@@ -1,0 +1,102 @@
+# This Service writes the HTTP request headers out to the response. Access it
+# through its NodePort, LoadBalancer or Ingress endpoint.
+apiVersion: v1
+kind: Service
+metadata:
+  name: echoheadersx
+  labels:
+    app: echoheaders
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30301
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: echoheaders
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echoheadersdefault
+  labels:
+    app: echoheaders
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30302
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: echoheaders
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echoheadersy
+  labels:
+    app: echoheaders
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30284
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: echoheaders
+---
+# This is a replication controller for the endpoint that services the 3
+# Services above.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: echoheaders
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: echoheaders
+    spec:
+      containers:
+      - name: echoheaders
+        image: bprashanth/echoserver:0.0
+        ports:
+        - containerPort: 8080
+---
+# This is the Ingress resource that creates a HTTP Loadbalancer configured
+# according to the Ingress rules.
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: echomap
+spec:
+  backend:
+    serviceName: echoheadersdefault
+    servicePort: 80
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - path: /foo
+        backend:
+          serviceName: echoheadersx
+          servicePort: 80
+  - host: bar.baz.com
+    http:
+      paths:
+      - path: /bar
+        backend:
+          serviceName: echoheadersy
+          servicePort: 80
+      - path: /foo
+        backend:
+          serviceName: echoheadersx
+          servicePort: 80
+

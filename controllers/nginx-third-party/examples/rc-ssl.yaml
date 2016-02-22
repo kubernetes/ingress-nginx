@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: nginx-ingress-3rdpartycfg
+  labels:
+    k8s-app: nginx-ingress-lb
+spec:
+  replicas: 1
+  selector:
+    k8s-app: nginx-ingress-lb
+  template:
+    metadata:
+      labels:
+        k8s-app: nginx-ingress-lb
+        name: nginx-ingress-lb
+    spec:
+      # A secret for each nginx host that requires SSL. These secrets need to
+      # exist before hand, see README.
+      # Follow this https://github.com/kubernetes/contrib/Ingress/controllers/nginx-third-party/examples/certs.sh
+      # as a guide on how to generate secrets containing SSL certificates.
+      volumes:
+      - name: secret-echoheaders-1
+        secret:
+          secretName: secret-echoheaders-1
+      containers:
+      - image: gcr.io/google_containers/nginx-third-party:0.3
+        name: nginx-ingress-lb
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10249
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        # use downward API
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        ports:
+        - containerPort: 80
+          hostPort: 80
+        - containerPort: 443
+          hostPort: 4444
+        - containerPort: 8080
+          hostPort: 9000
+        # the mountpoints for the SSL secrets must be a /etc/nginx-ssl subdirectory
+        volumeMounts:
+        - mountPath: /etc/nginx-ssl/secret-echoheaders-1
+          name: secret-echoheaders-1
+        # to configure ssl_dhparam http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+        # use the dhparam.sh file to generate and mount a secret that containing the key dhparam.pem or
+        # create a configuration with the content of dhparam.pem in the field sslDHParam.
+        args:
+        - /nginx-third-party-lb
+        - --default-backend-service=default/default-http-backend

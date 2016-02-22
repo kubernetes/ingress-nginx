@@ -1,0 +1,360 @@
+{{ $cfg := .cfg }}{{ $sslCertificates := .sslCertificates }}{{ $defErrorSvc := .defErrorSvc }}{{ $defBackend := .defBackend }}
+daemon off;
+
+worker_processes {{ $cfg.WorkerProcesses }};
+
+pid /run/nginx.pid;
+
+worker_rlimit_nofile 131072;
+
+events {
+    worker_connections {{ $cfg.MaxWorkerConnections }};
+}
+
+http {
+    #vhost_traffic_status_zone shared:vhost_traffic_status:10m;
+
+    # configure cache size used in ingress.lua
+    lua_shared_dict ingress 10m;
+    lua_shared_dict dns_cache 15m;
+    lua_shared_dict ssl_certs 5m;
+
+    lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-lock/lib/?.lua;/etc/nginx/lua/vendor/lua-resty-dns/lib/?.lua;/etc/nginx/lua/vendor/lua-resty-dns-cache/lib/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;/etc/nginx/lua/vendor/lua-resty-lrucache/lib/?.lua;;';
+    
+    init_worker_by_lua_block {
+        require("ingress").init_worker(ngx)
+    }
+
+    init_by_lua_block {
+        {{ if $defErrorSvc }}{{/* only if exists a custom error service */}}
+        dev_error_url = "http://{{ $defErrorSvc.ServiceName }}.{{ $defErrorSvc.Namespace }}.svc.cluster.local:{{ $defErrorSvc.ServicePort }}"
+        {{ else }}
+        dev_error_url = nil
+        {{ end }}
+        local options = {}
+        options.def_backend = "http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }}"
+        {{ if $defErrorSvc }}{{/* only if exists a custom error service */}}options.custom_error = "http://{{ $defErrorSvc.ServiceName }}.{{ $defErrorSvc.Namespace }}.svc.cluster.local:{{ $defErrorSvc.ServicePort }}"{{ end }}
+        {{ if not (empty .defResolver) }}-- Custom dns resolver.
+        options.resolvers = "{{ .defResolver }}"
+        {{ end }}
+
+        require("ingress").init(ngx, options)
+
+        local certs = {}{{ range $sslCert := .sslCertificates }}{{ range $cname := $sslCert.Cname }}
+        certs["{{ $cname }}"] = {}
+        certs["{{ $cname }}"].cert = "{{ $sslCert.Cert }}"
+        certs["{{ $cname }}"].key = "{{ $sslCert.Key }}"
+        certs["{{ $cname }}"].valid = {{ $sslCert.Valid }}
+        {{ end }}{{ end }}
+        ssl_certs = certs
+
+        require("error_page")
+    }
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+
+    keepalive_timeout {{ $cfg.KeepAlive }}s;
+
+    types_hash_max_size 2048;
+    server_names_hash_max_size {{ $cfg.ServerNameHashMaxSize }};
+    server_names_hash_bucket_size {{ $cfg.ServerNameHashBucketSize }};
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    {{ if $cfg.UseGzip }}
+    gzip on;
+    gzip_comp_level 5;
+    gzip_http_version 1.1;
+    gzip_min_length 256;
+    gzip_types {{ $.cfg.GzipTypes }};    
+    gzip_proxied any;
+    gzip_vary on;
+    {{ end }}
+
+    client_max_body_size "{{ $cfg.BodySize }}";
+
+    {{ if $cfg.UseProxyProtocol }}
+    set_real_ip_from {{ $cfg.ProxyRealIpCidr }};
+    real_ip_header proxy_protocol;
+    {{ end }}
+
+    log_format upstreaminfo '{{ if $cfg.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
+        '$remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
+        '$request_length $request_time $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
+
+    access_log /var/log/nginx/access.log upstreaminfo;
+    error_log  /var/log/nginx/error.log {{ $cfg.ErrorLogLevel }};
+
+    {{ if not (empty .defResolver) }}# Custom dns resolver.
+    resolver {{ .defResolver }} valid=30s;
+    {{ end }}
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    # trust http_x_forwarded_proto headers correctly indicate ssl offloading
+    map $http_x_forwarded_proto $access_scheme {
+      default $http_x_forwarded_proto;
+      ''      $scheme;
+    }
+
+    map $access_scheme $sts {
+      'https' 'max-age={{ $cfg.HtsMaxAge }}{{ if $cfg.HtsIncludeSubdomains }}; includeSubDomains{{ end }}; preload';
+    }
+
+    # Map a response error watching the header Content-Type
+    map $http_accept $httpAccept {
+        default          html;
+        application/json json;
+        application/xml  xml;
+        text/plain       text;
+    }
+
+    map $httpAccept $httpReturnType {
+        default          text/html;
+        json             application/json;
+        xml              application/xml;
+        text             text/plain;
+    }
+
+
+    server_name_in_redirect off;
+    port_in_redirect off;
+
+    ssl_protocols {{ $cfg.SSLProtocols }};
+
+    # turn on session caching to drastically improve performance
+    {{ if $cfg.SSLSessionCache }}
+    ssl_session_cache builtin:1000 shared:SSL:{{ $cfg.SSLSessionCacheSize }};
+    ssl_session_timeout {{ $cfg.SSLSessionTimeout }};
+    {{ end }}
+
+    # allow configuring ssl session tickets
+    ssl_session_tickets {{ if $cfg.SSLSessionTickets }}on{{ else }}off{{ end }};
+
+    # slightly reduce the time-to-first-byte
+    ssl_buffer_size {{ $cfg.SSLBufferSize }};
+
+    {{ if not (empty $cfg.SSLCiphers) }}
+    # allow configuring custom ssl ciphers
+    ssl_ciphers '{{ $cfg.SSLCiphers }}';
+    ssl_prefer_server_ciphers on;
+    {{ end }}
+
+    {{ if not (empty .sslDHParam) }}
+    # allow custom DH file http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+    ssl_dhparam {{ .sslDHParam }};
+    {{ end }}
+
+    {{ if $defErrorSvc }}
+    # Custom error pages using
+    proxy_intercept_errors on;
+    error_page 403 @custom_403;
+    error_page 404 @custom_404;
+    error_page 405 @custom_405;
+    error_page 408 @custom_408;
+    error_page 413 @custom_413;
+    error_page 500 @custom_500;
+    error_page 501 @custom_501;
+    error_page 502 @custom_502;
+    error_page 503 @custom_503;
+    error_page 504 @custom_504;
+    {{ end }}
+
+    # Reverse Proxy configuration
+    # pass original Host header
+    proxy_set_header Host                   $host;
+    # Pass Real IP
+    proxy_set_header X-Real-IP              $remote_addr;
+
+    proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host       $host;
+    proxy_set_header X-Forwarded-Server     $host;
+    proxy_set_header X-Forwarded-Port       $http_x_forwarded_port;
+    proxy_set_header X-Forwarded-Proto      $scheme;
+
+    proxy_connect_timeout       {{ .cfg.ProxyConnectTimeout }}s;
+    proxy_send_timeout          {{ .cfg.ProxySendTimeout }}s;
+    proxy_read_timeout          {{ .cfg.ProxyReadTimeout }}s;
+
+    proxy_buffering             off;
+    
+    proxy_http_version          1.1;
+
+    # Allow websocket connections
+    proxy_set_header            Upgrade           $http_upgrade;
+    proxy_set_header            Connection        $connection_upgrade;
+
+    # In case of errors try the next upstream server before returning an error
+    proxy_next_upstream         error timeout http_502 http_503 http_504;
+
+    server {
+        listen 80 default_server{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        #vhost_traffic_status_filter_by_host on;
+
+        location / {
+            set $upstream_host '';
+            set $upstream_port '';
+            access_by_lua_block {
+                require("ingress").content(ngx)
+            }
+            proxy_pass http://$upstream_host:$upstream_port$request_uri;
+        }
+
+        {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
+    }
+
+    {{ if ge (len .sslCertificates) 1 }}
+    # SSL
+    # TODO: support more than one certificate
+    server {
+        listen 443 ssl http2 default_server;
+
+        {{ range $sslCert := .sslCertificates }}{{ if $sslCert.Default }}
+        # default certificate in case no match
+        ssl_certificate "{{ $sslCert.Cert }}";
+        ssl_certificate_key "{{ $sslCert.Key }}";
+        {{ end }}{{ end }}
+
+        location / {
+            set $upstream_host '';
+            set $upstream_port '';
+
+            #ssl_certificate_by_lua '
+            #    -- TODO: waiting release 0.9.20
+            #    -- https://github.com/openresty/lua-nginx-module/pull/608#issuecomment-165255821
+            #    -- require("dynamic-ssl").config(ngx)
+            #    require("ingress").content(ngx)
+            #';
+            # TODO: remove after ^^
+            access_by_lua_block {
+                require("ingress").content(ngx)
+            }
+            proxy_pass http://$upstream_host:$upstream_port$request_uri;
+        }
+        
+        {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
+    }
+    {{ end }}
+
+    # default server, including healthcheck
+    server {
+        listen 8080 default_server{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }} reuseport;
+        #vhost_traffic_status_filter_by_host on;
+
+        location /healthz {
+            access_log off;
+            return 200;
+        }
+
+        # route to get the current Ingress configuration used in ingress.lua
+        location /config {
+            content_by_lua_block {
+                require("ingress").config(ngx)
+            }
+        }
+
+        # route to post the list of Ingress rules to use.
+        location /update-ingress {
+            content_by_lua_block {
+                require("ingress").update_ingress(ngx)
+            }
+        }
+        
+        location /health-check {
+            access_log off;
+            proxy_pass http://127.0.0.1:10249/healthz;
+        }
+
+        location /nginx-status {
+            #vhost_traffic_status_display;
+            #vhost_traffic_status_display_format html;
+            stub_status on;
+        }
+
+        location / {
+            proxy_pass             http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }};
+        }
+        {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
+    }
+}
+
+# TCP services
+stream {
+{{range $tcpSvc := .tcpServices }}
+    server {
+        listen {{ $tcpSvc.ExposedPort }};
+        proxy_connect_timeout  {{ $cfg.ProxyConnectTimeout }}s;
+        proxy_timeout          {{ $cfg.ProxyReadTimeout }}s;
+        proxy_pass             {{ $tcpSvc.ServiceName }}.{{ $tcpSvc.Namespace }}.svc.cluster.local:{{ $tcpSvc.ServicePort }};
+    }
+{{ end }}
+}
+
+{{/* definition of templates to avoid repetitions */}}
+{{ define "CUSTOM_ERRORS" }}
+        location @custom_403 {
+            content_by_lua_block {
+                openErrorURL(403, dev_error_url)
+            }
+        }
+
+        location @custom_404 {
+            content_by_lua_block {
+                openErrorURL(404, dev_error_url)
+            }
+        }
+
+        location @custom_405 {
+            content_by_lua_block {
+                openErrorURL(405, dev_error_url)
+            }
+        }
+
+        location @custom_408 {
+            content_by_lua_block {
+                openErrorURL(408, dev_error_url)
+            }
+        }                
+
+        location @custom_413 {
+            content_by_lua_block {
+                openErrorURL(413, dev_error_url)
+            }
+        }
+
+        location @custom_500 {
+            content_by_lua_block {
+                openErrorURL(500, dev_error_url)
+            }
+        }
+
+        location @custom_501 {
+            content_by_lua_block {
+                openErrorURL(501, dev_error_url)
+            }
+        }                
+
+        location @custom_502 {
+            content_by_lua_block {
+                openErrorURL(502, dev_error_url)
+            }
+        }                
+
+        location @custom_503 {
+            content_by_lua_block {
+                openErrorURL(503, dev_error_url)
+            }
+        }
+
+        location @custom_504 {
+            content_by_lua_block {
+                openErrorURL(504, dev_error_url)
+            }
+        }
+
+{{ end }}

@@ -1,0 +1,53 @@
+# Valgrind suppression file for LuaJIT 2.0.
+{
+   Optimized string compare
+   Memcheck:Addr4
+   fun:lj_str_cmp
+}
+{
+   Optimized string compare
+   Memcheck:Addr1
+   fun:lj_str_cmp
+}
+{
+   Optimized string compare
+   Memcheck:Addr4
+   fun:lj_str_new
+}
+{
+   Optimized string compare
+   Memcheck:Addr1
+   fun:lj_str_new
+}
+{
+   Optimized string compare
+   Memcheck:Cond
+   fun:lj_str_new
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:ngx_alloc
+   fun:ngx_event_process_init
+}
+{
+    <insert_a_suppression_name_here>
+    Memcheck:Param
+    epoll_ctl(event)
+    fun:epoll_ctl
+    fun:ngx_epoll_add_event
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:index
+   fun:expand_dynamic_string_token
+   fun:_dl_map_object
+   fun:map_doit
+   fun:_dl_catch_error
+   fun:do_preload
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+}
