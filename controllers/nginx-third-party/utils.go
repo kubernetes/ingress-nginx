@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -34,6 +35,11 @@ import (
 	"k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/pkg/util/workqueue"
+)
+
+const (
+	httpPort  = "80"
+	httpsPort = "443"
 )
 
 var (
@@ -160,52 +166,45 @@ func getLBDetails(kubeClient *unversioned.Client) (rc *lbInfo, err error) {
 	}
 }
 
-func getService(kubeClient *unversioned.Client, name string) nginx.Service {
+func getService(kubeClient *unversioned.Client, name string) (nginx.Service, error) {
 	if name == "" {
-		return nginx.Service{}
+		return nginx.Service{}, fmt.Errorf("Empty string is not a valid service name")
 	}
 
-	// Wait for the default backend Service. There's no pretty way to do this.
 	parts := strings.Split(name, "/")
 	if len(parts) != 2 {
-		glog.Fatalf("Default backend should take the form namespace/name: %v", name)
+		glog.Fatalf("Please check the service format (namespace/name) in service %v", name)
 	}
 
 	defaultPort, err := getServicePorts(kubeClient, parts[0], parts[1])
 	if err != nil {
-		glog.Fatalf("Could not configure default backend %v: %v", name, err)
+		return nginx.Service{}, fmt.Errorf("Error obtaining service %v: %v", name, err)
 	}
 
 	return nginx.Service{
 		ServiceName: parts[1],
 		ServicePort: defaultPort[0], //TODO: which port?
 		Namespace:   parts[0],
-	}
+	}, nil
 }
 
-// getServicePorts returns the po
+// getServicePorts returns the ports defined in a service spec
 func getServicePorts(kubeClient *unversioned.Client, ns, name string) (ports []string, err error) {
 	var svc *api.Service
-	glog.Infof("Waiting for %v/%v", ns, name)
-	wait.Poll(1*time.Second, 5*time.Minute, func() (bool, error) {
-		svc, err = kubeClient.Services(ns).Get(name)
-		if err != nil {
-			if glog.V(2) {
-				glog.Errorf("%v", err)
-			}
-			return false, nil
-		}
+	glog.Infof("Checking service %v/%v", ns, name)
+	svc, err = kubeClient.Services(ns).Get(name)
+	if err != nil {
+		return
+	}
 
-		for _, p := range svc.Spec.Ports {
-			if p.Port != 0 {
-				ports = append(ports, strconv.Itoa(p.Port))
-				break
-			}
+	for _, p := range svc.Spec.Ports {
+		if p.Port != 0 {
+			ports = append(ports, strconv.Itoa(p.Port))
+			break
 		}
+	}
 
-		glog.Infof("Ports for %v/%v : %v", ns, name, ports)
-		return true, nil
-	})
+	glog.Infof("Ports for %v/%v : %v", ns, name, ports)
 
 	return
 }
@@ -219,7 +218,18 @@ func getTcpServices(kubeClient *unversioned.Client, tcpServices string) []nginx.
 
 		namePort := strings.Split(svc, ":")
 		if len(namePort) == 2 {
-			tcpSvc := getService(kubeClient, namePort[0])
+			tcpSvc, err := getService(kubeClient, namePort[0])
+			if err != nil {
+				glog.Errorf("%s", err)
+				continue
+			}
+
+			// the exposed TCP service cannot use 80 or 443 as ports
+			if namePort[1] == httpPort || namePort[1] == httpsPort {
+				glog.Errorf("The TCP service %v cannot use ports 80 or 443 (it creates a conflict with nginx)", svc)
+				continue
+			}
+
 			tcpSvc.ExposedPort = namePort[1]
 			svcs = append(svcs, tcpSvc)
 		} else {
@@ -228,4 +238,14 @@ func getTcpServices(kubeClient *unversioned.Client, tcpServices string) []nginx.
 	}
 
 	return svcs
+}
+
+func checkDNS(name string) (*net.IPAddr, error) {
+	parts := strings.Split(name, "/")
+	if len(parts) != 2 {
+		glog.Fatalf("Please check the service format (namespace/name) in service %v", name)
+	}
+
+	host := fmt.Sprintf("%v.%v", parts[1], parts[0])
+	return net.ResolveIPAddr("ip4", host)
 }

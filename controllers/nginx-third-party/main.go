@@ -63,14 +63,24 @@ func main() {
 		glog.Fatalf("Please specify --default-backend")
 	}
 
+	glog.Info("Checking if DNS is working")
+	ip, err := checkDNS(*defaultSvc)
+	if err != nil {
+		glog.Fatalf("Please check if the DNS addon is working properly.\n%v", err)
+	}
+	glog.Infof("IP address of '%v' service: %s", *defaultSvc, ip)
+
 	kubeClient, err := unversioned.NewInCluster()
 	if err != nil {
 		glog.Fatalf("failed to create client: %v", err)
 	}
 
 	lbInfo, _ := getLBDetails(kubeClient)
-	defSvc := getService(kubeClient, *defaultSvc)
-	defError := getService(kubeClient, *customErrorSvc)
+	defSvc, err := getService(kubeClient, *defaultSvc)
+	if err != nil {
+		glog.Fatalf("no default backend service found: %v", err)
+	}
+	defError, _ := getService(kubeClient, *customErrorSvc)
 
 	// Start loadbalancer controller
 	lbc, err := NewLoadBalancerController(kubeClient, *resyncPeriod, defSvc, defError, *watchNamespace, lbInfo)

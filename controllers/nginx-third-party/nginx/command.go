@@ -30,6 +30,7 @@ const (
 // Start starts a nginx (master process) and waits. If the process ends
 // we need to kill the controller process and return the reason.
 func (ngx *NginxManager) Start() {
+	glog.Info("Starting nginx...")
 	cmd := exec.Command("nginx")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
