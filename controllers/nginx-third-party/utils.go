@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -33,6 +34,12 @@ import (
 	"k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/pkg/util/workqueue"
+)
+
+var (
+	errMissingPodInfo = fmt.Errorf("Unable to get POD information")
+
+	errInvalidKind = fmt.Errorf("Please check the field Kind, only ReplicationController or DaemonSet are allowed")
 )
 
 // taskQueue manages a work queue through an independent worker that
@@ -124,27 +131,33 @@ func getLBDetails(kubeClient *unversioned.Client) (rc *lbInfo, err error) {
 
 	pod, _ := kubeClient.Pods(podNs).Get(podName)
 	if pod == nil {
-		return
+		return nil, errMissingPodInfo
 	}
 
 	annotations := pod.Annotations["kubernetes.io/created-by"]
 	var sref api.SerializedReference
 	err = json.Unmarshal([]byte(annotations), &sref)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	if sref.Reference.Kind == "ReplicationController" {
-		rc = &lbInfo{
-			RCNamespace:  sref.Reference.Namespace,
-			RCName:       sref.Reference.Name,
-			PodIP:        podIP,
-			Podname:      podName,
-			PodNamespace: podNs,
-		}
+	rc = &lbInfo{
+		ObjectName:   sref.Reference.Name,
+		PodIP:        podIP,
+		Podname:      podName,
+		PodNamespace: podNs,
 	}
 
-	return
+	switch sref.Reference.Kind {
+	case "ReplicationController":
+		rc.DeployType = &api.ReplicationController{}
+		return rc, nil
+	case "DaemonSet":
+		rc.DeployType = &extensions.DaemonSet{}
+		return rc, nil
+	default:
+		return nil, errInvalidKind
+	}
 }
 
 func getService(kubeClient *unversioned.Client, name string) nginx.Service {

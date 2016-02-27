@@ -95,18 +95,19 @@ func getDnsServers() []string {
 
 // ReadConfig obtains the configuration defined by the user or returns the default if it does not
 // exists or if is not a well formed json object
-func (ngx *NginxManager) ReadConfig(data string) (cfg *nginxConfiguration, err error) {
-	err = json.Unmarshal([]byte(data), &cfg)
-	if err != nil {
-		glog.Errorf("Invalid json: %v", err)
-		cfg = &nginxConfiguration{}
-		err = fmt.Errorf("Invalid custom nginx configuration: %v", err)
-		return
+func (ngx *NginxManager) ReadConfig(data string) (*nginxConfiguration, error) {
+	if data == "" {
+		return newDefaultNginxCfg(), nil
 	}
 
-	cfg = newDefaultNginxCfg()
-	err = fmt.Errorf("No custom nginx configuration. Using defaults")
-	return
+	cfg := nginxConfiguration{}
+	err := json.Unmarshal([]byte(data), &cfg)
+	if err != nil {
+		glog.Errorf("Invalid json: %v", err)
+		return newDefaultNginxCfg(), fmt.Errorf("Invalid custom nginx configuration: %v", err)
+	}
+
+	return &cfg, nil
 }
 
 func merge(dst, src map[string]interface{}) map[string]interface{} {

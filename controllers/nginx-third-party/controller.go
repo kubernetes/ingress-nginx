@@ -157,14 +157,32 @@ func NewLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 	lbc.configLister.Store, lbc.configController = framework.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(api.ListOptions) (runtime.Object, error) {
-				rc, err := kubeClient.ReplicationControllers(lbInfo.RCNamespace).Get(lbInfo.RCName)
-				return &api.ReplicationControllerList{
-					Items: []api.ReplicationController{*rc},
-				}, err
+				switch lbInfo.DeployType.(type) {
+				case *api.ReplicationController:
+					rc, err := kubeClient.ReplicationControllers(lbInfo.PodNamespace).Get(lbInfo.ObjectName)
+					return &api.ReplicationControllerList{
+						Items: []api.ReplicationController{*rc},
+					}, err
+				case *extensions.DaemonSet:
+					ds, err := kubeClient.Extensions().DaemonSets(lbInfo.PodNamespace).Get(lbInfo.ObjectName)
+					return &extensions.DaemonSetList{
+						Items: []extensions.DaemonSet{*ds},
+					}, err
+				default:
+					return nil, errInvalidKind
+				}
 			},
 			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				options.LabelSelector = labels.SelectorFromSet(labels.Set{"name": lbInfo.RCName})
-				return kubeClient.ReplicationControllers(lbInfo.RCNamespace).Watch(options)
+				switch lbInfo.DeployType.(type) {
+				case *api.ReplicationController:
+					options.LabelSelector = labels.SelectorFromSet(labels.Set{"name": lbInfo.ObjectName})
+					return kubeClient.ReplicationControllers(lbInfo.PodNamespace).Watch(options)
+				case *extensions.DaemonSet:
+					options.LabelSelector = labels.SelectorFromSet(labels.Set{"name": lbInfo.ObjectName})
+					return kubeClient.Extensions().DaemonSets(lbInfo.PodNamespace).Watch(options)
+				default:
+					return nil, errInvalidKind
+				}
 			},
 		},
 		&api.ReplicationController{}, resyncPeriod, configHandlers)
@@ -218,8 +236,15 @@ func (lbc *loadBalancerController) syncIngress(key string) {
 
 // syncConfig manages changes in nginx configuration.
 func (lbc *loadBalancerController) syncConfig(key string) {
-	// we only need to sync the nginx rc
-	if key != fmt.Sprintf("%v/%v", lbc.lbInfo.RCNamespace, lbc.lbInfo.RCName) {
+	glog.Infof("Syncing nginx configuration")
+	if !lbc.ingController.HasSynced() {
+		glog.Infof("deferring sync till endpoints controller has synced")
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// we only need to sync nginx
+	if key != fmt.Sprintf("%v/%v", lbc.lbInfo.PodNamespace, lbc.lbInfo.ObjectName) {
+		glog.Warningf("skipping sync because the event is not related to a change in configuration")
 		return
 	}
 
@@ -230,15 +255,24 @@ func (lbc *loadBalancerController) syncConfig(key string) {
 	}
 
 	if !configExists {
-		glog.Errorf("Configutation not found: %v", key)
+		glog.Errorf("Configuration not found: %v", key)
 		return
 	}
 
 	glog.V(2).Infof("Syncing config %v", key)
 
-	rc := *obj.(*api.ReplicationController)
-	ngxCfgAnn, _ := annotations(rc.Annotations).getNginxConfig()
-	tcpSvcAnn, _ := annotations(rc.Annotations).getTcpServices()
+	var kindAnnotations map[string]string
+	switch obj.(type) {
+	case *api.ReplicationController:
+		rc := *obj.(*api.ReplicationController)
+		kindAnnotations = rc.Annotations
+	case *extensions.DaemonSet:
+		rc := *obj.(*extensions.DaemonSet)
+		kindAnnotations = rc.Annotations
+	}
+
+	ngxCfgAnn, _ := annotations(kindAnnotations).getNginxConfig()
+	tcpSvcAnn, _ := annotations(kindAnnotations).getTcpServices()
 
 	ngxConfig, err := lbc.ngx.ReadConfig(ngxCfgAnn)
 	if err != nil {
@@ -321,7 +355,7 @@ func (lbc *loadBalancerController) Run() {
 	go lbc.configQueue.run(time.Second, lbc.stopCh)
 
 	// Initial nginx configuration.
-	lbc.syncConfig(lbc.lbInfo.RCName)
+	lbc.syncConfig(lbc.lbInfo.PodNamespace + "/" + lbc.lbInfo.ObjectName)
 
 	time.Sleep(5 * time.Second)
 

@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/kubernetes/pkg/runtime"
 )
 
 const (
@@ -85,10 +86,10 @@ func main() {
 	}
 }
 
-// lbInfo contains runtime information about the pod and replication controller
+// lbInfo contains runtime information about the pod
 type lbInfo struct {
-	RCNamespace  string
-	RCName       string
+	ObjectName   string
+	DeployType   runtime.Object
 	Podname      string
 	PodIP        string
 	PodNamespace string
