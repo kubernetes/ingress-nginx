@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:edge
+FROM gcr.io/google_containers/debian-slim:0.1
 
 COPY build.sh /tmp
 
