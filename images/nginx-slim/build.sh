@@ -62,7 +62,7 @@ apt-get update && apt-get install --no-install-recommends -y \
   luajit \
   openssl \
   libluajit-5.1-dev \
-  linux-headers-amd64
+  linux-headers-generic
 
 # download, verify and extract the source files
 get_src 1af2eb956910ed4b11aaf525a81bc37e135907e7127948f9179f5410337da042 \
@@ -162,13 +162,16 @@ apt-mark unmarkauto \
 
 apt-get remove -y --purge \
   build-essential \
+  gcc-5 \
+  cpp-5 \
   libgeoip-dev \
   libpcre3-dev \
   libssl-dev \
   zlib1g-dev \
   libaio-dev \
   libluajit-5.1-dev \
-  linux-headers-amd64
+  linux-libc-dev \
+  linux-headers-generic
 
 apt-get autoremove -y
 

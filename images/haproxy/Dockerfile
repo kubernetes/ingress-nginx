@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM gcr.io/google_containers/debian-slim:0.1
+FROM gcr.io/google_containers/ubuntu-slim:0.1
 MAINTAINER Prashanth B <beeps@google.com>
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
