@@ -18,6 +18,7 @@ package controller
 
 import (
 	"k8s.io/contrib/ingress/controllers/gce/backends"
+	"k8s.io/contrib/ingress/controllers/gce/firewalls"
 	"k8s.io/contrib/ingress/controllers/gce/healthchecks"
 	"k8s.io/contrib/ingress/controllers/gce/instances"
 	"k8s.io/contrib/ingress/controllers/gce/loadbalancers"
@@ -60,11 +61,13 @@ func NewFakeClusterManager(clusterName string) *fakeClusterManager {
 		testDefaultBeNodePort,
 		namer,
 	)
+	frPool := firewalls.NewFirewallPool(firewalls.NewFakeFirewallRules(), namer)
 	cm := &ClusterManager{
 		ClusterNamer: namer,
 		instancePool: nodePool,
 		backendPool:  backendPool,
 		l7Pool:       l7Pool,
+		firewallPool: frPool,
 	}
 	return &fakeClusterManager{cm, fakeLbs, fakeBackends, fakeIGs}
 }

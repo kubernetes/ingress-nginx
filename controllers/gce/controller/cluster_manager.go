@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"k8s.io/contrib/ingress/controllers/gce/backends"
+	"k8s.io/contrib/ingress/controllers/gce/firewalls"
 	"k8s.io/contrib/ingress/controllers/gce/healthchecks"
 	"k8s.io/contrib/ingress/controllers/gce/instances"
 	"k8s.io/contrib/ingress/controllers/gce/loadbalancers"
@@ -70,6 +71,7 @@ type ClusterManager struct {
 	instancePool           instances.NodePool
 	backendPool            backends.BackendPool
 	l7Pool                 loadbalancers.LoadBalancerPool
+	firewallPool           firewalls.SingleFirewallPool
 }
 
 // IsHealthy returns an error if the cluster manager is unhealthy.
@@ -92,6 +94,9 @@ func (c *ClusterManager) shutdown() error {
 	if err := c.l7Pool.Shutdown(); err != nil {
 		return err
 	}
+	if err := c.firewallPool.Shutdown(); err != nil {
+		return err
+	}
 	// The backend pool will also delete instance groups.
 	return c.backendPool.Shutdown()
 }
@@ -107,6 +112,17 @@ func (c *ClusterManager) shutdown() error {
 // If in performing the checkpoint the cluster manager runs out of quota, a
 // googleapi 403 is returned.
 func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, nodePorts []int64) error {
+	// Multiple ingress paths can point to the same service (and hence nodePort)
+	// but each nodePort can only have one set of cloud resources behind it. So
+	// don't waste time double validating GCE BackendServices.
+	portMap := map[int64]struct{}{}
+	for _, p := range nodePorts {
+		portMap[p] = struct{}{}
+	}
+	nodePorts = []int64{}
+	for p, _ := range portMap {
+		nodePorts = append(nodePorts, p)
+	}
 	if err := c.backendPool.Sync(nodePorts); err != nil {
 		return err
 	}
@@ -116,6 +132,21 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	if err := c.l7Pool.Sync(lbs); err != nil {
 		return err
 	}
+
+	// TODO: Manage default backend and its firewall rule in a centralized way.
+	// DefaultBackend is managed in l7 pool, which doesn't understand instances,
+	// which the firewall rule requires.
+	fwNodePorts := nodePorts
+	if len(fwNodePorts) != 0 {
+		// If there are no Ingresses, we shouldn't be allowing traffic to the
+		// default backend. Equally importantly if the cluster gets torn down
+		// we shouldn't leak the firewall rule.
+		fwNodePorts = append(fwNodePorts, c.defaultBackendNodePort)
+	}
+	if err := c.firewallPool.Sync(fwNodePorts, nodeNames); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -213,6 +244,6 @@ func NewClusterManager(
 	cluster.defaultBackendNodePort = defaultBackendNodePort
 	cluster.l7Pool = loadbalancers.NewLoadBalancerPool(
 		cloud, defaultBackendPool, defaultBackendNodePort, cluster.ClusterNamer)
-
+	cluster.firewallPool = firewalls.NewFirewallPool(cloud, cluster.ClusterNamer)
 	return &cluster, nil
 }

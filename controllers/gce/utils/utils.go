@@ -54,6 +54,11 @@ const (
 	// Prefix used for instance groups involved in L7 balancing.
 	igPrefix = "k8s-ig"
 
+	// Suffix used in the l7 firewall rule. There is currently only one.
+	// Note that this name is used by the cloudprovider lib that inserts its
+	// own k8s-fw prefix.
+	globalFirewallSuffix = "l7"
+
 	// A delimiter used for clarity in naming GCE resources.
 	clusterNameDelimiter = "--"
 
@@ -143,6 +148,22 @@ func (n *Namer) BePort(beName string) (string, error) {
 func (n *Namer) IGName() string {
 	// Currently all ports are added to a single instance group.
 	return n.decorateName(igPrefix)
+}
+
+// FrSuffix constructs the glbc specific suffix for the FirewallRule.
+func (n *Namer) FrSuffix() string {
+	// The entire cluster only needs a single firewall rule.
+	if n.ClusterName == "" {
+		return globalFirewallSuffix
+	}
+	return n.Truncate(fmt.Sprintf("%v%v%v", globalFirewallSuffix, clusterNameDelimiter, n.ClusterName))
+}
+
+// FrName constructs the full firewall rule name, this is the name assigned by
+// the cloudprovider lib + suffix from glbc, so we don't mix this rule with a
+// rule created for L4 loadbalancing.
+func (n *Namer) FrName(suffix string) string {
+	return fmt.Sprintf("k8s-fw-%s", suffix)
 }
 
 // LBName constructs a loadbalancer name from the given key. The key is usually
