@@ -22,6 +22,7 @@ import (
 
 	compute "google.golang.org/api/compute/v1"
 	"k8s.io/contrib/ingress/controllers/gce/utils"
+	"k8s.io/kubernetes/pkg/util/sets"
 )
 
 var testIPManager = testIP{}
@@ -146,6 +147,17 @@ func (f *FakeLoadBalancers) DeleteGlobalForwardingRule(name string) error {
 	}
 	f.Fw = fw
 	return nil
+}
+
+// GetForwardingRulesWithIPs returns all forwarding rules that match the given ips.
+func (f *FakeLoadBalancers) GetForwardingRulesWithIPs(ip []string) (fwRules []*compute.ForwardingRule) {
+	ipSet := sets.NewString(ip...)
+	for i := range f.Fw {
+		if ipSet.Has(f.Fw[i].IPAddress) {
+			fwRules = append(fwRules, f.Fw[i])
+		}
+	}
+	return fwRules
 }
 
 // UrlMaps fakes

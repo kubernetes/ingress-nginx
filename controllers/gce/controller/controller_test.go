@@ -363,6 +363,55 @@ func TestLbNoService(t *testing.T) {
 	cm.fakeLbs.CheckURLMap(t, l7, expectedMap)
 }
 
+func TestLbChangeStaticIP(t *testing.T) {
+	cm := NewFakeClusterManager(DefaultClusterUID)
+	lbc := newLoadBalancerController(t, cm, "")
+	inputMap := map[string]utils.FakeIngressRuleValueMap{
+		"foo.example.com": {
+			"/foo1": "foo1svc",
+		},
+	}
+	ing := newIngress(inputMap)
+	ing.Spec.Backend.ServiceName = "foo1svc"
+	cert := extensions.IngressTLS{SecretName: "foo"}
+	ing.Spec.TLS = []extensions.IngressTLS{cert}
+
+	// Add some certs so we get 2 forwarding rules, the changed static IP
+	// should be assigned to both the HTTP and HTTPS forwarding rules.
+	lbc.tlsLoader = &fakeTLSSecretLoader{
+		fakeCerts: map[string]*loadbalancers.TLSCerts{
+			cert.SecretName: {Key: "foo", Cert: "bar"},
+		},
+	}
+
+	pm := newPortManager(1, 65536)
+	addIngress(lbc, ing, pm)
+	ingStoreKey := getKey(ing, t)
+
+	// First sync creates forwarding rules and allocates an IP.
+	lbc.sync(ingStoreKey)
+
+	// First allocate a static ip, then specify a userip in annotations.
+	// The forwarding rules should contain the user ip.
+	// The static ip should get cleaned up on lb tear down.
+	oldIP := ing.Status.LoadBalancer.Ingress[0].IP
+	oldRules := cm.fakeLbs.GetForwardingRulesWithIPs([]string{oldIP})
+	if len(oldRules) != 2 || oldRules[0].IPAddress != oldRules[1].IPAddress {
+		t.Fatalf("Expected 2 forwarding rules with the same IP.")
+	}
+
+	ing.Annotations = map[string]string{staticIPNameKey: "testip"}
+	cm.fakeLbs.ReserveGlobalStaticIP("testip", "1.2.3.4")
+
+	// Second sync reassigns 1.2.3.4 to existing forwarding rule (by recreating it)
+	lbc.sync(ingStoreKey)
+
+	newRules := cm.fakeLbs.GetForwardingRulesWithIPs([]string{"1.2.3.4"})
+	if len(newRules) != 2 || newRules[0].IPAddress != newRules[1].IPAddress || newRules[1].IPAddress != "1.2.3.4" {
+		t.Fatalf("Found unexpected forwaring rules after changing static IP annotation.")
+	}
+}
+
 type testIP struct {
 	start int
 }
