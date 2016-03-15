@@ -38,11 +38,11 @@ type Backends struct {
 	nodePool      instances.NodePool
 	healthChecker healthchecks.HealthChecker
 	snapshotter   storage.Snapshotter
-	namer         utils.Namer
 	// ignoredPorts are a set of ports excluded from GC, even
 	// after the Ingress has been deleted. Note that invoking
 	// a Delete() on these ports will still delete the backend.
 	ignoredPorts sets.String
+	namer        *utils.Namer
 }
 
 func portKey(port int64) string {
@@ -60,7 +60,7 @@ func NewBackendPool(
 	cloud BackendServices,
 	healthChecker healthchecks.HealthChecker,
 	nodePool instances.NodePool,
-	namer utils.Namer,
+	namer *utils.Namer,
 	ignorePorts []int64,
 	resyncWithCloud bool) *Backends {
 

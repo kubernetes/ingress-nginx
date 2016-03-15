@@ -28,6 +28,7 @@ import (
 
 	flag "github.com/spf13/pflag"
 	"k8s.io/contrib/ingress/controllers/gce/controller"
+	"k8s.io/contrib/ingress/controllers/gce/storage"
 	"k8s.io/kubernetes/pkg/api"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
@@ -56,7 +57,10 @@ const (
 	alphaNumericChar = "0"
 
 	// Current docker image version. Only used in debug logging.
-	imageVersion = "glbc:0.6.2"
+	imageVersion = "glbc:0.6.3"
+
+	// Key used to persist UIDs to configmaps.
+	uidConfigMapName = "ingress-uid"
 )
 
 var (
@@ -156,7 +160,7 @@ func main() {
 		go_flag.Lookup("logtostderr").Value.Set("true")
 		go_flag.Set("v", "4")
 	}
-	glog.Infof("Starting GLBC image: %v", imageVersion)
+	glog.Infof("Starting GLBC image: %v, cluster name %v", imageVersion, *clusterName)
 	if *defaultSvc == "" {
 		glog.Fatalf("Please specify --default-backend")
 	}
@@ -188,7 +192,7 @@ func main() {
 	if *inCluster || *useRealCloud {
 		// Create cluster manager
 		clusterManager, err = controller.NewClusterManager(
-			*clusterName, defaultBackendNodePort, *healthCheckPath)
+			*clusterName, defaultBackendNodePort, *healthCheckPath, storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName))
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}

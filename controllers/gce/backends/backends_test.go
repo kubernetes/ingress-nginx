@@ -28,7 +28,7 @@ import (
 )
 
 func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWithCloud bool) BackendPool {
-	namer := utils.Namer{}
+	namer := &utils.Namer{}
 	return NewBackendPool(
 		f,
 		healthchecks.NewHealthChecker(healthchecks.NewFakeHealthChecks(), "/", namer),

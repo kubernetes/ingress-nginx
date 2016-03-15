@@ -30,14 +30,14 @@ const l7SrcRange = "130.211.0.0/22"
 // FirewallRules manages firewall rules.
 type FirewallRules struct {
 	cloud    Firewall
-	namer    utils.Namer
+	namer    *utils.Namer
 	srcRange netset.IPNet
 }
 
 // NewFirewallPool creates a new firewall rule manager.
 // cloud: the cloud object implementing Firewall.
 // namer: cluster namer.
-func NewFirewallPool(cloud Firewall, namer utils.Namer) SingleFirewallPool {
+func NewFirewallPool(cloud Firewall, namer *utils.Namer) SingleFirewallPool {
 	srcNetSet, err := netset.ParseIPNets(l7SrcRange)
 	if err != nil {
 		glog.Fatalf("Could not parse L7 src range %v for firewall rule: %v", l7SrcRange, err)

@@ -28,13 +28,13 @@ import (
 type HealthChecks struct {
 	cloud       SingleHealthCheck
 	defaultPath string
-	namer       utils.Namer
+	namer       *utils.Namer
 }
 
 // NewHealthChecker creates a new health checker.
 // cloud: the cloud object implementing SingleHealthCheck.
 // defaultHealthCheckPath: is the HTTP path to use for health checks.
-func NewHealthChecker(cloud SingleHealthCheck, defaultHealthCheckPath string, namer utils.Namer) HealthChecker {
+func NewHealthChecker(cloud SingleHealthCheck, defaultHealthCheckPath string, namer *utils.Namer) HealthChecker {
 	return &HealthChecks{cloud, defaultHealthCheckPath, namer}
 }
 

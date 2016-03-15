@@ -301,7 +301,7 @@ func (lbc *LoadBalancerController) sync(key string) {
 	} else if err := l7.UpdateUrlMap(urlMap); err != nil {
 		lbc.recorder.Eventf(&ing, api.EventTypeWarning, "UrlMap", err.Error())
 		syncError = fmt.Errorf("%v, update url map error: %v", syncError, err)
-	} else if lbc.updateIngressStatus(l7, ing); err != nil {
+	} else if err := lbc.updateIngressStatus(l7, ing); err != nil {
 		lbc.recorder.Eventf(&ing, api.EventTypeWarning, "Status", err.Error())
 		syncError = fmt.Errorf("%v, update ingress error: %v", syncError, err)
 	}

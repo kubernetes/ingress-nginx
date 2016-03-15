@@ -67,7 +67,7 @@ type L7s struct {
 	glbcDefaultBackend     *compute.BackendService
 	defaultBackendPool     backends.BackendPool
 	defaultBackendNodePort int64
-	namer                  utils.Namer
+	namer                  *utils.Namer
 }
 
 // NewLoadBalancerPool returns a new loadbalancer pool.
@@ -80,7 +80,7 @@ type L7s struct {
 func NewLoadBalancerPool(
 	cloud LoadBalancers,
 	defaultBackendPool backends.BackendPool,
-	defaultBackendNodePort int64, namer utils.Namer) LoadBalancerPool {
+	defaultBackendNodePort int64, namer *utils.Namer) LoadBalancerPool {
 	return &L7s{cloud, storage.NewInMemoryPool(), nil, defaultBackendPool, defaultBackendNodePort, namer}
 }
 
@@ -284,7 +284,7 @@ type L7 struct {
 	// TODO: Expose this to users.
 	glbcDefaultBackend *compute.BackendService
 	// namer is used to compute names of the various sub-components of an L7.
-	namer utils.Namer
+	namer *utils.Namer
 }
 
 func (l *L7) checkUrlMap(backend *compute.BackendService) (err error) {

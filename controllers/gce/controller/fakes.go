@@ -17,14 +17,15 @@ limitations under the License.
 package controller
 
 import (
+	"k8s.io/kubernetes/pkg/util/intstr"
+	"k8s.io/kubernetes/pkg/util/sets"
+
 	"k8s.io/contrib/ingress/controllers/gce/backends"
 	"k8s.io/contrib/ingress/controllers/gce/firewalls"
 	"k8s.io/contrib/ingress/controllers/gce/healthchecks"
 	"k8s.io/contrib/ingress/controllers/gce/instances"
 	"k8s.io/contrib/ingress/controllers/gce/loadbalancers"
 	"k8s.io/contrib/ingress/controllers/gce/utils"
-	"k8s.io/kubernetes/pkg/util/intstr"
-	"k8s.io/kubernetes/pkg/util/sets"
 )
 
 const (
@@ -48,7 +49,7 @@ func NewFakeClusterManager(clusterName string) *fakeClusterManager {
 	fakeBackends := backends.NewFakeBackendServices()
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	fakeHCs := healthchecks.NewFakeHealthChecks()
-	namer := utils.Namer{clusterName}
+	namer := &utils.Namer{clusterName}
 	nodePool := instances.NewNodePool(fakeIGs, defaultZone)
 	healthChecker := healthchecks.NewHealthChecker(fakeHCs, "/", namer)
 	backendPool := backends.NewBackendPool(

@@ -66,7 +66,7 @@ const (
 
 // ClusterManager manages cluster resource pools.
 type ClusterManager struct {
-	ClusterNamer           utils.Namer
+	ClusterNamer           *utils.Namer
 	defaultBackendNodePort int64
 	instancePool           instances.NodePool
 	backendPool            backends.BackendPool
@@ -227,12 +227,17 @@ func NewClusterManager(
 	// and continue.
 	cloud := getGCEClient()
 
-	cluster := ClusterManager{ClusterNamer: utils.Namer{name}}
+	// Names are fundamental to the cluster, the uid allocator makes sure names don't collide.
+	cluster := ClusterManager{ClusterNamer: &utils.Namer{name}}
 	zone, err := cloud.GetZone()
 	if err != nil {
 		return nil, err
 	}
+
+	// NodePool stores GCE vms that are in this Kubernetes cluster.
 	cluster.instancePool = instances.NewNodePool(cloud, zone.FailureDomain)
+
+	// BackendPool creates GCE BackendServices and associated health checks.
 	healthChecker := healthchecks.NewHealthChecker(cloud, defaultHealthCheckPath, cluster.ClusterNamer)
 
 	// TODO: This needs to change to a consolidated management of the default backend.
@@ -242,6 +247,8 @@ func NewClusterManager(
 	defaultBackendPool := backends.NewBackendPool(
 		cloud, defaultBackendHealthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{}, false)
 	cluster.defaultBackendNodePort = defaultBackendNodePort
+
+	// L7 pool creates targetHTTPProxy, ForwardingRules, UrlMaps, StaticIPs.
 	cluster.l7Pool = loadbalancers.NewLoadBalancerPool(
 		cloud, defaultBackendPool, defaultBackendNodePort, cluster.ClusterNamer)
 	cluster.firewallPool = firewalls.NewFirewallPool(cloud, cluster.ClusterNamer)
