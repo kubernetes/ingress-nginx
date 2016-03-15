@@ -17,10 +17,10 @@ limitations under the License.
 package nginx
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"text/template"
 
 	"github.com/fatih/structs"
@@ -61,11 +61,6 @@ func (ngx *NginxManager) loadTemplate() {
 }
 
 func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []Upstream, servers []Server, servicesL4 []Service) (bool, error) {
-	file, err := os.Create(ngx.ConfigFile)
-	if err != nil {
-		return false, err
-	}
-
 	fromMap := structs.Map(cfg)
 	toMap := structs.Map(ngx.defCfg)
 	curNginxCfg := merge(toMap, fromMap)
@@ -86,7 +81,18 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []Upstream,
 		conf["defErrorSvc"] = false
 	}
 
-	if glog.V(2) {
+	buffer := new(bytes.Buffer)
+	err := ngx.template.Execute(buffer, conf)
+	if err != nil {
+		return false, err
+	}
+
+	changed, err := checkChanges(ngx.ConfigFile, buffer)
+	if err != nil {
+		return false, err
+	}
+
+	if glog.V(3) {
 		b, err := json.Marshal(conf)
 		if err != nil {
 			fmt.Println("error:", err)
@@ -94,10 +100,5 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []Upstream,
 		glog.Infof("nginx configuration: %v", string(b))
 	}
 
-	err = ngx.template.Execute(file, conf)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
+	return changed, nil
 }

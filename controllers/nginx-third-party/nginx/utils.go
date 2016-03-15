@@ -17,10 +17,13 @@ limitations under the License.
 package nginx
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"os/exec"
 	"reflect"
 	"strings"
 
@@ -36,7 +39,7 @@ func (ngx *NginxManager) IsHealthy() error {
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return fmt.Errorf("nginx status is unhealthy")
+		return fmt.Errorf("NGINX is unhealthy")
 	}
 
 	return nil
@@ -67,7 +70,7 @@ func getDnsServers() []string {
 		}
 	}
 
-	glog.V(2).Infof("Nameservers to use: %v", nameservers)
+	glog.V(3).Infof("nameservers to use: %v", nameservers)
 	return nameservers
 }
 
@@ -81,8 +84,8 @@ func (ngx *NginxManager) ReadConfig(data string) (*nginxConfiguration, error) {
 	cfg := nginxConfiguration{}
 	err := json.Unmarshal([]byte(data), &cfg)
 	if err != nil {
-		glog.Errorf("Invalid json: %v", err)
-		return newDefaultNginxCfg(), fmt.Errorf("Invalid custom nginx configuration: %v", err)
+		glog.Errorf("invalid json: %v", err)
+		return newDefaultNginxCfg(), fmt.Errorf("invalid custom nginx configuration: %v", err)
 	}
 
 	return &cfg, nil
@@ -115,4 +118,64 @@ func toMap(iface interface{}) (map[string]interface{}, bool) {
 	}
 
 	return map[string]interface{}{}, false
+}
+
+func checkChanges(filename string, data *bytes.Buffer) (bool, error) {
+	in, err := os.Open(filename)
+	if err != nil {
+		return false, err
+	}
+
+	src, err := ioutil.ReadAll(in)
+	in.Close()
+	if err != nil {
+		return false, err
+	}
+
+	res := data.Bytes()
+	if !bytes.Equal(src, res) {
+		err = ioutil.WriteFile(filename, res, 0644)
+		if err != nil {
+			return false, err
+		}
+
+		dData, err := diff(src, res)
+		if err != nil {
+			return false, fmt.Errorf("computing diff: %s", err)
+		}
+
+		if glog.V(2) {
+			glog.Infof("NGINX configuration diff a/%s b/%s\n", filename, filename)
+			glog.Infof("%v", string(dData))
+		}
+
+		return len(dData) > 0, nil
+	}
+
+	return false, nil
+}
+
+func diff(b1, b2 []byte) (data []byte, err error) {
+	f1, err := ioutil.TempFile("", "")
+	if err != nil {
+		return
+	}
+	defer os.Remove(f1.Name())
+	defer f1.Close()
+
+	f2, err := ioutil.TempFile("", "")
+	if err != nil {
+		return
+	}
+	defer os.Remove(f2.Name())
+	defer f2.Close()
+
+	f1.Write(b1)
+	f2.Write(b2)
+
+	data, err = exec.Command("diff", "-u", f1.Name(), f2.Name()).CombinedOutput()
+	if len(data) > 0 {
+		err = nil
+	}
+	return
 }

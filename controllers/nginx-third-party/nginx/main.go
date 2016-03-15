@@ -23,6 +23,8 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/golang/glog"
+
 	"k8s.io/contrib/ingress/controllers/nginx-third-party/ssl"
 
 	"k8s.io/kubernetes/pkg/client/record"
@@ -237,7 +239,7 @@ type NginxManager struct {
 // defaultConfiguration returns the default configuration contained
 // in the file default-conf.json
 func newDefaultNginxCfg() *nginxConfiguration {
-	return &nginxConfiguration{
+	cfg := nginxConfiguration{
 		BodySize:                 bodySize,
 		ErrorLogLevel:            errorLevel,
 		UseHTS:                   true,
@@ -263,6 +265,12 @@ func newDefaultNginxCfg() *nginxConfiguration {
 		UseGzip:                  true,
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
 	}
+
+	if glog.V(5) {
+		cfg.ErrorLogLevel = "debug"
+	}
+
+	return &cfg
 }
 
 // NewManager ...

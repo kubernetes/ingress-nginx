@@ -30,7 +30,7 @@ const (
 // Start starts a nginx (master process) and waits. If the process ends
 // we need to kill the controller process and return the reason.
 func (ngx *NginxManager) Start() {
-	glog.Info("Starting nginx...")
+	glog.Info("Starting NGINX process...")
 	cmd := exec.Command("nginx")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -43,7 +43,9 @@ func (ngx *NginxManager) Start() {
 	}
 }
 
-// Reload the master process receives the signal to reload configuration, it checks
+// CheckAndReload verify if the nginx configuration changed and sends a reload
+//
+// the master process receives the signal to reload configuration, it checks
 // the syntax validity of the new configuration file and tries to apply the
 // configuration provided in it. If this is a success, the master process starts
 // new worker processes and sends messages to old worker processes, requesting them
@@ -58,13 +60,13 @@ func (ngx *NginxManager) CheckAndReload(cfg *nginxConfiguration, upstreams []Ups
 
 	newCfg, err := ngx.writeCfg(cfg, upstreams, servers, servicesL4)
 	if err != nil {
-		glog.Errorf("Failed to write new nginx configuration. Avoiding reload: %v", err)
+		glog.Errorf("failed to write new nginx configuration. Avoiding reload: %v", err)
 		return
 	}
 
 	if newCfg {
 		if err := ngx.shellOut("nginx -s reload"); err == nil {
-			glog.Info("Change in configuration detected. Reloading...")
+			glog.Info("change in configuration detected. Reloading...")
 		}
 	}
 }
@@ -74,7 +76,7 @@ func (ngx *NginxManager) CheckAndReload(cfg *nginxConfiguration, upstreams []Ups
 func (ngx *NginxManager) shellOut(cmd string) error {
 	out, err := exec.Command("sh", "-c", cmd).CombinedOutput()
 	if err != nil {
-		glog.Errorf("Failed to execute %v: %v", cmd, string(out))
+		glog.Errorf("failed to execute %v: %v", cmd, string(out))
 		return err
 	}
 

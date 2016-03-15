@@ -1,3 +1,19 @@
+/*
+Copyright 2015 The Kubernetes Authors All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package nginx
 
 // NGINXController Updates NGINX configuration, starts and reloads NGINX
@@ -20,6 +36,7 @@ type Upstream struct {
 	Backends []UpstreamServer
 }
 
+// UpstreamByNameServers Upstream sorter by name
 type UpstreamByNameServers []Upstream
 
 func (c UpstreamByNameServers) Len() int      { return len(c) }
@@ -34,6 +51,7 @@ type UpstreamServer struct {
 	Port    string
 }
 
+// UpstreamServerByAddrPort UpstreamServer sorter by address and port
 type UpstreamServerByAddrPort []UpstreamServer
 
 func (c UpstreamServerByAddrPort) Len() int      { return len(c) }
@@ -59,11 +77,12 @@ type Server struct {
 	SSLCertificateKey string
 }
 
-type ServerByNamePort []Server
+// ServerByName Server sorter by name
+type ServerByName []Server
 
-func (c ServerByNamePort) Len() int      { return len(c) }
-func (c ServerByNamePort) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c ServerByNamePort) Less(i, j int) bool {
+func (c ServerByName) Len() int      { return len(c) }
+func (c ServerByName) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c ServerByName) Less(i, j int) bool {
 	return c[i].Name < c[j].Name
 }
 
@@ -73,20 +92,24 @@ type Location struct {
 	Upstream Upstream
 }
 
-type locByPathUpstream []Location
+// LocationByPath Location sorter by path
+type LocationByPath []Location
 
-func (c locByPathUpstream) Len() int      { return len(c) }
-func (c locByPathUpstream) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c locByPathUpstream) Less(i, j int) bool {
+func (c LocationByPath) Len() int      { return len(c) }
+func (c LocationByPath) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c LocationByPath) Less(i, j int) bool {
 	return c[i].Path < c[j].Path
 }
 
-// NewUpstreamWithDefaultServer creates an upstream with the default server.
-// proxy_pass to an upstream with the default server returns 502.
-// We use it for services that have no endpoints
-func NewUpstreamWithDefaultServer(name string) Upstream {
+// NewDefaultServer return an UpstreamServer to be use as default server returns 502.
+func NewDefaultServer() UpstreamServer {
+	return UpstreamServer{Address: "127.0.0.1", Port: "8181"}
+}
+
+// NewUpstream creates an upstream without servers.
+func NewUpstream(name string) Upstream {
 	return Upstream{
 		Name:     name,
-		Backends: []UpstreamServer{UpstreamServer{Address: "127.0.0.1", Port: "8181"}},
+		Backends: []UpstreamServer{},
 	}
 }
