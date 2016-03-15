@@ -60,10 +60,10 @@ func (ngx *NginxManager) loadTemplate() {
 	ngx.template = tmpl
 }
 
-func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, servicesL4 []Service) error {
+func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []Upstream, servers []Server, servicesL4 []Service) (bool, error) {
 	file, err := os.Create(ngx.ConfigFile)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	fromMap := structs.Map(cfg)
@@ -72,6 +72,8 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, servicesL4 []Service)
 
 	conf := make(map[string]interface{})
 	conf["sslCertificates"] = ngx.sslCertificates
+	conf["upstreams"] = upstreams
+	conf["servers"] = servers
 	conf["tcpServices"] = servicesL4
 	conf["defBackend"] = ngx.defBackend
 	conf["defResolver"] = ngx.defResolver
@@ -94,8 +96,8 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, servicesL4 []Service)
 
 	err = ngx.template.Execute(file, conf)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }

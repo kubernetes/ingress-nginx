@@ -63,13 +63,6 @@ func main() {
 		glog.Fatalf("Please specify --default-backend")
 	}
 
-	glog.Info("Checking if DNS is working")
-	ip, err := checkDNS(*defaultSvc)
-	if err != nil {
-		glog.Fatalf("Please check if the DNS addon is working properly.\n%v", err)
-	}
-	glog.Infof("IP address of '%v' service: %s", *defaultSvc, ip)
-
 	kubeClient, err := unversioned.NewInCluster()
 	if err != nil {
 		glog.Fatalf("failed to create client: %v", err)
@@ -82,8 +75,7 @@ func main() {
 	}
 	defError, _ := getService(kubeClient, *customErrorSvc)
 
-	// Start loadbalancer controller
-	lbc, err := NewLoadBalancerController(kubeClient, *resyncPeriod, defSvc, defError, *watchNamespace, lbInfo)
+	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, defSvc, defError, *watchNamespace, lbInfo)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
@@ -91,7 +83,7 @@ func main() {
 	lbc.Run()
 
 	for {
-		glog.Infof("Handled quit, awaiting pod deletion.")
+		glog.Infof("Handled quit, awaiting pod deletion")
 		time.Sleep(30 * time.Second)
 	}
 }

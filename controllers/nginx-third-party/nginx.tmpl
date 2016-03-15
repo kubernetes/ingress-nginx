@@ -1,3 +1,9 @@
+{{range $name, $upstream := .upstreams}}
+upstream {{$upstream.Name}} {
+  {{range $server := $upstream.UpstreamServers}}
+  server {{$server.Address}}:{{$server.Port}};{{end}}
+}{{end}}
+
 {{ $cfg := .cfg }}{{ $sslCertificates := .sslCertificates }}{{ $defErrorSvc := .defErrorSvc }}{{ $defBackend := .defBackend }}
 daemon off;
 
@@ -14,17 +20,8 @@ events {
 http {
     #vhost_traffic_status_zone shared:vhost_traffic_status:10m;
 
-    # configure cache size used in ingress.lua
-    lua_shared_dict ingress 10m;
-    lua_shared_dict dns_cache 15m;
-    lua_shared_dict ssl_certs 5m;
-
-    lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-lock/lib/?.lua;/etc/nginx/lua/vendor/lua-resty-dns/lib/?.lua;/etc/nginx/lua/vendor/lua-resty-dns-cache/lib/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;/etc/nginx/lua/vendor/lua-resty-lrucache/lib/?.lua;;';
+    lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
     
-    init_worker_by_lua_block {
-        require("ingress").init_worker(ngx)
-    }
-
     init_by_lua_block {
         {{ if $defErrorSvc }}{{/* only if exists a custom error service */}}
         dev_error_url = "http://{{ $defErrorSvc.ServiceName }}.{{ $defErrorSvc.Namespace }}.svc.cluster.local:{{ $defErrorSvc.ServicePort }}"
@@ -32,21 +29,7 @@ http {
         dev_error_url = nil
         {{ end }}
         local options = {}
-        options.def_backend = "http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }}"
-        {{ if $defErrorSvc }}{{/* only if exists a custom error service */}}options.custom_error = "http://{{ $defErrorSvc.ServiceName }}.{{ $defErrorSvc.Namespace }}.svc.cluster.local:{{ $defErrorSvc.ServicePort }}"{{ end }}
-        {{ if not (empty .defResolver) }}-- Custom dns resolver.
-        options.resolvers = "{{ .defResolver }}"
-        {{ end }}
-
-        require("ingress").init(ngx, options)
-
-        local certs = {}{{ range $sslCert := .sslCertificates }}{{ range $cname := $sslCert.Cname }}
-        certs["{{ $cname }}"] = {}
-        certs["{{ $cname }}"].cert = "{{ $sslCert.Cert }}"
-        certs["{{ $cname }}"].key = "{{ $sslCert.Key }}"
-        certs["{{ $cname }}"].valid = {{ $sslCert.Valid }}
-        {{ end }}{{ end }}
-        ssl_certs = certs
+        def_backend = "http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }}"
 
         require("error_page")
     }
@@ -120,7 +103,6 @@ http {
         xml              application/xml;
         text             text/plain;
     }
-
 
     server_name_in_redirect off;
     port_in_redirect off;
@@ -221,25 +203,36 @@ http {
         {{ end }}{{ end }}
 
         location / {
-            set $upstream_host '';
-            set $upstream_port '';
-
-            #ssl_certificate_by_lua '
-            #    -- TODO: waiting release 0.9.20
-            #    -- https://github.com/openresty/lua-nginx-module/pull/608#issuecomment-165255821
-            #    -- require("dynamic-ssl").config(ngx)
-            #    require("ingress").content(ngx)
-            #';
-            # TODO: remove after ^^
-            access_by_lua_block {
-                require("ingress").content(ngx)
-            }
-            proxy_pass http://$upstream_host:$upstream_port$request_uri;
+            proxy_pass             http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }};
         }
         
         {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
     }
     {{ end }}
+
+    {{ range $server := .servers }}
+    server {
+      listen 80;
+      {{ if $server.SSL }}
+      listen 443 ssl http2;
+      ssl_certificate {{ $server.SSLCertificate }};
+      ssl_certificate_key {{ $server.SSLCertificateKey }};
+      {{ end }}
+
+      server_name {{ $server.Name }};
+
+      {{ if $server.SSL }}
+      if ($scheme = http) {
+        return 301 https://$host$request_uri;
+      }
+      {{ end }}
+
+      {{ range $location := $server.Locations }}
+      location {{ $location.Path }} {
+        proxy_set_header Host $host;
+        proxy_pass http://{{ $location.Upstream.Name }};
+      }{{ end }}
+    }{{ end }}
 
     # default server, including healthcheck
     server {
@@ -299,62 +292,61 @@ stream {
 {{ define "CUSTOM_ERRORS" }}
         location @custom_403 {
             content_by_lua_block {
-                openErrorURL(403, dev_error_url)
+                openURL(403, dev_error_url)
             }
         }
 
         location @custom_404 {
             content_by_lua_block {
-                openErrorURL(404, dev_error_url)
+                openURL(404, dev_error_url)
             }
         }
 
         location @custom_405 {
             content_by_lua_block {
-                openErrorURL(405, dev_error_url)
+                openURL(405, dev_error_url)
             }
         }
 
         location @custom_408 {
             content_by_lua_block {
-                openErrorURL(408, dev_error_url)
+                openURL(408, dev_error_url)
             }
-        }                
+        }
 
         location @custom_413 {
             content_by_lua_block {
-                openErrorURL(413, dev_error_url)
+                openURL(413, dev_error_url)
             }
         }
 
         location @custom_500 {
             content_by_lua_block {
-                openErrorURL(500, dev_error_url)
+                openURL(500, dev_error_url)
             }
         }
 
         location @custom_501 {
             content_by_lua_block {
-                openErrorURL(501, dev_error_url)
+                openURL(501, dev_error_url)
             }
-        }                
+        }
 
         location @custom_502 {
             content_by_lua_block {
-                openErrorURL(502, dev_error_url)
+                openURL(502, dev_error_url)
             }
-        }                
+        }
 
         location @custom_503 {
             content_by_lua_block {
-                openErrorURL(503, dev_error_url)
+                openURL(503, dev_error_url)
             }
         }
 
         location @custom_504 {
             content_by_lua_block {
-                openErrorURL(504, dev_error_url)
+                openURL(504, dev_error_url)
             }
         }
-
 {{ end }}

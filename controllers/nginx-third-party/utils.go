@@ -19,11 +19,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"k8s.io/contrib/ingress/controllers/nginx-third-party/nginx"
 
@@ -33,8 +31,6 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/util/wait"
-	"k8s.io/kubernetes/pkg/util/workqueue"
 )
 
 const (
@@ -47,66 +43,6 @@ var (
 
 	errInvalidKind = fmt.Errorf("Please check the field Kind, only ReplicationController or DaemonSet are allowed")
 )
-
-// taskQueue manages a work queue through an independent worker that
-// invokes the given sync function for every work item inserted.
-type taskQueue struct {
-	// queue is the work queue the worker polls
-	queue *workqueue.Type
-	// sync is called for each item in the queue
-	sync func(string)
-	// workerDone is closed when the worker exits
-	workerDone chan struct{}
-}
-
-func (t *taskQueue) run(period time.Duration, stopCh <-chan struct{}) {
-	wait.Until(t.worker, period, stopCh)
-}
-
-// enqueue enqueues ns/name of the given api object in the task queue.
-func (t *taskQueue) enqueue(obj interface{}) {
-	key, err := keyFunc(obj)
-	if err != nil {
-		glog.Infof("Couldn't get key for object %+v: %v", obj, err)
-		return
-	}
-	t.queue.Add(key)
-}
-
-func (t *taskQueue) requeue(key string, err error) {
-	glog.Errorf("Requeuing %v, err %v", key, err)
-	t.queue.Add(key)
-}
-
-// worker processes work in the queue through sync.
-func (t *taskQueue) worker() {
-	for {
-		key, quit := t.queue.Get()
-		if quit {
-			close(t.workerDone)
-			return
-		}
-		glog.V(2).Infof("Syncing %v", key)
-		t.sync(key.(string))
-		t.queue.Done(key)
-	}
-}
-
-// shutdown shuts down the work queue and waits for the worker to ACK
-func (t *taskQueue) shutdown() {
-	t.queue.ShutDown()
-	<-t.workerDone
-}
-
-// NewTaskQueue creates a new task queue with the given sync function.
-// The sync function is called for every element inserted into the queue.
-func NewTaskQueue(syncFn func(string)) *taskQueue {
-	return &taskQueue{
-		queue:      workqueue.New(),
-		sync:       syncFn,
-		workerDone: make(chan struct{}),
-	}
-}
 
 // StoreToIngressLister makes a Store that lists Ingress.
 // TODO: use cache/listers post 1.1.
@@ -128,7 +64,7 @@ type StoreToConfigMapLister struct {
 }
 
 // getLBDetails returns runtime information about the pod (name, IP) and replication
-// controller (namespace and name)
+// controller or daemonset (namespace and name).
 // This is required to watch for changes in annotations or configuration (ConfigMap)
 func getLBDetails(kubeClient *unversioned.Client) (rc *lbInfo, err error) {
 	podIP := os.Getenv("POD_IP")
@@ -209,7 +145,7 @@ func getServicePorts(kubeClient *unversioned.Client, ns, name string) (ports []s
 	return
 }
 
-func getTcpServices(kubeClient *unversioned.Client, tcpServices string) []nginx.Service {
+func getTCPServices(kubeClient *unversioned.Client, tcpServices string) []nginx.Service {
 	svcs := []nginx.Service{}
 	for _, svc := range strings.Split(tcpServices, ",") {
 		if svc == "" {
@@ -238,14 +174,4 @@ func getTcpServices(kubeClient *unversioned.Client, tcpServices string) []nginx.
 	}
 
 	return svcs
-}
-
-func checkDNS(name string) (*net.IPAddr, error) {
-	parts := strings.Split(name, "/")
-	if len(parts) != 2 {
-		glog.Fatalf("Please check the service format (namespace/name) in service %v", name)
-	}
-
-	host := fmt.Sprintf("%v.%v", parts[1], parts[0])
-	return net.ResolveIPAddr("ip4", host)
 }

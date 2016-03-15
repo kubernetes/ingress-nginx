@@ -52,17 +52,20 @@ func (ngx *NginxManager) Start() {
 // shut down, stop accepting new connections and continue to service current requests
 // until all such requests are serviced. After that, the old worker processes exit.
 // http://nginx.org/en/docs/beginners_guide.html#control
-func (ngx *NginxManager) Reload(cfg *nginxConfiguration, servicesL4 []Service) {
+func (ngx *NginxManager) CheckAndReload(cfg *nginxConfiguration, upstreams []Upstream, servers []Server, servicesL4 []Service) {
 	ngx.reloadLock.Lock()
 	defer ngx.reloadLock.Unlock()
 
-	if err := ngx.writeCfg(cfg, servicesL4); err != nil {
+	newCfg, err := ngx.writeCfg(cfg, upstreams, servers, servicesL4)
+	if err != nil {
 		glog.Errorf("Failed to write new nginx configuration. Avoiding reload: %v", err)
 		return
 	}
 
-	if err := ngx.shellOut("nginx -s reload"); err == nil {
-		glog.Info("Change in configuration detected. Reloading...")
+	if newCfg {
+		if err := ngx.shellOut("nginx -s reload"); err == nil {
+			glog.Info("Change in configuration detected. Reloading...")
+		}
 	}
 }
 

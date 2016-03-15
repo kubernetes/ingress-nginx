@@ -17,7 +17,6 @@ limitations under the License.
 package nginx
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,27 +26,6 @@ import (
 
 	"github.com/golang/glog"
 )
-
-// SyncIngress creates a GET request to nginx to indicate that is required to refresh the Ingress rules.
-func (ngx *NginxManager) SyncIngress(ingList []interface{}) error {
-	encData, _ := json.Marshal(ingList)
-	req, err := http.NewRequest("POST", "http://127.0.0.1:8080/update-ingress", bytes.NewBuffer(encData))
-	req.Header.Set("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		body, _ := ioutil.ReadAll(res.Body)
-		glog.Errorf("Error: %v", string(body))
-		return fmt.Errorf("nginx status is unhealthy")
-	}
-
-	return nil
-
-}
 
 // IsHealthy checks if nginx is running
 func (ngx *NginxManager) IsHealthy() error {
