@@ -1,12 +1,12 @@
 package = "lua-resty-http"
-version = "0.06-0"
+version = "0.07-0"
 source = {
-  url = "git://github.com/pintsized/lua-resty-http",
-  tag = "v0.06"
+   url = "git://github.com/pintsized/lua-resty-http",
+   tag = "v0.07"
 }
 description = {
-  summary = "Lua HTTP client cosocket driver for OpenResty / ngx_lua.",
-  detailed = [[
+   summary = "Lua HTTP client cosocket driver for OpenResty / ngx_lua.",
+   detailed = [[
     Features an HTTP 1.0 and 1.1 streaming interface to reading 
     bodies using coroutines, for predictable memory usage in Lua 
     land. Alternative simple interface for singleshot requests 
@@ -17,17 +17,17 @@ description = {
     Recommended by the OpenResty maintainer as a long-term 
     replacement for internal requests through ngx.location.capture.
   ]],
-  homepage = "https://github.com/pintsized/lua-resty-http",
-  license = "2-clause BSD",
-  maintainer = "James Hurst <james@pintsized.co.uk>"
+   homepage = "https://github.com/pintsized/lua-resty-http",
+   license = "2-clause BSD",
+   maintainer = "James Hurst <james@pintsized.co.uk>"
 }
 dependencies = {
-  "lua >= 5.1",
+   "lua >= 5.1"
 }
 build = {
-  type = "builtin",
-  modules = {
-    ["resty.http"] = "lib/resty/http.lua",
-    ["resty.http_headers"] = "lib/resty/http_headers.lua"
-  }
+   type = "builtin",
+   modules = {
+      ["resty.http"] = "lib/resty/http.lua",
+      ["resty.http_headers"] = "lib/resty/http_headers.lua"
+   }
 }

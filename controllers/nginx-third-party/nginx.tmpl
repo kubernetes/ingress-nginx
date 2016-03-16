@@ -1,4 +1,4 @@
-{{ $cfg := .cfg }}{{ $sslCertificates := .sslCertificates }}{{ $defErrorSvc := .defErrorSvc }}{{ $defBackend := .defBackend }}
+{{ $cfg := .cfg }}{{ $defErrorSvc := .defErrorSvc }}{{ $defBackend := .defBackend }}
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -17,13 +17,13 @@ http {
     lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
     
     init_by_lua_block {
+        def_backend = "http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }}"
+
         {{ if $defErrorSvc }}{{/* only if exists a custom error service */}}
         dev_error_url = "http://{{ $defErrorSvc.ServiceName }}.{{ $defErrorSvc.Namespace }}.svc.cluster.local:{{ $defErrorSvc.ServicePort }}"
         {{ else }}
-        dev_error_url = nil
+        dev_error_url = def_backend
         {{ end }}
-        local options = {}
-        def_backend = "http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }}"
 
         require("error_page")
     }
@@ -178,25 +178,6 @@ http {
         {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
     }
 
-    {{ if ge (len .sslCertificates) 1 }}
-    # SSL
-    # TODO: support more than one certificate
-    server {
-        listen 443 ssl http2 default_server;
-        {{ range $sslCert := .sslCertificates }}{{ if $sslCert.Default }}
-        # default certificate in case no match
-        ssl_certificate "{{ $sslCert.Cert }}";
-        ssl_certificate_key "{{ $sslCert.Key }}";
-        {{ end }}{{ end }}
-
-        location / {
-            proxy_pass             http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }};
-        }
-        
-        {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
-    }
-    {{ end }}
-
     {{range $name, $upstream := .upstreams}}
     upstream {{$upstream.Name}} {
         least_conn;
@@ -256,6 +237,17 @@ http {
         }
         {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
     }
+
+    # default server for services without endpoints
+    server {
+        listen 8081;
+
+        location / {
+            content_by_lua_block {
+                openURL(503, dev_error_url)
+            }
+        }        
+    }    
 }
 
 # TCP services

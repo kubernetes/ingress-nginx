@@ -5,7 +5,10 @@ function openURL(status, page)
 
     local res, err = httpc:request_uri(page, {
         path = "/",
-        method = "GET"
+        method = "GET",
+        headers = {
+          ["Content-Type"] = ngx.var.httpReturnType or "text/html",
+        }
     })
 
     if not res then

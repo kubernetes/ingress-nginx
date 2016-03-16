@@ -25,12 +25,9 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
-
-	"k8s.io/contrib/ingress/controllers/nginx-third-party/ssl"
 )
 
 var funcMap = template.FuncMap{
-	"getSSLHost": ssl.GetSSLHost,
 	"empty": func(input interface{}) bool {
 		check, ok := input.(string)
 		if ok {
@@ -66,7 +63,6 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []Upstream,
 	curNginxCfg := merge(toMap, fromMap)
 
 	conf := make(map[string]interface{})
-	conf["sslCertificates"] = ngx.sslCertificates
 	conf["upstreams"] = upstreams
 	conf["servers"] = servers
 	conf["tcpServices"] = servicesL4

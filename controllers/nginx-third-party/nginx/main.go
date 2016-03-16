@@ -17,6 +17,7 @@ limitations under the License.
 package nginx
 
 import (
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -27,7 +28,6 @@ import (
 
 	"k8s.io/contrib/ingress/controllers/nginx-third-party/ssl"
 
-	"k8s.io/kubernetes/pkg/client/record"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	k8sruntime "k8s.io/kubernetes/pkg/runtime"
 )
@@ -220,9 +220,9 @@ type NginxManager struct {
 	// path to the configuration file to be used by nginx
 	ConfigFile string
 
-	sslCertificates []ssl.Certificate
-	sslDHParam      string
-	servicesL4      []Service
+	sslDHParam string
+
+	servicesL4 []Service
 
 	client *client.Client
 	// template loaded ready to be used to generate the nginx configuration file
@@ -230,8 +230,6 @@ type NginxManager struct {
 
 	// obj runtime object to be used in events
 	obj k8sruntime.Object
-
-	recorder record.EventRecorder
 
 	reloadLock *sync.Mutex
 }
@@ -276,17 +274,25 @@ func newDefaultNginxCfg() *nginxConfiguration {
 // NewManager ...
 func NewManager(kubeClient *client.Client, defaultSvc, customErrorSvc Service) *NginxManager {
 	ngx := &NginxManager{
-		ConfigFile:      "/etc/nginx/nginx.conf",
-		defBackend:      defaultSvc,
-		defCfg:          newDefaultNginxCfg(),
-		defError:        customErrorSvc,
-		defResolver:     strings.Join(getDnsServers(), " "),
-		reloadLock:      &sync.Mutex{},
-		sslDHParam:      ssl.SearchDHParamFile(sslDirectory),
-		sslCertificates: ssl.CreateSSLCerts(sslDirectory),
+		ConfigFile:  "/etc/nginx/nginx.conf",
+		defBackend:  defaultSvc,
+		defCfg:      newDefaultNginxCfg(),
+		defError:    customErrorSvc,
+		defResolver: strings.Join(getDnsServers(), " "),
+		reloadLock:  &sync.Mutex{},
 	}
+
+	ngx.createCertsDir(sslDirectory)
+
+	ngx.sslDHParam = ssl.SearchDHParamFile(sslDirectory)
 
 	ngx.loadTemplate()
 
 	return ngx
+}
+
+func (nginx *NginxManager) createCertsDir(base string) {
+	if err := os.Mkdir(base, os.ModeDir); err != nil {
+		glog.Fatalf("Couldn't create directory %v: %v", base, err)
+	}
 }

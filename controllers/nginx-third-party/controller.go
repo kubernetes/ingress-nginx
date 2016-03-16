@@ -243,8 +243,6 @@ func (lbc *loadBalancerController) sync() {
 }
 
 func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]nginx.Upstream, []nginx.Server) {
-	pems := make(map[string]string)
-
 	upstreams := make(map[string]nginx.Upstream)
 	servers := make(map[string]nginx.Server)
 
@@ -297,6 +295,8 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]ngi
 			}
 		}
 
+		pems := lbc.getPemsFromIngress(data)
+
 		for _, rule := range ing.Spec.Rules {
 			var server nginx.Server
 			if existent, ok := servers[rule.Host]; ok {
@@ -316,6 +316,18 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]ngi
 			for _, path := range rule.HTTP.Paths {
 				loc := nginx.Location{Path: path.Path}
 				upsName := ing.GetNamespace() + "-" + path.Backend.ServiceName
+
+				svcKey := ing.GetNamespace() + "/" + path.Backend.ServiceName
+				_, svcExists, err := lbc.svcLister.Store.GetByKey(svcKey)
+				if err != nil {
+					glog.Infof("error getting service %v from the cache: %v", svcKey, err)
+					continue
+				}
+
+				if !svcExists {
+					glog.Warningf("service %v does no exists. skipping Ingress rule", svcKey)
+					continue
+				}
 
 				for _, ups := range upstreams {
 					if upsName == ups.Name {
@@ -348,6 +360,41 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]ngi
 	sort.Sort(nginx.ServerByName(aServers))
 
 	return aUpstreams, aServers
+}
+
+func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[string]string {
+	pems := make(map[string]string)
+
+	for _, ingIf := range data {
+		ing := ingIf.(*extensions.Ingress)
+
+		for _, tls := range ing.Spec.TLS {
+			secretName := tls.SecretName
+			secret, err := lbc.client.Secrets(ing.Namespace).Get(secretName)
+			if err != nil {
+				glog.Warningf("Error retriveing secret %v for ing %v: %v", secretName, ing.Name, err)
+				continue
+			}
+			cert, ok := secret.Data[api.TLSCertKey]
+			if !ok {
+				glog.Warningf("Secret %v has no private key", secretName)
+				continue
+			}
+			key, ok := secret.Data[api.TLSPrivateKeyKey]
+			if !ok {
+				glog.Warningf("Secret %v has no cert", secretName)
+				continue
+			}
+
+			pemFileName := lbc.nginx.AddOrUpdateCertAndKey(secretName, string(cert), string(key))
+
+			for _, host := range tls.Hosts {
+				pems[host] = pemFileName
+			}
+		}
+	}
+
+	return pems
 }
 
 // getEndpoints returns a list of <endpoint ip>:<port> for a given service/target port combination.
@@ -415,9 +462,7 @@ func (lbc *loadBalancerController) Run() {
 	go lbc.svcController.Run(lbc.stopCh)
 
 	// periodic check for changes in configuration
-	go wait.Until(lbc.sync, 5*time.Second, wait.NeverStop)
-
-	time.Sleep(5 * time.Second)
+	go wait.Until(lbc.sync, 10*time.Second, wait.NeverStop)
 
 	<-lbc.stopCh
 	glog.Infof("shutting down NGINX loadbalancer controller")

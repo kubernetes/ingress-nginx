@@ -67,7 +67,7 @@ end
 
 
 local _M = {
-    _VERSION = '0.06',
+    _VERSION = '0.07',
 }
 _M._USER_AGENT = "lua-resty-http/" .. _M._VERSION .. " (Lua) ngx_lua/" .. ngx.config.ngx_lua_version
 
@@ -196,7 +196,7 @@ function _M.parse_uri(self, uri)
                 m[3] = 80
             end
         end
-        if not m[4] then m[4] = "/" end
+        if not m[4] or "" == m[4] then m[4] = "/" end
         return m, nil
     end
 end
@@ -805,7 +805,11 @@ function _M.proxy_response(self, response, chunksize)
         end
 
         if chunk then
-            ngx.print(chunk)
+            local res, err = ngx.print(chunk)
+            if not res then
+                ngx_log(ngx_ERR, err)
+                break
+            end
         end
     until not chunk
 end

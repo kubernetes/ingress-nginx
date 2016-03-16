@@ -56,6 +56,7 @@ server {
     content_by_lua '
 
       -- For simple singleshot requests, use the URI interface.
+      local http = require "resty.http"
       local httpc = http.new()
       local res, err = httpc:request_uri("http://example.com/helloworld", {
         method = "POST",

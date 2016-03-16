@@ -16,13 +16,11 @@ limitations under the License.
 
 package nginx
 
-// NGINXController Updates NGINX configuration, starts and reloads NGINX
-type NGINXController struct {
-	resolver       string
-	nginxConfdPath string
-	nginxCertsPath string
-	local          bool
-}
+import (
+	"os"
+
+	"github.com/golang/glog"
+)
 
 // IngressNGINXConfig describes an NGINX configuration
 type IngressNGINXConfig struct {
@@ -112,4 +110,26 @@ func NewUpstream(name string) Upstream {
 		Name:     name,
 		Backends: []UpstreamServer{},
 	}
+}
+
+// AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
+func (nginx *NginxManager) AddOrUpdateCertAndKey(name string, cert string, key string) string {
+	pemFileName := sslDirectory + "/" + name + ".pem"
+
+	pem, err := os.Create(pemFileName)
+	if err != nil {
+		glog.Fatalf("Couldn't create pem file %v: %v", pemFileName, err)
+	}
+	defer pem.Close()
+
+	_, err = pem.WriteString(string(key))
+	if err != nil {
+		glog.Fatalf("Couldn't write to pem file %v: %v", pemFileName, err)
+	}
+	_, err = pem.WriteString(string(cert))
+	if err != nil {
+		glog.Fatalf("Couldn't write to pem file %v: %v", pemFileName, err)
+	}
+
+	return pemFileName
 }
