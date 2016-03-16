@@ -242,9 +242,9 @@ func (lbc *loadBalancerController) sync() {
 	lbc.nginx.CheckAndReload(ngxConfig, upstreams, servers, tcpServices)
 }
 
-func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]nginx.Upstream, []nginx.Server) {
-	upstreams := make(map[string]nginx.Upstream)
-	servers := make(map[string]nginx.Server)
+func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*nginx.Upstream, []*nginx.Server) {
+	upstreams := lbc.createUpstreams(data)
+	servers := lbc.createServers(data)
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
@@ -254,16 +254,12 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]ngi
 				continue
 			}
 
+			server := servers[rule.Host]
+			var locations []nginx.Location
+
 			for _, path := range rule.HTTP.Paths {
-				name := ing.GetNamespace() + "-" + path.Backend.ServiceName
-
-				var ups nginx.Upstream
-
-				if existent, ok := upstreams[name]; ok {
-					ups = existent
-				} else {
-					ups = nginx.NewUpstream(name)
-				}
+				upsName := ing.GetNamespace() + "-" + path.Backend.ServiceName
+				ups := upstreams[upsName]
 
 				svcKey := ing.GetNamespace() + "/" + path.Backend.ServiceName
 				svcObj, svcExists, err := lbc.svcLister.Store.GetByKey(svcKey)
@@ -291,58 +287,24 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]ngi
 					}
 				}
 
-				upstreams[name] = ups
-			}
-		}
-
-		pems := lbc.getPemsFromIngress(data)
-
-		for _, rule := range ing.Spec.Rules {
-			var server nginx.Server
-			if existent, ok := servers[rule.Host]; ok {
-				server = existent
-			} else {
-				server = nginx.Server{Name: rule.Host}
-			}
-
-			if pemFile, ok := pems[rule.Host]; ok {
-				server.SSL = true
-				server.SSLCertificate = pemFile
-				server.SSLCertificateKey = pemFile
-			}
-
-			var locations []nginx.Location
-
-			for _, path := range rule.HTTP.Paths {
-				loc := nginx.Location{Path: path.Path}
-				upsName := ing.GetNamespace() + "-" + path.Backend.ServiceName
-
-				svcKey := ing.GetNamespace() + "/" + path.Backend.ServiceName
-				_, svcExists, err := lbc.svcLister.Store.GetByKey(svcKey)
-				if err != nil {
-					glog.Infof("error getting service %v from the cache: %v", svcKey, err)
-					continue
-				}
-
-				if !svcExists {
-					glog.Warningf("service %v does no exists. skipping Ingress rule", svcKey)
-					continue
-				}
-
 				for _, ups := range upstreams {
 					if upsName == ups.Name {
-						loc.Upstream = ups
+						loc := nginx.Location{Path: path.Path}
+						loc.Upstream = *ups
+						locations = append(locations, loc)
+						break
 					}
 				}
-				locations = append(locations, loc)
 			}
 
 			server.Locations = append(server.Locations, locations...)
-			servers[rule.Host] = server
 		}
 	}
 
-	aUpstreams := make([]nginx.Upstream, 0, len(upstreams))
+	// TODO: find a way to make this more readable
+	// The structs must be ordered to always generate the same file
+	// if the content does not change.
+	aUpstreams := make([]*nginx.Upstream, 0, len(upstreams))
 	for _, value := range upstreams {
 		if len(value.Backends) == 0 {
 			value.Backends = append(value.Backends, nginx.NewDefaultServer())
@@ -352,7 +314,7 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]ngi
 	}
 	sort.Sort(nginx.UpstreamByNameServers(aUpstreams))
 
-	aServers := make([]nginx.Server, 0, len(servers))
+	aServers := make([]*nginx.Server, 0, len(servers))
 	for _, value := range servers {
 		sort.Sort(nginx.LocationByPath(value.Locations))
 		aServers = append(aServers, value)
@@ -360,6 +322,54 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]ngi
 	sort.Sort(nginx.ServerByName(aServers))
 
 	return aUpstreams, aServers
+}
+
+func (lbc *loadBalancerController) createUpstreams(data []interface{}) map[string]*nginx.Upstream {
+	upstreams := make(map[string]*nginx.Upstream)
+
+	for _, ingIf := range data {
+		ing := ingIf.(*extensions.Ingress)
+
+		for _, rule := range ing.Spec.Rules {
+			if rule.IngressRuleValue.HTTP == nil {
+				continue
+			}
+
+			for _, path := range rule.HTTP.Paths {
+				name := ing.GetNamespace() + "-" + path.Backend.ServiceName
+				if _, ok := upstreams[name]; !ok {
+					upstreams[name] = nginx.NewUpstream(name)
+				}
+			}
+		}
+	}
+
+	return upstreams
+}
+
+func (lbc *loadBalancerController) createServers(data []interface{}) map[string]*nginx.Server {
+	servers := make(map[string]*nginx.Server)
+
+	pems := lbc.getPemsFromIngress(data)
+
+	for _, ingIf := range data {
+		ing := ingIf.(*extensions.Ingress)
+
+		for _, rule := range ing.Spec.Rules {
+			if _, ok := servers[rule.Host]; !ok {
+				servers[rule.Host] = &nginx.Server{Name: rule.Host}
+			}
+
+			if pemFile, ok := pems[rule.Host]; ok {
+				server := servers[rule.Host]
+				server.SSL = true
+				server.SSLCertificate = pemFile
+				server.SSLCertificateKey = pemFile
+			}
+		}
+	}
+
+	return servers
 }
 
 func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[string]string {
@@ -462,7 +472,7 @@ func (lbc *loadBalancerController) Run() {
 	go lbc.svcController.Run(lbc.stopCh)
 
 	// periodic check for changes in configuration
-	go wait.Until(lbc.sync, 10*time.Second, wait.NeverStop)
+	go wait.Until(lbc.sync, 5*time.Second, wait.NeverStop)
 
 	<-lbc.stopCh
 	glog.Infof("shutting down NGINX loadbalancer controller")

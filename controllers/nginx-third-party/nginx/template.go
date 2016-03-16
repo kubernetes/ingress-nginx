@@ -57,7 +57,7 @@ func (ngx *NginxManager) loadTemplate() {
 	ngx.template = tmpl
 }
 
-func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []Upstream, servers []Server, servicesL4 []Service) (bool, error) {
+func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []*Upstream, servers []*Server, servicesL4 []Service) (bool, error) {
 	fromMap := structs.Map(cfg)
 	toMap := structs.Map(ngx.defCfg)
 	curNginxCfg := merge(toMap, fromMap)

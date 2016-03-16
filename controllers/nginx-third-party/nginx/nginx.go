@@ -17,6 +17,7 @@ limitations under the License.
 package nginx
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/golang/glog"
@@ -35,7 +36,7 @@ type Upstream struct {
 }
 
 // UpstreamByNameServers Upstream sorter by name
-type UpstreamByNameServers []Upstream
+type UpstreamByNameServers []*Upstream
 
 func (c UpstreamByNameServers) Len() int      { return len(c) }
 func (c UpstreamByNameServers) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
@@ -76,7 +77,7 @@ type Server struct {
 }
 
 // ServerByName Server sorter by name
-type ServerByName []Server
+type ServerByName []*Server
 
 func (c ServerByName) Len() int      { return len(c) }
 func (c ServerByName) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
@@ -105,8 +106,8 @@ func NewDefaultServer() UpstreamServer {
 }
 
 // NewUpstream creates an upstream without servers.
-func NewUpstream(name string) Upstream {
-	return Upstream{
+func NewUpstream(name string) *Upstream {
+	return &Upstream{
 		Name:     name,
 		Backends: []UpstreamServer{},
 	}
@@ -122,11 +123,7 @@ func (nginx *NginxManager) AddOrUpdateCertAndKey(name string, cert string, key s
 	}
 	defer pem.Close()
 
-	_, err = pem.WriteString(string(key))
-	if err != nil {
-		glog.Fatalf("Couldn't write to pem file %v: %v", pemFileName, err)
-	}
-	_, err = pem.WriteString(string(cert))
+	_, err = pem.WriteString(fmt.Sprintf("%v\n%v", key, cert))
 	if err != nil {
 		glog.Fatalf("Couldn't write to pem file %v: %v", pemFileName, err)
 	}
