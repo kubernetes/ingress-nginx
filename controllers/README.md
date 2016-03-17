@@ -26,7 +26,6 @@ http {
   server {
     listen 80;
     server_name {{$rule.Host}};
-    resolver 127.0.0.1;
 {{ range $path := $rule.HTTP.Paths }}
     location {{$path.Path}} {
       proxy_set_header Host $host;
@@ -37,7 +36,7 @@ http {
 )
 ```
 
-You can take a similar approach to denormalize the Ingress to a [haproxy config](https://github.com/kubernetes/contrib/blob/master/service-loadbalancer/template.cfg) or use it to configure a cloud loadbalancer such as a [GCE L7](https://github.com/kubernetes/contrib/blob/master/Ingress/controllers/gce/README.md).
+You can take a similar approach to denormalize the Ingress to a [haproxy config](https://github.com/kubernetes/contrib/blob/master/service-loadbalancer/template.cfg) or use it to configure a cloud loadbalancer such as a [GCE L7](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/gce/README.md).
 
 And here is the Ingress controller's control loop:
 
@@ -58,7 +57,7 @@ for {
 ```
 
 All this is doing is:
-* List Ingresses, optionally you can watch for changes (see [GCE Ingress controller](https://github.com/kubernetes/contrib/blob/master/Ingress/controllers/gce/controller.go) for an example)
+* List Ingresses, optionally you can watch for changes (see [GCE Ingress controller](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/gce/controller.go) for an example)
 * Executes the template and writes results to `/etc/nginx/nginx.conf`
 * Reloads nginx
 
@@ -95,7 +94,6 @@ http {
   server {
     listen 80;
     server_name foo.bar.com;
-    resolver 127.0.0.1;
 
     location /foo {
       proxy_pass http://fooSvc;
@@ -104,7 +102,6 @@ http {
   server {
     listen 80;
     server_name bar.baz.com;
-    resolver 127.0.0.1;
 
     location /bar {
       proxy_pass http://barSvc;
@@ -128,8 +125,8 @@ $ curl --resolve foo.bar.com:80:104.197.203.179 foo.bar.com/foo
 
 ## Future work
 
-This section can also bear the title "why anyone would want to write an Ingress controller instead of directly configuring Services". There is more to Ingress than webserver configuration. *Real* HA usually involves the configuration of gateways and packet forwarding devices, which most cloud providers allow you to do through an API. See the GCE Loadbalancer Controller, which is deployed as a [cluster addon](https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/cluster-loadbalancing/glbc) in GCE and GKE clusters for more advanced Ingress configuration examples. Post 1.1 the Ingress resource will support at least the following:
-* TLS options (edge, passthrough, SNI etc)
+This section can also bear the title "why anyone would want to write an Ingress controller instead of directly configuring Services". There is more to Ingress than webserver configuration. *Real* HA usually involves the configuration of gateways and packet forwarding devices, which most cloud providers allow you to do through an API. See the GCE Loadbalancer Controller, which is deployed as a [cluster addon](https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/cluster-loadbalancing/glbc) in GCE and GKE clusters for more advanced Ingress configuration examples. Post 1.2 the Ingress resource will support at least the following:
+* More TLS options (SNI, re-encrypt etc)
 * L4 and L7 loadbalancing (it currently only supports HTTP rules)
 * Ingress Rules that are not limited to a simple path regex (eg: redirect rules, session persistence)
 

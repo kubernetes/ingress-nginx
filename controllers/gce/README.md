@@ -2,9 +2,12 @@
 
 GLBC is a GCE L7 load balancer controller that manages external loadbalancers configured through the Kubernetes Ingress API.
 
-## Disclaimer
+## A word to the wise
+
+Please read the [beta limitations](BETA_LIMITATIONS.md) doc to before using this controller. In summary:
+
 - This is a **work in progress**.
-- It relies on an experimental Kubernetes resource.
+- It relies on a beta Kubernetes resource.
 - The loadbalancer controller pod is not aware of your GCE quota.
 
 ## Overview
@@ -324,7 +327,7 @@ So simply delete the replication controller:
 $ kubectl get rc glbc
 CONTROLLER   CONTAINER(S)           IMAGE(S)                                      SELECTOR                    REPLICAS   AGE
 glbc         default-http-backend   gcr.io/google_containers/defaultbackend:1.0   k8s-app=glbc,version=v0.5   1          2m
-             l7-lb-controller       gcr.io/google_containers/glbc:0.5
+             l7-lb-controller       gcr.io/google_containers/glbc:0.6.0
 
 $ kubectl delete rc glbc
 replicationcontroller "glbc" deleted
@@ -361,6 +364,200 @@ Currently, all service backends must respond with a 200 on '/'. The content does
 * From the kubernetes endpoints, taking the form of liveness/readiness probes
 * From the GCE L7, which periodically pings '/'
 We really want (1) to control the health of an instance but (2) is a GCE requirement. Ideally, we would point (2) at (1), but we still need (2) for pods that don't have a defined health check. This will probably get resolved when Ingress grows up.
+
+## TLS
+
+You can secure an Ingress by specifying a [secret](http://kubernetes.io/docs/user-guide/secrets) that contains a TLS private key and certificate. Currently the Ingress only supports a single TLS port, 443, and assumes TLS termination. This controller does not support SNI, so it will ignore all but the first cert in the TLS configuration section. The TLS secret must contain keys named `tls.crt` and `tls.key` that contain the certificate and private key to use for TLS, eg:
+
+```yaml
+apiVersion: v1
+data:
+  tls.crt: base64 encoded cert
+  tls.key: base64 encoded key
+kind: Secret
+metadata:
+  name: testsecret
+  namespace: default
+type: Opaque
+```
+
+Referencing this secret in an Ingress will tell the Ingress controller to secure the channel from the client to the loadbalancer using TLS:
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: no-rules-map
+spec:
+  tls:
+    secretName: testsecret
+  backend:
+    serviceName: s1
+    servicePort: 80
+```
+
+This creates 2 GCE forwarding rules that use a single static ip. Both `:80` and `:443` will direct traffic to your backend, which serves HTTP requests on the target port mentioned in the Service associated with the Ingress.
+
+#### Redirecting HTTP to HTTPS
+
+To redirect traffic from `:80` to `:443` you need to examine the `x-forwarded-proto` header inserted by the GCE L7, since the Ingress does not support redirect rules. In nginx, this is as simple as adding the following lines to your config:
+```nginx
+# Replace '_' with your hostname.
+server_name _;
+if ($http_x_forwarded_proto = "http") {
+    return 301 https://$host$request_uri;
+}
+```
+
+And you can try with the [https_example](https_example/README.md):
+```console
+$ cd https_example
+$ make keys secret
+# The CName used here is specific to the service specified in nginx-app.yaml.
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/tls.key -out /tmp/tls.crt -subj "/CN=example.com/O=example.com"
+Generating a 2048 bit RSA private key
+...........+++
+....................................................+++
+writing new private key to '/tmp/tls.key'
+-----
+godep go run make_secret.go -crt /tmp/tls.crt -key /tmp/tls.key > /tmp/tls.json
+```
+
+This will generate a secret in `/tmp/tls.json`, first create it
+
+```console
+$ kubectl create -f /tmp/tls.json
+$ kubectl describe secret tls-secret
+Name:		tls-secret
+Namespace:	default
+Labels:		<none>
+Annotations:	<none>
+
+Type:	Opaque
+
+Data
+====
+tls.key:	1704 bytes
+tls.crt:	1159 bytes
+```
+
+Then create the HTTPS app:
+```console
+$ kubectl create -f tls-app.yaml
+$ kubectl get ing
+NAME      RULE      BACKEND               ADDRESS   AGE
+test      -         echoheaders-https:80             3s
+
+...
+
+$ kubectl describe ing
+Name:			test
+Namespace:		default
+Address:		130.211.5.76
+Default backend:	echoheaders-https:80 ()
+TLS:
+  tls-secret terminates
+Rules:
+  Host	Path	Backends
+  ----	----	--------
+Annotations:
+  url-map:			k8s-um-default-test--uid
+  backends:			{"k8s-be-31644--uid":"HEALTHY"}
+  forwarding-rule:		k8s-fw-default-test--uid
+  https-forwarding-rule:	k8s-fws-default-test--uid
+  https-target-proxy:		k8s-tps-default-test--uid
+  static-ip:			k8s-fw-default-test--uid
+  target-proxy:			k8s-tp-default-test--uid
+Events:
+  FirstSeen	LastSeen	Count	From				SubobjectPath	Type		Reason	Message
+  ---------	--------	-----	----				-------------	--------	------	-------
+  5m		5m		1	{loadbalancer-controller }			Normal		ADD	default/test
+  4m		4m		1	{loadbalancer-controller }			Normal		CREATE	ip: 130.211.5.76
+
+```
+
+Now you can perform 3 curl tests (`:80`, `:443`, `:80` following the redirect)
+```console
+$ curl 130.211.5.76
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body bgcolor="white">
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>nginx/1.9.11</center>
+</body>
+</html>
+
+$ curl https://130.211.5.76 -k
+CLIENT VALUES:
+...
+x-forwarded-for=104.132.0.73, 130.211.5.76
+x-forwarded-proto=https
+
+$ curl -L 130.211.5.76 -k
+CLIENT VALUES:
+...
+x-forwarded-for=104.132.0.73, 130.211.5.76
+x-forwarded-proto=https
+```
+
+Note that the GCLB health checks *do not* get the `301` because they don't include `x-forwarded-proto`.
+
+#### Blocking HTTP
+
+You can block traffic on `:80` through an annotation. You might want to do this if all your clients are only going to hit the loadbalancer through https and you don't want to waste the extra GCE forwarding rule, eg:
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test
+  annotations:
+    kubernetes.io/ingress.allowHTTP: "false"
+spec:
+  tls:
+  # This assumes tls-secret exists.
+  # To generate it run the make in this directory.
+  - secretName: tls-secret
+  backend:
+    serviceName: echoheaders-https
+    servicePort: 80
+```
+
+Upon describing it you should only see a single GCE forwarding rule:
+```console
+$ kubectl describe ing
+Name:			test
+Namespace:		default
+Address:		130.211.10.121
+Default backend:	echoheaders-https:80 (10.245.2.4:8080,10.245.3.4:8080)
+TLS:
+  tls-secret terminates
+Rules:
+  Host	Path	Backends
+  ----	----	--------
+Annotations:
+  https-target-proxy:		k8s-tps-default-test--uid
+  url-map:			k8s-um-default-test--uid
+  backends:			{"k8s-be-31644--uid":"Unknown"}
+  https-forwarding-rule:	k8s-fws-default-test--uid
+Events:
+  FirstSeen	LastSeen	Count	From				SubobjectPath	Type		Reason	Message
+  ---------	--------	-----	----				-------------	--------	------	-------
+  13m		13m		1	{loadbalancer-controller }			Normal		ADD	default/test
+  12m		12m		1	{loadbalancer-controller }			Normal		CREATE	ip: 130.211.10.121
+```
+
+And curling `:80` should just `404`:
+```console
+$ curl 130.211.10.121
+...
+  <a href=//www.google.com/><span id=logo aria-label=Google></span></a>
+  <p><b>404.</b> <ins>That’s an error.</ins>
+
+$ curl https://130.211.10.121 -k
+...
+SERVER VALUES:
+server_version=nginx: 1.9.11 - lua: 10001
+```
 
 ## Troubleshooting:
 
@@ -420,7 +617,7 @@ glbc-fjtlq             0/1       CrashLoopBackOff   17         1h
 ```
 If you hit that it means the controller isn't even starting. Re-check your input flags, especially the required ones.
 
-## GCELBC Implementation Details
+## GLBC Implementation Details
 
 For the curious, here is a high level overview of how the GCE LoadBalancer controller manages cloud resources.
 
@@ -434,7 +631,7 @@ Periodically, each pool checks that it has a valid connection to the next hop in
 
 ## Wishlist:
 
-* E2e, integration tests
+* More E2e, integration tests
 * Better events
 * Detect leaked resources even if the Ingress has been deleted when the controller isn't around
 * Specify health checks (currently we just rely on kubernetes service/pod liveness probes and force pods to have a `/` endpoint that responds with 200 for GCE)
@@ -442,7 +639,5 @@ Periodically, each pool checks that it has a valid connection to the next hop in
 * Async pool management of backends/L7s etc
 * Retry back-off when GCE Quota is done
 * GCE Quota integration
-* HTTP support as the Ingress grows
-* More aggressive resource sharing
 
 [![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/contrib/service-loadbalancer/gce/README.md?pixel)]()
