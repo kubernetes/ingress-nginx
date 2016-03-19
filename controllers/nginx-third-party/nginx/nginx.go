@@ -16,13 +16,6 @@ limitations under the License.
 
 package nginx
 
-import (
-	"fmt"
-	"os"
-
-	"github.com/golang/glog"
-)
-
 // IngressNGINXConfig describes an NGINX configuration
 type IngressNGINXConfig struct {
 	Upstreams []Upstream
@@ -35,7 +28,7 @@ type Upstream struct {
 	Backends []UpstreamServer
 }
 
-// UpstreamByNameServers Upstream sorter by name
+// UpstreamByNameServers sorts upstreams by name
 type UpstreamByNameServers []*Upstream
 
 func (c UpstreamByNameServers) Len() int      { return len(c) }
@@ -50,7 +43,7 @@ type UpstreamServer struct {
 	Port    string
 }
 
-// UpstreamServerByAddrPort UpstreamServer sorter by address and port
+// UpstreamServerByAddrPort sorts upstream servers by address and port
 type UpstreamServerByAddrPort []UpstreamServer
 
 func (c UpstreamServerByAddrPort) Len() int      { return len(c) }
@@ -76,7 +69,7 @@ type Server struct {
 	SSLCertificateKey string
 }
 
-// ServerByName Server sorter by name
+// ServerByName sorts server by name
 type ServerByName []*Server
 
 func (c ServerByName) Len() int      { return len(c) }
@@ -91,7 +84,7 @@ type Location struct {
 	Upstream Upstream
 }
 
-// LocationByPath Location sorter by path
+// LocationByPath sorts location by path
 type LocationByPath []Location
 
 func (c LocationByPath) Len() int      { return len(c) }
@@ -111,22 +104,4 @@ func NewUpstream(name string) *Upstream {
 		Name:     name,
 		Backends: []UpstreamServer{},
 	}
-}
-
-// AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
-func (nginx *NginxManager) AddOrUpdateCertAndKey(name string, cert string, key string) string {
-	pemFileName := sslDirectory + "/" + name + ".pem"
-
-	pem, err := os.Create(pemFileName)
-	if err != nil {
-		glog.Fatalf("Couldn't create pem file %v: %v", pemFileName, err)
-	}
-	defer pem.Close()
-
-	_, err = pem.WriteString(fmt.Sprintf("%v\n%v", key, cert))
-	if err != nil {
-		glog.Fatalf("Couldn't write to pem file %v: %v", pemFileName, err)
-	}
-
-	return pemFileName
 }

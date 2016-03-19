@@ -83,7 +83,7 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []*Upstream
 		return false, err
 	}
 
-	changed, err := checkChanges(ngx.ConfigFile, buffer)
+	changed, err := ngx.needsReload(buffer)
 	if err != nil {
 		return false, err
 	}

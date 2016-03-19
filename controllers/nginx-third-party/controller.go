@@ -396,10 +396,20 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 				continue
 			}
 
+			cn, err := lbc.nginx.CheckSSLCertificate(secretName)
+			if err != nil {
+				glog.Warningf("No valid SSL certificate found in secret %v", secretName)
+				continue
+			}
+
 			pemFileName := lbc.nginx.AddOrUpdateCertAndKey(secretName, string(cert), string(key))
 
 			for _, host := range tls.Hosts {
-				pems[host] = pemFileName
+				if isHostValid(host, cn) {
+					pems[host] = pemFileName
+				} else {
+					glog.Warningf("SSL Certificate stored in secret %v is not valid for the host %v defined in the Ingress rule %v", secretName, host, ing.Name)
+				}
 			}
 		}
 	}

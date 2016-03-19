@@ -175,3 +175,40 @@ func getTCPServices(kubeClient *unversioned.Client, tcpServices string) []nginx.
 
 	return svcs
 }
+
+func isHostValid(host string, cns []string) bool {
+	for _, cn := range cns {
+		if matchHostnames(cn, host) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func matchHostnames(pattern, host string) bool {
+	host = strings.TrimSuffix(host, ".")
+	pattern = strings.TrimSuffix(pattern, ".")
+
+	if len(pattern) == 0 || len(host) == 0 {
+		return false
+	}
+
+	patternParts := strings.Split(pattern, ".")
+	hostParts := strings.Split(host, ".")
+
+	if len(patternParts) != len(hostParts) {
+		return false
+	}
+
+	for i, patternPart := range patternParts {
+		if i == 0 && patternPart == "*" {
+			continue
+		}
+		if patternPart != hostParts[i] {
+			return false
+		}
+	}
+
+	return true
+}

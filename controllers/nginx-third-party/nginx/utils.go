@@ -120,7 +120,8 @@ func toMap(iface interface{}) (map[string]interface{}, bool) {
 	return map[string]interface{}{}, false
 }
 
-func checkChanges(filename string, data *bytes.Buffer) (bool, error) {
+func (ngx *NginxManager) needsReload(data *bytes.Buffer) (bool, error) {
+	filename := ngx.ConfigFile
 	in, err := os.Open(filename)
 	if err != nil {
 		return false, err
@@ -141,7 +142,8 @@ func checkChanges(filename string, data *bytes.Buffer) (bool, error) {
 
 		dData, err := diff(src, res)
 		if err != nil {
-			return false, fmt.Errorf("computing diff: %s", err)
+			glog.Errorf("error computing diff: %s", err)
+			return true, nil
 		}
 
 		if glog.V(2) {
