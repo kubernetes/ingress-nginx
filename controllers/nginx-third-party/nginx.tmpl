@@ -1,4 +1,4 @@
-{{ $cfg := .cfg }}{{ $defErrorSvc := .defErrorSvc }}{{ $defBackend := .defBackend }}
+{{ $cfg := .cfg }}
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -14,17 +14,9 @@ events {
 http {
     #vhost_traffic_status_zone shared:vhost_traffic_status:10m;
 
+    # lus sectrion to return proper error codes when custom pages are used
     lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
-    
-    init_by_lua_block {
-        def_backend = "http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }}"
-
-        {{ if $defErrorSvc }}{{/* only if exists a custom error service */}}
-        dev_error_url = "http://{{ $defErrorSvc.ServiceName }}.{{ $defErrorSvc.Namespace }}.svc.cluster.local:{{ $defErrorSvc.ServicePort }}"
-        {{ else }}
-        dev_error_url = def_backend
-        {{ end }}
-
+    init_by_lua_block {        
         require("error_page")
     }
 
@@ -58,7 +50,7 @@ http {
     {{ end }}
 
     log_format upstreaminfo '{{ if $cfg.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
-        '$remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
+        '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
         '$request_length $request_time $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
 
     access_log /var/log/nginx/access.log upstreaminfo;
@@ -126,7 +118,6 @@ http {
     ssl_dhparam {{ .sslDHParam }};
     {{ end }}
 
-    {{ if $defErrorSvc }}
     # Custom error pages
     proxy_intercept_errors on;
     error_page 403 @custom_403;
@@ -138,7 +129,6 @@ http {
     error_page 502 @custom_502;
     error_page 503 @custom_503;
     error_page 504 @custom_504;
-    {{ end }}
 
     # Reverse Proxy configuration
     # pass original Host header
@@ -152,30 +142,29 @@ http {
     proxy_set_header X-Forwarded-Port       $http_x_forwarded_port;
     proxy_set_header X-Forwarded-Proto      $scheme;
 
-    proxy_connect_timeout       {{ .cfg.ProxyConnectTimeout }}s;
-    proxy_send_timeout          {{ .cfg.ProxySendTimeout }}s;
-    proxy_read_timeout          {{ .cfg.ProxyReadTimeout }}s;
+    proxy_connect_timeout                   {{ .cfg.ProxyConnectTimeout }}s;
+    proxy_send_timeout                      {{ .cfg.ProxySendTimeout }}s;
+    proxy_read_timeout                      {{ .cfg.ProxyReadTimeout }}s;
 
-    proxy_buffering             off;
+    proxy_buffering                         off;
     
-    proxy_http_version          1.1;
+    proxy_http_version                      1.1;
 
     # Allow websocket connections
     proxy_set_header            Upgrade           $http_upgrade;
     proxy_set_header            Connection        $connection_upgrade;
 
     # In case of errors try the next upstream server before returning an error
-    proxy_next_upstream         error timeout http_502 http_503 http_504;
+    proxy_next_upstream                     error timeout http_501 http_502 http_503 http_504;
 
     server {
         listen 80 default_server{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        #vhost_traffic_status_filter_by_host on;
 
         location / {
             return 200;
         }
 
-        {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
+        {{ template "CUSTOM_ERRORS" $cfg }}
     }
 
     {{range $name, $upstream := .upstreams}}
@@ -206,7 +195,7 @@ http {
         }
         {{ end }}
 
-        {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
+        {{ template "CUSTOM_ERRORS" $cfg }}
 
     }
     {{ end }}
@@ -233,9 +222,9 @@ http {
         }
 
         location / {
-            proxy_pass             http://{{ $defBackend.ServiceName }}.{{ $defBackend.Namespace }}.svc.cluster.local:{{ $defBackend.ServicePort }};
+            proxy_pass             http://upstream-default-backend;
         }
-        {{ if $defErrorSvc }}{{ template "CUSTOM_ERRORS" (dict "cfg" $cfg "defErrorSvc" $defErrorSvc) }}{{ end }}
+        {{ template "CUSTOM_ERRORS" $cfg }}
     }
 
     # default server for services without endpoints
@@ -244,7 +233,7 @@ http {
 
         location / {
             content_by_lua_block {
-                openURL(503, dev_error_url)
+                openURL(503)
             }
         }        
     }    
@@ -252,12 +241,20 @@ http {
 
 # TCP services
 stream {
-{{range $tcpSvc := .tcpServices }}
+{{ range $name, $upstream := .tcpUpstreams }}
+    upstream tcp-{{ $upstream.Name }} {
+        least_conn;
+        {{ range $server := $upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{ end }}
+    }
+{{ end }}
+
+{{ range $tcpSvc := .tcpServices }}
     server {
         listen {{ $tcpSvc.ExposedPort }};
         proxy_connect_timeout  {{ $cfg.ProxyConnectTimeout }}s;
         proxy_timeout          {{ $cfg.ProxyReadTimeout }}s;
-        proxy_pass             {{ $tcpSvc.ServiceName }}.{{ $tcpSvc.Namespace }}.svc.cluster.local:{{ $tcpSvc.ServicePort }};
+        proxy_pass             {{ $tcpSvc.Namespace }}-{{ $tcpSvc.ServiceName }}:{{ $tcpSvc.ServicePort }};
     }
 {{ end }}
 }
@@ -266,55 +263,55 @@ stream {
 {{ define "CUSTOM_ERRORS" }}
         location @custom_403 {
             content_by_lua_block {
-                openURL(403, dev_error_url)
+                openURL(403)
             }
         }
 
         location @custom_404 {
             content_by_lua_block {
-                openURL(404, dev_error_url)
+                openURL(404)
             }
         }
 
         location @custom_405 {
             content_by_lua_block {
-                openURL(405, dev_error_url)
+                openURL(405)
             }
         }
 
         location @custom_408 {
             content_by_lua_block {
-                openURL(408, dev_error_url)
+                openURL(408)
             }
         }
 
         location @custom_413 {
             content_by_lua_block {
-                openURL(413, dev_error_url)
+                openURL(413)
             }
         }
 
         location @custom_501 {
             content_by_lua_block {
-                openURL(501, dev_error_url)
+                openURL(501)
             }
         }
 
         location @custom_502 {
             content_by_lua_block {
-                openURL(502, dev_error_url)
+                openURL(502)
             }
         }
 
         location @custom_503 {
             content_by_lua_block {
-                openURL(503, dev_error_url)
+                openURL(503)
             }
         }
 
         location @custom_504 {
             content_by_lua_block {
-                openURL(504, dev_error_url)
+                openURL(504)
             }
         }
 {{ end }}

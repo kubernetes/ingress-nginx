@@ -55,13 +55,7 @@ const (
 	// 2. Exposing the service ports as node ports on a pod.
 	// 3. Adding firewall rules so these ports can ingress traffic.
 
-	// Comma separated list of tcp/https
-	// namespace/serviceName:portToExport pairings. This assumes you've opened up the right
-	// hostPorts for each service that serves ingress traffic. Te value of portToExport indicates the
-	// port to listen inside nginx, not the port of the service.
-	lbTCPServices = "tcpservices"
-
-	k8sAnnotationPrefix = "nginx-ingress.kubernetes.io"
+	defUpstreamName = "upstream-default-backend"
 )
 
 // loadBalancerController watches the kubernetes api and adds/removes services
@@ -79,6 +73,9 @@ type loadBalancerController struct {
 	stopCh           chan struct{}
 	nginx            *nginx.NginxManager
 	lbInfo           *lbInfo
+	nxgConfigMap     string
+	tcpConfigMap     string
+
 	// stopLock is used to enforce only a single call to Stop is active.
 	// Needed because we allow stopping through an http endpoint and
 	// allowing concurrent stoppers leads to stack traces.
@@ -86,25 +83,16 @@ type loadBalancerController struct {
 	shutdown bool
 }
 
-type annotations map[string]string
-
-func (a annotations) getNginxConfig() (string, bool) {
-	val, ok := a[fmt.Sprintf("%v/%v", k8sAnnotationPrefix, lbConfigName)]
-	return val, ok
-}
-
-func (a annotations) getTCPServices() (string, bool) {
-	val, ok := a[fmt.Sprintf("%v/%v", k8sAnnotationPrefix, lbTCPServices)]
-	return val, ok
-}
-
 // newLoadBalancerController creates a controller for nginx loadbalancer
-func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Duration, defaultSvc, customErrorSvc nginx.Service, namespace string, lbInfo *lbInfo) (*loadBalancerController, error) {
+func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Duration, defaultSvc nginx.Service,
+	namespace, nxgConfigMapName, tcpConfigMapName string, lbInfo *lbInfo) (*loadBalancerController, error) {
 	lbc := loadBalancerController{
-		client: kubeClient,
-		stopCh: make(chan struct{}),
-		lbInfo: lbInfo,
-		nginx:  nginx.NewManager(kubeClient, defaultSvc, customErrorSvc),
+		client:       kubeClient,
+		stopCh:       make(chan struct{}),
+		lbInfo:       lbInfo,
+		nginx:        nginx.NewManager(kubeClient, defaultSvc),
+		nxgConfigMap: nxgConfigMapName,
+		tcpConfigMap: tcpConfigMapName,
 	}
 
 	lbc.ingLister.Store, lbc.ingController = framework.NewInformer(
@@ -207,6 +195,14 @@ func endpointsWatchFunc(c *client.Client, ns string) func(options api.ListOption
 	}
 }
 
+func (lbc *loadBalancerController) getConfigMap(name string) (api.ConfigMap, error) {
+	return lbc.client.ConfigMaps(lbc.lbInfo.PodNamespace).Get(name)
+}
+
+func (lbc *loadBalancerController) getTCPConfigMap(name string) (api.ConfigMap, error) {
+	return lbc.client.ConfigMaps(lbc.lbInfo.PodNamespace).Get(name)
+}
+
 func (lbc *loadBalancerController) registerHandlers() {
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if err := lbc.nginx.IsHealthy(); err != nil {
@@ -230,21 +226,22 @@ func (lbc *loadBalancerController) sync() {
 	ings := lbc.ingLister.Store.List()
 	upstreams, servers := lbc.getUpstreamServers(ings)
 
-	var kindAnnotations map[string]string
-	ngxCfgAnn, _ := annotations(kindAnnotations).getNginxConfig()
-	tcpSvcAnn, _ := annotations(kindAnnotations).getTCPServices()
-	ngxConfig, err := lbc.nginx.ReadConfig(ngxCfgAnn)
+	cfg, err := lbc.getConfigMap(lbc.nxgConfigMap)
+
+	ngxConfig, err := lbc.nginx.ReadConfig("")
 	if err != nil {
 		glog.Warningf("%v", err)
 	}
 
-	tcpServices := getTCPServices(lbc.client, tcpSvcAnn)
+	tcpServices := lbc.getTCPServices()
 	lbc.nginx.CheckAndReload(ngxConfig, upstreams, servers, tcpServices)
 }
 
 func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*nginx.Upstream, []*nginx.Server) {
 	upstreams := lbc.createUpstreams(data)
 	servers := lbc.createServers(data)
+
+	//TODO: add default backend upstream
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
@@ -326,6 +323,7 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 
 func (lbc *loadBalancerController) createUpstreams(data []interface{}) map[string]*nginx.Upstream {
 	upstreams := make(map[string]*nginx.Upstream)
+	upstreams[defUpstreamName] = nginx.NewUpstream(defUpstreamName)
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)

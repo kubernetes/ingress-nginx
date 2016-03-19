@@ -9,14 +9,13 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 - nginx 1.9.x with [lua-nginx-module](https://github.com/openresty/lua-nginx-module)
 - SSL support
 - custom ssl_dhparam (optional). Just mount a secret with a file named `dhparam.pem`.
-- support for TCP services (flag `--tcp-services`)
+- support for TCP services (flag `--tcp-services-configmap`)
 - custom nginx configuration using [ConfigMap](https://github.com/kubernetes/kubernetes/blob/master/docs/proposals/configmap.md)
 - custom error pages. Using the flag `--custom-error-service` is possible to use a custom compatible [404-server](https://github.com/kubernetes/contrib/tree/master/404-server) image [nginx-error-server](https://github.com/aledbf/contrib/tree/nginx-debug-server/Ingress/images/nginx-error-server) that provides an additional `/errors` route that returns custom content for a particular error code. **This is completely optional**
 
 
 ## Requirements
 - default backend [404-server](https://github.com/kubernetes/contrib/tree/master/404-server) (or a custom compatible image)
-- DNS must be operational and able to resolve default-http-backend.default.svc.cluster.local
 
 ## SSL
 
@@ -28,7 +27,7 @@ Currently Ingress does not support HTTPS. To bypass this the controller will che
 
 First we need to deploy some application to publish. To keep this simple we will use the [echoheaders app]() that just returns information about the http request as output
 ```
-kubectl run echoheaders --image=gcr.io/google_containers/echoserver:1.0 --replicas=1 --port=8080
+kubectl run echoheaders --image=gcr.io/google_containers/echoserver:1.1 --replicas=1 --port=8080
 ```
 
 Now we expose the same application in two different services (so we can create different Ingress rules)
@@ -148,19 +147,6 @@ kubectl delete rc nginx-ingress-3rdpartycfg
 ```
 kubectl create -f examples/rc-tcp.yaml
 ```
-
-Now we add the annotation to the replication controller that indicates with services should be exposed as TCP:
-The annotation key is `nginx-ingress.kubernetes.io/tcpservices`. You can expose more than one service using comma as separator.
-Each service must contain the namespace, service name and port to be use as public port
-
-```
-kubectl annotate rc nginx-ingress-3rdpartycfg "nginx-ingress.kubernetes.io/tcpservices=default/echoheaders-x:9000"
-```
-
-*Note:* the only reason to remove and create a new rc is that we cannot open new ports dynamically once the pod is running.
-
-
-Once we run the `kubectl annotate` command nginx will reload.
 
 Now we can test the new service:
 ```

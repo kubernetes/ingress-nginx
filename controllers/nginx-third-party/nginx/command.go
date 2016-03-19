@@ -54,7 +54,7 @@ func (ngx *NginxManager) Start() {
 // shut down, stop accepting new connections and continue to service current requests
 // until all such requests are serviced. After that, the old worker processes exit.
 // http://nginx.org/en/docs/beginners_guide.html#control
-func (ngx *NginxManager) CheckAndReload(cfg *nginxConfiguration, upstreams []*Upstream, servers []*Server, servicesL4 []Service) {
+func (ngx *NginxManager) CheckAndReload(cfg *nginxConfiguration, upstreams []*Upstream, servers []*Server, servicesL4 []*Upstream) {
 	ngx.reloadLock.Lock()
 	defer ngx.reloadLock.Unlock()
 

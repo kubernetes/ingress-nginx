@@ -24,10 +24,12 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"reflect"
 	"strings"
 
 	"github.com/golang/glog"
+
+	"github.com/imdario/mergo"
+	"k8s.io/kubernetes/pkg/api"
 )
 
 // IsHealthy checks if nginx is running
@@ -76,48 +78,22 @@ func getDnsServers() []string {
 
 // ReadConfig obtains the configuration defined by the user or returns the default if it does not
 // exists or if is not a well formed json object
-func (ngx *NginxManager) ReadConfig(data string) (*nginxConfiguration, error) {
-	if data == "" {
+func (ngx *NginxManager) ReadConfig(config *api.ConfigMap) (*nginxConfiguration, error) {
+	if len(config.Data) == 0 {
 		return newDefaultNginxCfg(), nil
 	}
 
-	cfg := nginxConfiguration{}
-	err := json.Unmarshal([]byte(data), &cfg)
+	cfg := newDefaultNginxCfg()
+
+	data, err := json.Marshal(config.Data)
 	if err != nil {
-		glog.Errorf("invalid json: %v", err)
-		return newDefaultNginxCfg(), fmt.Errorf("invalid custom nginx configuration: %v", err)
-	}
-
-	return &cfg, nil
-}
-
-func merge(dst, src map[string]interface{}) map[string]interface{} {
-	for key, srcVal := range src {
-		if dstVal, ok := dst[key]; ok {
-			srcMap, srcMapOk := toMap(srcVal)
-			dstMap, dstMapOk := toMap(dstVal)
-			if srcMapOk && dstMapOk {
-				srcVal = merge(dstMap, srcMap)
-			}
+		err = mergo.Merge(cfg, data)
+		if err != nil {
+			return cfg, nil
 		}
-		dst[key] = srcVal
 	}
 
-	return dst
-}
-
-func toMap(iface interface{}) (map[string]interface{}, bool) {
-	value := reflect.ValueOf(iface)
-	if value.Kind() == reflect.Map {
-		m := map[string]interface{}{}
-		for _, k := range value.MapKeys() {
-			m[k.String()] = value.MapIndex(k).Interface()
-		}
-
-		return m, true
-	}
-
-	return map[string]interface{}{}, false
+	return cfg, nil
 }
 
 func (ngx *NginxManager) needsReload(data *bytes.Buffer) (bool, error) {

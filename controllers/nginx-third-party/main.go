@@ -41,10 +41,12 @@ var (
     namespace/name. The controller uses the first node port of this Service for
     the default backend.`)
 
-	customErrorSvc = flags.String("custom-error-service", "",
-		`Service used that will receive the errors from nginx and serve a custom error page. 
-    Takes the form namespace/name. The controller uses the first node port of this Service 
-    for the backend.`)
+	tcpConfigMapName = flags.String("tcp-services-configmap", "",
+		`Name of the ConfigMap that containes the definition of the TCP services to expose.
+		The key in the map indicates the external port to be used. The value is the name of the 
+		service with the format namespace/serviceName and the port of the service could be a number of the
+		name of the port.
+		The ports 80 and 443 are not allowed as external ports. This ports are reserved for nginx`)
 
 	resyncPeriod = flags.Duration("sync-period", 30*time.Second,
 		`Relist and confirm cloud resources this often.`)
@@ -69,13 +71,13 @@ func main() {
 	}
 
 	lbInfo, _ := getLBDetails(kubeClient)
-	defSvc, err := getService(kubeClient, *defaultSvc)
-	if err != nil {
-		glog.Fatalf("no default backend service found: %v", err)
-	}
-	defError, _ := getService(kubeClient, *customErrorSvc)
 
-	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, defSvc, defError, *watchNamespace, lbInfo)
+	err = isValidService(kubeClient, *defaultSvc)
+	if err != nil {
+		glog.Fatalf("no service with name %v found: %v", *defaultSvc, err)
+	}
+
+	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, lbInfo)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}

@@ -1,13 +1,14 @@
 http = require "resty.http"
+def_backend = "http://upstream-default-backend"
 
-function openURL(status, page)
+function openURL(status)
     local httpc = http.new()
 
-    local res, err = httpc:request_uri(page, {
+    local res, err = httpc:request_uri(def_backend, {
         path = "/",
         method = "GET",
         headers = {
-          ["Content-Type"] = ngx.var.httpReturnType or "text/html",
+          ["Content-Type"] = ngx.var.httpAccept or "html",
         }
     })
 
@@ -17,7 +18,6 @@ function openURL(status, page)
     end
 
     ngx.status = tonumber(status)
-    ngx.header["Content-Type"] = ngx.var.httpReturnType or "text/plain"
     if ngx.var.http_cookie then
         ngx.header["Cookie"] = ngx.var.http_cookie
     end

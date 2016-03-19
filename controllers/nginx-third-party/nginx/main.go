@@ -212,9 +212,7 @@ type Service struct {
 
 // NginxManager ...
 type NginxManager struct {
-	defBackend  Service
 	defCfg      *nginxConfiguration
-	defError    Service
 	defResolver string
 
 	// path to the configuration file to be used by nginx
@@ -272,12 +270,10 @@ func newDefaultNginxCfg() *nginxConfiguration {
 }
 
 // NewManager ...
-func NewManager(kubeClient *client.Client, defaultSvc, customErrorSvc Service) *NginxManager {
+func NewManager(kubeClient *client.Client) *NginxManager {
 	ngx := &NginxManager{
 		ConfigFile:  "/etc/nginx/nginx.conf",
-		defBackend:  defaultSvc,
 		defCfg:      newDefaultNginxCfg(),
-		defError:    customErrorSvc,
 		defResolver: strings.Join(getDnsServers(), " "),
 		reloadLock:  &sync.Mutex{},
 	}

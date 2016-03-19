@@ -19,12 +19,12 @@ package nginx
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"text/template"
 
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
+	"github.com/imdario/mergo"
 )
 
 var funcMap = template.FuncMap{
@@ -36,20 +36,6 @@ var funcMap = template.FuncMap{
 
 		return true
 	},
-	"dict": func(values ...interface{}) (map[string]interface{}, error) {
-		if len(values)%2 != 0 {
-			return nil, errors.New("invalid dict call")
-		}
-		dict := make(map[string]interface{}, len(values)/2)
-		for i := 0; i < len(values); i += 2 {
-			key, ok := values[i].(string)
-			if !ok {
-				return nil, errors.New("dict keys must be strings")
-			}
-			dict[key] = values[i+1]
-		}
-		return dict, nil
-	},
 }
 
 func (ngx *NginxManager) loadTemplate() {
@@ -57,25 +43,18 @@ func (ngx *NginxManager) loadTemplate() {
 	ngx.template = tmpl
 }
 
-func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []*Upstream, servers []*Server, servicesL4 []Service) (bool, error) {
+func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []*Upstream, servers []*Server, tcpUpstreams []*Upstream) (bool, error) {
 	fromMap := structs.Map(cfg)
 	toMap := structs.Map(ngx.defCfg)
-	curNginxCfg := merge(toMap, fromMap)
+	curNginxCfg := mergo.MergeWithOverwrite(toMap, fromMap)
 
 	conf := make(map[string]interface{})
 	conf["upstreams"] = upstreams
 	conf["servers"] = servers
-	conf["tcpServices"] = servicesL4
-	conf["defBackend"] = ngx.defBackend
+	conf["tcpUpstreams"] = tcpUpstreams
 	conf["defResolver"] = ngx.defResolver
 	conf["sslDHParam"] = ngx.sslDHParam
 	conf["cfg"] = curNginxCfg
-
-	if ngx.defError.ServiceName != "" {
-		conf["defErrorSvc"] = ngx.defError
-	} else {
-		conf["defErrorSvc"] = false
-	}
 
 	buffer := new(bytes.Buffer)
 	err := ngx.template.Execute(buffer, conf)
@@ -93,7 +72,7 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []*Upstream
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-		glog.Infof("nginx configuration: %v", string(b))
+		glog.Infof("NGINX configuration: %v", string(b))
 	}
 
 	return changed, nil
