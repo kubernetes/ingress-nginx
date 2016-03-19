@@ -2031,6 +2031,7 @@ func deepCopy_v1_ReplicationControllerSpec(in ReplicationControllerSpec, out *Re
 
 func deepCopy_v1_ReplicationControllerStatus(in ReplicationControllerStatus, out *ReplicationControllerStatus, c *conversion.Cloner) error {
 	out.Replicas = in.Replicas
+	out.FullyLabeledReplicas = in.FullyLabeledReplicas
 	out.ObservedGeneration = in.ObservedGeneration
 	return nil
 }
@@ -2083,6 +2084,14 @@ func deepCopy_v1_ResourceQuotaSpec(in ResourceQuotaSpec, out *ResourceQuotaSpec,
 		}
 	} else {
 		out.Hard = nil
+	}
+	if in.Scopes != nil {
+		out.Scopes = make([]ResourceQuotaScope, len(in.Scopes))
+		for i := range in.Scopes {
+			out.Scopes[i] = in.Scopes[i]
+		}
+	} else {
+		out.Scopes = nil
 	}
 	return nil
 }

@@ -1030,55 +1030,6 @@ func deepCopy_v1beta1_CPUTargetUtilization(in CPUTargetUtilization, out *CPUTarg
 	return nil
 }
 
-func deepCopy_v1beta1_ClusterAutoscaler(in ClusterAutoscaler, out *ClusterAutoscaler, c *conversion.Cloner) error {
-	if err := deepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
-		return err
-	}
-	if err := deepCopy_v1_ObjectMeta(in.ObjectMeta, &out.ObjectMeta, c); err != nil {
-		return err
-	}
-	if err := deepCopy_v1beta1_ClusterAutoscalerSpec(in.Spec, &out.Spec, c); err != nil {
-		return err
-	}
-	return nil
-}
-
-func deepCopy_v1beta1_ClusterAutoscalerList(in ClusterAutoscalerList, out *ClusterAutoscalerList, c *conversion.Cloner) error {
-	if err := deepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
-		return err
-	}
-	if err := deepCopy_unversioned_ListMeta(in.ListMeta, &out.ListMeta, c); err != nil {
-		return err
-	}
-	if in.Items != nil {
-		out.Items = make([]ClusterAutoscaler, len(in.Items))
-		for i := range in.Items {
-			if err := deepCopy_v1beta1_ClusterAutoscaler(in.Items[i], &out.Items[i], c); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.Items = nil
-	}
-	return nil
-}
-
-func deepCopy_v1beta1_ClusterAutoscalerSpec(in ClusterAutoscalerSpec, out *ClusterAutoscalerSpec, c *conversion.Cloner) error {
-	out.MinNodes = in.MinNodes
-	out.MaxNodes = in.MaxNodes
-	if in.TargetUtilization != nil {
-		out.TargetUtilization = make([]NodeUtilization, len(in.TargetUtilization))
-		for i := range in.TargetUtilization {
-			if err := deepCopy_v1beta1_NodeUtilization(in.TargetUtilization[i], &out.TargetUtilization[i], c); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.TargetUtilization = nil
-	}
-	return nil
-}
-
 func deepCopy_v1beta1_DaemonSet(in DaemonSet, out *DaemonSet, c *conversion.Cloner) error {
 	if err := deepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
 		return err
@@ -1233,6 +1184,7 @@ func deepCopy_v1beta1_DeploymentSpec(in DeploymentSpec, out *DeploymentSpec, c *
 }
 
 func deepCopy_v1beta1_DeploymentStatus(in DeploymentStatus, out *DeploymentStatus, c *conversion.Cloner) error {
+	out.ObservedGeneration = in.ObservedGeneration
 	out.Replicas = in.Replicas
 	out.UpdatedReplicas = in.UpdatedReplicas
 	out.AvailableReplicas = in.AvailableReplicas
@@ -1564,6 +1516,12 @@ func deepCopy_v1beta1_JobSpec(in JobSpec, out *JobSpec, c *conversion.Cloner) er
 	} else {
 		out.Selector = nil
 	}
+	if in.AutoSelector != nil {
+		out.AutoSelector = new(bool)
+		*out.AutoSelector = *in.AutoSelector
+	} else {
+		out.AutoSelector = nil
+	}
 	if err := deepCopy_v1_PodTemplateSpec(in.Template, &out.Template, c); err != nil {
 		return err
 	}
@@ -1656,12 +1614,6 @@ func deepCopy_v1beta1_ListOptions(in ListOptions, out *ListOptions, c *conversio
 	return nil
 }
 
-func deepCopy_v1beta1_NodeUtilization(in NodeUtilization, out *NodeUtilization, c *conversion.Cloner) error {
-	out.Resource = in.Resource
-	out.Value = in.Value
-	return nil
-}
-
 func deepCopy_v1beta1_PodSecurityPolicy(in PodSecurityPolicy, out *PodSecurityPolicy, c *conversion.Cloner) error {
 	if err := deepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
 		return err
@@ -1726,7 +1678,7 @@ func deepCopy_v1beta1_PodSecurityPolicySpec(in PodSecurityPolicySpec, out *PodSe
 	}
 	out.HostPID = in.HostPID
 	out.HostIPC = in.HostIPC
-	if err := deepCopy_v1beta1_SELinuxContextStrategyOptions(in.SELinuxContext, &out.SELinuxContext, c); err != nil {
+	if err := deepCopy_v1beta1_SELinuxStrategyOptions(in.SELinux, &out.SELinux, c); err != nil {
 		return err
 	}
 	if err := deepCopy_v1beta1_RunAsUserStrategyOptions(in.RunAsUser, &out.RunAsUser, c); err != nil {
@@ -1786,19 +1738,15 @@ func deepCopy_v1beta1_ReplicaSetSpec(in ReplicaSetSpec, out *ReplicaSetSpec, c *
 	} else {
 		out.Selector = nil
 	}
-	if in.Template != nil {
-		out.Template = new(v1.PodTemplateSpec)
-		if err := deepCopy_v1_PodTemplateSpec(*in.Template, out.Template, c); err != nil {
-			return err
-		}
-	} else {
-		out.Template = nil
+	if err := deepCopy_v1_PodTemplateSpec(in.Template, &out.Template, c); err != nil {
+		return err
 	}
 	return nil
 }
 
 func deepCopy_v1beta1_ReplicaSetStatus(in ReplicaSetStatus, out *ReplicaSetStatus, c *conversion.Cloner) error {
 	out.Replicas = in.Replicas
+	out.FullyLabeledReplicas = in.FullyLabeledReplicas
 	out.ObservedGeneration = in.ObservedGeneration
 	return nil
 }
@@ -1836,7 +1784,7 @@ func deepCopy_v1beta1_RollingUpdateDeployment(in RollingUpdateDeployment, out *R
 }
 
 func deepCopy_v1beta1_RunAsUserStrategyOptions(in RunAsUserStrategyOptions, out *RunAsUserStrategyOptions, c *conversion.Cloner) error {
-	out.Type = in.Type
+	out.Rule = in.Rule
 	if in.Ranges != nil {
 		out.Ranges = make([]IDRange, len(in.Ranges))
 		for i := range in.Ranges {
@@ -1850,8 +1798,8 @@ func deepCopy_v1beta1_RunAsUserStrategyOptions(in RunAsUserStrategyOptions, out 
 	return nil
 }
 
-func deepCopy_v1beta1_SELinuxContextStrategyOptions(in SELinuxContextStrategyOptions, out *SELinuxContextStrategyOptions, c *conversion.Cloner) error {
-	out.Type = in.Type
+func deepCopy_v1beta1_SELinuxStrategyOptions(in SELinuxStrategyOptions, out *SELinuxStrategyOptions, c *conversion.Cloner) error {
+	out.Rule = in.Rule
 	if in.SELinuxOptions != nil {
 		out.SELinuxOptions = new(v1.SELinuxOptions)
 		if err := deepCopy_v1_SELinuxOptions(*in.SELinuxOptions, out.SELinuxOptions, c); err != nil {
@@ -1894,6 +1842,7 @@ func deepCopy_v1beta1_ScaleStatus(in ScaleStatus, out *ScaleStatus, c *conversio
 	} else {
 		out.Selector = nil
 	}
+	out.TargetSelector = in.TargetSelector
 	return nil
 }
 
@@ -2048,9 +1997,6 @@ func init() {
 		deepCopy_v1_VolumeSource,
 		deepCopy_v1beta1_APIVersion,
 		deepCopy_v1beta1_CPUTargetUtilization,
-		deepCopy_v1beta1_ClusterAutoscaler,
-		deepCopy_v1beta1_ClusterAutoscalerList,
-		deepCopy_v1beta1_ClusterAutoscalerSpec,
 		deepCopy_v1beta1_DaemonSet,
 		deepCopy_v1beta1_DaemonSetList,
 		deepCopy_v1beta1_DaemonSetSpec,
@@ -2085,7 +2031,6 @@ func init() {
 		deepCopy_v1beta1_LabelSelector,
 		deepCopy_v1beta1_LabelSelectorRequirement,
 		deepCopy_v1beta1_ListOptions,
-		deepCopy_v1beta1_NodeUtilization,
 		deepCopy_v1beta1_PodSecurityPolicy,
 		deepCopy_v1beta1_PodSecurityPolicyList,
 		deepCopy_v1beta1_PodSecurityPolicySpec,
@@ -2097,7 +2042,7 @@ func init() {
 		deepCopy_v1beta1_RollbackConfig,
 		deepCopy_v1beta1_RollingUpdateDeployment,
 		deepCopy_v1beta1_RunAsUserStrategyOptions,
-		deepCopy_v1beta1_SELinuxContextStrategyOptions,
+		deepCopy_v1beta1_SELinuxStrategyOptions,
 		deepCopy_v1beta1_Scale,
 		deepCopy_v1beta1_ScaleSpec,
 		deepCopy_v1beta1_ScaleStatus,

@@ -30,6 +30,7 @@ import (
 	"k8s.io/contrib/ingress/controllers/gce/controller"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
+	"k8s.io/kubernetes/pkg/client/restclient"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 	"k8s.io/kubernetes/pkg/util/wait"
@@ -163,9 +164,9 @@ func main() {
 
 	if *proxyUrl != "" {
 		// Create proxy kubeclient
-		kubeClient = client.NewOrDie(&client.Config{
+		kubeClient = client.NewOrDie(&restclient.Config{
 			Host:          *proxyUrl,
-			ContentConfig: client.ContentConfig{GroupVersion: &unversioned.GroupVersion{Version: "v1"}},
+			ContentConfig: restclient.ContentConfig{GroupVersion: &unversioned.GroupVersion{Version: "v1"}},
 		})
 	} else {
 		// Create kubeclient

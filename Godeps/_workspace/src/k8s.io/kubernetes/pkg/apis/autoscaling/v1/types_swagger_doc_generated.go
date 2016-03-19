@@ -16,7 +16,7 @@ limitations under the License.
 
 package v1
 
-// This file contains a collection of methods that can be used from go-resful to
+// This file contains a collection of methods that can be used from go-restful to
 // generate Swagger API documentation for its models. Please read this PR for more
 // information on the implementation: https://github.com/emicklei/go-restful/pull/215
 //
@@ -29,8 +29,8 @@ package v1
 // AUTO-GENERATED FUNCTIONS START HERE
 var map_CrossVersionObjectReference = map[string]string{
 	"":           "CrossVersionObjectReference contains enough information to let you identify the referred resource.",
-	"kind":       "Kind of the referent; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds\"",
-	"name":       "Name of the referent; More info: http://releases.k8s.io/HEAD/docs/user-guide/identifiers.md#names",
+	"kind":       "Kind of the referent; More info: http://releases.k8s.io/release-1.2/docs/devel/api-conventions.md#types-kinds\"",
+	"name":       "Name of the referent; More info: http://releases.k8s.io/release-1.2/docs/user-guide/identifiers.md#names",
 	"apiVersion": "API version of the referent",
 }
 
@@ -40,8 +40,8 @@ func (CrossVersionObjectReference) SwaggerDoc() map[string]string {
 
 var map_HorizontalPodAutoscaler = map[string]string{
 	"":         "configuration of a horizontal pod autoscaler.",
-	"metadata": "Standard object metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
-	"spec":     "behaviour of autoscaler. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status.",
+	"metadata": "Standard object metadata. More info: http://releases.k8s.io/release-1.2/docs/devel/api-conventions.md#metadata",
+	"spec":     "behaviour of autoscaler. More info: http://releases.k8s.io/release-1.2/docs/devel/api-conventions.md#spec-and-status.",
 	"status":   "current information about the autoscaler.",
 }
 
@@ -64,7 +64,7 @@ var map_HorizontalPodAutoscalerSpec = map[string]string{
 	"scaleTargetRef":                 "reference to scaled resource; horizontal pod autoscaler will learn the current resource consumption and will set the desired number of pods by using its Scale subresource.",
 	"minReplicas":                    "lower limit for the number of pods that can be set by the autoscaler, default 1.",
 	"maxReplicas":                    "upper limit for the number of pods that can be set by the autoscaler; cannot be smaller than MinReplicas.",
-	"targetCPUUtilizationPercentage": "target average CPU utilization (represented as a percentage of requested CPU) over all the pods;",
+	"targetCPUUtilizationPercentage": "target average CPU utilization (represented as a percentage of requested CPU) over all the pods; if not specified the default autoscaling policy will be used.",
 }
 
 func (HorizontalPodAutoscalerSpec) SwaggerDoc() map[string]string {
@@ -82,6 +82,36 @@ var map_HorizontalPodAutoscalerStatus = map[string]string{
 
 func (HorizontalPodAutoscalerStatus) SwaggerDoc() map[string]string {
 	return map_HorizontalPodAutoscalerStatus
+}
+
+var map_Scale = map[string]string{
+	"":         "Scale represents a scaling request for a resource.",
+	"metadata": "Standard object metadata; More info: http://releases.k8s.io/release-1.2/docs/devel/api-conventions.md#metadata.",
+	"spec":     "defines the behavior of the scale. More info: http://releases.k8s.io/release-1.2/docs/devel/api-conventions.md#spec-and-status.",
+	"status":   "current status of the scale. More info: http://releases.k8s.io/release-1.2/docs/devel/api-conventions.md#spec-and-status. Read-only.",
+}
+
+func (Scale) SwaggerDoc() map[string]string {
+	return map_Scale
+}
+
+var map_ScaleSpec = map[string]string{
+	"":         "ScaleSpec describes the attributes of a scale subresource.",
+	"replicas": "desired number of instances for the scaled object.",
+}
+
+func (ScaleSpec) SwaggerDoc() map[string]string {
+	return map_ScaleSpec
+}
+
+var map_ScaleStatus = map[string]string{
+	"":         "ScaleStatus represents the current status of a scale subresource.",
+	"replicas": "actual number of observed instances of the scaled object.",
+	"selector": "label query over pods that should match the replicas count. This is same as the label selector but in the string format to avoid introspection by clients. The string will be in the same format as the query-param syntax. More info about label selectors: http://releases.k8s.io/release-1.2/docs/user-guide/labels.md#label-selectors",
+}
+
+func (ScaleStatus) SwaggerDoc() map[string]string {
+	return map_ScaleStatus
 }
 
 // AUTO-GENERATED FUNCTIONS END HERE

@@ -18,13 +18,14 @@ package internalclientset
 
 import (
 	"github.com/golang/glog"
+	restclient "k8s.io/kubernetes/pkg/client/restclient"
+	discovery "k8s.io/kubernetes/pkg/client/typed/discovery"
 	unversionedcore "k8s.io/kubernetes/pkg/client/typed/generated/core/unversioned"
 	unversionedextensions "k8s.io/kubernetes/pkg/client/typed/generated/extensions/unversioned"
-	unversioned "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
 type Interface interface {
-	Discovery() unversioned.DiscoveryInterface
+	Discovery() discovery.DiscoveryInterface
 	Core() unversionedcore.CoreInterface
 	Extensions() unversionedextensions.ExtensionsInterface
 }
@@ -32,7 +33,7 @@ type Interface interface {
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
-	*unversioned.DiscoveryClient
+	*discovery.DiscoveryClient
 	*unversionedcore.CoreClient
 	*unversionedextensions.ExtensionsClient
 }
@@ -48,12 +49,12 @@ func (c *Clientset) Extensions() unversionedextensions.ExtensionsInterface {
 }
 
 // Discovery retrieves the DiscoveryClient
-func (c *Clientset) Discovery() unversioned.DiscoveryInterface {
+func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 	return c.DiscoveryClient
 }
 
 // NewForConfig creates a new Clientset for the given config.
-func NewForConfig(c *unversioned.Config) (*Clientset, error) {
+func NewForConfig(c *restclient.Config) (*Clientset, error) {
 	var clientset Clientset
 	var err error
 	clientset.CoreClient, err = unversionedcore.NewForConfig(c)
@@ -65,7 +66,7 @@ func NewForConfig(c *unversioned.Config) (*Clientset, error) {
 		return &clientset, err
 	}
 
-	clientset.DiscoveryClient, err = unversioned.NewDiscoveryClientForConfig(c)
+	clientset.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(c)
 	if err != nil {
 		glog.Errorf("failed to create the DiscoveryClient: %v", err)
 	}
@@ -74,21 +75,21 @@ func NewForConfig(c *unversioned.Config) (*Clientset, error) {
 
 // NewForConfigOrDie creates a new Clientset for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *unversioned.Config) *Clientset {
+func NewForConfigOrDie(c *restclient.Config) *Clientset {
 	var clientset Clientset
 	clientset.CoreClient = unversionedcore.NewForConfigOrDie(c)
 	clientset.ExtensionsClient = unversionedextensions.NewForConfigOrDie(c)
 
-	clientset.DiscoveryClient = unversioned.NewDiscoveryClientForConfigOrDie(c)
+	clientset.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &clientset
 }
 
 // New creates a new Clientset for the given RESTClient.
-func New(c *unversioned.RESTClient) *Clientset {
+func New(c *restclient.RESTClient) *Clientset {
 	var clientset Clientset
 	clientset.CoreClient = unversionedcore.New(c)
 	clientset.ExtensionsClient = unversionedextensions.New(c)
 
-	clientset.DiscoveryClient = unversioned.NewDiscoveryClient(c)
+	clientset.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &clientset
 }

@@ -28,6 +28,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/kubernetes/pkg/client/restclient"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/util"
 	"k8s.io/kubernetes/pkg/util/intstr"
@@ -47,7 +48,7 @@ func defaultBackendName(clusterName string) string {
 
 // newLoadBalancerController create a loadbalancer controller.
 func newLoadBalancerController(t *testing.T, cm *fakeClusterManager, masterUrl string) *LoadBalancerController {
-	client := client.NewOrDie(&client.Config{Host: masterUrl, ContentConfig: client.ContentConfig{GroupVersion: testapi.Default.GroupVersion()}})
+	client := client.NewOrDie(&restclient.Config{Host: masterUrl, ContentConfig: restclient.ContentConfig{GroupVersion: testapi.Default.GroupVersion()}})
 	lb, err := NewLoadBalancerController(client, cm.ClusterManager, 1*time.Second, api.NamespaceAll)
 	if err != nil {
 		t.Fatalf("%v", err)
