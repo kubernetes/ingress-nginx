@@ -70,3 +70,24 @@ func (nginx *NginxManager) CheckSSLCertificate(secretName string) ([]string, err
 	glog.V(2).Infof("DNS %v %v\n", cn, len(cn))
 	return cn, nil
 }
+
+// SearchDHParamFile iterates all the secrets mounted inside the /etc/nginx-ssl directory
+// in order to find a file with the name dhparam.pem. If such file exists it will
+// returns the path. If not it just returns an empty string
+func (nginx *NginxManager) SearchDHParamFile(baseDir string) string {
+	files, _ := ioutil.ReadDir(baseDir)
+	for _, file := range files {
+		if !file.IsDir() {
+			continue
+		}
+
+		dhPath := fmt.Sprintf("%v/%v/dhparam.pem", baseDir, file.Name())
+		if _, err := os.Stat(dhPath); err == nil {
+			glog.Infof("using file '%v' for parameter ssl_dhparam", dhPath)
+			return dhPath
+		}
+	}
+
+	glog.Warning("no file dhparam.pem found in secrets")
+	return ""
+}

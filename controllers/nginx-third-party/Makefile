@@ -1,7 +1,7 @@
 all: push
 
 # 0.0 shouldn't clobber any release builds
-TAG = 0.3
+TAG = 0.4
 PREFIX = gcr.io/google_containers/nginx-third-party
 
 controller: controller.go clean

@@ -24,7 +24,6 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
-	"github.com/imdario/mergo"
 )
 
 var funcMap = template.FuncMap{
@@ -43,15 +42,15 @@ func (ngx *NginxManager) loadTemplate() {
 	ngx.template = tmpl
 }
 
-func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []*Upstream, servers []*Server, tcpUpstreams []*Upstream) (bool, error) {
+func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, ingressCfg IngressConfig) (bool, error) {
 	fromMap := structs.Map(cfg)
 	toMap := structs.Map(ngx.defCfg)
-	curNginxCfg := mergo.MergeWithOverwrite(toMap, fromMap)
+	curNginxCfg := merge(toMap, fromMap)
 
 	conf := make(map[string]interface{})
-	conf["upstreams"] = upstreams
-	conf["servers"] = servers
-	conf["tcpUpstreams"] = tcpUpstreams
+	conf["upstreams"] = ingressCfg.Upstreams
+	conf["servers"] = ingressCfg.Servers
+	conf["tcpUpstreams"] = ingressCfg.TCPUpstreams
 	conf["defResolver"] = ngx.defResolver
 	conf["sslDHParam"] = ngx.sslDHParam
 	conf["cfg"] = curNginxCfg
@@ -59,11 +58,7 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []*Upstream
 	buffer := new(bytes.Buffer)
 	err := ngx.template.Execute(buffer, conf)
 	if err != nil {
-		return false, err
-	}
-
-	changed, err := ngx.needsReload(buffer)
-	if err != nil {
+		glog.Infof("NGINX error: %v", err)
 		return false, err
 	}
 
@@ -73,6 +68,11 @@ func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, upstreams []*Upstream
 			fmt.Println("error:", err)
 		}
 		glog.Infof("NGINX configuration: %v", string(b))
+	}
+
+	changed, err := ngx.needsReload(buffer)
+	if err != nil {
+		return false, err
 	}
 
 	return changed, nil

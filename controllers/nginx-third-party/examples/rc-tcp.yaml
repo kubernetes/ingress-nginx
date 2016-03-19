@@ -55,3 +55,4 @@ spec:
         args:
         - /nginx-third-party-lb
         - --default-backend-service=default/default-http-backend
+        - --tcp-services-configmap=default/tcp-configmap-example

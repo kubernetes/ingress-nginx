@@ -16,10 +16,11 @@ limitations under the License.
 
 package nginx
 
-// IngressNGINXConfig describes an NGINX configuration
-type IngressNGINXConfig struct {
-	Upstreams []Upstream
-	Servers   []Server
+// IngressConfig describes an NGINX configuration
+type IngressConfig struct {
+	Upstreams    []*Upstream
+	Servers      []*Server
+	TCPUpstreams []*Location
 }
 
 // Upstream describes an NGINX upstream
@@ -63,7 +64,7 @@ func (c UpstreamServerByAddrPort) Less(i, j int) bool {
 // Server describes an NGINX server
 type Server struct {
 	Name              string
-	Locations         []Location
+	Locations         []*Location
 	SSL               bool
 	SSLCertificate    string
 	SSLCertificateKey string
@@ -85,7 +86,7 @@ type Location struct {
 }
 
 // LocationByPath sorts location by path
-type LocationByPath []Location
+type LocationByPath []*Location
 
 func (c LocationByPath) Len() int      { return len(c) }
 func (c LocationByPath) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
@@ -93,7 +94,7 @@ func (c LocationByPath) Less(i, j int) bool {
 	return c[i].Path < c[j].Path
 }
 
-// NewDefaultServer return an UpstreamServer to be use as default server returns 502.
+// NewDefaultServer return an UpstreamServer to be use as default server that returns 503.
 func NewDefaultServer() UpstreamServer {
 	return UpstreamServer{Address: "127.0.0.1", Port: "8181"}
 }

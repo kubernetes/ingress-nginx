@@ -1,14 +1,14 @@
 {{ $cfg := .cfg }}
 daemon off;
 
-worker_processes {{ $cfg.WorkerProcesses }};
+worker_processes {{ $cfg.workerProcesses }};
 
 pid /run/nginx.pid;
 
 worker_rlimit_nofile 131072;
 
 events {
-    worker_connections {{ $cfg.MaxWorkerConnections }};
+    worker_connections {{ $cfg.maxWorkerConnections }};
 }
 
 http {
@@ -24,37 +24,37 @@ http {
     tcp_nopush on;
     tcp_nodelay on;
 
-    keepalive_timeout {{ $cfg.KeepAlive }}s;
+    keepalive_timeout {{ $cfg.keepAlive }}s;
 
     types_hash_max_size 2048;
-    server_names_hash_max_size {{ $cfg.ServerNameHashMaxSize }};
-    server_names_hash_bucket_size {{ $cfg.ServerNameHashBucketSize }};
+    server_names_hash_max_size {{ $cfg.serverNameHashMaxSize }};
+    server_names_hash_bucket_size {{ $cfg.serverNameHashBucketSize }};
 
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
-    {{ if $cfg.UseGzip }}
+    {{ if $cfg.useGzip }}
     gzip on;
     gzip_comp_level 5;
     gzip_http_version 1.1;
     gzip_min_length 256;
-    gzip_types {{ $.cfg.GzipTypes }};    
+    gzip_types {{ $cfg.gzipTypes }};    
     gzip_proxied any;
     gzip_vary on;
     {{ end }}
 
-    client_max_body_size "{{ $cfg.BodySize }}";
+    client_max_body_size "{{ $cfg.bodySize }}";
 
-    {{ if $cfg.UseProxyProtocol }}
-    set_real_ip_from {{ $cfg.ProxyRealIpCidr }};
+    {{ if $cfg.useProxyProtocol }}
+    set_real_ip_from {{ $cfg.proxyRealIpCidr }};
     real_ip_header proxy_protocol;
     {{ end }}
 
-    log_format upstreaminfo '{{ if $cfg.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
+    log_format upstreaminfo '{{ if $cfg.useProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
         '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
         '$request_length $request_time $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
 
     access_log /var/log/nginx/access.log upstreaminfo;
-    error_log  /var/log/nginx/error.log {{ $cfg.ErrorLogLevel }};
+    error_log  /var/log/nginx/error.log {{ $cfg.errorLogLevel }};
 
     {{ if not (empty .defResolver) }}# Custom dns resolver.
     resolver {{ .defResolver }} valid=30s;
@@ -72,7 +72,7 @@ http {
     }
 
     map $access_scheme $sts {
-      'https' 'max-age={{ $cfg.HtsMaxAge }}{{ if $cfg.HtsIncludeSubdomains }}; includeSubDomains{{ end }}; preload';
+      'https' 'max-age={{ $cfg.htsMaxAge }}{{ if $cfg.htsIncludeSubdomains }}; includeSubDomains{{ end }}; preload';
     }
 
     # Map a response error watching the header Content-Type
@@ -93,23 +93,23 @@ http {
     server_name_in_redirect off;
     port_in_redirect off;
 
-    ssl_protocols {{ $cfg.SSLProtocols }};
+    ssl_protocols {{ $cfg.sslProtocols }};
 
     # turn on session caching to drastically improve performance
-    {{ if $cfg.SSLSessionCache }}
-    ssl_session_cache builtin:1000 shared:SSL:{{ $cfg.SSLSessionCacheSize }};
-    ssl_session_timeout {{ $cfg.SSLSessionTimeout }};
+    {{ if $cfg.sslSessionCache }}
+    ssl_session_cache builtin:1000 shared:SSL:{{ $cfg.sslSessionCacheSize }};
+    ssl_session_timeout {{ $cfg.sslSessionTimeout }};
     {{ end }}
 
     # allow configuring ssl session tickets
-    ssl_session_tickets {{ if $cfg.SSLSessionTickets }}on{{ else }}off{{ end }};
+    ssl_session_tickets {{ if $cfg.sslSessionTickets }}on{{ else }}off{{ end }};
 
     # slightly reduce the time-to-first-byte
-    ssl_buffer_size {{ $cfg.SSLBufferSize }};
+    ssl_buffer_size {{ $cfg.sslBufferSize }};
 
-    {{ if not (empty $cfg.SSLCiphers) }}
+    {{ if not (empty $cfg.sslCiphers) }}
     # allow configuring custom ssl ciphers
-    ssl_ciphers '{{ $cfg.SSLCiphers }}';
+    ssl_ciphers '{{ $cfg.sslCiphers }}';
     ssl_prefer_server_ciphers on;
     {{ end }}
 
@@ -142,9 +142,9 @@ http {
     proxy_set_header X-Forwarded-Port       $http_x_forwarded_port;
     proxy_set_header X-Forwarded-Proto      $scheme;
 
-    proxy_connect_timeout                   {{ .cfg.ProxyConnectTimeout }}s;
-    proxy_send_timeout                      {{ .cfg.ProxySendTimeout }}s;
-    proxy_read_timeout                      {{ .cfg.ProxyReadTimeout }}s;
+    proxy_connect_timeout                   {{ $cfg.proxyConnectTimeout }}s;
+    proxy_send_timeout                      {{ $cfg.proxySendTimeout }}s;
+    proxy_read_timeout                      {{ $cfg.proxyReadTimeout }}s;
 
     proxy_buffering                         off;
     
@@ -155,10 +155,10 @@ http {
     proxy_set_header            Connection        $connection_upgrade;
 
     # In case of errors try the next upstream server before returning an error
-    proxy_next_upstream                     error timeout http_501 http_502 http_503 http_504;
+    proxy_next_upstream                     error timeout http_502 http_503 http_504;
 
     server {
-        listen 80 default_server{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen 80 default_server{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
 
         location / {
             return 200;
@@ -196,13 +196,12 @@ http {
         {{ end }}
 
         {{ template "CUSTOM_ERRORS" $cfg }}
-
     }
     {{ end }}
 
     # default server, including healthcheck
     server {
-        listen 8080 default_server{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }} reuseport;
+        listen 8080 default_server{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }} reuseport;
         #vhost_traffic_status_filter_by_host on;
 
         location /healthz {
@@ -229,7 +228,7 @@ http {
 
     # default server for services without endpoints
     server {
-        listen 8081;
+        listen 8181;
 
         location / {
             content_by_lua_block {
@@ -241,20 +240,17 @@ http {
 
 # TCP services
 stream {
-{{ range $name, $upstream := .tcpUpstreams }}
-    upstream tcp-{{ $upstream.Name }} {
-        least_conn;
-        {{ range $server := $upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+{{ range $i, $tcpServer := .tcpUpstreams }}
+    upstream tcp-{{ $tcpServer.Upstream.Name }} {
+        {{ range $server := $tcpServer.Upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
         {{ end }}
     }
-{{ end }}
 
-{{ range $tcpSvc := .tcpServices }}
     server {
-        listen {{ $tcpSvc.ExposedPort }};
-        proxy_connect_timeout  {{ $cfg.ProxyConnectTimeout }}s;
-        proxy_timeout          {{ $cfg.ProxyReadTimeout }}s;
-        proxy_pass             {{ $tcpSvc.Namespace }}-{{ $tcpSvc.ServiceName }}:{{ $tcpSvc.ServicePort }};
+        listen {{ $tcpServer.Path }};
+        proxy_connect_timeout  {{ $cfg.proxyConnectTimeout }}s;
+        proxy_timeout          {{ $cfg.proxyReadTimeout }}s;
+        proxy_pass             tcp-{{ $tcpServer.Upstream.Name }};
     }
 {{ end }}
 }
@@ -288,12 +284,6 @@ stream {
         location @custom_413 {
             content_by_lua_block {
                 openURL(413)
-            }
-        }
-
-        location @custom_501 {
-            content_by_lua_block {
-                openURL(501)
             }
         }
 

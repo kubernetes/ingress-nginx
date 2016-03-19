@@ -21,9 +21,6 @@ spec:
       # Follow this https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh
       # as a guide on how to generate secrets containing SSL certificates.
       volumes:
-      - name: secret-echoheaders-1
-        secret:
-          secretName: echoheaders
       - name: dhparam-example
         secret:
           secretName: dhparam-example
@@ -60,8 +57,6 @@ spec:
         - containerPort: 8080
           hostPort: 9000
         volumeMounts:
-        - mountPath: /etc/nginx-ssl/secret-echoheaders-1
-          name: secret-echoheaders-1
         - mountPath: /etc/nginx-ssl/dhparam
           name: dhparam-example
         # the flags tcp-services is required because Ingress do not support TCP rules
@@ -69,7 +64,5 @@ spec:
         # containerPort 8080 is mapped to 9000 in the node.
         args:
         - /nginx-third-party-lb
-        - --tcp-services=default/example-go:8080
+        - --tcp-services-configmap=default/tcp-configmap-example
         - --default-backend-service=default/default-http-backend
-        - --custom-error-service=default/default-error-backend
-

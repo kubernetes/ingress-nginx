@@ -17,6 +17,7 @@ limitations under the License.
 package nginx
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"strconv"
@@ -26,10 +27,11 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/contrib/ingress/controllers/nginx-third-party/ssl"
+	"github.com/fatih/structs"
+	"github.com/ghodss/yaml"
 
+	"k8s.io/kubernetes/pkg/api"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
-	k8sruntime "k8s.io/kubernetes/pkg/runtime"
 )
 
 const (
@@ -82,152 +84,137 @@ const (
 type nginxConfiguration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
-	BodySize string `json:"bodySize,omitempty" structs:",omitempty"`
+	BodySize string `json:"bodySize,omitempty" structs:"bodySize,omitempty"`
 
 	// http://nginx.org/en/docs/ngx_core_module.html#error_log
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
 	// Log levels above are listed in the order of increasing severity
-	ErrorLogLevel string `json:"errorLogLevel,omitempty" structs:",omitempty"`
+	ErrorLogLevel string `json:"errorLogLevel,omitempty" structs:"errorLogLevel,omitempty"`
 
 	// Enables or disables the header HTS in servers running SSL
-	UseHTS bool `json:"useHTS,omitempty" structs:",omitempty"`
+	UseHTS bool `json:"useHTS,omitempty" structs:"useHTS,omitempty"`
 
 	// Enables or disables the use of HTS in all the subdomains of the servername
-	HTSIncludeSubdomains bool `json:"htsIncludeSubdomains,omitempty" structs:",omitempty"`
+	HTSIncludeSubdomains bool `json:"htsIncludeSubdomains,omitempty" structs:"htsIncludeSubdomains,omitempty"`
 
 	// HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header)
 	// that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
 	// https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 	// max-age is the time, in seconds, that the browser should remember that this site is only to be
 	// accessed using HTTPS.
-	HTSMaxAge string `json:"htsMaxAge,omitempty" structs:",omitempty"`
+	HTSMaxAge string `json:"htsMaxAge,omitempty" structs:"htsMaxAge,omitempty"`
 
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
-	KeepAlive int `json:"keepAlive,omitempty" structs:",omitempty"`
+	KeepAlive int `json:"keepAlive,omitempty" structs:"keepAlive,omitempty"`
 
 	// Maximum number of simultaneous connections that can be opened by each worker process
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
-	MaxWorkerConnections int `json:"maxWorkerConnections,omitempty" structs:",omitempty"`
+	MaxWorkerConnections int `json:"maxWorkerConnections,omitempty" structs:"maxWorkerConnections,omitempty"`
 
 	// Defines a timeout for establishing a connection with a proxied server.
 	// It should be noted that this timeout cannot usually exceed 75 seconds.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout
-	ProxyConnectTimeout int `json:"proxyConnectTimeout,omitempty" structs:",omitempty"`
+	ProxyConnectTimeout int `json:"proxyConnectTimeout,omitempty" structs:"proxyConnectTimeout,omitempty"`
 
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
-	ProxyRealIPCIDR string `json:"proxyRealIPCIDR,omitempty" structs:",omitempty"`
+	ProxyRealIPCIDR string `json:"proxyRealIPCIDR,omitempty" structs:"proxyRealIPCIDR,omitempty"`
 
 	// Timeout in seconds for reading a response from the proxied server. The timeout is set only between
 	// two successive read operations, not for the transmission of the whole response
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
-	ProxyReadTimeout int `json:"proxyReadTimeout,omitempty" structs:",omitempty"`
+	ProxyReadTimeout int `json:"proxyReadTimeout,omitempty" structs:"proxyReadTimeout,omitempty"`
 
 	// Timeout in seconds for transmitting a request to the proxied server. The timeout is set only between
 	// two successive write operations, not for the transmission of the whole request.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout
-	ProxySendTimeout int `json:"proxySendTimeout,omitempty" structs:",omitempty"`
+	ProxySendTimeout int `json:"proxySendTimeout,omitempty" structs:"proxySendTimeout,omitempty"`
 
 	// Configures name servers used to resolve names of upstream servers into addresses
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#resolver
-	Resolver string `json:"resolver,omitempty" structs:",omitempty"`
+	Resolver string `json:"resolver,omitempty" structs:"resolver,omitempty"`
 
 	// Maximum size of the server names hash tables used in server names, map directive’s values,
 	// MIME types, names of request header strings, etcd.
 	// http://nginx.org/en/docs/hash.html
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size
-	ServerNameHashMaxSize int `json:"serverNameHashMaxSize,omitempty" structs:",omitempty"`
+	ServerNameHashMaxSize int `json:"serverNameHashMaxSize,omitempty" structs:"serverNameHashMaxSize,omitempty"`
 
 	// Size of the bucker for the server names hash tables
 	// http://nginx.org/en/docs/hash.html
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
-	ServerNameHashBucketSize int `json:"serverNameHashBucketSize,omitempty" structs:",omitempty"`
+	ServerNameHashBucketSize int `json:"serverNameHashBucketSize,omitempty" structs:"serverNameHashBucketSize,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
 	// 4k helps NGINX to improve TLS Time To First Byte (TTTFB)
 	// https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
-	SSLBufferSize string `json:"sslBufferSize,omitempty" structs:",omitempty"`
+	SSLBufferSize string `json:"sslBufferSize,omitempty" structs:"sslBufferSize,omitempty"`
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
 	// the OpenSSL library
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
-	SSLCiphers string `json:"sslCiphers,omitempty" structs:",omitempty"`
+	SSLCiphers string `json:"sslCiphers,omitempty" structs:"sslCiphers,omitempty"`
 
 	// Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
 	// https://www.openssl.org/docs/manmaster/apps/dhparam.html
 	// https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
-	SSLDHParam string `json:"sslDHParam,omitempty" structs:",omitempty"`
+	SSLDHParam string `json:"sslDHParam,omitempty" structs:"sslDHParam,omitempty"`
 
 	// SSL enabled protocols to use
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
-	SSLProtocols string `json:"sslProtocols,omitempty" structs:",omitempty"`
+	SSLProtocols string `json:"sslProtocols,omitempty" structs:"sslProtocols,omitempty"`
 
 	// Enables or disables the use of shared SSL cache among worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
-	SSLSessionCache bool `json:"sslSessionCache,omitempty" structs:",omitempty"`
+	SSLSessionCache bool `json:"sslSessionCache,omitempty" structs:"sslSessionCache,omitempty"`
 
 	// Size of the SSL shared cache between all worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
-	SSLSessionCacheSize string `json:"sslSessionCacheSize,omitempty" structs:",omitempty"`
+	SSLSessionCacheSize string `json:"sslSessionCacheSize,omitempty" structs:"sslSessionCacheSize,omitempty"`
 
 	// Enables or disables session resumption through TLS session tickets.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
-	SSLSessionTickets bool `json:"sslSessionTickets,omitempty" structs:",omitempty"`
+	SSLSessionTickets bool `json:"sslSessionTickets,omitempty" structs:"sslSessionTickets,omitempty"`
 
 	// Time during which a client may reuse the session parameters stored in a cache.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout
-	SSLSessionTimeout string `json:"sslSessionTimeout,omitempty" structs:",omitempty"`
+	SSLSessionTimeout string `json:"sslSessionTimeout,omitempty" structs:"sslSessionTimeout,omitempty"`
 
 	// Enables or disables the use of the PROXY protocol to receive client connection
 	// (real IP address) information passed through proxy servers and load balancers
 	// such as HAproxy and Amazon Elastic Load Balancer (ELB).
 	// https://www.nginx.com/resources/admin-guide/proxy-protocol/
-	UseProxyProtocol bool `json:"useProxyProtocol,omitempty" structs:",omitempty"`
+	UseProxyProtocol bool `json:"useProxyProtocol,omitempty" structs:"useProxyProtocol,omitempty"`
 
 	// Enables or disables the use of the nginx module that compresses responses using the "gzip" method
 	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
-	UseGzip bool `json:"useGzip,omitempty" structs:",omitempty"`
+	UseGzip bool `json:"useGzip,omitempty" structs:"useGzip,omitempty"`
 
 	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
 	// Responses with the “text/html” type are always compressed if UseGzip is enabled
-	GzipTypes string `json:"gzipTypes,omitempty" structs:",omitempty"`
+	GzipTypes string `json:"gzipTypes,omitempty" structs:"gzipTypes,omitempty"`
 
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
-	WorkerProcesses string `json:"workerProcesses,omitempty" structs:",omitempty"`
-}
-
-// Service service definition to use in nginx template
-type Service struct {
-	ServiceName string
-	ServicePort string
-	Namespace   string
-	// ExposedPort port used by nginx to listen for the stream upstream
-	ExposedPort string
+	WorkerProcesses string `json:"workerProcesses,omitempty" structs:"workerProcesses,omitempty"`
 }
 
 // NginxManager ...
 type NginxManager struct {
-	defCfg      *nginxConfiguration
-	defResolver string
-
-	// path to the configuration file to be used by nginx
 	ConfigFile string
+
+	defCfg *nginxConfiguration
+
+	defResolver string
 
 	sslDHParam string
 
-	servicesL4 []Service
-
-	client *client.Client
 	// template loaded ready to be used to generate the nginx configuration file
 	template *template.Template
-
-	// obj runtime object to be used in events
-	obj k8sruntime.Object
 
 	reloadLock *sync.Mutex
 }
@@ -280,7 +267,7 @@ func NewManager(kubeClient *client.Client) *NginxManager {
 
 	ngx.createCertsDir(sslDirectory)
 
-	ngx.sslDHParam = ssl.SearchDHParamFile(sslDirectory)
+	ngx.sslDHParam = ngx.SearchDHParamFile(sslDirectory)
 
 	ngx.loadTemplate()
 
@@ -291,4 +278,26 @@ func (nginx *NginxManager) createCertsDir(base string) {
 	if err := os.Mkdir(base, os.ModeDir); err != nil {
 		glog.Fatalf("Couldn't create directory %v: %v", base, err)
 	}
+}
+
+// ConfigMapAsString returns a ConfigMap with the default NGINX
+// configuration to be used a guide to provide a custom configuration
+func ConfigMapAsString() string {
+	cfg := &api.ConfigMap{}
+	cfg.Name = "custom-name"
+	cfg.Namespace = "a-valid-namespace"
+	cfg.Data = make(map[string]string)
+
+	data := structs.Map(newDefaultNginxCfg())
+	for k, v := range data {
+		cfg.Data[k] = fmt.Sprintf("%v", v)
+	}
+
+	out, err := yaml.Marshal(cfg)
+	if err != nil {
+		glog.Warningf("Unexpected error creating default configuration: %v", err)
+		return ""
+	}
+
+	return string(out)
 }

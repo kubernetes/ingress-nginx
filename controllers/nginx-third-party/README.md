@@ -144,6 +144,15 @@ First we need to remove the running
 kubectl delete rc nginx-ingress-3rdpartycfg
 ```
 
+To configure which services and ports will be exposed
+```
+kubectl create -f examples/tcp-configmap-example.yaml
+```
+
+The file `examples/tcp-configmap-example.yaml` uses a ConfigMap where the key is the external port to use and the value is <namespace/service name>:<service port>.
+(Is possible to use a number or the name of the port)
+
+
 ```
 kubectl create -f examples/rc-tcp.yaml
 ```
@@ -210,8 +219,6 @@ BODY:
 ```
 
 ## SSL
-
-Currently Ingress rules does not contains SSL definitions. In order to support SSL in nginx this controller uses secrets mounted inside the directory `/etc/nginx-ssl` to detect if some Ingress rule contains a host for which it is possible the creation of an SSL server.
 
 First create a secret containing the ssl certificate and key. This example creates the certificate and the secret (json):
 
@@ -305,9 +312,3 @@ Using a volume pointing to `/var/www/html` directory is possible to use a custom
 Problems encountered during [1.2.0-alpha7 deployment](https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker.md):
 * make setup-files.sh file in hypercube does not provide 10.0.0.1 IP to make-ca-certs, resulting in CA certs that are issued to the external cluster IP address rather then 10.0.0.1 -> this results in nginx-third-party-lb appearing to get stuck at "Utils.go:177 - Waiting for default/default-http-backend" in the docker logs.  Kubernetes will eventually kill the container before nginx-third-party-lb times out with a message indicating that the CA certificate issuer is invalid (wrong ip), to verify this add zeros to the end of initialDelaySeconds and timeoutSeconds and reload the RC, and docker will log this error before kubernetes kills the container.
   * To fix the above, setup-files.sh must be patched before the cluster is inited (refer to https://github.com/kubernetes/kubernetes/pull/21504)
-* if once the nginx-third-party-lb starts, its docker log spams this message continously "utils.go:(line #)] Requeuing default/echomap, err Post http://127.0.0.1:8080/update-ingress: dial tcp 127.0.0.1:8080: getsockopt: connection refused", it means that the container is unable to use DNS to resolve the service address, DNS autoconfigure is broken on 1.2.0-alpha7 (refer again to https://github.com/kubernetes/kubernetes/pull/21504 for fixes)
-
-## TODO:
-- multiple SSL certificates
-- custom nginx configuration using [ConfigMap](https://github.com/kubernetes/kubernetes/blob/master/docs/proposals/configmap.md)
-

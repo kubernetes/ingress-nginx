@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 
 	"github.com/golang/glog"
@@ -76,8 +77,7 @@ func getDnsServers() []string {
 	return nameservers
 }
 
-// ReadConfig obtains the configuration defined by the user or returns the default if it does not
-// exists or if is not a well formed json object
+// ReadConfig obtains the configuration defined by the user merged with the defaults.
 func (ngx *NginxManager) ReadConfig(config *api.ConfigMap) (*nginxConfiguration, error) {
 	if len(config.Data) == 0 {
 		return newDefaultNginxCfg(), nil
@@ -156,4 +156,33 @@ func diff(b1, b2 []byte) (data []byte, err error) {
 		err = nil
 	}
 	return
+}
+
+func merge(dst, src map[string]interface{}) map[string]interface{} {
+	for key, srcVal := range src {
+		if dstVal, ok := dst[key]; ok {
+			srcMap, srcMapOk := toMap(srcVal)
+			dstMap, dstMapOk := toMap(dstVal)
+			if srcMapOk && dstMapOk {
+				srcVal = merge(dstMap, srcMap)
+			}
+		}
+		dst[key] = srcVal
+	}
+
+	return dst
+}
+
+func toMap(iface interface{}) (map[string]interface{}, bool) {
+	value := reflect.ValueOf(iface)
+	if value.Kind() == reflect.Map {
+		m := map[string]interface{}{}
+		for _, k := range value.MapKeys() {
+			m[k.String()] = value.MapIndex(k).Interface()
+		}
+
+		return m, true
+	}
+
+	return map[string]interface{}{}, false
 }

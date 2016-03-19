@@ -17,56 +17,27 @@ limitations under the License.
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
-	"k8s.io/contrib/ingress/controllers/nginx-third-party/nginx"
-
-	"github.com/golang/glog"
-
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/client/unversioned"
 )
 
-const (
-	httpPort  = "80"
-	httpsPort = "443"
-)
-
 var (
 	errMissingPodInfo = fmt.Errorf("Unable to get POD information")
-
-	errInvalidKind = fmt.Errorf("Please check the field Kind, only ReplicationController or DaemonSet are allowed")
 )
 
 // StoreToIngressLister makes a Store that lists Ingress.
-// TODO: use cache/listers post 1.1.
 type StoreToIngressLister struct {
-	cache.Store
-}
-
-// List lists all Ingress' in the store.
-func (s *StoreToIngressLister) List() (ing extensions.IngressList, err error) {
-	for _, m := range s.Store.List() {
-		ing.Items = append(ing.Items, *(m.(*extensions.Ingress)))
-	}
-	return ing, nil
-}
-
-// StoreToConfigMapLister makes a Store that lists existing ConfigMap.
-type StoreToConfigMapLister struct {
 	cache.Store
 }
 
 // getLBDetails returns runtime information about the pod (name, IP) and replication
 // controller or daemonset (namespace and name).
 // This is required to watch for changes in annotations or configuration (ConfigMap)
-func getLBDetails(kubeClient *unversioned.Client) (rc *lbInfo, err error) {
+func getLBDetails(kubeClient *unversioned.Client) (*lbInfo, error) {
 	podIP := os.Getenv("POD_IP")
 	podName := os.Getenv("POD_NAME")
 	podNs := os.Getenv("POD_NAMESPACE")
@@ -76,30 +47,11 @@ func getLBDetails(kubeClient *unversioned.Client) (rc *lbInfo, err error) {
 		return nil, errMissingPodInfo
 	}
 
-	annotations := pod.Annotations["kubernetes.io/created-by"]
-	var sref api.SerializedReference
-	err = json.Unmarshal([]byte(annotations), &sref)
-	if err != nil {
-		return nil, err
-	}
-
-	rc = &lbInfo{
-		ObjectName:   sref.Reference.Name,
+	return &lbInfo{
 		PodIP:        podIP,
 		Podname:      podName,
 		PodNamespace: podNs,
-	}
-
-	switch sref.Reference.Kind {
-	case "ReplicationController":
-		rc.DeployType = &api.ReplicationController{}
-		return rc, nil
-	case "DaemonSet":
-		rc.DeployType = &extensions.DaemonSet{}
-		return rc, nil
-	default:
-		return nil, errInvalidKind
-	}
+	}, nil
 }
 
 func isValidService(kubeClient *unversioned.Client, name string) error {
@@ -112,83 +64,9 @@ func isValidService(kubeClient *unversioned.Client, name string) error {
 		return fmt.Errorf("Invalid name format (namespace/name) in service '%v'", name)
 	}
 
-	_, err = kubeClient.Services(parts[0]).Get(parts[1])
+	_, err := kubeClient.Services(parts[0]).Get(parts[1])
 	return err
 }
-
-// func getService(kubeClient *unversioned.Client, name string) (nginx.Service, error) {
-// 	if name == "" {
-// 		return nginx.Service{}, fmt.Errorf("Empty string is not a valid service name")
-// 	}
-
-// 	parts := strings.Split(name, "/")
-// 	if len(parts) != 2 {
-// 		glog.Fatalf("Please check the service format (namespace/name) in service %v", name)
-// 	}
-
-// 	defaultPort, err := getServicePorts(kubeClient, parts[0], parts[1])
-// 	if err != nil {
-// 		return nginx.Service{}, fmt.Errorf("Error obtaining service %v: %v", name, err)
-// 	}
-
-// 	return nginx.Service{
-// 		ServiceName: parts[1],
-// 		ServicePort: defaultPort[0], //TODO: which port?
-// 		Namespace:   parts[0],
-// 	}, nil
-// }
-
-// // getServicePorts returns the ports defined in a service spec
-// func getServicePorts(kubeClient *unversioned.Client, ns, name string) (ports []string, err error) {
-// 	var svc *api.Service
-// 	glog.Infof("Checking service %v/%v", ns, name)
-// 	svc, err = kubeClient.Services(ns).Get(name)
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	for _, p := range svc.Spec.Ports {
-// 		if p.Port != 0 {
-// 			ports = append(ports, strconv.Itoa(p.Port))
-// 			break
-// 		}
-// 	}
-
-// 	glog.Infof("Ports for %v/%v : %v", ns, name, ports)
-
-// 	return
-// }
-
-// func getTCPServices(kubeClient *unversioned.Client, tcpServices string) []nginx.Service {
-// 	svcs := []nginx.Service{}
-// 	for _, svc := range strings.Split(tcpServices, ",") {
-// 		if svc == "" {
-// 			continue
-// 		}
-
-// 		namePort := strings.Split(svc, ":")
-// 		if len(namePort) == 2 {
-// 			tcpSvc, err := getService(kubeClient, namePort[0])
-// 			if err != nil {
-// 				glog.Errorf("%s", err)
-// 				continue
-// 			}
-
-// 			// the exposed TCP service cannot use 80 or 443 as ports
-// 			if namePort[1] == httpPort || namePort[1] == httpsPort {
-// 				glog.Errorf("The TCP service %v cannot use ports 80 or 443 (it creates a conflict with nginx)", svc)
-// 				continue
-// 			}
-
-// 			tcpSvc.ExposedPort = namePort[1]
-// 			svcs = append(svcs, tcpSvc)
-// 		} else {
-// 			glog.Errorf("TCP services should take the form namespace/name:port not %v from %v", namePort, svc)
-// 		}
-// 	}
-
-// 	return svcs
-// }
 
 func isHostValid(host string, cns []string) bool {
 	for _, cn := range cns {
@@ -225,4 +103,13 @@ func matchHostnames(pattern, host string) bool {
 	}
 
 	return true
+}
+
+func parseNsName(input string) (string, string, error) {
+	nsName := strings.Split(input, "/")
+	if len(nsName) != 2 {
+		return "", "", fmt.Errorf("invalid format (namespace/name) found in '%v'", input)
+	}
+
+	return nsName[0], nsName[1], nil
 }

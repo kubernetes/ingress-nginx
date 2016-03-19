@@ -18,11 +18,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
+
+	"k8s.io/contrib/ingress/controllers/nginx-third-party/nginx"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
@@ -41,6 +44,9 @@ var (
     namespace/name. The controller uses the first node port of this Service for
     the default backend.`)
 
+	nxgConfigMap = flags.String("nginx-configmap", "",
+		`Name of the ConfigMap that containes the custom nginx configuration to use`)
+
 	tcpConfigMapName = flags.String("tcp-services-configmap", "",
 		`Name of the ConfigMap that containes the definition of the TCP services to expose.
 		The key in the map indicates the external port to be used. The value is the name of the 
@@ -55,11 +61,19 @@ var (
 		`Namespace to watch for Ingress. Default is to watch all namespaces`)
 
 	healthzPort = flags.Int("healthz-port", healthPort, "port for healthz endpoint.")
+
+	buildCfg = flags.Bool("dump-nginx—configuration", false, `Returns a ConfigMap with the default nginx conguration.
+		This can be used as a guide to create a custom configuration.`)
 )
 
 func main() {
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
+
+	if *buildCfg {
+		fmt.Printf("Example of ConfigMap to customize NGINX configuration:\n%v", nginx.ConfigMapAsString())
+		os.Exit(0)
+	}
 
 	if *defaultSvc == "" {
 		glog.Fatalf("Please specify --default-backend")
@@ -70,7 +84,10 @@ func main() {
 		glog.Fatalf("failed to create client: %v", err)
 	}
 
-	lbInfo, _ := getLBDetails(kubeClient)
+	lbInfo, err := getLBDetails(kubeClient)
+	if err != nil {
+		glog.Fatalf("unexpected error getting runtime information: %v", err)
+	}
 
 	err = isValidService(kubeClient, *defaultSvc)
 	if err != nil {
