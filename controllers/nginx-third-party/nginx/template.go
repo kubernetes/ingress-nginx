@@ -37,12 +37,12 @@ var funcMap = template.FuncMap{
 	},
 }
 
-func (ngx *NginxManager) loadTemplate() {
+func (ngx *Manager) loadTemplate() {
 	tmpl, _ := template.New("nginx.tmpl").Funcs(funcMap).ParseFiles("./nginx.tmpl")
 	ngx.template = tmpl
 }
 
-func (ngx *NginxManager) writeCfg(cfg *nginxConfiguration, ingressCfg IngressConfig) (bool, error) {
+func (ngx *Manager) writeCfg(cfg *nginxConfiguration, ingressCfg IngressConfig) (bool, error) {
 	fromMap := structs.Map(cfg)
 	toMap := structs.Map(ngx.defCfg)
 	curNginxCfg := merge(toMap, fromMap)

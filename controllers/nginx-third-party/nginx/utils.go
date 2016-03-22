@@ -19,9 +19,7 @@ package nginx
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"reflect"
@@ -33,23 +31,8 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
-// IsHealthy checks if nginx is running
-func (ngx *NginxManager) IsHealthy() error {
-	res, err := http.Get("http://127.0.0.1:8080/healthz")
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		return fmt.Errorf("NGINX is unhealthy")
-	}
-
-	return nil
-}
-
-// getDnsServers returns the list of nameservers located in the file /etc/resolv.conf
-func getDnsServers() []string {
+// getDNSServers returns the list of nameservers located in the file /etc/resolv.conf
+func getDNSServers() []string {
 	file, err := ioutil.ReadFile("/etc/resolv.conf")
 	if err != nil {
 		return []string{}
@@ -78,7 +61,7 @@ func getDnsServers() []string {
 }
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
-func (ngx *NginxManager) ReadConfig(config *api.ConfigMap) (*nginxConfiguration, error) {
+func (ngx *Manager) ReadConfig(config *api.ConfigMap) (*nginxConfiguration, error) {
 	if len(config.Data) == 0 {
 		return newDefaultNginxCfg(), nil
 	}
@@ -96,7 +79,7 @@ func (ngx *NginxManager) ReadConfig(config *api.ConfigMap) (*nginxConfiguration,
 	return cfg, nil
 }
 
-func (ngx *NginxManager) needsReload(data *bytes.Buffer) (bool, error) {
+func (ngx *Manager) needsReload(data *bytes.Buffer) (bool, error) {
 	filename := ngx.ConfigFile
 	in, err := os.Open(filename)
 	if err != nil {

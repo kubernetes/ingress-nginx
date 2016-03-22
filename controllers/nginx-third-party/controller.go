@@ -18,7 +18,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,7 +53,7 @@ type loadBalancerController struct {
 	ingLister      StoreToIngressLister
 	svcLister      cache.StoreToServiceLister
 	endpLister     cache.StoreToEndpointsLister
-	nginx          *nginx.NginxManager
+	nginx          *nginx.Manager
 	lbInfo         *lbInfo
 	defaultSvc     string
 	nxgConfigMap   string
@@ -147,25 +146,6 @@ func (lbc *loadBalancerController) getConfigMap(ns, name string) (*api.ConfigMap
 
 func (lbc *loadBalancerController) getTCPConfigMap(ns, name string) (*api.ConfigMap, error) {
 	return lbc.client.ConfigMaps(ns).Get(name)
-}
-
-func (lbc *loadBalancerController) registerHandlers() {
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		if err := lbc.nginx.IsHealthy(); err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte("nginx error"))
-			return
-		}
-
-		w.WriteHeader(200)
-		w.Write([]byte("ok"))
-	})
-
-	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		lbc.Stop()
-	})
-
-	glog.Fatalf(fmt.Sprintf("%v", http.ListenAndServe(fmt.Sprintf(":%v", *healthzPort), nil)))
 }
 
 func (lbc *loadBalancerController) sync() {
@@ -540,7 +520,6 @@ func (lbc *loadBalancerController) Stop() {
 func (lbc *loadBalancerController) Run() {
 	glog.Infof("starting NGINX loadbalancer controller")
 	go lbc.nginx.Start()
-	go lbc.registerHandlers()
 
 	go lbc.ingController.Run(lbc.stopCh)
 	go lbc.endpController.Run(lbc.stopCh)

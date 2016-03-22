@@ -27,7 +27,7 @@ import (
 )
 
 // AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
-func (nginx *NginxManager) AddOrUpdateCertAndKey(name string, cert string, key string) string {
+func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) string {
 	pemFileName := sslDirectory + "/" + name + ".pem"
 
 	pem, err := os.Create(pemFileName)
@@ -47,7 +47,7 @@ func (nginx *NginxManager) AddOrUpdateCertAndKey(name string, cert string, key s
 // CheckSSLCertificate checks if the certificate and key file are valid
 // returning the result of the validation and the list of hostnames
 // contained in the common name/s
-func (nginx *NginxManager) CheckSSLCertificate(secretName string) ([]string, error) {
+func (nginx *Manager) CheckSSLCertificate(secretName string) ([]string, error) {
 	pemFileName := sslDirectory + "/" + secretName + ".pem"
 	pemCerts, err := ioutil.ReadFile(pemFileName)
 	if err != nil {
@@ -55,7 +55,7 @@ func (nginx *NginxManager) CheckSSLCertificate(secretName string) ([]string, err
 	}
 
 	var block *pem.Block
-	block, pemCerts = pem.Decode(pemCerts)
+	block, _ = pem.Decode(pemCerts)
 
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
@@ -74,7 +74,7 @@ func (nginx *NginxManager) CheckSSLCertificate(secretName string) ([]string, err
 // SearchDHParamFile iterates all the secrets mounted inside the /etc/nginx-ssl directory
 // in order to find a file with the name dhparam.pem. If such file exists it will
 // returns the path. If not it just returns an empty string
-func (nginx *NginxManager) SearchDHParamFile(baseDir string) string {
+func (nginx *Manager) SearchDHParamFile(baseDir string) string {
 	files, _ := ioutil.ReadDir(baseDir)
 	for _, file := range files {
 		if !file.IsDir() {

@@ -17,15 +17,19 @@ limitations under the License.
 package nginx
 
 import (
+	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 
 	"github.com/golang/glog"
+
+	"k8s.io/kubernetes/pkg/healthz"
 )
 
 // Start starts a nginx (master process) and waits. If the process ends
 // we need to kill the controller process and return the reason.
-func (ngx *NginxManager) Start() {
+func (ngx *Manager) Start() {
 	glog.Info("Starting NGINX process...")
 	cmd := exec.Command("nginx")
 	cmd.Stdout = os.Stdout
@@ -50,7 +54,7 @@ func (ngx *NginxManager) Start() {
 // shut down, stop accepting new connections and continue to service current requests
 // until all such requests are serviced. After that, the old worker processes exit.
 // http://nginx.org/en/docs/beginners_guide.html#control
-func (ngx *NginxManager) CheckAndReload(cfg *nginxConfiguration, ingressCfg IngressConfig) {
+func (ngx *Manager) CheckAndReload(cfg *nginxConfiguration, ingressCfg IngressConfig) {
 	ngx.reloadLock.Lock()
 	defer ngx.reloadLock.Unlock()
 
@@ -70,11 +74,34 @@ func (ngx *NginxManager) CheckAndReload(cfg *nginxConfiguration, ingressCfg Ingr
 
 // shellOut executes a command and returns its combined standard output and standard
 // error in case of an error in the execution
-func (ngx *NginxManager) shellOut(cmd string) error {
+func (ngx *Manager) shellOut(cmd string) error {
 	out, err := exec.Command("sh", "-c", cmd).CombinedOutput()
 	if err != nil {
 		glog.Errorf("failed to execute %v: %v", cmd, string(out))
 		return err
+	}
+
+	return nil
+}
+
+// check to verify Manager implements HealthzChecker interface
+var _ healthz.HealthzChecker = Manager{}
+
+// Name returns the healthcheck name
+func (ngx Manager) Name() string {
+	return "NGINX"
+}
+
+// Check returns if the nginx healthz endpoint is returning ok (status code 200)
+func (ngx Manager) Check(_ *http.Request) error {
+	res, err := http.Get("http://127.0.0.1:8080/healthz")
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return fmt.Errorf("NGINX is unhealthy")
 	}
 
 	return nil

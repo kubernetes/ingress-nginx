@@ -203,8 +203,8 @@ type nginxConfiguration struct {
 	WorkerProcesses string `json:"workerProcesses,omitempty" structs:"workerProcesses,omitempty"`
 }
 
-// NginxManager ...
-type NginxManager struct {
+// Manager ...
+type Manager struct {
 	ConfigFile string
 
 	defCfg *nginxConfiguration
@@ -257,11 +257,11 @@ func newDefaultNginxCfg() *nginxConfiguration {
 }
 
 // NewManager ...
-func NewManager(kubeClient *client.Client) *NginxManager {
-	ngx := &NginxManager{
+func NewManager(kubeClient *client.Client) *Manager {
+	ngx := &Manager{
 		ConfigFile:  "/etc/nginx/nginx.conf",
 		defCfg:      newDefaultNginxCfg(),
-		defResolver: strings.Join(getDnsServers(), " "),
+		defResolver: strings.Join(getDNSServers(), " "),
 		reloadLock:  &sync.Mutex{},
 	}
 
@@ -274,7 +274,7 @@ func NewManager(kubeClient *client.Client) *NginxManager {
 	return ngx
 }
 
-func (nginx *NginxManager) createCertsDir(base string) {
+func (nginx *Manager) createCertsDir(base string) {
 	if err := os.Mkdir(base, os.ModeDir); err != nil {
 		glog.Fatalf("Couldn't create directory %v: %v", base, err)
 	}

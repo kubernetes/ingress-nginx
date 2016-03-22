@@ -619,6 +619,11 @@
 			"Rev": "fd557a2c9f47c655f9c07d9cf9dee2539e935703"
 		},
 		{
+			"ImportPath": "k8s.io/kubernetes/pkg/healthz",
+			"Comment": "v1.2.1-beta.0",
+			"Rev": "fd557a2c9f47c655f9c07d9cf9dee2539e935703"
+		},
+		{
 			"ImportPath": "k8s.io/kubernetes/pkg/kubectl",
 			"Comment": "v1.2.1-beta.0",
 			"Rev": "fd557a2c9f47c655f9c07d9cf9dee2539e935703"

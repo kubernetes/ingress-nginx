@@ -19,6 +19,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"net/http/pprof"
 	"os"
 	"time"
 
@@ -29,6 +31,7 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/kubernetes/pkg/healthz"
 	"k8s.io/kubernetes/pkg/runtime"
 )
 
@@ -64,6 +67,8 @@ var (
 
 	buildCfg = flags.Bool("dump-nginx—configuration", false, `Returns a ConfigMap with the default nginx conguration.
 		This can be used as a guide to create a custom configuration.`)
+
+	profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
 )
 
 func main() {
@@ -99,6 +104,8 @@ func main() {
 		glog.Fatalf("%v", err)
 	}
 
+	go registerHandlers(lbc)
+
 	lbc.Run()
 
 	for {
@@ -114,4 +121,25 @@ type lbInfo struct {
 	Podname      string
 	PodIP        string
 	PodNamespace string
+}
+
+func registerHandlers(lbc *loadBalancerController) {
+	mux := http.NewServeMux()
+	healthz.InstallHandler(mux, lbc.nginx)
+
+	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
+		lbc.Stop()
+	})
+
+	if *profiling {
+		mux.HandleFunc("/debug/pprof/", pprof.Index)
+		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	}
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%v", *healthzPort),
+		Handler: mux,
+	}
+	glog.Fatal(server.ListenAndServe())
 }
