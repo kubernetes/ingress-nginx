@@ -7,8 +7,12 @@ pid /run/nginx.pid;
 
 worker_rlimit_nofile 131072;
 
+pcre_jit on;
+
 events {
-    worker_connections {{ $cfg.maxWorkerConnections }};
+    multi_accept        on;
+    worker_connections  {{ $cfg.maxWorkerConnections }};
+    use                 epoll; 
 }
 
 http {
@@ -20,9 +24,14 @@ http {
         require("error_page")
     }
 
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
+    sendfile            on;
+    aio                 threads;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    
+    log_subrequest      on;
+
+    reset_timedout_connection on;
 
     keepalive_timeout {{ $cfg.keepAlive }}s;
 
@@ -45,8 +54,8 @@ http {
     client_max_body_size "{{ $cfg.bodySize }}";
 
     {{ if $cfg.useProxyProtocol }}
-    set_real_ip_from {{ $cfg.proxyRealIpCidr }};
-    real_ip_header proxy_protocol;
+    set_real_ip_from    {{ $cfg.proxyRealIpCidr }};
+    real_ip_header      proxy_protocol;
     {{ end }}
 
     log_format upstreaminfo '{{ if $cfg.useProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
@@ -120,42 +129,19 @@ http {
 
     # Custom error pages
     proxy_intercept_errors on;
-    error_page 403 @custom_403;
-    error_page 404 @custom_404;
-    error_page 405 @custom_405;
-    error_page 408 @custom_408;
-    error_page 413 @custom_413;
-    error_page 501 @custom_501;
-    error_page 502 @custom_502;
-    error_page 503 @custom_503;
-    error_page 504 @custom_504;
 
-    # Reverse Proxy configuration
-    # pass original Host header
-    proxy_set_header Host                   $host;
-    # Pass Real IP
-    proxy_set_header X-Real-IP              $remote_addr;
-
-    proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Host       $host;
-    proxy_set_header X-Forwarded-Server     $host;
-    proxy_set_header X-Forwarded-Port       $http_x_forwarded_port;
-    proxy_set_header X-Forwarded-Proto      $scheme;
-
-    proxy_connect_timeout                   {{ $cfg.proxyConnectTimeout }}s;
-    proxy_send_timeout                      {{ $cfg.proxySendTimeout }}s;
-    proxy_read_timeout                      {{ $cfg.proxyReadTimeout }}s;
-
-    proxy_buffering                         off;
-    
-    proxy_http_version                      1.1;
-
-    # Allow websocket connections
-    proxy_set_header            Upgrade           $http_upgrade;
-    proxy_set_header            Connection        $connection_upgrade;
+    error_page 403 = @custom_403;
+    error_page 404 = @custom_404;
+    error_page 405 = @custom_405;
+    error_page 408 = @custom_408;
+    error_page 413 = @custom_413;
+    error_page 501 = @custom_501;
+    error_page 502 = @custom_502;
+    error_page 503 = @custom_503;
+    error_page 504 = @custom_504;
 
     # In case of errors try the next upstream server before returning an error
-    proxy_next_upstream                     error timeout http_502 http_503 http_504;
+    proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504;
 
     server {
         listen 80 default_server{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
@@ -183,6 +169,7 @@ http {
         ssl_certificate_key {{ $server.SSLCertificateKey }};{{ end }}
 
         server_name {{ $server.Name }};
+
         {{ if $server.SSL }}
         if ($scheme = http) {
             return 301 https://$host$request_uri;
@@ -190,11 +177,32 @@ http {
         {{ end }}
         {{ range $location := $server.Locations }}
         location {{ $location.Path }} {
-            proxy_set_header Host $host;
+            proxy_set_header Host                   $host;
+
+            # Pass Real IP
+            proxy_set_header X-Real-IP              $remote_addr;
+
+            # Allow websocket connections
+            proxy_set_header                        Upgrade           $http_upgrade;
+            proxy_set_header                        Connection        $connection_upgrade;
+
+            proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Host       $host;
+            proxy_set_header X-Forwarded-Server     $host;
+            proxy_set_header X-Forwarded-Proto      $scheme;
+
+            proxy_connect_timeout                   {{ $cfg.proxyConnectTimeout }}s;
+            proxy_send_timeout                      {{ $cfg.proxySendTimeout }}s;
+            proxy_read_timeout                      {{ $cfg.proxyReadTimeout }}s;
+
+            proxy_redirect                          off;
+            proxy_buffering                         off;
+
+            proxy_http_version                      1.1;
+
             proxy_pass http://{{ $location.Upstream.Name }};
         }
         {{ end }}
-
         {{ template "CUSTOM_ERRORS" $cfg }}
     }
     {{ end }}
@@ -217,6 +225,7 @@ http {
         location /nginx-status {
             #vhost_traffic_status_display;
             #vhost_traffic_status_display_format html;
+            access_log off;
             stub_status on;
         }
 
@@ -248,8 +257,8 @@ stream {
 
     server {
         listen {{ $tcpServer.Path }};
-        proxy_connect_timeout  {{ $cfg.proxyConnectTimeout }}s;
-        proxy_timeout          {{ $cfg.proxyReadTimeout }}s;
+        proxy_connect_timeout  {{ $cfg.proxyConnectTimeout }};
+        proxy_timeout          {{ $cfg.proxyReadTimeout }};
         proxy_pass             tcp-{{ $tcpServer.Upstream.Name }};
     }
 {{ end }}
@@ -258,48 +267,56 @@ stream {
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
         location @custom_403 {
+            internal;
             content_by_lua_block {
                 openURL(403)
             }
         }
 
         location @custom_404 {
+            internal;
             content_by_lua_block {
                 openURL(404)
             }
         }
 
         location @custom_405 {
+            internal;
             content_by_lua_block {
                 openURL(405)
             }
         }
 
         location @custom_408 {
+            internal;
             content_by_lua_block {
                 openURL(408)
             }
         }
 
         location @custom_413 {
+            internal;
             content_by_lua_block {
                 openURL(413)
             }
         }
 
         location @custom_502 {
+            internal;
             content_by_lua_block {
                 openURL(502)
             }
         }
 
         location @custom_503 {
+            internal;
             content_by_lua_block {
                 openURL(503)
             }
         }
 
         location @custom_504 {
+            internal;
             content_by_lua_block {
                 openURL(504)
             }

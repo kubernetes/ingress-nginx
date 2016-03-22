@@ -54,7 +54,9 @@ func (ngx *Manager) Start() {
 // shut down, stop accepting new connections and continue to service current requests
 // until all such requests are serviced. After that, the old worker processes exit.
 // http://nginx.org/en/docs/beginners_guide.html#control
-func (ngx *Manager) CheckAndReload(cfg *nginxConfiguration, ingressCfg IngressConfig) {
+func (ngx *Manager) CheckAndReload(cfg nginxConfiguration, ingressCfg IngressConfig) {
+	ngx.reloadRateLimiter.Accept()
+
 	ngx.reloadLock.Lock()
 	defer ngx.reloadLock.Unlock()
 

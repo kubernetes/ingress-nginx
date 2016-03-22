@@ -47,8 +47,7 @@ func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string
 // CheckSSLCertificate checks if the certificate and key file are valid
 // returning the result of the validation and the list of hostnames
 // contained in the common name/s
-func (nginx *Manager) CheckSSLCertificate(secretName string) ([]string, error) {
-	pemFileName := sslDirectory + "/" + secretName + ".pem"
+func (nginx *Manager) CheckSSLCertificate(pemFileName string) ([]string, error) {
 	pemCerts, err := ioutil.ReadFile(pemFileName)
 	if err != nil {
 		return []string{}, err

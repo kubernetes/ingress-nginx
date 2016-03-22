@@ -20,18 +20,79 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/golang/glog"
 
 	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/client/unversioned"
-)
-
-var (
-	errMissingPodInfo = fmt.Errorf("Unable to get POD information")
+	"k8s.io/kubernetes/pkg/util/wait"
+	"k8s.io/kubernetes/pkg/util/workqueue"
 )
 
 // StoreToIngressLister makes a Store that lists Ingress.
 type StoreToIngressLister struct {
 	cache.Store
+}
+
+// taskQueue manages a work queue through an independent worker that
+// invokes the given sync function for every work item inserted.
+type taskQueue struct {
+	// queue is the work queue the worker polls
+	queue *workqueue.Type
+	// sync is called for each item in the queue
+	sync func(string)
+	// workerDone is closed when the worker exits
+	workerDone chan struct{}
+}
+
+func (t *taskQueue) run(period time.Duration, stopCh <-chan struct{}) {
+	wait.Until(t.worker, period, stopCh)
+}
+
+// enqueue enqueues ns/name of the given api object in the task queue.
+func (t *taskQueue) enqueue(obj interface{}) {
+	key, err := keyFunc(obj)
+	if err != nil {
+		glog.Infof("could not get key for object %+v: %v", obj, err)
+		return
+	}
+	t.queue.Add(key)
+}
+
+func (t *taskQueue) requeue(key string, err error) {
+	glog.V(3).Infof("requeuing %v, err %v", key, err)
+	t.queue.Add(key)
+}
+
+// worker processes work in the queue through sync.
+func (t *taskQueue) worker() {
+	for {
+		key, quit := t.queue.Get()
+		if quit {
+			close(t.workerDone)
+			return
+		}
+		glog.V(3).Infof("syncing %v", key)
+		t.sync(key.(string))
+		t.queue.Done(key)
+	}
+}
+
+// shutdown shuts down the work queue and waits for the worker to ACK
+func (t *taskQueue) shutdown() {
+	t.queue.ShutDown()
+	<-t.workerDone
+}
+
+// NewTaskQueue creates a new task queue with the given sync function.
+// The sync function is called for every element inserted into the queue.
+func NewTaskQueue(syncFn func(string)) *taskQueue {
+	return &taskQueue{
+		queue:      workqueue.New(),
+		sync:       syncFn,
+		workerDone: make(chan struct{}),
+	}
 }
 
 // getLBDetails returns runtime information about the pod (name, IP) and replication
@@ -44,7 +105,7 @@ func getLBDetails(kubeClient *unversioned.Client) (*lbInfo, error) {
 
 	pod, _ := kubeClient.Pods(podNs).Get(podName)
 	if pod == nil {
-		return nil, errMissingPodInfo
+		return nil, fmt.Errorf("Unable to get POD information")
 	}
 
 	return &lbInfo{
@@ -56,12 +117,12 @@ func getLBDetails(kubeClient *unversioned.Client) (*lbInfo, error) {
 
 func isValidService(kubeClient *unversioned.Client, name string) error {
 	if name == "" {
-		return fmt.Errorf("Empty string is not a valid service name")
+		return fmt.Errorf("empty string is not a valid service name")
 	}
 
 	parts := strings.Split(name, "/")
 	if len(parts) != 2 {
-		return fmt.Errorf("Invalid name format (namespace/name) in service '%v'", name)
+		return fmt.Errorf("invalid name format (namespace/name) in service '%v'", name)
 	}
 
 	_, err := kubeClient.Services(parts[0]).Get(parts[1])

@@ -18,7 +18,6 @@ package nginx
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -27,7 +26,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"github.com/imdario/mergo"
+	"github.com/mitchellh/mapstructure"
 	"k8s.io/kubernetes/pkg/api"
 )
 
@@ -61,22 +60,25 @@ func getDNSServers() []string {
 }
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
-func (ngx *Manager) ReadConfig(config *api.ConfigMap) (*nginxConfiguration, error) {
+func (ngx *Manager) ReadConfig(config *api.ConfigMap) nginxConfiguration {
 	if len(config.Data) == 0 {
-		return newDefaultNginxCfg(), nil
+		return newDefaultNginxCfg()
 	}
 
 	cfg := newDefaultNginxCfg()
 
-	data, err := json.Marshal(config.Data)
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		TagName:          "structs",
+		Result:           &cfg,
+		WeaklyTypedInput: true,
+	})
+
+	err = decoder.Decode(config.Data)
 	if err != nil {
-		err = mergo.Merge(cfg, data)
-		if err != nil {
-			return cfg, nil
-		}
+		glog.Infof("%v", err)
 	}
 
-	return cfg, nil
+	return cfg
 }
 
 func (ngx *Manager) needsReload(data *bytes.Buffer) (bool, error) {

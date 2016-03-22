@@ -20,29 +20,34 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"text/template"
 
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
 )
 
-var funcMap = template.FuncMap{
-	"empty": func(input interface{}) bool {
-		check, ok := input.(string)
-		if ok {
-			return len(check) == 0
-		}
+var (
+	camelRegexp = regexp.MustCompile("[0-9A-Za-z]+")
 
-		return true
-	},
-}
+	funcMap = template.FuncMap{
+		"empty": func(input interface{}) bool {
+			check, ok := input.(string)
+			if ok {
+				return len(check) == 0
+			}
+
+			return true
+		},
+	}
+)
 
 func (ngx *Manager) loadTemplate() {
 	tmpl, _ := template.New("nginx.tmpl").Funcs(funcMap).ParseFiles("./nginx.tmpl")
 	ngx.template = tmpl
 }
 
-func (ngx *Manager) writeCfg(cfg *nginxConfiguration, ingressCfg IngressConfig) (bool, error) {
+func (ngx *Manager) writeCfg(cfg nginxConfiguration, ingressCfg IngressConfig) (bool, error) {
 	fromMap := structs.Map(cfg)
 	toMap := structs.Map(ngx.defCfg)
 	curNginxCfg := merge(toMap, fromMap)
@@ -53,7 +58,7 @@ func (ngx *Manager) writeCfg(cfg *nginxConfiguration, ingressCfg IngressConfig) 
 	conf["tcpUpstreams"] = ingressCfg.TCPUpstreams
 	conf["defResolver"] = ngx.defResolver
 	conf["sslDHParam"] = ngx.sslDHParam
-	conf["cfg"] = curNginxCfg
+	conf["cfg"] = fixKeyNames(curNginxCfg)
 
 	buffer := new(bytes.Buffer)
 	err := ngx.template.Execute(buffer, conf)
@@ -76,4 +81,24 @@ func (ngx *Manager) writeCfg(cfg *nginxConfiguration, ingressCfg IngressConfig) 
 	}
 
 	return changed, nil
+}
+
+func fixKeyNames(data map[string]interface{}) map[string]interface{} {
+	fixed := make(map[string]interface{})
+	for k, v := range data {
+		fixed[toCamelCase(k)] = v
+	}
+
+	return fixed
+}
+
+func toCamelCase(src string) string {
+	byteSrc := []byte(src)
+	chunks := camelRegexp.FindAll(byteSrc, -1)
+	for idx, val := range chunks {
+		if idx > 0 {
+			chunks[idx] = bytes.Title(val)
+		}
+	}
+	return string(bytes.Join(chunks, nil))
 }

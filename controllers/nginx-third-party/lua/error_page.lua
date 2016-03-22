@@ -1,14 +1,23 @@
 http = require "resty.http"
-def_backend = "http://upstream-default-backend"
+def_backend = "upstream-default-backend"
+
+local concat = table.concat
+local upstream = require "ngx.upstream"
+local get_servers = upstream.get_servers
+local get_upstreams = upstream.get_upstreams
+local random = math.random
+local us = get_upstreams()
 
 function openURL(status)
     local httpc = http.new()
 
-    local res, err = httpc:request_uri(def_backend, {
+    local random_backend = get_destination()
+    local res, err = httpc:request_uri(random_backend, {
         path = "/",
         method = "GET",
         headers = {
-          ["Content-Type"] = ngx.var.httpAccept or "html",
+            ["X-Code"] = status or "404",
+            ["X-Format"] = ngx.var.httpAccept or "html",
         }
     })
 
@@ -17,10 +26,42 @@ function openURL(status)
         ngx.exit(500)
     end
 
-    ngx.status = tonumber(status)
     if ngx.var.http_cookie then
         ngx.header["Cookie"] = ngx.var.http_cookie
     end
-    
+
+    ngx.status = tonumber(status)
     ngx.say(res.body)
+end
+
+function get_destination()
+    for _, u in ipairs(us) do
+        if u == def_backend then
+            local srvs, err = get_servers(u)
+            local us_table = {}
+            if not srvs then
+                return "http://127.0.0.1:8181"
+            else
+                for _, srv in ipairs(srvs) do
+                    us_table[srv["name"]] = srv["weight"]
+                end
+            end
+            local destination = random_weight(us_table)
+            return "http://"..destination
+        end
+    end
+end
+
+function random_weight(tbl)
+    local total = 0
+    for k, v in pairs(tbl) do
+        total = total + v
+    end
+    local offset = random(0, total - 1)
+    for k1, v1 in pairs(tbl) do
+        if offset < v1 then
+            return k1
+        end
+        offset = offset - v1
+    end
 end
