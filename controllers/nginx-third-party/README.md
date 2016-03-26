@@ -50,21 +50,21 @@ spec:
 Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
 
-## Optimizing TLS Time To First Byte (TTTFB)
+#### Optimizing TLS Time To First Byte (TTTFB)
 
-NGINX provides the configuration option (`ssl_buffer_size)[http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size] to allow the optimization of the TLS record size. This improves the (Time To First Byte)[https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/] (TTTFB). The default value in the Ingress controller it is `4k` (nginx default is `16k`);
+NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) to allow the optimization of the TLS record size. This improves the [Time To First Byte](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) (TTTFB). The default value in the Ingress controller is `4k` (nginx default is `16k`);
 
 
 ## Examples:
 
-First we need to deploy some application to publish. To keep this simple we will use the [echoheaders app]() that just returns information about the http request as output
+First we need to deploy some application to publish. To keep this simple we will use the [echoheaders app](https://github.com/kubernetes/contrib/blob/master/ingress/echoheaders/echo-app.yaml) that just returns information about the http request as output
 ```
 kubectl run echoheaders --image=gcr.io/google_containers/echoserver:1.1 --replicas=1 --port=8080
 ```
 
 Now we expose the same application in two different services (so we can create different Ingress rules)
 ```
-kubectl expose rc echoheaders --port=80 --target-port=8080 --name=echoheaders-x 
+kubectl expose rc echoheaders --port=80 --target-port=8080 --name=echoheaders-x
 kubectl expose rc echoheaders --port=80 --target-port=8080 --name=echoheaders-y
 ```
 
@@ -83,7 +83,7 @@ echomap   -
           bar.baz.com
           /bar          echoheaders-y:80
           /foo          echoheaders-x:80
-```          
+```
 
 Before the deploy of nginx we need a default backend [404-server](https://github.com/kubernetes/contrib/tree/master/404-server) (or a compatible custom image)
 ```
@@ -181,7 +181,7 @@ To configure which services and ports will be exposed
 kubectl create -f examples/tcp-configmap-example.yaml
 ```
 
-The file `examples/tcp-configmap-example.yaml` uses a ConfigMap where the key is the external port to use and the value is 
+The file `examples/tcp-configmap-example.yaml` uses a ConfigMap where the key is the external port to use and the value is
 `<namespace/service name>:<service port>`
 It is possible to use a number or the name of the port.
 
@@ -331,7 +331,7 @@ BODY:
 ## Custom errors
 
 The default backend provides a way to customize the default 404 page. This helps but sometimes is not enough.
-Using the flag `--custom-error-service` is possible to use an image that must be 404 compatible and provide the route /error 
+Using the flag `--custom-error-service` is possible to use an image that must be 404 compatible and provide the route /error
 [Here](https://github.com/aledbf/contrib/tree/nginx-debug-server/Ingress/images/nginx-error-server) there is an example of the the image
 
 The route `/error` expects two arguments: code and format
