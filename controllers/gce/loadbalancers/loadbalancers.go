@@ -642,48 +642,29 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 	}
 	glog.V(3).Infof("Updating url map %+v", ingressRules)
 
-	for hostname, urlToBackend := range ingressRules {
-		// Find the hostrule
-		// Find the path matcher
-		// Add all given endpoint:backends to pathRules in path matcher
-		var hostRule *compute.HostRule
-		pmName := getNameForPathMatcher(hostname)
-		for _, hr := range l.um.HostRules {
-			// TODO: Hostnames must be exact match?
-			if hr.Hosts[0] == hostname {
-				hostRule = hr
-				break
-			}
-		}
-		if hostRule == nil {
-			// This is a new host
-			hostRule = &compute.HostRule{
-				Hosts:       []string{hostname},
-				PathMatcher: pmName,
-			}
-			// Why not just clobber existing host rules?
-			// Because we can have multiple loadbalancers point to a single
-			// gce url map when we have IngressClaims.
-			l.um.HostRules = append(l.um.HostRules, hostRule)
-		}
-		var pathMatcher *compute.PathMatcher
-		for _, pm := range l.um.PathMatchers {
-			if pm.Name == hostRule.PathMatcher {
-				pathMatcher = pm
-				break
-			}
-		}
-		if pathMatcher == nil {
-			// This is a dangling or new host
-			pathMatcher = &compute.PathMatcher{Name: pmName}
-			l.um.PathMatchers = append(l.um.PathMatchers, pathMatcher)
-		}
-		pathMatcher.DefaultService = l.um.DefaultService
+	// Every update replaces the entire urlmap.
+	// TODO:  when we have multiple loadbalancers point to a single gce url map
+	// this needs modification. For now, there is a 1:1 mapping of urlmaps to
+	// Ingresses, so if the given Ingress doesn't have a host rule we should
+	// delete the path to that backend.
+	l.um.HostRules = []*compute.HostRule{}
+	l.um.PathMatchers = []*compute.PathMatcher{}
 
-		// TODO: Every update replaces the entire path map. This will need to
-		// change when we allow joining. Right now we call a single method
-		// to verify current == desired and add new url mappings.
-		pathMatcher.PathRules = []*compute.PathRule{}
+	for hostname, urlToBackend := range ingressRules {
+		// Create a host rule
+		// Create a path matcher
+		// Add all given endpoint:backends to pathRules in path matcher
+		pmName := getNameForPathMatcher(hostname)
+		l.um.HostRules = append(l.um.HostRules, &compute.HostRule{
+			Hosts:       []string{hostname},
+			PathMatcher: pmName,
+		})
+
+		pathMatcher := &compute.PathMatcher{
+			Name:           pmName,
+			DefaultService: l.um.DefaultService,
+			PathRules:      []*compute.PathRule{},
+		}
 
 		// Longest prefix wins. For equal rules, first hit wins, i.e the second
 		// /foo rule when the first is deleted.
@@ -691,6 +672,7 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 			pathMatcher.PathRules = append(
 				pathMatcher.PathRules, &compute.PathRule{Paths: []string{expr}, Service: be.SelfLink})
 		}
+		l.um.PathMatchers = append(l.um.PathMatchers, pathMatcher)
 	}
 	um, err := l.cloud.UpdateUrlMap(l.um)
 	if err != nil {
