@@ -265,6 +265,9 @@ func (lbc *LoadBalancerController) sync(key string) {
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
 
+	// Record any errors during sync and throw a single error at the end. This
+	// allows us to free up associated cloud resources ASAP.
+	var syncError error
 	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, nodePorts); err != nil {
 		// TODO: Implement proper backoff for the queue.
 		eventMsg := "GCE"
@@ -276,29 +279,34 @@ func (lbc *LoadBalancerController) sync(key string) {
 		} else {
 			err = fmt.Errorf("%v Error: %v", eventMsg, err)
 		}
-		lbc.ingQueue.requeue(key, err)
-		return
+		syncError = err
 	}
 
 	if !ingExists {
+		if syncError != nil {
+			lbc.ingQueue.requeue(key, err)
+		}
 		return
 	}
 	// Update the UrlMap of the single loadbalancer that came through the watch.
 	l7, err := lbc.CloudClusterManager.l7Pool.Get(key)
 	if err != nil {
-		lbc.ingQueue.requeue(key, err)
+		lbc.ingQueue.requeue(key, fmt.Errorf("%v, unable to get loadbalancer: %v", syncError, err))
 		return
 	}
 
 	ing := *obj.(*extensions.Ingress)
 	if urlMap, err := lbc.tr.toUrlMap(&ing); err != nil {
-		lbc.ingQueue.requeue(key, err)
+		syncError = fmt.Errorf("%v, convert to url map error %v", syncError, err)
 	} else if err := l7.UpdateUrlMap(urlMap); err != nil {
 		lbc.recorder.Eventf(&ing, api.EventTypeWarning, "UrlMap", err.Error())
-		lbc.ingQueue.requeue(key, err)
+		syncError = fmt.Errorf("%v, update url map error: %v", syncError, err)
 	} else if lbc.updateIngressStatus(l7, ing); err != nil {
 		lbc.recorder.Eventf(&ing, api.EventTypeWarning, "Status", err.Error())
-		lbc.ingQueue.requeue(key, err)
+		syncError = fmt.Errorf("%v, update ingress error: %v", syncError, err)
+	}
+	if syncError != nil {
+		lbc.ingQueue.requeue(key, syncError)
 	}
 	return
 }
