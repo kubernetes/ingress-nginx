@@ -87,6 +87,13 @@ type nginxConfiguration struct {
 	// Sets the maximum allowed size of the client request body
 	BodySize string `structs:"body-size,omitempty"`
 
+	// EnableVtsStatus allows the replacement of the default status page with a third party module named
+	// nginx-module-vts - https://github.com/vozlt/nginx-module-vts
+	// By default this is disabled
+	EnableVtsStatus bool `structs:"enable-vts-status,omitempty"`
+
+	VtsStatusZoneSize string `structs:"vts-status-zone-size,omitempty"`
+
 	// http://nginx.org/en/docs/ngx_core_module.html#error_log
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
 	// Log levels above are listed in the order of increasing severity
@@ -250,6 +257,7 @@ func newDefaultNginxCfg() nginxConfiguration {
 		UseProxyProtocol:         false,
 		UseGzip:                  true,
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
+		VtsStatusZoneSize:        "10m",
 	}
 
 	if glog.V(5) {

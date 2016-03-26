@@ -16,7 +16,7 @@ events {
 }
 
 http {
-    #vhost_traffic_status_zone shared:vhost_traffic_status:10m;
+    {{ if $cfg.enableVtsStatus}}vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.vtsStatusZoneSize }};{{ end }}
 
     # lus sectrion to return proper error codes when custom pages are used
     lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
@@ -75,12 +75,17 @@ http {
     }
 
     # trust http_x_forwarded_proto headers correctly indicate ssl offloading
-    map $http_x_forwarded_proto $access_scheme {
+    map $http_x_forwarded_proto $pass_access_scheme {
       default $http_x_forwarded_proto;
       ''      $scheme;
     }
 
-    map $access_scheme $sts {
+    map $http_x_forwarded_proto $pass_forwarded_for {
+      default $http_x_forwarded_for;
+      ''      $proxy_add_x_forwarded_for;
+    }
+
+    map $pass_access_scheme $sts {
       'https' 'max-age={{ $cfg.htsMaxAge }}{{ if $cfg.htsIncludeSubdomains }}; includeSubDomains{{ end }}; preload';
     }
 
@@ -150,6 +155,14 @@ http {
             return 200;
         }
 
+        location /nginx_status {
+            allow 127.0.0.1;
+            deny all;
+            
+            access_log off;
+            stub_status on;
+        }
+
         {{ template "CUSTOM_ERRORS" $cfg }}
     }
 
@@ -167,6 +180,9 @@ http {
         {{ if $server.SSL }}listen 443 ssl http2;
         ssl_certificate {{ $server.SSLCertificate }};
         ssl_certificate_key {{ $server.SSLCertificateKey }};{{ end }}
+        {{ if $cfg.enableVtsStatus }}
+        vhost_traffic_status_filter_by_set_key {{ $server.Name }} application::*;
+        {{ end }}
 
         server_name {{ $server.Name }};
 
@@ -186,10 +202,10 @@ http {
             proxy_set_header                        Upgrade           $http_upgrade;
             proxy_set_header                        Connection        $connection_upgrade;
 
-            proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-For        $pass_forwarded_for;
             proxy_set_header X-Forwarded-Host       $host;
             proxy_set_header X-Forwarded-Server     $host;
-            proxy_set_header X-Forwarded-Proto      $scheme;
+            proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
 
             proxy_connect_timeout                   {{ $cfg.proxyConnectTimeout }}s;
             proxy_send_timeout                      {{ $cfg.proxySendTimeout }}s;
@@ -210,7 +226,6 @@ http {
     # default server, including healthcheck
     server {
         listen 8080 default_server{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }} reuseport;
-        #vhost_traffic_status_filter_by_host on;
 
         location /healthz {
             access_log off;
@@ -222,11 +237,14 @@ http {
             proxy_pass http://127.0.0.1:10249/healthz;
         }
 
-        location /nginx-status {
-            #vhost_traffic_status_display;
-            #vhost_traffic_status_display_format html;
+        location /nginx_status {
+            {{ if $cfg.enableVtsStatus }}
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+            {{ else }}
             access_log off;
             stub_status on;
+            {{ end }}
         }
 
         location / {

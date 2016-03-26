@@ -15,11 +15,6 @@ spec:
         k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
     spec:
-      # A secret for each nginx host that requires SSL. These secrets need to
-      # exist before hand, see README.
-      # The secret must contains 2 variables: cert and key.
-      # Follow this https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh
-      # as a guide on how to generate secrets containing SSL certificates.
       volumes:
       - name: dhparam-example
         secret:
@@ -59,9 +54,6 @@ spec:
         volumeMounts:
         - mountPath: /etc/nginx-ssl/dhparam
           name: dhparam-example
-        # the flags tcp-services is required because Ingress do not support TCP rules
-        # if no namespace is specified "default" is used. Example: nodefaultns/example-go:8080
-        # containerPort 8080 is mapped to 9000 in the node.
         args:
         - /nginx-third-party-lb
         - --tcp-services-configmap=default/tcp-configmap-example

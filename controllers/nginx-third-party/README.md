@@ -426,6 +426,16 @@ Please check the example `rc-custom-configuration.yaml`
 
 If the Configmap it is updated, NGINX will be reloaded with the new configuration
 
+### NGINX status page
+
+The ngx_http_stub_status_module module provides access to basic status information. This is the default module active in the url `/nginx_status`.
+This controller provides an alternitive to this module using [nginx-module-vts](https://github.com/vozlt/nginx-module-vts) third party module.
+To use this module just provide a ConfigMap with the key `enable-vts-status=true`. The URL is exposed in the port 8080.
+Please check the example `example/rc-default.yaml`
+
+![nginx-module-vts screenshot](https://cloud.githubusercontent.com/assets/3648408/10876811/77a67b70-8183-11e5-9924-6a6d0c5dc73a.png "screenshot with filter")
+
+To extract the information in JSON format the module provides a custom URL: `/nginx_status/format/json`
 
 ## Troubleshooting
 
