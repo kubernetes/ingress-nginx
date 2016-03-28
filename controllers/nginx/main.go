@@ -27,7 +27,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
 
-	"k8s.io/contrib/ingress/controllers/nginx-third-party/nginx"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"

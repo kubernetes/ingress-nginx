@@ -1,15 +1,21 @@
-apiVersion: extensions/v1beta1
-kind: DaemonSet
+apiVersion: v1
+kind: ReplicationController
 metadata:
-  name: nginx-ingress-lb
+  name: nginx-ingress-controller
+  labels:
+    k8s-app: nginx-ingress-lb
 spec:
+  replicas: 1
+  selector:
+    k8s-app: nginx-ingress-lb
   template:
     metadata:
       labels:
+        k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
     spec:
       containers:
-      - image: gcr.io/google_containers/nginx-third-party::0.4
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.4
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:
@@ -38,10 +44,15 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 4444
-        # we expose 8080 to access nginx stats in url /nginx_status
+        # we expose 8080 to access nginx stats in url /nginx-status
         # this is optional
         - containerPort: 8080
           hostPort: 8081
+        # service echoheaders as TCP service default/echoheaders:9000
+        # 9000 indicates the port used to expose the service
+        - containerPort: 9000
+          hostPort: 9000
         args:
-        - /nginx-third-party-lb
+        - /nginx-ingress-controller
         - --default-backend-service=default/default-http-backend
+        - --tcp-services-configmap=default/tcp-configmap-example

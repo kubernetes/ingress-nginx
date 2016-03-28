@@ -1,21 +1,15 @@
-apiVersion: v1
-kind: ReplicationController
+apiVersion: extensions/v1beta1
+kind: DaemonSet
 metadata:
-  name: nginx-ingress-3rdpartycfg
-  labels:
-    k8s-app: nginx-ingress-lb
+  name: nginx-ingress-lb
 spec:
-  replicas: 1
-  selector:
-    k8s-app: nginx-ingress-lb
   template:
     metadata:
       labels:
-        k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
     spec:
       containers:
-      - image: gcr.io/google_containers/nginx-third-party:0.4
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.4
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:
@@ -44,11 +38,10 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 4444
+        # we expose 8080 to access nginx stats in url /nginx_status
+        # this is optional
         - containerPort: 8080
-          hostPort: 9000
-        # to configure ssl_dhparam http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
-        # use the dhparam.sh file to generate and mount a secret that containing the key dhparam.pem or
-        # create a configuration with the content of dhparam.pem in the field sslDHParam.
+          hostPort: 8081
         args:
-        - /nginx-third-party-lb
+        - /nginx-ingress-controller-lb
         - --default-backend-service=default/default-http-backend

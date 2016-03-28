@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
   --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
-COPY nginx-third-party-lb /
+COPY nginx-ingress-controller /
 COPY nginx.tmpl /
 COPY default.conf /etc/nginx/nginx.conf
 
@@ -27,4 +27,4 @@ COPY lua /etc/nginx/lua/
 
 WORKDIR /
 
-CMD ["/nginx-third-party-lb"]
+CMD ["/nginx-ingress-controller"]

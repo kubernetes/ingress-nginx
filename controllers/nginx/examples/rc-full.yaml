@@ -1,7 +1,8 @@
+
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: nginx-ingress-3rdpartycfg
+  name: nginx-ingress-controller
   labels:
     k8s-app: nginx-ingress-lb
 spec:
@@ -14,8 +15,12 @@ spec:
         k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
     spec:
+      volumes:
+      - name: dhparam-example
+        secret:
+          secretName: dhparam-example
       containers:
-      - image: gcr.io/google_containers/nginx-third-party:0.4
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.4
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:
@@ -44,15 +49,12 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 4444
-        # we expose 8080 to access nginx stats in url /nginx-status
-        # this is optional
         - containerPort: 8080
-          hostPort: 8081
-        # service echoheaders as TCP service default/echoheaders:9000
-        # 9000 indicates the port used to expose the service
-        - containerPort: 9000
           hostPort: 9000
+        volumeMounts:
+        - mountPath: /etc/nginx-ssl/dhparam
+          name: dhparam-example
         args:
-        - /nginx-third-party-lb
-        - --default-backend-service=default/default-http-backend
+        - /nginx-ingress-controller
         - --tcp-services-configmap=default/tcp-configmap-example
+        - --default-backend-service=default/default-http-backend
