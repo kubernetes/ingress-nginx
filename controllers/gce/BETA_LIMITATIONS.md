@@ -140,12 +140,12 @@ $ gcloud compute firewall-rules create allow-130-211-0-0-22 \
 
 Where `130.211.0.0/22` is the source range of the GCE L7, `$NODE_PORT` is the node port your Service is exposed on, i.e:
 ```console
-$ export NODE_PORT=$(kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services echoheadersx)
+$ kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services ${SERVICE_NAME}
 ```
 
-and `$TAG` is a list of GKE instance tags, i.e:
+and `$TAG` is an optional list of GKE instance tags, i.e:
 ```console
-$ export TAG=$(basename `gcloud container clusters describe ${CLUSTER_NAME} --zone ${ZONE} | grep gke | awk '{print $2}'` | sed -e s/group/node/)
+$ kubectl get nodes | awk '{print $1}' | tail -n +2 | grep -Po 'gke-[0-9,a-z]+-[0-9,a-z]+-node' | uniq
 ```
 
 ## Static and Ephemeral IPs
