@@ -161,13 +161,16 @@ func NewClusterManager(
 	}
 	cluster.instancePool = instances.NewNodePool(cloud, zone.FailureDomain)
 	healthChecker := healthchecks.NewHealthChecker(cloud, defaultHealthCheckPath, cluster.ClusterNamer)
+
+	// TODO: This needs to change to a consolidated management of the default backend.
 	cluster.backendPool = backends.NewBackendPool(
-		cloud, healthChecker, cluster.instancePool, cluster.ClusterNamer)
+		cloud, healthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{defaultBackendNodePort}, true)
 	defaultBackendHealthChecker := healthchecks.NewHealthChecker(cloud, "/healthz", cluster.ClusterNamer)
 	defaultBackendPool := backends.NewBackendPool(
-		cloud, defaultBackendHealthChecker, cluster.instancePool, cluster.ClusterNamer)
+		cloud, defaultBackendHealthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{}, false)
 	cluster.defaultBackendNodePort = defaultBackendNodePort
 	cluster.l7Pool = loadbalancers.NewLoadBalancerPool(
 		cloud, defaultBackendPool, defaultBackendNodePort, cluster.ClusterNamer)
+
 	return &cluster, nil
 }

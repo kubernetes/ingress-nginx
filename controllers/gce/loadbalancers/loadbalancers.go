@@ -174,7 +174,7 @@ func (l *L7s) Sync(lbs []*L7RuntimeInfo) error {
 
 	// The default backend is completely managed by the l7 pool.
 	// This includes recreating it if it's deleted, or fixing broken links.
-	if err := l.defaultBackendPool.Sync([]int64{l.defaultBackendNodePort}); err != nil {
+	if err := l.defaultBackendPool.Add(l.defaultBackendNodePort); err != nil {
 		return err
 	}
 	// create new loadbalancers, perform an edge hop for existing

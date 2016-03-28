@@ -30,7 +30,7 @@ type BackendPool interface {
 	GC(ports []int64) error
 	Shutdown() error
 	Status(name string) string
-	List() (*compute.BackendServiceList, error)
+	List() ([]interface{}, error)
 }
 
 // BackendServices is an interface for managing gce backend services.

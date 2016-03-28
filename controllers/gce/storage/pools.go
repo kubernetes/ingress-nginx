@@ -17,7 +17,12 @@ limitations under the License.
 package storage
 
 import (
+	"sync"
+	"time"
+
+	"github.com/golang/glog"
 	"k8s.io/kubernetes/pkg/client/cache"
+	"k8s.io/kubernetes/pkg/util/wait"
 )
 
 // Snapshotter is an interface capable of providing a consistent snapshot of
@@ -50,4 +55,79 @@ func (p *InMemoryPool) Snapshot() map[string]interface{} {
 func NewInMemoryPool() *InMemoryPool {
 	return &InMemoryPool{
 		cache.NewThreadSafeStore(cache.Indexers{}, cache.Indices{})}
+}
+
+type keyFunc func(interface{}) (string, error)
+
+type cloudLister interface {
+	List() ([]interface{}, error)
+}
+
+// CloudListingPool wraps InMemoryPool but relists from the cloud periodically.
+type CloudListingPool struct {
+	// A lock to protect against concurrent mutation of the pool
+	lock sync.Mutex
+	// The pool that is re-populated via re-list from cloud, and written to
+	// from controller
+	*InMemoryPool
+	// An interface that lists objects from the cloud.
+	lister cloudLister
+	// A function capable of producing a key for a given object.
+	// This key must match the key used to store the same object in the user of
+	// this cache.
+	keyGetter keyFunc
+}
+
+// ReplinishPool lists through the cloudLister and inserts into the pool.
+func (c *CloudListingPool) ReplinishPool() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	glog.V(4).Infof("Replinishing pool")
+	items, err := c.lister.List()
+	if err != nil {
+		glog.Warningf("Failed to list: %v", err)
+		return
+	}
+	for i := range items {
+		key, err := c.keyGetter(items[i])
+		if err != nil {
+			glog.V(4).Infof("CloudListingPool: %v", err)
+			continue
+		}
+		c.InMemoryPool.Add(key, items[i])
+	}
+}
+
+// Snapshot just snapshots the underlying pool.
+func (c *CloudListingPool) Snapshot() map[string]interface{} {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return c.InMemoryPool.Snapshot()
+}
+
+// Add simply adds to the underlying pool.
+func (c *CloudListingPool) Add(key string, obj interface{}) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.InMemoryPool.Add(key, obj)
+}
+
+// Delete just deletes from underlying pool.
+func (c *CloudListingPool) Delete(key string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.InMemoryPool.Delete(key)
+}
+
+// NewCloudListingPool replinishes the InMemoryPool through a background
+// goroutine that lists from the given cloudLister.
+func NewCloudListingPool(k keyFunc, lister cloudLister, relistPeriod time.Duration) *CloudListingPool {
+	cl := &CloudListingPool{
+		InMemoryPool: NewInMemoryPool(),
+		lister:       lister,
+		keyGetter:    k,
+	}
+	glog.V(4).Infof("Starting pool replinish goroutine")
+	go wait.Until(cl.ReplinishPool, relistPeriod, make(chan struct{}))
+	return cl
 }

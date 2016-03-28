@@ -52,7 +52,7 @@ func NewFakeClusterManager(clusterName string) *fakeClusterManager {
 	healthChecker := healthchecks.NewHealthChecker(fakeHCs, "/", namer)
 	backendPool := backends.NewBackendPool(
 		fakeBackends,
-		healthChecker, nodePool, namer)
+		healthChecker, nodePool, namer, []int64{}, false)
 	l7Pool := loadbalancers.NewLoadBalancerPool(
 		fakeLbs,
 		// TODO: change this

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"k8s.io/kubernetes/pkg/util/sets"
 
@@ -38,6 +39,10 @@ type Backends struct {
 	healthChecker healthchecks.HealthChecker
 	snapshotter   storage.Snapshotter
 	namer         utils.Namer
+	// ignoredPorts are a set of ports excluded from GC, even
+	// after the Ingress has been deleted. Note that invoking
+	// a Delete() on these ports will still delete the backend.
+	ignoredPorts sets.String
 }
 
 func portKey(port int64) string {
@@ -46,18 +51,46 @@ func portKey(port int64) string {
 
 // NewBackendPool returns a new backend pool.
 // - cloud: implements BackendServices and syncs backends with a cloud provider
+// - healthChecker: is capable of producing health checks for backends.
 // - nodePool: implements NodePool, used to create/delete new instance groups.
+// - namer: procudes names for backends.
+// - ignorePorts: is a set of ports to avoid syncing/GCing.
+// - resyncWithCloud: if true, periodically syncs with cloud resources.
 func NewBackendPool(
 	cloud BackendServices,
 	healthChecker healthchecks.HealthChecker,
-	nodePool instances.NodePool, namer utils.Namer) *Backends {
-	return &Backends{
+	nodePool instances.NodePool, namer utils.Namer, ignorePorts []int64, resyncWithCloud bool) *Backends {
+	ignored := []string{}
+	for _, p := range ignorePorts {
+		ignored = append(ignored, portKey(p))
+	}
+	backendPool := &Backends{
 		cloud:         cloud,
 		nodePool:      nodePool,
-		snapshotter:   storage.NewInMemoryPool(),
 		healthChecker: healthChecker,
 		namer:         namer,
+		ignoredPorts:  sets.NewString(ignored...),
 	}
+	if !resyncWithCloud {
+		backendPool.snapshotter = storage.NewInMemoryPool()
+		return backendPool
+	}
+	backendPool.snapshotter = storage.NewCloudListingPool(
+		func(i interface{}) (string, error) {
+			bs := i.(*compute.BackendService)
+			if !namer.NameBelongsToCluster(bs.Name) {
+				return "", fmt.Errorf("Unrecognized name %v", bs.Name)
+			}
+			port, err := namer.BePort(bs.Name)
+			if err != nil {
+				return "", err
+			}
+			return port, nil
+		},
+		backendPool,
+		30*time.Second,
+	)
+	return backendPool
 }
 
 // Get returns a single backend.
@@ -150,10 +183,18 @@ func (b *Backends) Delete(port int64) (err error) {
 }
 
 // List lists all backends.
-func (b *Backends) List() (*compute.BackendServiceList, error) {
+func (b *Backends) List() ([]interface{}, error) {
 	// TODO: for consistency with the rest of this sub-package this method
 	// should return a list of backend ports.
-	return b.cloud.ListBackendServices()
+	interList := []interface{}{}
+	be, err := b.cloud.ListBackendServices()
+	if err != nil {
+		return interList, err
+	}
+	for i := range be.Items {
+		interList = append(interList, be.Items[i])
+	}
+	return interList, nil
 }
 
 // edgeHop checks the links of the given backend by executing an edge hop.
@@ -200,7 +241,7 @@ func (b *Backends) GC(svcNodePorts []int64) error {
 			return err
 		}
 		nodePort := int64(p)
-		if knownPorts.Has(portKey(nodePort)) {
+		if knownPorts.Has(portKey(nodePort)) || b.ignoredPorts.Has(portKey(nodePort)) {
 			continue
 		}
 		glog.V(3).Infof("GCing backend for port %v", p)

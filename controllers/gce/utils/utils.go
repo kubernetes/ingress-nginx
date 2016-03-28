@@ -18,10 +18,13 @@ package utils
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
+	"github.com/golang/glog"
 	compute "google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
+	"regexp"
 )
 
 const (
@@ -46,6 +49,7 @@ const (
 
 	// This allows sharing of backends across loadbalancers.
 	backendPrefix = "k8s-be"
+	backendRegex  = "k8s-be-([0-9]+).*"
 
 	// Prefix used for instance groups involved in L7 balancing.
 	igPrefix = "k8s-ig"
@@ -93,9 +97,46 @@ func (n *Namer) decorateName(name string) string {
 	return n.Truncate(fmt.Sprintf("%v%v%v", name, clusterNameDelimiter, n.ClusterName))
 }
 
+// NameBelongsToCluster checks if a given name is tagged with this cluster's UID.
+func (n *Namer) NameBelongsToCluster(name string) bool {
+	if !strings.HasPrefix(name, "k8s-") {
+		glog.V(4).Infof("%v not part of cluster", name)
+		return false
+	}
+	parts := strings.Split(name, clusterNameDelimiter)
+	if len(parts) == 1 {
+		if n.ClusterName == "" {
+			return true
+		}
+		return false
+	}
+	if len(parts) > 2 {
+		glog.Warningf("Too many parts to name %v, ignoring", name)
+		return false
+	}
+	return parts[1] == n.ClusterName
+}
+
 // BeName constructs the name for a backend.
 func (n *Namer) BeName(port int64) string {
 	return n.decorateName(fmt.Sprintf("%v-%d", backendPrefix, port))
+}
+
+// BePort retrieves the port from the given backend name.
+func (n *Namer) BePort(beName string) (string, error) {
+	r, err := regexp.Compile(backendRegex)
+	if err != nil {
+		return "", err
+	}
+	match := r.FindStringSubmatch(beName)
+	if len(match) < 2 {
+		return "", fmt.Errorf("Unable to lookup port for %v", beName)
+	}
+	_, err = strconv.Atoi(match[1])
+	if err != nil {
+		return "", fmt.Errorf("Unexpected regex match: %v", beName)
+	}
+	return match[1], nil
 }
 
 // IGName constructs the name for an Instance Group.
