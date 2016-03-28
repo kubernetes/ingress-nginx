@@ -44,11 +44,7 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 4444
-        - containerPort: 8080
-          hostPort: 9000
-        # to configure ssl_dhparam http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
-        # use the dhparam.sh file to generate and mount a secret that containing the key dhparam.pem or
-        # create a configuration with the content of dhparam.pem in the field sslDHParam.
         args:
         - /nginx-ingress-controller
         - --default-backend-service=default/default-http-backend
+        - --nginx-configmap=default/nginx-load-balancer-conf

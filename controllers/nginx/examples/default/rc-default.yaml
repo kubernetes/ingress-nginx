@@ -44,11 +44,6 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 4444
-        # we expose 8080 to access nginx stats in url /nginx_status
-        # this is optional
-        - containerPort: 8080
-          hostPort: 8081
         args:
         - /nginx-ingress-controller
         - --default-backend-service=default/default-http-backend
-        - --nginx-configmap=default/nginx-load-balancer-conf
