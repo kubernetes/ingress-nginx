@@ -21,6 +21,7 @@ type IngressConfig struct {
 	Upstreams    []*Upstream
 	Servers      []*Server
 	TCPUpstreams []*Location
+	UDPUpstreams []*Location
 }
 
 // Upstream describes an NGINX upstream

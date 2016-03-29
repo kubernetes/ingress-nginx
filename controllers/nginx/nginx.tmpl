@@ -24,6 +24,11 @@ http {
         require("error_page")
     }
 
+    {{ if $cfg.enableWaf}}
+    # https://github.com/nbs-system/naxsi/wiki/basicsetup
+    include  /etc/nginx/naxsi/*.rules;
+    {{ end }}
+
     sendfile            on;
     aio                 threads;
     tcp_nopush          on;
@@ -78,11 +83,6 @@ http {
     map $http_x_forwarded_proto $pass_access_scheme {
       default $http_x_forwarded_proto;
       ''      $scheme;
-    }
-
-    map $http_x_forwarded_proto $pass_forwarded_for {
-      default $http_x_forwarded_for;
-      ''      $proxy_add_x_forwarded_for;
     }
 
     map $pass_access_scheme $sts {
@@ -202,7 +202,7 @@ http {
             proxy_set_header                        Upgrade           $http_upgrade;
             proxy_set_header                        Connection        $connection_upgrade;
 
-            proxy_set_header X-Forwarded-For        $pass_forwarded_for;
+            proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Host       $host;
             proxy_set_header X-Forwarded-Server     $host;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
@@ -217,6 +217,11 @@ http {
             proxy_http_version                      1.1;
 
             proxy_pass http://{{ $location.Upstream.Name }};
+        }
+        {{ end }}
+        {{ if $cfg.enableWaf}}
+        location /RequestDenied {
+            return 418;
         }
         {{ end }}
         {{ template "CUSTOM_ERRORS" $cfg }}
@@ -265,8 +270,10 @@ http {
     }    
 }
 
-# TCP services
+
 stream {
+
+# TCP services
 {{ range $i, $tcpServer := .tcpUpstreams }}
     upstream tcp-{{ $tcpServer.Upstream.Name }} {
         {{ range $server := $tcpServer.Upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
@@ -280,6 +287,22 @@ stream {
         proxy_pass             tcp-{{ $tcpServer.Upstream.Name }};
     }
 {{ end }}
+
+# UDP services
+{{ range $i, $udpServer := .udpUpstreams }}
+    upstream udp-{{ $udpServer.Upstream.Name }} {
+        {{ range $server := $tcpServer.Upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{ end }}
+    }
+
+    server {
+        listen {{ $tcpServer.Path }} udp;
+        proxy_timeout          1s;
+        proxy_responses        1;
+        proxy_pass             udp-{{ $tcpServer.Upstream.Name }};
+    }
+{{ end }}
+
 }
 
 {{/* definition of templates to avoid repetitions */}}

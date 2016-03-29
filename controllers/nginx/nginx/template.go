@@ -56,6 +56,7 @@ func (ngx *Manager) writeCfg(cfg nginxConfiguration, ingressCfg IngressConfig) (
 	conf["upstreams"] = ingressCfg.Upstreams
 	conf["servers"] = ingressCfg.Servers
 	conf["tcpUpstreams"] = ingressCfg.TCPUpstreams
+	conf["udpUpstreams"] = ingressCfg.UDPUpstreams
 	conf["defResolver"] = ngx.defResolver
 	conf["sslDHParam"] = ngx.sslDHParam
 	conf["cfg"] = fixKeyNames(curNginxCfg)

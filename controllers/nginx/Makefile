@@ -1,7 +1,7 @@
 all: push
 
 # 0.0 shouldn't clobber any release builds
-TAG = 0.4
+TAG = 0.5
 PREFIX = gcr.io/google_containers/nginx-ingress-controller
 
 controller: controller.go clean

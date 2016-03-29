@@ -57,6 +57,12 @@ var (
 		name of the port.
 		The ports 80 and 443 are not allowed as external ports. This ports are reserved for nginx`)
 
+	udpConfigMapName = flags.String("udp-services-configmap", "",
+		`Name of the ConfigMap that containes the definition of the UDP services to expose.
+		The key in the map indicates the external port to be used. The value is the name of the 
+		service with the format namespace/serviceName and the port of the service could be a number of the
+		name of the port.`)
+
 	resyncPeriod = flags.Duration("sync-period", 30*time.Second,
 		`Relist and confirm cloud resources this often.`)
 
@@ -99,7 +105,7 @@ func main() {
 		glog.Fatalf("no service with name %v found: %v", *defaultSvc, err)
 	}
 
-	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, lbInfo)
+	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, *udpConfigMapName, lbInfo)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}

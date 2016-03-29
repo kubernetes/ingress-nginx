@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google_containers/nginx-slim:0.4
+FROM gcr.io/google_containers/nginx-slim:0.5
 
 RUN apt-get update && apt-get install -y \
   diffutils \

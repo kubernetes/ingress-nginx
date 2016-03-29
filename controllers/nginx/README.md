@@ -130,6 +130,27 @@ data:
 
 Please check the [tcp services](examples/tcp/README.md) example
 
+## Exposing UDP services
+
+Since 1.9.13 NGINX provides [UDP Load Balancing](https://www.nginx.com/blog/announcing-udp-load-balancing/).
+
+Ingress does not support UDP services (yet). For this reason this Ingress controller uses a ConfigMap where the key is the external port to use and the value is 
+`<namespace/service name>:<service port>`
+It is possible to use a number or the name of the port.
+
+The next example shows how to expose the service `kube-dns` running in the namespace `kube-system` in the port `53` using the port `53`
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: udp-configmap-example
+data:
+  53: "kube-system/kube-dns:53"
+```
+
+
+Please check the [udp services](examples/udp/README.md) example
+
 
 ## Custom NGINX configuration
 
