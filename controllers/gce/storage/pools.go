@@ -78,11 +78,11 @@ type CloudListingPool struct {
 	keyGetter keyFunc
 }
 
-// ReplinishPool lists through the cloudLister and inserts into the pool.
-func (c *CloudListingPool) ReplinishPool() {
+// ReplenishPool lists through the cloudLister and inserts into the pool.
+func (c *CloudListingPool) ReplenishPool() {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	glog.V(4).Infof("Replinishing pool")
+	glog.V(4).Infof("Replenishing pool")
 	items, err := c.lister.List()
 	if err != nil {
 		glog.Warningf("Failed to list: %v", err)
@@ -119,7 +119,7 @@ func (c *CloudListingPool) Delete(key string) {
 	c.InMemoryPool.Delete(key)
 }
 
-// NewCloudListingPool replinishes the InMemoryPool through a background
+// NewCloudListingPool replenishes the InMemoryPool through a background
 // goroutine that lists from the given cloudLister.
 func NewCloudListingPool(k keyFunc, lister cloudLister, relistPeriod time.Duration) *CloudListingPool {
 	cl := &CloudListingPool{
@@ -127,7 +127,7 @@ func NewCloudListingPool(k keyFunc, lister cloudLister, relistPeriod time.Durati
 		lister:       lister,
 		keyGetter:    k,
 	}
-	glog.V(4).Infof("Starting pool replinish goroutine")
-	go wait.Until(cl.ReplinishPool, relistPeriod, make(chan struct{}))
+	glog.V(4).Infof("Starting pool replenish goroutine")
+	go wait.Until(cl.ReplenishPool, relistPeriod, make(chan struct{}))
 	return cl
 }

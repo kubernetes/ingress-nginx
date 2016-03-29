@@ -18,6 +18,8 @@ package controller
 
 import (
 	"fmt"
+	"net/http"
+	"time"
 
 	"k8s.io/contrib/ingress/controllers/gce/backends"
 	"k8s.io/contrib/ingress/controllers/gce/healthchecks"
@@ -26,6 +28,8 @@ import (
 	"k8s.io/contrib/ingress/controllers/gce/utils"
 	"k8s.io/kubernetes/pkg/cloudprovider"
 	gce "k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
+
+	"github.com/golang/glog"
 )
 
 const (
@@ -54,6 +58,9 @@ const (
 
 	// Names longer than this are truncated, because of GCE restrictions.
 	nameLenLimit = 62
+
+	// Sleep interval to retry cloud client creation.
+	cloudClientRetryInterval = 10 * time.Second
 )
 
 // ClusterManager manages cluster resource pools.
@@ -70,6 +77,14 @@ func (c *ClusterManager) IsHealthy() (err error) {
 	// TODO: Expand on this, for now we just want to detect when the GCE client
 	// is broken.
 	_, err = c.backendPool.List()
+
+	// If this container is scheduled on a node without compute/rw it is
+	// effectively useless, but it is healthy. Reporting it as unhealthy
+	// will lead to container crashlooping.
+	if utils.IsHTTPErrorCode(err, http.StatusForbidden) {
+		glog.Infof("Reporting cluster as healthy, but unable to list backends: %v", err)
+		return nil
+	}
 	return
 }
 
@@ -138,6 +153,32 @@ func defaultInstanceGroupName(clusterName string) string {
 	return fmt.Sprintf("%v-%v", instanceGroupPrefix, clusterName)
 }
 
+func getGCEClient() *gce.GCECloud {
+	// Creating the cloud interface involves resolving the metadata server to get
+	// an oauth token. If this fails, the token provider assumes it's not on GCE.
+	// No errors are thrown. So we need to keep retrying till it works because
+	// we know we're on GCE.
+	for {
+		cloudInterface, err := cloudprovider.GetCloudProvider("gce", nil)
+		if err == nil {
+			cloud := cloudInterface.(*gce.GCECloud)
+
+			// If this controller is scheduled on a node without compute/rw
+			// it won't be allowed to list backends. We can assume that the
+			// user has no need for Ingress in this case. If they grant
+			// permissions to the node they will have to restart the controller
+			// manually to re-create the client.
+			if _, err = cloud.ListBackendServices(); err == nil || utils.IsHTTPErrorCode(err, http.StatusForbidden) {
+				return cloud
+			}
+			glog.Warningf("Failed to list backend services, retrying: %v", err)
+		} else {
+			glog.Warningf("Failed to retrieve cloud interface, retrying: %v", err)
+		}
+		time.Sleep(cloudClientRetryInterval)
+	}
+}
+
 // NewClusterManager creates a cluster manager for shared resources.
 // - name: is the name used to tag cluster wide shared resources. This is the
 //   string passed to glbc via --gce-cluster-name.
@@ -149,11 +190,12 @@ func NewClusterManager(
 	defaultBackendNodePort int64,
 	defaultHealthCheckPath string) (*ClusterManager, error) {
 
-	cloudInterface, err := cloudprovider.GetCloudProvider("gce", nil)
-	if err != nil {
-		return nil, err
-	}
-	cloud := cloudInterface.(*gce.GCECloud)
+	// TODO: Make this more resilient. Currently we create the cloud client
+	// and pass it through to all the pools. This makes unittesting easier.
+	// However if the cloud client suddenly fails, we should try to re-create it
+	// and continue.
+	cloud := getGCEClient()
+
 	cluster := ClusterManager{ClusterNamer: utils.Namer{name}}
 	zone, err := cloud.GetZone()
 	if err != nil {

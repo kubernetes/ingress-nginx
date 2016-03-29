@@ -137,7 +137,7 @@ func TestBackendPoolSync(t *testing.T) {
 	// Repopulate the pool with a cloud list, which now includes the 82 port
 	// backend. This would happen if, say, an ingress backend is removed
 	// while the controller is restarting.
-	pool.(*Backends).snapshotter.(*storage.CloudListingPool).ReplinishPool()
+	pool.(*Backends).snapshotter.(*storage.CloudListingPool).ReplenishPool()
 
 	pool.GC(svcNodePorts)
 
