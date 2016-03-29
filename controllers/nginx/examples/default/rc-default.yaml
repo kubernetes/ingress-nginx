@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: nginx-ingress-3rdpartycfg
+  name: nginx-ingress-controller
   labels:
     k8s-app: nginx-ingress-lb
 spec:
@@ -15,7 +15,7 @@ spec:
         name: nginx-ingress-lb
     spec:
       containers:
-      - image: gcr.io/google_containers/nginx-third-party:0.4
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.4
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:
@@ -44,11 +44,6 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 4444
-        # we expose 8080 to access nginx stats in url /nginx-status
-        # this is optional
-        - containerPort: 8080
-          hostPort: 8081
         args:
-        - /nginx-third-party-lb
+        - /nginx-ingress-controller
         - --default-backend-service=default/default-http-backend
-        - --nginx-configmap=default/nginx-load-balancer-conf

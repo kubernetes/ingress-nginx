@@ -36,7 +36,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/watch"
 
-	"k8s.io/contrib/ingress/controllers/nginx-third-party/nginx"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx"
 )
 
 const (
