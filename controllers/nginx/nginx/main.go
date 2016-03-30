@@ -94,6 +94,10 @@ type nginxConfiguration struct {
 
 	VtsStatusZoneSize string `structs:"vts-status-zone-size,omitempty"`
 
+	// RetryNonIdempotent since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH)
+	// in case of an error. The previous behavior can be restored using the value true
+	RetryNonIdempotent bool `structs:"retry-non-idempotent"`
+
 	// http://nginx.org/en/docs/ngx_core_module.html#error_log
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
 	// Log levels above are listed in the order of increasing severity

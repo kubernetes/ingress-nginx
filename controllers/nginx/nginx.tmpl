@@ -24,11 +24,6 @@ http {
         require("error_page")
     }
 
-    {{ if $cfg.enableWaf}}
-    # https://github.com/nbs-system/naxsi/wiki/basicsetup
-    include  /etc/nginx/naxsi/*.rules;
-    {{ end }}
-
     sendfile            on;
     aio                 threads;
     tcp_nopush          on;
@@ -146,7 +141,7 @@ http {
     error_page 504 = @custom_504;
 
     # In case of errors try the next upstream server before returning an error
-    proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504;
+    proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504 {{ if $cfg.retryNonIdempotent }}non_idempotent{{ end }};
 
     server {
         listen 80 default_server{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
@@ -219,11 +214,6 @@ http {
             proxy_pass http://{{ $location.Upstream.Name }};
         }
         {{ end }}
-        {{ if $cfg.enableWaf}}
-        location /RequestDenied {
-            return 418;
-        }
-        {{ end }}
         {{ template "CUSTOM_ERRORS" $cfg }}
     }
     {{ end }}
@@ -291,15 +281,15 @@ stream {
 # UDP services
 {{ range $i, $udpServer := .udpUpstreams }}
     upstream udp-{{ $udpServer.Upstream.Name }} {
-        {{ range $server := $tcpServer.Upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{ range $server := $udpServer.Upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
         {{ end }}
     }
 
     server {
-        listen {{ $tcpServer.Path }} udp;
-        proxy_timeout          1s;
+        listen {{ $udpServer.Path }} udp;
+        proxy_timeout          10s;
         proxy_responses        1;
-        proxy_pass             udp-{{ $tcpServer.Upstream.Name }};
+        proxy_pass             udp-{{ $udpServer.Upstream.Name }};
     }
 {{ end }}
 

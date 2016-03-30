@@ -36,8 +36,8 @@ kubectl run echoheaders --image=gcr.io/google_containers/echoserver:1.3 --replic
 
 Now we expose the same application in two different services (so we can create different Ingress rules)
 ```
-kubectl expose rc echoheaders --port=80 --target-port=8080 --name=echoheaders-x
-kubectl expose rc echoheaders --port=80 --target-port=8080 --name=echoheaders-y
+kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
+kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-y
 ```
 
 Next we create a couple of Ingress rules
@@ -213,6 +213,13 @@ I0316 12:24:37.610073       1 command.go:69] change in configuration detected. R
 
 - `--v=3` shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format
 - `--v=5` configures NGINX in [debug mode](http://nginx.org/en/docs/debugging_log.html)
+
+
+
+### Retries in no idempotent methods
+
+Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error. 
+The previous behavior can be restored using `retry-non-idempotent=true` in the configuration ConfigMap
 
 
 ## Limitations
