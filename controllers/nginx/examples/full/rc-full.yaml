@@ -15,6 +15,7 @@ spec:
         k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
     spec:
+      terminationGracePeriodSeconds: 60      
       volumes:
       - name: dhparam-example
         secret:
