@@ -15,7 +15,7 @@ spec:
         name: nginx-ingress-lb
     spec:
       containers:
-      - image: aledbf/nginx-third-party:0.9
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.5
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:

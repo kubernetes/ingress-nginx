@@ -68,6 +68,7 @@ type loadBalancerController struct {
 	recorder record.EventRecorder
 
 	syncQueue *taskQueue
+	ingQueue  *taskQueue
 
 	// stopLock is used to enforce only a single call to Stop is active.
 	// Needed because we allow stopping through an http endpoint and
@@ -98,12 +99,13 @@ func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 	}
 
 	lbc.syncQueue = NewTaskQueue(lbc.sync)
+	lbc.ingQueue = NewTaskQueue(lbc.syncIngress)
 
 	ingEventHandler := framework.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
 			lbc.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("%s/%s", addIng.Namespace, addIng.Name))
-			lbc.updateIngressStatus(addIng)
+			lbc.ingQueue.enqueue(obj)
 			lbc.syncQueue.enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -115,7 +117,7 @@ func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 			if !reflect.DeepEqual(old, cur) {
 				upIng := cur.(*extensions.Ingress)
 				lbc.recorder.Eventf(upIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("%s/%s", upIng.Namespace, upIng.Name))
-				lbc.updateIngressStatus(upIng)
+				lbc.ingQueue.enqueue(cur)
 				lbc.syncQueue.enqueue(cur)
 			}
 		},
@@ -237,26 +239,42 @@ func (lbc *loadBalancerController) sync(key string) {
 	})
 }
 
-func (lbc *loadBalancerController) updateIngressStatus(ing *extensions.Ingress) {
-	ingClient := lbc.client.Extensions().Ingress(ing.Namespace)
-	currIng, err := ingClient.Get(ing.Name)
-	if err != nil {
-		glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
+func (lbc *loadBalancerController) syncIngress(key string) {
+	if !lbc.controllersInSync() {
+		lbc.ingQueue.requeue(key, fmt.Errorf("deferring sync till endpoints controller has synced"))
 		return
 	}
 
-	lbIPs := ing.Status.LoadBalancer.Ingress
-	if len(lbIPs) > 0 && !lbc.isStatusIPDefined(lbIPs) {
-		glog.Infof("Updating loadbalancer %v/%v with IP %v", ing.Namespace, ing.Name, lbc.lbInfo.Address)
-		currIng.Status.LoadBalancer.Ingress = append(currIng.Status.LoadBalancer.Ingress, api.LoadBalancerIngress{
-			IP: lbc.lbInfo.Address,
-		})
-		if _, err := ingClient.UpdateStatus(currIng); err != nil {
-			lbc.recorder.Eventf(currIng, api.EventTypeWarning, "UPDATE", "error: %v", err)
+	obj, ingExists, err := lbc.ingLister.Store.GetByKey(key)
+	if err != nil {
+		lbc.ingQueue.requeue(key, err)
+		return
+	}
+
+	if ingExists {
+		ing := obj.(*extensions.Ingress)
+
+		ingClient := lbc.client.Extensions().Ingress(ing.Namespace)
+
+		currIng, err := ingClient.Get(ing.Name)
+		if err != nil {
+			glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
 			return
 		}
 
-		lbc.recorder.Eventf(currIng, api.EventTypeNormal, "CREATE", "ip: %v", lbc.lbInfo.Address)
+		lbIPs := ing.Status.LoadBalancer.Ingress
+		if len(lbIPs) > 0 && !lbc.isStatusIPDefined(lbIPs) {
+			glog.Infof("Updating loadbalancer %v/%v with IP %v", ing.Namespace, ing.Name, lbc.lbInfo.Address)
+			currIng.Status.LoadBalancer.Ingress = append(currIng.Status.LoadBalancer.Ingress, api.LoadBalancerIngress{
+				IP: lbc.lbInfo.Address,
+			})
+			if _, err := ingClient.UpdateStatus(currIng); err != nil {
+				lbc.recorder.Eventf(currIng, api.EventTypeWarning, "UPDATE", "error: %v", err)
+				return
+			}
+
+			lbc.recorder.Eventf(currIng, api.EventTypeNormal, "CREATE", "ip: %v", lbc.lbInfo.Address)
+		}
 	}
 }
 
@@ -701,6 +719,7 @@ func (lbc *loadBalancerController) Run() {
 	go lbc.svcController.Run(lbc.stopCh)
 
 	go lbc.syncQueue.run(time.Second, lbc.stopCh)
+	go lbc.ingQueue.run(time.Second, lbc.stopCh)
 
 	<-lbc.stopCh
 	glog.Infof("shutting down NGINX loadbalancer controller")

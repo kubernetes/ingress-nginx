@@ -9,7 +9,7 @@ spec:
         name: nginx-ingress-lb
     spec:
       containers:
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.4
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.5
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:
