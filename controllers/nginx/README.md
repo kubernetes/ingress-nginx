@@ -21,10 +21,16 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 
 ## Deploy the Ingress controller
 
-Loadbalancers are created via a ReplicationController or Daemonset
+First create a default backend:
+```
+$ kubectl create -f examples/default-backend.yaml
+$ kubectl expose rc default-http-backend --port=80 --target-port=8080 --name=default-http-backend
+```
+
+Loadbalancers are created via a ReplicationController or Daemonset:
 
 ```
-kubectl create -f examples/default/rc-default.yaml
+$ kubectl create -f examples/default/rc-default.yaml
 ```
 
 ## HTTP
@@ -113,7 +119,7 @@ NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/do
 
 ## Exposing TCP services
 
-Ingress does not support TCP services (yet). For this reason this Ingress controller uses a ConfigMap where the key is the external port to use and the value is 
+Ingress does not support TCP services (yet). For this reason this Ingress controller uses a ConfigMap where the key is the external port to use and the value is
 `<namespace/service name>:<service port>`
 It is possible to use a number or the name of the port.
 
@@ -134,7 +140,7 @@ Please check the [tcp services](examples/tcp/README.md) example
 
 Since 1.9.13 NGINX provides [UDP Load Balancing](https://www.nginx.com/blog/announcing-udp-load-balancing/).
 
-Ingress does not support UDP services (yet). For this reason this Ingress controller uses a ConfigMap where the key is the external port to use and the value is 
+Ingress does not support UDP services (yet). For this reason this Ingress controller uses a ConfigMap where the key is the external port to use and the value is
 `<namespace/service name>:<service port>`
 It is possible to use a number or the name of the port.
 
@@ -218,7 +224,7 @@ I0316 12:24:37.610073       1 command.go:69] change in configuration detected. R
 
 ### Retries in no idempotent methods
 
-Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error. 
+Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error.
 The previous behavior can be restored using `retry-non-idempotent=true` in the configuration ConfigMap
 
 
