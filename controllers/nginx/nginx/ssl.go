@@ -27,21 +27,21 @@ import (
 )
 
 // AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
-func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) string {
+func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) (string, error) {
 	pemFileName := sslDirectory + "/" + name + ".pem"
 
 	pem, err := os.Create(pemFileName)
 	if err != nil {
-		glog.Fatalf("Couldn't create pem file %v: %v", pemFileName, err)
+		return "", fmt.Errorf("Couldn't create pem file %v: %v", pemFileName, err)
 	}
 	defer pem.Close()
 
-	_, err = pem.WriteString(fmt.Sprintf("%v\n%v", key, cert))
+	_, err = pem.WriteString(fmt.Sprintf("%v\n%v", cert, key))
 	if err != nil {
-		glog.Fatalf("Couldn't write to pem file %v: %v", pemFileName, err)
+		return "", fmt.Errorf("Couldn't write to pem file %v: %v", pemFileName, err)
 	}
 
-	return pemFileName
+	return pemFileName, nil
 }
 
 // CheckSSLCertificate checks if the certificate and key file are valid

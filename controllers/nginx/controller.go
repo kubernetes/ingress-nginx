@@ -68,7 +68,10 @@ type loadBalancerController struct {
 	recorder record.EventRecorder
 
 	syncQueue *taskQueue
-	ingQueue  *taskQueue
+
+	// taskQueue used to update the status of the Ingress rules.
+	// this avoids a sync execution in the ResourceEventHandlerFuncs
+	ingQueue *taskQueue
 
 	// stopLock is used to enforce only a single call to Stop is active.
 	// Needed because we allow stopping through an http endpoint and
@@ -99,7 +102,7 @@ func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 	}
 
 	lbc.syncQueue = NewTaskQueue(lbc.sync)
-	lbc.ingQueue = NewTaskQueue(lbc.syncIngress)
+	lbc.ingQueue = NewTaskQueue(lbc.updateIngressStatus)
 
 	ingEventHandler := framework.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -239,7 +242,7 @@ func (lbc *loadBalancerController) sync(key string) {
 	})
 }
 
-func (lbc *loadBalancerController) syncIngress(key string) {
+func (lbc *loadBalancerController) updateIngressStatus(key string) {
 	if !lbc.controllersInSync() {
 		lbc.ingQueue.requeue(key, fmt.Errorf("deferring sync till endpoints controller has synced"))
 		return
@@ -251,30 +254,32 @@ func (lbc *loadBalancerController) syncIngress(key string) {
 		return
 	}
 
-	if ingExists {
-		ing := obj.(*extensions.Ingress)
+	if !ingExists {
+		return
+	}
 
-		ingClient := lbc.client.Extensions().Ingress(ing.Namespace)
+	ing := obj.(*extensions.Ingress)
 
-		currIng, err := ingClient.Get(ing.Name)
-		if err != nil {
-			glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
+	ingClient := lbc.client.Extensions().Ingress(ing.Namespace)
+
+	currIng, err := ingClient.Get(ing.Name)
+	if err != nil {
+		glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
+		return
+	}
+
+	lbIPs := ing.Status.LoadBalancer.Ingress
+	if !lbc.isStatusIPDefined(lbIPs) {
+		glog.Infof("Updating loadbalancer %v/%v with IP %v", ing.Namespace, ing.Name, lbc.lbInfo.Address)
+		currIng.Status.LoadBalancer.Ingress = append(currIng.Status.LoadBalancer.Ingress, api.LoadBalancerIngress{
+			IP: lbc.lbInfo.Address,
+		})
+		if _, err := ingClient.UpdateStatus(currIng); err != nil {
+			lbc.recorder.Eventf(currIng, api.EventTypeWarning, "UPDATE", "error: %v", err)
 			return
 		}
 
-		lbIPs := ing.Status.LoadBalancer.Ingress
-		if len(lbIPs) > 0 && !lbc.isStatusIPDefined(lbIPs) {
-			glog.Infof("Updating loadbalancer %v/%v with IP %v", ing.Namespace, ing.Name, lbc.lbInfo.Address)
-			currIng.Status.LoadBalancer.Ingress = append(currIng.Status.LoadBalancer.Ingress, api.LoadBalancerIngress{
-				IP: lbc.lbInfo.Address,
-			})
-			if _, err := ingClient.UpdateStatus(currIng); err != nil {
-				lbc.recorder.Eventf(currIng, api.EventTypeWarning, "UPDATE", "error: %v", err)
-				return
-			}
-
-			lbc.recorder.Eventf(currIng, api.EventTypeNormal, "CREATE", "ip: %v", lbc.lbInfo.Address)
-		}
+		lbc.recorder.Eventf(currIng, api.EventTypeNormal, "CREATE", "ip: %v", lbc.lbInfo.Address)
 	}
 }
 
@@ -587,10 +592,14 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 				continue
 			}
 
-			pemFileName := lbc.nginx.AddOrUpdateCertAndKey(secretName, string(cert), string(key))
+			pemFileName, err := lbc.nginx.AddOrUpdateCertAndKey(fmt.Sprintf("%v-%v", ing.Namespace, secretName), string(cert), string(key))
+			if err != nil {
+				glog.Errorf("No valid SSL certificate found in secret %v: %v", secretName, err)
+				continue
+			}
 			cn, err := lbc.nginx.CheckSSLCertificate(pemFileName)
 			if err != nil {
-				glog.Warningf("No valid SSL certificate found in secret %v", secretName)
+				glog.Errorf("No valid SSL certificate found in secret %v: %v", secretName, err)
 				continue
 			}
 
