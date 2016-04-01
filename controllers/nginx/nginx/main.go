@@ -77,7 +77,9 @@ const (
 	// Size of the SSL shared cache between all worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
 	sslSessionCacheSize = "10m"
+)
 
+var (
 	// Base directory that contains the mounted secrets with SSL certificates, keys and
 	sslDirectory = "/etc/nginx-ssl"
 )

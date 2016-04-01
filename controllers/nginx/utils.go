@@ -24,6 +24,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/util/wait"
@@ -108,10 +109,30 @@ func getLBDetails(kubeClient *unversioned.Client) (*lbInfo, error) {
 		return nil, fmt.Errorf("Unable to get POD information")
 	}
 
+	node, err := kubeClient.Nodes().Get(pod.Spec.NodeName)
+	if err != nil {
+		return nil, err
+	}
+
+	var externalIP string
+	for _, address := range node.Status.Addresses {
+		if address.Type == api.NodeExternalIP {
+			if address.Address != "" {
+				externalIP = address.Address
+				break
+			}
+		}
+
+		if externalIP == "" && address.Type == api.NodeLegacyHostIP {
+			externalIP = address.Address
+		}
+	}
+
 	return &lbInfo{
 		PodIP:        podIP,
 		Podname:      podName,
 		PodNamespace: podNs,
+		Address:      externalIP,
 	}, nil
 }
 

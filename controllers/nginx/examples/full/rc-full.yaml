@@ -15,12 +15,13 @@ spec:
         k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
     spec:
+      terminationGracePeriodSeconds: 60      
       volumes:
       - name: dhparam-example
         secret:
           secretName: dhparam-example
       containers:
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.4
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.5
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:

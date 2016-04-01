@@ -230,4 +230,4 @@ The previous behavior can be restored using `retry-non-idempotent=true` in the c
 
 ## Limitations
 
-TODO
+- Ingress rules for TLS require the definition of the field `host`

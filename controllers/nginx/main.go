@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/golang/glog"
@@ -32,7 +34,6 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/healthz"
-	"k8s.io/kubernetes/pkg/runtime"
 )
 
 const (
@@ -111,6 +112,7 @@ func main() {
 	}
 
 	go registerHandlers(lbc)
+	go handleSigterm(lbc)
 
 	lbc.Run()
 
@@ -122,11 +124,10 @@ func main() {
 
 // lbInfo contains runtime information about the pod
 type lbInfo struct {
-	ObjectName   string
-	DeployType   runtime.Object
 	Podname      string
 	PodIP        string
 	PodNamespace string
+	Address      string
 }
 
 func registerHandlers(lbc *loadBalancerController) {
@@ -148,4 +149,19 @@ func registerHandlers(lbc *loadBalancerController) {
 		Handler: mux,
 	}
 	glog.Fatal(server.ListenAndServe())
+}
+
+func handleSigterm(lbc *loadBalancerController) {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGTERM)
+	<-signalChan
+	glog.Infof("Received SIGTERM, shutting down")
+
+	exitCode := 0
+	if err := lbc.Stop(); err != nil {
+		glog.Infof("Error during shutdown %v", err)
+		exitCode = 1
+	}
+	glog.Infof("Exiting with %v", exitCode)
+	os.Exit(exitCode)
 }
