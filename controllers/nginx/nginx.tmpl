@@ -40,7 +40,7 @@ http {
     server_names_hash_bucket_size {{ $cfg.serverNameHashBucketSize }};
 
     include /etc/nginx/mime.types;
-    default_type application/octet-stream;
+    default_type text/html;
     {{ if $cfg.useGzip }}
     gzip on;
     gzip_comp_level 5;
@@ -143,24 +143,6 @@ http {
     # In case of errors try the next upstream server before returning an error
     proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504 {{ if $cfg.retryNonIdempotent }}non_idempotent{{ end }};
 
-    server {
-        listen 80 default_server{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
-
-        location / {
-            return 200;
-        }
-
-        location /nginx_status {
-            allow 127.0.0.1;
-            deny all;
-            
-            access_log off;
-            stub_status on;
-        }
-
-        {{ template "CUSTOM_ERRORS" $cfg }}
-    }
-
     {{range $name, $upstream := .upstreams}}
     upstream {{$upstream.Name}} {
         least_conn;
@@ -186,6 +168,7 @@ http {
             return 301 https://$host$request_uri;
         }
         {{ end }}
+
         {{ range $location := $server.Locations }}
         location {{ $location.Path }} {
             proxy_set_header Host                   $host;
@@ -199,7 +182,6 @@ http {
 
             proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Host       $host;
-            proxy_set_header X-Forwarded-Server     $host;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
 
             proxy_connect_timeout                   {{ $cfg.proxyConnectTimeout }}s;

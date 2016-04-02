@@ -42,6 +42,7 @@ import (
 
 const (
 	defUpstreamName = "upstream-default-backend"
+	defServerName   = "_"
 )
 
 var (
@@ -435,9 +436,18 @@ func (lbc *loadBalancerController) getDefaultUpstream() *nginx.Upstream {
 
 func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*nginx.Upstream, []*nginx.Server) {
 	upstreams := lbc.createUpstreams(data)
-	servers := lbc.createServers(data)
-
 	upstreams[defUpstreamName] = lbc.getDefaultUpstream()
+
+	servers := lbc.createServers(data)
+	// default server - no servername.
+	servers[defServerName] = &nginx.Server{
+		Name: defServerName,
+		Locations: []*nginx.Location{&nginx.Location{
+			Path:     "/",
+			Upstream: *lbc.getDefaultUpstream(),
+		},
+		},
+	}
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
@@ -521,7 +531,6 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 
 func (lbc *loadBalancerController) createUpstreams(data []interface{}) map[string]*nginx.Upstream {
 	upstreams := make(map[string]*nginx.Upstream)
-	upstreams[defUpstreamName] = nginx.NewUpstream(defUpstreamName)
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
@@ -600,6 +609,17 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 			cn, err := lbc.nginx.CheckSSLCertificate(pemFileName)
 			if err != nil {
 				glog.Errorf("No valid SSL certificate found in secret %v: %v", secretName, err)
+				continue
+			}
+
+			if len(tls.Hosts) == 0 {
+				if _, ok := pems["_"]; ok {
+					glog.Warningf("It is not possible to use %v secret for default SSL certificate because there is one already defined", secretName)
+					continue
+				}
+
+				pems["_"] = pemFileName
+				glog.Infof("Using the secret %v as source for the default SSL certificate", secretName)
 				continue
 			}
 
