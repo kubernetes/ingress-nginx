@@ -59,7 +59,11 @@ func portKey(port int64) string {
 func NewBackendPool(
 	cloud BackendServices,
 	healthChecker healthchecks.HealthChecker,
-	nodePool instances.NodePool, namer utils.Namer, ignorePorts []int64, resyncWithCloud bool) *Backends {
+	nodePool instances.NodePool,
+	namer utils.Namer,
+	ignorePorts []int64,
+	resyncWithCloud bool) *Backends {
+
 	ignored := []string{}
 	for _, p := range ignorePorts {
 		ignored = append(ignored, portKey(p))

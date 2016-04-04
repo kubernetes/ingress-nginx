@@ -58,7 +58,7 @@ const (
 	alphaNumericChar = "0"
 
 	// Current docker image version. Only used in debug logging.
-	imageVersion = "glbc:0.6.0"
+	imageVersion = "glbc:0.6.1"
 )
 
 var (
