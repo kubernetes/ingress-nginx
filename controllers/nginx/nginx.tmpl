@@ -196,6 +196,18 @@ http {
             proxy_pass http://{{ $location.Upstream.Name }};
         }
         {{ end }}
+
+        {{ if eq $server.Name "_" }}
+        # this is required to avoid error if nginx is being monitored
+        # with an external software (like sysdig)
+        location /nginx_status {
+            allow 127.0.0.1;
+            deny all;
+
+            access_log off;
+            stub_status on;
+        }
+        {{ end }}
         {{ template "CUSTOM_ERRORS" $cfg }}
     }
     {{ end }}
