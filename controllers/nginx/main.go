@@ -41,6 +41,10 @@ const (
 )
 
 var (
+	// value overwritten during build. This can be used to resolve issues.
+	version = "0.5"
+	gitRepo = "https://github.com/kubernetes/contrib"
+
 	flags = pflag.NewFlagSet("", pflag.ExitOnError)
 
 	defaultSvc = flags.String("default-backend-service", "",
@@ -82,6 +86,8 @@ func main() {
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
 
+	glog.Infof("Using build: %v - %v", gitRepo, version)
+
 	if *buildCfg {
 		fmt.Printf("Example of ConfigMap to customize NGINX configuration:\n%v", nginx.ConfigMapAsString())
 		os.Exit(0)
@@ -96,7 +102,7 @@ func main() {
 		glog.Fatalf("failed to create client: %v", err)
 	}
 
-	lbInfo, err := getLBDetails(kubeClient)
+	podInfo, err := getPodDetails(kubeClient)
 	if err != nil {
 		glog.Fatalf("unexpected error getting runtime information: %v", err)
 	}
@@ -106,7 +112,7 @@ func main() {
 		glog.Fatalf("no service with name %v found: %v", *defaultSvc, err)
 	}
 
-	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, *udpConfigMapName, lbInfo)
+	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, *udpConfigMapName, podInfo)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
@@ -122,17 +128,21 @@ func main() {
 	}
 }
 
-// lbInfo contains runtime information about the pod
-type lbInfo struct {
-	Podname      string
-	PodIP        string
+// podInfo contains runtime information about the pod
+type podInfo struct {
+	PodName      string
 	PodNamespace string
-	Address      string
+	NodeIP       string
 }
 
 func registerHandlers(lbc *loadBalancerController) {
 	mux := http.NewServeMux()
 	healthz.InstallHandler(mux, lbc.nginx)
+
+	http.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "build: %v - %v", gitRepo, version)
+	})
 
 	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
 		lbc.Stop()

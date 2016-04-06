@@ -4,8 +4,16 @@ all: push
 TAG = 0.5
 PREFIX = gcr.io/google_containers/nginx-ingress-controller
 
+REPO_INFO=$(shell git config --get remote.origin.url)
+
+ifndef VERSION
+  VERSION := git-$(shell git rev-parse --short HEAD)
+endif
+
 controller: controller.go clean
-	CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o nginx-ingress-controller
+	CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags \
+		"-w -X main.version=${VERSION} -X main.gitRepo=${REPO_INFO}" \
+		-o nginx-ingress-controller
 
 container: controller
 	docker build -t $(PREFIX):$(TAG) .

@@ -22,10 +22,6 @@ spec:
           timeoutSeconds: 5
         # use downward API
         env:
-          - name: POD_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
           - name: POD_NAME
             valueFrom:
               fieldRef:
@@ -40,5 +36,5 @@ spec:
         - containerPort: 443
           hostPort: 4444
         args:
-        - /nginx-ingress-controller-lb
+        - /nginx-ingress-controller
         - --default-backend-service=default/default-http-backend

@@ -33,10 +33,6 @@ spec:
           timeoutSeconds: 5
         # use downward API
         env:
-          - name: POD_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
           - name: POD_NAME
             valueFrom:
               fieldRef:

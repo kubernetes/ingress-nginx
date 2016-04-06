@@ -97,25 +97,19 @@ func NewTaskQueue(syncFn func(string)) *taskQueue {
 	}
 }
 
-// getLBDetails returns runtime information about the pod (name, IP) and replication
-// controller or daemonset (namespace and name).
-// This is required to watch for changes in annotations or configuration (ConfigMap)
-func getLBDetails(kubeClient *unversioned.Client) (*lbInfo, error) {
+// getPodDetails  returns runtime information about the pod: name, namespace and IP of the node
+func getPodDetails(kubeClient *unversioned.Client) (*podInfo, error) {
 	podName := os.Getenv("POD_NAME")
 	podNs := os.Getenv("POD_NAMESPACE")
+
+	err := waitForPodRunning(kubeClient, podNs, podName, time.Millisecond*200, time.Second*30)
+	if err != nil {
+		return nil, err
+	}
 
 	pod, _ := kubeClient.Pods(podNs).Get(podName)
 	if pod == nil {
 		return nil, fmt.Errorf("Unable to get POD information")
-	}
-
-	if pod.Status.Phase != api.PodRunning {
-		// we wait up to 30 seconds until the pod is running and
-		// it is possible to get the IP and name of the node
-		err := waitForPodRunning(kubeClient, podNs, podName, time.Millisecond*200, time.Second*30)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	node, err := kubeClient.Nodes().Get(pod.Spec.NodeName)
@@ -137,13 +131,10 @@ func getLBDetails(kubeClient *unversioned.Client) (*lbInfo, error) {
 		}
 	}
 
-	podIP := os.Getenv("POD_IP")
-
-	return &lbInfo{
-		PodIP:        podIP,
-		Podname:      podName,
+	return &podInfo{
+		PodName:      podName,
 		PodNamespace: podNs,
-		Address:      externalIP,
+		NodeIP:       externalIP,
 	}, nil
 }
 
