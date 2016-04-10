@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -34,6 +33,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/healthz"
+	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 )
 
 const (
@@ -55,16 +55,20 @@ var (
 	nxgConfigMap = flags.String("nginx-configmap", "",
 		`Name of the ConfigMap that containes the custom nginx configuration to use`)
 
+	inCluster = flags.Bool("running-in-cluster", true,
+		`Optional, if this controller is running in a kubernetes cluster, use the
+		 pod secrets for creating a Kubernetes client.`)
+
 	tcpConfigMapName = flags.String("tcp-services-configmap", "",
 		`Name of the ConfigMap that containes the definition of the TCP services to expose.
-		The key in the map indicates the external port to be used. The value is the name of the 
+		The key in the map indicates the external port to be used. The value is the name of the
 		service with the format namespace/serviceName and the port of the service could be a number of the
 		name of the port.
 		The ports 80 and 443 are not allowed as external ports. This ports are reserved for nginx`)
 
 	udpConfigMapName = flags.String("udp-services-configmap", "",
 		`Name of the ConfigMap that containes the definition of the UDP services to expose.
-		The key in the map indicates the external port to be used. The value is the name of the 
+		The key in the map indicates the external port to be used. The value is the name of the
 		service with the format namespace/serviceName and the port of the service could be a number of the
 		name of the port.`)
 
@@ -83,8 +87,9 @@ var (
 )
 
 func main() {
-	flags.AddGoFlagSet(flag.CommandLine)
+	var kubeClient *unversioned.Client
 	flags.Parse(os.Args)
+	clientConfig := kubectl_util.DefaultClientConfig(flags)
 
 	glog.Infof("Using build: %v - %v", gitRepo, version)
 
@@ -94,25 +99,36 @@ func main() {
 	}
 
 	if *defaultSvc == "" {
-		glog.Fatalf("Please specify --default-backend")
+		glog.Fatalf("Please specify --default-backend-service")
 	}
 
-	kubeClient, err := unversioned.NewInCluster()
+	var err error
+	if *inCluster {
+		kubeClient, err = unversioned.NewInCluster()
+	} else {
+		config, connErr := clientConfig.ClientConfig()
+		if connErr != nil {
+			glog.Fatalf("error connecting to the client: %v", err)
+		}
+		kubeClient, err = unversioned.New(config)
+	}
 	if err != nil {
 		glog.Fatalf("failed to create client: %v", err)
 	}
 
-	podInfo, err := getPodDetails(kubeClient)
-	if err != nil {
-		glog.Fatalf("unexpected error getting runtime information: %v", err)
+	runtimePodInfo := &podInfo{NodeIP: "127.0.0.1"}
+	if *inCluster {
+		runtimePodInfo, err = getPodDetails(kubeClient)
+		if err != nil {
+			glog.Fatalf("unexpected error getting runtime information: %v", err)
+		}
 	}
-
-	err = isValidService(kubeClient, *defaultSvc)
-	if err != nil {
+	if err := isValidService(kubeClient, *defaultSvc); err != nil {
 		glog.Fatalf("no service with name %v found: %v", *defaultSvc, err)
 	}
+	glog.Infof("Validated %v as the default backend", *defaultSvc)
 
-	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, *udpConfigMapName, podInfo)
+	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, *udpConfigMapName, runtimePodInfo)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}

@@ -294,6 +294,10 @@ func NewManager(kubeClient *client.Client) *Manager {
 
 func (nginx *Manager) createCertsDir(base string) {
 	if err := os.Mkdir(base, os.ModeDir); err != nil {
+		if os.IsExist(err) {
+			glog.Infof("%v already exists", err)
+			return
+		}
 		glog.Fatalf("Couldn't create directory %v: %v", base, err)
 	}
 }
