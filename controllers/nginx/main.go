@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -88,6 +89,7 @@ var (
 
 func main() {
 	var kubeClient *unversioned.Client
+	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
 	clientConfig := kubectl_util.DefaultClientConfig(flags)
 
