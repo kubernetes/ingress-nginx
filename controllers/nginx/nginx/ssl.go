@@ -53,8 +53,10 @@ func (nginx *Manager) CheckSSLCertificate(pemFileName string) ([]string, error) 
 		return []string{}, err
 	}
 
-	var block *pem.Block
-	block, _ = pem.Decode(pemCerts)
+	block, _ := pem.Decode(pemCerts)
+	if block == nil {
+		return []string{}, fmt.Errorf("No valid PEM formatted block found")
+	}
 
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
