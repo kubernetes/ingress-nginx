@@ -241,3 +241,5 @@ The previous behavior can be restored using `retry-non-idempotent=true` in the c
 ## Limitations
 
 - Ingress rules for TLS require the definition of the field `host`
+- The IP address in the status of loadBalancer could contain old values
+

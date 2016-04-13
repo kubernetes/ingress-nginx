@@ -1,11 +1,12 @@
 This is an example to use a TLS Ingress rule to use SSL in NGINX
 
-*First expose the `echoheaders` service:*
+# TLS certificate termination
 
-```
-kubectl run echoheaders --image=gcr.io/google_containers/echoserver:1.3 --replicas=1 --port=8080
-kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
-```
+This examples uses 2 different certificates to terminate SSL for 2 hostnames.
+
+1. Deploy the controller by creating the rc in the parent dir
+2. Create tls secret for foo.bar.com
+3. Create rc-ssl.yaml
 
 *Next create a SSL certificate for `foo.bar.com` host:*
 
@@ -30,6 +31,7 @@ data:
 *Finally create a tls Ingress rule:*
 
 ```
+echo "
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -51,51 +53,38 @@ spec:
 " | kubectl create -f -
 ```
 
+You should be able to reach your nginx service or echoheaders service using a hostname:
 ```
-TODO: 
-- show logs
-- curl
-```
-
-
-##### Another example:
-
-This shows a more complex example that creates the servers `foo.bar.com` and `bar.baz.com` where only `foo.bar.com` uses SSL
-
-```
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: complex-foo
-  namespace: default
-spec:
-  tls:
-  - hosts:
-    - foo.bar.com
-    secretName: foo-tls
-  - hosts:
-    - bar.baz.com
-    secretName: foo-tls
-  rules:
-  - host: foo.bar.com
-    http:
-      paths:
-      - backend:
-          serviceName: echoheaders-x
-          servicePort: 80
-        path: /
-  - host: bar.baz.com
-    http:
-      paths:
-      - backend:
-          serviceName: echoheaders-y
-          servicePort: 80
-        path: /
+$ kubectl get ing
+NAME      RULE          BACKEND   ADDRESS
+foo       -                       10.4.0.3
+          foo.bar.com
+          /             echoheaders-x:80
 ```
 
-
 ```
-TODO: 
-- show logs
-- curl
+$ curl https://10.4.0.3 -H 'Host:foo.bar.com' -k
+old-mbp:contrib aledbf$ curl https://10.4.0.3 -H 'Host:foo.bar.com' -k
+CLIENT VALUES:
+client_address=10.2.48.4
+command=GET
+real path=/
+query=nil
+request_version=1.1
+request_uri=http://foo.bar.com:8080/
+
+SERVER VALUES:
+server_version=nginx: 1.9.7 - lua: 9019
+
+HEADERS RECEIVED:
+accept=*/*
+connection=close
+host=foo.bar.com
+user-agent=curl/7.43.0
+x-forwarded-for=10.2.48.1
+x-forwarded-host=foo.bar.com
+x-forwarded-proto=https
+x-real-ip=10.2.48.1
+BODY:
+-no body in request-
 ```
