@@ -458,9 +458,9 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 			}
 
 			server := servers[rule.Host]
-			locations := []*nginx.Location{}
 
 			for _, path := range rule.HTTP.Paths {
+
 				upsName := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), path.Backend.ServiceName, path.Backend.ServicePort.IntValue())
 				ups := upstreams[upsName]
 
@@ -490,18 +490,23 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 					}
 				}
 
-				for _, ups := range upstreams {
-					if upsName == ups.Name {
-						loc := &nginx.Location{Path: path.Path}
-						loc.Upstream = *ups
-						locations = append(locations, loc)
+				// Validate that there is no another previuous rule
+				// for the same host and path.
+				skipLoc := false
+				for _, loc := range server.Locations {
+					if loc.Path == path.Path {
+						lbc.recorder.Eventf(ing, api.EventTypeWarning, "MAPPING", "Path '%v' already defined in another Ingress rule", path)
+						skipLoc = true
 						break
 					}
 				}
-			}
 
-			for _, loc := range locations {
-				server.Locations = append(server.Locations, loc)
+				if skipLoc == false {
+					server.Locations = append(server.Locations, &nginx.Location{
+						Path:     path.Path,
+						Upstream: *ups,
+					})
+				}
 			}
 		}
 	}
