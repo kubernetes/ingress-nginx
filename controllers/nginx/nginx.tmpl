@@ -182,6 +182,7 @@ http {
 
             proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Host       $host;
+            proxy_set_header X­-Forwarded­-Port       $server_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
 
             proxy_connect_timeout                   {{ $cfg.proxyConnectTimeout }}s;
