@@ -120,6 +120,9 @@ Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/exampl
 
 Check the [example](examples/tls/README.md)
 
+### Force HTTPS
+
+By default the controller redirects (301) to HTTPS if there is a TLS Ingress rule. To disable this behavior use `use-hts=false` in the NGINX ConfigMap.
 
 
 #### Optimizing TLS Time To First Byte (TTTFB)

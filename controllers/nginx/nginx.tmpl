@@ -80,10 +80,6 @@ http {
       ''      $scheme;
     }
 
-    map $pass_access_scheme $sts {
-      'https' 'max-age={{ $cfg.htsMaxAge }}{{ if $cfg.htsIncludeSubdomains }}; includeSubDomains{{ end }}; preload';
-    }
-
     # Map a response error watching the header Content-Type
     map $http_accept $httpAccept {
         default          html;
@@ -163,10 +159,12 @@ http {
 
         server_name {{ $server.Name }};
 
-        {{ if $server.SSL }}
+        {{ if (and $server.SSL $cfg.UseHTS) }}
         if ($scheme = http) {
             return 301 https://$host$request_uri;
         }
+
+        more_set_headers                            "Strict-Transport-Security: max-age={{ $cfg.htsMaxAge }}{{ if $cfg.htsIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
         {{ end }}
 
         {{ range $location := $server.Locations }}
