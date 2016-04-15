@@ -291,42 +291,52 @@ func (lbc *loadBalancerController) updateEpNamedPorts(key string) {
 				return
 			}
 
-			lbc.checkSvcForUpdate(svc)
+			err = lbc.checkSvcForUpdate(svc)
+			if err != nil {
+				lbc.svcEpQueue.requeue(key, err)
+				return
+			}
 		}
 	}
 }
 
-func (lbc *loadBalancerController) checkSvcForUpdate(svc *api.Service) {
+// checkSvcForUpdate verifies if one of the running pods for a service contains
+// named port. If the annotation in the service does not exists or is not equals
+// to the port mapping obtained from the pod the service must be updated to reflect
+// the current state
+func (lbc *loadBalancerController) checkSvcForUpdate(svc *api.Service) error {
+	// get the pods associated with the service
 	pods, err := lbc.client.Pods(svc.Namespace).List(api.ListOptions{
 		LabelSelector: labels.Set(svc.Spec.Selector).AsSelector(),
 	})
 	if err != nil {
-		glog.Errorf("error searching service pods %v/%v: %v", svc.Namespace, svc.Name, err)
-		return
+		return fmt.Errorf("error searching service pods %v/%v: %v", svc.Namespace, svc.Name, err)
+	}
+
+	if len(pods.Items) == 0 {
+		return nil
 	}
 
 	namedPorts := map[string]string{}
+	// we need to check only one pod searching for named ports
+	pod := &pods.Items[0]
+	glog.V(4).Infof("checking pod %v/%v for named port information", pod.Namespace, pod.Name)
+	for i := range svc.Spec.Ports {
+		servicePort := &svc.Spec.Ports[i]
 
-	for i := range pods.Items {
-		pod := &pods.Items[i]
-		glog.V(4).Infof("checking pod %v/%v for named port information", pod.Namespace, pod.Name)
-		for i := range svc.Spec.Ports {
-			servicePort := &svc.Spec.Ports[i]
-
-			_, err := strconv.Atoi(servicePort.TargetPort.StrVal)
+		_, err := strconv.Atoi(servicePort.TargetPort.StrVal)
+		if err != nil {
+			portNum, err := podutil.FindPort(pod, servicePort)
 			if err != nil {
-				portNum, err := podutil.FindPort(pod, servicePort)
-				if err != nil {
-					glog.V(4).Infof("failed to find port for service %s/%s: %v", svc.Namespace, svc.Name, err)
-					continue
-				}
-
-				if servicePort.TargetPort.StrVal == "" {
-					continue
-				}
-
-				namedPorts[servicePort.TargetPort.StrVal] = fmt.Sprintf("%v", portNum)
+				glog.V(4).Infof("failed to find port for service %s/%s: %v", svc.Namespace, svc.Name, err)
+				continue
 			}
+
+			if servicePort.TargetPort.StrVal == "" {
+				continue
+			}
+
+			namedPorts[servicePort.TargetPort.StrVal] = fmt.Sprintf("%v", portNum)
 		}
 	}
 
@@ -337,13 +347,25 @@ func (lbc *loadBalancerController) checkSvcForUpdate(svc *api.Service) {
 	curNamedPort := svc.ObjectMeta.Annotations[namedPortAnnotation]
 	if !reflect.DeepEqual(curNamedPort, namedPorts) {
 		data, _ := json.Marshal(namedPorts)
-		svc.ObjectMeta.Annotations[namedPortAnnotation] = string(data)
-		glog.Infof("updating service %v with new named port mappings", svc.Name)
-		_, err := lbc.client.Services(svc.Namespace).Update(svc)
+
+		newSvc, err := lbc.client.Services(svc.Namespace).Get(svc.Name)
 		if err != nil {
-			glog.Errorf("error syncing service %v/%v: %v", svc.Namespace, svc.Name, err)
+			return fmt.Errorf("error getting service %v/%v: %v", svc.Namespace, svc.Name, err)
+		}
+
+		if svc.ObjectMeta.Annotations == nil {
+			svc.ObjectMeta.Annotations = map[string]string{}
+		}
+
+		newSvc.ObjectMeta.Annotations[namedPortAnnotation] = string(data)
+		glog.Infof("updating service %v with new named port mappings", svc.Name)
+		_, err = lbc.client.Services(svc.Namespace).Update(svc)
+		if err != nil {
+			return fmt.Errorf("error syncing service %v/%v: %v", svc.Namespace, svc.Name, err)
 		}
 	}
+
+	return nil
 }
 
 func (lbc *loadBalancerController) sync(key string) {
