@@ -41,10 +41,6 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 443
-        # we expose 8080 to access nginx stats in url /nginx-status
-        # this is optional
-        - containerPort: 8080
-          hostPort: 8081
         - containerPort: 53
           hostPort: 53
         args:

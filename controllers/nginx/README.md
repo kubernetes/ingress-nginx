@@ -11,7 +11,6 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 - custom ssl_dhparam (optional). Just mount a secret with a file named `dhparam.pem`.
 - support for TCP services (flag `--tcp-services-configmap`)
 - custom nginx configuration using [ConfigMap](https://github.com/kubernetes/kubernetes/blob/master/docs/proposals/configmap.md)
-- custom error pages. Using the flag `--custom-error-service` is possible to use a custom compatible [404-server](https://github.com/kubernetes/contrib/tree/master/404-server) image
 
 
 ## Requirements
@@ -120,10 +119,13 @@ Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/exampl
 
 Check the [example](examples/tls/README.md)
 
-### Force HTTPS
+### HTTP Strict Transport Security
 
-By default the controller redirects (301) to HTTPS if there is a TLS Ingress rule. To disable this behavior use `use-hts=false` in the NGINX ConfigMap.
+HTTP Strict Transport Security (HSTS) is an opt-in security enhancement specified through the use of a special response header. Once a supported browser receives this header that browser will prevent any communications from being sent over HTTP to the specified domain and will instead send all communications over HTTPS.
 
+By default the controller redirects (301) to HTTPS if there is a TLS Ingress rule. 
+
+To disable this behavior use `hsts=false` in the NGINX ConfigMap.
 
 #### Optimizing TLS Time To First Byte (TTTFB)
 
@@ -190,24 +192,21 @@ Please check the example `example/rc-default.yaml`
 To extract the information in JSON format the module provides a custom URL: `/nginx_status/format/json`
 
 
+
+### Custom errors
+
+In case of an error in a request the body of the response is obtained from the `default backend`. Each request to the default backend includes two headers: 
+- `X-Code` indicates the HTTP code
+- `X-Format` the value of the `Accept` header
+
+Using this two headers is possible to use a custom backend service like [this one](https://github.com/aledbf/contrib/tree/nginx-debug-server/Ingress/images/nginx-error-server) that inspect each request and returns a custom error page with the format expected by the client. This images handles `html` and `json` responses.
+
+
 ## Troubleshooting
 
 Problems encountered during [1.2.0-alpha7 deployment](https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker.md):
 * make setup-files.sh file in hypercube does not provide 10.0.0.1 IP to make-ca-certs, resulting in CA certs that are issued to the external cluster IP address rather then 10.0.0.1 -> this results in nginx-third-party-lb appearing to get stuck at "Utils.go:177 - Waiting for default/default-http-backend" in the docker logs.  Kubernetes will eventually kill the container before nginx-third-party-lb times out with a message indicating that the CA certificate issuer is invalid (wrong ip), to verify this add zeros to the end of initialDelaySeconds and timeoutSeconds and reload the RC, and docker will log this error before kubernetes kills the container.
   * To fix the above, setup-files.sh must be patched before the cluster is inited (refer to https://github.com/kubernetes/kubernetes/pull/21504)
-
-### Custom errors
-
-The default backend provides a way to customize the default 404 page. This helps but sometimes is not enough.
-Using the flag `--custom-error-service` is possible to use an image that must be 404 compatible and provide the route /error
-[Here](https://github.com/aledbf/contrib/tree/nginx-debug-server/Ingress/images/nginx-error-server) there is an example of the the image
-
-The route `/error` expects two arguments: code and format
-* code defines the wich error code is expected to be returned (502,503,etc.)
-* format the format that should be returned For instance /error?code=504&format=json or /error?code=502&format=html
-
-Using a volume pointing to `/var/www/html` directory is possible to use a custom error
-
 
 ### Debug
 

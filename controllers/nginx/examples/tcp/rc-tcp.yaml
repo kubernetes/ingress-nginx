@@ -41,10 +41,6 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 443
-        # we expose 8080 to access nginx stats in url /nginx-status
-        # this is optional
-        - containerPort: 8080
-          hostPort: 8081
         # service echoheaders as TCP service default/echoheaders:9000
         # 9000 indicates the port used to expose the service
         - containerPort: 9000
