@@ -25,6 +25,7 @@ import (
 
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/runtime"
+	"k8s.io/kubernetes/pkg/util/framer"
 	utilyaml "k8s.io/kubernetes/pkg/util/yaml"
 )
 
@@ -59,6 +60,9 @@ type Serializer struct {
 	yaml    bool
 	pretty  bool
 }
+
+// Serializer implements Serializer
+var _ runtime.Serializer = &Serializer{}
 
 // Decode attempts to convert the provided data into YAML or JSON, extract the stored schema kind, apply the provided default gvk, and then
 // load that data into an object matching the desired schema kind or the provided into. If into is *runtime.Unknown, the raw data will be
@@ -105,8 +109,8 @@ func (s *Serializer) Decode(originalData []byte, gvk *unversioned.GroupVersionKi
 	}
 
 	if unk, ok := into.(*runtime.Unknown); ok && unk != nil {
-		unk.RawJSON = originalData
-		// TODO: set content type here
+		unk.Raw = originalData
+		unk.ContentType = runtime.ContentTypeJSON
 		unk.GetObjectKind().SetGroupVersionKind(actual)
 		return unk, actual, nil
 	}
@@ -188,4 +192,32 @@ func (s *Serializer) RecognizesData(peek io.Reader) (bool, error) {
 		return !ok, nil
 	}
 	return ok, nil
+}
+
+// NewFrameWriter implements stream framing for this serializer
+func (s *Serializer) NewFrameWriter(w io.Writer) io.Writer {
+	if s.yaml {
+		// TODO: needs document framing
+		return nil
+	}
+	// we can write JSON objects directly to the writer, because they are self-framing
+	return w
+}
+
+// NewFrameReader implements stream framing for this serializer
+func (s *Serializer) NewFrameReader(r io.Reader) io.Reader {
+	if s.yaml {
+		// TODO: needs document framing
+		return nil
+	}
+	// we need to extract the JSON chunks of data to pass to Decode()
+	return framer.NewJSONFramedReader(r)
+}
+
+// EncodesAsText returns true because both JSON and YAML are considered textual representations
+// of data. This is used to determine whether the serialized object should be transmitted over
+// a WebSocket Text or Binary frame. This must remain true for legacy compatibility with v1.1
+// watch over websocket implementations.
+func (s *Serializer) EncodesAsText() bool {
+	return true
 }

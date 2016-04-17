@@ -124,7 +124,9 @@ func (d *DiscoveryClient) ServerGroups() (apiGroupList *unversioned.APIGroupList
 // ServerResourcesForGroupVersion returns the supported resources for a group and version.
 func (d *DiscoveryClient) ServerResourcesForGroupVersion(groupVersion string) (resources *unversioned.APIResourceList, err error) {
 	url := url.URL{}
-	if groupVersion == "v1" {
+	if len(groupVersion) == 0 {
+		return nil, fmt.Errorf("groupVersion shouldn't be empty")
+	} else if groupVersion == "v1" {
 		url.Path = "/api/" + groupVersion
 	} else {
 		url.Path = "/apis/" + groupVersion
@@ -211,7 +213,7 @@ func (d *DiscoveryClient) SwaggerSchema(version unversioned.GroupVersion) (*swag
 func setDiscoveryDefaults(config *restclient.Config) error {
 	config.APIPath = ""
 	config.GroupVersion = nil
-	config.Codec = runtime.NoopEncoder{api.Codecs.UniversalDecoder()}
+	config.Codec = runtime.NoopEncoder{Decoder: api.Codecs.UniversalDecoder()}
 	if len(config.UserAgent) == 0 {
 		config.UserAgent = restclient.DefaultKubernetesUserAgent()
 	}

@@ -36,6 +36,10 @@ type TypeMeta struct {
 	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
 }
 
+const (
+	ContentTypeJSON string = "application/json"
+)
+
 // RawExtension is used to hold extensions in external versions.
 //
 // To use this, make a field which has RawExtension as its type in your external, versioned
@@ -80,8 +84,10 @@ type TypeMeta struct {
 //
 // +protobuf=true
 type RawExtension struct {
-	// RawJSON is the underlying serialization of this object.
-	RawJSON []byte
+	// Raw is the underlying serialization of this object.
+	//
+	// TODO: Determine how to detect ContentType and ContentEncoding of 'Raw' data.
+	Raw []byte
 	// Object can hold a representation of this extension - useful for working with versioned
 	// structs.
 	Object Object `json:"-"`
@@ -96,10 +102,16 @@ type RawExtension struct {
 // +protobuf=true
 type Unknown struct {
 	TypeMeta `json:",inline"`
-	// RawJSON will hold the complete JSON of the object which couldn't be matched
+	// Raw will hold the complete serialized object which couldn't be matched
 	// with a registered type. Most likely, nothing should be done with this
 	// except for passing it through the system.
-	RawJSON []byte
+	Raw []byte
+	// ContentEncoding is encoding used to encode 'Raw' data.
+	// Unspecified means no encoding.
+	ContentEncoding string
+	// ContentType  is serialization method used to serialize 'Raw'.
+	// Unspecified means ContentTypeJSON.
+	ContentType string
 }
 
 // Unstructured allows objects that do not have Golang structs registered to be manipulated

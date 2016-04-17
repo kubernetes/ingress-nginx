@@ -39,7 +39,7 @@ import (
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/util"
+	"k8s.io/kubernetes/pkg/util/flowcontrol"
 	"k8s.io/kubernetes/pkg/util/net"
 	"k8s.io/kubernetes/pkg/util/sets"
 	"k8s.io/kubernetes/pkg/watch"
@@ -117,11 +117,11 @@ type Request struct {
 	resp *http.Response
 
 	backoffMgr BackoffManager
-	throttle   util.RateLimiter
+	throttle   flowcontrol.RateLimiter
 }
 
 // NewRequest creates a new request helper object for accessing runtime.Objects on a server.
-func NewRequest(client HTTPClient, verb string, baseURL *url.URL, versionedAPIPath string, content ContentConfig, backoff BackoffManager, throttle util.RateLimiter) *Request {
+func NewRequest(client HTTPClient, verb string, baseURL *url.URL, versionedAPIPath string, content ContentConfig, backoff BackoffManager, throttle flowcontrol.RateLimiter) *Request {
 	if backoff == nil {
 		glog.V(2).Infof("Not implementing request backoff strategy.")
 		backoff = &NoBackoff{}
@@ -624,7 +624,7 @@ func (r *Request) tryThrottle() {
 		r.throttle.Accept()
 	}
 	if latency := time.Since(now); latency > longThrottleLatency {
-		glog.Warningf("Throttling request took %v, request: %s:%s", latency, r.verb, r.URL().String())
+		glog.V(4).Infof("Throttling request took %v, request: %s:%s", latency, r.verb, r.URL().String())
 	}
 }
 

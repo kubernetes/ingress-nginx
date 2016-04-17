@@ -305,7 +305,7 @@ const (
 	// PersistentVolumeReclaimDelete means the volume will be deleted from Kubernetes on release from its claim.
 	// The volume plugin must support Deletion.
 	PersistentVolumeReclaimDelete PersistentVolumeReclaimPolicy = "Delete"
-	// PersistentVolumeReclaimRetain means the volume will left in its current phase (Released) for manual reclamation by the administrator.
+	// PersistentVolumeReclaimRetain means the volume will be left in its current phase (Released) for manual reclamation by the administrator.
 	// The default policy is Retain.
 	PersistentVolumeReclaimRetain PersistentVolumeReclaimPolicy = "Retain"
 )
@@ -1671,8 +1671,14 @@ type NodeSpec struct {
 
 // DaemonEndpoint contains information about a single Daemon endpoint.
 type DaemonEndpoint struct {
+	/*
+		The port tag was not properly in quotes in earlier releases, so it must be
+		uppercased for backwards compat (since it was falling back to var name of
+		'Port').
+	*/
+
 	// Port number of the given endpoint.
-	Port int `json:port`
+	Port int `json:"Port"`
 }
 
 // NodeDaemonEndpoints lists ports opened by daemons running on the Node.
@@ -1718,7 +1724,7 @@ type NodeStatus struct {
 	// Set of ids/uuids to uniquely identify the node.
 	NodeInfo NodeSystemInfo `json:"nodeInfo,omitempty"`
 	// List of container images on this node
-	Images []ContainerImage `json:"images",omitempty`
+	Images []ContainerImage `json:"images,omitempty"`
 }
 
 // Describe a container image
@@ -1887,6 +1893,12 @@ type Binding struct {
 	Target ObjectReference `json:"target"`
 }
 
+// Preconditions must be fulfilled before an operation (update, delete, etc.) is carried out.
+type Preconditions struct {
+	// Specifies the target UID.
+	UID *types.UID `json:"uid,omitempty"`
+}
+
 // DeleteOptions may be provided when deleting an API object
 type DeleteOptions struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -1894,7 +1906,11 @@ type DeleteOptions struct {
 	// Optional duration in seconds before the object should be deleted. Value must be non-negative integer.
 	// The value zero indicates delete immediately. If this value is nil, the default grace period for the
 	// specified type will be used.
-	GracePeriodSeconds *int64 `json:"gracePeriodSeconds"`
+	GracePeriodSeconds *int64 `json:"gracePeriodSeconds,omitempty"`
+
+	// Must be fulfilled before a deletion is carried out. If not possible, a 409 Conflict status will be
+	// returned.
+	Preconditions *Preconditions `json:"preconditions,omitempty"`
 }
 
 // ExportOptions is the query options to the standard REST get call.
@@ -2194,6 +2210,8 @@ const (
 	ResourceConfigMaps ResourceName = "configmaps"
 	// ResourcePersistentVolumeClaims, number
 	ResourcePersistentVolumeClaims ResourceName = "persistentvolumeclaims"
+	// ResourceServicesNodePorts, number
+	ResourceServicesNodePorts ResourceName = "services.nodeports"
 	// CPU request, in cores. (500m = .5 cores)
 	ResourceRequestsCPU ResourceName = "requests.cpu"
 	// Memory request, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)

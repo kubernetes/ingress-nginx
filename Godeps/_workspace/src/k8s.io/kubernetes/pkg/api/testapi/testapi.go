@@ -232,7 +232,17 @@ func (g TestGroup) ResourcePath(resource, namespace, name string) string {
 }
 
 func (g TestGroup) RESTMapper() meta.RESTMapper {
-	return registered.GroupOrDie(g.externalGroupVersion.Group).RESTMapper
+	return registered.RESTMapper()
+}
+
+// ExternalGroupVersions returns all external group versions allowed for the server.
+func ExternalGroupVersions() []unversioned.GroupVersion {
+	versions := []unversioned.GroupVersion{}
+	for _, g := range Groups {
+		gv := g.GroupVersion()
+		versions = append(versions, *gv)
+	}
+	return versions
 }
 
 // Get codec based on runtime.Object

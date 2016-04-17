@@ -31,7 +31,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/util"
+	"k8s.io/kubernetes/pkg/util/crypto"
 	"k8s.io/kubernetes/pkg/version"
 )
 
@@ -61,6 +61,9 @@ type Config struct {
 	// refresh tokens for an OAuth2 flow.
 	// TODO: demonstrate an OAuth2 compatible client.
 	BearerToken string
+
+	// Impersonate is the username that this RESTClient will impersonate
+	Impersonate string
 
 	// TLSClientConfig contains settings to enable transport layer security
 	TLSClientConfig
@@ -235,7 +238,7 @@ func InClusterConfig() (*Config, error) {
 	}
 	tlsClientConfig := TLSClientConfig{}
 	rootCAFile := "/var/run/secrets/kubernetes.io/serviceaccount/" + api.ServiceAccountRootCAKey
-	if _, err := util.CertPoolFromFile(rootCAFile); err != nil {
+	if _, err := crypto.CertPoolFromFile(rootCAFile); err != nil {
 		glog.Errorf("Expected to load root CA config from %s, but got err: %v", rootCAFile, err)
 	} else {
 		tlsClientConfig.CAFile = rootCAFile
