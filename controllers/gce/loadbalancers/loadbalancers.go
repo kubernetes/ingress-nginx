@@ -275,6 +275,11 @@ type L7 struct {
 	// sslCert is the ssl cert associated with the targetHTTPSProxy.
 	// TODO: Make this a custom type that contains crt+key
 	sslCert *compute.SslCertificate
+	// oldSSLCert is the certificate that used to be hooked up to the
+	// targetHTTPSProxy. We can't update a cert in place, so we need
+	// to create - update - delete and storing the old cert in a field
+	// prevents leakage if there's a failure along the way.
+	oldSSLCert *compute.SslCertificate
 	// glbcDefaultBacked is the backend to use if no path rules match.
 	// TODO: Expose this to users.
 	glbcDefaultBackend *compute.BackendService
@@ -329,23 +334,66 @@ func (l *L7) checkProxy() (err error) {
 	return nil
 }
 
+func (l *L7) deleteOldSSLCert() (err error) {
+	if l.oldSSLCert == nil || l.sslCert == nil || l.oldSSLCert.Name == l.sslCert.Name {
+		return nil
+	}
+	glog.Infof("Cleaning up old SSL Certificate %v, current name %v", l.oldSSLCert.Name, l.sslCert.Name)
+	if err := l.cloud.DeleteSslCertificate(l.oldSSLCert.Name); err != nil {
+		if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+			return err
+		}
+	}
+	return nil
+}
+
 func (l *L7) checkSSLCert() (err error) {
 	// TODO: Currently, GCE only supports a single certificate per static IP
 	// so we don't need to bother with disambiguation. Naming the cert after
 	// the loadbalancer is a simplification.
-	certName := l.namer.Truncate(fmt.Sprintf("%v-%v", sslCertPrefix, l.Name))
+
+	ingCert := l.runtimeInfo.TLS.Cert
+	ingKey := l.runtimeInfo.TLS.Key
+
+	// The name of the cert for this lb flip-flops between these 2 on
+	// every certificate update. We don't append the index at the end so we're
+	// sure it isn't truncated.
+	// TODO: Clean this code up into a ring buffer.
+	primaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%v", sslCertPrefix, l.Name))
+	secondaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%d-%v", sslCertPrefix, 1, l.Name))
+	certName := primaryCertName
+	if l.sslCert != nil {
+		certName = l.sslCert.Name
+	}
 	cert, _ := l.cloud.GetSslCertificate(certName)
-	if cert == nil {
+
+	// PrivateKey is write only, so compare certs alone. We're assuming that
+	// no one will change just the key. We can remembe the key and compare,
+	// but a bug could end up leaking it, which feels worse.
+	if cert == nil || ingCert != cert.Certificate {
+
+		certChanged := cert != nil && (ingCert != cert.Certificate)
+		if certChanged {
+			if certName == primaryCertName {
+				certName = secondaryCertName
+			} else {
+				certName = primaryCertName
+			}
+		}
+
 		glog.Infof("Creating new sslCertificates %v for %v", l.Name, certName)
 		cert, err = l.cloud.CreateSslCertificate(&compute.SslCertificate{
 			Name:        certName,
-			Certificate: l.runtimeInfo.TLS.Cert,
-			PrivateKey:  l.runtimeInfo.TLS.Key,
+			Certificate: ingCert,
+			PrivateKey:  ingKey,
 		})
 		if err != nil {
 			return err
 		}
+		// Save the current cert for cleanup after we update the target proxy.
+		l.oldSSLCert = l.sslCert
 	}
+
 	l.sslCert = cert
 	return nil
 }
@@ -559,6 +607,9 @@ func (l *L7) edgeHopHttps() error {
 		return err
 	}
 	if err := l.checkHttpsForwardingRule(); err != nil {
+		return err
+	}
+	if err := l.deleteOldSSLCert(); err != nil {
 		return err
 	}
 	return nil
