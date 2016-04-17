@@ -29,8 +29,6 @@ import (
 	flag "github.com/spf13/pflag"
 	"k8s.io/contrib/ingress/controllers/gce/controller"
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/client/restclient"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 	"k8s.io/kubernetes/pkg/util/wait"
@@ -58,19 +56,13 @@ const (
 	alphaNumericChar = "0"
 
 	// Current docker image version. Only used in debug logging.
-	imageVersion = "glbc:0.6.1"
+	imageVersion = "glbc:0.6.2"
 )
 
 var (
 	flags = flag.NewFlagSet(
 		`gclb: gclb --runngin-in-cluster=false --default-backend-node-port=123`,
 		flag.ExitOnError)
-
-	proxyUrl = flags.String("proxy", "",
-		`If specified, the controller assumes a kubctl proxy server is running on the
-		given url and creates a proxy client and fake cluster manager. Results are
-		printed to stdout and no changes are made to your cluster. This flag is for
-		testing.`)
 
 	clusterName = flags.String("cluster-uid", controller.DefaultClusterUID,
 		`Optional, used to tag cluster wide, shared loadbalancer resources such
@@ -82,6 +74,13 @@ var (
 	inCluster = flags.Bool("running-in-cluster", true,
 		`Optional, if this controller is running in a kubernetes cluster, use the
 		 pod secrets for creating a Kubernetes client.`)
+
+	// TODO: Consolidate this flag and running-in-cluster. People already use
+	// the first one to mean "running in dev", unfortunately.
+	useRealCloud = flags.Bool("use-real-cloud", false,
+		`Optional, if set a real cloud client is created. Only matters with
+		 --running-in-cluster=false, i.e a real cloud is always used when this
+		 controller is running on a Kubernetes node.`)
 
 	resyncPeriod = flags.Duration("sync-period", 30*time.Second,
 		`Relist and confirm cloud resources this often.`)
@@ -162,25 +161,17 @@ func main() {
 		glog.Fatalf("Please specify --default-backend")
 	}
 
-	if *proxyUrl != "" {
-		// Create proxy kubeclient
-		kubeClient = client.NewOrDie(&restclient.Config{
-			Host:          *proxyUrl,
-			ContentConfig: restclient.ContentConfig{GroupVersion: &unversioned.GroupVersion{Version: "v1"}},
-		})
-	} else {
-		// Create kubeclient
-		if *inCluster {
-			if kubeClient, err = client.NewInCluster(); err != nil {
-				glog.Fatalf("Failed to create client: %v.", err)
-			}
-		} else {
-			config, err := clientConfig.ClientConfig()
-			if err != nil {
-				glog.Fatalf("error connecting to the client: %v", err)
-			}
-			kubeClient, err = client.New(config)
+	// Create kubeclient
+	if *inCluster {
+		if kubeClient, err = client.NewInCluster(); err != nil {
+			glog.Fatalf("Failed to create client: %v.", err)
 		}
+	} else {
+		config, err := clientConfig.ClientConfig()
+		if err != nil {
+			glog.Fatalf("error connecting to the client: %v", err)
+		}
+		kubeClient, err = client.New(config)
 	}
 	// Wait for the default backend Service. There's no pretty way to do this.
 	parts := strings.Split(*defaultSvc, "/")
@@ -194,7 +185,7 @@ func main() {
 			*defaultSvc, err)
 	}
 
-	if *proxyUrl == "" && *inCluster {
+	if *inCluster || *useRealCloud {
 		// Create cluster manager
 		clusterManager, err = controller.NewClusterManager(
 			*clusterName, defaultBackendNodePort, *healthCheckPath)
