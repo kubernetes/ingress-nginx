@@ -582,6 +582,7 @@ func (l *L7) edgeHop() error {
 		}
 	}
 	if l.runtimeInfo.TLS != nil {
+		glog.V(3).Infof("Edge hopping https for %v", l.Name)
 		if err := l.edgeHopHttps(); err != nil {
 			return err
 		}

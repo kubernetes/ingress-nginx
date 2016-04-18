@@ -120,7 +120,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 		portMap[p] = struct{}{}
 	}
 	nodePorts = []int64{}
-	for p, _ := range portMap {
+	for p := range portMap {
 		nodePorts = append(nodePorts, p)
 	}
 	if err := c.backendPool.Sync(nodePorts); err != nil {

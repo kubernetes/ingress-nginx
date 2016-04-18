@@ -48,7 +48,7 @@ func (f *fakeFirewallRules) CreateFirewall(name, msgTag string, srcRange netset.
 		// prefix to the given rule name.
 		Name:         f.namer.FrName(name),
 		SourceRanges: srcRange.StringSlice(),
-		Allowed:      []*compute.FirewallAllowed{&compute.FirewallAllowed{Ports: strPorts}},
+		Allowed:      []*compute.FirewallAllowed{{Ports: strPorts}},
 	})
 	return nil
 }
@@ -88,7 +88,7 @@ func (f *fakeFirewallRules) UpdateFirewall(name, msgTag string, srcRange netset.
 			f.fw[i] = &compute.Firewall{
 				Name:         name,
 				SourceRanges: srcRange.StringSlice(),
-				Allowed:      []*compute.FirewallAllowed{&compute.FirewallAllowed{Ports: strPorts}},
+				Allowed:      []*compute.FirewallAllowed{{Ports: strPorts}},
 			}
 		}
 	}
