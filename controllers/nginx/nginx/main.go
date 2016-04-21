@@ -32,7 +32,7 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/util"
+	"k8s.io/kubernetes/pkg/util/flowcontrol"
 )
 
 const (
@@ -227,7 +227,7 @@ type Manager struct {
 
 	sslDHParam string
 
-	reloadRateLimiter util.RateLimiter
+	reloadRateLimiter flowcontrol.RateLimiter
 
 	// template loaded ready to be used to generate the nginx configuration file
 	template *template.Template
@@ -280,7 +280,7 @@ func NewManager(kubeClient *client.Client) *Manager {
 		defCfg:            newDefaultNginxCfg(),
 		defResolver:       strings.Join(getDNSServers(), " "),
 		reloadLock:        &sync.Mutex{},
-		reloadRateLimiter: util.NewTokenBucketRateLimiter(0.1, 1),
+		reloadRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.1, 1),
 	}
 
 	ngx.createCertsDir(sslDirectory)

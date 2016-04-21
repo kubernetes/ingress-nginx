@@ -26,7 +26,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/util"
+	"k8s.io/kubernetes/pkg/util/flowcontrol"
 )
 
 const (
@@ -69,7 +69,7 @@ func main() {
 		ingClient = kubeClient.Extensions().Ingress(api.NamespaceAll)
 	}
 	tmpl, _ := template.New("nginx").Parse(nginxConf)
-	rateLimiter := util.NewTokenBucketRateLimiter(0.1, 1)
+	rateLimiter := flowcontrol.NewTokenBucketRateLimiter(0.1, 1)
 	known := &extensions.IngressList{}
 
 	// Controller loop
