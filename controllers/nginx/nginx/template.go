@@ -48,10 +48,6 @@ func (ngx *Manager) loadTemplate() {
 }
 
 func (ngx *Manager) writeCfg(cfg nginxConfiguration, ingressCfg IngressConfig) (bool, error) {
-	fromMap := structs.Map(cfg)
-	toMap := structs.Map(ngx.defCfg)
-	curNginxCfg := merge(toMap, fromMap)
-
 	conf := make(map[string]interface{})
 	conf["upstreams"] = ingressCfg.Upstreams
 	conf["servers"] = ingressCfg.Servers
@@ -59,7 +55,7 @@ func (ngx *Manager) writeCfg(cfg nginxConfiguration, ingressCfg IngressConfig) (
 	conf["udpUpstreams"] = ingressCfg.UDPUpstreams
 	conf["defResolver"] = ngx.defResolver
 	conf["sslDHParam"] = ngx.sslDHParam
-	conf["cfg"] = fixKeyNames(curNginxCfg)
+	conf["cfg"] = fixKeyNames(structs.Map(cfg))
 
 	buffer := new(bytes.Buffer)
 	err := ngx.template.Execute(buffer, conf)

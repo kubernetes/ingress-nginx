@@ -59,18 +59,36 @@ func getDNSServers() []string {
 	return nameservers
 }
 
+// getConfigKeyToStructKeyMap returns a map with the ConfigMapKey as key and the StructName as value.
+func getConfigKeyToStructKeyMap() map[string]string {
+	keyMap := map[string]string{}
+	n := &nginxConfiguration{}
+	val := reflect.Indirect(reflect.ValueOf(n))
+	for i := 0; i < val.Type().NumField(); i++ {
+		fieldSt := val.Type().Field(i)
+		configMapKey := strings.Split(fieldSt.Tag.Get("structs"), ",")[0]
+		structKey := fieldSt.Name
+		keyMap[configMapKey] = structKey
+	}
+	return keyMap
+}
+
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
 func (ngx *Manager) ReadConfig(config *api.ConfigMap) nginxConfiguration {
 	if len(config.Data) == 0 {
 		return newDefaultNginxCfg()
 	}
 
-	cfg := newDefaultNginxCfg()
+	cfgCM := nginxConfiguration{}
+	cfgDefault := newDefaultNginxCfg()
+
+	metadata := &mapstructure.Metadata{}
 
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		TagName:          "structs",
-		Result:           &cfg,
+		Result:           &cfgCM,
 		WeaklyTypedInput: true,
+		Metadata:         metadata,
 	})
 
 	err = decoder.Decode(config.Data)
@@ -78,7 +96,26 @@ func (ngx *Manager) ReadConfig(config *api.ConfigMap) nginxConfiguration {
 		glog.Infof("%v", err)
 	}
 
-	return cfg
+	keyMap := getConfigKeyToStructKeyMap()
+
+	valCM := reflect.Indirect(reflect.ValueOf(cfgCM))
+
+	for _, key := range metadata.Keys {
+		fieldName, ok := keyMap[key]
+		if !ok {
+			continue
+		}
+
+		valDefault := reflect.ValueOf(&cfgDefault).Elem().FieldByName(fieldName)
+
+		fieldCM := valCM.FieldByName(fieldName)
+
+		if valDefault.IsValid() {
+			valDefault.Set(fieldCM)
+		}
+	}
+
+	return cfgDefault
 }
 
 func (ngx *Manager) needsReload(data *bytes.Buffer) (bool, error) {
@@ -141,21 +178,6 @@ func diff(b1, b2 []byte) (data []byte, err error) {
 		err = nil
 	}
 	return
-}
-
-func merge(dst, src map[string]interface{}) map[string]interface{} {
-	for key, srcVal := range src {
-		if dstVal, ok := dst[key]; ok {
-			srcMap, srcMapOk := toMap(srcVal)
-			dstMap, dstMapOk := toMap(dstVal)
-			if srcMapOk && dstMapOk {
-				srcVal = merge(dstMap, srcMap)
-			}
-		}
-		dst[key] = srcVal
-	}
-
-	return dst
 }
 
 func toMap(iface interface{}) (map[string]interface{}, bool) {
