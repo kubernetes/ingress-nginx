@@ -48,6 +48,7 @@ const (
 	defServerName            = "_"
 	namedPortAnnotation      = "kubernetes.io/ingress-named-ports"
 	podStoreSyncedPollPeriod = 1 * time.Second
+	rootLocation             = "/"
 )
 
 var (
@@ -621,8 +622,9 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 	servers[defServerName] = &nginx.Server{
 		Name: defServerName,
 		Locations: []*nginx.Location{{
-			Path:     "/",
-			Upstream: *lbc.getDefaultUpstream(),
+			Path:         rootLocation,
+			IsDefBackend: true,
+			Upstream:     *lbc.getDefaultUpstream(),
 		},
 		},
 	}
@@ -646,13 +648,19 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 				if nginxPath == "" {
 					lbc.recorder.Eventf(ing, api.EventTypeWarning, "MAPPING",
 						"Ingress rule '%v/%v' contains no path definition. Assuming /", ing.GetNamespace(), ing.GetName())
-					nginxPath = "/"
+					nginxPath = rootLocation
 				}
 
-				// Validate that there is no another previuous rule
-				// for the same host and path.
+				// Validate that there is no another previuous
+				// rule for the same host and path.
 				addLoc := true
 				for _, loc := range server.Locations {
+					if loc.Path == rootLocation && nginxPath == rootLocation && loc.IsDefBackend {
+						loc.Upstream = *ups
+						addLoc = false
+						continue
+					}
+
 					if loc.Path == nginxPath {
 						lbc.recorder.Eventf(ing, api.EventTypeWarning, "MAPPING",
 							"Path '%v' already defined in another Ingress rule", nginxPath)
@@ -677,6 +685,7 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 	aUpstreams := make([]*nginx.Upstream, 0, len(upstreams))
 	for _, value := range upstreams {
 		if len(value.Backends) == 0 {
+			glog.Warningf("upstream %v does no have any active endpoints. Using default backend", value.Name)
 			value.Backends = append(value.Backends, nginx.NewDefaultServer())
 		}
 		sort.Sort(nginx.UpstreamServerByAddrPort(value.Backends))
@@ -709,37 +718,38 @@ func (lbc *loadBalancerController) createUpstreams(data []interface{}) map[strin
 
 			for _, path := range rule.HTTP.Paths {
 				name := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), path.Backend.ServiceName, path.Backend.ServicePort.String())
-				if _, ok := upstreams[name]; !ok {
-					upstreams[name] = nginx.NewUpstream(name)
+				if _, ok := upstreams[name]; ok {
+					continue
+				}
 
-					svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
-					svcObj, svcExists, err := lbc.svcLister.Store.GetByKey(svcKey)
-					if err != nil {
-						glog.Infof("error getting service %v from the cache: %v", svcKey, err)
-						continue
-					}
+				glog.V(3).Infof("creating upstream %v", name)
+				upstreams[name] = nginx.NewUpstream(name)
 
-					if !svcExists {
-						glog.Warningf("service %v does no exists", svcKey)
-						continue
-					}
+				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
+				svcObj, svcExists, err := lbc.svcLister.Store.GetByKey(svcKey)
+				if err != nil {
+					glog.Infof("error getting service %v from the cache: %v", svcKey, err)
+					continue
+				}
 
-					svc := svcObj.(*api.Service)
-					for _, servicePort := range svc.Spec.Ports {
-						port := servicePort.TargetPort
-						if servicePort.Name != "" {
-							port = intstr.FromString(servicePort.Name)
+				if !svcExists {
+					glog.Warningf("service %v does no exists", svcKey)
+					continue
+				}
+
+				svc := svcObj.(*api.Service)
+				glog.V(3).Infof("obtaining port information for service %v", svcKey)
+				bp := path.Backend.ServicePort.String()
+				for _, servicePort := range svc.Spec.Ports {
+					// targetPort could be a string, use the name or the port (int)
+					if strconv.Itoa(servicePort.Port) == bp || servicePort.TargetPort.String() == bp || servicePort.Name == bp {
+						endps := lbc.getEndpoints(svc, servicePort.TargetPort, api.ProtocolTCP)
+						if len(endps) == 0 {
+							glog.Warningf("service %v does no have any active endpoints", svcKey)
 						}
 
-						if port == path.Backend.ServicePort {
-							endps := lbc.getEndpoints(svc, port, api.ProtocolTCP)
-							if len(endps) == 0 {
-								glog.Warningf("service %v does no have any active endpoints", svcKey)
-							}
-
-							upstreams[name].Backends = append(upstreams[name].Backends, endps...)
-							break
-						}
+						upstreams[name].Backends = append(upstreams[name].Backends, endps...)
+						break
 					}
 				}
 			}
@@ -759,7 +769,13 @@ func (lbc *loadBalancerController) createServers(data []interface{}) map[string]
 
 		for _, rule := range ing.Spec.Rules {
 			if _, ok := servers[rule.Host]; !ok {
-				servers[rule.Host] = &nginx.Server{Name: rule.Host, Locations: []*nginx.Location{}}
+				locs := []*nginx.Location{}
+				locs = append(locs, &nginx.Location{
+					Path:         rootLocation,
+					IsDefBackend: true,
+					Upstream:     *lbc.getDefaultUpstream(),
+				})
+				servers[rule.Host] = &nginx.Server{Name: rule.Host, Locations: locs}
 			}
 
 			if pemFile, ok := pems[rule.Host]; ok {
