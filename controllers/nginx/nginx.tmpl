@@ -141,9 +141,13 @@ http {
 
     {{range $name, $upstream := .upstreams}}
     upstream {{$upstream.Name}} {
+        {{ if $cfg.enableStickySessions }}
+        sticky hash=sha1 httponly;
+        {{ else }}
         least_conn;
-        {{range $server := $upstream.Backends}}server {{$server.Address}}:{{$server.Port}};
-        {{end}}
+        {{ end }}
+        {{ range $server := $upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{ end }}
     }
     {{end}}
 
@@ -153,9 +157,6 @@ http {
         {{ if $server.SSL }}listen 443{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }} ssl http2;
         ssl_certificate {{ $server.SSLCertificate }};
         ssl_certificate_key {{ $server.SSLCertificateKey }};{{ end }}
-        {{ if $cfg.enableVtsStatus }}
-        vhost_traffic_status_filter_by_set_key {{ $server.Name }} application::*;
-        {{ end }}
 
         server_name {{ $server.Name }};
 

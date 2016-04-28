@@ -694,6 +694,8 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 	return aUpstreams, aServers
 }
 
+// createUpstreams creates the NGINX upstreams for each service referenced in
+// Ingress rules. The servers inside the upstream are endpoints.
 func (lbc *loadBalancerController) createUpstreams(data []interface{}) map[string]*nginx.Upstream {
 	upstreams := make(map[string]*nginx.Upstream)
 

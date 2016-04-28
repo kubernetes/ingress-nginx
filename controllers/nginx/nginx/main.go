@@ -89,6 +89,11 @@ type nginxConfiguration struct {
 	// Sets the maximum allowed size of the client request body
 	BodySize string `structs:"body-size,omitempty"`
 
+	// EnableStickySessions enabled sticky sessions using cookies
+	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
+	// By default this is disabled
+	EnableStickySessions bool `structs:"enable-sticky-sessions,omitempty"`
+
 	// EnableVtsStatus allows the replacement of the default status page with a third party module named
 	// nginx-module-vts - https://github.com/vozlt/nginx-module-vts
 	// By default this is disabled
