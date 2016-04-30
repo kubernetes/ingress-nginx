@@ -180,6 +180,15 @@ Using a ConfigMap it is possible to customize the defaults in nginx.
 Please check the [tcp services](examples/custom-configuration/README.md) example
 
 
+## Custom NGINX template
+
+The NGINX template is located in the file `/etc/nginx/template/nginx.tmpl`. Mounting a volume is possible to use a custom version.
+Use the [custom-template](examples/custom-template/README.md) example as a guide
+
+**Please note the template is tied to the go code. Be sure to no change names in the variable `$cfg`**
+
+
+
 ### NGINX status page
 
 The ngx_http_stub_status_module module provides access to basic status information. This is the default module active in the url `/nginx_status`.

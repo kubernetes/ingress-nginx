@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 COPY nginx-ingress-controller /
-COPY nginx.tmpl /
+COPY nginx.tmpl /etc/nginx/template/nginx.tmpl
 COPY default.conf /etc/nginx/nginx.conf
 
 COPY lua /etc/nginx/lua/
