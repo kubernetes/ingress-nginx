@@ -81,7 +81,7 @@ var (
 
 	healthzPort = flags.Int("healthz-port", healthPort, "port for healthz endpoint.")
 
-	buildCfg = flags.Bool("dump-nginx—configuration", false, `Returns a ConfigMap with the default nginx conguration.
+	buildCfg = flags.Bool("dump-nginx-configuration", false, `Returns a ConfigMap with the default nginx conguration.
 		This can be used as a guide to create a custom configuration.`)
 
 	profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
