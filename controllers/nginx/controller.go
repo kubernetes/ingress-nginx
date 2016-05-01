@@ -618,15 +618,18 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 	upstreams[defUpstreamName] = lbc.getDefaultUpstream()
 
 	servers := lbc.createServers(data)
-	// default server - no servername.
-	servers[defServerName] = &nginx.Server{
-		Name: defServerName,
-		Locations: []*nginx.Location{{
-			Path:         rootLocation,
-			IsDefBackend: true,
-			Upstream:     *lbc.getDefaultUpstream(),
-		},
-		},
+	if _, ok := servers[defServerName]; !ok {
+		// default server - no servername.
+		// there is no rule with default backend
+		servers[defServerName] = &nginx.Server{
+			Name: defServerName,
+			Locations: []*nginx.Location{{
+				Path:         rootLocation,
+				IsDefBackend: true,
+				Upstream:     *lbc.getDefaultUpstream(),
+			},
+			},
+		}
 	}
 
 	for _, ingIf := range data {
@@ -637,7 +640,14 @@ func (lbc *loadBalancerController) getUpstreamServers(data []interface{}) ([]*ng
 				continue
 			}
 
-			server := servers[rule.Host]
+			host := rule.Host
+			if host == "" {
+				host = defServerName
+			}
+			server := servers[host]
+			if server == nil {
+				server = servers["_"]
+			}
 
 			for _, path := range rule.HTTP.Paths {
 				upsName := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), path.Backend.ServiceName, path.Backend.ServicePort.String())
@@ -768,18 +778,23 @@ func (lbc *loadBalancerController) createServers(data []interface{}) map[string]
 		ing := ingIf.(*extensions.Ingress)
 
 		for _, rule := range ing.Spec.Rules {
-			if _, ok := servers[rule.Host]; !ok {
+			host := rule.Host
+			if host == "" {
+				host = defServerName
+			}
+
+			if _, ok := servers[host]; !ok {
 				locs := []*nginx.Location{}
 				locs = append(locs, &nginx.Location{
 					Path:         rootLocation,
 					IsDefBackend: true,
 					Upstream:     *lbc.getDefaultUpstream(),
 				})
-				servers[rule.Host] = &nginx.Server{Name: rule.Host, Locations: locs}
+				servers[host] = &nginx.Server{Name: host, Locations: locs}
 			}
 
-			if pemFile, ok := pems[rule.Host]; ok {
-				server := servers[rule.Host]
+			if pemFile, ok := pems[host]; ok {
+				server := servers[host]
 				server.SSL = true
 				server.SSLCertificate = pemFile
 				server.SSLCertificateKey = pemFile
