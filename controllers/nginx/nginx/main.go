@@ -49,7 +49,7 @@ const (
 	// that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
 	// https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 	// max-age is the time, in seconds, that the browser should remember that this site is only to be accessed using HTTPS.
-	htsMaxAge = "15724800"
+	hstsMaxAge = "15724800"
 
 	// If UseProxyProtocol is enabled defIPCIDR defines the default the IP/network address of your external load balancer
 	defIPCIDR = "0.0.0.0/0"
@@ -89,6 +89,11 @@ type nginxConfiguration struct {
 	// Sets the maximum allowed size of the client request body
 	BodySize string `structs:"body-size,omitempty"`
 
+	// EnableStickySessions enabled sticky sessions using cookies
+	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
+	// By default this is disabled
+	EnableStickySessions bool `structs:"enable-sticky-sessions,omitempty"`
+
 	// EnableVtsStatus allows the replacement of the default status page with a third party module named
 	// nginx-module-vts - https://github.com/vozlt/nginx-module-vts
 	// By default this is disabled
@@ -105,18 +110,19 @@ type nginxConfiguration struct {
 	// Log levels above are listed in the order of increasing severity
 	ErrorLogLevel string `structs:"error-log-level,omitempty"`
 
-	// Enables or disables the header HTS in servers running SSL
-	UseHTS bool `structs:"use-hts,omitempty"`
+	// Enables or disables the header HSTS in servers running SSL
+	HSTS bool `structs:"hsts,omitempty"`
 
-	// Enables or disables the use of HTS in all the subdomains of the servername
-	HTSIncludeSubdomains bool `structs:"hts-include-subdomains,omitempty"`
+	// Enables or disables the use of HSTS in all the subdomains of the servername
+	// Default: true
+	HSTSIncludeSubdomains bool `structs:"hsts-include-subdomains,omitempty"`
 
 	// HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header)
 	// that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
 	// https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 	// max-age is the time, in seconds, that the browser should remember that this site is only to be
 	// accessed using HTTPS.
-	HTSMaxAge string `structs:"hts-max-age,omitempty"`
+	HSTSMaxAge string `structs:"hsts-max-age,omitempty"`
 
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
@@ -239,11 +245,11 @@ type Manager struct {
 // in the file default-conf.json
 func newDefaultNginxCfg() nginxConfiguration {
 	cfg := nginxConfiguration{
-		BodySize:                 bodySize,
-		ErrorLogLevel:            errorLevel,
-		UseHTS:                   true,
-		HTSIncludeSubdomains:     true,
-		HTSMaxAge:                htsMaxAge,
+		BodySize:      bodySize,
+		ErrorLogLevel: errorLevel,
+		HSTS:          true,
+		HSTSIncludeSubdomains:    true,
+		HSTSMaxAge:               hstsMaxAge,
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
 		MaxWorkerConnections:     16384,

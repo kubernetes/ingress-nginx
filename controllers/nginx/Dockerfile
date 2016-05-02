@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google_containers/nginx-slim:0.5
+FROM gcr.io/google_containers/nginx-slim:0.6
 
 RUN apt-get update && apt-get install -y \
   diffutils \
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 COPY nginx-ingress-controller /
-COPY nginx.tmpl /
+COPY nginx.tmpl /etc/nginx/template/nginx.tmpl
 COPY default.conf /etc/nginx/nginx.conf
 
 COPY lua /etc/nginx/lua/

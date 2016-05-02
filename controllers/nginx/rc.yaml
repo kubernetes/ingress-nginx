@@ -68,7 +68,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 60
       containers:
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.5
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.6
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:
@@ -93,6 +93,10 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 443
+        # we expose 8080 to access nginx stats in url /nginx-status
+        # this is optional
+        - containerPort: 8080
+          hostPort: 8080
         args:
         - /nginx-ingress-controller
         - --default-backend-service=default/default-http-backend

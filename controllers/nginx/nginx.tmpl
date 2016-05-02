@@ -80,10 +80,6 @@ http {
       ''      $scheme;
     }
 
-    map $pass_access_scheme $sts {
-      'https' 'max-age={{ $cfg.htsMaxAge }}{{ if $cfg.htsIncludeSubdomains }}; includeSubDomains{{ end }}; preload';
-    }
-
     # Map a response error watching the header Content-Type
     map $http_accept $httpAccept {
         default          html;
@@ -145,28 +141,31 @@ http {
 
     {{range $name, $upstream := .upstreams}}
     upstream {{$upstream.Name}} {
+        {{ if $cfg.enableStickySessions }}
+        sticky hash=sha1 httponly;
+        {{ else }}
         least_conn;
-        {{range $server := $upstream.Backends}}server {{$server.Address}}:{{$server.Port}};
-        {{end}}
+        {{ end }}
+        {{ range $server := $upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{ end }}
     }
     {{end}}
 
     {{ range $server := .servers }}
     server {
-        listen 80;
-        {{ if $server.SSL }}listen 443 ssl http2;
+        listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
+        {{ if $server.SSL }}listen 443{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }} ssl http2;
         ssl_certificate {{ $server.SSLCertificate }};
         ssl_certificate_key {{ $server.SSLCertificateKey }};{{ end }}
-        {{ if $cfg.enableVtsStatus }}
-        vhost_traffic_status_filter_by_set_key {{ $server.Name }} application::*;
-        {{ end }}
 
         server_name {{ $server.Name }};
 
-        {{ if $server.SSL }}
+        {{ if (and $server.SSL $cfg.hsts) }}
         if ($scheme = http) {
             return 301 https://$host$request_uri;
         }
+
+        more_set_headers                            "Strict-Transport-Security: max-age={{ $cfg.hstsMaxAge }}{{ if $cfg.hstsIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
         {{ end }}
 
         {{ range $location := $server.Locations }}
@@ -182,6 +181,7 @@ http {
 
             proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Host       $host;
+            proxy_set_header X-Forwarded-Port       $server_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
 
             proxy_connect_timeout                   {{ $cfg.proxyConnectTimeout }}s;
@@ -214,18 +214,13 @@ http {
 
     # default server, including healthcheck
     server {
-        listen 8080 default_server{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }} reuseport;
+        listen 8080 default_server reuseport;
 
         location /healthz {
             access_log off;
             return 200;
         }
        
-        location /health-check {
-            access_log off;
-            proxy_pass http://127.0.0.1:10249/healthz;
-        }
-
         location /nginx_status {
             {{ if $cfg.enableVtsStatus }}
             vhost_traffic_status_display;
@@ -254,9 +249,7 @@ http {
     }    
 }
 
-
 stream {
-
 # TCP services
 {{ range $i, $tcpServer := .tcpUpstreams }}
     upstream tcp-{{ $tcpServer.Upstream.Name }} {
@@ -286,7 +279,6 @@ stream {
         proxy_pass             udp-{{ $udpServer.Upstream.Name }};
     }
 {{ end }}
-
 }
 
 {{/* definition of templates to avoid repetitions */}}

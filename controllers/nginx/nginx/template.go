@@ -29,6 +29,7 @@ import (
 
 var (
 	camelRegexp = regexp.MustCompile("[0-9A-Za-z]+")
+	tmplPath    = "/etc/nginx/template/nginx.tmpl"
 
 	funcMap = template.FuncMap{
 		"empty": func(input interface{}) bool {
@@ -43,7 +44,7 @@ var (
 )
 
 func (ngx *Manager) loadTemplate() {
-	tmpl, _ := template.New("nginx.tmpl").Funcs(funcMap).ParseFiles("./nginx.tmpl")
+	tmpl, _ := template.New("nginx.tmpl").Funcs(funcMap).ParseFiles(tmplPath)
 	ngx.template = tmpl
 }
 

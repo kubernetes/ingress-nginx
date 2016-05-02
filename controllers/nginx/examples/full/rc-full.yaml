@@ -21,7 +21,7 @@ spec:
         secret:
           secretName: dhparam-example
       containers:
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.5
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.6
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:
@@ -45,7 +45,7 @@ spec:
         - containerPort: 80
           hostPort: 80
         - containerPort: 443
-          hostPort: 4444
+          hostPort: 443
         - containerPort: 8080
           hostPort: 9000
         volumeMounts:

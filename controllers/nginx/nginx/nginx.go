@@ -82,8 +82,9 @@ func (c ServerByName) Less(i, j int) bool {
 
 // Location describes an NGINX location
 type Location struct {
-	Path     string
-	Upstream Upstream
+	Path         string
+	IsDefBackend bool
+	Upstream     Upstream
 }
 
 // LocationByPath sorts location by path

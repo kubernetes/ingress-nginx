@@ -41,9 +41,17 @@ spec:
           hostPort: 80
         - containerPort: 443
           hostPort: 443
-        - containerPort: 53
-          hostPort: 53
         args:
         - /nginx-ingress-controller
         - --default-backend-service=default/default-http-backend
-        - --udp-services-configmap=default/udp-configmap-example
+        volumeMounts:
+          - mountPath: /etc/nginx/template
+            name: nginx-template-volume
+            readOnly: true
+      volumes:
+        - name: nginx-template-volume
+          configMap:
+            name: nginx-template
+            items:
+            - key: nginx.tmpl
+              path: nginx.tmpl
