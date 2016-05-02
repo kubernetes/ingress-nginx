@@ -32,10 +32,10 @@ func getConfigNginxBool(data map[string]string) nginxConfiguration {
 
 func TestManagerReadConfigBoolFalse(t *testing.T) {
 	configNginx := getConfigNginxBool(map[string]string{
-		"hts-include-subdomains": "false",
-		"use-proxy-protocol":     "false",
+		"hsts-include-subdomains": "false",
+		"use-proxy-protocol":      "false",
 	})
-	if configNginx.HTSIncludeSubdomains {
+	if configNginx.HSTSIncludeSubdomains {
 		t.Error("Failed to config boolean value (default true) to false")
 	}
 	if configNginx.UseProxyProtocol {
@@ -45,10 +45,10 @@ func TestManagerReadConfigBoolFalse(t *testing.T) {
 
 func TestManagerReadConfigBoolTrue(t *testing.T) {
 	configNginx := getConfigNginxBool(map[string]string{
-		"hts-include-subdomains": "true",
-		"use-proxy-protocol":     "true",
+		"hsts-include-subdomains": "true",
+		"use-proxy-protocol":      "true",
 	})
-	if !configNginx.HTSIncludeSubdomains {
+	if !configNginx.HSTSIncludeSubdomains {
 		t.Error("Failed to config boolean value (default true) to true")
 	}
 	if !configNginx.UseProxyProtocol {
@@ -60,7 +60,7 @@ func TestManagerReadConfigBoolNothing(t *testing.T) {
 	configNginx := getConfigNginxBool(map[string]string{
 		"invaild-key": "true",
 	})
-	if !configNginx.HTSIncludeSubdomains {
+	if !configNginx.HSTSIncludeSubdomains {
 		t.Error("Failed to get default boolean value true")
 	}
 	if configNginx.UseProxyProtocol {
