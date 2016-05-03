@@ -21,7 +21,7 @@ spec:
         secret:
           secretName: dhparam-example
       containers:
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.6
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.61
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:
