@@ -88,12 +88,13 @@ type Location struct {
 }
 
 // LocationByPath sorts location by path
+// Location / is the last one
 type LocationByPath []*Location
 
 func (c LocationByPath) Len() int      { return len(c) }
 func (c LocationByPath) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 func (c LocationByPath) Less(i, j int) bool {
-	return c[i].Path < c[j].Path
+	return c[i].Path > c[j].Path
 }
 
 // NewDefaultServer return an UpstreamServer to be use as default server that returns 503.
