@@ -123,18 +123,23 @@ http {
     ssl_dhparam {{ .sslDHParam }};
     {{ end }}
 
+    {{  $interceptHttpErrors := $cfg.interceptHttp403 || $cfg.interceptHttp404 || $cfg.interceptHttp405 ||
+                                $cfg.interceptHttp408 || $cfg.interceptHttp413 || $cfg.interceptHttp501 ||
+                                $cfg.interceptHttp502 || $cfg.interceptHttp503 || $cfg.interceptHttp504 }}
+    {{ if $interceptHttpErrors }}
     # Custom error pages
     proxy_intercept_errors on;
+    {{ end }}
 
-    error_page 403 = @custom_403;
-    error_page 404 = @custom_404;
-    error_page 405 = @custom_405;
-    error_page 408 = @custom_408;
-    error_page 413 = @custom_413;
-    error_page 501 = @custom_501;
-    error_page 502 = @custom_502;
-    error_page 503 = @custom_503;
-    error_page 504 = @custom_504;
+    {{ if $cfg.interceptHttp403 }}error_page 403 = @custom_403;{{ end }}
+    {{ if $cfg.interceptHttp404 }}error_page 404 = @custom_404;{{ end }}
+    {{ if $cfg.interceptHttp405 }}error_page 405 = @custom_405;{{ end }}
+    {{ if $cfg.interceptHttp408 }}error_page 408 = @custom_408;{{ end }}
+    {{ if $cfg.interceptHttp413 }}error_page 413 = @custom_413;{{ end }}
+    {{ if $cfg.interceptHttp501 }}error_page 501 = @custom_501;{{ end }}
+    {{ if $cfg.interceptHttp502 }}error_page 502 = @custom_502;{{ end }}
+    {{ if $cfg.interceptHttp503 }}error_page 503 = @custom_503;{{ end }}
+    {{ if $cfg.interceptHttp504 }}error_page 504 = @custom_504;{{ end }}
 
     # In case of errors try the next upstream server before returning an error
     proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504 {{ if $cfg.retryNonIdempotent }}non_idempotent{{ end }};
@@ -285,59 +290,67 @@ stream {
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
+        {{ if $cfg.interceptHttp403 }}
         location @custom_403 {
             internal;
             content_by_lua_block {
                 openURL(403)
             }
-        }
-
+        }{{ end }}
+        {{ if $cfg.interceptHttp404 }}
         location @custom_404 {
             internal;
             content_by_lua_block {
                 openURL(404)
             }
-        }
-
+        }{{ end }}
+        {{ if $cfg.interceptHttp405 }}
         location @custom_405 {
             internal;
             content_by_lua_block {
                 openURL(405)
             }
-        }
-
+        }{{ end }}
+        {{ if $cfg.interceptHttp408 }}
         location @custom_408 {
             internal;
             content_by_lua_block {
                 openURL(408)
             }
-        }
-
+        }{{ end }}
+        {{ if $cfg.interceptHttp413 }}
         location @custom_413 {
             internal;
             content_by_lua_block {
                 openURL(413)
             }
-        }
-
+        }{{ end }}
+        {{ if $cfg.interceptHttp501 }}
+        location @custom_501 {
+            internal;
+            content_by_lua_block {
+                openURL(501)
+            }
+        }{{ end }}
+        {{ if $cfg.interceptHttp502 }}
         location @custom_502 {
             internal;
             content_by_lua_block {
                 openURL(502)
             }
-        }
-
+        }{{ end }}
+        {{ if $cfg.interceptHttp503 }}
         location @custom_503 {
             internal;
             content_by_lua_block {
                 openURL(503)
             }
-        }
-
+        }{{ end }}
+        {{ if $cfg.interceptHttp504 }}
         location @custom_504 {
             internal;
             content_by_lua_block {
                 openURL(504)
             }
-        }
+        }{{ end }}
 {{ end }}
