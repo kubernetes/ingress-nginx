@@ -216,7 +216,7 @@ In case of an error in a request the body of the response is obtained from the `
 - `X-Code` indicates the HTTP code
 - `X-Format` the value of the `Accept` header
 
-Using this two headers is possible to use a custom backend service like [this one](https://github.com/aledbf/contrib/tree/nginx-debug-server/Ingress/images/nginx-error-server) that inspect each request and returns a custom error page with the format expected by the client. This images handles `html` and `json` responses.
+Using this two headers is possible to use a custom backend service like [this one](https://github.com/aledbf/contrib/tree/nginx-debug-server/Ingress/images/nginx-error-server) that inspect each request and returns a custom error page with the format expected by the client. Please check the example [custom-errors](examples/custom-errors/README.md)
 
 
 ## Troubleshooting
