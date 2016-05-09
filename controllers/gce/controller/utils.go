@@ -267,13 +267,13 @@ func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespa
 	for _, p := range obj.(*api.Service).Spec.Ports {
 		switch be.ServicePort.Type {
 		case intstr.Int:
-			if p.Port == int(be.ServicePort.IntVal) {
-				nodePort = p.NodePort
+			if p.Port == be.ServicePort.IntVal {
+				nodePort = int(p.NodePort)
 				break
 			}
 		default:
 			if p.Name == be.ServicePort.StrVal {
-				nodePort = p.NodePort
+				nodePort = int(p.NodePort)
 				break
 			}
 		}

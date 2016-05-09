@@ -496,7 +496,7 @@ func (lbc *loadBalancerController) getStreamServices(data map[string]string, pro
 		} else {
 			// we need to use the TargetPort (where the endpoints are running)
 			for _, sp := range svc.Spec.Ports {
-				if sp.Port == targetPort {
+				if sp.Port == int32(targetPort) {
 					endps = lbc.getEndpoints(svc, sp.TargetPort, proto)
 					break
 				}
@@ -692,7 +692,7 @@ func (lbc *loadBalancerController) createUpstreams(data []interface{}) map[strin
 				bp := path.Backend.ServicePort.String()
 				for _, servicePort := range svc.Spec.Ports {
 					// targetPort could be a string, use the name or the port (int)
-					if strconv.Itoa(servicePort.Port) == bp || servicePort.TargetPort.String() == bp || servicePort.Name == bp {
+					if strconv.Itoa(int(servicePort.Port)) == bp || servicePort.TargetPort.String() == bp || servicePort.Name == bp {
 						endps := lbc.getEndpoints(svc, servicePort.TargetPort, api.ProtocolTCP)
 						if len(endps) == 0 {
 							glog.Warningf("service %v does no have any active endpoints", svcKey)
@@ -822,10 +822,10 @@ func (lbc *loadBalancerController) getEndpoints(s *api.Service, servicePort ints
 				continue
 			}
 
-			var targetPort int
+			var targetPort int32
 			switch servicePort.Type {
 			case intstr.Int:
-				if epPort.Port == servicePort.IntValue() {
+				if int(epPort.Port) == servicePort.IntValue() {
 					targetPort = epPort.Port
 				}
 			case intstr.String:
@@ -838,7 +838,7 @@ func (lbc *loadBalancerController) getEndpoints(s *api.Service, servicePort ints
 						continue
 					}
 
-					targetPort = port
+					targetPort = int32(port)
 				} else {
 					newnp, err := lbc.checkSvcForUpdate(s)
 					if err != nil {
@@ -853,7 +853,7 @@ func (lbc *loadBalancerController) getEndpoints(s *api.Service, servicePort ints
 							continue
 						}
 
-						targetPort = port
+						targetPort = int32(port)
 					}
 				}
 			}
