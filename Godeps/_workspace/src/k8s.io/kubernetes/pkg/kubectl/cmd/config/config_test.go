@@ -435,6 +435,76 @@ func TestCertLeavesToken(t *testing.T) {
 	test.run(t)
 }
 
+func TestSetBytesBad(t *testing.T) {
+	startingConfig := newRedFederalCowHammerConfig()
+	startingConfig.Clusters["another-cluster"] = clientcmdapi.NewCluster()
+
+	test := configCommandTest{
+		args:           []string{"set", "clusters.another-cluster.certificate-authority-data", "cadata"},
+		startingConfig: startingConfig,
+		expectedConfig: startingConfig,
+	}
+
+	test.run(t)
+}
+
+func TestSetBytes(t *testing.T) {
+	clusterInfoWithCAData := clientcmdapi.NewCluster()
+	clusterInfoWithCAData.CertificateAuthorityData = []byte("cadata")
+
+	startingConfig := newRedFederalCowHammerConfig()
+	startingConfig.Clusters["another-cluster"] = clientcmdapi.NewCluster()
+
+	expectedConfig := newRedFederalCowHammerConfig()
+	expectedConfig.Clusters["another-cluster"] = clusterInfoWithCAData
+
+	test := configCommandTest{
+		args:           []string{"set", "clusters.another-cluster.certificate-authority-data", "cadata", "--set-raw-bytes"},
+		startingConfig: startingConfig,
+		expectedConfig: expectedConfig,
+	}
+
+	test.run(t)
+}
+
+func TestSetBase64Bytes(t *testing.T) {
+	clusterInfoWithCAData := clientcmdapi.NewCluster()
+	clusterInfoWithCAData.CertificateAuthorityData = []byte("cadata")
+
+	startingConfig := newRedFederalCowHammerConfig()
+	startingConfig.Clusters["another-cluster"] = clientcmdapi.NewCluster()
+
+	expectedConfig := newRedFederalCowHammerConfig()
+	expectedConfig.Clusters["another-cluster"] = clusterInfoWithCAData
+
+	test := configCommandTest{
+		args:           []string{"set", "clusters.another-cluster.certificate-authority-data", "Y2FkYXRh"},
+		startingConfig: startingConfig,
+		expectedConfig: expectedConfig,
+	}
+
+	test.run(t)
+}
+
+func TestUnsetBytes(t *testing.T) {
+	clusterInfoWithCAData := clientcmdapi.NewCluster()
+	clusterInfoWithCAData.CertificateAuthorityData = []byte("cadata")
+
+	startingConfig := newRedFederalCowHammerConfig()
+	startingConfig.Clusters["another-cluster"] = clusterInfoWithCAData
+
+	expectedConfig := newRedFederalCowHammerConfig()
+	expectedConfig.Clusters["another-cluster"] = clientcmdapi.NewCluster()
+
+	test := configCommandTest{
+		args:           []string{"unset", "clusters.another-cluster.certificate-authority-data"},
+		startingConfig: startingConfig,
+		expectedConfig: expectedConfig,
+	}
+
+	test.run(t)
+}
+
 func TestCAClearsInsecure(t *testing.T) {
 	fakeCAFile, _ := ioutil.TempFile("", "ca-file")
 
@@ -700,12 +770,12 @@ func testConfigCommand(args []string, startingConfig clientcmdapi.Config, t *tes
 
 	buf := bytes.NewBuffer([]byte{})
 
-	cmd := NewCmdConfig(NewDefaultPathOptions(), buf)
+	cmd := NewCmdConfig(clientcmd.NewDefaultPathOptions(), buf)
 	cmd.SetArgs(argsToUse)
 	cmd.Execute()
 
 	// outBytes, _ := ioutil.ReadFile(fakeKubeFile.Name())
-	config := getConfigFromFileOrDie(fakeKubeFile.Name())
+	config := clientcmd.GetConfigFromFileOrDie(fakeKubeFile.Name())
 
 	return buf.String(), *config
 }

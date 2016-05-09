@@ -38,13 +38,13 @@ import (
 // describes the attributes of a scale subresource
 type ScaleSpec struct {
 	// desired number of instances for the scaled object.
-	Replicas int `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas,omitempty"`
 }
 
 // represents the current status of a scale subresource.
 type ScaleStatus struct {
 	// actual number of observed instances of the scaled object.
-	Replicas int `json:"replicas"`
+	Replicas int32 `json:"replicas"`
 
 	// label query over pods that should match the replicas count.
 	// More info: http://releases.k8s.io/HEAD/docs/user-guide/labels.md#label-selectors
@@ -86,7 +86,7 @@ type SubresourceReference struct {
 type CPUTargetUtilization struct {
 	// fraction of the requested CPU that should be utilized/used,
 	// e.g. 70 means that 70% of the requested CPU should be in use.
-	TargetPercentage int `json:"targetPercentage"`
+	TargetPercentage int32 `json:"targetPercentage"`
 }
 
 // Alpha-level support for Custom Metrics in HPA (as annotations).
@@ -118,9 +118,9 @@ type HorizontalPodAutoscalerSpec struct {
 	// and will set the desired number of pods by modifying its spec.
 	ScaleRef SubresourceReference `json:"scaleRef"`
 	// lower limit for the number of pods that can be set by the autoscaler, default 1.
-	MinReplicas *int `json:"minReplicas,omitempty"`
+	MinReplicas *int32 `json:"minReplicas,omitempty"`
 	// upper limit for the number of pods that can be set by the autoscaler. It cannot be smaller than MinReplicas.
-	MaxReplicas int `json:"maxReplicas"`
+	MaxReplicas int32 `json:"maxReplicas"`
 	// target average CPU utilization (represented as a percentage of requested CPU) over all the pods;
 	// if not specified it defaults to the target CPU utilization at 80% of the requested resources.
 	CPUUtilization *CPUTargetUtilization `json:"cpuUtilization,omitempty"`
@@ -136,14 +136,14 @@ type HorizontalPodAutoscalerStatus struct {
 	LastScaleTime *unversioned.Time `json:"lastScaleTime,omitempty"`
 
 	// current number of replicas of pods managed by this autoscaler.
-	CurrentReplicas int `json:"currentReplicas"`
+	CurrentReplicas int32 `json:"currentReplicas"`
 
 	// desired number of replicas of pods managed by this autoscaler.
-	DesiredReplicas int `json:"desiredReplicas"`
+	DesiredReplicas int32 `json:"desiredReplicas"`
 
 	// current average CPU utilization over all pods, represented as a percentage of requested CPU,
 	// e.g. 70 means that an average pod is using now 70% of its requested CPU.
-	CurrentCPUUtilizationPercentage *int `json:"currentCPUUtilizationPercentage,omitempty"`
+	CurrentCPUUtilizationPercentage *int32 `json:"currentCPUUtilizationPercentage,omitempty"`
 }
 
 // +genclient=true
@@ -169,7 +169,7 @@ type HorizontalPodAutoscalerList struct {
 	Items []HorizontalPodAutoscaler `json:"items"`
 }
 
-// +genclient=true
+// +genclient=true,nonNamespaced=true
 
 // A ThirdPartyResource is a generic representation of a resource, it is used by add-ons and plugins to add new resource
 // types to the API.  It consists of one or more Versions of the api.
@@ -229,7 +229,7 @@ type Deployment struct {
 type DeploymentSpec struct {
 	// Number of desired pods. This is a pointer to distinguish between explicit
 	// zero and not specified. Defaults to 1.
-	Replicas int `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas,omitempty"`
 
 	// Label selector for pods. Existing ReplicaSets whose pods are
 	// selected by this will be the ones affected by this deployment.
@@ -244,11 +244,11 @@ type DeploymentSpec struct {
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing, for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
-	MinReadySeconds int `json:"minReadySeconds,omitempty"`
+	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
 
 	// The number of old ReplicaSets to retain to allow rollback.
 	// This is a pointer to distinguish between explicit zero and not specified.
-	RevisionHistoryLimit *int `json:"revisionHistoryLimit,omitempty"`
+	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty"`
 
 	// Indicates that the deployment is paused and will not be processed by the
 	// deployment controller.
@@ -334,16 +334,16 @@ type DeploymentStatus struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// Total number of non-terminated pods targeted by this deployment (their labels match the selector).
-	Replicas int `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas,omitempty"`
 
 	// Total number of non-terminated pods targeted by this deployment that have the desired template spec.
-	UpdatedReplicas int `json:"updatedReplicas,omitempty"`
+	UpdatedReplicas int32 `json:"updatedReplicas,omitempty"`
 
 	// Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
-	AvailableReplicas int `json:"availableReplicas,omitempty"`
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 
 	// Total number of unavailable pods targeted by this deployment.
-	UnavailableReplicas int `json:"unavailableReplicas,omitempty"`
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty"`
 }
 
 type DeploymentList struct {
@@ -442,15 +442,15 @@ const (
 type DaemonSetStatus struct {
 	// CurrentNumberScheduled is the number of nodes that are running at least 1
 	// daemon pod and are supposed to run the daemon pod.
-	CurrentNumberScheduled int `json:"currentNumberScheduled"`
+	CurrentNumberScheduled int32 `json:"currentNumberScheduled"`
 
 	// NumberMisscheduled is the number of nodes that are running the daemon pod, but are
 	// not supposed to run the daemon pod.
-	NumberMisscheduled int `json:"numberMisscheduled"`
+	NumberMisscheduled int32 `json:"numberMisscheduled"`
 
 	// DesiredNumberScheduled is the total number of nodes that should be running the daemon
 	// pod (including nodes correctly running the daemon pod).
-	DesiredNumberScheduled int `json:"desiredNumberScheduled"`
+	DesiredNumberScheduled int32 `json:"desiredNumberScheduled"`
 }
 
 // +genclient=true
@@ -492,127 +492,6 @@ type ThirdPartyResourceDataList struct {
 	unversioned.ListMeta `json:"metadata,omitempty"`
 	// Items is a list of third party objects
 	Items []ThirdPartyResourceData `json:"items"`
-}
-
-// +genclient=true
-
-// Job represents the configuration of a single job.
-type Job struct {
-	unversioned.TypeMeta `json:",inline"`
-	// Standard object's metadata.
-	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	api.ObjectMeta `json:"metadata,omitempty"`
-
-	// Spec is a structure defining the expected behavior of a job.
-	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
-	Spec JobSpec `json:"spec,omitempty"`
-
-	// Status is a structure describing current status of a job.
-	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
-	Status JobStatus `json:"status,omitempty"`
-}
-
-// JobList is a collection of jobs.
-type JobList struct {
-	unversioned.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	unversioned.ListMeta `json:"metadata,omitempty"`
-
-	// Items is the list of Job.
-	Items []Job `json:"items"`
-}
-
-// JobSpec describes how the job execution will look like.
-type JobSpec struct {
-
-	// Parallelism specifies the maximum desired number of pods the job should
-	// run at any given time. The actual number of pods running in steady state will
-	// be less than this number when ((.spec.completions - .status.successful) < .spec.parallelism),
-	// i.e. when the work left to do is less than max parallelism.
-	Parallelism *int `json:"parallelism,omitempty"`
-
-	// Completions specifies the desired number of successfully finished pods the
-	// job should be run with.  Setting to nil means that the success of any
-	// pod signals the success of all pods, and allows parallelism to have any positive
-	// value.  Setting to 1 means that parallelism is limited to 1 and the success of that
-	// pod signals the success of the job.
-	Completions *int `json:"completions,omitempty"`
-
-	// Optional duration in seconds relative to the startTime that the job may be active
-	// before the system tries to terminate it; value must be positive integer
-	ActiveDeadlineSeconds *int64 `json:"activeDeadlineSeconds,omitempty"`
-
-	// Selector is a label query over pods that should match the pod count.
-	// Normally, the system sets this field for you.
-	Selector *unversioned.LabelSelector `json:"selector,omitempty"`
-
-	// ManualSelector controls generation of pod labels and pod selectors.
-	// Leave `manualSelector` unset unless you are certain what you are doing.
-	// When false or unset, the system pick labels unique to this job
-	// and appends those labels to the pod template.  When true,
-	// the user is responsible for picking unique labels and specifying
-	// the selector.  Failure to pick a unique label may cause this
-	// and other jobs to not function correctly.  However, You may see
-	// `manualSelector=true` in jobs that were created with the old `extensions/v1beta1`
-	// API.
-	ManualSelector *bool `json:"manualSelector,omitempty"`
-
-	// Template is the object that describes the pod that will be created when
-	// executing a job.
-	Template api.PodTemplateSpec `json:"template"`
-}
-
-// JobStatus represents the current state of a Job.
-type JobStatus struct {
-
-	// Conditions represent the latest available observations of an object's current state.
-	Conditions []JobCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
-
-	// StartTime represents time when the job was acknowledged by the Job Manager.
-	// It is not guaranteed to be set in happens-before order across separate operations.
-	// It is represented in RFC3339 form and is in UTC.
-	StartTime *unversioned.Time `json:"startTime,omitempty"`
-
-	// CompletionTime represents time when the job was completed. It is not guaranteed to
-	// be set in happens-before order across separate operations.
-	// It is represented in RFC3339 form and is in UTC.
-	CompletionTime *unversioned.Time `json:"completionTime,omitempty"`
-
-	// Active is the number of actively running pods.
-	Active int `json:"active,omitempty"`
-
-	// Succeeded is the number of pods which reached Phase Succeeded.
-	Succeeded int `json:"succeeded,omitempty"`
-
-	// Failed is the number of pods which reached Phase Failed.
-	Failed int `json:"failed,omitempty"`
-}
-
-type JobConditionType string
-
-// These are valid conditions of a job.
-const (
-	// JobComplete means the job has completed its execution.
-	JobComplete JobConditionType = "Complete"
-	// JobFailed means the job has failed its execution.
-	JobFailed JobConditionType = "Failed"
-)
-
-// JobCondition describes current state of a job.
-type JobCondition struct {
-	// Type of job condition, Complete or Failed.
-	Type JobConditionType `json:"type"`
-	// Status of the condition, one of True, False, Unknown.
-	Status api.ConditionStatus `json:"status"`
-	// Last time the condition was checked.
-	LastProbeTime unversioned.Time `json:"lastProbeTime,omitempty"`
-	// Last time the condition transit from one status to another.
-	LastTransitionTime unversioned.Time `json:"lastTransitionTime,omitempty"`
-	// (brief) reason for the condition's last transition.
-	Reason string `json:"reason,omitempty"`
-	// Human readable message indicating details about last transition.
-	Message string `json:"message,omitempty"`
 }
 
 // +genclient=true
@@ -795,7 +674,7 @@ type ReplicaSetList struct {
 // a Template set.
 type ReplicaSetSpec struct {
 	// Replicas is the number of desired replicas.
-	Replicas int `json:"replicas"`
+	Replicas int32 `json:"replicas"`
 
 	// Selector is a label query over pods that should match the replica count.
 	// Must match in order to be controlled.
@@ -811,10 +690,10 @@ type ReplicaSetSpec struct {
 // ReplicaSetStatus represents the current status of a ReplicaSet.
 type ReplicaSetStatus struct {
 	// Replicas is the number of actual replicas.
-	Replicas int `json:"replicas"`
+	Replicas int32 `json:"replicas"`
 
 	// The number of pods that have labels matching the labels of the pod template of the replicaset.
-	FullyLabeledReplicas int `json:"fullyLabeledReplicas,omitempty"`
+	FullyLabeledReplicas int32 `json:"fullyLabeledReplicas,omitempty"`
 
 	// ObservedGeneration is the most recent generation observed by the controller.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`

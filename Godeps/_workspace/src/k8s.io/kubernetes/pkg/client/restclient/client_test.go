@@ -42,13 +42,12 @@ func TestDoRequestSuccess(t *testing.T) {
 		T:            t,
 	}
 	testServer := httptest.NewServer(&fakeHandler)
-	// TODO: Uncomment when fix #19254
-	// defer testServer.Close()
+	defer testServer.Close()
 	c, err := RESTClientFor(&Config{
 		Host: testServer.URL,
 		ContentConfig: ContentConfig{
-			GroupVersion: testapi.Default.GroupVersion(),
-			Codec:        testapi.Default.Codec(),
+			GroupVersion:         testapi.Default.GroupVersion(),
+			NegotiatedSerializer: testapi.Default.NegotiatedSerializer(),
 		},
 		Username: "user",
 		Password: "pass",
@@ -88,13 +87,12 @@ func TestDoRequestFailed(t *testing.T) {
 		T:            t,
 	}
 	testServer := httptest.NewServer(&fakeHandler)
-	// TODO: Uncomment when fix #19254
-	// defer testServer.Close()
+	defer testServer.Close()
 	c, err := RESTClientFor(&Config{
 		Host: testServer.URL,
 		ContentConfig: ContentConfig{
-			GroupVersion: testapi.Default.GroupVersion(),
-			Codec:        testapi.Default.Codec(),
+			GroupVersion:         testapi.Default.GroupVersion(),
+			NegotiatedSerializer: testapi.Default.NegotiatedSerializer(),
 		},
 	})
 	if err != nil {
@@ -127,13 +125,12 @@ func TestDoRequestCreated(t *testing.T) {
 		T:            t,
 	}
 	testServer := httptest.NewServer(&fakeHandler)
-	// TODO: Uncomment when fix #19254
-	// defer testServer.Close()
+	defer testServer.Close()
 	c, err := RESTClientFor(&Config{
 		Host: testServer.URL,
 		ContentConfig: ContentConfig{
-			GroupVersion: testapi.Default.GroupVersion(),
-			Codec:        testapi.Default.Codec(),
+			GroupVersion:         testapi.Default.GroupVersion(),
+			NegotiatedSerializer: testapi.Default.NegotiatedSerializer(),
 		},
 		Username: "user",
 		Password: "pass",

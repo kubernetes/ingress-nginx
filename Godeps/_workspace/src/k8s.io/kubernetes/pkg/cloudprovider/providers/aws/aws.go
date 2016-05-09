@@ -575,6 +575,7 @@ func isRegionValid(region string) bool {
 		"ap-southeast-1",
 		"ap-southeast-2",
 		"ap-northeast-1",
+		"ap-northeast-2",
 		"cn-north-1",
 		"us-gov-west-1",
 		"sa-east-1",
@@ -1947,7 +1948,7 @@ func findTag(tags []*ec2.Tag, key string) (string, bool) {
 }
 
 // Finds the subnets associated with the cluster, by matching tags.
-// For maximal backwards compatability, if no subnets are tagged, it will fall-back to the current subnet.
+// For maximal backwards compatibility, if no subnets are tagged, it will fall-back to the current subnet.
 // However, in future this will likely be treated as an error.
 func (c *AWSCloud) findSubnets() ([]*ec2.Subnet, error) {
 	request := &ec2.DescribeSubnetsInput{}

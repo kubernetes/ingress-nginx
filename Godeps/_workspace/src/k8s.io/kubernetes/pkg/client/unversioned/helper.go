@@ -22,6 +22,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/apimachinery/registered"
+	"k8s.io/kubernetes/pkg/apis/apps"
 	"k8s.io/kubernetes/pkg/apis/autoscaling"
 	"k8s.io/kubernetes/pkg/apis/batch"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -29,6 +30,8 @@ import (
 	"k8s.io/kubernetes/pkg/client/typed/discovery"
 	"k8s.io/kubernetes/pkg/util/sets"
 	"k8s.io/kubernetes/pkg/version"
+	// Import solely to initialize client auth plugins.
+	_ "k8s.io/kubernetes/plugin/pkg/client/auth"
 )
 
 const (
@@ -82,8 +85,16 @@ func New(c *restclient.Config) (*Client, error) {
 			return nil, err
 		}
 	}
+	var appsClient *AppsClient
+	if registered.IsRegistered(apps.GroupName) {
+		appsConfig := *c
+		appsClient, err = NewApps(&appsConfig)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	return &Client{RESTClient: client, AutoscalingClient: autoscalingClient, BatchClient: batchClient, ExtensionsClient: extensionsClient, DiscoveryClient: discoveryClient}, nil
+	return &Client{RESTClient: client, AutoscalingClient: autoscalingClient, BatchClient: batchClient, ExtensionsClient: extensionsClient, DiscoveryClient: discoveryClient, AppsClient: appsClient}, nil
 }
 
 // MatchesServerVersion queries the server to compares the build version
@@ -220,6 +231,9 @@ func SetKubernetesDefaults(config *restclient.Config) error {
 	// TODO: Unconditionally set the config.Version, until we fix the config.
 	copyGroupVersion := g.GroupVersion
 	config.GroupVersion = &copyGroupVersion
+	if config.NegotiatedSerializer == nil {
+		config.NegotiatedSerializer = api.Codecs
+	}
 	if config.Codec == nil {
 		config.Codec = api.Codecs.LegacyCodec(*config.GroupVersion)
 	}

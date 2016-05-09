@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/testapi"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	"k8s.io/kubernetes/pkg/kubelet/server/remotecommand"
@@ -212,7 +213,14 @@ func TestStream(t *testing.T) {
 			server := httptest.NewServer(fakeServer(t, name, exec, testCase.Stdin, testCase.Stdout, testCase.Stderr, testCase.Error, testCase.Tty, testCase.MessageCount, testCase.ServerProtocols))
 
 			url, _ := url.ParseRequestURI(server.URL)
-			c := restclient.NewRESTClient(url, "", restclient.ContentConfig{GroupVersion: &unversioned.GroupVersion{Group: "x"}}, -1, -1, nil)
+			config := restclient.ContentConfig{
+				GroupVersion:         &unversioned.GroupVersion{Group: "x"},
+				NegotiatedSerializer: testapi.Default.NegotiatedSerializer(),
+			}
+			c, err := restclient.NewRESTClient(url, "", config, -1, -1, nil, nil)
+			if err != nil {
+				t.Fatalf("failed to create a client: %v", err)
+			}
 			req := c.Post().Resource("testing")
 
 			if exec {
@@ -257,15 +265,13 @@ func TestStream(t *testing.T) {
 					}
 				}
 
-				// TODO: Uncomment when fix #19254
-				// server.Close()
+				server.Close()
 				continue
 			}
 
 			if hasErr {
 				t.Errorf("%s: unexpected error: %v", name, err)
-				// TODO: Uncomment when fix #19254
-				// server.Close()
+				server.Close()
 				continue
 			}
 
@@ -281,8 +287,7 @@ func TestStream(t *testing.T) {
 				}
 			}
 
-			// TODO: Uncomment when fix #19254
-			// server.Close()
+			server.Close()
 		}
 	}
 }

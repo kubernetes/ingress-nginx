@@ -22,12 +22,12 @@ import (
 
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/runtime/serializer/streaming"
 )
 
 // EnableCrossGroupDecoding modifies the given decoder in place, if it is a codec
 // from this package. It allows objects from one group to be auto-decoded into
 // another group. 'destGroup' must already exist in the codec.
+// TODO: this is an encapsulation violation and should be refactored
 func EnableCrossGroupDecoding(d runtime.Decoder, sourceGroup, destGroup string) error {
 	internal, ok := d.(*codec)
 	if !ok {
@@ -46,6 +46,7 @@ func EnableCrossGroupDecoding(d runtime.Decoder, sourceGroup, destGroup string) 
 // EnableCrossGroupEncoding modifies the given encoder in place, if it is a codec
 // from this package. It allows objects from one group to be auto-decoded into
 // another group. 'destGroup' must already exist in the codec.
+// TODO: this is an encapsulation violation and should be refactored
 func EnableCrossGroupEncoding(e runtime.Encoder, sourceGroup, destGroup string) error {
 	internal, ok := e.(*codec)
 	if !ok {
@@ -276,24 +277,6 @@ func (c *codec) EncodeToStream(obj runtime.Object, w io.Writer, overrides ...unv
 	}
 
 	return c.encoder.EncodeToStream(obj, w, overrides...)
-}
-
-// NewFrameWriter calls into the nested encoder to expose its framing
-func (c *codec) NewFrameWriter(w io.Writer) io.Writer {
-	f, ok := c.encoder.(streaming.Framer)
-	if !ok {
-		return nil
-	}
-	return f.NewFrameWriter(w)
-}
-
-// NewFrameReader calls into the nested decoder to expose its framing
-func (c *codec) NewFrameReader(r io.Reader) io.Reader {
-	f, ok := c.decoder.(streaming.Framer)
-	if !ok {
-		return nil
-	}
-	return f.NewFrameReader(r)
 }
 
 // promoteOrPrependGroupVersion finds the group version in the provided group versions that has the same group as target.

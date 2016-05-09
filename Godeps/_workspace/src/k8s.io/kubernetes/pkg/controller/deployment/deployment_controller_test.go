@@ -27,7 +27,6 @@ import (
 	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
 	"k8s.io/kubernetes/pkg/client/record"
 	"k8s.io/kubernetes/pkg/client/testing/core"
-	"k8s.io/kubernetes/pkg/client/unversioned/testclient"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/util"
@@ -40,7 +39,7 @@ func rs(name string, replicas int, selector map[string]string) *exp.ReplicaSet {
 			Name: name,
 		},
 		Spec: exp.ReplicaSetSpec{
-			Replicas: replicas,
+			Replicas: int32(replicas),
 			Selector: &unversioned.LabelSelector{MatchLabels: selector},
 			Template: api.PodTemplateSpec{},
 		},
@@ -50,7 +49,7 @@ func rs(name string, replicas int, selector map[string]string) *exp.ReplicaSet {
 func newRSWithStatus(name string, specReplicas, statusReplicas int, selector map[string]string) *exp.ReplicaSet {
 	rs := rs(name, specReplicas, selector)
 	rs.Status = exp.ReplicaSetStatus{
-		Replicas: statusReplicas,
+		Replicas: int32(statusReplicas),
 	}
 	return rs
 }
@@ -61,7 +60,7 @@ func deployment(name string, replicas int, maxSurge, maxUnavailable intstr.IntOr
 			Name: name,
 		},
 		Spec: exp.DeploymentSpec{
-			Replicas: replicas,
+			Replicas: int32(replicas),
 			Strategy: exp.DeploymentStrategy{
 				Type: exp.RollingUpdateDeploymentStrategyType,
 				RollingUpdate: &exp.RollingUpdateDeployment{
@@ -76,6 +75,11 @@ func deployment(name string, replicas int, maxSurge, maxUnavailable intstr.IntOr
 var alwaysReady = func() bool { return true }
 
 func newDeployment(replicas int, revisionHistoryLimit *int) *exp.Deployment {
+	var v *int32
+	if revisionHistoryLimit != nil {
+		v = new(int32)
+		*v = int32(*revisionHistoryLimit)
+	}
 	d := exp.Deployment{
 		TypeMeta: unversioned.TypeMeta{APIVersion: testapi.Default.GroupVersion().String()},
 		ObjectMeta: api.ObjectMeta{
@@ -89,7 +93,7 @@ func newDeployment(replicas int, revisionHistoryLimit *int) *exp.Deployment {
 				Type:          exp.RollingUpdateDeploymentStrategyType,
 				RollingUpdate: &exp.RollingUpdateDeployment{},
 			},
-			Replicas: replicas,
+			Replicas: int32(replicas),
 			Selector: &unversioned.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
 			Template: api.PodTemplateSpec{
 				ObjectMeta: api.ObjectMeta{
@@ -106,7 +110,7 @@ func newDeployment(replicas int, revisionHistoryLimit *int) *exp.Deployment {
 					},
 				},
 			},
-			RevisionHistoryLimit: revisionHistoryLimit,
+			RevisionHistoryLimit: v,
 		},
 	}
 	return &d
@@ -119,7 +123,7 @@ func newReplicaSet(d *exp.Deployment, name string, replicas int) *exp.ReplicaSet
 			Namespace: api.NamespaceDefault,
 		},
 		Spec: exp.ReplicaSetSpec{
-			Replicas: replicas,
+			Replicas: int32(replicas),
 			Template: d.Spec.Template,
 		},
 	}
@@ -211,8 +215,8 @@ func TestDeploymentController_reconcileNewReplicaSet(t *testing.T) {
 			t.Errorf("expected 1 action during scale, got: %v", fake.Actions())
 			continue
 		}
-		updated := fake.Actions()[0].(testclient.UpdateAction).GetObject().(*exp.ReplicaSet)
-		if e, a := test.expectedNewReplicas, updated.Spec.Replicas; e != a {
+		updated := fake.Actions()[0].(core.UpdateAction).GetObject().(*exp.ReplicaSet)
+		if e, a := test.expectedNewReplicas, int(updated.Spec.Replicas); e != a {
 			t.Errorf("expected update to %d replicas, got %d", e, a)
 		}
 	}
@@ -471,12 +475,12 @@ func TestDeploymentController_cleanupUnhealthyReplicas(t *testing.T) {
 			client:        &fakeClientset,
 			eventRecorder: &record.FakeRecorder{},
 		}
-		_, cleanupCount, err := controller.cleanupUnhealthyReplicas(oldRSs, &deployment, test.maxCleanupCount)
+		_, cleanupCount, err := controller.cleanupUnhealthyReplicas(oldRSs, &deployment, int32(test.maxCleanupCount))
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 			continue
 		}
-		if cleanupCount != test.cleanupCountExpected {
+		if int(cleanupCount) != test.cleanupCountExpected {
 			t.Errorf("expected %v unhealthy replicas been cleaned up, got %v", test.cleanupCountExpected, cleanupCount)
 			continue
 		}
@@ -583,10 +587,10 @@ func TestDeploymentController_scaleDownOldReplicaSetsForRollingUpdate(t *testing
 		}
 		// There are both list and update actions logged, so extract the update
 		// action for verification.
-		var updateAction testclient.UpdateAction
+		var updateAction core.UpdateAction
 		for _, action := range fakeClientset.Actions() {
 			switch a := action.(type) {
-			case testclient.UpdateAction:
+			case core.UpdateAction:
 				if updateAction != nil {
 					t.Errorf("expected only 1 update action; had %v and found %v", updateAction, a)
 				} else {
@@ -599,7 +603,7 @@ func TestDeploymentController_scaleDownOldReplicaSetsForRollingUpdate(t *testing
 			continue
 		}
 		updated := updateAction.GetObject().(*exp.ReplicaSet)
-		if e, a := test.expectedOldReplicas, updated.Spec.Replicas; e != a {
+		if e, a := test.expectedOldReplicas, int(updated.Spec.Replicas); e != a {
 			t.Errorf("expected update to %d replicas, got %d", e, a)
 		}
 	}
@@ -704,22 +708,22 @@ type fixture struct {
 }
 
 func (f *fixture) expectUpdateDeploymentAction(d *exp.Deployment) {
-	f.actions = append(f.actions, core.NewUpdateAction("deployments", d.Namespace, d))
+	f.actions = append(f.actions, core.NewUpdateAction(unversioned.GroupVersionResource{Resource: "deployments"}, d.Namespace, d))
 	f.objects.Items = append(f.objects.Items, d)
 }
 
 func (f *fixture) expectCreateRSAction(rs *exp.ReplicaSet) {
-	f.actions = append(f.actions, core.NewCreateAction("replicasets", rs.Namespace, rs))
+	f.actions = append(f.actions, core.NewCreateAction(unversioned.GroupVersionResource{Resource: "replicasets"}, rs.Namespace, rs))
 	f.objects.Items = append(f.objects.Items, rs)
 }
 
 func (f *fixture) expectUpdateRSAction(rs *exp.ReplicaSet) {
-	f.actions = append(f.actions, core.NewUpdateAction("replicasets", rs.Namespace, rs))
+	f.actions = append(f.actions, core.NewUpdateAction(unversioned.GroupVersionResource{Resource: "replicasets"}, rs.Namespace, rs))
 	f.objects.Items = append(f.objects.Items, rs)
 }
 
 func (f *fixture) expectListPodAction(namespace string, opt api.ListOptions) {
-	f.actions = append(f.actions, testclient.NewListAction("pods", namespace, opt))
+	f.actions = append(f.actions, core.NewListAction(unversioned.GroupVersionResource{Resource: "pods"}, namespace, opt))
 }
 
 func newFixture(t *testing.T) *fixture {
@@ -742,7 +746,7 @@ func (f *fixture) run(deploymentName string) {
 		c.rsStore.Store.Add(rs)
 	}
 	for _, pod := range f.podStore {
-		c.podStore.Store.Add(pod)
+		c.podStore.Indexer.Add(pod)
 	}
 
 	err := c.syncDeployment(deploymentName)
@@ -758,7 +762,7 @@ func (f *fixture) run(deploymentName string) {
 		}
 
 		expectedAction := f.actions[i]
-		if !expectedAction.Matches(action.GetVerb(), action.GetResource()) {
+		if !expectedAction.Matches(action.GetVerb(), action.GetResource().Resource) {
 			f.t.Errorf("Expected\n\t%#v\ngot\n\t%#v", expectedAction, action)
 			continue
 		}

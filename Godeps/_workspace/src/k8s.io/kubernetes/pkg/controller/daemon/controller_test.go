@@ -133,7 +133,7 @@ func addPods(podStore cache.Store, nodeName string, label map[string]string, num
 
 func newTestController() (*DaemonSetsController, *controller.FakePodControl) {
 	clientset := clientset.NewForConfigOrDie(&restclient.Config{Host: "", ContentConfig: restclient.ContentConfig{GroupVersion: testapi.Default.GroupVersion()}})
-	manager := NewDaemonSetsController(clientset, controller.NoResyncPeriodFunc, 0)
+	manager := NewDaemonSetsControllerFromClient(clientset, controller.NoResyncPeriodFunc, 0)
 	manager.podStoreSynced = alwaysReady
 	podControl := &controller.FakePodControl{}
 	manager.podControl = podControl
@@ -419,10 +419,10 @@ func TestPodIsNotDeletedByDaemonsetWithEmptyLabelSelector(t *testing.T) {
 func TestDealsWithExistingPods(t *testing.T) {
 	manager, podControl := newTestController()
 	addNodes(manager.nodeStore.Store, 0, 5, nil)
-	addPods(manager.podStore.Store, "node-1", simpleDaemonSetLabel, 1)
-	addPods(manager.podStore.Store, "node-2", simpleDaemonSetLabel, 2)
-	addPods(manager.podStore.Store, "node-3", simpleDaemonSetLabel, 5)
-	addPods(manager.podStore.Store, "node-4", simpleDaemonSetLabel2, 2)
+	addPods(manager.podStore.Indexer, "node-1", simpleDaemonSetLabel, 1)
+	addPods(manager.podStore.Indexer, "node-2", simpleDaemonSetLabel, 2)
+	addPods(manager.podStore.Indexer, "node-3", simpleDaemonSetLabel, 5)
+	addPods(manager.podStore.Indexer, "node-4", simpleDaemonSetLabel2, 2)
 	ds := newDaemonSet("foo")
 	manager.dsStore.Add(ds)
 	syncAndValidateDaemonSets(t, manager, ds, podControl, 2, 5)
@@ -444,10 +444,10 @@ func TestSelectorDaemonDeletesUnselectedPods(t *testing.T) {
 	manager, podControl := newTestController()
 	addNodes(manager.nodeStore.Store, 0, 5, nil)
 	addNodes(manager.nodeStore.Store, 5, 5, simpleNodeLabel)
-	addPods(manager.podStore.Store, "node-0", simpleDaemonSetLabel2, 2)
-	addPods(manager.podStore.Store, "node-1", simpleDaemonSetLabel, 3)
-	addPods(manager.podStore.Store, "node-1", simpleDaemonSetLabel2, 1)
-	addPods(manager.podStore.Store, "node-4", simpleDaemonSetLabel, 1)
+	addPods(manager.podStore.Indexer, "node-0", simpleDaemonSetLabel2, 2)
+	addPods(manager.podStore.Indexer, "node-1", simpleDaemonSetLabel, 3)
+	addPods(manager.podStore.Indexer, "node-1", simpleDaemonSetLabel2, 1)
+	addPods(manager.podStore.Indexer, "node-4", simpleDaemonSetLabel, 1)
 	daemon := newDaemonSet("foo")
 	daemon.Spec.Template.Spec.NodeSelector = simpleNodeLabel
 	manager.dsStore.Add(daemon)
@@ -459,14 +459,14 @@ func TestSelectorDaemonDealsWithExistingPods(t *testing.T) {
 	manager, podControl := newTestController()
 	addNodes(manager.nodeStore.Store, 0, 5, nil)
 	addNodes(manager.nodeStore.Store, 5, 5, simpleNodeLabel)
-	addPods(manager.podStore.Store, "node-0", simpleDaemonSetLabel, 1)
-	addPods(manager.podStore.Store, "node-1", simpleDaemonSetLabel, 3)
-	addPods(manager.podStore.Store, "node-1", simpleDaemonSetLabel2, 2)
-	addPods(manager.podStore.Store, "node-2", simpleDaemonSetLabel, 4)
-	addPods(manager.podStore.Store, "node-6", simpleDaemonSetLabel, 13)
-	addPods(manager.podStore.Store, "node-7", simpleDaemonSetLabel2, 4)
-	addPods(manager.podStore.Store, "node-9", simpleDaemonSetLabel, 1)
-	addPods(manager.podStore.Store, "node-9", simpleDaemonSetLabel2, 1)
+	addPods(manager.podStore.Indexer, "node-0", simpleDaemonSetLabel, 1)
+	addPods(manager.podStore.Indexer, "node-1", simpleDaemonSetLabel, 3)
+	addPods(manager.podStore.Indexer, "node-1", simpleDaemonSetLabel2, 2)
+	addPods(manager.podStore.Indexer, "node-2", simpleDaemonSetLabel, 4)
+	addPods(manager.podStore.Indexer, "node-6", simpleDaemonSetLabel, 13)
+	addPods(manager.podStore.Indexer, "node-7", simpleDaemonSetLabel2, 4)
+	addPods(manager.podStore.Indexer, "node-9", simpleDaemonSetLabel, 1)
+	addPods(manager.podStore.Indexer, "node-9", simpleDaemonSetLabel2, 1)
 	ds := newDaemonSet("foo")
 	ds.Spec.Template.Spec.NodeSelector = simpleNodeLabel
 	manager.dsStore.Add(ds)

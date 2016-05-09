@@ -25,7 +25,6 @@ import (
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/controller/podautoscaler"
-	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/intstr"
 )
 
@@ -42,7 +41,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 					Name:        "myrc",
 					Subresource: "scale",
 				},
-				MinReplicas:    newInt(1),
+				MinReplicas:    newInt32(1),
 				MaxReplicas:    5,
 				CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: 70},
 			},
@@ -58,7 +57,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 					Name:        "myrc",
 					Subresource: "scale",
 				},
-				MinReplicas: newInt(1),
+				MinReplicas: newInt32(1),
 				MaxReplicas: 5,
 			},
 		},
@@ -76,7 +75,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 					Name:        "myrc",
 					Subresource: "scale",
 				},
-				MinReplicas: newInt(1),
+				MinReplicas: newInt32(1),
 				MaxReplicas: 5,
 			},
 		},
@@ -96,7 +95,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{Name: "myautoscaler", Namespace: api.NamespaceDefault},
 				Spec: extensions.HorizontalPodAutoscalerSpec{
 					ScaleRef:       extensions.SubresourceReference{Name: "myrc", Subresource: "scale"},
-					MinReplicas:    newInt(1),
+					MinReplicas:    newInt32(1),
 					MaxReplicas:    5,
 					CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: 70},
 				},
@@ -108,7 +107,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{Name: "myautoscaler", Namespace: api.NamespaceDefault},
 				Spec: extensions.HorizontalPodAutoscalerSpec{
 					ScaleRef:       extensions.SubresourceReference{Kind: "..", Name: "myrc", Subresource: "scale"},
-					MinReplicas:    newInt(1),
+					MinReplicas:    newInt32(1),
 					MaxReplicas:    5,
 					CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: 70},
 				},
@@ -120,7 +119,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{Name: "myautoscaler", Namespace: api.NamespaceDefault},
 				Spec: extensions.HorizontalPodAutoscalerSpec{
 					ScaleRef:       extensions.SubresourceReference{Kind: "ReplicationController", Subresource: "scale"},
-					MinReplicas:    newInt(1),
+					MinReplicas:    newInt32(1),
 					MaxReplicas:    5,
 					CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: 70},
 				},
@@ -132,7 +131,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{Name: "myautoscaler", Namespace: api.NamespaceDefault},
 				Spec: extensions.HorizontalPodAutoscalerSpec{
 					ScaleRef:       extensions.SubresourceReference{Kind: "ReplicationController", Name: "..", Subresource: "scale"},
-					MinReplicas:    newInt(1),
+					MinReplicas:    newInt32(1),
 					MaxReplicas:    5,
 					CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: 70},
 				},
@@ -144,7 +143,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{Name: "myautoscaler", Namespace: api.NamespaceDefault},
 				Spec: extensions.HorizontalPodAutoscalerSpec{
 					ScaleRef:       extensions.SubresourceReference{Kind: "ReplicationController", Name: "myrc", Subresource: ""},
-					MinReplicas:    newInt(1),
+					MinReplicas:    newInt32(1),
 					MaxReplicas:    5,
 					CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: 70},
 				},
@@ -156,7 +155,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{Name: "myautoscaler", Namespace: api.NamespaceDefault},
 				Spec: extensions.HorizontalPodAutoscalerSpec{
 					ScaleRef:       extensions.SubresourceReference{Kind: "ReplicationController", Name: "myrc", Subresource: ".."},
-					MinReplicas:    newInt(1),
+					MinReplicas:    newInt32(1),
 					MaxReplicas:    5,
 					CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: 70},
 				},
@@ -168,7 +167,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{Name: "myautoscaler", Namespace: api.NamespaceDefault},
 				Spec: extensions.HorizontalPodAutoscalerSpec{
 					ScaleRef:       extensions.SubresourceReference{Kind: "ReplicationController", Name: "myrc", Subresource: "randomsubresource"},
-					MinReplicas:    newInt(1),
+					MinReplicas:    newInt32(1),
 					MaxReplicas:    5,
 					CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: 70},
 				},
@@ -185,7 +184,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 					ScaleRef: extensions.SubresourceReference{
 						Subresource: "scale",
 					},
-					MinReplicas: newInt(-1),
+					MinReplicas: newInt32(-1),
 					MaxReplicas: 5,
 				},
 			},
@@ -201,7 +200,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 					ScaleRef: extensions.SubresourceReference{
 						Subresource: "scale",
 					},
-					MinReplicas: newInt(7),
+					MinReplicas: newInt32(7),
 					MaxReplicas: 5,
 				},
 			},
@@ -217,7 +216,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 					ScaleRef: extensions.SubresourceReference{
 						Subresource: "scale",
 					},
-					MinReplicas:    newInt(1),
+					MinReplicas:    newInt32(1),
 					MaxReplicas:    5,
 					CPUUtilization: &extensions.CPUTargetUtilization{TargetPercentage: -70},
 				},
@@ -239,7 +238,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 						Name:        "myrc",
 						Subresource: "scale",
 					},
-					MinReplicas: newInt(1),
+					MinReplicas: newInt32(1),
 					MaxReplicas: 5,
 				},
 			},
@@ -260,7 +259,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 						Name:        "myrc",
 						Subresource: "scale",
 					},
-					MinReplicas: newInt(1),
+					MinReplicas: newInt32(1),
 					MaxReplicas: 5,
 				},
 			},
@@ -281,7 +280,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 						Name:        "myrc",
 						Subresource: "scale",
 					},
-					MinReplicas: newInt(1),
+					MinReplicas: newInt32(1),
 					MaxReplicas: 5,
 				},
 			},
@@ -302,7 +301,7 @@ func TestValidateHorizontalPodAutoscaler(t *testing.T) {
 						Name:        "myrc",
 						Subresource: "scale",
 					},
-					MinReplicas: newInt(1),
+					MinReplicas: newInt32(1),
 					MaxReplicas: 5,
 				},
 			},
@@ -985,270 +984,6 @@ func TestValidateDeploymentRollback(t *testing.T) {
 			t.Errorf("[%s] expected failure", k)
 		} else if !strings.Contains(errs[0].Error(), k) {
 			t.Errorf("unexpected error: %q, expected: %q", errs[0].Error(), k)
-		}
-	}
-}
-
-func TestValidateJob(t *testing.T) {
-	validManualSelector := &unversioned.LabelSelector{
-		MatchLabels: map[string]string{"a": "b"},
-	}
-	validGeneratedSelector := &unversioned.LabelSelector{
-		MatchLabels: map[string]string{"controller-uid": "1a2b3c", "job-name": "myjob"},
-	}
-	validPodTemplateSpecForManual := api.PodTemplateSpec{
-		ObjectMeta: api.ObjectMeta{
-			Labels: validManualSelector.MatchLabels,
-		},
-		Spec: api.PodSpec{
-			RestartPolicy: api.RestartPolicyOnFailure,
-			DNSPolicy:     api.DNSClusterFirst,
-			Containers:    []api.Container{{Name: "abc", Image: "image", ImagePullPolicy: "IfNotPresent"}},
-		},
-	}
-	validPodTemplateSpecForGenerated := api.PodTemplateSpec{
-		ObjectMeta: api.ObjectMeta{
-			Labels: validGeneratedSelector.MatchLabels,
-		},
-		Spec: api.PodSpec{
-			RestartPolicy: api.RestartPolicyOnFailure,
-			DNSPolicy:     api.DNSClusterFirst,
-			Containers:    []api.Container{{Name: "abc", Image: "image", ImagePullPolicy: "IfNotPresent"}},
-		},
-	}
-	successCases := map[string]extensions.Job{
-		"manual selector": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				Selector:       validManualSelector,
-				ManualSelector: newBool(true),
-				Template:       validPodTemplateSpecForManual,
-			},
-		},
-		"generated selector": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				Selector:       validGeneratedSelector,
-				ManualSelector: newBool(false),
-				Template:       validPodTemplateSpecForGenerated,
-			},
-		},
-	}
-	for k, v := range successCases {
-		if errs := ValidateJob(&v); len(errs) != 0 {
-			t.Errorf("expected success for %s: %v", k, errs)
-		}
-	}
-	negative := -1
-	negative64 := int64(-1)
-	errorCases := map[string]extensions.Job{
-		"spec.parallelism:must be greater than or equal to 0": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				Parallelism:    &negative,
-				ManualSelector: newBool(true),
-				Template:       validPodTemplateSpecForGenerated,
-			},
-		},
-		"spec.completions:must be greater than or equal to 0": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				Completions:    &negative,
-				Selector:       validManualSelector,
-				ManualSelector: newBool(true),
-				Template:       validPodTemplateSpecForGenerated,
-			},
-		},
-		"spec.activeDeadlineSeconds:must be greater than or equal to 0": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				ActiveDeadlineSeconds: &negative64,
-				Selector:              validManualSelector,
-				ManualSelector:        newBool(true),
-				Template:              validPodTemplateSpecForGenerated,
-			},
-		},
-		"spec.selector:Required value": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				Template: validPodTemplateSpecForGenerated,
-			},
-		},
-		"spec.template.metadata.labels: Invalid value: {\"y\":\"z\"}: `selector` does not match template `labels`": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				Selector:       validManualSelector,
-				ManualSelector: newBool(true),
-				Template: api.PodTemplateSpec{
-					ObjectMeta: api.ObjectMeta{
-						Labels: map[string]string{"y": "z"},
-					},
-					Spec: api.PodSpec{
-						RestartPolicy: api.RestartPolicyOnFailure,
-						DNSPolicy:     api.DNSClusterFirst,
-						Containers:    []api.Container{{Name: "abc", Image: "image", ImagePullPolicy: "IfNotPresent"}},
-					},
-				},
-			},
-		},
-		"spec.template.metadata.labels: Invalid value: {\"controller-uid\":\"4d5e6f\"}: `selector` does not match template `labels`": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				Selector:       validManualSelector,
-				ManualSelector: newBool(true),
-				Template: api.PodTemplateSpec{
-					ObjectMeta: api.ObjectMeta{
-						Labels: map[string]string{"controller-uid": "4d5e6f"},
-					},
-					Spec: api.PodSpec{
-						RestartPolicy: api.RestartPolicyOnFailure,
-						DNSPolicy:     api.DNSClusterFirst,
-						Containers:    []api.Container{{Name: "abc", Image: "image", ImagePullPolicy: "IfNotPresent"}},
-					},
-				},
-			},
-		},
-		"spec.template.spec.restartPolicy: Unsupported value": {
-			ObjectMeta: api.ObjectMeta{
-				Name:      "myjob",
-				Namespace: api.NamespaceDefault,
-				UID:       types.UID("1a2b3c"),
-			},
-			Spec: extensions.JobSpec{
-				Selector:       validManualSelector,
-				ManualSelector: newBool(true),
-				Template: api.PodTemplateSpec{
-					ObjectMeta: api.ObjectMeta{
-						Labels: validManualSelector.MatchLabels,
-					},
-					Spec: api.PodSpec{
-						RestartPolicy: api.RestartPolicyAlways,
-						DNSPolicy:     api.DNSClusterFirst,
-						Containers:    []api.Container{{Name: "abc", Image: "image", ImagePullPolicy: "IfNotPresent"}},
-					},
-				},
-			},
-		},
-	}
-
-	for k, v := range errorCases {
-		errs := ValidateJob(&v)
-		if len(errs) == 0 {
-			t.Errorf("expected failure for %s", k)
-		} else {
-			s := strings.Split(k, ":")
-			err := errs[0]
-			if err.Field != s[0] || !strings.Contains(err.Error(), s[1]) {
-				t.Errorf("unexpected error: %v, expected: %s", err, k)
-			}
-		}
-	}
-}
-
-func TestValidateJobUpdateStatus(t *testing.T) {
-	type testcase struct {
-		old    extensions.Job
-		update extensions.Job
-	}
-
-	successCases := []testcase{
-		{
-			old: extensions.Job{
-				ObjectMeta: api.ObjectMeta{Name: "abc", Namespace: api.NamespaceDefault},
-				Status: extensions.JobStatus{
-					Active:    1,
-					Succeeded: 2,
-					Failed:    3,
-				},
-			},
-			update: extensions.Job{
-				ObjectMeta: api.ObjectMeta{Name: "abc", Namespace: api.NamespaceDefault},
-				Status: extensions.JobStatus{
-					Active:    1,
-					Succeeded: 1,
-					Failed:    3,
-				},
-			},
-		},
-	}
-
-	for _, successCase := range successCases {
-		successCase.old.ObjectMeta.ResourceVersion = "1"
-		successCase.update.ObjectMeta.ResourceVersion = "1"
-		if errs := ValidateJobUpdateStatus(&successCase.update, &successCase.old); len(errs) != 0 {
-			t.Errorf("expected success: %v", errs)
-		}
-	}
-
-	errorCases := map[string]testcase{
-		"[status.active: Invalid value: -1: must be greater than or equal to 0, status.succeeded: Invalid value: -2: must be greater than or equal to 0]": {
-			old: extensions.Job{
-				ObjectMeta: api.ObjectMeta{
-					Name:            "abc",
-					Namespace:       api.NamespaceDefault,
-					ResourceVersion: "10",
-				},
-				Status: extensions.JobStatus{
-					Active:    1,
-					Succeeded: 2,
-					Failed:    3,
-				},
-			},
-			update: extensions.Job{
-				ObjectMeta: api.ObjectMeta{
-					Name:            "abc",
-					Namespace:       api.NamespaceDefault,
-					ResourceVersion: "10",
-				},
-				Status: extensions.JobStatus{
-					Active:    -1,
-					Succeeded: -2,
-					Failed:    3,
-				},
-			},
-		},
-	}
-
-	for testName, errorCase := range errorCases {
-		errs := ValidateJobUpdateStatus(&errorCase.update, &errorCase.old)
-		if len(errs) == 0 {
-			t.Errorf("expected failure: %s", testName)
-			continue
-		}
-		if errs.ToAggregate().Error() != testName {
-			t.Errorf("expected '%s' got '%s'", errs.ToAggregate().Error(), testName)
 		}
 	}
 }
@@ -1974,8 +1709,8 @@ func TestValidateReplicaSet(t *testing.T) {
 	}
 }
 
-func newInt(val int) *int {
-	p := new(int)
+func newInt32(val int32) *int32 {
+	p := new(int32)
 	*p = val
 	return p
 }

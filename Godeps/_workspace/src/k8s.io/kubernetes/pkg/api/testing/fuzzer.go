@@ -23,11 +23,11 @@ import (
 	"strconv"
 	"testing"
 
-	docker "github.com/fsouza/go-dockerclient"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/resource"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	"k8s.io/kubernetes/pkg/api/unversioned"
+	"k8s.io/kubernetes/pkg/apis/batch"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
@@ -156,10 +156,10 @@ func FuzzerFor(t *testing.T, version unversioned.GroupVersion, src rand.Source) 
 				j.RollingUpdate = &rollingUpdate
 			}
 		},
-		func(j *extensions.JobSpec, c fuzz.Continue) {
+		func(j *batch.JobSpec, c fuzz.Continue) {
 			c.FuzzNoCustom(j) // fuzz self without calling this function again
-			completions := int(c.Rand.Int31())
-			parallelism := int(c.Rand.Int31())
+			completions := int32(c.Rand.Int31())
+			parallelism := int32(c.Rand.Int31())
 			j.Completions = &completions
 			j.Parallelism = &parallelism
 			if c.Rand.Int31()%2 == 0 {
@@ -188,21 +188,6 @@ func FuzzerFor(t *testing.T, version unversioned.GroupVersion, src rand.Source) 
 				t := types[c.Rand.Intn(len(types))]
 				c.Fuzz(t)
 				*j = t
-			}
-		},
-		func(pb map[docker.Port][]docker.PortBinding, c fuzz.Continue) {
-			// This is necessary because keys with nil values get omitted.
-			// TODO: Is this a bug?
-			pb[docker.Port(c.RandString())] = []docker.PortBinding{
-				{c.RandString(), c.RandString()},
-				{c.RandString(), c.RandString()},
-			}
-		},
-		func(pm map[string]docker.PortMapping, c fuzz.Continue) {
-			// This is necessary because keys with nil values get omitted.
-			// TODO: Is this a bug?
-			pm[c.RandString()] = docker.PortMapping{
-				c.RandString(): c.RandString(),
 			}
 		},
 		func(q *api.ResourceRequirements, c fuzz.Continue) {
@@ -394,9 +379,9 @@ func FuzzerFor(t *testing.T, version unversioned.GroupVersion, src rand.Source) 
 		},
 		func(s *extensions.HorizontalPodAutoscalerSpec, c fuzz.Continue) {
 			c.FuzzNoCustom(s) // fuzz self without calling this function again
-			minReplicas := int(c.Rand.Int31())
+			minReplicas := int32(c.Rand.Int31())
 			s.MinReplicas = &minReplicas
-			s.CPUUtilization = &extensions.CPUTargetUtilization{TargetPercentage: int(int32(c.RandUint64()))}
+			s.CPUUtilization = &extensions.CPUTargetUtilization{TargetPercentage: int32(c.RandUint64())}
 		},
 		func(s *extensions.SubresourceReference, c fuzz.Continue) {
 			c.FuzzNoCustom(s) // fuzz self without calling this function again

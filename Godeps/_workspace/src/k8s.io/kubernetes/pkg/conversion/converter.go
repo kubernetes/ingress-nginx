@@ -40,12 +40,19 @@ type NameFunc func(t reflect.Type) string
 
 var DefaultNameFunc = func(t reflect.Type) string { return t.Name() }
 
+type GenericConversionFunc func(a, b interface{}, scope Scope) (bool, error)
+
 // Converter knows how to convert one type to another.
 type Converter struct {
 	// Map from the conversion pair to a function which can
 	// do the conversion.
 	conversionFuncs          ConversionFuncs
 	generatedConversionFuncs ConversionFuncs
+
+	// genericConversions are called during normal conversion to offer a "fast-path"
+	// that avoids all reflection. These methods are not called outside of the .Convert()
+	// method.
+	genericConversions []GenericConversionFunc
 
 	// Set of conversions that should be treated as a no-op
 	ignoredConversions map[typePair]struct{}
@@ -99,6 +106,14 @@ func NewConverter(nameFn NameFunc) *Converter {
 	return c
 }
 
+// AddGenericConversionFunc adds a function that accepts the ConversionFunc call pattern
+// (for two conversion types) to the converter. These functions are checked first during
+// a normal conversion, but are otherwise not called. Use AddConversionFuncs when registering
+// typed conversions.
+func (c *Converter) AddGenericConversionFunc(fn GenericConversionFunc) {
+	c.genericConversions = append(c.genericConversions, fn)
+}
+
 // WithConversions returns a Converter that is a copy of c but with the additional
 // fns merged on top.
 func (c *Converter) WithConversions(fns ConversionFuncs) *Converter {
@@ -116,6 +131,10 @@ func (c *Converter) DefaultMeta(t reflect.Type) (FieldMatchingFlags, *Meta) {
 
 // Convert_Slice_byte_To_Slice_byte prevents recursing into every byte
 func Convert_Slice_byte_To_Slice_byte(in *[]byte, out *[]byte, s Scope) error {
+	if *in == nil {
+		*out = nil
+		return nil
+	}
 	*out = make([]byte, len(*in))
 	copy(*out, *in)
 	return nil
@@ -496,6 +515,15 @@ func (f FieldMatchingFlags) IsSet(flag FieldMatchingFlags) bool {
 // it is not used by Convert() other than storing it in the scope.
 // Not safe for objects with cyclic references!
 func (c *Converter) Convert(src, dest interface{}, flags FieldMatchingFlags, meta *Meta) error {
+	if len(c.genericConversions) > 0 {
+		// TODO: avoid scope allocation
+		s := &scope{converter: c, flags: flags, meta: meta}
+		for _, fn := range c.genericConversions {
+			if ok, err := fn(src, dest, s); ok {
+				return err
+			}
+		}
+	}
 	return c.doConversion(src, dest, flags, meta, c.convert)
 }
 

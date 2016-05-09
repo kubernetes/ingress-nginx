@@ -18,6 +18,7 @@ package fake
 
 import (
 	unversioned "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/extensions/unversioned"
+	restclient "k8s.io/kubernetes/pkg/client/restclient"
 	core "k8s.io/kubernetes/pkg/client/testing/core"
 )
 
@@ -41,10 +42,6 @@ func (c *FakeExtensions) Ingresses(namespace string) unversioned.IngressInterfac
 	return &FakeIngresses{c, namespace}
 }
 
-func (c *FakeExtensions) Jobs(namespace string) unversioned.JobInterface {
-	return &FakeJobs{c, namespace}
-}
-
 func (c *FakeExtensions) ReplicaSets(namespace string) unversioned.ReplicaSetInterface {
 	return &FakeReplicaSets{c, namespace}
 }
@@ -53,6 +50,12 @@ func (c *FakeExtensions) Scales(namespace string) unversioned.ScaleInterface {
 	return &FakeScales{c, namespace}
 }
 
-func (c *FakeExtensions) ThirdPartyResources(namespace string) unversioned.ThirdPartyResourceInterface {
-	return &FakeThirdPartyResources{c, namespace}
+func (c *FakeExtensions) ThirdPartyResources() unversioned.ThirdPartyResourceInterface {
+	return &FakeThirdPartyResources{c}
+}
+
+// GetRESTClient returns a RESTClient that is used to communicate
+// with API server by this client implementation.
+func (c *FakeExtensions) GetRESTClient() *restclient.RESTClient {
+	return nil
 }

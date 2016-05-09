@@ -23,6 +23,7 @@ import (
 )
 
 type CoreInterface interface {
+	GetRESTClient() *restclient.RESTClient
 	ComponentStatusesGetter
 	ConfigMapsGetter
 	EndpointsGetter
@@ -154,7 +155,8 @@ func setConfigDefaults(config *restclient.Config) error {
 	config.GroupVersion = &copyGroupVersion
 	//}
 
-	config.Codec = api.Codecs.LegacyCodec(*config.GroupVersion)
+	config.NegotiatedSerializer = api.Codecs
+
 	if config.QPS == 0 {
 		config.QPS = 5
 	}
@@ -162,4 +164,13 @@ func setConfigDefaults(config *restclient.Config) error {
 		config.Burst = 10
 	}
 	return nil
+}
+
+// GetRESTClient returns a RESTClient that is used to communicate
+// with API server by this client implementation.
+func (c *CoreClient) GetRESTClient() *restclient.RESTClient {
+	if c == nil {
+		return nil
+	}
+	return c.RESTClient
 }

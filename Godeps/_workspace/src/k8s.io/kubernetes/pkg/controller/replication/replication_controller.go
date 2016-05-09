@@ -32,8 +32,10 @@ import (
 	"k8s.io/kubernetes/pkg/client/record"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/framework"
+	"k8s.io/kubernetes/pkg/controller/framework/informers"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/runtime"
+	"k8s.io/kubernetes/pkg/util/metrics"
 	utilruntime "k8s.io/kubernetes/pkg/util/runtime"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/pkg/util/workqueue"
@@ -66,6 +68,13 @@ type ReplicationManager struct {
 	kubeClient clientset.Interface
 	podControl controller.PodControlInterface
 
+	// internalPodInformer is used to hold a personal informer.  If we're using
+	// a normal shared informer, then the informer will be started for us.  If
+	// we have a personal informer, we must start it ourselves.   If you start
+	// the controller using NewReplicationManager(passing SharedInformer), this
+	// will be null
+	internalPodInformer framework.SharedIndexInformer
+
 	// An rc is temporarily suspended after creating/deleting these many replicas.
 	// It resumes normal action after observing the watch events for them.
 	burstReplicas int
@@ -82,7 +91,7 @@ type ReplicationManager struct {
 	// A store of pods, populated by the podController
 	podStore cache.StoreToPodLister
 	// Watches changes to all pods
-	podController *framework.Controller
+	podController framework.ControllerInterface
 	// podStoreSynced returns true if the pod store has been synced at least once.
 	// Added as a member to the struct to allow injection for testing.
 	podStoreSynced func() bool
@@ -93,11 +102,14 @@ type ReplicationManager struct {
 	queue *workqueue.Type
 }
 
-// NewReplicationManager creates a new ReplicationManager.
-func NewReplicationManager(kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int, lookupCacheSize int) *ReplicationManager {
+func NewReplicationManager(podInformer framework.SharedIndexInformer, kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int, lookupCacheSize int) *ReplicationManager {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{Interface: kubeClient.Core().Events("")})
+
+	if kubeClient != nil && kubeClient.Core().GetRESTClient().GetRateLimiter() != nil {
+		metrics.RegisterMetricAndTrackRateLimiterUsage("replication_controller", kubeClient.Core().GetRESTClient().GetRateLimiter())
+	}
 
 	rm := &ReplicationManager{
 		kubeClient: kubeClient,
@@ -110,7 +122,7 @@ func NewReplicationManager(kubeClient clientset.Interface, resyncPeriod controll
 		queue:         workqueue.New(),
 	}
 
-	rm.rcStore.Store, rm.rcController = framework.NewInformer(
+	rm.rcStore.Indexer, rm.rcController = framework.NewIndexerInformer(
 		&cache.ListWatch{
 			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
 				return rm.kubeClient.Core().ReplicationControllers(api.NamespaceAll).List(options)
@@ -165,32 +177,33 @@ func NewReplicationManager(kubeClient clientset.Interface, resyncPeriod controll
 			// way of achieving this is by performing a `stop` operation on the controller.
 			DeleteFunc: rm.enqueueController,
 		},
+		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
-	rm.podStore.Store, rm.podController = framework.NewInformer(
-		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-				return rm.kubeClient.Core().Pods(api.NamespaceAll).List(options)
-			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				return rm.kubeClient.Core().Pods(api.NamespaceAll).Watch(options)
-			},
-		},
-		&api.Pod{},
-		resyncPeriod(),
-		framework.ResourceEventHandlerFuncs{
-			AddFunc: rm.addPod,
-			// This invokes the rc for every pod change, eg: host assignment. Though this might seem like overkill
-			// the most frequent pod update is status, and the associated rc will only list from local storage, so
-			// it should be ok.
-			UpdateFunc: rm.updatePod,
-			DeleteFunc: rm.deletePod,
-		},
-	)
+	podInformer.AddEventHandler(framework.ResourceEventHandlerFuncs{
+		AddFunc: rm.addPod,
+		// This invokes the rc for every pod change, eg: host assignment. Though this might seem like overkill
+		// the most frequent pod update is status, and the associated rc will only list from local storage, so
+		// it should be ok.
+		UpdateFunc: rm.updatePod,
+		DeleteFunc: rm.deletePod,
+	})
+	rm.podStore.Indexer = podInformer.GetIndexer()
+	rm.podController = podInformer.GetController()
 
 	rm.syncHandler = rm.syncReplicationController
 	rm.podStoreSynced = rm.podController.HasSynced
 	rm.lookupCache = controller.NewMatchingCache(lookupCacheSize)
+	return rm
+
+}
+
+// NewReplicationManagerFromClient creates a new ReplicationManager that runs its own informer.
+func NewReplicationManagerFromClient(kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int, lookupCacheSize int) *ReplicationManager {
+	podInformer := informers.CreateSharedPodIndexInformer(kubeClient, resyncPeriod())
+	rm := NewReplicationManager(podInformer, kubeClient, resyncPeriod, burstReplicas, lookupCacheSize)
+	rm.internalPodInformer = podInformer
+
 	return rm
 }
 
@@ -211,6 +224,11 @@ func (rm *ReplicationManager) Run(workers int, stopCh <-chan struct{}) {
 	for i := 0; i < workers; i++ {
 		go wait.Until(rm.worker, time.Second, stopCh)
 	}
+
+	if rm.internalPodInformer != nil {
+		go rm.internalPodInformer.Run(stopCh)
+	}
+
 	<-stopCh
 	glog.Infof("Shutting down RC Manager")
 	rm.queue.ShutDown()
@@ -259,7 +277,7 @@ func (rm *ReplicationManager) getPodController(pod *api.Pod) *api.ReplicationCon
 
 // isCacheValid check if the cache is valid
 func (rm *ReplicationManager) isCacheValid(pod *api.Pod, cachedRC *api.ReplicationController) bool {
-	_, exists, err := rm.rcStore.Get(cachedRC)
+	exists, err := rm.rcStore.Exists(cachedRC)
 	// rc has been deleted or updated, cache is invalid
 	if err != nil || !exists || !isControllerMatch(pod, cachedRC) {
 		return false
@@ -412,7 +430,7 @@ func (rm *ReplicationManager) worker() {
 
 // manageReplicas checks and updates replicas for the given replication controller.
 func (rm *ReplicationManager) manageReplicas(filteredPods []*api.Pod, rc *api.ReplicationController) {
-	diff := len(filteredPods) - rc.Spec.Replicas
+	diff := len(filteredPods) - int(rc.Spec.Replicas)
 	rcKey, err := controller.KeyFunc(rc)
 	if err != nil {
 		glog.Errorf("Couldn't get key for replication controller %#v: %v", rc, err)
@@ -478,7 +496,7 @@ func (rm *ReplicationManager) manageReplicas(filteredPods []*api.Pod, rc *api.Re
 				if err := rm.podControl.DeletePod(rc.Namespace, filteredPods[ix].Name, rc); err != nil {
 					// Decrement the expected number of deletes because the informer won't observe this deletion
 					podKey := controller.PodKey(filteredPods[ix])
-					glog.V(2).Infof("Failed to delete %v, decrementing expectations for controller %q/%q", podKey, rc.Namespace, rc.Name)
+					glog.V(2).Infof("Failed to delete %v due to %v, decrementing expectations for controller %q/%q", podKey, err, rc.Namespace, rc.Name)
 					rm.expectations.DeletionObserved(rcKey, podKey)
 					utilruntime.HandleError(err)
 				}
@@ -505,7 +523,7 @@ func (rm *ReplicationManager) syncReplicationController(key string) error {
 		return nil
 	}
 
-	obj, exists, err := rm.rcStore.Store.GetByKey(key)
+	obj, exists, err := rm.rcStore.Indexer.GetByKey(key)
 	if !exists {
 		glog.Infof("Replication Controller has been deleted %v", key)
 		rm.expectations.DeleteExpectations(key)

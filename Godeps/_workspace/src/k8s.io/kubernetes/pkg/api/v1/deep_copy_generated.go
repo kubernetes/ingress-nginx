@@ -114,6 +114,7 @@ func init() {
 		DeepCopy_v1_ObjectFieldSelector,
 		DeepCopy_v1_ObjectMeta,
 		DeepCopy_v1_ObjectReference,
+		DeepCopy_v1_OwnerReference,
 		DeepCopy_v1_PersistentVolume,
 		DeepCopy_v1_PersistentVolumeClaim,
 		DeepCopy_v1_PersistentVolumeClaimList,
@@ -125,6 +126,9 @@ func init() {
 		DeepCopy_v1_PersistentVolumeSpec,
 		DeepCopy_v1_PersistentVolumeStatus,
 		DeepCopy_v1_Pod,
+		DeepCopy_v1_PodAffinity,
+		DeepCopy_v1_PodAffinityTerm,
+		DeepCopy_v1_PodAntiAffinity,
 		DeepCopy_v1_PodAttachOptions,
 		DeepCopy_v1_PodCondition,
 		DeepCopy_v1_PodExecOptions,
@@ -171,6 +175,7 @@ func init() {
 		DeepCopy_v1_Volume,
 		DeepCopy_v1_VolumeMount,
 		DeepCopy_v1_VolumeSource,
+		DeepCopy_v1_WeightedPodAffinityTerm,
 	); err != nil {
 		// if one of the deep copy functions is malformed, detect it immediately.
 		panic(err)
@@ -194,6 +199,24 @@ func DeepCopy_v1_Affinity(in Affinity, out *Affinity, c *conversion.Cloner) erro
 		}
 	} else {
 		out.NodeAffinity = nil
+	}
+	if in.PodAffinity != nil {
+		in, out := in.PodAffinity, &out.PodAffinity
+		*out = new(PodAffinity)
+		if err := DeepCopy_v1_PodAffinity(*in, *out, c); err != nil {
+			return err
+		}
+	} else {
+		out.PodAffinity = nil
+	}
+	if in.PodAntiAffinity != nil {
+		in, out := in.PodAntiAffinity, &out.PodAntiAffinity
+		*out = new(PodAntiAffinity)
+		if err := DeepCopy_v1_PodAntiAffinity(*in, *out, c); err != nil {
+			return err
+		}
+	} else {
+		out.PodAntiAffinity = nil
 	}
 	return nil
 }
@@ -606,6 +629,13 @@ func DeepCopy_v1_DeleteOptions(in DeleteOptions, out *DeleteOptions, c *conversi
 	} else {
 		out.Preconditions = nil
 	}
+	if in.OrphanDependents != nil {
+		in, out := in.OrphanDependents, &out.OrphanDependents
+		*out = new(bool)
+		**out = *in
+	} else {
+		out.OrphanDependents = nil
+	}
 	return nil
 }
 
@@ -639,6 +669,7 @@ func DeepCopy_v1_EmptyDirVolumeSource(in EmptyDirVolumeSource, out *EmptyDirVolu
 
 func DeepCopy_v1_EndpointAddress(in EndpointAddress, out *EndpointAddress, c *conversion.Cloner) error {
 	out.IP = in.IP
+	out.Hostname = in.Hostname
 	if in.TargetRef != nil {
 		in, out := in.TargetRef, &out.TargetRef
 		*out = new(ObjectReference)
@@ -1555,6 +1586,24 @@ func DeepCopy_v1_ObjectMeta(in ObjectMeta, out *ObjectMeta, c *conversion.Cloner
 	} else {
 		out.Annotations = nil
 	}
+	if in.OwnerReferences != nil {
+		in, out := in.OwnerReferences, &out.OwnerReferences
+		*out = make([]OwnerReference, len(in))
+		for i := range in {
+			if err := DeepCopy_v1_OwnerReference(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.OwnerReferences = nil
+	}
+	if in.Finalizers != nil {
+		in, out := in.Finalizers, &out.Finalizers
+		*out = make([]string, len(in))
+		copy(*out, in)
+	} else {
+		out.Finalizers = nil
+	}
 	return nil
 }
 
@@ -1566,6 +1615,14 @@ func DeepCopy_v1_ObjectReference(in ObjectReference, out *ObjectReference, c *co
 	out.APIVersion = in.APIVersion
 	out.ResourceVersion = in.ResourceVersion
 	out.FieldPath = in.FieldPath
+	return nil
+}
+
+func DeepCopy_v1_OwnerReference(in OwnerReference, out *OwnerReference, c *conversion.Cloner) error {
+	out.APIVersion = in.APIVersion
+	out.Kind = in.Kind
+	out.Name = in.Name
+	out.UID = in.UID
 	return nil
 }
 
@@ -1876,6 +1933,79 @@ func DeepCopy_v1_Pod(in Pod, out *Pod, c *conversion.Cloner) error {
 	return nil
 }
 
+func DeepCopy_v1_PodAffinity(in PodAffinity, out *PodAffinity, c *conversion.Cloner) error {
+	if in.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+		in, out := in.RequiredDuringSchedulingIgnoredDuringExecution, &out.RequiredDuringSchedulingIgnoredDuringExecution
+		*out = make([]PodAffinityTerm, len(in))
+		for i := range in {
+			if err := DeepCopy_v1_PodAffinityTerm(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.RequiredDuringSchedulingIgnoredDuringExecution = nil
+	}
+	if in.PreferredDuringSchedulingIgnoredDuringExecution != nil {
+		in, out := in.PreferredDuringSchedulingIgnoredDuringExecution, &out.PreferredDuringSchedulingIgnoredDuringExecution
+		*out = make([]WeightedPodAffinityTerm, len(in))
+		for i := range in {
+			if err := DeepCopy_v1_WeightedPodAffinityTerm(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.PreferredDuringSchedulingIgnoredDuringExecution = nil
+	}
+	return nil
+}
+
+func DeepCopy_v1_PodAffinityTerm(in PodAffinityTerm, out *PodAffinityTerm, c *conversion.Cloner) error {
+	if in.LabelSelector != nil {
+		in, out := in.LabelSelector, &out.LabelSelector
+		*out = new(unversioned.LabelSelector)
+		if err := unversioned.DeepCopy_unversioned_LabelSelector(*in, *out, c); err != nil {
+			return err
+		}
+	} else {
+		out.LabelSelector = nil
+	}
+	if in.Namespaces != nil {
+		in, out := in.Namespaces, &out.Namespaces
+		*out = make([]string, len(in))
+		copy(*out, in)
+	} else {
+		out.Namespaces = nil
+	}
+	out.TopologyKey = in.TopologyKey
+	return nil
+}
+
+func DeepCopy_v1_PodAntiAffinity(in PodAntiAffinity, out *PodAntiAffinity, c *conversion.Cloner) error {
+	if in.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+		in, out := in.RequiredDuringSchedulingIgnoredDuringExecution, &out.RequiredDuringSchedulingIgnoredDuringExecution
+		*out = make([]PodAffinityTerm, len(in))
+		for i := range in {
+			if err := DeepCopy_v1_PodAffinityTerm(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.RequiredDuringSchedulingIgnoredDuringExecution = nil
+	}
+	if in.PreferredDuringSchedulingIgnoredDuringExecution != nil {
+		in, out := in.PreferredDuringSchedulingIgnoredDuringExecution, &out.PreferredDuringSchedulingIgnoredDuringExecution
+		*out = make([]WeightedPodAffinityTerm, len(in))
+		for i := range in {
+			if err := DeepCopy_v1_WeightedPodAffinityTerm(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.PreferredDuringSchedulingIgnoredDuringExecution = nil
+	}
+	return nil
+}
+
 func DeepCopy_v1_PodAttachOptions(in PodAttachOptions, out *PodAttachOptions, c *conversion.Cloner) error {
 	if err := unversioned.DeepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
 		return err
@@ -2106,6 +2236,8 @@ func DeepCopy_v1_PodSpec(in PodSpec, out *PodSpec, c *conversion.Cloner) error {
 	} else {
 		out.ImagePullSecrets = nil
 	}
+	out.Hostname = in.Hostname
+	out.Subdomain = in.Subdomain
 	return nil
 }
 
@@ -2784,6 +2916,7 @@ func DeepCopy_v1_VolumeMount(in VolumeMount, out *VolumeMount, c *conversion.Clo
 	out.Name = in.Name
 	out.ReadOnly = in.ReadOnly
 	out.MountPath = in.MountPath
+	out.SubPath = in.SubPath
 	return nil
 }
 
@@ -2958,6 +3091,14 @@ func DeepCopy_v1_VolumeSource(in VolumeSource, out *VolumeSource, c *conversion.
 		}
 	} else {
 		out.ConfigMap = nil
+	}
+	return nil
+}
+
+func DeepCopy_v1_WeightedPodAffinityTerm(in WeightedPodAffinityTerm, out *WeightedPodAffinityTerm, c *conversion.Cloner) error {
+	out.Weight = in.Weight
+	if err := DeepCopy_v1_PodAffinityTerm(in.PodAffinityTerm, &out.PodAffinityTerm, c); err != nil {
+		return err
 	}
 	return nil
 }

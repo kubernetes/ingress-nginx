@@ -23,6 +23,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -468,6 +469,11 @@ func (i *Instances) ExternalID(name string) (string, error) {
 	return srv.ID, nil
 }
 
+// InstanceID returns the kubelet's cloud provider ID.
+func (os *OpenStack) InstanceID() (string, error) {
+	return os.localInstanceID, nil
+}
+
 // InstanceID returns the cloud provider ID of the specified instance.
 func (i *Instances) InstanceID(name string) (string, error) {
 	srv, err := getServerByName(i.compute, name)
@@ -734,7 +740,7 @@ func (lb *LoadBalancer) EnsureLoadBalancer(apiService *api.Service, hosts []stri
 
 		_, err = members.Create(lb.network, members.CreateOpts{
 			PoolID:       pool.ID,
-			ProtocolPort: ports[0].NodePort, //TODO: need to handle multi-port
+			ProtocolPort: int(ports[0].NodePort), //TODO: need to handle multi-port
 			Address:      addr,
 		}).Extract()
 		if err != nil {
@@ -768,7 +774,7 @@ func (lb *LoadBalancer) EnsureLoadBalancer(apiService *api.Service, hosts []stri
 		Name:         name,
 		Description:  fmt.Sprintf("Kubernetes external service %s", name),
 		Protocol:     "TCP",
-		ProtocolPort: ports[0].Port, //TODO: need to handle multi-port
+		ProtocolPort: int(ports[0].Port), //TODO: need to handle multi-port
 		PoolID:       pool.ID,
 		SubnetID:     lb.opts.SubnetId,
 		Persistence:  persistence,
@@ -956,7 +962,7 @@ func (os *OpenStack) Routes() (cloudprovider.Routes, bool) {
 }
 
 // Attaches given cinder volume to the compute running kubelet
-func (os *OpenStack) AttachDisk(diskName string) (string, error) {
+func (os *OpenStack) AttachDisk(instanceID string, diskName string) (string, error) {
 	disk, err := os.getVolume(diskName)
 	if err != nil {
 		return "", err
@@ -970,8 +976,8 @@ func (os *OpenStack) AttachDisk(diskName string) (string, error) {
 	}
 
 	if len(disk.Attachments) > 0 && disk.Attachments[0]["server_id"] != nil {
-		if os.localInstanceID == disk.Attachments[0]["server_id"] {
-			glog.V(4).Infof("Disk: %q is already attached to compute: %q", diskName, os.localInstanceID)
+		if instanceID == disk.Attachments[0]["server_id"] {
+			glog.V(4).Infof("Disk: %q is already attached to compute: %q", diskName, instanceID)
 			return disk.ID, nil
 		} else {
 			errMsg := fmt.Sprintf("Disk %q is attached to a different compute: %q, should be detached before proceeding", diskName, disk.Attachments[0]["server_id"])
@@ -980,19 +986,19 @@ func (os *OpenStack) AttachDisk(diskName string) (string, error) {
 		}
 	}
 	// add read only flag here if possible spothanis
-	_, err = volumeattach.Create(cClient, os.localInstanceID, &volumeattach.CreateOpts{
+	_, err = volumeattach.Create(cClient, instanceID, &volumeattach.CreateOpts{
 		VolumeID: disk.ID,
 	}).Extract()
 	if err != nil {
-		glog.Errorf("Failed to attach %s volume to %s compute", diskName, os.localInstanceID)
+		glog.Errorf("Failed to attach %s volume to %s compute", diskName, instanceID)
 		return "", err
 	}
-	glog.V(2).Infof("Successfully attached %s volume to %s compute", diskName, os.localInstanceID)
+	glog.V(2).Infof("Successfully attached %s volume to %s compute", diskName, instanceID)
 	return disk.ID, nil
 }
 
 // Detaches given cinder volume from the compute running kubelet
-func (os *OpenStack) DetachDisk(partialDiskId string) error {
+func (os *OpenStack) DetachDisk(instanceID string, partialDiskId string) error {
 	disk, err := os.getVolume(partialDiskId)
 	if err != nil {
 		return err
@@ -1004,17 +1010,17 @@ func (os *OpenStack) DetachDisk(partialDiskId string) error {
 		glog.Errorf("Unable to initialize nova client for region: %s", os.region)
 		return err
 	}
-	if len(disk.Attachments) > 0 && disk.Attachments[0]["server_id"] != nil && os.localInstanceID == disk.Attachments[0]["server_id"] {
+	if len(disk.Attachments) > 0 && disk.Attachments[0]["server_id"] != nil && instanceID == disk.Attachments[0]["server_id"] {
 		// This is a blocking call and effects kubelet's performance directly.
 		// We should consider kicking it out into a separate routine, if it is bad.
-		err = volumeattach.Delete(cClient, os.localInstanceID, disk.ID).ExtractErr()
+		err = volumeattach.Delete(cClient, instanceID, disk.ID).ExtractErr()
 		if err != nil {
-			glog.Errorf("Failed to delete volume %s from compute %s attached %v", disk.ID, os.localInstanceID, err)
+			glog.Errorf("Failed to delete volume %s from compute %s attached %v", disk.ID, instanceID, err)
 			return err
 		}
-		glog.V(2).Infof("Successfully detached volume: %s from compute: %s", disk.ID, os.localInstanceID)
+		glog.V(2).Infof("Successfully detached volume: %s from compute: %s", disk.ID, instanceID)
 	} else {
-		errMsg := fmt.Sprintf("Disk: %s has no attachments or is not attached to compute: %s", disk.Name, os.localInstanceID)
+		errMsg := fmt.Sprintf("Disk: %s has no attachments or is not attached to compute: %s", disk.Name, instanceID)
 		glog.Errorf(errMsg)
 		return errors.New(errMsg)
 	}
@@ -1084,6 +1090,22 @@ func (os *OpenStack) CreateVolume(name string, size int, tags *map[string]string
 	}
 	glog.Infof("Created volume %v", vol.ID)
 	return vol.ID, err
+}
+
+// GetDevicePath returns the path of an attached block storage volume, specified by its id.
+func (os *OpenStack) GetDevicePath(diskId string) string {
+	files, _ := ioutil.ReadDir("/dev/disk/by-id/")
+	for _, f := range files {
+		if strings.Contains(f.Name(), "virtio-") {
+			devid_prefix := f.Name()[len("virtio-"):len(f.Name())]
+			if strings.Contains(diskId, devid_prefix) {
+				glog.V(4).Infof("Found disk attached as %q; full devicepath: %s\n", f.Name(), path.Join("/dev/disk/by-id/", f.Name()))
+				return path.Join("/dev/disk/by-id/", f.Name())
+			}
+		}
+	}
+	glog.Warningf("Failed to find device for the diskid: %q\n", diskId)
+	return ""
 }
 
 func (os *OpenStack) DeleteVolume(volumeName string) error {
