@@ -623,6 +623,11 @@
 			"Rev": "dee24333ffe6942519476bb1db4c7d6eadf65cdb"
 		},
 		{
+			"ImportPath": "k8s.io/kubernetes/pkg/client/unversioned/testclient",
+			"Comment": "v1.3.0-alpha.3-574-gdee2433",
+			"Rev": "dee24333ffe6942519476bb1db4c7d6eadf65cdb"
+		},
+		{
 			"ImportPath": "k8s.io/kubernetes/pkg/cloudprovider",
 			"Comment": "v1.3.0-alpha.3-574-gdee2433",
 			"Rev": "dee24333ffe6942519476bb1db4c7d6eadf65cdb"
