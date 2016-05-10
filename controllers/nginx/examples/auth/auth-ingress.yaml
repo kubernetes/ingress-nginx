@@ -1,0 +1,18 @@
+# An Ingress with 2 hosts and 3 endpoints
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: echo-with-auth
+annotations:
+  ingress-nginx.kubernetes.io/auth-type: basic
+  ingress-nginx.kubernetes.io/auth-secret: echo-auth-secret
+  ingress-nginx.kubernetes.io/auth-realm: "Ingress with Basic Authentication"
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: echoheaders-x
+          servicePort: 80
