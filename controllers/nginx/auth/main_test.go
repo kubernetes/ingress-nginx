@@ -17,7 +17,11 @@ limitations under the License.
 package auth
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
+	"time"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -65,15 +69,20 @@ type secretsClient struct {
 	unversioned.Interface
 }
 
-func mockClient() *testclient.Fake {
-	secretObj := &api.Secret{
+// dummySecret generates a secret with one user inside the auth key
+// foo:md5(bar)
+func dummySecret() *api.Secret {
+	return &api.Secret{
 		ObjectMeta: api.ObjectMeta{
 			Namespace: api.NamespaceDefault,
 			Name:      "demo-secret",
 		},
+		Data: map[string][]byte{"auth": []byte("foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0")},
 	}
+}
 
-	return testclient.NewSimpleFake(secretObj)
+func mockClient() *testclient.Fake {
+	return testclient.NewSimpleFake(dummySecret())
 }
 
 func TestAnnotations(t *testing.T) {
@@ -121,21 +130,77 @@ func TestAnnotations(t *testing.T) {
 func TestIngressWithoutAuth(t *testing.T) {
 	ing := buildIngress()
 	client := mockClient()
-	_, err := Parse(client, ing)
+	_, err := ParseAnnotations(client, ing, "")
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
 	}
 
-	if err != ErrMissingAuthType {
+	if err == ErrMissingAuthType {
 		t.Errorf("Expected MissingAuthType error but returned %v", err)
 	}
 }
 
-func TestIngressBasicAuth(t *testing.T) {
+func TestIngressAuth(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[authType] = "basic"
+	data[authSecret] = "demo-secret"
+	data[authRealm] = "-realm-"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	client := mockClient()
+	nginxAuth, err := ParseAnnotations(client, ing, dir)
+	if err != nil {
+		t.Errorf("Uxpected error with ingress: %v", err)
+	}
+
+	if nginxAuth.Type != "basic" {
+		t.Errorf("Expected basic as auth type but returned %s", nginxAuth.Type)
+	}
+	if nginxAuth.Realm != "-realm-" {
+		t.Errorf("Expected -realm- as realm but returned %s", nginxAuth.Realm)
+	}
+	if nginxAuth.Secured != true {
+		t.Errorf("Expected true as secured but returned %v", nginxAuth.Secured)
+	}
 }
 
-func TestIngressDigestAuth(t *testing.T) {
+func dummySecretContent(t *testing.T) (string, string, *api.Secret) {
+	dir, err := ioutil.TempDir("", fmt.Sprintf("%v", time.Now().Unix()))
+	if err != nil {
+		t.Error(err)
+	}
+
+	tmpfile, err := ioutil.TempFile("", "example-")
+	if err != nil {
+		t.Error(err)
+	}
+	defer tmpfile.Close()
+
+	s := dummySecret()
+
+	return tmpfile.Name(), dir, s
 }
 
-func TestIngressMissingAnnotation(t *testing.T) {
+func TestDumpSecret(t *testing.T) {
+	tmpfile, dir, s := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	sd := s.Data
+	s.Data = nil
+
+	err := dumpSecret(tmpfile, s)
+	if err == nil {
+		t.Errorf("Expected error with secret without auth")
+	}
+
+	s.Data = sd
+	err = dumpSecret(tmpfile, s)
+	if err != nil {
+		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
+	}
 }

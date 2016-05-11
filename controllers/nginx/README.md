@@ -213,6 +213,29 @@ This means only one of the rules should define annotations to configure the upst
 
 Please check the [auth](examples/custom-upstream-check/README.md) example
 
+ ### Authentication
+ 
+ Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the the key `auth`
+ 
+ The annotations are:
+ 
+ ```
+ ingress-nginx.kubernetes.io/auth-type:[basic|digest]
+ ```
+ 
+ Indicates the [HTTP Authentication Type: Basic or Digest Access Authentication](https://tools.ietf.org/html/rfc2617).
+ 
+ ```
+ ingress-nginx.kubernetes.io/auth-secret:secretName
+ ```
+ 
+ Name of the secret that contains the usernames and passwords with access to the `path/s` defined in the Ingress Rule.
+ The secret must be created in the same namespace than the Ingress rule
+ 
+ ```
+ ingress-nginx.kubernetes.io/auth-realm:"realm string"
+ ```
+
 
 ### NGINX status page
 
