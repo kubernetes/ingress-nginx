@@ -214,6 +214,11 @@ type nginxConfiguration struct {
 	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
 	UseGzip bool `structs:"use-gzip,omitempty"`
 
+	// Enables or disables the HTTP/2 support in secure connections
+	// http://nginx.org/en/docs/http/ngx_http_v2_module.html
+	// Default: true
+	UseHTTP2 bool `structs:"use-http2,omitempty"`
+
 	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
 	// Responses with the “text/html” type are always compressed if UseGzip is enabled
 	GzipTypes string `structs:"gzip-types,omitempty"`
@@ -270,6 +275,7 @@ func newDefaultNginxCfg() nginxConfiguration {
 		UseGzip:                  true,
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
 		VtsStatusZoneSize:        "10m",
+		UseHTTP2:                 true,
 	}
 
 	if glog.V(5) {
