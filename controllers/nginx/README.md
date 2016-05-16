@@ -196,6 +196,23 @@ Use the [custom-template](examples/custom-template/README.md) example as a guide
 **Please note the template is tied to the go code. Be sure to no change names in the variable `$cfg`**
 
 
+### Custom NGINX upstream checks
+
+NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enabled configuration of each server in the upstream. The ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` or `upstream-fail-timeout` in the NGINX Configmap or in a particular Ingress rule. By default this values are 0. This means NGINX will respect the `livenessProbe`, if is defined. If there is no probe, NGINX will not mark a server inside an upstream down.
+
+To use custom values in an Ingress rule define this annotations:
+
+`ingress-nginx.kubernetes.io/upstream-max-fails`: number of unsuccessful attempts to communicate with the server that should happen in the duration set by the fail_timeout parameter to consider the server unavailable
+
+`ingress-nginx.kubernetes.io/upstream-fail-timeout`: time in seconds during which the specified number of unsuccessful attempts to communicate with the server should happen to consider the server unavailable. Also the period of time the server will be considered unavailable.
+
+**Important:** 
+The upstreams are shared. i.e. Ingress rule using the same service will use the same upstream. 
+This means only one of the rules should define annotations to configure the upstream servers
+
+
+Please check the [auth](examples/custom-upstream-check/README.md) example
+
 
 ### NGINX status page
 
@@ -207,7 +224,6 @@ Please check the example `example/rc-default.yaml`
 ![nginx-module-vts screenshot](https://cloud.githubusercontent.com/assets/3648408/10876811/77a67b70-8183-11e5-9924-6a6d0c5dc73a.png "screenshot with filter")
 
 To extract the information in JSON format the module provides a custom URL: `/nginx_status/format/json`
-
 
 
 ### Custom errors

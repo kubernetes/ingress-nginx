@@ -22,7 +22,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
-func getConfigNginxBool(data map[string]string) nginxConfiguration {
+func getConfigNginxBool(data map[string]string) NginxConfiguration {
 	manager := &Manager{}
 	configMap := &api.ConfigMap{
 		Data: data,

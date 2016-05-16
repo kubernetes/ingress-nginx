@@ -48,7 +48,7 @@ func (ngx *Manager) loadTemplate() {
 	ngx.template = tmpl
 }
 
-func (ngx *Manager) writeCfg(cfg nginxConfiguration, ingressCfg IngressConfig) (bool, error) {
+func (ngx *Manager) writeCfg(cfg NginxConfiguration, ingressCfg IngressConfig) (bool, error) {
 	conf := make(map[string]interface{})
 	conf["upstreams"] = ingressCfg.Upstreams
 	conf["servers"] = ingressCfg.Servers

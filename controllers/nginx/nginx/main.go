@@ -84,7 +84,8 @@ var (
 	sslDirectory = "/etc/nginx-ssl"
 )
 
-type nginxConfiguration struct {
+// NginxConfiguration ...
+type NginxConfiguration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
 	BodySize string `structs:"body-size,omitempty"`
@@ -210,6 +211,18 @@ type nginxConfiguration struct {
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout
 	SSLSessionTimeout string `structs:"ssl-session-timeout,omitempty"`
 
+	// Number of unsuccessful attempts to communicate with the server that should happen in the
+	// duration set by the fail_timeout parameter to consider the server unavailable
+	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream
+	// Default: 0, ie use platform liveness probe
+	UpstreamMaxFails int `structs:"upstream-max-fails,omitempty"`
+
+	// Time during which the specified number of unsuccessful attempts to communicate with
+	// the server should happen to consider the server unavailable
+	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream
+	// Default: 0, ie use platform liveness probe
+	UpstreamFailTimeout int `structs:"upstream-fail-timeout,omitempty"`
+
 	// Enables or disables the use of the PROXY protocol to receive client connection
 	// (real IP address) information passed through proxy servers and load balancers
 	// such as HAproxy and Amazon Elastic Load Balancer (ELB).
@@ -238,7 +251,7 @@ type nginxConfiguration struct {
 type Manager struct {
 	ConfigFile string
 
-	defCfg nginxConfiguration
+	defCfg NginxConfiguration
 
 	defResolver string
 
@@ -254,8 +267,8 @@ type Manager struct {
 
 // defaultConfiguration returns the default configuration contained
 // in the file default-conf.json
-func newDefaultNginxCfg() nginxConfiguration {
-	cfg := nginxConfiguration{
+func newDefaultNginxCfg() NginxConfiguration {
+	cfg := NginxConfiguration{
 		BodySize:      bodySize,
 		ErrorLogLevel: errorLevel,
 		HSTS:          true,

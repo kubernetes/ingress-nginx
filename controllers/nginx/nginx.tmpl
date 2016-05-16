@@ -41,22 +41,21 @@ http {
 
     include /etc/nginx/mime.types;
     default_type text/html;
-    {{ if $cfg.useGzip }}
+    {{ if $cfg.useGzip -}}
     gzip on;
     gzip_comp_level 5;
     gzip_http_version 1.1;
     gzip_min_length 256;
     gzip_types {{ $cfg.gzipTypes }};    
     gzip_proxied any;
-    gzip_vary on;
-    {{ end }}
+    {{- end }}
 
     client_max_body_size "{{ $cfg.bodySize }}";
 
-    {{ if $cfg.useProxyProtocol }}
+    {{ if $cfg.useProxyProtocol -}}
     set_real_ip_from    {{ $cfg.proxyRealIpCidr }};
     real_ip_header      proxy_protocol;
-    {{ end }}
+    {{ end -}}
 
     log_format upstreaminfo '{{ if $cfg.useProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
         '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
@@ -137,15 +136,16 @@ http {
 
     {{range $name, $upstream := .upstreams}}
     upstream {{$upstream.Name}} {
-        {{ if $cfg.enableStickySessions }}
+        {{ if $cfg.enableStickySessions -}}
         sticky hash=sha1 httponly;
-        {{ else }}
+        {{ else -}}
         least_conn;
-        {{ end }}
-        {{ range $server := $upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{- end }}
+        {{ range $server := $upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
+
         {{ end }}
     }
-    {{end}}
+    {{ end }}
 
     {{ range $server := .servers }}
     server {
@@ -155,15 +155,16 @@ http {
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}        
         ssl_certificate {{ $server.SSLCertificate }};
-        ssl_certificate_key {{ $server.SSLCertificateKey }};{{ end }}
+        ssl_certificate_key {{ $server.SSLCertificateKey }};
+        {{ end }}
 
-        {{ if (and $server.SSL $cfg.hsts) }}
+        {{ if (and $server.SSL $cfg.hsts) -}}
         if ($scheme = http) {
             return 301 https://$host$request_uri;
         }
 
         more_set_headers                            "Strict-Transport-Security: max-age={{ $cfg.hstsMaxAge }}{{ if $cfg.hstsIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
-        {{ end }}
+        {{ end -}}
 
         {{ range $location := $server.Locations }}
         location {{ $location.Path }} {
@@ -219,13 +220,13 @@ http {
         }
        
         location /nginx_status {
-            {{ if $cfg.enableVtsStatus }}
+            {{ if $cfg.enableVtsStatus -}}
             vhost_traffic_status_display;
             vhost_traffic_status_display_format html;
             {{ else }}
             access_log off;
             stub_status on;
-            {{ end }}
+            {{- end }}
         }
 
         location / {

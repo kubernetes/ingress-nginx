@@ -41,8 +41,10 @@ func (c UpstreamByNameServers) Less(i, j int) bool {
 
 // UpstreamServer describes a server in an NGINX upstream
 type UpstreamServer struct {
-	Address string
-	Port    string
+	Address     string
+	Port        string
+	MaxFails    int
+	FailTimeout int
 }
 
 // UpstreamServerByAddrPort sorts upstream servers by address and port

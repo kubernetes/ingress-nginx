@@ -67,7 +67,7 @@ func getDNSServers() []string {
 // getConfigKeyToStructKeyMap returns a map with the ConfigMapKey as key and the StructName as value.
 func getConfigKeyToStructKeyMap() map[string]string {
 	keyMap := map[string]string{}
-	n := &nginxConfiguration{}
+	n := &NginxConfiguration{}
 	val := reflect.Indirect(reflect.ValueOf(n))
 	for i := 0; i < val.Type().NumField(); i++ {
 		fieldSt := val.Type().Field(i)
@@ -79,12 +79,12 @@ func getConfigKeyToStructKeyMap() map[string]string {
 }
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
-func (ngx *Manager) ReadConfig(config *api.ConfigMap) nginxConfiguration {
+func (ngx *Manager) ReadConfig(config *api.ConfigMap) NginxConfiguration {
 	if len(config.Data) == 0 {
 		return newDefaultNginxCfg()
 	}
 
-	cfgCM := nginxConfiguration{}
+	cfgCM := NginxConfiguration{}
 	cfgDefault := newDefaultNginxCfg()
 
 	metadata := &mapstructure.Metadata{}
