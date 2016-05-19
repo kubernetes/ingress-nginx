@@ -46,7 +46,7 @@ $ kubectl create -f examples/default/rc-default.yaml
 
 First we need to deploy some application to publish. To keep this simple we will use the [echoheaders app](https://github.com/kubernetes/contrib/blob/master/ingress/echoheaders/echo-app.yaml) that just returns information about the http request as output
 ```
-kubectl run echoheaders --image=gcr.io/google_containers/echoserver:1.3 --replicas=1 --port=8080
+kubectl run echoheaders --image=gcr.io/google_containers/echoserver:1.4 --replicas=1 --port=8080
 ```
 
 Now we expose the same application in two different services (so we can create different Ingress rules)
