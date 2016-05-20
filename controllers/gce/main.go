@@ -32,6 +32,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
+	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/util/wait"
 
 	"github.com/golang/glog"
@@ -191,8 +192,11 @@ func main() {
 
 	if *inCluster || *useRealCloud {
 		// Create cluster manager
-		clusterManager, err = controller.NewClusterManager(
-			*clusterName, defaultBackendNodePort, *healthCheckPath, storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName))
+		name, err := getClusterUID(kubeClient, *clusterName)
+		if err != nil {
+			glog.Fatalf("%v", err)
+		}
+		clusterManager, err = controller.NewClusterManager(name, defaultBackendNodePort, *healthCheckPath)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
@@ -217,6 +221,60 @@ func main() {
 		glog.Infof("Handled quit, awaiting pod deletion.")
 		time.Sleep(30 * time.Second)
 	}
+}
+
+// getClusterUID returns the cluster UID. Rules for UID generation:
+// If the user specifies a --cluster-uid param it overwrites everything
+// else, check UID config map for a previously recorded uid
+// else, check if there are any working Ingresses
+//	- remember that "" is the cluster uid
+// else, allocate a new uid
+func getClusterUID(kubeClient *client.Client, name string) (string, error) {
+	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	if name != "" {
+		glog.Infof("Using user provided cluster uid %v", name)
+		// Don't save the uid in the vault, so users can rollback through
+		// --cluster-uid=""
+		return name, nil
+	}
+
+	existingUID, found, err := cfgVault.Get()
+	if found {
+		glog.Infof("Using saved cluster uid %q", name)
+		return existingUID, nil
+	} else if err != nil {
+		// This can fail because of:
+		// 1. No such config map - found=false, err=nil
+		// 2. No such key in config map - found=false, err=nil
+		// 3. Apiserver flake - found=false, err!=nil
+		// It is not safe to proceed in 3.
+		return "", fmt.Errorf("Failed to retrieve current uid: %v, using %q as name", err, name)
+	}
+
+	// Check if the cluster has an Ingress with ip
+	ings, err := kubeClient.Extensions().Ingress(api.NamespaceAll).List(api.ListOptions{LabelSelector: labels.Everything()})
+	if err != nil {
+		return "", err
+	}
+	for _, ing := range ings.Items {
+		if len(ing.Status.LoadBalancer.Ingress) != 0 {
+			glog.Infof("Found a working Ingress, assuming uid is empty string")
+			return "", cfgVault.Put("")
+		}
+	}
+
+	// Allocate new uid
+	f, err := os.Open("/dev/urandom")
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	b := make([]byte, 8)
+	if _, err := f.Read(b); err != nil {
+		return "", err
+	}
+	uid := fmt.Sprintf("%x", b)
+	return uid, cfgVault.Put(uid)
 }
 
 // getNodePort waits for the Service, and returns it's first node port.

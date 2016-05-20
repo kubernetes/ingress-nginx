@@ -54,13 +54,13 @@ func (c *ConfigMapVault) Get() (string, bool, error) {
 	key := fmt.Sprintf("%v/%v", c.namespace, c.name)
 	item, found, err := c.ConfigMapStore.GetByKey(key)
 	if err != nil || !found {
-		return "", found, err
+		return "", false, err
 	}
 	cfg := item.(*api.ConfigMap)
 	if k, ok := cfg.Data[uidDataKey]; ok {
-		return k, false, nil
+		return k, true, nil
 	}
-	return "", found, fmt.Errorf("Found config map %v but it doesn't contain uid key: %+v", key, cfg.Data)
+	return "", false, fmt.Errorf("Found config map %v but it doesn't contain uid key: %+v", key, cfg.Data)
 }
 
 // Put stores the given UID in the cluster config map.
@@ -89,7 +89,7 @@ func (c *ConfigMapVault) Put(uid string) error {
 	} else if err := c.ConfigMapStore.Add(apiObj); err != nil {
 		return fmt.Errorf("Failed to add %v: %v", cfgMapKey, err)
 	}
-	glog.Infof("Successfully stored uid %v in config map %v", uid, cfgMapKey)
+	glog.Infof("Successfully stored uid %q in config map %v", uid, cfgMapKey)
 	return nil
 }
 
@@ -111,7 +111,7 @@ func NewConfigMapVault(c *client.Client, uidNs, uidConfigMapName string) *Config
 	return &ConfigMapVault{NewConfigMapStore(c), uidNs, uidConfigMapName}
 }
 
-// FakeConfigMapStore is an implementation of the ConfigMapStore that doesn't
+// NewFakeConfigMapVault is an implementation of the ConfigMapStore that doesn't
 // persist configmaps. Only used in testing.
 func NewFakeConfigMapVault(ns, name string) *ConfigMapVault {
 	return &ConfigMapVault{cache.NewStore(cache.MetaNamespaceKeyFunc), ns, name}
