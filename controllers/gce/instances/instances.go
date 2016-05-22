@@ -17,6 +17,7 @@ limitations under the License.
 package instances
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -35,89 +36,162 @@ const (
 
 // Instances implements NodePool.
 type Instances struct {
-	cloud       InstanceGroups
-	zone        string
+	cloud InstanceGroups
+	// zones is a list of zones seeded by Kubernetes node zones.
+	// TODO: we can figure this out.
 	snapshotter storage.Snapshotter
+	zoneLister
 }
 
 // NewNodePool creates a new node pool.
 // - cloud: implements InstanceGroups, used to sync Kubernetes nodes with
 //   members of the cloud InstanceGroup.
-func NewNodePool(cloud InstanceGroups, zone string) NodePool {
-	glog.V(3).Infof("NodePool is only aware of instances in zone %v", zone)
-	return &Instances{cloud, zone, storage.NewInMemoryPool()}
+func NewNodePool(cloud InstanceGroups, defaultZone string) NodePool {
+	return &Instances{cloud, storage.NewInMemoryPool(), nil}
+}
+
+func (i *Instances) Init(zl zoneLister) {
+	i.zoneLister = zl
 }
 
 // AddInstanceGroup creates or gets an instance group if it doesn't exist
-// and adds the given port to it.
-func (i *Instances) AddInstanceGroup(name string, port int64) (*compute.InstanceGroup, *compute.NamedPort, error) {
-	ig, _ := i.Get(name)
-	if ig == nil {
-		glog.Infof("Creating instance group %v", name)
+// and adds the given port to it. Returns a list of one instance group per zone,
+// all of which have the exact same named port.
+func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.InstanceGroup, *compute.NamedPort, error) {
+	igs := []*compute.InstanceGroup{}
+	namedPort := &compute.NamedPort{}
+
+	zones, err := i.ListZones()
+	if err != nil {
+		return igs, namedPort, err
+	}
+
+	for _, zone := range zones {
+		ig, _ := i.Get(name, zone)
 		var err error
-		ig, err = i.cloud.CreateInstanceGroup(name, i.zone)
+		if ig == nil {
+			glog.Infof("Creating instance group %v in zone %v", name, zone)
+			ig, err = i.cloud.CreateInstanceGroup(name, zone)
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			glog.V(3).Infof("Instance group %v already exists in zone %v, adding port %d to it", name, zone, port)
+		}
+		defer i.snapshotter.Add(name, struct{}{})
+		namedPort, err = i.cloud.AddPortToInstanceGroup(ig, port)
 		if err != nil {
 			return nil, nil, err
 		}
-	} else {
-		glog.V(3).Infof("Instance group already exists %v", name)
+		igs = append(igs, ig)
 	}
-	defer i.snapshotter.Add(name, ig)
-	namedPort, err := i.cloud.AddPortToInstanceGroup(ig, port)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return ig, namedPort, nil
+	return igs, namedPort, nil
 }
 
-// DeleteInstanceGroup deletes the given IG by name.
+// DeleteInstanceGroup deletes the given IG by name, from all zones.
 func (i *Instances) DeleteInstanceGroup(name string) error {
 	defer i.snapshotter.Delete(name)
-	return i.cloud.DeleteInstanceGroup(name, i.zone)
+	errs := []error{}
+
+	zones, err := i.ListZones()
+	if err != nil {
+		return err
+	}
+	for _, zone := range zones {
+		glog.Infof("deleting instance group %v in zone %v", name, zone)
+		if err := i.cloud.DeleteInstanceGroup(name, zone); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%v", errs)
 }
 
+// list lists all instances in all zones.
 func (i *Instances) list(name string) (sets.String, error) {
 	nodeNames := sets.NewString()
-	instances, err := i.cloud.ListInstancesInInstanceGroup(
-		name, i.zone, allInstances)
+	zones, err := i.ListZones()
 	if err != nil {
 		return nodeNames, err
 	}
-	for _, ins := range instances.Items {
-		// TODO: If round trips weren't so slow one would be inclided
-		// to GetInstance using this url and get the name.
-		parts := strings.Split(ins.Instance, "/")
-		nodeNames.Insert(parts[len(parts)-1])
+
+	for _, zone := range zones {
+		instances, err := i.cloud.ListInstancesInInstanceGroup(
+			name, zone, allInstances)
+		if err != nil {
+			return nodeNames, err
+		}
+		for _, ins := range instances.Items {
+			// TODO: If round trips weren't so slow one would be inclided
+			// to GetInstance using this url and get the name.
+			parts := strings.Split(ins.Instance, "/")
+			nodeNames.Insert(parts[len(parts)-1])
+		}
 	}
 	return nodeNames, nil
 }
 
 // Get returns the Instance Group by name.
-func (i *Instances) Get(name string) (*compute.InstanceGroup, error) {
-	ig, err := i.cloud.GetInstanceGroup(name, i.zone)
+func (i *Instances) Get(name, zone string) (*compute.InstanceGroup, error) {
+	ig, err := i.cloud.GetInstanceGroup(name, zone)
 	if err != nil {
 		return nil, err
 	}
-	i.snapshotter.Add(name, ig)
+	i.snapshotter.Add(name, struct{}{})
 	return ig, nil
 }
 
-// Add adds the given instances to the Instance Group.
-func (i *Instances) Add(groupName string, names []string) error {
-	glog.V(3).Infof("Adding nodes %v to %v", names, groupName)
-	return i.cloud.AddInstancesToInstanceGroup(groupName, i.zone, names)
+func (i *Instances) splitNodesByZone(names []string) map[string][]string {
+	nodesByZone := map[string][]string{}
+	for _, name := range names {
+		zone, err := i.GetZoneForNode(name)
+		if err != nil {
+			glog.Errorf("Failed to get zones for %v: %v, skipping", name, err)
+			continue
+		}
+		if _, ok := nodesByZone[zone]; !ok {
+			nodesByZone[zone] = []string{}
+		}
+		nodesByZone[zone] = append(nodesByZone[zone], name)
+	}
+	return nodesByZone
 }
 
-// Remove removes the given instances from the Instance Group.
+// Add adds the given instances to the appropriately zoned Instance Group.
+func (i *Instances) Add(groupName string, names []string) error {
+	errs := []error{}
+	for zone, nodeNames := range i.splitNodesByZone(names) {
+		glog.V(1).Infof("Adding nodes %v to %v in zone %v", nodeNames, groupName, zone)
+		if err := i.cloud.AddInstancesToInstanceGroup(groupName, zone, nodeNames); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%v", errs)
+}
+
+// Remove removes the given instances from the appropriately zoned Instance Group.
 func (i *Instances) Remove(groupName string, names []string) error {
-	glog.V(3).Infof("Removing nodes %v from %v", names, groupName)
-	return i.cloud.RemoveInstancesFromInstanceGroup(groupName, i.zone, names)
+	errs := []error{}
+	for zone, nodeNames := range i.splitNodesByZone(names) {
+		glog.V(1).Infof("Adding nodes %v to %v in zone %v", nodeNames, groupName, zone)
+		if err := i.cloud.RemoveInstancesFromInstanceGroup(groupName, zone, nodeNames); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%v", errs)
 }
 
 // Sync syncs kubernetes instances with the instances in the instance group.
 func (i *Instances) Sync(nodes []string) (err error) {
-	glog.V(3).Infof("Syncing nodes %v", nodes)
+	glog.V(1).Infof("Syncing nodes %v", nodes)
 
 	defer func() {
 		// The node pool is only responsible for syncing nodes to instance

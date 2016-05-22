@@ -30,7 +30,6 @@ import (
 
 const (
 	testDefaultBeNodePort = int64(3000)
-	defaultZone           = "default-zone"
 )
 
 var testBackendPort = intstr.IntOrString{Type: intstr.Int, IntVal: 80}

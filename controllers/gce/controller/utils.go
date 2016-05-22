@@ -28,6 +28,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/util/intstr"
+	"k8s.io/kubernetes/pkg/util/sets"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/pkg/util/workqueue"
 
@@ -37,6 +38,10 @@ import (
 const (
 	allowHTTPKey    = "kubernetes.io/ingress.allow-http"
 	staticIPNameKey = "kubernetes.io/ingress.global-static-ip-name"
+
+	// Label key to denote which GCE zone a Kubernetes node is in.
+	zoneKey     = "failure-domain.beta.kubernetes.io/zone"
+	defaultZone = ""
 )
 
 // ingAnnotations represents Ingress annotations.
@@ -314,4 +319,41 @@ func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
 		}
 	}
 	return knownPorts
+}
+
+func getZone(n api.Node) string {
+	zone, ok := n.Labels[zoneKey]
+	if !ok {
+		return defaultZone
+	}
+	return zone
+}
+
+// GetZoneForNode returns the zone for a given node by looking up its zone label.
+func (t *GCETranslator) GetZoneForNode(name string) (string, error) {
+	nodes, err := t.nodeLister.NodeCondition(nodeReady).List()
+	if err != nil {
+		return "", err
+	}
+	for _, n := range nodes.Items {
+		if n.Name == name {
+			// TODO: Make this more resilient to label changes by listing
+			// cloud nodes and figuring out zone.
+			return getZone(n), nil
+		}
+	}
+	return "", fmt.Errorf("Node not found %v", name)
+}
+
+// ListZones returns a list of zones this Kubernetes cluster spans.
+func (t *GCETranslator) ListZones() ([]string, error) {
+	zones := sets.String{}
+	readyNodes, err := t.nodeLister.NodeCondition(nodeReady).List()
+	if err != nil {
+		return zones.List(), err
+	}
+	for _, n := range readyNodes.Items {
+		zones.Insert(getZone(n))
+	}
+	return zones.List(), nil
 }

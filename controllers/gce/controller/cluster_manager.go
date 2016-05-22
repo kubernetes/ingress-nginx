@@ -76,6 +76,11 @@ type ClusterManager struct {
 	firewallPool           firewalls.SingleFirewallPool
 }
 
+func (c *ClusterManager) Init(tr *GCETranslator) {
+	c.instancePool.Init(tr)
+	// TODO: Initialize other members as needed.
+}
+
 // IsHealthy returns an error if the cluster manager is unhealthy.
 func (c *ClusterManager) IsHealthy() (err error) {
 	// TODO: Expand on this, for now we just want to detect when the GCE client
@@ -148,7 +153,6 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	if err := c.firewallPool.Sync(fwNodePorts, nodeNames); err != nil {
 		return err
 	}
-
 	return nil
 }
 
