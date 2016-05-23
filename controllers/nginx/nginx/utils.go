@@ -22,12 +22,17 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
 
 	"github.com/mitchellh/mapstructure"
 	"k8s.io/kubernetes/pkg/api"
+)
+
+const (
+	customHTTPErrors = "custom-http-errors"
 )
 
 // getDNSServers returns the list of nameservers located in the file /etc/resolv.conf
@@ -91,6 +96,19 @@ func (ngx *Manager) ReadConfig(config *api.ConfigMap) nginxConfiguration {
 		Metadata:         metadata,
 	})
 
+	cErrors := make([]int, 0)
+	if val, ok := config.Data[customHTTPErrors]; ok {
+		delete(config.Data, customHTTPErrors)
+		for _, i := range strings.Split(val, ",") {
+			j, err := strconv.Atoi(i)
+			if err != nil {
+				glog.Warningf("%v is not a valid http code", i)
+			} else {
+				cErrors = append(cErrors, j)
+			}
+		}
+	}
+
 	err = decoder.Decode(config.Data)
 	if err != nil {
 		glog.Infof("%v", err)
@@ -115,7 +133,21 @@ func (ngx *Manager) ReadConfig(config *api.ConfigMap) nginxConfiguration {
 		}
 	}
 
+	cfgDefault.CustomHTTPErrors = ngx.filterErrors(cErrors)
 	return cfgDefault
+}
+
+func (ngx *Manager) filterErrors(errCodes []int) []int {
+	fa := make([]int, 0)
+	for _, errCode := range errCodes {
+		if errCode > 299 && errCode < 600 {
+			fa = append(fa, errCode)
+		} else {
+			glog.Warningf("error code %v is not valid for custom error pages", errCode)
+		}
+	}
+
+	return fa
 }
 
 func (ngx *Manager) needsReload(data *bytes.Buffer) (bool, error) {
@@ -178,18 +210,4 @@ func diff(b1, b2 []byte) (data []byte, err error) {
 		err = nil
 	}
 	return
-}
-
-func toMap(iface interface{}) (map[string]interface{}, bool) {
-	value := reflect.ValueOf(iface)
-	if value.Kind() == reflect.Map {
-		m := map[string]interface{}{}
-		for _, k := range value.MapKeys() {
-			m[k.String()] = value.MapIndex(k).Interface()
-		}
-
-		return m, true
-	}
-
-	return map[string]interface{}{}, false
 }

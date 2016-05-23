@@ -123,23 +123,14 @@ http {
     ssl_dhparam {{ .sslDHParam }};
     {{ end }}
 
-    {{  $interceptHttpErrors := $cfg.interceptHttp403 || $cfg.interceptHttp404 || $cfg.interceptHttp405 ||
-                                $cfg.interceptHttp408 || $cfg.interceptHttp413 || $cfg.interceptHttp501 ||
-                                $cfg.interceptHttp502 || $cfg.interceptHttp503 || $cfg.interceptHttp504 }}
-    {{ if $interceptHttpErrors }}
+    {{- if .customErrors }}
     # Custom error pages
     proxy_intercept_errors on;
-    {{ end }}
+    {{ end -}}
 
-    {{ if $cfg.interceptHttp403 }}error_page 403 = @custom_403;{{ end }}
-    {{ if $cfg.interceptHttp404 }}error_page 404 = @custom_404;{{ end }}
-    {{ if $cfg.interceptHttp405 }}error_page 405 = @custom_405;{{ end }}
-    {{ if $cfg.interceptHttp408 }}error_page 408 = @custom_408;{{ end }}
-    {{ if $cfg.interceptHttp413 }}error_page 413 = @custom_413;{{ end }}
-    {{ if $cfg.interceptHttp501 }}error_page 501 = @custom_501;{{ end }}
-    {{ if $cfg.interceptHttp502 }}error_page 502 = @custom_502;{{ end }}
-    {{ if $cfg.interceptHttp503 }}error_page 503 = @custom_503;{{ end }}
-    {{ if $cfg.interceptHttp504 }}error_page 504 = @custom_504;{{ end }}
+    {{- range $errCode := $cfg.customHttpErrors }}
+    error_page {{ $errCode }} = @custom_{{ $errCode }};
+    {{ end }}
 
     # In case of errors try the next upstream server before returning an error
     proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504 {{ if $cfg.retryNonIdempotent }}non_idempotent{{ end }};
@@ -158,14 +149,13 @@ http {
 
     {{ range $server := .servers }}
     server {
+        server_name {{ $server.Name }};
         listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
         {{ if $server.SSL }}listen 443 {{ if $cfg.useProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.useHttp2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}        
         ssl_certificate {{ $server.SSLCertificate }};
         ssl_certificate_key {{ $server.SSLCertificateKey }};{{ end }}
-
-        server_name {{ $server.Name }};
 
         {{ if (and $server.SSL $cfg.hsts) }}
         if ($scheme = http) {
@@ -241,7 +231,7 @@ http {
         location / {
             proxy_pass             http://upstream-default-backend;
         }
-        {{ template "CUSTOM_ERRORS" $cfg }}
+        {{- template "CUSTOM_ERRORS" $cfg }}
     }
 
     # default server for services without endpoints
@@ -249,9 +239,13 @@ http {
         listen 8181;
 
         location / {
+            {{ if .customErrors }}
             content_by_lua_block {
                 openURL(503)
             }
+            {{ else }}
+            return 503;
+            {{ end }}
         }        
     }    
 }
@@ -290,67 +284,12 @@ stream {
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
-        {{ if $cfg.interceptHttp403 }}
-        location @custom_403 {
+        {{ range $errCode := .customHttpErrors }}
+        location @custom_{{ $errCode }} {
             internal;
             content_by_lua_block {
-                openURL(403)
+                openURL({{ $errCode }})
             }
-        }{{ end }}
-        {{ if $cfg.interceptHttp404 }}
-        location @custom_404 {
-            internal;
-            content_by_lua_block {
-                openURL(404)
-            }
-        }{{ end }}
-        {{ if $cfg.interceptHttp405 }}
-        location @custom_405 {
-            internal;
-            content_by_lua_block {
-                openURL(405)
-            }
-        }{{ end }}
-        {{ if $cfg.interceptHttp408 }}
-        location @custom_408 {
-            internal;
-            content_by_lua_block {
-                openURL(408)
-            }
-        }{{ end }}
-        {{ if $cfg.interceptHttp413 }}
-        location @custom_413 {
-            internal;
-            content_by_lua_block {
-                openURL(413)
-            }
-        }{{ end }}
-        {{ if $cfg.interceptHttp501 }}
-        location @custom_501 {
-            internal;
-            content_by_lua_block {
-                openURL(501)
-            }
-        }{{ end }}
-        {{ if $cfg.interceptHttp502 }}
-        location @custom_502 {
-            internal;
-            content_by_lua_block {
-                openURL(502)
-            }
-        }{{ end }}
-        {{ if $cfg.interceptHttp503 }}
-        location @custom_503 {
-            internal;
-            content_by_lua_block {
-                openURL(503)
-            }
-        }{{ end }}
-        {{ if $cfg.interceptHttp504 }}
-        location @custom_504 {
-            internal;
-            content_by_lua_block {
-                openURL(504)
-            }
-        }{{ end }}
+        }    
+        {{ end }}
 {{ end }}

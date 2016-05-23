@@ -124,19 +124,11 @@ type nginxConfiguration struct {
 	// accessed using HTTPS.
 	HSTSMaxAge string `structs:"hsts-max-age,omitempty"`
 
-	// enables or disable if HTTP codes should be passed to a client or be redirected to nginx for
-	// processing with the error_page directive
+	// enables which HTTP codes should be passed for processing with the error_page directive
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page
 	// By default this is disabled
-	InterceptHTTP403 bool `structs:"intercept-error-403,omitempty"`
-	InterceptHTTP404 bool `structs:"intercept-error-404,omitempty"`
-	InterceptHTTP405 bool `structs:"intercept-error-405,omitempty"`
-	InterceptHTTP408 bool `structs:"intercept-error-408,omitempty"`
-	InterceptHTTP413 bool `structs:"intercept-error-413,omitempty"`
-	InterceptHTTP501 bool `structs:"intercept-error-502,omitempty"`
-	InterceptHTTP502 bool `structs:"intercept-error-502,omitempty"`
-	InterceptHTTP503 bool `structs:"intercept-error-503,omitempty"`
-	InterceptHTTP504 bool `structs:"intercept-error-504,omitempty"`
+	CustomHTTPErrors []int
 
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
@@ -290,6 +282,7 @@ func newDefaultNginxCfg() nginxConfiguration {
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
+		CustomHTTPErrors:         []int{},
 	}
 
 	if glog.V(5) {
