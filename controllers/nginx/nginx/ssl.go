@@ -17,7 +17,9 @@ limitations under the License.
 package nginx
 
 import (
+	"crypto/sha1"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
@@ -26,28 +28,52 @@ import (
 	"github.com/golang/glog"
 )
 
+// SSLCert describes a SSL certificate to be used in NGINX
+type SSLCert struct {
+	CertFileName string
+	KeyFileName  string
+	// PemFileName contains the path to the file with the certificate and key concatenated
+	PemFileName string
+	// PemSHA contains the sha1 of the pem file.
+	// This is used to detect changes in the secret that contains the certificates
+	PemSHA string
+	// CN contains all the common names defined in the SSL certificate
+	CN []string
+}
+
 // AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
-func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) (string, error) {
+func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) (SSLCert, error) {
 	pemFileName := sslDirectory + "/" + name + ".pem"
 
 	pem, err := os.Create(pemFileName)
 	if err != nil {
-		return "", fmt.Errorf("Couldn't create pem file %v: %v", pemFileName, err)
+		return SSLCert{}, fmt.Errorf("Couldn't create pem file %v: %v", pemFileName, err)
 	}
 	defer pem.Close()
 
 	_, err = pem.WriteString(fmt.Sprintf("%v\n%v", cert, key))
 	if err != nil {
-		return "", fmt.Errorf("Couldn't write to pem file %v: %v", pemFileName, err)
+		return SSLCert{}, fmt.Errorf("Couldn't write to pem file %v: %v", pemFileName, err)
 	}
 
-	return pemFileName, nil
+	cn, err := nginx.commonNames(pemFileName)
+	if err != nil {
+		return SSLCert{}, err
+	}
+
+	return SSLCert{
+		CertFileName: cert,
+		KeyFileName:  key,
+		PemFileName:  pemFileName,
+		PemSHA:       nginx.pemSHA1(pemFileName),
+		CN:           cn,
+	}, nil
 }
 
-// CheckSSLCertificate checks if the certificate and key file are valid
+// commonNames checks if the certificate and key file are valid
 // returning the result of the validation and the list of hostnames
 // contained in the common name/s
-func (nginx *Manager) CheckSSLCertificate(pemFileName string) ([]string, error) {
+func (nginx *Manager) commonNames(pemFileName string) ([]string, error) {
 	pemCerts, err := ioutil.ReadFile(pemFileName)
 	if err != nil {
 		return []string{}, err
@@ -91,4 +117,15 @@ func (nginx *Manager) SearchDHParamFile(baseDir string) string {
 
 	glog.Warning("no file dhparam.pem found in secrets")
 	return ""
+}
+
+func (nginx *Manager) pemSHA1(filename string) string {
+	hasher := sha1.New()
+	s, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return ""
+	}
+
+	hasher.Write(s)
+	return hex.EncodeToString(hasher.Sum(nil))
 }

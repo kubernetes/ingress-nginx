@@ -733,11 +733,12 @@ func (lbc *loadBalancerController) createServers(data []interface{}) map[string]
 				servers[host] = &nginx.Server{Name: host, Locations: locs}
 			}
 
-			if pemFile, ok := pems[host]; ok {
+			if ngxCert, ok := pems[host]; ok {
 				server := servers[host]
 				server.SSL = true
-				server.SSLCertificate = pemFile
-				server.SSLCertificateKey = pemFile
+				server.SSLCertificate = ngxCert.PemFileName
+				server.SSLCertificateKey = ngxCert.PemFileName
+				server.SSLPemChecksum = ngxCert.PemSHA
 			}
 		}
 	}
@@ -745,8 +746,8 @@ func (lbc *loadBalancerController) createServers(data []interface{}) map[string]
 	return servers
 }
 
-func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[string]string {
-	pems := make(map[string]string)
+func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[string]nginx.SSLCert {
+	pems := make(map[string]nginx.SSLCert)
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
@@ -769,12 +770,7 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 				continue
 			}
 
-			pemFileName, err := lbc.nginx.AddOrUpdateCertAndKey(fmt.Sprintf("%v-%v", ing.Namespace, secretName), string(cert), string(key))
-			if err != nil {
-				glog.Errorf("No valid SSL certificate found in secret %v: %v", secretName, err)
-				continue
-			}
-			cn, err := lbc.nginx.CheckSSLCertificate(pemFileName)
+			ngxCert, err := lbc.nginx.AddOrUpdateCertAndKey(fmt.Sprintf("%v-%v", ing.Namespace, secretName), string(cert), string(key))
 			if err != nil {
 				glog.Errorf("No valid SSL certificate found in secret %v: %v", secretName, err)
 				continue
@@ -786,14 +782,14 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 					continue
 				}
 
-				pems["_"] = pemFileName
+				pems["_"] = ngxCert
 				glog.Infof("Using the secret %v as source for the default SSL certificate", secretName)
 				continue
 			}
 
 			for _, host := range tls.Hosts {
-				if isHostValid(host, cn) {
-					pems[host] = pemFileName
+				if isHostValid(host, ngxCert.CN) {
+					pems[host] = ngxCert
 				} else {
 					glog.Warningf("SSL Certificate stored in secret %v is not valid for the host %v defined in the Ingress rule %v", secretName, host, ing.Name)
 				}

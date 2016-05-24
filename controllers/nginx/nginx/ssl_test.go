@@ -44,25 +44,20 @@ func TestAddOrUpdateCertAndKey(t *testing.T) {
 	ngx := &Manager{}
 
 	name := fmt.Sprintf("test-%v", time.Now().UnixNano())
-	pemPath, err := ngx.AddOrUpdateCertAndKey(name, string(dCrt), string(dKey))
+	ngxCert, err := ngx.AddOrUpdateCertAndKey(name, string(dCrt), string(dKey))
 	if err != nil {
 		t.Fatalf("unexpected error checking SSL certificate: %v", err)
 	}
 
-	if pemPath == "" {
+	if ngxCert.PemFileName == "" {
 		t.Fatalf("expected path to pem file but returned empty")
 	}
 
-	cnames, err := ngx.CheckSSLCertificate(pemPath)
-	if err != nil {
-		t.Fatalf("unexpected error checking SSL certificate: %v", err)
-	}
-
-	if len(cnames) == 0 {
+	if len(ngxCert.CN) == 0 {
 		t.Fatalf("expected at least one cname but none returned")
 	}
 
-	if cnames[0] != "echoheaders" {
-		t.Fatalf("expected cname echoheaders but %v returned", cnames[0])
+	if ngxCert.CN[0] != "echoheaders" {
+		t.Fatalf("expected cname echoheaders but %v returned", ngxCert.CN[0])
 	}
 }

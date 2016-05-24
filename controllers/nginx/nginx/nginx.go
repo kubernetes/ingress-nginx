@@ -69,6 +69,7 @@ type Server struct {
 	SSL               bool
 	SSLCertificate    string
 	SSLCertificateKey string
+	SSLPemChecksum    string
 }
 
 // ServerByName sorts server by name
