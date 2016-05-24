@@ -881,13 +881,16 @@ func (lbc *loadBalancerController) Stop() error {
 
 	// Only try draining the workqueue if we haven't already.
 	if !lbc.shutdown {
-
-		lbc.removeFromIngress()
-
-		close(lbc.stopCh)
-		glog.Infof("shutting down controller queues")
 		lbc.shutdown = true
+		close(lbc.stopCh)
+
+		ings := lbc.ingLister.Store.List()
+		glog.Infof("removing IP address %v from ingress rules", lbc.podInfo.NodeIP)
+		lbc.removeFromIngress(ings)
+
+		glog.Infof("Shutting down controller queues.")
 		lbc.syncQueue.shutdown()
+		lbc.ingQueue.shutdown()
 
 		return nil
 	}
@@ -898,8 +901,7 @@ func (lbc *loadBalancerController) Stop() error {
 // removeFromIngress removes the IP address of the node where the Ingres
 // controller is running before shutdown to avoid incorrect status
 // information in Ingress rules
-func (lbc *loadBalancerController) removeFromIngress() {
-	ings := lbc.ingLister.Store.List()
+func (lbc *loadBalancerController) removeFromIngress(ings []interface{}) {
 	glog.Infof("updating %v Ingress rule/s", len(ings))
 	for _, cur := range ings {
 		ing := cur.(*extensions.Ingress)
@@ -946,5 +948,4 @@ func (lbc *loadBalancerController) Run() {
 	go lbc.ingQueue.run(time.Second, lbc.stopCh)
 
 	<-lbc.stopCh
-	glog.Infof("shutting down NGINX loadbalancer controller")
 }

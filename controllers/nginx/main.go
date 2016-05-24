@@ -190,6 +190,7 @@ func handleSigterm(lbc *loadBalancerController) {
 		glog.Infof("Error during shutdown %v", err)
 		exitCode = 1
 	}
+
 	glog.Infof("Exiting with %v", exitCode)
 	os.Exit(exitCode)
 }
