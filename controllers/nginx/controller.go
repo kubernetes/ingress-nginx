@@ -90,10 +90,12 @@ type loadBalancerController struct {
 	ingController  *framework.Controller
 	endpController *framework.Controller
 	svcController  *framework.Controller
+	secrController *framework.Controller
 	mapController  *framework.Controller
 	ingLister      StoreToIngressLister
 	svcLister      cache.StoreToServiceLister
 	endpLister     cache.StoreToEndpointsLister
+	secrLister     StoreToSecretsLister
 	mapLister      StoreToConfigmapLister
 	nginx          *nginx.Manager
 	podInfo        *podInfo
@@ -165,6 +167,32 @@ func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 		},
 	}
 
+	secrEventHandler := framework.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			addSecr := obj.(*api.Secret)
+			if lbc.secrReferenced(addSecr.Namespace, addSecr.Name) {
+				lbc.recorder.Eventf(addSecr, api.EventTypeNormal, "CREATE", fmt.Sprintf("%s/%s", addSecr.Namespace, addSecr.Name))
+				lbc.syncQueue.enqueue(obj)
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			delSecr := obj.(*api.Secret)
+			if lbc.secrReferenced(delSecr.Namespace, delSecr.Name) {
+				lbc.recorder.Eventf(delSecr, api.EventTypeNormal, "DELETE", fmt.Sprintf("%s/%s", delSecr.Namespace, delSecr.Name))
+				lbc.syncQueue.enqueue(obj)
+			}
+		},
+		UpdateFunc: func(old, cur interface{}) {
+			if !reflect.DeepEqual(old, cur) {
+				upSecr := cur.(*api.Secret)
+				if lbc.secrReferenced(upSecr.Namespace, upSecr.Name) {
+					lbc.recorder.Eventf(upSecr, api.EventTypeNormal, "UPDATE", fmt.Sprintf("%s/%s", upSecr.Namespace, upSecr.Name))
+					lbc.syncQueue.enqueue(cur)
+				}
+			}
+		},
+	}
+
 	eventHandler := framework.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			lbc.syncQueue.enqueue(obj)
@@ -214,6 +242,13 @@ func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 		},
 		&api.Service{}, resyncPeriod, framework.ResourceEventHandlerFuncs{})
 
+	lbc.secrLister.Store, lbc.secrController = framework.NewInformer(
+		&cache.ListWatch{
+			ListFunc:  secretsListFunc(lbc.client, namespace),
+			WatchFunc: secretsWatchFunc(lbc.client, namespace),
+		},
+		&api.Secret{}, resyncPeriod, secrEventHandler)
+
 	lbc.mapLister.Store, lbc.mapController = framework.NewInformer(
 		&cache.ListWatch{
 			ListFunc:  mapListFunc(lbc.client, namespace),
@@ -260,6 +295,18 @@ func endpointsWatchFunc(c *client.Client, ns string) func(options api.ListOption
 	}
 }
 
+func secretsListFunc(c *client.Client, ns string) func(api.ListOptions) (runtime.Object, error) {
+	return func(opts api.ListOptions) (runtime.Object, error) {
+		return c.Secrets(ns).List(opts)
+	}
+}
+
+func secretsWatchFunc(c *client.Client, ns string) func(options api.ListOptions) (watch.Interface, error) {
+	return func(options api.ListOptions) (watch.Interface, error) {
+		return c.Secrets(ns).Watch(options)
+	}
+}
+
 func mapListFunc(c *client.Client, ns string) func(api.ListOptions) (runtime.Object, error) {
 	return func(opts api.ListOptions) (runtime.Object, error) {
 		return c.ConfigMaps(ns).List(opts)
@@ -273,8 +320,11 @@ func mapWatchFunc(c *client.Client, ns string) func(options api.ListOptions) (wa
 }
 
 func (lbc *loadBalancerController) controllersInSync() bool {
-	return lbc.ingController.HasSynced() && lbc.svcController.HasSynced() &&
-		lbc.endpController.HasSynced() && lbc.mapController.HasSynced()
+	return lbc.ingController.HasSynced() &&
+		lbc.svcController.HasSynced() &&
+		lbc.endpController.HasSynced() &&
+		lbc.secrController.HasSynced() &&
+		lbc.mapController.HasSynced()
 }
 
 func (lbc *loadBalancerController) getConfigMap(ns, name string) (*api.ConfigMap, error) {
@@ -759,6 +809,7 @@ func (lbc *loadBalancerController) createUpstreams(ngxCfg nginx.Configuration, d
 
 				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
 				svcObj, svcExists, err := lbc.svcLister.Store.GetByKey(svcKey)
+
 				if err != nil {
 					glog.Infof("error getting service %v from the cache: %v", svcKey, err)
 					continue
@@ -833,14 +884,19 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
-
 		for _, tls := range ing.Spec.TLS {
 			secretName := tls.SecretName
-			secret, err := lbc.client.Secrets(ing.Namespace).Get(secretName)
+			secretKey := fmt.Sprintf("%s/%s", ing.Namespace, secretName)
+			secretInterface, exists, err := lbc.secrLister.Store.GetByKey(secretKey)
 			if err != nil {
 				glog.Warningf("Error retriveing secret %v for ing %v: %v", secretName, ing.Name, err)
 				continue
 			}
+			if !exists {
+				glog.Warningf("Secret %v is not existing", secretKey)
+				continue
+			}
+			secret := secretInterface.(*api.Secret)
 			cert, ok := secret.Data[api.TLSCertKey]
 			if !ok {
 				glog.Warningf("Secret %v has no private key", secretName)
@@ -880,6 +936,22 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 	}
 
 	return pems
+}
+
+// check if secret is referenced in this controller's config
+func (lbc *loadBalancerController) secrReferenced(namespace string, name string) bool {
+	for _, ingIf := range lbc.ingLister.Store.List() {
+		ing := ingIf.(*extensions.Ingress)
+		if ing.Namespace != namespace {
+			continue
+		}
+		for _, tls := range ing.Spec.TLS {
+			if tls.SecretName == name {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // getEndpoints returns a list of <endpoint ip>:<port> for a given service/target port combination.
@@ -1026,6 +1098,7 @@ func (lbc *loadBalancerController) Run() {
 	go lbc.ingController.Run(lbc.stopCh)
 	go lbc.endpController.Run(lbc.stopCh)
 	go lbc.svcController.Run(lbc.stopCh)
+	go lbc.secrController.Run(lbc.stopCh)
 	go lbc.mapController.Run(lbc.stopCh)
 
 	go lbc.syncQueue.run(time.Second, lbc.stopCh)
