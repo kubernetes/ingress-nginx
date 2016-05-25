@@ -42,6 +42,7 @@ import (
 
 	"k8s.io/contrib/ingress/controllers/nginx/healthcheck"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
 )
 
 const (
@@ -609,6 +610,12 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 				for _, loc := range server.Locations {
 					if loc.Path == rootLocation && nginxPath == rootLocation && loc.IsDefBackend {
 						loc.Upstream = *ups
+						locRew, err := rewrite.ParseAnnotations(ing)
+						if err != nil {
+							glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+						}
+						loc.Redirect = *locRew
+
 						addLoc = false
 						continue
 					}
@@ -622,9 +629,15 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 				}
 
 				if addLoc {
+					locRew, err := rewrite.ParseAnnotations(ing)
+					if err != nil {
+						glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+					}
+
 					server.Locations = append(server.Locations, &nginx.Location{
 						Path:     nginxPath,
 						Upstream: *ups,
+						Redirect: *locRew,
 					})
 				}
 			}

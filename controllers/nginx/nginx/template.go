@@ -21,10 +21,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 	"text/template"
 
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
+)
+
+const (
+	slash = "/"
 )
 
 var (
@@ -40,6 +45,8 @@ var (
 
 			return true
 		},
+		"buildLocation":  buildLocation,
+		"buildProxyPass": buildProxyPass,
 	}
 )
 
@@ -100,4 +107,61 @@ func toCamelCase(src string) string {
 		}
 	}
 	return string(bytes.Join(chunks, nil))
+}
+
+func buildLocation(input interface{}) string {
+	location, ok := input.(*Location)
+	if !ok {
+		return slash
+	}
+
+	path := location.Path
+	if len(location.Redirect.To) > 0 && location.Redirect.To != path {
+		// if path != slash && !strings.HasSuffix(path, slash) {
+		// 	path = fmt.Sprintf("%s/", path)
+		// }
+		return fmt.Sprintf("~* %s", path)
+	}
+
+	return path
+}
+
+func buildProxyPass(input interface{}) string {
+	location, ok := input.(*Location)
+	if !ok {
+		return ""
+	}
+
+	path := location.Path
+
+	if path == location.Redirect.To {
+		return fmt.Sprintf("proxy_pass http://%s;", location.Upstream.Name)
+	}
+
+	if path != slash && !strings.HasSuffix(path, slash) {
+		path = fmt.Sprintf("%s/", path)
+	}
+
+	if len(location.Redirect.To) > 0 {
+		rc := ""
+		if location.Redirect.Rewrite {
+			rc = fmt.Sprintf(`sub_filter '<head(.*)>' '<head$1><base href="$scheme://$server_name%v">';
+sub_filter_once off;`, location.Path)
+		}
+
+		if location.Redirect.To == slash {
+			// special case redirect to /
+			// ie /something to /
+			return fmt.Sprintf(`rewrite %s(.*) /$1 break;
+proxy_pass http://%s;
+%v`, path, location.Upstream.Name, rc)
+		}
+
+		return fmt.Sprintf(`rewrite %s(.*) %s/$1 break;
+proxy_pass http://%s;
+%v`, path, location.Redirect.To, location.Upstream.Name, rc)
+	}
+
+	// default proxy_pass
+	return fmt.Sprintf("proxy_pass http://%s;", location.Upstream.Name)
 }

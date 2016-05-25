@@ -16,6 +16,10 @@ limitations under the License.
 
 package nginx
 
+import (
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
+)
+
 // IngressConfig describes an NGINX configuration
 type IngressConfig struct {
 	Upstreams    []*Upstream
@@ -88,6 +92,7 @@ type Location struct {
 	Path         string
 	IsDefBackend bool
 	Upstream     Upstream
+	Redirect     rewrite.Redirect
 }
 
 // LocationByPath sorts location by path
