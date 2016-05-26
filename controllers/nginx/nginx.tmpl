@@ -155,6 +155,8 @@ http {
     server {
         listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
         {{ if $server.SSL }}listen 443{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }} ssl http2;
+        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
+        # PEM sha: {{ $server.SSLPemChecksum }}        
         ssl_certificate {{ $server.SSLCertificate }};
         ssl_certificate_key {{ $server.SSLCertificateKey }};{{ end }}
 
