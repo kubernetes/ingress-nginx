@@ -48,7 +48,7 @@ import (
 const (
 	defUpstreamName          = "upstream-default-backend"
 	defServerName            = "_"
-	namedPortAnnotation      = "kubernetes.io/ingress-named-ports"
+	namedPortAnnotation      = "ingress.kubernetes.io/named-ports"
 	podStoreSyncedPollPeriod = 1 * time.Second
 	rootLocation             = "/"
 )

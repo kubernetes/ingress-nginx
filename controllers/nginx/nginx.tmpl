@@ -177,8 +177,10 @@ http {
 
         {{ if $cfg.enableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
 
-        {{ range $location := $server.Locations }}
-        location {{ $location.Path }} {
+        {{- range $location := $server.Locations }}
+        {{- $path := buildLocation $location }}
+        location {{ $path }} {
+        location {{ $path }} {        
             proxy_set_header Host                   $host;
 
             # Pass Real IP
@@ -202,7 +204,12 @@ http {
 
             proxy_http_version                      1.1;
 
-            proxy_pass http://{{ $location.Upstream.Name }};
+            {{/* rewrite only works if the content is not compressed */}}
+            {{ if $location.Redirect.AddBaseURL -}}
+            proxy_set_header                        Accept-Encoding     "";
+            {{- end }}
+
+            {{- buildProxyPass $location }}
         }
         {{ end }}
 

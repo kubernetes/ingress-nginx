@@ -66,29 +66,29 @@ func buildIngress() *extensions.Ingress {
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 
-	r := ingAnnotations(ing.GetAnnotations()).rewrite()
+	r := ingAnnotations(ing.GetAnnotations()).rewriteTo()
 	if r != "" {
 		t.Error("Expected no redirect")
 	}
 
-	f := ingAnnotations(ing.GetAnnotations()).fixUrls()
+	f := ingAnnotations(ing.GetAnnotations()).addBaseURL()
 	if f != false {
-		t.Error("Expected false as fix-urls but %v was returend", f)
+		t.Error("Expected false in add-base-url but %v was returend", f)
 	}
 
 	data := map[string]string{}
-	data[rewrite] = defRoute
-	data[fixUrls] = "true"
+	data[rewriteTo] = defRoute
+	data[addBaseURL] = "true"
 	ing.SetAnnotations(data)
 
-	r = ingAnnotations(ing.GetAnnotations()).rewrite()
+	r = ingAnnotations(ing.GetAnnotations()).rewriteTo()
 	if r != defRoute {
-		t.Error("Expected %v as rewrite but %v was returend", defRoute, r)
+		t.Error("Expected %v in rewrite but %v was returend", defRoute, r)
 	}
 
-	f = ingAnnotations(ing.GetAnnotations()).fixUrls()
+	f = ingAnnotations(ing.GetAnnotations()).addBaseURL()
 	if f != true {
-		t.Error("Expected true as fix-urls but %v was returend", f)
+		t.Error("Expected true in add-base-url but %v was returend", f)
 	}
 }
 
@@ -104,7 +104,7 @@ func TestRedirect(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[rewrite] = defRoute
+	data[rewriteTo] = defRoute
 	ing.SetAnnotations(data)
 
 	redirect, err := ParseAnnotations(ing)
@@ -112,7 +112,7 @@ func TestRedirect(t *testing.T) {
 		t.Errorf("Uxpected error with ingress: %v", err)
 	}
 
-	if redirect.To != defRoute {
-		t.Errorf("Expected %v as redirect but returned %s", defRoute, redirect.To)
+	if redirect.Target != defRoute {
+		t.Errorf("Expected %v as redirect but returned %s", defRoute, redirect.Target)
 	}
 }

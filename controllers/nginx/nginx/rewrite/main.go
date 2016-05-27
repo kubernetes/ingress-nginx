@@ -17,68 +17,57 @@ limitations under the License.
 package rewrite
 
 import (
+	"errors"
 	"strconv"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 const (
-	rewrite = "ingress-nginx.kubernetes.io/rewrite-to"
-	fixUrls = "ingress-nginx.kubernetes.io/fix-urls"
+	rewriteTo  = "ingress.kubernetes.io/rewrite-target"
+	addBaseURL = "ingress.kubernetes.io/add-base-url"
 )
-
-// ErrMissingAnnotations is returned when the ingress rule
-// does not contains annotations related with redirect or strip prefix
-type ErrMissingAnnotations struct {
-	msg string
-}
-
-func (e ErrMissingAnnotations) Error() string {
-	return e.msg
-}
 
 // Redirect returns authentication configuration for an Ingress rule
 type Redirect struct {
-	// To URI where the traffic must be redirected
-	To string
-	// Rewrite indicates if is required to change the
-	// links in the response from the upstream servers
-	Rewrite bool
+	// Target URI where the traffic must be redirected
+	Target string
+	// AddBaseURL indicates if is required to add a base tag in the head
+	// of the responses from the upstream servers
+	AddBaseURL bool
 }
 
 type ingAnnotations map[string]string
 
-func (a ingAnnotations) rewrite() string {
-	val, ok := a[rewrite]
-	if ok {
-		return val
-	}
-
-	return ""
-}
-
-func (a ingAnnotations) fixUrls() bool {
-	val, ok := a[fixUrls]
+func (a ingAnnotations) addBaseURL() bool {
+	val, ok := a[addBaseURL]
 	if ok {
 		if b, err := strconv.ParseBool(val); err == nil {
 			return b
 		}
 	}
-
 	return false
+}
+
+func (a ingAnnotations) rewriteTo() string {
+	val, ok := a[rewriteTo]
+	if ok {
+		return val
+	}
+	return ""
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func ParseAnnotations(ing *extensions.Ingress) (*Redirect, error) {
 	if ing.GetAnnotations() == nil {
-		return &Redirect{}, ErrMissingAnnotations{"no annotations present"}
+		return &Redirect{}, errors.New("no annotations present")
 	}
 
-	rt := ingAnnotations(ing.GetAnnotations()).rewrite()
-	rw := ingAnnotations(ing.GetAnnotations()).fixUrls()
+	rt := ingAnnotations(ing.GetAnnotations()).rewriteTo()
+	abu := ingAnnotations(ing.GetAnnotations()).addBaseURL()
 	return &Redirect{
-		To:      rt,
-		Rewrite: rw,
+		Target:     rt,
+		AddBaseURL: abu,
 	}, nil
 }
