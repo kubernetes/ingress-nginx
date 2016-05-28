@@ -124,6 +124,12 @@ type nginxConfiguration struct {
 	// accessed using HTTPS.
 	HSTSMaxAge string `structs:"hsts-max-age,omitempty"`
 
+	// enables which HTTP codes should be passed for processing with the error_page directive
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page
+	// By default this is disabled
+	CustomHTTPErrors []int
+
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
@@ -276,6 +282,7 @@ func newDefaultNginxCfg() nginxConfiguration {
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
+		CustomHTTPErrors:         []int{},
 	}
 
 	if glog.V(5) {

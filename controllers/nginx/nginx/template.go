@@ -56,14 +56,8 @@ func (ngx *Manager) writeCfg(cfg nginxConfiguration, ingressCfg IngressConfig) (
 	conf["udpUpstreams"] = ingressCfg.UDPUpstreams
 	conf["defResolver"] = ngx.defResolver
 	conf["sslDHParam"] = ngx.sslDHParam
+	conf["customErrors"] = len(cfg.CustomHTTPErrors) > 0
 	conf["cfg"] = fixKeyNames(structs.Map(cfg))
-
-	buffer := new(bytes.Buffer)
-	err := ngx.template.Execute(buffer, conf)
-	if err != nil {
-		glog.Infof("NGINX error: %v", err)
-		return false, err
-	}
 
 	if glog.V(3) {
 		b, err := json.Marshal(conf)
@@ -71,6 +65,13 @@ func (ngx *Manager) writeCfg(cfg nginxConfiguration, ingressCfg IngressConfig) (
 			fmt.Println("error:", err)
 		}
 		glog.Infof("NGINX configuration: %v", string(b))
+	}
+
+	buffer := new(bytes.Buffer)
+	err := ngx.template.Execute(buffer, conf)
+	if err != nil {
+		glog.Infof("NGINX error: %v", err)
+		return false, err
 	}
 
 	changed, err := ngx.needsReload(buffer)
