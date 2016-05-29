@@ -32,11 +32,6 @@ type HealthChecks struct {
 	healthCheckGetter
 }
 
-type healthCheckGetter interface {
-	// HealthCheck returns the HTTP readiness check for a node port.
-	HealthCheck(nodePort int64) (*compute.HttpHealthCheck, error)
-}
-
 // NewHealthChecker creates a new health checker.
 // cloud: the cloud object implementing SingleHealthCheck.
 // defaultHealthCheckPath: is the HTTP path to use for health checks.

@@ -50,6 +50,9 @@ func NewNodePool(cloud InstanceGroups, defaultZone string) NodePool {
 	return &Instances{cloud, storage.NewInMemoryPool(), nil}
 }
 
+// Init initializes the instance pool. The given zoneLister is used to list
+// all zones that require an instance group, and to lookup which zone a
+// given Kubernetes node is in so we can add it to the right instance group.
 func (i *Instances) Init(zl zoneLister) {
 	i.zoneLister = zl
 }
@@ -191,7 +194,7 @@ func (i *Instances) Remove(groupName string, names []string) error {
 
 // Sync syncs kubernetes instances with the instances in the instance group.
 func (i *Instances) Sync(nodes []string) (err error) {
-	glog.V(1).Infof("Syncing nodes %v", nodes)
+	glog.V(4).Infof("Syncing nodes %v", nodes)
 
 	defer func() {
 		// The node pool is only responsible for syncing nodes to instance
@@ -207,9 +210,9 @@ func (i *Instances) Sync(nodes []string) (err error) {
 	}()
 
 	pool := i.snapshotter.Snapshot()
-	for name := range pool {
+	for igName := range pool {
 		gceNodes := sets.NewString()
-		gceNodes, err = i.list(name)
+		gceNodes, err = i.list(igName)
 		if err != nil {
 			return err
 		}
@@ -223,14 +226,14 @@ func (i *Instances) Sync(nodes []string) (err error) {
 		addNodes := kubeNodes.Difference(gceNodes).List()
 		if len(removeNodes) != 0 {
 			if err = i.Remove(
-				name, gceNodes.Difference(kubeNodes).List()); err != nil {
+				igName, gceNodes.Difference(kubeNodes).List()); err != nil {
 				return err
 			}
 		}
 
 		if len(addNodes) != 0 {
 			if err = i.Add(
-				name, kubeNodes.Difference(gceNodes).List()); err != nil {
+				igName, kubeNodes.Difference(gceNodes).List()); err != nil {
 				return err
 			}
 		}

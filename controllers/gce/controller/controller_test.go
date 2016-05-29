@@ -55,7 +55,7 @@ func newLoadBalancerController(t *testing.T, cm *fakeClusterManager, masterUrl s
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	lb.hasSynced = func() { return true }
+	lb.hasSynced = func() bool { return true }
 	return lb
 }
 

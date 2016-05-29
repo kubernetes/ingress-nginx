@@ -29,10 +29,12 @@ import (
 
 func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWithCloud bool) BackendPool {
 	namer := &utils.Namer{}
+	nodePool := instances.NewNodePool(fakeIGs, "default-zone")
+	nodePool.Init(&instances.FakeZoneLister{[]string{"zone-a"}})
+	healthChecks := healthchecks.NewHealthChecker(healthchecks.NewFakeHealthChecks(), "/", namer)
+	healthChecks.Init(&healthchecks.FakeHealthCheckGetter{nil})
 	return NewBackendPool(
-		f,
-		healthchecks.NewHealthChecker(healthchecks.NewFakeHealthChecks(), "/", namer),
-		instances.NewNodePool(fakeIGs, "default-zone"), namer, []int64{}, syncWithCloud)
+		f, healthChecks, nodePool, namer, []int64{}, syncWithCloud)
 }
 
 func TestBackendPoolAdd(t *testing.T) {

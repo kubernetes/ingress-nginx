@@ -20,6 +20,12 @@ import (
 	compute "google.golang.org/api/compute/v1"
 )
 
+// healthCheckGetter retrieves health checks.
+type healthCheckGetter interface {
+	// HealthCheck returns the HTTP readiness check for a node port.
+	HealthCheck(nodePort int64) (*compute.HttpHealthCheck, error)
+}
+
 // SingleHealthCheck is an interface to manage a single GCE health check.
 type SingleHealthCheck interface {
 	CreateHttpHealthCheck(hc *compute.HttpHealthCheck) error

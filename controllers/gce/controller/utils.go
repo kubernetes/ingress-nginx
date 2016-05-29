@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"time"
 
@@ -376,6 +377,10 @@ func (t *GCETranslator) getHTTPProbe(l map[string]string, targetPort intstr.IntO
 	if err != nil {
 		return nil, err
 	}
+
+	// If multiple endpoints have different health checks, take the first
+	sort.Sort(PodsByCreationTimestamp(pl))
+
 	for _, pod := range pl {
 		logStr := fmt.Sprintf("Pod %v matching service selectors %v (targetport %+v)", pod.Name, l, targetPort)
 		for _, c := range pod.Spec.Containers {
@@ -387,10 +392,9 @@ func (t *GCETranslator) getHTTPProbe(l map[string]string, targetPort intstr.IntO
 				if isPortEqual(cPort, targetPort) {
 					if isPortEqual(c.ReadinessProbe.Handler.HTTPGet.Port, targetPort) {
 						return c.ReadinessProbe, nil
-					} else {
-						glog.Infof("%v: found matching targetPort on container %v, but not on readinessProbe (%+v)",
-							logStr, c.Name, c.ReadinessProbe.Handler.HTTPGet.Port)
 					}
+					glog.Infof("%v: found matching targetPort on container %v, but not on readinessProbe (%+v)",
+						logStr, c.Name, c.ReadinessProbe.Handler.HTTPGet.Port)
 				}
 			}
 		}
@@ -437,19 +441,18 @@ func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error
 			}
 		}
 	}
-	return &compute.HttpHealthCheck{
-		Port: port,
-		// Empty string is used as a signal to the caller to use the appropriate
-		// default.
-		RequestPath: "",
-		Description: "Default kubernetes L7 Loadbalancing health check.",
-		// How often to health check.
-		CheckIntervalSec: 1,
-		// How long to wait before claiming failure of a health check.
-		TimeoutSec: 1,
-		// Number of healthchecks to pass for a vm to be deemed healthy.
-		HealthyThreshold: 1,
-		// Number of healthchecks to fail before the vm is deemed unhealthy.
-		UnhealthyThreshold: 10,
-	}, nil
+	return utils.DefaultHealthCheckTemplate(port), nil
+}
+
+// PodsByCreationTimestamp sorts a list of Pods by creation timestamp, using their names as a tie breaker.
+type PodsByCreationTimestamp []*api.Pod
+
+func (o PodsByCreationTimestamp) Len() int      { return len(o) }
+func (o PodsByCreationTimestamp) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
+
+func (o PodsByCreationTimestamp) Less(i, j int) bool {
+	if o[i].CreationTimestamp.Equal(o[j].CreationTimestamp) {
+		return o[i].Name < o[j].Name
+	}
+	return o[i].CreationTimestamp.Before(o[j].CreationTimestamp)
 }

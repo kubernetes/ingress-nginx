@@ -84,6 +84,7 @@ type ClusterManager struct {
 	healthCheckers []healthchecks.HealthChecker
 }
 
+// Init initializes the cluster manager.
 func (c *ClusterManager) Init(tr *GCETranslator) {
 	c.instancePool.Init(tr)
 	for _, h := range c.healthCheckers {
