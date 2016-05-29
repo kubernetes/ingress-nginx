@@ -74,10 +74,21 @@ type ClusterManager struct {
 	backendPool            backends.BackendPool
 	l7Pool                 loadbalancers.LoadBalancerPool
 	firewallPool           firewalls.SingleFirewallPool
+
+	// TODO: Refactor so we simply init a health check pool.
+	// Currently health checks are tied to backends because each backend needs
+	// the link of the associated health, but both the backend pool and
+	// loadbalancer pool manage backends, because the lifetime of the default
+	// backend is tied to the last/first loadbalancer not the life of the
+	// nodeport service or Ingress.
+	healthCheckers []healthchecks.HealthChecker
 }
 
 func (c *ClusterManager) Init(tr *GCETranslator) {
 	c.instancePool.Init(tr)
+	for _, h := range c.healthCheckers {
+		h.Init(tr)
+	}
 	// TODO: Initialize other members as needed.
 }
 
@@ -221,7 +232,7 @@ func getGCEClient(config io.Reader) *gce.GCECloud {
 //   string passed to glbc via --gce-cluster-name.
 // - defaultBackendNodePort: is the node port of glbc's default backend. This is
 //	 the kubernetes Service that serves the 404 page if no urls match.
-// - defaultHealthCheckPath: is the default path used for L7 health checks, eg: "/healthz"
+// - defaultHealthCheckPath: is the default path used for L7 health checks, eg: "/healthz".
 func NewClusterManager(
 	configFilePath string,
 	name string,
@@ -258,11 +269,14 @@ func NewClusterManager(
 
 	// BackendPool creates GCE BackendServices and associated health checks.
 	healthChecker := healthchecks.NewHealthChecker(cloud, defaultHealthCheckPath, cluster.ClusterNamer)
+	// Loadbalancer pool manages the default backend and its health check.
+	defaultBackendHealthChecker := healthchecks.NewHealthChecker(cloud, "/healthz", cluster.ClusterNamer)
+
+	cluster.healthCheckers = []healthchecks.HealthChecker{healthChecker, defaultBackendHealthChecker}
 
 	// TODO: This needs to change to a consolidated management of the default backend.
 	cluster.backendPool = backends.NewBackendPool(
 		cloud, healthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{defaultBackendNodePort}, true)
-	defaultBackendHealthChecker := healthchecks.NewHealthChecker(cloud, "/healthz", cluster.ClusterNamer)
 	defaultBackendPool := backends.NewBackendPool(
 		cloud, defaultBackendHealthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{}, false)
 	cluster.defaultBackendNodePort = defaultBackendNodePort

@@ -65,3 +65,5 @@ func (f *FakeHealthChecks) DeleteHttpHealthCheck(name string) error {
 	f.hc = healthChecks
 	return nil
 }
+
+func (f *FakeHealthChecks) UpdateHttpHealthCheck(hc *compute.HttpHealthCheck) error { return nil }

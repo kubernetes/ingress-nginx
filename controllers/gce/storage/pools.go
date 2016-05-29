@@ -78,16 +78,28 @@ type CloudListingPool struct {
 	keyGetter keyFunc
 }
 
-// ReplenishPool lists through the cloudLister and inserts into the pool.
+// ReplenishPool lists through the cloudLister and inserts into the pool. This
+// is especially useful in scenarios like deleting an Ingress while the
+// controller is restarting. As long as the resource exists in the shared
+// memory pool, it is visible to the caller and they can take corrective
+// actions, eg: backend pool deletes backends with non-matching node ports
+// in its sync method.
 func (c *CloudListingPool) ReplenishPool() {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	glog.V(4).Infof("Replenishing pool")
+
+	// We must list with the lock, because the controller also lists through
+	// Snapshot(). It's ok if the controller takes a snpshot, we list, we
+	// delete, because we have delete based on the most recent state. Worst
+	// case we thrash. It's not ok if we list, the controller lists and
+	// creates a backend, and we delete that backend based on stale state.
 	items, err := c.lister.List()
 	if err != nil {
 		glog.Warningf("Failed to list: %v", err)
 		return
 	}
+
 	for i := range items {
 		key, err := c.keyGetter(items[i])
 		if err != nil {

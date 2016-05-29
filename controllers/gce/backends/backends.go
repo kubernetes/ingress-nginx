@@ -109,7 +109,7 @@ func (b *Backends) Get(port int64) (*compute.BackendService, error) {
 
 func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.NamedPort, name string) (*compute.BackendService, error) {
 	// Create a new health check
-	if err := b.healthChecker.Add(namedPort.Port, ""); err != nil {
+	if err := b.healthChecker.Add(namedPort.Port); err != nil {
 		return nil, err
 	}
 	hc, err := b.healthChecker.Get(namedPort.Port)
@@ -151,6 +151,10 @@ func (b *Backends) Add(port int64) error {
 		if err != nil {
 			return err
 		}
+	}
+	// we won't find any igs till the node pool syncs nodes.
+	if len(igs) == 0 {
+		return nil
 	}
 	if err := b.edgeHop(be, igs); err != nil {
 		return err

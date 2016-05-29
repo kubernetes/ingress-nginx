@@ -23,13 +23,16 @@ import (
 // SingleHealthCheck is an interface to manage a single GCE health check.
 type SingleHealthCheck interface {
 	CreateHttpHealthCheck(hc *compute.HttpHealthCheck) error
+	UpdateHttpHealthCheck(hc *compute.HttpHealthCheck) error
 	DeleteHttpHealthCheck(name string) error
 	GetHttpHealthCheck(name string) (*compute.HttpHealthCheck, error)
 }
 
 // HealthChecker is an interface to manage cloud HTTPHealthChecks.
 type HealthChecker interface {
-	Add(port int64, path string) error
+	Init(h healthCheckGetter)
+
+	Add(port int64) error
 	Delete(port int64) error
 	Get(port int64) (*compute.HttpHealthCheck, error)
 }
