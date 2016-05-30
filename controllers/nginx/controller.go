@@ -42,6 +42,7 @@ import (
 
 	"k8s.io/contrib/ingress/controllers/nginx/healthcheck"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/ratelimit"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
 )
 
@@ -583,6 +584,12 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 				continue
 			}
 
+			rl, err := ratelimit.ParseAnnotations(ing)
+			glog.V(3).Infof("nginx rate limit %v", rl)
+			if err != nil {
+				glog.V(3).Infof("error reading rate limit annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			}
+
 			host := rule.Host
 			if host == "" {
 				host = defServerName
@@ -615,6 +622,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 							glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
 						}
 						loc.Redirect = *locRew
+						loc.RateLimit = *rl
 
 						addLoc = false
 						continue
@@ -635,9 +643,10 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 					}
 
 					server.Locations = append(server.Locations, &nginx.Location{
-						Path:     nginxPath,
-						Upstream: *ups,
-						Redirect: *locRew,
+						Path:      nginxPath,
+						Upstream:  *ups,
+						Redirect:  *locRew,
+						RateLimit: *rl,
 					})
 				}
 			}

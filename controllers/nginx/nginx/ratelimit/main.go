@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	limitIp  = "ingress-nginx.kubernetes.io/limit-connections"
-	limitRps = "ingress-nginx.kubernetes.io/limit-rps"
+	limitIp  = "ingress.kubernetes.io/limit-connections"
+	limitRps = "ingress.kubernetes.io/limit-rps"
 
 	// allow 5 times the specified limit as burst
 	defBurst = 5
@@ -39,17 +39,11 @@ const (
 var (
 	// ErrInvalidRateLimit is returned when the annotation caontains invalid values
 	ErrInvalidRateLimit = errors.New("invalid rate limit value. Must be > 0")
+
+	// ErrMissingAnnotations is returned when the ingress rule
+	// does not contains annotations related with rate limit
+	ErrMissingAnnotations = errors.New("no annotations present")
 )
-
-// ErrMissingAnnotations is returned when the ingress rule
-// does not contains annotations related with rate limit
-type ErrMissingAnnotations struct {
-	msg string
-}
-
-func (e ErrMissingAnnotations) Error() string {
-	return e.msg
-}
 
 // RateLimit returns rate limit configuration for an Ingress rule
 // Is possible to limit the number of connections per IP address or
@@ -62,7 +56,8 @@ type RateLimit struct {
 	RPS Zone
 }
 
-// Zone returns information about the rate limit
+// Zone returns information about the NGINX rate limit (limit_req_zone)
+// http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_zone
 type Zone struct {
 	Name  string
 	Limit int
@@ -81,7 +76,7 @@ func (a ingAnnotations) limitIp() int {
 		}
 	}
 
-	return -1
+	return 0
 }
 
 func (a ingAnnotations) limitRps() int {
@@ -92,14 +87,14 @@ func (a ingAnnotations) limitRps() int {
 		}
 	}
 
-	return -1
+	return 0
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func ParseAnnotations(ing *extensions.Ingress) (*RateLimit, error) {
 	if ing.GetAnnotations() == nil {
-		return &RateLimit{}, ErrMissingAnnotations{"no annotations present"}
+		return &RateLimit{}, ErrMissingAnnotations
 	}
 
 	rps := ingAnnotations(ing.GetAnnotations()).limitRps()
@@ -107,8 +102,8 @@ func ParseAnnotations(ing *extensions.Ingress) (*RateLimit, error) {
 
 	if rps == 0 && conn == 0 {
 		return &RateLimit{
-			Connections: Zone{"", -1, -1, 1},
-			RPS:         Zone{"", -1, -1, 1},
+			Connections: Zone{},
+			RPS:         Zone{},
 		}, ErrInvalidRateLimit
 	}
 

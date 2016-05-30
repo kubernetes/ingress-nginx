@@ -45,8 +45,10 @@ var (
 
 			return true
 		},
-		"buildLocation":  buildLocation,
-		"buildProxyPass": buildProxyPass,
+		"buildLocation":       buildLocation,
+		"buildProxyPass":      buildProxyPass,
+		"buildRateLimitZones": buildRateLimitZones,
+		"buildRateLimit":      buildRateLimit,
 	}
 )
 
@@ -179,4 +181,60 @@ func buildProxyPass(input interface{}) string {
 
 	// default proxy_pass
 	return defProxyPass
+}
+
+// buildRateLimitZones produces an array of limit_conn_zone in order to allow
+// rate limiting of request. Each Ingress rule could have up to two zones, one
+// for connection limit by IP address and other for limiting request per second
+func buildRateLimitZones(input interface{}) []string {
+	zones := []string{}
+
+	servers, ok := input.([]*Server)
+	if !ok {
+		return zones
+	}
+
+	for _, server := range servers {
+		for _, loc := range server.Locations {
+
+			if loc.RateLimit.Connections.Limit != -1 {
+				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%v;",
+					loc.RateLimit.Connections.Name, loc.RateLimit.Connections.SharedSize)
+				zones = append(zones, zone)
+			}
+
+			if loc.RateLimit.RPS.Limit != -1 {
+				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%v rate=%vr/s;",
+					loc.RateLimit.Connections.Name, loc.RateLimit.Connections.SharedSize, loc.RateLimit.Connections.Limit)
+				zones = append(zones, zone)
+			}
+		}
+	}
+
+	return zones
+}
+
+// buildRateLimit produces an array of limit_req to be used inside the Path of
+// Ingress rules. The order: connections by IP first and RPS next.
+func buildRateLimit(input interface{}) []string {
+	limits := []string{}
+
+	loc, ok := input.(*Location)
+	if !ok {
+		return limits
+	}
+
+	if loc.RateLimit.Connections.Limit != -1 {
+		limit := fmt.Sprintf("limit_conn %v %v;",
+			loc.RateLimit.Connections.Name, loc.RateLimit.Connections.Limit)
+		limits = append(limits, limit)
+	}
+
+	if loc.RateLimit.RPS.Limit != -1 {
+		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
+			loc.RateLimit.Connections.Name, loc.RateLimit.Connections.Burst)
+		limits = append(limits, limit)
+	}
+
+	return limits
 }

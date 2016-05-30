@@ -186,7 +186,10 @@ http {
         {{- range $location := $server.Locations }}
         {{- $path := buildLocation $location }}
         location {{ $path }} {
-        location {{ $path }} {        
+            {{/* if the location contains a rate limit annotation, create one */}}
+            {{ $limits := buildRateLimit $location }}
+            {{- range $limit := $limits }}
+            {{ $limit }}{{ end }}
             proxy_set_header Host                   $host;
 
             # Pass Real IP

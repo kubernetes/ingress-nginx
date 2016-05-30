@@ -63,13 +63,13 @@ func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 
 	lip := ingAnnotations(ing.GetAnnotations()).limitIp()
-	if lip != -1 {
-		t.Error("Expected -1 in limit by ip but %v was returned", lip)
+	if lip != 0 {
+		t.Error("Expected 0 in limit by ip but %v was returned", lip)
 	}
 
 	lrps := ingAnnotations(ing.GetAnnotations()).limitRps()
-	if lrps != -1 {
-		t.Error("Expected -1 in limit by rps but %v was returend", lrps)
+	if lrps != 0 {
+		t.Error("Expected 0 in limit by rps but %v was returend", lrps)
 	}
 
 	data := map[string]string{}
