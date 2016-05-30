@@ -19,6 +19,12 @@ RUN apt-get update && apt-get install -y \
   --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
+# Download of GeoIP databases
+RUN curl -sSL -o /etc/nginx/GeoIP.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz \
+  && curl -sSL -o /etc/nginx/GeoLiteCity.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz \
+  && gunzip /etc/nginx/GeoIP.dat.gz \
+  && gunzip /etc/nginx/GeoLiteCity.dat.gz
+
 COPY nginx-ingress-controller /
 COPY nginx.tmpl /etc/nginx/template/nginx.tmpl
 COPY default.conf /etc/nginx/nginx.conf

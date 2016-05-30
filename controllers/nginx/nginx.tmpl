@@ -16,7 +16,16 @@ events {
 }
 
 http {
-    {{ if $cfg.enableVtsStatus}}vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.vtsStatusZoneSize }};{{ end }}
+    {{/* databases used to determine the country depending on the client IP address */}}
+    {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
+    {{/* this is require to calculate traffic for individual country using GeoIP in the status page */}}
+    geoip_country       /etc/nginx/GeoIP.dat;
+    geoip_city          /etc/nginx/GeoLiteCity.dat;
+
+    {{- if $cfg.enableVtsStatus }}
+    vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.vtsStatusZoneSize }};
+    vhost_traffic_status_filter_by_set_key $geoip_country_code country::*;
+    {{ end -}}
 
     # lus sectrion to return proper error codes when custom pages are used
     lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
@@ -165,6 +174,8 @@ http {
 
         more_set_headers                            "Strict-Transport-Security: max-age={{ $cfg.hstsMaxAge }}{{ if $cfg.hstsIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
         {{ end -}}
+
+        {{ if $cfg.enableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
 
         {{ range $location := $server.Locations }}
         location {{ $location.Path }} {
