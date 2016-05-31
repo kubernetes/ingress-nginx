@@ -40,8 +40,9 @@ import (
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/watch"
 
-	"k8s.io/contrib/ingress/controllers/nginx/healthcheck"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/auth"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/healthcheck"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ratelimit"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
 )
@@ -584,6 +585,12 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 				continue
 			}
 
+			nginxAuth, err := auth.ParseAnnotations(lbc.client, ing, auth.DefAuthDirectory)
+			glog.V(3).Infof("nginx auth %v", nginxAuth)
+			if err != nil {
+				glog.V(3).Infof("error reading authentication in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			}
+
 			rl, err := ratelimit.ParseAnnotations(ing)
 			glog.V(3).Infof("nginx rate limit %v", rl)
 			if err != nil {
@@ -617,12 +624,14 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 				for _, loc := range server.Locations {
 					if loc.Path == rootLocation && nginxPath == rootLocation && loc.IsDefBackend {
 						loc.Upstream = *ups
+						loc.Auth = *nginxAuth
+						loc.RateLimit = *rl
+
 						locRew, err := rewrite.ParseAnnotations(ing)
 						if err != nil {
 							glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
 						}
 						loc.Redirect = *locRew
-						loc.RateLimit = *rl
 
 						addLoc = false
 						continue
@@ -645,8 +654,9 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 					server.Locations = append(server.Locations, &nginx.Location{
 						Path:      nginxPath,
 						Upstream:  *ups,
-						Redirect:  *locRew,
+						Auth:      *nginxAuth,
 						RateLimit: *rl,
+						Redirect:  *locRew,
 					})
 				}
 			}

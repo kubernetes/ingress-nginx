@@ -17,6 +17,7 @@ limitations under the License.
 package nginx
 
 import (
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/auth"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ratelimit"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
 )
@@ -93,8 +94,9 @@ type Location struct {
 	Path         string
 	IsDefBackend bool
 	Upstream     Upstream
-	Redirect     rewrite.Redirect
+	Auth         auth.Nginx
 	RateLimit    ratelimit.RateLimit
+	Redirect     rewrite.Redirect
 }
 
 // LocationByPath sorts location by path

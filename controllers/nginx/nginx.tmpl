@@ -190,6 +190,18 @@ http {
             {{ $limits := buildRateLimit $location }}
             {{- range $limit := $limits }}
             {{ $limit }}{{ end }}
+
+            {{ if $location.Auth.Secured -}}
+            {{ if eq $location.Auth.Type "basic" }}
+            auth_basic "{{ $location.Auth.Realm }}";
+            auth_basic_user_file {{ $location.Auth.File }};
+            {{ else }}
+            #TODO: add nginx-http-auth-digest module
+            auth_digest "{{ $location.Auth.Realm }}";
+            auth_digest_user_file {{ $location.Auth.File }};
+            {{ end }}
+            {{- end }}
+
             proxy_set_header Host                   $host;
 
             # Pass Real IP

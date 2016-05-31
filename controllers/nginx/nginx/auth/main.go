@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	authType   = "ingress-nginx.kubernetes.io/auth-type"
-	authSecret = "ingress-nginx.kubernetes.io/auth-secret"
-	authRealm  = "ingress-nginx.kubernetes.io/auth-realm"
+	authType   = "ingress.kubernetes.io/auth-type"
+	authSecret = "ingress.kubernetes.io/auth-secret"
+	authRealm  = "ingress.kubernetes.io/auth-realm"
 
 	defAuthRealm = "Authentication Required"
 
@@ -61,17 +61,11 @@ var (
 
 	// ErrMissingAuthInSecret is returned when there is no auth key in secret data
 	ErrMissingAuthInSecret = errors.New("the secret does not contains the auth key")
+
+	// ErrMissingAnnotations is returned when the ingress rule
+	// does not contains annotations related with authentication
+	ErrMissingAnnotations = errors.New("missing authentication annotations")
 )
-
-// ErrMissingAnnotations is returned when the ingress rule
-// does not contains annotations related with authentication
-type ErrMissingAnnotations struct {
-	msg string
-}
-
-func (e ErrMissingAnnotations) Error() string {
-	return e.msg
-}
 
 // Nginx returns authentication configuration for an Ingress rule
 type Nginx struct {
@@ -121,7 +115,7 @@ func (a ingAnnotations) secretName() (string, error) {
 // during the authentication process
 func ParseAnnotations(kubeClient client.Interface, ing *extensions.Ingress, authDir string) (*Nginx, error) {
 	if ing.GetAnnotations() == nil {
-		return &Nginx{}, ErrMissingAnnotations{"missing authentication annotations"}
+		return &Nginx{}, ErrMissingAnnotations
 	}
 
 	at, err := ingAnnotations(ing.GetAnnotations()).authType()

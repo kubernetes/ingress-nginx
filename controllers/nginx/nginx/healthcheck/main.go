@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	upsMaxFails    = "ingress-nginx.kubernetes.io/upstream-max-fails"
-	upsFailTimeout = "ingress-nginx.kubernetes.io/upstream-fail-timeout"
+	upsMaxFails    = "ingress.kubernetes.io/upstream-max-fails"
+	upsFailTimeout = "ingress.kubernetes.io/upstream-fail-timeout"
 )
 
 var (
