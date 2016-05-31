@@ -102,7 +102,7 @@ func (ngx *Manager) ReadConfig(config *api.ConfigMap) NginxConfiguration {
 		for _, i := range strings.Split(val, ",") {
 			j, err := strconv.Atoi(i)
 			if err != nil {
-				glog.Warningf("%v is not a valid http code", i)
+				glog.Warningf("%v is not a valid http code: %v", i, err)
 			} else {
 				cErrors = append(cErrors, j)
 			}

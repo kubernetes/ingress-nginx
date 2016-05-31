@@ -198,7 +198,9 @@ Use the [custom-template](examples/custom-template/README.md) example as a guide
 
 ### Custom NGINX upstream checks
 
-NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enabled configuration of each server in the upstream. The ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` or `upstream-fail-timeout` in the NGINX Configmap or in a particular Ingress rule. By default this values are 0. This means NGINX will respect the `livenessProbe`, if is defined. If there is no probe, NGINX will not mark a server inside an upstream down.
+NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enables the configuration of each server in the upstream. The ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` or `upstream-fail-timeout` in the NGINX Configmap or in a particular Ingress rule. By default this values are 0. This means NGINX will respect the `readinessProbe`, if is defined. If there is no probe, NGINX will not mark a server inside an upstream down.
+
+**With the default values NGINX will not health check your backends, and whenever the endpoints controller notices a readiness probe failure that pod's ip will be removed from the list of endpoints, causing nginx to also remove it from the upstreams.**
 
 To use custom values in an Ingress rule define this annotations:
 
@@ -258,6 +260,19 @@ In case of an error in a request the body of the response is obtained from the `
 Using this two headers is possible to use a custom backend service like [this one](https://github.com/aledbf/contrib/tree/nginx-debug-server/Ingress/images/nginx-error-server) that inspect each request and returns a custom error page with the format expected by the client. Please check the example [custom-errors](examples/custom-errors/README.md)
 
 
+### Annotations
+
+|Annotation                 |Values|Description|
+|---------------------------|------|-----------|
+|ingress.kubernetes.io/rewrite-target|URI|   |
+|ingress.kubernetes.io/add-base-url|true\|false| |
+|ingress.kubernetes.io/limit-connections| ||
+|ingress.kubernetes.io/limit-rps|||
+|ingress.kubernetes.io/auth-type|basic\|digest|Indicates the [HTTP Authentication Type: Basic or Digest Access Authentication](https://tools.ietf.org/html/rfc2617)||
+|ingress.kubernetes.io/auth-secret|string|Name of the secret that contains the usernames and passwords.
+| | |The secret must be created in the same namespace than the Ingress rule||
+|ingress.kubernetes.io/auth-realm|string| |
+
 ## Troubleshooting
 
 Problems encountered during [1.2.0-alpha7 deployment](https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker.md):
@@ -299,5 +314,5 @@ The previous behavior can be restored using `retry-non-idempotent=true` in the c
 ## Limitations
 
 - Ingress rules for TLS require the definition of the field `host`
-- The IP address in the status of loadBalancer could contain old values
+
 
