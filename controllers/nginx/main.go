@@ -159,7 +159,7 @@ func registerHandlers(lbc *loadBalancerController) {
 
 	http.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "build: %v - %v", gitRepo, version)
+		fmt.Fprintf(w, "build: %v - %v", gitRepo, version)
 	})
 
 	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {

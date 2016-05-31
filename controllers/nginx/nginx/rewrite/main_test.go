@@ -72,8 +72,8 @@ func TestAnnotations(t *testing.T) {
 	}
 
 	f := ingAnnotations(ing.GetAnnotations()).addBaseURL()
-	if f != false {
-		t.Error("Expected false in add-base-url but %v was returend", f)
+	if f {
+		t.Errorf("Expected false in add-base-url but %v was returend", f)
 	}
 
 	data := map[string]string{}
@@ -83,12 +83,12 @@ func TestAnnotations(t *testing.T) {
 
 	r = ingAnnotations(ing.GetAnnotations()).rewriteTo()
 	if r != defRoute {
-		t.Error("Expected %v in rewrite but %v was returend", defRoute, r)
+		t.Errorf("Expected %v in rewrite but %v was returend", defRoute, r)
 	}
 
 	f = ingAnnotations(ing.GetAnnotations()).addBaseURL()
-	if f != true {
-		t.Error("Expected true in add-base-url but %v was returend", f)
+	if !f {
+		t.Errorf("Expected true in add-base-url but %v was returend", f)
 	}
 }
 

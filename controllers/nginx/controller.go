@@ -558,7 +558,7 @@ func (lbc *loadBalancerController) getDefaultUpstream() *nginx.Upstream {
 	return upstream
 }
 
-func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfiguration, data []interface{}) ([]*nginx.Upstream, []*nginx.Server) {
+func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.Configuration, data []interface{}) ([]*nginx.Upstream, []*nginx.Server) {
 	upstreams := lbc.createUpstreams(ngxCfg, data)
 	upstreams[defUpstreamName] = lbc.getDefaultUpstream()
 
@@ -689,7 +689,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.NginxConfigur
 
 // createUpstreams creates the NGINX upstreams for each service referenced in
 // Ingress rules. The servers inside the upstream are endpoints.
-func (lbc *loadBalancerController) createUpstreams(ngxCfg nginx.NginxConfiguration, data []interface{}) map[string]*nginx.Upstream {
+func (lbc *loadBalancerController) createUpstreams(ngxCfg nginx.Configuration, data []interface{}) map[string]*nginx.Upstream {
 	upstreams := make(map[string]*nginx.Upstream)
 
 	for _, ingIf := range data {

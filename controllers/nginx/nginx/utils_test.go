@@ -22,7 +22,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
-func getConfigNginxBool(data map[string]string) NginxConfiguration {
+func getConfigNginxBool(data map[string]string) Configuration {
 	manager := &Manager{}
 	configMap := &api.ConfigMap{
 		Data: data,
@@ -74,7 +74,7 @@ func TestManagerReadConfigStringSet(t *testing.T) {
 	})
 	exp := "TLSv1.2"
 	if configNginx.SSLProtocols != exp {
-		t.Error("Failed to set string value true actual='%s' expected='%s'", configNginx.SSLProtocols, exp)
+		t.Errorf("Failed to set string value true actual='%s' expected='%s'", configNginx.SSLProtocols, exp)
 	}
 }
 
@@ -84,6 +84,6 @@ func TestManagerReadConfigStringNothing(t *testing.T) {
 	})
 	exp := "10m"
 	if configNginx.SSLSessionTimeout != exp {
-		t.Error("Failed to set string value true actual='%s' expected='%s'", configNginx.SSLSessionTimeout, exp)
+		t.Errorf("Failed to set string value true actual='%s' expected='%s'", configNginx.SSLSessionTimeout, exp)
 	}
 }

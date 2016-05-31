@@ -80,11 +80,17 @@ func TestAnnotations(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	mf, err := ingAnnotations(ing.GetAnnotations()).maxFails()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 	if mf != 1 {
 		t.Errorf("Expected 1 but returned %s", mf)
 	}
 
 	ft, err := ingAnnotations(ing.GetAnnotations()).failTimeout()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 	if ft != 1 {
 		t.Errorf("Expected 1 but returned %s", ft)
 	}
@@ -97,7 +103,7 @@ func TestIngressHealthCheck(t *testing.T) {
 	data[upsMaxFails] = "2"
 	ing.SetAnnotations(data)
 
-	cfg := nginx.NginxConfiguration{}
+	cfg := nginx.Configuration{}
 	cfg.UpstreamFailTimeout = 1
 
 	nginxHz := ParseAnnotations(cfg, ing)

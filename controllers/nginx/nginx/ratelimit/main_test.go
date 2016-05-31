@@ -62,29 +62,29 @@ func buildIngress() *extensions.Ingress {
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 
-	lip := ingAnnotations(ing.GetAnnotations()).limitIp()
+	lip := ingAnnotations(ing.GetAnnotations()).limitIP()
 	if lip != 0 {
-		t.Error("Expected 0 in limit by ip but %v was returned", lip)
+		t.Errorf("Expected 0 in limit by ip but %v was returned", lip)
 	}
 
-	lrps := ingAnnotations(ing.GetAnnotations()).limitRps()
+	lrps := ingAnnotations(ing.GetAnnotations()).limitRPS()
 	if lrps != 0 {
-		t.Error("Expected 0 in limit by rps but %v was returend", lrps)
+		t.Errorf("Expected 0 in limit by rps but %v was returend", lrps)
 	}
 
 	data := map[string]string{}
-	data[limitIp] = "5"
-	data[limitRps] = "100"
+	data[limitIP] = "5"
+	data[limitRPS] = "100"
 	ing.SetAnnotations(data)
 
-	lip = ingAnnotations(ing.GetAnnotations()).limitIp()
+	lip = ingAnnotations(ing.GetAnnotations()).limitIP()
 	if lip != 5 {
-		t.Error("Expected %v in limit by ip but %v was returend", lip)
+		t.Errorf("Expected 5 in limit by ip but %v was returend", lip)
 	}
 
-	lrps = ingAnnotations(ing.GetAnnotations()).limitRps()
+	lrps = ingAnnotations(ing.GetAnnotations()).limitRPS()
 	if lrps != 100 {
-		t.Error("Expected 100 in limit by rps but %v was returend", lrps)
+		t.Errorf("Expected 100 in limit by rps but %v was returend", lrps)
 	}
 }
 
@@ -100,8 +100,8 @@ func TestBadRateLimiting(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[limitIp] = "0"
-	data[limitRps] = "0"
+	data[limitIP] = "0"
+	data[limitRPS] = "0"
 	ing.SetAnnotations(data)
 
 	_, err := ParseAnnotations(ing)
@@ -110,8 +110,8 @@ func TestBadRateLimiting(t *testing.T) {
 	}
 
 	data = map[string]string{}
-	data[limitIp] = "5"
-	data[limitRps] = "100"
+	data[limitIP] = "5"
+	data[limitRPS] = "100"
 	ing.SetAnnotations(data)
 
 	rateLimit, err := ParseAnnotations(ing)
@@ -120,10 +120,10 @@ func TestBadRateLimiting(t *testing.T) {
 	}
 
 	if rateLimit.Connections.Limit != 5 {
-		t.Error("Expected 5 in limit by ip but %v was returend", rateLimit.Connections)
+		t.Errorf("Expected 5 in limit by ip but %v was returend", rateLimit.Connections)
 	}
 
 	if rateLimit.RPS.Limit != 100 {
-		t.Error("Expected 100 in limit by rps but %v was returend", rateLimit.RPS)
+		t.Errorf("Expected 100 in limit by rps but %v was returend", rateLimit.RPS)
 	}
 }

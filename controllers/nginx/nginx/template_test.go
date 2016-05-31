@@ -72,7 +72,7 @@ func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &Location{
 			Path:     tc.Path,
-			Redirect: rewrite.Redirect{tc.Target, tc.AddBaseURL},
+			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
 
 		newLoc := buildLocation(loc)
@@ -86,7 +86,7 @@ func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &Location{
 			Path:     tc.Path,
-			Redirect: rewrite.Redirect{tc.Target, tc.AddBaseURL},
+			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 			Upstream: Upstream{Name: "upstream-name"},
 		}
 

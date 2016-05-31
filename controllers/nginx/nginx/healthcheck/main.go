@@ -82,7 +82,7 @@ func (a ingAnnotations) failTimeout() (int, error) {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
-func ParseAnnotations(cfg nginx.NginxConfiguration, ing *extensions.Ingress) *Upstream {
+func ParseAnnotations(cfg nginx.Configuration, ing *extensions.Ingress) *Upstream {
 	if ing.GetAnnotations() == nil {
 		return &Upstream{cfg.UpstreamMaxFails, cfg.UpstreamFailTimeout}
 	}

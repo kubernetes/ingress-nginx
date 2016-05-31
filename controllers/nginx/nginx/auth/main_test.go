@@ -164,7 +164,7 @@ func TestIngressAuth(t *testing.T) {
 	if nginxAuth.Realm != "-realm-" {
 		t.Errorf("Expected -realm- as realm but returned %s", nginxAuth.Realm)
 	}
-	if nginxAuth.Secured != true {
+	if !nginxAuth.Secured {
 		t.Errorf("Expected true as secured but returned %v", nginxAuth.Secured)
 	}
 }

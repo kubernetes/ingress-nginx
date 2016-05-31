@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	limitIp  = "ingress.kubernetes.io/limit-connections"
-	limitRps = "ingress.kubernetes.io/limit-rps"
+	limitIP  = "ingress.kubernetes.io/limit-connections"
+	limitRPS = "ingress.kubernetes.io/limit-rps"
 
 	// allow 5 times the specified limit as burst
 	defBurst = 5
@@ -68,8 +68,8 @@ type Zone struct {
 
 type ingAnnotations map[string]string
 
-func (a ingAnnotations) limitIp() int {
-	val, ok := a[limitIp]
+func (a ingAnnotations) limitIP() int {
+	val, ok := a[limitIP]
 	if ok {
 		if i, err := strconv.Atoi(val); err == nil {
 			return i
@@ -79,8 +79,8 @@ func (a ingAnnotations) limitIp() int {
 	return 0
 }
 
-func (a ingAnnotations) limitRps() int {
-	val, ok := a[limitRps]
+func (a ingAnnotations) limitRPS() int {
+	val, ok := a[limitRPS]
 	if ok {
 		if i, err := strconv.Atoi(val); err == nil {
 			return i
@@ -97,8 +97,8 @@ func ParseAnnotations(ing *extensions.Ingress) (*RateLimit, error) {
 		return &RateLimit{}, ErrMissingAnnotations
 	}
 
-	rps := ingAnnotations(ing.GetAnnotations()).limitRps()
-	conn := ingAnnotations(ing.GetAnnotations()).limitIp()
+	rps := ingAnnotations(ing.GetAnnotations()).limitRPS()
+	conn := ingAnnotations(ing.GetAnnotations()).limitIP()
 
 	if rps == 0 && conn == 0 {
 		return &RateLimit{

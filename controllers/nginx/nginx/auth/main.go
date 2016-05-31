@@ -158,10 +158,5 @@ func dumpSecret(filename string, secret *api.Secret) error {
 	}
 
 	// TODO: check permissions required
-	err := ioutil.WriteFile(filename, val, 0777)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(filename, val, 0777)
 }
