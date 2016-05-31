@@ -1,7 +1,7 @@
 all: push
 
 # 0.0 shouldn't clobber any release builds
-TAG = 0.62
+TAG = 0.7
 PREFIX = gcr.io/google_containers/nginx-ingress-controller
 
 REPO_INFO=$(shell git config --get remote.origin.url)
@@ -11,8 +11,8 @@ ifndef VERSION
 endif
 
 controller: controller.go clean
-	CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags \
-		"-w -X main.version=${VERSION} -X main.gitRepo=${REPO_INFO}" \
+	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags \
+		"-s -w -X main.version=${VERSION} -X main.gitRepo=${REPO_INFO}" \
 		-o nginx-ingress-controller
 
 container: controller

@@ -268,10 +268,14 @@ Using this two headers is possible to use a custom backend service like [this on
 |ingress.kubernetes.io/add-base-url|true\|false| |
 |ingress.kubernetes.io/limit-connections| ||
 |ingress.kubernetes.io/limit-rps|||
-|ingress.kubernetes.io/auth-type|basic\|digest|Indicates the [HTTP Authentication Type: Basic or Digest Access Authentication](https://tools.ietf.org/html/rfc2617)||
+|ingress.kubernetes.io/auth-type|basic or digest|Indicates the [HTTP Authentication Type: Basic or Digest Access Authentication](https://tools.ietf.org/html/rfc2617)||
 |ingress.kubernetes.io/auth-secret|string|Name of the secret that contains the usernames and passwords.
 | | |The secret must be created in the same namespace than the Ingress rule||
 |ingress.kubernetes.io/auth-realm|string| |
+|ingress.kubernetes.io/upstream-max-fails| |
+|ingress.kubernetes.io/upstream-max-fails| |
+|ingress.kubernetes.io/upstream-fail-timeout| |
+
 
 
 ### Custom configuration options
