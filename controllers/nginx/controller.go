@@ -45,6 +45,7 @@ import (
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/healthcheck"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ratelimit"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/secureupstream"
 )
 
 const (
@@ -93,7 +94,7 @@ type loadBalancerController struct {
 	ingLister      StoreToIngressLister
 	svcLister      cache.StoreToServiceLister
 	endpLister     cache.StoreToEndpointsLister
-	mapLister      StoreToMapLister
+	mapLister      StoreToConfigmapLister
 	nginx          *nginx.Manager
 	podInfo        *podInfo
 	defaultSvc     string
@@ -635,6 +636,11 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.Configuration
 				glog.V(3).Infof("error reading rate limit annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
 			}
 
+			secUpstream, err := secureupstream.ParseAnnotations(ing)
+			if err != nil {
+				glog.V(3).Infof("error reading secure upstream in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			}
+
 			host := rule.Host
 			if host == "" {
 				host = defServerName
@@ -664,6 +670,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.Configuration
 						loc.Upstream = *ups
 						loc.Auth = *nginxAuth
 						loc.RateLimit = *rl
+						loc.SecureUpstream = secUpstream
 
 						locRew, err := rewrite.ParseAnnotations(ing)
 						if err != nil {
@@ -690,11 +697,12 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg nginx.Configuration
 					}
 
 					server.Locations = append(server.Locations, &nginx.Location{
-						Path:      nginxPath,
-						Upstream:  *ups,
-						Auth:      *nginxAuth,
-						RateLimit: *rl,
-						Redirect:  *locRew,
+						Path:           nginxPath,
+						Upstream:       *ups,
+						Auth:           *nginxAuth,
+						RateLimit:      *rl,
+						Redirect:       *locRew,
+						SecureUpstream: secUpstream,
 					})
 				}
 			}

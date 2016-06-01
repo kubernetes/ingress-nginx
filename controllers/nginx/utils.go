@@ -37,8 +37,8 @@ type StoreToIngressLister struct {
 	cache.Store
 }
 
-// StoreToMapLister makes a Store that lists Secrets.
-type StoreToMapLister struct {
+// StoreToConfigmapLister makes a Store that lists Configmap.
+type StoreToConfigmapLister struct {
 	cache.Store
 }
 

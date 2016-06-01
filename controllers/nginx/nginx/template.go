@@ -139,8 +139,12 @@ func buildProxyPass(input interface{}) string {
 
 	path := location.Path
 
+	proto := "http"
+	if location.SecureUpstream {
+		proto = "https"
+	}
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
-	defProxyPass := fmt.Sprintf("proxy_pass http://%s;", location.Upstream.Name)
+	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, location.Upstream.Name)
 	// if the path in the ingress rule is equals to the target: no special rewrite
 	if path == location.Redirect.Target {
 		return defProxyPass
@@ -169,14 +173,14 @@ func buildProxyPass(input interface{}) string {
 			return fmt.Sprintf(`
 	rewrite %s / break;
 	rewrite %s(.*) /$1 break;
-	proxy_pass http://%s;
-	%v`, location.Path, path, location.Upstream.Name, abu)
+	proxy_pass %s://%s;
+	%v`, location.Path, path, proto, location.Upstream.Name, abu)
 		}
 
 		return fmt.Sprintf(`
 	rewrite %s(.*) %s/$1 break;
-	proxy_pass http://%s;
-	%v`, path, location.Redirect.Target, location.Upstream.Name, abu)
+	proxy_pass %s://%s;
+	%v`, path, location.Redirect.Target, proto, location.Upstream.Name, abu)
 	}
 
 	// default proxy_pass
