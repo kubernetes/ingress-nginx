@@ -197,14 +197,14 @@ func buildRateLimitZones(input interface{}) []string {
 	for _, server := range servers {
 		for _, loc := range server.Locations {
 
-			if loc.RateLimit.Connections.Limit != -1 {
-				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%v;",
+			if loc.RateLimit.Connections.Limit > 0 {
+				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%vm;",
 					loc.RateLimit.Connections.Name, loc.RateLimit.Connections.SharedSize)
 				zones = append(zones, zone)
 			}
 
-			if loc.RateLimit.RPS.Limit != -1 {
-				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%v rate=%vr/s;",
+			if loc.RateLimit.RPS.Limit > 0 {
+				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%vm rate=%vr/s;",
 					loc.RateLimit.Connections.Name, loc.RateLimit.Connections.SharedSize, loc.RateLimit.Connections.Limit)
 				zones = append(zones, zone)
 			}
@@ -224,13 +224,13 @@ func buildRateLimit(input interface{}) []string {
 		return limits
 	}
 
-	if loc.RateLimit.Connections.Limit != -1 {
+	if loc.RateLimit.Connections.Limit > 0 {
 		limit := fmt.Sprintf("limit_conn %v %v;",
 			loc.RateLimit.Connections.Name, loc.RateLimit.Connections.Limit)
 		limits = append(limits, limit)
 	}
 
-	if loc.RateLimit.RPS.Limit != -1 {
+	if loc.RateLimit.RPS.Limit > 0 {
 		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
 			loc.RateLimit.Connections.Name, loc.RateLimit.Connections.Burst)
 		limits = append(limits, limit)

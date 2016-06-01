@@ -129,7 +129,7 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page
 	// By default this is disabled
-	CustomHTTPErrors []int
+	CustomHTTPErrors []int `structs:"custom-http-errors,-"`
 
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
@@ -295,7 +295,7 @@ func newDefaultNginxCfg() Configuration {
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
-		CustomHTTPErrors:         []int{},
+		CustomHTTPErrors:         make([]int, 0),
 	}
 
 	if glog.V(5) {

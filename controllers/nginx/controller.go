@@ -89,9 +89,11 @@ type loadBalancerController struct {
 	ingController  *framework.Controller
 	endpController *framework.Controller
 	svcController  *framework.Controller
+	mapController  *framework.Controller
 	ingLister      StoreToIngressLister
 	svcLister      cache.StoreToServiceLister
 	endpLister     cache.StoreToEndpointsLister
+	mapLister      StoreToMapLister
 	nginx          *nginx.Manager
 	podInfo        *podInfo
 	defaultSvc     string
@@ -176,6 +178,20 @@ func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 		},
 	}
 
+	mapEventHandler := framework.ResourceEventHandlerFuncs{
+		UpdateFunc: func(old, cur interface{}) {
+			if !reflect.DeepEqual(old, cur) {
+				upCmap := cur.(*api.ConfigMap)
+				mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+				// updates to configuration configmaps can trigger an update
+				if mapKey == lbc.nxgConfigMap || mapKey == lbc.tcpConfigMap || mapKey == lbc.udpConfigMap {
+					lbc.recorder.Eventf(upCmap, api.EventTypeNormal, "UPDATE", mapKey)
+					lbc.syncQueue.enqueue(cur)
+				}
+			}
+		},
+	}
+
 	lbc.ingLister.Store, lbc.ingController = framework.NewInformer(
 		&cache.ListWatch{
 			ListFunc:  ingressListFunc(lbc.client, namespace),
@@ -196,6 +212,13 @@ func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 			WatchFunc: serviceWatchFunc(lbc.client, namespace),
 		},
 		&api.Service{}, resyncPeriod, framework.ResourceEventHandlerFuncs{})
+
+	lbc.mapLister.Store, lbc.mapController = framework.NewInformer(
+		&cache.ListWatch{
+			ListFunc:  mapListFunc(lbc.client, namespace),
+			WatchFunc: mapWatchFunc(lbc.client, namespace),
+		},
+		&api.ConfigMap{}, resyncPeriod, mapEventHandler)
 
 	return &lbc, nil
 }
@@ -236,20 +259,34 @@ func endpointsWatchFunc(c *client.Client, ns string) func(options api.ListOption
 	}
 }
 
+func mapListFunc(c *client.Client, ns string) func(api.ListOptions) (runtime.Object, error) {
+	return func(opts api.ListOptions) (runtime.Object, error) {
+		return c.ConfigMaps(ns).List(opts)
+	}
+}
+
+func mapWatchFunc(c *client.Client, ns string) func(options api.ListOptions) (watch.Interface, error) {
+	return func(options api.ListOptions) (watch.Interface, error) {
+		return c.ConfigMaps(ns).Watch(options)
+	}
+}
+
 func (lbc *loadBalancerController) controllersInSync() bool {
-	return lbc.ingController.HasSynced() && lbc.svcController.HasSynced() && lbc.endpController.HasSynced()
+	return lbc.ingController.HasSynced() && lbc.svcController.HasSynced() &&
+		lbc.endpController.HasSynced() && lbc.mapController.HasSynced()
 }
 
 func (lbc *loadBalancerController) getConfigMap(ns, name string) (*api.ConfigMap, error) {
+	// TODO: check why lbc.mapLister.Store.GetByKey(mapKey) is not stable (random content)
 	return lbc.client.ConfigMaps(ns).Get(name)
 }
 
 func (lbc *loadBalancerController) getTCPConfigMap(ns, name string) (*api.ConfigMap, error) {
-	return lbc.client.ConfigMaps(ns).Get(name)
+	return lbc.getConfigMap(ns, name)
 }
 
 func (lbc *loadBalancerController) getUDPConfigMap(ns, name string) (*api.ConfigMap, error) {
-	return lbc.client.ConfigMaps(ns).Get(name)
+	return lbc.getConfigMap(ns, name)
 }
 
 // checkSvcForUpdate verifies if one of the running pods for a service contains
@@ -336,6 +373,7 @@ func (lbc *loadBalancerController) sync(key string) {
 	ns, name, _ := parseNsName(lbc.nxgConfigMap)
 	cfg, err := lbc.getConfigMap(ns, name)
 	if err != nil {
+		glog.V(3).Infof("unexpected error searching configmap %v: %v", lbc.nxgConfigMap, err)
 		cfg = &api.ConfigMap{}
 	}
 
@@ -980,6 +1018,7 @@ func (lbc *loadBalancerController) Run() {
 	go lbc.ingController.Run(lbc.stopCh)
 	go lbc.endpController.Run(lbc.stopCh)
 	go lbc.svcController.Run(lbc.stopCh)
+	go lbc.mapController.Run(lbc.stopCh)
 
 	go lbc.syncQueue.run(time.Second, lbc.stopCh)
 	go lbc.ingQueue.run(time.Second, lbc.stopCh)

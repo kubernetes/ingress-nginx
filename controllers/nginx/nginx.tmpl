@@ -134,14 +134,13 @@ http {
     {{- if .customErrors }}
     # Custom error pages
     proxy_intercept_errors on;
-    {{ end -}}
-
-    {{- range $errCode := $cfg.customHttpErrors }}
-    error_page {{ $errCode }} = @custom_{{ $errCode }};
     {{ end }}
 
+    {{- range $errCode := $cfg.customHttpErrors }}
+    error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
+
     # In case of errors try the next upstream server before returning an error
-    proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504 {{ if $cfg.retryNonIdempotent }}non_idempotent{{ end }};
+    proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504{{ if $cfg.retryNonIdempotent }} non_idempotent{{ end }};
 
     {{range $name, $upstream := .upstreams}}
     upstream {{$upstream.Name}} {
@@ -151,14 +150,13 @@ http {
         least_conn;
         {{- end }}
         {{ range $server := $upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
-
         {{ end }}
     }
     {{ end }}
 
     {{/* build all the required rate limit zones. Each annotation requires a dedicated zone */}}
     {{/* 1MB -> 16 thousand 64-byte states or about 8 thousand 128-byte states */}}
-    {{ range $zone := (buildRateLimitZones .servers) }}
+    {{- range $zone := (buildRateLimitZones .servers) }}
     {{ $zone }}
     {{ end }}
 
@@ -171,7 +169,7 @@ http {
         # PEM sha: {{ $server.SSLPemChecksum }}        
         ssl_certificate {{ $server.SSLCertificate }};
         ssl_certificate_key {{ $server.SSLCertificateKey }};
-        {{ end }}
+        {{- end }}
 
         {{ if (and $server.SSL $cfg.hsts) -}}
         if ($scheme = http) {
@@ -179,19 +177,19 @@ http {
         }
 
         more_set_headers                            "Strict-Transport-Security: max-age={{ $cfg.hstsMaxAge }}{{ if $cfg.hstsIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
-        {{ end -}}
+        {{- end }}
 
         {{ if $cfg.enableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
 
         {{- range $location := $server.Locations }}
-        {{- $path := buildLocation $location }}
+        {{ $path := buildLocation $location }}
         location {{ $path }} {
             {{/* if the location contains a rate limit annotation, create one */}}
             {{ $limits := buildRateLimit $location }}
             {{- range $limit := $limits }}
             {{ $limit }}{{ end }}
 
-            {{ if $location.Auth.Secured -}}
+            {{ if $location.Auth.Secured }}
             {{ if eq $location.Auth.Type "basic" }}
             auth_basic "{{ $location.Auth.Realm }}";
             auth_basic_user_file {{ $location.Auth.File }};

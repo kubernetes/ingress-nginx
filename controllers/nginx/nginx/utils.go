@@ -96,7 +96,7 @@ func (ngx *Manager) ReadConfig(config *api.ConfigMap) Configuration {
 		Metadata:         metadata,
 	})
 
-	var cErrors []int
+	cErrors := make([]int, 0)
 	if val, ok := config.Data[customHTTPErrors]; ok {
 		delete(config.Data, customHTTPErrors)
 		for _, i := range strings.Split(val, ",") {
@@ -138,7 +138,7 @@ func (ngx *Manager) ReadConfig(config *api.ConfigMap) Configuration {
 }
 
 func (ngx *Manager) filterErrors(errCodes []int) []int {
-	var fa []int
+	fa := make([]int, 0)
 	for _, errCode := range errCodes {
 		if errCode > 299 && errCode < 600 {
 			fa = append(fa, errCode)
