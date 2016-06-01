@@ -425,6 +425,10 @@ func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error
 					break
 				}
 				healthPath := rp.Handler.HTTPGet.Path
+				// GCE requires a leading "/" for health check urls.
+				if string(healthPath[0]) != "/" {
+					healthPath = fmt.Sprintf("/%v", healthPath)
+				}
 				host := rp.Handler.HTTPGet.Host
 				glog.Infof("Found custom health check for Service %v nodeport %v: %v%v", s.Name, port, host, healthPath)
 				return &compute.HttpHealthCheck{

@@ -86,7 +86,7 @@ func (f *FakeHealthChecks) UpdateHttpHealthCheck(hc *compute.HttpHealthCheck) er
 	healthChecks := []*compute.HttpHealthCheck{}
 	found := false
 	for _, h := range f.hc {
-		if h.Name == name {
+		if h.Name == hc.Name {
 			healthChecks = append(healthChecks, hc)
 			found = true
 		} else {
