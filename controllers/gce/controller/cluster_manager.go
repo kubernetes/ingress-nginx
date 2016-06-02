@@ -165,6 +165,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	if err := c.firewallPool.Sync(fwNodePorts, nodeNames); err != nil {
 		return err
 	}
+
 	return nil
 }
 

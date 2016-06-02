@@ -344,6 +344,7 @@ func (l *L7) deleteOldSSLCert() (err error) {
 			return err
 		}
 	}
+	l.oldSSLCert = nil
 	return nil
 }
 
