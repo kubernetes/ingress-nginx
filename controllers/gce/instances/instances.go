@@ -46,7 +46,7 @@ type Instances struct {
 // NewNodePool creates a new node pool.
 // - cloud: implements InstanceGroups, used to sync Kubernetes nodes with
 //   members of the cloud InstanceGroup.
-func NewNodePool(cloud InstanceGroups, defaultZone string) NodePool {
+func NewNodePool(cloud InstanceGroups) NodePool {
 	return &Instances{cloud, storage.NewInMemoryPool(), nil}
 }
 
@@ -146,6 +146,8 @@ func (i *Instances) Get(name, zone string) (*compute.InstanceGroup, error) {
 	return ig, nil
 }
 
+// splitNodesByZones takes a list of node names and returns a map of zone:node names.
+// It figures out the zones by asking the zoneLister.
 func (i *Instances) splitNodesByZone(names []string) map[string][]string {
 	nodesByZone := map[string][]string{}
 	for _, name := range names {

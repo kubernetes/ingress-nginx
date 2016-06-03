@@ -261,13 +261,9 @@ func NewClusterManager(
 
 	// Names are fundamental to the cluster, the uid allocator makes sure names don't collide.
 	cluster := ClusterManager{ClusterNamer: &utils.Namer{name}}
-	zone, err := cloud.GetZone()
-	if err != nil {
-		return nil, err
-	}
 
 	// NodePool stores GCE vms that are in this Kubernetes cluster.
-	cluster.instancePool = instances.NewNodePool(cloud, zone.FailureDomain)
+	cluster.instancePool = instances.NewNodePool(cloud)
 
 	// BackendPool creates GCE BackendServices and associated health checks.
 	healthChecker := healthchecks.NewHealthChecker(cloud, defaultHealthCheckPath, cluster.ClusterNamer)

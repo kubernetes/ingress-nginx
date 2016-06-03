@@ -27,10 +27,12 @@ import (
 	"k8s.io/kubernetes/pkg/util/sets"
 )
 
+const defaultZone = "zone-a"
+
 func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWithCloud bool) BackendPool {
 	namer := &utils.Namer{}
-	nodePool := instances.NewNodePool(fakeIGs, "default-zone")
-	nodePool.Init(&instances.FakeZoneLister{[]string{"zone-a"}})
+	nodePool := instances.NewNodePool(fakeIGs)
+	nodePool.Init(&instances.FakeZoneLister{[]string{defaultZone}})
 	healthChecks := healthchecks.NewHealthChecker(healthchecks.NewFakeHealthChecks(), "/", namer)
 	healthChecks.Init(&healthchecks.FakeHealthCheckGetter{nil})
 	return NewBackendPool(
@@ -82,8 +84,14 @@ func TestBackendPoolAdd(t *testing.T) {
 			t.Fatalf("Unexpected create for existing backend service")
 		}
 	}
-	gotBackend, _ := f.GetBackendService(beName)
-	gotGroup, _ := fakeIGs.GetInstanceGroup(namer.IGName(), "default-zone")
+	gotBackend, err := f.GetBackendService(beName)
+	if err != nil {
+		t.Fatalf("Failed to find a backend with name %v: %v", beName, err)
+	}
+	gotGroup, err := fakeIGs.GetInstanceGroup(namer.IGName(), defaultZone)
+	if err != nil {
+		t.Fatalf("Failed to find instance group %v", namer.IGName())
+	}
 	if gotBackend.Backends[0].Group != gotGroup.SelfLink {
 		t.Fatalf(
 			"Broken instance group link: %v %v",

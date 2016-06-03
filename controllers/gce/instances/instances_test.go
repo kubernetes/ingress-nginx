@@ -25,7 +25,7 @@ import (
 const defaultZone = "default-zone"
 
 func newNodePool(f *FakeInstanceGroups, zone string) NodePool {
-	pool := NewNodePool(f, zone)
+	pool := NewNodePool(f)
 	pool.Init(&FakeZoneLister{[]string{zone}})
 	return pool
 }
