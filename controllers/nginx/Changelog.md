@@ -4,6 +4,7 @@ Changelog
 
 - [X] [#1063](https://github.com/kubernetes/contrib/pull/1063) watches referenced tls secrets
 - [X] [#850](https://github.com/kubernetes/contrib/pull/850) adds configurable SSL redirect nginx controller
+- [ ] [#1136](https://github.com/kubernetes/contrib/pull/1136) Fix nginx rewrite rule order
 
 ### 0.7
 
