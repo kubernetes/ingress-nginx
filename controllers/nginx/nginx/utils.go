@@ -26,9 +26,10 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
-
 	"github.com/mitchellh/mapstructure"
 	"k8s.io/kubernetes/pkg/api"
+
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
 const (
@@ -67,7 +68,7 @@ func getDNSServers() []string {
 // getConfigKeyToStructKeyMap returns a map with the ConfigMapKey as key and the StructName as value.
 func getConfigKeyToStructKeyMap() map[string]string {
 	keyMap := map[string]string{}
-	n := &Configuration{}
+	n := &config.Configuration{}
 	val := reflect.Indirect(reflect.ValueOf(n))
 	for i := 0; i < val.Type().NumField(); i++ {
 		fieldSt := val.Type().Field(i)
@@ -79,13 +80,13 @@ func getConfigKeyToStructKeyMap() map[string]string {
 }
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
-func (ngx *Manager) ReadConfig(config *api.ConfigMap) Configuration {
-	if len(config.Data) == 0 {
-		return newDefaultNginxCfg()
+func (ngx *Manager) ReadConfig(conf *api.ConfigMap) config.Configuration {
+	if len(conf.Data) == 0 {
+		return config.NewDefault()
 	}
 
-	cfgCM := Configuration{}
-	cfgDefault := newDefaultNginxCfg()
+	cfgCM := config.Configuration{}
+	cfgDefault := config.NewDefault()
 
 	metadata := &mapstructure.Metadata{}
 
@@ -97,8 +98,8 @@ func (ngx *Manager) ReadConfig(config *api.ConfigMap) Configuration {
 	})
 
 	cErrors := make([]int, 0)
-	if val, ok := config.Data[customHTTPErrors]; ok {
-		delete(config.Data, customHTTPErrors)
+	if val, ok := conf.Data[customHTTPErrors]; ok {
+		delete(conf.Data, customHTTPErrors)
 		for _, i := range strings.Split(val, ",") {
 			j, err := strconv.Atoi(i)
 			if err != nil {
@@ -109,7 +110,7 @@ func (ngx *Manager) ReadConfig(config *api.ConfigMap) Configuration {
 		}
 	}
 
-	err = decoder.Decode(config.Data)
+	err = decoder.Decode(conf.Data)
 	if err != nil {
 		glog.Infof("%v", err)
 	}

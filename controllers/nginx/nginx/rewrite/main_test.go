@@ -22,6 +22,8 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/util/intstr"
+
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
 const (
@@ -94,7 +96,7 @@ func TestAnnotations(t *testing.T) {
 
 func TestWithoutAnnotations(t *testing.T) {
 	ing := buildIngress()
-	_, err := ParseAnnotations(ing)
+	_, err := ParseAnnotations(config.NewDefault(), ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
 	}
@@ -107,7 +109,7 @@ func TestRedirect(t *testing.T) {
 	data[rewriteTo] = defRoute
 	ing.SetAnnotations(data)
 
-	redirect, err := ParseAnnotations(ing)
+	redirect, err := ParseAnnotations(config.NewDefault(), ing)
 	if err != nil {
 		t.Errorf("Uxpected error with ingress: %v", err)
 	}

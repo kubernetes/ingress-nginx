@@ -20,9 +20,11 @@ import (
 	"testing"
 
 	"k8s.io/kubernetes/pkg/api"
+
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
-func getConfigNginxBool(data map[string]string) Configuration {
+func getConfigNginxBool(data map[string]string) config.Configuration {
 	manager := &Manager{}
 	configMap := &api.ConfigMap{
 		Data: data,

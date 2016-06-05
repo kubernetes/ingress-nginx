@@ -26,6 +26,8 @@ import (
 	"os"
 
 	"github.com/golang/glog"
+
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
 // SSLCert describes a SSL certificate to be used in NGINX
@@ -43,7 +45,7 @@ type SSLCert struct {
 
 // AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
 func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) (SSLCert, error) {
-	pemFileName := sslDirectory + "/" + name + ".pem"
+	pemFileName := config.SSLDirectory + "/" + name + ".pem"
 
 	pem, err := os.Create(pemFileName)
 	if err != nil {

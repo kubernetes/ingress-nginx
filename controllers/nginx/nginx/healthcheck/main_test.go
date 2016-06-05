@@ -23,7 +23,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/util/intstr"
 
-	"k8s.io/contrib/ingress/controllers/nginx/nginx"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -103,7 +103,7 @@ func TestIngressHealthCheck(t *testing.T) {
 	data[upsMaxFails] = "2"
 	ing.SetAnnotations(data)
 
-	cfg := nginx.Configuration{}
+	cfg := config.Configuration{}
 	cfg.UpstreamFailTimeout = 1
 
 	nginxHz := ParseAnnotations(cfg, ing)

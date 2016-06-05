@@ -26,6 +26,8 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
+
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
 const (
@@ -57,7 +59,7 @@ func (ngx *Manager) loadTemplate() {
 	ngx.template = tmpl
 }
 
-func (ngx *Manager) writeCfg(cfg Configuration, ingressCfg IngressConfig) (bool, error) {
+func (ngx *Manager) writeCfg(cfg config.Configuration, ingressCfg IngressConfig) (bool, error) {
 	conf := make(map[string]interface{})
 	conf["upstreams"] = ingressCfg.Upstreams
 	conf["servers"] = ingressCfg.Servers

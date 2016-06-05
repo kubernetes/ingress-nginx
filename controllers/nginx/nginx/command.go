@@ -25,6 +25,8 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/kubernetes/pkg/healthz"
+
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
 // Start starts a nginx (master process) and waits. If the process ends
@@ -54,7 +56,7 @@ func (ngx *Manager) Start() {
 // shut down, stop accepting new connections and continue to service current requests
 // until all such requests are serviced. After that, the old worker processes exit.
 // http://nginx.org/en/docs/beginners_guide.html#control
-func (ngx *Manager) CheckAndReload(cfg Configuration, ingressCfg IngressConfig) {
+func (ngx *Manager) CheckAndReload(cfg config.Configuration, ingressCfg IngressConfig) {
 	ngx.reloadRateLimiter.Accept()
 
 	ngx.reloadLock.Lock()

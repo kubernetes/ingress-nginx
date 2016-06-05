@@ -22,7 +22,7 @@ import (
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
-	"k8s.io/contrib/ingress/controllers/nginx/nginx"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
 const (
@@ -82,7 +82,7 @@ func (a ingAnnotations) failTimeout() (int, error) {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
-func ParseAnnotations(cfg nginx.Configuration, ing *extensions.Ingress) *Upstream {
+func ParseAnnotations(cfg config.Configuration, ing *extensions.Ingress) *Upstream {
 	if ing.GetAnnotations() == nil {
 		return &Upstream{cfg.UpstreamMaxFails, cfg.UpstreamFailTimeout}
 	}
