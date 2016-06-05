@@ -692,6 +692,11 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 				glog.V(3).Infof("error reading secure upstream in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
 			}
 
+			locRew, err := rewrite.ParseAnnotations(ngxCfg, ing)
+			if err != nil {
+				glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			}
+
 			host := rule.Host
 			if host == "" {
 				host = defServerName
@@ -721,13 +726,8 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 						loc.Upstream = *ups
 						loc.Auth = *nginxAuth
 						loc.RateLimit = *rl
-						loc.SecureUpstream = secUpstream
-
-						locRew, err := rewrite.ParseAnnotations(ing)
-						if err != nil {
-							glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-						}
 						loc.Redirect = *locRew
+						loc.SecureUpstream = secUpstream
 
 						addLoc = false
 						continue
@@ -742,10 +742,6 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 				}
 
 				if addLoc {
-					locRew, err := rewrite.ParseAnnotations(ing)
-					if err != nil {
-						glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-					}
 
 					server.Locations = append(server.Locations, &nginx.Location{
 						Path:           nginxPath,

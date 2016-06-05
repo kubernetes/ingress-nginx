@@ -1,5 +1,10 @@
 Changelog
 
+### next
+
+- [X] [#1063](https://github.com/kubernetes/contrib/pull/1063) watches referenced tls secrets
+- [X] [#850](https://github.com/kubernetes/contrib/pull/850) adds configurable SSL redirect nginx controller
+
 ### 0.7
 
 - [X] [#898](https://github.com/kubernetes/contrib/pull/898) reorder locations. Location / must be the last one to avoid errors routing to subroutes
@@ -16,10 +21,3 @@ Changelog
 - [X] [#1102](https://github.com/kubernetes/contrib/pull/1102) geolocation of traffic in stats
 - [X] [#884](https://github.com/kubernetes/contrib/issues/884) support services running ssl
 - [X] [#930](https://github.com/kubernetes/contrib/issues/930) detect changes in configuration configmaps
-
-
-TODO
-
-- [ ] [#1063](https://github.com/kubernetes/contrib/pull/1063) watches referenced tls secrets
-- [ ] [#850](https://github.com/kubernetes/contrib/pull/850) adds configurable SSL redirect nginx controller
-

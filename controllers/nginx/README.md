@@ -131,6 +131,11 @@ To disable this behavior use `hsts=false` in the NGINX ConfigMap.
 
 NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) to allow the optimization of the TLS record size. This improves the [Time To First Byte](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) (TTTFB). The default value in the Ingress controller is `4k` (nginx default is `16k`);
 
+### Server-side HTTPS enforcement through redirect
+
+By default the controller redirects (301) to HTTPS if TLS is enabled for that ingress . If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX ConfigMap.
+
+To configure this feature for specfic ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in theparticular resource.
 
 ## Proxy Protocol
 

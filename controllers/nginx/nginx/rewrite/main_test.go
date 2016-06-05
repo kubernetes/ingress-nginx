@@ -118,3 +118,28 @@ func TestRedirect(t *testing.T) {
 		t.Errorf("Expected %v as redirect but returned %s", defRoute, redirect.Target)
 	}
 }
+
+func TestSSLRedirect(t *testing.T) {
+	ing := buildIngress()
+
+	cfg := config.Configuration{SSLRedirect: true}
+
+	data := map[string]string{}
+
+	ing.SetAnnotations(data)
+
+	redirect, _ := ParseAnnotations(cfg, ing)
+
+	if !redirect.SSLRedirect {
+		t.Errorf("Expected true but returned false")
+	}
+
+	data[sslRedirect] = "false"
+	ing.SetAnnotations(data)
+
+	redirect, _ = ParseAnnotations(cfg, ing)
+
+	if redirect.SSLRedirect {
+		t.Errorf("Expected false but returned true")
+	}
+}

@@ -21,21 +21,35 @@ import (
 	"strconv"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
+
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 )
 
 const (
-	rewriteTo  = "ingress.kubernetes.io/rewrite-target"
-	addBaseURL = "ingress.kubernetes.io/add-base-url"
+	rewriteTo   = "ingress.kubernetes.io/rewrite-target"
+	addBaseURL  = "ingress.kubernetes.io/add-base-url"
+	sslRedirect = "ingress.kubernetes.io/ssl-redirect"
 )
 
-// Redirect returns authentication configuration for an Ingress rule
+// Redirect describes the per location redirect config
 type Redirect struct {
 	// Target URI where the traffic must be redirected
 	Target string
 	// AddBaseURL indicates if is required to add a base tag in the head
 	// of the responses from the upstream servers
 	AddBaseURL bool
+	// Should indicates if the location section should be accessible SSL only
+	SSLRedirect bool
 }
+
+var (
+	// ErrMissingSSLRedirect returned error when the ingress does not contains the
+	// ssl-redirect annotation
+	ErrMissingSSLRedirect = errors.New("ssl-redirect annotations is missing")
+
+	// ErrInvalidBool gets returned when the str value is not convertible to a bool
+	ErrInvalidBool = errors.New("ssl-redirect annotations has invalid value")
+)
 
 type ingAnnotations map[string]string
 
@@ -57,17 +71,39 @@ func (a ingAnnotations) rewriteTo() string {
 	return ""
 }
 
+func (a ingAnnotations) sslRedirect() (bool, error) {
+	val, ok := a[sslRedirect]
+	if !ok {
+		return false, ErrMissingSSLRedirect
+	}
+
+	sr, err := strconv.ParseBool(val)
+	if err != nil {
+		return false, ErrInvalidBool
+	}
+
+	return sr, nil
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func ParseAnnotations(ing *extensions.Ingress) (*Redirect, error) {
+func ParseAnnotations(cfg config.Configuration, ing *extensions.Ingress) (*Redirect, error) {
 	if ing.GetAnnotations() == nil {
 		return &Redirect{}, errors.New("no annotations present")
 	}
 
-	rt := ingAnnotations(ing.GetAnnotations()).rewriteTo()
-	abu := ingAnnotations(ing.GetAnnotations()).addBaseURL()
+	annotations := ingAnnotations(ing.GetAnnotations())
+
+	sslRe, err := annotations.sslRedirect()
+	if err != nil {
+		sslRe = cfg.SSLRedirect
+	}
+
+	rt := annotations.rewriteTo()
+	abu := annotations.addBaseURL()
 	return &Redirect{
-		Target:     rt,
-		AddBaseURL: abu,
+		Target:      rt,
+		AddBaseURL:  abu,
+		SSLRedirect: sslRe,
 	}, nil
 }
