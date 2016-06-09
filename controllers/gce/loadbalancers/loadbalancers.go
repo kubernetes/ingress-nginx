@@ -344,6 +344,7 @@ func (l *L7) deleteOldSSLCert() (err error) {
 			return err
 		}
 	}
+	l.oldSSLCert = nil
 	return nil
 }
 
@@ -368,7 +369,7 @@ func (l *L7) checkSSLCert() (err error) {
 	cert, _ := l.cloud.GetSslCertificate(certName)
 
 	// PrivateKey is write only, so compare certs alone. We're assuming that
-	// no one will change just the key. We can remembe the key and compare,
+	// no one will change just the key. We can remember the key and compare,
 	// but a bug could end up leaking it, which feels worse.
 	if cert == nil || ingCert != cert.Certificate {
 

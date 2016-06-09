@@ -44,18 +44,25 @@ var (
 	// DefaultClusterUID is the uid to use for clusters resources created by an
 	// L7 controller created without specifying the --cluster-uid flag.
 	DefaultClusterUID = ""
+
+	// Frequency to poll on local stores to sync.
+	storeSyncPollPeriod = 5 * time.Second
 )
 
 // LoadBalancerController watches the kubernetes api and adds/removes services
 // from the loadbalancer, via loadBalancerConfig.
 type LoadBalancerController struct {
-	client              *client.Client
-	ingController       *framework.Controller
-	nodeController      *framework.Controller
-	svcController       *framework.Controller
-	ingLister           StoreToIngressLister
-	nodeLister          cache.StoreToNodeLister
-	svcLister           cache.StoreToServiceLister
+	client         *client.Client
+	ingController  *framework.Controller
+	nodeController *framework.Controller
+	svcController  *framework.Controller
+	podController  *framework.Controller
+	ingLister      StoreToIngressLister
+	nodeLister     cache.StoreToNodeLister
+	svcLister      cache.StoreToServiceLister
+	// Health checks are the readiness probes of containers on pods.
+	podLister cache.StoreToPodLister
+	// TODO: Watch secrets
 	CloudClusterManager *ClusterManager
 	recorder            record.EventRecorder
 	nodeQueue           *taskQueue
@@ -69,6 +76,9 @@ type LoadBalancerController struct {
 	shutdown bool
 	// tlsLoader loads secrets from the Kubernetes apiserver for Ingresses.
 	tlsLoader tlsLoader
+	// hasSynced returns true if all associated sub-controllers have synced.
+	// Abstracted into a func for testing.
+	hasSynced func() bool
 }
 
 // NewLoadBalancerController creates a controller for gce loadbalancers.
@@ -90,6 +100,7 @@ func NewLoadBalancerController(kubeClient *client.Client, clusterManager *Cluste
 	}
 	lbc.nodeQueue = NewTaskQueue(lbc.syncNodes)
 	lbc.ingQueue = NewTaskQueue(lbc.sync)
+	lbc.hasSynced = lbc.storesSynced
 
 	// Ingress watch handlers
 	pathHandlers := framework.ResourceEventHandlerFuncs{
@@ -130,12 +141,19 @@ func NewLoadBalancerController(kubeClient *client.Client, clusterManager *Cluste
 			lbc.client, "services", namespace, fields.Everything()),
 		&api.Service{}, resyncPeriod, svcHandlers)
 
+	lbc.podLister.Indexer, lbc.podController = framework.NewIndexerInformer(
+		cache.NewListWatchFromClient(lbc.client, "pods", namespace, fields.Everything()),
+		&api.Pod{},
+		resyncPeriod,
+		framework.ResourceEventHandlerFuncs{},
+		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+	)
+
 	nodeHandlers := framework.ResourceEventHandlerFuncs{
 		AddFunc:    lbc.nodeQueue.enqueue,
 		DeleteFunc: lbc.nodeQueue.enqueue,
 		// Nodes are updated every 10s and we don't care, so no update handler.
 	}
-
 	// Node watch handlers
 	lbc.nodeLister.Store, lbc.nodeController = framework.NewInformer(
 		&cache.ListWatch{
@@ -194,6 +212,7 @@ func (lbc *LoadBalancerController) Run() {
 	go lbc.ingController.Run(lbc.stopCh)
 	go lbc.nodeController.Run(lbc.stopCh)
 	go lbc.svcController.Run(lbc.stopCh)
+	go lbc.podController.Run(lbc.stopCh)
 	go lbc.ingQueue.run(time.Second, lbc.stopCh)
 	go lbc.nodeQueue.run(time.Second, lbc.stopCh)
 	<-lbc.stopCh
@@ -224,8 +243,29 @@ func (lbc *LoadBalancerController) Stop(deleteAll bool) error {
 	return nil
 }
 
+// storesSynced returns true if all the sub-controllers have finished their
+// first sync with apiserver.
+func (lbc *LoadBalancerController) storesSynced() bool {
+	return (
+	// wait for pods to sync so we don't allocate a default health check when
+	// an endpoint has a readiness probe.
+	lbc.podController.HasSynced() &&
+		// wait for services so we don't thrash on backend creation.
+		lbc.svcController.HasSynced() &&
+		// wait for nodes so we don't disconnect a backend from an instance
+		// group just because we don't realize there are nodes in that zone.
+		lbc.nodeController.HasSynced() &&
+		// Wait for ingresses as a safety measure. We don't really need this.
+		lbc.ingController.HasSynced())
+}
+
 // sync manages Ingress create/updates/deletes.
 func (lbc *LoadBalancerController) sync(key string) {
+	if !lbc.hasSynced() {
+		time.Sleep(storeSyncPollPeriod)
+		lbc.ingQueue.requeue(key, fmt.Errorf("Waiting for stores to sync"))
+		return
+	}
 	glog.V(3).Infof("Syncing %v", key)
 
 	paths, err := lbc.ingLister.List()

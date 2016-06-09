@@ -20,11 +20,26 @@ import (
 	"fmt"
 
 	compute "google.golang.org/api/compute/v1"
+	"k8s.io/contrib/ingress/controllers/gce/utils"
 )
 
 // NewFakeHealthChecks returns a new FakeHealthChecks.
 func NewFakeHealthChecks() *FakeHealthChecks {
 	return &FakeHealthChecks{hc: []*compute.HttpHealthCheck{}}
+}
+
+// FakeHealthCheckGetter implements the healthCheckGetter interface for tests.
+type FakeHealthCheckGetter struct {
+	DefaultHealthCheck *compute.HttpHealthCheck
+}
+
+// HealthCheck returns the health check for the given port. If a health check
+// isn't stored under the DefaultHealthCheck member, it constructs one.
+func (h *FakeHealthCheckGetter) HealthCheck(port int64) (*compute.HttpHealthCheck, error) {
+	if h.DefaultHealthCheck == nil {
+		return utils.DefaultHealthCheckTemplate(port), nil
+	}
+	return h.DefaultHealthCheck, nil
 }
 
 // FakeHealthChecks fakes out health checks.
@@ -61,6 +76,25 @@ func (f *FakeHealthChecks) DeleteHttpHealthCheck(name string) error {
 	}
 	if !exists {
 		return fmt.Errorf("Failed to find health check %v", name)
+	}
+	f.hc = healthChecks
+	return nil
+}
+
+// UpdateHttpHealthCheck sends the given health check as an update.
+func (f *FakeHealthChecks) UpdateHttpHealthCheck(hc *compute.HttpHealthCheck) error {
+	healthChecks := []*compute.HttpHealthCheck{}
+	found := false
+	for _, h := range f.hc {
+		if h.Name == hc.Name {
+			healthChecks = append(healthChecks, hc)
+			found = true
+		} else {
+			healthChecks = append(healthChecks, h)
+		}
+	}
+	if !found {
+		return fmt.Errorf("Cannot update a non-existent health check %v", hc.Name)
 	}
 	f.hc = healthChecks
 	return nil

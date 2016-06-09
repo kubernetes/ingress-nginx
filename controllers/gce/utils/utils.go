@@ -238,3 +238,22 @@ func CompareLinks(l1, l2 string) bool {
 // FakeIngressRuleValueMap is a convenience type used by multiple submodules
 // that share the same testing methods.
 type FakeIngressRuleValueMap map[string]string
+
+// DefaultHealthCheckTemplate simply returns the default health check template.
+func DefaultHealthCheckTemplate(port int64) *compute.HttpHealthCheck {
+	return &compute.HttpHealthCheck{
+		Port: port,
+		// Empty string is used as a signal to the caller to use the appropriate
+		// default.
+		RequestPath: "",
+		Description: "Default kubernetes L7 Loadbalancing health check.",
+		// How often to health check.
+		CheckIntervalSec: 1,
+		// How long to wait before claiming failure of a health check.
+		TimeoutSec: 1,
+		// Number of healthchecks to pass for a vm to be deemed healthy.
+		HealthyThreshold: 1,
+		// Number of healthchecks to fail before the vm is deemed unhealthy.
+		UnhealthyThreshold: 10,
+	}
+}

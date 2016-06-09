@@ -27,30 +27,50 @@ import (
 // NewFakeInstanceGroups creates a new FakeInstanceGroups.
 func NewFakeInstanceGroups(nodes sets.String) *FakeInstanceGroups {
 	return &FakeInstanceGroups{
-		instances:  nodes,
-		listResult: getInstanceList(nodes),
-		namer:      utils.Namer{},
+		instances:        nodes,
+		listResult:       getInstanceList(nodes),
+		namer:            utils.Namer{},
+		zonesToInstances: map[string][]string{},
 	}
 }
 
 // InstanceGroup fakes
 
+// FakeZoneLister records zones for nodes.
+type FakeZoneLister struct {
+	Zones []string
+}
+
+// ListZones returns the list of zones.
+func (z *FakeZoneLister) ListZones() ([]string, error) {
+	return z.Zones, nil
+}
+
+// GetZoneForNode returns the only zone stored in the fake zone lister.
+func (z *FakeZoneLister) GetZoneForNode(name string) (string, error) {
+	// TODO: evolve as required, it's currently needed just to satisfy the
+	// interface in unittests that don't care about zones. See unittests in
+	// controller/util_test for actual zoneLister testing.
+	return z.Zones[0], nil
+}
+
 // FakeInstanceGroups fakes out the instance groups api.
 type FakeInstanceGroups struct {
-	instances      sets.String
-	instanceGroups []*compute.InstanceGroup
-	Ports          []int64
-	getResult      *compute.InstanceGroup
-	listResult     *compute.InstanceGroupsListInstances
-	calls          []int
-	namer          utils.Namer
+	instances        sets.String
+	instanceGroups   []*compute.InstanceGroup
+	Ports            []int64
+	getResult        *compute.InstanceGroup
+	listResult       *compute.InstanceGroupsListInstances
+	calls            []int
+	namer            utils.Namer
+	zonesToInstances map[string][]string
 }
 
 // GetInstanceGroup fakes getting an instance group from the cloud.
 func (f *FakeInstanceGroups) GetInstanceGroup(name, zone string) (*compute.InstanceGroup, error) {
 	f.calls = append(f.calls, utils.Get)
 	for _, ig := range f.instanceGroups {
-		if ig.Name == name {
+		if ig.Name == name && ig.Zone == zone {
 			return ig, nil
 		}
 	}
@@ -60,7 +80,7 @@ func (f *FakeInstanceGroups) GetInstanceGroup(name, zone string) (*compute.Insta
 
 // CreateInstanceGroup fakes instance group creation.
 func (f *FakeInstanceGroups) CreateInstanceGroup(name, zone string) (*compute.InstanceGroup, error) {
-	newGroup := &compute.InstanceGroup{Name: name, SelfLink: name}
+	newGroup := &compute.InstanceGroup{Name: name, SelfLink: name, Zone: zone}
 	f.instanceGroups = append(f.instanceGroups, newGroup)
 	return newGroup, nil
 }
@@ -92,13 +112,35 @@ func (f *FakeInstanceGroups) ListInstancesInInstanceGroup(name, zone string, sta
 func (f *FakeInstanceGroups) AddInstancesToInstanceGroup(name, zone string, instanceNames []string) error {
 	f.calls = append(f.calls, utils.AddInstances)
 	f.instances.Insert(instanceNames...)
+	if _, ok := f.zonesToInstances[zone]; !ok {
+		f.zonesToInstances[zone] = []string{}
+	}
+	f.zonesToInstances[zone] = append(f.zonesToInstances[zone], instanceNames...)
 	return nil
+}
+
+// GetInstancesByZone returns the zone to instances map.
+func (f *FakeInstanceGroups) GetInstancesByZone() map[string][]string {
+	return f.zonesToInstances
 }
 
 // RemoveInstancesFromInstanceGroup fakes removing instances from an instance group.
 func (f *FakeInstanceGroups) RemoveInstancesFromInstanceGroup(name, zone string, instanceNames []string) error {
 	f.calls = append(f.calls, utils.RemoveInstances)
 	f.instances.Delete(instanceNames...)
+	l, ok := f.zonesToInstances[zone]
+	if !ok {
+		return nil
+	}
+	newIns := []string{}
+	delIns := sets.NewString(instanceNames...)
+	for _, oldIns := range l {
+		if delIns.Has(oldIns) {
+			continue
+		}
+		newIns = append(newIns, oldIns)
+	}
+	f.zonesToInstances[zone] = newIns
 	return nil
 }
 

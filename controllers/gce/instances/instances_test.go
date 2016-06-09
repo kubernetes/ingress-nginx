@@ -24,10 +24,16 @@ import (
 
 const defaultZone = "default-zone"
 
+func newNodePool(f *FakeInstanceGroups, zone string) NodePool {
+	pool := NewNodePool(f)
+	pool.Init(&FakeZoneLister{[]string{zone}})
+	return pool
+}
+
 func TestNodePoolSync(t *testing.T) {
 	f := NewFakeInstanceGroups(sets.NewString(
 		[]string{"n1", "n2"}...))
-	pool := NewNodePool(f, defaultZone)
+	pool := newNodePool(f, defaultZone)
 	pool.AddInstanceGroup("test", 80)
 
 	// KubeNodes: n1
@@ -46,7 +52,7 @@ func TestNodePoolSync(t *testing.T) {
 	// Try to add n2 to the instance group.
 
 	f = NewFakeInstanceGroups(sets.NewString([]string{"n1"}...))
-	pool = NewNodePool(f, defaultZone)
+	pool = newNodePool(f, defaultZone)
 	pool.AddInstanceGroup("test", 80)
 
 	f.calls = []int{}
@@ -62,7 +68,7 @@ func TestNodePoolSync(t *testing.T) {
 	// Do nothing.
 
 	f = NewFakeInstanceGroups(sets.NewString([]string{"n1", "n2"}...))
-	pool = NewNodePool(f, defaultZone)
+	pool = newNodePool(f, defaultZone)
 	pool.AddInstanceGroup("test", 80)
 
 	f.calls = []int{}

@@ -30,7 +30,6 @@ import (
 
 const (
 	testDefaultBeNodePort = int64(3000)
-	defaultZone           = "default-zone"
 )
 
 var testBackendPort = intstr.IntOrString{Type: intstr.Int, IntVal: 80}
@@ -50,8 +49,13 @@ func NewFakeClusterManager(clusterName string) *fakeClusterManager {
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	fakeHCs := healthchecks.NewFakeHealthChecks()
 	namer := &utils.Namer{clusterName}
-	nodePool := instances.NewNodePool(fakeIGs, defaultZone)
+
+	nodePool := instances.NewNodePool(fakeIGs)
+	nodePool.Init(&instances.FakeZoneLister{[]string{"zone-a"}})
+
 	healthChecker := healthchecks.NewHealthChecker(fakeHCs, "/", namer)
+	healthChecker.Init(&healthchecks.FakeHealthCheckGetter{nil})
+
 	backendPool := backends.NewBackendPool(
 		fakeBackends,
 		healthChecker, nodePool, namer, []int64{}, false)

@@ -220,6 +220,7 @@ func main() {
 	if clusterManager.ClusterNamer.ClusterName != "" {
 		glog.V(3).Infof("Cluster name %+v", clusterManager.ClusterNamer.ClusterName)
 	}
+	clusterManager.Init(&controller.GCETranslator{lbc})
 	go registerHandlers(lbc)
 	go handleSigterm(lbc, *deleteAllOnQuit)
 

@@ -107,9 +107,9 @@ func (b *Backends) Get(port int64) (*compute.BackendService, error) {
 	return be, nil
 }
 
-func (b *Backends) create(ig *compute.InstanceGroup, namedPort *compute.NamedPort, name string) (*compute.BackendService, error) {
+func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.NamedPort, name string) (*compute.BackendService, error) {
 	// Create a new health check
-	if err := b.healthChecker.Add(namedPort.Port, ""); err != nil {
+	if err := b.healthChecker.Add(namedPort.Port); err != nil {
 		return nil, err
 	}
 	hc, err := b.healthChecker.Get(namedPort.Port)
@@ -120,11 +120,7 @@ func (b *Backends) create(ig *compute.InstanceGroup, namedPort *compute.NamedPor
 	backend := &compute.BackendService{
 		Name:     name,
 		Protocol: "HTTP",
-		Backends: []*compute.Backend{
-			{
-				Group: ig.SelfLink,
-			},
-		},
+		Backends: getBackendsForIGs(igs),
 		// Api expects one, means little to kubernetes.
 		HealthChecks: []string{hc.SelfLink},
 		Port:         namedPort.Port,
@@ -143,20 +139,24 @@ func (b *Backends) Add(port int64) error {
 	be := &compute.BackendService{}
 	defer func() { b.snapshotter.Add(portKey(port), be) }()
 
-	ig, namedPort, err := b.nodePool.AddInstanceGroup(b.namer.IGName(), port)
+	igs, namedPort, err := b.nodePool.AddInstanceGroup(b.namer.IGName(), port)
 	if err != nil {
 		return err
 	}
 	be, _ = b.Get(port)
 	if be == nil {
-		glog.Infof("Creating backend for instance group %v port %v named port %v",
-			ig.Name, port, namedPort)
-		be, err = b.create(ig, namedPort, b.namer.BeName(port))
+		glog.Infof("Creating backend for %d instance groups, port %v named port %v",
+			len(igs), port, namedPort)
+		be, err = b.create(igs, namedPort, b.namer.BeName(port))
 		if err != nil {
 			return err
 		}
 	}
-	if err := b.edgeHop(be, ig); err != nil {
+	// we won't find any igs till the node pool syncs nodes.
+	if len(igs) == 0 {
+		return nil
+	}
+	if err := b.edgeHop(be, igs); err != nil {
 		return err
 	}
 	return err
@@ -201,18 +201,31 @@ func (b *Backends) List() ([]interface{}, error) {
 	return interList, nil
 }
 
+func getBackendsForIGs(igs []*compute.InstanceGroup) []*compute.Backend {
+	backends := []*compute.Backend{}
+	for _, ig := range igs {
+		backends = append(backends, &compute.Backend{Group: ig.SelfLink})
+	}
+	return backends
+}
+
 // edgeHop checks the links of the given backend by executing an edge hop.
 // It fixes broken links.
-func (b *Backends) edgeHop(be *compute.BackendService, ig *compute.InstanceGroup) error {
-	if len(be.Backends) == 1 &&
-		utils.CompareLinks(be.Backends[0].Group, ig.SelfLink) {
+func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGroup) error {
+	beIGs := sets.String{}
+	for _, beToIG := range be.Backends {
+		beIGs.Insert(beToIG.Group)
+	}
+	igLinks := sets.String{}
+	for _, igToBE := range igs {
+		igLinks.Insert(igToBE.SelfLink)
+	}
+	if igLinks.Equal(beIGs) {
 		return nil
 	}
-	glog.Infof("Backend %v has a broken edge, adding link to %v",
-		be.Name, ig.Name)
-	be.Backends = []*compute.Backend{
-		{Group: ig.SelfLink},
-	}
+	glog.Infof("Backend %v has a broken edge, expected igs %+v, current igs %+v",
+		be.Name, igLinks.List(), beIGs.List())
+	be.Backends = getBackendsForIGs(igs)
 	if err := b.cloud.UpdateBackendService(be); err != nil {
 		return err
 	}

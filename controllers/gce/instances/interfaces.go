@@ -20,17 +20,26 @@ import (
 	compute "google.golang.org/api/compute/v1"
 )
 
+// zoneLister manages lookups for GCE instance groups/instances to zones.
+type zoneLister interface {
+	ListZones() ([]string, error)
+	GetZoneForNode(name string) (string, error)
+}
+
 // NodePool is an interface to manage a pool of kubernetes nodes synced with vm instances in the cloud
-// through the InstanceGroups interface.
+// through the InstanceGroups interface. It handles zones opaquely using the zoneLister.
 type NodePool interface {
-	AddInstanceGroup(name string, port int64) (*compute.InstanceGroup, *compute.NamedPort, error)
+	Init(zl zoneLister)
+
+	// The following 2 methods operate on instance groups.
+	AddInstanceGroup(name string, port int64) ([]*compute.InstanceGroup, *compute.NamedPort, error)
 	DeleteInstanceGroup(name string) error
 
 	// TODO: Refactor for modularity
 	Add(groupName string, nodeNames []string) error
 	Remove(groupName string, nodeNames []string) error
 	Sync(nodeNames []string) error
-	Get(name string) (*compute.InstanceGroup, error)
+	Get(name, zone string) (*compute.InstanceGroup, error)
 }
 
 // InstanceGroups is an interface for managing gce instances groups, and the instances therein.
