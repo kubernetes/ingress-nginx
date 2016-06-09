@@ -83,4 +83,16 @@ func TestAnnotations(t *testing.T) {
 	if !reflect.DeepEqual(wl, enet) {
 		t.Errorf("Expected %v but returned %s", enet, wl)
 	}
+
+	data[whitelist] = "10.0.0.0/24,10.0.1.0/25"
+	ing.SetAnnotations(data)
+
+	wl, err = ingAnnotations(ing.GetAnnotations()).whitelist()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	if len(wl) != 2 {
+		t.Errorf("Expected 2 netwotks but %v was returned", len(wl))
+	}
 }

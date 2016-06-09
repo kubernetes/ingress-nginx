@@ -18,13 +18,14 @@ package ipwhitelist
 
 import (
 	"errors"
+	"strings"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/util/net/sets"
 )
 
 const (
-	whitelist = "ingress.kubernetes.io/whitelist"
+	whitelist = "ingress.kubernetes.io/whitelist-source-range"
 )
 
 var (
@@ -37,8 +38,8 @@ var (
 	ErrInvalidCIDR = errors.New("the annotation does not contains a valid IP address or network")
 )
 
-// Whitelist returns the CIDR
-type Whitelist struct {
+// SourceRange returns the CIDR
+type SourceRange struct {
 	CIDR []string
 }
 
@@ -50,24 +51,27 @@ func (a ingAnnotations) whitelist() ([]string, error) {
 		return nil, ErrMissingWhitelist
 	}
 
-	ipnet, err := sets.ParseIPNets(val)
+	values := strings.Split(val, ",")
+	ipnets, err := sets.ParseIPNets(values...)
 	if err != nil {
 		return nil, ErrInvalidCIDR
 	}
 
-	nets := make([]string, 0)
-	for k := range ipnet {
-		nets = append(nets, k)
+	cidrs := make([]string, 0)
+	for k := range ipnets {
+		cidrs = append(cidrs, k)
 	}
 
-	return nets, nil
+	return cidrs, nil
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
-// rule used to configure upstream check parameters
-func ParseAnnotations(whiteList []string, ing *extensions.Ingress) (*Whitelist, error) {
+// rule used to limit access to certain client addresses or networks.
+// Multiple ranges can specified using commas as separator
+// e.g. `18.0.0.0/8,56.0.0.0/8`
+func ParseAnnotations(whiteList []string, ing *extensions.Ingress) (*SourceRange, error) {
 	if ing.GetAnnotations() == nil {
-		return &Whitelist{whiteList}, ErrMissingWhitelist
+		return &SourceRange{whiteList}, ErrMissingWhitelist
 	}
 
 	wl, err := ingAnnotations(ing.GetAnnotations()).whitelist()
@@ -75,5 +79,5 @@ func ParseAnnotations(whiteList []string, ing *extensions.Ingress) (*Whitelist, 
 		wl = whiteList
 	}
 
-	return &Whitelist{wl}, err
+	return &SourceRange{wl}, err
 }

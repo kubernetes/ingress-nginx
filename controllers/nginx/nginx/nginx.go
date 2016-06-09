@@ -100,7 +100,7 @@ type Location struct {
 	RateLimit      ratelimit.RateLimit
 	Redirect       rewrite.Redirect
 	SecureUpstream bool
-	Whitelist      ipwhitelist.Whitelist
+	Whitelist      ipwhitelist.SourceRange
 }
 
 // LocationByPath sorts location by path

@@ -698,7 +698,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 				glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
 			}
 
-			wl, err := ipwhitelist.ParseAnnotations(ngxCfg.WhiteList, ing)
+			wl, err := ipwhitelist.ParseAnnotations(ngxCfg.WhitelistSourceRange, ing)
 			glog.V(3).Infof("nginx white list %v", wl)
 			if err != nil {
 				glog.V(3).Infof("error reading white list annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
