@@ -18,6 +18,7 @@ package nginx
 
 import (
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/auth"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/ipwhitelist"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ratelimit"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
 )
@@ -99,6 +100,7 @@ type Location struct {
 	RateLimit      ratelimit.RateLimit
 	Redirect       rewrite.Redirect
 	SecureUpstream bool
+	Whitelist      ipwhitelist.SourceRange
 }
 
 // LocationByPath sorts location by path

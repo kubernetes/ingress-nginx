@@ -44,6 +44,7 @@ import (
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/auth"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/healthcheck"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/ipwhitelist"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ratelimit"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/secureupstream"
@@ -697,6 +698,12 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 				glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
 			}
 
+			wl, err := ipwhitelist.ParseAnnotations(ngxCfg.WhitelistSourceRange, ing)
+			glog.V(3).Infof("nginx white list %v", wl)
+			if err != nil {
+				glog.V(3).Infof("error reading white list annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			}
+
 			host := rule.Host
 			if host == "" {
 				host = defServerName
@@ -728,6 +735,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 						loc.RateLimit = *rl
 						loc.Redirect = *locRew
 						loc.SecureUpstream = secUpstream
+						loc.Whitelist = *wl
 
 						addLoc = false
 						continue
@@ -750,6 +758,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 						RateLimit:      *rl,
 						Redirect:       *locRew,
 						SecureUpstream: secUpstream,
+						Whitelist:      *wl,
 					})
 				}
 			}

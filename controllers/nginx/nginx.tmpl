@@ -180,6 +180,12 @@ http {
         {{- range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
         location {{ $path }} {
+            {{ if gt (len $location.Whitelist.CIDR) 0 }}
+            {{- range $ip := $location.Whitelist.CIDR }}
+            allow {{ $ip }};{{ end }}
+            deny all;
+            {{ end -}}
+
             {{ if (and $server.SSL $location.Redirect.SSLRedirect) -}}
             # enforce ssl on server side
             if ($scheme = http) {
