@@ -602,7 +602,7 @@ func (lbc *loadBalancerController) getStreamServices(data map[string]string, pro
 		// tcp upstreams cannot contain empty upstreams and there is no
 		// default backend equivalent for TCP
 		if len(endps) == 0 {
-			glog.Warningf("service %v/%v does no have any active endpoints", svcNs, svcName)
+			glog.Warningf("service %v/%v does not have any active endpoints", svcNs, svcName)
 			continue
 		}
 
@@ -631,7 +631,7 @@ func (lbc *loadBalancerController) getDefaultUpstream() *nginx.Upstream {
 	}
 
 	if !svcExists {
-		glog.Warningf("service %v does no exists", svcKey)
+		glog.Warningf("service %v does not exists", svcKey)
 		upstream.Backends = append(upstream.Backends, nginx.NewDefaultServer())
 		return upstream
 	}
@@ -640,7 +640,7 @@ func (lbc *loadBalancerController) getDefaultUpstream() *nginx.Upstream {
 
 	endps := lbc.getEndpoints(svc, svc.Spec.Ports[0].TargetPort, api.ProtocolTCP, &healthcheck.Upstream{})
 	if len(endps) == 0 {
-		glog.Warningf("service %v does no have any active endpoints", svcKey)
+		glog.Warningf("service %v does not have any active endpoints", svcKey)
 		upstream.Backends = append(upstream.Backends, nginx.NewDefaultServer())
 	} else {
 		upstream.Backends = append(upstream.Backends, endps...)
@@ -771,7 +771,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 	aUpstreams := make([]*nginx.Upstream, 0, len(upstreams))
 	for _, value := range upstreams {
 		if len(value.Backends) == 0 {
-			glog.Warningf("upstream %v does no have any active endpoints. Using default backend", value.Name)
+			glog.Warningf("upstream %v does not have any active endpoints. Using default backend", value.Name)
 			value.Backends = append(value.Backends, nginx.NewDefaultServer())
 		}
 		sort.Sort(nginx.UpstreamServerByAddrPort(value.Backends))
@@ -822,7 +822,7 @@ func (lbc *loadBalancerController) createUpstreams(ngxCfg config.Configuration, 
 				}
 
 				if !svcExists {
-					glog.Warningf("service %v does no exists", svcKey)
+					glog.Warningf("service %v does not exists", svcKey)
 					continue
 				}
 
@@ -834,7 +834,7 @@ func (lbc *loadBalancerController) createUpstreams(ngxCfg config.Configuration, 
 					if strconv.Itoa(int(servicePort.Port)) == bp || servicePort.TargetPort.String() == bp || servicePort.Name == bp {
 						endps := lbc.getEndpoints(svc, servicePort.TargetPort, api.ProtocolTCP, hz)
 						if len(endps) == 0 {
-							glog.Warningf("service %v does no have any active endpoints", svcKey)
+							glog.Warningf("service %v does not have any active endpoints", svcKey)
 						}
 
 						upstreams[name].Backends = append(upstreams[name].Backends, endps...)
