@@ -16,18 +16,24 @@ events {
 }
 
 http {
+    {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
+    real_ip_header      X-Forwarded-For;
+    set_real_ip_from    0.0.0.0/0;
+    real_ip_recursive   on;
+
     {{/* databases used to determine the country depending on the client IP address */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
     {{/* this is require to calculate traffic for individual country using GeoIP in the status page */}}
     geoip_country       /etc/nginx/GeoIP.dat;
     geoip_city          /etc/nginx/GeoLiteCity.dat;
+    geoip_proxy_recursive on;
 
     {{- if $cfg.enableVtsStatus }}
     vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.vtsStatusZoneSize }};
     vhost_traffic_status_filter_by_set_key $geoip_country_code country::*;
     {{ end -}}
 
-    # lus sectrion to return proper error codes when custom pages are used
+    # lua section to return proper error codes when custom pages are used
     lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
     init_by_lua_block {        
         require("error_page")
