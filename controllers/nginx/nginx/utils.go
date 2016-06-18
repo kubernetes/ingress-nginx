@@ -33,7 +33,8 @@ import (
 )
 
 const (
-	customHTTPErrors = "custom-http-errors"
+	customHTTPErrors  = "custom-http-errors"
+	skipAccessLogUrls = "skip-access-log-urls"
 )
 
 // getDNSServers returns the list of nameservers located in the file /etc/resolv.conf
@@ -110,6 +111,12 @@ func (ngx *Manager) ReadConfig(conf *api.ConfigMap) config.Configuration {
 		}
 	}
 
+	cSkipUrls := make([]string, 0)
+	if val, ok := conf.Data[skipAccessLogUrls]; ok {
+		delete(conf.Data, skipAccessLogUrls)
+		cSkipUrls = strings.Split(val, ",")
+	}
+
 	err = decoder.Decode(conf.Data)
 	if err != nil {
 		glog.Infof("%v", err)
@@ -135,6 +142,7 @@ func (ngx *Manager) ReadConfig(conf *api.ConfigMap) config.Configuration {
 	}
 
 	cfgDefault.CustomHTTPErrors = ngx.filterErrors(cErrors)
+	cfgDefault.SkipAccessLogURLs = cSkipUrls
 	return cfgDefault
 }
 

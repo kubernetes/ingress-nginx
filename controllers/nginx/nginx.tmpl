@@ -70,7 +70,15 @@ http {
         '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
         '$request_length $request_time $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
 
-    access_log /var/log/nginx/access.log upstreaminfo;
+    {{/* map urls that should not appear in access.log */}}
+    {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
+    map $request $loggable {
+        {{- range $reqUri := $cfg.skipAccessLogUrls }}
+        {{ $reqUri }} 0;{{ end }}
+        default 1;
+    }
+
+    access_log /var/log/nginx/access.log upstreaminfo if=$loggable;
     error_log  /var/log/nginx/error.log {{ $cfg.errorLogLevel }};
 
     {{ if not (empty .defResolver) }}# Custom dns resolver.
