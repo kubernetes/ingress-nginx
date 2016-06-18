@@ -1,10 +1,20 @@
 Changelog
 
-### next
+
+### 0.8
 
 - [X] [#1063](https://github.com/kubernetes/contrib/pull/1063) watches referenced tls secrets
 - [X] [#850](https://github.com/kubernetes/contrib/pull/850) adds configurable SSL redirect nginx controller
-- [ ] [#1136](https://github.com/kubernetes/contrib/pull/1136) Fix nginx rewrite rule order
+- [X] [#1136](https://github.com/kubernetes/contrib/pull/1136) Fix nginx rewrite rule order
+- [X] [#1144](https://github.com/kubernetes/contrib/pull/1144) Add cidr whitelist support
+- [X] [#1230](https://github.com/kubernetes/contrib/pull/1130) Improve docs and examples
+- [X] [#1258](https://github.com/kubernetes/contrib/pull/1258) Avoid sync without a reachable 
+- [X] [#1235](https://github.com/kubernetes/contrib/pull/1235) Fix stats by country in nginx status page
+- [X] [#1236](https://github.com/kubernetes/contrib/pull/1236) Update nginx to add dynamic TLS records and spdy
+- [X] [#1238](https://github.com/kubernetes/contrib/pull/1238) Add support for dynamic TLS records and spdy
+- [X] [#1239](https://github.com/kubernetes/contrib/pull/1239) Add support for conditional log of urls
+- [X] [#1253](https://github.com/kubernetes/contrib/pull/1253) Use delayed queue
+
 
 ### 0.7
 
