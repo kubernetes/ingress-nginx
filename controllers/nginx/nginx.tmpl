@@ -145,6 +145,10 @@ http {
     ssl_dhparam {{ .sslDHParam }};
     {{ end }}
 
+    {{- if not $cfg.enableDynamicTlsRecords }}
+    ssl_dyn_rec_size_lo 0;
+    {{ end }}
+
     {{- if .customErrors }}
     # Custom error pages
     proxy_intercept_errors on;
@@ -178,7 +182,7 @@ http {
     server {
         server_name {{ $server.Name }};
         listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
-        {{ if $server.SSL }}listen 443 {{ if $cfg.useProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.useHttp2 }}http2{{ end }};
+        {{ if $server.SSL }}listen 443 {{ if $cfg.useProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.enableSpdy }}spdy{{ end }} {{ if $cfg.useHttp2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}        
         ssl_certificate {{ $server.SSLCertificate }};

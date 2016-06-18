@@ -18,7 +18,7 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 * [NGINX status page](#nginx-status-page)
 * [Debug & Troubleshooting](#troubleshooting)
 * [Limitations](#limitations)
-
+* [NGINX Notes](#nginx-notes)
 
 ## Conventions
 
@@ -253,3 +253,18 @@ I0316 12:24:37.610073       1 command.go:69] change in configuration detected. R
 ## Limitations
 
 - Ingress rules for TLS require the definition of the field `host`
+
+
+## NGINX notes
+
+Since `gcr.io/google_containers/nginx-slim:0.8` NGINX contains the next patches:
+- Dynamic TLS record size [nginx__dynamic_tls_records.patch](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/)
+NGINX provides the parameter `ssl_buffer_size` to adjust the size of the buffer. Default value in NGINX is 16KB. The ingress controller changes the default to 4KB. This improves the [TLS Time To First Byte (TTTFB)](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) but the size is fixed. This patches adapts the size of the buffer to the content is being served helping to improve the perceived latency.
+
+- Add SPDY support back to Nginx with HTTP/2 [nginx_1_9_15_http2_spdy.patch](https://github.com/cloudflare/sslconfig/pull/36)
+At the same NGINX introduced HTTP/2 support for SPDY was removed. This patch add support for SPDY wichout compromising HTTP/2 support using the Application-Layer Protocol Negotiation (ALPN) or Next Protocol Negotiation (NPN) Transport Layer Security (TLS) extension to negotiate what protocol the server and client support
+```
+openssl s_client -servername www.my-site.com -connect www.my-site.com:443 -nextprotoneg ''
+CONNECTED(00000003)
+Protocols advertised by server: h2, spdy/3.1, http/1.1
+```

@@ -78,6 +78,16 @@ type Configuration struct {
 	// Sets the maximum allowed size of the client request body
 	BodySize string `structs:"body-size,omitempty"`
 
+	// EnableDynamicTLSRecords enables dynamic TLS record sizes
+	// https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency
+	// By default this is enabled
+	EnableDynamicTLSRecords bool `structs:"enable-dynamic-tls-records"`
+
+	// EnableSPDY enables spdy and use ALPN and NPN to advertise the availability of the two protocols
+	// https://blog.cloudflare.com/open-sourcing-our-nginx-http-2-spdy-code
+	// By default this is enabled
+	EnableSPDY bool `structs:"enable-spdy"`
+
 	// EnableStickySessions enabled sticky sessions using cookies
 	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
 	// By default this is disabled
@@ -251,9 +261,11 @@ type Configuration struct {
 // in the file default-conf.json
 func NewDefault() Configuration {
 	cfg := Configuration{
-		BodySize:      bodySize,
-		ErrorLogLevel: errorLevel,
-		HSTS:          true,
+		BodySize:                bodySize,
+		EnableDynamicTLSRecords: true,
+		EnableSPDY:              true,
+		ErrorLogLevel:           errorLevel,
+		HSTS:                    true,
 		HSTSIncludeSubdomains:    true,
 		HSTSMaxAge:               hstsMaxAge,
 		GzipTypes:                gzipTypes,
