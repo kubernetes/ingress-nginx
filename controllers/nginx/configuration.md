@@ -7,7 +7,7 @@
 * [Authentication](#authentication)
 * [Rewrite](#rewrite)
 * [Rate limiting](#rate-limiting)
-* [Secure upstreams](#secure-upstreams)
+* [Secure backends](#secure-backends)
 * [Whitelist source range](#whitelist-source-range)
 * [Allowed parameters in configuration config map](#allowed-parameters-in-configuration-configmap)
 * [Default configuration options](#default-configuration-options)
@@ -22,12 +22,12 @@ there are 3 ways to customize nginx
 
 1. config map: create a stand alone config map, use this if you want a different global configuration
 2. annoations: [annotate the ingress](#annotations), use this if you want a specific configuration for the site defined in the ingress rule
-3. custom template: when do people want this?
+3. custom template: when is required a specific setting like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), custom [log_format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change an through the config map
 
 
 #### Custom NGINX configuration
 
-Using a config map it is possible to customize the defaults in nginx.
+It's possible to customize the defaults in NGINX using a config map.
 
 Please check the [custom configuration](examples/custom-configuration/README.md) example
 
@@ -47,7 +47,7 @@ The following annotaitons are supported:
 |[ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
-|[ingress.kubernetes.io/secure-upstream](#secure-upstreams)|true or false|
+|[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 
 
@@ -62,7 +62,7 @@ Use the [custom-template](examples/custom-template/README.md) example as a guide
 
 ### Custom NGINX upstream checks
 
-NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enables the configuration of each server in the upstream. The ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` or `upstream-fail-timeout` in the NGINX config map or in a particular Ingress rule. By default this values are 0. This means NGINX will respect the `readinessProbe`, if is defined. If there is no probe, NGINX will not mark a server inside an upstream down.
+NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enables the configuration of each server in the upstream. The ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` or `upstream-fail-timeout` in the NGINX config map or in a particular Ingress rule. It defaults to 0. This means NGINX will respect the `readinessProbe`, if is defined. If there is no probe, NGINX will not mark a server inside an upstream down.
 
 **With the default values NGINX will not health check your backends, and whenever the endpoints controller notices a readiness probe failure that pod's ip will be removed from the list of endpoints, causing nginx to also remove it from the upstreams.**
 
@@ -109,7 +109,8 @@ Please check the [auth](examples/custom-upstream-check/README.md) example
 ### Rewrite
 
 In some scenarios the exposed URL in the backend service differs from the specified path in the Ingress rule. Without a rewrite any request will return 404.
-To allow this is possible to use the annotation `ingress.kubernetes.io/rewrite-target` with the path expected in the service.
+Set the annotation `ingress.kubernetes.io/rewrite-target` to the path expected by the service.
+
 If the application contains relative links is possible to add an additional annotation `ingress.kubernetes.io/add-base-url` that will append a `base` tag in the header of the returned HTML from the backend.
 
 
@@ -125,17 +126,17 @@ The annotations `ingress.kubernetes.io/limit-connections` and `ingress.kubernete
 `ingress.kubernetes.io/limit-rps`: number of allowed connections per second from a single IP address
 
 
-Is possible to specify both annotation in the same Ingress rule. In this case the order of the limit is `limit-connections` and then `limit-rps`
+Is possible to specify both annotation in the same Ingress rule. If you specify both annotations in a single Ingress rule, limit-rps takes precedence
 
 
 ### Secure upstreams
 
-By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-upstream: "true"` in the ingress rule changes the protocol to `https`.
+By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the ingress rule changes the protocol to `https`.
 
 
 ### Whitelist source range
 
-Using the annotation `ingress.kubernetes.io/whitelist-source-range` is possible to specify one or ranges of client IP addresses from which is possible to access the `Path` in the Ingress rule, e.g. `10.0.0.0/24,172.10.0.1`
+You can specify the allowed client ip source ranges through the `ingress.kubernetes.io/whitelist-source-range` annotation, eg;  `10.0.0.0/24,172.10.0.1`
 For a global restriction (any URL) is possible to use `whitelist-source-range` in the NGINX config map
 
 *Note:* adding an annotation overrides any global restriction
@@ -169,12 +170,8 @@ The previous behavior can be restored using the value "true"
 
 
 **hsts:** Enables or disables the header HSTS in servers running SSL.
-HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header) that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
+HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header) that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP. It provides protection against protocol downgrade attacks and cookie theft.
 https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
-
-*Why HSTS is important?*
-
-HSTS provides protection against a wide array of attacks allowing only TLS connections avoiding insecure or mixed content from a site using HTTPS
 https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-strict-transport-security-implementation-on-your-web-server
 
 

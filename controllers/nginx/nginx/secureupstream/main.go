@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	secureUpstream = "ingress.kubernetes.io/secure-upstream"
+	secureUpstream = "ingress.kubernetes.io/secure-backends"
 )
 
 type ingAnnotations map[string]string
