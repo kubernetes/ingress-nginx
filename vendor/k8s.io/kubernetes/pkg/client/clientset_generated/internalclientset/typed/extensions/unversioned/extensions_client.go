@@ -26,8 +26,8 @@ type ExtensionsInterface interface {
 	GetRESTClient() *restclient.RESTClient
 	DaemonSetsGetter
 	DeploymentsGetter
-	HorizontalPodAutoscalersGetter
 	IngressesGetter
+	PodSecurityPoliciesGetter
 	ReplicaSetsGetter
 	ScalesGetter
 	ThirdPartyResourcesGetter
@@ -46,12 +46,12 @@ func (c *ExtensionsClient) Deployments(namespace string) DeploymentInterface {
 	return newDeployments(c, namespace)
 }
 
-func (c *ExtensionsClient) HorizontalPodAutoscalers(namespace string) HorizontalPodAutoscalerInterface {
-	return newHorizontalPodAutoscalers(c, namespace)
-}
-
 func (c *ExtensionsClient) Ingresses(namespace string) IngressInterface {
 	return newIngresses(c, namespace)
+}
+
+func (c *ExtensionsClient) PodSecurityPolicies() PodSecurityPolicyInterface {
+	return newPodSecurityPolicies(c)
 }
 
 func (c *ExtensionsClient) ReplicaSets(namespace string) ReplicaSetInterface {

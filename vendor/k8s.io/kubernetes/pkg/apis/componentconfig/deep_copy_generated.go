@@ -117,7 +117,10 @@ func DeepCopy_componentconfig_KubeControllerManagerConfiguration(in KubeControll
 	out.EnableProfiling = in.EnableProfiling
 	out.ClusterName = in.ClusterName
 	out.ClusterCIDR = in.ClusterCIDR
+	out.ServiceCIDR = in.ServiceCIDR
+	out.NodeCIDRMaskSize = in.NodeCIDRMaskSize
 	out.AllocateNodeCIDRs = in.AllocateNodeCIDRs
+	out.ConfigureCloudRoutes = in.ConfigureCloudRoutes
 	out.RootCAFile = in.RootCAFile
 	out.ContentType = in.ContentType
 	out.KubeAPIQPS = in.KubeAPIQPS
@@ -131,6 +134,7 @@ func DeepCopy_componentconfig_KubeControllerManagerConfiguration(in KubeControll
 	if err := unversioned.DeepCopy_unversioned_Duration(in.ControllerStartInterval, &out.ControllerStartInterval, c); err != nil {
 		return err
 	}
+	out.EnableGarbageCollector = in.EnableGarbageCollector
 	return nil
 }
 
@@ -221,6 +225,7 @@ func DeepCopy_componentconfig_KubeletConfiguration(in KubeletConfiguration, out 
 	out.PodInfraContainerImage = in.PodInfraContainerImage
 	out.DockerEndpoint = in.DockerEndpoint
 	out.RootDirectory = in.RootDirectory
+	out.SeccompProfileRoot = in.SeccompProfileRoot
 	out.AllowPrivileged = in.AllowPrivileged
 	out.HostNetworkSources = in.HostNetworkSources
 	out.HostPIDSources = in.HostPIDSources
@@ -268,14 +273,19 @@ func DeepCopy_componentconfig_KubeletConfiguration(in KubeletConfiguration, out 
 	out.SystemCgroups = in.SystemCgroups
 	out.CgroupRoot = in.CgroupRoot
 	out.ContainerRuntime = in.ContainerRuntime
+	if err := unversioned.DeepCopy_unversioned_Duration(in.RuntimeRequestTimeout, &out.RuntimeRequestTimeout, c); err != nil {
+		return err
+	}
 	out.RktPath = in.RktPath
 	out.RktAPIEndpoint = in.RktAPIEndpoint
 	out.RktStage1Image = in.RktStage1Image
 	out.LockFilePath = in.LockFilePath
+	out.ExitOnLockContention = in.ExitOnLockContention
 	out.ConfigureCBR0 = in.ConfigureCBR0
 	out.HairpinMode = in.HairpinMode
 	out.BabysitDaemons = in.BabysitDaemons
 	out.MaxPods = in.MaxPods
+	out.NvidiaGPUs = in.NvidiaGPUs
 	out.DockerExecHandlerName = in.DockerExecHandlerName
 	out.PodCIDR = in.PodCIDR
 	out.ResolverConfig = in.ResolverConfig
@@ -307,6 +317,12 @@ func DeepCopy_componentconfig_KubeletConfiguration(in KubeletConfiguration, out 
 	out.EvictionHard = in.EvictionHard
 	out.EvictionSoft = in.EvictionSoft
 	out.EvictionSoftGracePeriod = in.EvictionSoftGracePeriod
+	if err := unversioned.DeepCopy_unversioned_Duration(in.EvictionPressureTransitionPeriod, &out.EvictionPressureTransitionPeriod, c); err != nil {
+		return err
+	}
+	out.EvictionMaxPodGracePeriod = in.EvictionMaxPodGracePeriod
+	out.PodsPerCore = in.PodsPerCore
+	out.EnableControllerAttachDetach = in.EnableControllerAttachDetach
 	return nil
 }
 
@@ -348,8 +364,10 @@ func DeepCopy_componentconfig_PortRangeVar(in PortRangeVar, out *PortRangeVar, c
 
 func DeepCopy_componentconfig_VolumeConfiguration(in VolumeConfiguration, out *VolumeConfiguration, c *conversion.Cloner) error {
 	out.EnableHostPathProvisioning = in.EnableHostPathProvisioning
+	out.EnableDynamicProvisioning = in.EnableDynamicProvisioning
 	if err := DeepCopy_componentconfig_PersistentVolumeRecyclerConfiguration(in.PersistentVolumeRecyclerConfiguration, &out.PersistentVolumeRecyclerConfiguration, c); err != nil {
 		return err
 	}
+	out.FlexVolumePluginDir = in.FlexVolumePluginDir
 	return nil
 }

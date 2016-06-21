@@ -23,8 +23,10 @@ import (
 	"sort"
 
 	"k8s.io/kubernetes/pkg/api/meta"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/runtime"
+	"k8s.io/kubernetes/pkg/util/integer"
 	"k8s.io/kubernetes/pkg/util/jsonpath"
 
 	"github.com/golang/glog"
@@ -153,6 +155,29 @@ func isLess(i, j reflect.Value) (bool, error) {
 		return i.String() < j.String(), nil
 	case reflect.Ptr:
 		return isLess(i.Elem(), j.Elem())
+	case reflect.Struct:
+		// sort unversioned.Time
+		in := i.Interface()
+		if t, ok := in.(unversioned.Time); ok {
+			return t.Before(j.Interface().(unversioned.Time)), nil
+		}
+		// fallback to the fields comparison
+		for idx := 0; idx < i.NumField(); idx++ {
+			less, err := isLess(i.Field(idx), j.Field(idx))
+			if err != nil || !less {
+				return less, err
+			}
+		}
+		return true, nil
+	case reflect.Array, reflect.Slice:
+		// note: the length of i and j may be different
+		for idx := 0; idx < integer.IntMin(i.Len(), j.Len()); idx++ {
+			less, err := isLess(i.Index(idx), j.Index(idx))
+			if err != nil || !less {
+				return less, err
+			}
+		}
+		return true, nil
 	default:
 		return false, fmt.Errorf("unsortable type: %v", i.Kind())
 	}

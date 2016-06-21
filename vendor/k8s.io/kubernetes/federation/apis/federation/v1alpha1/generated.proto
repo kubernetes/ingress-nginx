@@ -85,12 +85,14 @@ message ClusterSpec {
   // This is to help clients reach servers in the most network-efficient way possible.
   // Clients can use the appropriate server address as per the CIDR that they match.
   // In case of multiple matches, clients should use the longest matching CIDR.
-  repeated k8s.io.kubernetes.pkg.api.unversioned.ServerAddressByClientCIDR serverAddressByClientCIDRs = 1;
+  repeated ServerAddressByClientCIDR serverAddressByClientCIDRs = 1;
 
-  // the type (e.g. bearer token, client certificate etc) and data of the credential used to access cluster.
-  // It’s used for system routines (not behalf of users)
-  // TODO: string may not enough, https://github.com/kubernetes/kubernetes/pull/23847#discussion_r59301275
-  optional string credential = 2;
+  // Name of the secret containing kubeconfig to access this cluster.
+  // The secret is read from the kubernetes cluster that is hosting federation control plane.
+  // Admin needs to ensure that the required secret exists. Secret should be in the same namespace where federation control plane is hosted and it should have kubeconfig in its data with key "kubeconfig".
+  // This will later be changed to a reference to secret in federation control plane when the federation control plane supports secrets.
+  // This can be left empty if the cluster allows insecure access.
+  optional k8s.io.kubernetes.pkg.api.v1.LocalObjectReference secretRef = 2;
 }
 
 // ClusterStatus is information about the current status of a cluster updated by cluster controller peridocally.
@@ -105,5 +107,22 @@ message ClusterStatus {
   map<string, k8s.io.kubernetes.pkg.api.resource.Quantity> allocatable = 3;
 
   optional ClusterMeta clusterMeta = 4;
+
+  // Zones is the list of avaliability zones in which the nodes of the cluster exist, e.g. 'us-east1-a'.
+  // These will always be in the same region.
+  repeated string zones = 5;
+
+  // Region is the name of the region in which all of the nodes in the cluster exist.  e.g. 'us-east1'.
+  optional string region = 6;
+}
+
+// ServerAddressByClientCIDR helps the client to determine the server address that they should use, depending on the clientCIDR that they match.
+message ServerAddressByClientCIDR {
+  // The CIDR with which clients can match their IP to figure out the server address that they should use.
+  optional string clientCIDR = 1;
+
+  // Address of this server, suitable for a client that matches the above CIDR.
+  // This can be a hostname, hostname:port, IP or IP:port.
+  optional string serverAddress = 2;
 }
 

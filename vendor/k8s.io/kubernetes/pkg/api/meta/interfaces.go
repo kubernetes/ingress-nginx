@@ -17,6 +17,7 @@ limitations under the License.
 package meta
 
 import (
+	"k8s.io/kubernetes/pkg/api/meta/metatypes"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/types"
@@ -57,25 +58,25 @@ type Object interface {
 	SetLabels(labels map[string]string)
 	GetAnnotations() map[string]string
 	SetAnnotations(annotations map[string]string)
+	GetFinalizers() []string
+	SetFinalizers(finalizers []string)
+	GetOwnerReferences() []metatypes.OwnerReference
+	SetOwnerReferences([]metatypes.OwnerReference)
+}
+
+var _ Object = &runtime.Unstructured{}
+
+type ListMetaAccessor interface {
+	GetListMeta() List
 }
 
 // List lets you work with list metadata from any of the versioned or
 // internal API objects. Attempting to set or retrieve a field on an object that does
 // not support that field will be a no-op and return a default value.
-type List interface {
-	GetResourceVersion() string
-	SetResourceVersion(version string)
-	GetSelfLink() string
-	SetSelfLink(selfLink string)
-}
+type List unversioned.List
 
 // Type exposes the type and APIVersion of versioned or internal API objects.
-type Type interface {
-	GetAPIVersion() string
-	SetAPIVersion(version string)
-	GetKind() string
-	SetKind(kind string)
-}
+type Type unversioned.Type
 
 // MetadataAccessor lets you work with object and list metadata from any of the versioned or
 // internal API objects. Attempting to set or retrieve a field on an object that does
@@ -177,5 +178,3 @@ type RESTMapper interface {
 	AliasesForResource(resource string) ([]string, bool)
 	ResourceSingularizer(resource string) (singular string, err error)
 }
-
-var _ Object = &runtime.Unstructured{}

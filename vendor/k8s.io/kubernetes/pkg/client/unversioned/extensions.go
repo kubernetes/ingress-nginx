@@ -28,12 +28,12 @@ import (
 // Features of Extensions group are not supported and may be changed or removed in
 // incompatible ways at any time.
 type ExtensionsInterface interface {
-	HorizontalPodAutoscalersNamespacer
 	ScaleNamespacer
 	DaemonSetsNamespacer
 	DeploymentsNamespacer
 	JobsNamespacer
 	IngressNamespacer
+	NetworkPolicyNamespacer
 	ThirdPartyResourceNamespacer
 	ReplicaSetsNamespacer
 	PodSecurityPoliciesInterface
@@ -48,10 +48,6 @@ type ExtensionsClient struct {
 
 func (c *ExtensionsClient) PodSecurityPolicies() PodSecurityPolicyInterface {
 	return newPodSecurityPolicy(c)
-}
-
-func (c *ExtensionsClient) HorizontalPodAutoscalers(namespace string) HorizontalPodAutoscalerInterface {
-	return newHorizontalPodAutoscalers(c, namespace)
 }
 
 func (c *ExtensionsClient) Scales(namespace string) ScaleInterface {
@@ -72,6 +68,10 @@ func (c *ExtensionsClient) Jobs(namespace string) JobInterface {
 
 func (c *ExtensionsClient) Ingress(namespace string) IngressInterface {
 	return newIngress(c, namespace)
+}
+
+func (c *ExtensionsClient) NetworkPolicies(namespace string) NetworkPolicyInterface {
+	return newNetworkPolicies(c, namespace)
 }
 
 func (c *ExtensionsClient) ThirdPartyResources() ThirdPartyResourceInterface {

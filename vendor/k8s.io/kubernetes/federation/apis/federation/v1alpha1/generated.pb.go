@@ -31,6 +31,7 @@ limitations under the License.
 		ClusterMeta
 		ClusterSpec
 		ClusterStatus
+		ServerAddressByClientCIDR
 */
 package v1alpha1
 
@@ -39,7 +40,7 @@ import fmt "fmt"
 import math "math"
 
 import k8s_io_kubernetes_pkg_api_resource "k8s.io/kubernetes/pkg/api/resource"
-import k8s_io_kubernetes_pkg_api_unversioned "k8s.io/kubernetes/pkg/api/unversioned"
+
 import k8s_io_kubernetes_pkg_api_v1 "k8s.io/kubernetes/pkg/api/v1"
 
 import io "io"
@@ -73,6 +74,10 @@ func (m *ClusterStatus) Reset()         { *m = ClusterStatus{} }
 func (m *ClusterStatus) String() string { return proto.CompactTextString(m) }
 func (*ClusterStatus) ProtoMessage()    {}
 
+func (m *ServerAddressByClientCIDR) Reset()         { *m = ServerAddressByClientCIDR{} }
+func (m *ServerAddressByClientCIDR) String() string { return proto.CompactTextString(m) }
+func (*ServerAddressByClientCIDR) ProtoMessage()    {}
+
 func init() {
 	proto.RegisterType((*Cluster)(nil), "k8s.io.kubernetes.federation.apis.federation.v1alpha1.Cluster")
 	proto.RegisterType((*ClusterCondition)(nil), "k8s.io.kubernetes.federation.apis.federation.v1alpha1.ClusterCondition")
@@ -80,6 +85,7 @@ func init() {
 	proto.RegisterType((*ClusterMeta)(nil), "k8s.io.kubernetes.federation.apis.federation.v1alpha1.ClusterMeta")
 	proto.RegisterType((*ClusterSpec)(nil), "k8s.io.kubernetes.federation.apis.federation.v1alpha1.ClusterSpec")
 	proto.RegisterType((*ClusterStatus)(nil), "k8s.io.kubernetes.federation.apis.federation.v1alpha1.ClusterStatus")
+	proto.RegisterType((*ServerAddressByClientCIDR)(nil), "k8s.io.kubernetes.federation.apis.federation.v1alpha1.ServerAddressByClientCIDR")
 }
 func (m *Cluster) Marshal() (data []byte, err error) {
 	size := m.Size()
@@ -260,10 +266,16 @@ func (m *ClusterSpec) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
-	data[i] = 0x12
-	i++
-	i = encodeVarintGenerated(data, i, uint64(len(m.Credential)))
-	i += copy(data[i:], m.Credential)
+	if m.SecretRef != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintGenerated(data, i, uint64(m.SecretRef.Size()))
+		n7, err := m.SecretRef.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
 	return i, nil
 }
 
@@ -309,11 +321,11 @@ func (m *ClusterStatus) MarshalTo(data []byte) (int, error) {
 			data[i] = 0x12
 			i++
 			i = encodeVarintGenerated(data, i, uint64((&v).Size()))
-			n7, err := (&v).MarshalTo(data[i:])
+			n8, err := (&v).MarshalTo(data[i:])
 			if err != nil {
 				return 0, err
 			}
-			i += n7
+			i += n8
 		}
 	}
 	if len(m.Allocatable) > 0 {
@@ -331,21 +343,66 @@ func (m *ClusterStatus) MarshalTo(data []byte) (int, error) {
 			data[i] = 0x12
 			i++
 			i = encodeVarintGenerated(data, i, uint64((&v).Size()))
-			n8, err := (&v).MarshalTo(data[i:])
+			n9, err := (&v).MarshalTo(data[i:])
 			if err != nil {
 				return 0, err
 			}
-			i += n8
+			i += n9
 		}
 	}
 	data[i] = 0x22
 	i++
 	i = encodeVarintGenerated(data, i, uint64(m.ClusterMeta.Size()))
-	n9, err := m.ClusterMeta.MarshalTo(data[i:])
+	n10, err := m.ClusterMeta.MarshalTo(data[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n9
+	i += n10
+	if len(m.Zones) > 0 {
+		for _, s := range m.Zones {
+			data[i] = 0x2a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			data[i] = uint8(l)
+			i++
+			i += copy(data[i:], s)
+		}
+	}
+	data[i] = 0x32
+	i++
+	i = encodeVarintGenerated(data, i, uint64(len(m.Region)))
+	i += copy(data[i:], m.Region)
+	return i, nil
+}
+
+func (m *ServerAddressByClientCIDR) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ServerAddressByClientCIDR) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintGenerated(data, i, uint64(len(m.ClientCIDR)))
+	i += copy(data[i:], m.ClientCIDR)
+	data[i] = 0x12
+	i++
+	i = encodeVarintGenerated(data, i, uint64(len(m.ServerAddress)))
+	i += copy(data[i:], m.ServerAddress)
 	return i, nil
 }
 
@@ -437,8 +494,10 @@ func (m *ClusterSpec) Size() (n int) {
 			n += 1 + l + sovGenerated(uint64(l))
 		}
 	}
-	l = len(m.Credential)
-	n += 1 + l + sovGenerated(uint64(l))
+	if m.SecretRef != nil {
+		l = m.SecretRef.Size()
+		n += 1 + l + sovGenerated(uint64(l))
+	}
 	return n
 }
 
@@ -470,6 +529,24 @@ func (m *ClusterStatus) Size() (n int) {
 		}
 	}
 	l = m.ClusterMeta.Size()
+	n += 1 + l + sovGenerated(uint64(l))
+	if len(m.Zones) > 0 {
+		for _, s := range m.Zones {
+			l = len(s)
+			n += 1 + l + sovGenerated(uint64(l))
+		}
+	}
+	l = len(m.Region)
+	n += 1 + l + sovGenerated(uint64(l))
+	return n
+}
+
+func (m *ServerAddressByClientCIDR) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.ClientCIDR)
+	n += 1 + l + sovGenerated(uint64(l))
+	l = len(m.ServerAddress)
 	n += 1 + l + sovGenerated(uint64(l))
 	return n
 }
@@ -1098,16 +1175,16 @@ func (m *ClusterSpec) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ServerAddressByClientCIDRs = append(m.ServerAddressByClientCIDRs, k8s_io_kubernetes_pkg_api_unversioned.ServerAddressByClientCIDR{})
+			m.ServerAddressByClientCIDRs = append(m.ServerAddressByClientCIDRs, ServerAddressByClientCIDR{})
 			if err := m.ServerAddressByClientCIDRs[len(m.ServerAddressByClientCIDRs)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Credential", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SecretRef", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenerated
@@ -1117,20 +1194,24 @@ func (m *ClusterSpec) Unmarshal(data []byte) error {
 				}
 				b := data[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthGenerated
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Credential = string(data[iNdEx:postIndex])
+			if m.SecretRef == nil {
+				m.SecretRef = &k8s_io_kubernetes_pkg_api_v1.LocalObjectReference{}
+			}
+			if err := m.SecretRef.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1474,6 +1555,172 @@ func (m *ClusterStatus) Unmarshal(data []byte) error {
 			if err := m.ClusterMeta.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zones", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zones = append(m.Zones, string(data[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Region", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Region = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenerated(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ServerAddressByClientCIDR) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenerated
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ServerAddressByClientCIDR: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ServerAddressByClientCIDR: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientCIDR", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientCIDR = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ServerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ServerAddress = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

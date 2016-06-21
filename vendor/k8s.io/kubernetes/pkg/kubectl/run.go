@@ -434,7 +434,7 @@ func populateResourceList(spec string) (api.ResourceList, error) {
 		if err != nil {
 			return nil, err
 		}
-		result[resourceName] = *resourceQuantity
+		result[resourceName] = resourceQuantity
 	}
 	return result, nil
 }
@@ -458,7 +458,7 @@ func populateV1ResourceList(spec string) (v1.ResourceList, error) {
 		if err != nil {
 			return nil, err
 		}
-		result[resourceName] = *resourceQuantity
+		result[resourceName] = resourceQuantity
 	}
 	return result, nil
 }
@@ -827,7 +827,7 @@ func (BasicPod) Generate(genericParams map[string]interface{}) (runtime.Object, 
 }
 
 func parseEnvs(envArray []string) ([]api.EnvVar, error) {
-	envs := []api.EnvVar{}
+	envs := make([]api.EnvVar, 0, len(envArray))
 	for _, env := range envArray {
 		pos := strings.Index(env, "=")
 		if pos == -1 {

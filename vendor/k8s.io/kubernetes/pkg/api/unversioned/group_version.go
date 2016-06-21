@@ -29,8 +29,8 @@ import (
 // `resource.group.com` -> `group=com, version=group, resource=resource` and `group=group.com, resource=resource`
 func ParseResourceArg(arg string) (*GroupVersionResource, GroupResource) {
 	var gvr *GroupVersionResource
-	s := strings.SplitN(arg, ".", 3)
-	if len(s) == 3 {
+	if strings.Count(arg, ".") >= 2 {
+		s := strings.SplitN(arg, ".", 3)
 		gvr = &GroupVersionResource{Group: s[2], Version: s[1], Resource: s[0]}
 	}
 
@@ -64,12 +64,11 @@ func (gr *GroupResource) String() string {
 // ParseGroupResource turns "resource.group" string into a GroupResource struct.  Empty strings are allowed
 // for each field.
 func ParseGroupResource(gr string) GroupResource {
-	s := strings.SplitN(gr, ".", 2)
-	if len(s) == 1 {
-		return GroupResource{Resource: s[0]}
+	if i := strings.Index(gr, "."); i == -1 {
+		return GroupResource{Resource: gr}
+	} else {
+		return GroupResource{Group: gr[i+1:], Resource: gr[:i]}
 	}
-
-	return GroupResource{Group: s[1], Resource: s[0]}
 }
 
 // GroupVersionResource unambiguously identifies a resource.  It doesn't anonymously include GroupVersion
@@ -189,18 +188,14 @@ func ParseGroupVersion(gv string) (GroupVersion, error) {
 		return GroupVersion{}, nil
 	}
 
-	s := strings.Split(gv, "/")
-	// "v1" is the only special case. Otherwise GroupVersion is expected to contain
-	// one "/" dividing the string into two parts.
-	switch {
-	case len(s) == 1 && gv == "v1":
-		return GroupVersion{"", "v1"}, nil
-	case len(s) == 1:
-		return GroupVersion{"", s[0]}, nil
-	case len(s) == 2:
-		return GroupVersion{s[0], s[1]}, nil
+	switch strings.Count(gv, "/") {
+	case 0:
+		return GroupVersion{"", gv}, nil
+	case 1:
+		i := strings.Index(gv, "/")
+		return GroupVersion{gv[:i], gv[i+1:]}, nil
 	default:
-		return GroupVersion{}, fmt.Errorf("Unexpected GroupVersion string: %v", gv)
+		return GroupVersion{}, fmt.Errorf("unexpected GroupVersion string: %v", gv)
 	}
 }
 
@@ -259,11 +254,11 @@ func (gvk *GroupVersionKind) ToAPIVersionAndKind() (string, string) {
 // do not use TypeMeta. This method exists to support test types and legacy serializations
 // that have a distinct group and kind.
 // TODO: further reduce usage of this method.
-func FromAPIVersionAndKind(apiVersion, kind string) *GroupVersionKind {
+func FromAPIVersionAndKind(apiVersion, kind string) GroupVersionKind {
 	if gv, err := ParseGroupVersion(apiVersion); err == nil {
-		return &GroupVersionKind{Group: gv.Group, Version: gv.Version, Kind: kind}
+		return GroupVersionKind{Group: gv.Group, Version: gv.Version, Kind: kind}
 	}
-	return &GroupVersionKind{Kind: kind}
+	return GroupVersionKind{Kind: kind}
 }
 
 // All objects that are serialized from a Scheme encode their type information. This interface is used
@@ -273,10 +268,10 @@ func FromAPIVersionAndKind(apiVersion, kind string) *GroupVersionKind {
 type ObjectKind interface {
 	// SetGroupVersionKind sets or clears the intended serialized kind of an object. Passing kind nil
 	// should clear the current setting.
-	SetGroupVersionKind(kind *GroupVersionKind)
+	SetGroupVersionKind(kind GroupVersionKind)
 	// GroupVersionKind returns the stored group, version, and kind of an object, or nil if the object does
 	// not expose or provide these fields.
-	GroupVersionKind() *GroupVersionKind
+	GroupVersionKind() GroupVersionKind
 }
 
 // EmptyObjectKind implements the ObjectKind interface as a noop
@@ -286,7 +281,7 @@ var EmptyObjectKind = emptyObjectKind{}
 type emptyObjectKind struct{}
 
 // SetGroupVersionKind implements the ObjectKind interface
-func (emptyObjectKind) SetGroupVersionKind(gvk *GroupVersionKind) {}
+func (emptyObjectKind) SetGroupVersionKind(gvk GroupVersionKind) {}
 
 // GroupVersionKind implements the ObjectKind interface
-func (emptyObjectKind) GroupVersionKind() *GroupVersionKind { return nil }
+func (emptyObjectKind) GroupVersionKind() GroupVersionKind { return GroupVersionKind{} }

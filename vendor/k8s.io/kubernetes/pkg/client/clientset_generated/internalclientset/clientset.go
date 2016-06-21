@@ -18,9 +18,11 @@ package internalclientset
 
 import (
 	"github.com/golang/glog"
+	unversionedautoscaling "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/autoscaling/unversioned"
 	unversionedbatch "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/batch/unversioned"
 	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/unversioned"
 	unversionedextensions "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/extensions/unversioned"
+	unversionedrbac "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/rbac/unversioned"
 	restclient "k8s.io/kubernetes/pkg/client/restclient"
 	discovery "k8s.io/kubernetes/pkg/client/typed/discovery"
 	"k8s.io/kubernetes/pkg/util/flowcontrol"
@@ -30,7 +32,9 @@ type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	Core() unversionedcore.CoreInterface
 	Extensions() unversionedextensions.ExtensionsInterface
+	Autoscaling() unversionedautoscaling.AutoscalingInterface
 	Batch() unversionedbatch.BatchInterface
+	Rbac() unversionedrbac.RbacInterface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -39,7 +43,9 @@ type Clientset struct {
 	*discovery.DiscoveryClient
 	*unversionedcore.CoreClient
 	*unversionedextensions.ExtensionsClient
+	*unversionedautoscaling.AutoscalingClient
 	*unversionedbatch.BatchClient
+	*unversionedrbac.RbacClient
 }
 
 // Core retrieves the CoreClient
@@ -58,12 +64,28 @@ func (c *Clientset) Extensions() unversionedextensions.ExtensionsInterface {
 	return c.ExtensionsClient
 }
 
+// Autoscaling retrieves the AutoscalingClient
+func (c *Clientset) Autoscaling() unversionedautoscaling.AutoscalingInterface {
+	if c == nil {
+		return nil
+	}
+	return c.AutoscalingClient
+}
+
 // Batch retrieves the BatchClient
 func (c *Clientset) Batch() unversionedbatch.BatchInterface {
 	if c == nil {
 		return nil
 	}
 	return c.BatchClient
+}
+
+// Rbac retrieves the RbacClient
+func (c *Clientset) Rbac() unversionedrbac.RbacInterface {
+	if c == nil {
+		return nil
+	}
+	return c.RbacClient
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -87,7 +109,15 @@ func NewForConfig(c *restclient.Config) (*Clientset, error) {
 	if err != nil {
 		return &clientset, err
 	}
+	clientset.AutoscalingClient, err = unversionedautoscaling.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return &clientset, err
+	}
 	clientset.BatchClient, err = unversionedbatch.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return &clientset, err
+	}
+	clientset.RbacClient, err = unversionedrbac.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return &clientset, err
 	}
@@ -105,7 +135,9 @@ func NewForConfigOrDie(c *restclient.Config) *Clientset {
 	var clientset Clientset
 	clientset.CoreClient = unversionedcore.NewForConfigOrDie(c)
 	clientset.ExtensionsClient = unversionedextensions.NewForConfigOrDie(c)
+	clientset.AutoscalingClient = unversionedautoscaling.NewForConfigOrDie(c)
 	clientset.BatchClient = unversionedbatch.NewForConfigOrDie(c)
+	clientset.RbacClient = unversionedrbac.NewForConfigOrDie(c)
 
 	clientset.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &clientset
@@ -116,7 +148,9 @@ func New(c *restclient.RESTClient) *Clientset {
 	var clientset Clientset
 	clientset.CoreClient = unversionedcore.New(c)
 	clientset.ExtensionsClient = unversionedextensions.New(c)
+	clientset.AutoscalingClient = unversionedautoscaling.New(c)
 	clientset.BatchClient = unversionedbatch.New(c)
+	clientset.RbacClient = unversionedrbac.New(c)
 
 	clientset.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &clientset

@@ -31,7 +31,7 @@ import (
 
 var (
 	// protoEncodingPrefix serves as a magic number for an encoded protobuf message on this serializer. All
-	// proto messages serialized by this schema will be precedeed by the bytes 0x6b 0x38 0x73, with the fourth
+	// proto messages serialized by this schema will be preceded by the bytes 0x6b 0x38 0x73, with the fourth
 	// byte being reserved for the encoding style. The only encoding style defined is 0x00, which means that
 	// the rest of the byte stream is a message of type k8s.io.kubernetes.pkg.runtime.Unknown (proto2).
 	//
@@ -59,7 +59,7 @@ func IsNotMarshalable(err error) bool {
 // as-is (any type info passed with the object will be used).
 //
 // This encoding scheme is experimental, and is subject to change at any time.
-func NewSerializer(creater runtime.ObjectCreater, typer runtime.Typer, defaultContentType string) *Serializer {
+func NewSerializer(creater runtime.ObjectCreater, typer runtime.ObjectTyper, defaultContentType string) *Serializer {
 	return &Serializer{
 		prefix:      protoEncodingPrefix,
 		creater:     creater,
@@ -71,7 +71,7 @@ func NewSerializer(creater runtime.ObjectCreater, typer runtime.Typer, defaultCo
 type Serializer struct {
 	prefix      []byte
 	creater     runtime.ObjectCreater
-	typer       runtime.Typer
+	typer       runtime.ObjectTyper
 	contentType string
 }
 
@@ -120,61 +120,60 @@ func (s *Serializer) Decode(originalData []byte, gvk *unversioned.GroupVersionKi
 	}
 
 	actual := unk.GroupVersionKind()
-	copyKindDefaults(actual, gvk)
+	copyKindDefaults(&actual, gvk)
 
 	if intoUnknown, ok := into.(*runtime.Unknown); ok && intoUnknown != nil {
 		*intoUnknown = unk
 		if len(intoUnknown.ContentType) == 0 {
 			intoUnknown.ContentType = s.contentType
 		}
-		return intoUnknown, actual, nil
+		return intoUnknown, &actual, nil
 	}
 
 	if into != nil {
-		typed, _, err := s.typer.ObjectKind(into)
+		types, _, err := s.typer.ObjectKinds(into)
 		switch {
 		case runtime.IsNotRegisteredError(err):
 			pb, ok := into.(proto.Message)
 			if !ok {
-				return nil, actual, errNotMarshalable{reflect.TypeOf(into)}
+				return nil, &actual, errNotMarshalable{reflect.TypeOf(into)}
 			}
 			if err := proto.Unmarshal(unk.Raw, pb); err != nil {
-				return nil, actual, err
+				return nil, &actual, err
 			}
-			return into, actual, nil
+			return into, &actual, nil
 		case err != nil:
-			return nil, actual, err
+			return nil, &actual, err
 		default:
-			copyKindDefaults(actual, typed)
+			copyKindDefaults(&actual, &types[0])
 			// if the result of defaulting did not set a version or group, ensure that at least group is set
 			// (copyKindDefaults will not assign Group if version is already set). This guarantees that the group
 			// of into is set if there is no better information from the caller or object.
 			if len(actual.Version) == 0 && len(actual.Group) == 0 {
-				actual.Group = typed.Group
+				actual.Group = types[0].Group
 			}
 		}
 	}
 
 	if len(actual.Kind) == 0 {
-		return nil, actual, runtime.NewMissingKindErr(fmt.Sprintf("%#v", unk.TypeMeta))
+		return nil, &actual, runtime.NewMissingKindErr(fmt.Sprintf("%#v", unk.TypeMeta))
 	}
 	if len(actual.Version) == 0 {
-		return nil, actual, runtime.NewMissingVersionErr(fmt.Sprintf("%#v", unk.TypeMeta))
+		return nil, &actual, runtime.NewMissingVersionErr(fmt.Sprintf("%#v", unk.TypeMeta))
 	}
 
-	return unmarshalToObject(s.typer, s.creater, actual, into, unk.Raw)
+	return unmarshalToObject(s.typer, s.creater, &actual, into, unk.Raw)
 }
 
-// EncodeToStream serializes the provided object to the given writer. Overrides is ignored.
-func (s *Serializer) EncodeToStream(obj runtime.Object, w io.Writer, overrides ...unversioned.GroupVersion) error {
+// Encode serializes the provided object to the given writer.
+func (s *Serializer) Encode(obj runtime.Object, w io.Writer) error {
 	var unk runtime.Unknown
-	if kind := obj.GetObjectKind().GroupVersionKind(); kind != nil {
-		unk = runtime.Unknown{
-			TypeMeta: runtime.TypeMeta{
-				Kind:       kind.Kind,
-				APIVersion: kind.GroupVersion().String(),
-			},
-		}
+	kind := obj.GetObjectKind().GroupVersionKind()
+	unk = runtime.Unknown{
+		TypeMeta: runtime.TypeMeta{
+			Kind:       kind.Kind,
+			APIVersion: kind.GroupVersion().String(),
+		},
 	}
 
 	prefixSize := uint64(len(s.prefix))
@@ -278,7 +277,7 @@ func estimateUnknownSize(unk *runtime.Unknown, byteSize uint64) uint64 {
 // encoded object, and thus is not self describing (callers must know what type is being described in order to decode).
 //
 // This encoding scheme is experimental, and is subject to change at any time.
-func NewRawSerializer(creater runtime.ObjectCreater, typer runtime.Typer, defaultContentType string) *RawSerializer {
+func NewRawSerializer(creater runtime.ObjectCreater, typer runtime.ObjectTyper, defaultContentType string) *RawSerializer {
 	return &RawSerializer{
 		creater:     creater,
 		typer:       typer,
@@ -290,7 +289,7 @@ func NewRawSerializer(creater runtime.ObjectCreater, typer runtime.Typer, defaul
 // type).
 type RawSerializer struct {
 	creater     runtime.ObjectCreater
-	typer       runtime.Typer
+	typer       runtime.ObjectTyper
 	contentType string
 }
 
@@ -334,11 +333,11 @@ func (s *RawSerializer) Decode(originalData []byte, gvk *unversioned.GroupVersio
 		intoUnknown.Raw = data
 		intoUnknown.ContentEncoding = ""
 		intoUnknown.ContentType = s.contentType
-		intoUnknown.SetGroupVersionKind(actual)
+		intoUnknown.SetGroupVersionKind(*actual)
 		return intoUnknown, actual, nil
 	}
 
-	typed, _, err := s.typer.ObjectKind(into)
+	types, _, err := s.typer.ObjectKinds(into)
 	switch {
 	case runtime.IsNotRegisteredError(err):
 		pb, ok := into.(proto.Message)
@@ -352,12 +351,12 @@ func (s *RawSerializer) Decode(originalData []byte, gvk *unversioned.GroupVersio
 	case err != nil:
 		return nil, actual, err
 	default:
-		copyKindDefaults(actual, typed)
+		copyKindDefaults(actual, &types[0])
 		// if the result of defaulting did not set a version or group, ensure that at least group is set
 		// (copyKindDefaults will not assign Group if version is already set). This guarantees that the group
 		// of into is set if there is no better information from the caller or object.
 		if len(actual.Version) == 0 && len(actual.Group) == 0 {
-			actual.Group = typed.Group
+			actual.Group = types[0].Group
 		}
 	}
 
@@ -372,7 +371,7 @@ func (s *RawSerializer) Decode(originalData []byte, gvk *unversioned.GroupVersio
 }
 
 // unmarshalToObject is the common code between decode in the raw and normal serializer.
-func unmarshalToObject(typer runtime.Typer, creater runtime.ObjectCreater, actual *unversioned.GroupVersionKind, into runtime.Object, data []byte) (runtime.Object, *unversioned.GroupVersionKind, error) {
+func unmarshalToObject(typer runtime.ObjectTyper, creater runtime.ObjectCreater, actual *unversioned.GroupVersionKind, into runtime.Object, data []byte) (runtime.Object, *unversioned.GroupVersionKind, error) {
 	// use the target if necessary
 	obj, err := runtime.UseOrCreateObject(typer, creater, *actual, into)
 	if err != nil {
@@ -389,8 +388,8 @@ func unmarshalToObject(typer runtime.Typer, creater runtime.ObjectCreater, actua
 	return obj, actual, nil
 }
 
-// EncodeToStream serializes the provided object to the given writer. Overrides is ignored.
-func (s *RawSerializer) EncodeToStream(obj runtime.Object, w io.Writer, overrides ...unversioned.GroupVersion) error {
+// Encode serializes the provided object to the given writer. Overrides is ignored.
+func (s *RawSerializer) Encode(obj runtime.Object, w io.Writer) error {
 	switch t := obj.(type) {
 	case bufferedMarshaller:
 		// this path performs a single allocation during write but requires the caller to implement

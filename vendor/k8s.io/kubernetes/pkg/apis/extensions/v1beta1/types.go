@@ -68,7 +68,7 @@ type ReplicationControllerDummy struct {
 
 // SubresourceReference contains enough information to let you inspect or modify the referred subresource.
 type SubresourceReference struct {
-	// Kind of the referent; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds"
+	// Kind of the referent; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds
 	Kind string `json:"kind,omitempty" protobuf:"bytes,1,opt,name=kind"`
 	// Name of the referent; More info: http://releases.k8s.io/HEAD/docs/user-guide/identifiers.md#names
 	Name string `json:"name,omitempty" protobuf:"bytes,2,opt,name=name"`
@@ -912,6 +912,8 @@ type ReplicaSetStatus struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
 }
 
+// +genclient=true,nonNamespaced=true
+
 // Pod Security Policy governs the ability to make requests that affect the Security Context
 // that will be applied to a pod and container.
 type PodSecurityPolicy struct {
@@ -928,29 +930,51 @@ type PodSecurityPolicy struct {
 type PodSecurityPolicySpec struct {
 	// privileged determines if a pod can request to be run as privileged.
 	Privileged bool `json:"privileged,omitempty" protobuf:"varint,1,opt,name=privileged"`
-	// capabilities is a list of capabilities that can be added.
-	Capabilities []v1.Capability `json:"capabilities,omitempty" protobuf:"bytes,2,rep,name=capabilities,casttype=k8s.io/kubernetes/pkg/api/v1.Capability"`
+	// DefaultAddCapabilities is the default set of capabilities that will be added to the container
+	// unless the pod spec specifically drops the capability.  You may not list a capabiility in both
+	// DefaultAddCapabilities and RequiredDropCapabilities.
+	DefaultAddCapabilities []v1.Capability `json:"defaultAddCapabilities,omitempty" protobuf:"bytes,2,rep,name=defaultAddCapabilities,casttype=k8s.io/kubernetes/pkg/api/v1.Capability"`
+	// RequiredDropCapabilities are the capabilities that will be dropped from the container.  These
+	// are required to be dropped and cannot be added.
+	RequiredDropCapabilities []v1.Capability `json:"requiredDropCapabilities,omitempty" protobuf:"bytes,3,rep,name=requiredDropCapabilities,casttype=k8s.io/kubernetes/pkg/api/v1.Capability"`
+	// AllowedCapabilities is a list of capabilities that can be requested to add to the container.
+	// Capabilities in this field may be added at the pod author's discretion.
+	// You must not list a capability in both AllowedCapabilities and RequiredDropCapabilities.
+	AllowedCapabilities []v1.Capability `json:"allowedCapabilities,omitempty" protobuf:"bytes,4,rep,name=allowedCapabilities,casttype=k8s.io/kubernetes/pkg/api/v1.Capability"`
 	// volumes is a white list of allowed volume plugins.  Empty indicates that all plugins
 	// may be used.
-	Volumes []FSType `json:"volumes,omitempty" protobuf:"bytes,3,rep,name=volumes,casttype=FSType"`
+	Volumes []FSType `json:"volumes,omitempty" protobuf:"bytes,5,rep,name=volumes,casttype=FSType"`
 	// hostNetwork determines if the policy allows the use of HostNetwork in the pod spec.
-	HostNetwork bool `json:"hostNetwork,omitempty" protobuf:"varint,4,opt,name=hostNetwork"`
+	HostNetwork bool `json:"hostNetwork,omitempty" protobuf:"varint,6,opt,name=hostNetwork"`
 	// hostPorts determines which host port ranges are allowed to be exposed.
-	HostPorts []HostPortRange `json:"hostPorts,omitempty" protobuf:"bytes,5,rep,name=hostPorts"`
+	HostPorts []HostPortRange `json:"hostPorts,omitempty" protobuf:"bytes,7,rep,name=hostPorts"`
 	// hostPID determines if the policy allows the use of HostPID in the pod spec.
-	HostPID bool `json:"hostPID,omitempty" protobuf:"varint,6,opt,name=hostPID"`
+	HostPID bool `json:"hostPID,omitempty" protobuf:"varint,8,opt,name=hostPID"`
 	// hostIPC determines if the policy allows the use of HostIPC in the pod spec.
-	HostIPC bool `json:"hostIPC,omitempty" protobuf:"varint,7,opt,name=hostIPC"`
+	HostIPC bool `json:"hostIPC,omitempty" protobuf:"varint,9,opt,name=hostIPC"`
 	// seLinux is the strategy that will dictate the allowable labels that may be set.
-	SELinux SELinuxStrategyOptions `json:"seLinux,omitempty" protobuf:"bytes,8,opt,name=seLinux"`
+	SELinux SELinuxStrategyOptions `json:"seLinux" protobuf:"bytes,10,opt,name=seLinux"`
 	// runAsUser is the strategy that will dictate the allowable RunAsUser values that may be set.
-	RunAsUser RunAsUserStrategyOptions `json:"runAsUser,omitempty" protobuf:"bytes,9,opt,name=runAsUser"`
+	RunAsUser RunAsUserStrategyOptions `json:"runAsUser" protobuf:"bytes,11,opt,name=runAsUser"`
+	// SupplementalGroups is the strategy that will dictate what supplemental groups are used by the SecurityContext.
+	SupplementalGroups SupplementalGroupsStrategyOptions `json:"supplementalGroups" protobuf:"bytes,12,opt,name=supplementalGroups"`
+	// FSGroup is the strategy that will dictate what fs group is used by the SecurityContext.
+	FSGroup FSGroupStrategyOptions `json:"fsGroup" protobuf:"bytes,13,opt,name=fsGroup"`
+	// ReadOnlyRootFilesystem when set to true will force containers to run with a read only root file
+	// system.  If the container specifically requests to run with a non-read only root file system
+	// the PSP should deny the pod.
+	// If set to false the container may run with a read only root file system if it wishes but it
+	// will not be forced to.
+	ReadOnlyRootFilesystem bool `json:"readOnlyRootFilesystem,omitempty" protobuf:"varint,14,opt,name=readOnlyRootFilesystem"`
 }
 
 // FS Type gives strong typing to different file systems that are used by volumes.
 type FSType string
 
 var (
+	AzureFile             FSType = "azureFile"
+	Flocker               FSType = "flocker"
+	FlexVolume            FSType = "flexVolume"
 	HostPath              FSType = "hostPath"
 	EmptyDir              FSType = "emptyDir"
 	GCEPersistentDisk     FSType = "gcePersistentDisk"
@@ -966,6 +990,8 @@ var (
 	CephFS                FSType = "cephFS"
 	DownwardAPI           FSType = "downwardAPI"
 	FC                    FSType = "fc"
+	ConfigMap             FSType = "configMap"
+	All                   FSType = "*"
 )
 
 // Host Port Range defines a range of host ports that will be enabled by a policy
@@ -1026,6 +1052,46 @@ const (
 	RunAsUserStrategyRunAsAny RunAsUserStrategy = "RunAsAny"
 )
 
+// FSGroupStrategyOptions defines the strategy type and options used to create the strategy.
+type FSGroupStrategyOptions struct {
+	// Rule is the strategy that will dictate what FSGroup is used in the SecurityContext.
+	Rule FSGroupStrategyType `json:"rule,omitempty" protobuf:"bytes,1,opt,name=rule,casttype=FSGroupStrategyType"`
+	// Ranges are the allowed ranges of fs groups.  If you would like to force a single
+	// fs group then supply a single range with the same start and end.
+	Ranges []IDRange `json:"ranges,omitempty" protobuf:"bytes,2,rep,name=ranges"`
+}
+
+// FSGroupStrategyType denotes strategy types for generating FSGroup values for a
+// SecurityContext
+type FSGroupStrategyType string
+
+const (
+	// container must have FSGroup of X applied.
+	FSGroupStrategyMustRunAs FSGroupStrategyType = "MustRunAs"
+	// container may make requests for any FSGroup labels.
+	FSGroupStrategyRunAsAny FSGroupStrategyType = "RunAsAny"
+)
+
+// SupplementalGroupsStrategyOptions defines the strategy type and options used to create the strategy.
+type SupplementalGroupsStrategyOptions struct {
+	// Rule is the strategy that will dictate what supplemental groups is used in the SecurityContext.
+	Rule SupplementalGroupsStrategyType `json:"rule,omitempty" protobuf:"bytes,1,opt,name=rule,casttype=SupplementalGroupsStrategyType"`
+	// Ranges are the allowed ranges of supplemental groups.  If you would like to force a single
+	// supplemental group then supply a single range with the same start and end.
+	Ranges []IDRange `json:"ranges,omitempty" protobuf:"bytes,2,rep,name=ranges"`
+}
+
+// SupplementalGroupsStrategyType denotes strategy types for determining valid supplemental
+// groups for a SecurityContext.
+type SupplementalGroupsStrategyType string
+
+const (
+	// container must run as a particular gid.
+	SupplementalGroupsStrategyMustRunAs SupplementalGroupsStrategyType = "MustRunAs"
+	// container may make requests for any gid.
+	SupplementalGroupsStrategyRunAsAny SupplementalGroupsStrategyType = "RunAsAny"
+)
+
 // Pod Security Policy List is a list of PodSecurityPolicy objects.
 type PodSecurityPolicyList struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -1035,4 +1101,95 @@ type PodSecurityPolicyList struct {
 
 	// Items is a list of schema objects.
 	Items []PodSecurityPolicy `json:"items" protobuf:"bytes,2,rep,name=items"`
+}
+
+type NetworkPolicy struct {
+	unversioned.TypeMeta `json:",inline"`
+	// Standard object's metadata.
+	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	v1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	// Specification of the desired behavior for this NetworkPolicy.
+	Spec NetworkPolicySpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
+}
+
+type NetworkPolicySpec struct {
+	// Selects the pods to which this NetworkPolicy object applies.  The array of ingress rules
+	// is applied to any pods selected by this field. Multiple network policies can select the
+	// same set of pods.  In this case, the ingress rules for each are combined additively.
+	// This field is NOT optional and follows standard label selector semantics.
+	// An empty podSelector matches all pods in this namespace.
+	PodSelector LabelSelector `json:"podSelector" protobuf:"bytes,1,opt,name=podSelector"`
+
+	// List of ingress rules to be applied to the selected pods.
+	// Traffic is allowed to a pod if namespace.networkPolicy.ingress.isolation is undefined and cluster policy allows it,
+	// OR if the traffic source is the pod's local node,
+	// OR if the traffic matches at least one ingress rule across all of the NetworkPolicy
+	// objects whose podSelector matches the pod.
+	// If this field is empty then this NetworkPolicy does not affect ingress isolation.
+	// If this field is present and contains at least one rule, this policy allows any traffic
+	// which matches at least one of the ingress rules in this list.
+	Ingress []NetworkPolicyIngressRule `json:"ingress,omitempty" protobuf:"bytes,2,rep,name=ingress"`
+}
+
+// This NetworkPolicyIngressRule matches traffic if and only if the traffic matches both ports AND from.
+type NetworkPolicyIngressRule struct {
+	// List of ports which should be made accessible on the pods selected for this rule.
+	// Each item in this list is combined using a logical OR.
+	// If this field is not provided, this rule matches all ports (traffic not restricted by port).
+	// If this field is empty, this rule matches no ports (no traffic matches).
+	// If this field is present and contains at least one item, then this rule allows traffic
+	// only if the traffic matches at least one port in the list.
+	// TODO: Update this to be a pointer to slice as soon as auto-generation supports it.
+	Ports []NetworkPolicyPort `json:"ports,omitempty" protobuf:"bytes,1,rep,name=ports"`
+
+	// List of sources which should be able to access the pods selected for this rule.
+	// Items in this list are combined using a logical OR operation.
+	// If this field is not provided, this rule matches all sources (traffic not restricted by source).
+	// If this field is empty, this rule matches no sources (no traffic matches).
+	// If this field is present and contains at least on item, this rule allows traffic only if the
+	// traffic matches at least one item in the from list.
+	// TODO: Update this to be a pointer to slice as soon as auto-generation supports it.
+	From []NetworkPolicyPeer `json:"from,omitempty" protobuf:"bytes,2,rep,name=from"`
+}
+
+type NetworkPolicyPort struct {
+	// Optional.  The protocol (TCP or UDP) which traffic must match.
+	// If not specified, this field defaults to TCP.
+	Protocol *v1.Protocol `json:"protocol,omitempty" protobuf:"bytes,1,opt,name=protocol,casttype=k8s.io/kubernetes/pkg/api/v1.Protocol"`
+
+	// If specified, the port on the given protocol.  This can
+	// either be a numerical or named port on a pod.  If this field is not provided,
+	// this matches all port names and numbers.
+	// If present, only traffic on the specified protocol AND port
+	// will be matched.
+	Port *intstr.IntOrString `json:"port,omitempty" protobuf:"bytes,2,opt,name=port"`
+}
+
+type NetworkPolicyPeer struct {
+	// Exactly one of the following must be specified.
+
+	// This is a label selector which selects Pods in this namespace.
+	// This field follows standard label selector semantics.
+	// If not provided, this selector selects no pods.
+	// If present but empty, this selector selects all pods in this namespace.
+	PodSelector *LabelSelector `json:"podSelector,omitempty" protobuf:"bytes,1,opt,name=podSelector"`
+
+	// Selects Namespaces using cluster scoped-labels.  This
+	// matches all pods in all namespaces selected by this label selector.
+	// This field follows standard label selector semantics.
+	// If omitted, this selector selects no namespaces.
+	// If present but empty, this selector selects all namespaces.
+	NamespaceSelector *LabelSelector `json:"namespaceSelector,omitempty" protobuf:"bytes,2,opt,name=namespaceSelector"`
+}
+
+// Network Policy List is a list of NetworkPolicy objects.
+type NetworkPolicyList struct {
+	unversioned.TypeMeta `json:",inline"`
+	// Standard list metadata.
+	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	unversioned.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	// Items is a list of schema objects.
+	Items []NetworkPolicy `json:"items" protobuf:"bytes,2,rep,name=items"`
 }

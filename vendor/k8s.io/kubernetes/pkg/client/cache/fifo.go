@@ -18,14 +18,21 @@ package cache
 
 import (
 	"sync"
+
+	"k8s.io/kubernetes/pkg/util/sets"
 )
+
+// PopProcessFunc is passed to Pop() method of Queue interface.
+// It is supposed to process the element popped from the queue.
+type PopProcessFunc func(interface{}) error
 
 // Queue is exactly like a Store, but has a Pop() method too.
 type Queue interface {
 	Store
 
-	// Pop blocks until it has something to return.
-	Pop() interface{}
+	// Pop blocks until it has something to process.
+	// It returns the object that was process and the result of processing.
+	Pop(PopProcessFunc) (interface{}, error)
 
 	// AddIfNotPresent adds a value previously
 	// returned by Pop back into the queue as long
@@ -35,6 +42,18 @@ type Queue interface {
 
 	// Return true if the first batch of items has been popped
 	HasSynced() bool
+}
+
+// Helper function for popping from Queue.
+// WARNING: Do NOT use this function in non-test code to avoid races
+// unless you really really really really know what you are doing.
+func Pop(queue Queue) interface{} {
+	var result interface{}
+	queue.Pop(func(obj interface{}) error {
+		result = obj
+		return nil
+	})
+	return result
 }
 
 // FIFO receives adds and updates from a Reflector, and puts them in a queue for
@@ -181,12 +200,13 @@ func (f *FIFO) GetByKey(key string) (item interface{}, exists bool, err error) {
 	return item, exists, nil
 }
 
-// Pop waits until an item is ready and returns it. If multiple items are
+// Pop waits until an item is ready and processes it. If multiple items are
 // ready, they are returned in the order in which they were added/updated.
-// The item is removed from the queue (and the store) before it is returned,
-// so if you don't successfully process it, you need to add it back with
-// AddIfNotPresent().
-func (f *FIFO) Pop() interface{} {
+// The item is removed from the queue (and the store) before it is processed,
+// so if you don't successfully process it, it should be added back with
+// AddIfNotPresent(). process function is called under lock, so it is safe
+// update data structures in it that need to be in sync with the queue.
+func (f *FIFO) Pop(process PopProcessFunc) (interface{}, error) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	for {
@@ -204,7 +224,7 @@ func (f *FIFO) Pop() interface{} {
 			continue
 		}
 		delete(f.items, id)
-		return item
+		return item, process(item)
 	}
 }
 
@@ -234,6 +254,26 @@ func (f *FIFO) Replace(list []interface{}, resourceVersion string) error {
 	f.queue = f.queue[:0]
 	for id := range items {
 		f.queue = append(f.queue, id)
+	}
+	if len(f.queue) > 0 {
+		f.cond.Broadcast()
+	}
+	return nil
+}
+
+// Resync will touch all objects to put them into the processing queue
+func (f *FIFO) Resync() error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
+	inQueue := sets.NewString()
+	for _, id := range f.queue {
+		inQueue.Insert(id)
+	}
+	for id := range f.items {
+		if !inQueue.Has(id) {
+			f.queue = append(f.queue, id)
+		}
 	}
 	if len(f.queue) > 0 {
 		f.cond.Broadcast()

@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors All rights reserved.
+Copyright 2016 The Kubernetes Authors All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -184,6 +184,16 @@ var map_ExportOptions = map[string]string{
 
 func (ExportOptions) SwaggerDoc() map[string]string {
 	return map_ExportOptions
+}
+
+var map_FSGroupStrategyOptions = map[string]string{
+	"":       "FSGroupStrategyOptions defines the strategy type and options used to create the strategy.",
+	"rule":   "Rule is the strategy that will dictate what FSGroup is used in the SecurityContext.",
+	"ranges": "Ranges are the allowed ranges of fs groups.  If you would like to force a single fs group then supply a single range with the same start and end.",
+}
+
+func (FSGroupStrategyOptions) SwaggerDoc() map[string]string {
+	return map_FSGroupStrategyOptions
 }
 
 var map_HTTPIngressPath = map[string]string{
@@ -446,6 +456,62 @@ func (ListOptions) SwaggerDoc() map[string]string {
 	return map_ListOptions
 }
 
+var map_NetworkPolicy = map[string]string{
+	"metadata": "Standard object's metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+	"spec":     "Specification of the desired behavior for this NetworkPolicy.",
+}
+
+func (NetworkPolicy) SwaggerDoc() map[string]string {
+	return map_NetworkPolicy
+}
+
+var map_NetworkPolicyIngressRule = map[string]string{
+	"":      "This NetworkPolicyIngressRule matches traffic if and only if the traffic matches both ports AND from.",
+	"ports": "List of ports which should be made accessible on the pods selected for this rule. Each item in this list is combined using a logical OR. If this field is not provided, this rule matches all ports (traffic not restricted by port). If this field is empty, this rule matches no ports (no traffic matches). If this field is present and contains at least one item, then this rule allows traffic only if the traffic matches at least one port in the list.",
+	"from":  "List of sources which should be able to access the pods selected for this rule. Items in this list are combined using a logical OR operation. If this field is not provided, this rule matches all sources (traffic not restricted by source). If this field is empty, this rule matches no sources (no traffic matches). If this field is present and contains at least on item, this rule allows traffic only if the traffic matches at least one item in the from list.",
+}
+
+func (NetworkPolicyIngressRule) SwaggerDoc() map[string]string {
+	return map_NetworkPolicyIngressRule
+}
+
+var map_NetworkPolicyList = map[string]string{
+	"":         "Network Policy List is a list of NetworkPolicy objects.",
+	"metadata": "Standard list metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+	"items":    "Items is a list of schema objects.",
+}
+
+func (NetworkPolicyList) SwaggerDoc() map[string]string {
+	return map_NetworkPolicyList
+}
+
+var map_NetworkPolicyPeer = map[string]string{
+	"podSelector":       "This is a label selector which selects Pods in this namespace. This field follows standard label selector semantics. If not provided, this selector selects no pods. If present but empty, this selector selects all pods in this namespace.",
+	"namespaceSelector": "Selects Namespaces using cluster scoped-labels.  This matches all pods in all namespaces selected by this label selector. This field follows standard label selector semantics. If omitted, this selector selects no namespaces. If present but empty, this selector selects all namespaces.",
+}
+
+func (NetworkPolicyPeer) SwaggerDoc() map[string]string {
+	return map_NetworkPolicyPeer
+}
+
+var map_NetworkPolicyPort = map[string]string{
+	"protocol": "Optional.  The protocol (TCP or UDP) which traffic must match. If not specified, this field defaults to TCP.",
+	"port":     "If specified, the port on the given protocol.  This can either be a numerical or named port on a pod.  If this field is not provided, this matches all port names and numbers. If present, only traffic on the specified protocol AND port will be matched.",
+}
+
+func (NetworkPolicyPort) SwaggerDoc() map[string]string {
+	return map_NetworkPolicyPort
+}
+
+var map_NetworkPolicySpec = map[string]string{
+	"podSelector": "Selects the pods to which this NetworkPolicy object applies.  The array of ingress rules is applied to any pods selected by this field. Multiple network policies can select the same set of pods.  In this case, the ingress rules for each are combined additively. This field is NOT optional and follows standard label selector semantics. An empty podSelector matches all pods in this namespace.",
+	"ingress":     "List of ingress rules to be applied to the selected pods. Traffic is allowed to a pod if namespace.networkPolicy.ingress.isolation is undefined and cluster policy allows it, OR if the traffic source is the pod's local node, OR if the traffic matches at least one ingress rule across all of the NetworkPolicy objects whose podSelector matches the pod. If this field is empty then this NetworkPolicy does not affect ingress isolation. If this field is present and contains at least one rule, this policy allows any traffic which matches at least one of the ingress rules in this list.",
+}
+
+func (NetworkPolicySpec) SwaggerDoc() map[string]string {
+	return map_NetworkPolicySpec
+}
+
 var map_PodSecurityPolicy = map[string]string{
 	"":         "Pod Security Policy governs the ability to make requests that affect the Security Context that will be applied to a pod and container.",
 	"metadata": "Standard object's metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
@@ -467,16 +533,21 @@ func (PodSecurityPolicyList) SwaggerDoc() map[string]string {
 }
 
 var map_PodSecurityPolicySpec = map[string]string{
-	"":             "Pod Security Policy Spec defines the policy enforced.",
-	"privileged":   "privileged determines if a pod can request to be run as privileged.",
-	"capabilities": "capabilities is a list of capabilities that can be added.",
-	"volumes":      "volumes is a white list of allowed volume plugins.  Empty indicates that all plugins may be used.",
-	"hostNetwork":  "hostNetwork determines if the policy allows the use of HostNetwork in the pod spec.",
-	"hostPorts":    "hostPorts determines which host port ranges are allowed to be exposed.",
-	"hostPID":      "hostPID determines if the policy allows the use of HostPID in the pod spec.",
-	"hostIPC":      "hostIPC determines if the policy allows the use of HostIPC in the pod spec.",
-	"seLinux":      "seLinux is the strategy that will dictate the allowable labels that may be set.",
-	"runAsUser":    "runAsUser is the strategy that will dictate the allowable RunAsUser values that may be set.",
+	"":                         "Pod Security Policy Spec defines the policy enforced.",
+	"privileged":               "privileged determines if a pod can request to be run as privileged.",
+	"defaultAddCapabilities":   "DefaultAddCapabilities is the default set of capabilities that will be added to the container unless the pod spec specifically drops the capability.  You may not list a capabiility in both DefaultAddCapabilities and RequiredDropCapabilities.",
+	"requiredDropCapabilities": "RequiredDropCapabilities are the capabilities that will be dropped from the container.  These are required to be dropped and cannot be added.",
+	"allowedCapabilities":      "AllowedCapabilities is a list of capabilities that can be requested to add to the container. Capabilities in this field may be added at the pod author's discretion. You must not list a capability in both AllowedCapabilities and RequiredDropCapabilities.",
+	"volumes":                  "volumes is a white list of allowed volume plugins.  Empty indicates that all plugins may be used.",
+	"hostNetwork":              "hostNetwork determines if the policy allows the use of HostNetwork in the pod spec.",
+	"hostPorts":                "hostPorts determines which host port ranges are allowed to be exposed.",
+	"hostPID":                  "hostPID determines if the policy allows the use of HostPID in the pod spec.",
+	"hostIPC":                  "hostIPC determines if the policy allows the use of HostIPC in the pod spec.",
+	"seLinux":                  "seLinux is the strategy that will dictate the allowable labels that may be set.",
+	"runAsUser":                "runAsUser is the strategy that will dictate the allowable RunAsUser values that may be set.",
+	"supplementalGroups":       "SupplementalGroups is the strategy that will dictate what supplemental groups are used by the SecurityContext.",
+	"fsGroup":                  "FSGroup is the strategy that will dictate what fs group is used by the SecurityContext.",
+	"readOnlyRootFilesystem":   "ReadOnlyRootFilesystem when set to true will force containers to run with a read only root file system.  If the container specifically requests to run with a non-read only root file system the PSP should deny the pod. If set to false the container may run with a read only root file system if it wishes but it will not be forced to.",
 }
 
 func (PodSecurityPolicySpec) SwaggerDoc() map[string]string {
@@ -605,7 +676,7 @@ func (ScaleStatus) SwaggerDoc() map[string]string {
 
 var map_SubresourceReference = map[string]string{
 	"":            "SubresourceReference contains enough information to let you inspect or modify the referred subresource.",
-	"kind":        "Kind of the referent; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds\"",
+	"kind":        "Kind of the referent; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds",
 	"name":        "Name of the referent; More info: http://releases.k8s.io/HEAD/docs/user-guide/identifiers.md#names",
 	"apiVersion":  "API version of the referent",
 	"subresource": "Subresource name of the referent",
@@ -613,6 +684,16 @@ var map_SubresourceReference = map[string]string{
 
 func (SubresourceReference) SwaggerDoc() map[string]string {
 	return map_SubresourceReference
+}
+
+var map_SupplementalGroupsStrategyOptions = map[string]string{
+	"":       "SupplementalGroupsStrategyOptions defines the strategy type and options used to create the strategy.",
+	"rule":   "Rule is the strategy that will dictate what supplemental groups is used in the SecurityContext.",
+	"ranges": "Ranges are the allowed ranges of supplemental groups.  If you would like to force a single supplemental group then supply a single range with the same start and end.",
+}
+
+func (SupplementalGroupsStrategyOptions) SwaggerDoc() map[string]string {
+	return map_SupplementalGroupsStrategyOptions
 }
 
 var map_ThirdPartyResource = map[string]string{

@@ -36,6 +36,8 @@ import (
 var FileExtensions = []string{".json", ".yaml", ".yml"}
 var InputExtensions = append(FileExtensions, "stdin")
 
+const defaultHttpGetAttempts int = 3
+
 // Builder provides convenience functions for taking arguments and parameters
 // from the command line and converting them to a list of resources to iterate
 // over using the Visitor interface.
@@ -68,6 +70,8 @@ type Builder struct {
 
 	singleResourceType bool
 	continueOnError    bool
+
+	singular bool
 
 	export bool
 
@@ -109,8 +113,11 @@ func (b *Builder) FilenameParam(enforceNamespace, recursive bool, paths ...strin
 				b.errs = append(b.errs, fmt.Errorf("the URL passed to filename %q is not valid: %v", s, err))
 				continue
 			}
-			b.URL(url)
+			b.URL(defaultHttpGetAttempts, url)
 		default:
+			if !recursive {
+				b.singular = true
+			}
 			b.Path(recursive, s)
 		}
 	}
@@ -123,11 +130,12 @@ func (b *Builder) FilenameParam(enforceNamespace, recursive bool, paths ...strin
 }
 
 // URL accepts a number of URLs directly.
-func (b *Builder) URL(urls ...*url.URL) *Builder {
+func (b *Builder) URL(httpAttemptCount int, urls ...*url.URL) *Builder {
 	for _, u := range urls {
 		b.paths = append(b.paths, &URLVisitor{
-			URL:           u,
-			StreamVisitor: NewStreamVisitor(nil, b.mapper, u.String(), b.schema),
+			URL:              u,
+			StreamVisitor:    NewStreamVisitor(nil, b.mapper, u.String(), b.schema),
+			HttpAttemptCount: httpAttemptCount,
 		})
 	}
 	return b
@@ -543,7 +551,12 @@ func (b *Builder) visitorResult() *Result {
 
 	// visit items specified by resource and name
 	if len(b.resourceTuples) != 0 {
-		isSingular := len(b.resourceTuples) == 1
+		// if b.singular is false, this could be by default, so double-check length
+		// of resourceTuples to determine if in fact it is singular or not
+		isSingular := b.singular
+		if !isSingular {
+			isSingular = len(b.resourceTuples) == 1
+		}
 
 		if len(b.paths) != 0 {
 			return &Result{singular: isSingular, err: fmt.Errorf("when paths, URLs, or stdin is provided as input, you may not specify a resource by arguments as well")}

@@ -32,7 +32,6 @@ var SchemeGroupVersion = unversioned.GroupVersion{Group: GroupName, Version: "v1
 func AddToScheme(scheme *runtime.Scheme) {
 	addKnownTypes(scheme)
 	addDefaultingFuncs(scheme)
-	addConversionFuncs(scheme)
 }
 
 // Adds the list of known types to api.Scheme.
@@ -45,7 +44,3 @@ func addKnownTypes(scheme *runtime.Scheme) {
 	)
 	versionedwatch.AddToGroupVersion(scheme, SchemeGroupVersion)
 }
-
-func (obj *HorizontalPodAutoscaler) GetObjectKind() unversioned.ObjectKind     { return &obj.TypeMeta }
-func (obj *HorizontalPodAutoscalerList) GetObjectKind() unversioned.ObjectKind { return &obj.TypeMeta }
-func (obj *Scale) GetObjectKind() unversioned.ObjectKind                       { return &obj.TypeMeta }

@@ -175,7 +175,7 @@ func (exp *ControlleeExpectations) isExpired() bool {
 // SetExpectations registers new expectations for the given controller. Forgets existing expectations.
 func (r *ControllerExpectations) SetExpectations(controllerKey string, add, del int) error {
 	exp := &ControlleeExpectations{add: int64(add), del: int64(del), key: controllerKey, timestamp: util.RealClock{}.Now()}
-	glog.V(4).Infof("Setting expectations %+v", exp)
+	glog.V(4).Infof("Setting expectations %#v", exp)
 	return r.Add(exp)
 }
 
@@ -399,7 +399,7 @@ func getPodsAnnotationSet(template *api.PodTemplateSpec, object runtime.Object) 
 func getPodsPrefix(controllerName string) string {
 	// use the dash (if the name isn't too long) to make the pod name a bit prettier
 	prefix := fmt.Sprintf("%s-", controllerName)
-	if ok, _ := validation.ValidatePodName(prefix, true); !ok {
+	if len(validation.ValidatePodName(prefix, true)) != 0 {
 		prefix = controllerName
 	}
 	return prefix

@@ -21,17 +21,28 @@ import (
 	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
+// ServerAddressByClientCIDR helps the client to determine the server address that they should use, depending on the clientCIDR that they match.
+type ServerAddressByClientCIDR struct {
+	// The CIDR with which clients can match their IP to figure out the server address that they should use.
+	ClientCIDR string `json:"clientCIDR" protobuf:"bytes,1,opt,name=clientCIDR"`
+	// Address of this server, suitable for a client that matches the above CIDR.
+	// This can be a hostname, hostname:port, IP or IP:port.
+	ServerAddress string `json:"serverAddress" protobuf:"bytes,2,opt,name=serverAddress"`
+}
+
 // ClusterSpec describes the attributes of a kubernetes cluster.
 type ClusterSpec struct {
 	// A map of client CIDR to server address.
 	// This is to help clients reach servers in the most network-efficient way possible.
 	// Clients can use the appropriate server address as per the CIDR that they match.
 	// In case of multiple matches, clients should use the longest matching CIDR.
-	ServerAddressByClientCIDRs []unversioned.ServerAddressByClientCIDR `json:"serverAddressByClientCIDRs" patchStrategy:"merge" patchMergeKey:"clientCIDR"`
-	// the type (e.g. bearer token, client certificate etc) and data of the credential used to access cluster.
-	// It’s used for system routines (not behalf of users)
-	// TODO: string may not enough, https://github.com/kubernetes/kubernetes/pull/23847#discussion_r59301275
-	Credential string `json:"credential,omitempty"`
+	ServerAddressByClientCIDRs []ServerAddressByClientCIDR `json:"serverAddressByClientCIDRs" patchStrategy:"merge" patchMergeKey:"clientCIDR"`
+	// Name of the secret containing kubeconfig to access this cluster.
+	// The secret is read from the kubernetes cluster that is hosting federation control plane.
+	// Admin needs to ensure that the required secret exists. Secret should be in the same namespace where federation control plane is hosted and it should have kubeconfig in its data with key "kubeconfig".
+	// This will later be changed to a reference to secret in federation control plane when the federation control plane supports secrets.
+	// This can be left empty if the cluster allows insecure access.
+	SecretRef *api.LocalObjectReference `json:"secretRef,omitempty"`
 }
 
 type ClusterConditionType string
@@ -75,6 +86,11 @@ type ClusterStatus struct {
 	// Allocatable represents the total resources of a cluster that are available for scheduling.
 	Allocatable api.ResourceList `json:"allocatable,omitempty"`
 	ClusterMeta `json:",inline"`
+	// Zones is the list of avaliability zones in which the nodes of the cluster exist, e.g. 'us-east1-a'.
+	// These will always be in the same region.
+	Zones []string `json:"zones,omitempty"`
+	// Region is the name of the region in which all of the nodes in the cluster exist.  e.g. 'us-east1'.
+	Region string `json:"region,omitempty"`
 }
 
 // +genclient=true,nonNamespaced=true

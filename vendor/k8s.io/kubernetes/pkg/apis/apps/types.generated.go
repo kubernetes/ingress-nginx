@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors All rights reserved.
+Copyright 2016 The Kubernetes Authors All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,10 +29,9 @@ import (
 	pkg4_resource "k8s.io/kubernetes/pkg/api/resource"
 	pkg1_unversioned "k8s.io/kubernetes/pkg/api/unversioned"
 	pkg3_types "k8s.io/kubernetes/pkg/types"
-	pkg6_intstr "k8s.io/kubernetes/pkg/util/intstr"
+	pkg5_intstr "k8s.io/kubernetes/pkg/util/intstr"
 	"reflect"
 	"runtime"
-	pkg5_inf "speter.net/go/exp/math/dec/inf"
 	time "time"
 )
 
@@ -70,10 +69,9 @@ func init() {
 		var v1 pkg4_resource.Quantity
 		var v2 pkg1_unversioned.TypeMeta
 		var v3 pkg3_types.UID
-		var v4 pkg6_intstr.IntOrString
-		var v5 pkg5_inf.Dec
-		var v6 time.Time
-		_, _, _, _, _, _, _ = v0, v1, v2, v3, v4, v5, v6
+		var v4 pkg5_intstr.IntOrString
+		var v5 time.Time
+		_, _, _, _, _, _ = v0, v1, v2, v3, v4, v5
 	}
 }
 
@@ -1436,7 +1434,7 @@ func (x codecSelfer1234) decSliceapi_PersistentVolumeClaim(v *[]pkg2_api.Persist
 
 			yyrg1 := len(yyv1) > 0
 			yyv21 := yyv1
-			yyrl1, yyrt1 = z.DecInferLen(yyl1, z.DecBasicHandle().MaxInitLen, 344)
+			yyrl1, yyrt1 = z.DecInferLen(yyl1, z.DecBasicHandle().MaxInitLen, 352)
 			if yyrt1 {
 				if yyrl1 <= cap(yyv1) {
 					yyv1 = yyv1[:yyrl1]
@@ -1555,7 +1553,7 @@ func (x codecSelfer1234) decSlicePetSet(v *[]PetSet, d *codec1978.Decoder) {
 
 			yyrg1 := len(yyv1) > 0
 			yyv21 := yyv1
-			yyrl1, yyrt1 = z.DecInferLen(yyl1, z.DecBasicHandle().MaxInitLen, 720)
+			yyrl1, yyrt1 = z.DecInferLen(yyl1, z.DecBasicHandle().MaxInitLen, 744)
 			if yyrt1 {
 				if yyrl1 <= cap(yyv1) {
 					yyv1 = yyv1[:yyrl1]

@@ -179,8 +179,8 @@ func (r *Request) Resource(resource string) *Request {
 		r.err = fmt.Errorf("resource already set to %q, cannot change to %q", r.resource, resource)
 		return r
 	}
-	if ok, msg := validation.IsValidPathSegmentName(resource); !ok {
-		r.err = fmt.Errorf("invalid resource %q: %s", resource, msg)
+	if msgs := validation.IsValidPathSegmentName(resource); len(msgs) != 0 {
+		r.err = fmt.Errorf("invalid resource %q: %v", resource, msgs)
 		return r
 	}
 	r.resource = resource
@@ -199,8 +199,8 @@ func (r *Request) SubResource(subresources ...string) *Request {
 		return r
 	}
 	for _, s := range subresources {
-		if ok, msg := validation.IsValidPathSegmentName(s); !ok {
-			r.err = fmt.Errorf("invalid subresource %q: %s", s, msg)
+		if msgs := validation.IsValidPathSegmentName(s); len(msgs) != 0 {
+			r.err = fmt.Errorf("invalid subresource %q: %v", s, msgs)
 			return r
 		}
 	}
@@ -221,8 +221,8 @@ func (r *Request) Name(resourceName string) *Request {
 		r.err = fmt.Errorf("resource name already set to %q, cannot change to %q", r.resourceName, resourceName)
 		return r
 	}
-	if ok, msg := validation.IsValidPathSegmentName(resourceName); !ok {
-		r.err = fmt.Errorf("invalid resource name %q: %s", resourceName, msg)
+	if msgs := validation.IsValidPathSegmentName(resourceName); len(msgs) != 0 {
+		r.err = fmt.Errorf("invalid resource name %q: %v", resourceName, msgs)
 		return r
 	}
 	r.resourceName = resourceName
@@ -238,8 +238,8 @@ func (r *Request) Namespace(namespace string) *Request {
 		r.err = fmt.Errorf("namespace already set to %q, cannot change to %q", r.namespace, namespace)
 		return r
 	}
-	if ok, msg := validation.IsValidPathSegmentName(namespace); !ok {
-		r.err = fmt.Errorf("invalid namespace %q: %s", namespace, msg)
+	if msgs := validation.IsValidPathSegmentName(namespace); len(msgs) != 0 {
+		r.err = fmt.Errorf("invalid namespace %q: %v", namespace, msgs)
 		return r
 	}
 	r.namespaceSet = true
@@ -539,10 +539,10 @@ func (r *Request) Body(obj interface{}) *Request {
 			return r
 		}
 		glog.V(8).Infof("Request Body: %s", string(data))
-		r.body = bytes.NewBuffer(data)
+		r.body = bytes.NewReader(data)
 	case []byte:
 		glog.V(8).Infof("Request Body: %s", string(t))
-		r.body = bytes.NewBuffer(t)
+		r.body = bytes.NewReader(t)
 	case io.Reader:
 		r.body = t
 	case runtime.Object:
@@ -556,7 +556,7 @@ func (r *Request) Body(obj interface{}) *Request {
 			return r
 		}
 		glog.V(8).Infof("Request Body: %s", string(data))
-		r.body = bytes.NewBuffer(data)
+		r.body = bytes.NewReader(data)
 		r.SetHeader("Content-Type", r.content.ContentType)
 	default:
 		r.err = fmt.Errorf("unknown type used for body: %+v", obj)
@@ -823,6 +823,15 @@ func (r *Request) request(fn func(*http.Request, *http.Response)) error {
 
 			retries++
 			if seconds, wait := checkWait(resp); wait && retries < maxRetries {
+				if seeker, ok := r.body.(io.Seeker); ok && r.body != nil {
+					_, err := seeker.Seek(0, 0)
+					if err != nil {
+						glog.V(4).Infof("Could not retry request, can't Seek() back to beginning of body for %T", r.body)
+						fn(req, resp)
+						return true
+					}
+				}
+
 				glog.V(4).Infof("Got a Retry-After %s response for attempt %d to %v", seconds, retries, url)
 				r.backoffMgr.Sleep(time.Duration(seconds) * time.Second)
 				return false
@@ -910,12 +919,30 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 		return Result{err: errors.FromObject(status)}
 	}
 
-	// TODO: Check ContentType.
+	contentType := resp.Header.Get("Content-Type")
+	var decoder runtime.Decoder
+	if contentType == r.content.ContentType {
+		decoder = r.serializers.Decoder
+	} else {
+		mediaType, params, err := mime.ParseMediaType(contentType)
+		if err != nil {
+			return Result{err: errors.NewInternalError(err)}
+		}
+		decoder, err = r.serializers.RenegotiatedDecoder(mediaType, params)
+		if err != nil {
+			return Result{
+				body:        body,
+				contentType: contentType,
+				statusCode:  resp.StatusCode,
+			}
+		}
+	}
+
 	return Result{
 		body:        body,
-		contentType: resp.Header.Get("Content-Type"),
+		contentType: contentType,
 		statusCode:  resp.StatusCode,
-		decoder:     r.serializers.Decoder,
+		decoder:     decoder,
 	}
 }
 
@@ -1021,6 +1048,9 @@ func (r Result) Get() (runtime.Object, error) {
 	if r.err != nil {
 		return nil, r.err
 	}
+	if r.decoder == nil {
+		return nil, fmt.Errorf("serializer for %s doesn't exist", r.contentType)
+	}
 	return runtime.Decode(r.decoder, r.body)
 }
 
@@ -1035,6 +1065,9 @@ func (r Result) StatusCode(statusCode *int) Result {
 func (r Result) Into(obj runtime.Object) error {
 	if r.err != nil {
 		return r.err
+	}
+	if r.decoder == nil {
+		return fmt.Errorf("serializer for %s doesn't exist", r.contentType)
 	}
 	return runtime.DecodeInto(r.decoder, r.body, obj)
 }

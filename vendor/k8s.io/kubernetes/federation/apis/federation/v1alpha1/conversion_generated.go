@@ -24,7 +24,6 @@ import (
 	federation "k8s.io/kubernetes/federation/apis/federation"
 	api "k8s.io/kubernetes/pkg/api"
 	resource "k8s.io/kubernetes/pkg/api/resource"
-	unversioned "k8s.io/kubernetes/pkg/api/unversioned"
 	v1 "k8s.io/kubernetes/pkg/api/v1"
 	conversion "k8s.io/kubernetes/pkg/conversion"
 )
@@ -43,6 +42,8 @@ func init() {
 		Convert_federation_ClusterSpec_To_v1alpha1_ClusterSpec,
 		Convert_v1alpha1_ClusterStatus_To_federation_ClusterStatus,
 		Convert_federation_ClusterStatus_To_v1alpha1_ClusterStatus,
+		Convert_v1alpha1_ServerAddressByClientCIDR_To_federation_ServerAddressByClientCIDR,
+		Convert_federation_ServerAddressByClientCIDR_To_v1alpha1_ServerAddressByClientCIDR,
 	); err != nil {
 		// if one of the conversion functions is malformed, detect it immediately.
 		panic(err)
@@ -198,17 +199,25 @@ func Convert_federation_ClusterMeta_To_v1alpha1_ClusterMeta(in *federation.Clust
 func autoConvert_v1alpha1_ClusterSpec_To_federation_ClusterSpec(in *ClusterSpec, out *federation.ClusterSpec, s conversion.Scope) error {
 	if in.ServerAddressByClientCIDRs != nil {
 		in, out := &in.ServerAddressByClientCIDRs, &out.ServerAddressByClientCIDRs
-		*out = make([]unversioned.ServerAddressByClientCIDR, len(*in))
+		*out = make([]federation.ServerAddressByClientCIDR, len(*in))
 		for i := range *in {
-			// TODO: Inefficient conversion - can we improve it?
-			if err := s.Convert(&(*in)[i], &(*out)[i], 0); err != nil {
+			if err := Convert_v1alpha1_ServerAddressByClientCIDR_To_federation_ServerAddressByClientCIDR(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
 	} else {
 		out.ServerAddressByClientCIDRs = nil
 	}
-	out.Credential = in.Credential
+	if in.SecretRef != nil {
+		in, out := &in.SecretRef, &out.SecretRef
+		*out = new(api.LocalObjectReference)
+		// TODO: Inefficient conversion - can we improve it?
+		if err := s.Convert(*in, *out, 0); err != nil {
+			return err
+		}
+	} else {
+		out.SecretRef = nil
+	}
 	return nil
 }
 
@@ -219,17 +228,25 @@ func Convert_v1alpha1_ClusterSpec_To_federation_ClusterSpec(in *ClusterSpec, out
 func autoConvert_federation_ClusterSpec_To_v1alpha1_ClusterSpec(in *federation.ClusterSpec, out *ClusterSpec, s conversion.Scope) error {
 	if in.ServerAddressByClientCIDRs != nil {
 		in, out := &in.ServerAddressByClientCIDRs, &out.ServerAddressByClientCIDRs
-		*out = make([]unversioned.ServerAddressByClientCIDR, len(*in))
+		*out = make([]ServerAddressByClientCIDR, len(*in))
 		for i := range *in {
-			// TODO: Inefficient conversion - can we improve it?
-			if err := s.Convert(&(*in)[i], &(*out)[i], 0); err != nil {
+			if err := Convert_federation_ServerAddressByClientCIDR_To_v1alpha1_ServerAddressByClientCIDR(&(*in)[i], &(*out)[i], s); err != nil {
 				return err
 			}
 		}
 	} else {
 		out.ServerAddressByClientCIDRs = nil
 	}
-	out.Credential = in.Credential
+	if in.SecretRef != nil {
+		in, out := &in.SecretRef, &out.SecretRef
+		*out = new(v1.LocalObjectReference)
+		// TODO: Inefficient conversion - can we improve it?
+		if err := s.Convert(*in, *out, 0); err != nil {
+			return err
+		}
+	} else {
+		out.SecretRef = nil
+	}
 	return nil
 }
 
@@ -258,6 +275,8 @@ func autoConvert_v1alpha1_ClusterStatus_To_federation_ClusterStatus(in *ClusterS
 	if err := Convert_v1alpha1_ClusterMeta_To_federation_ClusterMeta(&in.ClusterMeta, &out.ClusterMeta, s); err != nil {
 		return err
 	}
+	out.Zones = in.Zones
+	out.Region = in.Region
 	return nil
 }
 
@@ -306,9 +325,31 @@ func autoConvert_federation_ClusterStatus_To_v1alpha1_ClusterStatus(in *federati
 	if err := Convert_federation_ClusterMeta_To_v1alpha1_ClusterMeta(&in.ClusterMeta, &out.ClusterMeta, s); err != nil {
 		return err
 	}
+	out.Zones = in.Zones
+	out.Region = in.Region
 	return nil
 }
 
 func Convert_federation_ClusterStatus_To_v1alpha1_ClusterStatus(in *federation.ClusterStatus, out *ClusterStatus, s conversion.Scope) error {
 	return autoConvert_federation_ClusterStatus_To_v1alpha1_ClusterStatus(in, out, s)
+}
+
+func autoConvert_v1alpha1_ServerAddressByClientCIDR_To_federation_ServerAddressByClientCIDR(in *ServerAddressByClientCIDR, out *federation.ServerAddressByClientCIDR, s conversion.Scope) error {
+	out.ClientCIDR = in.ClientCIDR
+	out.ServerAddress = in.ServerAddress
+	return nil
+}
+
+func Convert_v1alpha1_ServerAddressByClientCIDR_To_federation_ServerAddressByClientCIDR(in *ServerAddressByClientCIDR, out *federation.ServerAddressByClientCIDR, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ServerAddressByClientCIDR_To_federation_ServerAddressByClientCIDR(in, out, s)
+}
+
+func autoConvert_federation_ServerAddressByClientCIDR_To_v1alpha1_ServerAddressByClientCIDR(in *federation.ServerAddressByClientCIDR, out *ServerAddressByClientCIDR, s conversion.Scope) error {
+	out.ClientCIDR = in.ClientCIDR
+	out.ServerAddress = in.ServerAddress
+	return nil
+}
+
+func Convert_federation_ServerAddressByClientCIDR_To_v1alpha1_ServerAddressByClientCIDR(in *federation.ServerAddressByClientCIDR, out *ServerAddressByClientCIDR, s conversion.Scope) error {
+	return autoConvert_federation_ServerAddressByClientCIDR_To_v1alpha1_ServerAddressByClientCIDR(in, out, s)
 }

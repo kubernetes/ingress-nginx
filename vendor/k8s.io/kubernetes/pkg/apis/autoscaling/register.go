@@ -19,7 +19,6 @@ package autoscaling
 import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/runtime"
 )
 
@@ -48,10 +47,8 @@ func AddToScheme(scheme *runtime.Scheme) {
 func addKnownTypes(scheme *runtime.Scheme) {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Scale{},
-		&extensions.HorizontalPodAutoscaler{},
-		&extensions.HorizontalPodAutoscalerList{},
+		&HorizontalPodAutoscaler{},
+		&HorizontalPodAutoscalerList{},
 		&api.ListOptions{},
 	)
 }
-
-func (obj *Scale) GetObjectKind() unversioned.ObjectKind { return &obj.TypeMeta }

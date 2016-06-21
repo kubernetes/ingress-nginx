@@ -301,6 +301,10 @@ func (c *Fake) ConfigMaps(namespace string) client.ConfigMapsInterface {
 	return &FakeConfigMaps{Fake: c, Namespace: namespace}
 }
 
+func (c *Fake) Rbac() client.RbacInterface {
+	return &FakeRbac{Fake: c}
+}
+
 // SwaggerSchema returns an empty swagger.ApiDeclaration for testing
 func (c *Fake) SwaggerSchema(version unversioned.GroupVersion) (*swagger.ApiDeclaration, error) {
 	action := ActionImpl{}
@@ -325,7 +329,7 @@ type FakeAutoscaling struct {
 }
 
 func (c *FakeAutoscaling) HorizontalPodAutoscalers(namespace string) client.HorizontalPodAutoscalerInterface {
-	return &FakeHorizontalPodAutoscalersV1{Fake: c, Namespace: namespace}
+	return &FakeHorizontalPodAutoscalers{Fake: c, Namespace: namespace}
 }
 
 // NewSimpleFakeBatch returns a client that will respond with the provided objects
@@ -341,6 +345,10 @@ func (c *FakeBatch) Jobs(namespace string) client.JobInterface {
 	return &FakeJobsV1{Fake: c, Namespace: namespace}
 }
 
+func (c *FakeBatch) ScheduledJobs(namespace string) client.ScheduledJobInterface {
+	return &FakeScheduledJobs{Fake: c, Namespace: namespace}
+}
+
 // NewSimpleFakeExp returns a client that will respond with the provided objects
 func NewSimpleFakeExp(objects ...runtime.Object) *FakeExperimental {
 	return &FakeExperimental{Fake: NewSimpleFake(objects...)}
@@ -352,10 +360,6 @@ type FakeExperimental struct {
 
 func (c *FakeExperimental) DaemonSets(namespace string) client.DaemonSetInterface {
 	return &FakeDaemonSets{Fake: c, Namespace: namespace}
-}
-
-func (c *FakeExperimental) HorizontalPodAutoscalers(namespace string) client.HorizontalPodAutoscalerInterface {
-	return &FakeHorizontalPodAutoscalers{Fake: c, Namespace: namespace}
 }
 
 func (c *FakeExperimental) Deployments(namespace string) client.DeploymentInterface {
@@ -382,8 +386,44 @@ func (c *FakeExperimental) ReplicaSets(namespace string) client.ReplicaSetInterf
 	return &FakeReplicaSets{Fake: c, Namespace: namespace}
 }
 
+func (c *FakeExperimental) NetworkPolicies(namespace string) client.NetworkPolicyInterface {
+	return &FakeNetworkPolicies{Fake: c, Namespace: namespace}
+}
+
+func NewSimpleFakeRbac(objects ...runtime.Object) *FakeRbac {
+	return &FakeRbac{Fake: NewSimpleFake(objects...)}
+}
+
+type FakeRbac struct {
+	*Fake
+}
+
+func (c *FakeRbac) Roles(namespace string) client.RoleInterface {
+	return &FakeRoles{Fake: c, Namespace: namespace}
+}
+
+func (c *FakeRbac) RoleBindings(namespace string) client.RoleBindingInterface {
+	return &FakeRoleBindings{Fake: c, Namespace: namespace}
+}
+
+func (c *FakeRbac) ClusterRoles() client.ClusterRoleInterface {
+	return &FakeClusterRoles{Fake: c}
+}
+
+func (c *FakeRbac) ClusterRoleBindings() client.ClusterRoleBindingInterface {
+	return &FakeClusterRoleBindings{Fake: c}
+}
+
 type FakeDiscovery struct {
 	*Fake
+}
+
+func (c *FakeDiscovery) ServerPreferredResources() ([]unversioned.GroupVersionResource, error) {
+	return nil, nil
+}
+
+func (c *FakeDiscovery) ServerPreferredNamespacedResources() ([]unversioned.GroupVersionResource, error) {
+	return nil, nil
 }
 
 func (c *FakeDiscovery) ServerResourcesForGroupVersion(groupVersion string) (*unversioned.APIResourceList, error) {

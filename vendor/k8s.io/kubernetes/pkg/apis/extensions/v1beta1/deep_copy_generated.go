@@ -48,6 +48,7 @@ func init() {
 		DeepCopy_v1beta1_DeploymentStatus,
 		DeepCopy_v1beta1_DeploymentStrategy,
 		DeepCopy_v1beta1_ExportOptions,
+		DeepCopy_v1beta1_FSGroupStrategyOptions,
 		DeepCopy_v1beta1_HTTPIngressPath,
 		DeepCopy_v1beta1_HTTPIngressRuleValue,
 		DeepCopy_v1beta1_HorizontalPodAutoscaler,
@@ -72,6 +73,12 @@ func init() {
 		DeepCopy_v1beta1_LabelSelector,
 		DeepCopy_v1beta1_LabelSelectorRequirement,
 		DeepCopy_v1beta1_ListOptions,
+		DeepCopy_v1beta1_NetworkPolicy,
+		DeepCopy_v1beta1_NetworkPolicyIngressRule,
+		DeepCopy_v1beta1_NetworkPolicyList,
+		DeepCopy_v1beta1_NetworkPolicyPeer,
+		DeepCopy_v1beta1_NetworkPolicyPort,
+		DeepCopy_v1beta1_NetworkPolicySpec,
 		DeepCopy_v1beta1_PodSecurityPolicy,
 		DeepCopy_v1beta1_PodSecurityPolicyList,
 		DeepCopy_v1beta1_PodSecurityPolicySpec,
@@ -88,6 +95,7 @@ func init() {
 		DeepCopy_v1beta1_ScaleSpec,
 		DeepCopy_v1beta1_ScaleStatus,
 		DeepCopy_v1beta1_SubresourceReference,
+		DeepCopy_v1beta1_SupplementalGroupsStrategyOptions,
 		DeepCopy_v1beta1_ThirdPartyResource,
 		DeepCopy_v1beta1_ThirdPartyResourceData,
 		DeepCopy_v1beta1_ThirdPartyResourceDataList,
@@ -344,6 +352,22 @@ func DeepCopy_v1beta1_ExportOptions(in ExportOptions, out *ExportOptions, c *con
 	}
 	out.Export = in.Export
 	out.Exact = in.Exact
+	return nil
+}
+
+func DeepCopy_v1beta1_FSGroupStrategyOptions(in FSGroupStrategyOptions, out *FSGroupStrategyOptions, c *conversion.Cloner) error {
+	out.Rule = in.Rule
+	if in.Ranges != nil {
+		in, out := in.Ranges, &out.Ranges
+		*out = make([]IDRange, len(in))
+		for i := range in {
+			if err := DeepCopy_v1beta1_IDRange(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ranges = nil
+	}
 	return nil
 }
 
@@ -778,6 +802,126 @@ func DeepCopy_v1beta1_ListOptions(in ListOptions, out *ListOptions, c *conversio
 	return nil
 }
 
+func DeepCopy_v1beta1_NetworkPolicy(in NetworkPolicy, out *NetworkPolicy, c *conversion.Cloner) error {
+	if err := unversioned.DeepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
+		return err
+	}
+	if err := v1.DeepCopy_v1_ObjectMeta(in.ObjectMeta, &out.ObjectMeta, c); err != nil {
+		return err
+	}
+	if err := DeepCopy_v1beta1_NetworkPolicySpec(in.Spec, &out.Spec, c); err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeepCopy_v1beta1_NetworkPolicyIngressRule(in NetworkPolicyIngressRule, out *NetworkPolicyIngressRule, c *conversion.Cloner) error {
+	if in.Ports != nil {
+		in, out := in.Ports, &out.Ports
+		*out = make([]NetworkPolicyPort, len(in))
+		for i := range in {
+			if err := DeepCopy_v1beta1_NetworkPolicyPort(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
+	if in.From != nil {
+		in, out := in.From, &out.From
+		*out = make([]NetworkPolicyPeer, len(in))
+		for i := range in {
+			if err := DeepCopy_v1beta1_NetworkPolicyPeer(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.From = nil
+	}
+	return nil
+}
+
+func DeepCopy_v1beta1_NetworkPolicyList(in NetworkPolicyList, out *NetworkPolicyList, c *conversion.Cloner) error {
+	if err := unversioned.DeepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
+		return err
+	}
+	if err := unversioned.DeepCopy_unversioned_ListMeta(in.ListMeta, &out.ListMeta, c); err != nil {
+		return err
+	}
+	if in.Items != nil {
+		in, out := in.Items, &out.Items
+		*out = make([]NetworkPolicy, len(in))
+		for i := range in {
+			if err := DeepCopy_v1beta1_NetworkPolicy(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
+	return nil
+}
+
+func DeepCopy_v1beta1_NetworkPolicyPeer(in NetworkPolicyPeer, out *NetworkPolicyPeer, c *conversion.Cloner) error {
+	if in.PodSelector != nil {
+		in, out := in.PodSelector, &out.PodSelector
+		*out = new(LabelSelector)
+		if err := DeepCopy_v1beta1_LabelSelector(*in, *out, c); err != nil {
+			return err
+		}
+	} else {
+		out.PodSelector = nil
+	}
+	if in.NamespaceSelector != nil {
+		in, out := in.NamespaceSelector, &out.NamespaceSelector
+		*out = new(LabelSelector)
+		if err := DeepCopy_v1beta1_LabelSelector(*in, *out, c); err != nil {
+			return err
+		}
+	} else {
+		out.NamespaceSelector = nil
+	}
+	return nil
+}
+
+func DeepCopy_v1beta1_NetworkPolicyPort(in NetworkPolicyPort, out *NetworkPolicyPort, c *conversion.Cloner) error {
+	if in.Protocol != nil {
+		in, out := in.Protocol, &out.Protocol
+		*out = new(v1.Protocol)
+		**out = *in
+	} else {
+		out.Protocol = nil
+	}
+	if in.Port != nil {
+		in, out := in.Port, &out.Port
+		*out = new(intstr.IntOrString)
+		if err := intstr.DeepCopy_intstr_IntOrString(*in, *out, c); err != nil {
+			return err
+		}
+	} else {
+		out.Port = nil
+	}
+	return nil
+}
+
+func DeepCopy_v1beta1_NetworkPolicySpec(in NetworkPolicySpec, out *NetworkPolicySpec, c *conversion.Cloner) error {
+	if err := DeepCopy_v1beta1_LabelSelector(in.PodSelector, &out.PodSelector, c); err != nil {
+		return err
+	}
+	if in.Ingress != nil {
+		in, out := in.Ingress, &out.Ingress
+		*out = make([]NetworkPolicyIngressRule, len(in))
+		for i := range in {
+			if err := DeepCopy_v1beta1_NetworkPolicyIngressRule(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ingress = nil
+	}
+	return nil
+}
+
 func DeepCopy_v1beta1_PodSecurityPolicy(in PodSecurityPolicy, out *PodSecurityPolicy, c *conversion.Cloner) error {
 	if err := unversioned.DeepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
 		return err
@@ -814,14 +958,32 @@ func DeepCopy_v1beta1_PodSecurityPolicyList(in PodSecurityPolicyList, out *PodSe
 
 func DeepCopy_v1beta1_PodSecurityPolicySpec(in PodSecurityPolicySpec, out *PodSecurityPolicySpec, c *conversion.Cloner) error {
 	out.Privileged = in.Privileged
-	if in.Capabilities != nil {
-		in, out := in.Capabilities, &out.Capabilities
+	if in.DefaultAddCapabilities != nil {
+		in, out := in.DefaultAddCapabilities, &out.DefaultAddCapabilities
 		*out = make([]v1.Capability, len(in))
 		for i := range in {
 			(*out)[i] = in[i]
 		}
 	} else {
-		out.Capabilities = nil
+		out.DefaultAddCapabilities = nil
+	}
+	if in.RequiredDropCapabilities != nil {
+		in, out := in.RequiredDropCapabilities, &out.RequiredDropCapabilities
+		*out = make([]v1.Capability, len(in))
+		for i := range in {
+			(*out)[i] = in[i]
+		}
+	} else {
+		out.RequiredDropCapabilities = nil
+	}
+	if in.AllowedCapabilities != nil {
+		in, out := in.AllowedCapabilities, &out.AllowedCapabilities
+		*out = make([]v1.Capability, len(in))
+		for i := range in {
+			(*out)[i] = in[i]
+		}
+	} else {
+		out.AllowedCapabilities = nil
 	}
 	if in.Volumes != nil {
 		in, out := in.Volumes, &out.Volumes
@@ -852,6 +1014,13 @@ func DeepCopy_v1beta1_PodSecurityPolicySpec(in PodSecurityPolicySpec, out *PodSe
 	if err := DeepCopy_v1beta1_RunAsUserStrategyOptions(in.RunAsUser, &out.RunAsUser, c); err != nil {
 		return err
 	}
+	if err := DeepCopy_v1beta1_SupplementalGroupsStrategyOptions(in.SupplementalGroups, &out.SupplementalGroups, c); err != nil {
+		return err
+	}
+	if err := DeepCopy_v1beta1_FSGroupStrategyOptions(in.FSGroup, &out.FSGroup, c); err != nil {
+		return err
+	}
+	out.ReadOnlyRootFilesystem = in.ReadOnlyRootFilesystem
 	return nil
 }
 
@@ -1027,6 +1196,22 @@ func DeepCopy_v1beta1_SubresourceReference(in SubresourceReference, out *Subreso
 	out.Name = in.Name
 	out.APIVersion = in.APIVersion
 	out.Subresource = in.Subresource
+	return nil
+}
+
+func DeepCopy_v1beta1_SupplementalGroupsStrategyOptions(in SupplementalGroupsStrategyOptions, out *SupplementalGroupsStrategyOptions, c *conversion.Cloner) error {
+	out.Rule = in.Rule
+	if in.Ranges != nil {
+		in, out := in.Ranges, &out.Ranges
+		*out = make([]IDRange, len(in))
+		for i := range in {
+			if err := DeepCopy_v1beta1_IDRange(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ranges = nil
+	}
 	return nil
 }
 

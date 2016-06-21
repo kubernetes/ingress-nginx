@@ -17,6 +17,8 @@ limitations under the License.
 package api
 
 import (
+	"k8s.io/kubernetes/pkg/api/meta"
+	"k8s.io/kubernetes/pkg/api/meta/metatypes"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/conversion"
 	"k8s.io/kubernetes/pkg/runtime"
@@ -63,6 +65,10 @@ func ListMetaFor(obj runtime.Object) (*unversioned.ListMeta, error) {
 	return meta, err
 }
 
+func (obj *ObjectMeta) GetObjectMeta() meta.Object { return obj }
+
+func (obj *ObjectReference) GetObjectKind() unversioned.ObjectKind { return obj }
+
 // Namespace implements meta.Object for any object with an ObjectMeta typed field. Allows
 // fast, direct access to metadata fields for API objects.
 func (meta *ObjectMeta) GetNamespace() string                   { return meta.Namespace }
@@ -89,3 +95,35 @@ func (meta *ObjectMeta) GetLabels() map[string]string                 { return m
 func (meta *ObjectMeta) SetLabels(labels map[string]string)           { meta.Labels = labels }
 func (meta *ObjectMeta) GetAnnotations() map[string]string            { return meta.Annotations }
 func (meta *ObjectMeta) SetAnnotations(annotations map[string]string) { meta.Annotations = annotations }
+func (meta *ObjectMeta) GetFinalizers() []string                      { return meta.Finalizers }
+func (meta *ObjectMeta) SetFinalizers(finalizers []string)            { meta.Finalizers = finalizers }
+
+func (meta *ObjectMeta) GetOwnerReferences() []metatypes.OwnerReference {
+	ret := make([]metatypes.OwnerReference, len(meta.OwnerReferences))
+	for i := 0; i < len(meta.OwnerReferences); i++ {
+		ret[i].Kind = meta.OwnerReferences[i].Kind
+		ret[i].Name = meta.OwnerReferences[i].Name
+		ret[i].UID = meta.OwnerReferences[i].UID
+		ret[i].APIVersion = meta.OwnerReferences[i].APIVersion
+		if meta.OwnerReferences[i].Controller != nil {
+			value := *meta.OwnerReferences[i].Controller
+			ret[i].Controller = &value
+		}
+	}
+	return ret
+}
+
+func (meta *ObjectMeta) SetOwnerReferences(references []metatypes.OwnerReference) {
+	newReferences := make([]OwnerReference, len(references))
+	for i := 0; i < len(references); i++ {
+		newReferences[i].Kind = references[i].Kind
+		newReferences[i].Name = references[i].Name
+		newReferences[i].UID = references[i].UID
+		newReferences[i].APIVersion = references[i].APIVersion
+		if references[i].Controller != nil {
+			value := *references[i].Controller
+			newReferences[i].Controller = &value
+		}
+	}
+	meta.OwnerReferences = newReferences
+}
