@@ -248,7 +248,7 @@ func getClusterUID(kubeClient *client.Client, name string) (string, error) {
 
 	existingUID, found, err := cfgVault.Get()
 	if found {
-		glog.Infof("Using saved cluster uid %q", name)
+		glog.Infof("Using saved cluster uid %q", existingUID)
 		return existingUID, nil
 	} else if err != nil {
 		// This can fail because of:
