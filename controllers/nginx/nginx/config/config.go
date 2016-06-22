@@ -162,6 +162,11 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
 	ServerNameHashBucketSize int `structs:"server-name-hash-bucket-size,omitempty"`
 
+	// SkipAccessLogURLs sets a list of URLs that should not appear in the NGINX access log
+	// This is useful with urls like `/health` or `health-check` that make "complex" reading the logs
+	// By default this list is empty
+	SkipAccessLogURLs []string `structs:"skip-access-log-urls,-"`
+
 	// Enables or disables the redirect (301) to the HTTPS port
 	SSLRedirect bool `structs:"ssl-redirect,omitempty"`
 
@@ -275,6 +280,7 @@ func NewDefault() Configuration {
 		UseHTTP2:                 true,
 		CustomHTTPErrors:         make([]int, 0),
 		WhitelistSourceRange:     make([]string, 0),
+		SkipAccessLogURLs:        make([]string, 0),
 	}
 
 	if glog.V(5) {
