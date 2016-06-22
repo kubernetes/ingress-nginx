@@ -414,11 +414,10 @@ func (lbc *loadBalancerController) checkSvcForUpdate(svc *api.Service) (map[stri
 	return namedPorts, nil
 }
 
-func (lbc *loadBalancerController) sync(key string) {
+func (lbc *loadBalancerController) sync(key string) error {
 	if !lbc.controllersInSync() {
 		time.Sleep(podStoreSyncedPollPeriod)
-		lbc.syncQueue.requeue(key, fmt.Errorf("deferring sync till endpoints controller has synced"))
-		return
+		return fmt.Errorf("deferring sync till endpoints controller has synced")
 	}
 
 	var cfg *api.ConfigMap
@@ -435,7 +434,7 @@ func (lbc *loadBalancerController) sync(key string) {
 	ings := lbc.ingLister.Store.List()
 	upstreams, servers := lbc.getUpstreamServers(ngxConfig, ings)
 
-	lbc.nginx.CheckAndReload(ngxConfig, nginx.IngressConfig{
+	return lbc.nginx.CheckAndReload(ngxConfig, nginx.IngressConfig{
 		Upstreams:    upstreams,
 		Servers:      servers,
 		TCPUpstreams: lbc.getTCPServices(),
@@ -443,21 +442,20 @@ func (lbc *loadBalancerController) sync(key string) {
 	})
 }
 
-func (lbc *loadBalancerController) updateIngressStatus(key string) {
+func (lbc *loadBalancerController) updateIngressStatus(key string) error {
 	if !lbc.controllersInSync() {
 		time.Sleep(podStoreSyncedPollPeriod)
-		lbc.ingQueue.requeue(key, fmt.Errorf("deferring sync till endpoints controller has synced"))
-		return
+		return fmt.Errorf("deferring sync till endpoints controller has synced")
 	}
 
 	obj, ingExists, err := lbc.ingLister.Store.GetByKey(key)
 	if err != nil {
-		lbc.ingQueue.requeue(key, err)
-		return
+		return err
 	}
 
 	if !ingExists {
-		return
+		// TODO: what's the correct behavior here?
+		return nil
 	}
 
 	ing := obj.(*extensions.Ingress)
@@ -466,8 +464,7 @@ func (lbc *loadBalancerController) updateIngressStatus(key string) {
 
 	currIng, err := ingClient.Get(ing.Name)
 	if err != nil {
-		glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
-		return
+		return fmt.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
 	}
 
 	lbIPs := ing.Status.LoadBalancer.Ingress
@@ -478,11 +475,13 @@ func (lbc *loadBalancerController) updateIngressStatus(key string) {
 		})
 		if _, err := ingClient.UpdateStatus(currIng); err != nil {
 			lbc.recorder.Eventf(currIng, api.EventTypeWarning, "UPDATE", "error: %v", err)
-			return
+			return err
 		}
 
 		lbc.recorder.Eventf(currIng, api.EventTypeNormal, "CREATE", "ip: %v", lbc.podInfo.NodeIP)
 	}
+
+	return nil
 }
 
 func (lbc *loadBalancerController) isStatusIPDefined(lbings []api.LoadBalancerIngress) bool {

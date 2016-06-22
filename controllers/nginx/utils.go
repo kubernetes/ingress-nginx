@@ -51,9 +51,9 @@ type StoreToConfigmapLister struct {
 // invokes the given sync function for every work item inserted.
 type taskQueue struct {
 	// queue is the work queue the worker polls
-	queue *workqueue.Type
+	queue workqueue.RateLimitingInterface
 	// sync is called for each item in the queue
-	sync func(string)
+	sync func(string) error
 	// workerDone is closed when the worker exits
 	workerDone chan struct{}
 }
@@ -72,9 +72,8 @@ func (t *taskQueue) enqueue(obj interface{}) {
 	t.queue.Add(key)
 }
 
-func (t *taskQueue) requeue(key string, err error) {
-	glog.V(3).Infof("requeuing %v, err %v", key, err)
-	t.queue.Add(key)
+func (t *taskQueue) requeue(key string) {
+	t.queue.AddRateLimited(key)
 }
 
 // worker processes work in the queue through sync.
@@ -86,7 +85,13 @@ func (t *taskQueue) worker() {
 			return
 		}
 		glog.V(3).Infof("syncing %v", key)
-		t.sync(key.(string))
+		if err := t.sync(key.(string)); err != nil {
+			glog.V(3).Infof("requeuing %v, err %v", key, err)
+			t.requeue(key.(string))
+		} else {
+			t.queue.Forget(key)
+		}
+
 		t.queue.Done(key)
 	}
 }
@@ -99,9 +104,9 @@ func (t *taskQueue) shutdown() {
 
 // NewTaskQueue creates a new task queue with the given sync function.
 // The sync function is called for every element inserted into the queue.
-func NewTaskQueue(syncFn func(string)) *taskQueue {
+func NewTaskQueue(syncFn func(string) error) *taskQueue {
 	return &taskQueue{
-		queue:      workqueue.New(),
+		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		sync:       syncFn,
 		workerDone: make(chan struct{}),
 	}
