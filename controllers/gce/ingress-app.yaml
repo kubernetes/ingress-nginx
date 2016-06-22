@@ -20,23 +20,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: echoheadersdefault
-  labels:
-    app: echoheaders
-spec:
-  type: NodePort
-  ports:
-  - port: 80
-    nodePort: 30302
-    targetPort: 8080
-    protocol: TCP
-    name: http
-  selector:
-    app: echoheaders
----
-apiVersion: v1
-kind: Service
-metadata:
   name: echoheadersy
   labels:
     app: echoheaders
@@ -79,8 +62,7 @@ metadata:
 spec:
   backend:
     # Re-use echoheadersx as the default backend so we stay under the default
-    # quota for gce BackendServices. You can change this to echoheadersdefault
-    # if you have enough quota.
+    # quota for gce BackendServices.
     serviceName: echoheadersx
     servicePort: 80
   rules:
