@@ -130,13 +130,6 @@ func main() {
 	}
 	glog.Infof("Validated %v as the default backend", *defaultSvc)
 
-	if *nxgConfigMap != "" {
-		_, _, err := parseNsName(*nxgConfigMap)
-		if err != nil {
-			glog.Fatalf("configmap error: %v", err)
-		}
-	}
-
 	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, *udpConfigMapName, runtimePodInfo)
 	if err != nil {
 		glog.Fatalf("%v", err)

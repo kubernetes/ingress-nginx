@@ -420,19 +420,13 @@ func (lbc *loadBalancerController) sync(key string) error {
 		return fmt.Errorf("deferring sync till endpoints controller has synced")
 	}
 
-	// by default no custom configuration configmap
-	cfg := &api.ConfigMap{}
+	var cfg *api.ConfigMap
 
-	if lbc.nxgConfigMap != "" {
-		// Search for custom configmap (defined in main args)
-		var err error
-		ns, name, _ := parseNsName(lbc.nxgConfigMap)
-		cfg, err = lbc.getConfigMap(ns, name)
-		if err != nil {
-			glog.V(3).Infof("unexpected error searching configmap %v: %v", lbc.nxgConfigMap, err)
-			lbc.syncQueue.requeue(key, err)
-			return
-		}
+	ns, name, _ := parseNsName(lbc.nxgConfigMap)
+	cfg, err := lbc.getConfigMap(ns, name)
+	if err != nil {
+		glog.V(3).Infof("unexpected error searching configmap %v: %v", lbc.nxgConfigMap, err)
+		cfg = &api.ConfigMap{}
 	}
 
 	ngxConfig := lbc.nginx.ReadConfig(cfg)
