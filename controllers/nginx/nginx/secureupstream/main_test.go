@@ -67,7 +67,7 @@ func TestAnnotations(t *testing.T) {
 
 	su := ingAnnotations(ing.GetAnnotations()).secureUpstream()
 	if !su {
-		t.Errorf("Expected true in secure-upstgream but %v was returned", su)
+		t.Errorf("Expected true in secure-backends but %v was returned", su)
 	}
 }
 

@@ -7,7 +7,7 @@ kind: Ingress
 metadata:
   name: echoheaders
   annotations:
-    ingress-nginx.kubernetes.io/upstream-fail-timeout: "30"
+    ingress.kubernetes.io/upstream-fail-timeout: "30"
 spec:
   rules:
   - host: foo.bar.com
