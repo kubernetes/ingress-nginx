@@ -56,7 +56,7 @@ func (ngx *Manager) Start() {
 // shut down, stop accepting new connections and continue to service current requests
 // until all such requests are serviced. After that, the old worker processes exit.
 // http://nginx.org/en/docs/beginners_guide.html#control
-func (ngx *Manager) CheckAndReload(cfg config.Configuration, ingressCfg IngressConfig) {
+func (ngx *Manager) CheckAndReload(cfg config.Configuration, ingressCfg IngressConfig) error {
 	ngx.reloadRateLimiter.Accept()
 
 	ngx.reloadLock.Lock()
@@ -65,15 +65,18 @@ func (ngx *Manager) CheckAndReload(cfg config.Configuration, ingressCfg IngressC
 	newCfg, err := ngx.writeCfg(cfg, ingressCfg)
 
 	if err != nil {
-		glog.Errorf("failed to write new nginx configuration. Avoiding reload: %v", err)
-		return
+		return fmt.Errorf("failed to write new nginx configuration. Avoiding reload: %v", err)
 	}
 
 	if newCfg {
-		if err := ngx.shellOut("nginx -s reload"); err == nil {
-			glog.Info("change in configuration detected. Reloading...")
+		if err := ngx.shellOut("nginx -s reload"); err != nil {
+			return fmt.Errorf("error reloading nginx: %v", err)
 		}
+
+		glog.Info("change in configuration detected. Reloading...")
 	}
+
+	return nil
 }
 
 // shellOut executes a command and returns its combined standard output and standard
