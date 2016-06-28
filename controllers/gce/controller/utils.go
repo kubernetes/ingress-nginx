@@ -384,7 +384,7 @@ func (t *GCETranslator) getHTTPProbe(l map[string]string, targetPort intstr.IntO
 	for _, pod := range pl {
 		logStr := fmt.Sprintf("Pod %v matching service selectors %v (targetport %+v)", pod.Name, l, targetPort)
 		for _, c := range pod.Spec.Containers {
-			if c.ReadinessProbe == nil || c.ReadinessProbe.Handler.HTTPGet == nil {
+			if !isSimpleHTTPProbe(c.ReadinessProbe) {
 				continue
 			}
 			for _, p := range c.Ports {
@@ -401,6 +401,15 @@ func (t *GCETranslator) getHTTPProbe(l map[string]string, targetPort intstr.IntO
 		glog.V(4).Infof("%v: lacks a matching HTTP probe for use in health checks.", logStr)
 	}
 	return nil, nil
+}
+
+// isSimpleHTTPProbe returns true if the given Probe is:
+// - an HTTPGet probe, as opposed to a tcp or exec probe
+// - has a scheme of HTTP, as opposed to HTTPS
+// - has no special host or headers fields
+func isSimpleHTTPProbe(probe *api.Probe) bool {
+	return (probe != nil && probe.Handler.HTTPGet != nil && probe.Handler.HTTPGet.Host == "" &&
+		probe.Handler.HTTPGet.Scheme == api.URISchemeHTTP && len(probe.Handler.HTTPGet.HTTPHeaders) == 0)
 }
 
 // HealthCheck returns the http readiness probe for the endpoint backing the
