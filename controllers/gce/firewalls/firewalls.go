@@ -18,10 +18,12 @@ package firewalls
 
 import (
 	"github.com/golang/glog"
+	"strconv"
 
 	compute "google.golang.org/api/compute/v1"
 	"k8s.io/contrib/ingress/controllers/gce/utils"
 	netset "k8s.io/kubernetes/pkg/util/net/sets"
+	"k8s.io/kubernetes/pkg/util/sets"
 )
 
 // Src range from which the GCE L7 performs health checks.
@@ -60,7 +62,21 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 		glog.Infof("Creating global l7 firewall rule %v", name)
 		return fr.cloud.CreateFirewall(suffix, "GCE L7 firewall rule", fr.srcRange, nodePorts, nodeNames)
 	}
-	glog.V(3).Infof("Firewall rule already %v exists, verifying for nodeports %v", name, nodePorts)
+
+	requiredPorts := sets.NewString()
+	for _, p := range nodePorts {
+		requiredPorts.Insert(strconv.Itoa(int(p)))
+	}
+	existingPorts := sets.NewString()
+	for _, allowed := range rule.Allowed {
+		for _, p := range allowed.Ports {
+			existingPorts.Insert(p)
+		}
+	}
+	if requiredPorts.Equal(existingPorts) {
+		return nil
+	}
+	glog.V(3).Infof("Firewall rule already %v exists, updating nodeports %v", name, nodePorts)
 	return fr.cloud.UpdateFirewall(suffix, "GCE L7 firewall rule", fr.srcRange, nodePorts, nodeNames)
 }
 
