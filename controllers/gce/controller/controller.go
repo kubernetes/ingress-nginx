@@ -260,31 +260,27 @@ func (lbc *LoadBalancerController) storesSynced() bool {
 }
 
 // sync manages Ingress create/updates/deletes.
-func (lbc *LoadBalancerController) sync(key string) {
+func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if !lbc.hasSynced() {
 		time.Sleep(storeSyncPollPeriod)
-		lbc.ingQueue.requeue(key, fmt.Errorf("Waiting for stores to sync"))
-		return
+		return fmt.Errorf("Waiting for stores to sync")
 	}
 	glog.V(3).Infof("Syncing %v", key)
 
 	paths, err := lbc.ingLister.List()
 	if err != nil {
-		lbc.ingQueue.requeue(key, err)
-		return
+		return err
 	}
 	nodePorts := lbc.tr.toNodePorts(&paths)
 	lbNames := lbc.ingLister.Store.ListKeys()
 	lbs, _ := lbc.ListRuntimeInfo()
 	nodeNames, err := lbc.getReadyNodeNames()
 	if err != nil {
-		lbc.ingQueue.requeue(key, err)
-		return
+		return err
 	}
 	obj, ingExists, err := lbc.ingLister.Store.GetByKey(key)
 	if err != nil {
-		lbc.ingQueue.requeue(key, err)
-		return
+		return err
 	}
 
 	// This performs a 2 phase checkpoint with the cloud:
@@ -299,8 +295,8 @@ func (lbc *LoadBalancerController) sync(key string) {
 	//   don't have an associated Kubernetes Ingress/Service/Endpoint.
 
 	defer func() {
-		if err := lbc.CloudClusterManager.GC(lbNames, nodePorts); err != nil {
-			lbc.ingQueue.requeue(key, err)
+		if deferErr := lbc.CloudClusterManager.GC(lbNames, nodePorts); deferErr != nil {
+			err = fmt.Errorf("Error during sync %v, error during GC %v", err, deferErr)
 		}
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
@@ -323,16 +319,12 @@ func (lbc *LoadBalancerController) sync(key string) {
 	}
 
 	if !ingExists {
-		if syncError != nil {
-			lbc.ingQueue.requeue(key, err)
-		}
-		return
+		return syncError
 	}
 	// Update the UrlMap of the single loadbalancer that came through the watch.
 	l7, err := lbc.CloudClusterManager.l7Pool.Get(key)
 	if err != nil {
-		lbc.ingQueue.requeue(key, fmt.Errorf("%v, unable to get loadbalancer: %v", syncError, err))
-		return
+		return fmt.Errorf("%v, unable to get loadbalancer: %v", syncError, err)
 	}
 
 	ing := *obj.(*extensions.Ingress)
@@ -345,10 +337,7 @@ func (lbc *LoadBalancerController) sync(key string) {
 		lbc.recorder.Eventf(&ing, api.EventTypeWarning, "Status", err.Error())
 		syncError = fmt.Errorf("%v, update ingress error: %v", syncError, err)
 	}
-	if syncError != nil {
-		lbc.ingQueue.requeue(key, syncError)
-	}
-	return
+	return syncError
 }
 
 // updateIngressStatus updates the IP and annotations of a loadbalancer.
@@ -421,16 +410,15 @@ func (lbc *LoadBalancerController) ListRuntimeInfo() (lbs []*loadbalancers.L7Run
 
 // syncNodes manages the syncing of kubernetes nodes to gce instance groups.
 // The instancegroups are referenced by loadbalancer backends.
-func (lbc *LoadBalancerController) syncNodes(key string) {
+func (lbc *LoadBalancerController) syncNodes(key string) error {
 	nodeNames, err := lbc.getReadyNodeNames()
 	if err != nil {
-		lbc.nodeQueue.requeue(key, err)
-		return
+		return err
 	}
 	if err := lbc.CloudClusterManager.instancePool.Sync(nodeNames); err != nil {
-		lbc.nodeQueue.requeue(key, err)
+		return err
 	}
-	return
+	return nil
 }
 
 func nodeReady(node api.Node) bool {
