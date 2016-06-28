@@ -241,23 +241,27 @@ func NewClusterManager(
 	defaultBackendNodePort int64,
 	defaultHealthCheckPath string) (*ClusterManager, error) {
 
-	var config *os.File
-	var err error
-	if configFilePath != "" {
-		glog.Infof("Reading config from path %v", configFilePath)
-		config, err = os.Open(configFilePath)
-		if err != nil {
-			return nil, err
-		}
-		defer config.Close()
-	}
-
 	// TODO: Make this more resilient. Currently we create the cloud client
 	// and pass it through to all the pools. This makes unittesting easier.
 	// However if the cloud client suddenly fails, we should try to re-create it
 	// and continue.
-	cloud := getGCEClient(config)
-	glog.Infof("Successfully loaded cloudprovider using config %q", configFilePath)
+	var cloud *gce.GCECloud
+	if configFilePath != "" {
+		glog.Infof("Reading config from path %v", configFilePath)
+		config, err := os.Open(configFilePath)
+		if err != nil {
+			return nil, err
+		}
+		defer config.Close()
+		cloud = getGCEClient(config)
+		glog.Infof("Successfully loaded cloudprovider using config %q", configFilePath)
+	} else {
+		// While you might be tempted to refactor so we simply assing nil to the
+		// config and only invoke getGCEClient once, that will not do the right
+		// thing because a nil check against an interface isn't true in golang.
+		cloud = getGCEClient(nil)
+		glog.Infof("Created GCE client without a confi file")
+	}
 
 	// Names are fundamental to the cluster, the uid allocator makes sure names don't collide.
 	cluster := ClusterManager{ClusterNamer: &utils.Namer{name}}
