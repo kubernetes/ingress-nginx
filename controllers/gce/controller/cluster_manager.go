@@ -260,7 +260,7 @@ func NewClusterManager(
 		// config and only invoke getGCEClient once, that will not do the right
 		// thing because a nil check against an interface isn't true in golang.
 		cloud = getGCEClient(nil)
-		glog.Infof("Created GCE client without a confi file")
+		glog.Infof("Created GCE client without a config file")
 	}
 
 	// Names are fundamental to the cluster, the uid allocator makes sure names don't collide.

@@ -38,8 +38,25 @@ import (
 )
 
 const (
-	allowHTTPKey    = "kubernetes.io/ingress.allow-http"
+	// allowHTTPKey tells the Ingress controller to allow/block HTTP access.
+	// If either unset or set to true, the controller will create a
+	// forwarding-rule for port 80, and any additional rules based on the TLS
+	// section of the Ingress. If set to false, the controller will only create
+	// rules for port 443 based on the TLS section.
+	allowHTTPKey = "kubernetes.io/ingress.allow-http"
+
+	// staticIPNameKey tells the Ingress controller to use a specific GCE
+	// static ip for its forwarding rules. If specified, the Ingress controller
+	// assigns the static ip by this name to the forwarding rules of the given
+	// Ingress. The controller *does not* manage this ip, it is the users
+	// responsibility to create/delete it.
 	staticIPNameKey = "kubernetes.io/ingress.global-static-ip-name"
+
+	// ingressClassKey picks a specific "class" for the Ingress. The controller
+	// only processes Ingresses with this annotation either unset, or set
+	// to either gceIngessClass or the empty string.
+	ingressClassKey = "kubernetes.io/ingress.class"
+	gceIngressClass = "gce"
 
 	// Label key to denote which GCE zone a Kubernetes node is in.
 	zoneKey     = "failure-domain.beta.kubernetes.io/zone"
@@ -68,6 +85,21 @@ func (ing ingAnnotations) staticIPName() string {
 		return ""
 	}
 	return val
+}
+
+func (ing ingAnnotations) ingressClass() string {
+	val, ok := ing[ingressClassKey]
+	if !ok {
+		return ""
+	}
+	return val
+}
+
+// isGCEIngress returns true if the given Ingress either doesn't specify the
+// ingress.class annotation, or it's set to "gce".
+func isGCEIngress(ing *extensions.Ingress) bool {
+	class := ingAnnotations(ing.ObjectMeta.Annotations).ingressClass()
+	return class == "" || class == gceIngressClass
 }
 
 // errorNodePortNotFound is an implementation of error.

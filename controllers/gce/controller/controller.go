@@ -106,14 +106,29 @@ func NewLoadBalancerController(kubeClient *client.Client, clusterManager *Cluste
 	pathHandlers := framework.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
+			if !isGCEIngress(addIng) {
+				glog.Infof("Ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
+				return
+			}
 			lbc.recorder.Eventf(addIng, api.EventTypeNormal, "ADD", fmt.Sprintf("%s/%s", addIng.Namespace, addIng.Name))
 			lbc.ingQueue.enqueue(obj)
 		},
-		DeleteFunc: lbc.ingQueue.enqueue,
+		DeleteFunc: func(obj interface{}) {
+			delIng := obj.(*extensions.Ingress)
+			if !isGCEIngress(delIng) {
+				glog.Infof("Ignoring delete for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
+				return
+			}
+			glog.Infof("Delete notification received for Ingress %v/%v", delIng.Namespace, delIng.Name)
+			lbc.ingQueue.enqueue(obj)
+		},
 		UpdateFunc: func(old, cur interface{}) {
+			curIng := cur.(*extensions.Ingress)
+			if !isGCEIngress(curIng) {
+				return
+			}
 			if !reflect.DeepEqual(old, cur) {
-				glog.V(3).Infof("Ingress %v changed, syncing",
-					cur.(*extensions.Ingress).Name)
+				glog.V(3).Infof("Ingress %v changed, syncing", curIng.Name)
 			}
 			lbc.ingQueue.enqueue(cur)
 		},
@@ -202,6 +217,9 @@ func (lbc *LoadBalancerController) enqueueIngressForService(obj interface{}) {
 		return
 	}
 	for _, ing := range ings {
+		if !isGCEIngress(&ing) {
+			continue
+		}
 		lbc.ingQueue.enqueue(&ing)
 	}
 }

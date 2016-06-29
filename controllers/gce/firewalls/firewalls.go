@@ -76,7 +76,7 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 	if requiredPorts.Equal(existingPorts) {
 		return nil
 	}
-	glog.V(3).Infof("Firewall rule already %v exists, updating nodeports %v", name, nodePorts)
+	glog.V(3).Infof("Firewall rule %v already exists, updating nodeports %v", name, nodePorts)
 	return fr.cloud.UpdateFirewall(suffix, "GCE L7 firewall rule", fr.srcRange, nodePorts, nodeNames)
 }
 

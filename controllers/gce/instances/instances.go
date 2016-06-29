@@ -101,7 +101,7 @@ func (i *Instances) DeleteInstanceGroup(name string) error {
 		return err
 	}
 	for _, zone := range zones {
-		glog.Infof("deleting instance group %v in zone %v", name, zone)
+		glog.Infof("Deleting instance group %v in zone %v", name, zone)
 		if err := i.cloud.DeleteInstanceGroup(name, zone); err != nil {
 			errs = append(errs, err)
 		}

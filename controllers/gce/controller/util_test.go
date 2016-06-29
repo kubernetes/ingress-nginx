@@ -135,7 +135,8 @@ func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string
 						ReadinessProbe: &api.Probe{
 							Handler: api.Handler{
 								HTTPGet: &api.HTTPGetAction{
-									Path: u,
+									Scheme: api.URISchemeHTTP,
+									Path:   u,
 									Port: intstr.IntOrString{
 										Type:   intstr.Int,
 										IntVal: 80,
