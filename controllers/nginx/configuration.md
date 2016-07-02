@@ -268,7 +268,7 @@ Default is true
 
 
 **use-gzip:** Enables or disables the use of the nginx module that compresses responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html)
-
+The default mime type list to compress is: `application/atom+xml application/javascript aplication/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`
 
 **use-http2:** Enables or disables the [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections 
 
