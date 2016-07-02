@@ -14,7 +14,8 @@ Changelog
 - [X] [#1238](https://github.com/kubernetes/contrib/pull/1238) Add support for dynamic TLS records and spdy
 - [X] [#1239](https://github.com/kubernetes/contrib/pull/1239) Add support for conditional log of urls
 - [X] [#1253](https://github.com/kubernetes/contrib/pull/1253) Use delayed queue
-
+- [X] [#1296](https://github.com/kubernetes/contrib/pull/1296) Fix formatting
+- [X] [#1299](https://github.com/kubernetes/contrib/pull/1299) Fix formatting
 
 ### 0.7
 
