@@ -1,5 +1,8 @@
 Changelog
 
+### 0.8.1
+- [X] [#1317](https://github.com/kubernetes/contrib/pull/1317) Fix duplicated real_ip_header
+- [X] [#1315](https://github.com/kubernetes/contrib/pull/1315) Addresses #1314
 
 ### 0.8
 
