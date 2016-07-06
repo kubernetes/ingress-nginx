@@ -360,28 +360,29 @@ You just instructed the loadbalancer controller to quit, however if it had done 
 
 #### Health checks
 
-Currently, all service backends must respond with a 200 on '/'. The content does not matter. If they fail to do so they will be deemed unhealthy by the GCE L7. This limitation is because there are 2 sets of health checks:
-* From the kubernetes endpoints, taking the form of liveness/readiness probes
-* From the GCE L7, which periodically pings '/'
-We really want (1) to control the health of an instance but (2) is a GCE requirement. Ideally, we would point (2) at (1), but we still need (2) for pods that don't have a defined health check. This will probably get resolved when Ingress grows up.
+Currently, all service backends must satisfy *either* of the following requirements to pass the HTTP health checks sent to it from the GCE loadbalancer:
+1. Respond with a 200 on '/'. The content does not matter.
+2. Expose an arbitrary url as a `readiness` probe on the pods backing the Service.
+
+The Ingress controller looks for a compatible readiness probe first, if it finds one, it adopts it as the GCE loadbalancer's HTTP health check. If there's no readiness probe, or the readiness probe requires special HTTP headers, or HTTPS, the Ingress controller points the GCE loadbalancer's HTTP health check at '/'. [This is an example](examples/health_check/README.md) of an Ingress that adopts the readiness probe from the endpoints as its health check.
 
 ## TLS
 
-You can secure an Ingress by specifying a [secret](http://kubernetes.io/docs/user-guide/secrets) that contains a TLS private key and certificate. Currently the Ingress only supports a single TLS port, 443, and assumes TLS termination. This controller does not support SNI, so it will ignore all but the first cert in the TLS configuration section. The TLS secret must contain keys named `tls.crt` and `tls.key` that contain the certificate and private key to use for TLS, eg:
+You can secure an Ingress by specifying a [secret](http://kubernetes.io/docs/user-guide/secrets) that contains a TLS private key and certificate. Currently the Ingress only supports a single TLS port, 443, and assumes TLS termination. This controller does not support SNI, so it will ignore all but the first cert in the TLS configuration section. The TLS secret must [contain keys](https://github.com/kubernetes/kubernetes/blob/master/pkg/api/types.go#L2696) named `tls.crt` and `tls.key` that contain the certificate and private key to use for TLS, eg:
 
 ```yaml
 apiVersion: v1
-data:
-  tls.crt: base64 encoded cert
-  tls.key: base64 encoded key
 kind: Secret
 metadata:
   name: testsecret
   namespace: default
 type: Opaque
+data:
+  tls.crt: base64 encoded cert
+  tls.key: base64 encoded key
 ```
 
-Referencing this secret in an Ingress will tell the Ingress controller to secure the channel from the client to the loadbalancer using TLS:
+Referencing this secret in an Ingress will tell the Ingress controller to secure the channel from the client to the loadbalancer using TLS.
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -409,95 +410,121 @@ if ($http_x_forwarded_proto = "http") {
 }
 ```
 
-And you can try with the [https_example](https_example/README.md):
+Here's an example that demonstrates it, first lets create a self signed certificate valid for upto a year:
+
 ```console
-$ cd https_example
-$ make keys secret
-# The CName used here is specific to the service specified in nginx-app.yaml.
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/tls.key -out /tmp/tls.crt -subj "/CN=example.com/O=example.com"
-Generating a 2048 bit RSA private key
-...........+++
-....................................................+++
-writing new private key to '/tmp/tls.key'
------
-godep go run make_secret.go -crt /tmp/tls.crt -key /tmp/tls.key > /tmp/tls.json
+$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/tls.key -out /tmp/tls.crt -subj "/CN=foobar.com"
+$ kubectl create secret tls tls-secret --key=/tmp/tls.key --cert=/tmp/tls.crt
+secret "tls-secret" created
 ```
 
-This will generate a secret in `/tmp/tls.json`, first create it
+Then the Services/Ingress to use it:
 
-```console
-$ kubectl create -f /tmp/tls.json
-$ kubectl describe secret tls-secret
-Name:		tls-secret
-Namespace:	default
-Labels:		<none>
-Annotations:	<none>
-
-Type:	Opaque
-
-Data
-====
-tls.key:	1704 bytes
-tls.crt:	1159 bytes
+```yaml
+$ echo "
+apiVersion: v1
+kind: Service
+metadata:
+  name: echoheaders-https
+  labels:
+    app: echoheaders-https
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: echoheaders-https
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: echoheaders-https
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: echoheaders-https
+    spec:
+      containers:
+      - name: echoheaders-https
+        image: gcr.io/google_containers/echoserver:1.3
+        ports:
+        - containerPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test
+spec:
+  tls:
+  - secretName: tls-secret
+  backend:
+    serviceName: echoheaders-https
+    servicePort: 80
+" | kubectl create -f -
 ```
 
-Then create the HTTPS app:
+This creates 2 GCE forwarding rules that use a single static ip. Port `80` redirects to port `443` which terminates TLS and sends traffic to your backend.
+
 ```console
-$ kubectl create -f tls-app.yaml
 $ kubectl get ing
-NAME      RULE      BACKEND               ADDRESS   AGE
-test      -         echoheaders-https:80             3s
-
-...
+NAME      HOSTS     ADDRESS   PORTS     AGE
+test      *                   80, 443   5s
 
 $ kubectl describe ing
 Name:			test
 Namespace:		default
-Address:		130.211.5.76
-Default backend:	echoheaders-https:80 ()
+Address:		130.211.21.233
+Default backend:	echoheaders-https:80 (10.180.1.7:8080,10.180.2.3:8080)
 TLS:
   tls-secret terminates
 Rules:
   Host	Path	Backends
   ----	----	--------
+  *	* 	echoheaders-https:80 (10.180.1.7:8080,10.180.2.3:8080)
 Annotations:
-  url-map:			k8s-um-default-test--uid
-  backends:			{"k8s-be-31644--uid":"HEALTHY"}
-  forwarding-rule:		k8s-fw-default-test--uid
-  https-forwarding-rule:	k8s-fws-default-test--uid
-  https-target-proxy:		k8s-tps-default-test--uid
-  static-ip:			k8s-fw-default-test--uid
-  target-proxy:			k8s-tp-default-test--uid
+  url-map:			k8s-um-default-test--7d2d86e772b6c246
+  backends:			{"k8s-be-32327--7d2d86e772b6c246":"HEALTHY"}
+  forwarding-rule:		k8s-fw-default-test--7d2d86e772b6c246
+  https-forwarding-rule:	k8s-fws-default-test--7d2d86e772b6c246
+  https-target-proxy:		k8s-tps-default-test--7d2d86e772b6c246
+  static-ip:			k8s-fw-default-test--7d2d86e772b6c246
+  target-proxy:			k8s-tp-default-test--7d2d86e772b6c246
 Events:
-  FirstSeen	LastSeen	Count	From				SubobjectPath	Type		Reason	Message
-  ---------	--------	-----	----				-------------	--------	------	-------
-  5m		5m		1	{loadbalancer-controller }			Normal		ADD	default/test
-  4m		4m		1	{loadbalancer-controller }			Normal		CREATE	ip: 130.211.5.76
-
+  FirstSeen	LastSeen	Count	From				SubobjectPath	Type		Reason		Message
+  ---------	--------	-----	----				-------------	--------	------		-------
+  12m		12m		1	{loadbalancer-controller }			Normal		ADD		default/test
+  4m		4m		1	{loadbalancer-controller }			Normal		CREATE		ip: 130.211.21.233
 ```
 
-Now you can perform 3 curl tests (`:80`, `:443`, `:80` following the redirect)
+Testing reachability:
 ```console
-$ curl 130.211.5.76
-<html>
-<head><title>301 Moved Permanently</title></head>
-<body bgcolor="white">
-<center><h1>301 Moved Permanently</h1></center>
-<hr><center>nginx/1.9.11</center>
-</body>
-</html>
-
-$ curl https://130.211.5.76 -k
+$ curl 130.211.21.233 -kL
 CLIENT VALUES:
+client_address=10.240.0.4
+command=GET
+real path=/
+query=nil
+request_version=1.1
+request_uri=http://130.211.21.233:8080/
 ...
-x-forwarded-for=104.132.0.73, 130.211.5.76
-x-forwarded-proto=https
 
-$ curl -L 130.211.5.76 -k
+$ curl --resolve foobar.in:443:130.211.21.233 https://foobar.in --cacert /tmp/tls.crt
 CLIENT VALUES:
+client_address=10.240.0.4
+command=GET
+real path=/
+query=nil
+request_version=1.1
+request_uri=http://bitrot.com:8080/
 ...
-x-forwarded-for=104.132.0.73, 130.211.5.76
-x-forwarded-proto=https
+
+$ curl --resolve bitrot.in:443:130.211.21.233 https://foobar.in --cacert /tmp/tls.crt
+curl: (51) SSL: certificate subject name 'foobar.in' does not match target host name 'foobar.in'
 ```
 
 Note that the GCLB health checks *do not* get the `301` because they don't include `x-forwarded-proto`.
@@ -616,6 +643,26 @@ $ kubectl get pods
 glbc-fjtlq             0/1       CrashLoopBackOff   17         1h
 ```
 If you hit that it means the controller isn't even starting. Re-check your input flags, especially the required ones.
+
+## Creating the firewall rule for GLBC health checks
+
+A default GKE/GCE cluster needs at least 1 firewall rule for GLBC to function. The Ingress controller should create this for you automatically. You can also create it thus:
+```console
+$ gcloud compute firewall-rules create allow-130-211-0-0-22 \
+  --source-ranges 130.211.0.0/22 \
+  --target-tags $TAG \
+  --allow tcp:$NODE_PORT
+```
+
+Where `130.211.0.0/22` is the source range of the GCE L7, `$NODE_PORT` is the node port your Service is exposed on, i.e:
+```console
+$ kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services ${SERVICE_NAME}
+```
+
+and `$TAG` is an optional list of GKE instance tags, i.e:
+```console
+$ kubectl get nodes | awk '{print $1}' | tail -n +2 | grep -Po 'gke-[0-9,a-z]+-[0-9,a-z]+-node' | uniq
+```
 
 ## GLBC Implementation Details
 
