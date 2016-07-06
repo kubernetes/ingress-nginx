@@ -45,17 +45,28 @@ type SSLCert struct {
 
 // AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
 func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) (SSLCert, error) {
-	pemFileName := config.SSLDirectory + "/" + name + ".pem"
+	temporaryPemFileName := fmt.Sprintf("%v.pem", name)
+	pemFileName := fmt.Sprintf("%v/%v.pem", config.SSLDirectory, name)
 
-	pem, err := os.Create(pemFileName)
+	temporaryPemFile, err := ioutil.TempFile("", temporaryPemFileName)
 	if err != nil {
-		return SSLCert{}, fmt.Errorf("Couldn't create pem file %v: %v", pemFileName, err)
+		return SSLCert{}, fmt.Errorf("Couldn't create temp pem file %v: %v", temporaryPemFile.Name(), err)
 	}
-	defer pem.Close()
 
-	_, err = pem.WriteString(fmt.Sprintf("%v\n%v", cert, key))
+	_, err = temporaryPemFile.WriteString(fmt.Sprintf("%v\n%v", cert, key))
 	if err != nil {
-		return SSLCert{}, fmt.Errorf("Couldn't write to pem file %v: %v", pemFileName, err)
+		return SSLCert{}, fmt.Errorf("Couldn't write to pem file %v: %v", temporaryPemFile.Name(), err)
+	}
+
+	err = temporaryPemFile.Close()
+	if err != nil {
+		return SSLCert{}, fmt.Errorf("Couldn't close temp pem file %v: %v", temporaryPemFile.Name(), err)
+	}
+
+	err = os.Rename(temporaryPemFile.Name(), pemFileName)
+	if err != nil {
+		os.Remove(temporaryPemFile.Name())
+		return SSLCert{}, fmt.Errorf("Couldn't move temp pem file %v to destination %v: %v", temporaryPemFile.Name(), pemFileName, err)
 	}
 
 	cn, err := nginx.commonNames(pemFileName)
