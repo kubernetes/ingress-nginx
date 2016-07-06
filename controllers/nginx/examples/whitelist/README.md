@@ -1,6 +1,7 @@
 
 This example shows how is possible to restrict access
 
+```
 echo "
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -18,7 +19,7 @@ spec:
           serviceName: echoheaders
           servicePort: 80
 " | kubectl create -f -
-
+```
 
 Check the annotation is present in the Ingress rule:
 ```
@@ -48,7 +49,7 @@ status:
   loadBalancer:
     ingress:
     - ip: 172.17.4.99
-``
+```
 
 Finally test is not possible to access the URL
 
