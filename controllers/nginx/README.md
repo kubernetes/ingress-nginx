@@ -9,6 +9,7 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 * [Deployment](#deployment)
 * [HTTP](#http)
 * [HTTPS](#https)
+  * [Default SSL Certificate](#default-ssl-certificate)
   * [HTTPS enforcement](#server-side-https-enforcement)
   * [HSTS](#http-strict-transport-security)
 * [TCP Services](#exposing-tcp-services)
@@ -132,6 +133,13 @@ spec:
 Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
 Check the [example](examples/tls/README.md)
+
+### Default SSL Certificate
+
+NGINX provides the option [default_server](http://nginx.org/en/docs/http/server_names.html) to allow a catch-all server in case of request with a not configured server name. This configuration works without issues for HTTP traffic.
+In case of HTTPS NGINX requires a certificate. For this reason the Ingress controller provides the flag `--default-ssl-certificate`. The secret behind this flag contains the default certificate to be used in the mentioned case.
+If this flag is not provided NGINX will reject the request with the HTTP code 444.
+
 
 ### Server-side HTTPS enforcement
 
