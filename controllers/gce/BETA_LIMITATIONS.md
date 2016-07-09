@@ -4,9 +4,6 @@ As of the Kubernetes 1.2 release, the GCE L7 Loadbalancer controller is still a 
 
 This is a list of beta limitations:
 
-* [Firewalls](#creating-the-firewall-rule-for-glbc-health-checks): You must create the firewall-rule required for GLBC's health checks to succeed.
-* [UIDs](#running-multiple-loadbalanced-clusters-in-the-same-gce-project): If you're creating multiple clusters that will use Ingress within a single GCE project, you must assign a UID to GLBC so it doesn't stomp on resources from another cluster.
-* [Health Checks](#health-checks): All Kubernetes services must serve a 200 page on '/', or whatever custom value you've specified through GLBC's `--health-check-path argument`.
 * [IPs](#static-and-ephemeral-ips): Creating a simple HTTP Ingress will allocate an ephemeral IP. Creating an Ingress with a TLS section will allocate a static IP.
 * [Latency](#latency): GLBC is not built for performance. Creating many Ingresses at a time can overwhelm it. It won't fall over, but will take its own time to churn through the Ingress queue.
 * [Quota](#quota): By default, GCE projects are granted a quota of 3 Backend Services. This is insufficient for most Kubernetes clusters.
@@ -87,67 +84,6 @@ Events:
 
 ```
 
-## Health checks
-
-Currently, all service backends must respond with a 200 on '/'. The content does not matter. If they fail to do so they will be deemed unhealthy by the GCE L7. This limitation is because there are 2 sets of health checks:
-* From the kubernetes endpoints, taking the form of liveness/readiness probes
-* From the GCE L7, which periodically pings '/'
-We really want (1) to control the health of an instance but (2) is a GCE requirement. Ideally, we would point (2) at (1), but we still need (2) for pods that don't have a defined health check. This will probably get resolved when Ingress grows up.
-
-
-## Running multiple loadbalanced clusters in the same GCE project
-
-If you're creating multiple clusters that will use Ingress within a single GCE project, you MUST assign a UID to GLBC so it doesn't stomp on resources from another cluster. You can do so by:
-```console
-$ kubectl get rc --namespace=kube-system
-NAME                             DESIRED   CURRENT   AGE
-elasticsearch-logging-v1         2         2         26m
-heapster-v1.0.0                  1         1         26m
-kibana-logging-v1                1         1         26m
-kube-dns-v11                     1         1         26m
-kubernetes-dashboard-v1.0.0      1         1         26m
-l7-lb-controller-v0.6.0          1         1         26m
-monitoring-influxdb-grafana-v3   1         1         26m
-
-$ kubectl edit rc l7-lb-controller-v0.6.0 --namespace=kube-system
-```
-
-And modify the args passed to the controller:
-```yaml
-      - args:
-        - --default-backend-service=kube-system/default-http-backend
-        - --sync-period=300s
-        - --cluster-uid=uid
-```
-
-Saving the file should update the RC but not the existing pod. To do so, just delete the pod, and the RC will create a new one with the --cluster-uid args.
-```console
-$ kubectl delete pod -l name=glbc --namespace=kube-system
-pod "l7-lb-controller-v0.6.0-ud9ix" deleted
-$ kubectl get pod --namespace=kube-system -l name=glbc -o yaml | grep cluster-uid
-      - --cluster-uid=uid
-```
-
-## Creating the firewall rule for GLBC health checks
-
-A default GKE/GCE cluster needs at least 1 firewall rule for GLBC to function. You can create it thus:
-```console
-$ gcloud compute firewall-rules create allow-130-211-0-0-22 \
-  --source-ranges 130.211.0.0/22 \
-  --target-tags $TAG \
-  --allow tcp:$NODE_PORT
-```
-
-Where `130.211.0.0/22` is the source range of the GCE L7, `$NODE_PORT` is the node port your Service is exposed on, i.e:
-```console
-$ kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services ${SERVICE_NAME}
-```
-
-and `$TAG` is an optional list of GKE instance tags, i.e:
-```console
-$ kubectl get nodes | awk '{print $1}' | tail -n +2 | grep -Po 'gke-[0-9,a-z]+-[0-9,a-z]+-node' | uniq
-```
-
 ## Static and Ephemeral IPs
 
 GCE has a concept of [ephemeral](https://cloud.google.com/compute/docs/instances-and-network#ephemeraladdress) and [static](https://cloud.google.com/compute/docs/instances-and-network#reservedaddress) IPs. A production website would always want a static IP, which ephemeral IPs are cheaper (both in terms of quota and cost), and are therefore better suited for experimentation.
@@ -158,23 +94,29 @@ GCE has a concept of [ephemeral](https://cloud.google.com/compute/docs/instances
 
 ## Disabling GLBC
 
-Since GLBC runs as a cluster addon, you cannot simply delete the RC. The easiest way to disable it is to do as follows:
+Setting the annotation `kubernetes.io/ingress.class` to any value other than "gce" or the empty string, will force the GCE Ingress controller to ignore your Ingress. Do this if you wish to use one of the other Ingress controllers at the same time as the GCE controller, eg:
 
-* IFF you want to tear down existing L7 loadbalancers, hit the /delete-all-and-quit endpoint on the pod:
-
-```console
-$ kubectl get pods --namespace=kube-system
-NAME                                               READY     STATUS    RESTARTS   AGE
-l7-lb-controller-7bb21                             1/1       Running   0          1h
-$ kubectl exec l7-lb-controller-7bb21 -c l7-lb-controller curl http://localhost:8081/delete-all-and-quit --namespace=kube-system
-$ kubectl logs l7-lb-controller-7b221 -c l7-lb-controller --follow
-...
-I1007 00:30:00.322528       1 main.go:160] Handled quit, awaiting pod deletion.
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  tls:
+  - secretName: tls-secret
+  backend:
+    serviceName: echoheaders-https
+    servicePort: 80
 ```
 
-* Nullify the RC (but don't delete it or the addon controller will "fix" it for you)
-```console
-$ kubectl scale rc l7-lb-controller --replicas=0 --namespace=kube-system
-```
+As of Kubernetes 1.3, GLBC runs as a static pod on the master. If you want to totally disable it, you can ssh into the master node and delete the GLBC manifest file found at `/etc/kubernetes/manifests/glbc.manifest`. You can also disable it on GKE at cluster bring-up time through the `disable-addons` flag, eg:
 
+```console
+gcloud container clusters create mycluster --network "default" --num-nodes 1 \
+--machine-type n1-standard-2 --zone $ZONE \
+--disable-addons HttpLoadBalancing \
+--disk-size 50 --scopes storage-full
+```
 
