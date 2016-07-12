@@ -63,15 +63,16 @@ func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string
 		return SSLCert{}, fmt.Errorf("Couldn't close temp pem file %v: %v", temporaryPemFile.Name(), err)
 	}
 
+	cn, err := nginx.commonNames(temporaryPemFile.Name())
+	if err != nil {
+		os.Remove(temporaryPemFile.Name())
+		return SSLCert{}, err
+	}
+
 	err = os.Rename(temporaryPemFile.Name(), pemFileName)
 	if err != nil {
 		os.Remove(temporaryPemFile.Name())
 		return SSLCert{}, fmt.Errorf("Couldn't move temp pem file %v to destination %v: %v", temporaryPemFile.Name(), pemFileName, err)
-	}
-
-	cn, err := nginx.commonNames(pemFileName)
-	if err != nil {
-		return SSLCert{}, err
 	}
 
 	return SSLCert{
@@ -107,7 +108,7 @@ func (nginx *Manager) commonNames(pemFileName string) ([]string, error) {
 		cn = append(cn, cert.DNSNames...)
 	}
 
-	glog.V(2).Infof("DNS %v %v\n", cn, len(cn))
+	glog.V(2).Infof("found %v common names: %v\n", cn, len(cn))
 	return cn, nil
 }
 
