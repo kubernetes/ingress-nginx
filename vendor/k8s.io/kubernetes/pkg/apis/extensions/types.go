@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors All rights reserved.
+Copyright 2015 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -51,7 +51,8 @@ type ScaleStatus struct {
 	Selector *unversioned.LabelSelector `json:"selector,omitempty"`
 }
 
-// +genclient=true,noMethods=true
+// +genclient=true
+// +noMethods=true
 
 // represents a scaling request for a resource.
 type Scale struct {
@@ -94,7 +95,8 @@ type CustomMetricCurrentStatusList struct {
 	Items []CustomMetricCurrentStatus `json:"items"`
 }
 
-// +genclient=true,nonNamespaced=true
+// +genclient=true
+// +nonNamespaced=true
 
 // A ThirdPartyResource is a generic representation of a resource, it is used by add-ons and plugins to add new resource
 // types to the API.  It consists of one or more Versions of the api.
@@ -624,7 +626,8 @@ type ReplicaSetStatus struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
-// +genclient=true,nonNamespaced=true
+// +genclient=true
+// +nonNamespaced=true
 
 // PodSecurityPolicy governs the ability to make requests that affect the SecurityContext
 // that will be applied to a pod and container.
@@ -641,7 +644,7 @@ type PodSecurityPolicySpec struct {
 	// Privileged determines if a pod can request to be run as privileged.
 	Privileged bool `json:"privileged,omitempty"`
 	// DefaultAddCapabilities is the default set of capabilities that will be added to the container
-	// unless the pod spec specifically drops the capability.  You may not list a capabiility in both
+	// unless the pod spec specifically drops the capability.  You may not list a capability in both
 	// DefaultAddCapabilities and RequiredDropCapabilities.
 	DefaultAddCapabilities []api.Capability `json:"defaultAddCapabilities,omitempty"`
 	// RequiredDropCapabilities are the capabilities that will be dropped from the container.  These
