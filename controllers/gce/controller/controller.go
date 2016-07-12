@@ -439,20 +439,22 @@ func (lbc *LoadBalancerController) syncNodes(key string) error {
 	return nil
 }
 
-func nodeReady(node api.Node) bool {
-	for ix := range node.Status.Conditions {
-		condition := &node.Status.Conditions[ix]
-		if condition.Type == api.NodeReady {
-			return condition.Status == api.ConditionTrue
+func getNodeReadyPredicate() cache.NodeConditionPredicate {
+	return func(node *api.Node) bool {
+		for ix := range node.Status.Conditions {
+			condition := &node.Status.Conditions[ix]
+			if condition.Type == api.NodeReady {
+				return condition.Status == api.ConditionTrue
+			}
 		}
+		return false
 	}
-	return false
 }
 
 // getReadyNodeNames returns names of schedulable, ready nodes from the node lister.
 func (lbc *LoadBalancerController) getReadyNodeNames() ([]string, error) {
 	nodeNames := []string{}
-	nodes, err := lbc.nodeLister.NodeCondition(nodeReady).List()
+	nodes, err := lbc.nodeLister.NodeCondition(getNodeReadyPredicate()).List()
 	if err != nil {
 		return nodeNames, err
 	}

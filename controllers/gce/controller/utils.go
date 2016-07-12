@@ -365,7 +365,7 @@ func getZone(n api.Node) string {
 
 // GetZoneForNode returns the zone for a given node by looking up its zone label.
 func (t *GCETranslator) GetZoneForNode(name string) (string, error) {
-	nodes, err := t.nodeLister.NodeCondition(nodeReady).List()
+	nodes, err := t.nodeLister.NodeCondition(getNodeReadyPredicate()).List()
 	if err != nil {
 		return "", err
 	}
@@ -382,7 +382,7 @@ func (t *GCETranslator) GetZoneForNode(name string) (string, error) {
 // ListZones returns a list of zones this Kubernetes cluster spans.
 func (t *GCETranslator) ListZones() ([]string, error) {
 	zones := sets.String{}
-	readyNodes, err := t.nodeLister.NodeCondition(nodeReady).List()
+	readyNodes, err := t.nodeLister.NodeCondition(getNodeReadyPredicate()).List()
 	if err != nil {
 		return zones.List(), err
 	}
