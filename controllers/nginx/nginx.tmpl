@@ -276,7 +276,7 @@ http {
 
     # default server, including healthcheck
     server {
-        listen 8080 default_server reuseport;
+        listen 8080 default_server reuseport backlog={{ .backlogSize }};
 
         location /healthz {
             access_log off;
