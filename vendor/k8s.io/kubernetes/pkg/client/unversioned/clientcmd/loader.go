@@ -1,5 +1,5 @@
 /*
-Copyright 2014 The Kubernetes Authors All rights reserved.
+Copyright 2014 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -230,14 +230,17 @@ func (rules *ClientConfigLoadingRules) Migrate() error {
 		if _, err := os.Stat(destination); err == nil {
 			// if the destination already exists, do nothing
 			continue
+		} else if os.IsPermission(err) {
+			// if we can't access the file, skip it
+			continue
 		} else if !os.IsNotExist(err) {
 			// if we had an error other than non-existence, fail
 			return err
 		}
 
 		if sourceInfo, err := os.Stat(source); err != nil {
-			if os.IsNotExist(err) {
-				// if the source file doesn't exist, there's no work to do.
+			if os.IsNotExist(err) || os.IsPermission(err) {
+				// if the source file doesn't exist or we can't access it, there's no work to do.
 				continue
 			}
 
@@ -381,10 +384,38 @@ func WriteToFile(config clientcmdapi.Config, filename string) error {
 			return err
 		}
 	}
+
 	if err := ioutil.WriteFile(filename, content, 0600); err != nil {
 		return err
 	}
 	return nil
+}
+
+func lockFile(filename string) error {
+	// TODO: find a way to do this with actual file locks. Will
+	// probably need seperate solution for windows and linux.
+
+	// Make sure the dir exists before we try to create a lock file.
+	dir := filepath.Dir(filename)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	}
+	f, err := os.OpenFile(lockName(filename), os.O_CREATE|os.O_EXCL, 0)
+	if err != nil {
+		return err
+	}
+	f.Close()
+	return nil
+}
+
+func unlockFile(filename string) error {
+	return os.Remove(lockName(filename))
+}
+
+func lockName(filename string) string {
+	return filename + ".lock"
 }
 
 // Write serializes the config to yaml.

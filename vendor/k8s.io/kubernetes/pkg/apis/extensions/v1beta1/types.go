@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors All rights reserved.
+Copyright 2015 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -46,7 +46,8 @@ type ScaleStatus struct {
 	TargetSelector string `json:"targetSelector,omitempty" protobuf:"bytes,3,opt,name=targetSelector"`
 }
 
-// +genclient=true,noMethods=true
+// +genclient=true
+// +noMethods=true
 
 // represents a scaling request for a resource.
 type Scale struct {
@@ -166,7 +167,8 @@ type HorizontalPodAutoscalerList struct {
 	Items []HorizontalPodAutoscaler `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
 
-// +genclient=true,nonNamespaced=true
+// +genclient=true
+// +nonNamespaced=true
 
 // A ThirdPartyResource is a generic representation of a resource, it is used by add-ons and plugins to add new resource
 // types to the API.  It consists of one or more Versions of the api.
@@ -912,7 +914,8 @@ type ReplicaSetStatus struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
 }
 
-// +genclient=true,nonNamespaced=true
+// +genclient=true
+// +nonNamespaced=true
 
 // Pod Security Policy governs the ability to make requests that affect the Security Context
 // that will be applied to a pod and container.

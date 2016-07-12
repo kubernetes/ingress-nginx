@@ -1,5 +1,5 @@
 /*
-Copyright 2014 The Kubernetes Authors All rights reserved.
+Copyright 2014 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,6 +31,13 @@ import (
 // +protobuf.as=Timestamp
 type Time struct {
 	time.Time `protobuf:"-"`
+}
+
+// DeepCopy returns a deep-copy of the Time value.  The underlying time.Time
+// type is effectively immutable in the time API, so it is safe to
+// copy-by-assign, despite the presence of (unexported) Pointer fields.
+func (t Time) DeepCopy() Time {
+	return t
 }
 
 // NewTime returns a wrapped instance of the provided time

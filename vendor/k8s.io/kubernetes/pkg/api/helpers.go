@@ -1,5 +1,5 @@
 /*
-Copyright 2014 The Kubernetes Authors All rights reserved.
+Copyright 2014 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -424,6 +424,10 @@ const (
 	// SeccompContainerAnnotationKeyPrefix represents the key of a seccomp profile applied
 	// to one container of a pod.
 	SeccompContainerAnnotationKeyPrefix string = "container.seccomp.security.alpha.kubernetes.io/"
+
+	// CreatedByAnnotation represents the key used to store the spec(json)
+	// used to create the resource.
+	CreatedByAnnotation = "kubernetes.io/created-by"
 )
 
 // GetAffinityFromPod gets the json serialized affinity data from Pod.Annotations
@@ -466,7 +470,7 @@ func GetTaintsFromNodeAnnotations(annotations map[string]string) ([]Taint, error
 }
 
 // TolerationToleratesTaint checks if the toleration tolerates the taint.
-func TolerationToleratesTaint(toleration Toleration, taint Taint) bool {
+func TolerationToleratesTaint(toleration *Toleration, taint *Taint) bool {
 	if len(toleration.Effect) != 0 && toleration.Effect != taint.Effect {
 		return false
 	}
@@ -486,10 +490,10 @@ func TolerationToleratesTaint(toleration Toleration, taint Taint) bool {
 }
 
 // TaintToleratedByTolerations checks if taint is tolerated by any of the tolerations.
-func TaintToleratedByTolerations(taint Taint, tolerations []Toleration) bool {
+func TaintToleratedByTolerations(taint *Taint, tolerations []Toleration) bool {
 	tolerated := false
-	for _, toleration := range tolerations {
-		if TolerationToleratesTaint(toleration, taint) {
+	for i := range tolerations {
+		if TolerationToleratesTaint(&tolerations[i], taint) {
 			tolerated = true
 			break
 		}

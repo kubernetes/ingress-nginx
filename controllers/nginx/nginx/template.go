@@ -61,6 +61,7 @@ func (ngx *Manager) loadTemplate() {
 
 func (ngx *Manager) writeCfg(cfg config.Configuration, ingressCfg IngressConfig) (bool, error) {
 	conf := make(map[string]interface{})
+	conf["backlogSize"] = sysctlSomaxconn()
 	conf["upstreams"] = ingressCfg.Upstreams
 	conf["servers"] = ingressCfg.Servers
 	conf["tcpUpstreams"] = ingressCfg.TCPUpstreams
