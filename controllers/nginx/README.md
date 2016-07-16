@@ -11,6 +11,7 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 * [HTTPS](#https)
   * [HTTPS enforcement](#server-side-https-enforcement)
   * [HSTS](#http-strict-transport-security)
+  * [Kube-Lego](#automated-certificate-management-with-kube-lego)
 * [TCP Services](#exposing-tcp-services)
 * [UDP Services](#exposing-udp-services)
 * [Proxy Protocol](#proxy-protocol)
@@ -148,6 +149,23 @@ By default the controller redirects (301) to HTTPS if there is a TLS Ingress rul
 
 To disable this behavior use `hsts=false` in the NGINX config map.
 
+
+### Automated Certificate Management with Kube-Lego
+
+[Kube-Lego] automatically requests missing certificates or expired from
+[Let's Encrypt] by monitoring ingress resources and its referenced secrets. To
+enable this for an ingress resource you have to add an annotation:
+
+```
+kubectl annotate ing ingress-demo kubernetes.io/tls-acme="true"
+```
+
+To setup Kube-Lego you can take a look at this [full example]. The first
+version to fully support Kube-Lego is nginx Ingress controller 0.8.
+
+[full example]:https://github.com/jetstack/kube-lego/tree/master/examples
+[Kube-Lego]:https://github.com/jetstack/kube-lego
+[Let's Encrypt]:https://letsencrypt.org
 
 ## Exposing TCP services
 
