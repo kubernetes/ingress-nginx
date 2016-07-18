@@ -225,6 +225,7 @@ http {
             auth_digest "{{ $location.Auth.Realm }}";
             auth_digest_user_file {{ $location.Auth.File }};
             {{ end }}
+            proxy_set_header Authorization "";
             {{- end }}
 
             proxy_set_header Host                   $host;
