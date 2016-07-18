@@ -140,7 +140,9 @@ func main() {
 		}
 	}
 
-	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod, *defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName, *udpConfigMapName, runtimePodInfo)
+	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod,
+		*defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName,
+		*udpConfigMapName, *defSSLCertificate, runtimePodInfo)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
