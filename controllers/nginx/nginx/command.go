@@ -101,7 +101,7 @@ func (ngx Manager) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (ngx Manager) Check(_ *http.Request) error {
-	res, err := http.Get("http://127.0.0.1:8080/healthz")
+	res, err := http.Get("http://127.0.0.1:18080/healthz")
 	if err != nil {
 		return err
 	}
