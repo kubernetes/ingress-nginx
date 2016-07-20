@@ -88,23 +88,24 @@ func (npm namedPortMapping) getPortMappings() map[string]string {
 // loadBalancerController watches the kubernetes api and adds/removes services
 // from the loadbalancer
 type loadBalancerController struct {
-	client         *client.Client
-	ingController  *framework.Controller
-	endpController *framework.Controller
-	svcController  *framework.Controller
-	secrController *framework.Controller
-	mapController  *framework.Controller
-	ingLister      StoreToIngressLister
-	svcLister      cache.StoreToServiceLister
-	endpLister     cache.StoreToEndpointsLister
-	secrLister     StoreToSecretsLister
-	mapLister      StoreToConfigmapLister
-	nginx          *nginx.Manager
-	podInfo        *podInfo
-	defaultSvc     string
-	nxgConfigMap   string
-	tcpConfigMap   string
-	udpConfigMap   string
+	client            *client.Client
+	ingController     *framework.Controller
+	endpController    *framework.Controller
+	svcController     *framework.Controller
+	secrController    *framework.Controller
+	mapController     *framework.Controller
+	ingLister         StoreToIngressLister
+	svcLister         cache.StoreToServiceLister
+	endpLister        cache.StoreToEndpointsLister
+	secrLister        StoreToSecretsLister
+	mapLister         StoreToConfigmapLister
+	nginx             *nginx.Manager
+	podInfo           *podInfo
+	defaultSvc        string
+	nxgConfigMap      string
+	tcpConfigMap      string
+	udpConfigMap      string
+	defSSLCertificate string
 
 	recorder record.EventRecorder
 
@@ -123,22 +124,24 @@ type loadBalancerController struct {
 }
 
 // newLoadBalancerController creates a controller for nginx loadbalancer
-func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Duration, defaultSvc,
-	namespace, nxgConfigMapName, tcpConfigMapName, udpConfigMapName string, runtimeInfo *podInfo) (*loadBalancerController, error) {
+func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Duration,
+	defaultSvc, namespace, nxgConfigMapName, tcpConfigMapName, udpConfigMapName,
+	defSSLCertificate string, runtimeInfo *podInfo) (*loadBalancerController, error) {
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(kubeClient.Events(namespace))
 
 	lbc := loadBalancerController{
-		client:       kubeClient,
-		stopCh:       make(chan struct{}),
-		podInfo:      runtimeInfo,
-		nginx:        nginx.NewManager(kubeClient),
-		nxgConfigMap: nxgConfigMapName,
-		tcpConfigMap: tcpConfigMapName,
-		udpConfigMap: udpConfigMapName,
-		defaultSvc:   defaultSvc,
+		client:            kubeClient,
+		stopCh:            make(chan struct{}),
+		podInfo:           runtimeInfo,
+		nginx:             nginx.NewManager(kubeClient),
+		nxgConfigMap:      nxgConfigMapName,
+		tcpConfigMap:      tcpConfigMapName,
+		udpConfigMap:      udpConfigMapName,
+		defSSLCertificate: defSSLCertificate,
+		defaultSvc:        defaultSvc,
 		recorder: eventBroadcaster.NewRecorder(api.EventSource{
 			Component: "nginx-ingress-controller",
 		}),
@@ -867,6 +870,14 @@ func (lbc *loadBalancerController) createServers(data []interface{}) map[string]
 	servers := make(map[string]*nginx.Server)
 
 	pems := lbc.getPemsFromIngress(data)
+	if lbc.defSSLCertificate != "" {
+		ngxCert, err := lbc.getPemCertificate(lbc.defSSLCertificate)
+		if err == nil {
+			pems["_"] = ngxCert
+		} else {
+			glog.Warningf("%v", err)
+		}
+	}
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
@@ -908,41 +919,10 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 		for _, tls := range ing.Spec.TLS {
 			secretName := tls.SecretName
 			secretKey := fmt.Sprintf("%s/%s", ing.Namespace, secretName)
-			secretInterface, exists, err := lbc.secrLister.Store.GetByKey(secretKey)
+
+			ngxCert, err := lbc.getPemCertificate(secretKey)
 			if err != nil {
-				glog.Warningf("Error retriveing secret %v for ing %v: %v", secretName, ing.Name, err)
-				continue
-			}
-			if !exists {
-				glog.Warningf("Secret %v is not existing", secretKey)
-				continue
-			}
-			secret := secretInterface.(*api.Secret)
-			cert, ok := secret.Data[api.TLSCertKey]
-			if !ok {
-				glog.Warningf("Secret %v has no private key", secretName)
-				continue
-			}
-			key, ok := secret.Data[api.TLSPrivateKeyKey]
-			if !ok {
-				glog.Warningf("Secret %v has no cert", secretName)
-				continue
-			}
-
-			ngxCert, err := lbc.nginx.AddOrUpdateCertAndKey(fmt.Sprintf("%v-%v", ing.Namespace, secretName), string(cert), string(key))
-			if err != nil {
-				glog.Errorf("No valid SSL certificate found in secret %v: %v", secretName, err)
-				continue
-			}
-
-			if len(tls.Hosts) == 0 {
-				if _, ok := pems["_"]; ok {
-					glog.Warningf("It is not possible to use %v secret for default SSL certificate because there is one already defined", secretName)
-					continue
-				}
-
-				pems["_"] = ngxCert
-				glog.Infof("Using the secret %v as source for the default SSL certificate", secretName)
+				glog.Warningf("%v", err)
 				continue
 			}
 
@@ -957,6 +937,29 @@ func (lbc *loadBalancerController) getPemsFromIngress(data []interface{}) map[st
 	}
 
 	return pems
+}
+
+func (lbc *loadBalancerController) getPemCertificate(secretName string) (nginx.SSLCert, error) {
+	secretInterface, exists, err := lbc.secrLister.Store.GetByKey(secretName)
+	if err != nil {
+		return nginx.SSLCert{}, fmt.Errorf("Error retriveing secret %v: %v", secretName, err)
+	}
+	if !exists {
+		return nginx.SSLCert{}, fmt.Errorf("Secret %v does not exists", secretName)
+	}
+
+	secret := secretInterface.(*api.Secret)
+	cert, ok := secret.Data[api.TLSCertKey]
+	if !ok {
+		return nginx.SSLCert{}, fmt.Errorf("Secret %v has no private key", secretName)
+	}
+	key, ok := secret.Data[api.TLSPrivateKeyKey]
+	if !ok {
+		return nginx.SSLCert{}, fmt.Errorf("Secret %v has no cert", secretName)
+	}
+
+	nsSecName := strings.Replace(secretName, "/", "-", -1)
+	return lbc.nginx.AddOrUpdateCertAndKey(nsSecName, string(cert), string(key))
 }
 
 // check if secret is referenced in this controller's config

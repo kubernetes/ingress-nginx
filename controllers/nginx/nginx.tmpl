@@ -180,6 +180,16 @@ http {
     {{ end }}
 
     {{ range $server := .servers }}
+    {{/* Check for default SSL backend */}}
+    {{ if and (eq $server.Name "_") (not $server.SSL) -}}
+    server {
+        server_name {{ $server.Name }};
+        listen 443;
+        # return protocol error.
+        return 444;
+    }
+    {{ end }}
+
     server {
         server_name {{ $server.Name }};
         listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
