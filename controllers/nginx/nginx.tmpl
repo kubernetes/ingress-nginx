@@ -241,6 +241,10 @@ http {
             proxy_set_header X-Forwarded-Port       $server_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
 
+            # mitigate HTTPoxy Vulnerability
+            # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
+            proxy_set_header Proxy                  "";
+
             proxy_connect_timeout                   {{ $cfg.proxyConnectTimeout }}s;
             proxy_send_timeout                      {{ $cfg.proxySendTimeout }}s;
             proxy_read_timeout                      {{ $cfg.proxyReadTimeout }}s;
