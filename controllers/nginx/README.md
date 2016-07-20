@@ -17,6 +17,7 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 * [Proxy Protocol](#proxy-protocol)
 * [NGINX customization](configuration.md)
 * [NGINX status page](#nginx-status-page)
+* [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
 * [Debug & Troubleshooting](#troubleshooting)
 * [Limitations](#limitations)
 * [NGINX Notes](#nginx-notes)
@@ -232,6 +233,10 @@ Please check the example `example/rc-default.yaml`
 ![nginx-module-vts screenshot](https://cloud.githubusercontent.com/assets/3648408/10876811/77a67b70-8183-11e5-9924-6a6d0c5dc73a.png "screenshot with filter")
 
 To extract the information in JSON format the module provides a custom URL: `/nginx_status/format/json`
+
+### Disabling NGINX ingress controller
+
+Setting the annotation `kubernetes.io/ingress.class` to any value other than "nginx" or the empty string, will force the NGINX Ingress controller to ignore your Ingress. Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
 
 
 ### Debug & Troubleshooting

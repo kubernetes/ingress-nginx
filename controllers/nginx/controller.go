@@ -150,16 +150,28 @@ func newLoadBalancerController(kubeClient *client.Client, resyncPeriod time.Dura
 	ingEventHandler := framework.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
+			if !isNGINXIngress(addIng) {
+				glog.Infof("Ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
+				return
+			}
 			lbc.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("%s/%s", addIng.Namespace, addIng.Name))
 			lbc.ingQueue.enqueue(obj)
 			lbc.syncQueue.enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
-			upIng := obj.(*extensions.Ingress)
-			lbc.recorder.Eventf(upIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("%s/%s", upIng.Namespace, upIng.Name))
+			delIng := obj.(*extensions.Ingress)
+			if !isNGINXIngress(delIng) {
+				glog.Infof("Ignoring add for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
+				return
+			}
+			lbc.recorder.Eventf(delIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("%s/%s", delIng.Namespace, delIng.Name))
 			lbc.syncQueue.enqueue(obj)
 		},
 		UpdateFunc: func(old, cur interface{}) {
+			curIng := cur.(*extensions.Ingress)
+			if !isNGINXIngress(curIng) {
+				return
+			}
 			if !reflect.DeepEqual(old, cur) {
 				upIng := cur.(*extensions.Ingress)
 				lbc.recorder.Eventf(upIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("%s/%s", upIng.Namespace, upIng.Name))
