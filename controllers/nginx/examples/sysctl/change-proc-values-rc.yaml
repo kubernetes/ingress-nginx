@@ -89,7 +89,7 @@ spec:
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.8.1
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.8.2
         name: nginx-ingress-lb
         imagePullPolicy: Always
         livenessProbe:

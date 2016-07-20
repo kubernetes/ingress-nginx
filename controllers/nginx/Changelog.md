@@ -1,14 +1,17 @@
 Changelog
 
 ### 0.8.2
+
 - [X] [#1336](https://github.com/kubernetes/contrib/pull/1336) Add annotation to skip ingress rule
 - [X] [#1338](https://github.com/kubernetes/contrib/pull/1338) Add HTTPS default backend
 - [X] [#1351](https://github.com/kubernetes/contrib/pull/1351) Avoid generation of invalid ssl certificates
 - [X] [#1379](https://github.com/kubernetes/contrib/pull/1379) improve nginx performance
 - [X] [#1350](https://github.com/kubernetes/contrib/pull/1350) Improve performance (listen backlog=net.core.somaxconn)
 - [X] [#1384](https://github.com/kubernetes/contrib/pull/1384) Unset Authorization header when proxying
+- [X] [#1398](https://github.com/kubernetes/contrib/pull/1398) Mitigate HTTPoxy Vulnerability
 
 ### 0.8.1
+
 - [X] [#1317](https://github.com/kubernetes/contrib/pull/1317) Fix duplicated real_ip_header
 - [X] [#1315](https://github.com/kubernetes/contrib/pull/1315) Addresses #1314
 
