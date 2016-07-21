@@ -14,10 +14,12 @@
 
 FROM gcr.io/google_containers/nginx-slim:0.8
 
-RUN apt-get update && apt-get install -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
   diffutils \
+  ssl-cert \
   --no-install-recommends \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && make-ssl-cert generate-default-snakeoil --force-overwrite
 
 COPY nginx-ingress-controller /
 COPY nginx.tmpl /etc/nginx/template/nginx.tmpl

@@ -33,7 +33,7 @@ Please check the [custom configuration](examples/custom-configuration/README.md)
 
 #### Annotations
 
-The following annotaitons are supported:
+The following annotations are supported:
 
 |Name                 |type|
 |---------------------------|------|

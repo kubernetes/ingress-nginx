@@ -870,13 +870,22 @@ func (lbc *loadBalancerController) createServers(data []interface{}) map[string]
 	servers := make(map[string]*nginx.Server)
 
 	pems := lbc.getPemsFromIngress(data)
-	if lbc.defSSLCertificate != "" {
-		ngxCert, err := lbc.getPemCertificate(lbc.defSSLCertificate)
-		if err == nil {
-			pems["_"] = ngxCert
-		} else {
-			glog.Warningf("%v", err)
-		}
+
+	var ngxCert nginx.SSLCert
+	var err error
+
+	if lbc.defSSLCertificate == "" {
+		// use system certificated generated at image build time
+		cert, key := getFakeSSLCert()
+		ngxCert, err = lbc.nginx.AddOrUpdateCertAndKey("system-snake-oil-certificate", cert, key)
+	} else {
+		ngxCert, err = lbc.getPemCertificate(lbc.defSSLCertificate)
+	}
+
+	if err == nil {
+		pems["_"] = ngxCert
+	} else {
+		glog.Warningf("%v", err)
 	}
 
 	for _, ingIf := range data {

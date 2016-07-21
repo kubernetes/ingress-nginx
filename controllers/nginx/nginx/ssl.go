@@ -108,7 +108,7 @@ func (nginx *Manager) commonNames(pemFileName string) ([]string, error) {
 		cn = append(cn, cert.DNSNames...)
 	}
 
-	glog.V(2).Infof("found %v common names: %v\n", cn, len(cn))
+	glog.V(3).Infof("found %v common names: %v\n", cn, len(cn))
 	return cn, nil
 }
 

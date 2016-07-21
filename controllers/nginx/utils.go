@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -272,4 +273,25 @@ func (ing ingAnnotations) ingressClass() string {
 func isNGINXIngress(ing *extensions.Ingress) bool {
 	class := ingAnnotations(ing.ObjectMeta.Annotations).ingressClass()
 	return class == "" || class == nginxIngressClass
+}
+
+const (
+	snakeOilPem = "/etc/ssl/certs/ssl-cert-snakeoil.pem"
+	snakeOilKey = "/etc/ssl/private/ssl-cert-snakeoil.key"
+)
+
+// getFakeSSLCert returns the snake oil ssl certificate created by the command
+// make-ssl-cert generate-default-snakeoil --force-overwrite
+func getFakeSSLCert() (string, string) {
+	cert, err := ioutil.ReadFile(snakeOilPem)
+	if err != nil {
+		return "", ""
+	}
+
+	key, err := ioutil.ReadFile(snakeOilKey)
+	if err != nil {
+		return "", ""
+	}
+
+	return string(cert), string(key)
 }

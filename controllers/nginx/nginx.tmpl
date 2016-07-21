@@ -180,16 +180,6 @@ http {
     {{ end }}
 
     {{ range $server := .servers }}
-    {{/* Check for default SSL backend */}}
-    {{ if and (eq $server.Name "_") (not $server.SSL) -}}
-    server {
-        server_name {{ $server.Name }};
-        listen 443;
-        # return protocol error.
-        return 444;
-    }
-    {{ end }}
-
     server {
         server_name {{ $server.Name }};
         listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
@@ -289,8 +279,11 @@ http {
     }
     {{ end }}
 
-    # default server, including healthcheck
+    # default server, used for NGINX healthcheck and access to nginx stats
     server {
+        # Use the port 18080 (random value just to avoid known ports) as default port for nginx.
+        # Changing this value requires a change in:
+        # https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/nginx/command.go#L104
         listen 18080 default_server reuseport backlog={{ .backlogSize }};
 
         location /healthz {
