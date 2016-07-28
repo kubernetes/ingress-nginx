@@ -67,7 +67,9 @@ func NewManager(kubeClient *client.Client) *Manager {
 
 	ngx.sslDHParam = ngx.SearchDHParamFile(config.SSLDirectory)
 
-	ngx.loadTemplate()
+	if err := ngx.loadTemplate(); err != nil {
+		glog.Fatalf("invalid NGINX template: %v", err)
+	}
 
 	return ngx
 }
