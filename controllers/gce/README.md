@@ -364,7 +364,7 @@ Currently, all service backends must satisfy *either* of the following requireme
 1. Respond with a 200 on '/'. The content does not matter.
 2. Expose an arbitrary url as a `readiness` probe on the pods backing the Service.
 
-The Ingress controller looks for a compatible readiness probe first, if it finds one, it adopts it as the GCE loadbalancer's HTTP health check. If there's no readiness probe, or the readiness probe requires special HTTP headers, or HTTPS, the Ingress controller points the GCE loadbalancer's HTTP health check at '/'. [This is an example](examples/health_check/README.md) of an Ingress that adopts the readiness probe from the endpoints as its health check.
+The Ingress controller looks for a compatible readiness probe first, if it finds one, it adopts it as the GCE loadbalancer's HTTP health check. If there's no readiness probe, or the readiness probe requires special HTTP headers, or HTTPS, the Ingress controller points the GCE loadbalancer's HTTP health check at '/'. [This is an example](examples/health_checks/README.md) of an Ingress that adopts the readiness probe from the endpoints as its health check.
 
 ## TLS
 
