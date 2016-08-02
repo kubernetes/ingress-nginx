@@ -538,7 +538,7 @@ kind: Ingress
 metadata:
   name: test
   annotations:
-    kubernetes.io/ingress.allowHTTP: "false"
+    kubernetes.io/ingress.allow-http: "false"
 spec:
   tls:
   # This assumes tls-secret exists.
