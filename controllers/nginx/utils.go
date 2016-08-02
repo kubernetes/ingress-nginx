@@ -119,6 +119,10 @@ func getPodDetails(kubeClient *unversioned.Client) (*podInfo, error) {
 	podName := os.Getenv("POD_NAME")
 	podNs := os.Getenv("POD_NAMESPACE")
 
+	if podName == "" && podNs == "" {
+		return nil, fmt.Errorf("unable to get POD information (missing POD_NAME or POD_NAMESPACE environment variable")
+	}
+
 	err := waitForPodRunning(kubeClient, podNs, podName, time.Millisecond*200, time.Second*30)
 	if err != nil {
 		return nil, err
@@ -126,7 +130,7 @@ func getPodDetails(kubeClient *unversioned.Client) (*podInfo, error) {
 
 	pod, _ := kubeClient.Pods(podNs).Get(podName)
 	if pod == nil {
-		return nil, fmt.Errorf("Unable to get POD information")
+		return nil, fmt.Errorf("unable to get POD information")
 	}
 
 	node, err := kubeClient.Nodes().Get(pod.Spec.NodeName)
