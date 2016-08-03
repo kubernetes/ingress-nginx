@@ -74,7 +74,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 10249
+            port: 10254
             scheme: HTTP
           initialDelaySeconds: 30
           timeoutSeconds: 5

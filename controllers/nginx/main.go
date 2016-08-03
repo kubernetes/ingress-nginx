@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	healthPort = 10249
+	healthPort = 10254
 )
 
 var (

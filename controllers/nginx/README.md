@@ -19,6 +19,7 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 * [NGINX customization](configuration.md)
 * [NGINX status page](#nginx-status-page)
 * [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
+* [Local cluster](#local-cluster)
 * [Debug & Troubleshooting](#troubleshooting)
 * [Limitations](#limitations)
 * [NGINX Notes](#nginx-notes)
@@ -342,6 +343,12 @@ To extract the information in JSON format the module provides a custom URL: `/ng
 ### Disabling NGINX ingress controller
 
 Setting the annotation `kubernetes.io/ingress.class` to any value other than "nginx" or the empty string, will force the NGINX Ingress controller to ignore your Ingress. Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
+
+### Local cluster
+
+Using [`hack/local-up-cluster.sh`](https://github.com/kubernetes/kubernetes/blob/master/hack/local-up-cluster.sh) is possible to start a local kubernetes cluster consisting of a master and a single node. Please read [running-locally.md](https://github.com/kubernetes/kubernetes/blob/master/docs/devel/running-locally.md) for more details.
+
+Use of `hostNetwork: true` in the ingress controller is required to falls back at localhost:8080 for the apiserver if every other client creation check fails (eg: service account not present, kubeconfig doesn't exist, no master env vars...)
 
 
 ### Debug & Troubleshooting
