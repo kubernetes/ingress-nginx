@@ -88,7 +88,7 @@ func (t *taskQueue) worker() {
 		}
 		glog.V(3).Infof("syncing %v", key)
 		if err := t.sync(key.(string)); err != nil {
-			glog.V(3).Infof("requeuing %v, err %v", key, err)
+			glog.Warningf("requeuing %v, err %v", key, err)
 			t.requeue(key.(string))
 		} else {
 			t.queue.Forget(key)
