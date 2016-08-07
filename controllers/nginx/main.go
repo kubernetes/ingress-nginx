@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -28,8 +29,6 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
-
-	"k8s.io/contrib/ingress/controllers/nginx/nginx"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
@@ -77,9 +76,6 @@ var (
 
 	healthzPort = flags.Int("healthz-port", healthPort, "port for healthz endpoint.")
 
-	buildCfg = flags.Bool("dump-nginx-configuration", false, `Returns a ConfigMap with the default nginx conguration.
-		This can be used as a guide to create a custom configuration.`)
-
 	profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
 
 	defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret that contains a SSL 
@@ -92,11 +88,6 @@ func main() {
 	clientConfig := kubectl_util.DefaultClientConfig(flags)
 
 	glog.Infof("Using build: %v - %v", gitRepo, version)
-
-	if *buildCfg {
-		fmt.Printf("Example of ConfigMap to customize NGINX configuration:\n%v", nginx.ConfigMapAsString())
-		os.Exit(0)
-	}
 
 	if *defaultSvc == "" {
 		glog.Fatalf("Please specify --default-backend-service")
@@ -123,11 +114,13 @@ func main() {
 	glog.Infof("Validated %v as the default backend", *defaultSvc)
 
 	if *nxgConfigMap != "" {
-		_, _, err := parseNsName(*nxgConfigMap)
+		_, _, err = parseNsName(*nxgConfigMap)
 		if err != nil {
 			glog.Fatalf("configmap error: %v", err)
 		}
 	}
+
+	checkTemplate()
 
 	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod,
 		*defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName,
@@ -158,12 +151,12 @@ func registerHandlers(lbc *loadBalancerController) {
 	mux := http.NewServeMux()
 	healthz.InstallHandler(mux, lbc.nginx)
 
-	http.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "build: %v - %v", gitRepo, version)
 	})
 
-	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
 		lbc.Stop()
 	})
 
@@ -194,4 +187,29 @@ func handleSigterm(lbc *loadBalancerController) {
 
 	glog.Infof("Exiting with %v", exitCode)
 	os.Exit(exitCode)
+}
+
+const (
+	defTmpl      = "/etc/nginx/template/nginx.tmpl"
+	fallbackTmpl = "/etc/nginx/nginx.tmpl"
+)
+
+// checkTemplate verifies the NGINX template exists (file /etc/nginx/template/nginx.tmpl)
+// If the file does not exists it means:
+// a. custom docker image
+// b. standard image using watch-resource sidecar with emptyDir volume
+// If the file /etc/nginx/nginx.tmpl exists copy the file to /etc/nginx/template/nginx.tmpl
+// or terminate the execution (It is not possible to start NGINX without a template)
+func checkTemplate() {
+	_, err := os.Stat(defTmpl)
+	if err != nil {
+		glog.Warningf("error checking template %v: %v", defTmpl, err)
+		data, err := ioutil.ReadFile(fallbackTmpl)
+		if err != nil {
+			glog.Fatalf("error reading template %v: %v", fallbackTmpl, err)
+		}
+		if err = ioutil.WriteFile(defTmpl, data, 0644); err != nil {
+			glog.Fatalf("error copying %v to %v: %v", fallbackTmpl, defTmpl, err)
+		}
+	}
 }

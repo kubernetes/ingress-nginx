@@ -28,54 +28,42 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/ingress"
 )
 
-// SSLCert describes a SSL certificate to be used in NGINX
-type SSLCert struct {
-	CertFileName string
-	KeyFileName  string
-	// PemFileName contains the path to the file with the certificate and key concatenated
-	PemFileName string
-	// PemSHA contains the sha1 of the pem file.
-	// This is used to detect changes in the secret that contains the certificates
-	PemSHA string
-	// CN contains all the common names defined in the SSL certificate
-	CN []string
-}
-
 // AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
-func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) (SSLCert, error) {
+func (nginx *Manager) AddOrUpdateCertAndKey(name string, cert string, key string) (ingress.SSLCert, error) {
 	temporaryPemFileName := fmt.Sprintf("%v.pem", name)
 	pemFileName := fmt.Sprintf("%v/%v.pem", config.SSLDirectory, name)
 
 	temporaryPemFile, err := ioutil.TempFile("", temporaryPemFileName)
 	if err != nil {
-		return SSLCert{}, fmt.Errorf("Couldn't create temp pem file %v: %v", temporaryPemFile.Name(), err)
+		return ingress.SSLCert{}, fmt.Errorf("Couldn't create temp pem file %v: %v", temporaryPemFile.Name(), err)
 	}
 
 	_, err = temporaryPemFile.WriteString(fmt.Sprintf("%v\n%v", cert, key))
 	if err != nil {
-		return SSLCert{}, fmt.Errorf("Couldn't write to pem file %v: %v", temporaryPemFile.Name(), err)
+		return ingress.SSLCert{}, fmt.Errorf("Couldn't write to pem file %v: %v", temporaryPemFile.Name(), err)
 	}
 
 	err = temporaryPemFile.Close()
 	if err != nil {
-		return SSLCert{}, fmt.Errorf("Couldn't close temp pem file %v: %v", temporaryPemFile.Name(), err)
+		return ingress.SSLCert{}, fmt.Errorf("Couldn't close temp pem file %v: %v", temporaryPemFile.Name(), err)
 	}
 
 	cn, err := nginx.commonNames(temporaryPemFile.Name())
 	if err != nil {
 		os.Remove(temporaryPemFile.Name())
-		return SSLCert{}, err
+		return ingress.SSLCert{}, err
 	}
 
 	err = os.Rename(temporaryPemFile.Name(), pemFileName)
 	if err != nil {
 		os.Remove(temporaryPemFile.Name())
-		return SSLCert{}, fmt.Errorf("Couldn't move temp pem file %v to destination %v: %v", temporaryPemFile.Name(), pemFileName, err)
+		return ingress.SSLCert{}, fmt.Errorf("Couldn't move temp pem file %v to destination %v: %v", temporaryPemFile.Name(), pemFileName, err)
 	}
 
-	return SSLCert{
+	return ingress.SSLCert{
 		CertFileName: cert,
 		KeyFileName:  key,
 		PemFileName:  pemFileName,
@@ -133,6 +121,8 @@ func (nginx *Manager) SearchDHParamFile(baseDir string) string {
 	return ""
 }
 
+// pemSHA1 returns the SHA1 of a pem file. This is used to
+// reload NGINX in case a secret with a SSL certificate changed.
 func (nginx *Manager) pemSHA1(filename string) string {
 	hasher := sha1.New()
 	s, err := ioutil.ReadFile(filename)

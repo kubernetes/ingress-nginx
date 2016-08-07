@@ -282,7 +282,6 @@ Responses with the "text/html" type are always compressed if `use-gzip` is enabl
 
 ### Default configuration options
 
-Running `/nginx-ingress-controller --dump-nginx-configuration` is possible to get the value of the options that can be changed.
 The next table shows the options, the default value and a description
 
 |name                 |default|

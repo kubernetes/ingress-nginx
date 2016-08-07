@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package nginx
+package template
 
 import (
 	"strings"
 	"testing"
 
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/ingress"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
 )
 
@@ -70,7 +71,7 @@ var (
 
 func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
-		loc := &Location{
+		loc := &ingress.Location{
 			Path:     tc.Path,
 			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
@@ -84,10 +85,10 @@ func TestBuildLocation(t *testing.T) {
 
 func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
-		loc := &Location{
+		loc := &ingress.Location{
 			Path:     tc.Path,
 			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
-			Upstream: Upstream{Name: "upstream-name"},
+			Upstream: ingress.Upstream{Name: "upstream-name"},
 		}
 
 		pp := buildProxyPass(loc)

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package nginx
+package ingress
 
 import (
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/auth"
@@ -23,8 +23,8 @@ import (
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
 )
 
-// IngressConfig describes an NGINX configuration
-type IngressConfig struct {
+// Configuration describes an NGINX configuration
+type Configuration struct {
 	Upstreams    []*Upstream
 	Servers      []*Server
 	TCPUpstreams []*Location
@@ -113,15 +113,15 @@ func (c LocationByPath) Less(i, j int) bool {
 	return c[i].Path > c[j].Path
 }
 
-// NewDefaultServer return an UpstreamServer to be use as default server that returns 503.
-func NewDefaultServer() UpstreamServer {
-	return UpstreamServer{Address: "127.0.0.1", Port: "8181"}
-}
-
-// NewUpstream creates an upstream without servers.
-func NewUpstream(name string) *Upstream {
-	return &Upstream{
-		Name:     name,
-		Backends: []UpstreamServer{},
-	}
+// SSLCert describes a SSL certificate to be used in NGINX
+type SSLCert struct {
+	CertFileName string
+	KeyFileName  string
+	// PemFileName contains the path to the file with the certificate and key concatenated
+	PemFileName string
+	// PemSHA contains the sha1 of the pem file.
+	// This is used to detect changes in the secret that contains the certificates
+	PemSHA string
+	// CN contains all the common names defined in the SSL certificate
+	CN []string
 }

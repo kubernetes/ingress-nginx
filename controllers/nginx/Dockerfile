@@ -23,6 +23,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
 
 COPY nginx-ingress-controller /
 COPY nginx.tmpl /etc/nginx/template/nginx.tmpl
+COPY nginx.tmpl /etc/nginx/nginx.tmpl
 COPY default.conf /etc/nginx/nginx.conf
 
 COPY lua /etc/nginx/lua/

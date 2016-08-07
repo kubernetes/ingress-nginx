@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package nginx
+package template
 
 import (
 	"bytes"
@@ -22,12 +22,14 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"text/template"
+	text_template "text/template"
 
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
 
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/ingress"
+	"k8s.io/kubernetes/pkg/util/sysctl"
 )
 
 const (
@@ -36,9 +38,8 @@ const (
 
 var (
 	camelRegexp = regexp.MustCompile("[0-9A-Za-z]+")
-	tmplPath    = "/etc/nginx/template/nginx.tmpl"
 
-	funcMap = template.FuncMap{
+	funcMap = text_template.FuncMap{
 		"empty": func(input interface{}) bool {
 			check, ok := input.(string)
 			if ok {
@@ -54,48 +55,64 @@ var (
 	}
 )
 
-func (ngx *Manager) loadTemplate() error {
-	tmpl, err := template.New("nginx.tmpl").Funcs(funcMap).ParseFiles(tmplPath)
-	if err != nil {
-		return err
-	}
-	ngx.template = tmpl
-	return nil
+// Template ...
+type Template struct {
+	tmpl *text_template.Template
+	fw   fileWatcher
 }
 
-func (ngx *Manager) writeCfg(cfg config.Configuration, ingressCfg IngressConfig) (bool, error) {
+//NewTemplate returns a new Template instance or an
+//error if the specified template file contains errors
+func NewTemplate(file string, onChange func()) (*Template, error) {
+	tmpl, err := text_template.New("nginx.tmpl").Funcs(funcMap).ParseFiles(file)
+	if err != nil {
+		return nil, err
+	}
+	fw, err := newFileWatcher(file, onChange)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Template{
+		tmpl: tmpl,
+		fw:   fw,
+	}, nil
+}
+
+// Close removes the file watcher
+func (t *Template) Close() {
+	t.fw.close()
+}
+
+// Write populates a buffer using a template with NGINX configuration
+// and the servers and upstreams created by Ingress rules
+func (t *Template) Write(cfg config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
 	conf := make(map[string]interface{})
 	conf["backlogSize"] = sysctlSomaxconn()
 	conf["upstreams"] = ingressCfg.Upstreams
 	conf["servers"] = ingressCfg.Servers
 	conf["tcpUpstreams"] = ingressCfg.TCPUpstreams
 	conf["udpUpstreams"] = ingressCfg.UDPUpstreams
-	conf["defResolver"] = ngx.defResolver
-	conf["sslDHParam"] = ngx.sslDHParam
+	conf["defResolver"] = cfg.Resolver
+	conf["sslDHParam"] = cfg.SSLDHParam
 	conf["customErrors"] = len(cfg.CustomHTTPErrors) > 0
 	conf["cfg"] = fixKeyNames(structs.Map(cfg))
 
 	if glog.V(3) {
 		b, err := json.Marshal(conf)
 		if err != nil {
-			glog.Errorf("unexpected error:", err)
+			glog.Errorf("unexpected error: %v", err)
 		}
 		glog.Infof("NGINX configuration: %v", string(b))
 	}
 
 	buffer := new(bytes.Buffer)
-	err := ngx.template.Execute(buffer, conf)
+	err := t.tmpl.Execute(buffer, conf)
 	if err != nil {
 		glog.V(3).Infof("%v", string(buffer.Bytes()))
-		return false, err
 	}
 
-	changed, err := ngx.needsReload(buffer)
-	if err != nil {
-		return false, err
-	}
-
-	return changed, nil
+	return buffer.Bytes(), err
 }
 
 func fixKeyNames(data map[string]interface{}) map[string]interface{} {
@@ -121,7 +138,7 @@ func toCamelCase(src string) string {
 // buildLocation produces the location string, if the ingress has redirects
 // (specified through the ingress.kubernetes.io/rewrite-to annotation)
 func buildLocation(input interface{}) string {
-	location, ok := input.(*Location)
+	location, ok := input.(*ingress.Location)
 	if !ok {
 		return slash
 	}
@@ -139,7 +156,7 @@ func buildLocation(input interface{}) string {
 // If the annotation ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
 func buildProxyPass(input interface{}) string {
-	location, ok := input.(*Location)
+	location, ok := input.(*ingress.Location)
 	if !ok {
 		return ""
 	}
@@ -200,7 +217,7 @@ func buildProxyPass(input interface{}) string {
 func buildRateLimitZones(input interface{}) []string {
 	zones := []string{}
 
-	servers, ok := input.([]*Server)
+	servers, ok := input.([]*ingress.Server)
 	if !ok {
 		return zones
 	}
@@ -230,7 +247,7 @@ func buildRateLimitZones(input interface{}) []string {
 func buildRateLimit(input interface{}) []string {
 	limits := []string{}
 
-	loc, ok := input.(*Location)
+	loc, ok := input.(*ingress.Location)
 	if !ok {
 		return limits
 	}
@@ -248,4 +265,17 @@ func buildRateLimit(input interface{}) []string {
 	}
 
 	return limits
+}
+
+// sysctlSomaxconn returns the value of net.core.somaxconn, i.e.
+// maximum number of connections that can be queued for acceptance
+// http://nginx.org/en/docs/http/ngx_http_core_module.html#listen
+func sysctlSomaxconn() int {
+	maxConns, err := sysctl.GetSysctl("net/core/somaxconn")
+	if err != nil || maxConns < 512 {
+		glog.Warningf("system net.core.somaxconn=%v. Using NGINX default (511)", maxConns)
+		return 511
+	}
+
+	return maxConns
 }
