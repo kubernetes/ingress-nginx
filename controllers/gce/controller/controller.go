@@ -291,7 +291,10 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	}
 	nodePorts := lbc.tr.toNodePorts(&paths)
 	lbNames := lbc.ingLister.Store.ListKeys()
-	lbs, _ := lbc.ListRuntimeInfo()
+	lbs, err := lbc.ListRuntimeInfo()
+	if err != nil {
+		return err
+	}
 	nodeNames, err := lbc.getReadyNodeNames()
 	if err != nil {
 		return err
@@ -404,14 +407,17 @@ func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing
 
 // ListRuntimeInfo lists L7RuntimeInfo as understood by the loadbalancer module.
 func (lbc *LoadBalancerController) ListRuntimeInfo() (lbs []*loadbalancers.L7RuntimeInfo, err error) {
-	for _, m := range lbc.ingLister.Store.List() {
-		ing := m.(*extensions.Ingress)
-		k, err := keyFunc(ing)
+	ingList, err := lbc.ingLister.List()
+	if err != nil {
+		return lbs, err
+	}
+	for _, ing := range ingList.Items {
+		k, err := keyFunc(&ing)
 		if err != nil {
 			glog.Warningf("Cannot get key for Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
 			continue
 		}
-		tls, err := lbc.tlsLoader.load(ing)
+		tls, err := lbc.tlsLoader.load(&ing)
 		if err != nil {
 			glog.Warningf("Cannot get certs for Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
 		}
