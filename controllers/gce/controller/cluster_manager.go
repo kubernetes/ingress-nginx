@@ -230,14 +230,13 @@ func getGCEClient(config io.Reader) *gce.GCECloud {
 }
 
 // NewClusterManager creates a cluster manager for shared resources.
-// - name: is the name used to tag cluster wide shared resources. This is the
-//   string passed to glbc via --gce-cluster-name.
+// - namer: is the namer used to tag cluster wide shared resources.
 // - defaultBackendNodePort: is the node port of glbc's default backend. This is
 //	 the kubernetes Service that serves the 404 page if no urls match.
 // - defaultHealthCheckPath: is the default path used for L7 health checks, eg: "/healthz".
 func NewClusterManager(
 	configFilePath string,
-	name string,
+	namer *utils.Namer,
 	defaultBackendNodePort int64,
 	defaultHealthCheckPath string) (*ClusterManager, error) {
 
@@ -264,7 +263,7 @@ func NewClusterManager(
 	}
 
 	// Names are fundamental to the cluster, the uid allocator makes sure names don't collide.
-	cluster := ClusterManager{ClusterNamer: &utils.Namer{name}}
+	cluster := ClusterManager{ClusterNamer: namer}
 
 	// NodePool stores GCE vms that are in this Kubernetes cluster.
 	cluster.instancePool = instances.NewNodePool(cloud)

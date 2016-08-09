@@ -28,7 +28,9 @@ import (
 
 	flag "github.com/spf13/pflag"
 	"k8s.io/contrib/ingress/controllers/gce/controller"
+	"k8s.io/contrib/ingress/controllers/gce/loadbalancers"
 	"k8s.io/contrib/ingress/controllers/gce/storage"
+	"k8s.io/contrib/ingress/controllers/gce/utils"
 	"k8s.io/kubernetes/pkg/api"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
@@ -199,11 +201,11 @@ func main() {
 
 	if *inCluster || *useRealCloud {
 		// Create cluster manager
-		name, err := getClusterUID(kubeClient, *clusterName)
+		namer, err := newNamer(kubeClient, *clusterName)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
-		clusterManager, err = controller.NewClusterManager(*configFilePath, name, defaultBackendNodePort, *healthCheckPath)
+		clusterManager, err = controller.NewClusterManager(*configFilePath, namer, defaultBackendNodePort, *healthCheckPath)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
@@ -217,8 +219,8 @@ func main() {
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
-	if clusterManager.ClusterNamer.ClusterName != "" {
-		glog.V(3).Infof("Cluster name %+v", clusterManager.ClusterNamer.ClusterName)
+	if clusterManager.ClusterNamer.GetClusterName() != "" {
+		glog.V(3).Infof("Cluster name %+v", clusterManager.ClusterNamer.GetClusterName())
 	}
 	clusterManager.Init(&controller.GCETranslator{lbc})
 	go registerHandlers(lbc)
@@ -229,6 +231,32 @@ func main() {
 		glog.Infof("Handled quit, awaiting pod deletion.")
 		time.Sleep(30 * time.Second)
 	}
+}
+
+func newNamer(kubeClient *client.Client, clusterName string) (*utils.Namer, error) {
+	name, err := getClusterUID(kubeClient, clusterName)
+	if err != nil {
+		return nil, err
+	}
+
+	namer := utils.NewNamer(name)
+	vault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+
+	// Start a goroutine to poll the cluster UID config map
+	// We don't watch because we know exactly which configmap we want and this
+	// controller already watches 5 other resources, so it isn't worth the cost
+	// of another connection and complexity.
+	go wait.Forever(func() {
+		uid, found, err := vault.Get()
+		existing := namer.GetClusterName()
+		if found && uid != existing {
+			glog.Infof("Cluster uid changed from %v -> %v", existing, uid)
+			namer.SetClusterName(uid)
+		} else if err != nil {
+			glog.Errorf("Failed to reconcile cluster uid %v, currently set to %v", err, existing)
+		}
+	}, 5*time.Second)
+	return namer, nil
 }
 
 // getClusterUID returns the cluster UID. Rules for UID generation:
@@ -264,8 +292,13 @@ func getClusterUID(kubeClient *client.Client, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	namer := utils.Namer{}
 	for _, ing := range ings.Items {
 		if len(ing.Status.LoadBalancer.Ingress) != 0 {
+			c := namer.ParseName(loadbalancers.GCEResourceName(ing.Annotations, "forwarding-rule"))
+			if c.ClusterName != "" {
+				return c.ClusterName, cfgVault.Put(c.ClusterName)
+			}
 			glog.Infof("Found a working Ingress, assuming uid is empty string")
 			return "", cfgVault.Put("")
 		}
