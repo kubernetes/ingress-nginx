@@ -464,7 +464,7 @@ func (lbc *LoadBalancerController) getReadyNodeNames() ([]string, error) {
 	if err != nil {
 		return nodeNames, err
 	}
-	for _, n := range nodes.Items {
+	for _, n := range nodes {
 		if n.Spec.Unschedulable {
 			continue
 		}

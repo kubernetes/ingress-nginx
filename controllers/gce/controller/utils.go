@@ -358,7 +358,7 @@ func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
 	return knownPorts
 }
 
-func getZone(n api.Node) string {
+func getZone(n *api.Node) string {
 	zone, ok := n.Labels[zoneKey]
 	if !ok {
 		return defaultZone
@@ -372,7 +372,7 @@ func (t *GCETranslator) GetZoneForNode(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for _, n := range nodes.Items {
+	for _, n := range nodes {
 		if n.Name == name {
 			// TODO: Make this more resilient to label changes by listing
 			// cloud nodes and figuring out zone.
@@ -389,7 +389,7 @@ func (t *GCETranslator) ListZones() ([]string, error) {
 	if err != nil {
 		return zones.List(), err
 	}
-	for _, n := range readyNodes.Items {
+	for _, n := range readyNodes {
 		zones.Insert(getZone(n))
 	}
 	return zones.List(), nil

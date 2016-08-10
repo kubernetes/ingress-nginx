@@ -31,9 +31,9 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/util"
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/util/sets"
+	"k8s.io/kubernetes/pkg/util/uuid"
 )
 
 const testClusterName = "testcluster"
@@ -94,7 +94,7 @@ func toIngressRules(hostRules map[string]utils.FakeIngressRuleValueMap) []extens
 func newIngress(hostRules map[string]utils.FakeIngressRuleValueMap) *extensions.Ingress {
 	return &extensions.Ingress{
 		ObjectMeta: api.ObjectMeta{
-			Name:      fmt.Sprintf("%v", util.NewUUID()),
+			Name:      fmt.Sprintf("%v", uuid.NewUUID()),
 			Namespace: api.NamespaceNone,
 		},
 		Spec: extensions.IngressSpec{
