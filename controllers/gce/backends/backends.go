@@ -220,12 +220,19 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 	for _, igToBE := range igs {
 		igLinks.Insert(igToBE.SelfLink)
 	}
-	if igLinks.Equal(beIGs) {
+	if beIGs.IsSuperset(igLinks) {
 		return nil
 	}
 	glog.Infof("Backend %v has a broken edge, expected igs %+v, current igs %+v",
 		be.Name, igLinks.List(), beIGs.List())
-	be.Backends = getBackendsForIGs(igs)
+
+	newBackends := []*compute.Backend{}
+	for _, b := range getBackendsForIGs(igs) {
+		if !beIGs.Has(b.Group) {
+			newBackends = append(newBackends, b)
+		}
+	}
+	be.Backends = append(be.Backends, newBackends...)
 	if err := b.cloud.UpdateBackendService(be); err != nil {
 		return err
 	}
