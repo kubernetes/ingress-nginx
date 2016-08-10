@@ -53,6 +53,8 @@ import (
 	"k8s.io/kubernetes/pkg/apis/policy"
 	"k8s.io/kubernetes/pkg/apis/rbac"
 	"k8s.io/kubernetes/pkg/client/restclient"
+	"k8s.io/kubernetes/pkg/client/typed/discovery"
+	"k8s.io/kubernetes/pkg/client/typed/dynamic"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	clientset "k8s.io/kubernetes/pkg/client/unversioned/adapters/internalclientset"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
@@ -83,6 +85,9 @@ type Factory struct {
 	// Returns interfaces for dealing with arbitrary runtime.Objects. If thirdPartyDiscovery is true, performs API calls
 	// to discovery dynamic API objects registered by third parties.
 	Object func(thirdPartyDiscovery bool) (meta.RESTMapper, runtime.ObjectTyper)
+	// Returns interfaces for dealing with arbitrary
+	// runtime.Unstructured. This performs API calls to discover types.
+	UnstructuredObject func() (meta.RESTMapper, runtime.ObjectTyper, error)
 	// Returns interfaces for decoding objects - if toInternal is set, decoded objects will be converted
 	// into their internal form (if possible). Eventually the internal form will be removed as an option,
 	// and only versioned objects will be returned.
@@ -96,10 +101,12 @@ type Factory struct {
 	// Returns a RESTClient for working with the specified RESTMapping or an error. This is intended
 	// for working with arbitrary resources and is not guaranteed to point to a Kubernetes APIServer.
 	ClientForMapping func(mapping *meta.RESTMapping) (resource.RESTClient, error)
+	// Returns a RESTClient for working with Unstructured objects.
+	UnstructuredClientForMapping func(mapping *meta.RESTMapping) (resource.RESTClient, error)
 	// Returns a Describer for displaying the specified RESTMapping type or an error.
 	Describer func(mapping *meta.RESTMapping) (kubectl.Describer, error)
 	// Returns a Printer for formatting objects of the given type or an error.
-	Printer func(mapping *meta.RESTMapping, noHeaders, withNamespace bool, wide bool, showAll bool, showLabels bool, absoluteTimestamps bool, columnLabels []string) (kubectl.ResourcePrinter, error)
+	Printer func(mapping *meta.RESTMapping, options kubectl.PrintOptions) (kubectl.ResourcePrinter, error)
 	// Returns a Scaler for changing the size of the specified RESTMapping type or an error
 	Scaler func(mapping *meta.RESTMapping) (kubectl.Scaler, error)
 	// Returns a Reaper for gracefully shutting down resources.
@@ -158,13 +165,19 @@ const (
 	RunPodV1GeneratorName                       = "run-pod/v1"
 	ServiceV1GeneratorName                      = "service/v1"
 	ServiceV2GeneratorName                      = "service/v2"
+	ServiceNodePortGeneratorV1Name              = "service-nodeport/v1"
+	ServiceClusterIPGeneratorV1Name             = "service-clusterip/v1"
+	ServiceLoadBalancerGeneratorV1Name          = "service-loadbalancer/v1"
 	ServiceAccountV1GeneratorName               = "serviceaccount/v1"
 	HorizontalPodAutoscalerV1Beta1GeneratorName = "horizontalpodautoscaler/v1beta1"
 	HorizontalPodAutoscalerV1GeneratorName      = "horizontalpodautoscaler/v1"
 	DeploymentV1Beta1GeneratorName              = "deployment/v1beta1"
+	DeploymentBasicV1Beta1GeneratorName         = "deployment-basic/v1beta1"
 	JobV1Beta1GeneratorName                     = "job/v1beta1"
 	JobV1GeneratorName                          = "job/v1"
+	ScheduledJobV2Alpha1GeneratorName           = "scheduledjob/v2alpha1"
 	NamespaceV1GeneratorName                    = "namespace/v1"
+	ResourceQuotaV1GeneratorName                = "resourcequotas/v1"
 	SecretV1GeneratorName                       = "secret/v1"
 	SecretForDockerRegistryV1GeneratorName      = "secret-for-docker-registry/v1"
 	SecretForTLSV1GeneratorName                 = "secret-for-tls/v1"
@@ -178,12 +191,25 @@ func DefaultGenerators(cmdName string) map[string]kubectl.Generator {
 		ServiceV1GeneratorName: kubectl.ServiceGeneratorV1{},
 		ServiceV2GeneratorName: kubectl.ServiceGeneratorV2{},
 	}
+	generators["service-clusterip"] = map[string]kubectl.Generator{
+		ServiceClusterIPGeneratorV1Name: kubectl.ServiceClusterIPGeneratorV1{},
+	}
+	generators["service-nodeport"] = map[string]kubectl.Generator{
+		ServiceNodePortGeneratorV1Name: kubectl.ServiceNodePortGeneratorV1{},
+	}
+	generators["service-loadbalancer"] = map[string]kubectl.Generator{
+		ServiceLoadBalancerGeneratorV1Name: kubectl.ServiceLoadBalancerGeneratorV1{},
+	}
+	generators["deployment"] = map[string]kubectl.Generator{
+		DeploymentBasicV1Beta1GeneratorName: kubectl.DeploymentBasicGeneratorV1{},
+	}
 	generators["run"] = map[string]kubectl.Generator{
-		RunV1GeneratorName:             kubectl.BasicReplicationController{},
-		RunPodV1GeneratorName:          kubectl.BasicPod{},
-		DeploymentV1Beta1GeneratorName: kubectl.DeploymentV1Beta1{},
-		JobV1Beta1GeneratorName:        kubectl.JobV1Beta1{},
-		JobV1GeneratorName:             kubectl.JobV1{},
+		RunV1GeneratorName:                kubectl.BasicReplicationController{},
+		RunPodV1GeneratorName:             kubectl.BasicPod{},
+		DeploymentV1Beta1GeneratorName:    kubectl.DeploymentV1Beta1{},
+		JobV1Beta1GeneratorName:           kubectl.JobV1Beta1{},
+		JobV1GeneratorName:                kubectl.JobV1{},
+		ScheduledJobV2Alpha1GeneratorName: kubectl.ScheduledJobV2Alpha1{},
 	}
 	generators["autoscale"] = map[string]kubectl.Generator{
 		HorizontalPodAutoscalerV1Beta1GeneratorName: kubectl.HorizontalPodAutoscalerV1Beta1{},
@@ -192,6 +218,11 @@ func DefaultGenerators(cmdName string) map[string]kubectl.Generator {
 	generators["namespace"] = map[string]kubectl.Generator{
 		NamespaceV1GeneratorName: kubectl.NamespaceGeneratorV1{},
 	}
+
+	generators["quota"] = map[string]kubectl.Generator{
+		ResourceQuotaV1GeneratorName: kubectl.ResourceQuotaGeneratorV1{},
+	}
+
 	generators["secret"] = map[string]kubectl.Generator{
 		SecretV1GeneratorName: kubectl.SecretGeneratorV1{},
 	}
@@ -310,28 +341,65 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 						multiMapper = append(meta.MultiRESTMapper{thirdPartyMapper}, multiMapper...)
 					}
 					priorityMapper.Delegate = multiMapper
-					// Re-assign to the RESTMapper here because priorityMapper is actually a copy, so if we
-					// don't re-assign, the above assignement won't actually update mapper.RESTMapper
+					// Reassign to the RESTMapper here because priorityMapper is actually a copy, so if we
+					// don't reassign, the above assignement won't actually update mapper.RESTMapper
 					mapper.RESTMapper = priorityMapper
 				}
 			}
 			outputRESTMapper := kubectl.OutputVersionMapper{RESTMapper: mapper, OutputVersions: []unversioned.GroupVersion{cmdApiVersion}}
 			priorityRESTMapper := meta.PriorityRESTMapper{
 				Delegate: outputRESTMapper,
-				ResourcePriority: []unversioned.GroupVersionResource{
-					{Group: api.GroupName, Version: meta.AnyVersion, Resource: meta.AnyResource},
-					{Group: autoscaling.GroupName, Version: meta.AnyVersion, Resource: meta.AnyResource},
-					{Group: extensions.GroupName, Version: meta.AnyVersion, Resource: meta.AnyResource},
-					{Group: federation.GroupName, Version: meta.AnyVersion, Resource: meta.AnyResource},
-				},
-				KindPriority: []unversioned.GroupVersionKind{
-					{Group: api.GroupName, Version: meta.AnyVersion, Kind: meta.AnyKind},
-					{Group: autoscaling.GroupName, Version: meta.AnyVersion, Kind: meta.AnyKind},
-					{Group: extensions.GroupName, Version: meta.AnyVersion, Kind: meta.AnyKind},
-					{Group: federation.GroupName, Version: meta.AnyVersion, Kind: meta.AnyKind},
-				},
+			}
+			// TODO: this should come from registered versions
+			groups := []string{api.GroupName, autoscaling.GroupName, extensions.GroupName, federation.GroupName, batch.GroupName}
+			// set a preferred version
+			for _, group := range groups {
+				gvs := registered.EnabledVersionsForGroup(group)
+				if len(gvs) == 0 {
+					continue
+				}
+				priorityRESTMapper.ResourcePriority = append(priorityRESTMapper.ResourcePriority, unversioned.GroupVersionResource{Group: group, Version: gvs[0].Version, Resource: meta.AnyResource})
+				priorityRESTMapper.KindPriority = append(priorityRESTMapper.KindPriority, unversioned.GroupVersionKind{Group: group, Version: gvs[0].Version, Kind: meta.AnyKind})
+			}
+			for _, group := range groups {
+				priorityRESTMapper.ResourcePriority = append(priorityRESTMapper.ResourcePriority, unversioned.GroupVersionResource{Group: group, Version: meta.AnyVersion, Resource: meta.AnyResource})
+				priorityRESTMapper.KindPriority = append(priorityRESTMapper.KindPriority, unversioned.GroupVersionKind{Group: group, Version: meta.AnyVersion, Kind: meta.AnyKind})
 			}
 			return priorityRESTMapper, api.Scheme
+		},
+		UnstructuredObject: func() (meta.RESTMapper, runtime.ObjectTyper, error) {
+			cfg, err := clients.ClientConfigForVersion(nil)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			dc, err := discovery.NewDiscoveryClientForConfig(cfg)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			groupResources, err := discovery.GetAPIGroupResources(dc)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// Register unknown APIs as third party for now to make
+			// validation happy. TODO perhaps make a dynamic schema
+			// validator to avoid this.
+			for _, group := range groupResources {
+				for _, version := range group.Group.Versions {
+					gv := unversioned.GroupVersion{Group: group.Group.Name, Version: version.Version}
+					if !registered.IsRegisteredVersion(gv) {
+						registered.AddThirdPartyAPIGroupVersions(gv)
+					}
+				}
+			}
+
+			mapper := discovery.NewRESTMapper(groupResources, meta.InterfacesForUnstructured)
+
+			typer := discovery.NewUnstructuredObjectTyper(groupResources)
+
+			return kubectl.ShortcutExpander{RESTMapper: mapper}, typer, nil
 		},
 		Client: func() (*client.Client, error) {
 			return clients.ClientForVersion(nil)
@@ -340,49 +408,46 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 			return clients.ClientConfigForVersion(nil)
 		},
 		ClientForMapping: func(mapping *meta.RESTMapping) (resource.RESTClient, error) {
-			gvk := mapping.GroupVersionKind
-			mappingVersion := mapping.GroupVersionKind.GroupVersion()
-			c, err := clients.ClientForVersion(&mappingVersion)
+			cfg, err := clientConfig.ClientConfig()
 			if err != nil {
 				return nil, err
 			}
-			switch gvk.Group {
-			case api.GroupName:
-				return c.RESTClient, nil
-			case autoscaling.GroupName:
-				return c.AutoscalingClient.RESTClient, nil
-			case batch.GroupName:
-				return c.BatchClient.RESTClient, nil
-			case policy.GroupName:
-				return c.PolicyClient.RESTClient, nil
-			case apps.GroupName:
-				return c.AppsClient.RESTClient, nil
-			case extensions.GroupName:
-				return c.ExtensionsClient.RESTClient, nil
-			case api.SchemeGroupVersion.Group:
-				return c.RESTClient, nil
-			case extensions.SchemeGroupVersion.Group:
-				return c.ExtensionsClient.RESTClient, nil
-			case federation.GroupName:
-				return clients.FederationClientForVersion(&mappingVersion)
-			case rbac.GroupName:
-				return c.RbacClient.RESTClient, nil
-			case certificates.GroupName:
-				return c.CertificatesClient.RESTClient, nil
-			default:
-				if !registered.IsThirdPartyAPIGroupVersion(gvk.GroupVersion()) {
-					return nil, fmt.Errorf("unknown api group/version: %s", gvk.String())
-				}
-				cfg, err := clientConfig.ClientConfig()
-				if err != nil {
-					return nil, err
-				}
-				gv := gvk.GroupVersion()
-				cfg.GroupVersion = &gv
-				cfg.APIPath = "/apis"
-				cfg.NegotiatedSerializer = thirdpartyresourcedata.NewNegotiatedSerializer(api.Codecs, gvk.Kind, gv, gv)
-				return restclient.RESTClientFor(cfg)
+			if err := client.SetKubernetesDefaults(cfg); err != nil {
+				return nil, err
 			}
+			gvk := mapping.GroupVersionKind
+			switch gvk.Group {
+			case federation.GroupName:
+				mappingVersion := mapping.GroupVersionKind.GroupVersion()
+				return clients.FederationClientForVersion(&mappingVersion)
+			case api.GroupName:
+				cfg.APIPath = "/api"
+			default:
+				cfg.APIPath = "/apis"
+			}
+			gv := gvk.GroupVersion()
+			cfg.GroupVersion = &gv
+			if registered.IsThirdPartyAPIGroupVersion(gvk.GroupVersion()) {
+				cfg.NegotiatedSerializer = thirdpartyresourcedata.NewNegotiatedSerializer(api.Codecs, gvk.Kind, gv, gv)
+			}
+			return restclient.RESTClientFor(cfg)
+		},
+		UnstructuredClientForMapping: func(mapping *meta.RESTMapping) (resource.RESTClient, error) {
+			cfg, err := clientConfig.ClientConfig()
+			if err != nil {
+				return nil, err
+			}
+			if err := restclient.SetKubernetesDefaults(cfg); err != nil {
+				return nil, err
+			}
+			cfg.APIPath = "/apis"
+			if mapping.GroupVersionKind.Group == api.GroupName {
+				cfg.APIPath = "/api"
+			}
+			gv := mapping.GroupVersionKind.GroupVersion()
+			cfg.ContentConfig = dynamic.ContentConfig()
+			cfg.GroupVersion = &gv
+			return restclient.RESTClientFor(cfg)
 		},
 		Describer: func(mapping *meta.RESTMapping) (kubectl.Describer, error) {
 			mappingVersion := mapping.GroupVersionKind.GroupVersion()
@@ -417,8 +482,8 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 		JSONEncoder: func() runtime.Encoder {
 			return api.Codecs.LegacyCodec(registered.EnabledVersions()...)
 		},
-		Printer: func(mapping *meta.RESTMapping, noHeaders, withNamespace bool, wide bool, showAll bool, showLabels bool, absoluteTimestamps bool, columnLabels []string) (kubectl.ResourcePrinter, error) {
-			return kubectl.NewHumanReadablePrinter(noHeaders, withNamespace, wide, showAll, showLabels, absoluteTimestamps, columnLabels), nil
+		Printer: func(mapping *meta.RESTMapping, options kubectl.PrintOptions) (kubectl.ResourcePrinter, error) {
+			return kubectl.NewHumanReadablePrinter(options), nil
 		},
 		MapBasedSelectorForObject: func(object runtime.Object) (string, error) {
 			// TODO: replace with a swagger schema based approach (identify pod selector via schema introspection)
@@ -1017,7 +1082,7 @@ func getSchemaAndValidate(c schemaClient, data []byte, prefix, groupVersion, cac
 	}
 	err = schema.ValidateBytes(data)
 	if _, ok := err.(validation.TypeNotFoundError); ok && !firstSeen {
-		// As a temporay hack, kubectl would re-get the schema if validation
+		// As a temporary hack, kubectl would re-get the schema if validation
 		// fails for type not found reason.
 		// TODO: runtime-config settings needs to make into the file's name
 		schemaData, err = downloadSchemaAndStore(c, cacheDir, fullDir, cacheFile, prefix, groupVersion)
@@ -1059,32 +1124,28 @@ func (c *clientSwaggerSchema) ValidateBytes(data []byte) error {
 	if ok := registered.IsEnabledVersion(gvk.GroupVersion()); !ok {
 		return fmt.Errorf("API version %q isn't supported, only supports API versions %q", gvk.GroupVersion().String(), registered.EnabledVersions())
 	}
-	if gvk.Group == autoscaling.GroupName {
+	switch gvk.Group {
+	case autoscaling.GroupName:
 		if c.c.AutoscalingClient == nil {
 			return errors.New("unable to validate: no autoscaling client")
 		}
 		return getSchemaAndValidate(c.c.AutoscalingClient.RESTClient, data, "apis/", gvk.GroupVersion().String(), c.cacheDir, c)
-	}
-	if gvk.Group == policy.GroupName {
+	case policy.GroupName:
 		if c.c.PolicyClient == nil {
 			return errors.New("unable to validate: no policy client")
 		}
 		return getSchemaAndValidate(c.c.PolicyClient.RESTClient, data, "apis/", gvk.GroupVersion().String(), c.cacheDir, c)
-	}
-	if gvk.Group == apps.GroupName {
+	case apps.GroupName:
 		if c.c.AppsClient == nil {
-			return errors.New("unable to validate: no autoscaling client")
+			return errors.New("unable to validate: no apps client")
 		}
 		return getSchemaAndValidate(c.c.AppsClient.RESTClient, data, "apis/", gvk.GroupVersion().String(), c.cacheDir, c)
-	}
-
-	if gvk.Group == batch.GroupName {
+	case batch.GroupName:
 		if c.c.BatchClient == nil {
 			return errors.New("unable to validate: no batch client")
 		}
 		return getSchemaAndValidate(c.c.BatchClient.RESTClient, data, "apis/", gvk.GroupVersion().String(), c.cacheDir, c)
-	}
-	if gvk.Group == rbac.GroupName {
+	case rbac.GroupName:
 		if c.c.RbacClient == nil {
 			return errors.New("unable to validate: no rbac client")
 		}
@@ -1094,19 +1155,18 @@ func (c *clientSwaggerSchema) ValidateBytes(data []byte) error {
 		// Don't attempt to validate third party objects
 		return nil
 	}
-	if gvk.Group == extensions.GroupName {
+	switch gvk.Group {
+	case extensions.GroupName:
 		if c.c.ExtensionsClient == nil {
 			return errors.New("unable to validate: no experimental client")
 		}
 		return getSchemaAndValidate(c.c.ExtensionsClient.RESTClient, data, "apis/", gvk.GroupVersion().String(), c.cacheDir, c)
-	}
-	if gvk.Group == federation.GroupName {
+	case federation.GroupName:
 		if c.fedc == nil {
 			return errors.New("unable to validate: no federation client")
 		}
 		return getSchemaAndValidate(c.fedc, data, "apis/", gvk.GroupVersion().String(), c.cacheDir, c)
-	}
-	if gvk.Group == certificates.GroupName {
+	case certificates.GroupName:
 		if c.c.CertificatesClient == nil {
 			return errors.New("unable to validate: no certificates client")
 		}
@@ -1117,7 +1177,7 @@ func (c *clientSwaggerSchema) ValidateBytes(data []byte) error {
 
 // DefaultClientConfig creates a clientcmd.ClientConfig with the following hierarchy:
 //   1.  Use the kubeconfig builder.  The number of merges and overrides here gets a little crazy.  Stay with me.
-//       1.  Merge together the kubeconfig itself.  This is done with the following hierarchy rules:
+//       1.  Merge the kubeconfig itself.  This is done with the following hierarchy rules:
 //           1.  CommandLineLocation - this parsed from the command line, so it must be late bound.  If you specify this,
 //               then no other kubeconfig files are merged.  This file must exist.
 //           2.  If $KUBECONFIG is set, then it is treated as a list of files that should be merged.
@@ -1205,14 +1265,16 @@ func (f *Factory) PrinterForMapping(cmd *cobra.Command, mapping *meta.RESTMappin
 		if err != nil {
 			return nil, err
 		}
-		if version.IsEmpty() {
+		if version.Empty() && mapping != nil {
 			version = mapping.GroupVersionKind.GroupVersion()
 		}
-		if version.IsEmpty() {
+		if version.Empty() {
 			return nil, fmt.Errorf("you must specify an output-version when using this output format")
 		}
 
-		printer = kubectl.NewVersionedPrinter(printer, mapping.ObjectConvertor, version, mapping.GroupVersionKind.GroupVersion())
+		if mapping != nil {
+			printer = kubectl.NewVersionedPrinter(printer, mapping.ObjectConvertor, version, mapping.GroupVersionKind.GroupVersion())
+		}
 
 	} else {
 		// Some callers do not have "label-columns" so we can't use the GetFlagStringSlice() helper
@@ -1220,7 +1282,15 @@ func (f *Factory) PrinterForMapping(cmd *cobra.Command, mapping *meta.RESTMappin
 		if err != nil {
 			columnLabel = []string{}
 		}
-		printer, err = f.Printer(mapping, GetFlagBool(cmd, "no-headers"), withNamespace, GetWideFlag(cmd), GetFlagBool(cmd, "show-all"), GetFlagBool(cmd, "show-labels"), isWatch(cmd), columnLabel)
+		printer, err = f.Printer(mapping, kubectl.PrintOptions{
+			NoHeaders:          GetFlagBool(cmd, "no-headers"),
+			WithNamespace:      withNamespace,
+			Wide:               GetWideFlag(cmd),
+			ShowAll:            GetFlagBool(cmd, "show-all"),
+			ShowLabels:         GetFlagBool(cmd, "show-labels"),
+			AbsoluteTimestamps: isWatch(cmd),
+			ColumnLabels:       columnLabel,
+		})
 		if err != nil {
 			return nil, err
 		}

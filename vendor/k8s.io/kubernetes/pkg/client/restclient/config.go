@@ -108,6 +108,10 @@ type Config struct {
 
 	// Rate limiter for limiting connections to the master from this client. If present overwrites QPS/Burst
 	RateLimiter flowcontrol.RateLimiter
+
+	// Version forces a specific version to be used (if registered)
+	// Do we need this?
+	// Version string
 }
 
 // TLSClientConfig contains settings to enable transport layer security
@@ -131,6 +135,9 @@ type TLSClientConfig struct {
 }
 
 type ContentConfig struct {
+	// AcceptContentTypes specifies the types the client will accept and is optional.
+	// If not set, ContentType will be used to define the Accept header
+	AcceptContentTypes string
 	// ContentType specifies the wire format used to communicate with the server.
 	// This value will be set as the Accept header on requests made to the server, and
 	// as the default content type on any object sent to the server. If not set,
@@ -240,7 +247,7 @@ func DefaultKubernetesUserAgent() string {
 
 // InClusterConfig returns a config object which uses the service account
 // kubernetes gives to pods. It's intended for clients that expect to be
-// running inside a pod running on kuberenetes. It will return an error if
+// running inside a pod running on kubernetes. It will return an error if
 // called from a process not running in a kubernetes environment.
 func InClusterConfig() (*Config, error) {
 	host, port := os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT")

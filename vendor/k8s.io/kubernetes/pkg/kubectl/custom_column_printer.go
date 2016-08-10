@@ -105,7 +105,7 @@ func splitOnWhitespace(line string) []string {
 
 // NewCustomColumnsPrinterFromTemplate creates a custom columns printer from a template stream.  The template is expected
 // to consist of two lines, whitespace separated.  The first line is the header line, the second line is the jsonpath field spec
-// For example the template below:
+// For example, the template below:
 // NAME               API_VERSION
 // {metadata.name}    {apiVersion}
 func NewCustomColumnsPrinterFromTemplate(templateReader io.Reader, decoder runtime.Decoder) (*CustomColumnsPrinter, error) {
@@ -153,6 +153,10 @@ type CustomColumnsPrinter struct {
 	Columns   []Column
 	Decoder   runtime.Decoder
 	NoHeaders bool
+}
+
+func (s *CustomColumnsPrinter) FinishPrint(w io.Writer, res string) error {
+	return nil
 }
 
 func (s *CustomColumnsPrinter) PrintObj(obj runtime.Object, out io.Writer) error {

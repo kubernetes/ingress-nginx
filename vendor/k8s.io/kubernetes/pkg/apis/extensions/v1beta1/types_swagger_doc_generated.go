@@ -590,6 +590,7 @@ var map_ReplicaSetStatus = map[string]string{
 	"":                     "ReplicaSetStatus represents the current status of a ReplicaSet.",
 	"replicas":             "Replicas is the most recently oberved number of replicas. More info: http://releases.k8s.io/HEAD/docs/user-guide/replication-controller.md#what-is-a-replication-controller",
 	"fullyLabeledReplicas": "The number of pods that have labels matching the labels of the pod template of the replicaset.",
+	"readyReplicas":        "The number of ready replicas for this replica set.",
 	"observedGeneration":   "ObservedGeneration reflects the generation of the most recently observed ReplicaSet.",
 }
 
@@ -672,6 +673,27 @@ var map_ScaleStatus = map[string]string{
 
 func (ScaleStatus) SwaggerDoc() map[string]string {
 	return map_ScaleStatus
+}
+
+var map_StorageClass = map[string]string{
+	"":            "StorageClass describes the parameters for a class of storage for which PersistentVolumes can be dynamically provisioned.\n\nStorageClasses are non-namespaced; the name of the storage class according to etcd is in ObjectMeta.Name.",
+	"metadata":    "Standard object's metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+	"provisioner": "Provisioner indicates the type of the provisioner.",
+	"parameters":  "Parameters holds the parameters for the provisioner that should create volumes of this storage class.",
+}
+
+func (StorageClass) SwaggerDoc() map[string]string {
+	return map_StorageClass
+}
+
+var map_StorageClassList = map[string]string{
+	"":         "StorageClassList is a collection of storage classes.",
+	"metadata": "Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+	"items":    "Items is the list of StorageClasses",
+}
+
+func (StorageClassList) SwaggerDoc() map[string]string {
+	return map_StorageClassList
 }
 
 var map_SubresourceReference = map[string]string{

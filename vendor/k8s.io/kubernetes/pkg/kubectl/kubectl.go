@@ -30,12 +30,6 @@ import (
 
 const (
 	kubectlAnnotationPrefix = "kubectl.kubernetes.io/"
-	// TODO: auto-generate this
-	PossibleResourceTypes = `Possible resource types include (case insensitive): pods (aka 'po'), services (aka 'svc'), deployments,
-replicasets (aka 'rs'), replicationcontrollers (aka 'rc'), nodes (aka 'no'), events (aka 'ev'), limitranges (aka 'limits'),
-persistentvolumes (aka 'pv'), persistentvolumeclaims (aka 'pvc'), resourcequotas (aka 'quota'), namespaces (aka 'ns'),
-serviceaccounts (aka 'sa'), ingresses (aka 'ing'), horizontalpodautoscalers (aka 'hpa'), daemonsets (aka 'ds'), configmaps,
-componentstatuses (aka 'cs), endpoints (aka 'ep'), petsets (alpha feature, may be unstable) and secrets.`
 )
 
 type NamespaceInfo struct {
@@ -127,12 +121,16 @@ func (e ShortcutExpander) ResourceFor(resource unversioned.GroupVersionResource)
 	return e.RESTMapper.ResourceFor(expandResourceShortcut(resource))
 }
 
-func (e ShortcutExpander) ResourceSingularizer(resource string) (string, error) {
-	return e.RESTMapper.ResourceSingularizer(expandResourceShortcut(unversioned.GroupVersionResource{Resource: resource}).Resource)
-}
-
 func (e ShortcutExpander) RESTMapping(gk unversioned.GroupKind, versions ...string) (*meta.RESTMapping, error) {
 	return e.RESTMapper.RESTMapping(gk, versions...)
+}
+
+func (e ShortcutExpander) RESTMappings(gk unversioned.GroupKind) ([]*meta.RESTMapping, error) {
+	return e.RESTMapper.RESTMappings(gk)
+}
+
+func (e ShortcutExpander) ResourceSingularizer(resource string) (string, error) {
+	return e.RESTMapper.ResourceSingularizer(expandResourceShortcut(unversioned.GroupVersionResource{Resource: resource}).Resource)
 }
 
 func (e ShortcutExpander) AliasesForResource(resource string) ([]string, bool) {
@@ -144,7 +142,10 @@ var shortForms = map[string]string{
 	// Please keep this alphabetized
 	// If you add an entry here, please also take a look at pkg/kubectl/cmd/cmd.go
 	// and add an entry to valid_resources when appropriate.
+	"cm":     "configmaps",
 	"cs":     "componentstatuses",
+	"csr":    "certificatesigningrequests",
+	"deploy": "deployments",
 	"ds":     "daemonsets",
 	"ep":     "endpoints",
 	"ev":     "events",

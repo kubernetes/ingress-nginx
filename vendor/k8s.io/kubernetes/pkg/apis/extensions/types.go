@@ -35,6 +35,13 @@ import (
 	"k8s.io/kubernetes/pkg/util/intstr"
 )
 
+const (
+	// SysctlsPodSecurityPolicyAnnotationKey represents the key of a whitelist of
+	// allowed safe and unsafe sysctls in a pod spec. It's a comma-separated list of plain sysctl
+	// names or sysctl patterns (which end in *). The string "*" matches all sysctls.
+	SysctlsPodSecurityPolicyAnnotationKey string = "security.alpha.kubernetes.io/sysctls"
+)
+
 // describes the attributes of a scale subresource
 type ScaleSpec struct {
 	// desired number of instances for the scaled object.
@@ -622,6 +629,9 @@ type ReplicaSetStatus struct {
 	// The number of pods that have labels matching the labels of the pod template of the replicaset.
 	FullyLabeledReplicas int32 `json:"fullyLabeledReplicas,omitempty"`
 
+	// The number of ready replicas for this replica set.
+	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+
 	// ObservedGeneration is the most recent generation observed by the controller.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
@@ -714,6 +724,8 @@ var (
 	FC                    FSType = "fc"
 	ConfigMap             FSType = "configMap"
 	VsphereVolume         FSType = "vsphereVolume"
+	Quobyte               FSType = "quobyte"
+	AzureDisk             FSType = "azureDisk"
 	All                   FSType = "*"
 )
 
@@ -898,4 +910,42 @@ type NetworkPolicyList struct {
 	unversioned.ListMeta `json:"metadata,omitempty"`
 
 	Items []NetworkPolicy `json:"items"`
+}
+
+// +genclient=true
+// +nonNamespaced=true
+
+// StorageClass describes a named "class" of storage offered in a cluster.
+// Different classes might map to quality-of-service levels, or to backup policies,
+// or to arbitrary policies determined by the cluster administrators.  Kubernetes
+// itself is unopinionated about what classes represent.  This concept is sometimes
+// called "profiles" in other storage systems.
+// The name of a StorageClass object is significant, and is how users can request a particular class.
+type StorageClass struct {
+	unversioned.TypeMeta `json:",inline"`
+	api.ObjectMeta       `json:"metadata,omitempty"`
+
+	// provisioner is the driver expected to handle this StorageClass.
+	// This is an optionally-prefixed name, like a label key.
+	// For example: "kubernetes.io/gce-pd" or "kubernetes.io/aws-ebs".
+	// This value may not be empty.
+	Provisioner string `json:"provisioner"`
+
+	// parameters holds parameters for the provisioner.
+	// These values are opaque to the  system and are passed directly
+	// to the provisioner.  The only validation done on keys is that they are
+	// not empty.  The maximum number of parameters is
+	// 512, with a cumulative max size of 256K
+	Parameters map[string]string `json:"parameters,omitempty"`
+}
+
+// StorageClassList is a collection of storage classes.
+type StorageClassList struct {
+	unversioned.TypeMeta `json:",inline"`
+	// Standard list metadata
+	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	unversioned.ListMeta `json:"metadata,omitempty"`
+
+	// Items is the list of StorageClasses
+	Items []StorageClass `json:"items"`
 }

@@ -212,6 +212,10 @@ func (b *Builder) ResourceNames(resource string, names ...string) *Builder {
 			b.resourceTuples = append(b.resourceTuples, tuple)
 			continue
 		}
+		if len(resource) == 0 {
+			b.errs = append(b.errs, fmt.Errorf("the argument %q must be RESOURCE/NAME", name))
+			continue
+		}
 
 		// Use the given default type to create a resource tuple
 		b.resourceTuples = append(b.resourceTuples, resourceTuple{Resource: resource, Name: name})
@@ -333,7 +337,7 @@ func (b *Builder) ResourceTypeOrNameArgs(allowEmptySelector bool, args ...string
 		}
 	case len(args) == 0:
 	default:
-		b.errs = append(b.errs, fmt.Errorf("when passing arguments, must be resource or resource and name"))
+		b.errs = append(b.errs, fmt.Errorf("arguments must consist of a resource or a resource and name"))
 	}
 	return b
 }
@@ -362,7 +366,12 @@ func hasCombinedTypeArgs(args []string) (bool, error) {
 	case hasSlash > 0 && hasSlash == len(args):
 		return true, nil
 	case hasSlash > 0 && hasSlash != len(args):
-		return true, fmt.Errorf("when passing arguments in resource/name form, all arguments must include the resource")
+		baseCmd := "cmd"
+		if len(os.Args) > 0 {
+			baseCmdSlice := strings.Split(os.Args[0], "/")
+			baseCmd = baseCmdSlice[len(baseCmdSlice)-1]
+		}
+		return true, fmt.Errorf("there is no need to specify a resource type as a separate argument when passing arguments in resource/name form (e.g. '%s get resource/<resource_name>' instead of '%s get resource resource/<resource_name>'", baseCmd, baseCmd)
 	default:
 		return false, nil
 	}
@@ -449,7 +458,7 @@ func (b *Builder) mappingFor(resourceArg string) (*meta.RESTMapping, error) {
 	if fullySpecifiedGVR != nil {
 		gvk, _ = b.mapper.KindFor(*fullySpecifiedGVR)
 	}
-	if gvk.IsEmpty() {
+	if gvk.Empty() {
 		var err error
 		gvk, err = b.mapper.KindFor(groupResource.WithVersion(""))
 		if err != nil {

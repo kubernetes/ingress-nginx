@@ -93,6 +93,7 @@ func newRESTMapper(externalVersions []unversioned.GroupVersion) meta.RESTMapper 
 	rootScoped := sets.NewString(
 		"PodSecurityPolicy",
 		"ThirdPartyResource",
+		"StorageClass",
 	)
 
 	ignoredKinds := sets.NewString()
@@ -117,7 +118,10 @@ func interfacesFor(version unversioned.GroupVersion) (*meta.VersionInterfaces, e
 
 func addVersionsToScheme(externalVersions ...unversioned.GroupVersion) {
 	// add the internal version to Scheme
-	extensions.AddToScheme(api.Scheme)
+	if err := extensions.AddToScheme(api.Scheme); err != nil {
+		// Programmer error, detect immediately
+		panic(err)
+	}
 	// add the enabled external versions to Scheme
 	for _, v := range externalVersions {
 		if !registered.IsEnabledVersion(v) {
@@ -126,7 +130,10 @@ func addVersionsToScheme(externalVersions ...unversioned.GroupVersion) {
 		}
 		switch v {
 		case v1beta1.SchemeGroupVersion:
-			v1beta1.AddToScheme(api.Scheme)
+			if err := v1beta1.AddToScheme(api.Scheme); err != nil {
+				// Programmer error, detect immediately
+				panic(err)
+			}
 		}
 	}
 }

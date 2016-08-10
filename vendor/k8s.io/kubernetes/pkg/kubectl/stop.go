@@ -25,6 +25,7 @@ import (
 	"k8s.io/kubernetes/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/api/meta"
 	"k8s.io/kubernetes/pkg/api/unversioned"
+	"k8s.io/kubernetes/pkg/apis/apps"
 	"k8s.io/kubernetes/pkg/apis/batch"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
@@ -32,6 +33,7 @@ import (
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/util"
 	utilerrors "k8s.io/kubernetes/pkg/util/errors"
+	"k8s.io/kubernetes/pkg/util/uuid"
 	"k8s.io/kubernetes/pkg/util/wait"
 )
 
@@ -81,6 +83,9 @@ func ReaperFor(kind unversioned.GroupKind, c client.Interface) (Reaper, error) {
 	case extensions.Kind("Job"), batch.Kind("Job"):
 		return &JobReaper{c, Interval, Timeout}, nil
 
+	case apps.Kind("PetSet"):
+		return &PetSetReaper{c, Interval, Timeout}, nil
+
 	case extensions.Kind("Deployment"):
 		return &DeploymentReaper{c, Interval, Timeout}, nil
 
@@ -117,6 +122,10 @@ type PodReaper struct {
 }
 type ServiceReaper struct {
 	client.Interface
+}
+type PetSetReaper struct {
+	client.Interface
+	pollInterval, timeout time.Duration
 }
 
 type objInterface interface {
@@ -201,7 +210,9 @@ func (reaper *ReplicationControllerReaper) Stop(namespace, name string, timeout 
 			return err
 		}
 	}
-	return rc.Delete(name)
+	falseVar := false
+	deleteOptions := &api.DeleteOptions{OrphanDependents: &falseVar}
+	return rc.Delete(name, deleteOptions)
 }
 
 // TODO(madhusudancs): Implement it when controllerRef is implemented - https://github.com/kubernetes/kubernetes/issues/2210
@@ -273,10 +284,9 @@ func (reaper *ReplicaSetReaper) Stop(namespace, name string, timeout time.Durati
 		}
 	}
 
-	if err := rsc.Delete(name, nil); err != nil {
-		return err
-	}
-	return nil
+	falseVar := false
+	deleteOptions := &api.DeleteOptions{OrphanDependents: &falseVar}
+	return rsc.Delete(name, deleteOptions)
 }
 
 func (reaper *DaemonSetReaper) Stop(namespace, name string, timeout time.Duration, gracePeriod *api.DeleteOptions) error {
@@ -290,7 +300,7 @@ func (reaper *DaemonSetReaper) Stop(namespace, name string, timeout time.Duratio
 	// daemon pods. Once it's done deleting the daemon pods, it's safe to delete
 	// the DaemonSet.
 	ds.Spec.Template.Spec.NodeSelector = map[string]string{
-		string(util.NewUUID()): string(util.NewUUID()),
+		string(uuid.NewUUID()): string(uuid.NewUUID()),
 	}
 	// force update to avoid version conflict
 	ds.ResourceVersion = ""
@@ -305,12 +315,60 @@ func (reaper *DaemonSetReaper) Stop(namespace, name string, timeout time.Duratio
 		if err != nil {
 			return false, nil
 		}
+
 		return updatedDS.Status.CurrentNumberScheduled+updatedDS.Status.NumberMisscheduled == 0, nil
 	}); err != nil {
 		return err
 	}
 
 	return reaper.Extensions().DaemonSets(namespace).Delete(name)
+}
+
+func (reaper *PetSetReaper) Stop(namespace, name string, timeout time.Duration, gracePeriod *api.DeleteOptions) error {
+	petsets := reaper.Apps().PetSets(namespace)
+	scaler, err := ScalerFor(apps.Kind("PetSet"), *reaper)
+	if err != nil {
+		return err
+	}
+	ps, err := petsets.Get(name)
+	if err != nil {
+		return err
+	}
+	if timeout == 0 {
+		numPets := ps.Spec.Replicas
+		timeout = Timeout + time.Duration(10*numPets)*time.Second
+	}
+	retry := NewRetryParams(reaper.pollInterval, reaper.timeout)
+	waitForPetSet := NewRetryParams(reaper.pollInterval, reaper.timeout)
+	if err = scaler.Scale(namespace, name, 0, nil, retry, waitForPetSet); err != nil {
+		return err
+	}
+
+	// TODO: This shouldn't be needed, see corresponding TODO in PetSetHasDesiredPets.
+	// PetSet should track generation number.
+	pods := reaper.Pods(namespace)
+	selector, _ := unversioned.LabelSelectorAsSelector(ps.Spec.Selector)
+	options := api.ListOptions{LabelSelector: selector}
+	podList, err := pods.List(options)
+	if err != nil {
+		return err
+	}
+
+	errList := []error{}
+	for _, pod := range podList.Items {
+		if err := pods.Delete(pod.Name, gracePeriod); err != nil {
+			if !errors.IsNotFound(err) {
+				errList = append(errList, err)
+			}
+		}
+	}
+	if len(errList) > 0 {
+		return utilerrors.NewAggregate(errList)
+	}
+
+	// TODO: Cleanup volumes? We don't want to accidentally delete volumes from
+	// stop, so just leave this up to the the petset.
+	return petsets.Delete(name, nil)
 }
 
 func (reaper *JobReaper) Stop(namespace, name string, timeout time.Duration, gracePeriod *api.DeleteOptions) error {
@@ -397,9 +455,10 @@ func (reaper *DeploymentReaper) Stop(namespace, name string, timeout time.Durati
 	for _, rc := range rsList.Items {
 		if err := rsReaper.Stop(rc.Namespace, rc.Name, timeout, gracePeriod); err != nil {
 			scaleGetErr, ok := err.(*ScaleError)
-			if !errors.IsNotFound(err) || ok && !errors.IsNotFound(scaleGetErr.ActualError) {
-				errList = append(errList, err)
+			if errors.IsNotFound(err) || (ok && errors.IsNotFound(scaleGetErr.ActualError)) {
+				continue
 			}
+			errList = append(errList, err)
 		}
 	}
 	if len(errList) > 0 {
@@ -407,7 +466,7 @@ func (reaper *DeploymentReaper) Stop(namespace, name string, timeout time.Durati
 	}
 
 	// Delete deployment at the end.
-	// Note: We delete deployment at the end so that if removing RSs fails, we atleast have the deployment to retry.
+	// Note: We delete deployment at the end so that if removing RSs fails, we at least have the deployment to retry.
 	return deployments.Delete(name, nil)
 }
 
@@ -424,7 +483,11 @@ func (reaper *DeploymentReaper) updateDeploymentWithRetries(namespace, name stri
 		if deployment, err = deployments.Update(deployment); err == nil {
 			return true, nil
 		}
-		return false, nil
+		// Retry only on update conflict.
+		if errors.IsConflict(err) {
+			return false, nil
+		}
+		return false, err
 	})
 	return deployment, err
 }
