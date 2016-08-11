@@ -188,7 +188,10 @@ type StoreToIngressLister struct {
 // List lists all Ingress' in the store.
 func (s *StoreToIngressLister) List() (ing extensions.IngressList, err error) {
 	for _, m := range s.Store.List() {
-		ing.Items = append(ing.Items, *(m.(*extensions.Ingress)))
+		newIng := m.(*extensions.Ingress)
+		if isGCEIngress(newIng) {
+			ing.Items = append(ing.Items, *newIng)
+		}
 	}
 	return ing, nil
 }
