@@ -17,7 +17,6 @@ limitations under the License.
 package controller
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -38,10 +37,6 @@ import (
 const (
 	defaultPort            = 80
 	defaultHealthCheckPath = "/"
-
-	// A single instance-group is created per cluster manager.
-	// Tagged with the name of the controller.
-	instanceGroupPrefix = "k8s-ig"
 
 	// A backend is created per nodePort, tagged with the nodeport.
 	// This allows sharing of backends across loadbalancers.
@@ -197,10 +192,6 @@ func (c *ClusterManager) GC(lbNames []string, nodePorts []int64) error {
 		return beErr
 	}
 	return nil
-}
-
-func defaultInstanceGroupName(clusterName string) string {
-	return fmt.Sprintf("%v-%v", instanceGroupPrefix, clusterName)
 }
 
 func getGCEClient(config io.Reader) *gce.GCECloud {
