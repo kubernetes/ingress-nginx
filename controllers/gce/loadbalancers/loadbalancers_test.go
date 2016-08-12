@@ -17,6 +17,7 @@ limitations under the License.
 package loadbalancers
 
 import (
+	"fmt"
 	"testing"
 
 	compute "google.golang.org/api/compute/v1"
@@ -189,4 +190,97 @@ func TestUpdateUrlMap(t *testing.T) {
 		},
 	}
 	f.CheckURLMap(t, l7, expectedMap)
+}
+
+func TestNameParsing(t *testing.T) {
+	clusterName := "123"
+	namer := utils.NewNamer(clusterName)
+	fullName := namer.Truncate(fmt.Sprintf("%v-%v", forwardingRulePrefix, namer.LBName("testlb")))
+	annotationsMap := map[string]string{
+		fmt.Sprintf("%v/forwarding-rule", utils.K8sAnnotationPrefix): fullName,
+	}
+	components := namer.ParseName(GCEResourceName(annotationsMap, "forwarding-rule"))
+	t.Logf("%+v", components)
+	if components.ClusterName != clusterName {
+		t.Errorf("Failed to parse cluster name from %v, expected %v got %v", fullName, clusterName, components.ClusterName)
+	}
+	resourceName := "fw"
+	if components.Resource != resourceName {
+		t.Errorf("Failed to parse resource from %v, expected %v got %v", fullName, resourceName, components.Resource)
+	}
+}
+
+func TestClusterNameChange(t *testing.T) {
+	lbInfo := &L7RuntimeInfo{
+		Name: "test",
+		TLS:  &TLSCerts{Key: "key", Cert: "cert"},
+	}
+	f := NewFakeLoadBalancers(lbInfo.Name)
+	pool := newFakeLoadBalancerPool(f, t)
+	pool.Add(lbInfo)
+	l7, err := pool.Get(lbInfo.Name)
+	if err != nil || l7 == nil {
+		t.Fatalf("Expected l7 not created")
+	}
+	um, err := f.GetUrlMap(f.umName())
+	if err != nil ||
+		um.DefaultService != pool.(*L7s).glbcDefaultBackend.SelfLink {
+		t.Fatalf("%v", err)
+	}
+	tps, err := f.GetTargetHttpsProxy(f.tpName(true))
+	if err != nil || tps.UrlMap != um.SelfLink {
+		t.Fatalf("%v", err)
+	}
+	fws, err := f.GetGlobalForwardingRule(f.fwName(true))
+	if err != nil || fws.Target != tps.SelfLink {
+		t.Fatalf("%v", err)
+	}
+	newName := "newName"
+	namer := pool.(*L7s).namer
+	namer.SetClusterName(newName)
+	f.name = fmt.Sprintf("%v--%v", lbInfo.Name, newName)
+
+	// Now the components should get renamed with the next suffix.
+	pool.Add(lbInfo)
+	l7, err = pool.Get(lbInfo.Name)
+	if err != nil || namer.ParseName(l7.Name).ClusterName != newName {
+		t.Fatalf("Expected L7 name to change.")
+	}
+	um, err = f.GetUrlMap(f.umName())
+	if err != nil || namer.ParseName(um.Name).ClusterName != newName {
+		t.Fatalf("Expected urlmap name to change.")
+	}
+	if err != nil ||
+		um.DefaultService != pool.(*L7s).glbcDefaultBackend.SelfLink {
+		t.Fatalf("%v", err)
+	}
+
+	tps, err = f.GetTargetHttpsProxy(f.tpName(true))
+	if err != nil || tps.UrlMap != um.SelfLink {
+		t.Fatalf("%v", err)
+	}
+	fws, err = f.GetGlobalForwardingRule(f.fwName(true))
+	if err != nil || fws.Target != tps.SelfLink {
+		t.Fatalf("%v", err)
+	}
+}
+
+func TestInvalidClusterNameChange(t *testing.T) {
+	namer := utils.NewNamer("test--123")
+	if got := namer.GetClusterName(); got != "123" {
+		t.Fatalf("Expected name 123, got %v", got)
+	}
+	// A name with `--` should take the last token
+	for _, testCase := range []struct{ newName, expected string }{
+		{"foo--bar", "bar"},
+		{"--", ""},
+		{"", ""},
+		{"foo--bar--com", "com"},
+	} {
+		namer.SetClusterName(testCase.newName)
+		if got := namer.GetClusterName(); got != testCase.expected {
+			t.Fatalf("Expected %q got %q", testCase.expected, got)
+		}
+	}
+
 }
