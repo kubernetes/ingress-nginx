@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	healthPort = 10249
+	healthPort = 10254
 )
 
 var (
@@ -55,10 +55,6 @@ var (
 
 	nxgConfigMap = flags.String("nginx-configmap", "",
 		`Name of the ConfigMap that containes the custom nginx configuration to use`)
-
-	inCluster = flags.Bool("running-in-cluster", true,
-		`Optional, if this controller is running in a kubernetes cluster, use the
-		 pod secrets for creating a Kubernetes client.`)
 
 	tcpConfigMapName = flags.String("tcp-services-configmap", "",
 		`Name of the ConfigMap that containes the definition of the TCP services to expose.
@@ -91,7 +87,6 @@ var (
 )
 
 func main() {
-	var kubeClient *unversioned.Client
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
 	clientConfig := kubectl_util.DefaultClientConfig(flags)
@@ -107,26 +102,20 @@ func main() {
 		glog.Fatalf("Please specify --default-backend-service")
 	}
 
-	var err error
-	if *inCluster {
-		kubeClient, err = unversioned.NewInCluster()
-	} else {
-		config, connErr := clientConfig.ClientConfig()
-		if connErr != nil {
-			glog.Fatalf("error connecting to the client: %v", err)
-		}
-		kubeClient, err = unversioned.New(config)
+	config, err := clientConfig.ClientConfig()
+	if err != nil {
+		glog.Fatalf("error connecting to the client: %v", err)
 	}
+	kubeClient, err := unversioned.New(config)
+
 	if err != nil {
 		glog.Fatalf("failed to create client: %v", err)
 	}
 
-	runtimePodInfo := &podInfo{NodeIP: "127.0.0.1"}
-	if *inCluster {
-		runtimePodInfo, err = getPodDetails(kubeClient)
-		if err != nil {
-			glog.Fatalf("unexpected error getting runtime information: %v", err)
-		}
+	runtimePodInfo, err := getPodDetails(kubeClient)
+	if err != nil {
+		runtimePodInfo = &podInfo{NodeIP: "127.0.0.1"}
+		glog.Warningf("unexpected error getting runtime information: %v", err)
 	}
 	if err := isValidService(kubeClient, *defaultSvc); err != nil {
 		glog.Fatalf("no service with name %v found: %v", *defaultSvc, err)
