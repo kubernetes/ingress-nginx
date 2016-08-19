@@ -95,14 +95,16 @@ func main() {
 		glog.Fatalf("Please specify --default-backend-service")
 	}
 
-	config, err := clientConfig.ClientConfig()
+	kubeClient, err := unversioned.NewInCluster()
 	if err != nil {
-		glog.Fatalf("error connecting to the client: %v", err)
-	}
-	kubeClient, err := unversioned.New(config)
-
-	if err != nil {
-		glog.Fatalf("failed to create client: %v", err)
+		config, err := clientConfig.ClientConfig()
+		if err != nil {
+			glog.Fatalf("error configuring the client: %v", err)
+		}
+		kubeClient, err = unversioned.New(config)
+		if err != nil {
+			glog.Fatalf("failed to create client: %v", err)
+		}
 	}
 
 	runtimePodInfo, err := getPodDetails(kubeClient)

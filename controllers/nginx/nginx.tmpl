@@ -90,6 +90,7 @@ http {
 
     {{ if not (empty .defResolver) }}# Custom dns resolver.
     resolver {{ .defResolver }} valid=30s;
+    resolver_timeout 10s;
     {{ end }}
 
     map $http_upgrade $connection_upgrade {
@@ -183,27 +184,47 @@ http {
     server {
         server_name {{ $server.Name }};
         listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
-        {{ if $server.SSL }}listen 443 {{ if $cfg.useProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.enableSpdy }}spdy{{ end }} {{ if $cfg.useHttp2 }}http2{{ end }};
+        {{- if $server.SSL }}listen 443 {{ if $cfg.useProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.enableSpdy }}spdy{{ end }} {{ if $cfg.useHttp2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate {{ $server.SSLCertificate }};
         ssl_certificate_key {{ $server.SSLCertificateKey }};
         {{- end }}
 
-        {{ if (and $server.SSL $cfg.hsts) -}}
+        {{- if (and $server.SSL $cfg.hsts) }}
         more_set_headers                            "Strict-Transport-Security: max-age={{ $cfg.hstsMaxAge }}{{ if $cfg.hstsIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
         {{- end }}
 
-        {{ if $cfg.enableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
+        {{- if $cfg.enableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end -}}
 
         {{- range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
+        {{ $authPath := buildAuthLocation $location }}
+        {{- if not (empty $authPath) }}
+        location = {{ $authPath }} {
+            internal;
+            {{ if not $location.ExternalAuthURL.SendBody }}
+            proxy_pass_request_body     off;
+            proxy_set_header            Content-Length "";
+            {{ end -}}
+            {{ if not (empty $location.ExternalAuthURL.Method) }}           
+            proxy_method {{ $location.ExternalAuthURL.Method }};
+            {{ end -}}
+            proxy_set_header            Host $host;            
+            proxy_pass_request_headers  on;
+            proxy_pass {{ $location.ExternalAuthURL.URL }};
+        }
+        {{ end }}
         location {{ $path }} {
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
             {{- range $ip := $location.Whitelist.CIDR }}
             allow {{ $ip }};{{ end }}
             deny all;
             {{ end -}}
+            {{ if not (empty $authPath) }}
+            # this location requires authentication
+            auth_request {{ $authPath }};
+            {{ end }}
 
             {{ if (and $server.SSL $location.Redirect.SSLRedirect) -}}
             # enforce ssl on server side
@@ -272,7 +293,7 @@ http {
 
         {{ if eq $server.Name "_" }}
         # health checks in cloud providers require the use of port 80
-        location {{ $cfg.healthzUrl }} {
+        location {{ $cfg.HealthzURL }} {
             access_log off;
             return 200;
         }

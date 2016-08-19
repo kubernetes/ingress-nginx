@@ -18,6 +18,7 @@ package template
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -49,6 +50,7 @@ var (
 			return true
 		},
 		"buildLocation":       buildLocation,
+		"buildAuthLocation":   buildAuthLocation,
 		"buildProxyPass":      buildProxyPass,
 		"buildRateLimitZones": buildRateLimitZones,
 		"buildRateLimit":      buildRateLimit,
@@ -191,6 +193,22 @@ func buildLocation(input interface{}) string {
 	}
 
 	return path
+}
+
+func buildAuthLocation(input interface{}) string {
+	location, ok := input.(*ingress.Location)
+	if !ok {
+		return ""
+	}
+
+	if location.ExternalAuthURL.URL == "" {
+		return ""
+	}
+
+	str := base64.URLEncoding.EncodeToString([]byte(location.Path))
+	// avoid locations containing the = char
+	str = strings.Replace(str, "=", "", -1)
+	return fmt.Sprintf("/_external-auth-%v", str)
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects

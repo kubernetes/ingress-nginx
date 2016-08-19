@@ -71,17 +71,21 @@ func NewManager(kubeClient *client.Client) *Manager {
 	ngx := &Manager{
 		ConfigFile:        "/etc/nginx/nginx.conf",
 		defCfg:            config.NewDefault(),
-		defResolver:       strings.Join(getDNSServers(), " "),
 		reloadLock:        &sync.Mutex{},
 		reloadRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.1, 1),
 	}
+
+	res, err := getDNSServers()
+	if err != nil {
+		glog.Warningf("error reading nameservers: %v", err)
+	}
+	ngx.defResolver = strings.Join(res, " ")
 
 	ngx.createCertsDir(config.SSLDirectory)
 
 	ngx.sslDHParam = ngx.SearchDHParamFile(config.SSLDirectory)
 
 	var onChange func()
-
 	onChange = func() {
 		template, err := ngx_template.NewTemplate(tmplPath, onChange)
 		if err != nil {

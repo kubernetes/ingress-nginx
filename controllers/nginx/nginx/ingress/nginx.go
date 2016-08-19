@@ -18,6 +18,7 @@ package ingress
 
 import (
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/auth"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/authreq"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ipwhitelist"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ratelimit"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/rewrite"
@@ -93,15 +94,16 @@ func (c ServerByName) Less(i, j int) bool {
 
 // Location describes an NGINX location
 type Location struct {
-	Path           string
-	IsDefBackend   bool
-	Upstream       Upstream
-	Auth           auth.Nginx
-	RateLimit      ratelimit.RateLimit
-	Redirect       rewrite.Redirect
-	SecureUpstream bool
-	Whitelist      ipwhitelist.SourceRange
-	EnableCORS     bool
+	Path            string
+	IsDefBackend    bool
+	Upstream        Upstream
+	Auth            auth.Nginx
+	RateLimit       ratelimit.RateLimit
+	Redirect        rewrite.Redirect
+	SecureUpstream  bool
+	Whitelist       ipwhitelist.SourceRange
+	EnableCORS      bool
+	ExternalAuthURL authreq.Auth
 }
 
 // LocationByPath sorts location by path

@@ -38,15 +38,14 @@ const (
 )
 
 // getDNSServers returns the list of nameservers located in the file /etc/resolv.conf
-func getDNSServers() []string {
+func getDNSServers() ([]string, error) {
+	var nameservers []string
 	file, err := ioutil.ReadFile("/etc/resolv.conf")
 	if err != nil {
-		return []string{}
+		return nameservers, err
 	}
 
 	// Lines of the form "nameserver 1.2.3.4" accumulate.
-	nameservers := []string{}
-
 	lines := strings.Split(string(file), "\n")
 	for l := range lines {
 		trimmed := strings.TrimSpace(lines[l])
@@ -63,7 +62,7 @@ func getDNSServers() []string {
 	}
 
 	glog.V(3).Infof("nameservers to use: %v", nameservers)
-	return nameservers
+	return nameservers, nil
 }
 
 // getConfigKeyToStructKeyMap returns a map with the ConfigMapKey as key and the StructName as value.
@@ -143,6 +142,10 @@ func (ngx *Manager) ReadConfig(conf *api.ConfigMap) config.Configuration {
 
 	cfgDefault.CustomHTTPErrors = ngx.filterErrors(cErrors)
 	cfgDefault.SkipAccessLogURLs = cSkipUrls
+	// no custom resolver means use the system resolver
+	if cfgDefault.Resolver == "" {
+		cfgDefault.Resolver = ngx.defResolver
+	}
 	return cfgDefault
 }
 

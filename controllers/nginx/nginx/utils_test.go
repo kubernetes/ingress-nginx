@@ -89,3 +89,13 @@ func TestManagerReadConfigStringNothing(t *testing.T) {
 		t.Errorf("Failed to set string value true actual='%s' expected='%s'", configNginx.SSLSessionTimeout, exp)
 	}
 }
+
+func TestGetDNSServers(t *testing.T) {
+	s, err := getDNSServers()
+	if err != nil {
+		t.Fatalf("unexpected error reading /etc/resolv.conf file: %v", err)
+	}
+	if len(s) < 1 {
+		t.Error("expected at least 1 nameserver in /etc/resolv.conf")
+	}
+}
