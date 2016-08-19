@@ -47,5 +47,5 @@ spec:
           hostPort: 9000
         args:
         - /nginx-ingress-controller
-        - --default-backend-service=default/default-http-backend
-        - --tcp-services-configmap=default/tcp-configmap-example
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
+        - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-configmap-example

@@ -43,4 +43,4 @@ spec:
           hostPort: 443
         args:
         - /nginx-ingress-controller
-        - --default-backend-service=default/default-http-backend
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
