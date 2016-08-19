@@ -1,5 +1,12 @@
 Changelog
 
+### 0.8.3
+
+- [X] [#1450](https://github.com/kubernetes/contrib/pull/1450) Check for errors in nginx template
+- [ ] [#1498](https://github.com/kubernetes/contrib/pull/1498) Refactoring of template handling
+- [X] [#1467](https://github.com/kubernetes/contrib/pull/1467) Use ClientConfig to configure connection
+- [X] [#1575](https://github.com/kubernetes/contrib/pull/1575) Update nginx to 1.11.3
+
 ### 0.8.2
 
 - [X] [#1336](https://github.com/kubernetes/contrib/pull/1336) Add annotation to skip ingress rule

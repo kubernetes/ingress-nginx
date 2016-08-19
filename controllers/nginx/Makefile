@@ -1,7 +1,7 @@
 all: push
 
 # 0.0 shouldn't clobber any release builds
-TAG = 0.8.2
+TAG = 0.8.3
 PREFIX = gcr.io/google_containers/nginx-ingress-controller
 
 REPO_INFO=$(shell git config --get remote.origin.url)
