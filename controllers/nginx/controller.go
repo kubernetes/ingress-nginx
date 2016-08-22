@@ -669,22 +669,7 @@ func (lbc *loadBalancerController) getDefaultUpstream() *nginx.Upstream {
 
 func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuration, data []interface{}) ([]*nginx.Upstream, []*nginx.Server) {
 	upstreams := lbc.createUpstreams(ngxCfg, data)
-	upstreams[defUpstreamName] = lbc.getDefaultUpstream()
-
 	servers := lbc.createServers(data)
-	if _, ok := servers[defServerName]; !ok {
-		// default server - no servername.
-		// there is no rule with default backend
-		servers[defServerName] = &nginx.Server{
-			Name: defServerName,
-			Locations: []*nginx.Location{{
-				Path:         rootLocation,
-				IsDefBackend: true,
-				Upstream:     *lbc.getDefaultUpstream(),
-			},
-			},
-		}
-	}
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
@@ -728,7 +713,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 			}
 			server := servers[host]
 			if server == nil {
-				server = servers["_"]
+				server = servers[defServerName]
 			}
 
 			for _, path := range rule.HTTP.Paths {
@@ -811,6 +796,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 // Ingress rules. The servers inside the upstream are endpoints.
 func (lbc *loadBalancerController) createUpstreams(ngxCfg config.Configuration, data []interface{}) map[string]*nginx.Upstream {
 	upstreams := make(map[string]*nginx.Upstream)
+	upstreams[defUpstreamName] = lbc.getDefaultUpstream()
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
@@ -882,10 +868,22 @@ func (lbc *loadBalancerController) createServers(data []interface{}) map[string]
 		ngxCert, err = lbc.getPemCertificate(lbc.defSSLCertificate)
 	}
 
+	locs := []*nginx.Location{}
+	locs = append(locs, &nginx.Location{
+		Path:         rootLocation,
+		IsDefBackend: true,
+		Upstream:     *lbc.getDefaultUpstream(),
+	})
+	servers[defServerName] = &nginx.Server{Name: defServerName, Locations: locs}
+
 	if err == nil {
-		pems["_"] = ngxCert
+		pems[defServerName] = ngxCert
+		servers[defServerName].SSL = true
+		servers[defServerName].SSLCertificate = ngxCert.PemFileName
+		servers[defServerName].SSLCertificateKey = ngxCert.PemFileName
+		servers[defServerName].SSLPemChecksum = ngxCert.PemSHA
 	} else {
-		glog.Warningf("%v", err)
+		glog.Warningf("unexpected error reading default SSL certificate: %v", err)
 	}
 
 	for _, ingIf := range data {
