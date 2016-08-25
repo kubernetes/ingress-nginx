@@ -19,7 +19,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -120,8 +119,6 @@ func main() {
 		}
 	}
 
-	checkTemplate()
-
 	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod,
 		*defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName,
 		*udpConfigMapName, *defSSLCertificate, runtimePodInfo)
@@ -187,29 +184,4 @@ func handleSigterm(lbc *loadBalancerController) {
 
 	glog.Infof("Exiting with %v", exitCode)
 	os.Exit(exitCode)
-}
-
-const (
-	defTmpl      = "/etc/nginx/template/nginx.tmpl"
-	fallbackTmpl = "/etc/nginx/nginx.tmpl"
-)
-
-// checkTemplate verifies the NGINX template exists (file /etc/nginx/template/nginx.tmpl)
-// If the file does not exists it means:
-// a. custom docker image
-// b. standard image using watch-resource sidecar with emptyDir volume
-// If the file /etc/nginx/nginx.tmpl exists copy the file to /etc/nginx/template/nginx.tmpl
-// or terminate the execution (It is not possible to start NGINX without a template)
-func checkTemplate() {
-	_, err := os.Stat(defTmpl)
-	if err != nil {
-		glog.Warningf("error checking template %v: %v", defTmpl, err)
-		data, err := ioutil.ReadFile(fallbackTmpl)
-		if err != nil {
-			glog.Fatalf("error reading template %v: %v", fallbackTmpl, err)
-		}
-		if err = ioutil.WriteFile(defTmpl, data, 0644); err != nil {
-			glog.Fatalf("error copying %v to %v: %v", fallbackTmpl, defTmpl, err)
-		}
-	}
 }
