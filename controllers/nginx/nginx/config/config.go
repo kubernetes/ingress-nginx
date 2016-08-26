@@ -167,7 +167,7 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size
 	ServerNameHashMaxSize int `structs:"server-name-hash-max-size,omitempty"`
 
-	// Size of the bucker for the server names hash tables
+	// Size of the bucket for the server names hash tables
 	// http://nginx.org/en/docs/hash.html
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
 	ServerNameHashBucketSize int `structs:"server-name-hash-bucket-size,omitempty"`

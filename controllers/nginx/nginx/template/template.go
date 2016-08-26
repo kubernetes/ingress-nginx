@@ -87,6 +87,32 @@ func (t *Template) Close() {
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
 func (t *Template) Write(cfg config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
+	var longestName int
+	var serverNames int
+	for _, srv := range ingressCfg.Servers {
+		serverNames += len([]byte(srv.Name))
+		if longestName < len(srv.Name) {
+			longestName = len(srv.Name)
+		}
+	}
+
+	// NGINX cannot resize the has tables used to store server names.
+	// For this reason we check if the defined size defined is correct
+	// for the FQDN defined in the ingress rules adjusting the value
+	// if is required.
+	// https://trac.nginx.org/nginx/ticket/352
+	// https://trac.nginx.org/nginx/ticket/631
+	nameHashBucketSize := nextPowerOf2(longestName)
+	if nameHashBucketSize > cfg.ServerNameHashBucketSize {
+		glog.V(3).Infof("adjusting ServerNameHashBucketSize variable from %v to %v", cfg.ServerNameHashBucketSize, nameHashBucketSize)
+		cfg.ServerNameHashBucketSize = nameHashBucketSize
+	}
+	serverNameHashMaxSize := nextPowerOf2(serverNames)
+	if serverNameHashMaxSize > cfg.ServerNameHashMaxSize {
+		glog.V(3).Infof("adjusting ServerNameHashMaxSize variable from %v to %v", cfg.ServerNameHashMaxSize, serverNameHashMaxSize)
+		cfg.ServerNameHashMaxSize = serverNameHashMaxSize
+	}
+
 	conf := make(map[string]interface{})
 	conf["backlogSize"] = sysctlSomaxconn()
 	conf["upstreams"] = ingressCfg.Upstreams
@@ -278,4 +304,18 @@ func sysctlSomaxconn() int {
 	}
 
 	return maxConns
+}
+
+// http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+// https://play.golang.org/p/TVSyCcdxUh
+func nextPowerOf2(v int) int {
+	v--
+	v |= v >> 1
+	v |= v >> 2
+	v |= v >> 4
+	v |= v >> 8
+	v |= v >> 16
+	v++
+
+	return v
 }
