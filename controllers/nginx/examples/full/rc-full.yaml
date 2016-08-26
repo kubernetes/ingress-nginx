@@ -15,7 +15,7 @@ spec:
         k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
     spec:
-      terminationGracePeriodSeconds: 60      
+      terminationGracePeriodSeconds: 60
       volumes:
       - name: dhparam-example
         secret:
@@ -53,5 +53,5 @@ spec:
           name: dhparam-example
         args:
         - /nginx-ingress-controller
-        - --tcp-services-configmap=default/tcp-configmap-example
-        - --default-backend-service=default/default-http-backend
+        - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-configmap-example
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend

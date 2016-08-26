@@ -14,7 +14,7 @@ spec:
         k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
     spec:
-      terminationGracePeriodSeconds: 60      
+      terminationGracePeriodSeconds: 60
       containers:
       - image: gcr.io/google_containers/nginx-ingress-controller:0.8.2
         name: nginx-ingress-lb
@@ -47,5 +47,5 @@ spec:
           hostPort: 9000
         args:
         - /nginx-ingress-controller
-        - --default-backend-service=default/default-http-backend
-        - --tcp-services-configmap=default/tcp-configmap-example
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
+        - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-configmap-example

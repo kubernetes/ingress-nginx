@@ -65,23 +65,23 @@ spec:
       labels:
         k8s-app: nginx-ingress-lb
         name: nginx-ingress-lb
-    spec:     
+    spec:
       terminationGracePeriodSeconds: 60
       containers:
       - image: alpine:3.4
         name: sysctl-buddy
         # using kubectl exec you can check which other parameters is possible to change
-        # IPC Namespace:     kernel.msgmax, kernel.msgmnb, kernel.msgmni, kernel.sem, kernel.shmall, 
-        #                    kernel.shmmax, kernel.shmmni, kernel.shm_rmid_forced and Sysctls 
+        # IPC Namespace:     kernel.msgmax, kernel.msgmnb, kernel.msgmni, kernel.sem, kernel.shmall,
+        #                    kernel.shmmax, kernel.shmmni, kernel.shm_rmid_forced and Sysctls
         #                    beginning with fs.mqueue.*
         # Network Namespace: Sysctls beginning with net.*
-        # 
+        #
         # kubectl <podname> -c sysctl-buddy -- sysctl -A | grep net
         command:
         - /bin/sh
         - -c
         - |
-          while true; do 
+          while true; do
             sysctl -w net.core.somaxconn=32768
             sysctl -w net.ipv4.ip_local_port_range='1024 65535'
             sleep 10
@@ -120,4 +120,4 @@ spec:
           hostPort: 8080
         args:
         - /nginx-ingress-controller
-        - --default-backend-service=default/default-http-backend
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
