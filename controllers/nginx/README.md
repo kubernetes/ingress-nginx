@@ -78,6 +78,8 @@ Next we create a couple of Ingress rules
 kubectl create -f examples/ingress.yaml
 ```
 
+If your version of Kubernetes is higher than 1.3, you can restrict the ingress usage to NGINX with this annotation :`kubernetes.io/ingress.class: "nginx"`
+
 we check that ingress rules are defined:
 ```
 $ kubectl get ing
@@ -102,6 +104,7 @@ Check NGINX it is running with the defined Ingress rules:
 $ LBIP=$(kubectl get node `kubectl get po -l name=nginx-ingress-lb --template '{{range .items}}{{.spec.nodeName}}{{end}}'` --template '{{range $i, $n := .status.addresses}}{{if eq $n.type "ExternalIP"}}{{$n.address}}{{end}}{{end}}')
 $ curl $LBIP/foo -H 'Host: foo.bar.com'
 ```
+You may need to add a firewall rule to allow traffic on port 80. This is related to your cloud provider.
 
 ## HTTPS
 
@@ -136,6 +139,8 @@ spec:
 Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
 Check the [example](examples/tls/README.md)
+
+You may need to add a firewall rule to allow traffic on port 443. This is related to your cloud provider.
 
 ### Default SSL Certificate
 
