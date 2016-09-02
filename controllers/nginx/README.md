@@ -345,7 +345,7 @@ To extract the information in JSON format the module provides a custom URL: `/ng
 ### Running multiple ingress controllers
 
 If you're running multiple ingress controllers, or running on a cloudprovider that natively handles 
-ingress, you need to specify the annotation kubernetes.io/ingress.class: "nginx" in all ingresses 
+ingress, you need to specify the annotation `kubernetes.io/ingress.class: "nginx"` in all ingresses 
 that you would like this controller to claim. Not specifying the annotation will lead to multiple 
 ingress controllers claiming the same ingress. Specifying the wrong value will result in all ingress 
 controllers ignoring the ingress. Multiple ingress controllers running in the same cluster was not 
