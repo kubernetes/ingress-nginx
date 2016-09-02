@@ -18,6 +18,8 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 * [Proxy Protocol](#proxy-protocol)
 * [NGINX customization](configuration.md)
 * [NGINX status page](#nginx-status-page)
+* [Running multiple ingress controllers](running-multiple-ingress-controllers)
+* [Running on Cloudproviders](running-on-cloudproviders)
 * [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
 * [Local cluster](#local-cluster)
 * [Debug & Troubleshooting](#troubleshooting)
@@ -78,8 +80,6 @@ Next we create a couple of Ingress rules
 kubectl create -f examples/ingress.yaml
 ```
 
-If your version of Kubernetes is higher than 1.3, you can restrict the ingress usage to NGINX with this annotation :`kubernetes.io/ingress.class: "nginx"`
-
 we check that ingress rules are defined:
 ```
 $ kubectl get ing
@@ -104,7 +104,6 @@ Check NGINX it is running with the defined Ingress rules:
 $ LBIP=$(kubectl get node `kubectl get po -l name=nginx-ingress-lb --template '{{range .items}}{{.spec.nodeName}}{{end}}'` --template '{{range $i, $n := .status.addresses}}{{if eq $n.type "ExternalIP"}}{{$n.address}}{{end}}{{end}}')
 $ curl $LBIP/foo -H 'Host: foo.bar.com'
 ```
-You may need to add a firewall rule to allow traffic on port 80. This is related to your cloud provider.
 
 ## HTTPS
 
@@ -139,8 +138,6 @@ spec:
 Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
 Check the [example](examples/tls/README.md)
-
-You may need to add a firewall rule to allow traffic on port 443. This is related to your cloud provider.
 
 ### Default SSL Certificate
 
@@ -344,6 +341,21 @@ Please check the example `example/rc-default.yaml`
 ![nginx-module-vts screenshot](https://cloud.githubusercontent.com/assets/3648408/10876811/77a67b70-8183-11e5-9924-6a6d0c5dc73a.png "screenshot with filter")
 
 To extract the information in JSON format the module provides a custom URL: `/nginx_status/format/json`
+
+### Running multiple ingress controllers
+
+If you're running multiple ingress controllers, or running on a cloudprovider that natively handles 
+ingress, you need to specify the annotation kubernetes.io/ingress.class: "nginx" in all ingresses 
+that you would like this controller to claim. Not specifying the annotation will lead to multiple 
+ingress controllers claiming the same ingress. Specifying the wrong value will result in all ingress 
+controllers ignoring the ingress. Multiple ingress controllers running in the same cluster was not 
+supported in Kubernetes versions < 1.3.
+
+### Running on Cloudproviders
+
+If you're running this ingress controller on a cloudprovider, you should assume the provider also has a native 
+Ingress controller and specify the ingress.class annotation as indicated in this section.
+In addition to this, you will need to add a firewall rule for each port this controller is listening on, i.e :80 and :443.
 
 ### Disabling NGINX ingress controller
 
