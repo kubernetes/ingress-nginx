@@ -9,6 +9,7 @@ This is a list of beta limitations:
 * [Quota](#quota): By default, GCE projects are granted a quota of 3 Backend Services. This is insufficient for most Kubernetes clusters.
 * [Oauth scopes](https://cloud.google.com/compute/docs/authentication): By default GKE/GCE clusters are granted "compute/rw" permissions. If you setup a cluster without these permissions, GLBC is useless and you should delete the controller as described in the [section below](#disabling-glbc). If you don't delete the controller it will keep restarting.
 * [Default backends](https://cloud.google.com/compute/docs/load-balancing/http/url-map#url_map_simplest_case): All L7 Loadbalancers created by GLBC have a default backend. If you don't specify one in your Ingress, GLBC will assign the 404 default backend mentioned above.
+* [Large clusters](#large-clusters): Ingress on GCE isn't supported on large (>1000 nodes), single-zone clusters.
 * [Teardown](README.md#deletion): The recommended way to tear down a cluster with active Ingresses is to either delete each Ingress, or hit the `/delete-all-and-quit` endpoint on GLBC, before invoking a cluster teardown script (eg: kube-down.sh). You will have to manually cleanup GCE resources through the [cloud console](https://cloud.google.com/compute/docs/console#access) or [gcloud CLI](https://cloud.google.com/compute/docs/gcloud-compute/) if you simply tear down the cluster with active Ingresses.
 * [Changing UIDs](#changing-the-cluster-uid): You can change the UID used as a suffix for all your GCE cloud resources, but this requires you to delete existing Ingresses first.
 * [Cleaning up](#cleaning-up-cloud-resources): You can delete loadbalancers that older clusters might've leaked due to permature teardown through the GCE console.
@@ -93,6 +94,10 @@ GCE has a concept of [ephemeral](https://cloud.google.com/compute/docs/instances
 * Creating an Ingress with a TLS section allocates a static IP, because GLBC assumes you mean business.
 * Modifying an Ingress and adding a TLS section allocates a static IP, but the IP *will* change. This is a beta limitation.
 * You can [promote](https://cloud.google.com/compute/docs/instances-and-network#promote_ephemeral_ip) an ephemeral to a static IP by hand, if required.
+
+## Large clusters
+
+Ingress is not yet supported on single zone clusters of size > 1000 nodes ([issue](https://github.com/kubernetes/contrib/issues/1724)). If you'd like to use Ingress on a large cluster, spread it across 2 or more zones such that no single zone contains more than a 1000 nodes. This is because there is a [limit](https://cloud.google.com/compute/docs/instance-groups/creating-groups-of-managed-instances) to the number of instances one can add to a single GCE Instance Group. In a multi-zone cluster, each zone gets its own instance group.
 
 ## Disabling GLBC
 
