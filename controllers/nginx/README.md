@@ -1,6 +1,6 @@
 # Nginx Ingress Controller
 
-This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kubernetes/kubernetes/blob/master/docs/proposals/configmap.md) to store the nginx configuration. See [Ingress controller documentation](../README.md) for details on how it works.
+This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kubernetes/kubernetes/blob/master/docs/design/configmap.md) to store the nginx configuration. See [Ingress controller documentation](../README.md) for details on how it works.
 
 ## Contents
 * [Conventions](#conventions)
@@ -30,7 +30,7 @@ This is a nginx Ingress controller that uses [ConfigMap](https://github.com/kube
 
 Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). You can generate such a certificate with: 
 `openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(KEY) -out $(CERT) -subj "/CN=$(HOST)/O=$(HOST)"`
-and creat the secret via `kubectl create secret tls --key file --cert file`
+and create the secret via `kubectl create secret tls --key file --cert file`
 
 
 
@@ -141,7 +141,7 @@ Check the [example](examples/tls/README.md)
 
 ### Default SSL Certificate
 
-NGINX provides the option serve rname [_](http://nginx.org/en/docs/http/server_names.html) as a catch-all in case of requests that do not match one of the configured server names. This configuration works without issues for HTTP traffic. In case of HTTPS NGINX requires a certificate. For this reason the Ingress controller provides the flag `--default-ssl-certificate`. The secret behind this flag contains the default certificate to be used in the mentioned case.
+NGINX provides the option [server name](http://nginx.org/en/docs/http/server_names.html) as a catch-all in case of requests that do not match one of the configured server names. This configuration works without issues for HTTP traffic. In case of HTTPS NGINX requires a certificate. For this reason the Ingress controller provides the flag `--default-ssl-certificate`. The secret behind this flag contains the default certificate to be used in the mentioned case.
 If this flag is not provided NGINX will use a self signed certificate.
 
 Running without the flag `--default-ssl-certificate`:
@@ -193,7 +193,7 @@ $ curl -v https://10.2.78.7:443 -k
 * Connection #0 to host 10.2.78.7 left intact
 ```
 
-Specifyng `--default-ssl-certificate=default/foo-tls`:
+Specifying `--default-ssl-certificate=default/foo-tls`:
 
 ```
 core@localhost ~ $ curl -v https://10.2.78.7:443 -k
@@ -247,7 +247,7 @@ core@localhost ~ $ curl -v https://10.2.78.7:443 -k
 
 By default the controller redirects (301) to HTTPS if TLS is enabled for that ingress . If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map.
 
-To configure this feature for specfic ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in theparticular resource.
+To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
 
 ### HTTP Strict Transport Security
@@ -316,7 +316,7 @@ Please check the [udp services](examples/udp/README.md) example
 
 ## Proxy Protocol
 
-If you are using a L4 proxy to forward the traffic to the NGINX pods and terminate HTTP/HTTPS there, you will lose the remote endpoint's IP addresses. To prevent this you could use the [Proxy Protocol](http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt) for forwarding traffic, this will send the connection details before forwarding the acutal TCP connection itself.
+If you are using a L4 proxy to forward the traffic to the NGINX pods and terminate HTTP/HTTPS there, you will lose the remote endpoint's IP addresses. To prevent this you could use the [Proxy Protocol](http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt) for forwarding traffic, this will send the connection details before forwarding the actual TCP connection itself.
 
 Amongst others [ELBs in AWS](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-proxy-protocol.html) and [HAProxy](http://www.haproxy.org/) support Proxy Protocol.
 
@@ -334,7 +334,7 @@ Using this two headers is possible to use a custom backend service like [this on
 ### NGINX status page
 
 The ngx_http_stub_status_module module provides access to basic status information. This is the default module active in the url `/nginx_status`.
-This controller provides an alternitive to this module using [nginx-module-vts](https://github.com/vozlt/nginx-module-vts) third party module.
+This controller provides an alternative to this module using [nginx-module-vts](https://github.com/vozlt/nginx-module-vts) third party module.
 To use this module just provide a config map with the key `enable-vts-status=true`. The URL is exposed in the port 8080.
 Please check the example `example/rc-default.yaml`
 
@@ -414,7 +414,7 @@ Since `gcr.io/google_containers/nginx-slim:0.8` NGINX contains the next patches:
 NGINX provides the parameter `ssl_buffer_size` to adjust the size of the buffer. Default value in NGINX is 16KB. The ingress controller changes the default to 4KB. This improves the [TLS Time To First Byte (TTTFB)](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) but the size is fixed. This patches adapts the size of the buffer to the content is being served helping to improve the perceived latency.
 
 - Add SPDY support back to Nginx with HTTP/2 [nginx_1_9_15_http2_spdy.patch](https://github.com/cloudflare/sslconfig/pull/36)
-At the same NGINX introduced HTTP/2 support for SPDY was removed. This patch add support for SPDY wichout compromising HTTP/2 support using the Application-Layer Protocol Negotiation (ALPN) or Next Protocol Negotiation (NPN) Transport Layer Security (TLS) extension to negotiate what protocol the server and client support
+At the same NGINX introduced HTTP/2 support for SPDY was removed. This patch add support for SPDY without compromising HTTP/2 support using the Application-Layer Protocol Negotiation (ALPN) or Next Protocol Negotiation (NPN) Transport Layer Security (TLS) extension to negotiate what protocol the server and client support
 ```
 openssl s_client -servername www.my-site.com -connect www.my-site.com:443 -nextprotoneg ''
 CONNECTED(00000003)
