@@ -252,6 +252,7 @@ http {
 
             proxy_redirect                          off;
             proxy_buffering                         off;
+            proxy_buffer_size                       {{ $cfg.proxyBufferSize }};
 
             proxy_http_version                      1.1;
 
