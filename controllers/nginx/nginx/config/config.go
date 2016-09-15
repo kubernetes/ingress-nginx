@@ -157,6 +157,11 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout
 	ProxySendTimeout int `structs:"proxy-send-timeout,omitempty"`
 
+	// Sets the size of the buffer used for reading the first part of the response received from the
+	// proxied server. This part usually contains a small response header.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size)
+	ProxyBufferSize string `structs:"proxy-buffer-size,omitempty"`
+
 	// Configures name servers used to resolve names of upstream servers into addresses
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#resolver
 	Resolver string `structs:"resolver,omitempty"`
@@ -275,6 +280,7 @@ func NewDefault() Configuration {
 		ProxyRealIPCIDR:          defIPCIDR,
 		ProxyReadTimeout:         60,
 		ProxySendTimeout:         60,
+		ProxyBufferSize:          "4k",
 		ServerNameHashMaxSize:    512,
 		ServerNameHashBucketSize: 64,
 		SSLRedirect:              true,

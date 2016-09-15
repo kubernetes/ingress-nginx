@@ -198,6 +198,9 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 **proxy-send-timeout:** Sets the timeout in seconds for [transmitting a request to the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
 
 
+**proxy-buffer-size:** Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.`
+
+
 **resolver:** Configures name servers used to [resolve](http://nginx.org/en/docs/http/ngx_http_core_module.html#resolver) names of upstream servers into addresses
 
 
