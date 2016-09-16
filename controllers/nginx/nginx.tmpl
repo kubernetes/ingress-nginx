@@ -265,6 +265,12 @@ http {
         {{ end }}
 
         {{ if eq $server.Name "_" }}
+        # health checks in cloud providers require the use of port 80
+        location {{ $cfg.healthzUrl }} {
+            access_log off;
+            return 200;
+        }
+
         # this is required to avoid error if nginx is being monitored
         # with an external software (like sysdig)
         location /nginx_status {

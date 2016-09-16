@@ -19,13 +19,18 @@ spec:
       - image: gcr.io/google_containers/nginx-ingress-controller:0.8.3
         name: nginx-ingress-lb
         imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            path: /ingress-controller-healthz
+            port: 80
+            scheme: HTTP
         livenessProbe:
           httpGet:
-            path: /healthz
-            port: 10254
+            path: /ingress-controller-healthz
+            port: 80
             scheme: HTTP
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
         # use downward API
         env:
           - name: POD_NAME
