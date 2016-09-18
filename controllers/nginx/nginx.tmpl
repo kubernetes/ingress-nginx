@@ -75,7 +75,7 @@ http {
 
     log_format upstreaminfo '{{ if $cfg.useProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
         '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
-        '$request_length $request_time $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
+        '$request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
 
     {{/* map urls that should not appear in access.log */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
@@ -262,6 +262,7 @@ http {
             {{- end }}
 
             {{- buildProxyPass $location }}
+            set $proxy_upstream_name "{{ $location.Upstream.Name }}";
         }
         {{ end }}
 
