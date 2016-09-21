@@ -172,13 +172,24 @@ func (d *NamespaceDescriber) Describe(namespace, name string, describerSettings 
 	}
 	resourceQuotaList, err := d.ResourceQuotas(name).List(api.ListOptions{})
 	if err != nil {
-		return "", err
+		if errors.IsNotFound(err) {
+			// Server does not support resource quotas.
+			// Not an error, will not show resource quotas information.
+			resourceQuotaList = nil
+		} else {
+			return "", err
+		}
 	}
 	limitRangeList, err := d.LimitRanges(name).List(api.ListOptions{})
 	if err != nil {
-		return "", err
+		if errors.IsNotFound(err) {
+			// Server does not support limit ranges.
+			// Not an error, will not show limit ranges information.
+			limitRangeList = nil
+		} else {
+			return "", err
+		}
 	}
-
 	return describeNamespace(ns, resourceQuotaList, limitRangeList)
 }
 
@@ -2184,6 +2195,10 @@ func (dd *DeploymentDescriber) Describe(namespace, name string, describerSetting
 			}
 			fmt.Fprintf(out, "NewReplicaSet:\t%s\n", printReplicaSetsByLabels(newRSs))
 		}
+		overlapWith := d.Annotations[deploymentutil.OverlapAnnotation]
+		if len(overlapWith) > 0 {
+			fmt.Fprintf(out, "!!!WARNING!!! This deployment has overlapping label selector with deployment %q and won't behave as expected. Please fix it before continue.\n", overlapWith)
+		}
 		if describerSettings.ShowEvents {
 			events, err := dd.Core().Events(namespace).Search(d)
 			if err == nil && events != nil {
@@ -2564,23 +2579,19 @@ func printTaintsMultilineWithIndent(out io.Writer, initialIndent, title, innerIn
 	// to print taints in the sorted order
 	keys := make([]string, 0, len(taints))
 	for _, taint := range taints {
-		keys = append(keys, taint.Key)
+		keys = append(keys, string(taint.Effect)+","+taint.Key)
 	}
 	sort.Strings(keys)
 
-	effects := []api.TaintEffect{api.TaintEffectNoSchedule, api.TaintEffectPreferNoSchedule}
-
 	for i, key := range keys {
-		for _, effect := range effects {
-			for _, taint := range taints {
-				if taint.Key == key && taint.Effect == effect {
-					if i != 0 {
-						fmt.Fprint(out, initialIndent)
-						fmt.Fprint(out, innerIndent)
-					}
-					fmt.Fprintf(out, "%s=%s:%s\n", taint.Key, taint.Value, taint.Effect)
-					i++
+		for _, taint := range taints {
+			if string(taint.Effect)+","+taint.Key == key {
+				if i != 0 {
+					fmt.Fprint(out, initialIndent)
+					fmt.Fprint(out, innerIndent)
 				}
+				fmt.Fprintf(out, "%s\n", taint.ToString())
+				i++
 			}
 		}
 	}

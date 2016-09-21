@@ -367,7 +367,7 @@ func (reaper *PetSetReaper) Stop(namespace, name string, timeout time.Duration, 
 	}
 
 	// TODO: Cleanup volumes? We don't want to accidentally delete volumes from
-	// stop, so just leave this up to the the petset.
+	// stop, so just leave this up to the petset.
 	return petsets.Delete(name, nil)
 }
 
@@ -454,7 +454,7 @@ func (reaper *DeploymentReaper) Stop(namespace, name string, timeout time.Durati
 	errList := []error{}
 	for _, rc := range rsList.Items {
 		if err := rsReaper.Stop(rc.Namespace, rc.Name, timeout, gracePeriod); err != nil {
-			scaleGetErr, ok := err.(*ScaleError)
+			scaleGetErr, ok := err.(ScaleError)
 			if errors.IsNotFound(err) || (ok && errors.IsNotFound(scaleGetErr.ActualError)) {
 				continue
 			}

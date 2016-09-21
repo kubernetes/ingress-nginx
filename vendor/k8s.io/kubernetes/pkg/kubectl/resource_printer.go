@@ -42,6 +42,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/certificates"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/apis/rbac"
+	"k8s.io/kubernetes/pkg/apis/storage"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/runtime"
 	utilerrors "k8s.io/kubernetes/pkg/util/errors"
@@ -474,7 +475,7 @@ var resourceQuotaColumns = []string{"NAME", "AGE"}
 var namespaceColumns = []string{"NAME", "STATUS", "AGE"}
 var secretColumns = []string{"NAME", "TYPE", "DATA", "AGE"}
 var serviceAccountColumns = []string{"NAME", "SECRETS", "AGE"}
-var persistentVolumeColumns = []string{"NAME", "CAPACITY", "ACCESSMODES", "STATUS", "CLAIM", "REASON", "AGE"}
+var persistentVolumeColumns = []string{"NAME", "CAPACITY", "ACCESSMODES", "RECLAIMPOLICY", "STATUS", "CLAIM", "REASON", "AGE"}
 var persistentVolumeClaimColumns = []string{"NAME", "STATUS", "VOLUME", "CAPACITY", "ACCESSMODES", "AGE"}
 var componentStatusColumns = []string{"NAME", "STATUS", "MESSAGE", "ERROR"}
 var thirdPartyResourceColumns = []string{"NAME", "DESCRIPTION", "VERSION(S)"}
@@ -1513,13 +1514,14 @@ func printPersistentVolume(pv *api.PersistentVolume, w io.Writer, options PrintO
 	}
 
 	modesStr := api.GetAccessModesAsString(pv.Spec.AccessModes)
+	reclaimPolicyStr := string(pv.Spec.PersistentVolumeReclaimPolicy)
 
 	aQty := pv.Spec.Capacity[api.ResourceStorage]
 	aSize := aQty.String()
 
-	if _, err := fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s",
+	if _, err := fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
 		name,
-		aSize, modesStr,
+		aSize, modesStr, reclaimPolicyStr,
 		pv.Status.Phase,
 		claimRefUID,
 		pv.Status.Reason,
@@ -1778,7 +1780,7 @@ func extractCSRStatus(csr *certificates.CertificateSigningRequest) (string, erro
 		case certificates.CertificateDenied:
 			denied = true
 		default:
-			return "", fmt.Errorf("unknown csr conditon %q", c)
+			return "", fmt.Errorf("unknown csr condition %q", c)
 		}
 	}
 	var status string
@@ -2067,7 +2069,7 @@ func printNetworkPolicyList(list *extensions.NetworkPolicyList, w io.Writer, opt
 	return nil
 }
 
-func printStorageClass(sc *extensions.StorageClass, w io.Writer, options PrintOptions) error {
+func printStorageClass(sc *storage.StorageClass, w io.Writer, options PrintOptions) error {
 	name := sc.Name
 	provtype := sc.Provisioner
 
@@ -2084,7 +2086,7 @@ func printStorageClass(sc *extensions.StorageClass, w io.Writer, options PrintOp
 	return nil
 }
 
-func printStorageClassList(scList *extensions.StorageClassList, w io.Writer, options PrintOptions) error {
+func printStorageClassList(scList *storage.StorageClassList, w io.Writer, options PrintOptions) error {
 	for _, sc := range scList.Items {
 		if err := printStorageClass(&sc, w, options); err != nil {
 			return err

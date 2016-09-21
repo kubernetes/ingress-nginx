@@ -33,6 +33,7 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful/swagger"
+	"github.com/imdario/mergo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -52,6 +53,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/apis/policy"
 	"k8s.io/kubernetes/pkg/apis/rbac"
+	"k8s.io/kubernetes/pkg/apis/storage"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	"k8s.io/kubernetes/pkg/client/typed/discovery"
 	"k8s.io/kubernetes/pkg/client/typed/dynamic"
@@ -844,7 +846,7 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 cluster.  If you want to expose this service to the external internet, you may
 need to set up firewall rules for the service port(s) (%s) to serve traffic.
 
-See http://releases.k8s.io/HEAD/docs/user-guide/services-firewalls.md for more details.
+See http://releases.k8s.io/release-1.4/docs/user-guide/services-firewalls.md for more details.
 `,
 						makePortsString(obj.Spec.Ports, true))
 					out.Write([]byte(msg))
@@ -856,7 +858,7 @@ See http://releases.k8s.io/HEAD/docs/user-guide/services-firewalls.md for more d
 It has been promoted to field [loadBalancerSourceRanges] in service spec. This annotation will be deprecated in the future.
 Please use the loadBalancerSourceRanges field instead.
 
-See http://releases.k8s.io/HEAD/docs/user-guide/services-firewalls.md for more details.
+See http://releases.k8s.io/release-1.4/docs/user-guide/services-firewalls.md for more details.
 `)
 					out.Write([]byte(msg))
 				}
@@ -1150,6 +1152,11 @@ func (c *clientSwaggerSchema) ValidateBytes(data []byte) error {
 			return errors.New("unable to validate: no rbac client")
 		}
 		return getSchemaAndValidate(c.c.RbacClient.RESTClient, data, "apis/", gvk.GroupVersion().String(), c.cacheDir, c)
+	case storage.GroupName:
+		if c.c.StorageClient == nil {
+			return errors.New("unable to validate: no storage client")
+		}
+		return getSchemaAndValidate(c.c.StorageClient.RESTClient, data, "apis/", gvk.GroupVersion().String(), c.cacheDir, c)
 	}
 	if registered.IsThirdPartyAPIGroupVersion(gvk.GroupVersion()) {
 		// Don't attempt to validate third party objects
@@ -1219,6 +1226,9 @@ func DefaultClientConfig(flags *pflag.FlagSet) clientcmd.ClientConfig {
 	flags.StringVar(&loadingRules.ExplicitPath, "kubeconfig", "", "Path to the kubeconfig file to use for CLI requests.")
 
 	overrides := &clientcmd.ConfigOverrides{}
+	// use the standard defaults for this client config
+	mergo.Merge(&overrides.ClusterDefaults, clientcmd.DefaultCluster)
+
 	flagNames := clientcmd.RecommendedConfigOverrideFlags("")
 	// short flagnames are disabled by default.  These are here for compatibility with existing scripts
 	flagNames.ClusterOverrideFlags.APIServer.ShortName = "s"
