@@ -23,6 +23,7 @@ This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kub
 * [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
 * [Local cluster](#local-cluster)
 * [Debug & Troubleshooting](#troubleshooting)
+* [Why endpoints and not services?](#why-endpoints-and-not-services)
 * [Limitations](#limitations)
 * [NGINX Notes](#nginx-notes)
 
@@ -402,12 +403,17 @@ I0316 12:24:37.610073       1 command.go:69] change in configuration detected. R
   * To fix the above, setup-files.sh must be patched before the cluster is inited (refer to https://github.com/kubernetes/kubernetes/pull/21504)
 
 
-## Limitations
+### Limitations
 
 - Ingress rules for TLS require the definition of the field `host`
 
 
-## NGINX notes
+### Why endpoints and not services
+
+The NGINX ingress controller does not uses [Services](http://kubernetes.io/docs/user-guide/services) to route traffic to the pods. Instead it uses the Endpoints API in order to bypass [kube-proxy](http://kubernetes.io/docs/admin/kube-proxy/) to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.
+
+
+### NGINX notes
 
 Since `gcr.io/google_containers/nginx-slim:0.8` NGINX contains the next patches:
 - Dynamic TLS record size [nginx__dynamic_tls_records.patch](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/)
