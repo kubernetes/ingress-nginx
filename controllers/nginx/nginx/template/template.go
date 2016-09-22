@@ -91,7 +91,10 @@ func (t *Template) Close() {
 
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
-func (t *Template) Write(cfg config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
+func (t *Template) Write(
+	cfg config.Configuration,
+	ingressCfg ingress.Configuration,
+	isValidTemplate func([]byte) error) ([]byte, error) {
 	var longestName int
 	var serverNames int
 	for _, srv := range ingressCfg.Servers {
@@ -109,12 +112,14 @@ func (t *Template) Write(cfg config.Configuration, ingressCfg ingress.Configurat
 	// https://trac.nginx.org/nginx/ticket/631
 	nameHashBucketSize := nextPowerOf2(longestName)
 	if nameHashBucketSize > cfg.ServerNameHashBucketSize {
-		glog.V(3).Infof("adjusting ServerNameHashBucketSize variable from %v to %v", cfg.ServerNameHashBucketSize, nameHashBucketSize)
+		glog.V(3).Infof("adjusting ServerNameHashBucketSize variable from %v to %v",
+			cfg.ServerNameHashBucketSize, nameHashBucketSize)
 		cfg.ServerNameHashBucketSize = nameHashBucketSize
 	}
 	serverNameHashMaxSize := nextPowerOf2(serverNames)
 	if serverNameHashMaxSize > cfg.ServerNameHashMaxSize {
-		glog.V(3).Infof("adjusting ServerNameHashMaxSize variable from %v to %v", cfg.ServerNameHashMaxSize, serverNameHashMaxSize)
+		glog.V(3).Infof("adjusting ServerNameHashMaxSize variable from %v to %v",
+			cfg.ServerNameHashMaxSize, serverNameHashMaxSize)
 		cfg.ServerNameHashMaxSize = serverNameHashMaxSize
 	}
 
@@ -141,9 +146,15 @@ func (t *Template) Write(cfg config.Configuration, ingressCfg ingress.Configurat
 	err := t.tmpl.Execute(buffer, conf)
 	if err != nil {
 		glog.V(3).Infof("%v", string(buffer.Bytes()))
+		return nil, err
 	}
 
-	return buffer.Bytes(), err
+	err = isValidTemplate(buffer.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
 }
 
 func fixKeyNames(data map[string]interface{}) map[string]interface{} {
@@ -258,13 +269,16 @@ func buildRateLimitZones(input interface{}) []string {
 
 			if loc.RateLimit.Connections.Limit > 0 {
 				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%vm;",
-					loc.RateLimit.Connections.Name, loc.RateLimit.Connections.SharedSize)
+					loc.RateLimit.Connections.Name,
+					loc.RateLimit.Connections.SharedSize)
 				zones = append(zones, zone)
 			}
 
 			if loc.RateLimit.RPS.Limit > 0 {
 				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%vm rate=%vr/s;",
-					loc.RateLimit.Connections.Name, loc.RateLimit.Connections.SharedSize, loc.RateLimit.Connections.Limit)
+					loc.RateLimit.Connections.Name,
+					loc.RateLimit.Connections.SharedSize,
+					loc.RateLimit.Connections.Limit)
 				zones = append(zones, zone)
 			}
 		}

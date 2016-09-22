@@ -18,6 +18,7 @@ package nginx
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -63,7 +64,7 @@ func (ngx *Manager) CheckAndReload(cfg config.Configuration, ingressCfg ingress.
 	ngx.reloadLock.Lock()
 	defer ngx.reloadLock.Unlock()
 
-	newCfg, err := ngx.template.Write(cfg, ingressCfg)
+	newCfg, err := ngx.template.Write(cfg, ingressCfg, ngx.testTemplate)
 	if err != nil {
 		return fmt.Errorf("failed to write new nginx configuration. Avoiding reload: %v", err)
 	}
@@ -116,5 +117,21 @@ func (ngx Manager) Check(_ *http.Request) error {
 		return fmt.Errorf("NGINX is unhealthy")
 	}
 
+	return nil
+}
+
+// testTemplate checks if the NGINX configuration inside the byte array is valid
+// running the command "nginx -t" using a temporal file.
+func (ngx Manager) testTemplate(cfg []byte) error {
+	tmpfile, err := ioutil.TempFile("", "nginx-cfg")
+	if err != nil {
+		return err
+	}
+	defer tmpfile.Close()
+	defer os.Remove(tmpfile.Name())
+	ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
+	if err := ngx.shellOut(fmt.Sprintf("nginx -t -c %v", tmpfile.Name())); err != nil {
+		return fmt.Errorf("invalid nginx configuration: %v", err)
+	}
 	return nil
 }
