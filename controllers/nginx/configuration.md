@@ -103,7 +103,7 @@ The secret must be created in the same namespace than the Ingress rule
 ingress.kubernetes.io/auth-realm:"realm string"
 ```
 
-Please check the [auth](examples/custom-upstream-check/README.md) example
+Please check the [auth](examples/auth/README.md) example
 
 
 ### Rewrite
