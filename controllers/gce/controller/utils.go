@@ -405,7 +405,9 @@ func isPortEqual(port, targetPort intstr.IntOrString) bool {
 
 // geHTTPProbe returns the http readiness probe from the first container
 // that matches targetPort, from the set of pods matching the given labels.
-func (t *GCETranslator) getHTTPProbe(l map[string]string, targetPort intstr.IntOrString) (*api.Probe, error) {
+func (t *GCETranslator) getHTTPProbe(svc api.Service, targetPort intstr.IntOrString) (*api.Probe, error) {
+	l := svc.Spec.Selector
+
 	// Lookup any container with a matching targetPort from the set of pods
 	// with a matching label selector.
 	pl, err := t.podLister.List(labels.SelectorFromSet(labels.Set(l)))
@@ -417,6 +419,9 @@ func (t *GCETranslator) getHTTPProbe(l map[string]string, targetPort intstr.IntO
 	sort.Sort(PodsByCreationTimestamp(pl))
 
 	for _, pod := range pl {
+		if pod.Namespace != svc.Namespace {
+			continue
+		}
 		logStr := fmt.Sprintf("Pod %v matching service selectors %v (targetport %+v)", pod.Name, l, targetPort)
 		for _, c := range pod.Spec.Containers {
 			if !isSimpleHTTPProbe(c.ReadinessProbe) {
@@ -460,7 +465,7 @@ func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error
 	for _, s := range sl.Items {
 		for _, p := range s.Spec.Ports {
 			if int32(port) == p.NodePort {
-				rp, err := t.getHTTPProbe(s.Spec.Selector, p.TargetPort)
+				rp, err := t.getHTTPProbe(s, p.TargetPort)
 				if err != nil {
 					return nil, err
 				}
