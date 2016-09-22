@@ -101,6 +101,7 @@ type Location struct {
 	Redirect       rewrite.Redirect
 	SecureUpstream bool
 	Whitelist      ipwhitelist.SourceRange
+	EnableCORS     bool
 }
 
 // LocationByPath sorts location by path

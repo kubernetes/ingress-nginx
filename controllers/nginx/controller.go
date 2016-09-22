@@ -43,6 +43,7 @@ import (
 	"k8s.io/contrib/ingress/controllers/nginx/nginx"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/auth"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/config"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/cors"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/healthcheck"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ingress"
 	"k8s.io/contrib/ingress/controllers/nginx/nginx/ipwhitelist"
@@ -717,6 +718,11 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 				glog.V(3).Infof("error reading white list annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
 			}
 
+			eCORS, err := cors.ParseAnnotations(ing)
+			if err != nil {
+				glog.V(3).Infof("error reading CORS annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			}
+
 			host := rule.Host
 			if host == "" {
 				host = defServerName
@@ -749,6 +755,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 						loc.Redirect = *locRew
 						loc.SecureUpstream = secUpstream
 						loc.Whitelist = *wl
+						loc.EnableCORS = eCORS
 
 						addLoc = false
 						continue
@@ -763,7 +770,6 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 				}
 
 				if addLoc {
-
 					server.Locations = append(server.Locations, &ingress.Location{
 						Path:           nginxPath,
 						Upstream:       *ups,
@@ -772,6 +778,7 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 						Redirect:       *locRew,
 						SecureUpstream: secUpstream,
 						Whitelist:      *wl,
+						EnableCORS:     eCORS,
 					})
 				}
 			}
