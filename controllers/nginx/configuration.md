@@ -59,6 +59,19 @@ Use the [custom-template](examples/custom-template/README.md) example as a guide
 
 **Please note the template is tied to the go code. Be sure to no change names in the variable `$cfg`**
 
+To know more about the template please check the [Go template package](https://golang.org/pkg/text/template/)
+Additionally to the built-in functions provided by the go package this were added:
+  - empty: returns true if the specified parameter (string) is empty
+  - contains: [strings.Contains](https://golang.org/pkg/strings/#Contains)
+  - hasPrefix: [strings.HasPrefix](https://golang.org/pkg/strings/#Contains)
+  - hasSuffix: [strings.HasSuffix](https://golang.org/pkg/strings/#HasSuffix)
+  - toUpper: [strings.ToUpper](https://golang.org/pkg/strings/#ToUpper)
+  - toLower: [strings.ToLower](https://golang.org/pkg/strings/#ToLower)
+  - buildLocation: helper to build the NGINX Location section in each server
+  - buildProxyPass: builds the reverse proxy configuration
+  - buildRateLimitZones: helper to build all the required rate limit zones
+  - buildRateLimit:  helper to build a limit zone inside a location if contains a rate limit annotation
+
 
 ### Custom NGINX upstream checks
 
