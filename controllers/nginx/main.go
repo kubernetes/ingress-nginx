@@ -79,6 +79,9 @@ var (
 
 	defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret that contains a SSL 
 		certificate to be used as default for a HTTPS catch-all server`)
+
+	defHealthzURL = flags.String("health-check-path", "/ingress-controller-healthz", `Defines the URL to
+		be used as health check inside in the default server in NGINX.`)
 )
 
 func main() {
@@ -121,7 +124,7 @@ func main() {
 
 	lbc, err := newLoadBalancerController(kubeClient, *resyncPeriod,
 		*defaultSvc, *watchNamespace, *nxgConfigMap, *tcpConfigMapName,
-		*udpConfigMapName, *defSSLCertificate, runtimePodInfo)
+		*udpConfigMapName, *defSSLCertificate, *defHealthzURL, runtimePodInfo)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
