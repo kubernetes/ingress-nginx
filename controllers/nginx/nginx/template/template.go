@@ -52,6 +52,11 @@ var (
 		"buildProxyPass":      buildProxyPass,
 		"buildRateLimitZones": buildRateLimitZones,
 		"buildRateLimit":      buildRateLimit,
+		"contains":            strings.Contains,
+		"hasPrefix":           strings.HasPrefix,
+		"hasSuffix":           strings.HasSuffix,
+		"toUpper":             strings.ToUpper,
+		"toLower":             strings.ToLower,
 	}
 )
 
