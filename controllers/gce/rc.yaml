@@ -61,7 +61,7 @@ spec:
           requests:
             cpu: 10m
             memory: 20Mi
-      - image: gcr.io/google_containers/glbc:0.6.2
+      - image: gcr.io/google_containers/glbc:0.8.0
         livenessProbe:
           httpGet:
             path: /healthz
