@@ -57,7 +57,7 @@ for {
 ```
 
 All this is doing is:
-* List Ingresses, optionally you can watch for changes (see [GCE Ingress controller](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/gce/controller.go) for an example)
+* List Ingresses, optionally you can watch for changes (see [GCE Ingress controller](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/gce/controller/controller.go) for an example)
 * Executes the template and writes results to `/etc/nginx/nginx.conf`
 * Reloads nginx
 
