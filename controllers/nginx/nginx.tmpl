@@ -41,7 +41,7 @@ http {
 
     # lua section to return proper error codes when custom pages are used
     lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
-    init_by_lua_block {        
+    init_by_lua_block {
         require("error_page")
     }
 
@@ -185,7 +185,7 @@ http {
         listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
         {{ if $server.SSL }}listen 443 {{ if $cfg.useProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.enableSpdy }}spdy{{ end }} {{ if $cfg.useHttp2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
-        # PEM sha: {{ $server.SSLPemChecksum }}        
+        # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate {{ $server.SSLCertificate }};
         ssl_certificate_key {{ $server.SSLCertificateKey }};
         {{- end }}
@@ -314,6 +314,7 @@ http {
         }
 
         location / {
+            set $proxy_upstream_name "upstream-default-backend";
             proxy_pass             http://upstream-default-backend;
         }
         {{- template "CUSTOM_ERRORS" $cfg }}
@@ -322,6 +323,7 @@ http {
     # default server for services without endpoints
     server {
         listen 8181;
+        set $proxy_upstream_name "-";
 
         location / {
             {{ if .customErrors }}
@@ -331,7 +333,7 @@ http {
             {{ else }}
             return 503;
             {{ end }}
-        }        
+        }
     }    
 }
 
