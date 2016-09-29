@@ -21,6 +21,7 @@ This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kub
 * [Running multiple ingress controllers](#running-multiple-ingress-controllers)
 * [Running on Cloudproviders](#running-on-cloudproviders)
 * [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
+* [Log format](#log-format)
 * [Local cluster](#local-cluster)
 * [Debug & Troubleshooting](#troubleshooting)
 * [Why endpoints and not services?](#why-endpoints-and-not-services)
@@ -361,6 +362,39 @@ In addition to this, you will need to add a firewall rule for each port this con
 ### Disabling NGINX ingress controller
 
 Setting the annotation `kubernetes.io/ingress.class` to any value other than "nginx" or the empty string, will force the NGINX Ingress controller to ignore your Ingress. Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
+
+### Log format
+
+The default configuration uses a custom logging format to add additional information about upstreams
+
+```
+    log_format upstreaminfo '{{ if $cfg.useProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
+        '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
+        '$request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
+```
+
+Sources:
+  - [upstream variables](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#variables)
+  - [embedded variables](http://nginx.org/en/docs/http/ngx_http_core_module.html#variables)
+
+Description:
+- `$proxy_protocol_addr`: if PROXY protocol is enabled
+- `$remote_addr`: if PROXY protocol is disabled (default)
+- `$proxy_add_x_forwarded_for`: the `X-Forwarded-For` client request header field with the $remote_addr variable appended to it, separated by a comma
+- `$remote_user`: user name supplied with the Basic authentication
+- `$time_local`: local time in the Common Log Format
+- `$request`: full original request line
+- `$status`: response status
+- `$body_bytes_sent`: number of bytes sent to a client, not counting the response header
+- `$http_referer`: value of the Referer header
+- `$http_user_agent`: value of User-Agent header
+- `$request_length`: request length (including request line, header, and request body)
+- `$request_time`: time elapsed since the first bytes were read from the client
+- `$proxy_upstream_name`: name of the upstream. The format is `upstream-<namespace>-<service name>-<service port>`
+- `$upstream_addr`: keeps the IP address and port, or the path to the UNIX-domain socket of the upstream server. If several servers were contacted during request processing, their addresses are separated by commas
+- `$upstream_response_length`: keeps the length of the response obtained from the upstream server
+- `$upstream_response_time`: keeps time spent on receiving the response from the upstream server; the time is kept in seconds with millisecond resolution
+- `$upstream_status`: keeps status code of the response obtained from the upstream server
 
 ### Local cluster
 
