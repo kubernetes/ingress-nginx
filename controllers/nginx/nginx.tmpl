@@ -184,7 +184,7 @@ http {
     server {
         server_name {{ $server.Name }};
         listen 80{{ if $cfg.useProxyProtocol }} proxy_protocol{{ end }};
-        {{- if $server.SSL }}listen 443 {{ if $cfg.useProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.enableSpdy }}spdy{{ end }} {{ if $cfg.useHttp2 }}http2{{ end }};
+        {{ if $server.SSL }}listen 443 {{ if $cfg.useProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.enableSpdy }}spdy{{ end }} {{ if $cfg.useHttp2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate {{ $server.SSLCertificate }};
@@ -195,7 +195,7 @@ http {
         more_set_headers                            "Strict-Transport-Security: max-age={{ $cfg.hstsMaxAge }}{{ if $cfg.hstsIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
         {{- end }}
 
-        {{- if $cfg.enableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end -}}
+        {{ if $cfg.enableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end -}}
 
         {{- range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
@@ -216,42 +216,42 @@ http {
         }
         {{ end }}
         location {{ $path }} {
-            {{ if gt (len $location.Whitelist.CIDR) 0 }}
+            {{- if gt (len $location.Whitelist.CIDR) 0 }}
             {{- range $ip := $location.Whitelist.CIDR }}
             allow {{ $ip }};{{ end }}
             deny all;
             {{ end -}}
-            {{ if not (empty $authPath) }}
+            {{- if not (empty $authPath) }}
             # this location requires authentication
             auth_request {{ $authPath }};
-            {{ end }}
+            {{ end -}}
 
-            {{ if (and $server.SSL $location.Redirect.SSLRedirect) -}}
+            {{- if (and $server.SSL $location.Redirect.SSLRedirect) }}
             # enforce ssl on server side
             if ($scheme = http) {
                 return 301 https://$host$request_uri;
             }
-            {{- end }}
+            {{ end -}}
             {{/* if the location contains a rate limit annotation, create one */}}
             {{ $limits := buildRateLimit $location }}
             {{- range $limit := $limits }}
             {{ $limit }}{{ end }}
 
-            {{ if $location.Auth.Secured }}
-            {{ if eq $location.Auth.Type "basic" }}
+            {{- if $location.Auth.Secured }}
+            {{- if eq $location.Auth.Type "basic" }}
             auth_basic "{{ $location.Auth.Realm }}";
             auth_basic_user_file {{ $location.Auth.File }};
             {{ else }}
             #TODO: add nginx-http-auth-digest module
             auth_digest "{{ $location.Auth.Realm }}";
             auth_digest_user_file {{ $location.Auth.File }};
-            {{ end }}
+            {{ end -}}
             proxy_set_header Authorization "";
-            {{- end }}
+            {{ end -}}
 
-            {{ if $location.EnableCORS }}
+            {{- if $location.EnableCORS }}
             {{ template "CORS" }}
-            {{ end }}
+            {{ end -}}
 
             proxy_set_header Host                   $host;
 
@@ -282,16 +282,16 @@ http {
             proxy_http_version                      1.1;
 
             {{/* rewrite only works if the content is not compressed */}}
-            {{ if $location.Redirect.AddBaseURL -}}
+            {{- if $location.Redirect.AddBaseURL }}
             proxy_set_header                        Accept-Encoding     "";
-            {{- end }}
+            {{ end -}}
 
             set $proxy_upstream_name "{{ $location.Upstream.Name }}";
-            {{- buildProxyPass $location }}
+            {{ buildProxyPass $location }}
         }
         {{ end }}
 
-        {{ if eq $server.Name "_" }}
+        {{- if eq $server.Name "_" }}
         # health checks in cloud providers require the use of port 80
         location {{ $cfg.HealthzURL }} {
             access_log off;
@@ -307,7 +307,7 @@ http {
             access_log off;
             stub_status on;
         }
-        {{ end }}
+        {{ end -}}
         {{ template "CUSTOM_ERRORS" $cfg }}
     }
     {{ end }}

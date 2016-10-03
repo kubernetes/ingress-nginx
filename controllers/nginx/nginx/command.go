@@ -128,10 +128,11 @@ func (ngx Manager) testTemplate(cfg []byte) error {
 		return err
 	}
 	defer tmpfile.Close()
-	defer os.Remove(tmpfile.Name())
 	ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
 	if err := ngx.shellOut(fmt.Sprintf("nginx -t -c %v", tmpfile.Name())); err != nil {
 		return fmt.Errorf("invalid nginx configuration: %v", err)
 	}
+	// in case of error do not remove temporal file
+	defer os.Remove(tmpfile.Name())
 	return nil
 }
