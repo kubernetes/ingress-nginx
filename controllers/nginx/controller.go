@@ -648,6 +648,9 @@ func (lbc *loadBalancerController) getStreamServices(data map[string]string, pro
 	return svcs
 }
 
+// getDefaultUpstream returns an NGINX upstream associated with the
+// default backend service. In case of error retrieving information
+// configure the upstream to return http code 503.
 func (lbc *loadBalancerController) getDefaultUpstream() *ingress.Upstream {
 	upstream := &ingress.Upstream{
 		Name: defUpstreamName,
@@ -671,7 +674,7 @@ func (lbc *loadBalancerController) getDefaultUpstream() *ingress.Upstream {
 	endps := lbc.getEndpoints(svc, svc.Spec.Ports[0].TargetPort, api.ProtocolTCP, &healthcheck.Upstream{})
 	if len(endps) == 0 {
 		glog.Warningf("service %v does not have any active endpoints", svcKey)
-		upstream.Backends = append(upstream.Backends, nginx.NewDefaultServer())
+		endps = []ingress.UpstreamServer{nginx.NewDefaultServer()}
 	} else {
 		upstream.Backends = append(upstream.Backends, endps...)
 	}
@@ -679,57 +682,55 @@ func (lbc *loadBalancerController) getDefaultUpstream() *ingress.Upstream {
 	return upstream
 }
 
+// getUpstreamServers returns a list of Upstream and Server to be used in NGINX.
+// An upstream can be used in multiple servers if the namespace, service name and port are the same
 func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuration, data []interface{}) ([]*ingress.Upstream, []*ingress.Server) {
 	upstreams := lbc.createUpstreams(ngxCfg, data)
-	servers := lbc.createServers(data)
+	servers := lbc.createServers(data, upstreams)
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
 
+		nginxAuth, err := auth.ParseAnnotations(lbc.client, ing, auth.DefAuthDirectory)
+		glog.V(3).Infof("nginx auth %v", nginxAuth)
+		if err != nil {
+			glog.V(3).Infof("error reading authentication in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		}
+
+		rl, err := ratelimit.ParseAnnotations(ing)
+		glog.V(3).Infof("nginx rate limit %v", rl)
+		if err != nil {
+			glog.V(3).Infof("error reading rate limit annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		}
+
+		secUpstream, err := secureupstream.ParseAnnotations(ing)
+		if err != nil {
+			glog.V(3).Infof("error reading secure upstream in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		}
+
+		locRew, err := rewrite.ParseAnnotations(ngxCfg, ing)
+		if err != nil {
+			glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		}
+
+		wl, err := ipwhitelist.ParseAnnotations(ngxCfg.WhitelistSourceRange, ing)
+		glog.V(3).Infof("nginx white list %v", wl)
+		if err != nil {
+			glog.V(3).Infof("error reading white list annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		}
+
+		eCORS, err := cors.ParseAnnotations(ing)
+		if err != nil {
+			glog.V(3).Infof("error reading CORS annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		}
+
+		ra, err := authreq.ParseAnnotations(ing)
+		glog.V(3).Infof("nginx auth request %v", ra)
+		if err != nil {
+			glog.V(3).Infof("error reading auth request annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		}
+
 		for _, rule := range ing.Spec.Rules {
-			if rule.IngressRuleValue.HTTP == nil {
-				continue
-			}
-
-			nginxAuth, err := auth.ParseAnnotations(lbc.client, ing, auth.DefAuthDirectory)
-			glog.V(3).Infof("nginx auth %v", nginxAuth)
-			if err != nil {
-				glog.V(3).Infof("error reading authentication in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-			}
-
-			rl, err := ratelimit.ParseAnnotations(ing)
-			glog.V(3).Infof("nginx rate limit %v", rl)
-			if err != nil {
-				glog.V(3).Infof("error reading rate limit annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-			}
-
-			secUpstream, err := secureupstream.ParseAnnotations(ing)
-			if err != nil {
-				glog.V(3).Infof("error reading secure upstream in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-			}
-
-			locRew, err := rewrite.ParseAnnotations(ngxCfg, ing)
-			if err != nil {
-				glog.V(3).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-			}
-
-			wl, err := ipwhitelist.ParseAnnotations(ngxCfg.WhitelistSourceRange, ing)
-			glog.V(3).Infof("nginx white list %v", wl)
-			if err != nil {
-				glog.V(3).Infof("error reading white list annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-			}
-
-			eCORS, err := cors.ParseAnnotations(ing)
-			if err != nil {
-				glog.V(3).Infof("error reading CORS annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-			}
-
-			ra, err := authreq.ParseAnnotations(ing)
-			glog.V(3).Infof("nginx auth request %v", ra)
-			if err != nil {
-				glog.V(3).Infof("error reading auth request annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-			}
-
 			host := rule.Host
 			if host == "" {
 				host = defServerName
@@ -739,20 +740,40 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 				server = servers[defServerName]
 			}
 
+			if rule.HTTP == nil && host != defServerName {
+				// no rules, host is not default server.
+				// check if Ingress rules contains Backend and replace default backend
+				defBackend := fmt.Sprintf("default-backend-%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
+				ups := upstreams[defBackend]
+				for _, loc := range server.Locations {
+					loc.Upstream = *ups
+				}
+				continue
+			}
+
 			for _, path := range rule.HTTP.Paths {
 				upsName := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), path.Backend.ServiceName, path.Backend.ServicePort.String())
 				ups := upstreams[upsName]
 
+				// we need to check if the upstream contains the default backend
+				if isDefaultUpstream(ups) && ing.Spec.Backend != nil {
+					defBackend := fmt.Sprintf("default-backend-%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
+					if defUps, ok := upstreams[defBackend]; ok {
+						ups = defUps
+					}
+				}
+
 				nginxPath := path.Path
 				// if there's no path defined we assume /
+				// in NGINX / == /*
 				if nginxPath == "" {
 					lbc.recorder.Eventf(ing, api.EventTypeWarning, "MAPPING",
-						"Ingress rule '%v/%v' contains no path definition. Assuming /", ing.GetNamespace(), ing.GetName())
+						"Ingress rule '%v/%v' contains no path definition. Assuming /",
+						ing.GetNamespace(), ing.GetName())
 					nginxPath = rootLocation
 				}
 
-				// Validate that there is no another previuous
-				// rule for the same host and path.
+				// Validate that there is no previous rule for the same host and path.
 				addLoc := true
 				for _, loc := range server.Locations {
 					if loc.Path == rootLocation && nginxPath == rootLocation && loc.IsDefBackend {
@@ -762,6 +783,8 @@ func (lbc *loadBalancerController) getUpstreamServers(ngxCfg config.Configuratio
 						loc.Redirect = *locRew
 						loc.SecureUpstream = secUpstream
 						loc.Whitelist = *wl
+						loc.IsDefBackend = false
+						loc.Upstream = *ups
 						loc.EnableCORS = eCORS
 						loc.ExternalAuthURL = ra
 
@@ -829,6 +852,20 @@ func (lbc *loadBalancerController) createUpstreams(ngxCfg config.Configuration, 
 
 		hz := healthcheck.ParseAnnotations(ngxCfg, ing)
 
+		var defBackend string
+		if ing.Spec.Backend != nil {
+			defBackend = fmt.Sprintf("default-backend-%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
+			glog.V(3).Infof("creating upstream %v", defBackend)
+			upstreams[defBackend] = nginx.NewUpstream(defBackend)
+
+			svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName)
+			endps, err := lbc.getSvcEndpoints(svcKey, ing.Spec.Backend.ServicePort.String(), hz)
+			upstreams[defBackend].Backends = append(upstreams[defBackend].Backends, endps...)
+			if err != nil {
+				glog.Warningf("error creating upstream %v: %v", defBackend, err)
+			}
+		}
+
 		for _, rule := range ing.Spec.Rules {
 			if rule.IngressRuleValue.HTTP == nil {
 				continue
@@ -844,33 +881,12 @@ func (lbc *loadBalancerController) createUpstreams(ngxCfg config.Configuration, 
 				upstreams[name] = nginx.NewUpstream(name)
 
 				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
-				svcObj, svcExists, err := lbc.svcLister.Store.GetByKey(svcKey)
-
+				endp, err := lbc.getSvcEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
 				if err != nil {
-					glog.Infof("error getting service %v from the cache: %v", svcKey, err)
+					glog.Warningf("error obtaining service endpoints: %v", err)
 					continue
 				}
-
-				if !svcExists {
-					glog.Warningf("service %v does not exists", svcKey)
-					continue
-				}
-
-				svc := svcObj.(*api.Service)
-				glog.V(3).Infof("obtaining port information for service %v", svcKey)
-				bp := path.Backend.ServicePort.String()
-				for _, servicePort := range svc.Spec.Ports {
-					// targetPort could be a string, use the name or the port (int)
-					if strconv.Itoa(int(servicePort.Port)) == bp || servicePort.TargetPort.String() == bp || servicePort.Name == bp {
-						endps := lbc.getEndpoints(svc, servicePort.TargetPort, api.ProtocolTCP, hz)
-						if len(endps) == 0 {
-							glog.Warningf("service %v does not have any active endpoints", svcKey)
-						}
-
-						upstreams[name].Backends = append(upstreams[name].Backends, endps...)
-						break
-					}
-				}
+				upstreams[name].Backends = endp
 			}
 		}
 	}
@@ -878,7 +894,42 @@ func (lbc *loadBalancerController) createUpstreams(ngxCfg config.Configuration, 
 	return upstreams
 }
 
-func (lbc *loadBalancerController) createServers(data []interface{}) map[string]*ingress.Server {
+func (lbc *loadBalancerController) getSvcEndpoints(svcKey, backendPort string,
+	hz *healthcheck.Upstream) ([]ingress.UpstreamServer, error) {
+	svcObj, svcExists, err := lbc.svcLister.Store.GetByKey(svcKey)
+
+	var upstreams []ingress.UpstreamServer
+	if err != nil {
+		return upstreams, fmt.Errorf("error getting service %v from the cache: %v", svcKey, err)
+	}
+
+	if !svcExists {
+		err = fmt.Errorf("service %v does not exists", svcKey)
+		return upstreams, err
+	}
+
+	svc := svcObj.(*api.Service)
+	glog.V(3).Infof("obtaining port information for service %v", svcKey)
+	for _, servicePort := range svc.Spec.Ports {
+		// targetPort could be a string, use the name or the port (int)
+		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
+			servicePort.TargetPort.String() == backendPort ||
+			servicePort.Name == backendPort {
+
+			endps := lbc.getEndpoints(svc, servicePort.TargetPort, api.ProtocolTCP, hz)
+			if len(endps) == 0 {
+				glog.Warningf("service %v does not have any active endpoints", svcKey)
+			}
+
+			upstreams = append(upstreams, endps...)
+			break
+		}
+	}
+
+	return upstreams, nil
+}
+
+func (lbc *loadBalancerController) createServers(data []interface{}, upstreams map[string]*ingress.Upstream) map[string]*ingress.Server {
 	servers := make(map[string]*ingress.Server)
 
 	pems := lbc.getPemsFromIngress(data)
@@ -921,13 +972,28 @@ func (lbc *loadBalancerController) createServers(data []interface{}) map[string]
 				host = defServerName
 			}
 
-			if _, ok := servers[host]; !ok {
+			if _, ok := servers[host]; ok {
+				glog.V(3).Infof("rule %v/%v uses a host already defined. Skipping server creation", ing.GetNamespace(), ing.GetName())
+			} else {
 				locs := []*ingress.Location{}
-				locs = append(locs, &ingress.Location{
+				loc := &ingress.Location{
 					Path:         rootLocation,
 					IsDefBackend: true,
 					Upstream:     *lbc.getDefaultUpstream(),
-				})
+				}
+
+				if ing.Spec.Backend != nil {
+					defUpstream := fmt.Sprintf("default-backend-%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
+					if backendUpstream, ok := upstreams[defUpstream]; ok {
+						if host == "" || host == defServerName {
+							lbc.recorder.Eventf(ing, api.EventTypeWarning, "MAPPING", "error: rules with Spec.Backend are allowed with hostnames")
+						} else {
+							loc.Upstream = *backendUpstream
+						}
+					}
+				}
+
+				locs = append(locs, loc)
 				servers[host] = &ingress.Server{Name: host, Locations: locs}
 			}
 
@@ -1012,7 +1078,11 @@ func (lbc *loadBalancerController) secrReferenced(namespace string, name string)
 }
 
 // getEndpoints returns a list of <endpoint ip>:<port> for a given service/target port combination.
-func (lbc *loadBalancerController) getEndpoints(s *api.Service, servicePort intstr.IntOrString, proto api.Protocol, hz *healthcheck.Upstream) []ingress.UpstreamServer {
+func (lbc *loadBalancerController) getEndpoints(
+	s *api.Service,
+	servicePort intstr.IntOrString,
+	proto api.Protocol,
+	hz *healthcheck.Upstream) []ingress.UpstreamServer {
 	glog.V(3).Infof("getting endpoints for service %v/%v and port %v", s.Namespace, s.Name, servicePort.String())
 	ep, err := lbc.endpLister.GetServiceEndpoints(s)
 	if err != nil {
@@ -1162,4 +1232,13 @@ func (lbc *loadBalancerController) Run() {
 	go lbc.ingQueue.run(time.Second, lbc.stopCh)
 
 	<-lbc.stopCh
+}
+
+func isDefaultUpstream(ups *ingress.Upstream) bool {
+	if ups == nil || len(ups.Backends) == 0 {
+		return false
+	}
+
+	return ups.Backends[0].Address == "127.0.0.1" &&
+		ups.Backends[0].Port == "8181"
 }
