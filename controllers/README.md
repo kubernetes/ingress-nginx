@@ -130,6 +130,6 @@ This section can also bear the title "why anyone would want to write an Ingress 
 * L4 and L7 loadbalancing (it currently only supports HTTP rules)
 * Ingress Rules that are not limited to a simple path regex (eg: redirect rules, session persistence)
 
-And is expected to be the way one configures a "frontends" that handle user traffic for a Kubernetes cluster.
+And is expected to be the way one configures "frontends" that handle user traffic for a Kubernetes cluster.
 
 
