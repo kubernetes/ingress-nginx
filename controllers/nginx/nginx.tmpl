@@ -59,6 +59,7 @@ http {
     types_hash_max_size 2048;
     server_names_hash_max_size {{ $cfg.serverNameHashMaxSize }};
     server_names_hash_bucket_size {{ $cfg.serverNameHashBucketSize }};
+    map_hash_bucket_size {{ $cfg.mapHashBucketSize }};
 
     include /etc/nginx/mime.types;
     default_type text/html;
