@@ -141,6 +141,11 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
 	MaxWorkerConnections int `structs:"max-worker-connections,omitempty"`
 
+	// Sets the bucket size for the map variables hash tables.
+	// Default value depends on the processor’s cache line size.
+	// http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
+	MapHashBucketSize int `structs:"map-hash-bucket-size,omitempty"`
+
 	// Defines a timeout for establishing a connection with a proxied server.
 	// It should be noted that this timeout cannot usually exceed 75 seconds.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout
@@ -279,6 +284,7 @@ func NewDefault() Configuration {
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
 		MaxWorkerConnections:     16384,
+		MapHashBucketSize:        64,
 		ProxyConnectTimeout:      5,
 		ProxyRealIPCIDR:          defIPCIDR,
 		ProxyReadTimeout:         60,
