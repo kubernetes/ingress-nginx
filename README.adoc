@@ -1,0 +1,21 @@
+// vim: ft=asciidoc
+
+= Ingress
+:toc: macro
+:toc-title:
+
+toc::[]
+
+== Description
+
+This repository contains controllers built around the http://kubernetes.io/docs/user-guide/ingress/[Kubernetes Ingress resource].
+It is currently in a state of flux as project maintainers port code over from https://github.com/kubernetes/contrib/tree/master/ingress[Kubernetes/contrib/ingress].
+
+== Directory Structure
+
+----
+ingress
+├── docs                  Documentation/examples
+├── controllers           Ingress Controllers
+└── vendor                Vendored dependencies
+----
