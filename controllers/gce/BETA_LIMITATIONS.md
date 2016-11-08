@@ -9,6 +9,7 @@ This is a list of beta limitations:
 * [Quota](#quota): By default, GCE projects are granted a quota of 3 Backend Services. This is insufficient for most Kubernetes clusters.
 * [Oauth scopes](https://cloud.google.com/compute/docs/authentication): By default GKE/GCE clusters are granted "compute/rw" permissions. If you setup a cluster without these permissions, GLBC is useless and you should delete the controller as described in the [section below](#disabling-glbc). If you don't delete the controller it will keep restarting.
 * [Default backends](https://cloud.google.com/compute/docs/load-balancing/http/url-map#url_map_simplest_case): All L7 Loadbalancers created by GLBC have a default backend. If you don't specify one in your Ingress, GLBC will assign the 404 default backend mentioned above.
+* [Load Balancing Algorithms](#load-balancing-algorithms): The ingress controller doesn't support fine grained control over loadbalancing algorithms yet.
 * [Large clusters](#large-clusters): Ingress on GCE isn't supported on large (>1000 nodes), single-zone clusters.
 * [Teardown](README.md#deletion): The recommended way to tear down a cluster with active Ingresses is to either delete each Ingress, or hit the `/delete-all-and-quit` endpoint on GLBC, before invoking a cluster teardown script (eg: kube-down.sh). You will have to manually cleanup GCE resources through the [cloud console](https://cloud.google.com/compute/docs/console#access) or [gcloud CLI](https://cloud.google.com/compute/docs/gcloud-compute/) if you simply tear down the cluster with active Ingresses.
 * [Changing UIDs](#changing-the-cluster-uid): You can change the UID used as a suffix for all your GCE cloud resources, but this requires you to delete existing Ingresses first.
@@ -19,7 +20,7 @@ This is a list of beta limitations:
 Before you can receive traffic through the GCE L7 Loadbalancer Controller you need:
 * A Working Kubernetes cluster >= 1.1
 * At least 1 Kubernetes [NodePort Service](../../../../docs/user-guide/services.md#type-nodeport) (this is the endpoint for your Ingress)
-* A single instance of the L7 Loadbalancer Controller pod (if you're using the default GCE setup, this should already be running in the `kube-system` namespace)
+* A single instance of the L7 Loadbalancer Controller pod, if you're running Kubernetes < 1.3 (the GCP ingress controller runs on the master in later versions)
 
 ## Quota
 
@@ -94,6 +95,10 @@ GCE has a concept of [ephemeral](https://cloud.google.com/compute/docs/instances
 * Creating an Ingress with a TLS section allocates a static IP, because GLBC assumes you mean business.
 * Modifying an Ingress and adding a TLS section allocates a static IP, but the IP *will* change. This is a beta limitation.
 * You can [promote](https://cloud.google.com/compute/docs/instances-and-network#promote_ephemeral_ip) an ephemeral to a static IP by hand, if required.
+
+## Load Balancing Algorithms
+
+Right now, a kube-proxy nodePort is a necessary condition for Ingress on GCP. This is because the cloud lb doesn't understand how to route directly to your pods. Incorporating kube-proxy and cloud lb algorithms so they cooperate toward a common goal is still a work in progress. If you really want fine grained control over the algorithm, you should deploy the nginx ingress controller.
 
 ## Large clusters
 
