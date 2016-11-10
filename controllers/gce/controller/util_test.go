@@ -179,7 +179,7 @@ func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string
 		}
 		svc.Name = fmt.Sprintf("%d", np)
 		svc.Namespace = ns
-		lbc.svcLister.Store.Add(svc)
+		lbc.svcLister.Indexer.Add(svc)
 
 		pod := &api.Pod{
 			ObjectMeta: api.ObjectMeta{

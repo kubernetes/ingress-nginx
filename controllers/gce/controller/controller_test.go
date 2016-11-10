@@ -23,14 +23,16 @@ import (
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
-	"k8s.io/contrib/ingress/controllers/gce/firewalls"
-	"k8s.io/contrib/ingress/controllers/gce/loadbalancers"
-	"k8s.io/contrib/ingress/controllers/gce/utils"
+
+	"k8s.io/ingress/controllers/gce/firewalls"
+	"k8s.io/ingress/controllers/gce/loadbalancers"
+	"k8s.io/ingress/controllers/gce/utils"
+
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	"k8s.io/kubernetes/pkg/apis/extensions"
+	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	"k8s.io/kubernetes/pkg/client/restclient"
-	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/util/sets"
 	"k8s.io/kubernetes/pkg/util/uuid"
@@ -50,7 +52,7 @@ func defaultBackendName(clusterName string) string {
 
 // newLoadBalancerController create a loadbalancer controller.
 func newLoadBalancerController(t *testing.T, cm *fakeClusterManager, masterUrl string) *LoadBalancerController {
-	client := client.NewOrDie(&restclient.Config{Host: masterUrl, ContentConfig: restclient.ContentConfig{GroupVersion: testapi.Default.GroupVersion()}})
+	client := client.NewForConfigOrDie(&restclient.Config{Host: masterUrl, ContentConfig: restclient.ContentConfig{GroupVersion: testapi.Default.GroupVersion()}})
 	lb, err := NewLoadBalancerController(client, cm.ClusterManager, 1*time.Second, api.NamespaceAll)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -191,7 +193,7 @@ func addIngress(lbc *LoadBalancerController, ing *extensions.Ingress, pm *nodePo
 			}
 			svcPort.NodePort = int32(pm.getNodePort(path.Backend.ServiceName))
 			svc.Spec.Ports = []api.ServicePort{svcPort}
-			lbc.svcLister.Store.Add(svc)
+			lbc.svcLister.Indexer.Add(svc)
 		}
 	}
 }
