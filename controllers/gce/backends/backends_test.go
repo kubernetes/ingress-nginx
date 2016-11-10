@@ -32,7 +32,7 @@ const defaultZone = "zone-a"
 func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWithCloud bool) BackendPool {
 	namer := &utils.Namer{}
 	nodePool := instances.NewNodePool(fakeIGs)
-	nodePool.Init(&instances.FakeZoneLister{Items:[]string{defaultZone}})
+	nodePool.Init(&instances.FakeZoneLister{Zones: []string{defaultZone}})
 	healthChecks := healthchecks.NewHealthChecker(healthchecks.NewFakeHealthChecks(), "/", namer)
 	healthChecks.Init(&healthchecks.FakeHealthCheckGetter{DefaultHealthCheck: nil})
 	return NewBackendPool(

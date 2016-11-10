@@ -1,1 +1,2 @@
-nginx-ingress-controller
+rootfs/nginx-ingress-controller
+*/**/.coverprofile
