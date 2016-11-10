@@ -26,6 +26,7 @@ import (
 	conversion "k8s.io/kubernetes/pkg/conversion"
 	runtime "k8s.io/kubernetes/pkg/runtime"
 	config "k8s.io/kubernetes/pkg/util/config"
+	unsafe "unsafe"
 )
 
 func init() {
@@ -40,36 +41,47 @@ func RegisterConversions(scheme *runtime.Scheme) error {
 		Convert_componentconfig_KubeProxyConfiguration_To_v1alpha1_KubeProxyConfiguration,
 		Convert_v1alpha1_KubeSchedulerConfiguration_To_componentconfig_KubeSchedulerConfiguration,
 		Convert_componentconfig_KubeSchedulerConfiguration_To_v1alpha1_KubeSchedulerConfiguration,
+		Convert_v1alpha1_KubeletAnonymousAuthentication_To_componentconfig_KubeletAnonymousAuthentication,
+		Convert_componentconfig_KubeletAnonymousAuthentication_To_v1alpha1_KubeletAnonymousAuthentication,
+		Convert_v1alpha1_KubeletAuthentication_To_componentconfig_KubeletAuthentication,
+		Convert_componentconfig_KubeletAuthentication_To_v1alpha1_KubeletAuthentication,
+		Convert_v1alpha1_KubeletAuthorization_To_componentconfig_KubeletAuthorization,
+		Convert_componentconfig_KubeletAuthorization_To_v1alpha1_KubeletAuthorization,
 		Convert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfiguration,
 		Convert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfiguration,
+		Convert_v1alpha1_KubeletWebhookAuthentication_To_componentconfig_KubeletWebhookAuthentication,
+		Convert_componentconfig_KubeletWebhookAuthentication_To_v1alpha1_KubeletWebhookAuthentication,
+		Convert_v1alpha1_KubeletWebhookAuthorization_To_componentconfig_KubeletWebhookAuthorization,
+		Convert_componentconfig_KubeletWebhookAuthorization_To_v1alpha1_KubeletWebhookAuthorization,
+		Convert_v1alpha1_KubeletX509Authentication_To_componentconfig_KubeletX509Authentication,
+		Convert_componentconfig_KubeletX509Authentication_To_v1alpha1_KubeletX509Authentication,
 		Convert_v1alpha1_LeaderElectionConfiguration_To_componentconfig_LeaderElectionConfiguration,
 		Convert_componentconfig_LeaderElectionConfiguration_To_v1alpha1_LeaderElectionConfiguration,
 	)
 }
 
 func autoConvert_v1alpha1_KubeProxyConfiguration_To_componentconfig_KubeProxyConfiguration(in *KubeProxyConfiguration, out *componentconfig.KubeProxyConfiguration, s conversion.Scope) error {
-	SetDefaults_KubeProxyConfiguration(in)
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
 	out.BindAddress = in.BindAddress
 	out.ClusterCIDR = in.ClusterCIDR
 	out.HealthzBindAddress = in.HealthzBindAddress
 	out.HealthzPort = in.HealthzPort
 	out.HostnameOverride = in.HostnameOverride
-	out.IPTablesMasqueradeBit = in.IPTablesMasqueradeBit
+	out.IPTablesMasqueradeBit = (*int32)(unsafe.Pointer(in.IPTablesMasqueradeBit))
 	out.IPTablesSyncPeriod = in.IPTablesSyncPeriod
+	out.IPTablesMinSyncPeriod = in.IPTablesMinSyncPeriod
 	out.KubeconfigPath = in.KubeconfigPath
 	out.MasqueradeAll = in.MasqueradeAll
 	out.Master = in.Master
-	out.OOMScoreAdj = in.OOMScoreAdj
+	out.OOMScoreAdj = (*int32)(unsafe.Pointer(in.OOMScoreAdj))
 	out.Mode = componentconfig.ProxyMode(in.Mode)
 	out.PortRange = in.PortRange
 	out.ResourceContainer = in.ResourceContainer
 	out.UDPIdleTimeout = in.UDPIdleTimeout
 	out.ConntrackMax = in.ConntrackMax
 	out.ConntrackMaxPerCore = in.ConntrackMaxPerCore
+	out.ConntrackMin = in.ConntrackMin
 	out.ConntrackTCPEstablishedTimeout = in.ConntrackTCPEstablishedTimeout
+	out.ConntrackTCPCloseWaitTimeout = in.ConntrackTCPCloseWaitTimeout
 	return nil
 }
 
@@ -78,27 +90,27 @@ func Convert_v1alpha1_KubeProxyConfiguration_To_componentconfig_KubeProxyConfigu
 }
 
 func autoConvert_componentconfig_KubeProxyConfiguration_To_v1alpha1_KubeProxyConfiguration(in *componentconfig.KubeProxyConfiguration, out *KubeProxyConfiguration, s conversion.Scope) error {
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
 	out.BindAddress = in.BindAddress
 	out.ClusterCIDR = in.ClusterCIDR
 	out.HealthzBindAddress = in.HealthzBindAddress
 	out.HealthzPort = in.HealthzPort
 	out.HostnameOverride = in.HostnameOverride
-	out.IPTablesMasqueradeBit = in.IPTablesMasqueradeBit
+	out.IPTablesMasqueradeBit = (*int32)(unsafe.Pointer(in.IPTablesMasqueradeBit))
 	out.IPTablesSyncPeriod = in.IPTablesSyncPeriod
+	out.IPTablesMinSyncPeriod = in.IPTablesMinSyncPeriod
 	out.KubeconfigPath = in.KubeconfigPath
 	out.MasqueradeAll = in.MasqueradeAll
 	out.Master = in.Master
-	out.OOMScoreAdj = in.OOMScoreAdj
+	out.OOMScoreAdj = (*int32)(unsafe.Pointer(in.OOMScoreAdj))
 	out.Mode = ProxyMode(in.Mode)
 	out.PortRange = in.PortRange
 	out.ResourceContainer = in.ResourceContainer
 	out.UDPIdleTimeout = in.UDPIdleTimeout
 	out.ConntrackMax = in.ConntrackMax
 	out.ConntrackMaxPerCore = in.ConntrackMaxPerCore
+	out.ConntrackMin = in.ConntrackMin
 	out.ConntrackTCPEstablishedTimeout = in.ConntrackTCPEstablishedTimeout
+	out.ConntrackTCPCloseWaitTimeout = in.ConntrackTCPCloseWaitTimeout
 	return nil
 }
 
@@ -107,10 +119,6 @@ func Convert_componentconfig_KubeProxyConfiguration_To_v1alpha1_KubeProxyConfigu
 }
 
 func autoConvert_v1alpha1_KubeSchedulerConfiguration_To_componentconfig_KubeSchedulerConfiguration(in *KubeSchedulerConfiguration, out *componentconfig.KubeSchedulerConfiguration, s conversion.Scope) error {
-	SetDefaults_KubeSchedulerConfiguration(in)
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
 	out.Port = int32(in.Port)
 	out.Address = in.Address
 	out.AlgorithmProvider = in.AlgorithmProvider
@@ -135,9 +143,6 @@ func Convert_v1alpha1_KubeSchedulerConfiguration_To_componentconfig_KubeSchedule
 }
 
 func autoConvert_componentconfig_KubeSchedulerConfiguration_To_v1alpha1_KubeSchedulerConfiguration(in *componentconfig.KubeSchedulerConfiguration, out *KubeSchedulerConfiguration, s conversion.Scope) error {
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
 	out.Port = int(in.Port)
 	out.Address = in.Address
 	out.AlgorithmProvider = in.AlgorithmProvider
@@ -161,11 +166,87 @@ func Convert_componentconfig_KubeSchedulerConfiguration_To_v1alpha1_KubeSchedule
 	return autoConvert_componentconfig_KubeSchedulerConfiguration_To_v1alpha1_KubeSchedulerConfiguration(in, out, s)
 }
 
-func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfiguration(in *KubeletConfiguration, out *componentconfig.KubeletConfiguration, s conversion.Scope) error {
-	SetDefaults_KubeletConfiguration(in)
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
+func autoConvert_v1alpha1_KubeletAnonymousAuthentication_To_componentconfig_KubeletAnonymousAuthentication(in *KubeletAnonymousAuthentication, out *componentconfig.KubeletAnonymousAuthentication, s conversion.Scope) error {
+	if err := api.Convert_Pointer_bool_To_bool(&in.Enabled, &out.Enabled, s); err != nil {
 		return err
 	}
+	return nil
+}
+
+func Convert_v1alpha1_KubeletAnonymousAuthentication_To_componentconfig_KubeletAnonymousAuthentication(in *KubeletAnonymousAuthentication, out *componentconfig.KubeletAnonymousAuthentication, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KubeletAnonymousAuthentication_To_componentconfig_KubeletAnonymousAuthentication(in, out, s)
+}
+
+func autoConvert_componentconfig_KubeletAnonymousAuthentication_To_v1alpha1_KubeletAnonymousAuthentication(in *componentconfig.KubeletAnonymousAuthentication, out *KubeletAnonymousAuthentication, s conversion.Scope) error {
+	if err := api.Convert_bool_To_Pointer_bool(&in.Enabled, &out.Enabled, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func Convert_componentconfig_KubeletAnonymousAuthentication_To_v1alpha1_KubeletAnonymousAuthentication(in *componentconfig.KubeletAnonymousAuthentication, out *KubeletAnonymousAuthentication, s conversion.Scope) error {
+	return autoConvert_componentconfig_KubeletAnonymousAuthentication_To_v1alpha1_KubeletAnonymousAuthentication(in, out, s)
+}
+
+func autoConvert_v1alpha1_KubeletAuthentication_To_componentconfig_KubeletAuthentication(in *KubeletAuthentication, out *componentconfig.KubeletAuthentication, s conversion.Scope) error {
+	if err := Convert_v1alpha1_KubeletX509Authentication_To_componentconfig_KubeletX509Authentication(&in.X509, &out.X509, s); err != nil {
+		return err
+	}
+	if err := Convert_v1alpha1_KubeletWebhookAuthentication_To_componentconfig_KubeletWebhookAuthentication(&in.Webhook, &out.Webhook, s); err != nil {
+		return err
+	}
+	if err := Convert_v1alpha1_KubeletAnonymousAuthentication_To_componentconfig_KubeletAnonymousAuthentication(&in.Anonymous, &out.Anonymous, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func Convert_v1alpha1_KubeletAuthentication_To_componentconfig_KubeletAuthentication(in *KubeletAuthentication, out *componentconfig.KubeletAuthentication, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KubeletAuthentication_To_componentconfig_KubeletAuthentication(in, out, s)
+}
+
+func autoConvert_componentconfig_KubeletAuthentication_To_v1alpha1_KubeletAuthentication(in *componentconfig.KubeletAuthentication, out *KubeletAuthentication, s conversion.Scope) error {
+	if err := Convert_componentconfig_KubeletX509Authentication_To_v1alpha1_KubeletX509Authentication(&in.X509, &out.X509, s); err != nil {
+		return err
+	}
+	if err := Convert_componentconfig_KubeletWebhookAuthentication_To_v1alpha1_KubeletWebhookAuthentication(&in.Webhook, &out.Webhook, s); err != nil {
+		return err
+	}
+	if err := Convert_componentconfig_KubeletAnonymousAuthentication_To_v1alpha1_KubeletAnonymousAuthentication(&in.Anonymous, &out.Anonymous, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func Convert_componentconfig_KubeletAuthentication_To_v1alpha1_KubeletAuthentication(in *componentconfig.KubeletAuthentication, out *KubeletAuthentication, s conversion.Scope) error {
+	return autoConvert_componentconfig_KubeletAuthentication_To_v1alpha1_KubeletAuthentication(in, out, s)
+}
+
+func autoConvert_v1alpha1_KubeletAuthorization_To_componentconfig_KubeletAuthorization(in *KubeletAuthorization, out *componentconfig.KubeletAuthorization, s conversion.Scope) error {
+	out.Mode = componentconfig.KubeletAuthorizationMode(in.Mode)
+	if err := Convert_v1alpha1_KubeletWebhookAuthorization_To_componentconfig_KubeletWebhookAuthorization(&in.Webhook, &out.Webhook, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func Convert_v1alpha1_KubeletAuthorization_To_componentconfig_KubeletAuthorization(in *KubeletAuthorization, out *componentconfig.KubeletAuthorization, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KubeletAuthorization_To_componentconfig_KubeletAuthorization(in, out, s)
+}
+
+func autoConvert_componentconfig_KubeletAuthorization_To_v1alpha1_KubeletAuthorization(in *componentconfig.KubeletAuthorization, out *KubeletAuthorization, s conversion.Scope) error {
+	out.Mode = KubeletAuthorizationMode(in.Mode)
+	if err := Convert_componentconfig_KubeletWebhookAuthorization_To_v1alpha1_KubeletWebhookAuthorization(&in.Webhook, &out.Webhook, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func Convert_componentconfig_KubeletAuthorization_To_v1alpha1_KubeletAuthorization(in *componentconfig.KubeletAuthorization, out *KubeletAuthorization, s conversion.Scope) error {
+	return autoConvert_componentconfig_KubeletAuthorization_To_v1alpha1_KubeletAuthorization(in, out, s)
+}
+
+func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfiguration(in *KubeletConfiguration, out *componentconfig.KubeletConfiguration, s conversion.Scope) error {
 	out.PodManifestPath = in.PodManifestPath
 	out.SyncFrequency = in.SyncFrequency
 	out.FileCheckFrequency = in.FileCheckFrequency
@@ -181,6 +262,12 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	out.TLSCertFile = in.TLSCertFile
 	out.TLSPrivateKeyFile = in.TLSPrivateKeyFile
 	out.CertDirectory = in.CertDirectory
+	if err := Convert_v1alpha1_KubeletAuthentication_To_componentconfig_KubeletAuthentication(&in.Authentication, &out.Authentication, s); err != nil {
+		return err
+	}
+	if err := Convert_v1alpha1_KubeletAuthorization_To_componentconfig_KubeletAuthorization(&in.Authorization, &out.Authorization, s); err != nil {
+		return err
+	}
 	out.HostnameOverride = in.HostnameOverride
 	out.PodInfraContainerImage = in.PodInfraContainerImage
 	out.DockerEndpoint = in.DockerEndpoint
@@ -189,9 +276,9 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	if err := api.Convert_Pointer_bool_To_bool(&in.AllowPrivileged, &out.AllowPrivileged, s); err != nil {
 		return err
 	}
-	out.HostNetworkSources = in.HostNetworkSources
-	out.HostPIDSources = in.HostPIDSources
-	out.HostIPCSources = in.HostIPCSources
+	out.HostNetworkSources = *(*[]string)(unsafe.Pointer(&in.HostNetworkSources))
+	out.HostPIDSources = *(*[]string)(unsafe.Pointer(&in.HostPIDSources))
+	out.HostIPCSources = *(*[]string)(unsafe.Pointer(&in.HostIPCSources))
 	if err := api.Convert_Pointer_int32_To_int32(&in.RegistryPullQPS, &out.RegistryPullQPS, s); err != nil {
 		return err
 	}
@@ -246,20 +333,19 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	if err := api.Convert_Pointer_bool_To_bool(&in.CgroupsPerQOS, &out.CgroupsPerQOS, s); err != nil {
 		return err
 	}
+	out.CgroupDriver = in.CgroupDriver
 	out.ContainerRuntime = in.ContainerRuntime
 	out.RemoteRuntimeEndpoint = in.RemoteRuntimeEndpoint
 	out.RemoteImageEndpoint = in.RemoteImageEndpoint
 	out.RuntimeRequestTimeout = in.RuntimeRequestTimeout
 	out.RktPath = in.RktPath
+	out.ExperimentalMounterPath = in.ExperimentalMounterPath
 	out.RktAPIEndpoint = in.RktAPIEndpoint
 	out.RktStage1Image = in.RktStage1Image
 	if err := api.Convert_Pointer_string_To_string(&in.LockFilePath, &out.LockFilePath, s); err != nil {
 		return err
 	}
 	out.ExitOnLockContention = in.ExitOnLockContention
-	if err := api.Convert_Pointer_bool_To_bool(&in.ConfigureCBR0, &out.ConfigureCBR0, s); err != nil {
-		return err
-	}
 	out.HairpinMode = in.HairpinMode
 	out.BabysitDaemons = in.BabysitDaemons
 	out.MaxPods = in.MaxPods
@@ -288,10 +374,9 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	if err := api.Convert_Pointer_bool_To_bool(&in.SerializeImagePulls, &out.SerializeImagePulls, s); err != nil {
 		return err
 	}
-	out.ExperimentalFlannelOverlay = in.ExperimentalFlannelOverlay
 	out.OutOfDiskTransitionFrequency = in.OutOfDiskTransitionFrequency
 	out.NodeIP = in.NodeIP
-	out.NodeLabels = in.NodeLabels
+	out.NodeLabels = *(*map[string]string)(unsafe.Pointer(&in.NodeLabels))
 	out.NonMasqueradeCIDR = in.NonMasqueradeCIDR
 	out.EnableCustomMetrics = in.EnableCustomMetrics
 	if err := api.Convert_Pointer_string_To_string(&in.EvictionHard, &out.EvictionHard, s); err != nil {
@@ -306,24 +391,8 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	if err := api.Convert_Pointer_bool_To_bool(&in.EnableControllerAttachDetach, &out.EnableControllerAttachDetach, s); err != nil {
 		return err
 	}
-	if in.SystemReserved != nil {
-		in, out := &in.SystemReserved, &out.SystemReserved
-		*out = make(config.ConfigurationMap, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
-	} else {
-		out.SystemReserved = nil
-	}
-	if in.KubeReserved != nil {
-		in, out := &in.KubeReserved, &out.KubeReserved
-		*out = make(config.ConfigurationMap, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
-	} else {
-		out.KubeReserved = nil
-	}
+	out.SystemReserved = *(*config.ConfigurationMap)(unsafe.Pointer(&in.SystemReserved))
+	out.KubeReserved = *(*config.ConfigurationMap)(unsafe.Pointer(&in.KubeReserved))
 	out.ProtectKernelDefaults = in.ProtectKernelDefaults
 	if err := api.Convert_Pointer_bool_To_bool(&in.MakeIPTablesUtilChains, &out.MakeIPTablesUtilChains, s); err != nil {
 		return err
@@ -334,7 +403,10 @@ func autoConvert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigu
 	if err := api.Convert_Pointer_int32_To_int32(&in.IPTablesDropBit, &out.IPTablesDropBit, s); err != nil {
 		return err
 	}
-	out.AllowedUnsafeSysctls = in.AllowedUnsafeSysctls
+	out.AllowedUnsafeSysctls = *(*[]string)(unsafe.Pointer(&in.AllowedUnsafeSysctls))
+	out.FeatureGates = in.FeatureGates
+	out.EnableCRI = in.EnableCRI
+	out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
 	return nil
 }
 
@@ -343,9 +415,6 @@ func Convert_v1alpha1_KubeletConfiguration_To_componentconfig_KubeletConfigurati
 }
 
 func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfiguration(in *componentconfig.KubeletConfiguration, out *KubeletConfiguration, s conversion.Scope) error {
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
 	out.PodManifestPath = in.PodManifestPath
 	out.SyncFrequency = in.SyncFrequency
 	out.FileCheckFrequency = in.FileCheckFrequency
@@ -361,6 +430,12 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	out.TLSCertFile = in.TLSCertFile
 	out.TLSPrivateKeyFile = in.TLSPrivateKeyFile
 	out.CertDirectory = in.CertDirectory
+	if err := Convert_componentconfig_KubeletAuthentication_To_v1alpha1_KubeletAuthentication(&in.Authentication, &out.Authentication, s); err != nil {
+		return err
+	}
+	if err := Convert_componentconfig_KubeletAuthorization_To_v1alpha1_KubeletAuthorization(&in.Authorization, &out.Authorization, s); err != nil {
+		return err
+	}
 	out.HostnameOverride = in.HostnameOverride
 	out.PodInfraContainerImage = in.PodInfraContainerImage
 	out.DockerEndpoint = in.DockerEndpoint
@@ -369,9 +444,9 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	if err := api.Convert_bool_To_Pointer_bool(&in.AllowPrivileged, &out.AllowPrivileged, s); err != nil {
 		return err
 	}
-	out.HostNetworkSources = in.HostNetworkSources
-	out.HostPIDSources = in.HostPIDSources
-	out.HostIPCSources = in.HostIPCSources
+	out.HostNetworkSources = *(*[]string)(unsafe.Pointer(&in.HostNetworkSources))
+	out.HostPIDSources = *(*[]string)(unsafe.Pointer(&in.HostPIDSources))
+	out.HostIPCSources = *(*[]string)(unsafe.Pointer(&in.HostIPCSources))
 	if err := api.Convert_int32_To_Pointer_int32(&in.RegistryPullQPS, &out.RegistryPullQPS, s); err != nil {
 		return err
 	}
@@ -423,6 +498,7 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	if err := api.Convert_bool_To_Pointer_bool(&in.CgroupsPerQOS, &out.CgroupsPerQOS, s); err != nil {
 		return err
 	}
+	out.CgroupDriver = in.CgroupDriver
 	out.RuntimeCgroups = in.RuntimeCgroups
 	out.SystemCgroups = in.SystemCgroups
 	out.CgroupRoot = in.CgroupRoot
@@ -431,15 +507,13 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	out.RemoteImageEndpoint = in.RemoteImageEndpoint
 	out.RuntimeRequestTimeout = in.RuntimeRequestTimeout
 	out.RktPath = in.RktPath
+	out.ExperimentalMounterPath = in.ExperimentalMounterPath
 	out.RktAPIEndpoint = in.RktAPIEndpoint
 	out.RktStage1Image = in.RktStage1Image
 	if err := api.Convert_string_To_Pointer_string(&in.LockFilePath, &out.LockFilePath, s); err != nil {
 		return err
 	}
 	out.ExitOnLockContention = in.ExitOnLockContention
-	if err := api.Convert_bool_To_Pointer_bool(&in.ConfigureCBR0, &out.ConfigureCBR0, s); err != nil {
-		return err
-	}
 	out.HairpinMode = in.HairpinMode
 	out.BabysitDaemons = in.BabysitDaemons
 	out.MaxPods = in.MaxPods
@@ -468,10 +542,9 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	if err := api.Convert_bool_To_Pointer_bool(&in.SerializeImagePulls, &out.SerializeImagePulls, s); err != nil {
 		return err
 	}
-	out.ExperimentalFlannelOverlay = in.ExperimentalFlannelOverlay
 	out.OutOfDiskTransitionFrequency = in.OutOfDiskTransitionFrequency
 	out.NodeIP = in.NodeIP
-	out.NodeLabels = in.NodeLabels
+	out.NodeLabels = *(*map[string]string)(unsafe.Pointer(&in.NodeLabels))
 	out.NonMasqueradeCIDR = in.NonMasqueradeCIDR
 	out.EnableCustomMetrics = in.EnableCustomMetrics
 	if err := api.Convert_string_To_Pointer_string(&in.EvictionHard, &out.EvictionHard, s); err != nil {
@@ -486,24 +559,8 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	if err := api.Convert_bool_To_Pointer_bool(&in.EnableControllerAttachDetach, &out.EnableControllerAttachDetach, s); err != nil {
 		return err
 	}
-	if in.SystemReserved != nil {
-		in, out := &in.SystemReserved, &out.SystemReserved
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
-	} else {
-		out.SystemReserved = nil
-	}
-	if in.KubeReserved != nil {
-		in, out := &in.KubeReserved, &out.KubeReserved
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
-	} else {
-		out.KubeReserved = nil
-	}
+	out.SystemReserved = *(*map[string]string)(unsafe.Pointer(&in.SystemReserved))
+	out.KubeReserved = *(*map[string]string)(unsafe.Pointer(&in.KubeReserved))
 	out.ProtectKernelDefaults = in.ProtectKernelDefaults
 	if err := api.Convert_bool_To_Pointer_bool(&in.MakeIPTablesUtilChains, &out.MakeIPTablesUtilChains, s); err != nil {
 		return err
@@ -514,7 +571,10 @@ func autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigu
 	if err := api.Convert_int32_To_Pointer_int32(&in.IPTablesDropBit, &out.IPTablesDropBit, s); err != nil {
 		return err
 	}
-	out.AllowedUnsafeSysctls = in.AllowedUnsafeSysctls
+	out.AllowedUnsafeSysctls = *(*[]string)(unsafe.Pointer(&in.AllowedUnsafeSysctls))
+	out.FeatureGates = in.FeatureGates
+	out.EnableCRI = in.EnableCRI
+	out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
 	return nil
 }
 
@@ -522,8 +582,69 @@ func Convert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfigurati
 	return autoConvert_componentconfig_KubeletConfiguration_To_v1alpha1_KubeletConfiguration(in, out, s)
 }
 
+func autoConvert_v1alpha1_KubeletWebhookAuthentication_To_componentconfig_KubeletWebhookAuthentication(in *KubeletWebhookAuthentication, out *componentconfig.KubeletWebhookAuthentication, s conversion.Scope) error {
+	if err := api.Convert_Pointer_bool_To_bool(&in.Enabled, &out.Enabled, s); err != nil {
+		return err
+	}
+	out.CacheTTL = in.CacheTTL
+	return nil
+}
+
+func Convert_v1alpha1_KubeletWebhookAuthentication_To_componentconfig_KubeletWebhookAuthentication(in *KubeletWebhookAuthentication, out *componentconfig.KubeletWebhookAuthentication, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KubeletWebhookAuthentication_To_componentconfig_KubeletWebhookAuthentication(in, out, s)
+}
+
+func autoConvert_componentconfig_KubeletWebhookAuthentication_To_v1alpha1_KubeletWebhookAuthentication(in *componentconfig.KubeletWebhookAuthentication, out *KubeletWebhookAuthentication, s conversion.Scope) error {
+	if err := api.Convert_bool_To_Pointer_bool(&in.Enabled, &out.Enabled, s); err != nil {
+		return err
+	}
+	out.CacheTTL = in.CacheTTL
+	return nil
+}
+
+func Convert_componentconfig_KubeletWebhookAuthentication_To_v1alpha1_KubeletWebhookAuthentication(in *componentconfig.KubeletWebhookAuthentication, out *KubeletWebhookAuthentication, s conversion.Scope) error {
+	return autoConvert_componentconfig_KubeletWebhookAuthentication_To_v1alpha1_KubeletWebhookAuthentication(in, out, s)
+}
+
+func autoConvert_v1alpha1_KubeletWebhookAuthorization_To_componentconfig_KubeletWebhookAuthorization(in *KubeletWebhookAuthorization, out *componentconfig.KubeletWebhookAuthorization, s conversion.Scope) error {
+	out.CacheAuthorizedTTL = in.CacheAuthorizedTTL
+	out.CacheUnauthorizedTTL = in.CacheUnauthorizedTTL
+	return nil
+}
+
+func Convert_v1alpha1_KubeletWebhookAuthorization_To_componentconfig_KubeletWebhookAuthorization(in *KubeletWebhookAuthorization, out *componentconfig.KubeletWebhookAuthorization, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KubeletWebhookAuthorization_To_componentconfig_KubeletWebhookAuthorization(in, out, s)
+}
+
+func autoConvert_componentconfig_KubeletWebhookAuthorization_To_v1alpha1_KubeletWebhookAuthorization(in *componentconfig.KubeletWebhookAuthorization, out *KubeletWebhookAuthorization, s conversion.Scope) error {
+	out.CacheAuthorizedTTL = in.CacheAuthorizedTTL
+	out.CacheUnauthorizedTTL = in.CacheUnauthorizedTTL
+	return nil
+}
+
+func Convert_componentconfig_KubeletWebhookAuthorization_To_v1alpha1_KubeletWebhookAuthorization(in *componentconfig.KubeletWebhookAuthorization, out *KubeletWebhookAuthorization, s conversion.Scope) error {
+	return autoConvert_componentconfig_KubeletWebhookAuthorization_To_v1alpha1_KubeletWebhookAuthorization(in, out, s)
+}
+
+func autoConvert_v1alpha1_KubeletX509Authentication_To_componentconfig_KubeletX509Authentication(in *KubeletX509Authentication, out *componentconfig.KubeletX509Authentication, s conversion.Scope) error {
+	out.ClientCAFile = in.ClientCAFile
+	return nil
+}
+
+func Convert_v1alpha1_KubeletX509Authentication_To_componentconfig_KubeletX509Authentication(in *KubeletX509Authentication, out *componentconfig.KubeletX509Authentication, s conversion.Scope) error {
+	return autoConvert_v1alpha1_KubeletX509Authentication_To_componentconfig_KubeletX509Authentication(in, out, s)
+}
+
+func autoConvert_componentconfig_KubeletX509Authentication_To_v1alpha1_KubeletX509Authentication(in *componentconfig.KubeletX509Authentication, out *KubeletX509Authentication, s conversion.Scope) error {
+	out.ClientCAFile = in.ClientCAFile
+	return nil
+}
+
+func Convert_componentconfig_KubeletX509Authentication_To_v1alpha1_KubeletX509Authentication(in *componentconfig.KubeletX509Authentication, out *KubeletX509Authentication, s conversion.Scope) error {
+	return autoConvert_componentconfig_KubeletX509Authentication_To_v1alpha1_KubeletX509Authentication(in, out, s)
+}
+
 func autoConvert_v1alpha1_LeaderElectionConfiguration_To_componentconfig_LeaderElectionConfiguration(in *LeaderElectionConfiguration, out *componentconfig.LeaderElectionConfiguration, s conversion.Scope) error {
-	SetDefaults_LeaderElectionConfiguration(in)
 	if err := api.Convert_Pointer_bool_To_bool(&in.LeaderElect, &out.LeaderElect, s); err != nil {
 		return err
 	}

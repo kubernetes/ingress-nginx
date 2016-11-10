@@ -269,12 +269,6 @@ func addConversionFuncs(scheme *runtime.Scheme) error {
 }
 
 func Convert_v1_ReplicationController_to_extensions_ReplicaSet(in *ReplicationController, out *extensions.ReplicaSet, s conversion.Scope) error {
-	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
-		defaulting.(func(*ReplicationController))(in)
-	}
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
 	if err := Convert_v1_ObjectMeta_To_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, s); err != nil {
 		return err
 	}
@@ -288,9 +282,6 @@ func Convert_v1_ReplicationController_to_extensions_ReplicaSet(in *ReplicationCo
 }
 
 func Convert_v1_ReplicationControllerSpec_to_extensions_ReplicaSetSpec(in *ReplicationControllerSpec, out *extensions.ReplicaSetSpec, s conversion.Scope) error {
-	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
-		defaulting.(func(*ReplicationControllerSpec))(in)
-	}
 	out.Replicas = *in.Replicas
 	if in.Selector != nil {
 		api.Convert_map_to_unversioned_LabelSelector(&in.Selector, out.Selector, s)
@@ -304,22 +295,15 @@ func Convert_v1_ReplicationControllerSpec_to_extensions_ReplicaSetSpec(in *Repli
 }
 
 func Convert_v1_ReplicationControllerStatus_to_extensions_ReplicaSetStatus(in *ReplicationControllerStatus, out *extensions.ReplicaSetStatus, s conversion.Scope) error {
-	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
-		defaulting.(func(*ReplicationControllerStatus))(in)
-	}
 	out.Replicas = in.Replicas
 	out.FullyLabeledReplicas = in.FullyLabeledReplicas
+	out.ReadyReplicas = in.ReadyReplicas
+	out.AvailableReplicas = in.AvailableReplicas
 	out.ObservedGeneration = in.ObservedGeneration
 	return nil
 }
 
 func Convert_extensions_ReplicaSet_to_v1_ReplicationController(in *extensions.ReplicaSet, out *ReplicationController, s conversion.Scope) error {
-	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
-		defaulting.(func(*extensions.ReplicaSet))(in)
-	}
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
 	if err := Convert_api_ObjectMeta_To_v1_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, s); err != nil {
 		return err
 	}
@@ -340,11 +324,9 @@ func Convert_extensions_ReplicaSet_to_v1_ReplicationController(in *extensions.Re
 }
 
 func Convert_extensions_ReplicaSetSpec_to_v1_ReplicationControllerSpec(in *extensions.ReplicaSetSpec, out *ReplicationControllerSpec, s conversion.Scope) error {
-	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
-		defaulting.(func(*extensions.ReplicaSetSpec))(in)
-	}
 	out.Replicas = new(int32)
 	*out.Replicas = in.Replicas
+	out.MinReadySeconds = in.MinReadySeconds
 	var invalidErr error
 	if in.Selector != nil {
 		invalidErr = api.Convert_unversioned_LabelSelector_to_map(in.Selector, &out.Selector, s)
@@ -357,17 +339,17 @@ func Convert_extensions_ReplicaSetSpec_to_v1_ReplicationControllerSpec(in *exten
 }
 
 func Convert_extensions_ReplicaSetStatus_to_v1_ReplicationControllerStatus(in *extensions.ReplicaSetStatus, out *ReplicationControllerStatus, s conversion.Scope) error {
-	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
-		defaulting.(func(*extensions.ReplicaSetStatus))(in)
-	}
 	out.Replicas = in.Replicas
 	out.FullyLabeledReplicas = in.FullyLabeledReplicas
+	out.ReadyReplicas = in.ReadyReplicas
+	out.AvailableReplicas = in.AvailableReplicas
 	out.ObservedGeneration = in.ObservedGeneration
 	return nil
 }
 
 func Convert_api_ReplicationControllerSpec_To_v1_ReplicationControllerSpec(in *api.ReplicationControllerSpec, out *ReplicationControllerSpec, s conversion.Scope) error {
 	out.Replicas = &in.Replicas
+	out.MinReadySeconds = in.MinReadySeconds
 	out.Selector = in.Selector
 	if in.Template != nil {
 		out.Template = new(PodTemplateSpec)
@@ -381,7 +363,10 @@ func Convert_api_ReplicationControllerSpec_To_v1_ReplicationControllerSpec(in *a
 }
 
 func Convert_v1_ReplicationControllerSpec_To_api_ReplicationControllerSpec(in *ReplicationControllerSpec, out *api.ReplicationControllerSpec, s conversion.Scope) error {
-	out.Replicas = *in.Replicas
+	if in.Replicas != nil {
+		out.Replicas = *in.Replicas
+	}
+	out.MinReadySeconds = in.MinReadySeconds
 	out.Selector = in.Selector
 	if in.Template != nil {
 		out.Template = new(api.PodTemplateSpec)
@@ -414,14 +399,22 @@ func Convert_api_PodStatusResult_To_v1_PodStatusResult(in *api.PodStatusResult, 
 			return err
 		}
 		out.Annotations[PodInitContainerStatusesAnnotationKey] = string(value)
+		out.Annotations[PodInitContainerStatusesBetaAnnotationKey] = string(value)
 	} else {
 		delete(out.Annotations, PodInitContainerStatusesAnnotationKey)
+		delete(out.Annotations, PodInitContainerStatusesBetaAnnotationKey)
 	}
 	return nil
 }
 
 func Convert_v1_PodStatusResult_To_api_PodStatusResult(in *PodStatusResult, out *api.PodStatusResult, s conversion.Scope) error {
 	// TODO: sometime after we move init container to stable, remove these conversions
+	// If there is a beta annotation, copy to alpha key.
+	// See commit log for PR #31026 for why we do this.
+	if valueBeta, okBeta := in.Annotations[PodInitContainerStatusesBetaAnnotationKey]; okBeta {
+		in.Annotations[PodInitContainerStatusesAnnotationKey] = valueBeta
+	}
+	// Move the annotation to the internal repr. field
 	if value, ok := in.Annotations[PodInitContainerStatusesAnnotationKey]; ok {
 		var values []ContainerStatus
 		if err := json.Unmarshal([]byte(value), &values); err != nil {
@@ -446,6 +439,7 @@ func Convert_v1_PodStatusResult_To_api_PodStatusResult(in *PodStatusResult, out 
 			out.Annotations[k] = v
 		}
 		delete(out.Annotations, PodInitContainerStatusesAnnotationKey)
+		delete(out.Annotations, PodInitContainerStatusesBetaAnnotationKey)
 	}
 	return nil
 }
@@ -575,6 +569,7 @@ func Convert_api_Pod_To_v1_Pod(in *api.Pod, out *Pod, s conversion.Scope) error 
 		delete(out.Annotations, PodInitContainersAnnotationKey)
 		delete(out.Annotations, PodInitContainersBetaAnnotationKey)
 		delete(out.Annotations, PodInitContainerStatusesAnnotationKey)
+		delete(out.Annotations, PodInitContainerStatusesBetaAnnotationKey)
 	}
 	if len(out.Spec.InitContainers) > 0 {
 		value, err := json.Marshal(out.Spec.InitContainers)
@@ -590,6 +585,7 @@ func Convert_api_Pod_To_v1_Pod(in *api.Pod, out *Pod, s conversion.Scope) error 
 			return err
 		}
 		out.Annotations[PodInitContainerStatusesAnnotationKey] = string(value)
+		out.Annotations[PodInitContainerStatusesBetaAnnotationKey] = string(value)
 	}
 
 	// We need to reset certain fields for mirror pods from pre-v1.1 kubelet
@@ -626,6 +622,16 @@ func Convert_v1_Pod_To_api_Pod(in *Pod, out *api.Pod, s conversion.Scope) error 
 		// taking responsibility to ensure mutation of in is not exposed
 		// back to the caller.
 		in.Spec.InitContainers = values
+		// Call defaulters explicitly until annotations are removed
+		for i := range in.Spec.InitContainers {
+			c := &in.Spec.InitContainers[i]
+			SetDefaults_Container(c)
+		}
+	}
+	// If there is a beta annotation, copy to alpha key.
+	// See commit log for PR #31026 for why we do this.
+	if valueBeta, okBeta := in.Annotations[PodInitContainerStatusesBetaAnnotationKey]; okBeta {
+		in.Annotations[PodInitContainerStatusesAnnotationKey] = valueBeta
 	}
 	if value, ok := in.Annotations[PodInitContainerStatusesAnnotationKey]; ok {
 		var values []ContainerStatus
@@ -653,6 +659,7 @@ func Convert_v1_Pod_To_api_Pod(in *Pod, out *api.Pod, s conversion.Scope) error 
 		delete(out.Annotations, PodInitContainersAnnotationKey)
 		delete(out.Annotations, PodInitContainersBetaAnnotationKey)
 		delete(out.Annotations, PodInitContainerStatusesAnnotationKey)
+		delete(out.Annotations, PodInitContainerStatusesBetaAnnotationKey)
 	}
 	return nil
 }
@@ -727,19 +734,20 @@ func Convert_v1_PodSecurityContext_To_api_PodSecurityContext(in *PodSecurityCont
 	return nil
 }
 
+// +k8s:conversion-fn=copy-only
 func Convert_v1_ResourceList_To_api_ResourceList(in *ResourceList, out *api.ResourceList, s conversion.Scope) error {
 	if *in == nil {
 		return nil
 	}
-
 	if *out == nil {
 		*out = make(api.ResourceList, len(*in))
 	}
 	for key, val := range *in {
+		// Moved to defaults
 		// TODO(#18538): We round up resource values to milli scale to maintain API compatibility.
 		// In the future, we should instead reject values that need rounding.
-		const milliScale = -3
-		val.RoundUp(milliScale)
+		// const milliScale = -3
+		// val.RoundUp(milliScale)
 
 		(*out)[api.ResourceName(key)] = val
 	}
