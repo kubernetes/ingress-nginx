@@ -20,12 +20,12 @@ import (
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/util/sets"
 
-	"k8s.io/contrib/ingress/controllers/gce/backends"
-	"k8s.io/contrib/ingress/controllers/gce/firewalls"
-	"k8s.io/contrib/ingress/controllers/gce/healthchecks"
-	"k8s.io/contrib/ingress/controllers/gce/instances"
-	"k8s.io/contrib/ingress/controllers/gce/loadbalancers"
-	"k8s.io/contrib/ingress/controllers/gce/utils"
+	"k8s.io/ingress/controllers/gce/backends"
+	"k8s.io/ingress/controllers/gce/firewalls"
+	"k8s.io/ingress/controllers/gce/healthchecks"
+	"k8s.io/ingress/controllers/gce/instances"
+	"k8s.io/ingress/controllers/gce/loadbalancers"
+	"k8s.io/ingress/controllers/gce/utils"
 )
 
 const (

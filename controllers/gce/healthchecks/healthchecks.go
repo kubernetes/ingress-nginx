@@ -20,7 +20,7 @@ import (
 	compute "google.golang.org/api/compute/v1"
 
 	"github.com/golang/glog"
-	"k8s.io/contrib/ingress/controllers/gce/utils"
+	"k8s.io/ingress/controllers/gce/utils"
 	"net/http"
 )
 

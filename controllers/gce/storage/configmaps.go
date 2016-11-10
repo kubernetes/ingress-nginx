@@ -24,7 +24,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/client/cache"
-	client "k8s.io/kubernetes/pkg/client/unversioned"
+	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 )
 
 // UIDVault stores UIDs.
@@ -107,7 +107,7 @@ func (c *ConfigMapVault) Delete() error {
 // NewConfigMapVault creates a config map client.
 // This client is essentially meant to abstract out the details of
 // configmaps and the API, and just store/retrieve a single value, the cluster uid.
-func NewConfigMapVault(c *client.Client, uidNs, uidConfigMapName string) *ConfigMapVault {
+func NewConfigMapVault(c client.Interface, uidNs, uidConfigMapName string) *ConfigMapVault {
 	return &ConfigMapVault{NewConfigMapStore(c), uidNs, uidConfigMapName}
 }
 
@@ -128,27 +128,27 @@ type ConfigMapStore interface {
 // through cache.
 type ApiServerConfigMapStore struct {
 	ConfigMapStore
-	client *client.Client
+	client client.Interface
 }
 
 // Add adds the given config map to the apiserver's store.
 func (a *ApiServerConfigMapStore) Add(obj interface{}) error {
 	cfg := obj.(*api.ConfigMap)
-	_, err := a.client.ConfigMaps(cfg.Namespace).Create(cfg)
+	_, err := a.client.Core().ConfigMaps(cfg.Namespace).Create(cfg)
 	return err
 }
 
 // Update updates the existing config map object.
 func (a *ApiServerConfigMapStore) Update(obj interface{}) error {
 	cfg := obj.(*api.ConfigMap)
-	_, err := a.client.ConfigMaps(cfg.Namespace).Update(cfg)
+	_, err := a.client.Core().ConfigMaps(cfg.Namespace).Update(cfg)
 	return err
 }
 
 // Delete deletes the existing config map object.
 func (a *ApiServerConfigMapStore) Delete(obj interface{}) error {
 	cfg := obj.(*api.ConfigMap)
-	return a.client.ConfigMaps(cfg.Namespace).Delete(cfg.Name)
+	return a.client.Core().ConfigMaps(cfg.Namespace).Delete(cfg.Name, &api.DeleteOptions{})
 }
 
 // GetByKey returns the config map for a given key.
@@ -159,7 +159,7 @@ func (a *ApiServerConfigMapStore) GetByKey(key string) (item interface{}, exists
 		return nil, false, fmt.Errorf("Failed to get key %v, unexpecte format, expecting ns/name", key)
 	}
 	ns, name := nsName[0], nsName[1]
-	cfg, err := a.client.ConfigMaps(ns).Get(name)
+	cfg, err := a.client.Core().ConfigMaps(ns).Get(name)
 	if err != nil {
 		// Translate not found errors to found=false, err=nil
 		if errors.IsNotFound(err) {
@@ -172,6 +172,6 @@ func (a *ApiServerConfigMapStore) GetByKey(key string) (item interface{}, exists
 
 // NewConfigMapStore returns a config map store capable of persisting updates
 // to apiserver.
-func NewConfigMapStore(c *client.Client) ConfigMapStore {
+func NewConfigMapStore(c client.Interface) ConfigMapStore {
 	return &ApiServerConfigMapStore{ConfigMapStore: cache.NewStore(cache.MetaNamespaceKeyFunc), client: c}
 }
