@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: tcp-configmap-example
-data:
-  9000: "default/example-go:8080"
