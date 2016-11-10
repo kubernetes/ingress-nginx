@@ -1,12 +1,18 @@
+
+[![Build Status](https://travis-ci.org/aledbf/ingress-controller.svg?branch=master)](https://travis-ci.org/aledbf/ingress-controller)
+[![Coverage Status](https://coveralls.io/repos/github/aledbf/ingress-controller/badge.svg?branch=master)](https://coveralls.io/github/aledbf/ingress-controller?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/aledbf/ingress-controller)](https://goreportcard.com/report/github.com/aledbf/ingress-controller)
+
 # Nginx Ingress Controller
 
 This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kubernetes/kubernetes/blob/master/docs/design/configmap.md) to store the nginx configuration. See [Ingress controller documentation](../README.md) for details on how it works.
 
 ## Contents
+* [Recent changes](#recent-changes)
 * [Conventions](#conventions)
 * [Requirements](#what-it-provides)
-* [Dry running](#dry-running-the-ingress-controller)
 * [Deployment](#deployment)
+* [Health checks](#health-checks)
 * [HTTP](#http)
 * [HTTPS](#https)
   * [Default SSL Certificate](#default-ssl-certificate)
@@ -16,6 +22,7 @@ This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kub
 * [TCP Services](#exposing-tcp-services)
 * [UDP Services](#exposing-udp-services)
 * [Proxy Protocol](#proxy-protocol)
+* [Service Integration](#service-integration)
 * [NGINX customization](configuration.md)
 * [NGINX status page](#nginx-status-page)
 * [Running multiple ingress controllers](#running-multiple-ingress-controllers)
@@ -25,8 +32,14 @@ This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kub
 * [Local cluster](#local-cluster)
 * [Debug & Troubleshooting](#troubleshooting)
 * [Why endpoints and not services?](#why-endpoints-and-not-services)
+* [Metrics](#metrics)
 * [Limitations](#limitations)
 * [NGINX Notes](#nginx-notes)
+
+## Recent changes
+
+Change history is available in [CHANGELOG.md](CHANGELOG.md)
+
 
 ## Conventions
 
@@ -35,20 +48,9 @@ Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). Y
 and create the secret via `kubectl create secret tls --key file --cert file`
 
 
-
 ## Requirements
 - Default backend [404-server](https://github.com/kubernetes/contrib/tree/master/404-server)
 
-
-## Dry running the Ingress controller
-
-Before deploying the controller to production you might want to run it outside the cluster and observe it.
-
-```console
-$ make controller
-$ mkdir /etc/nginx-ssl
-$ ./nginx-ingress-controller --running-in-cluster=false --default-backend-service=kube-system/default-http-backend
-```
 
 ## Deployment
 
@@ -63,6 +65,15 @@ Loadbalancers are created via a ReplicationController or Daemonset:
 ```
 $ kubectl create -f examples/default/rc-default.yaml
 ```
+
+## Health checks
+
+The proveded examples in the Ingress controller use a `readiness` and `liveness` probe. By default the URL is `/healthz` and the port `18080`. 
+Using the flag `--health-check-path` is possible to specify a custom path.
+In some environments only port 80 is allowed to enable health checks. For this reason the Ingress controller exposes this path in the default server.
+
+If PROXY protocol is enabled the health check must use the default port `18080`. This is required because Kubernetes probes do not understand PROXY protocol.
+
 
 ## HTTP
 
@@ -140,6 +151,7 @@ spec:
 Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
 Check the [example](examples/tls/README.md)
+
 
 ### Default SSL Certificate
 
@@ -325,6 +337,12 @@ Amongst others [ELBs in AWS](http://docs.aws.amazon.com/ElasticLoadBalancing/lat
 Please check the [proxy-protocol](examples/proxy-protocol/) example
 
 
+## Service Integration
+
+On clouds like AWS or GCE, using a service with `Type=LoadBalancer` allows the default kubernetes integration, which can save a lot of work.
+By passing the `--publish-service` argument to the controller, the ingress status will be updated with the load balancer configuration of the service, rather than the IP/s of the node/s.
+
+
 ### Custom errors
 
 In case of an error in a request the body of the response is obtained from the `default backend`. Each request to the default backend includes two headers: 
@@ -427,14 +445,12 @@ I0316 12:24:37.610073       1 command.go:69] change in configuration detected. R
 - `--v=3` shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format
 - `--v=5` configures NGINX in [debug mode](http://nginx.org/en/docs/debugging_log.html)
 
+### Metrics
 
-
-*These issues were encountered in past versions of Kubernetes:*
-
-[1.2.0-alpha7 deployment](https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker.md):
-
-* make setup-files.sh file in hypercube does not provide 10.0.0.1 IP to make-ca-certs, resulting in CA certs that are issued to the external cluster IP address rather then 10.0.0.1 -> this results in nginx-third-party-lb appearing to get stuck at "Utils.go:177 - Waiting for default/default-http-backend" in the docker logs.  Kubernetes will eventually kill the container before nginx-third-party-lb times out with a message indicating that the CA certificate issuer is invalid (wrong ip), to verify this add zeros to the end of initialDelaySeconds and timeoutSeconds and reload the RC, and docker will log this error before kubernetes kills the container.
-  * To fix the above, setup-files.sh must be patched before the cluster is inited (refer to https://github.com/kubernetes/kubernetes/pull/21504)
+Using the doc [Instrumenting Kubernetes with a new metric](https://github.com/kubernetes/kubernetes/blob/master/docs/devel/instrumentation.md#instrumenting-kubernetes-with-a-new-metric) the Ingress controller
+exposes the registered metrics via HTTP. Besides the default metrics provided by Prometheus is possible to get the number of reloads `reload_operations` and reloads with error `reload_operations_errors`, 
+ie error in validation in the configuration file before the reload. The metrics are exposed in port `10254` and path `/metrics`. 
+Using curl: `curl -v <pod ip>:10254/metrics`
 
 
 ### Limitations
@@ -452,11 +468,3 @@ The NGINX ingress controller does not uses [Services](http://kubernetes.io/docs/
 Since `gcr.io/google_containers/nginx-slim:0.8` NGINX contains the next patches:
 - Dynamic TLS record size [nginx__dynamic_tls_records.patch](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/)
 NGINX provides the parameter `ssl_buffer_size` to adjust the size of the buffer. Default value in NGINX is 16KB. The ingress controller changes the default to 4KB. This improves the [TLS Time To First Byte (TTTFB)](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) but the size is fixed. This patches adapts the size of the buffer to the content is being served helping to improve the perceived latency.
-
-- Add SPDY support back to Nginx with HTTP/2 [nginx_1_9_15_http2_spdy.patch](https://github.com/cloudflare/sslconfig/pull/36)
-At the same NGINX introduced HTTP/2 support for SPDY was removed. This patch add support for SPDY without compromising HTTP/2 support using the Application-Layer Protocol Negotiation (ALPN) or Next Protocol Negotiation (NPN) Transport Layer Security (TLS) extension to negotiate what protocol the server and client support
-```
-openssl s_client -servername www.my-site.com -connect www.my-site.com:443 -nextprotoneg ''
-CONNECTED(00000003)
-Protocols advertised by server: h2, spdy/3.1, http/1.1
-```

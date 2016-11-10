@@ -1,0 +1,30 @@
+sudo: required
+
+services:
+  - docker
+
+language: go
+
+notifications:
+  email: true
+
+go:
+  - 1.7
+
+env:
+  global:
+    - RELEASE="ci-${TRAVIS_BUILD_ID}"
+
+install:
+  - go get github.com/golang/lint/golint
+  - go get github.com/mattn/goveralls
+  - go get github.com/modocache/gover
+  - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+
+before_script:
+  - export PATH=$PATH:$PWD/hack/e2e-internal/
+
+script:  
+  - make fmt lint vet cover
+  - make controllers controller-images
+  #- make test-e2e
