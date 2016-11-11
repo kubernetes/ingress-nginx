@@ -226,8 +226,8 @@ type GCETranslator struct {
 	*LoadBalancerController
 }
 
-// toUrlMap converts an ingress to a map of subdomain: url-regex: gce backend.
-func (t *GCETranslator) toUrlMap(ing *extensions.Ingress) (utils.GCEURLMap, error) {
+// toURLMap converts an ingress to a map of subdomain: url-regex: gce backend.
+func (t *GCETranslator) toURLMap(ing *extensions.Ingress) (utils.GCEURLMap, error) {
 	hostPathBackend := utils.GCEURLMap{}
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {

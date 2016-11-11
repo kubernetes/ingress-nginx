@@ -25,10 +25,10 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/cache"
 
+	"github.com/golang/glog"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ssl "k8s.io/ingress/core/pkg/net/ssl"
-	"github.com/golang/glog"
 )
 
 // syncSecret keeps in sync Secrets used by Ingress rules with files to allow

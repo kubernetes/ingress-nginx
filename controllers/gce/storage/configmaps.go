@@ -123,37 +123,37 @@ type ConfigMapStore interface {
 	cache.Store
 }
 
-// ApiServerConfigMapStore only services Add and GetByKey from apiserver.
+// APIServerConfigMapStore only services Add and GetByKey from apiserver.
 // TODO: Implement all the other store methods and make this a write
 // through cache.
-type ApiServerConfigMapStore struct {
+type APIServerConfigMapStore struct {
 	ConfigMapStore
 	client client.Interface
 }
 
 // Add adds the given config map to the apiserver's store.
-func (a *ApiServerConfigMapStore) Add(obj interface{}) error {
+func (a *APIServerConfigMapStore) Add(obj interface{}) error {
 	cfg := obj.(*api.ConfigMap)
 	_, err := a.client.Core().ConfigMaps(cfg.Namespace).Create(cfg)
 	return err
 }
 
 // Update updates the existing config map object.
-func (a *ApiServerConfigMapStore) Update(obj interface{}) error {
+func (a *APIServerConfigMapStore) Update(obj interface{}) error {
 	cfg := obj.(*api.ConfigMap)
 	_, err := a.client.Core().ConfigMaps(cfg.Namespace).Update(cfg)
 	return err
 }
 
 // Delete deletes the existing config map object.
-func (a *ApiServerConfigMapStore) Delete(obj interface{}) error {
+func (a *APIServerConfigMapStore) Delete(obj interface{}) error {
 	cfg := obj.(*api.ConfigMap)
 	return a.client.Core().ConfigMaps(cfg.Namespace).Delete(cfg.Name, &api.DeleteOptions{})
 }
 
 // GetByKey returns the config map for a given key.
 // The key must take the form namespace/name.
-func (a *ApiServerConfigMapStore) GetByKey(key string) (item interface{}, exists bool, err error) {
+func (a *APIServerConfigMapStore) GetByKey(key string) (item interface{}, exists bool, err error) {
 	nsName := strings.Split(key, "/")
 	if len(nsName) != 2 {
 		return nil, false, fmt.Errorf("Failed to get key %v, unexpecte format, expecting ns/name", key)
@@ -173,5 +173,5 @@ func (a *ApiServerConfigMapStore) GetByKey(key string) (item interface{}, exists
 // NewConfigMapStore returns a config map store capable of persisting updates
 // to apiserver.
 func NewConfigMapStore(c client.Interface) ConfigMapStore {
-	return &ApiServerConfigMapStore{ConfigMapStore: cache.NewStore(cache.MetaNamespaceKeyFunc), client: c}
+	return &APIServerConfigMapStore{ConfigMapStore: cache.NewStore(cache.MetaNamespaceKeyFunc), client: c}
 }

@@ -354,7 +354,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	}
 
 	ing := *obj.(*extensions.Ingress)
-	if urlMap, err := lbc.tr.toUrlMap(&ing); err != nil {
+	if urlMap, err := lbc.tr.toURLMap(&ing); err != nil {
 		syncError = fmt.Errorf("%v, convert to url map error %v", syncError, err)
 	} else if err := l7.UpdateUrlMap(urlMap); err != nil {
 		lbc.recorder.Eventf(&ing, api.EventTypeWarning, "UrlMap", err.Error())
