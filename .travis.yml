@@ -11,6 +11,8 @@ notifications:
 go:
   - 1.7
 
+go_import_path: k8s.io/ingress
+
 env:
   global:
     - RELEASE="ci-${TRAVIS_BUILD_ID}"
@@ -26,5 +28,5 @@ before_script:
 
 script:  
   - make fmt lint vet cover
-  - make controllers controller-images
+  - make controllers controllers-images
   #- make test-e2e
