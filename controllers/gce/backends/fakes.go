@@ -18,30 +18,42 @@ package backends
 
 import (
 	"fmt"
+
 	compute "google.golang.org/api/compute/v1"
 	"k8s.io/ingress/controllers/gce/utils"
+	"k8s.io/kubernetes/pkg/client/cache"
 )
 
 // NewFakeBackendServices creates a new fake backend services manager.
 func NewFakeBackendServices() *FakeBackendServices {
 	return &FakeBackendServices{
-		backendServices: []*compute.BackendService{},
+		backendServices: cache.NewStore(func(obj interface{}) (string, error) {
+			svc := obj.(*compute.BackendService)
+			return svc.Name, nil
+		}),
 	}
 }
 
 // FakeBackendServices fakes out GCE backend services.
 type FakeBackendServices struct {
-	backendServices []*compute.BackendService
+	backendServices cache.Store
 	calls           []int
 }
 
 // GetBackendService fakes getting a backend service from the cloud.
 func (f *FakeBackendServices) GetBackendService(name string) (*compute.BackendService, error) {
 	f.calls = append(f.calls, utils.Get)
-	for i := range f.backendServices {
-		if name == f.backendServices[i].Name {
-			return f.backendServices[i], nil
-		}
+	obj, exists, err := f.backendServices.GetByKey(name)
+	if !exists {
+		return nil, fmt.Errorf("Backend service %v not found", name)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	svc := obj.(*compute.BackendService)
+	if name == svc.Name {
+		return svc, nil
 	}
 	return nil, fmt.Errorf("Backend service %v not found", name)
 }
@@ -50,37 +62,36 @@ func (f *FakeBackendServices) GetBackendService(name string) (*compute.BackendSe
 func (f *FakeBackendServices) CreateBackendService(be *compute.BackendService) error {
 	f.calls = append(f.calls, utils.Create)
 	be.SelfLink = be.Name
-	f.backendServices = append(f.backendServices, be)
-	return nil
+	return f.backendServices.Update(be)
 }
 
 // DeleteBackendService fakes backend service deletion.
 func (f *FakeBackendServices) DeleteBackendService(name string) error {
 	f.calls = append(f.calls, utils.Delete)
-	newBackends := []*compute.BackendService{}
-	for i := range f.backendServices {
-		if name != f.backendServices[i].Name {
-			newBackends = append(newBackends, f.backendServices[i])
-		}
+	svc, exists, err := f.backendServices.GetByKey(name)
+	if !exists {
+		return fmt.Errorf("Backend service %v not found", name)
 	}
-	f.backendServices = newBackends
-	return nil
+	if err != nil {
+		return err
+	}
+	return f.backendServices.Delete(svc)
 }
 
 // ListBackendServices fakes backend service listing.
 func (f *FakeBackendServices) ListBackendServices() (*compute.BackendServiceList, error) {
-	return &compute.BackendServiceList{Items: f.backendServices}, nil
+	var svcs []*compute.BackendService
+	for _, s := range f.backendServices.List() {
+		svc := s.(*compute.BackendService)
+		svcs = append(svcs, svc)
+	}
+	return &compute.BackendServiceList{Items: svcs}, nil
 }
 
 // UpdateBackendService fakes updating a backend service.
 func (f *FakeBackendServices) UpdateBackendService(be *compute.BackendService) error {
 	f.calls = append(f.calls, utils.Update)
-	for i := range f.backendServices {
-		if f.backendServices[i].Name == be.Name {
-			f.backendServices[i] = be
-		}
-	}
-	return nil
+	return f.backendServices.Update(be)
 }
 
 // GetHealth fakes getting backend service health.
