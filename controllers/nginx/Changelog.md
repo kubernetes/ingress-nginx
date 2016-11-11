@@ -1,5 +1,33 @@
 Changelog
 
+### 0.9
+
+- [X] [#1498](https://github.com/kubernetes/contrib/pull/1498) Refactoring of template handling
+- [X] [#1571](https://github.com/kubernetes/contrib/pull/1571) use POD_NAMESPACE as a namespace in cli parameters
+- [X] [#1591](https://github.com/kubernetes/contrib/pull/1591) Always listen on port 443, even without ingress rules
+- [X] [#1596](https://github.com/kubernetes/contrib/pull/1596) Adapt nginx hash sizes to the number of ingress
+- [X] [#1653](https://github.com/kubernetes/contrib/pull/1653) Update image version
+- [X] [#1672](https://github.com/kubernetes/contrib/pull/1672) Add firewall rules and ing class clarifications
+- [X] [#1711](https://github.com/kubernetes/contrib/pull/1711) Add function helpers to nginx template
+- [X] [#1743](https://github.com/kubernetes/contrib/pull/1743) Allow customisation of the nginx proxy_buffer_size directive via ConfigMap
+- [X] [#1749](https://github.com/kubernetes/contrib/pull/1749) Readiness probe that works behind a CP lb
+- [X] [#1751](https://github.com/kubernetes/contrib/pull/1751) Add the name of the upstream in the log
+- [X] [#1758](https://github.com/kubernetes/contrib/pull/1758) Update nginx to 1.11.4
+- [X] [#1759](https://github.com/kubernetes/contrib/pull/1759) Add support for default backend in Ingress rule
+- [X] [#1762](https://github.com/kubernetes/contrib/pull/1762) Add cloud detection
+- [X] [#1766](https://github.com/kubernetes/contrib/pull/1766) Clarify the controller uses endpoints and not services
+- [X] [#1767](https://github.com/kubernetes/contrib/pull/1767) Update godeps
+- [X] [#1772](https://github.com/kubernetes/contrib/pull/1772) Avoid replacing nginx.conf file if the new configuration is invalid
+- [X] [#1773](https://github.com/kubernetes/contrib/pull/1773) Add annotation to add CORS support
+- [X] [#1786](https://github.com/kubernetes/contrib/pull/1786) Add docs about go template
+- [X] [#1796](https://github.com/kubernetes/contrib/pull/1796) Add external authentication support using auth_request
+- [X] [#1802](https://github.com/kubernetes/contrib/pull/1802) Initialize proxy_upstream_name variable
+- [X] [#1806](https://github.com/kubernetes/contrib/pull/1806) Add docs about the log format
+- [X] [#1808](https://github.com/kubernetes/contrib/pull/1808) WebSocket documentation
+- [X] [#1847](https://github.com/kubernetes/contrib/pull/1847) Change structure of packages
+- [X] Add annotation for custom upstream timeouts
+- [X] Mutual TLS auth (https://github.com/kubernetes/contrib/issues/1870)
+
 ### 0.8.3
 
 - [X] [#1450](https://github.com/kubernetes/contrib/pull/1450) Check for errors in nginx template

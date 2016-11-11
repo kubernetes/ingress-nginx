@@ -26,10 +26,10 @@ import (
 
 	"github.com/golang/glog"
 	compute "google.golang.org/api/compute/v1"
-	"k8s.io/contrib/ingress/controllers/gce/healthchecks"
-	"k8s.io/contrib/ingress/controllers/gce/instances"
-	"k8s.io/contrib/ingress/controllers/gce/storage"
-	"k8s.io/contrib/ingress/controllers/gce/utils"
+	"k8s.io/ingress/controllers/gce/healthchecks"
+	"k8s.io/ingress/controllers/gce/instances"
+	"k8s.io/ingress/controllers/gce/storage"
+	"k8s.io/ingress/controllers/gce/utils"
 )
 
 // Backends implements BackendPool.

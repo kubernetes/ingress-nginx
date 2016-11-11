@@ -1,5 +1,7 @@
 // vim: ft=asciidoc
 
+image:https://travis-ci.org/kubernetes/ingress.svg?branch=master["Build Status", link="https://travis-ci.org/kubernetes/ingress"]
+
 = Ingress
 :toc: macro
 :toc-title:

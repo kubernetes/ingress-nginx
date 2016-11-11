@@ -43,15 +43,6 @@ import (
 	"k8s.io/kubernetes/pkg/watch"
 )
 
-// ListerWatcher is any object that knows how to perform an initial list and start a watch on a resource.
-type ListerWatcher interface {
-	// List should return a list type object; the Items field will be extracted, and the
-	// ResourceVersion field will be used to start the watch in the right place.
-	List(options api.ListOptions) (runtime.Object, error)
-	// Watch should begin a watch at the specified version.
-	Watch(options api.ListOptions) (watch.Interface, error)
-}
-
 // Reflector watches a specified resource and causes all changes to be reflected in the given store.
 type Reflector struct {
 	// name identifies this reflector.  By default it will be a file:line if possible.
@@ -125,7 +116,7 @@ func NewNamedReflector(name string, lw ListerWatcher, expectedType interface{}, 
 
 // internalPackages are packages that ignored when creating a default reflector name.  These packages are in the common
 // call chains to NewReflector, so they'd be low entropy names for reflectors
-var internalPackages = []string{"kubernetes/pkg/client/cache/", "kubernetes/pkg/controller/framework/", "/runtime/asm_"}
+var internalPackages = []string{"kubernetes/pkg/client/cache/", "/runtime/asm_"}
 
 // getDefaultReflectorName walks back through the call stack until we find a caller from outside of the ignoredPackages
 // it returns back a shortpath/filename:line to aid in identification of this reflector when it starts logging
