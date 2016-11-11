@@ -51,8 +51,8 @@ func defaultBackendName(clusterName string) string {
 }
 
 // newLoadBalancerController create a loadbalancer controller.
-func newLoadBalancerController(t *testing.T, cm *fakeClusterManager, masterUrl string) *LoadBalancerController {
-	client := client.NewForConfigOrDie(&restclient.Config{Host: masterUrl, ContentConfig: restclient.ContentConfig{GroupVersion: testapi.Default.GroupVersion()}})
+func newLoadBalancerController(t *testing.T, cm *fakeClusterManager, masterURL string) *LoadBalancerController {
+	client := client.NewForConfigOrDie(&restclient.Config{Host: masterURL, ContentConfig: restclient.ContentConfig{GroupVersion: testapi.Default.GroupVersion()}})
 	lb, err := NewLoadBalancerController(client, cm.ClusterManager, 1*time.Second, api.NamespaceAll)
 	if err != nil {
 		t.Fatalf("%v", err)

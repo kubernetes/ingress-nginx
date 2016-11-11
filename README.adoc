@@ -1,6 +1,6 @@
 // vim: ft=asciidoc
 
-[![Build Status](https://travis-ci.org/kubernetes/ingress.svg?branch=master)](https://travis-ci.org/kubernetes/ingress)
+image:https://travis-ci.org/kubernetes/ingress.svg?branch=master["Build Status", link="https://travis-ci.org/kubernetes/ingress"]
 
 = Ingress
 :toc: macro

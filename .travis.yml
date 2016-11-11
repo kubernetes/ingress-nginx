@@ -27,6 +27,8 @@ before_script:
   - export PATH=$PATH:$PWD/hack/e2e-internal/
 
 script:  
-  - make fmt lint vet cover
+  # enable kubernetes/ingress in 
+  # coveralls.io and add cover task
+  - make fmt lint vet test
   - make controllers controllers-images
   #- make test-e2e
