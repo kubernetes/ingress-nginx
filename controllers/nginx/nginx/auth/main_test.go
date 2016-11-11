@@ -120,7 +120,7 @@ func TestAnnotations(t *testing.T) {
 
 	secret, err := ingAnnotations(ing.GetAnnotations()).secretName()
 	if err != nil {
-		t.Error("Unexpec error %v", err)
+		t.Errorf("Unexpec error %v", err)
 	}
 	if secret != "demo-secret" {
 		t.Errorf("Expected demo-secret as realm but returned %s", secret)

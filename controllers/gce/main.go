@@ -234,7 +234,7 @@ func main() {
 	if clusterManager.ClusterNamer.GetClusterName() != "" {
 		glog.V(3).Infof("Cluster name %+v", clusterManager.ClusterNamer.GetClusterName())
 	}
-	clusterManager.Init(&controller.GCETranslator{lbc})
+	clusterManager.Init(&controller.GCETranslator{LoadBalancerController: lbc})
 	go registerHandlers(lbc)
 	go handleSigterm(lbc, *deleteAllOnQuit)
 
