@@ -23,8 +23,8 @@ import (
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
-	"k8s.io/contrib/ingress/controllers/gce/loadbalancers"
-	"k8s.io/contrib/ingress/controllers/gce/utils"
+	"k8s.io/ingress/controllers/gce/loadbalancers"
+	"k8s.io/ingress/controllers/gce/utils"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/cache"
@@ -226,8 +226,8 @@ type GCETranslator struct {
 	*LoadBalancerController
 }
 
-// toUrlMap converts an ingress to a map of subdomain: url-regex: gce backend.
-func (t *GCETranslator) toUrlMap(ing *extensions.Ingress) (utils.GCEURLMap, error) {
+// toURLMap converts an ingress to a map of subdomain: url-regex: gce backend.
+func (t *GCETranslator) toURLMap(ing *extensions.Ingress) (utils.GCEURLMap, error) {
 	hostPathBackend := utils.GCEURLMap{}
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
@@ -291,7 +291,7 @@ func (t *GCETranslator) toGCEBackend(be *extensions.IngressBackend, ns string) (
 // getServiceNodePort looks in the svc store for a matching service:port,
 // and returns the nodeport.
 func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespace string) (int, error) {
-	obj, exists, err := t.svcLister.Store.Get(
+	obj, exists, err := t.svcLister.Indexer.Get(
 		&api.Service{
 			ObjectMeta: api.ObjectMeta{
 				Name:      be.ServiceName,
@@ -457,15 +457,15 @@ func isSimpleHTTPProbe(probe *api.Probe) bool {
 // the request path, callers are responsible for swapping this out for the
 // appropriate default.
 func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error) {
-	sl, err := t.svcLister.List()
+	sl, err := t.svcLister.List(labels.Everything())
 	if err != nil {
 		return nil, err
 	}
 	// Find the label and target port of the one service with the given nodePort
-	for _, s := range sl.Items {
+	for _, s := range sl {
 		for _, p := range s.Spec.Ports {
 			if int32(port) == p.NodePort {
-				rp, err := t.getHTTPProbe(s, p.TargetPort)
+				rp, err := t.getHTTPProbe(*s, p.TargetPort)
 				if err != nil {
 					return nil, err
 				}

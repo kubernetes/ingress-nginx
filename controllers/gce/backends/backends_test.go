@@ -20,10 +20,10 @@ import (
 	"testing"
 
 	compute "google.golang.org/api/compute/v1"
-	"k8s.io/contrib/ingress/controllers/gce/healthchecks"
-	"k8s.io/contrib/ingress/controllers/gce/instances"
-	"k8s.io/contrib/ingress/controllers/gce/storage"
-	"k8s.io/contrib/ingress/controllers/gce/utils"
+	"k8s.io/ingress/controllers/gce/healthchecks"
+	"k8s.io/ingress/controllers/gce/instances"
+	"k8s.io/ingress/controllers/gce/storage"
+	"k8s.io/ingress/controllers/gce/utils"
 	"k8s.io/kubernetes/pkg/util/sets"
 )
 
@@ -32,9 +32,9 @@ const defaultZone = "zone-a"
 func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWithCloud bool) BackendPool {
 	namer := &utils.Namer{}
 	nodePool := instances.NewNodePool(fakeIGs)
-	nodePool.Init(&instances.FakeZoneLister{[]string{defaultZone}})
+	nodePool.Init(&instances.FakeZoneLister{Items:[]string{defaultZone}})
 	healthChecks := healthchecks.NewHealthChecker(healthchecks.NewFakeHealthChecks(), "/", namer)
-	healthChecks.Init(&healthchecks.FakeHealthCheckGetter{nil})
+	healthChecks.Init(&healthchecks.FakeHealthCheckGetter{DefaultHealthCheck: nil})
 	return NewBackendPool(
 		f, healthChecks, nodePool, namer, []int64{}, syncWithCloud)
 }

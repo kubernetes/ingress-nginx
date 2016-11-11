@@ -18,8 +18,9 @@ package clientcmd
 
 import (
 	"io"
-	"reflect"
 	"sync"
+
+	"github.com/golang/glog"
 
 	"k8s.io/kubernetes/pkg/client/restclient"
 	clientcmdapi "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
@@ -103,26 +104,22 @@ func (config *DeferredLoadingClientConfig) ClientConfig() (*restclient.Config, e
 	// content differs from the default config
 	mergedConfig, err := mergedClientConfig.ClientConfig()
 	switch {
-	case err != nil && !IsEmptyConfig(err):
-		// return on any error except empty config
-		return nil, err
-	case mergedConfig != nil:
-		// if the configuration has any settings at all, we cannot use ICC
-		// TODO: we need to discriminate better between "empty due to env" and
-		//   "empty due to defaults"
-		// TODO: this shouldn't be a global - the client config rules should be
-		//   handling this.
-		defaultConfig, defErr := DefaultClientConfig.ClientConfig()
-		if IsConfigurationInvalid(defErr) && !IsEmptyConfig(err) {
-			return mergedConfig, nil
+	case err != nil:
+		if !IsEmptyConfig(err) {
+			// return on any error except empty config
+			return nil, err
 		}
-		if defErr == nil && !reflect.DeepEqual(mergedConfig, defaultConfig) {
+	case mergedConfig != nil:
+		// the configuration is valid, but if this is equal to the defaults we should try
+		// in-cluster configuration
+		if !config.loader.IsDefaultConfig(mergedConfig) {
 			return mergedConfig, nil
 		}
 	}
 
 	// check for in-cluster configuration and use it
 	if config.icc.Possible() {
+		glog.V(4).Infof("Using in-cluster configuration")
 		return config.icc.ClientConfig()
 	}
 
@@ -137,7 +134,18 @@ func (config *DeferredLoadingClientConfig) Namespace() (string, bool, error) {
 		return "", false, err
 	}
 
-	return mergedKubeConfig.Namespace()
+	ns, ok, err := mergedKubeConfig.Namespace()
+	// if we get an error and it is not empty config, or if the merged config defined an explicit namespace, or
+	// if in-cluster config is not possible, return immediately
+	if (err != nil && !IsEmptyConfig(err)) || ok || !config.icc.Possible() {
+		// return on any error except empty config
+		return ns, ok, err
+	}
+
+	glog.V(4).Infof("Using in-cluster namespace")
+
+	// allow the namespace from the service account token directory to be used.
+	return config.icc.Namespace()
 }
 
 // ConfigAccess implements ClientConfig

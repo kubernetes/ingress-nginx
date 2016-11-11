@@ -27,6 +27,11 @@ import (
 	"k8s.io/kubernetes/pkg/apis/apps"
 	"k8s.io/kubernetes/pkg/apis/batch"
 	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	appsclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/apps/internalversion"
+	batchclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/batch/internalversion"
+	coreclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/internalversion"
+	extensionsclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/extensions/internalversion"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/util/wait"
@@ -44,16 +49,16 @@ type Scaler interface {
 	ScaleSimple(namespace, name string, preconditions *ScalePrecondition, newSize uint) (updatedResourceVersion string, err error)
 }
 
-func ScalerFor(kind unversioned.GroupKind, c client.Interface) (Scaler, error) {
+func ScalerFor(kind unversioned.GroupKind, c internalclientset.Interface) (Scaler, error) {
 	switch kind {
 	case api.Kind("ReplicationController"):
-		return &ReplicationControllerScaler{c}, nil
+		return &ReplicationControllerScaler{c.Core()}, nil
 	case extensions.Kind("ReplicaSet"):
 		return &ReplicaSetScaler{c.Extensions()}, nil
 	case extensions.Kind("Job"), batch.Kind("Job"):
 		return &JobScaler{c.Batch()}, nil // Either kind of job can be scaled with Batch interface.
-	case apps.Kind("PetSet"):
-		return &PetSetScaler{c.Apps()}, nil
+	case apps.Kind("StatefulSet"):
+		return &StatefulSetScaler{c.Apps()}, nil
 	case extensions.Kind("Deployment"):
 		return &DeploymentScaler{c.Extensions()}, nil
 	}
@@ -132,8 +137,8 @@ func ScaleCondition(r Scaler, precondition *ScalePrecondition, namespace, name s
 	}
 }
 
-// ValidatePetSet ensures that the preconditions match. Returns nil if they are valid, an error otherwise.
-func (precondition *ScalePrecondition) ValidatePetSet(ps *apps.PetSet) error {
+// ValidateStatefulSet ensures that the preconditions match. Returns nil if they are valid, an error otherwise.
+func (precondition *ScalePrecondition) ValidateStatefulSet(ps *apps.StatefulSet) error {
 	if precondition.Size != -1 && int(ps.Spec.Replicas) != precondition.Size {
 		return PreconditionError{"replicas", strconv.Itoa(precondition.Size), strconv.Itoa(int(ps.Spec.Replicas))}
 	}
@@ -155,7 +160,7 @@ func (precondition *ScalePrecondition) ValidateReplicationController(controller 
 }
 
 type ReplicationControllerScaler struct {
-	c client.Interface
+	c coreclient.ReplicationControllersGetter
 }
 
 // ScaleSimple does a simple one-shot attempt at scaling. It returns the
@@ -253,7 +258,7 @@ func (precondition *ScalePrecondition) ValidateReplicaSet(replicaSet *extensions
 }
 
 type ReplicaSetScaler struct {
-	c client.ExtensionsInterface
+	c extensionsclient.ReplicaSetsGetter
 }
 
 // ScaleSimple does a simple one-shot attempt at scaling. It returns the
@@ -323,34 +328,34 @@ func (precondition *ScalePrecondition) ValidateJob(job *batch.Job) error {
 	return nil
 }
 
-type PetSetScaler struct {
-	c client.AppsInterface
+type StatefulSetScaler struct {
+	c appsclient.StatefulSetsGetter
 }
 
 // ScaleSimple does a simple one-shot attempt at scaling. It returns the
-// resourceVersion of the petset if the update is successful.
-func (scaler *PetSetScaler) ScaleSimple(namespace, name string, preconditions *ScalePrecondition, newSize uint) (string, error) {
-	ps, err := scaler.c.PetSets(namespace).Get(name)
+// resourceVersion of the statefulset if the update is successful.
+func (scaler *StatefulSetScaler) ScaleSimple(namespace, name string, preconditions *ScalePrecondition, newSize uint) (string, error) {
+	ps, err := scaler.c.StatefulSets(namespace).Get(name)
 	if err != nil {
 		return "", ScaleError{ScaleGetFailure, "Unknown", err}
 	}
 	if preconditions != nil {
-		if err := preconditions.ValidatePetSet(ps); err != nil {
+		if err := preconditions.ValidateStatefulSet(ps); err != nil {
 			return "", err
 		}
 	}
-	ps.Spec.Replicas = int(newSize)
-	updatedPetSet, err := scaler.c.PetSets(namespace).Update(ps)
+	ps.Spec.Replicas = int32(newSize)
+	updatedStatefulSet, err := scaler.c.StatefulSets(namespace).Update(ps)
 	if err != nil {
 		if errors.IsConflict(err) {
 			return "", ScaleError{ScaleUpdateConflictFailure, ps.ResourceVersion, err}
 		}
 		return "", ScaleError{ScaleUpdateFailure, ps.ResourceVersion, err}
 	}
-	return updatedPetSet.ResourceVersion, nil
+	return updatedStatefulSet.ResourceVersion, nil
 }
 
-func (scaler *PetSetScaler) Scale(namespace, name string, newSize uint, preconditions *ScalePrecondition, retry, waitForReplicas *RetryParams) error {
+func (scaler *StatefulSetScaler) Scale(namespace, name string, newSize uint, preconditions *ScalePrecondition, retry, waitForReplicas *RetryParams) error {
 	if preconditions == nil {
 		preconditions = &ScalePrecondition{-1, ""}
 	}
@@ -363,11 +368,11 @@ func (scaler *PetSetScaler) Scale(namespace, name string, newSize uint, precondi
 		return err
 	}
 	if waitForReplicas != nil {
-		job, err := scaler.c.PetSets(namespace).Get(name)
+		job, err := scaler.c.StatefulSets(namespace).Get(name)
 		if err != nil {
 			return err
 		}
-		err = wait.Poll(waitForReplicas.Interval, waitForReplicas.Timeout, client.PetSetHasDesiredPets(scaler.c, job))
+		err = wait.Poll(waitForReplicas.Interval, waitForReplicas.Timeout, client.StatefulSetHasDesiredPets(scaler.c, job))
 		if err == wait.ErrWaitTimeout {
 			return fmt.Errorf("timed out waiting for %q to be synced", name)
 		}
@@ -377,7 +382,7 @@ func (scaler *PetSetScaler) Scale(namespace, name string, newSize uint, precondi
 }
 
 type JobScaler struct {
-	c client.BatchInterface
+	c batchclient.JobsGetter
 }
 
 // ScaleSimple is responsible for updating job's parallelism. It returns the
@@ -445,7 +450,7 @@ func (precondition *ScalePrecondition) ValidateDeployment(deployment *extensions
 }
 
 type DeploymentScaler struct {
-	c client.ExtensionsInterface
+	c extensionsclient.DeploymentsGetter
 }
 
 // ScaleSimple is responsible for updating a deployment's desired replicas

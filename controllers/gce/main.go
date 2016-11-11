@@ -27,12 +27,13 @@ import (
 	"time"
 
 	flag "github.com/spf13/pflag"
-	"k8s.io/contrib/ingress/controllers/gce/controller"
-	"k8s.io/contrib/ingress/controllers/gce/loadbalancers"
-	"k8s.io/contrib/ingress/controllers/gce/storage"
-	"k8s.io/contrib/ingress/controllers/gce/utils"
+	"k8s.io/ingress/controllers/gce/controller"
+	"k8s.io/ingress/controllers/gce/loadbalancers"
+	"k8s.io/ingress/controllers/gce/storage"
+	"k8s.io/ingress/controllers/gce/utils"
 	"k8s.io/kubernetes/pkg/api"
-	client "k8s.io/kubernetes/pkg/client/unversioned"
+	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	"k8s.io/kubernetes/pkg/client/restclient"
 	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/util/wait"
@@ -159,7 +160,6 @@ func handleSigterm(lbc *controller.LoadBalancerController, deleteAll bool) {
 // main function for GLBC.
 func main() {
 	// TODO: Add a healthz endpoint
-	var kubeClient *client.Client
 	var err error
 	var clusterManager *controller.ClusterManager
 
@@ -181,18 +181,24 @@ func main() {
 		glog.Fatalf("Please specify --default-backend")
 	}
 
+	var config *restclient.Config
 	// Create kubeclient
 	if *inCluster {
-		if kubeClient, err = client.NewInCluster(); err != nil {
-			glog.Fatalf("Failed to create client: %v.", err)
+		if config, err = restclient.InClusterConfig(); err != nil {
+			glog.Fatalf("error creating client configuration: %v", err)
 		}
 	} else {
-		config, err := clientConfig.ClientConfig()
+		config, err = clientConfig.ClientConfig()
 		if err != nil {
-			glog.Fatalf("error connecting to the client: %v", err)
+			glog.Fatalf("error creating client configuration: %v", err)
 		}
-		kubeClient, err = client.New(config)
 	}
+
+	kubeClient, err := client.NewForConfig(config)
+	if err != nil {
+		glog.Fatalf("Failed to create client: %v.", err)
+	}
+
 	// Wait for the default backend Service. There's no pretty way to do this.
 	parts := strings.Split(*defaultSvc, "/")
 	if len(parts) != 2 {
@@ -228,7 +234,7 @@ func main() {
 	if clusterManager.ClusterNamer.GetClusterName() != "" {
 		glog.V(3).Infof("Cluster name %+v", clusterManager.ClusterNamer.GetClusterName())
 	}
-	clusterManager.Init(&controller.GCETranslator{lbc})
+	clusterManager.Init(&controller.GCETranslator{LoadBalancerController: lbc})
 	go registerHandlers(lbc)
 	go handleSigterm(lbc, *deleteAllOnQuit)
 
@@ -239,7 +245,7 @@ func main() {
 	}
 }
 
-func newNamer(kubeClient *client.Client, clusterName string) (*utils.Namer, error) {
+func newNamer(kubeClient client.Interface, clusterName string) (*utils.Namer, error) {
 	name, err := getClusterUID(kubeClient, clusterName)
 	if err != nil {
 		return nil, err
@@ -271,7 +277,7 @@ func newNamer(kubeClient *client.Client, clusterName string) (*utils.Namer, erro
 // else, check if there are any working Ingresses
 //	- remember that "" is the cluster uid
 // else, allocate a new uid
-func getClusterUID(kubeClient *client.Client, name string) (string, error) {
+func getClusterUID(kubeClient client.Interface, name string) (string, error) {
 	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
 	if name != "" {
 		glog.Infof("Using user provided cluster uid %v", name)
@@ -294,7 +300,7 @@ func getClusterUID(kubeClient *client.Client, name string) (string, error) {
 	}
 
 	// Check if the cluster has an Ingress with ip
-	ings, err := kubeClient.Extensions().Ingress(api.NamespaceAll).List(api.ListOptions{LabelSelector: labels.Everything()})
+	ings, err := kubeClient.Extensions().Ingresses(api.NamespaceAll).List(api.ListOptions{LabelSelector: labels.Everything()})
 	if err != nil {
 		return "", err
 	}
@@ -325,11 +331,11 @@ func getClusterUID(kubeClient *client.Client, name string) (string, error) {
 }
 
 // getNodePort waits for the Service, and returns it's first node port.
-func getNodePort(client *client.Client, ns, name string) (nodePort int64, err error) {
+func getNodePort(client client.Interface, ns, name string) (nodePort int64, err error) {
 	var svc *api.Service
 	glog.V(3).Infof("Waiting for %v/%v", ns, name)
 	wait.Poll(1*time.Second, 5*time.Minute, func() (bool, error) {
-		svc, err = client.Services(ns).Get(name)
+		svc, err = client.Core().Services(ns).Get(name)
 		if err != nil {
 			return false, nil
 		}

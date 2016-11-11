@@ -1,0 +1,21 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override:
+    - docker pull segment/golang:latest
+
+test:
+  override:
+    - >
+      docker run
+      $(env | grep -E '^CIRCLE_|^DOCKER_|^CIRCLECI=|^CI=' | sed 's/^/--env /g' | tr "\\n" " ")
+      --rm
+      --tty
+      --interactive
+      --name go
+      --volume /var/run/docker.sock:/run/docker.sock
+      --volume ${PWD}:/go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+      --workdir /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+      segment/golang:latest
