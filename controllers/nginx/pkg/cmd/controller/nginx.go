@@ -240,8 +240,8 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 	conf["upstreams"] = ingressCfg.Upstreams
 	conf["passthroughUpstreams"] = ingressCfg.PassthroughUpstreams
 	conf["servers"] = ingressCfg.Servers
-	conf["tcpUpstreams"] = ingressCfg.TCPUpstreams
-	conf["udpUpstreams"] = ingressCfg.UDPUpstreams
+	conf["tcpUpstreams"] = ingressCfg.TCPEndpoints
+	conf["udpUpstreams"] = ingressCfg.UPDEndpoints
 	conf["healthzURL"] = ingressCfg.HealthzURL
 	conf["defResolver"] = cfg.Resolver
 	conf["sslDHParam"] = ""

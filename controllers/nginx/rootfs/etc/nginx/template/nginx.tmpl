@@ -173,7 +173,7 @@ http {
         {{ else }}
         least_conn;
         {{ end }}
-        {{ range $server := $upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
+        {{ range $server := $upstream.Endpoints }}server {{ $server.Address }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
     }
     {{ end }}
@@ -300,7 +300,7 @@ http {
             proxy_set_header                        Accept-Encoding     "";
             {{ end }}
 
-            set $proxy_upstream_name "{{ $location.Upstream.Name }}";
+            set $proxy_upstream_name "{{ $location.Backend.Name }}";
             {{ buildProxyPass $location }}
         }
         {{ end }}
@@ -396,7 +396,7 @@ stream {
 
     {{ range $i, $passthrough := .passthroughUpstreams }}
     upstream {{ $passthrough.Name }}-{{ $i }}-pt {
-        {{ range $server := $passthrough.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{ range $server := $passthrough.Endpoints }}server {{ $server.Address }}:{{ $server.Port }};
         {{ end }}
     }
     {{ end }}
@@ -413,7 +413,7 @@ stream {
 # TCP services
 {{ range $i, $tcpServer := .tcpUpstreams }}
     upstream tcp-{{ $tcpServer.Upstream.Name }} {
-        {{ range $server := $tcpServer.Upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{ range $server := $tcpServer.Upstream.Endpoints }}server {{ $server.Address }}:{{ $server.Port }};
         {{ end }}
     }
     
@@ -428,7 +428,7 @@ stream {
 # UDP services
 {{ range $i, $udpServer := .udpUpstreams }}
     upstream udp-{{ $udpServer.Upstream.Name }} {
-        {{ range $server := $udpServer.Upstream.Backends }}server {{ $server.Address }}:{{ $server.Port }};
+        {{ range $server := $udpServer.Upstream.Endpoints }}server {{ $server.Address }}:{{ $server.Port }};
         {{ end }}
     }
     

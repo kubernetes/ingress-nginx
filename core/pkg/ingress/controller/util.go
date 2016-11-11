@@ -25,16 +25,16 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
-// newDefaultServer return an UpstreamServer to be use as default server that returns 503.
-func newDefaultServer() ingress.UpstreamServer {
-	return ingress.UpstreamServer{Address: "127.0.0.1", Port: "8181"}
+// newDefaultServer return an BackendServer to be use as default server that returns 503.
+func newDefaultServer() ingress.Endpoint {
+	return ingress.Endpoint{Address: "127.0.0.1", Port: "8181"}
 }
 
 // newUpstream creates an upstream without servers.
-func newUpstream(name string) *ingress.Upstream {
-	return &ingress.Upstream{
+func newUpstream(name string) *ingress.Backend {
+	return &ingress.Backend{
 		Name:     name,
-		Backends: []ingress.UpstreamServer{},
+		Endpoints: []ingress.Endpoint{},
 	}
 }
 

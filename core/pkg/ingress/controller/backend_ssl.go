@@ -31,8 +31,8 @@ import (
 	ssl "k8s.io/ingress/core/pkg/net/ssl"
 )
 
-// syncSecret keeps in sync Secrets used by Ingress rules with files to allow
-// being used in controllers.
+// syncSecret keeps in sync Secrets used by Ingress rules with the files on
+// disk to allow being used in controllers.
 func (ic *GenericController) syncSecret(k interface{}) error {
 	if ic.secretQueue.IsShuttingDown() {
 		return nil
@@ -67,7 +67,6 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 
 	key = k.(string)
 
-	// get secret
 	secObj, exists, err := ic.secrLister.Store.GetByKey(key)
 	if err != nil {
 		return fmt.Errorf("error getting secret %v: %v", key, err)
@@ -128,7 +127,7 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 	return s, nil
 }
 
-// check if secret is referenced in this controller's config
+// secrReferenced checks if a secret is referenced or not by one or more Ingress rules
 func (ic *GenericController) secrReferenced(name, namespace string) bool {
 	for _, ingIf := range ic.ingLister.Store.List() {
 		ing := ingIf.(*extensions.Ingress)
@@ -136,7 +135,6 @@ func (ic *GenericController) secrReferenced(name, namespace string) bool {
 		if err == nil && str == fmt.Sprintf("%v/%v", namespace, name) {
 			return true
 		}
-
 		if ing.Namespace != namespace {
 			continue
 		}
@@ -149,7 +147,7 @@ func (ic *GenericController) secrReferenced(name, namespace string) bool {
 	return false
 }
 
-// sslCertTracker ...
+// sslCertTracker holds a store of referenced Secrets in Ingress rules
 type sslCertTracker struct {
 	cache.ThreadSafeStore
 }

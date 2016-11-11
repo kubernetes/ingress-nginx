@@ -23,8 +23,8 @@ import (
 	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 )
 
-// NewIngressController returns a configured Ingress controller ready to start
-func NewIngressController(backend ingress.Controller) Interface {
+// NewIngressController returns a configured Ingress controller
+func NewIngressController(backend ingress.Controller) *GenericController {
 	var (
 		flags = pflag.NewFlagSet("", pflag.ExitOnError)
 
@@ -33,7 +33,7 @@ func NewIngressController(backend ingress.Controller) Interface {
     	namespace/name. The controller uses the first node port of this Service for
     	the default backend.`)
 
-		ingressClass = flags.String("ingress-class", "nginx",
+		ingressClass = flags.String("ingress-class", "",
 			`Name of the ingress class to route through this controller.`)
 
 		configMap = flags.String("configmap", "",
@@ -49,7 +49,7 @@ func NewIngressController(backend ingress.Controller) Interface {
 		The key in the map indicates the external port to be used. The value is the name of the
 		service with the format namespace/serviceName and the port of the service could be a 
 		number of the name of the port.
-		The ports 80 and 443 are not allowed as external ports. This ports are reserved for nginx`)
+		The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend`)
 
 		udpConfigMapName = flags.String("udp-services-configmap", "",
 			`Name of the ConfigMap that contains the definition of the UDP services to expose.
@@ -152,7 +152,7 @@ func NewIngressController(backend ingress.Controller) Interface {
 	return ic
 }
 
-func registerHandlers(enableProfiling bool, port int, ic Interface) {
+func registerHandlers(enableProfiling bool, port int, ic *GenericController) {
 	mux := http.NewServeMux()
 	healthz.InstallHandler(mux, ic)
 

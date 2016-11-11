@@ -43,7 +43,7 @@ func main() {
 	}
 }
 
-func handleSigterm(ic controller.Interface) {
+func handleSigterm(ic *controller.GenericController) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan

@@ -88,7 +88,7 @@ func TestBuildProxyPass(t *testing.T) {
 		loc := &ingress.Location{
 			Path:     tc.Path,
 			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
-			Upstream: ingress.Upstream{Name: "upstream-name"},
+			Upstream: ingress.Backend{Name: "upstream-name"},
 		}
 
 		pp := buildProxyPass(loc)
