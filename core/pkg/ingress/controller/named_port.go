@@ -24,11 +24,11 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/ingress/core/pkg/ingress/annotations/service"
-
 	"k8s.io/kubernetes/pkg/api"
 	podutil "k8s.io/kubernetes/pkg/api/pod"
 	"k8s.io/kubernetes/pkg/labels"
+
+	"k8s.io/ingress/core/pkg/ingress/annotations/service"
 )
 
 // checkSvcForUpdate verifies if one of the running pods for a service contains

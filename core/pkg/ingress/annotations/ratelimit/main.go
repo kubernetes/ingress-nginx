@@ -20,9 +20,9 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-
 	"k8s.io/kubernetes/pkg/apis/extensions"
+
+	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 )
 
 const (
@@ -48,19 +48,19 @@ var (
 // Note: Is possible to specify both limits
 type RateLimit struct {
 	// Connections indicates a limit with the number of connections per IP address
-	Connections Zone
+	Connections Zone `json:"connections"`
 	// RPS indicates a limit with the number of connections per second
-	RPS Zone
+	RPS Zone `json:"rps"`
 }
 
 // Zone returns information about the NGINX rate limit (limit_req_zone)
 // http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_zone
 type Zone struct {
-	Name  string
-	Limit int
-	Burst int
+	Name  string `json:"name"`
+	Limit int    `json:"limit"`
+	Burst int    `json:"burst"`
 	// SharedSize amount of shared memory for the zone
-	SharedSize int
+	SharedSize int `json:"sharedSize"`
 }
 
 // ParseAnnotations parses the annotations contained in the ingress

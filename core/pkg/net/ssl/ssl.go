@@ -21,6 +21,7 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -92,7 +93,8 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 		_, err := pemCert.Verify(opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to verify certificate chain: \n\t%s\n", err)
+			oe := fmt.Sprintf("failed to verify certificate chain: \n\t%s\n", err)
+			return nil, errors.New(oe)
 		}
 
 		caName := fmt.Sprintf("ca-%v.pem", name)

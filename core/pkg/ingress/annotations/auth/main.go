@@ -23,10 +23,10 @@ import (
 	"os"
 	"regexp"
 
-	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
+
+	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 )
 
 const (
@@ -59,10 +59,10 @@ var (
 
 // BasicDigest returns authentication configuration for an Ingress rule
 type BasicDigest struct {
-	Type    string
-	Realm   string
-	File    string
-	Secured bool
+	Type    string `json:"type"`
+	Realm   string `json:"realm"`
+	File    string `json:"file"`
+	Secured bool   `json:"secured"`
 }
 
 // ParseAnnotations parses the annotations contained in the ingress

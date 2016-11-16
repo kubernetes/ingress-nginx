@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
@@ -12,15 +13,15 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
 
-	"k8s.io/ingress/core/pkg/ingress"
-	"k8s.io/ingress/core/pkg/k8s"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/kubernetes/pkg/api"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	"k8s.io/kubernetes/pkg/healthz"
 	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
+
+	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/k8s"
 )
 
 // NewIngressController returns a configured Ingress controller
@@ -160,7 +161,8 @@ func registerHandlers(enableProfiling bool, port int, ic *GenericController) {
 
 	mux.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, ic.Info())
+		b, _ := json.Marshal(ic.Info())
+		w.Write(b)
 	})
 
 	mux.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {

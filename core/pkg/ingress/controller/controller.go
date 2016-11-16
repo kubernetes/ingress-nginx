@@ -301,7 +301,7 @@ func (ic GenericController) Check(_ *http.Request) error {
 }
 
 // Info returns information about the backend
-func (ic GenericController) Info() string {
+func (ic GenericController) Info() *ingress.BackendInfo {
 	return ic.cfg.Backend.Info()
 }
 
@@ -368,31 +368,25 @@ func (ic *GenericController) sync(key interface{}) error {
 				continue
 			}
 			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
-				Upstream: loc.Backend,
-				Host:     server.Name,
+				Backend:  loc.Backend,
+				Hostname: server.Hostname,
 			})
 			break
 		}
 	}
 
 	data, err := ic.cfg.Backend.OnUpdate(cfg, ingress.Configuration{
-		HealthzURL:           ic.cfg.DefaultHealthzURL,
-		Upstreams:            upstreams,
-		Servers:              servers,
-		TCPEndpoints:         ic.getTCPServices(),
-		UPDEndpoints:         ic.getUDPServices(),
-		PassthroughUpstreams: passUpstreams,
+		Backends:            upstreams,
+		Servers:             servers,
+		TCPEndpoints:        ic.getTCPServices(),
+		UPDEndpoints:        ic.getUDPServices(),
+		PassthroughBackends: passUpstreams,
 	})
 	if err != nil {
 		return err
 	}
 
-	if !ic.cfg.Backend.IsReloadRequired(data) {
-		return nil
-	}
-
-	glog.Infof("reloading ingress backend...")
-	out, err := ic.cfg.Backend.Restart(data)
+	out, err := ic.cfg.Backend.Reload(data)
 	if err != nil {
 		incReloadErrorCount()
 		glog.Errorf("unexpected failure restarting the backend: \n%v", string(out))
@@ -517,11 +511,8 @@ func (ic *GenericController) getStreamServices(data map[string]string, proto api
 		}
 
 		svcs = append(svcs, &ingress.Location{
-			Path: k,
-			Upstream: ingress.Backend{
-				Name:     fmt.Sprintf("%v-%v-%v", svcNs, svcName, port),
-				Endpoints: endps,
-			},
+			Path:    k,
+			Backend: fmt.Sprintf("%v-%v-%v", svcNs, svcName, port),
 		})
 	}
 
@@ -579,7 +570,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	upstreams := ic.createUpstreams(ings)
 	servers := ic.createServers(ings, upstreams)
 
-	upsDefaults := ic.cfg.Backend.UpstreamDefaults()
+	upsDefaults := ic.cfg.Backend.BackendDefaults()
 
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
@@ -594,11 +585,6 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 		glog.V(5).Infof("rate limit annotation: %v", rl)
 		if err != nil {
 			glog.V(5).Infof("error reading rate limit annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
-
-		secUpstream, err := secureupstream.ParseAnnotations(ing)
-		if err != nil {
-			glog.V(5).Infof("error reading secure upstream in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
 		}
 
 		locRew, err := rewrite.ParseAnnotations(upsDefaults, ing)
@@ -666,7 +652,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 				len(ing.Spec.TLS) == 0 &&
 				host != defServerName {
 				glog.V(3).Infof("ingress rule %v/%v does not contains HTTP or TLS rules. using default backend", ing.Namespace, ing.Name)
-				server.Locations[0].Upstream = *defBackend
+				server.Locations[0].Backend = defBackend.Name
 				continue
 			}
 
@@ -690,19 +676,19 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						addLoc = false
 
 						if !loc.IsDefBackend {
-							glog.V(3).Infof("avoiding replacement of ingress rule %v/%v location %v upstream %v (%v)", ing.Namespace, ing.Name, loc.Path, ups.Name, loc.Backend.Name)
+							glog.V(3).Infof("avoiding replacement of ingress rule %v/%v location %v upstream %v (%v)", ing.Namespace, ing.Name, loc.Path, ups.Name, loc.Backend)
 							break
 						}
 
-						glog.V(3).Infof("replacing ingress rule %v/%v location %v upstream %v (%v)", ing.Namespace, ing.Name, loc.Path, ups.Name, loc.Backend.Name)
-						loc.Backend = *ups
+						glog.V(3).Infof("replacing ingress rule %v/%v location %v upstream %v (%v)", ing.Namespace, ing.Name, loc.Path, ups.Name, loc.Backend)
+						loc.Backend = ups.Name
 						loc.IsDefBackend = false
 						loc.BasicDigestAuth = *nginxAuth
 						loc.RateLimit = *rl
 						loc.Redirect = *locRew
-						loc.SecureUpstream = secUpstream
+						//loc.SecureUpstream = secUpstream
 						loc.Whitelist = *wl
-						loc.Backend = *ups
+						loc.Backend = ups.Name
 						loc.EnableCORS = eCORS
 						loc.ExternalAuth = ra
 						loc.Proxy = *prx
@@ -712,15 +698,15 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 				}
 				// is a new location
 				if addLoc {
-					glog.V(3).Infof("adding location %v in ingress rule %v/%v upstream", nginxPath, ing.Namespace, ing.Name, ups.Name)
+					glog.V(3).Infof("adding location %v in ingress rule %v/%v upstream %v", nginxPath, ing.Namespace, ing.Name, ups.Name)
 					server.Locations = append(server.Locations, &ingress.Location{
 						Path:            nginxPath,
-						Upstream:        *ups,
+						Backend:         ups.Name,
 						IsDefBackend:    false,
 						BasicDigestAuth: *nginxAuth,
 						RateLimit:       *rl,
 						Redirect:        *locRew,
-						SecureUpstream:  secUpstream,
+						//SecureUpstream:  secUpstream,
 						Whitelist:       *wl,
 						EnableCORS:      eCORS,
 						ExternalAuth:    ra,
@@ -776,9 +762,14 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 	upstreams := make(map[string]*ingress.Backend)
 	upstreams[defUpstreamName] = ic.getDefaultUpstream()
 
-	upsDefaults := ic.cfg.Backend.UpstreamDefaults()
+	upsDefaults := ic.cfg.Backend.BackendDefaults()
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
+
+		secUpstream, err := secureupstream.ParseAnnotations(ing)
+		if err != nil {
+			glog.V(5).Infof("error reading secure upstream in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		}
 
 		hz := healthcheck.ParseAnnotations(upsDefaults, ing)
 
@@ -817,7 +808,9 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 				glog.V(3).Infof("creating upstream %v", name)
 				upstreams[name] = newUpstream(name)
-
+				if !upstreams[name].Secure {
+					upstreams[name].Secure = secUpstream
+				}
 				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
 				endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
 				if err != nil {
@@ -871,18 +864,18 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 
 func (ic *GenericController) createServers(data []interface{}, upstreams map[string]*ingress.Backend) map[string]*ingress.Server {
 	servers := make(map[string]*ingress.Server)
-	ngxProxy := *proxy.ParseAnnotations(ic.cfg.Backend.UpstreamDefaults(), nil)
+	ngxProxy := *proxy.ParseAnnotations(ic.cfg.Backend.BackendDefaults(), nil)
 
-	upsDefaults := ic.cfg.Backend.UpstreamDefaults()
+	upsDefaults := ic.cfg.Backend.BackendDefaults()
 
 	// default server
 	servers[defServerName] = &ingress.Server{
-		Name: defServerName,
+		Hostname: defServerName,
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
 				IsDefBackend: true,
-				Upstream:     *ic.getDefaultUpstream(),
+				Backend:      ic.getDefaultUpstream().Name,
 				Proxy:        ngxProxy,
 			},
 		}}
@@ -906,12 +899,12 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 				continue
 			}
 			servers[host] = &ingress.Server{
-				Name: host,
+				Hostname: host,
 				Locations: []*ingress.Location{
 					{
 						Path:         rootLocation,
 						IsDefBackend: true,
-						Upstream:     *ic.getDefaultUpstream(),
+						Backend:      ic.getDefaultUpstream().Name,
 						Proxy:        ngxProxy,
 					},
 				}, SSLPassthrough: sslpt}
@@ -929,15 +922,13 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 			}
 
 			// only add certificate if the server does not have one previously configured
-			if len(ing.Spec.TLS) > 0 && !servers[host].SSL {
+			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate != "" {
 				key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.TLS[0].SecretName)
 				bc, exists := ic.sslCertTracker.Get(key)
 				if exists {
 					cert := bc.(*ingress.SSLCert)
 					if isHostValid(host, cert) {
-						servers[host].SSL = true
 						servers[host].SSLCertificate = cert.PemFileName
-						//servers[host].SSLCertificateKey = cert.PemFileName
 						servers[host].SSLPemChecksum = cert.PemSHA
 					}
 				}
@@ -950,7 +941,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 						ic.recorder.Eventf(ing, api.EventTypeWarning, "MAPPING", "error: rules with Spec.Backend are allowed only with hostnames")
 						continue
 					}
-					servers[host].Locations[0].Upstream = *backendUpstream
+					servers[host].Locations[0].Backend = backendUpstream.Name
 				}
 			}
 		}
@@ -1050,7 +1041,6 @@ func (ic GenericController) Stop() error {
 // Start starts the Ingress controller.
 func (ic GenericController) Start() {
 	glog.Infof("starting Ingress controller")
-	go ic.cfg.Backend.Start()
 
 	go ic.ingController.Run(ic.stopCh)
 	go ic.endpController.Run(ic.stopCh)

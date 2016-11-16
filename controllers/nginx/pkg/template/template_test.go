@@ -17,14 +17,21 @@ limitations under the License.
 package template
 
 import (
+	"encoding/json"
+	"os"
+	"path"
 	"strings"
 	"testing"
 
+	"io/ioutil"
+
+	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 )
 
 var (
+	// TODO: add tests for secure endpoints
 	tmplFuncTestcases = map[string]struct {
 		Path       string
 		Target     string
@@ -88,12 +95,77 @@ func TestBuildProxyPass(t *testing.T) {
 		loc := &ingress.Location{
 			Path:     tc.Path,
 			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
-			Upstream: ingress.Backend{Name: "upstream-name"},
+			Backend:  "upstream-name",
 		}
 
-		pp := buildProxyPass(loc)
+		pp := buildProxyPass([]*ingress.Backend{}, loc)
 		if !strings.EqualFold(tc.ProxyPass, pp) {
 			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, tc.ProxyPass, pp)
 		}
+	}
+}
+
+func TestTemplateWithData(t *testing.T) {
+	pwd, _ := os.Getwd()
+	f, err := os.Open(path.Join(pwd, "../../test/data/config.json"))
+	if err != nil {
+		t.Errorf("unexpected error reading json file: %v", err)
+	}
+	defer f.Close()
+	data, err := ioutil.ReadFile(f.Name())
+	if err != nil {
+		t.Error("unexpected error reading json file: ", err)
+	}
+	var dat config.TemplateConfig
+	if err := json.Unmarshal(data, &dat); err != nil {
+		t.Errorf("unexpected error unmarshalling json: %v", err)
+	}
+
+	tf, err := os.Open(path.Join(pwd, "../../rootfs/etc/nginx/template/nginx.tmpl"))
+	if err != nil {
+		t.Errorf("unexpected error reading json file: %v", err)
+	}
+	defer tf.Close()
+
+	ngxTpl, err := NewTemplate(tf.Name(), func() {})
+	if err != nil {
+		t.Errorf("invalid NGINX template: %v", err)
+	}
+
+	_, err = ngxTpl.Write(dat, func(b []byte) error { return nil })
+	if err != nil {
+		t.Errorf("invalid NGINX template: %v", err)
+	}
+}
+
+func BenchmarkTemplateWithData(b *testing.B) {
+	pwd, _ := os.Getwd()
+	f, err := os.Open(path.Join(pwd, "../../test/data/config.json"))
+	if err != nil {
+		b.Errorf("unexpected error reading json file: %v", err)
+	}
+	defer f.Close()
+	data, err := ioutil.ReadFile(f.Name())
+	if err != nil {
+		b.Error("unexpected error reading json file: ", err)
+	}
+	var dat config.TemplateConfig
+	if err := json.Unmarshal(data, &dat); err != nil {
+		b.Errorf("unexpected error unmarshalling json: %v", err)
+	}
+
+	tf, err := os.Open(path.Join(pwd, "../../rootfs/etc/nginx/template/nginx.tmpl"))
+	if err != nil {
+		b.Errorf("unexpected error reading json file: %v", err)
+	}
+	defer tf.Close()
+
+	ngxTpl, err := NewTemplate(tf.Name(), func() {})
+	if err != nil {
+		b.Errorf("invalid NGINX template: %v", err)
+	}
+
+	for i := 0; i < b.N; i++ {
+		ngxTpl.Write(dat, func(b []byte) error { return nil })
 	}
 }

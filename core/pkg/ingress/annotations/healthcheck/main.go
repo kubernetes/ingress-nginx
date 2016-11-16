@@ -31,8 +31,8 @@ const (
 // Upstream returns the URL and method to use check the status of
 // the upstream server/s
 type Upstream struct {
-	MaxFails    int
-	FailTimeout int
+	MaxFails    int `json:"maxFails"`
+	FailTimeout int `json:"failTimeout"`
 }
 
 // ParseAnnotations parses the annotations contained in the ingress

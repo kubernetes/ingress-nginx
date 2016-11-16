@@ -32,10 +32,10 @@ const (
 
 // Configuration returns the proxy timeout to use in the upstream server/s
 type Configuration struct {
-	ConnectTimeout int
-	SendTimeout    int
-	ReadTimeout    int
-	BufferSize     string
+	ConnectTimeout int    `json:"conectTimeout"`
+	SendTimeout    int    `json:"sendTimeout"`
+	ReadTimeout    int    `json:"readTimeout"`
+	BufferSize     string `json:"bufferSize"`
 }
 
 // ParseAnnotations parses the annotations contained in the ingress

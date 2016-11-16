@@ -19,10 +19,10 @@ package controller
 import (
 	"strings"
 
+	"k8s.io/kubernetes/pkg/apis/extensions"
+
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-
-	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 // newDefaultServer return an BackendServer to be use as default server that returns 503.
@@ -33,7 +33,7 @@ func newDefaultServer() ingress.Endpoint {
 // newUpstream creates an upstream without servers.
 func newUpstream(name string) *ingress.Backend {
 	return &ingress.Backend{
-		Name:     name,
+		Name:      name,
 		Endpoints: []ingress.Endpoint{},
 	}
 }

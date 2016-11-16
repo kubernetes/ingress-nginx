@@ -19,9 +19,10 @@ package config
 import (
 	"runtime"
 
-	"k8s.io/ingress/core/pkg/ingress/defaults"
-
 	"github.com/golang/glog"
+
+	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
 
 const (
@@ -216,8 +217,7 @@ type Configuration struct {
 	WorkerProcesses int `structs:"worker-processes,omitempty"`
 }
 
-// NewDefault returns the default configuration contained
-// in the file default-conf.json
+// NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	cfg := Configuration{
 		BodySize:                bodySize,
@@ -263,4 +263,16 @@ func NewDefault() Configuration {
 	}
 
 	return cfg
+}
+
+type TemplateConfig struct {
+	BacklogSize        int
+	Backends           []*ingress.Backend
+	PassthrougBackends []*ingress.SSLPassthroughBackend
+	Servers            []*ingress.Server
+	TCPBackends        []*ingress.Location
+	UDPBackends        []*ingress.Location
+	HealthzURI         string
+	CustomErrors       bool
+	Cfg                Configuration
 }

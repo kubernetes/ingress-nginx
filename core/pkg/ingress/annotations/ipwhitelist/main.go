@@ -20,11 +20,11 @@ import (
 	"errors"
 	"strings"
 
-	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
-
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/util/net/sets"
+
+	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
 
 const (
@@ -39,7 +39,7 @@ var (
 
 // SourceRange returns the CIDR
 type SourceRange struct {
-	CIDR []string
+	CIDR []string `json:"cidr"`
 }
 
 // ParseAnnotations parses the annotations contained in the ingress

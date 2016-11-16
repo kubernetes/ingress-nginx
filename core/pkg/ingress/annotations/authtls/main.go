@@ -19,10 +19,10 @@ package authtls
 import (
 	"fmt"
 
+	"k8s.io/kubernetes/pkg/apis/extensions"
+
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/k8s"
-
-	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 const (
@@ -32,11 +32,11 @@ const (
 
 // SSLCert returns external authentication configuration for an Ingress rule
 type SSLCert struct {
-	Secret       string
-	CertFileName string
-	KeyFileName  string
-	CAFileName   string
-	PemSHA       string
+	Secret       string `json:"secret"`
+	CertFileName string `json:"certFilename"`
+	KeyFileName  string `json:"keyFilename"`
+	CAFileName   string `json:"caFilename"`
+	PemSHA       string `json:"pemSha"`
 }
 
 // ParseAnnotations parses the annotations contained in the ingress

@@ -25,14 +25,16 @@ import (
 
 	"github.com/golang/glog"
 
+	"k8s.io/kubernetes/pkg/api"
+
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+
+	"errors"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
 	"k8s.io/ingress/controllers/nginx/pkg/version"
-
-	"k8s.io/kubernetes/pkg/api"
 )
 
 var (
@@ -75,6 +77,8 @@ Error loading new template : %v
 	}
 
 	n.t = ngxTpl
+	go n.Start()
+
 	return n
 }
 
@@ -85,7 +89,7 @@ type NGINXController struct {
 	binary string
 }
 
-// Start ...
+// Start start a new NGINX master process running in foreground.
 func (n NGINXController) Start() {
 	glog.Info("starting NGINX process...")
 	cmd := exec.Command(n.binary, "-c", cfgPath)
@@ -99,14 +103,13 @@ func (n NGINXController) Start() {
 	}
 }
 
-// Stop ...
-func (n NGINXController) Stop() error {
-	n.t.Close()
-	return exec.Command(n.binary, "-s", "stop").Run()
-}
+// Reload checks if the running configuration file is different
+// to the specified and reload nginx if required
+func (n NGINXController) Reload(data []byte) ([]byte, error) {
+	if !n.isReloadRequired(data) {
+		return nil, fmt.Errorf("Reload not required")
+	}
 
-// Restart ...
-func (n NGINXController) Restart(data []byte) ([]byte, error) {
 	err := ioutil.WriteFile(cfgPath, data, 0644)
 	if err != nil {
 		return nil, err
@@ -120,15 +123,15 @@ func (n NGINXController) Test(file string) *exec.Cmd {
 	return exec.Command(n.binary, "-t", "-c", file)
 }
 
-// UpstreamDefaults returns the nginx defaults
-func (n NGINXController) UpstreamDefaults() defaults.Backend {
+// BackendDefaults returns the nginx defaults
+func (n NGINXController) BackendDefaults() defaults.Backend {
 	d := config.NewDefault()
 	return d.Backend
 }
 
 // IsReloadRequired check if the new configuration file is different
 // from the current one.
-func (n NGINXController) IsReloadRequired(data []byte) bool {
+func (n NGINXController) isReloadRequired(data []byte) bool {
 	in, err := os.Open(cfgPath)
 	if err != nil {
 		return false
@@ -167,8 +170,13 @@ func (n NGINXController) IsReloadRequired(data []byte) bool {
 }
 
 // Info return build information
-func (n NGINXController) Info() string {
-	return fmt.Sprintf("build version %v from repo %v commit %v", version.RELEASE, version.REPO, version.COMMIT)
+func (n NGINXController) Info() *ingress.BackendInfo {
+	return &ingress.BackendInfo{
+		Name:       "NGINX",
+		Release:    version.RELEASE,
+		Build:      version.COMMIT,
+		Repository: version.REPO,
+	}
 }
 
 // testTemplate checks if the NGINX configuration inside the byte array is valid
@@ -183,12 +191,13 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	out, err := n.Test(tmpfile.Name()).CombinedOutput()
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
-		return fmt.Errorf(`
+		oe := fmt.Sprintf(`
 -------------------------------------------------------------------------------
 Error: %v
 %v
 -------------------------------------------------------------------------------
 `, err, string(out))
+		return errors.New(oe)
 	}
 
 	os.Remove(tmpfile.Name())
@@ -207,9 +216,9 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 	var longestName int
 	var serverNames int
 	for _, srv := range ingressCfg.Servers {
-		serverNames += len([]byte(srv.Name))
-		if longestName < len(srv.Name) {
-			longestName = len(srv.Name)
+		serverNames += len([]byte(srv.Hostname))
+		if longestName < len(srv.Hostname) {
+			longestName = len(srv.Hostname)
 		}
 	}
 
@@ -234,21 +243,17 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 		cfg.ServerNameHashMaxSize = serverNameHashMaxSize
 	}
 
-	conf := make(map[string]interface{})
-	// adjust the size of the backlog
-	conf["backlogSize"] = sysctlSomaxconn()
-	conf["upstreams"] = ingressCfg.Upstreams
-	conf["passthroughUpstreams"] = ingressCfg.PassthroughUpstreams
-	conf["servers"] = ingressCfg.Servers
-	conf["tcpUpstreams"] = ingressCfg.TCPEndpoints
-	conf["udpUpstreams"] = ingressCfg.UPDEndpoints
-	conf["healthzURL"] = ingressCfg.HealthzURL
-	conf["defResolver"] = cfg.Resolver
-	conf["sslDHParam"] = ""
-	conf["customErrors"] = len(cfg.CustomHTTPErrors) > 0
-	conf["cfg"] = ngx_template.StandarizeKeyNames(cfg)
-
-	return n.t.Write(conf, n.testTemplate)
+	return n.t.Write(config.TemplateConfig{
+		BacklogSize:        sysctlSomaxconn(),
+		Backends:           ingressCfg.Backends,
+		PassthrougBackends: ingressCfg.PassthroughBackends,
+		Servers:            ingressCfg.Servers,
+		TCPBackends:        ingressCfg.TCPEndpoints,
+		UDPBackends:        ingressCfg.UPDEndpoints,
+		HealthzURI:         "/healthz",
+		CustomErrors:       len(cfg.CustomHTTPErrors) > 0,
+		Cfg:                cfg,
+	}, n.testTemplate)
 }
 
 // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2

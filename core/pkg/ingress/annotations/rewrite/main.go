@@ -19,10 +19,10 @@ package rewrite
 import (
 	"errors"
 
+	"k8s.io/kubernetes/pkg/apis/extensions"
+
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
-
-	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 const (
@@ -34,12 +34,12 @@ const (
 // Redirect describes the per location redirect config
 type Redirect struct {
 	// Target URI where the traffic must be redirected
-	Target string
+	Target string `json:"target"`
 	// AddBaseURL indicates if is required to add a base tag in the head
 	// of the responses from the upstream servers
-	AddBaseURL bool
+	AddBaseURL bool `json:"addBaseUrl"`
 	// SSLRedirect indicates if the location section is accessible SSL only
-	SSLRedirect bool
+	SSLRedirect bool `json:"sslRedirect"`
 }
 
 // ParseAnnotations parses the annotations contained in the ingress

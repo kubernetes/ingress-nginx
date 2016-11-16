@@ -21,11 +21,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/glog"
+
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/cache"
 
-	"github.com/golang/glog"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ssl "k8s.io/ingress/core/pkg/net/ssl"

@@ -19,10 +19,10 @@ package sslpassthrough
 import (
 	"fmt"
 
+	"k8s.io/kubernetes/pkg/apis/extensions"
+
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
-
-	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
 const (

@@ -21,8 +21,9 @@ import (
 	"net/url"
 	"strings"
 
-	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/kubernetes/pkg/apis/extensions"
+
+	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 )
 
 const (
@@ -34,9 +35,9 @@ const (
 
 // External returns external authentication configuration for an Ingress rule
 type External struct {
-	URL      string
-	Method   string
-	SendBody bool
+	URL      string `json:"url"`
+	Method   string `json:"method"`
+	SendBody bool   `json:"sendBody"`
 }
 
 var (

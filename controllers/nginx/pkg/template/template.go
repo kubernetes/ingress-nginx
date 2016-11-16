@@ -27,6 +27,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/watch"
 )
@@ -73,11 +74,18 @@ func (t *Template) Close() {
 
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
-func (t *Template) Write(conf map[string]interface{},
-	isValidTemplate func([]byte) error) ([]byte, error) {
-
+func (t *Template) Write(conf config.TemplateConfig, isValidTemplate func([]byte) error) ([]byte, error) {
 	defer t.tmplBuf.Reset()
 	defer t.outCmdBuf.Reset()
+
+	defer func() {
+		if t.s < t.tmplBuf.Cap() {
+			glog.V(2).Infof("adjusting template buffer size from %v to %v", t.s, t.tmplBuf.Cap())
+			t.s = t.tmplBuf.Cap()
+			t.tmplBuf = bytes.NewBuffer(make([]byte, 0, t.tmplBuf.Cap()))
+			t.outCmdBuf = bytes.NewBuffer(make([]byte, 0, t.outCmdBuf.Cap()))
+		}
+	}()
 
 	if glog.V(3) {
 		b, err := json.Marshal(conf)
@@ -88,12 +96,8 @@ func (t *Template) Write(conf map[string]interface{},
 	}
 
 	err := t.tmpl.Execute(t.tmplBuf, conf)
-
-	if t.s < t.tmplBuf.Cap() {
-		glog.V(2).Infof("adjusting template buffer size from %v to %v", t.s, t.tmplBuf.Cap())
-		t.s = t.tmplBuf.Cap()
-		t.tmplBuf = bytes.NewBuffer(make([]byte, 0, t.tmplBuf.Cap()))
-		t.outCmdBuf = bytes.NewBuffer(make([]byte, 0, t.outCmdBuf.Cap()))
+	if err != nil {
+		return nil, err
 	}
 
 	// squeezes multiple adjacent empty lines to be single
@@ -124,12 +128,12 @@ var (
 			}
 			return true
 		},
-		"buildLocation":            buildLocation,
-		"buildAuthLocation":        buildAuthLocation,
-		"buildProxyPass":           buildProxyPass,
-		"buildRateLimitZones":      buildRateLimitZones,
-		"buildRateLimit":           buildRateLimit,
-		"getSSPassthroughUpstream": getSSPassthroughUpstream,
+		"buildLocation":               buildLocation,
+		"buildAuthLocation":           buildAuthLocation,
+		"buildProxyPass":              buildProxyPass,
+		"buildRateLimitZones":         buildRateLimitZones,
+		"buildRateLimit":              buildRateLimit,
+		"buildSSPassthroughUpstreams": buildSSPassthroughUpstreams,
 
 		"contains":  strings.Contains,
 		"hasPrefix": strings.HasPrefix,
@@ -139,13 +143,32 @@ var (
 	}
 )
 
-func getSSPassthroughUpstream(input interface{}) string {
-	s, ok := input.(*ingress.Server)
-	if !ok {
-		return ""
+func buildSSPassthroughUpstreams(b interface{}, sslb interface{}) string {
+	backends := b.([]*ingress.Backend)
+	sslBackends := sslb.([]*ingress.SSLPassthroughBackend)
+	buf := bytes.NewBuffer(make([]byte, 0, 10))
+
+	// multiple services can use the same upstream.
+	// avoid duplications using a map[name]=true
+	u := make(map[string]bool)
+	for _, passthrough := range sslBackends {
+		if u[passthrough.Backend] {
+			continue
+		}
+		u[passthrough.Backend] = true
+		fmt.Fprintf(buf, "upstream %v {\n", passthrough.Backend)
+		for _, backend := range backends {
+			if backend.Name == passthrough.Backend {
+				for _, server := range backend.Endpoints {
+					fmt.Fprintf(buf, "\t\tserver %v:%v;\n", server.Address, server.Port)
+				}
+				break
+			}
+		}
+		fmt.Fprint(buf, "\t}\n\n")
 	}
 
-	return s.Name
+	return buf.String()
 }
 
 // buildLocation produces the location string, if the ingress has redirects
@@ -184,20 +207,27 @@ func buildAuthLocation(input interface{}) string {
 // (specified through the ingress.kubernetes.io/rewrite-to annotation)
 // If the annotation ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
-func buildProxyPass(input interface{}) string {
-	location, ok := input.(*ingress.Location)
+func buildProxyPass(b interface{}, loc interface{}) string {
+	backends := b.([]*ingress.Backend)
+	location, ok := loc.(*ingress.Location)
 	if !ok {
 		return ""
 	}
 
 	path := location.Path
-
 	proto := "http"
-	if location.SecureUpstream {
-		proto = "https"
+
+	for _, backend := range backends {
+		if backend.Name == location.Backend {
+			if backend.Secure {
+				proto = "https"
+			}
+			break
+		}
 	}
+
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
-	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, location.Backend.Name)
+	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, location.Backend)
 	// if the path in the ingress rule is equals to the target: no special rewrite
 	if path == location.Redirect.Target {
 		return defProxyPass
@@ -227,13 +257,13 @@ func buildProxyPass(input interface{}) string {
 	rewrite %s(.*) /$1 break;
 	rewrite %s / break;
 	proxy_pass %s://%s;
-	%v`, path, location.Path, proto, location.Backend.Name, abu)
+	%v`, path, location.Path, proto, location.Backend, abu)
 		}
 
 		return fmt.Sprintf(`
 	rewrite %s(.*) %s/$1 break;
 	proxy_pass %s://%s;
-	%v`, path, location.Redirect.Target, proto, location.Backend.Name, abu)
+	%v`, path, location.Redirect.Target, proto, location.Backend, abu)
 	}
 
 	// default proxy_pass

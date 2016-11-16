@@ -27,10 +27,10 @@ import (
 	"github.com/mitchellh/mapstructure"
 	go_camelcase "github.com/segmentio/go-camelcase"
 
+	"k8s.io/kubernetes/pkg/api"
+
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
-
-	"k8s.io/kubernetes/pkg/api"
 )
 
 const (
@@ -50,9 +50,9 @@ func ReadConfig(conf *api.ConfigMap) config.Configuration {
 		return config.NewDefault()
 	}
 
-	var errors []int
-	var skipUrls []string
-	var whitelist []string
+	errors := make([]int, 0)
+	skipUrls := make([]string, 0)
+	whitelist := make([]string, 0)
 
 	if val, ok := conf.Data[customHTTPErrors]; ok {
 		delete(conf.Data, customHTTPErrors)
