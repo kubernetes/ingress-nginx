@@ -88,19 +88,8 @@ func NewLoadBalancerPool(
 }
 
 func (l *L7s) create(ri *L7RuntimeInfo) (*L7, error) {
-	// Lazily create a default backend so we don't tax users who don't care
-	// about Ingress by consuming 1 of their 3 GCE BackendServices. This
-	// BackendService is deleted when there are no more Ingresses, either
-	// through Sync or Shutdown.
 	if l.glbcDefaultBackend == nil {
-		err := l.defaultBackendPool.Add(l.defaultBackendNodePort)
-		if err != nil {
-			return nil, err
-		}
-		l.glbcDefaultBackend, err = l.defaultBackendPool.Get(l.defaultBackendNodePort)
-		if err != nil {
-			return nil, err
-		}
+		glog.Warningf("Creating l7 without a default backend")
 	}
 	return &L7{
 		runtimeInfo:        ri,
@@ -175,24 +164,24 @@ func (l *L7s) Delete(name string) error {
 func (l *L7s) Sync(lbs []*L7RuntimeInfo) error {
 	glog.V(3).Infof("Creating loadbalancers %+v", lbs)
 
-	// The default backend is completely managed by the l7 pool.
-	// This includes recreating it if it's deleted, or fixing broken links.
-	if err := l.defaultBackendPool.Add(l.defaultBackendNodePort); err != nil {
-		return err
+	if len(lbs) != 0 {
+		// Lazily create a default backend so we don't tax users who don't care
+		// about Ingress by consuming 1 of their 3 GCE BackendServices. This
+		// BackendService is GC'd when there are no more Ingresses.
+		if err := l.defaultBackendPool.Add(l.defaultBackendNodePort); err != nil {
+			return err
+		}
+		defaultBackend, err := l.defaultBackendPool.Get(l.defaultBackendNodePort)
+		if err != nil {
+			return err
+		}
+		l.glbcDefaultBackend = defaultBackend
 	}
-	// create new loadbalancers, perform an edge hop for existing
+	// create new loadbalancers, validate existing
 	for _, ri := range lbs {
 		if err := l.Add(ri); err != nil {
 			return err
 		}
-	}
-	// Tear down the default backend when there are no more loadbalancers
-	// because the cluster could go down anytime and we'd leak it otherwise.
-	if len(lbs) == 0 {
-		if err := l.defaultBackendPool.Delete(l.defaultBackendNodePort); err != nil {
-			return err
-		}
-		l.glbcDefaultBackend = nil
 	}
 	return nil
 }
@@ -214,6 +203,15 @@ func (l *L7s) GC(names []string) error {
 		if err := l.Delete(name); err != nil {
 			return err
 		}
+	}
+	// Tear down the default backend when there are no more loadbalancers.
+	// This needs to happen after we've deleted all url-maps that might be
+	// using it.
+	if len(names) == 0 {
+		if err := l.defaultBackendPool.Delete(l.defaultBackendNodePort); err != nil {
+			return err
+		}
+		l.glbcDefaultBackend = nil
 	}
 	return nil
 }
@@ -586,7 +584,7 @@ func (l *L7) edgeHop() error {
 		}
 	}
 	if l.runtimeInfo.TLS != nil {
-		glog.V(3).Infof("Edge hopping https for %v", l.Name)
+		glog.V(3).Infof("validating https for %v", l.Name)
 		if err := l.edgeHopHttps(); err != nil {
 			return err
 		}
