@@ -694,7 +694,7 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 	} else {
 		l.um.DefaultService = l.glbcDefaultBackend.SelfLink
 	}
-	glog.V(3).Infof("Updating url map %+v", ingressRules)
+	glog.Infof("Updating url map:\n%+v", ingressRules)
 
 	// Every update replaces the entire urlmap.
 	// TODO:  when we have multiple loadbalancers point to a single gce url map
