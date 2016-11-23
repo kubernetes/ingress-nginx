@@ -100,7 +100,8 @@ type GenericController struct {
 
 	syncStatus status.Sync
 
-	// controller for SSL certificates
+	// local store of SSL certificates
+	// (only certificates used in ingress)
 	sslCertTracker *sslCertTracker
 	// TaskQueue in charge of keep the secrets referenced from Ingress
 	// in sync with the files on disk
@@ -922,7 +923,8 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 			}
 
 			// only add a certificate if the server does not have one previously configured
-			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate != "" {
+			// TODO: TLS without secret?
+			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate == "" && ing.Spec.TLS[0].SecretName != "" {
 				key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.TLS[0].SecretName)
 				bc, exists := ic.sslCertTracker.Get(key)
 				if exists {
@@ -931,6 +933,8 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 						servers[host].SSLCertificate = cert.PemFileName
 						servers[host].SSLPemChecksum = cert.PemSHA
 					}
+				} else {
+					glog.Warningf("secret %v does not exists", key)
 				}
 			}
 

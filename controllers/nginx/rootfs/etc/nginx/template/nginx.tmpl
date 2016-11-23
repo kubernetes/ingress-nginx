@@ -188,7 +188,7 @@ http {
     server {
         server_name {{ $server.Hostname }};
         listen 80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        {{ if not (empty $server.SSLCertificate) }}listen 442 {{ if $cfg.UseProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.UseHttp2 }}http2{{ end }};
+        {{ if not (empty $server.SSLCertificate) }}listen 442 {{ if $cfg.UseProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate                         {{ $server.SSLCertificate }};
