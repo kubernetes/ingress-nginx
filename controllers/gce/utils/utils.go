@@ -79,6 +79,15 @@ const (
 	// K8sAnnotationPrefix is the prefix used in annotations used to record
 	// debug information in the Ingress annotations.
 	K8sAnnotationPrefix = "ingress.kubernetes.io"
+
+	// DefaultHealthCheckInterval defines how frequently a probe runs
+	DefaultHealthCheckInterval = 60
+	// DefaultHealthyThreshold defines the threshold of success probes that declare a backend "healthy"
+	DefaultHealthyThreshold = 1
+	// DefaultUnhealthyThreshold defines the threshold of failure probes that declare a backend "unhealthy"
+	DefaultUnhealthyThreshold = 10
+	// DefaultTimeoutSeconds defines the timeout of each probe
+	DefaultTimeoutSeconds = 60
 )
 
 // Namer handles centralized naming for the cluster.
@@ -305,12 +314,12 @@ func DefaultHealthCheckTemplate(port int64) *compute.HttpHealthCheck {
 		RequestPath: "",
 		Description: "Default kubernetes L7 Loadbalancing health check.",
 		// How often to health check.
-		CheckIntervalSec: 1,
+		CheckIntervalSec: DefaultHealthCheckInterval,
 		// How long to wait before claiming failure of a health check.
-		TimeoutSec: 1,
+		TimeoutSec: DefaultTimeoutSeconds,
 		// Number of healthchecks to pass for a vm to be deemed healthy.
-		HealthyThreshold: 1,
+		HealthyThreshold: DefaultHealthyThreshold,
 		// Number of healthchecks to fail before the vm is deemed unhealthy.
-		UnhealthyThreshold: 10,
+		UnhealthyThreshold: DefaultUnhealthyThreshold,
 	}
 }

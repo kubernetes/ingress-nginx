@@ -242,7 +242,7 @@ func (t *GCETranslator) toURLMap(ing *extensions.Ingress) (utils.GCEURLMap, erro
 				// to all other services under the assumption that the user will
 				// modify nodeport.
 				if _, ok := err.(errorNodePortNotFound); ok {
-					glog.Infof("%v", err)
+					t.recorder.Eventf(ing, api.EventTypeWarning, "Service", err.(errorNodePortNotFound).Error())
 					continue
 				}
 
@@ -269,6 +269,10 @@ func (t *GCETranslator) toURLMap(ing *extensions.Ingress) (utils.GCEURLMap, erro
 	}
 	defaultBackend, _ := t.toGCEBackend(ing.Spec.Backend, ing.Namespace)
 	hostPathBackend.PutDefaultBackend(defaultBackend)
+
+	if defaultBackend != nil && ing.Spec.Backend != nil {
+		t.recorder.Eventf(ing, api.EventTypeNormal, "GCE", fmt.Sprintf("default backend set to %v:%v", ing.Spec.Backend.ServiceName, defaultBackend.Port))
+	}
 	return hostPathBackend, nil
 }
 
@@ -461,40 +465,66 @@ func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error
 	if err != nil {
 		return nil, err
 	}
+	var ingresses []extensions.Ingress
+	var healthCheck *compute.HttpHealthCheck
 	// Find the label and target port of the one service with the given nodePort
 	for _, s := range sl {
 		for _, p := range s.Spec.Ports {
-			if int32(port) == p.NodePort {
-				rp, err := t.getHTTPProbe(*s, p.TargetPort)
-				if err != nil {
-					return nil, err
-				}
-				if rp == nil {
-					glog.Infof("No pod in service %v with node port %v has declared a matching readiness probe for health checks.", s.Name, port)
-					break
-				}
-				healthPath := rp.Handler.HTTPGet.Path
-				// GCE requires a leading "/" for health check urls.
-				if string(healthPath[0]) != "/" {
-					healthPath = fmt.Sprintf("/%v", healthPath)
-				}
-				host := rp.Handler.HTTPGet.Host
-				glog.Infof("Found custom health check for Service %v nodeport %v: %v%v", s.Name, port, host, healthPath)
-				return &compute.HttpHealthCheck{
-					Port:               port,
-					RequestPath:        healthPath,
-					Host:               host,
-					Description:        "kubernetes L7 health check from readiness probe.",
-					CheckIntervalSec:   int64(rp.PeriodSeconds),
-					TimeoutSec:         int64(rp.TimeoutSeconds),
-					HealthyThreshold:   int64(rp.SuccessThreshold),
-					UnhealthyThreshold: int64(rp.FailureThreshold),
-					// TODO: include headers after updating compute godep.
-				}, nil
+
+			// only one Service can match this nodePort, try and look up
+			// the readiness probe of the pods behind it
+			if int32(port) != p.NodePort {
+				continue
 			}
+			rp, err := t.getHTTPProbe(*s, p.TargetPort)
+			if err != nil {
+				return nil, err
+			}
+			if rp == nil {
+				glog.Infof("No pod in service %v with node port %v has declared a matching readiness probe for health checks.", s.Name, port)
+				break
+			}
+
+			healthPath := rp.Handler.HTTPGet.Path
+			// GCE requires a leading "/" for health check urls.
+			if string(healthPath[0]) != "/" {
+				healthPath = fmt.Sprintf("/%v", healthPath)
+			}
+
+			host := rp.Handler.HTTPGet.Host
+			glog.Infof("Found custom health check for Service %v nodeport %v: %v%v", s.Name, port, host, healthPath)
+			// remember the ingresses that use this Service so we can send
+			// the right events
+			ingresses, err = t.ingLister.GetServiceIngress(s)
+			if err != nil {
+				glog.Warningf("Failed to list ingresses for service %v", s.Name)
+			}
+
+			healthCheck = &compute.HttpHealthCheck{
+				Port:        port,
+				RequestPath: healthPath,
+				Host:        host,
+				Description: "kubernetes L7 health check from readiness probe.",
+				// set a low health threshold and a high failure threshold.
+				// We're just trying to detect if the node networking is
+				// borked, service level outages will get detected sooner
+				// by kube-proxy.
+				CheckIntervalSec:   int64(rp.PeriodSeconds + utils.DefaultHealthCheckInterval),
+				TimeoutSec:         int64(rp.TimeoutSeconds),
+				HealthyThreshold:   utils.DefaultHealthyThreshold,
+				UnhealthyThreshold: utils.DefaultUnhealthyThreshold,
+				// TODO: include headers after updating compute godep.
+			}
+			break
 		}
 	}
-	return utils.DefaultHealthCheckTemplate(port), nil
+	if healthCheck == nil {
+		healthCheck = utils.DefaultHealthCheckTemplate(port)
+	}
+	for _, ing := range ingresses {
+		t.recorder.Eventf(&ing, api.EventTypeNormal, "GCE", fmt.Sprintf("health check using %v:%v%v", healthCheck.Host, healthCheck.Port, healthCheck.RequestPath))
+	}
+	return healthCheck, nil
 }
 
 // PodsByCreationTimestamp sorts a list of Pods by creation timestamp, using their names as a tie breaker.
