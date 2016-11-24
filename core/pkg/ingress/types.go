@@ -17,8 +17,6 @@ limitations under the License.
 package ingress
 
 import (
-	"os/exec"
-
 	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
@@ -43,15 +41,13 @@ var (
 // TODO (#18): Make sure this is sufficiently supportive of other backends.
 type Controller interface {
 	// Reload takes a byte array representing the new loadbalancer configuration,
-	// and returns a byte array containing any output/errors from the backend.
+	// and returns a byte array containing any output/errors from the backend and
+	// if a reload was required.
 	// Before returning the backend must load the configuration in the given array
 	// into the loadbalancer and restart it, or fail with an error and message string.
 	// If reloading fails, there should be not change in the running configuration or
 	// the given byte array.
-	Reload(data []byte) ([]byte, error)
-	// Tests returns the commands to execute that verifies if the configuration file is valid
-	// Example: nginx -t -c <file>
-	Test(file string) *exec.Cmd
+	Reload(data []byte) ([]byte, bool, error)
 	// OnUpdate callback invoked from the sync queue https://k8s.io/ingress/core/blob/master/pkg/ingress/controller/controller.go#L387
 	// when an update occurs. This is executed frequently because Ingress
 	// controllers watches changes in:

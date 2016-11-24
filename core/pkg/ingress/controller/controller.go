@@ -386,14 +386,16 @@ func (ic *GenericController) sync(key interface{}) error {
 		return err
 	}
 
-	out, err := ic.cfg.Backend.Reload(data)
+	out, reloaded, err := ic.cfg.Backend.Reload(data)
 	if err != nil {
 		incReloadErrorCount()
 		glog.Errorf("unexpected failure restarting the backend: \n%v", string(out))
 		return err
 	}
-	glog.Infof("ingress backend successfully reloaded...")
-	incReloadCount()
+	if reloaded {
+		glog.Infof("ingress backend successfully reloaded...")
+		incReloadCount()
+	}
 	return nil
 }
 
@@ -686,7 +688,6 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						loc.BasicDigestAuth = *nginxAuth
 						loc.RateLimit = *rl
 						loc.Redirect = *locRew
-						//loc.SecureUpstream = secUpstream
 						loc.Whitelist = *wl
 						loc.Backend = ups.Name
 						loc.EnableCORS = eCORS
@@ -706,7 +707,6 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						BasicDigestAuth: *nginxAuth,
 						RateLimit:       *rl,
 						Redirect:        *locRew,
-						//SecureUpstream:  secUpstream,
 						Whitelist:       *wl,
 						EnableCORS:      eCORS,
 						ExternalAuth:    ra,
@@ -921,7 +921,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 				host = defServerName
 			}
 
-			// only add certificate if the server does not have one previously configured
+			// only add a certificate if the server does not have one previously configured
 			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate != "" {
 				key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.TLS[0].SecretName)
 				bc, exists := ic.sslCertTracker.Get(key)
@@ -1048,8 +1048,8 @@ func (ic GenericController) Start() {
 	go ic.secrController.Run(ic.stopCh)
 	go ic.mapController.Run(ic.stopCh)
 
-	go ic.secretQueue.Run(time.Second, ic.stopCh)
-	go ic.syncQueue.Run(time.Second, ic.stopCh)
+	go ic.secretQueue.Run(5*time.Second, ic.stopCh)
+	go ic.syncQueue.Run(5*time.Second, ic.stopCh)
 
 	go ic.syncStatus.Run(ic.stopCh)
 

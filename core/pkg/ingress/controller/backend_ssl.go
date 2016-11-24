@@ -89,9 +89,11 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 	// create certificates and add or update the item in the store
 	_, exists = ic.sslCertTracker.Get(key)
 	if exists {
+		glog.V(3).Infof("updating secret %v/%v in the store ", sec.Namespace, sec.Name)
 		ic.sslCertTracker.Update(key, cert)
 		return nil
 	}
+	glog.V(3).Infof("adding secret %v/%v to the store ", sec.Namespace, sec.Name)
 	ic.sslCertTracker.Add(key, cert)
 	return nil
 }
@@ -99,7 +101,7 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
 	secretInterface, exists, err := ic.secrLister.Store.GetByKey(secretName)
 	if err != nil {
-		return nil, fmt.Errorf("Error retriveing secret %v: %v", secretName, err)
+		return nil, fmt.Errorf("error retriveing secret %v: %v", secretName, err)
 	}
 	if !exists {
 		return nil, fmt.Errorf("secret named %v does not exists", secretName)

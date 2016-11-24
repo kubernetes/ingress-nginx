@@ -105,22 +105,18 @@ func (n NGINXController) Start() {
 
 // Reload checks if the running configuration file is different
 // to the specified and reload nginx if required
-func (n NGINXController) Reload(data []byte) ([]byte, error) {
+func (n NGINXController) Reload(data []byte) ([]byte, bool, error) {
 	if !n.isReloadRequired(data) {
-		return nil, fmt.Errorf("Reload not required")
+		return []byte("Reload not required"), false, nil
 	}
 
 	err := ioutil.WriteFile(cfgPath, data, 0644)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	return exec.Command(n.binary, "-s", "reload").CombinedOutput()
-}
-
-// Test checks is a file contains a valid NGINX configuration
-func (n NGINXController) Test(file string) *exec.Cmd {
-	return exec.Command(n.binary, "-t", "-c", file)
+	o, e := exec.Command(n.binary, "-s", "reload").CombinedOutput()
+	return o, true, e
 }
 
 // BackendDefaults returns the nginx defaults
@@ -188,7 +184,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	}
 	defer tmpfile.Close()
 	ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
-	out, err := n.Test(tmpfile.Name()).CombinedOutput()
+	out, err := exec.Command(n.binary, "-t", "-c", tmpfile.Name()).CombinedOutput()
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
