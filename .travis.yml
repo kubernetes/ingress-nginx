@@ -30,5 +30,5 @@ script:
   # enable kubernetes/ingress in 
   # coveralls.io and add cover task
   - make fmt lint vet test
-  - make controllers controllers-images
+  #- make controllers controllers-images
   #- make test-e2e

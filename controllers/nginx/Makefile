@@ -1,25 +1,52 @@
 all: push
 
+BUILDTAGS=
+
 # 0.0 shouldn't clobber any release builds
-TAG = 0.8.3
-PREFIX = gcr.io/google_containers/nginx-ingress-controller
+RELEASE?=0.0
+PREFIX?=gcr.io/google_containers/nginx-ingress-controller
+GOOS?=linux
 
 REPO_INFO=$(shell git config --get remote.origin.url)
 
-ifndef VERSION
-  VERSION := git-$(shell git rev-parse --short HEAD)
+ifndef COMMIT
+  COMMIT := git-$(shell git rev-parse --short HEAD)
 endif
 
-controller: controller.go clean
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags \
-		"-s -w -X main.version=${VERSION} -X main.gitRepo=${REPO_INFO}" \
-		-o nginx-ingress-controller
+PKG=k8s.io/ingress/controllers/nginx
 
-container: controller
-	docker build -t $(PREFIX):$(TAG) .
+build: clean
+	CGO_ENABLED=0 GOOS=${GOOS} go build -a -installsuffix cgo \
+		-ldflags "-s -w -X ${PKG}/pkg/version.RELEASE=${RELEASE} -X ${PKG}/pkg/version.COMMIT=${COMMIT} -X ${PKG}/pkg/version.REPO=${REPO_INFO}" \
+		-o rootfs/nginx-ingress-controller ${PKG}/pkg/cmd/controller
 
-push: container
-	gcloud docker push $(PREFIX):$(TAG)
+container:
+	docker build -t $(PREFIX):$(RELEASE) rootfs
+
+push:
+	gcloud docker push $(PREFIX):$(RELEASE)
+
+fmt:
+	@echo "+ $@"
+	@go list -f '{{if len .TestGoFiles}}"gofmt -s -l {{.Dir}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
+
+lint:
+	@echo "+ $@"
+	@go list -f '{{if len .TestGoFiles}}"golint {{.Dir}}/..."{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
+
+test: fmt lint vet
+	@echo "+ $@"
+	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor)
+
+cover:
+	@echo "+ $@"
+	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
+	gover
+	goveralls -coverprofile=gover.coverprofile -service travis-ci -repotoken ${COVERALLS_TOKEN}
+
+vet:
+	@echo "+ $@"
+	@go vet $(shell go list ${PKG}/... | grep -v vendor)
 
 clean:
 	rm -f nginx-ingress-controller
