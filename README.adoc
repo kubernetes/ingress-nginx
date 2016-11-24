@@ -2,6 +2,9 @@
 
 image:https://travis-ci.org/kubernetes/ingress.svg?branch=master["Build Status", link="https://travis-ci.org/kubernetes/ingress"]
 
+image:https://coveralls.io/repos/github/kubernetes/ingress/badge.svg?branch=master["Coverage Status", link="https://coveralls.io/github/kubernetes/ingress"]
+
+
 = Ingress
 :toc: macro
 :toc-title:
