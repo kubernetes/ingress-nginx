@@ -23,8 +23,7 @@ endif
 # base package. It contains the common and backends code
 PKG := "k8s.io/ingress"
 
-# TODO: fix lint errors in gce controller
-GO_LIST_FILES=$(shell go list ${PKG}/... | grep -v vendor | grep -v -e "test/e2e" -e "controllers/gce/loadbalancers" -e "controllers/gce/controller")
+GO_LIST_FILES=$(shell go list ${PKG}/... | grep -v vendor | grep -v -e "test/e2e")
 
 .PHONY: fmt
 fmt:
@@ -32,7 +31,7 @@ fmt:
 
 .PHONY: lint
 lint:
-	@go list -f '{{if len .TestGoFiles}}"golint {{.Dir}}/..."{{end}}' ${GO_LIST_FILES} | xargs -L 1 sh -c
+	@go list -f '{{if len .TestGoFiles}}"golint -min_confidence=0.85 {{.Dir}}/..."{{end}}' ${GO_LIST_FILES} | xargs -L 1 sh -c
 
 .PHONY: test
 test:
