@@ -18,8 +18,19 @@ package watch
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
+	"time"
 )
+
+func prepareTimeout() chan bool {
+	timeoutChan := make(chan bool, 1)
+	go func() {
+		time.Sleep(1 * time.Second)
+		timeoutChan <- true
+	}()
+	return timeoutChan
+}
 
 func TestFileWatcher(t *testing.T) {
 	file, err := ioutil.TempFile("", "fw")
@@ -27,19 +38,30 @@ func TestFileWatcher(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer file.Close()
+	defer os.Remove(file.Name())
 	count := 0
+	events := make(chan bool, 10)
 	fw, err := NewFileWatcher(file.Name(), func() {
 		count++
 		if count != 1 {
 			t.Fatalf("expected 1 but returned %v", count)
 		}
+		events <- true
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer fw.Close()
-	if count != 0 {
-		t.Fatalf("expected 0 but returned %v", count)
+	timeoutChan := prepareTimeout()
+	select {
+	case <-events:
+		t.Fatalf("expected no events before writing a file")
+	case <-timeoutChan:
 	}
 	ioutil.WriteFile(file.Name(), []byte{}, 0644)
+	select {
+	case <-events:
+	case <-timeoutChan:
+		t.Fatalf("expected an event shortly after writing a file")
+	}
 }
