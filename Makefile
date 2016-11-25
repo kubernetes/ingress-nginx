@@ -1,4 +1,4 @@
-all: push
+all: fmt lint vet cover
 
 BUILDTAGS=
 
