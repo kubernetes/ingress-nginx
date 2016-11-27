@@ -23,4 +23,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
 
 COPY . /
 
+# https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem
+RUN curl -sSL -o /sbin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 && \
+  chmod +x /sbin/dumb-init
+
+ENTRYPOINT ["/sbin/dumb-init", "--"]
+
 CMD ["/nginx-ingress-controller"]
