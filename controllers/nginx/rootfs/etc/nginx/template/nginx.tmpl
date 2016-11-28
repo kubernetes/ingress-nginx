@@ -184,10 +184,10 @@ http {
     {{ $zone }}
     {{ end }}
 
-    {{ range $server := .Servers }}
+    {{ range $index, $server := .Servers }}
     server {
         server_name {{ $server.Hostname }};
-        listen 80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen [::]:80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $index 0 }} ipv6only=off{{end}};
         {{ if not (empty $server.SSLCertificate) }}listen 442 {{ if $cfg.UseProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
@@ -332,7 +332,7 @@ http {
         # Use the port 18080 (random value just to avoid known ports) as default port for nginx.
         # Changing this value requires a change in:
         # https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/nginx/command.go#L104
-        listen 18080 default_server reuseport backlog={{ .BacklogSize }};
+        listen [::]:18080 ipv6only=off default_server reuseport backlog={{ .BacklogSize }};
 
         location {{ $healthzURI }} {
             access_log off;
@@ -396,7 +396,7 @@ stream {
     {{ buildSSPassthroughUpstreams $backends .PassthrougBackends }}
 
     server {
-        listen                  443;
+        listen                  [::]:443 ipv6only=off;
         {{ if $cfg.UseProxyProtocol }}proxy_protocol on;{{ end }}
         proxy_pass              $stream_upstream;
         ssl_preread             on;
