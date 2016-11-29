@@ -302,12 +302,12 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 		out.RuntimeCgroups = in.RuntimeCgroups
 		out.SystemCgroups = in.SystemCgroups
 		out.CgroupRoot = in.CgroupRoot
-		if in.CgroupsPerQOS != nil {
-			in, out := &in.CgroupsPerQOS, &out.CgroupsPerQOS
+		if in.ExperimentalCgroupsPerQOS != nil {
+			in, out := &in.ExperimentalCgroupsPerQOS, &out.ExperimentalCgroupsPerQOS
 			*out = new(bool)
 			**out = **in
 		} else {
-			out.CgroupsPerQOS = nil
+			out.ExperimentalCgroupsPerQOS = nil
 		}
 		out.CgroupDriver = in.CgroupDriver
 		out.ContainerRuntime = in.ContainerRuntime
@@ -461,6 +461,7 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 		out.FeatureGates = in.FeatureGates
 		out.EnableCRI = in.EnableCRI
 		out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
+		out.ExperimentalCheckNodeCapabilitiesBeforeMount = in.ExperimentalCheckNodeCapabilitiesBeforeMount
 		return nil
 	}
 }

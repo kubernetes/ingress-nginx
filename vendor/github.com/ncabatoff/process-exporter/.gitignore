@@ -1,0 +1,4 @@
+.*.sw?
+process-exporter
+.tarballs
+process-exporter-*.tar.gz
