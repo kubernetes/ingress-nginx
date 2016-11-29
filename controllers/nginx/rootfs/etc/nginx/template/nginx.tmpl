@@ -349,6 +349,17 @@ http {
             {{ end }}
         }
 
+        # this location is used to extract nginx metrics
+        # using prometheus.
+        # TODO: enable extraction for vts module.
+        location /internal_nginx_status {
+            allow 127.0.0.1;
+            deny all;
+
+            access_log off;
+            stub_status on;
+        }
+
         location / {
             set $proxy_upstream_name "upstream-default-backend";
             proxy_pass             http://upstream-default-backend;
