@@ -18,6 +18,7 @@ package ingress
 
 import (
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/healthz"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
@@ -40,6 +41,10 @@ var (
 // Controller holds the methods to handle an Ingress backend
 // TODO (#18): Make sure this is sufficiently supportive of other backends.
 type Controller interface {
+	// HealthzChecker returns is a named healthz check that returns the ingress
+	// controller status
+	healthz.HealthzChecker
+
 	// Reload takes a byte array representing the new loadbalancer configuration,
 	// and returns a byte array containing any output/errors from the backend and
 	// if a reload was required.

@@ -155,7 +155,11 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 func registerHandlers(enableProfiling bool, port int, ic *GenericController) {
 	mux := http.NewServeMux()
-	healthz.InstallHandler(mux, ic)
+	// expose health check endpoint (/healthz)
+	healthz.InstallHandler(mux,
+		healthz.PingHealthz,
+		ic.cfg.Backend,
+	)
 
 	mux.Handle("/metrics", prometheus.Handler())
 

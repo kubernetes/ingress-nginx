@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 
@@ -250,6 +251,24 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 		CustomErrors:       len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                cfg,
 	}, n.testTemplate)
+}
+
+// Name returns the healthcheck name
+func (n NGINXController) Name() string {
+	return "Ingress Controller"
+}
+
+// Check returns if the nginx healthz endpoint is returning ok (status code 200)
+func (n NGINXController) Check(_ *http.Request) error {
+	res, err := http.Get("http://127.0.0.1:18080/healthz")
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return fmt.Errorf("Ingress controller is not healthy")
+	}
+	return nil
 }
 
 // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2

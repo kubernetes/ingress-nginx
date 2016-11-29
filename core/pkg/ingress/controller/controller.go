@@ -18,7 +18,6 @@ package controller
 
 import (
 	"fmt"
-	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
@@ -35,7 +34,6 @@ import (
 	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/internalversion"
 	"k8s.io/kubernetes/pkg/client/record"
 	"k8s.io/kubernetes/pkg/fields"
-	"k8s.io/kubernetes/pkg/healthz"
 	"k8s.io/kubernetes/pkg/util/flowcontrol"
 	"k8s.io/kubernetes/pkg/util/intstr"
 
@@ -78,8 +76,6 @@ var (
 
 // GenericController holds the boilerplate code required to build an Ingress controlller.
 type GenericController struct {
-	healthz.HealthzChecker
-
 	cfg *Configuration
 
 	ingController  *cache.Controller
@@ -281,24 +277,6 @@ func (ic *GenericController) controllersInSync() bool {
 		ic.endpController.HasSynced() &&
 		ic.secrController.HasSynced() &&
 		ic.mapController.HasSynced()
-}
-
-// Name returns the healthcheck name
-func (ic GenericController) Name() string {
-	return "Ingress Controller"
-}
-
-// Check returns if the nginx healthz endpoint is returning ok (status code 200)
-func (ic GenericController) Check(_ *http.Request) error {
-	res, err := http.Get("http://127.0.0.1:18080/healthz")
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return fmt.Errorf("Ingress controller is not healthy")
-	}
-	return nil
 }
 
 // Info returns information about the backend

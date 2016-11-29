@@ -55,6 +55,14 @@ package ingress
 //     return ingress.NewStandardDefaults()
 // }
 //
+// func (n DummyController) Name() string {
+// 	   return "dummy Controller"
+// }
+//
+// func (n DummyController) Check(_ *http.Request) error {
+//     return nil
+// }
+//
 // func (dc DummyController) Info() *BackendInfo {
 //     Name: "dummy",
 //   Release: "0.0.0",
