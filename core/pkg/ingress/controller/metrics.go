@@ -16,7 +16,9 @@ limitations under the License.
 
 package controller
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 const (
 	ns          = "ingress_controller"
@@ -27,9 +29,6 @@ const (
 func init() {
 	prometheus.MustRegister(reloadOperation)
 	prometheus.MustRegister(reloadOperationErrors)
-
-	reloadOperationErrors.WithLabelValues(reloadLabel).Set(0)
-	reloadOperation.WithLabelValues(reloadLabel).Set(0)
 }
 
 var (

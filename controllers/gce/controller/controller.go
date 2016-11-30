@@ -90,7 +90,7 @@ type LoadBalancerController struct {
 func NewLoadBalancerController(kubeClient client.Interface, clusterManager *ClusterManager, resyncPeriod time.Duration, namespace string) (*LoadBalancerController, error) {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
-	eventBroadcaster.StartRecordingToSink(unversionedcore.EventSinkImpl{
+	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{
 		Interface: kubeClient.Core().Events(""),
 	})
 	lbc := LoadBalancerController{

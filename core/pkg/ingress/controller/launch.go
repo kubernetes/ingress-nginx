@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/kubernetes/pkg/api"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	"k8s.io/kubernetes/pkg/client/restclient"
@@ -161,7 +161,7 @@ func registerHandlers(enableProfiling bool, port int, ic *GenericController) {
 		ic.cfg.Backend,
 	)
 
-	mux.Handle("/metrics", prometheus.Handler())
+	mux.Handle("/metrics", promhttp.Handler())
 
 	mux.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

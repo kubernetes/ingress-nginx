@@ -18,24 +18,30 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"syscall"
+	"time"
 
 	"github.com/golang/glog"
-
 	"k8s.io/kubernetes/pkg/api"
-
-	"k8s.io/ingress/core/pkg/ingress"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
-
-	"errors"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
 	"k8s.io/ingress/controllers/nginx/pkg/version"
+	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/ingress/defaults"
+)
+
+const (
+	ngxHealthPort = 18080
+	ngxHealthPath = "/healthz"
+	ngxStatusPath = "/internal_nginx_status"
 )
 
 var (
@@ -78,6 +84,7 @@ Error loading new template : %v
 	}
 
 	n.t = ngxTpl
+
 	go n.Start()
 
 	return n
@@ -93,15 +100,56 @@ type NGINXController struct {
 // Start start a new NGINX master process running in foreground.
 func (n NGINXController) Start() {
 	glog.Info("starting NGINX process...")
+
+	done := make(chan error, 1)
 	cmd := exec.Command(n.binary, "-c", cfgPath)
+	n.start(cmd, done)
+
+	// if the nginx master process dies the workers continue to process requests,
+	// passing checks but in case of updates in ingress no updates will be
+	// reflected in the nginx configuration which can lead to confusion and report
+	// issues because of this behavior.
+	// To avoid this issue we restart nginx in case of errors.
+	for {
+		err := <-done
+		if exitError, ok := err.(*exec.ExitError); ok {
+			waitStatus := exitError.Sys().(syscall.WaitStatus)
+			glog.Warningf(`
+-------------------------------------------------------------------------------
+NGINX master process died (%v): %v
+-------------------------------------------------------------------------------
+`, waitStatus.ExitStatus(), err)
+		}
+		cmd.Process.Release()
+		cmd = exec.Command(n.binary, "-c", cfgPath)
+		// we wait until the workers are killed
+		for {
+			conn, err := net.DialTimeout("tcp", "127.0.0.1:80", 1*time.Second)
+			if err == nil {
+				conn.Close()
+				break
+			}
+			time.Sleep(1 * time.Second)
+		}
+		// start a new nginx master process
+		n.start(cmd, done)
+	}
+}
+
+func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
 		glog.Fatalf("nginx error: %v", err)
+		done <- err
+		return
 	}
-	if err := cmd.Wait(); err != nil {
-		glog.Errorf("nginx error: %v", err)
-	}
+
+	n.setupMonitor(cmd.Args)
+
+	go func() {
+		done <- cmd.Wait()
+	}()
 }
 
 // Reload checks if the running configuration file is different
@@ -260,7 +308,7 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n NGINXController) Check(_ *http.Request) error {
-	res, err := http.Get("http://127.0.0.1:18080/healthz")
+	res, err := http.Get(fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxHealthPath))
 	if err != nil {
 		return err
 	}

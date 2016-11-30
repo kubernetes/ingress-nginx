@@ -308,7 +308,7 @@ func DeepCopy_componentconfig_KubeletConfiguration(in interface{}, out interface
 		out.CloudProvider = in.CloudProvider
 		out.CloudConfigFile = in.CloudConfigFile
 		out.KubeletCgroups = in.KubeletCgroups
-		out.CgroupsPerQOS = in.CgroupsPerQOS
+		out.ExperimentalCgroupsPerQOS = in.ExperimentalCgroupsPerQOS
 		out.CgroupDriver = in.CgroupDriver
 		out.RuntimeCgroups = in.RuntimeCgroups
 		out.SystemCgroups = in.SystemCgroups
@@ -392,6 +392,7 @@ func DeepCopy_componentconfig_KubeletConfiguration(in interface{}, out interface
 		out.FeatureGates = in.FeatureGates
 		out.EnableCRI = in.EnableCRI
 		out.ExperimentalFailSwapOn = in.ExperimentalFailSwapOn
+		out.ExperimentalCheckNodeCapabilitiesBeforeMount = in.ExperimentalCheckNodeCapabilitiesBeforeMount
 		return nil
 	}
 }

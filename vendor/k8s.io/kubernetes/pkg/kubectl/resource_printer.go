@@ -40,6 +40,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/batch"
 	"k8s.io/kubernetes/pkg/apis/certificates"
 	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/kubernetes/pkg/apis/policy"
 	"k8s.io/kubernetes/pkg/apis/rbac"
 	"k8s.io/kubernetes/pkg/apis/storage"
 	storageutil "k8s.io/kubernetes/pkg/apis/storage/util"
@@ -474,6 +475,7 @@ func (h *HumanReadablePrinter) AfterPrint(output io.Writer, res string) error {
 var (
 	podColumns                   = []string{"NAME", "READY", "STATUS", "RESTARTS", "AGE"}
 	podTemplateColumns           = []string{"TEMPLATE", "CONTAINER(S)", "IMAGE(S)", "PODLABELS"}
+	podDisruptionBudgetColumns   = []string{"NAME", "MIN-AVAILABLE", "ALLOWED-DISRUPTIONS", "AGE"}
 	replicationControllerColumns = []string{"NAME", "DESIRED", "CURRENT", "READY", "AGE"}
 	replicaSetColumns            = []string{"NAME", "DESIRED", "CURRENT", "READY", "AGE"}
 	jobColumns                   = []string{"NAME", "DESIRED", "SUCCESSFUL", "AGE"}
@@ -536,6 +538,8 @@ func (h *HumanReadablePrinter) addDefaultHandlers() {
 	h.Handler(podColumns, h.printPod)
 	h.Handler(podTemplateColumns, printPodTemplate)
 	h.Handler(podTemplateColumns, printPodTemplateList)
+	h.Handler(podDisruptionBudgetColumns, printPodDisruptionBudget)
+	h.Handler(podDisruptionBudgetColumns, printPodDisruptionBudgetList)
 	h.Handler(replicationControllerColumns, printReplicationController)
 	h.Handler(replicationControllerColumns, printReplicationControllerList)
 	h.Handler(replicaSetColumns, printReplicaSet)
@@ -822,6 +826,37 @@ func printPodTemplate(pod *api.PodTemplate, w io.Writer, options PrintOptions) e
 func printPodTemplateList(podList *api.PodTemplateList, w io.Writer, options PrintOptions) error {
 	for _, pod := range podList.Items {
 		if err := printPodTemplate(&pod, w, options); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func printPodDisruptionBudget(pdb *policy.PodDisruptionBudget, w io.Writer, options PrintOptions) error {
+	// name, minavailable, selector
+	name := formatResourceName(options.Kind, pdb.Name, options.WithKind)
+	namespace := pdb.Namespace
+
+	if options.WithNamespace {
+		if _, err := fmt.Fprintf(w, "%s\t", namespace); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintf(w, "%s\t%s\t%d\t%s\n",
+		name,
+		pdb.Spec.MinAvailable.String(),
+		pdb.Status.PodDisruptionsAllowed,
+		translateTimestamp(pdb.CreationTimestamp),
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func printPodDisruptionBudgetList(pdbList *policy.PodDisruptionBudgetList, w io.Writer, options PrintOptions) error {
+	for _, pdb := range pdbList.Items {
+		if err := printPodDisruptionBudget(&pdb, w, options); err != nil {
 			return err
 		}
 	}
@@ -1491,6 +1526,10 @@ func printNode(node *api.Node, w io.Writer, options PrintOptions) error {
 	if node.Spec.Unschedulable {
 		status = append(status, "SchedulingDisabled")
 	}
+	role := findNodeRole(node)
+	if role != "" {
+		status = append(status, role)
+	}
 
 	if _, err := fmt.Fprintf(w, "%s\t%s\t%s", name, strings.Join(status, ","), translateTimestamp(node.CreationTimestamp)); err != nil {
 		return err
@@ -1518,6 +1557,22 @@ func getNodeExternalIP(node *api.Node) string {
 	}
 
 	return "<none>"
+}
+
+// findNodeRole returns the role of a given node, or "" if none found.
+// The role is determined by looking in order for:
+// * a kubernetes.io/role label
+// * a kubeadm.alpha.kubernetes.io/role label
+// If no role is found, ("", nil) is returned
+func findNodeRole(node *api.Node) string {
+	if role := node.Labels[unversioned.NodeLabelRole]; role != "" {
+		return role
+	}
+	if role := node.Labels[unversioned.NodeLabelKubeadmAlphaRole]; role != "" {
+		return role
+	}
+	// No role found
+	return ""
 }
 
 func printNodeList(list *api.NodeList, w io.Writer, options PrintOptions) error {
@@ -2263,7 +2318,7 @@ func (h *HumanReadablePrinter) PrintObj(obj runtime.Object, output io.Writer) er
 	// check if the object is unstructured.  If so, let's attempt to convert it to a type we can understand before
 	// trying to print, since the printers are keyed by type.  This is extremely expensive.
 	switch obj.(type) {
-	case *runtime.Unstructured, *runtime.Unknown:
+	case *runtime.UnstructuredList, *runtime.Unstructured, *runtime.Unknown:
 		if objBytes, err := runtime.Encode(api.Codecs.LegacyCodec(), obj); err == nil {
 			if decodedObj, err := runtime.Decode(api.Codecs.UniversalDecoder(), objBytes); err == nil {
 				obj = decodedObj
