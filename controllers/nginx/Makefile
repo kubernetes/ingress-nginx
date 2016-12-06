@@ -3,7 +3,7 @@ all: push
 BUILDTAGS=
 
 # 0.0 shouldn't clobber any release builds
-RELEASE?=0.0
+RELEASE?=0.8.4
 PREFIX?=gcr.io/google_containers/nginx-ingress-controller
 GOOS?=linux
 
