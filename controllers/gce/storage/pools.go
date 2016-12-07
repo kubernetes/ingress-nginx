@@ -103,7 +103,7 @@ func (c *CloudListingPool) ReplenishPool() {
 	for i := range items {
 		key, err := c.keyGetter(items[i])
 		if err != nil {
-			glog.V(4).Infof("CloudListingPool: %v", err)
+			glog.V(5).Infof("CloudListingPool: %v", err)
 			continue
 		}
 		c.InMemoryPool.Add(key, items[i])
