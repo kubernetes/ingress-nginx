@@ -53,7 +53,7 @@ func TestCreateHTTPLoadBalancer(t *testing.T) {
 	lbInfo := &L7RuntimeInfo{Name: "test", AllowHTTP: true}
 	f := NewFakeLoadBalancers(lbInfo.Name)
 	pool := newFakeLoadBalancerPool(f, t)
-	pool.Add(lbInfo)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
 	l7, err := pool.Get(lbInfo.Name)
 	if err != nil || l7 == nil {
 		t.Fatalf("Expected l7 not created")
@@ -83,7 +83,7 @@ func TestCreateHTTPSLoadBalancer(t *testing.T) {
 	}
 	f := NewFakeLoadBalancers(lbInfo.Name)
 	pool := newFakeLoadBalancerPool(f, t)
-	pool.Add(lbInfo)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
 	l7, err := pool.Get(lbInfo.Name)
 	if err != nil || l7 == nil {
 		t.Fatalf("Expected l7 not created")
@@ -114,7 +114,7 @@ func TestCreateBothLoadBalancers(t *testing.T) {
 	}
 	f := NewFakeLoadBalancers(lbInfo.Name)
 	pool := newFakeLoadBalancerPool(f, t)
-	pool.Add(lbInfo)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
 	l7, err := pool.Get(lbInfo.Name)
 	if err != nil || l7 == nil {
 		t.Fatalf("Expected l7 not created")
@@ -166,7 +166,7 @@ func TestUpdateUrlMap(t *testing.T) {
 	lbInfo := &L7RuntimeInfo{Name: "test", AllowHTTP: true}
 	f := NewFakeLoadBalancers(lbInfo.Name)
 	pool := newFakeLoadBalancerPool(f, t)
-	pool.Add(lbInfo)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
 	l7, err := pool.Get(lbInfo.Name)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -217,7 +217,7 @@ func TestClusterNameChange(t *testing.T) {
 	}
 	f := NewFakeLoadBalancers(lbInfo.Name)
 	pool := newFakeLoadBalancerPool(f, t)
-	pool.Add(lbInfo)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
 	l7, err := pool.Get(lbInfo.Name)
 	if err != nil || l7 == nil {
 		t.Fatalf("Expected l7 not created")
@@ -241,7 +241,7 @@ func TestClusterNameChange(t *testing.T) {
 	f.name = fmt.Sprintf("%v--%v", lbInfo.Name, newName)
 
 	// Now the components should get renamed with the next suffix.
-	pool.Add(lbInfo)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
 	l7, err = pool.Get(lbInfo.Name)
 	if err != nil || namer.ParseName(l7.Name).ClusterName != newName {
 		t.Fatalf("Expected L7 name to change.")
