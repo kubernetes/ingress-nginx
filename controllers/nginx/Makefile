@@ -2,8 +2,8 @@ all: push
 
 BUILDTAGS=
 
-# 0.0 shouldn't clobber any release builds
-RELEASE?=0.0
+# Use the 0.0 tag for testing, it shouldn't clobber any release builds
+RELEASE?=0.8.4
 PREFIX?=gcr.io/google_containers/nginx-ingress-controller
 GOOS?=linux
 
