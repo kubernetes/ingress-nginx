@@ -1,3 +1,0 @@
-# Ingress developer guide
-
-
