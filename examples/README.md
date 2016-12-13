@@ -6,6 +6,7 @@ A catalog of examples on how to run, configure and scale Ingress.
 
 Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
+Deployment | basic deployment of controllers | * | Beginner
 TLS termination | terminate TLS at the ingress controller | * | Beginner
 Name based virtual hosting | `Host` header routing | * | Beginner
 Path routing | URL regex routing | * | Beginner
