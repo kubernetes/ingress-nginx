@@ -42,7 +42,7 @@ func (em exeMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
 func (n *NGINXController) setupMonitor(args []string) {
 	pc, err := newProcessCollector(true, exeMatcher{"nginx", args})
 	if err != nil {
-		glog.Fatalf("unexpedted error registering nginx collector: %v", err)
+		glog.Fatalf("unexpected error registering nginx collector: %v", err)
 	}
 	err = prometheus.Register(pc)
 	if err != nil {
