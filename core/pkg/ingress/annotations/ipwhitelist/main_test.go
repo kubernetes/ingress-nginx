@@ -63,6 +63,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 func TestParseAnnotations(t *testing.T) {
+	// TODO: convert test cases to tables
 	ing := buildIngress()
 
 	testNet := "10.0.0.0/24"
@@ -86,24 +87,42 @@ func TestParseAnnotations(t *testing.T) {
 	}
 
 	data[whitelist] = "www"
-	ing.SetAnnotations(data)
 	_, err = ParseAnnotations(defaults.Backend{}, ing)
 	if err == nil {
 		t.Errorf("Expected error parsing an invalid cidr")
 	}
 
-	delete(data, "whitelist")
+	delete(data, whitelist)
 	ing.SetAnnotations(data)
-	//sr, _ = ParseAnnotations(defaults.Backend{}, ing)
-	// TODO: fix test
-	/*
-		if !reflect.DeepEqual(sr.CIDR, []string{}) {
-			t.Errorf("Expected empty CIDR but %v returned", sr.CIDR)
-		}
+	sr, err = ParseAnnotations(defaults.Backend{}, ing)
+	if err == nil {
+		t.Errorf("Expected error parsing an invalid cidr")
+	}
+	if !strsEquals(sr.CIDR, []string{}) {
+		t.Errorf("Expected empty CIDR but %v returned", sr.CIDR)
+	}
 
-		sr, _ = ParseAnnotations(defaults.Upstream{}, &extensions.Ingress{})
-		if !reflect.DeepEqual(sr.CIDR, []string{}) {
-			t.Errorf("Expected empty CIDR but %v returned", sr.CIDR)
+	sr, _ = ParseAnnotations(defaults.Backend{}, &extensions.Ingress{})
+	if !strsEquals(sr.CIDR, []string{}) {
+		t.Errorf("Expected empty CIDR but %v returned", sr.CIDR)
+	}
+
+	data[whitelist] = "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24"
+	sr, _ = ParseAnnotations(defaults.Backend{}, ing)
+	ecidr := []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"}
+	if !strsEquals(sr.CIDR, ecidr) {
+		t.Errorf("Expected %v CIDR but %v returned", ecidr, sr.CIDR)
+	}
+}
+
+func strsEquals(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
 		}
-	*/
+	}
+	return true
 }
