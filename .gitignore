@@ -18,3 +18,7 @@
 *.un~
 Session.vim
 .netrwhist
+
+# coverage artifacts
+.coverprofile
+/gover.coverprofile
