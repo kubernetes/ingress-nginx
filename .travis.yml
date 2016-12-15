@@ -30,5 +30,4 @@ before_script:
 
 script:  
   - make fmt lint vet cover
-  #- make controllers controllers-images
   #- make test-e2e
