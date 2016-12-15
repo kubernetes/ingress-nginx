@@ -18,6 +18,7 @@ package ipwhitelist
 
 import (
 	"errors"
+	"sort"
 	"strings"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -47,8 +48,7 @@ type SourceRange struct {
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`
 func ParseAnnotations(cfg defaults.Backend, ing *extensions.Ingress) (*SourceRange, error) {
-	cidrs := []string{}
-
+	sort.Strings(cfg.WhitelistSourceRange)
 	if ing.GetAnnotations() == nil {
 		return &SourceRange{CIDR: cfg.WhitelistSourceRange}, parser.ErrMissingAnnotations
 	}
@@ -64,9 +64,12 @@ func ParseAnnotations(cfg defaults.Backend, ing *extensions.Ingress) (*SourceRan
 		return &SourceRange{CIDR: cfg.WhitelistSourceRange}, ErrInvalidCIDR
 	}
 
+	cidrs := []string{}
 	for k := range ipnets {
 		cidrs = append(cidrs, k)
 	}
+
+	sort.Strings(cidrs)
 
 	return &SourceRange{cidrs}, nil
 }
