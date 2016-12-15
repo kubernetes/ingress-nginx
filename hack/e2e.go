@@ -57,7 +57,7 @@ func validWorkingDirectory() error {
 	if err != nil {
 		return fmt.Errorf("failed to convert %s to an absolute path: %v", cwd, err)
 	}
-	if !strings.Contains(filepath.Base(acwd), "ingress-controller") {
+	if !strings.Contains(filepath.Base(acwd), "ingress") {
 		return fmt.Errorf("must run from git root directory: %v", acwd)
 	}
 	return nil
@@ -214,7 +214,7 @@ func run(deploy deployer) error {
 func Build() error {
 	// The build-release script needs stdin to ask the user whether
 	// it's OK to download the docker image.
-	cmd := exec.Command("make", "backends", "backends-images", "backends-push")
+	cmd := exec.Command("make", "docker-build", "docker-push")
 	cmd.Stdin = os.Stdin
 	if err := finishRunning("build-release", cmd); err != nil {
 		return fmt.Errorf("error building: %v", err)

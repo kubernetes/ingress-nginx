@@ -59,9 +59,14 @@ clean:
 controllers:
 	make -C controllers/nginx build
 
-.PHONY: controllers-images
-controllers-images:
+.PHONY: docker-build
+docker-build:
 	make -C controllers/nginx container
+
+.PHONY: docker-push
+docker-push:
+	make -C controllers/nginx push
+
 
 .PHONY: ginkgo
 ginkgo:
