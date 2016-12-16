@@ -211,13 +211,14 @@ func (s *statusSync) runningAddresess() ([]string, error) {
 		return nil, err
 	}
 
-	ips := []string{}
+	addrs := []string{}
 	for _, pod := range pods.Items {
-		if !strings.StringInSlice(pod.Status.HostIP, ips) {
-			ips = append(ips, pod.Status.HostIP)
+		name := k8s.GetNodeIP(s.Client, pod.Spec.NodeName)
+		if !strings.StringInSlice(name, addrs) {
+			addrs = append(addrs, name)
 		}
 	}
-	return ips, nil
+	return addrs, nil
 }
 
 // sliceToStatus converts a slice of IP and/or hostnames to LoadBalancerIngress
