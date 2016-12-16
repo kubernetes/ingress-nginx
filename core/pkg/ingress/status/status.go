@@ -17,6 +17,7 @@ limitations under the License.
 package status
 
 import (
+	"net"
 	"sort"
 	"sync"
 	"time"
@@ -92,19 +93,19 @@ func (s statusSync) Shutdown() {
 
 	glog.Infof("updating status of Ingress rules (remove)")
 
-	ips, err := s.getRunningIPs()
+	addrs, err := s.runningAddresess()
 	if err != nil {
-		glog.Errorf("error obtaining running IPs: %v", ips)
+		glog.Errorf("error obtaining running IPs: %v", addrs)
 		return
 	}
 
-	if len(ips) > 1 {
+	if len(addrs) > 1 {
 		// leave the job to the next leader
-		glog.Infof("leaving status update for next leader (%v)", len(ips))
+		glog.Infof("leaving status update for next leader (%v)", len(addrs))
 		return
 	}
 
-	glog.Infof("removing my ip (%v)", ips)
+	glog.Infof("removing address from ingress status (%v)", addrs)
 	s.updateStatus([]api.LoadBalancerIngress{})
 }
 
@@ -131,11 +132,11 @@ func (s *statusSync) sync(key interface{}) error {
 		return nil
 	}
 
-	ips, err := s.getRunningIPs()
+	addrs, err := s.runningAddresess()
 	if err != nil {
 		return err
 	}
-	s.updateStatus(sliceToStatus(ips))
+	s.updateStatus(sliceToStatus(addrs))
 
 	return nil
 }
@@ -180,7 +181,9 @@ func NewStatusSyncer(config Config) Sync {
 	return st
 }
 
-func (s *statusSync) getRunningIPs() ([]string, error) {
+// runningAddresess returns a list of IP addresses and/or FQDN where the
+// ingress controller is currently running
+func (s *statusSync) runningAddresess() ([]string, error) {
 	if s.PublishService != "" {
 		ns, name, _ := k8s.ParseNameNS(s.PublishService)
 		svc, err := s.Client.Core().Services(ns).Get(name)
@@ -188,12 +191,16 @@ func (s *statusSync) getRunningIPs() ([]string, error) {
 			return nil, err
 		}
 
-		ips := []string{}
+		addrs := []string{}
 		for _, ip := range svc.Status.LoadBalancer.Ingress {
-			ips = append(ips, ip.IP)
+			if ip.IP == "" {
+				addrs = append(addrs, ip.Hostname)
+			} else {
+				addrs = append(addrs, ip.IP)
+			}
 		}
 
-		return ips, nil
+		return addrs, nil
 	}
 
 	// get information about all the pods running the ingress controller
@@ -213,10 +220,15 @@ func (s *statusSync) getRunningIPs() ([]string, error) {
 	return ips, nil
 }
 
-func sliceToStatus(ips []string) []api.LoadBalancerIngress {
+// sliceToStatus converts a slice of IP and/or hostnames to LoadBalancerIngress
+func sliceToStatus(endpoints []string) []api.LoadBalancerIngress {
 	lbi := []api.LoadBalancerIngress{}
-	for _, ip := range ips {
-		lbi = append(lbi, api.LoadBalancerIngress{IP: ip})
+	for _, ep := range endpoints {
+		if net.ParseIP(ep) == nil {
+			lbi = append(lbi, api.LoadBalancerIngress{Hostname: ep})
+		} else {
+			lbi = append(lbi, api.LoadBalancerIngress{IP: ep})
+		}
 	}
 
 	sort.Sort(loadBalancerIngressByIP(lbi))
