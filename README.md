@@ -15,12 +15,12 @@ It is currently in a state of flux as project maintainers port code over from [i
      * See our user documentation on [k8s.io](http://kubernetes.io/docs/user-guide/ingress/)
      * Follow through to the respective platform specific [examples](docs/examples/README.md)
 * Write your own Ingress controller
-    * See our [developer documentation](docs/developer.md)
+    * See our [developer documentation](docs/dev/README.md)
 * Deploy existing Ingress controllers
     * See our [admin documentation](docs/admin.md)
 * Contribute
     * See the [contributor guidelines](CONTRIBUTING.md)
 * Debug
-    * Peruse the [FAQ section](docs/faq.md)
+    * Peruse the [FAQ section](docs/faq/README.md)
     * Ask on one of the [user-support channels](CONTRIBUTING.md#support-channels)
 
