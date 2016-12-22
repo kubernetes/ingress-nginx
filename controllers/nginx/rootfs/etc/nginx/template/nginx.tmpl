@@ -188,13 +188,20 @@ http {
     server {
         server_name {{ $server.Hostname }};
         listen [::]:80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $index 0 }} ipv6only=off{{end}};
+        {{/* Listen on 442 because port 443 is used in the stream section */}}
         {{ if not (empty $server.SSLCertificate) }}listen 442 {{ if $cfg.UseProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate                         {{ $server.SSLCertificate }};
         ssl_certificate_key                     {{ $server.SSLCertificate }};
         {{ end }}
-        
+
+        # map port 442 to 443 for header X-Forwarded-Port
+        map $pass_port $server_port {
+            442                                 443;
+            default                             80;
+        }
+
         {{ if (and (not (empty $server.SSLCertificate)) $cfg.HSTS) }}
         more_set_headers                        "Strict-Transport-Security: max-age={{ $cfg.HSTSMaxAge }}{{ if $cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
         {{ end }}
@@ -265,7 +272,7 @@ http {
             {{ if $location.EnableCORS }}
             {{ template "CORS" }}
             {{ end }}
-            
+
             proxy_set_header Host                   $host;
 
             # Pass Real IP
@@ -277,7 +284,7 @@ http {
 
             proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Host       $host;
-            proxy_set_header X-Forwarded-Port       $server_port;
+            proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
 
             # mitigate HTTPoxy Vulnerability
