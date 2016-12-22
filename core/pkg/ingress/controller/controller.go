@@ -992,7 +992,7 @@ func (ic *GenericController) getEndpoints(
 			}
 
 			// check for invalid port value
-			if targetPort <=0 {
+			if targetPort <= 0 {
 				continue
 			}
 

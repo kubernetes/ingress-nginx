@@ -17,6 +17,9 @@ limitations under the License.
 package dns
 
 import (
+	"io/ioutil"
+	"net"
+	"os"
 	"testing"
 )
 
@@ -27,5 +30,32 @@ func TestGetDNSServers(t *testing.T) {
 	}
 	if len(s) < 1 {
 		t.Error("expected at least 1 nameserver in /etc/resolv.conf")
+	}
+
+	file, err := ioutil.TempFile("", "fw")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer file.Close()
+	defer os.Remove(file.Name())
+
+	ioutil.WriteFile(file.Name(), []byte(`
+	nameserver 2001:4860:4860::8844
+	nameserver 2001:4860:4860::8888
+	nameserver 8.8.8.8
+	`), 0644)
+
+	defResolvConf = file.Name()
+	s, err = GetSystemNameServers()
+	if err != nil {
+		t.Fatalf("unexpected error reading /etc/resolv.conf file: %v", err)
+	}
+	if len(s) < 3 {
+		t.Errorf("expected at 3 nameservers but %v returned", len(s))
+	}
+
+	eip := net.ParseIP("2001:4860:4860::8844")
+	if !s[0].Equal(eip) {
+		t.Errorf("expected %v as nameservers but %v returned", eip, s[0])
 	}
 }

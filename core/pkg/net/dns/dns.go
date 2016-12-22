@@ -18,15 +18,18 @@ package dns
 
 import (
 	"io/ioutil"
+	"net"
 	"strings"
 
 	"github.com/golang/glog"
 )
 
+var defResolvConf = "/etc/resolv.conf"
+
 // GetSystemNameServers returns the list of nameservers located in the file /etc/resolv.conf
-func GetSystemNameServers() ([]string, error) {
-	var nameservers []string
-	file, err := ioutil.ReadFile("/etc/resolv.conf")
+func GetSystemNameServers() ([]net.IP, error) {
+	var nameservers []net.IP
+	file, err := ioutil.ReadFile(defResolvConf)
 	if err != nil {
 		return nameservers, err
 	}
@@ -43,10 +46,13 @@ func GetSystemNameServers() ([]string, error) {
 			continue
 		}
 		if fields[0] == "nameserver" {
-			nameservers = append(nameservers, fields[1:]...)
+			ip := net.ParseIP(fields[1])
+			if ip != nil {
+				nameservers = append(nameservers, ip)
+			}
 		}
 	}
 
-	glog.V(3).Infof("nameservers to use: %v", nameservers)
+	glog.V(3).Infof("nameservers IP address/es to use: %v", nameservers)
 	return nameservers, nil
 }

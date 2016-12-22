@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os/exec"
 	"strings"
 	text_template "text/template"
@@ -29,6 +30,7 @@ import (
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
+	ing_net "k8s.io/ingress/core/pkg/net"
 	"k8s.io/ingress/core/pkg/watch"
 )
 
@@ -134,6 +136,7 @@ var (
 		"buildRateLimitZones":         buildRateLimitZones,
 		"buildRateLimit":              buildRateLimit,
 		"buildSSPassthroughUpstreams": buildSSPassthroughUpstreams,
+		"buildResolvers":              buildResolvers,
 
 		"contains":  strings.Contains,
 		"hasPrefix": strings.HasPrefix,
@@ -142,6 +145,27 @@ var (
 		"toLower":   strings.ToLower,
 	}
 )
+
+// buildResolvers returns the resolvers reading the /etc/resolv.conf file
+func buildResolvers(a interface{}) string {
+	// NGINX need IPV6 addresses to be surrounded by brakets
+	nss := a.([]net.IP)
+	if len(nss) == 0 {
+		return ""
+	}
+
+	r := []string{"resolver"}
+	for _, ns := range nss {
+		if ing_net.IsIPV6(ns) {
+			r = append(r, fmt.Sprintf("[%v]", ns))
+		} else {
+			r = append(r, fmt.Sprintf("%v", ns))
+		}
+	}
+	r = append(r, "valid=30s;")
+
+	return strings.Join(r, " ")
+}
 
 func buildSSPassthroughUpstreams(b interface{}, sslb interface{}) string {
 	backends := b.([]*ingress.Backend)

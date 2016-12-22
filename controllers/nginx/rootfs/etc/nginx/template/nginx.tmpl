@@ -85,10 +85,7 @@ http {
     access_log /var/log/nginx/access.log upstreaminfo if=$loggable;
     error_log  /var/log/nginx/error.log {{ $cfg.ErrorLogLevel }};
 
-    {{ if not (empty $cfg.Resolver) }}# Custom dns resolver.
-    resolver {{ $cfg.Resolver }} valid=30s;
-    resolver_timeout 10s;
-    {{ end }}
+    {{ buildResolvers $cfg.Resolver }}
 
     {{/* Whenever nginx proxies a request without a "Connection" header, the "Connection" header is set to "close" */}}
     {{/* when making the target request.  This means that you cannot simply use */}}
