@@ -107,6 +107,11 @@ http {
         default          $http_x_forwarded_proto;
         ''               $scheme;
     }
+    
+    map $http_x_forwarded_proto $pass_server_port {
+      default $http_x_forwarded_port;
+      ''      $server_port;
+    }
 
     # Map a response error watching the header Content-Type
     map $http_accept $httpAccept {
@@ -197,7 +202,7 @@ http {
         {{ end }}
 
         # map port 442 to 443 for header X-Forwarded-Port
-        map $pass_port $server_port {
+        map $pass_port $pass_server_port {
             442                                 443;
             default                             80;
         }
