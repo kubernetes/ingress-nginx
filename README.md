@@ -13,9 +13,9 @@ It is currently in a state of flux as project maintainers port code over from [i
 
 * Learn more about using Ingress
      * See our user documentation on [k8s.io](http://kubernetes.io/docs/user-guide/ingress/)
-     * Follow through to the respective platform specific [examples](docs/examples/README.md)
+     * Follow through to the respective platform specific [examples](examples/README.md)
 * Write your own Ingress controller
-    * See our [developer documentation](docs/developer.md)
+    * See our [developer documentation](docs/dev/README.md)
 * Deploy existing Ingress controllers
     * See our [admin documentation](docs/admin.md)
 * Contribute
