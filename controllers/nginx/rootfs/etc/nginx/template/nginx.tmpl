@@ -108,6 +108,17 @@ http {
         ''               $scheme;
     }
 
+    map $http_x_forwarded_port $pass_server_port {
+       default           $http_x_forwarded_port;
+       ''                $server_port;
+    }
+
+    # map port 442 to 443 for header X-Forwarded-Port
+    map $pass_server_port $pass_port {
+        442              443;
+        default          $pass_server_port;
+    }
+
     # Map a response error watching the header Content-Type
     map $http_accept $httpAccept {
         default          html;
@@ -195,12 +206,6 @@ http {
         ssl_certificate                         {{ $server.SSLCertificate }};
         ssl_certificate_key                     {{ $server.SSLCertificate }};
         {{ end }}
-
-        # map port 442 to 443 for header X-Forwarded-Port
-        map $pass_port $server_port {
-            442                                 443;
-            default                             80;
-        }
 
         {{ if (and (not (empty $server.SSLCertificate)) $cfg.HSTS) }}
         more_set_headers                        "Strict-Transport-Security: max-age={{ $cfg.HSTSMaxAge }}{{ if $cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
