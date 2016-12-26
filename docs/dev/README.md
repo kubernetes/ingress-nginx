@@ -6,7 +6,7 @@ This document is intended to be relative to the branch in which it is found. It 
 
 ## Navigation
 
-* [Build, test or release](build.md) an existing controller
+* [Build, test or release](releases.md) an existing controller
 * [Setup a cluster](setup.md) to hack at an existing controller
 * [Write your own](devel.md) controller
 
