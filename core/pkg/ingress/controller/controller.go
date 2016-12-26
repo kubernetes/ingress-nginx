@@ -902,8 +902,18 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 
 			// only add a certificate if the server does not have one previously configured
 			// TODO: TLS without secret?
-			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate == "" && ing.Spec.TLS[0].SecretName != "" {
-				key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.TLS[0].SecretName)
+			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate == "" {
+				tlsSecretName := ""
+				for _, tls := range ing.Spec.TLS {
+					for _, tlsHost := range tls.Hosts {
+						if tlsHost == host {
+							tlsSecretName = tls.SecretName
+							break
+						}
+					}
+				}
+
+				key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 				bc, exists := ic.sslCertTracker.Get(key)
 				if exists {
 					cert := bc.(*ingress.SSLCert)
