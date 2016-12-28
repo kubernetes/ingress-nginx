@@ -17,13 +17,12 @@ limitations under the License.
 package template
 
 import (
+	"reflect"
 	"testing"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
+	"k8s.io/kubernetes/pkg/api"
 )
-
-func TestStandarizeKeyNames(t *testing.T) {
-}
 
 func TestFilterErrors(t *testing.T) {
 	e := filterErrors([]int{200, 300, 345, 500, 555, 999})
@@ -32,52 +31,30 @@ func TestFilterErrors(t *testing.T) {
 	}
 }
 
-func TestFixKeyNames(t *testing.T) {
-	d := map[string]interface{}{
-		"one":                   "one",
-		"one-example":           "oneExample",
-		"aMore-complex_example": "aMoreComplexExample",
-		"a": "a",
-	}
-
-	fixed := fixKeyNames(d)
-	for k, v := range fixed {
-		if k != v {
-			t.Errorf("expected %v but retuned %v", v, k)
-		}
-	}
-}
-
-type testStruct struct {
-	ProxyReadTimeout  int      `structs:"proxy-read-timeout,omitempty"`
-	ProxySendTimeout  int      `structs:"proxy-send-timeout,omitempty"`
-	CustomHTTPErrors  []int    `structs:"custom-http-errors"`
-	SkipAccessLogURLs []string `structs:"skip-access-log-urls,-"`
-	NoTag             string
-}
-
-var decodedData = &testStruct{
-	1,
-	2,
-	[]int{300, 400},
-	[]string{"/log"},
-	"",
-}
-
 func TestMergeConfigMapToStruct(t *testing.T) {
-	/*conf := &api.ConfigMap{
+	conf := &api.ConfigMap{
 		Data: map[string]string{
-			"custom-http-errors":   "300,400",
-			"proxy-read-timeout":   "1",
-			"proxy-send-timeout":   "2",
-			"skip-access-log-urls": "/log",
+			"custom-http-errors":         "300,400",
+			"proxy-read-timeout":         "1",
+			"proxy-send-timeout":         "2",
+			"skip-access-log-urls":       "/log,/demo,/test",
+			"use-proxy-protocol":         "true",
+			"use-gzip":                   "true",
+			"enable-dynamic-tls-records": "false",
+			"gzip-types":                 "text/html",
 		},
-	}*/
+	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
-	def.SkipAccessLogURLs = []string{"/log"}
-	//to := ReadConfig(conf)
-	//if !reflect.DeepEqual(def, to) {
-	//	t.Errorf("expected %v but retuned %v", def, to)
-	//}
+	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
+	def.ProxyReadTimeout = 1
+	def.ProxySendTimeout = 2
+	def.EnableDynamicTLSRecords = false
+	def.UseProxyProtocol = true
+	def.GzipTypes = "text/html"
+
+	to := ReadConfig(conf)
+	if !reflect.DeepEqual(def, to) {
+		t.Errorf("expected %v but retuned %v", def, to)
+	}
 }

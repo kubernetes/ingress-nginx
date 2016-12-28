@@ -76,145 +76,145 @@ var (
 
 // Configuration represents the content of nginx.conf file
 type Configuration struct {
-	defaults.Backend
+	defaults.Backend `json:",squash"`
 
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
-	BodySize string `structs:"body-size,omitempty"`
+	BodySize string `json:"body-size,omitempty"`
 
 	// EnableDynamicTLSRecords enables dynamic TLS record sizes
 	// https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency
 	// By default this is enabled
-	EnableDynamicTLSRecords bool `structs:"enable-dynamic-tls-records"`
+	EnableDynamicTLSRecords bool `json:"enable-dynamic-tls-records"`
 
 	// EnableSPDY enables spdy and use ALPN and NPN to advertise the availability of the two protocols
 	// https://blog.cloudflare.com/open-sourcing-our-nginx-http-2-spdy-code
 	// By default this is enabled
-	EnableSPDY bool `structs:"enable-spdy"`
+	EnableSPDY bool `json:"enable-spdy"`
 
 	// EnableStickySessions enabled sticky sessions using cookies
 	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
 	// By default this is disabled
-	EnableStickySessions bool `structs:"enable-sticky-sessions,omitempty"`
+	EnableStickySessions bool `json:"enable-sticky-sessions,omitempty"`
 
 	// EnableVtsStatus allows the replacement of the default status page with a third party module named
 	// nginx-module-vts - https://github.com/vozlt/nginx-module-vts
 	// By default this is disabled
-	EnableVtsStatus bool `structs:"enable-vts-status,omitempty"`
+	EnableVtsStatus bool `json:"enable-vts-status,omitempty"`
 
-	VtsStatusZoneSize string `structs:"vts-status-zone-size,omitempty"`
+	VtsStatusZoneSize string `json:"vts-status-zone-size,omitempty"`
 
 	// RetryNonIdempotent since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH)
 	// in case of an error. The previous behavior can be restored using the value true
-	RetryNonIdempotent bool `structs:"retry-non-idempotent"`
+	RetryNonIdempotent bool `json:"retry-non-idempotent"`
 
 	// http://nginx.org/en/docs/ngx_core_module.html#error_log
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
 	// Log levels above are listed in the order of increasing severity
-	ErrorLogLevel string `structs:"error-log-level,omitempty"`
+	ErrorLogLevel string `json:"error-log-level,omitempty"`
 
 	// Enables or disables the header HSTS in servers running SSL
-	HSTS bool `structs:"hsts,omitempty"`
+	HSTS bool `json:"hsts,omitempty"`
 
 	// Enables or disables the use of HSTS in all the subdomains of the servername
 	// Default: true
-	HSTSIncludeSubdomains bool `structs:"hsts-include-subdomains,omitempty"`
+	HSTSIncludeSubdomains bool `json:"hsts-include-subdomains,omitempty"`
 
 	// HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header)
 	// that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
 	// https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 	// max-age is the time, in seconds, that the browser should remember that this site is only to be
 	// accessed using HTTPS.
-	HSTSMaxAge string `structs:"hsts-max-age,omitempty"`
+	HSTSMaxAge string `json:"hsts-max-age,omitempty"`
 
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
-	KeepAlive int `structs:"keep-alive,omitempty"`
+	KeepAlive int `json:"keep-alive,omitempty"`
 
 	// Maximum number of simultaneous connections that can be opened by each worker process
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
-	MaxWorkerConnections int `structs:"max-worker-connections,omitempty"`
+	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
 
 	// Sets the bucket size for the map variables hash tables.
 	// Default value depends on the processor’s cache line size.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
-	MapHashBucketSize int `structs:"map-hash-bucket-size,omitempty"`
+	MapHashBucketSize int `json:"map-hash-bucket-size,omitempty"`
 
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
-	ProxyRealIPCIDR string `structs:"proxy-real-ip-cidr,omitempty"`
+	ProxyRealIPCIDR string `json:"proxy-real-ip-cidr,omitempty"`
 
 	// Maximum size of the server names hash tables used in server names, map directive’s values,
 	// MIME types, names of request header strings, etcd.
 	// http://nginx.org/en/docs/hash.html
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size
-	ServerNameHashMaxSize int `structs:"server-name-hash-max-size,omitempty"`
+	ServerNameHashMaxSize int `json:"server-name-hash-max-size,omitempty"`
 
 	// Size of the bucket for the server names hash tables
 	// http://nginx.org/en/docs/hash.html
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
-	ServerNameHashBucketSize int `structs:"server-name-hash-bucket-size,omitempty"`
+	ServerNameHashBucketSize int `json:"server-name-hash-bucket-size,omitempty"`
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
 	// the OpenSSL library
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
-	SSLCiphers string `structs:"ssl-ciphers,omitempty"`
+	SSLCiphers string `json:"ssl-ciphers,omitempty"`
 
 	// Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
 	// https://www.openssl.org/docs/manmaster/apps/dhparam.html
 	// https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
-	SSLDHParam string `structs:"ssl-dh-param,omitempty"`
+	SSLDHParam string `json:"ssl-dh-param,omitempty"`
 
 	// SSL enabled protocols to use
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
-	SSLProtocols string `structs:"ssl-protocols,omitempty"`
+	SSLProtocols string `json:"ssl-protocols,omitempty"`
 
 	// Enables or disables the use of shared SSL cache among worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
-	SSLSessionCache bool `structs:"ssl-session-cache,omitempty"`
+	SSLSessionCache bool `json:"ssl-session-cache,omitempty"`
 
 	// Size of the SSL shared cache between all worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
-	SSLSessionCacheSize string `structs:"ssl-session-cache-size,omitempty"`
+	SSLSessionCacheSize string `json:"ssl-session-cache-size,omitempty"`
 
 	// Enables or disables session resumption through TLS session tickets.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
-	SSLSessionTickets bool `structs:"ssl-session-tickets,omitempty"`
+	SSLSessionTickets bool `json:"ssl-session-tickets,omitempty"`
 
 	// Time during which a client may reuse the session parameters stored in a cache.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout
-	SSLSessionTimeout string `structs:"ssl-session-timeout,omitempty"`
+	SSLSessionTimeout string `json:"ssl-session-timeout,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
 	// 4k helps NGINX to improve TLS Time To First Byte (TTTFB)
 	// https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
-	SSLBufferSize string `structs:"ssl-buffer-size,omitempty"`
+	SSLBufferSize string `json:"ssl-buffer-size,omitempty"`
 
 	// Enables or disables the use of the PROXY protocol to receive client connection
 	// (real IP address) information passed through proxy servers and load balancers
 	// such as HAproxy and Amazon Elastic Load Balancer (ELB).
 	// https://www.nginx.com/resources/admin-guide/proxy-protocol/
-	UseProxyProtocol bool `structs:"use-proxy-protocol,omitempty"`
+	UseProxyProtocol bool `json:"use-proxy-protocol,omitempty"`
 
 	// Enables or disables the use of the nginx module that compresses responses using the "gzip" method
 	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
-	UseGzip bool `structs:"use-gzip,omitempty"`
+	UseGzip bool `json:"use-gzip,omitempty"`
 
 	// Enables or disables the HTTP/2 support in secure connections
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html
 	// Default: true
-	UseHTTP2 bool `structs:"use-http2,omitempty"`
+	UseHTTP2 bool `json:"use-http2,omitempty"`
 
 	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
 	// Responses with the “text/html” type are always compressed if UseGzip is enabled
-	GzipTypes string `structs:"gzip-types,omitempty"`
+	GzipTypes string `json:"gzip-types,omitempty"`
 
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
-	WorkerProcesses int `structs:"worker-processes,omitempty"`
+	WorkerProcesses int `json:"worker-processes,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
