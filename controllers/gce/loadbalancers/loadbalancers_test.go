@@ -39,9 +39,9 @@ func newFakeLoadBalancerPool(f LoadBalancers, t *testing.T) LoadBalancerPool {
 	fakeHCs := healthchecks.NewFakeHealthChecks()
 	namer := &utils.Namer{}
 	healthChecker := healthchecks.NewHealthChecker(fakeHCs, "/", namer)
-	healthChecker.Init(&healthchecks.FakeHealthCheckGetter{nil})
+	healthChecker.Init(&healthchecks.FakeHealthCheckGetter{})
 	nodePool := instances.NewNodePool(fakeIGs)
-	nodePool.Init(&instances.FakeZoneLister{[]string{defaultZone}})
+	nodePool.Init(&instances.FakeZoneLister{Zones: []string{defaultZone}})
 	backendPool := backends.NewBackendPool(
 		fakeBackends, healthChecker, nodePool, namer, []int64{}, false)
 	return NewLoadBalancerPool(f, backendPool, testDefaultBeNodePort, namer)
