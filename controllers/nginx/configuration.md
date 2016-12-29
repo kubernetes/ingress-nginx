@@ -315,7 +315,7 @@ The next table shows the options, the default value and a description
 
 |name                 |default|
 |---------------------------|------|
-|body-size|1m|
+|body-size|0 (unlimited)|
 |custom-http-errors|" "|
 |enable-sticky-sessions|"false"|
 |enable-vts-status|"false"|
