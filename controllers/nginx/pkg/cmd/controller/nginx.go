@@ -289,15 +289,15 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 	}
 
 	return n.t.Write(config.TemplateConfig{
-		BacklogSize:        sysctlSomaxconn(),
-		Backends:           ingressCfg.Backends,
-		PassthrougBackends: ingressCfg.PassthroughBackends,
-		Servers:            ingressCfg.Servers,
-		TCPBackends:        ingressCfg.TCPEndpoints,
-		UDPBackends:        ingressCfg.UPDEndpoints,
-		HealthzURI:         "/healthz",
-		CustomErrors:       len(cfg.CustomHTTPErrors) > 0,
-		Cfg:                cfg,
+		BacklogSize:         sysctlSomaxconn(),
+		Backends:            ingressCfg.Backends,
+		PassthroughBackends: ingressCfg.PassthroughBackends,
+		Servers:             ingressCfg.Servers,
+		TCPBackends:         ingressCfg.TCPEndpoints,
+		UDPBackends:         ingressCfg.UPDEndpoints,
+		HealthzURI:          "/healthz",
+		CustomErrors:        len(cfg.CustomHTTPErrors) > 0,
+		Cfg:                 cfg,
 	}, n.testTemplate)
 }
 
