@@ -17,28 +17,29 @@ limitations under the License.
 package sslpassthrough
 
 import (
-	"fmt"
-
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
+	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
 )
 
 const (
 	passthrough = "ingress.kubernetes.io/ssl-passthrough"
 )
 
+type sslpt struct {
+}
+
+// NewParser creates a new SSL passthrough annotation parser
+func NewParser() parser.IngressAnnotation {
+	return sslpt{}
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to indicate if is required to configure
-func ParseAnnotations(cfg defaults.Backend, ing *extensions.Ingress) (bool, error) {
-
+func (a sslpt) Parse(ing *extensions.Ingress) (interface{}, error) {
 	if ing.GetAnnotations() == nil {
-		return false, parser.ErrMissingAnnotations
-	}
-
-	if len(ing.Spec.TLS) == 0 {
-		return false, fmt.Errorf("ingres rule %v/%v does not contains a TLS section", ing.Name, ing.Namespace)
+		return false, ing_errors.ErrMissingAnnotations
 	}
 
 	return parser.GetBoolAnnotation(passthrough, ing)

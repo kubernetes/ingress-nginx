@@ -65,7 +65,7 @@ func TestAnnotations(t *testing.T) {
 	data[secureUpstream] = "true"
 	ing.SetAnnotations(data)
 
-	_, err := ParseAnnotations(ing)
+	_, err := NewParser().Parse(ing)
 	if err != nil {
 		t.Error("Expected error with ingress without annotations")
 	}
@@ -73,7 +73,7 @@ func TestAnnotations(t *testing.T) {
 
 func TestWithoutAnnotations(t *testing.T) {
 	ing := buildIngress()
-	_, err := ParseAnnotations(ing)
+	_, err := NewParser().Parse(ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
 	}

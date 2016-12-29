@@ -26,8 +26,16 @@ const (
 	secureUpstream = "ingress.kubernetes.io/secure-backends"
 )
 
-// ParseAnnotations parses the annotations contained in the ingress
+type su struct {
+}
+
+// NewParser creates a new secure upstream annotation parser
+func NewParser() parser.IngressAnnotation {
+	return su{}
+}
+
+// Parse parses the annotations contained in the ingress
 // rule used to indicate if the upstream servers should use SSL
-func ParseAnnotations(ing *extensions.Ingress) (bool, error) {
+func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
 	return parser.GetBoolAnnotation(secureUpstream, ing)
 }
