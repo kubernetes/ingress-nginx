@@ -399,7 +399,7 @@ http {
 stream {
     # map FQDN that requires SSL passthrough
     map $ssl_preread_server_name $stream_upstream {
-        {{ range $i, $passthrough := .PassthrougBackends }}
+        {{ range $i, $passthrough := .PassthroughBackends }}
         {{ $passthrough.Hostname }}         {{  $passthrough.Backend }};
         {{ end }}
         # send SSL traffic to this nginx in a different port 
@@ -416,7 +416,7 @@ stream {
         server 127.0.0.1:442;
     }
 
-    {{ buildSSPassthroughUpstreams $backends .PassthrougBackends }}
+    {{ buildSSPassthroughUpstreams $backends .PassthroughBackends }}
 
     server {
         listen                  [::]:443 ipv6only=off;

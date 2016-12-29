@@ -45,7 +45,7 @@
 	"customErrors": true,
 	"defResolver": "",
 	"healthzURI": "/healthz",
-	"passthrougBackends": [{
+	"passthroughBackends": [{
 		"namespace": "default-kubernetes-443",
 		"hostname": "foo-898.bar.com"
 	}, {

@@ -268,7 +268,7 @@ func NewDefault() Configuration {
 type TemplateConfig struct {
 	BacklogSize        int
 	Backends           []*ingress.Backend
-	PassthrougBackends []*ingress.SSLPassthroughBackend
+	PassthroughBackends []*ingress.SSLPassthroughBackend
 	Servers            []*ingress.Server
 	TCPBackends        []*ingress.Location
 	UDPBackends        []*ingress.Location
