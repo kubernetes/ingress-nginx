@@ -17,11 +17,10 @@ limitations under the License.
 package authtls
 
 import (
-	"fmt"
-
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/k8s"
 )
 
@@ -29,6 +28,13 @@ const (
 	// name of the secret
 	authTLSSecret = "ingress.kubernetes.io/auth-tls-secret"
 )
+
+// AuthCertificate has a method that searchs for a secret
+// that contains a SSL certificate.
+// The secret must contain 3 keys named:
+type AuthCertificate interface {
+	GetAuthCertificate(string) (*SSLCert, error)
+}
 
 // SSLCert returns external authentication configuration for an Ingress rule
 type SSLCert struct {
@@ -39,27 +45,31 @@ type SSLCert struct {
 	PemSHA       string `json:"pemSha"`
 }
 
+type authTLS struct {
+	certResolver AuthCertificate
+}
+
+// NewParser creates a new TLS authentication annotation parser
+func NewParser(resolver AuthCertificate) parser.IngressAnnotation {
+	return authTLS{resolver}
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an external URL as source for authentication
-func ParseAnnotations(ing *extensions.Ingress,
-	fn func(secret string) (*SSLCert, error)) (*SSLCert, error) {
-	if ing.GetAnnotations() == nil {
-		return &SSLCert{}, parser.ErrMissingAnnotations
-	}
-
+func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 	str, err := parser.GetStringAnnotation(authTLSSecret, ing)
 	if err != nil {
-		return &SSLCert{}, err
+		return nil, err
 	}
 
 	if str == "" {
-		return &SSLCert{}, fmt.Errorf("an empty string is not a valid secret name")
+		return nil, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
 	_, _, err = k8s.ParseNameNS(str)
 	if err != nil {
-		return &SSLCert{}, err
+		return nil, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
-	return fn(str)
+	return a.certResolver.GetAuthCertificate(str)
 }

@@ -203,6 +203,9 @@ type Location struct {
 	// an Ingress rule.
 	// +optional
 	BasicDigestAuth auth.BasicDigest `json:"basicDigestAuth,omitempty"`
+	// Denied returns an error when this location cannot not be allowed
+	// Requesting a denied location should return HTTP code 403.
+	Denied error
 	// EnableCORS indicates if path must support CORS
 	// +optional
 	EnableCORS bool `json:"enableCors,omitempty"`

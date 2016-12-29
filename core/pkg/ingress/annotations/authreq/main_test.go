@@ -87,15 +87,17 @@ func TestAnnotations(t *testing.T) {
 		data[authBody] = fmt.Sprintf("%v", test.sendBody)
 		data[authMethod] = fmt.Sprintf("%v", test.method)
 
-		u, err := ParseAnnotations(ing)
-
+		i, err := NewParser().Parse(ing)
 		if test.expErr {
 			if err == nil {
 				t.Errorf("%v: expected error but retuned nil", test.title)
 			}
 			continue
 		}
-
+		u, ok := i.(*External)
+		if !ok {
+			t.Errorf("%v: expected an External type", test.title)
+		}
 		if u.URL != test.url {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.url, u.URL)
 		}

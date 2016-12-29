@@ -17,12 +17,10 @@ limitations under the License.
 package rewrite
 
 import (
-	"errors"
-
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
@@ -42,19 +40,27 @@ type Redirect struct {
 	SSLRedirect bool `json:"sslRedirect"`
 }
 
+type rewrite struct {
+	backendResolver resolver.DefaultBackend
+}
+
+// NewParser creates a new reqrite annotation parser
+func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
+	return rewrite{br}
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func ParseAnnotations(cfg defaults.Backend, ing *extensions.Ingress) (*Redirect, error) {
-	if ing.GetAnnotations() == nil {
-		return &Redirect{}, errors.New("no annotations present")
+func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
+	rt, err := parser.GetStringAnnotation(rewriteTo, ing)
+	if err != nil {
+		return nil, err
 	}
 
 	sslRe, err := parser.GetBoolAnnotation(sslRedirect, ing)
 	if err != nil {
-		sslRe = cfg.SSLRedirect
+		sslRe = a.backendResolver.GetDefaultBackend().SSLRedirect
 	}
-
-	rt, _ := parser.GetStringAnnotation(rewriteTo, ing)
 	abu, _ := parser.GetBoolAnnotation(addBaseURL, ing)
 	return &Redirect{
 		Target:      rt,

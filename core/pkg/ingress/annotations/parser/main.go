@@ -17,32 +17,30 @@ limitations under the License.
 package parser
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
+
+	"k8s.io/ingress/core/pkg/ingress/errors"
 )
 
-var (
-	// ErrMissingAnnotations is returned when the ingress rule
-	// does not contains annotations related with rate limit
-	ErrMissingAnnotations = errors.New("Ingress rule without annotations")
-
-	// ErrInvalidName ...
-	ErrInvalidName = errors.New("invalid annotation name")
-)
+// IngressAnnotation has a method to parse annotations located in Ingress
+type IngressAnnotation interface {
+	Parse(ing *extensions.Ingress) (interface{}, error)
+}
 
 type ingAnnotations map[string]string
 
 func (a ingAnnotations) parseBool(name string) (bool, error) {
 	val, ok := a[name]
 	if ok {
-		if b, err := strconv.ParseBool(val); err == nil {
-			return b, nil
+		b, err := strconv.ParseBool(val)
+		if err != nil {
+			return false, errors.NewInvalidAnnotationContent(name)
 		}
+		return b, nil
 	}
-	return false, ErrMissingAnnotations
+	return false, errors.ErrMissingAnnotations
 }
 
 func (a ingAnnotations) parseString(name string) (string, error) {
@@ -50,7 +48,7 @@ func (a ingAnnotations) parseString(name string) (string, error) {
 	if ok {
 		return val, nil
 	}
-	return "", ErrMissingAnnotations
+	return "", errors.ErrMissingAnnotations
 }
 
 func (a ingAnnotations) parseInt(name string) (int, error) {
@@ -58,45 +56,47 @@ func (a ingAnnotations) parseInt(name string) (int, error) {
 	if ok {
 		i, err := strconv.Atoi(val)
 		if err != nil {
-			return 0, fmt.Errorf("invalid annotations value: %v", err)
+			return 0, errors.NewInvalidAnnotationContent(name)
 		}
 		return i, nil
 	}
-	return 0, ErrMissingAnnotations
+	return 0, errors.ErrMissingAnnotations
 }
 
-// GetBoolAnnotation ...
-func GetBoolAnnotation(name string, ing *extensions.Ingress) (bool, error) {
-	if ing == nil || ing.GetAnnotations() == nil {
-		return false, ErrMissingAnnotations
+func checkAnnotation(name string, ing *extensions.Ingress) error {
+	if ing == nil || len(ing.GetAnnotations()) == 0 {
+		return errors.ErrMissingAnnotations
 	}
 	if name == "" {
-		return false, ErrInvalidName
+		return errors.ErrInvalidAnnotationName
 	}
 
+	return nil
+}
+
+// GetBoolAnnotation extracts a boolean from an Ingress annotation
+func GetBoolAnnotation(name string, ing *extensions.Ingress) (bool, error) {
+	err := checkAnnotation(name, ing)
+	if err != nil {
+		return false, err
+	}
 	return ingAnnotations(ing.GetAnnotations()).parseBool(name)
 }
 
-// GetStringAnnotation ...
+// GetStringAnnotation extracts a string from an Ingress annotation
 func GetStringAnnotation(name string, ing *extensions.Ingress) (string, error) {
-	if ing == nil || ing.GetAnnotations() == nil {
-		return "", ErrMissingAnnotations
+	err := checkAnnotation(name, ing)
+	if err != nil {
+		return "", err
 	}
-	if name == "" {
-		return "", ErrInvalidName
-	}
-
 	return ingAnnotations(ing.GetAnnotations()).parseString(name)
 }
 
-// GetIntAnnotation ...
+// GetIntAnnotation extracts an int from an Ingress annotation
 func GetIntAnnotation(name string, ing *extensions.Ingress) (int, error) {
-	if ing == nil || ing.GetAnnotations() == nil {
-		return 0, ErrMissingAnnotations
+	err := checkAnnotation(name, ing)
+	if err != nil {
+		return 0, err
 	}
-	if name == "" {
-		return 0, ErrInvalidName
-	}
-
 	return ingAnnotations(ing.GetAnnotations()).parseInt(name)
 }
