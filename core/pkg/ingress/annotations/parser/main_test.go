@@ -70,6 +70,8 @@ func TestGetBoolAnnotation(t *testing.T) {
 		if u != test.exp {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.name, test.exp, u)
 		}
+
+		delete(data, test.field)
 	}
 }
 
@@ -110,6 +112,8 @@ func TestGetStringAnnotation(t *testing.T) {
 		if s != test.exp {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.name, test.exp, s)
 		}
+
+		delete(data, test.field)
 	}
 }
 
@@ -150,5 +154,7 @@ func TestGetIntAnnotation(t *testing.T) {
 		if s != test.exp {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.name, test.exp, s)
 		}
+
+		delete(data, test.field)
 	}
 }

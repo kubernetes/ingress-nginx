@@ -266,13 +266,13 @@ func NewDefault() Configuration {
 }
 
 type TemplateConfig struct {
-	BacklogSize        int
-	Backends           []*ingress.Backend
+	BacklogSize         int
+	Backends            []*ingress.Backend
 	PassthroughBackends []*ingress.SSLPassthroughBackend
-	Servers            []*ingress.Server
-	TCPBackends        []*ingress.Location
-	UDPBackends        []*ingress.Location
-	HealthzURI         string
-	CustomErrors       bool
-	Cfg                Configuration
+	Servers             []*ingress.Server
+	TCPBackends         []*ingress.Location
+	UDPBackends         []*ingress.Location
+	HealthzURI          string
+	CustomErrors        bool
+	Cfg                 Configuration
 }

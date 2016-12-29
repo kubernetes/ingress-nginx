@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package healthcheck
+package controller
 
 import (
 	"testing"
@@ -23,8 +23,38 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/util/intstr"
 
+	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
+
+type mockCfg struct {
+}
+
+func (m mockCfg) GetDefaultBackend() defaults.Backend {
+	return defaults.Backend{}
+}
+
+func (m mockCfg) GetSecret(string) (*api.Secret, error) {
+	return nil, nil
+}
+
+func (m mockCfg) GetAuthCertificate(string) (*authtls.SSLCert, error) {
+	return nil, nil
+}
+
+func TestAnnotationExtractor(t *testing.T) {
+	ec := newAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	m := ec.Extract(ing)
+	// the map at least should contains HealthCheck and Proxy information (defaults)
+	if _, ok := m["HealthCheck"]; !ok {
+		t.Error("expected HealthCheck annotation")
+	}
+	if _, ok := m["Proxy"]; !ok {
+		t.Error("expected Proxy annotation")
+	}
+}
 
 func buildIngress() *extensions.Ingress {
 	defaultBackend := extensions.IngressBackend{
@@ -58,34 +88,5 @@ func buildIngress() *extensions.Ingress {
 				},
 			},
 		},
-	}
-}
-
-type mockBackend struct {
-}
-
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{UpstreamFailTimeout: 1}
-}
-
-func TestIngressHealthCheck(t *testing.T) {
-	ing := buildIngress()
-
-	data := map[string]string{}
-	data[upsMaxFails] = "2"
-	ing.SetAnnotations(data)
-
-	hzi, _ := NewParser(mockBackend{}).Parse(ing)
-	nginxHz, ok := hzi.(*Upstream)
-	if !ok {
-		t.Errorf("expected a Upstream type")
-	}
-
-	if nginxHz.MaxFails != 2 {
-		t.Errorf("expected 2 as max-fails but returned %v", nginxHz.MaxFails)
-	}
-
-	if nginxHz.FailTimeout != 1 {
-		t.Errorf("expected 0 as fail-timeout but returned %v", nginxHz.FailTimeout)
 	}
 }

@@ -39,18 +39,11 @@ import (
 
 	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress"
-	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
-	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
-	"k8s.io/ingress/core/pkg/ingress/annotations/cors"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
-	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
-	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
-	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
-	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
 	"k8s.io/ingress/core/pkg/ingress/annotations/service"
-	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
+	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/status"
 	"k8s.io/ingress/core/pkg/k8s"
 	local_strings "k8s.io/ingress/core/pkg/strings"
@@ -89,6 +82,8 @@ type GenericController struct {
 	endpLister cache.StoreToEndpointsLister
 	secrLister cache_store.StoreToSecretsLister
 	mapLister  cache_store.StoreToConfigmapLister
+
+	annotations annotationExtractor
 
 	recorder record.EventRecorder
 
@@ -268,6 +263,8 @@ func newIngressController(config *Configuration) *GenericController {
 		IngressLister:  ic.ingLister,
 	})
 
+	ic.annotations = newAnnotationExtractor(ic)
+
 	return &ic
 }
 
@@ -289,8 +286,13 @@ func (ic GenericController) IngressClass() string {
 	return ic.cfg.IngressClass
 }
 
-// getSecret searchs for a secret in the local secrets Store
-func (ic *GenericController) getSecret(name string) (*api.Secret, error) {
+// GetDefaultBackend returns the default backend
+func (ic GenericController) GetDefaultBackend() defaults.Backend {
+	return ic.cfg.Backend.BackendDefaults()
+}
+
+// GetSecret searchs for a secret in the local secrets Store
+func (ic GenericController) GetSecret(name string) (*api.Secret, error) {
 	s, exists, err := ic.secrLister.Store.GetByKey(name)
 	if err != nil {
 		return nil, err
@@ -551,53 +553,10 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	upstreams := ic.createUpstreams(ings)
 	servers := ic.createServers(ings, upstreams)
 
-	upsDefaults := ic.cfg.Backend.BackendDefaults()
-
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
 
-		nginxAuth, err := auth.ParseAnnotations(ing, auth.DefAuthDirectory, ic.getSecret)
-		glog.V(5).Infof("auth annotation: %v", nginxAuth)
-		if err != nil {
-			glog.V(5).Infof("error reading authentication in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
-
-		rl, err := ratelimit.ParseAnnotations(ing)
-		glog.V(5).Infof("rate limit annotation: %v", rl)
-		if err != nil {
-			glog.V(5).Infof("error reading rate limit annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
-
-		locRew, err := rewrite.ParseAnnotations(upsDefaults, ing)
-		if err != nil {
-			glog.V(5).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
-
-		wl, err := ipwhitelist.ParseAnnotations(upsDefaults, ing)
-		glog.V(5).Infof("white list annotation: %v", wl)
-		if err != nil {
-			glog.V(5).Infof("error reading white list annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
-
-		eCORS, err := cors.ParseAnnotations(ing)
-		if err != nil {
-			glog.V(5).Infof("error reading CORS annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
-
-		ra, err := authreq.ParseAnnotations(ing)
-		glog.V(5).Infof("auth request annotation: %v", ra)
-		if err != nil {
-			glog.V(5).Infof("error reading auth request annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
-
-		prx := proxy.ParseAnnotations(upsDefaults, ing)
-		glog.V(5).Infof("proxy timeouts annotation: %v", prx)
-
-		certAuth, err := authtls.ParseAnnotations(ing, ic.getAuthCertificate)
-		glog.V(5).Infof("auth request annotation: %v", certAuth)
-		if err != nil {
-			glog.V(5).Infof("error reading certificate auth annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
+		anns := ic.annotations.Extract(ing)
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -664,34 +623,21 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						glog.V(3).Infof("replacing ingress rule %v/%v location %v upstream %v (%v)", ing.Namespace, ing.Name, loc.Path, ups.Name, loc.Backend)
 						loc.Backend = ups.Name
 						loc.IsDefBackend = false
-						loc.BasicDigestAuth = *nginxAuth
-						loc.RateLimit = *rl
-						loc.Redirect = *locRew
-						loc.Whitelist = *wl
 						loc.Backend = ups.Name
-						loc.EnableCORS = eCORS
-						loc.ExternalAuth = ra
-						loc.Proxy = *prx
-						loc.CertificateAuth = *certAuth
+						mergeLocationAnnotations(loc, anns)
 						break
 					}
 				}
 				// is a new location
 				if addLoc {
 					glog.V(3).Infof("adding location %v in ingress rule %v/%v upstream %v", nginxPath, ing.Namespace, ing.Name, ups.Name)
-					server.Locations = append(server.Locations, &ingress.Location{
-						Path:            nginxPath,
-						Backend:         ups.Name,
-						IsDefBackend:    false,
-						BasicDigestAuth: *nginxAuth,
-						RateLimit:       *rl,
-						Redirect:        *locRew,
-						Whitelist:       *wl,
-						EnableCORS:      eCORS,
-						ExternalAuth:    ra,
-						Proxy:           *prx,
-						CertificateAuth: *certAuth,
-					})
+					loc := &ingress.Location{
+						Path:         nginxPath,
+						Backend:      ups.Name,
+						IsDefBackend: false,
+					}
+					mergeLocationAnnotations(loc, anns)
+					server.Locations = append(server.Locations, loc)
 				}
 			}
 		}
@@ -721,7 +667,8 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	return aUpstreams, aServers
 }
 
-func (ic *GenericController) getAuthCertificate(secretName string) (*authtls.SSLCert, error) {
+// GetAuthCertificate ...
+func (ic GenericController) GetAuthCertificate(secretName string) (*authtls.SSLCert, error) {
 	bc, exists := ic.sslCertTracker.Get(secretName)
 	if !exists {
 		return &authtls.SSLCert{}, fmt.Errorf("secret %v does not exists", secretName)
@@ -741,16 +688,11 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 	upstreams := make(map[string]*ingress.Backend)
 	upstreams[defUpstreamName] = ic.getDefaultUpstream()
 
-	upsDefaults := ic.cfg.Backend.BackendDefaults()
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
 
-		secUpstream, err := secureupstream.ParseAnnotations(ing)
-		if err != nil {
-			glog.V(5).Infof("error reading secure upstream in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
-
-		hz := healthcheck.ParseAnnotations(upsDefaults, ing)
+		secUpstream := ic.annotations.SecureUpstream(ing)
+		hz := ic.annotations.HealthCheck(ing)
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -843,9 +785,16 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 
 func (ic *GenericController) createServers(data []interface{}, upstreams map[string]*ingress.Backend) map[string]*ingress.Server {
 	servers := make(map[string]*ingress.Server)
-	ngxProxy := *proxy.ParseAnnotations(ic.cfg.Backend.BackendDefaults(), nil)
 
-	upsDefaults := ic.cfg.Backend.BackendDefaults()
+	bdef := ic.GetDefaultBackend()
+	ngxProxy := proxy.Configuration{
+		ConnectTimeout: bdef.ProxyConnectTimeout,
+		SendTimeout:    bdef.ProxySendTimeout,
+		ReadTimeout:    bdef.ProxyReadTimeout,
+		BufferSize:     bdef.ProxyBufferSize,
+	}
+
+	dun := ic.getDefaultUpstream().Name
 
 	// default server
 	servers[defServerName] = &ingress.Server{
@@ -854,7 +803,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 			{
 				Path:         rootLocation,
 				IsDefBackend: true,
-				Backend:      ic.getDefaultUpstream().Name,
+				Backend:      dun,
 				Proxy:        ngxProxy,
 			},
 		}}
@@ -863,10 +812,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
 		// check if ssl passthrough is configured
-		sslpt, err := sslpassthrough.ParseAnnotations(upsDefaults, ing)
-		if err != nil {
-			glog.V(5).Infof("error reading ssl passthrough annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
-		}
+		sslpt := ic.annotations.SSLPassthrough(ing)
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -883,7 +829,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 					{
 						Path:         rootLocation,
 						IsDefBackend: true,
-						Backend:      ic.getDefaultUpstream().Name,
+						Backend:      dun,
 						Proxy:        ngxProxy,
 					},
 				}, SSLPassthrough: sslpt}

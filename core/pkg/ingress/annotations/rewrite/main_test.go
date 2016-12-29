@@ -65,9 +65,17 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
+type mockBackend struct {
+	redirect bool
+}
+
+func (m mockBackend) GetDefaultBackend() defaults.Backend {
+	return defaults.Backend{SSLRedirect: m.redirect}
+}
+
 func TestWithoutAnnotations(t *testing.T) {
 	ing := buildIngress()
-	_, err := ParseAnnotations(defaults.Backend{}, ing)
+	_, err := NewParser(mockBackend{}).Parse(ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
 	}
@@ -80,11 +88,14 @@ func TestRedirect(t *testing.T) {
 	data[rewriteTo] = defRoute
 	ing.SetAnnotations(data)
 
-	redirect, err := ParseAnnotations(defaults.Backend{}, ing)
+	i, err := NewParser(mockBackend{}).Parse(ing)
 	if err != nil {
-		t.Errorf("Uxpected error with ingress: %v", err)
+		t.Errorf("Unexpected error with ingress: %v", err)
 	}
-
+	redirect, ok := i.(*Redirect)
+	if !ok {
+		t.Errorf("expected a Redirect type")
+	}
 	if redirect.Target != defRoute {
 		t.Errorf("Expected %v as redirect but returned %s", defRoute, redirect.Target)
 	}
@@ -93,13 +104,18 @@ func TestRedirect(t *testing.T) {
 func TestSSLRedirect(t *testing.T) {
 	ing := buildIngress()
 
-	cfg := defaults.Backend{SSLRedirect: true}
-
 	data := map[string]string{}
-
+	data[rewriteTo] = defRoute
 	ing.SetAnnotations(data)
 
-	redirect, _ := ParseAnnotations(cfg, ing)
+	i, _ := NewParser(mockBackend{true}).Parse(ing)
+	redirect, ok := i.(*Redirect)
+	if !ok {
+		t.Errorf("expected a Redirect type")
+	}
+	if !redirect.SSLRedirect {
+		t.Errorf("Expected true but returned false")
+	}
 
 	if !redirect.SSLRedirect {
 		t.Errorf("Expected true but returned false")
@@ -108,8 +124,11 @@ func TestSSLRedirect(t *testing.T) {
 	data[sslRedirect] = "false"
 	ing.SetAnnotations(data)
 
-	redirect, _ = ParseAnnotations(cfg, ing)
-
+	i, _ = NewParser(mockBackend{false}).Parse(ing)
+	redirect, ok = i.(*Redirect)
+	if !ok {
+		t.Errorf("expected a Redirect type")
+	}
 	if redirect.SSLRedirect {
 		t.Errorf("Expected false but returned true")
 	}

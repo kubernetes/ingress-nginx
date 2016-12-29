@@ -17,7 +17,6 @@ limitations under the License.
 package ratelimit
 
 import (
-	"errors"
 	"fmt"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -35,11 +34,6 @@ const (
 	// 1MB -> 16 thousand 64-byte states or about 8 thousand 128-byte states
 	// default is 5MB
 	defSharedSize = 5
-)
-
-var (
-	// ErrInvalidRateLimit is returned when the annotation caontains invalid values
-	ErrInvalidRateLimit = errors.New("invalid rate limit value. Must be > 0")
 )
 
 // RateLimit returns rate limit configuration for an Ingress rule
@@ -63,12 +57,17 @@ type Zone struct {
 	SharedSize int `json:"sharedSize"`
 }
 
+type ratelimit struct {
+}
+
+// NewParser creates a new ratelimit annotation parser
+func NewParser() parser.IngressAnnotation {
+	return ratelimit{}
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
-func ParseAnnotations(ing *extensions.Ingress) (*RateLimit, error) {
-	if ing.GetAnnotations() == nil {
-		return &RateLimit{}, parser.ErrMissingAnnotations
-	}
+func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	rps, _ := parser.GetIntAnnotation(limitRPS, ing)
 	conn, _ := parser.GetIntAnnotation(limitIP, ing)
@@ -77,7 +76,7 @@ func ParseAnnotations(ing *extensions.Ingress) (*RateLimit, error) {
 		return &RateLimit{
 			Connections: Zone{},
 			RPS:         Zone{},
-		}, ErrInvalidRateLimit
+		}, nil
 	}
 
 	zoneName := fmt.Sprintf("%v_%v", ing.GetNamespace(), ing.GetName())

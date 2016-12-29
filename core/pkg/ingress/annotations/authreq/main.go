@@ -17,13 +17,13 @@ limitations under the License.
 package authreq
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
 )
 
 const (
@@ -57,44 +57,49 @@ func validMethod(method string) bool {
 	return false
 }
 
+type authReq struct {
+}
+
+// NewParser creates a new authentication request annotation parser
+func NewParser() parser.IngressAnnotation {
+	return authReq{}
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an external URL as source for authentication
-func ParseAnnotations(ing *extensions.Ingress) (External, error) {
-	if ing.GetAnnotations() == nil {
-		return External{}, parser.ErrMissingAnnotations
-	}
-
+func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	str, err := parser.GetStringAnnotation(authURL, ing)
 	if err != nil {
-		return External{}, err
+		return nil, err
 	}
+
 	if str == "" {
-		return External{}, fmt.Errorf("an empty string is not a valid URL")
+		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
 	}
 
 	ur, err := url.Parse(str)
 	if err != nil {
-		return External{}, err
+		return nil, err
 	}
 	if ur.Scheme == "" {
-		return External{}, fmt.Errorf("url scheme is empty")
+		return nil, ing_errors.NewLocationDenied("url scheme is empty")
 	}
 	if ur.Host == "" {
-		return External{}, fmt.Errorf("url host is empty")
+		return nil, ing_errors.NewLocationDenied("url host is empty")
 	}
 
 	if strings.Contains(ur.Host, "..") {
-		return External{}, fmt.Errorf("invalid url host")
+		return nil, ing_errors.NewLocationDenied("invalid url host")
 	}
 
 	m, _ := parser.GetStringAnnotation(authMethod, ing)
 	if len(m) != 0 && !validMethod(m) {
-		return External{}, fmt.Errorf("invalid HTTP method")
+		return nil, ing_errors.NewLocationDenied("invalid HTTP method")
 	}
 
 	sb, _ := parser.GetBoolAnnotation(authBody, ing)
 
-	return External{
+	return &External{
 		URL:      str,
 		Method:   m,
 		SendBody: sb,

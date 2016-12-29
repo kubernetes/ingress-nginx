@@ -17,25 +17,20 @@ limitations under the License.
 package ipwhitelist
 
 import (
-	"errors"
 	"sort"
 	"strings"
 
+	"github.com/pkg/errors"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/util/net/sets"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
+	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
 	whitelist = "ingress.kubernetes.io/whitelist-source-range"
-)
-
-var (
-	// ErrInvalidCIDR returned error when the whitelist annotation does not
-	// contains a valid IP or network address
-	ErrInvalidCIDR = errors.New("the annotation does not contains a valid IP address or network")
 )
 
 // SourceRange returns the CIDR
@@ -43,25 +38,34 @@ type SourceRange struct {
 	CIDR []string `json:"cidr"`
 }
 
+type ipwhitelist struct {
+	backendResolver resolver.DefaultBackend
+}
+
+// NewParser creates a new whitelist annotation parser
+func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
+	return ipwhitelist{br}
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to limit access to certain client addresses or networks.
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`
-func ParseAnnotations(cfg defaults.Backend, ing *extensions.Ingress) (*SourceRange, error) {
-	sort.Strings(cfg.WhitelistSourceRange)
-	if ing.GetAnnotations() == nil {
-		return &SourceRange{CIDR: cfg.WhitelistSourceRange}, parser.ErrMissingAnnotations
-	}
+func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
+	defBackend := a.backendResolver.GetDefaultBackend()
+	sort.Strings(defBackend.WhitelistSourceRange)
 
 	val, err := parser.GetStringAnnotation(whitelist, ing)
 	if err != nil {
-		return &SourceRange{CIDR: cfg.WhitelistSourceRange}, err
+		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, err
 	}
 
 	values := strings.Split(val, ",")
 	ipnets, err := sets.ParseIPNets(values...)
 	if err != nil {
-		return &SourceRange{CIDR: cfg.WhitelistSourceRange}, ErrInvalidCIDR
+		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "the annotation does not contains a valid IP address or network"),
+		}
 	}
 
 	cidrs := []string{}

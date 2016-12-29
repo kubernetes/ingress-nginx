@@ -238,6 +238,7 @@ http {
         {{ end }}
         
         location {{ $path }} {
+            {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
             {{ range $ip := $location.Whitelist.CIDR }}
             allow {{ $ip }};{{ end }}
@@ -310,6 +311,10 @@ http {
 
             set $proxy_upstream_name "{{ $location.Backend }}";
             {{ buildProxyPass $backends $location }}
+            {{ else }}
+            #{{ $location.Denied }}
+            return 503;
+            {{ end }}
         }
         {{ end }}
         
@@ -324,6 +329,7 @@ http {
         # with an external software (like sysdig)
         location /nginx_status {
             allow 127.0.0.1;
+            allow ::1;
             deny all;
 
             access_log off;
@@ -363,6 +369,7 @@ http {
         # TODO: enable extraction for vts module.
         location /internal_nginx_status {
             allow 127.0.0.1;
+            allow ::1;
             deny all;
 
             access_log off;

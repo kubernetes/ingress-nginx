@@ -19,6 +19,9 @@ package controller
 import (
 	"strings"
 
+	"github.com/golang/glog"
+	"github.com/imdario/mergo"
+
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress"
@@ -92,4 +95,17 @@ func IsValidClass(ing *extensions.Ingress, class string) bool {
 	}
 
 	return cc == class
+}
+
+const denied = "Denied"
+
+func mergeLocationAnnotations(loc *ingress.Location, anns map[string]interface{}) {
+	if _, ok := anns[denied]; ok {
+		loc.Denied = anns[denied].(error)
+	}
+	delete(anns, denied)
+	err := mergo.Map(loc, anns)
+	if err != nil {
+		glog.Errorf("unexpected error merging extracted annotations in location type: %v", err)
+	}
 }

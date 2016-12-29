@@ -23,11 +23,19 @@ import (
 )
 
 const (
-	cors = "ingress.kubernetes.io/enable-cors"
+	annotation = "ingress.kubernetes.io/enable-cors"
 )
 
-// ParseAnnotations parses the annotations contained in the ingress
+type cors struct {
+}
+
+// NewParser creates a new CORS annotation parser
+func NewParser() parser.IngressAnnotation {
+	return cors{}
+}
+
+// Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should allows CORS
-func ParseAnnotations(ing *extensions.Ingress) (bool, error) {
-	return parser.GetBoolAnnotation(cors, ing)
+func (a cors) Parse(ing *extensions.Ingress) (interface{}, error) {
+	return parser.GetBoolAnnotation(annotation, ing)
 }

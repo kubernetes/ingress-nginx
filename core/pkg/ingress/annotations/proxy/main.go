@@ -20,7 +20,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
@@ -38,37 +38,38 @@ type Configuration struct {
 	BufferSize     string `json:"bufferSize"`
 }
 
+type proxy struct {
+	backendResolver resolver.DefaultBackend
+}
+
+// NewParser creates a new reverse proxy configuration annotation parser
+func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
+	return proxy{br}
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
-func ParseAnnotations(cfg defaults.Backend, ing *extensions.Ingress) *Configuration {
-	if ing == nil || ing.GetAnnotations() == nil {
-		return &Configuration{
-			cfg.ProxyConnectTimeout,
-			cfg.ProxySendTimeout,
-			cfg.ProxyReadTimeout,
-			cfg.ProxyBufferSize,
-		}
-	}
-
+func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
+	defBackend := a.backendResolver.GetDefaultBackend()
 	ct, err := parser.GetIntAnnotation(connect, ing)
 	if err != nil {
-		ct = cfg.ProxyConnectTimeout
+		ct = defBackend.ProxyConnectTimeout
 	}
 
 	st, err := parser.GetIntAnnotation(send, ing)
 	if err != nil {
-		st = cfg.ProxySendTimeout
+		st = defBackend.ProxySendTimeout
 	}
 
 	rt, err := parser.GetIntAnnotation(read, ing)
 	if err != nil {
-		rt = cfg.ProxyReadTimeout
+		rt = defBackend.ProxyReadTimeout
 	}
 
 	bs, err := parser.GetStringAnnotation(bufferSize, ing)
 	if err != nil || bs == "" {
-		bs = cfg.ProxyBufferSize
+		bs = defBackend.ProxyBufferSize
 	}
 
-	return &Configuration{ct, st, rt, bs}
+	return &Configuration{ct, st, rt, bs}, nil
 }

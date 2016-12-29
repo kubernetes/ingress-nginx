@@ -61,9 +61,9 @@ func buildIngress() *extensions.Ingress {
 
 func TestWithoutAnnotations(t *testing.T) {
 	ing := buildIngress()
-	_, err := ParseAnnotations(ing)
-	if err == nil {
-		t.Error("Expected error with ingress without annotations")
+	_, err := NewParser().Parse(ing)
+	if err != nil {
+		t.Error("unexpected error with ingress without annotations")
 	}
 }
 
@@ -75,9 +75,9 @@ func TestBadRateLimiting(t *testing.T) {
 	data[limitRPS] = "0"
 	ing.SetAnnotations(data)
 
-	_, err := ParseAnnotations(ing)
-	if err == nil {
-		t.Errorf("Expected error with invalid limits (0)")
+	_, err := NewParser().Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error with invalid limits (0)")
 	}
 
 	data = map[string]string{}
@@ -85,16 +85,18 @@ func TestBadRateLimiting(t *testing.T) {
 	data[limitRPS] = "100"
 	ing.SetAnnotations(data)
 
-	rateLimit, err := ParseAnnotations(ing)
+	i, err := NewParser().Parse(ing)
 	if err != nil {
-		t.Errorf("Uxpected error: %v", err)
+		t.Errorf("unexpected error: %v", err)
 	}
-
+	rateLimit, ok := i.(*RateLimit)
+	if !ok {
+		t.Errorf("expected a RateLimit type")
+	}
 	if rateLimit.Connections.Limit != 5 {
-		t.Errorf("Expected 5 in limit by ip but %v was returend", rateLimit.Connections)
+		t.Errorf("expected 5 in limit by ip but %v was returend", rateLimit.Connections)
 	}
-
 	if rateLimit.RPS.Limit != 100 {
-		t.Errorf("Expected 100 in limit by rps but %v was returend", rateLimit.RPS)
+		t.Errorf("expected 100 in limit by rps but %v was returend", rateLimit.RPS)
 	}
 }
