@@ -68,6 +68,8 @@ http {
     gzip_proxied any;
     {{ end }}
 
+    server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
+
     client_max_body_size "{{ $cfg.BodySize }}";
 
     log_format upstreaminfo '{{ if $cfg.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '

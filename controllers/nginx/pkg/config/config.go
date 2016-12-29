@@ -156,6 +156,11 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
 	ServerNameHashBucketSize int `json:"server-name-hash-bucket-size,omitempty"`
 
+	// Enables or disables emitting nginx version in error messages and in the “Server” response header field.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens
+	// Default: true
+	ShowServerTokens bool `json:"server-tokens"`
+
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
 	// the OpenSSL library
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
@@ -234,6 +239,7 @@ func NewDefault() Configuration {
 		ProxyRealIPCIDR:          defIPCIDR,
 		ServerNameHashMaxSize:    512,
 		ServerNameHashBucketSize: 64,
+		ShowServerTokens:         true,
 		SSLBufferSize:            sslBufferSize,
 		SSLCiphers:               sslCiphers,
 		SSLProtocols:             sslProtocols,
@@ -266,13 +272,13 @@ func NewDefault() Configuration {
 }
 
 type TemplateConfig struct {
-	BacklogSize        int
-	Backends           []*ingress.Backend
+	BacklogSize         int
+	Backends            []*ingress.Backend
 	PassthroughBackends []*ingress.SSLPassthroughBackend
-	Servers            []*ingress.Server
-	TCPBackends        []*ingress.Location
-	UDPBackends        []*ingress.Location
-	HealthzURI         string
-	CustomErrors       bool
-	Cfg                Configuration
+	Servers             []*ingress.Server
+	TCPBackends         []*ingress.Location
+	UDPBackends         []*ingress.Location
+	HealthzURI          string
+	CustomErrors        bool
+	Cfg                 Configuration
 }
