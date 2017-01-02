@@ -31,6 +31,7 @@ import (
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/net/dns"
 )
 
 const (
@@ -97,6 +98,13 @@ func ReadConfig(conf *api.ConfigMap) config.Configuration {
 	if err != nil {
 		glog.Infof("%v", err)
 	}
+
+	nss, err := dns.GetSystemNameServers()
+	if err != nil {
+		glog.Infof("unexpected error reading /etc/resolv.conf file: %v", err)
+	}
+	to.Resolver = nss
+
 	return to
 }
 

@@ -1,5 +1,7 @@
 package defaults
 
+import "net"
+
 // Backend defines the mandatory configuration that an Ingress controller must provide
 // The reason of this requirements is the annotations are generic. If some implementation do not supports
 // one or more annotations it just can provides defaults
@@ -30,9 +32,9 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size)
 	ProxyBufferSize string `structs:"proxy-buffer-size"`
 
-	// Configures name servers used to resolve names of upstream servers into addresses
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#resolver
-	Resolver string `structs:"resolver"`
+	// Name server/s used to resolve names of upstream servers into IP addresses.
+	// The file /etc/resolv.conf is used as DNS resolution configuration.
+	Resolver []net.IP
 
 	// SkipAccessLogURLs sets a list of URLs that should not appear in the NGINX access log
 	// This is useful with urls like `/health` or `health-check` that make "complex" reading the logs

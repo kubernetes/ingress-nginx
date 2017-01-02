@@ -51,10 +51,10 @@ func NewFakeClusterManager(clusterName string) *fakeClusterManager {
 	namer := utils.NewNamer(clusterName)
 
 	nodePool := instances.NewNodePool(fakeIGs)
-	nodePool.Init(&instances.FakeZoneLister{[]string{"zone-a"}})
+	nodePool.Init(&instances.FakeZoneLister{Zones: []string{"zone-a"}})
 
 	healthChecker := healthchecks.NewHealthChecker(fakeHCs, "/", namer)
-	healthChecker.Init(&healthchecks.FakeHealthCheckGetter{nil})
+	healthChecker.Init(&healthchecks.FakeHealthCheckGetter{})
 
 	backendPool := backends.NewBackendPool(
 		fakeBackends,
