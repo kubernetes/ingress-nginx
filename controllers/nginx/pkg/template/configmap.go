@@ -21,17 +21,11 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
-	"github.com/imdario/mergo"
-
-	"github.com/fatih/structs"
 	"github.com/mitchellh/mapstructure"
-	go_camelcase "github.com/segmentio/go-camelcase"
 
 	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
-	"k8s.io/ingress/core/pkg/net/dns"
 )
 
 const (
@@ -39,11 +33,6 @@ const (
 	skipAccessLogUrls    = "skip-access-log-urls"
 	whitelistSourceRange = "whitelist-source-range"
 )
-
-// StandarizeKeyNames ...
-func StandarizeKeyNames(data interface{}) map[string]interface{} {
-	return fixKeyNames(structs.Map(data))
-}
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
 func ReadConfig(conf *api.ConfigMap) config.Configuration {
@@ -75,35 +64,26 @@ func ReadConfig(conf *api.ConfigMap) config.Configuration {
 		whitelist = append(whitelist, strings.Split(val, ",")...)
 	}
 
-	to := config.Configuration{}
-	to.Backend = defaults.Backend{
-		CustomHTTPErrors:     filterErrors(errors),
-		SkipAccessLogURLs:    skipUrls,
-		WhitelistSourceRange: whitelist,
+	to := config.NewDefault()
+	to.CustomHTTPErrors = filterErrors(errors)
+	to.SkipAccessLogURLs = skipUrls
+	to.WhitelistSourceRange = whitelist
+
+	config := &mapstructure.DecoderConfig{
+		Metadata:         nil,
+		WeaklyTypedInput: true,
+		Result:           &to,
+		TagName:          "json",
 	}
-	def := config.NewDefault()
-	if err := mergo.Merge(&to, def); err != nil {
+
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
 		glog.Warningf("unexpected error merging defaults: %v", err)
 	}
-
-	metadata := &mapstructure.Metadata{}
-	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		TagName:          "structs",
-		Result:           &to,
-		WeaklyTypedInput: true,
-		Metadata:         metadata,
-	})
-
 	err = decoder.Decode(conf.Data)
 	if err != nil {
-		glog.Infof("%v", err)
+		glog.Warningf("unexpected error merging defaults: %v", err)
 	}
-
-	nss, err := dns.GetSystemNameServers()
-	if err != nil {
-		glog.Infof("unexpected error reading /etc/resolv.conf file: %v", err)
-	}
-	to.Resolver = nss
 
 	return to
 }
@@ -119,12 +99,4 @@ func filterErrors(codes []int) []int {
 	}
 
 	return fa
-}
-
-func fixKeyNames(data map[string]interface{}) map[string]interface{} {
-	fixed := make(map[string]interface{})
-	for k, v := range data {
-		fixed[go_camelcase.Camelcase(k)] = v
-	}
-	return fixed
 }
