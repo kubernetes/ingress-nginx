@@ -327,6 +327,7 @@ func getClusterUID(kubeClient client.Interface, name string) (string, error) {
 		return "", err
 	}
 	uid := fmt.Sprintf("%x", b)
+	glog.Infof("Using new cluster uid %q", uid)
 	return uid, cfgVault.Put(uid)
 }
 
