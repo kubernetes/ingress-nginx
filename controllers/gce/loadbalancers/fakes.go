@@ -47,6 +47,7 @@ type FakeLoadBalancers struct {
 	IP    []*compute.Address
 	Certs []*compute.SslCertificate
 	name  string
+	calls []string // list of calls that were made
 }
 
 // TODO: There is some duplication between these functions and the name mungers in
@@ -102,6 +103,7 @@ func (f *FakeLoadBalancers) String() string {
 
 // GetGlobalForwardingRule returns a fake forwarding rule.
 func (f *FakeLoadBalancers) GetGlobalForwardingRule(name string) (*compute.ForwardingRule, error) {
+	f.calls = append(f.calls, "GetGlobalForwardingRule")
 	for i := range f.Fw {
 		if f.Fw[i].Name == name {
 			return f.Fw[i], nil
@@ -112,6 +114,7 @@ func (f *FakeLoadBalancers) GetGlobalForwardingRule(name string) (*compute.Forwa
 
 // CreateGlobalForwardingRule fakes forwarding rule creation.
 func (f *FakeLoadBalancers) CreateGlobalForwardingRule(proxyLink, ip, name, portRange string) (*compute.ForwardingRule, error) {
+	f.calls = append(f.calls, "CreateGlobalForwardingRule")
 	if ip == "" {
 		ip = fmt.Sprintf(testIPManager.ip())
 	}
@@ -129,6 +132,7 @@ func (f *FakeLoadBalancers) CreateGlobalForwardingRule(proxyLink, ip, name, port
 
 // SetProxyForGlobalForwardingRule fakes setting a global forwarding rule.
 func (f *FakeLoadBalancers) SetProxyForGlobalForwardingRule(fw *compute.ForwardingRule, proxyLink string) error {
+	f.calls = append(f.calls, "SetProxyForGlobalForwardingRule")
 	for i := range f.Fw {
 		if f.Fw[i].Name == fw.Name {
 			f.Fw[i].Target = proxyLink
@@ -139,6 +143,7 @@ func (f *FakeLoadBalancers) SetProxyForGlobalForwardingRule(fw *compute.Forwardi
 
 // DeleteGlobalForwardingRule fakes deleting a global forwarding rule.
 func (f *FakeLoadBalancers) DeleteGlobalForwardingRule(name string) error {
+	f.calls = append(f.calls, "DeleteGlobalForwardingRule")
 	fw := []*compute.ForwardingRule{}
 	for i := range f.Fw {
 		if f.Fw[i].Name != name {
@@ -151,6 +156,7 @@ func (f *FakeLoadBalancers) DeleteGlobalForwardingRule(name string) error {
 
 // GetForwardingRulesWithIPs returns all forwarding rules that match the given ips.
 func (f *FakeLoadBalancers) GetForwardingRulesWithIPs(ip []string) (fwRules []*compute.ForwardingRule) {
+	f.calls = append(f.calls, "GetForwardingRulesWithIPs")
 	ipSet := sets.NewString(ip...)
 	for i := range f.Fw {
 		if ipSet.Has(f.Fw[i].IPAddress) {
@@ -164,6 +170,7 @@ func (f *FakeLoadBalancers) GetForwardingRulesWithIPs(ip []string) (fwRules []*c
 
 // GetUrlMap fakes getting url maps from the cloud.
 func (f *FakeLoadBalancers) GetUrlMap(name string) (*compute.UrlMap, error) {
+	f.calls = append(f.calls, "GetUrlMap")
 	for i := range f.Um {
 		if f.Um[i].Name == name {
 			return f.Um[i], nil
@@ -174,6 +181,7 @@ func (f *FakeLoadBalancers) GetUrlMap(name string) (*compute.UrlMap, error) {
 
 // CreateUrlMap fakes url-map creation.
 func (f *FakeLoadBalancers) CreateUrlMap(backend *compute.BackendService, name string) (*compute.UrlMap, error) {
+	f.calls = append(f.calls, "CreateUrlMap")
 	urlMap := &compute.UrlMap{
 		Name:           name,
 		DefaultService: backend.SelfLink,
@@ -185,6 +193,7 @@ func (f *FakeLoadBalancers) CreateUrlMap(backend *compute.BackendService, name s
 
 // UpdateUrlMap fakes updating url-maps.
 func (f *FakeLoadBalancers) UpdateUrlMap(urlMap *compute.UrlMap) (*compute.UrlMap, error) {
+	f.calls = append(f.calls, "UpdateUrlMap")
 	for i := range f.Um {
 		if f.Um[i].Name == urlMap.Name {
 			f.Um[i] = urlMap
@@ -196,6 +205,7 @@ func (f *FakeLoadBalancers) UpdateUrlMap(urlMap *compute.UrlMap) (*compute.UrlMa
 
 // DeleteUrlMap fakes url-map deletion.
 func (f *FakeLoadBalancers) DeleteUrlMap(name string) error {
+	f.calls = append(f.calls, "DeleteUrlMap")
 	um := []*compute.UrlMap{}
 	for i := range f.Um {
 		if f.Um[i].Name != name {
@@ -210,6 +220,7 @@ func (f *FakeLoadBalancers) DeleteUrlMap(name string) error {
 
 // GetTargetHttpProxy fakes getting target http proxies from the cloud.
 func (f *FakeLoadBalancers) GetTargetHttpProxy(name string) (*compute.TargetHttpProxy, error) {
+	f.calls = append(f.calls, "GetTargetHttpProxy")
 	for i := range f.Tp {
 		if f.Tp[i].Name == name {
 			return f.Tp[i], nil
@@ -220,6 +231,7 @@ func (f *FakeLoadBalancers) GetTargetHttpProxy(name string) (*compute.TargetHttp
 
 // CreateTargetHttpProxy fakes creating a target http proxy.
 func (f *FakeLoadBalancers) CreateTargetHttpProxy(urlMap *compute.UrlMap, name string) (*compute.TargetHttpProxy, error) {
+	f.calls = append(f.calls, "CreateTargetHttpProxy")
 	proxy := &compute.TargetHttpProxy{
 		Name:     name,
 		UrlMap:   urlMap.SelfLink,
@@ -231,6 +243,7 @@ func (f *FakeLoadBalancers) CreateTargetHttpProxy(urlMap *compute.UrlMap, name s
 
 // DeleteTargetHttpProxy fakes deleting a target http proxy.
 func (f *FakeLoadBalancers) DeleteTargetHttpProxy(name string) error {
+	f.calls = append(f.calls, "DeleteTargetHttpProxy")
 	tp := []*compute.TargetHttpProxy{}
 	for i := range f.Tp {
 		if f.Tp[i].Name != name {
@@ -243,6 +256,7 @@ func (f *FakeLoadBalancers) DeleteTargetHttpProxy(name string) error {
 
 // SetUrlMapForTargetHttpProxy fakes setting an url-map for a target http proxy.
 func (f *FakeLoadBalancers) SetUrlMapForTargetHttpProxy(proxy *compute.TargetHttpProxy, urlMap *compute.UrlMap) error {
+	f.calls = append(f.calls, "SetUrlMapForTargetHttpProxy")
 	for i := range f.Tp {
 		if f.Tp[i].Name == proxy.Name {
 			f.Tp[i].UrlMap = urlMap.SelfLink
@@ -255,6 +269,7 @@ func (f *FakeLoadBalancers) SetUrlMapForTargetHttpProxy(proxy *compute.TargetHtt
 
 // GetTargetHttpsProxy fakes getting target http proxies from the cloud.
 func (f *FakeLoadBalancers) GetTargetHttpsProxy(name string) (*compute.TargetHttpsProxy, error) {
+	f.calls = append(f.calls, "GetTargetHttpsProxy")
 	for i := range f.Tps {
 		if f.Tps[i].Name == name {
 			return f.Tps[i], nil
@@ -265,6 +280,7 @@ func (f *FakeLoadBalancers) GetTargetHttpsProxy(name string) (*compute.TargetHtt
 
 // CreateTargetHttpsProxy fakes creating a target http proxy.
 func (f *FakeLoadBalancers) CreateTargetHttpsProxy(urlMap *compute.UrlMap, cert *compute.SslCertificate, name string) (*compute.TargetHttpsProxy, error) {
+	f.calls = append(f.calls, "CreateTargetHttpsProxy")
 	proxy := &compute.TargetHttpsProxy{
 		Name:            name,
 		UrlMap:          urlMap.SelfLink,
@@ -277,6 +293,7 @@ func (f *FakeLoadBalancers) CreateTargetHttpsProxy(urlMap *compute.UrlMap, cert 
 
 // DeleteTargetHttpsProxy fakes deleting a target http proxy.
 func (f *FakeLoadBalancers) DeleteTargetHttpsProxy(name string) error {
+	f.calls = append(f.calls, "DeleteTargetHttpsProxy")
 	tp := []*compute.TargetHttpsProxy{}
 	for i := range f.Tps {
 		if f.Tps[i].Name != name {
@@ -289,6 +306,7 @@ func (f *FakeLoadBalancers) DeleteTargetHttpsProxy(name string) error {
 
 // SetUrlMapForTargetHttpsProxy fakes setting an url-map for a target http proxy.
 func (f *FakeLoadBalancers) SetUrlMapForTargetHttpsProxy(proxy *compute.TargetHttpsProxy, urlMap *compute.UrlMap) error {
+	f.calls = append(f.calls, "SetUrlMapForTargetHttpsProxy")
 	for i := range f.Tps {
 		if f.Tps[i].Name == proxy.Name {
 			f.Tps[i].UrlMap = urlMap.SelfLink
@@ -299,6 +317,7 @@ func (f *FakeLoadBalancers) SetUrlMapForTargetHttpsProxy(proxy *compute.TargetHt
 
 // SetSslCertificateForTargetHttpsProxy fakes out setting certificates.
 func (f *FakeLoadBalancers) SetSslCertificateForTargetHttpsProxy(proxy *compute.TargetHttpsProxy, SSLCert *compute.SslCertificate) error {
+	f.calls = append(f.calls, "SetSslCertificateForTargetHttpsProxy")
 	found := false
 	for i := range f.Tps {
 		if f.Tps[i].Name == proxy.Name {
@@ -316,6 +335,7 @@ func (f *FakeLoadBalancers) SetSslCertificateForTargetHttpsProxy(proxy *compute.
 
 // CheckURLMap checks the URL map.
 func (f *FakeLoadBalancers) CheckURLMap(t *testing.T, l7 *L7, expectedMap map[string]utils.FakeIngressRuleValueMap) {
+	f.calls = append(f.calls, "CheckURLMap")
 	um, err := f.GetUrlMap(l7.um.Name)
 	if err != nil || um == nil {
 		t.Fatalf("%v", err)
@@ -378,6 +398,7 @@ func (f *FakeLoadBalancers) CheckURLMap(t *testing.T, l7 *L7, expectedMap map[st
 
 // ReserveGlobalStaticIP fakes out static IP reservation.
 func (f *FakeLoadBalancers) ReserveGlobalStaticIP(name, IPAddress string) (*compute.Address, error) {
+	f.calls = append(f.calls, "ReserveGlobalStaticIP")
 	ip := &compute.Address{
 		Name:    name,
 		Address: IPAddress,
@@ -388,6 +409,7 @@ func (f *FakeLoadBalancers) ReserveGlobalStaticIP(name, IPAddress string) (*comp
 
 // GetGlobalStaticIP fakes out static IP retrieval.
 func (f *FakeLoadBalancers) GetGlobalStaticIP(name string) (*compute.Address, error) {
+	f.calls = append(f.calls, "GetGlobalStaticIP")
 	for i := range f.IP {
 		if f.IP[i].Name == name {
 			return f.IP[i], nil
@@ -398,6 +420,7 @@ func (f *FakeLoadBalancers) GetGlobalStaticIP(name string) (*compute.Address, er
 
 // DeleteGlobalStaticIP fakes out static IP deletion.
 func (f *FakeLoadBalancers) DeleteGlobalStaticIP(name string) error {
+	f.calls = append(f.calls, "DeleteGlobalStaticIP")
 	ip := []*compute.Address{}
 	for i := range f.IP {
 		if f.IP[i].Name != name {
@@ -412,6 +435,7 @@ func (f *FakeLoadBalancers) DeleteGlobalStaticIP(name string) error {
 
 // GetSslCertificate fakes out getting ssl certs.
 func (f *FakeLoadBalancers) GetSslCertificate(name string) (*compute.SslCertificate, error) {
+	f.calls = append(f.calls, "GetSslCertificate")
 	for i := range f.Certs {
 		if f.Certs[i].Name == name {
 			return f.Certs[i], nil
@@ -422,6 +446,7 @@ func (f *FakeLoadBalancers) GetSslCertificate(name string) (*compute.SslCertific
 
 // CreateSslCertificate fakes out certificate creation.
 func (f *FakeLoadBalancers) CreateSslCertificate(cert *compute.SslCertificate) (*compute.SslCertificate, error) {
+	f.calls = append(f.calls, "CreateSslCertificate")
 	cert.SelfLink = cert.Name
 	f.Certs = append(f.Certs, cert)
 	return cert, nil
@@ -429,6 +454,7 @@ func (f *FakeLoadBalancers) CreateSslCertificate(cert *compute.SslCertificate) (
 
 // DeleteSslCertificate fakes out certificate deletion.
 func (f *FakeLoadBalancers) DeleteSslCertificate(name string) error {
+	f.calls = append(f.calls, "DeleteSslCertificate")
 	certs := []*compute.SslCertificate{}
 	for i := range f.Certs {
 		if f.Certs[i].Name != name {
