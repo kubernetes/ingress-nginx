@@ -290,12 +290,6 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	}
 	glog.V(3).Infof("Syncing %v", key)
 
-	ingresses, err := lbc.ingLister.List()
-	if err != nil {
-		return err
-	}
-	nodePorts := lbc.tr.toNodePorts(&ingresses)
-	lbNames := lbc.ingLister.Store.ListKeys()
 	lbs, err := lbc.ListRuntimeInfo()
 	if err != nil {
 		return err
@@ -320,8 +314,13 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	//   successful GC we know that there are no dangling cloud resources that
 	//   don't have an associated Kubernetes Ingress/Service/Endpoint.
 
+	allNodePorts := []int64{}
+	for _, lb := range lbs {
+		allNodePorts = append(allNodePorts, lb.NodePorts...)
+	}
+	lbNames := lbc.ingLister.Store.ListKeys()
 	defer func() {
-		if deferErr := lbc.CloudClusterManager.GC(lbNames, nodePorts); deferErr != nil {
+		if deferErr := lbc.CloudClusterManager.GC(lbNames, allNodePorts); deferErr != nil {
 			err = fmt.Errorf("Error during sync %v, error during GC %v", err, deferErr)
 		}
 		glog.V(3).Infof("Finished syncing %v", key)
@@ -330,7 +329,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	// Record any errors during sync and throw a single error at the end. This
 	// allows us to free up associated cloud resources ASAP.
 	var syncError error
-	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, nodePorts); err != nil {
+	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, allNodePorts); err != nil {
 		// TODO: Implement proper backoff for the queue.
 		eventMsg := "GCE"
 		if utils.IsHTTPErrorCode(err, http.StatusForbidden) {
@@ -427,15 +426,54 @@ func (lbc *LoadBalancerController) ListRuntimeInfo() (lbs []*loadbalancers.L7Run
 		if err != nil {
 			glog.Warningf("Cannot get certs for Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
 		}
+		nodePorts, missingPorts := lbc.getNodePorts(&ing)
+		if len(missingPorts) > 0 {
+			glog.Warningf("Ingress %v/%v is missing some NodePorts", ing.Namespace, ing.Name)
+		}
+
 		annotations := ingAnnotations(ing.ObjectMeta.Annotations)
 		lbs = append(lbs, &loadbalancers.L7RuntimeInfo{
 			Name:         k,
 			TLS:          tls,
+			NodePorts:    nodePorts,
 			AllowHTTP:    annotations.allowHTTP(),
 			StaticIPName: annotations.staticIPName(),
 		})
 	}
 	return lbs, nil
+}
+
+func (lbc *LoadBalancerController) getNodePorts(ing *extensions.Ingress) ([]int64, []int64) {
+	nodePorts := []int64{}
+	missing := []int64{}
+
+	defaultBackend := ing.Spec.Backend
+	if defaultBackend != nil {
+		port, err := lbc.tr.getServiceNodePort(*defaultBackend, ing.Namespace)
+		if err != nil {
+			lbc.recorder.Eventf(ing, api.EventTypeWarning, "Service", err.Error())
+			missing = append(missing, int64(port))
+		} else {
+			nodePorts = append(nodePorts, int64(port))
+		}
+	}
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			glog.Errorf("Ignoring non http Ingress rule.")
+			continue
+		}
+		for _, path := range rule.HTTP.Paths {
+			port, err := lbc.tr.getServiceNodePort(path.Backend, ing.Namespace)
+			if err != nil {
+				lbc.recorder.Eventf(ing, api.EventTypeWarning, "Service", err.Error())
+				missing = append(missing, int64(port))
+				continue
+			}
+			nodePorts = append(nodePorts, int64(port))
+		}
+	}
+
+	return nodePorts, missing
 }
 
 // syncNodes manages the syncing of kubernetes nodes to gce instance groups.
