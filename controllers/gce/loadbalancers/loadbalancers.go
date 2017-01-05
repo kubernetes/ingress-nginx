@@ -709,7 +709,6 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 	} else {
 		l.um.DefaultService = l.glbcDefaultBackend.SelfLink
 	}
-	glog.Infof("Updating url map:\n%+v", ingressRules)
 
 	// Every update replaces the entire urlmap.
 	// TODO:  when we have multiple loadbalancers point to a single gce url map
@@ -743,12 +742,80 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 		}
 		l.um.PathMatchers = append(l.um.PathMatchers, pathMatcher)
 	}
+	oldMap, _ := l.cloud.GetUrlMap(l.um.Name)
+	if oldMap != nil && mapsEqual(oldMap, l.um) {
+		glog.Infof("UrlMap for l7 %v is unchanged", l.Name)
+		return nil
+	}
+	glog.Infof("Updating url map: %+v", ingressRules)
 	um, err := l.cloud.UpdateUrlMap(l.um)
 	if err != nil {
 		return err
 	}
 	l.um = um
 	return nil
+}
+
+func mapsEqual(a, b *compute.UrlMap) bool {
+	if a.DefaultService != b.DefaultService {
+		return false
+	}
+	if len(a.HostRules) != len(b.HostRules) {
+		return false
+	}
+	for i := range a.HostRules {
+		a := a.HostRules[i]
+		b := b.HostRules[i]
+		if a.Description != b.Description {
+			return false
+		}
+		if len(a.Hosts) != len(a.Hosts) {
+			return false
+		}
+		for i := range a.Hosts {
+			if a.Hosts[i] != b.Hosts[i] {
+				return false
+			}
+		}
+		if a.PathMatcher != b.PathMatcher {
+			return false
+		}
+	}
+	if len(a.PathMatchers) != len(b.PathMatchers) {
+		return false
+	}
+	for i := range a.PathMatchers {
+		a := a.PathMatchers[i]
+		b := b.PathMatchers[i]
+		if a.DefaultService != b.DefaultService {
+			return false
+		}
+		if a.Description != b.Description {
+			return false
+		}
+		if a.Name != b.Name {
+			return false
+		}
+		if len(a.PathRules) != len(a.PathRules) {
+			return false
+		}
+		for i := range a.PathRules {
+			a := a.PathRules[i]
+			b := b.PathRules[i]
+			if len(a.Paths) != len(a.Paths) {
+				return false
+			}
+			for i := range a.Paths {
+				if a.Paths[i] != b.Paths[i] {
+					return false
+				}
+			}
+			if a.Service != b.Service {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // Cleanup deletes resources specific to this l7 in the right order.
