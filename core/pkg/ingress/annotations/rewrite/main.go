@@ -17,8 +17,6 @@ limitations under the License.
 package rewrite
 
 import (
-	"errors"
-
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
@@ -46,7 +44,7 @@ type Redirect struct {
 // rule used to rewrite the defined paths
 func ParseAnnotations(cfg defaults.Backend, ing *extensions.Ingress) (*Redirect, error) {
 	if ing.GetAnnotations() == nil {
-		return &Redirect{}, errors.New("no annotations present")
+		return &Redirect{}, parser.ErrMissingAnnotations
 	}
 
 	sslRe, err := parser.GetBoolAnnotation(sslRedirect, ing)
