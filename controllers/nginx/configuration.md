@@ -29,7 +29,7 @@ there are 3 ways to customize nginx
 
 It's possible to customize the defaults in NGINX using a config map.
 
-Please check the [custom configuration](examples/custom-configuration/README.md) example
+Please check the [custom configuration](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/examples/custom-configuration/README.md) example
 
 #### Annotations
 
@@ -56,7 +56,7 @@ The following annotations are supported:
 #### Custom NGINX template
 
 The NGINX template is located in the file `/etc/nginx/template/nginx.tmpl`. Mounting a volume is possible to use a custom version.
-Use the [custom-template](examples/custom-template/README.md) example as a guide
+Use the [custom-template](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/examples/custom-template/README.md) example as a guide
 
 **Please note the template is tied to the go code. Be sure to no change names in the variable `$cfg`**
 
@@ -91,7 +91,7 @@ The upstreams are shared. i.e. Ingress rule using the same service will use the 
 This means only one of the rules should define annotations to configure the upstream servers
 
 
-Please check the [custom upstream check](examples/custom-upstream-check/README.md) example
+Please check the [custom upstream check](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/examples/custom-upstream-check/README.md) example
 
 
 ### Authentication
@@ -117,7 +117,7 @@ The secret must be created in the same namespace than the Ingress rule
 ingress.kubernetes.io/auth-realm:"realm string"
 ```
 
-Please check the [auth](examples/auth/README.md) example
+Please check the [auth](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/examples/auth/README.md) example
 
 
 ### External Authentication
@@ -129,7 +129,7 @@ Additionally is possible to set `ingress.kubernetes.io/auth-method` to specify t
 ingress.kubernetes.io/auth-url:"URL to the authentication service"
 ```
 
-Please check the [external-auth](examples/external-auth/README.md) example
+Please check the [external-auth](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/examples/external-auth/README.md) example
 
 
 ### Rewrite
@@ -140,7 +140,7 @@ Set the annotation `ingress.kubernetes.io/rewrite-target` to the path expected b
 If the application contains relative links is possible to add an additional annotation `ingress.kubernetes.io/add-base-url` that will append a `base` tag in the header of the returned HTML from the backend.
 
 
-Please check the [rewrite](examples/rewrite/README.md) example
+Please check the [rewrite](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/examples/rewrite/README.md) example
 
 
 ### Rate limiting
@@ -167,7 +167,7 @@ For a global restriction (any URL) is possible to use `whitelist-source-range` i
 
 *Note:* adding an annotation overrides any global restriction
 
-Please check the [whitelist](examples/whitelist/README.md) example
+Please check the [whitelist](https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/examples/whitelist/README.md) example
 
 
 
