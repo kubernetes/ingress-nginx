@@ -45,6 +45,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/cors"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
+	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
@@ -558,36 +559,42 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 		nginxAuth, err := auth.ParseAnnotations(ing, auth.DefAuthDirectory, ic.getSecret)
 		glog.V(5).Infof("auth annotation: %v", nginxAuth)
-		if err != nil {
-			glog.V(5).Infof("error reading authentication in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		if err != nil && err != parser.ErrMissingAnnotations {
+			glog.Errorf("error reading authentication in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			continue
 		}
 
 		rl, err := ratelimit.ParseAnnotations(ing)
 		glog.V(5).Infof("rate limit annotation: %v", rl)
-		if err != nil {
-			glog.V(5).Infof("error reading rate limit annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		if err != nil && err != parser.ErrMissingAnnotations {
+			glog.Errorf("error reading rate limit annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			continue
 		}
 
 		locRew, err := rewrite.ParseAnnotations(upsDefaults, ing)
-		if err != nil {
-			glog.V(5).Infof("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		if err != nil && err != parser.ErrMissingAnnotations {
+			glog.Errorf("error parsing rewrite annotations for Ingress rule %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			continue
 		}
 
 		wl, err := ipwhitelist.ParseAnnotations(upsDefaults, ing)
 		glog.V(5).Infof("white list annotation: %v", wl)
-		if err != nil {
-			glog.V(5).Infof("error reading white list annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		if err != nil && err != parser.ErrMissingAnnotations {
+			glog.Errorf("error reading white list annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			continue
 		}
 
 		eCORS, err := cors.ParseAnnotations(ing)
-		if err != nil {
-			glog.V(5).Infof("error reading CORS annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		if err != nil && err != parser.ErrMissingAnnotations {
+			glog.Errorf("error reading CORS annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			continue
 		}
 
 		ra, err := authreq.ParseAnnotations(ing)
 		glog.V(5).Infof("auth request annotation: %v", ra)
-		if err != nil {
-			glog.V(5).Infof("error reading auth request annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		if err != nil && err != parser.ErrMissingAnnotations {
+			glog.Errorf("error reading auth request annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			continue
 		}
 
 		prx := proxy.ParseAnnotations(upsDefaults, ing)
@@ -595,8 +602,9 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 		certAuth, err := authtls.ParseAnnotations(ing, ic.getAuthCertificate)
 		glog.V(5).Infof("auth request annotation: %v", certAuth)
-		if err != nil {
-			glog.V(5).Infof("error reading certificate auth annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+		if err != nil && err != parser.ErrMissingAnnotations {
+			glog.Errorf("error reading certificate auth annotation in Ingress %v/%v: %v", ing.GetNamespace(), ing.GetName(), err)
+			continue
 		}
 
 		for _, rule := range ing.Spec.Rules {
