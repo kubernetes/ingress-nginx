@@ -119,7 +119,7 @@ func NewBackendPool(
 		func(i interface{}) (string, error) {
 			bs := i.(*compute.BackendService)
 			if !namer.NameBelongsToCluster(bs.Name) {
-				return "", fmt.Errorf("Unrecognized name %v", bs.Name)
+				return "", fmt.Errorf("unrecognized name %v", bs.Name)
 			}
 			port, err := namer.BePort(bs.Name)
 			if err != nil {

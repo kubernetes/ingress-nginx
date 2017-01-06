@@ -138,7 +138,7 @@ func (bit BoolToFloat64) UnmarshalJSON(data []byte) error {
 	} else if asString == "0" || asString == "false" {
 		bit = 0
 	} else {
-		return fmt.Errorf(fmt.Sprintf("Boolean unmarshal error: invalid input %s", asString))
+		return fmt.Errorf(fmt.Sprintf("boolean unmarshal error: invalid input %s", asString))
 	}
 	return nil
 }

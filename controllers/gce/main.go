@@ -316,7 +316,7 @@ func useDefaultOrLookupVault(cfgVault *storage.ConfigMapVault, cm_key, default_n
 		// 2. No such key in config map - found=false, err=nil
 		// 3. Apiserver flake - found=false, err!=nil
 		// It is not safe to proceed in 3.
-		return "", fmt.Errorf("Failed to retrieve %v: %v, returning empty name", cm_key, err)
+		return "", fmt.Errorf("failed to retrieve %v: %v, returning empty name", cm_key, err)
 	} else if !found {
 		// Not found but safe to proceed.
 		return "", nil

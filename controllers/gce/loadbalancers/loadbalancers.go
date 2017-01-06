@@ -106,7 +106,7 @@ func (l *L7s) Get(name string) (*L7, error) {
 	name = l.namer.LBName(name)
 	lb, exists := l.snapshotter.Get(name)
 	if !exists {
-		return nil, fmt.Errorf("Loadbalancer %v not in pool", name)
+		return nil, fmt.Errorf("loadbalancer %v not in pool", name)
 	}
 	return lb.(*L7), nil
 }
@@ -292,7 +292,7 @@ type L7 struct {
 
 func (l *L7) checkUrlMap(backend *compute.BackendService) (err error) {
 	if l.glbcDefaultBackend == nil {
-		return fmt.Errorf("Cannot create urlmap without default backend.")
+		return fmt.Errorf("cannot create urlmap without default backend")
 	}
 	urlMapName := l.namer.Truncate(fmt.Sprintf("%v-%v", urlMapPrefix, l.Name))
 	urlMap, _ := l.cloud.GetUrlMap(urlMapName)
@@ -313,7 +313,7 @@ func (l *L7) checkUrlMap(backend *compute.BackendService) (err error) {
 
 func (l *L7) checkProxy() (err error) {
 	if l.um == nil {
-		return fmt.Errorf("Cannot create proxy without urlmap.")
+		return fmt.Errorf("cannot create proxy without urlmap")
 	}
 	proxyName := l.namer.Truncate(fmt.Sprintf("%v-%v", targetProxyPrefix, l.Name))
 	proxy, _ := l.cloud.GetTargetHttpProxy(proxyName)
@@ -362,7 +362,7 @@ func (l *L7) checkSSLCert() (err error) {
 			return err
 		}
 		if cert == nil {
-			return fmt.Errorf("Cannot find existing sslCertificate %v for %v", certName, l.Name)
+			return fmt.Errorf("cannot find existing sslCertificate %v for %v", certName, l.Name)
 		}
 
 		glog.Infof("Using existing sslCertificate %v for %v", certName, l.Name)
@@ -429,7 +429,7 @@ func (l *L7) checkHttpsProxy() (err error) {
 		return nil
 	}
 	if l.um == nil {
-		return fmt.Errorf("No UrlMap for %v, will not create HTTPS proxy.", l.Name)
+		return fmt.Errorf("no UrlMap for %v, will not create HTTPS proxy", l.Name)
 	}
 	proxyName := l.namer.Truncate(fmt.Sprintf("%v-%v", targetHTTPSProxyPrefix, l.Name))
 	proxy, _ := l.cloud.GetTargetHttpsProxy(proxyName)
@@ -535,7 +535,7 @@ func (l *L7) getEffectiveIP() (string, bool) {
 
 func (l *L7) checkHttpForwardingRule() (err error) {
 	if l.tp == nil {
-		return fmt.Errorf("Cannot create forwarding rule without proxy.")
+		return fmt.Errorf("cannot create forwarding rule without proxy")
 	}
 	name := l.namer.Truncate(fmt.Sprintf("%v-%v", forwardingRulePrefix, l.Name))
 	address, _ := l.getEffectiveIP()
@@ -565,7 +565,7 @@ func (l *L7) checkHttpsForwardingRule() (err error) {
 // checkStaticIP reserves a static IP allocated to the Forwarding Rule.
 func (l *L7) checkStaticIP() (err error) {
 	if l.fw == nil || l.fw.IPAddress == "" {
-		return fmt.Errorf("Will not create static IP without a forwarding rule.")
+		return fmt.Errorf("will not create static IP without a forwarding rule")
 	}
 	// Don't manage staticIPs if the user has specified an IP.
 	if address, manageStaticIP := l.getEffectiveIP(); !manageStaticIP {
@@ -704,7 +704,7 @@ func getNameForPathMatcher(hostRule string) string {
 // pathmatcher of the host.
 func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 	if l.um == nil {
-		return fmt.Errorf("Cannot add url without an urlmap.")
+		return fmt.Errorf("cannot add url without an urlmap")
 	}
 	glog.V(3).Infof("Updating urlmap for l7 %v", l.Name)
 

@@ -223,11 +223,11 @@ func (n *Namer) BePort(beName string) (string, error) {
 	}
 	match := r.FindStringSubmatch(beName)
 	if len(match) < 2 {
-		return "", fmt.Errorf("Unable to lookup port for %v", beName)
+		return "", fmt.Errorf("unable to lookup port for %v", beName)
 	}
 	_, err = strconv.Atoi(match[1])
 	if err != nil {
-		return "", fmt.Errorf("Unexpected regex match: %v", beName)
+		return "", fmt.Errorf("unexpected regex match: %v", beName)
 	}
 	return match[1], nil
 }

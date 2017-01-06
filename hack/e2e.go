@@ -234,7 +234,7 @@ func getDeployer() (deployer, error) {
 	case "bash":
 		return bash{}, nil
 	default:
-		return nil, fmt.Errorf("Unknown deployment strategy %q", *deployment)
+		return nil, fmt.Errorf("unknown deployment strategy %q", *deployment)
 	}
 }
 
