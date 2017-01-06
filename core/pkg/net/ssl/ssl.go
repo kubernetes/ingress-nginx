@@ -75,13 +75,13 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 	pemBlock, _ := pem.Decode(pemCerts)
 	if pemBlock == nil {
 		_ = os.Remove(tempPemFile.Name())
-		return nil, fmt.Errorf("No valid PEM formatted block found")
+		return nil, fmt.Errorf("no valid PEM formatted block found")
 	}
 
 	// If the file does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
 	if pemBlock.Type != "CERTIFICATE" {
 		_ = os.Remove(tempPemFile.Name())
-		return nil, fmt.Errorf("Certificate %v contains invalid data, and must be created with 'kubectl create secret tls'", name)
+		return nil, fmt.Errorf("certificate %v contains invalid data, and must be created with 'kubectl create secret tls'", name)
 	}
 
 	pemCert, err := x509.ParseCertificate(pemBlock.Bytes)
@@ -115,7 +115,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 		caFile, err := os.OpenFile(pemFileName, os.O_RDWR|os.O_APPEND, 0600)
 		if err != nil {
-			return nil, fmt.Errorf("Could not open file %v for writing additional CA chains: %v", pemFileName, err)
+			return nil, fmt.Errorf("could not open file %v for writing additional CA chains: %v", pemFileName, err)
 		}
 
 		defer caFile.Close()
@@ -150,11 +150,11 @@ func AddCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
 
 	pemCABlock, _ := pem.Decode(ca)
 	if pemCABlock == nil {
-		return nil, fmt.Errorf("No valid PEM formatted block found")
+		return nil, fmt.Errorf("no valid PEM formatted block found")
 	}
 	// If the first certificate does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
 	if pemCABlock.Type != "CERTIFICATE" {
-		return nil, fmt.Errorf("CA File %v contains invalid data, and must be created only with PEM formated certificates", name)
+		return nil, fmt.Errorf("CA file %v contains invalid data, and must be created only with PEM formated certificates", name)
 	}
 
 	_, err := x509.ParseCertificate(pemCABlock.Bytes)
@@ -206,13 +206,13 @@ func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
 	pemBlock, _ := pem.Decode(pemCerts)
 	if pemBlock == nil {
 		_ = os.Remove(tempPemFile.Name())
-		return "", fmt.Errorf("No valid PEM formatted block found")
+		return "", fmt.Errorf("no valid PEM formatted block found")
 	}
 
 	// If the file does not start with 'BEGIN DH PARAMETERS' it's invalid and must not be used.
 	if pemBlock.Type != "DH PARAMETERS" {
 		_ = os.Remove(tempPemFile.Name())
-		return "", fmt.Errorf("Certificate %v contains invalid data", name)
+		return "", fmt.Errorf("certificate %v contains invalid data", name)
 	}
 
 	err = os.Rename(tempPemFile.Name(), pemFileName)
