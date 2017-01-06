@@ -35,7 +35,7 @@ func (f *fakeFirewallRules) GetFirewall(name string) (*compute.Firewall, error) 
 			return rule, nil
 		}
 	}
-	return nil, fmt.Errorf("Firewall rule %v not found.", name)
+	return nil, fmt.Errorf("firewall rule %v not found", name)
 }
 
 func (f *fakeFirewallRules) CreateFirewall(name, msgTag string, srcRange netset.IPNet, ports []int64, hosts []string) error {
@@ -66,7 +66,7 @@ func (f *fakeFirewallRules) DeleteFirewall(name string) error {
 		firewalls = append(firewalls, rule)
 	}
 	if !exists {
-		return fmt.Errorf("Failed to find health check %v", name)
+		return fmt.Errorf("failed to find health check %v", name)
 	}
 	f.fw = firewalls
 	return nil
@@ -95,7 +95,7 @@ func (f *fakeFirewallRules) UpdateFirewall(name, msgTag string, srcRange netset.
 	if exists {
 		return nil
 	}
-	return fmt.Errorf("Update failed for rule %v, srcRange %v ports %v, rule not found", name, srcRange, ports)
+	return fmt.Errorf("update failed for rule %v, srcRange %v ports %v, rule not found", name, srcRange, ports)
 }
 
 // NewFakeFirewallRules creates a fake for firewall rules.
