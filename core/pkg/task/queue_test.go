@@ -54,7 +54,7 @@ func TestShutdown(t *testing.T) {
 	q.Shutdown()
 	s := q.IsShuttingDown()
 	if !s {
-		t.Fatalf("queue shoule be shutdown")
+		t.Errorf("queue should be shutdown")
 	}
 }
 
