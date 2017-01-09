@@ -273,12 +273,6 @@ func (b *Backends) GC(svcNodePorts []int64) error {
 			return err
 		}
 	}
-	if len(svcNodePorts) == 0 {
-		glog.Infof("Deleting instance group %v", b.namer.IGName())
-		if err := b.nodePool.DeleteInstanceGroup(b.namer.IGName()); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
