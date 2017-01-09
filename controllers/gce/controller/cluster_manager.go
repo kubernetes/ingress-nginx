@@ -151,7 +151,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	// DefaultBackend is managed in l7 pool, which doesn't understand instances,
 	// which the firewall rule requires.
 	fwNodePorts := nodePorts
-	if len(fwNodePorts) != 0 {
+	if len(lbs) != 0 {
 		// If there are no Ingresses, we shouldn't be allowing traffic to the
 		// default backend. Equally importantly if the cluster gets torn down
 		// we shouldn't leak the firewall rule.
@@ -190,6 +190,17 @@ func (c *ClusterManager) GC(lbNames []string, nodePorts []int64) error {
 	}
 	if beErr != nil {
 		return beErr
+	}
+
+	// TODO(ingress#120): Move this to the backend pool so it mirrors creation
+	var igErr error
+	if len(lbNames) == 0 {
+		igName := c.ClusterNamer.IGName()
+		glog.Infof("Deleting instance group %v", igName)
+		igErr = c.instancePool.DeleteInstanceGroup(igName)
+	}
+	if igErr != nil {
+		return igErr
 	}
 	return nil
 }
