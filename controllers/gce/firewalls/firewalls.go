@@ -82,7 +82,7 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 
 // Shutdown shuts down this firewall rules manager.
 func (fr *FirewallRules) Shutdown() error {
-	glog.Infof("Deleting fireawll rule with suffix %v", fr.namer.FrSuffix())
+	glog.Infof("Deleting firewall rule with suffix %v", fr.namer.FrSuffix())
 	return fr.cloud.DeleteFirewall(fr.namer.FrSuffix())
 }
 
