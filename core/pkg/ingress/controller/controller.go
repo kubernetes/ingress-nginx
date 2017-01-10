@@ -975,7 +975,7 @@ func (ic *GenericController) getEndpoints(
 				port, err := service.GetPortMapping(servicePort.StrVal, s)
 				if err == nil {
 					targetPort = port
-					continue
+					break
 				}
 
 				glog.Warningf("error mapping service port: %v", err)
