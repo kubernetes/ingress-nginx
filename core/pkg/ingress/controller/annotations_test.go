@@ -23,8 +23,8 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/util/intstr"
 
-	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 type mockCfg struct {
@@ -38,7 +38,7 @@ func (m mockCfg) GetSecret(string) (*api.Secret, error) {
 	return nil, nil
 }
 
-func (m mockCfg) GetAuthCertificate(string) (*authtls.SSLCert, error) {
+func (m mockCfg) GetAuthCertificate(string) (*resolver.AuthSSLCert, error) {
 	return nil, nil
 }
 

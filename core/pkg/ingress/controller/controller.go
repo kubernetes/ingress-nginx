@@ -39,11 +39,11 @@ import (
 
 	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress"
-	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/service"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
 	"k8s.io/ingress/core/pkg/k8s"
 	local_strings "k8s.io/ingress/core/pkg/strings"
@@ -668,13 +668,13 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 }
 
 // GetAuthCertificate ...
-func (ic GenericController) GetAuthCertificate(secretName string) (*authtls.SSLCert, error) {
+func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
 	bc, exists := ic.sslCertTracker.Get(secretName)
 	if !exists {
-		return &authtls.SSLCert{}, fmt.Errorf("secret %v does not exists", secretName)
+		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exists", secretName)
 	}
 	cert := bc.(*ingress.SSLCert)
-	return &authtls.SSLCert{
+	return &resolver.AuthSSLCert{
 		Secret:       secretName,
 		CertFileName: cert.PemFileName,
 		CAFileName:   cert.CAFileName,

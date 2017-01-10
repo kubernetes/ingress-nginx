@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/k8s"
 )
 
@@ -29,28 +30,12 @@ const (
 	authTLSSecret = "ingress.kubernetes.io/auth-tls-secret"
 )
 
-// AuthCertificate has a method that searchs for a secret
-// that contains a SSL certificate.
-// The secret must contain 3 keys named:
-type AuthCertificate interface {
-	GetAuthCertificate(string) (*SSLCert, error)
-}
-
-// SSLCert returns external authentication configuration for an Ingress rule
-type SSLCert struct {
-	Secret       string `json:"secret"`
-	CertFileName string `json:"certFilename"`
-	KeyFileName  string `json:"keyFilename"`
-	CAFileName   string `json:"caFilename"`
-	PemSHA       string `json:"pemSha"`
-}
-
 type authTLS struct {
-	certResolver AuthCertificate
+	certResolver resolver.AuthCertificate
 }
 
 // NewParser creates a new TLS authentication annotation parser
-func NewParser(resolver AuthCertificate) parser.IngressAnnotation {
+func NewParser(resolver resolver.AuthCertificate) parser.IngressAnnotation {
 	return authTLS{resolver}
 }
 
