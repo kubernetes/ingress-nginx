@@ -290,11 +290,11 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	}
 	glog.V(3).Infof("Syncing %v", key)
 
-	paths, err := lbc.ingLister.List()
+	ingresses, err := lbc.ingLister.List()
 	if err != nil {
 		return err
 	}
-	nodePorts := lbc.tr.toNodePorts(&paths)
+	nodePorts := lbc.tr.toNodePorts(&ingresses)
 	lbNames := lbc.ingLister.Store.ListKeys()
 	lbs, err := lbc.ListRuntimeInfo()
 	if err != nil {

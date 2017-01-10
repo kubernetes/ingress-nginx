@@ -230,15 +230,15 @@ func (i *Instances) Sync(nodes []string) (err error) {
 		removeNodes := gceNodes.Difference(kubeNodes).List()
 		addNodes := kubeNodes.Difference(gceNodes).List()
 		if len(removeNodes) != 0 {
-			if err = i.Remove(
-				igName, gceNodes.Difference(kubeNodes).List()); err != nil {
+			glog.V(4).Infof("Removing nodes from IG: %v", removeNodes)
+			if err = i.Remove(igName, removeNodes); err != nil {
 				return err
 			}
 		}
 
 		if len(addNodes) != 0 {
-			if err = i.Add(
-				igName, kubeNodes.Difference(gceNodes).List()); err != nil {
+			glog.V(4).Infof("Adding nodes to IG: %v", removeNodes)
+			if err = i.Add(igName, addNodes); err != nil {
 				return err
 			}
 		}
