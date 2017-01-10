@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
+	"k8s.io/ingress/core/pkg/net/dns"
 	"k8s.io/kubernetes/pkg/api"
 )
 
@@ -52,6 +53,9 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.EnableDynamicTLSRecords = false
 	def.UseProxyProtocol = true
 	def.GzipTypes = "text/html"
+
+	h, _ := dns.GetSystemNameServers()
+	def.Resolver = h
 
 	to := ReadConfig(conf)
 	if !reflect.DeepEqual(def, to) {

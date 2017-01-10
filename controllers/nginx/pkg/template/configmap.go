@@ -26,6 +26,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
+	"k8s.io/ingress/core/pkg/net/dns"
 )
 
 const (
@@ -68,6 +69,12 @@ func ReadConfig(conf *api.ConfigMap) config.Configuration {
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
 	to.WhitelistSourceRange = whitelist
+
+	h, err := dns.GetSystemNameServers()
+	if err != nil {
+		glog.Warningf("unexpected error reading system nameservers: %v", err)
+	}
+	to.Resolver = h
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,
