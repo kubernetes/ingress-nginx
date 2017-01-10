@@ -28,6 +28,9 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 )
 
+// DeniedKeyName name of the key that contains the reason to deny a location
+const DeniedKeyName = "Denied"
+
 // newDefaultServer return an BackendServer to be use as default server that returns 503.
 func newDefaultServer() ingress.Endpoint {
 	return ingress.Endpoint{Address: "127.0.0.1", Port: "8181"}
@@ -97,13 +100,11 @@ func IsValidClass(ing *extensions.Ingress, class string) bool {
 	return cc == class
 }
 
-const denied = "Denied"
-
 func mergeLocationAnnotations(loc *ingress.Location, anns map[string]interface{}) {
-	if _, ok := anns[denied]; ok {
-		loc.Denied = anns[denied].(error)
+	if _, ok := anns[DeniedKeyName]; ok {
+		loc.Denied = anns[DeniedKeyName].(error)
 	}
-	delete(anns, denied)
+	delete(anns, DeniedKeyName)
 	err := mergo.Map(loc, anns)
 	if err != nil {
 		glog.Errorf("unexpected error merging extracted annotations in location type: %v", err)
