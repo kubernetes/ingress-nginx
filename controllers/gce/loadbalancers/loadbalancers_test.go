@@ -192,6 +192,48 @@ func TestUpdateUrlMap(t *testing.T) {
 	f.CheckURLMap(t, l7, expectedMap)
 }
 
+func TestUpdateUrlMapNoChanges(t *testing.T) {
+	um1 := utils.GCEURLMap{
+		"foo.example.com": {
+			"/foo1": &compute.BackendService{SelfLink: "foo1svc"},
+			"/foo2": &compute.BackendService{SelfLink: "foo2svc"},
+		},
+		"bar.example.com": {
+			"/bar1": &compute.BackendService{SelfLink: "bar1svc"},
+		},
+	}
+	um1.PutDefaultBackend(&compute.BackendService{SelfLink: "default"})
+	um2 := utils.GCEURLMap{
+		"foo.example.com": {
+			"/foo1": &compute.BackendService{SelfLink: "foo1svc"},
+			"/foo2": &compute.BackendService{SelfLink: "foo2svc"},
+		},
+		"bar.example.com": {
+			"/bar1": &compute.BackendService{SelfLink: "bar1svc"},
+		},
+	}
+	um2.PutDefaultBackend(&compute.BackendService{SelfLink: "default"})
+
+	lbInfo := &L7RuntimeInfo{Name: "test", AllowHTTP: true}
+	f := NewFakeLoadBalancers(lbInfo.Name)
+	pool := newFakeLoadBalancerPool(f, t)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
+	l7, err := pool.Get(lbInfo.Name)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	for _, ir := range []utils.GCEURLMap{um1, um2} {
+		if err := l7.UpdateUrlMap(ir); err != nil {
+			t.Fatalf("%v", err)
+		}
+	}
+	for _, call := range f.calls {
+		if call == "UpdateUrlMap" {
+			t.Errorf("UpdateUrlMap() should not have been called")
+		}
+	}
+}
+
 func TestNameParsing(t *testing.T) {
 	clusterName := "123"
 	namer := utils.NewNamer(clusterName)
