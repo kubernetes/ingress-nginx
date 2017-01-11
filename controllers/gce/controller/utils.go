@@ -267,12 +267,23 @@ func (t *GCETranslator) toURLMap(ing *extensions.Ingress) (utils.GCEURLMap, erro
 		}
 		hostPathBackend[host] = pathToBackend
 	}
-	defaultBackend, _ := t.toGCEBackend(ing.Spec.Backend, ing.Namespace)
-	hostPathBackend.PutDefaultBackend(defaultBackend)
-
-	if defaultBackend != nil && ing.Spec.Backend != nil {
-		t.recorder.Eventf(ing, api.EventTypeNormal, "GCE", fmt.Sprintf("default backend set to %v:%v", ing.Spec.Backend.ServiceName, defaultBackend.Port))
+	var defaultBackend *compute.BackendService
+	if ing.Spec.Backend != nil {
+		var err error
+		defaultBackend, err = t.toGCEBackend(ing.Spec.Backend, ing.Namespace)
+		if err != nil {
+			msg := fmt.Sprintf("%v", err)
+			if _, ok := err.(errorNodePortNotFound); ok {
+				msg = fmt.Sprintf("couldn't find nodeport for %v/%v", ing.Namespace, ing.Spec.Backend.ServiceName)
+			}
+			t.recorder.Eventf(ing, api.EventTypeWarning, "Service", fmt.Sprintf("failed to identify user specified default backend, %v, using system default", msg))
+		} else if defaultBackend != nil {
+			t.recorder.Eventf(ing, api.EventTypeNormal, "Service", fmt.Sprintf("default backend set to %v:%v", ing.Spec.Backend.ServiceName, defaultBackend.Port))
+		}
+	} else {
+		t.recorder.Eventf(ing, api.EventTypeNormal, "Service", "no user specified default backend, using system default")
 	}
+	hostPathBackend.PutDefaultBackend(defaultBackend)
 	return hostPathBackend, nil
 }
 
