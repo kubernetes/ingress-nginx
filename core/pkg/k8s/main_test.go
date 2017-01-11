@@ -21,10 +21,10 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 	testclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
+	"os"
 )
 
 func TestParseNameNS(t *testing.T) {
-
 	tests := []struct {
 		title  string
 		input  string
@@ -42,15 +42,15 @@ func TestParseNameNS(t *testing.T) {
 		ns, name, err := ParseNameNS(test.input)
 		if test.expErr {
 			if err == nil {
-				t.Errorf("%v: expected error but retuned nil", test.title)
+				t.Errorf("%v: expected error but returned nil", test.title)
 			}
 			continue
 		}
 		if test.ns != ns {
-			t.Errorf("%v: expected %v but retuned %v", test.title, test.ns, ns)
+			t.Errorf("%v: expected %v but returned %v", test.title, test.ns, ns)
 		}
 		if test.name != name {
-			t.Errorf("%v: expected %v but retuned %v", test.title, test.name, name)
+			t.Errorf("%v: expected %v but returned %v", test.title, test.name, name)
 		}
 	}
 }
@@ -65,20 +65,20 @@ func TestIsValidService(t *testing.T) {
 
 	_, err := IsValidService(fk, "")
 	if err == nil {
-		t.Errorf("expected error but retuned nil")
+		t.Errorf("expected error but returned nil")
 	}
 	s, err := IsValidService(fk, "default/demo")
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if s == nil {
-		t.Errorf("expected a Service but retuned nil")
+		t.Errorf("expected a Service but returned nil")
 	}
 
 	fk = testclient.NewSimpleClientset()
 	s, err = IsValidService(fk, "default/demo")
 	if err == nil {
-		t.Errorf("expected an error but retuned nil")
+		t.Errorf("expected an error but returned nil")
 	}
 	if s != nil {
 		t.Errorf("unexpected Service returned: %v", s)
@@ -95,22 +95,190 @@ func TestIsValidSecret(t *testing.T) {
 
 	_, err := IsValidSecret(fk, "")
 	if err == nil {
-		t.Errorf("expected error but retuned nil")
+		t.Errorf("expected error but returned nil")
 	}
 	s, err := IsValidSecret(fk, "default/demo")
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if s == nil {
-		t.Errorf("expected a Secret but retuned nil")
+		t.Errorf("expected a Secret but returned nil")
 	}
 
 	fk = testclient.NewSimpleClientset()
 	s, err = IsValidSecret(fk, "default/demo")
 	if err == nil {
-		t.Errorf("expected an error but retuned nil")
+		t.Errorf("expected an error but returned nil")
 	}
 	if s != nil {
 		t.Errorf("unexpected Secret returned: %v", s)
+	}
+}
+
+func TestGetNodeIP(t *testing.T) {
+	fKNodes := []struct {
+		cs *testclient.Clientset
+		n  string
+		ea string
+	}{
+		// empty node list
+		{testclient.NewSimpleClientset(), "demo", ""},
+
+		// node not exist
+		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
+			ObjectMeta: api.ObjectMeta{
+				Name: "demo",
+			},
+			Status: api.NodeStatus{
+				Addresses: []api.NodeAddress{
+					{
+						Type:    api.NodeLegacyHostIP,
+						Address: "10.0.0.1",
+					},
+				},
+			},
+		}}}), "notexistnode", ""},
+
+		// node  exist
+		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
+			ObjectMeta: api.ObjectMeta{
+				Name: "demo",
+			},
+			Status: api.NodeStatus{
+				Addresses: []api.NodeAddress{
+					{
+						Type:    api.NodeLegacyHostIP,
+						Address: "10.0.0.1",
+					},
+				},
+			},
+		}}}), "demo", "10.0.0.1"},
+
+		// search the correct node
+		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{
+			{
+				ObjectMeta: api.ObjectMeta{
+					Name: "demo1",
+				},
+				Status: api.NodeStatus{
+					Addresses: []api.NodeAddress{
+						{
+							Type:    api.NodeLegacyHostIP,
+							Address: "10.0.0.1",
+						},
+					},
+				},
+			},
+			{
+				ObjectMeta: api.ObjectMeta{
+					Name: "demo2",
+				},
+				Status: api.NodeStatus{
+					Addresses: []api.NodeAddress{
+						{
+							Type:    api.NodeLegacyHostIP,
+							Address: "10.0.0.2",
+						},
+					},
+				},
+			},
+		}}), "demo2", "10.0.0.2"},
+
+		// get NodeExternalIP
+		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
+			ObjectMeta: api.ObjectMeta{
+				Name: "demo",
+			},
+			Status: api.NodeStatus{
+				Addresses: []api.NodeAddress{
+					{
+						Type:    api.NodeLegacyHostIP,
+						Address: "10.0.0.1",
+					}, {
+						Type:    api.NodeExternalIP,
+						Address: "10.0.0.2",
+					},
+				},
+			},
+		}}}), "demo", "10.0.0.2"},
+
+		// get NodeLegacyHostIP
+		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
+			ObjectMeta: api.ObjectMeta{
+				Name: "demo",
+			},
+			Status: api.NodeStatus{
+				Addresses: []api.NodeAddress{
+					{
+						Type:    api.NodeExternalIP,
+						Address: "",
+					}, {
+						Type:    api.NodeLegacyHostIP,
+						Address: "10.0.0.2",
+					},
+				},
+			},
+		}}}), "demo", "10.0.0.2"},
+	}
+
+	for _, fk := range fKNodes {
+		address := GetNodeIP(fk.cs, fk.n)
+		if address != fk.ea {
+			t.Errorf("expected %s, but returned %s", fk.ea, address)
+		}
+	}
+}
+
+func TestGetPodDetails(t *testing.T) {
+	// POD_NAME & POD_NAMESPACE not exist
+	os.Setenv("POD_NAME", "")
+	os.Setenv("POD_NAMESPACE", "")
+	_, err1 := GetPodDetails(testclient.NewSimpleClientset())
+	if err1 == nil {
+		t.Errorf("expected an error but returned nil")
+	}
+
+	// POD not exist
+	os.Setenv("POD_NAME", "testpod")
+	os.Setenv("POD_NAMESPACE", api.NamespaceDefault)
+	_, err2 := GetPodDetails(testclient.NewSimpleClientset())
+	if err2 == nil {
+		t.Errorf("expected an error but returned nil")
+	}
+
+	// success to get PodInfo
+	fkClient := testclient.NewSimpleClientset(
+		&api.PodList{Items: []api.Pod{{
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testpod",
+				Namespace: api.NamespaceDefault,
+				Labels: map[string]string{
+					"first":  "first_label",
+					"second": "second_label",
+				},
+			},
+		}}},
+		&api.NodeList{Items: []api.Node{{
+			ObjectMeta: api.ObjectMeta{
+				Name: "demo",
+			},
+			Status: api.NodeStatus{
+				Addresses: []api.NodeAddress{
+					{
+						Type:    api.NodeLegacyHostIP,
+						Address: "10.0.0.1",
+					},
+				},
+			},
+		}}})
+
+	epi, err3 := GetPodDetails(fkClient)
+	if err3 != nil {
+		t.Errorf("expected a PodInfo but returned error")
+		return
+	}
+
+	if epi == nil {
+		t.Errorf("expected a PodInfo but returned nil")
 	}
 }
