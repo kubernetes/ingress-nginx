@@ -17,6 +17,7 @@ limitations under the License.
 package authtls
 
 import (
+	"github.com/pkg/errors"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
@@ -56,5 +57,12 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
-	return a.certResolver.GetAuthCertificate(str)
+	authCert, err := a.certResolver.GetAuthCertificate(str)
+	if err != nil {
+		return nil, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "error obtaining certificate"),
+		}
+	}
+
+	return authCert, nil
 }

@@ -71,16 +71,17 @@ func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interf
 		val, err := annotationParser.Parse(ing)
 		glog.V(5).Infof("annotation %v in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), val)
 		if err != nil {
-			_, de := anns["Denied"]
-			if errors.IsLocationDenied(err) && !de {
-				anns["Denied"] = err
+			if errors.IsMissingAnnotations(err) {
+				continue
+			}
+
+			_, alreadyDenied := anns[DeniedKeyName]
+			if !alreadyDenied {
+				anns[DeniedKeyName] = err
 				glog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
 				continue
 			}
-			if !errors.IsMissingAnnotations(err) {
-				glog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
-				continue
-			}
+
 			glog.V(5).Infof("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
 		}
 
