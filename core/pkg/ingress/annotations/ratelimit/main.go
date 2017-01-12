@@ -70,8 +70,23 @@ func ParseAnnotations(ing *extensions.Ingress) (*RateLimit, error) {
 		return &RateLimit{}, parser.ErrMissingAnnotations
 	}
 
-	rps, _ := parser.GetIntAnnotation(limitRPS, ing)
-	conn, _ := parser.GetIntAnnotation(limitIP, ing)
+	rpsMissing := false
+	rps, err := parser.GetIntAnnotation(limitRPS, ing)
+	if err != nil && err != parser.ErrMissingAnnotations {
+		return &RateLimit{}, err
+	}
+	if err == parser.ErrMissingAnnotations {
+		rpsMissing = true
+	}
+	conn, errip := parser.GetIntAnnotation(limitIP, ing)
+	if errip != nil && errip != parser.ErrMissingAnnotations {
+		return &RateLimit{}, errip
+	}
+	if rpsMissing && errip == parser.ErrMissingAnnotations {
+		// Both annotations missing, that's not an 'InvalidRateLimit', return the
+		// right error
+		return &RateLimit{}, parser.ErrMissingAnnotations
+	}
 
 	if rps == 0 && conn == 0 {
 		return &RateLimit{
