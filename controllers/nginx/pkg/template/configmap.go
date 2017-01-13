@@ -37,10 +37,6 @@ const (
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
 func ReadConfig(conf *api.ConfigMap) config.Configuration {
-	if len(conf.Data) == 0 {
-		return config.NewDefault()
-	}
-
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
 	whitelist := make([]string, 0)

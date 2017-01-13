@@ -17,7 +17,6 @@ limitations under the License.
 package template
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -63,17 +62,19 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.Resolver = h
 
 	to := ReadConfig(conf)
-	if !reflect.DeepEqual(def, to) {
-		t.Errorf("expected %v but retuned %v", def, to)
+	if diff := pretty.Compare(to, def); diff != "" {
+		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 
 	def = config.NewDefault()
+	def.Resolver = h
 	to = ReadConfig(&api.ConfigMap{})
-	if !reflect.DeepEqual(def, to) {
-		t.Errorf("expected %v but retuned %v", def, to)
+	if diff := pretty.Compare(to, def); diff != "" {
+		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 
 	def = config.NewDefault()
+	def.Resolver = h
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
 	to = ReadConfig(&api.ConfigMap{
 		Data: map[string]string{
