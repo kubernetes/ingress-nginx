@@ -17,8 +17,9 @@ limitations under the License.
 package template
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/kylelemons/godebug/pretty"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/net/dns"
@@ -35,7 +36,7 @@ func TestFilterErrors(t *testing.T) {
 func TestMergeConfigMapToStruct(t *testing.T) {
 	conf := &api.ConfigMap{
 		Data: map[string]string{
-			"custom-http-errors":         "300,400",
+			"custom-http-errors":         "300,400,demo",
 			"proxy-read-timeout":         "1",
 			"proxy-send-timeout":         "2",
 			"skip-access-log-urls":       "/log,/demo,/test",
@@ -61,7 +62,27 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.Resolver = h
 
 	to := ReadConfig(conf)
-	if !reflect.DeepEqual(def, to) {
-		t.Errorf("expected %v but retuned %v", def, to)
+	if diff := pretty.Compare(to, def); diff != "" {
+		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
+	}
+
+	def = config.NewDefault()
+	def.Resolver = h
+	to = ReadConfig(&api.ConfigMap{})
+	if diff := pretty.Compare(to, def); diff != "" {
+		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
+	}
+
+	def = config.NewDefault()
+	def.Resolver = h
+	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
+	to = ReadConfig(&api.ConfigMap{
+		Data: map[string]string{
+			"whitelist-source-range": "1.1.1.1/32",
+		},
+	})
+
+	if diff := pretty.Compare(to, def); diff != "" {
+		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 }
