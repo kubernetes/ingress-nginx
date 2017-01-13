@@ -20,7 +20,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
@@ -35,22 +35,32 @@ type Upstream struct {
 	FailTimeout int `json:"failTimeout"`
 }
 
+type healthCheck struct {
+	backendResolver resolver.DefaultBackend
+}
+
+// NewParser creates a new health check annotation parser
+func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
+	return healthCheck{br}
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
-func ParseAnnotations(cfg defaults.Backend, ing *extensions.Ingress) *Upstream {
+func (a healthCheck) Parse(ing *extensions.Ingress) (interface{}, error) {
+	defBackend := a.backendResolver.GetDefaultBackend()
 	if ing.GetAnnotations() == nil {
-		return &Upstream{cfg.UpstreamMaxFails, cfg.UpstreamFailTimeout}
+		return &Upstream{defBackend.UpstreamMaxFails, defBackend.UpstreamFailTimeout}, nil
 	}
 
 	mf, err := parser.GetIntAnnotation(upsMaxFails, ing)
 	if err != nil {
-		mf = cfg.UpstreamMaxFails
+		mf = defBackend.UpstreamMaxFails
 	}
 
 	ft, err := parser.GetIntAnnotation(upsFailTimeout, ing)
 	if err != nil {
-		ft = cfg.UpstreamFailTimeout
+		ft = defBackend.UpstreamFailTimeout
 	}
 
-	return &Upstream{mf, ft}
+	return &Upstream{mf, ft}, nil
 }

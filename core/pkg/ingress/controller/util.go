@@ -19,11 +19,17 @@ package controller
 import (
 	"strings"
 
+	"github.com/golang/glog"
+	"github.com/imdario/mergo"
+
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 )
+
+// DeniedKeyName name of the key that contains the reason to deny a location
+const DeniedKeyName = "Denied"
 
 // newDefaultServer return an BackendServer to be use as default server that returns 503.
 func newDefaultServer() ingress.Endpoint {
@@ -92,4 +98,15 @@ func IsValidClass(ing *extensions.Ingress, class string) bool {
 	}
 
 	return cc == class
+}
+
+func mergeLocationAnnotations(loc *ingress.Location, anns map[string]interface{}) {
+	if _, ok := anns[DeniedKeyName]; ok {
+		loc.Denied = anns[DeniedKeyName].(error)
+	}
+	delete(anns, DeniedKeyName)
+	err := mergo.Map(loc, anns)
+	if err != nil {
+		glog.Errorf("unexpected error merging extracted annotations in location type: %v", err)
+	}
 }

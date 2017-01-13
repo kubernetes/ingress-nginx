@@ -17,44 +17,31 @@ limitations under the License.
 package auth
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
 
+	"github.com/pkg/errors"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
 	authType   = "ingress.kubernetes.io/auth-type"
 	authSecret = "ingress.kubernetes.io/auth-secret"
 	authRealm  = "ingress.kubernetes.io/auth-realm"
-
-	// DefAuthDirectory default directory used to store files
-	// to authenticate request
-	DefAuthDirectory = "/etc/ingress-controller/auth"
 )
-
-func init() {
-	// TODO: check permissions required
-	os.MkdirAll(DefAuthDirectory, 0655)
-}
 
 var (
 	authTypeRegex = regexp.MustCompile(`basic|digest`)
-
-	// ErrInvalidAuthType is return in case of unsupported authentication type
-	ErrInvalidAuthType = errors.New("invalid authentication type")
-
-	// ErrMissingSecretName is returned when the name of the secret is missing
-	ErrMissingSecretName = errors.New("secret name is missing")
-
-	// ErrMissingAuthInSecret is returned when there is no auth key in secret data
-	ErrMissingAuthInSecret = errors.New("the secret does not contains the auth key")
+	// AuthDirectory default directory used to store files
+	// to authenticate request
+	AuthDirectory = "/etc/ingress-controller/auth"
 )
 
 // BasicDigest returns authentication configuration for an Ingress rule
@@ -65,40 +52,53 @@ type BasicDigest struct {
 	Secured bool   `json:"secured"`
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
+type auth struct {
+	secretResolver resolver.Secret
+	authDirectory  string
+}
+
+// NewParser creates a new authentication annotation parser
+func NewParser(authDirectory string, sr resolver.Secret) parser.IngressAnnotation {
+	// TODO: check permissions required
+	os.MkdirAll(authDirectory, 0655)
+	return auth{sr, authDirectory}
+}
+
+// Parse parses the annotations contained in the ingress
 // rule used to add authentication in the paths defined in the rule
 // and generated an htpasswd compatible file to be used as source
 // during the authentication process
-func ParseAnnotations(ing *extensions.Ingress, authDir string, fn func(string) (*api.Secret, error)) (*BasicDigest, error) {
-	if ing.GetAnnotations() == nil {
-		return &BasicDigest{}, parser.ErrMissingAnnotations
-	}
-
+func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 	at, err := parser.GetStringAnnotation(authType, ing)
 	if err != nil {
-		return &BasicDigest{}, err
+		return nil, err
 	}
 
 	if !authTypeRegex.MatchString(at) {
-		return &BasicDigest{}, ErrInvalidAuthType
+		return nil, ing_errors.NewLocationDenied("invalid authentication type")
 	}
 
 	s, err := parser.GetStringAnnotation(authSecret, ing)
 	if err != nil {
-		return &BasicDigest{}, err
+		return nil, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "error reading secret name from annotation"),
+		}
 	}
 
-	secret, err := fn(fmt.Sprintf("%v/%v", ing.Namespace, s))
+	name := fmt.Sprintf("%v/%v", ing.Namespace, s)
+	secret, err := a.secretResolver.GetSecret(name)
 	if err != nil {
-		return &BasicDigest{}, err
+		return nil, ing_errors.LocationDenied{
+			Reason: errors.Wrapf(err, "unexpected error reading secret %v", name),
+		}
 	}
 
 	realm, _ := parser.GetStringAnnotation(authRealm, ing)
 
-	passFile := fmt.Sprintf("%v/%v-%v.passwd", authDir, ing.GetNamespace(), ing.GetName())
+	passFile := fmt.Sprintf("%v/%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.GetName())
 	err = dumpSecret(passFile, secret)
 	if err != nil {
-		return &BasicDigest{}, err
+		return nil, err
 	}
 
 	return &BasicDigest{
@@ -114,9 +114,18 @@ func ParseAnnotations(ing *extensions.Ingress, authDir string, fn func(string) (
 func dumpSecret(filename string, secret *api.Secret) error {
 	val, ok := secret.Data["auth"]
 	if !ok {
-		return ErrMissingAuthInSecret
+		return ing_errors.LocationDenied{
+			Reason: errors.Errorf("the secret %v does not contains a key with value auth", secret.Name),
+		}
 	}
 
 	// TODO: check permissions required
-	return ioutil.WriteFile(filename, val, 0777)
+	err := ioutil.WriteFile(filename, val, 0777)
+	if err != nil {
+		return ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "unexpected error creating password file"),
+		}
+	}
+
+	return nil
 }

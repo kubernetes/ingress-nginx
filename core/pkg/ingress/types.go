@@ -22,12 +22,12 @@ import (
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
-	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 var (
@@ -203,6 +203,9 @@ type Location struct {
 	// an Ingress rule.
 	// +optional
 	BasicDigestAuth auth.BasicDigest `json:"basicDigestAuth,omitempty"`
+	// Denied returns an error when this location cannot not be allowed
+	// Requesting a denied location should return HTTP code 403.
+	Denied error
 	// EnableCORS indicates if path must support CORS
 	// +optional
 	EnableCORS bool `json:"enableCors,omitempty"`
@@ -229,7 +232,7 @@ type Location struct {
 	// CertificateAuth indicates the access to this location requires
 	// external authentication
 	// +optional
-	CertificateAuth authtls.SSLCert `json:"certificateAuth,omitempty"`
+	CertificateAuth resolver.AuthSSLCert `json:"certificateAuth,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

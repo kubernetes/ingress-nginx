@@ -137,6 +137,7 @@ var (
 		"buildRateLimit":              buildRateLimit,
 		"buildSSPassthroughUpstreams": buildSSPassthroughUpstreams,
 		"buildResolvers":              buildResolvers,
+		"isLocationAllowed":           isLocationAllowed,
 
 		"contains":  strings.Contains,
 		"hasPrefix": strings.HasPrefix,
@@ -351,4 +352,14 @@ func buildRateLimit(input interface{}) []string {
 	}
 
 	return limits
+}
+
+func isLocationAllowed(input interface{}) bool {
+	loc, ok := input.(*ingress.Location)
+	if !ok {
+		glog.Errorf("expected an ingress.Location type but %T was returned", input)
+		return false
+	}
+
+	return loc.Denied == nil
 }
