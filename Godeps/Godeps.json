@@ -234,6 +234,14 @@
 			"Rev": "77ed1c8a01217656d2080ad51981f6e99adaa177"
 		},
 		{
+			"ImportPath": "github.com/kylelemons/godebug/diff",
+			"Rev": "d99083b96f422f8fd5a93bc02040acec769e178f"
+		},
+		{
+			"ImportPath": "github.com/kylelemons/godebug/pretty",
+			"Rev": "d99083b96f422f8fd5a93bc02040acec769e178f"
+		},
+		{
 			"ImportPath": "github.com/mailru/easyjson/buffer",
 			"Rev": "d5b7844b561a7bc640052f1b935f7b800330d7e0"
 		},
