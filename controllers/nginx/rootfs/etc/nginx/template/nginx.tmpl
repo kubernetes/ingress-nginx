@@ -197,7 +197,7 @@ http {
     {{ range $index, $server := .Servers }}
     server {
         server_name {{ $server.Hostname }};
-        listen [::]:80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $index 0 }} ipv6only=off{{end}};
+        listen [::]:80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $index 0 }} ipv6only=off{{end}}{{ if eq $server.Hostname "_"}} default_server{{end}};
         {{/* Listen on 442 because port 443 is used in the stream section */}}
         {{ if not (empty $server.SSLCertificate) }}listen 442 {{ if $cfg.UseProxyProtocol }}proxy_protocol{{ end }} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
