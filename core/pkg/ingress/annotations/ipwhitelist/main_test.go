@@ -62,6 +62,13 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
+type mockBackend struct {
+}
+
+func (m mockBackend) GetDefaultBackend() defaults.Backend {
+	return defaults.Backend{}
+}
+
 func TestParseAnnotations(t *testing.T) {
 	// TODO: convert test cases to tables
 	ing := buildIngress()
@@ -77,38 +84,56 @@ func TestParseAnnotations(t *testing.T) {
 		CIDR: enet,
 	}
 
-	sr, err := ParseAnnotations(defaults.Backend{}, ing)
+	p := NewParser(mockBackend{})
+
+	i, err := p.Parse(ing)
 	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
+		t.Errorf("unexpected error: %v", err)
+	}
+	sr, ok := i.(*SourceRange)
+	if !ok {
+		t.Errorf("expected a SourceRange type")
 	}
 
 	if !reflect.DeepEqual(sr, expected) {
-		t.Errorf("Expected %v but returned %s", sr, expected)
+		t.Errorf("expected %v but returned %s", sr, expected)
 	}
 
 	data[whitelist] = "www"
-	_, err = ParseAnnotations(defaults.Backend{}, ing)
+	_, err = p.Parse(ing)
 	if err == nil {
-		t.Errorf("Expected error parsing an invalid cidr")
+		t.Errorf("expected error parsing an invalid cidr")
 	}
 
 	delete(data, whitelist)
 	ing.SetAnnotations(data)
-	sr, err = ParseAnnotations(defaults.Backend{}, ing)
+	i, err = p.Parse(ing)
+	sr, ok = i.(*SourceRange)
+	if !ok {
+		t.Errorf("expected a SourceRange type")
+	}
 	if err == nil {
-		t.Errorf("Expected error parsing an invalid cidr")
+		t.Errorf("expected error parsing an invalid cidr")
 	}
 	if !strsEquals(sr.CIDR, []string{}) {
-		t.Errorf("Expected empty CIDR but %v returned", sr.CIDR)
+		t.Errorf("expected empty CIDR but %v returned", sr.CIDR)
 	}
 
-	sr, _ = ParseAnnotations(defaults.Backend{}, &extensions.Ingress{})
+	i, _ = p.Parse(&extensions.Ingress{})
+	sr, ok = i.(*SourceRange)
+	if !ok {
+		t.Errorf("expected a SourceRange type")
+	}
 	if !strsEquals(sr.CIDR, []string{}) {
-		t.Errorf("Expected empty CIDR but %v returned", sr.CIDR)
+		t.Errorf("expected empty CIDR but %v returned", sr.CIDR)
 	}
 
 	data[whitelist] = "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24"
-	sr, _ = ParseAnnotations(defaults.Backend{}, ing)
+	i, _ = p.Parse(ing)
+	sr, ok = i.(*SourceRange)
+	if !ok {
+		t.Errorf("expected a SourceRange type")
+	}
 	ecidr := []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"}
 	if !strsEquals(sr.CIDR, ecidr) {
 		t.Errorf("Expected %v CIDR but %v returned", ecidr, sr.CIDR)

@@ -22,8 +22,6 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/util/intstr"
-
-	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -44,7 +42,7 @@ func buildIngress() *extensions.Ingress {
 func TestParseAnnotations(t *testing.T) {
 	ing := buildIngress()
 
-	_, err := ParseAnnotations(defaults.Backend{}, ing)
+	_, err := NewParser().Parse(ing)
 	if err == nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -53,9 +51,9 @@ func TestParseAnnotations(t *testing.T) {
 	data[passthrough] = "true"
 	ing.SetAnnotations(data)
 	// test ingress using the annotation without a TLS section
-	val, err := ParseAnnotations(defaults.Backend{}, ing)
-	if err == nil {
-		t.Errorf("expected error parsing an invalid cidr")
+	_, err = NewParser().Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error parsing ingress with sslpassthrough")
 	}
 
 	// test with a valid host
@@ -64,9 +62,13 @@ func TestParseAnnotations(t *testing.T) {
 			Hosts: []string{"foo.bar.com"},
 		},
 	}
-	val, err = ParseAnnotations(defaults.Backend{}, ing)
+	i, err := NewParser().Parse(ing)
 	if err != nil {
-		t.Errorf("expected error parsing an invalid cidr")
+		t.Errorf("expected error parsing ingress with sslpassthrough")
+	}
+	val, ok := i.(bool)
+	if !ok {
+		t.Errorf("expected a bool type")
 	}
 	if !val {
 		t.Errorf("expected true but false returned")

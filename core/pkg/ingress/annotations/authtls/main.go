@@ -17,11 +17,12 @@ limitations under the License.
 package authtls
 
 import (
-	"fmt"
-
+	"github.com/pkg/errors"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/k8s"
 )
 
@@ -30,36 +31,38 @@ const (
 	authTLSSecret = "ingress.kubernetes.io/auth-tls-secret"
 )
 
-// SSLCert returns external authentication configuration for an Ingress rule
-type SSLCert struct {
-	Secret       string `json:"secret"`
-	CertFileName string `json:"certFilename"`
-	KeyFileName  string `json:"keyFilename"`
-	CAFileName   string `json:"caFilename"`
-	PemSHA       string `json:"pemSha"`
+type authTLS struct {
+	certResolver resolver.AuthCertificate
+}
+
+// NewParser creates a new TLS authentication annotation parser
+func NewParser(resolver resolver.AuthCertificate) parser.IngressAnnotation {
+	return authTLS{resolver}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an external URL as source for authentication
-func ParseAnnotations(ing *extensions.Ingress,
-	fn func(secret string) (*SSLCert, error)) (*SSLCert, error) {
-	if ing.GetAnnotations() == nil {
-		return &SSLCert{}, parser.ErrMissingAnnotations
-	}
-
+func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 	str, err := parser.GetStringAnnotation(authTLSSecret, ing)
 	if err != nil {
-		return &SSLCert{}, err
+		return nil, err
 	}
 
 	if str == "" {
-		return &SSLCert{}, fmt.Errorf("an empty string is not a valid secret name")
+		return nil, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
 	_, _, err = k8s.ParseNameNS(str)
 	if err != nil {
-		return &SSLCert{}, err
+		return nil, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
-	return fn(str)
+	authCert, err := a.certResolver.GetAuthCertificate(str)
+	if err != nil {
+		return nil, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "error obtaining certificate"),
+		}
+	}
+
+	return authCert, nil
 }

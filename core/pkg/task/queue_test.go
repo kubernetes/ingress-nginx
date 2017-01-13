@@ -18,11 +18,12 @@ package task
 
 import (
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 )
 
-var sr int = 0
+var sr uint32
 
 type mockEnqueueObj struct {
 	k string
@@ -31,7 +32,7 @@ type mockEnqueueObj struct {
 
 func mockSynFn(interface{}) error {
 	// sr will be plus one times after enqueue
-	sr++
+	atomic.AddUint32(&sr, 1)
 	return nil
 }
 
@@ -60,7 +61,7 @@ func TestShutdown(t *testing.T) {
 
 func TestEnqueueSuccess(t *testing.T) {
 	// initialize result
-	sr = 0
+	atomic.StoreUint32(&sr, 0)
 	q := NewCustomTaskQueue(mockSynFn, mockKeyFn)
 	stopCh := make(chan struct{})
 	// run queue
@@ -73,7 +74,7 @@ func TestEnqueueSuccess(t *testing.T) {
 	q.Enqueue(mo)
 	// wait for 'mockSynFn'
 	time.Sleep(time.Millisecond * 10)
-	if sr != 1 {
+	if atomic.LoadUint32(&sr) != 1 {
 		t.Errorf("sr should be 1, but is %d", sr)
 	}
 
@@ -83,7 +84,7 @@ func TestEnqueueSuccess(t *testing.T) {
 
 func TestEnqueueFailed(t *testing.T) {
 	// initialize result
-	sr = 0
+	atomic.StoreUint32(&sr, 0)
 	q := NewCustomTaskQueue(mockSynFn, mockKeyFn)
 	stopCh := make(chan struct{})
 	// run queue
@@ -102,14 +103,14 @@ func TestEnqueueFailed(t *testing.T) {
 	// wait for 'mockSynFn'
 	time.Sleep(time.Millisecond * 10)
 	// queue is shutdown, so mockSynFn should not be executed, so the result should be 0
-	if sr != 0 {
+	if atomic.LoadUint32(&sr) != 0 {
 		t.Errorf("queue has been shutdown, so sr should be 0, but is %d", sr)
 	}
 }
 
 func TestEnqueueKeyError(t *testing.T) {
 	// initialize result
-	sr = 0
+	atomic.StoreUint32(&sr, 0)
 	q := NewCustomTaskQueue(mockSynFn, mockErrorKeyFn)
 	stopCh := make(chan struct{})
 	// run queue
@@ -124,7 +125,7 @@ func TestEnqueueKeyError(t *testing.T) {
 	// wait for 'mockSynFn'
 	time.Sleep(time.Millisecond * 10)
 	// key error, so the result should be 0
-	if sr != 0 {
+	if atomic.LoadUint32(&sr) != 0 {
 		t.Errorf("error occurs while get key, so sr should be 0, but is %d", sr)
 	}
 	// shutdown queue before exit

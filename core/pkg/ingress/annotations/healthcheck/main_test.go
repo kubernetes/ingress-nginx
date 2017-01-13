@@ -61,6 +61,13 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
+type mockBackend struct {
+}
+
+func (m mockBackend) GetDefaultBackend() defaults.Backend {
+	return defaults.Backend{UpstreamFailTimeout: 1}
+}
+
 func TestIngressHealthCheck(t *testing.T) {
 	ing := buildIngress()
 
@@ -68,15 +75,17 @@ func TestIngressHealthCheck(t *testing.T) {
 	data[upsMaxFails] = "2"
 	ing.SetAnnotations(data)
 
-	cfg := defaults.Backend{UpstreamFailTimeout: 1}
-
-	nginxHz := ParseAnnotations(cfg, ing)
+	hzi, _ := NewParser(mockBackend{}).Parse(ing)
+	nginxHz, ok := hzi.(*Upstream)
+	if !ok {
+		t.Errorf("expected a Upstream type")
+	}
 
 	if nginxHz.MaxFails != 2 {
-		t.Errorf("Expected 2 as max-fails but returned %v", nginxHz.MaxFails)
+		t.Errorf("expected 2 as max-fails but returned %v", nginxHz.MaxFails)
 	}
 
 	if nginxHz.FailTimeout != 1 {
-		t.Errorf("Expected 0 as fail-timeout but returned %v", nginxHz.FailTimeout)
+		t.Errorf("expected 0 as fail-timeout but returned %v", nginxHz.FailTimeout)
 	}
 }
