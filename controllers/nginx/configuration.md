@@ -188,9 +188,8 @@ Example usage: `custom-http-errors: 404,415`
 http://nginx.org/en/docs/ngx_core_module.html#error_log
 
 
-**retry-non-idempotent:** Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error in the upstream server.
-
-The previous behavior can be restored using the value "true".
+**gzip-types:** Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type.
+Responses with the "text/html" type are always compressed if `use-gzip` is enabled.
 
 
 **hsts:** Enables or disables the header HSTS in servers running SSL.
@@ -213,6 +212,9 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 **max-worker-connections:** Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections).
 
 
+**proxy-buffer-size:** Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.`
+
+
 **proxy-connect-timeout:** Sets the timeout for [establishing a connection with a proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
 
 
@@ -222,16 +224,18 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 **proxy-send-timeout:** Sets the timeout in seconds for [transmitting a request to the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
 
 
-**proxy-buffer-size:** Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.`
+**retry-non-idempotent:** Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error in the upstream server.
 
-
-**server-name-hash-max-size:** Sets the maximum size of the [server names hash tables](http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) used in server names, map directive’s values, MIME types, names of request header strings, etc.
-http://nginx.org/en/docs/hash.html
+The previous behavior can be restored using the value "true".
 
 
 **server-name-hash-bucket-size:** Sets the size of the bucket for the server names hash tables.
 http://nginx.org/en/docs/hash.html
 http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
+
+
+**server-name-hash-max-size:** Sets the maximum size of the [server names hash tables](http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) used in server names, map directive’s values, MIME types, names of request header strings, etc.
+http://nginx.org/en/docs/hash.html
 
 
 **ssl-buffer-size:** Sets the size of the [SSL buffer](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) used for sending data.
@@ -250,6 +254,12 @@ The recommendation above prioritizes algorithms that provide perfect [forward se
 Please check the [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/).
 
 
+**ssl-dh-param:** sets the Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy."
+https://www.openssl.org/docs/manmaster/apps/dhparam.html
+https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
+http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+
+
 **ssl-protocols:** Sets the [SSL protocols](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols) to use.
 The default is: `TLSv1 TLSv1.1 TLSv1.2`.
 
@@ -262,10 +272,8 @@ If you dont need to support this clients please remove TLSv1.
 Please check the result of the configuration using `https://ssllabs.com/ssltest/analyze.html` or `https://testssl.sh`.
 
 
-**ssl-dh-param:** sets the Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy."
-https://www.openssl.org/docs/manmaster/apps/dhparam.html
-https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
-http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+**ssl-redirect:** Sets the global value of redirects (301) to HTTPS if the server has a TLS certificate (defined in an Ingress rule)
+Default is "true".
 
 
 **ssl-session-cache:** Enables or disables the use of shared [SSL cache](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache) among worker processes.
@@ -280,17 +288,10 @@ http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
 **ssl-session-timeout:** Sets the time during which a client may [reuse the session](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout) parameters stored in a cache.
 
 
-**ssl-redirect:** Sets the global value of redirects (301) to HTTPS if the server has a TLS certificate (defined in an Ingress rule)
-Default is "true".
-
-
 **upstream-max-fails:** Sets the number of unsuccessful attempts to communicate with the [server](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that should happen in the duration set by the fail_timeout parameter to consider the server unavailable.
 
 
 **upstream-fail-timeout:** Sets the time during which the specified number of unsuccessful attempts to communicate with the [server](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) should happen to consider the server unavailable.
-
-
-**use-proxy-protocol:** Enables or disables the use of the [PROXY protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol/) to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAproxy and Amazon Elastic Load Balancer (ELB).
 
 
 **use-gzip:** Enables or disables the use of the nginx module that compresses responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html)
@@ -300,8 +301,7 @@ The default mime type list to compress is: `application/atom+xml application/jav
 **use-http2:** Enables or disables the [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
 
 
-**gzip-types:** Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type.
-Responses with the "text/html" type are always compressed if `use-gzip` is enabled.
+**use-proxy-protocol:** Enables or disables the use of the [PROXY protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol/) to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAproxy and Amazon Elastic Load Balancer (ELB).
 
 
 **worker-processes:** Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). By default "auto" means number of available CPU cores.
