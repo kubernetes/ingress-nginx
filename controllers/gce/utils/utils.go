@@ -37,7 +37,7 @@ const (
 	Sync
 	// Get used to record Get from a sync pool.
 	Get
-	// Create used to recrod creations in a sync pool.
+	// Create used to record creations in a sync pool.
 	Create
 	// Update used to record updates in a sync pool.
 	Update
