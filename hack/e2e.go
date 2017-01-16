@@ -163,7 +163,7 @@ func run(deploy deployer) error {
 		//
 		// TODO: We should try calling deploy.Down exactly once. Though to
 		// stop the leaking resources for now, we want to be on the safe side
-		// and call it explictly in defer if the other one is not called.
+		// and call it explicitly in defer if the other one is not called.
 		if *down {
 			defer xmlWrap("Deferred TearDown", deploy.Down)
 		}
