@@ -235,6 +235,10 @@ http://nginx.org/en/docs/hash.html
 http://nginx.org/en/docs/hash.html
 http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
 
+
+**map-hash-bucket-size:** Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size). The details of setting up hash tables are provided in a separate [document](http://nginx.org/en/docs/hash.html)
+
+
 **ssl-buffer-size:** Sets the size of the [SSL buffer](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) used for sending data.
 4k helps NGINX to improve TLS Time To First Byte (TTTFB)
 https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
