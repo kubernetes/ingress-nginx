@@ -13,12 +13,12 @@
 * [Default configuration options](#default-configuration-options)
 * [Websockets](#websockets)
 * [Optimizing TLS Time To First Byte (TTTFB)](#optimizing-tls-time-to-first-byte-tttfb)
-* [Retries in no idempotent methods](#retries-in-no-idempotent-methods)
+* [Retries in non-idempotent methods](#retries-in-non-idempotent-methods)
 
 
-### Customizing nginx
+### Customizing NGINX
 
-There are 3 ways to customize nginx:
+There are 3 ways to customize NGINX:
 
 1. [config map](#allowed-parameters-in-configuration-config-map): create a stand alone config map, use this if you want a different global configuration
 2. [annotations](#annotations): use this if you want a specific configuration for the site defined in the Ingress rule
@@ -60,7 +60,7 @@ Use the [custom-template](examples/custom-template/README.md) example as a guide
 
 **Please note the template is tied to the Go code. Do not change names in the variable `$cfg`.**
 
-To know more about the template syntax please check the [Go template package](https://golang.org/pkg/text/template/).
+For more information about the template syntax please check the [Go template package](https://golang.org/pkg/text/template/).
 In addition to the built-in functions provided by the Go package the following functions are also available:
 
   - empty: returns true if the specified parameter (string) is empty
@@ -79,7 +79,7 @@ In addition to the built-in functions provided by the Go package the following f
 
 NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enable the configuration of each server in the upstream. The Ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` and `upstream-fail-timeout` in the NGINX config map or in a particular Ingress rule. `upstream-max-fails` defaults to 0. This means NGINX will respect the container's `readinessProbe` if it is defined. If there is no probe and no values for `upstream-max-fails` NGINX will continue to send traffic to the container.
 
-**With the default values NGINX will not health check your backends, and whenever the endpoints controller notices a readiness probe failure that pod's IP will be removed from the list of endpoints, causing nginx to also remove it from the upstreams.**
+**With the default configuration NGINX will not health check your backends. Whenever the endpoints controller notices a readiness probe failure, that pod's IP will be removed from the list of endpoints. This will trigger the NGINX controller to also remove it from the upstreams.**
 
 To use custom values in an Ingress rule define these annotations:
 
@@ -87,8 +87,9 @@ To use custom values in an Ingress rule define these annotations:
 
 `ingress.kubernetes.io/upstream-fail-timeout`: time in seconds during which the specified number of unsuccessful attempts to communicate with the server should occur to consider the server unavailable. This is also the period of time the server will be considered unavailable.
 
-**Important:**
-The upstreams are shared. All Ingress rules using the same service will use the same upstream. This means only one of the rules should define annotations to configure the upstream servers.
+In NGINX, backend server pools are called "[upstreams](http://nginx.org/en/docs/http/ngx_http_upstream_module.html)". Each upstream contains the endpoints for a service. An upstream is created for each service that has Ingress rules defined.
+
+**Important:** All Ingress rules using the same service will use the same upstream. Only one of the Ingress rules should define annotations to configure the upstream servers.
 
 Please check the [custom upstream check](examples/custom-upstream-check/README.md) example.
 
@@ -110,7 +111,7 @@ ingress.kubernetes.io/auth-secret:secretName
 ```
 
 The name of the secret that contains the usernames and passwords with access to the `path`'s defined in the Ingress Rule.
-The secret must be created in the same namespace than the Ingress rule.
+The secret must be created in the same namespace as the Ingress rule.
 
 ```
 ingress.kubernetes.io/auth-realm:"realm string"
@@ -143,7 +144,7 @@ Please check the [rewrite](examples/rewrite/README.md) example.
 
 ### Rate limiting
 
-The annotations `ingress.kubernetes.io/limit-connections` and `ingress.kubernetes.io/limit-rps` allows the creation of a limit in the connections that can be opened by a single client IP address. This can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
+The annotations `ingress.kubernetes.io/limit-connections` and `ingress.kubernetes.io/limit-rps` define a limit on the connections that can be opened by a single client IP address. This can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
 
 `ingress.kubernetes.io/limit-connections`: number of concurrent allowed connections from a single IP address.
 
@@ -162,7 +163,7 @@ By default NGINX uses `http` to reach the services. Adding the annotation `ingre
 You can specify the allowed client ip source ranges through the `ingress.kubernetes.io/whitelist-source-range` annotation, eg  `10.0.0.0/24,172.10.0.1`.
 For a global restriction (any URL) is possible to use `whitelist-source-range` in the NGINX config map.
 
-*Note:* adding an annotation overrides any global restriction.
+*Note:* Adding an annotation overrides any global restriction.
 
 Please check the [whitelist](examples/whitelist/README.md) example.
 
@@ -352,11 +353,12 @@ The only requirement to avoid the close of connections is the increase of the va
 A more adequate value to support websockets is a value higher than one hour (`3600`).
 
 
-#### Optimizing TLS Time To First Byte (TTTFB)
+### Optimizing TLS Time To First Byte (TTTFB)
 
-NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) to allow the optimization of the TLS record size. This improves the [Time To First Byte](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) (TTTFB). The default value in the Ingress controller is `4k` (nginx default is `16k`).
+NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) to allow the optimization of the TLS record size. This improves the [Time To First Byte](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) (TTTFB). The default value in the Ingress controller is `4k` (NGINX default is `16k`).
 
-#### Retries in non idempotent methods
+
+### Retries in non-idempotent methods
 
 Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error.
 The previous behavior can be restored using `retry-non-idempotent=true` in the configuration config map.
