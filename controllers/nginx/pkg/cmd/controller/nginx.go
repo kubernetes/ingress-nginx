@@ -295,7 +295,7 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 		Servers:             ingressCfg.Servers,
 		TCPBackends:         ingressCfg.TCPEndpoints,
 		UDPBackends:         ingressCfg.UPDEndpoints,
-		HealthzURI:          "/healthz",
+		HealthzURI:          ngxHealthPath,
 		CustomErrors:        len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                 cfg,
 	}, n.testTemplate)
