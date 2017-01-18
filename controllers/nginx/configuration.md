@@ -9,7 +9,7 @@
 * [Rate limiting](#rate-limiting)
 * [Secure backends](#secure-backends)
 * [Whitelist source range](#whitelist-source-range)
-* [Allowed parameters in configuration config map](#allowed-parameters-in-configuration-config-map)
+* [Allowed parameters in configuration ConfigMap](#allowed-parameters-in-configuration-configmap)
 * [Default configuration options](#default-configuration-options)
 * [Websockets](#websockets)
 * [Optimizing TLS Time To First Byte (TTTFB)](#optimizing-tls-time-to-first-byte-tttfb)
@@ -20,14 +20,14 @@
 
 There are 3 ways to customize NGINX:
 
-1. [config map](#allowed-parameters-in-configuration-config-map): create a stand alone config map, use this if you want a different global configuration
+1. [ConfigMap](#allowed-parameters-in-configuration-configmap): create a stand alone ConfigMap, use this if you want a different global configuration
 2. [annotations](#annotations): use this if you want a specific configuration for the site defined in the Ingress rule
-3. custom template: when more specific settings are required, like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), custom [log_format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change an through the config map
+3. custom template: when more specific settings are required, like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), custom [log_format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change an through the ConfigMap.
 
 
 #### Custom NGINX configuration
 
-It is possible to customize the defaults in NGINX using a config map.
+It is possible to customize the defaults in NGINX using a ConfigMap.
 
 Please check the [custom configuration](examples/custom-configuration/README.md) example.
 
@@ -77,7 +77,7 @@ In addition to the built-in functions provided by the Go package the following f
 
 ### Custom NGINX upstream checks
 
-NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enable the configuration of each server in the upstream. The Ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` and `upstream-fail-timeout` in the NGINX config map or in a particular Ingress rule. `upstream-max-fails` defaults to 0. This means NGINX will respect the container's `readinessProbe` if it is defined. If there is no probe and no values for `upstream-max-fails` NGINX will continue to send traffic to the container.
+NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enable the configuration of each server in the upstream. The Ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` and `upstream-fail-timeout` in the NGINX ConfigMap or in a particular Ingress rule. `upstream-max-fails` defaults to 0. This means NGINX will respect the container's `readinessProbe` if it is defined. If there is no probe and no values for `upstream-max-fails` NGINX will continue to send traffic to the container.
 
 **With the default configuration NGINX will not health check your backends. Whenever the endpoints controller notices a readiness probe failure, that pod's IP will be removed from the list of endpoints. This will trigger the NGINX controller to also remove it from the upstreams.**
 
@@ -101,20 +101,20 @@ Is possible to add authentication adding additional annotations in the Ingress r
 The annotations are:
 
 ```
-ingress.kubernetes.io/auth-type:[basic|digest]
+ingress.kubernetes.io/auth-type: [basic|digest]
 ```
 
 Indicates the [HTTP Authentication Type: Basic or Digest Access Authentication](https://tools.ietf.org/html/rfc2617).
 
 ```
-ingress.kubernetes.io/auth-secret:secretName
+ingress.kubernetes.io/auth-secret: secretName
 ```
 
-The name of the secret that contains the usernames and passwords with access to the `path`'s defined in the Ingress Rule.
+The name of the secret that contains the usernames and passwords with access to the `path`s defined in the Ingress Rule.
 The secret must be created in the same namespace as the Ingress rule.
 
 ```
-ingress.kubernetes.io/auth-realm:"realm string"
+ingress.kubernetes.io/auth-realm: "realm string"
 ```
 
 Please check the [auth](examples/auth/README.md) example.
@@ -126,7 +126,7 @@ To use an existing service that provides authentication the Ingress rule can be 
 Additionally it is possible to set `ingress.kubernetes.io/auth-method` to specify the HTTP method to use (GET or POST) and `ingress.kubernetes.io/auth-send-body` to true or false (default).
 
 ```
-ingress.kubernetes.io/auth-url:"URL to the authentication service"
+ingress.kubernetes.io/auth-url: "URL to the authentication service"
 ```
 
 Please check the [external-auth](examples/external-auth/README.md) example.
@@ -146,29 +146,30 @@ Please check the [rewrite](examples/rewrite/README.md) example.
 
 The annotations `ingress.kubernetes.io/limit-connections` and `ingress.kubernetes.io/limit-rps` define a limit on the connections that can be opened by a single client IP address. This can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
 
-`ingress.kubernetes.io/limit-connections`: number of concurrent allowed connections from a single IP address.
+`ingress.kubernetes.io/limit-connections`: number of concurrent connections allowed from a single IP address.
 
-`ingress.kubernetes.io/limit-rps`: number of allowed connections per second from a single IP address.
+`ingress.kubernetes.io/limit-rps`: number of connections that may be accepted from a given IP each second.
 
-If you specify both annotations in a single Ingress rule, limit-rps takes precedence.
+If you specify both annotations in a single Ingress rule, `limit-rps` takes precedence.
 
 
 ### Secure upstreams
 
-By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the ingress rule changes the protocol to `https`.
+By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to `https`.
 
 
 ### Whitelist source range
 
-You can specify the allowed client ip source ranges through the `ingress.kubernetes.io/whitelist-source-range` annotation, eg  `10.0.0.0/24,172.10.0.1`.
-For a global restriction (any URL) is possible to use `whitelist-source-range` in the NGINX config map.
+You can specify the allowed client IP source ranges through the `ingress.kubernetes.io/whitelist-source-range` annotation. The value is a comma separated list of [CIDRs](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing), e.g.  `10.0.0.0/24,172.10.0.1`.
 
-*Note:* Adding an annotation overrides any global restriction.
+To configure this setting globally for all Ingress rules, the `whitelist-source-range` value may be set in the NGINX ConfigMap.
+
+*Note:* Adding an annotation to an Ingress rule overrides any global restriction.
 
 Please check the [whitelist](examples/whitelist/README.md) example.
 
 
-### **Allowed parameters in configuration config map:**
+### **Allowed parameters in configuration ConfigMap:**
 
 **body-size:** Sets the maximum allowed size of the client request body. See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
 
@@ -268,7 +269,7 @@ TLSv1 is enabled to allow old clients like:
 - [IE 8-10 / Win 7](https://www.ssllabs.com/ssltest/viewClient.html?name=IE&version=8-10&platform=Win%207&key=113)
 - [Java 7u25](https://www.ssllabs.com/ssltest/viewClient.html?name=Java&version=7u25&key=26)
 
-If you dont need to support this clients please remove TLSv1.
+If you don't need to support these clients please remove `TLSv1` to improve security.
 
 Please check the result of the configuration using `https://ssllabs.com/ssltest/analyze.html` or `https://testssl.sh`.
 
@@ -289,28 +290,28 @@ Default is "true".
 **ssl-session-timeout:** Sets the time during which a client may [reuse the session](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout) parameters stored in a cache.
 
 
-**upstream-max-fails:** Sets the number of unsuccessful attempts to communicate with the [server](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that should happen in the duration set by the fail_timeout parameter to consider the server unavailable.
+**upstream-max-fails:** Sets the number of unsuccessful attempts to communicate with the [server](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that should happen in the duration set by the `fail_timeout` parameter to consider the server unavailable.
 
 
 **upstream-fail-timeout:** Sets the time during which the specified number of unsuccessful attempts to communicate with the [server](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) should happen to consider the server unavailable.
 
 
-**use-gzip:** Enables or disables the use of the nginx module that compresses responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html)
+**use-gzip:** Enables or disables compression of HTTP responses using the ["gzip" module](http://nginx.org/en/docs/http/ngx_http_gzip_module.html)
 The default mime type list to compress is: `application/atom+xml application/javascript aplication/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
 
 
-**use-http2:** Enables or disables the [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
+**use-http2:** Enables or disables [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
 
 
-**use-proxy-protocol:** Enables or disables the use of the [PROXY protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol/) to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAproxy and Amazon Elastic Load Balancer (ELB).
+**use-proxy-protocol:** Enables or disables the [PROXY protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol/) to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAProxy and Amazon Elastic Load Balancer (ELB).
 
 
-**worker-processes:** Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). By default "auto" means number of available CPU cores.
+**worker-processes:** Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). The default of "auto" means number of available CPU cores.
 
 
 ### Default configuration options
 
-The next table shows the options, the default value and a description
+The following table shows the options, the default value and a description.
 
 |name                 |default|
 |---------------------------|------|
@@ -347,7 +348,7 @@ The next table shows the options, the default value and a description
 
 ### Websockets
 
-Support for websockets is provided by NGINX OOTB. No special configuration required.
+Support for websockets is provided by NGINX out of the box. No special configuration required.
 
 The only requirement to avoid the close of connections is the increase of the values of `proxy-read-timeout` and `proxy-send-timeout`. The default value of this settings is `30 seconds`.
 A more adequate value to support websockets is a value higher than one hour (`3600`).
@@ -361,4 +362,4 @@ NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/do
 ### Retries in non-idempotent methods
 
 Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error.
-The previous behavior can be restored using `retry-non-idempotent=true` in the configuration config map.
+The previous behavior can be restored using `retry-non-idempotent=true` in the configuration ConfigMap.
