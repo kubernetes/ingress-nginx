@@ -8,6 +8,7 @@
 * [Rewrite](#rewrite)
 * [Rate limiting](#rate-limiting)
 * [Secure backends](#secure-backends)
+* [Server-side HTTPS enforcement through redirect](#server-side-https-enforcement-through-redirect)
 * [Whitelist source range](#whitelist-source-range)
 * [Allowed parameters in configuration config map](#allowed-parameters-in-configuration-configmap)
 * [Default configuration options](#default-configuration-options)
@@ -158,6 +159,13 @@ Is possible to specify both annotation in the same Ingress rule. If you specify 
 ### Secure upstreams
 
 By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the ingress rule changes the protocol to `https`.
+
+
+### Server-side HTTPS enforcement through redirect
+
+By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map
+
+To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource
 
 
 ### Whitelist source range
