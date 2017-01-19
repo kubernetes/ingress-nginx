@@ -271,7 +271,9 @@ func NewDefault() Configuration {
 	return cfg
 }
 
+// TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
+	MaxOpenFiles        int
 	BacklogSize         int
 	Backends            []*ingress.Backend
 	PassthroughBackends []*ingress.SSLPassthroughBackend
