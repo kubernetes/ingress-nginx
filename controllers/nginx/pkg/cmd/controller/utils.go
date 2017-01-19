@@ -39,6 +39,19 @@ func sysctlSomaxconn() int {
 	return maxConns
 }
 
+// sysctlFSFileMax returns the value of fs.file-max, i.e.
+// maximum number of open file descriptors
+func sysctlFSFileMax() int {
+	maxConns, err := sysctl.New().GetSysctl("fs/file-max")
+	if err != nil {
+		glog.Errorf("unexpected error reading system maximum number of open file descriptors (fs.file-max): %v", err)
+		// returning 0 means don't render the value
+		return 0
+	}
+
+	return maxConns
+}
+
 func diff(b1, b2 []byte) ([]byte, error) {
 	f1, err := ioutil.TempFile("", "a")
 	if err != nil {
