@@ -433,7 +433,27 @@ stream {
         proxy_pass              $stream_upstream;
         ssl_preread             on;
     }
+    
+    {{ buildStreamUpstreams "tcp" $backends .TCPBackends }}
+    
+    {{ buildStreamUpstreams "udp" $backends .UDPBackends }}
 
+    # TCP services		
+    {{ range $i, $tcpServer := .TCPBackends }}
+        server {
+            listen {{ $tcpServer.Path }};
+            proxy_pass             tcp-{{ $tcpServer.Backend }};		
+        }
+    {{ end }}
+
+    # UDP services		
+    {{ range $i, $udpServer := .UDPBackends }}		
+        server {		
+            listen {{ $udpServer.Path }} udp;
+            proxy_responses        1;
+            proxy_pass             udp-{{ $udpServer.Backend }};
+        }		
+    {{ end }}
 }
 
 {{/* definition of templates to avoid repetitions */}}

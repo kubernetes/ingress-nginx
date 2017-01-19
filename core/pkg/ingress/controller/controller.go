@@ -425,7 +425,7 @@ func (ic *GenericController) getStreamServices(data map[string]string, proto api
 	// k -> port to expose
 	// v -> <namespace>/<service name>:<port from service to be used>
 	for k, v := range data {
-		port, err := strconv.Atoi(k)
+		_, err := strconv.Atoi(k)
 		if err != nil {
 			glog.Warningf("%v is not valid as a TCP port", k)
 			continue
@@ -495,7 +495,7 @@ func (ic *GenericController) getStreamServices(data map[string]string, proto api
 
 		svcs = append(svcs, &ingress.Location{
 			Path:    k,
-			Backend: fmt.Sprintf("%v-%v-%v", svcNs, svcName, port),
+			Backend: fmt.Sprintf("%v-%v-%v", svcNs, svcName, svcPort),
 		})
 	}
 
