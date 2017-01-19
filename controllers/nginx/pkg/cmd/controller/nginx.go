@@ -289,6 +289,7 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 	}
 
 	return n.t.Write(config.TemplateConfig{
+		MaxOpenFiles:        sysctlFSFileMax(),
 		BacklogSize:         sysctlSomaxconn(),
 		Backends:            ingressCfg.Backends,
 		PassthroughBackends: ingressCfg.PassthroughBackends,
