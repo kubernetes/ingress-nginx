@@ -8,6 +8,7 @@
 * [Rewrite](#rewrite)
 * [Rate limiting](#rate-limiting)
 * [Secure backends](#secure-backends)
+* [Server-side HTTPS enforcement through redirect](#server-side-https-enforcement-through-redirect)
 * [Whitelist source range](#whitelist-source-range)
 * [Allowed parameters in configuration config map](#allowed-parameters-in-configuration-configmap)
 * [Default configuration options](#default-configuration-options)
@@ -160,6 +161,13 @@ Is possible to specify both annotation in the same Ingress rule. If you specify 
 By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the ingress rule changes the protocol to `https`.
 
 
+### Server-side HTTPS enforcement through redirect
+
+By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map
+
+To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource
+
+
 ### Whitelist source range
 
 You can specify the allowed client ip source ranges through the `ingress.kubernetes.io/whitelist-source-range` annotation, eg;  `10.0.0.0/24,172.10.0.1`
@@ -234,6 +242,10 @@ http://nginx.org/en/docs/hash.html
 **server-name-hash-bucket-size:** Sets the size of the bucker for the server names hash tables
 http://nginx.org/en/docs/hash.html
 http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
+
+
+**map-hash-bucket-size:** Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size). The details of setting up hash tables are provided in a separate [document](http://nginx.org/en/docs/hash.html)
+
 
 **ssl-buffer-size:** Sets the size of the [SSL buffer](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) used for sending data.
 4k helps NGINX to improve TLS Time To First Byte (TTTFB)
