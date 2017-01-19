@@ -288,7 +288,12 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 		cfg.ServerNameHashMaxSize = serverNameHashMaxSize
 	}
 
+	// the limit of open files is per worker process
+	// and we leave some room to avoid consuming all the FDs available
+	maxOpenFiles := (sysctlFSFileMax() / cfg.WorkerProcesses) - 1024
+
 	return n.t.Write(config.TemplateConfig{
+		MaxOpenFiles:        maxOpenFiles,
 		BacklogSize:         sysctlSomaxconn(),
 		Backends:            ingressCfg.Backends,
 		PassthroughBackends: ingressCfg.PassthroughBackends,
