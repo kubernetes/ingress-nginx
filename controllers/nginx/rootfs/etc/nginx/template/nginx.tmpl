@@ -251,6 +251,8 @@ http {
             deny all;
             {{ end }}
             
+            port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
+
             {{ if not (empty $authPath) }}
             # this location requires authentication
             auth_request {{ $authPath }};

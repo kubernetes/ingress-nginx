@@ -36,7 +36,7 @@ func (a ingAnnotations) parseBool(name string) (bool, error) {
 	if ok {
 		b, err := strconv.ParseBool(val)
 		if err != nil {
-			return false, errors.NewInvalidAnnotationContent(name)
+			return false, errors.NewInvalidAnnotationContent(name, val)
 		}
 		return b, nil
 	}
@@ -56,7 +56,7 @@ func (a ingAnnotations) parseInt(name string) (int, error) {
 	if ok {
 		i, err := strconv.Atoi(val)
 		if err != nil {
-			return 0, errors.NewInvalidAnnotationContent(name)
+			return 0, errors.NewInvalidAnnotationContent(name, val)
 		}
 		return i, nil
 	}

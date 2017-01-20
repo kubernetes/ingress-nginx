@@ -68,7 +68,6 @@ type Controller interface {
 	// Notifications of type Add, Update and Delete:
 	// https://github.com/kubernetes/kubernetes/blob/master/pkg/client/cache/controller.go#L164
 	//
-	// ConfigMap content of --configmap
 	// Configuration returns the translation from Ingress rules containing
 	// information about all the upstreams (service endpoints ) "virtual"
 	// servers (FQDN) and all the locations inside each server. Each
@@ -79,7 +78,9 @@ type Controller interface {
 	//
 	// The returned configuration is then passed to test, and then to reload
 	// if there is no errors.
-	OnUpdate(*api.ConfigMap, Configuration) ([]byte, error)
+	OnUpdate(Configuration) ([]byte, error)
+	// ConfigMap content of --configmap
+	SetConfig(*api.ConfigMap)
 	// BackendDefaults returns the minimum settings required to configure the
 	// communication to endpoints
 	BackendDefaults() defaults.Backend
@@ -233,6 +234,9 @@ type Location struct {
 	// external authentication
 	// +optional
 	CertificateAuth resolver.AuthSSLCert `json:"certificateAuth,omitempty"`
+	// UsePortInRedirects indicates if redirects must specify the port
+	// +optional
+	UsePortInRedirects bool `json:"use-port-in-redirects"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
