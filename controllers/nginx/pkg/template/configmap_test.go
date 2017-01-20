@@ -23,7 +23,6 @@ import (
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/net/dns"
-	"k8s.io/kubernetes/pkg/api"
 )
 
 func TestFilterErrors(t *testing.T) {
@@ -34,17 +33,15 @@ func TestFilterErrors(t *testing.T) {
 }
 
 func TestMergeConfigMapToStruct(t *testing.T) {
-	conf := &api.ConfigMap{
-		Data: map[string]string{
-			"custom-http-errors":         "300,400,demo",
-			"proxy-read-timeout":         "1",
-			"proxy-send-timeout":         "2",
-			"skip-access-log-urls":       "/log,/demo,/test",
-			"use-proxy-protocol":         "true",
-			"use-gzip":                   "true",
-			"enable-dynamic-tls-records": "false",
-			"gzip-types":                 "text/html",
-		},
+	conf := map[string]string{
+		"custom-http-errors":         "300,400,demo",
+		"proxy-read-timeout":         "1",
+		"proxy-send-timeout":         "2",
+		"skip-access-log-urls":       "/log,/demo,/test",
+		"use-proxy-protocol":         "true",
+		"use-gzip":                   "true",
+		"enable-dynamic-tls-records": "false",
+		"gzip-types":                 "text/html",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -68,7 +65,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 
 	def = config.NewDefault()
 	def.Resolver = h
-	to = ReadConfig(&api.ConfigMap{})
+	to = ReadConfig(map[string]string{})
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
@@ -76,10 +73,8 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def = config.NewDefault()
 	def.Resolver = h
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
-	to = ReadConfig(&api.ConfigMap{
-		Data: map[string]string{
-			"whitelist-source-range": "1.1.1.1/32",
-		},
+	to = ReadConfig(map[string]string{
+		"whitelist-source-range": "1.1.1.1/32",
 	})
 
 	if diff := pretty.Compare(to, def); diff != "" {

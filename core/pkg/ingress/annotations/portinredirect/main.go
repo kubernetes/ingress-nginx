@@ -14,28 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cors
+package portinredirect
 
 import (
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
-	annotation = "ingress.kubernetes.io/port-in-redirect"
+	annotation = "ingress.kubernetes.io/use-port-in-redirects"
 )
 
 type portInRedirect struct {
+	backendResolver resolver.DefaultBackend
 }
 
 // NewParser creates a new port in redirect annotation parser
-func NewParser() parser.IngressAnnotation {
-	return portInRedirect{}
+func NewParser(db resolver.DefaultBackend) parser.IngressAnnotation {
+	return portInRedirect{db}
 }
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the redirects must
 func (a portInRedirect) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation(annotation, ing)
+	up, err := parser.GetBoolAnnotation(annotation, ing)
+	if err != nil {
+		return a.backendResolver.GetDefaultBackend().UsePortInRedirects, nil
+	}
+
+	return up, nil
 }
