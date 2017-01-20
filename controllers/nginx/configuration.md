@@ -154,7 +154,7 @@ The annotations `ingress.kubernetes.io/limit-connections` and `ingress.kubernete
 If you specify both annotations in a single Ingress rule, `limit-rps` takes precedence.
 
 
-### Secure upstreams
+### Secure backends
 
 By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to `https`.
 
