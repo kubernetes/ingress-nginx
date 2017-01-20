@@ -21,8 +21,8 @@
 
 There are 3 ways to customize NGINX:
 
-1. [ConfigMap](#allowed-parameters-in-configuration-configmap): create a stand alone ConfigMap, use this if you want a different global configuration
-2. [annotations](#annotations): use this if you want a specific configuration for the site defined in the Ingress rule
+1. [ConfigMap](#allowed-parameters-in-configuration-configmap): create a stand alone ConfigMap, use this if you want a different global configuration.
+2. [annotations](#annotations): use this if you want a specific configuration for the site defined in the Ingress rule.
 3. custom template: when more specific settings are required, like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), custom [log_format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change an through the ConfigMap.
 
 
@@ -97,7 +97,7 @@ Please check the [custom upstream check](examples/custom-upstream-check/README.m
 
 ### Authentication
 
-Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the the key `auth`
+Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the the key `auth`.
 
 The annotations are:
 
@@ -161,9 +161,9 @@ By default NGINX uses `http` to reach the services. Adding the annotation `ingre
 
 ### Server-side HTTPS enforcement through redirect
 
-By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map
+By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map.
 
-To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource
+To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
 
 ### Whitelist source range
@@ -177,7 +177,7 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 Please check the [whitelist](examples/whitelist/README.md) example.
 
 
-### **Allowed parameters in configuration ConfigMap:**
+### **Allowed parameters in configuration ConfigMap**
 
 **body-size:** Sets the maximum allowed size of the client request body. See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
 
@@ -222,7 +222,7 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 **max-worker-connections:** Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections).
 
 
-**proxy-buffer-size:** Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.`
+**proxy-buffer-size:** Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.
 
 
 **proxy-connect-timeout:** Sets the timeout for [establishing a connection with a proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
@@ -249,7 +249,7 @@ http://nginx.org/en/docs/hash.html
 
 
 
-**map-hash-bucket-size:** Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size). The details of setting up hash tables are provided in a separate [document](http://nginx.org/en/docs/hash.html)
+**map-hash-bucket-size:** Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size). The details of setting up hash tables are provided in a separate [document](http://nginx.org/en/docs/hash.html).
 
 
 **ssl-buffer-size:** Sets the size of the [SSL buffer](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) used for sending data.
@@ -268,7 +268,7 @@ The recommendation above prioritizes algorithms that provide perfect [forward se
 Please check the [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/).
 
 
-**ssl-dh-param:** sets the Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy."
+**ssl-dh-param:** sets the Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy".
 https://www.openssl.org/docs/manmaster/apps/dhparam.html
 https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
