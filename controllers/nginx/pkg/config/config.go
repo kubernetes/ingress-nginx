@@ -82,6 +82,11 @@ type Configuration struct {
 	// Sets the maximum allowed size of the client request body
 	BodySize string `json:"body-size,omitempty"`
 
+	// ClientHeaderBufferSize allows to configure a custom buffer
+	// size for reading client request header
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
+	ClientHeaderBufferSize string `json:"client-header-buffer-size"`
+
 	// EnableDynamicTLSRecords enables dynamic TLS record sizes
 	// https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency
 	// By default this is enabled
@@ -131,6 +136,12 @@ type Configuration struct {
 	// The zero value disables keep-alive client connections
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 	KeepAlive int `json:"keep-alive,omitempty"`
+
+	// LargeClientHeaderBuffers Sets the maximum number and size of buffers used for reading
+	// large client request header.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers
+	// Default: 4 8k
+	LargeClientHeaderBuffers string `json:"large-client-header-buffers"`
 
 	// Maximum number of simultaneous connections that can be opened by each worker process
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
@@ -226,6 +237,7 @@ type Configuration struct {
 func NewDefault() Configuration {
 	cfg := Configuration{
 		BodySize:                bodySize,
+		ClientHeaderBufferSize:  "1k",
 		EnableDynamicTLSRecords: true,
 		EnableSPDY:              false,
 		ErrorLogLevel:           errorLevel,
@@ -234,6 +246,7 @@ func NewDefault() Configuration {
 		HSTSMaxAge:               hstsMaxAge,
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
+		LargeClientHeaderBuffers: "4 8k",
 		MaxWorkerConnections:     16384,
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
