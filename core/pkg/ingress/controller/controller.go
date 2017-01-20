@@ -128,6 +128,8 @@ type Configuration struct {
 	// Backend is the particular implementation to be used.
 	// (for instance NGINX)
 	Backend ingress.Controller
+
+	UpdateStatus bool
 }
 
 // newIngressController creates an Ingress controller
@@ -257,11 +259,15 @@ func newIngressController(config *Configuration) *GenericController {
 		cache.ResourceEventHandlerFuncs{},
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 
-	ic.syncStatus = status.NewStatusSyncer(status.Config{
-		Client:         config.Client,
-		PublishService: ic.cfg.PublishService,
-		IngressLister:  ic.ingLister,
-	})
+	if config.UpdateStatus {
+		ic.syncStatus = status.NewStatusSyncer(status.Config{
+			Client:         config.Client,
+			PublishService: ic.cfg.PublishService,
+			IngressLister:  ic.ingLister,
+		})
+	} else {
+		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
+	}
 
 	ic.annotations = newAnnotationExtractor(ic)
 
@@ -970,7 +976,9 @@ func (ic GenericController) Stop() error {
 		close(ic.stopCh)
 		go ic.syncQueue.Shutdown()
 		go ic.secretQueue.Shutdown()
-		ic.syncStatus.Shutdown()
+		if ic.syncStatus != nil {
+			ic.syncStatus.Shutdown()
+		}
 		return nil
 	}
 
@@ -990,7 +998,9 @@ func (ic GenericController) Start() {
 	go ic.secretQueue.Run(5*time.Second, ic.stopCh)
 	go ic.syncQueue.Run(5*time.Second, ic.stopCh)
 
-	go ic.syncStatus.Run(ic.stopCh)
+	if ic.syncStatus != nil {
+		go ic.syncStatus.Run(ic.stopCh)
+	}
 
 	<-ic.stopCh
 }
