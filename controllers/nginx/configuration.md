@@ -319,6 +319,7 @@ The default mime type list to compress is: `application/atom+xml application/jav
 
 **use-http2:** Enables or disables [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
 
+**use-upstream-health-checks:** Enables or disables the use of upstream health checks provided by the [nginx_upstream_check_module](https://github.com/yaoweibin/nginx_upstream_check_module) module. If enabled, NGINX will do health checking based on the `readinessProbe` in the pod definition.
 
 **use-proxy-protocol:** Enables or disables the [PROXY protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol/) to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAProxy and Amazon Elastic Load Balancer (ELB).
 

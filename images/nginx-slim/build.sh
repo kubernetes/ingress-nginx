@@ -29,6 +29,7 @@ export LUA_UPSTREAM_VERSION=0.06
 export MORE_HEADERS_VERSION=0.32
 export NGINX_DIGEST_AUTH=7955af9c77598c697ac292811914ce1e2b3b824c
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
+export UPSTREAM_CHECK_VERSION=d6341aeeb86911d4798fbceab35015c63178e66f
 
 export BUILD_PATH=/tmp/build
 
@@ -105,6 +106,8 @@ get_src 9b1d0075df787338bb607f14925886249bda60b6b3156713923d5d59e99a708b \
 get_src 8eabbcd5950fdcc718bb0ef9165206c2ed60f67cd9da553d7bc3e6fe4e338461 \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
+get_src 35983b0b6ae812bee9fb4de37db6bf68cea68f7e82a9fc274ab29d574e321e98 \
+        "https://github.com/yaoweibin/nginx_upstream_check_module/archive/$UPSTREAM_CHECK_VERSION.tar.gz"
 
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
@@ -114,6 +117,9 @@ cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
 echo "Applying tls nginx patches..."
 patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
+
+echo "Applying nginx_upstream_check patch.."
+patch -p0 < $BUILD_PATH/nginx_upstream_check_module-$UPSTREAM_CHECK_VERSION/check_1.11.5+.patch
 
 ./configure \
   --prefix=/usr/share/nginx \
@@ -158,6 +164,7 @@ patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
   --add-module="$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION" \
   --add-module="$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH" \
   --add-module="$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS" \
+  --add-module="$BUILD_PATH/nginx_upstream_check_module-$UPSTREAM_CHECK_VERSION" \
   --add-module="$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION" || exit 1 \
   && make || exit 1 \
   && make install || exit 1

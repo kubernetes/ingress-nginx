@@ -188,6 +188,13 @@ http {
         {{ end }}
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
+
+        {{ if $cfg.UseUpstreamHealthChecks -}}
+        {{ if $upstream.UpstreamCheck -}}
+        check interval={{ $upstream.UpstreamCheck.IntervalMillis }} rise={{ $upstream.UpstreamCheck.Rise }} fall={{ $upstream.UpstreamCheck.Fall }} timeout={{ $upstream.UpstreamCheck.TimeoutMillis }} port={{ $upstream.UpstreamCheck.Port }} type=http;
+        check_http_send "{{ $upstream.UpstreamCheck.HttpSend }}";
+        {{- end }}
+        {{- end }}
     }
     {{ end }}
 
@@ -365,6 +372,12 @@ http {
             access_log off;
             return 200;
         }
+
+        {{ if $cfg.UseUpstreamHealthChecks }}
+        location /upstream_status {
+            check_status html;
+        }
+        {{ end }}
        
         location /nginx_status {
             {{ if $cfg.EnableVtsStatus }}
