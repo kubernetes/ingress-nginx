@@ -73,6 +73,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines 
 		the URL to be used as health check inside in the default server in NGINX.`)
+
+		updateStatus = flags.Bool("update-status", true, `Indicates if the 
+		ingress controller should update the Ingress status IP/hostname. Default is true`)
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
@@ -134,6 +137,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
 
 	config := &Configuration{
+		UpdateStatus:          *updateStatus,
 		Client:                kubeClient,
 		ResyncPeriod:          *resyncPeriod,
 		DefaultService:        *defaultSvc,

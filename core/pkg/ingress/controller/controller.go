@@ -128,6 +128,8 @@ type Configuration struct {
 	// Backend is the particular implementation to be used.
 	// (for instance NGINX)
 	Backend ingress.Controller
+
+	UpdateStatus bool
 }
 
 // newIngressController creates an Ingress controller
@@ -257,11 +259,13 @@ func newIngressController(config *Configuration) *GenericController {
 		cache.ResourceEventHandlerFuncs{},
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 
-	ic.syncStatus = status.NewStatusSyncer(status.Config{
-		Client:         config.Client,
-		PublishService: ic.cfg.PublishService,
-		IngressLister:  ic.ingLister,
-	})
+	if !config.UpdateStatus {
+		ic.syncStatus = status.NewStatusSyncer(status.Config{
+			Client:         config.Client,
+			PublishService: ic.cfg.PublishService,
+			IngressLister:  ic.ingLister,
+		})
+	}
 
 	ic.annotations = newAnnotationExtractor(ic)
 
