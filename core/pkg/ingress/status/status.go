@@ -33,7 +33,7 @@ import (
 
 	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/k8s"
-	strings "k8s.io/ingress/core/pkg/strings"
+	"k8s.io/ingress/core/pkg/strings"
 	"k8s.io/ingress/core/pkg/task"
 )
 
