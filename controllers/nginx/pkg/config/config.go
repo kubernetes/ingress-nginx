@@ -220,6 +220,11 @@ type Configuration struct {
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerProcesses int `json:"worker-processes,omitempty"`
+
+	// Enables or disables the use of upstream health checks provided by the
+	// nginx_upstream_check_module module. If enabled, NGINX will do health checking
+	// based on the readinessProbe in the pod definition.
+	UseUpstreamHealthChecks bool `json:"use-upstream-health-checks"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -252,6 +257,7 @@ func NewDefault() Configuration {
 		WorkerProcesses:          runtime.NumCPU(),
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
+		UseUpstreamHealthChecks:  false,
 		Backend: defaults.Backend{
 			ProxyConnectTimeout:  5,
 			ProxyReadTimeout:     60,

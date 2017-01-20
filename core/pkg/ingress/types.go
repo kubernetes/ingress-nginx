@@ -101,6 +101,16 @@ type BackendInfo struct {
 	Repository string `json:"repository"`
 }
 
+// UpstreamCheck is used to configure ingress health checks
+type UpstreamCheck struct {
+	HttpSend       string
+	Port           int
+	IntervalMillis int32
+	Fall           int32
+	Rise           int32
+	TimeoutMillis  int32
+}
+
 // Configuration holds the definition of all the parts required to describe all
 // ingresses reachable by the ingress controller (using a filter by namespace)
 type Configuration struct {
@@ -133,6 +143,8 @@ type Backend struct {
 	Secure bool `json:"secure"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints"`
+
+	UpstreamCheck *UpstreamCheck
 }
 
 // Endpoint describes a kubernetes endpoint in an backend
