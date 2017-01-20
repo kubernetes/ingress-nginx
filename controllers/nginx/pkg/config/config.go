@@ -78,10 +78,6 @@ var (
 type Configuration struct {
 	defaults.Backend `json:",squash"`
 
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
-	// Sets the maximum allowed size of the client request body
-	BodySize string `json:"body-size,omitempty"`
-
 	// EnableDynamicTLSRecords enables dynamic TLS record sizes
 	// https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency
 	// By default this is enabled
@@ -225,7 +221,6 @@ type Configuration struct {
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	cfg := Configuration{
-		BodySize:                bodySize,
 		EnableDynamicTLSRecords: true,
 		EnableSPDY:              false,
 		ErrorLogLevel:           errorLevel,
@@ -253,6 +248,7 @@ func NewDefault() Configuration {
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
 		Backend: defaults.Backend{
+			ProxyBodySize:        bodySize,
 			ProxyConnectTimeout:  5,
 			ProxyReadTimeout:     60,
 			ProxySendTimeout:     60,
