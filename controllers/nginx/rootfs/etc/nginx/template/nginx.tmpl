@@ -70,9 +70,7 @@ http {
     gzip_proxied any;
     {{ end }}
 
-    server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
-
-    client_max_body_size "{{ $cfg.BodySize }}";
+    server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};   
 
     log_format upstreaminfo '{{ if $cfg.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
         '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
@@ -280,6 +278,8 @@ http {
             {{ if $location.EnableCORS }}
             {{ template "CORS" }}
             {{ end }}
+
+            client_max_body_size                    "{{ $location.Proxy.BodySize }}";
 
             proxy_set_header Host                   $host;
 
