@@ -54,6 +54,9 @@ http {
 
     keepalive_timeout {{ $cfg.KeepAlive }}s;
 
+    client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
+    large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
+
     types_hash_max_size             2048;
     server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};
     server_names_hash_bucket_size   {{ $cfg.ServerNameHashBucketSize }};
