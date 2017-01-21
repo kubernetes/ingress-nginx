@@ -788,6 +788,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 
 	bdef := ic.GetDefaultBackend()
 	ngxProxy := proxy.Configuration{
+		BodySize:       bdef.ProxyBodySize,
 		ConnectTimeout: bdef.ProxyConnectTimeout,
 		SendTimeout:    bdef.ProxySendTimeout,
 		ReadTimeout:    bdef.ProxyReadTimeout,
