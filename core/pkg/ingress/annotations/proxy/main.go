@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	bodySize   = "ingress.kubernetes.io/proxy-body-size"
 	connect    = "ingress.kubernetes.io/proxy-connect-timeout"
 	send       = "ingress.kubernetes.io/proxy-send-timeout"
 	read       = "ingress.kubernetes.io/proxy-read-timeout"
@@ -32,6 +33,7 @@ const (
 
 // Configuration returns the proxy timeout to use in the upstream server/s
 type Configuration struct {
+	BodySize       string `json:"bodySize"`
 	ConnectTimeout int    `json:"conectTimeout"`
 	SendTimeout    int    `json:"sendTimeout"`
 	ReadTimeout    int    `json:"readTimeout"`
@@ -66,10 +68,15 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		rt = defBackend.ProxyReadTimeout
 	}
 
-	bs, err := parser.GetStringAnnotation(bufferSize, ing)
-	if err != nil || bs == "" {
-		bs = defBackend.ProxyBufferSize
+	bufs, err := parser.GetStringAnnotation(bufferSize, ing)
+	if err != nil || bufs == "" {
+		bufs = defBackend.ProxyBufferSize
 	}
 
-	return &Configuration{ct, st, rt, bs}, nil
+	bs, err := parser.GetStringAnnotation(bodySize, ing)
+	if err != nil || bs == "" {
+		bs = defBackend.ProxyBodySize
+	}
+
+	return &Configuration{bs, ct, st, rt, bufs}, nil
 }

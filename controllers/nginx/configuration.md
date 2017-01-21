@@ -179,7 +179,7 @@ Please check the [whitelist](examples/whitelist/README.md) example.
 
 ### **Allowed parameters in configuration ConfigMap**
 
-**body-size:** Sets the maximum allowed size of the client request body. See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
+**proxy-body-size:** Sets the maximum allowed size of the client request body. See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
 
 
 **custom-http-errors:** Enables which HTTP codes should be passed for processing with the [error_page directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page).
