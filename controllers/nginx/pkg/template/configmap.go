@@ -23,8 +23,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/mitchellh/mapstructure"
 
-	"k8s.io/kubernetes/pkg/api"
-
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/net/dns"
 )
@@ -36,13 +34,21 @@ const (
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
-func ReadConfig(conf *api.ConfigMap) config.Configuration {
+func ReadConfig(src map[string]string) config.Configuration {
+	conf := map[string]string{}
+	if src != nil {
+		// we need to copy the configmap data because the content is altered
+		for k, v := range src {
+			conf[k] = v
+		}
+	}
+
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
 	whitelist := make([]string, 0)
 
-	if val, ok := conf.Data[customHTTPErrors]; ok {
-		delete(conf.Data, customHTTPErrors)
+	if val, ok := conf[customHTTPErrors]; ok {
+		delete(conf, customHTTPErrors)
 		for _, i := range strings.Split(val, ",") {
 			j, err := strconv.Atoi(i)
 			if err != nil {
@@ -52,12 +58,12 @@ func ReadConfig(conf *api.ConfigMap) config.Configuration {
 			}
 		}
 	}
-	if val, ok := conf.Data[skipAccessLogUrls]; ok {
-		delete(conf.Data, skipAccessLogUrls)
+	if val, ok := conf[skipAccessLogUrls]; ok {
+		delete(conf, skipAccessLogUrls)
 		skipUrls = strings.Split(val, ",")
 	}
-	if val, ok := conf.Data[whitelistSourceRange]; ok {
-		delete(conf.Data, whitelistSourceRange)
+	if val, ok := conf[whitelistSourceRange]; ok {
+		delete(conf, whitelistSourceRange)
 		whitelist = append(whitelist, strings.Split(val, ",")...)
 	}
 
@@ -84,7 +90,7 @@ func ReadConfig(conf *api.ConfigMap) config.Configuration {
 	if err != nil {
 		glog.Warningf("unexpected error merging defaults: %v", err)
 	}
-	err = decoder.Decode(conf.Data)
+	err = decoder.Decode(conf)
 	if err != nil {
 		glog.Warningf("unexpected error merging defaults: %v", err)
 	}

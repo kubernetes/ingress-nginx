@@ -28,6 +28,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	"k8s.io/ingress/core/pkg/ingress/annotations/portinredirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
@@ -50,17 +51,18 @@ type annotationExtractor struct {
 func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 	return annotationExtractor{
 		map[string]parser.IngressAnnotation{
-			"BasicDigestAuth": auth.NewParser(auth.AuthDirectory, cfg),
-			"ExternalAuth":    authreq.NewParser(),
-			"CertificateAuth": authtls.NewParser(cfg),
-			"EnableCORS":      cors.NewParser(),
-			"HealthCheck":     healthcheck.NewParser(cfg),
-			"Whitelist":       ipwhitelist.NewParser(cfg),
-			"Proxy":           proxy.NewParser(cfg),
-			"RateLimit":       ratelimit.NewParser(),
-			"Redirect":        rewrite.NewParser(cfg),
-			"SecureUpstream":  secureupstream.NewParser(),
-			"SSLPassthrough":  sslpassthrough.NewParser(),
+			"BasicDigestAuth":    auth.NewParser(auth.AuthDirectory, cfg),
+			"ExternalAuth":       authreq.NewParser(),
+			"CertificateAuth":    authtls.NewParser(cfg),
+			"EnableCORS":         cors.NewParser(),
+			"HealthCheck":        healthcheck.NewParser(cfg),
+			"Whitelist":          ipwhitelist.NewParser(cfg),
+			"UsePortInRedirects": portinredirect.NewParser(cfg),
+			"Proxy":              proxy.NewParser(cfg),
+			"RateLimit":          ratelimit.NewParser(),
+			"Redirect":           rewrite.NewParser(cfg),
+			"SecureUpstream":     secureupstream.NewParser(),
+			"SSLPassthrough":     sslpassthrough.NewParser(),
 		},
 	}
 }

@@ -270,6 +270,7 @@ func NewDefault() Configuration {
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
+			UsePortInRedirects:   false,
 		},
 	}
 

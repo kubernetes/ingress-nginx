@@ -223,10 +223,22 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	mapEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			upCmap := obj.(*api.ConfigMap)
+			mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+			if mapKey == ic.cfg.ConfigMapName {
+				glog.V(2).Infof("adding configmap %v to backend", mapKey)
+				ic.cfg.Backend.SetConfig(upCmap)
+			}
+		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
 				upCmap := cur.(*api.ConfigMap)
 				mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+				if mapKey == ic.cfg.ConfigMapName {
+					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
+					ic.cfg.Backend.SetConfig(upCmap)
+				}
 				// updates to configuration configmaps can trigger an update
 				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
 					ic.recorder.Eventf(upCmap, api.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
@@ -310,8 +322,14 @@ func (ic GenericController) GetSecret(name string) (*api.Secret, error) {
 }
 
 func (ic *GenericController) getConfigMap(ns, name string) (*api.ConfigMap, error) {
-	// TODO: check why ic.mapLister.Store.GetByKey(mapKey) is not stable (random content)
-	return ic.cfg.Client.ConfigMaps(ns).Get(name)
+	s, exists, err := ic.mapLister.Store.GetByKey(fmt.Sprintf("%v/%v", ns, name))
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("configmap %v was not found", name)
+	}
+	return s.(*api.ConfigMap), nil
 }
 
 // sync collects all the pieces required to assemble the configuration file and
@@ -327,20 +345,6 @@ func (ic *GenericController) sync(key interface{}) error {
 	if !ic.controllersInSync() {
 		time.Sleep(podStoreSyncedPollPeriod)
 		return fmt.Errorf("deferring sync till endpoints controller has synced")
-	}
-
-	// by default no custom configuration
-	cfg := &api.ConfigMap{}
-
-	if ic.cfg.ConfigMapName != "" {
-		// search for custom configmap (defined in main args)
-		var err error
-		ns, name, _ := k8s.ParseNameNS(ic.cfg.ConfigMapName)
-		cfg, err = ic.getConfigMap(ns, name)
-		if err != nil {
-			// requeue
-			return fmt.Errorf("unexpected error searching configmap %v: %v", ic.cfg.ConfigMapName, err)
-		}
 	}
 
 	upstreams, servers := ic.getBackendServers()
@@ -362,7 +366,7 @@ func (ic *GenericController) sync(key interface{}) error {
 		}
 	}
 
-	data, err := ic.cfg.Backend.OnUpdate(cfg, ingress.Configuration{
+	data, err := ic.cfg.Backend.OnUpdate(ingress.Configuration{
 		Backends:            upstreams,
 		Servers:             servers,
 		TCPEndpoints:        ic.getTCPServices(),
