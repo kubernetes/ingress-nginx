@@ -29,6 +29,8 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/mitchellh/mapstructure"
+
 	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
@@ -58,7 +60,10 @@ func newNGINXController() ingress.Controller {
 	if ngx == "" {
 		ngx = binary
 	}
-	n := NGINXController{binary: ngx}
+	n := NGINXController{
+		binary:    ngx,
+		configmap: &api.ConfigMap{},
+	}
 
 	var onChange func()
 	onChange = func() {
@@ -87,12 +92,14 @@ Error loading new template : %v
 
 	go n.Start()
 
-	return n
+	return ingress.Controller(&n)
 }
 
 // NGINXController ...
 type NGINXController struct {
 	t *ngx_template.Template
+
+	configmap *api.ConfigMap
 
 	binary string
 }
@@ -170,11 +177,31 @@ func (n NGINXController) Reload(data []byte) ([]byte, bool, error) {
 
 // BackendDefaults returns the nginx defaults
 func (n NGINXController) BackendDefaults() defaults.Backend {
+	if n.configmap == nil {
+		d := config.NewDefault()
+		return d.Backend
+	}
+
+	return n.backendDefaults()
+}
+
+func (n *NGINXController) backendDefaults() defaults.Backend {
 	d := config.NewDefault()
+	config := &mapstructure.DecoderConfig{
+		Metadata:         nil,
+		WeaklyTypedInput: true,
+		Result:           &d,
+		TagName:          "json",
+	}
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		glog.Warningf("unexpected error merging defaults: %v", err)
+	}
+	decoder.Decode(n.configmap.Data)
 	return d.Backend
 }
 
-// IsReloadRequired check if the new configuration file is different
+// isReloadRequired check if the new configuration file is different
 // from the current one.
 func (n NGINXController) isReloadRequired(data []byte) bool {
 	in, err := os.Open(cfgPath)
@@ -249,6 +276,11 @@ Error: %v
 	return nil
 }
 
+// SetConfig ...
+func (n *NGINXController) SetConfig(cmap *api.ConfigMap) {
+	n.configmap = cmap
+}
+
 // OnUpdate is called by syncQueue in https://github.com/aledbf/ingress-controller/blob/master/pkg/ingress/controller/controller.go#L82
 // periodically to keep the configuration in sync.
 //
@@ -257,7 +289,7 @@ Error: %v
 // write the configuration file
 // returning nill implies the backend will be reloaded.
 // if an error is returned means requeue the update
-func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Configuration) ([]byte, error) {
+func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, error) {
 	var longestName int
 	var serverNames int
 	for _, srv := range ingressCfg.Servers {
@@ -267,7 +299,7 @@ func (n NGINXController) OnUpdate(cmap *api.ConfigMap, ingressCfg ingress.Config
 		}
 	}
 
-	cfg := ngx_template.ReadConfig(cmap)
+	cfg := ngx_template.ReadConfig(n.configmap.Data)
 
 	// NGINX cannot resize the has tables used to store server names.
 	// For this reason we check if the defined size defined is correct

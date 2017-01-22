@@ -49,6 +49,10 @@ type Backend struct {
 	// Enables or disables the redirect (301) to the HTTPS port
 	SSLRedirect bool `json:"ssl-redirect"`
 
+	// Enables or disables the specification of port in redirects
+	// Default: false
+	UsePortInRedirects bool `json:"use-port-in-redirects"`
+
 	// Number of unsuccessful attempts to communicate with the server that should happen in the
 	// duration set by the fail_timeout parameter to consider the server unavailable
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream
