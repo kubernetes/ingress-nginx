@@ -194,9 +194,6 @@ Example usage: `custom-http-errors: 404,415`
 **enable-sticky-sessions:**  Enables sticky sessions using cookies. This is provided by [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng) module.
 
 
-**enable-spdy:** Enables the SPDY protocol.
-
-
 **enable-vts-status:** Allows the replacement of the default status page with a third party module named [nginx-module-vts](https://github.com/vozlt/nginx-module-vts).
 
 
@@ -341,7 +338,6 @@ The following table shows the options, the default value and a description.
 |body-size|1m|
 |custom-http-errors|" "|
 |enable-dynamic-tls-records|"true"|
-|enable-spdy|"true"|
 |enable-sticky-sessions|"false"|
 |enable-vts-status|"false"|
 |error-log-level|notice|
