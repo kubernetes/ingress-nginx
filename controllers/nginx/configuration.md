@@ -188,6 +188,9 @@ Setting at least one code also enables [proxy_intercept_errors](http://nginx.org
 Example usage: `custom-http-errors: 404,415`
 
 
+**enable-dynamic-tls-records:** Enables dynamically sized TLS records to improve time-to-first-byte. Enabled by default. See [CloudFlare's blog](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency) for more information.
+
+
 **enable-sticky-sessions:**  Enables sticky sessions using cookies. This is provided by [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng) module.
 
 
@@ -247,6 +250,8 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket
 **server-name-hash-max-size:** Sets the maximum size of the [server names hash tables](http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) used in server names, map directive’s values, MIME types, names of request header strings, etc.
 http://nginx.org/en/docs/hash.html
 
+
+**server-tokens:** Send NGINX Server header in responses and display NGINX version in error pages. Enabled by default.
 
 
 **map-hash-bucket-size:** Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size). The details of setting up hash tables are provided in a separate [document](http://nginx.org/en/docs/hash.html).
@@ -318,6 +323,9 @@ The default mime type list to compress is: `application/atom+xml application/jav
 **use-proxy-protocol:** Enables or disables the [PROXY protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol/) to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAProxy and Amazon Elastic Load Balancer (ELB).
 
 
+**whitelist-source-range:** Sets the default whitelisted IPs for each `server` block. This can be overwritten by an annotation on an Ingress rule. See [ngx_http_access_module](http://nginx.org/en/docs/http/ngx_http_access_module.html).
+
+
 **worker-processes:** Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). The default of "auto" means number of available CPU cores.
 
 
@@ -329,14 +337,16 @@ The following table shows the options, the default value and a description.
 |---------------------------|------|
 |body-size|1m|
 |custom-http-errors|" "|
+|enable-dynamic-tls-records|"true"|
 |enable-sticky-sessions|"false"|
 |enable-vts-status|"false"|
 |error-log-level|notice|
-|gzip-types||
+|gzip-types|see use-gzip description above|
 |hsts|"true"|
 |hsts-include-subdomains|"true"|
 |hsts-max-age|"15724800"|
 |keep-alive|"75"|
+|map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|
 |proxy-connect-timeout|"5"|
 |proxy-read-timeout|"60"|
@@ -345,8 +355,10 @@ The following table shows the options, the default value and a description.
 |retry-non-idempotent|"false"|
 |server-name-hash-bucket-size|"64"|
 |server-name-hash-max-size|"512"|
+|server-tokens|"true"|
 |ssl-buffer-size|4k|
 |ssl-ciphers||
+|ssl-dh-param|value from openssl|
 |ssl-protocols|TLSv1 TLSv1.1 TLSv1.2|
 |ssl-session-cache|"true"|
 |ssl-session-cache-size|10m|
@@ -355,6 +367,7 @@ The following table shows the options, the default value and a description.
 |use-gzip|"true"|
 |use-http2|"true"|
 |vts-status-zone-size|10m|
+|whitelist-source-range|permit all|
 |worker-processes|number of CPUs|
 
 
