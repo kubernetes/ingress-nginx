@@ -24,6 +24,8 @@ import (
 )
 
 const (
+	/* Describe the maximum allowed size of the client request body
+	   http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size */
 	bodySize   = "ingress.kubernetes.io/proxy-body-size"
 	connect    = "ingress.kubernetes.io/proxy-connect-timeout"
 	send       = "ingress.kubernetes.io/proxy-send-timeout"
