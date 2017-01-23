@@ -65,7 +65,14 @@ type mockBackend struct {
 }
 
 func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{UpstreamFailTimeout: 1}
+	return defaults.Backend{
+		UpstreamFailTimeout: 1,
+		ProxyConnectTimeout: 10,
+		ProxySendTimeout:    15,
+		ProxyReadTimeout:    20,
+		ProxyBufferSize:     "10k",
+		ProxyBodySize:       "3k",
+	}
 }
 
 func TestProxy(t *testing.T) {
@@ -76,15 +83,16 @@ func TestProxy(t *testing.T) {
 	data[send] = "2"
 	data[read] = "3"
 	data[bufferSize] = "1k"
+	data[bodySize] = "2k"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
 	if err != nil {
-		t.Errorf("unexpected error parsing a valid")
+		t.Fatalf("unexpected error parsing a valid")
 	}
 	p, ok := i.(*Configuration)
 	if !ok {
-		t.Errorf("expected a Configuration type")
+		t.Fatalf("expected a Configuration type")
 	}
 	if p.ConnectTimeout != 1 {
 		t.Errorf("expected 1 as connect-timeout but returned %v", p.ConnectTimeout)
@@ -97,5 +105,39 @@ func TestProxy(t *testing.T) {
 	}
 	if p.BufferSize != "1k" {
 		t.Errorf("expected 1k as buffer-size but returned %v", p.BufferSize)
+	}
+	if p.BodySize != "2k" {
+		t.Errorf("expected 2k as body-size but returned %v", p.BodySize)
+	}
+}
+
+func TestProxyWithNoAnnotation(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	i, err := NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Fatalf("unexpected error parsing a valid")
+	}
+	p, ok := i.(*Configuration)
+	if !ok {
+		t.Fatalf("expected a Configuration type")
+	}
+	if p.ConnectTimeout != 10 {
+		t.Errorf("expected 10 as connect-timeout but returned %v", p.ConnectTimeout)
+	}
+	if p.SendTimeout != 15 {
+		t.Errorf("expected 15 as send-timeout but returned %v", p.SendTimeout)
+	}
+	if p.ReadTimeout != 20 {
+		t.Errorf("expected 20 as read-timeout but returned %v", p.ReadTimeout)
+	}
+	if p.BufferSize != "10k" {
+		t.Errorf("expected 10k as buffer-size but returned %v", p.BufferSize)
+	}
+	if p.BodySize != "3k" {
+		t.Errorf("expected 3k as body-size but returned %v", p.BodySize)
 	}
 }
