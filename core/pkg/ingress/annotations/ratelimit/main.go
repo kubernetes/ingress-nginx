@@ -91,7 +91,7 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 		RPS: Zone{
 			Name:       fmt.Sprintf("%v_rps", zoneName),
 			Limit:      rps,
-			Burst:      conn * defBurst,
+			Burst:      rps * defBurst,
 			SharedSize: defSharedSize,
 		},
 	}, nil
