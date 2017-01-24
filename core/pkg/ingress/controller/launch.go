@@ -132,6 +132,8 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	}
 
 	os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
+	// Creates a temp directory for Certificates, as 'rename' functions need to be in the same mount point as the Certificates
+	os.MkdirAll(ingress.TempSSLDirectory, 0655)
 
 	config := &Configuration{
 		UpdateStatus:          *updateStatus,
