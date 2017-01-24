@@ -36,6 +36,7 @@ var (
 	// The name of each file is <namespace>-<secret name>.pem. The content is the concatenated
 	// certificate and key.
 	DefaultSSLDirectory = "/ingress-controller/ssl"
+	TempSSLDirectory = "/ingress-controller/ssl/temp"
 )
 
 // Controller holds the methods to handle an Ingress backend
