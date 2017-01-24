@@ -99,6 +99,10 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		glog.Fatalf("Please specify --default-backend-service")
 	}
 
+	if *defSSLCertificate == "" {
+		glog.Fatalf("Please specify --default-ssl-certificate")
+	}
+
 	kubeClient, err := createApiserverClient(*apiserverHost, *kubeConfigFile)
 	if err != nil {
 		handleFatalInitError(err)
