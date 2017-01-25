@@ -54,14 +54,14 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		tcpConfigMapName = flags.String("tcp-services-configmap", "",
 			`Name of the ConfigMap that contains the definition of the TCP services to expose.
 		The key in the map indicates the external port to be used. The value is the name of the
-		service with the format namespace/serviceName and the port of the service could be a 
+		service with the format namespace/serviceName and the port of the service could be a
 		number of the name of the port.
 		The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend`)
 
 		udpConfigMapName = flags.String("udp-services-configmap", "",
 			`Name of the ConfigMap that contains the definition of the UDP services to expose.
 		The key in the map indicates the external port to be used. The value is the name of the
-		service with the format namespace/serviceName and the port of the service could be a 
+		service with the format namespace/serviceName and the port of the service could be a
 		number of the name of the port.`)
 
 		resyncPeriod = flags.Duration("sync-period", 60*time.Second,
@@ -74,13 +74,13 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
 
-		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret 
+		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret
 		that contains a SSL certificate to be used as default for a HTTPS catch-all server`)
 
-		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines 
+		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines
 		the URL to be used as health check inside in the default server in NGINX.`)
 
-		updateStatus = flags.Bool("update-status", true, `Indicates if the 
+		updateStatus = flags.Bool("update-status", true, `Indicates if the
 		ingress controller should update the Ingress status IP/hostname. Default is true`)
 	)
 
@@ -97,10 +97,6 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 	if *defaultSvc == "" {
 		glog.Fatalf("Please specify --default-backend-service")
-	}
-
-	if *defSSLCertificate == "" {
-		glog.Fatalf("Please specify --default-ssl-certificate")
 	}
 
 	kubeClient, err := createApiserverClient(*apiserverHost, *kubeConfigFile)
