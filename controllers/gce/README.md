@@ -51,7 +51,7 @@ __Lines 5-7__: Ingress Spec has all the information needed to configure a GCE L7
 
 __Lines 8-9__: Each http rule contains the following information: A host (eg: foo.bar.com, defaults to `*` in this example), a list of paths (eg: `/hostless`) each of which has an associated backend (`test:80`). Both the `host` and `path` must match the content of an incoming request before the L7 directs traffic to the `backend`.
 
-__Lines 10-12__: A `backend` is a service:port combination. It selects a group of pods capable of servicing traffic sent to the path specified in the parent rule.
+__Lines 10-12__: A `backend` is a service:port combination. It selects a group of pods capable of servicing traffic sent to the path specified in the parent rule. The `port` is the desired `spec.ports[*].port` from the Service Spec -- Note, though, that the L7 actually directs traffic to the corresponding `NodePort`.
 
 __Global Prameters__: For the sake of simplicity the example Ingress has no global parameters. However, one can specify a default backend (see examples below) in the absence of which requests that don't match a path in the spec are sent to the default backend of glbc. Though glbc doesn't support HTTPS yet, security configs would also be global.
 
