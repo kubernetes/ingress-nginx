@@ -27,6 +27,13 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
+const (
+	annotation_secureUpstream = "ingress.kubernetes.io/secure-backends"
+	annotation_upsMaxFails    = "ingress.kubernetes.io/upstream-max-fails"
+	annotation_upsFailTimeout = "ingress.kubernetes.io/upstream-fail-timeout"
+	annotation_passthrough    = "ingress.kubernetes.io/ssl-passthrough"
+)
+
 type mockCfg struct {
 }
 
@@ -88,5 +95,87 @@ func buildIngress() *extensions.Ingress {
 				},
 			},
 		},
+	}
+}
+
+func TestSecureUpstream(t *testing.T) {
+	ec := newAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		er          bool
+	}{
+		{map[string]string{annotation_secureUpstream: "true"}, true},
+		{map[string]string{annotation_secureUpstream: "false"}, false},
+		{map[string]string{annotation_secureUpstream + "_no": "true"}, false},
+		{map[string]string{}, false},
+		{nil, false},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.SecureUpstream(ing)
+		if r != foo.er {
+			t.Errorf("Returned %v but expected %v", r, foo.er)
+		}
+	}
+}
+
+func TestHealthCheck(t *testing.T) {
+	ec := newAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		eumf        int
+		euft        int
+	}{
+		{map[string]string{annotation_upsMaxFails: "3", annotation_upsFailTimeout: "10"}, 3, 10},
+		{map[string]string{annotation_upsMaxFails: "3"}, 3, 0},
+		{map[string]string{annotation_upsFailTimeout: "10"}, 0, 10},
+		{map[string]string{}, 0, 0},
+		{nil, 0, 0},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.HealthCheck(ing)
+		if r == nil {
+			t.Errorf("Returned nil but expected a healthcheck.Upstream")
+			continue
+		}
+
+		if r.FailTimeout != foo.euft {
+			t.Errorf("Returned %d but expected %d for FailTimeout", r.FailTimeout, foo.euft)
+		}
+
+		if r.MaxFails != foo.eumf {
+			t.Errorf("Returned %d but expected %d for MaxFails", r.MaxFails, foo.eumf)
+		}
+	}
+}
+
+func TestSSLPassthrough(t *testing.T) {
+	ec := newAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		er          bool
+	}{
+		{map[string]string{annotation_passthrough: "true"}, true},
+		{map[string]string{annotation_passthrough: "false"}, false},
+		{map[string]string{annotation_passthrough + "_no": "true"}, false},
+		{map[string]string{}, false},
+		{nil, false},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.SSLPassthrough(ing)
+		if r != foo.er {
+			t.Errorf("Returned %v but expected %v", r, foo.er)
+		}
 	}
 }
