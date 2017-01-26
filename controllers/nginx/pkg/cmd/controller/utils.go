@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"syscall"
 
 	"k8s.io/kubernetes/pkg/util/sysctl"
 
@@ -42,14 +43,14 @@ func sysctlSomaxconn() int {
 // sysctlFSFileMax returns the value of fs.file-max, i.e.
 // maximum number of open file descriptors
 func sysctlFSFileMax() int {
-	maxConns, err := sysctl.New().GetSysctl("fs/file-max")
+	var rLimit syscall.Rlimit
+	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		glog.Errorf("unexpected error reading system maximum number of open file descriptors (fs.file-max): %v", err)
+		glog.Errorf("unexpected error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
 		// returning 0 means don't render the value
 		return 0
 	}
-
-	return maxConns
+	return int(rLimit.Max)
 }
 
 func diff(b1, b2 []byte) ([]byte, error) {
