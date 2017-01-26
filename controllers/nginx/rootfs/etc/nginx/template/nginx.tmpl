@@ -248,6 +248,8 @@ http {
         {{ end }}
         
         location {{ $path }} {
+            set $proxy_upstream_name "{{ $location.Backend }}";
+
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
             {{ range $ip := $location.Whitelist.CIDR }}
@@ -323,7 +325,6 @@ http {
             proxy_set_header                        Accept-Encoding     "";
             {{ end }}
 
-            set $proxy_upstream_name "{{ $location.Backend }}";
             {{ buildProxyPass $backends $location }}
             {{ else }}
             #{{ $location.Denied }}
