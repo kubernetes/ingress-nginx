@@ -47,6 +47,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
 	"k8s.io/ingress/core/pkg/k8s"
+	ssl "k8s.io/ingress/core/pkg/net/ssl"
 	local_strings "k8s.io/ingress/core/pkg/strings"
 	"k8s.io/ingress/core/pkg/task"
 )
@@ -827,9 +828,30 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 
 	dun := ic.getDefaultUpstream().Name
 
+	// This adds the Default Certificate to Default Backend and also for vhosts missing the secret
+	var defaultPemFileName, defaultPemSHA string
+	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
+	// If no default Certificate was supplied, tries to generate a new dumb one
+	if err != nil {
+		var cert *ingress.SSLCert
+		defCert, defKey := ssl.GetFakeSSLCert()
+		cert, err = ssl.AddOrUpdateCertAndKey("system-snake-oil-certificate", defCert, defKey, []byte{})
+		if err != nil {
+			glog.Fatalf("Error generating self signed certificate: %v", err)
+		} else {
+			defaultPemFileName = cert.PemFileName
+			defaultPemSHA = cert.PemSHA
+		}
+	} else {
+		defaultPemFileName = defaultCertificate.PemFileName
+		defaultPemSHA = defaultCertificate.PemSHA
+	}
+
 	// default server
 	servers[defServerName] = &ingress.Server{
-		Hostname: defServerName,
+		Hostname:       defServerName,
+		SSLCertificate: defaultPemFileName,
+		SSLPemChecksum: defaultPemSHA,
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
@@ -899,7 +921,9 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 						servers[host].SSLPemChecksum = cert.PemSHA
 					}
 				} else {
-					glog.Warningf("secret %v does not exists", key)
+
+					servers[host].SSLCertificate = defaultPemFileName
+					servers[host].SSLPemChecksum = defaultPemSHA
 				}
 			}
 
