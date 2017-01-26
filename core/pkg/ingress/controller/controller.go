@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/kylelemons/godebug/pretty"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -178,6 +179,7 @@ func newIngressController(config *Configuration) *GenericController {
 			ic.syncQueue.Enqueue(obj)
 		},
 		UpdateFunc: func(old, cur interface{}) {
+			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
 			if !IsValidClass(curIng, config.IngressClass) {
 				return
@@ -186,6 +188,24 @@ func newIngressController(config *Configuration) *GenericController {
 			if !reflect.DeepEqual(old, cur) {
 				upIng := cur.(*extensions.Ingress)
 				ic.recorder.Eventf(upIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", upIng.Namespace, upIng.Name))
+				// the referenced secret is different?
+				if diff := pretty.Compare(curIng.Spec.TLS, oldIng.Spec.TLS); diff != "" {
+					for _, secretName := range curIng.Spec.TLS {
+						secKey := fmt.Sprintf("%v/%v", curIng.Namespace, secretName.SecretName)
+						go func() {
+							glog.Infof("TLS section in ingress %v/%v changed (secret is now %v)", upIng.Namespace, upIng.Name, secKey)
+							// we need to wait until the ingress store is updated
+							time.Sleep(10 * time.Second)
+							key, err := ic.GetSecret(secKey)
+							if err != nil {
+								glog.Errorf("unexpected error: %v", err)
+							}
+							if key != nil {
+								ic.secretQueue.Enqueue(key)
+							}
+						}()
+					}
+				}
 				ic.syncQueue.Enqueue(cur)
 			}
 		},
