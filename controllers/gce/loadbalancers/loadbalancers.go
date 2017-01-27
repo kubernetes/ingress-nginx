@@ -958,6 +958,9 @@ func GetLBAnnotations(l7 *L7, existing map[string]string, backendPool backends.B
 	if l7.ip != nil {
 		existing[fmt.Sprintf("%v/static-ip", utils.K8sAnnotationPrefix)] = l7.ip.Name
 	}
+	if l7.sslCert != nil {
+		existing[fmt.Sprintf("%v/ssl-cert", utils.K8sAnnotationPrefix)] = l7.sslCert.Name
+	}
 	// TODO: We really want to know *when* a backend flipped states.
 	existing[fmt.Sprintf("%v/backends", utils.K8sAnnotationPrefix)] = jsonBackendState
 	return existing
