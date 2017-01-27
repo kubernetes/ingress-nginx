@@ -410,14 +410,6 @@ func (t *GCETranslator) ListZones() ([]string, error) {
 	return zones.List(), nil
 }
 
-// isPortEqual compares the given IntOrString ports
-func isPortEqual(port, targetPort intstr.IntOrString) bool {
-	if targetPort.Type == intstr.Int {
-		return port.IntVal == targetPort.IntVal
-	}
-	return port.StrVal == targetPort.StrVal
-}
-
 // geHTTPProbe returns the http readiness probe from the first container
 // that matches targetPort, from the set of pods matching the given labels.
 func (t *GCETranslator) getHTTPProbe(svc api.Service, targetPort intstr.IntOrString) (*api.Probe, error) {
@@ -443,11 +435,21 @@ func (t *GCETranslator) getHTTPProbe(svc api.Service, targetPort intstr.IntOrStr
 				continue
 			}
 			for _, p := range c.Ports {
-				cPort := intstr.IntOrString{IntVal: p.ContainerPort, StrVal: p.Name}
-				if isPortEqual(cPort, targetPort) {
-					if isPortEqual(c.ReadinessProbe.Handler.HTTPGet.Port, targetPort) {
-						return c.ReadinessProbe, nil
+				if targetPort.Type == intstr.Int && targetPort.IntVal == p.ContainerPort ||
+					targetPort.Type == intstr.String && targetPort.StrVal == p.Name {
+
+					readinessProbePort := c.ReadinessProbe.Handler.HTTPGet.Port
+					switch readinessProbePort.Type {
+					case intstr.Int:
+						if readinessProbePort.IntVal == p.ContainerPort {
+							return c.ReadinessProbe, nil
+						}
+					case intstr.String:
+						if readinessProbePort.StrVal == p.Name {
+							return c.ReadinessProbe, nil
+						}
 					}
+
 					glog.Infof("%v: found matching targetPort on container %v, but not on readinessProbe (%+v)",
 						logStr, c.Name, c.ReadinessProbe.Handler.HTTPGet.Port)
 				}
