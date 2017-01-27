@@ -375,7 +375,7 @@ func (l *L7) checkSSLCert() (err error) {
 			return nil
 		}
 
-		glog.Warningf("-- %s: Uh oh, no cert found by %f", l.runtimeInfo.Name, certName)
+		return fmt.Errorf("Cannot find existing sslCertificate %v for %v", certName, l.Name)
 	}
 
 	ingCert := l.runtimeInfo.TLS.Cert
