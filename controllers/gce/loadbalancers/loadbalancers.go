@@ -383,7 +383,7 @@ func (l *L7) checkSSLCert() (err error) {
 			}
 		}
 
-		glog.Infof("Creating new sslCertificates %v for %v", l.Name, certName)
+		glog.Infof("Creating new sslCertificates %v for %v", certName, l.Name)
 		cert, err = l.cloud.CreateSslCertificate(&compute.SslCertificate{
 			Name:        certName,
 			Certificate: ingCert,
