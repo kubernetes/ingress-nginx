@@ -246,6 +246,8 @@ type L7RuntimeInfo struct {
 	IP string
 	// TLS are the tls certs to use in termination.
 	TLS *TLSCerts
+	// TLSName is the name of/for the tls cert to use.
+	TLSName string
 	// AllowHTTP will not setup :80, if TLS is nil and AllowHTTP is set,
 	// no loadbalancer is created.
 	AllowHTTP bool
@@ -353,6 +355,29 @@ func (l *L7) checkSSLCert() (err error) {
 	// TODO: Currently, GCE only supports a single certificate per static IP
 	// so we don't need to bother with disambiguation. Naming the cert after
 	// the loadbalancer is a simplification.
+
+	namedCert := l.runtimeInfo.TLSName
+
+	// Use the named GCE cert if specified by the annotation.
+	if namedCert != "" {
+		glog.Infof("-- %s: Using namedCert %s for certName", l.runtimeInfo.Name, namedCert)
+		certName := namedCert
+
+		// Use the targetHTTPSProxy's cert name if one already exists.
+		if l.sslCert != nil {
+			certName = l.sslCert.Name
+		}
+		cert, _ := l.cloud.GetSslCertificate(certName)
+
+		if cert == nil {
+			glog.Warningf("-- %s: Uh oh, no cert found by %f", l.runtimeInfo.Name, certName)
+		}
+
+		glog.Infof("-- %s: Got cert name: %s, cert: %+v, name: %s, selflink: %s", l.runtimeInfo.Name, certName, cert, cert.Name, cert.SelfLink)
+		//cert.SelfLink = cert.Name
+		l.sslCert = cert
+		return nil
+	}
 
 	ingCert := l.runtimeInfo.TLS.Cert
 	ingKey := l.runtimeInfo.TLS.Key
@@ -578,12 +603,12 @@ func (l *L7) edgeHop() error {
 		}
 	}
 	// Defer promoting an emphemral to a static IP till it's really needed.
-	if l.runtimeInfo.AllowHTTP && l.runtimeInfo.TLS != nil {
+	if l.runtimeInfo.AllowHTTP && (l.runtimeInfo.TLS != nil || l.runtimeInfo.TLSName != "") {
 		if err := l.checkStaticIP(); err != nil {
 			return err
 		}
 	}
-	if l.runtimeInfo.TLS != nil {
+	if l.runtimeInfo.TLS != nil || l.runtimeInfo.TLSName != "" {
 		glog.V(3).Infof("validating https for %v", l.Name)
 		if err := l.edgeHopHttps(); err != nil {
 			return err
@@ -843,7 +868,8 @@ func (l *L7) Cleanup() error {
 		}
 		l.tps = nil
 	}
-	if l.sslCert != nil {
+	// Delete the SSL cert if it is not a pre-created GCE cert.
+	if l.sslCert != nil && l.sslCert.Name != l.runtimeInfo.TLSName {
 		glog.Infof("Deleting sslcert %v", l.sslCert.Name)
 		if err := l.cloud.DeleteSslCertificate(l.sslCert.Name); err != nil {
 			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {

@@ -431,6 +431,7 @@ func (lbc *LoadBalancerController) ListRuntimeInfo() (lbs []*loadbalancers.L7Run
 		lbs = append(lbs, &loadbalancers.L7RuntimeInfo{
 			Name:         k,
 			TLS:          tls,
+			TLSName:      annotations.useNamedTLS(),
 			AllowHTTP:    annotations.allowHTTP(),
 			StaticIPName: annotations.staticIPName(),
 		})

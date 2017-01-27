@@ -86,6 +86,15 @@ func (ing ingAnnotations) allowHTTP() bool {
 	return v
 }
 
+func (ing ingAnnotations) useNamedTLS() string {
+	val, ok := ing[useNamedTLS]
+	if !ok {
+		return ""
+	}
+
+	return val
+}
+
 func (ing ingAnnotations) staticIPName() string {
 	val, ok := ing[staticIPNameKey]
 	if !ok {
