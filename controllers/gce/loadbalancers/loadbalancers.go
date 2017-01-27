@@ -358,9 +358,8 @@ func (l *L7) checkSSLCert() (err error) {
 
 	namedCert := l.runtimeInfo.TLSName
 
-	// Use the named GCE cert if specified by the annotation.
+	// Use the named GCE cert when it is specified by the annotation.
 	if namedCert != "" {
-		glog.Infof("-- %s: Using namedCert %s for certName", l.runtimeInfo.Name, namedCert)
 		certName := namedCert
 
 		// Use the targetHTTPSProxy's cert name if one already exists.
@@ -369,14 +368,14 @@ func (l *L7) checkSSLCert() (err error) {
 		}
 		cert, _ := l.cloud.GetSslCertificate(certName)
 
-		if cert == nil {
-			glog.Warningf("-- %s: Uh oh, no cert found by %f", l.runtimeInfo.Name, certName)
+		if cert != nil {
+			glog.Infof("Using existing sslCertificate %v for %v", certName, l.Name)
+
+			l.sslCert = cert
+			return nil
 		}
 
-		glog.Infof("-- %s: Got cert name: %s, cert: %+v, name: %s, selflink: %s", l.runtimeInfo.Name, certName, cert, cert.Name, cert.SelfLink)
-		//cert.SelfLink = cert.Name
-		l.sslCert = cert
-		return nil
+		glog.Warningf("-- %s: Uh oh, no cert found by %f", l.runtimeInfo.Name, certName)
 	}
 
 	ingCert := l.runtimeInfo.TLS.Cert
