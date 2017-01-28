@@ -1,6 +1,8 @@
 # Ingress examples
 
-A catalog of examples on how to run, configure and scale Ingress.
+This directory contains a catalog of examples on how to run, configure and
+scale Ingress. Please review the [prerequisities](prerequisites.md) before
+trying them.
 
 ## Basic cross platform
 
