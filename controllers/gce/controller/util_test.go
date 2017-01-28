@@ -109,6 +109,29 @@ func TestProbeGetter(t *testing.T) {
 	}
 }
 
+func TestProbeGetterNamedPort(t *testing.T) {
+	cm := NewFakeClusterManager(DefaultClusterUID)
+	lbc := newLoadBalancerController(t, cm, "")
+	nodePortToHealthCheck := map[int64]string{
+		3001: "/healthz",
+	}
+	addPods(lbc, nodePortToHealthCheck, api.NamespaceDefault)
+	for _, p := range lbc.podLister.Indexer.List() {
+		pod := p.(*api.Pod)
+		pod.Spec.Containers[0].Ports[0].Name = "test"
+		pod.Spec.Containers[0].ReadinessProbe.Handler.HTTPGet.Port = intstr.IntOrString{Type: intstr.String, StrVal: "test"}
+	}
+	for p, exp := range nodePortToHealthCheck {
+		got, err := lbc.tr.HealthCheck(p)
+		if err != nil {
+			t.Errorf("Failed to get health check for node port %v: %v", p, err)
+		} else if got.RequestPath != exp {
+			t.Errorf("Wrong health check for node port %v, got %v expected %v", p, got.RequestPath, exp)
+		}
+	}
+
+}
+
 func TestProbeGetterCrossNamespace(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID)
 	lbc := newLoadBalancerController(t, cm, "")
@@ -191,7 +214,7 @@ func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string
 			Spec: api.PodSpec{
 				Containers: []api.Container{
 					{
-						Ports: []api.ContainerPort{{ContainerPort: 80}},
+						Ports: []api.ContainerPort{{Name: "test", ContainerPort: 80}},
 						ReadinessProbe: &api.Probe{
 							Handler: api.Handler{
 								HTTPGet: &api.HTTPGetAction{
