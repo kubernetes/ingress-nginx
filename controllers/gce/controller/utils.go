@@ -50,6 +50,7 @@ const (
 	// assigns the SSL certifiate by this name to the target proxies of the given
 	// Ingress. The controller *does not* manage this certificate, it is the users
 	// responsibility to create/delete it.
+	// TODO: naming this (ie: external-ssl-cert)
 	useNamedTLS = "kubernetes.io/ingress.use-named-tls"
 
 	// staticIPNameKey tells the Ingress controller to use a specific GCE
