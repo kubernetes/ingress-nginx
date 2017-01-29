@@ -25,16 +25,18 @@ import (
 
 const (
 	// external URL that provides the authentication
-	authURL    = "ingress.kubernetes.io/auth-url"
-	authMethod = "ingress.kubernetes.io/auth-method"
-	authBody   = "ingress.kubernetes.io/auth-send-body"
+	authURL       = "ingress.kubernetes.io/auth-url"
+	authSigninURL = "ingress.kubernetes.io/auth-signin"
+	authMethod    = "ingress.kubernetes.io/auth-method"
+	authBody      = "ingress.kubernetes.io/auth-send-body"
 )
 
 // External returns external authentication configuration for an Ingress rule
 type External struct {
-	URL      string `json:"url"`
-	Method   string `json:"method"`
-	SendBody bool   `json:"sendBody"`
+	URL       string `json:"url"`
+	SigninURL string `json:"signinUrl"`
+	Method    string `json:"method"`
+	SendBody  bool   `json:"sendBody"`
 }
 
 var (
@@ -70,6 +72,11 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
+	signin, err := parser.GetURLAnnotation(authSigninURL, ing)
+	if err != nil {
+		return nil, err
+	}
+
 	m, err := parser.GetStringAnnotation(authMethod, ing)
 	if err != nil {
 		return nil, err
@@ -82,8 +89,9 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	sb, _ := parser.GetBoolAnnotation(authBody, ing)
 
 	return &External{
-		URL:      auth.String(),
-		Method:   m,
-		SendBody: sb,
+		URL:       auth.String(),
+		SigninURL: signin.String(),
+		Method:    m,
+		SendBody:  sb,
 	}, nil
 }
