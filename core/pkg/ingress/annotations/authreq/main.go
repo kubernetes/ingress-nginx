@@ -17,9 +17,6 @@ limitations under the License.
 package authreq
 
 import (
-	"net/url"
-	"strings"
-
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
@@ -28,16 +25,18 @@ import (
 
 const (
 	// external URL that provides the authentication
-	authURL    = "ingress.kubernetes.io/auth-url"
-	authMethod = "ingress.kubernetes.io/auth-method"
-	authBody   = "ingress.kubernetes.io/auth-send-body"
+	authURL       = "ingress.kubernetes.io/auth-url"
+	authSigninURL = "ingress.kubernetes.io/auth-signin"
+	authMethod    = "ingress.kubernetes.io/auth-method"
+	authBody      = "ingress.kubernetes.io/auth-send-body"
 )
 
 // External returns external authentication configuration for an Ingress rule
 type External struct {
-	URL      string `json:"url"`
-	Method   string `json:"method"`
-	SendBody bool   `json:"sendBody"`
+	URL       string `json:"url"`
+	SigninURL string `json:"signinUrl"`
+	Method    string `json:"method"`
+	SendBody  bool   `json:"sendBody"`
 }
 
 var (
@@ -68,28 +67,14 @@ func NewParser() parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an external URL as source for authentication
 func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
-	str, err := parser.GetStringAnnotation(authURL, ing)
+	auth, err := parser.GetURLAnnotation(authURL, ing)
 	if err != nil {
 		return nil, err
 	}
 
-	if str == "" {
-		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
-	}
-
-	ur, err := url.Parse(str)
+	signin, err := parser.GetURLAnnotation(authSigninURL, ing)
 	if err != nil {
 		return nil, err
-	}
-	if ur.Scheme == "" {
-		return nil, ing_errors.NewLocationDenied("url scheme is empty")
-	}
-	if ur.Host == "" {
-		return nil, ing_errors.NewLocationDenied("url host is empty")
-	}
-
-	if strings.Contains(ur.Host, "..") {
-		return nil, ing_errors.NewLocationDenied("invalid url host")
 	}
 
 	m, _ := parser.GetStringAnnotation(authMethod, ing)
@@ -100,8 +85,9 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	sb, _ := parser.GetBoolAnnotation(authBody, ing)
 
 	return &External{
-		URL:      str,
-		Method:   m,
-		SendBody: sb,
+		URL:       auth.String(),
+		SigninURL: signin.String(),
+		Method:    m,
+		SendBody:  sb,
 	}, nil
 }

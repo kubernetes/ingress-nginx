@@ -17,7 +17,9 @@ limitations under the License.
 package parser
 
 import (
+	"net/url"
 	"strconv"
+	"strings"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
@@ -49,6 +51,30 @@ func (a ingAnnotations) parseString(name string) (string, error) {
 		return val, nil
 	}
 	return "", errors.ErrMissingAnnotations
+}
+
+func (a ingAnnotations) parseURL(name string) (*url.URL, error) {
+	val, ok := a[name]
+	if ok {
+		ur, err := url.Parse(val)
+		if err != nil {
+			return nil, err
+		}
+		if ur.Scheme == "" {
+			return nil, errors.NewLocationDenied("url scheme is empty")
+		}
+		if ur.Host == "" {
+			return nil, errors.NewLocationDenied("url host is empty")
+		}
+		if val == "" {
+			return nil, errors.NewLocationDenied("an empty string is not a valid URL")
+		}
+		if strings.Contains(ur.Host, "..") {
+			return nil, errors.NewLocationDenied("invalid url host")
+		}
+		return ur, nil
+	}
+	return nil, errors.ErrMissingAnnotations
 }
 
 func (a ingAnnotations) parseInt(name string) (int, error) {
@@ -99,4 +125,13 @@ func GetIntAnnotation(name string, ing *extensions.Ingress) (int, error) {
 		return 0, err
 	}
 	return ingAnnotations(ing.GetAnnotations()).parseInt(name)
+}
+
+// GetUrlAnnotation extracts a URL from an Ingress annotation
+func GetURLAnnotation(name string, ing *extensions.Ingress) (*url.URL, error) {
+	err := checkAnnotation(name, ing)
+	if err != nil {
+		return nil, err
+	}
+	return ingAnnotations(ing.GetAnnotations()).parseURL(name)
 }
