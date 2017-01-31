@@ -56,7 +56,7 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 			}
 		} else {
 			defCert, defKey := ssl.GetFakeSSLCert()
-			cert, err = ssl.AddOrUpdateCertAndKey("system-snake-oil-certificate", defCert, defKey, []byte{})
+			cert, err = ssl.AddOrUpdateCertAndKey("default-fake-certificate", defCert, defKey, []byte{})
 			if err != nil {
 				return nil
 			}

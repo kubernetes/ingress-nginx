@@ -17,17 +17,17 @@ limitations under the License.
 package ssl
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"crypto/rand"
-	"crypto/rsa"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"math/big"
 	"io/ioutil"
+	"math/big"
 	"os"
 	"time"
 
@@ -118,14 +118,14 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		return &ingress.SSLCert{
 			CAFileName:  caFileName,
 			PemFileName: pemFileName,
-			PemSHA:      pemSHA1(pemFileName),
+			PemSHA:      PemSHA1(pemFileName),
 			CN:          cn,
 		}, nil
 	}
 
 	return &ingress.SSLCert{
 		PemFileName: pemFileName,
-		PemSHA:      pemSHA1(pemFileName),
+		PemSHA:      PemSHA1(pemFileName),
 		CN:          cn,
 	}, nil
 }
@@ -151,9 +151,9 @@ func SearchDHParamFile(baseDir string) string {
 	return ""
 }
 
-// pemSHA1 returns the SHA1 of a pem file. This is used to
+// PemSHA1 returns the SHA1 of a pem file. This is used to
 // reload NGINX in case a secret with a SSL certificate changed.
-func pemSHA1(filename string) string {
+func PemSHA1(filename string) string {
 	hasher := sha1.New()
 	s, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -164,17 +164,14 @@ func pemSHA1(filename string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-
 // GetFakeSSLCert creates a Self Signed Certificate
 // Based in the code https://golang.org/src/crypto/tls/generate_cert.go
 func GetFakeSSLCert() ([]byte, []byte) {
 
-	var priv, privtype interface{}
+	var priv interface{}
 	var err error
 
 	priv, err = rsa.GenerateKey(rand.Reader, 2048)
-
-	privtype = &priv.(*rsa.PrivateKey).PublicKey
 
 	if err != nil {
 		glog.Fatalf("failed to generate fake private key: %s", err)
@@ -182,7 +179,7 @@ func GetFakeSSLCert() ([]byte, []byte) {
 
 	notBefore := time.Now()
 	// This certificate is valid for 365 days
-	notAfter := notBefore.Add(365*24*time.Hour)
+	notAfter := notBefore.Add(365 * 24 * time.Hour)
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
@@ -195,6 +192,7 @@ func GetFakeSSLCert() ([]byte, []byte) {
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			Organization: []string{"Acme Co"},
+			CommonName:   "Kubernetes Ingress Controller Fake Certificate",
 		},
 		NotBefore: notBefore,
 		NotAfter:  notAfter,
@@ -202,9 +200,9 @@ func GetFakeSSLCert() ([]byte, []byte) {
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
-		DNSNames: []string{"ingress.local"},
+		DNSNames:              []string{"ingress.local"},
 	}
-	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, privtype, priv)
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.(*rsa.PrivateKey).PublicKey, priv)
 	if err != nil {
 		glog.Fatalf("Failed to create fake certificate: %s", err)
 	}
