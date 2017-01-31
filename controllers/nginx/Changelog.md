@@ -1,8 +1,8 @@
 Changelog
 
-### 0.9
+### 0.9-beta.1
 
-**Temporal Image:**  `quay.io/aledbf/nginx-ingress-controller:0.9.0`
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.1`
 
 *New Features:*
 
@@ -33,7 +33,7 @@ Changelog
 - [X] [#158](https://github.com/kubernetes/ingress/pull/158) prefect unit test cases for annotation.proxy
 - [X] [#156](https://github.com/kubernetes/ingress/pull/156) Fix issue for ratelimit
 - [X] [#154](https://github.com/kubernetes/ingress/pull/154) add unit test cases for core.pkg.ingress.annotations.cors
-- [X] [#151](https://github.com/kubernetes/ingress/pull/151) Port in redirect 
+- [X] [#151](https://github.com/kubernetes/ingress/pull/151) Port in redirect
 - [X] [#150](https://github.com/kubernetes/ingress/pull/150) Add support for custom header sizes
 - [X] [#149](https://github.com/kubernetes/ingress/pull/149) Add flag to allow switch off the update of Ingress status
 - [X] [#148](https://github.com/kubernetes/ingress/pull/148) Add annotation to allow custom body sizes
@@ -43,7 +43,7 @@ Changelog
 - [X] [#142](https://github.com/kubernetes/ingress/pull/142) Use system fs.max-files as limits instead of hard-coded value
 - [X] [#141](https://github.com/kubernetes/ingress/pull/141) Add reuse port and backlog to port 80 and 443
 - [X] [#138](https://github.com/kubernetes/ingress/pull/138) reference to const
-- [X] [#136](https://github.com/kubernetes/ingress/pull/136) Add content and descriptions about nginx's configuration 
+- [X] [#136](https://github.com/kubernetes/ingress/pull/136) Add content and descriptions about nginx's configuration
 - [X] [#135](https://github.com/kubernetes/ingress/pull/135) correct improper punctuation
 - [X] [#134](https://github.com/kubernetes/ingress/pull/134) fix typo
 - [X] [#133](https://github.com/kubernetes/ingress/pull/133) Add TCP and UDP services removed in migration
@@ -81,9 +81,9 @@ Changelog
 - [X] [#62](https://github.com/kubernetes/ingress/pull/62) Fix e2e make targets
 - [X] [#61](https://github.com/kubernetes/ingress/pull/61) Ignore coverage profile files
 - [X] [#58](https://github.com/kubernetes/ingress/pull/58) Fix "invalid port in upstream" on nginx controller
-- [X] [#57](https://github.com/kubernetes/ingress/pull/57) Fix invalid port in upstream 
+- [X] [#57](https://github.com/kubernetes/ingress/pull/57) Fix invalid port in upstream
 - [X] [#54](https://github.com/kubernetes/ingress/pull/54) Expand developer docs
-- [X] [#52](https://github.com/kubernetes/ingress/pull/52) fix typo in variable ProxyRealIPCIDR 
+- [X] [#52](https://github.com/kubernetes/ingress/pull/52) fix typo in variable ProxyRealIPCIDR
 - [X] [#44](https://github.com/kubernetes/ingress/pull/44) Bump nginx version to one higher than that in contrib
 - [X] [#36](https://github.com/kubernetes/ingress/pull/36) Add nginx metrics to prometheus
 - [X] [#34](https://github.com/kubernetes/ingress/pull/34) nginx: also listen on ipv6
@@ -147,7 +147,7 @@ Changelog
 - [X] [#1136](https://github.com/kubernetes/contrib/pull/1136) Fix nginx rewrite rule order
 - [X] [#1144](https://github.com/kubernetes/contrib/pull/1144) Add cidr whitelist support
 - [X] [#1230](https://github.com/kubernetes/contrib/pull/1130) Improve docs and examples
-- [X] [#1258](https://github.com/kubernetes/contrib/pull/1258) Avoid sync without a reachable 
+- [X] [#1258](https://github.com/kubernetes/contrib/pull/1258) Avoid sync without a reachable
 - [X] [#1235](https://github.com/kubernetes/contrib/pull/1235) Fix stats by country in nginx status page
 - [X] [#1236](https://github.com/kubernetes/contrib/pull/1236) Update nginx to add dynamic TLS records and spdy
 - [X] [#1238](https://github.com/kubernetes/contrib/pull/1238) Add support for dynamic TLS records and spdy
