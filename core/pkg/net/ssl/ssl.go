@@ -19,12 +19,17 @@ package ssl
 import (
 	"crypto/sha1"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"math/big"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -159,23 +164,54 @@ func pemSHA1(filename string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-const (
-	snakeOilPem = "/etc/ssl/certs/ssl-cert-snakeoil.pem"
-	snakeOilKey = "/etc/ssl/private/ssl-cert-snakeoil.key"
-)
 
-// GetFakeSSLCert returns the snake oil ssl certificate created by the command
-// make-ssl-cert generate-default-snakeoil --force-overwrite
+// GetFakeSSLCert creates a Self Signed Certificate
+// Based in the code https://golang.org/src/crypto/tls/generate_cert.go
 func GetFakeSSLCert() ([]byte, []byte) {
-	cert, err := ioutil.ReadFile(snakeOilPem)
+
+	var priv, privtype interface{}
+	var err error
+
+	priv, err = rsa.GenerateKey(rand.Reader, 2048)
+
+	privtype = &priv.(*rsa.PrivateKey).PublicKey
+
 	if err != nil {
-		return nil, nil
+		glog.Fatalf("failed to generate fake private key: %s", err)
 	}
 
-	key, err := ioutil.ReadFile(snakeOilKey)
+	notBefore := time.Now()
+	// This certificate is valid for 365 days
+	notAfter := notBefore.Add(365*24*time.Hour)
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+
 	if err != nil {
-		return nil, nil
+		glog.Fatalf("failed to generate fake serial number: %s", err)
 	}
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"Acme Co"},
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		DNSNames: []string{"ingress.local"},
+	}
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, privtype, priv)
+	if err != nil {
+		glog.Fatalf("Failed to create fake certificate: %s", err)
+	}
+
+	cert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+
+	key := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv.(*rsa.PrivateKey))})
 
 	return cert, key
 }
