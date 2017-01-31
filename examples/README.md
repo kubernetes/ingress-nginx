@@ -69,4 +69,10 @@ Websockets | websockets loadbalancing | nginx | Intermediate
 HTTP/2 | HTTP/2 loadbalancing | * | Intermediate
 Proxy protocol | leverage the proxy protocol for source IP | nginx | Advanced
 
+## Custom controllers
+
+Name | Description | Platform   | Complexity Level
+-----| ----------- | ---------- | ----------------
+Dummy  | A simple dummy controller that logs updates | * | Advanced
+
 
