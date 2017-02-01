@@ -45,14 +45,6 @@ const (
 	// rules for port 443 based on the TLS section.
 	allowHTTPKey = "kubernetes.io/ingress.allow-http"
 
-	// useNamedTLS tells the Ingress controller to use a specific GCE
-	// SSL certificate for its target proxies. If specified, the Ingress controller
-	// assigns the SSL certifiate by this name to the target proxies of the given
-	// Ingress. The controller *does not* manage this certificate, it is the users
-	// responsibility to create/delete it.
-	// TODO: naming this (ie: external-ssl-cert)
-	useNamedTLS = "kubernetes.io/ingress.use-named-tls"
-
 	// staticIPNameKey tells the Ingress controller to use a specific GCE
 	// static ip for its forwarding rules. If specified, the Ingress controller
 	// assigns the static ip by this name to the forwarding rules of the given
@@ -87,8 +79,10 @@ func (ing ingAnnotations) allowHTTP() bool {
 	return v
 }
 
+// useNamedTLS returns the name of the GCE SSL certificate. Empty by default.
+// TODO: naming this (ie: external-ssl-cert)
 func (ing ingAnnotations) useNamedTLS() string {
-	val, ok := ing[useNamedTLS]
+	val, ok := ing[extensions.IngressPreSharedCertAnnotationKey]
 	if !ok {
 		return ""
 	}
