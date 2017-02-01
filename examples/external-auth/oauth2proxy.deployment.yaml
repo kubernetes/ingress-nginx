@@ -1,0 +1,31 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  labels:
+    k8s-app: oauth2proxy
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: oauth2proxy
+    spec:
+      volumes:
+      - name: oauth2proxy-secret
+        secret:
+          secretName: oauth2proxy
+      containers:
+      - name: oauth2proxy
+        image: docker.io/colemickens/oauth2_proxy:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 4180
+        volumeMounts:
+        - name: oauth2proxy-secret
+          readOnly: true
+          mountPath: /var/run/secrets/oauth2proxy
+        command:
+        - oauth2_proxy
+        - --config=/var/run/secrets/oauth2proxy/oauth2proxy.config
