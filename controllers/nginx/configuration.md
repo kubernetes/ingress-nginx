@@ -21,8 +21,8 @@
 
 There are 3 ways to customize NGINX:
 
-1. [ConfigMap](#allowed-parameters-in-configuration-configmap): create a stand alone ConfigMap, use this if you want a different global configuration
-2. [annotations](#annotations): use this if you want a specific configuration for the site defined in the Ingress rule
+1. [ConfigMap](#allowed-parameters-in-configuration-configmap): create a stand alone ConfigMap, use this if you want a different global configuration.
+2. [annotations](#annotations): use this if you want a specific configuration for the site defined in the Ingress rule.
 3. custom template: when more specific settings are required, like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), custom [log_format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change an through the ConfigMap.
 
 
@@ -97,7 +97,7 @@ Please check the [custom upstream check](examples/custom-upstream-check/README.m
 
 ### Authentication
 
-Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the the key `auth`
+Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the the key `auth`.
 
 The annotations are:
 
@@ -154,16 +154,16 @@ The annotations `ingress.kubernetes.io/limit-connections` and `ingress.kubernete
 If you specify both annotations in a single Ingress rule, `limit-rps` takes precedence.
 
 
-### Secure upstreams
+### Secure backends
 
 By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to `https`.
 
 
 ### Server-side HTTPS enforcement through redirect
 
-By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map
+By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map.
 
-To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource
+To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
 
 ### Whitelist source range
@@ -177,15 +177,18 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 Please check the [whitelist](examples/whitelist/README.md) example.
 
 
-### **Allowed parameters in configuration ConfigMap:**
+### **Allowed parameters in configuration ConfigMap**
 
-**body-size:** Sets the maximum allowed size of the client request body. See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
+**proxy-body-size:** Sets the maximum allowed size of the client request body. See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
 
 
 **custom-http-errors:** Enables which HTTP codes should be passed for processing with the [error_page directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page).
 Setting at least one code also enables [proxy_intercept_errors](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) which are required to process error_page.
 
 Example usage: `custom-http-errors: 404,415`
+
+
+**enable-dynamic-tls-records:** Enables dynamically sized TLS records to improve time-to-first-byte. Enabled by default. See [CloudFlare's blog](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency) for more information.
 
 
 **enable-sticky-sessions:**  Enables sticky sessions using cookies. This is provided by [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng) module.
@@ -222,7 +225,7 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 **max-worker-connections:** Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections).
 
 
-**proxy-buffer-size:** Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.`
+**proxy-buffer-size:** Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.
 
 
 **proxy-connect-timeout:** Sets the timeout for [establishing a connection with a proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
@@ -248,8 +251,10 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket
 http://nginx.org/en/docs/hash.html
 
 
+**server-tokens:** Send NGINX Server header in responses and display NGINX version in error pages. Enabled by default.
 
-**map-hash-bucket-size:** Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size). The details of setting up hash tables are provided in a separate [document](http://nginx.org/en/docs/hash.html)
+
+**map-hash-bucket-size:** Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size). The details of setting up hash tables are provided in a separate [document](http://nginx.org/en/docs/hash.html).
 
 
 **ssl-buffer-size:** Sets the size of the [SSL buffer](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) used for sending data.
@@ -268,7 +273,7 @@ The recommendation above prioritizes algorithms that provide perfect [forward se
 Please check the [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/).
 
 
-**ssl-dh-param:** sets the Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy."
+**ssl-dh-param:** sets the Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy".
 https://www.openssl.org/docs/manmaster/apps/dhparam.html
 https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
@@ -319,6 +324,9 @@ The default mime type list to compress is: `application/atom+xml application/jav
 **use-proxy-protocol:** Enables or disables the [PROXY protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol/) to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAProxy and Amazon Elastic Load Balancer (ELB).
 
 
+**whitelist-source-range:** Sets the default whitelisted IPs for each `server` block. This can be overwritten by an annotation on an Ingress rule. See [ngx_http_access_module](http://nginx.org/en/docs/http/ngx_http_access_module.html).
+
+
 **worker-processes:** Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). The default of "auto" means number of available CPU cores.
 
 
@@ -330,14 +338,16 @@ The following table shows the options, the default value and a description.
 |---------------------------|------|
 |body-size|1m|
 |custom-http-errors|" "|
+|enable-dynamic-tls-records|"true"|
 |enable-sticky-sessions|"false"|
 |enable-vts-status|"false"|
 |error-log-level|notice|
-|gzip-types||
+|gzip-types|see use-gzip description above|
 |hsts|"true"|
 |hsts-include-subdomains|"true"|
 |hsts-max-age|"15724800"|
 |keep-alive|"75"|
+|map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|
 |proxy-connect-timeout|"5"|
 |proxy-read-timeout|"60"|
@@ -346,8 +356,10 @@ The following table shows the options, the default value and a description.
 |retry-non-idempotent|"false"|
 |server-name-hash-bucket-size|"64"|
 |server-name-hash-max-size|"512"|
+|server-tokens|"true"|
 |ssl-buffer-size|4k|
 |ssl-ciphers||
+|ssl-dh-param|value from openssl|
 |ssl-protocols|TLSv1 TLSv1.1 TLSv1.2|
 |ssl-session-cache|"true"|
 |ssl-session-cache-size|10m|
@@ -356,6 +368,7 @@ The following table shows the options, the default value and a description.
 |use-gzip|"true"|
 |use-http2|"true"|
 |vts-status-zone-size|10m|
+|whitelist-source-range|permit all|
 |worker-processes|number of CPUs|
 
 

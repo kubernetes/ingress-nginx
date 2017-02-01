@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+spec:
+  tls:
+  # This assumes tls-secret exists.
+  - secretName: tls-secret
+  backend:
+    # This assumes http-svc exists and routes to healthy endpoints.
+    serviceName: http-svc
+    servicePort: 80
+

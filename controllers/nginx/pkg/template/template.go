@@ -26,6 +26,8 @@ import (
 	"strings"
 	text_template "text/template"
 
+	"k8s.io/kubernetes/pkg/util/sets"
+
 	"github.com/golang/glog"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
@@ -328,11 +330,11 @@ func buildProxyPass(b interface{}, loc interface{}) string {
 // rate limiting of request. Each Ingress rule could have up to two zones, one
 // for connection limit by IP address and other for limiting request per second
 func buildRateLimitZones(input interface{}) []string {
-	zones := []string{}
+	zones := sets.String{}
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
-		return zones
+		return zones.List()
 	}
 
 	for _, server := range servers {
@@ -342,20 +344,24 @@ func buildRateLimitZones(input interface{}) []string {
 				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%vm;",
 					loc.RateLimit.Connections.Name,
 					loc.RateLimit.Connections.SharedSize)
-				zones = append(zones, zone)
+				if !zones.Has(zone) {
+					zones.Insert(zone)
+				}
 			}
 
 			if loc.RateLimit.RPS.Limit > 0 {
-				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%vm rate=%vr/s;",
-					loc.RateLimit.Connections.Name,
-					loc.RateLimit.Connections.SharedSize,
-					loc.RateLimit.Connections.Limit)
-				zones = append(zones, zone)
+				zone := fmt.Sprintf("limit_req_zone $binary_remote_addr zone=%v:%vm rate=%vr/s;",
+					loc.RateLimit.RPS.Name,
+					loc.RateLimit.RPS.SharedSize,
+					loc.RateLimit.RPS.Limit)
+				if !zones.Has(zone) {
+					zones.Insert(zone)
+				}
 			}
 		}
 	}
 
-	return zones
+	return zones.List()
 }
 
 // buildRateLimit produces an array of limit_req to be used inside the Path of
@@ -376,7 +382,7 @@ func buildRateLimit(input interface{}) []string {
 
 	if loc.RateLimit.RPS.Limit > 0 {
 		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
-			loc.RateLimit.Connections.Name, loc.RateLimit.Connections.Burst)
+			loc.RateLimit.RPS.Name, loc.RateLimit.RPS.Burst)
 		limits = append(limits, limit)
 	}
 

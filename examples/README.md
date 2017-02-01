@@ -1,6 +1,8 @@
 # Ingress examples
 
-A catalog of examples on how to run, configure and scale Ingress.
+This directory contains a catalog of examples on how to run, configure and
+scale Ingress. Please review the [prerequisities](prerequisites.md) before
+trying them.
 
 ## Basic cross platform
 
@@ -66,5 +68,11 @@ UDP | UDP loadbalancing | nginx | Intermediate
 Websockets | websockets loadbalancing | nginx | Intermediate
 HTTP/2 | HTTP/2 loadbalancing | * | Intermediate
 Proxy protocol | leverage the proxy protocol for source IP | nginx | Advanced
+
+## Custom controllers
+
+Name | Description | Platform   | Complexity Level
+-----| ----------- | ---------- | ----------------
+Dummy  | A simple dummy controller that logs updates | * | Advanced
 
 

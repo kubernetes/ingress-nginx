@@ -78,14 +78,15 @@ var (
 type Configuration struct {
 	defaults.Backend `json:",squash"`
 
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
-	// Sets the maximum allowed size of the client request body
-	BodySize string `json:"body-size,omitempty"`
-
 	// EnableDynamicTLSRecords enables dynamic TLS record sizes
 	// https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency
 	// By default this is enabled
 	EnableDynamicTLSRecords bool `json:"enable-dynamic-tls-records"`
+
+	// ClientHeaderBufferSize allows to configure a custom buffer
+	// size for reading client request header
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
+	ClientHeaderBufferSize string `json:"client-header-buffer-size"`
 
 	// EnableSPDY enables spdy and use ALPN and NPN to advertise the availability of the two protocols
 	// https://blog.cloudflare.com/open-sourcing-our-nginx-http-2-spdy-code
@@ -131,6 +132,12 @@ type Configuration struct {
 	// The zero value disables keep-alive client connections
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 	KeepAlive int `json:"keep-alive,omitempty"`
+
+	// LargeClientHeaderBuffers Sets the maximum number and size of buffers used for reading
+	// large client request header.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers
+	// Default: 4 8k
+	LargeClientHeaderBuffers string `json:"large-client-header-buffers"`
 
 	// Maximum number of simultaneous connections that can be opened by each worker process
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
@@ -230,7 +237,7 @@ type Configuration struct {
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	cfg := Configuration{
-		BodySize:                bodySize,
+		ClientHeaderBufferSize:  "1k",
 		EnableDynamicTLSRecords: true,
 		EnableSPDY:              false,
 		ErrorLogLevel:           errorLevel,
@@ -239,6 +246,7 @@ func NewDefault() Configuration {
 		HSTSMaxAge:               hstsMaxAge,
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
+		LargeClientHeaderBuffers: "4 8k",
 		MaxWorkerConnections:     16384,
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
@@ -259,6 +267,7 @@ func NewDefault() Configuration {
 		UseHTTP2:                 true,
 		UseUpstreamHealthChecks:  false,
 		Backend: defaults.Backend{
+			ProxyBodySize:        bodySize,
 			ProxyConnectTimeout:  5,
 			ProxyReadTimeout:     60,
 			ProxySendTimeout:     60,
@@ -267,6 +276,7 @@ func NewDefault() Configuration {
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
+			UsePortInRedirects:   false,
 		},
 	}
 

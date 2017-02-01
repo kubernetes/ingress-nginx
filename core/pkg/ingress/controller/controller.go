@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/kylelemons/godebug/pretty"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -49,6 +50,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
 	"k8s.io/ingress/core/pkg/k8s"
+	ssl "k8s.io/ingress/core/pkg/net/ssl"
 	local_strings "k8s.io/ingress/core/pkg/strings"
 	"k8s.io/ingress/core/pkg/task"
 )
@@ -134,6 +136,8 @@ type Configuration struct {
 	// Backend is the particular implementation to be used.
 	// (for instance NGINX)
 	Backend ingress.Controller
+
+	UpdateStatus bool
 }
 
 // newIngressController creates an Ingress controller
@@ -182,6 +186,7 @@ func newIngressController(config *Configuration) *GenericController {
 			ic.syncQueue.Enqueue(obj)
 		},
 		UpdateFunc: func(old, cur interface{}) {
+			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
 			if !IsValidClass(curIng, config.IngressClass) {
 				return
@@ -190,6 +195,24 @@ func newIngressController(config *Configuration) *GenericController {
 			if !reflect.DeepEqual(old, cur) {
 				upIng := cur.(*extensions.Ingress)
 				ic.recorder.Eventf(upIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", upIng.Namespace, upIng.Name))
+				// the referenced secret is different?
+				if diff := pretty.Compare(curIng.Spec.TLS, oldIng.Spec.TLS); diff != "" {
+					for _, secretName := range curIng.Spec.TLS {
+						secKey := fmt.Sprintf("%v/%v", curIng.Namespace, secretName.SecretName)
+						go func() {
+							glog.Infof("TLS section in ingress %v/%v changed (secret is now %v)", upIng.Namespace, upIng.Name, secKey)
+							// we need to wait until the ingress store is updated
+							time.Sleep(10 * time.Second)
+							key, err := ic.GetSecret(secKey)
+							if err != nil {
+								glog.Errorf("unexpected error: %v", err)
+							}
+							if key != nil {
+								ic.secretQueue.Enqueue(key)
+							}
+						}()
+					}
+				}
 				ic.syncQueue.Enqueue(cur)
 			}
 		},
@@ -227,10 +250,22 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	mapEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			upCmap := obj.(*api.ConfigMap)
+			mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+			if mapKey == ic.cfg.ConfigMapName {
+				glog.V(2).Infof("adding configmap %v to backend", mapKey)
+				ic.cfg.Backend.SetConfig(upCmap)
+			}
+		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
 				upCmap := cur.(*api.ConfigMap)
 				mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+				if mapKey == ic.cfg.ConfigMapName {
+					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
+					ic.cfg.Backend.SetConfig(upCmap)
+				}
 				// updates to configuration configmaps can trigger an update
 				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
 					ic.recorder.Eventf(upCmap, api.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
@@ -270,11 +305,15 @@ func newIngressController(config *Configuration) *GenericController {
 		cache.ResourceEventHandlerFuncs{},
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 
-	ic.syncStatus = status.NewStatusSyncer(status.Config{
-		Client:         config.Client,
-		PublishService: ic.cfg.PublishService,
-		IngressLister:  ic.ingLister,
-	})
+	if config.UpdateStatus {
+		ic.syncStatus = status.NewStatusSyncer(status.Config{
+			Client:         config.Client,
+			PublishService: ic.cfg.PublishService,
+			IngressLister:  ic.ingLister,
+		})
+	} else {
+		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
+	}
 
 	ic.annotations = newAnnotationExtractor(ic)
 
@@ -318,8 +357,14 @@ func (ic GenericController) GetSecret(name string) (*api.Secret, error) {
 }
 
 func (ic *GenericController) getConfigMap(ns, name string) (*api.ConfigMap, error) {
-	// TODO: check why ic.mapLister.Store.GetByKey(mapKey) is not stable (random content)
-	return ic.cfg.Client.ConfigMaps(ns).Get(name)
+	s, exists, err := ic.mapLister.Store.GetByKey(fmt.Sprintf("%v/%v", ns, name))
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("configmap %v was not found", name)
+	}
+	return s.(*api.ConfigMap), nil
 }
 
 // sync collects all the pieces required to assemble the configuration file and
@@ -335,20 +380,6 @@ func (ic *GenericController) sync(key interface{}) error {
 	if !ic.controllersInSync() {
 		time.Sleep(podStoreSyncedPollPeriod)
 		return fmt.Errorf("deferring sync till endpoints controller has synced")
-	}
-
-	// by default no custom configuration
-	cfg := &api.ConfigMap{}
-
-	if ic.cfg.ConfigMapName != "" {
-		// search for custom configmap (defined in main args)
-		var err error
-		ns, name, _ := k8s.ParseNameNS(ic.cfg.ConfigMapName)
-		cfg, err = ic.getConfigMap(ns, name)
-		if err != nil {
-			// requeue
-			return fmt.Errorf("unexpected error searching configmap %v: %v", ic.cfg.ConfigMapName, err)
-		}
 	}
 
 	upstreams, servers := ic.getBackendServers()
@@ -370,7 +401,7 @@ func (ic *GenericController) sync(key interface{}) error {
 		}
 	}
 
-	data, err := ic.cfg.Backend.OnUpdate(cfg, ingress.Configuration{
+	data, err := ic.cfg.Backend.OnUpdate(ingress.Configuration{
 		Backends:            upstreams,
 		Servers:             servers,
 		TCPEndpoints:        ic.getTCPServices(),
@@ -873,6 +904,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 
 	bdef := ic.GetDefaultBackend()
 	ngxProxy := proxy.Configuration{
+		BodySize:       bdef.ProxyBodySize,
 		ConnectTimeout: bdef.ProxyConnectTimeout,
 		SendTimeout:    bdef.ProxySendTimeout,
 		ReadTimeout:    bdef.ProxyReadTimeout,
@@ -881,9 +913,30 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 
 	dun := ic.getDefaultUpstream().Name
 
+	// This adds the Default Certificate to Default Backend and also for vhosts missing the secret
+	var defaultPemFileName, defaultPemSHA string
+	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
+	// If no default Certificate was supplied, tries to generate a new dumb one
+	if err != nil {
+		var cert *ingress.SSLCert
+		defCert, defKey := ssl.GetFakeSSLCert()
+		cert, err = ssl.AddOrUpdateCertAndKey("system-snake-oil-certificate", defCert, defKey, []byte{})
+		if err != nil {
+			glog.Fatalf("Error generating self signed certificate: %v", err)
+		} else {
+			defaultPemFileName = cert.PemFileName
+			defaultPemSHA = cert.PemSHA
+		}
+	} else {
+		defaultPemFileName = defaultCertificate.PemFileName
+		defaultPemSHA = defaultCertificate.PemSHA
+	}
+
 	// default server
 	servers[defServerName] = &ingress.Server{
-		Hostname: defServerName,
+		Hostname:       defServerName,
+		SSLCertificate: defaultPemFileName,
+		SSLPemChecksum: defaultPemSHA,
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
@@ -953,7 +1006,9 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 						servers[host].SSLPemChecksum = cert.PemSHA
 					}
 				} else {
-					glog.Warningf("secret %v does not exists", key)
+
+					servers[host].SSLCertificate = defaultPemFileName
+					servers[host].SSLPemChecksum = defaultPemSHA
 				}
 			}
 
@@ -1054,7 +1109,9 @@ func (ic GenericController) Stop() error {
 		close(ic.stopCh)
 		go ic.syncQueue.Shutdown()
 		go ic.secretQueue.Shutdown()
-		ic.syncStatus.Shutdown()
+		if ic.syncStatus != nil {
+			ic.syncStatus.Shutdown()
+		}
 		return nil
 	}
 
@@ -1075,7 +1132,9 @@ func (ic GenericController) Start() {
 	go ic.secretQueue.Run(5*time.Second, ic.stopCh)
 	go ic.syncQueue.Run(5*time.Second, ic.stopCh)
 
-	go ic.syncStatus.Run(ic.stopCh)
+	if ic.syncStatus != nil {
+		go ic.syncStatus.Run(ic.stopCh)
+	}
 
 	<-ic.stopCh
 }

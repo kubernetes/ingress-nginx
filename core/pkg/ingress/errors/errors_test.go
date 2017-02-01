@@ -38,7 +38,7 @@ func TestInvalidContent(t *testing.T) {
 	if IsInvalidContent(ErrMissingAnnotations) {
 		t.Error("expected false")
 	}
-	err := NewInvalidAnnotationContent("demo")
+	err := NewInvalidAnnotationContent("demo", "")
 	if !IsInvalidContent(err) {
 		t.Error("expected true")
 	}

@@ -15,10 +15,10 @@ import (
 	"github.com/spf13/pflag"
 
 	"k8s.io/kubernetes/pkg/api"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/restclient"
+	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
+	clientcmdapi "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 	"k8s.io/kubernetes/pkg/healthz"
-	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/k8s"
@@ -28,6 +28,12 @@ import (
 func NewIngressController(backend ingress.Controller) *GenericController {
 	var (
 		flags = pflag.NewFlagSet("", pflag.ExitOnError)
+
+		apiserverHost = flags.String("apiserver-host", "", "The address of the Kubernetes Apiserver "+
+			"to connect to in the format of protocol://address:port, e.g., "+
+			"http://localhost:8080. If not specified, the assumption is that the binary runs inside a "+
+			"Kubernetes cluster and local discovery is attempted.")
+		kubeConfigFile = flags.String("kubeconfig", "", "Path to kubeconfig file with authorization and master location information.")
 
 		defaultSvc = flags.String("default-backend-service", "",
 			`Service used to serve a 404 page for the default backend. Takes the form
@@ -73,11 +79,13 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines 
 		the URL to be used as health check inside in the default server in NGINX.`)
+
+		updateStatus = flags.Bool("update-status", true, `Indicates if the 
+		ingress controller should update the Ingress status IP/hostname. Default is true`)
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
-	clientConfig := kubectl_util.DefaultClientConfig(flags)
 
 	flag.Set("logtostderr", "true")
 
@@ -91,17 +99,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		glog.Fatalf("Please specify --default-backend-service")
 	}
 
-	kubeconfig, err := restclient.InClusterConfig()
+	kubeClient, err := createApiserverClient(*apiserverHost, *kubeConfigFile)
 	if err != nil {
-		kubeconfig, err = clientConfig.ClientConfig()
-		if err != nil {
-			glog.Fatalf("error configuring the client: %v", err)
-		}
-	}
-
-	kubeClient, err := clientset.NewForConfig(kubeconfig)
-	if err != nil {
-		glog.Fatalf("failed to create client: %v", err)
+		handleFatalInitError(err)
 	}
 
 	_, err = k8s.IsValidService(kubeClient, *defaultSvc)
@@ -134,6 +134,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
 
 	config := &Configuration{
+		UpdateStatus:          *updateStatus,
 		Client:                kubeClient,
 		ResyncPeriod:          *resyncPeriod,
 		DefaultService:        *defaultSvc,
@@ -185,4 +186,56 @@ func registerHandlers(enableProfiling bool, port int, ic *GenericController) {
 		Handler: mux,
 	}
 	glog.Fatal(server.ListenAndServe())
+}
+
+const (
+	// High enough QPS to fit all expected use cases. QPS=0 is not set here, because
+	// client code is overriding it.
+	defaultQPS = 1e6
+	// High enough Burst to fit all expected use cases. Burst=0 is not set here, because
+	// client code is overriding it.
+	defaultBurst = 1e6
+)
+
+// createApiserverClient creates new Kubernetes Apiserver client. When kubeconfig or apiserverHost param is empty
+// the function assumes that it is running inside a Kubernetes cluster and attempts to
+// discover the Apiserver. Otherwise, it connects to the Apiserver specified.
+//
+// apiserverHost param is in the format of protocol://address:port/pathPrefix, e.g.http://localhost:8001.
+// kubeConfig location of kubeconfig file
+func createApiserverClient(apiserverHost string, kubeConfig string) (*client.Clientset, error) {
+
+	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeConfig},
+		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: apiserverHost}})
+
+	cfg, err := clientConfig.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.QPS = defaultQPS
+	cfg.Burst = defaultBurst
+	cfg.ContentType = "application/vnd.kubernetes.protobuf"
+
+	glog.Infof("Creating API server client for %s", cfg.Host)
+
+	client, err := client.NewForConfig(cfg)
+
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+/**
+ * Handles fatal init error that prevents server from doing any work. Prints verbose error
+ * message and quits the server.
+ */
+func handleFatalInitError(err error) {
+	glog.Fatalf("Error while initializing connection to Kubernetes apiserver. "+
+		"This most likely means that the cluster is misconfigured (e.g., it has "+
+		"invalid apiserver certificates or service accounts configuration). Reason: %s\n"+
+		"Refer to the troubleshooting guide for more information: "+
+		"https://github.com/kubernetes/ingress/blob/master/docs/troubleshooting.md", err)
 }

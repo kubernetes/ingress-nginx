@@ -37,9 +37,9 @@ var (
 )
 
 // NewInvalidAnnotationContent returns a new InvalidContent error
-func NewInvalidAnnotationContent(name string) error {
+func NewInvalidAnnotationContent(name string, val interface{}) error {
 	return InvalidContent{
-		Name: fmt.Sprintf("the annotation %v does not contains a valid value", name),
+		Name: fmt.Sprintf("the annotation %v does not contains a valid value (%v)", name, val),
 	}
 }
 

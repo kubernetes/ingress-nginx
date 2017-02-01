@@ -3,7 +3,7 @@ all: push
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-RELEASE?=0.8.4
+RELEASE?=0.9.0-beta.1
 PREFIX?=gcr.io/google_containers/nginx-ingress-controller
 GOOS?=linux
 
@@ -20,10 +20,10 @@ build: clean
 		-ldflags "-s -w -X ${PKG}/pkg/version.RELEASE=${RELEASE} -X ${PKG}/pkg/version.COMMIT=${COMMIT} -X ${PKG}/pkg/version.REPO=${REPO_INFO}" \
 		-o rootfs/nginx-ingress-controller ${PKG}/pkg/cmd/controller
 
-container:
+container: build
 	docker build -t $(PREFIX):$(RELEASE) rootfs
 
-push:
+push: container
 	gcloud docker push $(PREFIX):$(RELEASE)
 
 fmt:
