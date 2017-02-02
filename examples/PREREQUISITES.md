@@ -15,6 +15,10 @@ will need to create a firewall rule that targets port 80/443 on the specific VMs
 the nginx controller is running on. On cloudproviders, the respective backend
 will auto-create firewall rules for your Ingress.
 
+If you'd like to auto-create firewall rules for an OSS Ingress controller,
+you can put it behind a Service of `Type=Loadbalancer` as shown in
+[this example](/examples/static-ip/nginx#acquiring-an-ip).
+
 ## TLS certificates
 
 Unless otherwise mentioned, the TLS secret used in examples is a 2048 bit RSA
