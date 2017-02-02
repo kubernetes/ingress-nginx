@@ -17,9 +17,6 @@ limitations under the License.
 package authreq
 
 import (
-	"net/url"
-	"strings"
-
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
@@ -68,28 +65,9 @@ func NewParser() parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an external URL as source for authentication
 func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
-	str, err := parser.GetStringAnnotation(authURL, ing)
+	auth, err := parser.GetURLAnnotation(authURL, ing)
 	if err != nil {
 		return nil, err
-	}
-
-	if str == "" {
-		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
-	}
-
-	ur, err := url.Parse(str)
-	if err != nil {
-		return nil, err
-	}
-	if ur.Scheme == "" {
-		return nil, ing_errors.NewLocationDenied("url scheme is empty")
-	}
-	if ur.Host == "" {
-		return nil, ing_errors.NewLocationDenied("url host is empty")
-	}
-
-	if strings.Contains(ur.Host, "..") {
-		return nil, ing_errors.NewLocationDenied("invalid url host")
 	}
 
 	m, err := parser.GetStringAnnotation(authMethod, ing)
@@ -104,7 +82,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	sb, _ := parser.GetBoolAnnotation(authBody, ing)
 
 	return &External{
-		URL:      str,
+		URL:      auth.String(),
 		Method:   m,
 		SendBody: sb,
 	}, nil
