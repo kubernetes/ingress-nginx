@@ -1,0 +1,43 @@
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  labels:
+    k8s-app: oauth2proxy
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: oauth2proxy
+    spec:
+      volumes:
+      - name: oauth2proxy-secret
+        secret:
+          secretName: oauth2proxy
+      containers:
+      - name: oauth2proxy
+        image: docker.io/colemickens/oauth2_proxy:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 4180
+        args:
+        - --provider=github
+        - --email-domain=*
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: oauth2proxy
+  name: oauth2proxy
+spec:
+  ports:
+  - name: http
+    port: 4180
+    protocol: TCP
+    targetPort: 4180
+  selector:
+    k8s-app: oauth2proxy
