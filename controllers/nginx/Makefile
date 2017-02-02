@@ -21,7 +21,7 @@ build: clean
 		-o rootfs/nginx-ingress-controller ${PKG}/pkg/cmd/controller
 
 container: build
-	docker build -t $(PREFIX):$(RELEASE) rootfs
+	docker build --pull -t $(PREFIX):$(RELEASE) rootfs
 
 push: container
 	gcloud docker push $(PREFIX):$(RELEASE)
