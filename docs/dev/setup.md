@@ -49,7 +49,7 @@ NAME        STATUS    AGE       VERSION
 a sandboxed local cluster. You will first need to [install](https://github.com/kubernetes/minikube/releases)
 the minikube binary, then bring up a cluster
 ```console
-$ minikube up
+$ minikube start
 ```
 
 Check for Ready nodes
@@ -71,11 +71,15 @@ $ minikube addons list
 If this list already contains the ingress controller, you don't need to
 redeploy it. If the addon controller is disabled, you can enable it with
 ```console
-$ minikube enable addons ingress
+$ minikube addons enable ingress
 ```
 
 If the list *does not* contain the ingress controller, you can either update
 minikube, or deploy it yourself as shown in the next section.
+
+You may want to consider [using the VM's docker
+daemon](https://github.com/kubernetes/minikube/blob/master/README.md#reusing-the-docker-daemon)
+when developing.
 
 ## Deploy the ingress controller
 
