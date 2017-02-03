@@ -1,0 +1,113 @@
+{{ $cfg := . }}
+global
+    daemon
+    stats socket /tmp/haproxy
+    #server-state-file global
+    #server-state-base /var/state/haproxy/
+{{ if ne $cfg.Syslog "" }}
+    log {{ $cfg.Syslog }} format rfc5424 local0
+    log-tag ingress
+{{ end }}
+    tune.ssl.default-dh-param 1024
+    ssl-default-bind-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
+    ssl-default-bind-options no-tls-tickets
+
+defaults
+    log global
+    #load-server-state-from-file global
+    option redispatch
+    option dontlognull
+    option http-server-close
+    option http-keep-alive
+    timeout http-request    5s
+    timeout connect         5s
+    timeout client          50s
+    timeout client-fin      50s
+    timeout server          50s
+    timeout tunnel          1h
+    timeout http-keep-alive 60s
+    #default_backend #default-backend
+
+######
+###### Backends
+######
+{{ range $backend := $cfg.Backends }}
+backend {{ $backend.Name }}
+    mode http
+    balance roundrobin
+{{ range $endpoint := $backend.Endpoints }}
+{{ $target := (print $endpoint.Address ":" $endpoint.Port) }}
+    server {{ $target }} {{ $target }} check port {{ $endpoint.Port }} inter 2s
+{{ end }}
+{{ end }}
+
+######
+###### HTTP frontend
+######
+frontend httpfront
+    bind *:80
+    mode http
+{{ if ne $cfg.Syslog "" }}
+    option httplog
+{{ end }}
+    option forwardfor
+{{ range $server := $cfg.Servers }}
+{{ if and (ne $server.Hostname "_") (ne $server.SSLCertificate "") }}
+    redirect scheme https if { hdr(host) {{ $server.Hostname }} }
+{{ end }}
+{{ end }}
+{{ range $server := $cfg.Servers }}
+{{ if and (ne $server.Hostname "_") (eq $server.SSLCertificate "") }}
+{{ range $location := $server.Locations }}
+    use_backend {{ $location.Backend }} if { hdr(host) {{ $server.Hostname }} } { path_beg {{ $location.Path }} }
+{{ end }}
+{{ end }}
+{{ end }}
+
+######
+###### HTTPS frontends (tcp mode)
+######
+frontend httpsfront
+    bind :443
+    mode tcp
+    tcp-request inspect-delay 5s
+    tcp-request content accept if { req.ssl_hello_type 1 }
+{{ range $server := $cfg.Servers }}
+{{ if and (ne $server.Hostname "_") (ne $server.SSLCertificate "") }}
+    use_backend httpsback-{{ $server.Hostname }} if { req.ssl_sni -i {{ $server.Hostname }} }
+{{ end }}
+{{ end }}
+
+{{ range $server := $cfg.Servers }}
+{{ if and (ne $server.Hostname "_") (ne $server.SSLCertificate "") }}
+##
+## {{ $server.Hostname }}
+backend httpsback-{{ $server.Hostname }}
+    mode tcp
+    server {{ $server.Hostname }} unix@/var/run/haproxy-{{ $server.Hostname }}.sock send-proxy-v2
+
+frontend httpsfront-{{ $server.Hostname }}
+    # CRT PEM checksum: {{ $server.SSLPemChecksum }}
+    bind unix@/var/run/haproxy-{{ $server.Hostname }}.sock ssl crt {{ $server.SSLCertificate }} no-sslv3 accept-proxy
+    mode http
+{{ if ne $cfg.Syslog "" }}
+    option httplog
+{{ end }}
+    option forwardfor
+    rspadd  Strict-Transport-Security:\ max-age=15768000
+{{ range $location := $server.Locations }}
+    use_backend {{ $location.Backend }} if { path_beg {{ $location.Path }} }
+{{ end }}
+{{ end }}
+{{ end }}
+
+######
+###### Status page
+######
+listen stats
+    bind *:1936
+    mode http
+    stats enable
+    stats realm Haproxy\ Statistics
+    stats uri /
+    no log
