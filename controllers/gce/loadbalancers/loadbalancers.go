@@ -352,31 +352,32 @@ func (l *L7) deleteOldSSLCert() (err error) {
 }
 
 func (l *L7) checkSSLCert() (err error) {
-	// TODO: Currently, GCE only supports a single certificate per static IP
-	// so we don't need to bother with disambiguation. Naming the cert after
-	// the loadbalancer is a simplification.
-
-	namedCert := l.runtimeInfo.TLSName
+	certName := l.runtimeInfo.TLSName
 
 	// Use the named GCE cert when it is specified by the annotation.
-	if namedCert != "" {
-		certName := namedCert
-
-		// Use the targetHTTPSProxy's cert name if one already exists.
+	if certName != "" {
+		// Use the targetHTTPSProxy's cert name if it already has one set.
 		if l.sslCert != nil {
 			certName = l.sslCert.Name
 		}
-		cert, _ := l.cloud.GetSslCertificate(certName)
 
-		if cert != nil {
-			glog.Infof("Using existing sslCertificate %v for %v", certName, l.Name)
-
-			l.sslCert = cert
-			return nil
+		// Ask GCE for the cert, checking for problems and existence.
+		cert, err := l.cloud.GetSslCertificate(certName)
+		if err != nil {
+			return err
+		}
+		if cert == nil {
+			return fmt.Errorf("Cannot find existing sslCertificate %v for %v", certName, l.Name)
 		}
 
-		return fmt.Errorf("Cannot find existing sslCertificate %v for %v", certName, l.Name)
+		glog.Infof("Using existing sslCertificate %v for %v", certName, l.Name)
+		l.sslCert = cert
+		return nil
 	}
+
+	// TODO: Currently, GCE only supports a single certificate per static IP
+	// so we don't need to bother with disambiguation. Naming the cert after
+	// the loadbalancer is a simplification.
 
 	ingCert := l.runtimeInfo.TLS.Cert
 	ingKey := l.runtimeInfo.TLS.Key
@@ -387,7 +388,7 @@ func (l *L7) checkSSLCert() (err error) {
 	// TODO: Clean this code up into a ring buffer.
 	primaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%v", sslCertPrefix, l.Name))
 	secondaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%d-%v", sslCertPrefix, 1, l.Name))
-	certName := primaryCertName
+	certName = primaryCertName
 	if l.sslCert != nil {
 		certName = l.sslCert.Name
 	}
