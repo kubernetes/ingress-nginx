@@ -367,10 +367,10 @@ func (l *L7) checkSSLCert() (err error) {
 	if l.sslCert != nil {
 		certName = l.sslCert.Name
 	}
-	cert, err := l.cloud.GetSslCertificate(certName)
-	if err != nil {
-		return err
-	}
+
+	// Skip error checking because error-ing out will retry and loop, when we
+	// should create/update the cert if there is an error or does not exist.
+	cert, _ := l.cloud.GetSslCertificate(certName)
 
 	// PrivateKey is write only, so compare certs alone. We're assuming that
 	// no one will change just the key. We can remember the key and compare,
