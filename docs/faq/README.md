@@ -100,7 +100,7 @@ Testing for the Ingress controllers is divided between:
 * Ingress repo: unittests and pre-submit integration tests run via travis
 * Kubernetes repo: [pre-submit e2e](https://k8s-testgrid.appspot.com/google-gce#gce&include-filter-by-regex=Loadbalancing),
   [post-merge e2e](https://k8s-testgrid.appspot.com/google-gce#gci-gce-ingress),
-  [per release-branch e2e](https://k8s-testgrid.appspot.com/google-gce#gci-gce-ingress-release-1.5)
+  [per release-branch e2e](https://k8s-testgrid.appspot.com/google-gce#gci-gce-ingress-1.5)
 
 The configuration for jenkins e2e tests are located [here](https://github.com/kubernetes/test-infra).
 The Ingress E2Es are located [here](https://github.com/kubernetes/kubernetes/blob/master/test/e2e/ingress.go),
