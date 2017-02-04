@@ -134,6 +134,7 @@ var (
 		},
 		"buildLocation":               buildLocation,
 		"buildAuthLocation":           buildAuthLocation,
+		"buildAuthResponseHeaders":    buildAuthResponseHeaders,
 		"buildProxyPass":              buildProxyPass,
 		"buildRateLimitZones":         buildRateLimitZones,
 		"buildRateLimit":              buildRateLimit,
@@ -258,6 +259,27 @@ func buildAuthLocation(input interface{}) string {
 	str = strings.Replace(str, "=", "", -1)
 	return fmt.Sprintf("/_external-auth-%v", str)
 }
+
+func buildAuthResponseHeaders(input interface{}) []string {
+	location, ok := input.(*ingress.Location)
+	res := []string{}
+	if !ok {
+		return res
+	}
+
+	if len(location.ExternalAuth.ResponseHeaders) == 0 {
+		return res
+	}
+
+	for i, h := range location.ExternalAuth.ResponseHeaders {
+		hvar := strings.ToLower(h)
+		hvar = strings.NewReplacer("-", "_").Replace(hvar)
+		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
+		res = append(res, fmt.Sprintf("proxy_set_header '%v' $authHeader%v;", h, i))
+	}
+	return res
+}
+
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
 // (specified through the ingress.kubernetes.io/rewrite-to annotation)
