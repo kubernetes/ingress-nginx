@@ -434,8 +434,7 @@ stream {
     {{ buildSSPassthroughUpstreams $backends .PassthroughBackends }}
 
     server {
-        listen                  [::]:443 ipv6only=off;
-        {{ if $cfg.UseProxyProtocol }}proxy_protocol on;{{ end }}
+        listen                  [::]:443 ipv6only=off{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
         proxy_pass              $stream_upstream;
         ssl_preread             on;
     }
