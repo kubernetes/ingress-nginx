@@ -620,9 +620,8 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 			}
 
 			if rule.HTTP == nil &&
-				len(ing.Spec.TLS) == 0 &&
 				host != defServerName {
-				glog.V(3).Infof("ingress rule %v/%v does not contains HTTP or TLS rules. using default backend", ing.Namespace, ing.Name)
+				glog.V(3).Infof("ingress rule %v/%v does not contains HTTP rules. using default backend", ing.Namespace, ing.Name)
 				server.Locations[0].Backend = defBackend.Name
 				continue
 			}
@@ -976,7 +975,7 @@ func (ic *GenericController) getEndpoints(
 				port, err := service.GetPortMapping(servicePort.StrVal, s)
 				if err == nil {
 					targetPort = port
-					continue
+					break
 				}
 
 				glog.Warningf("error mapping service port: %v", err)
