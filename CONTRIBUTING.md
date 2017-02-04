@@ -22,10 +22,11 @@ If you're new to the project and want to help, but don't know where to start, we
 ## Contributing A Patch
 
 1. If you haven't already done so, sign a Contributor License Agreement (see details above).
+1. Read the [Ingress development guide](docs/dev/README.md)
 1. Fork the desired repo, develop and test your code changes.
 1. Submit a pull request.
 
-All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/kubernetes/tree/8a2c639bfb2087a9a89c02d2dc30fcb9bd0846f6/docs/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.
+All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/kubernetes/tree/master/docs/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.
 
 ### Merge Approval
 

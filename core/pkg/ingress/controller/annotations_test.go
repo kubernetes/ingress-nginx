@@ -28,10 +28,10 @@ import (
 )
 
 const (
-	annotation_secureUpstream = "ingress.kubernetes.io/secure-backends"
-	annotation_upsMaxFails    = "ingress.kubernetes.io/upstream-max-fails"
-	annotation_upsFailTimeout = "ingress.kubernetes.io/upstream-fail-timeout"
-	annotation_passthrough    = "ingress.kubernetes.io/ssl-passthrough"
+	annotationSecureUpstream = "ingress.kubernetes.io/secure-backends"
+	annotationUpsMaxFails    = "ingress.kubernetes.io/upstream-max-fails"
+	annotationUpsFailTimeout = "ingress.kubernetes.io/upstream-fail-timeout"
+	annotationPassthrough    = "ingress.kubernetes.io/ssl-passthrough"
 )
 
 type mockCfg struct {
@@ -106,9 +106,9 @@ func TestSecureUpstream(t *testing.T) {
 		annotations map[string]string
 		er          bool
 	}{
-		{map[string]string{annotation_secureUpstream: "true"}, true},
-		{map[string]string{annotation_secureUpstream: "false"}, false},
-		{map[string]string{annotation_secureUpstream + "_no": "true"}, false},
+		{map[string]string{annotationSecureUpstream: "true"}, true},
+		{map[string]string{annotationSecureUpstream: "false"}, false},
+		{map[string]string{annotationSecureUpstream + "_no": "true"}, false},
 		{map[string]string{}, false},
 		{nil, false},
 	}
@@ -131,9 +131,9 @@ func TestHealthCheck(t *testing.T) {
 		eumf        int
 		euft        int
 	}{
-		{map[string]string{annotation_upsMaxFails: "3", annotation_upsFailTimeout: "10"}, 3, 10},
-		{map[string]string{annotation_upsMaxFails: "3"}, 3, 0},
-		{map[string]string{annotation_upsFailTimeout: "10"}, 0, 10},
+		{map[string]string{annotationUpsMaxFails: "3", annotationUpsFailTimeout: "10"}, 3, 10},
+		{map[string]string{annotationUpsMaxFails: "3"}, 3, 0},
+		{map[string]string{annotationUpsFailTimeout: "10"}, 0, 10},
 		{map[string]string{}, 0, 0},
 		{nil, 0, 0},
 	}
@@ -164,9 +164,9 @@ func TestSSLPassthrough(t *testing.T) {
 		annotations map[string]string
 		er          bool
 	}{
-		{map[string]string{annotation_passthrough: "true"}, true},
-		{map[string]string{annotation_passthrough: "false"}, false},
-		{map[string]string{annotation_passthrough + "_no": "true"}, false},
+		{map[string]string{annotationPassthrough: "true"}, true},
+		{map[string]string{annotationPassthrough: "false"}, false},
+		{map[string]string{annotationPassthrough + "_no": "true"}, false},
 		{map[string]string{}, false},
 		{nil, false},
 	}
