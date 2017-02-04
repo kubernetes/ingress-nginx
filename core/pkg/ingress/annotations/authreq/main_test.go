@@ -19,6 +19,7 @@ package authreq
 import (
 	"fmt"
 	"testing"
+	"reflect"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -106,6 +107,51 @@ func TestAnnotations(t *testing.T) {
 		}
 		if u.SendBody != test.sendBody {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.sendBody, u.SendBody)
+		}
+	}
+}
+
+func TestHeaderAnnotations(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	tests := []struct {
+		title         string
+		url           string
+		headers       string
+		parsedHeaders []string
+		expErr        bool
+	}{
+		{"single header", "http://goog.url", "h1", []string{"h1"}, false},
+		{"nothing", "http://goog.url", "", []string{}, false},
+		{"spaces", "http://goog.url", "  ", []string{}, false},
+		{"two headers", "http://goog.url", "1,2", []string{"1", "2"}, false},
+		{"two headers and empty entries", "http://goog.url", ",1,,2,", []string{"1", "2"}, false},
+		{"header with spaces", "http://goog.url", "1 2", []string{}, true},
+		{"header with other bad symbols", "http://goog.url", "1+2", []string{}, true},
+	}
+
+	for _, test := range tests {
+		data[authURL] = test.url
+		data[authHeaders] = test.headers
+
+		i, err := NewParser().Parse(ing)
+		if test.expErr {
+			if err == nil {
+				t.Errorf("%v: expected error but retuned nil", err.Error())
+			}
+			continue
+		}
+
+		u, ok := i.(*External)
+		if !ok {
+			t.Errorf("%v: expected an External type", test.title)
+		}
+
+		if !reflect.DeepEqual(u.ResponseHeaders, test.parsedHeaders) {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.headers, u.ResponseHeaders)
 		}
 	}
 }
