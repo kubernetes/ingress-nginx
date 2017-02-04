@@ -872,20 +872,24 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 			if host == "" {
 				host = defServerName
 			}
-			if _, ok := servers[host]; ok {
-				// server already configured
-				continue
-			}
-			servers[host] = &ingress.Server{
-				Hostname: host,
-				Locations: []*ingress.Location{
-					{
-						Path:         rootLocation,
-						IsDefBackend: true,
-						Backend:      dun,
-						Proxy:        ngxProxy,
+			server := servers[host]
+			if server == nil {
+				server = &ingress.Server{
+					Hostname: host,
+					Locations: []*ingress.Location{
+						{
+							Path:         rootLocation,
+							IsDefBackend: true,
+							Backend:      dun,
+							Proxy:        ngxProxy,
+						},
 					},
-				}, SSLPassthrough: sslpt}
+				}
+				servers[host] = server
+			}
+			if sslpt != nil {
+				server.SSLPassthrough = *sslpt
+			}
 		}
 	}
 

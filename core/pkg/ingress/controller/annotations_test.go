@@ -156,26 +156,36 @@ func TestHealthCheck(t *testing.T) {
 	}
 }
 
+func Bool(v bool) *bool {
+	return &v
+}
+
 func TestSSLPassthrough(t *testing.T) {
 	ec := newAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
 	fooAnns := []struct {
 		annotations map[string]string
-		er          bool
+		expected    *bool
 	}{
-		{map[string]string{annotation_passthrough: "true"}, true},
-		{map[string]string{annotation_passthrough: "false"}, false},
-		{map[string]string{annotation_passthrough + "_no": "true"}, false},
-		{map[string]string{}, false},
-		{nil, false},
+		{map[string]string{annotation_passthrough: "true"}, Bool(true)},
+		{map[string]string{annotation_passthrough: "false"}, Bool(false)},
+		{map[string]string{annotation_passthrough + "_no": "true"}, nil},
+		{map[string]string{}, nil},
+		{nil, nil},
 	}
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
 		r := ec.SSLPassthrough(ing)
-		if r != foo.er {
-			t.Errorf("Returned %v but expected %v", r, foo.er)
+		if r == nil && foo.expected != nil {
+			t.Errorf("Returned nil but expected %v", *foo.expected)
+		}
+		if r != nil && foo.expected == nil {
+			t.Errorf("Returned %v but expected nil", *r)
+		}
+		if r != nil && foo.expected != nil && *r != *foo.expected {
+			t.Errorf("Returned %v but expected %v", *r, *foo.expected)
 		}
 	}
 }

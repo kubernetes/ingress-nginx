@@ -111,7 +111,11 @@ func (e *annotationExtractor) HealthCheck(ing *extensions.Ingress) *healthcheck.
 	return val.(*healthcheck.Upstream)
 }
 
-func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
-	val, _ := e.annotations[sslPassthrough].Parse(ing)
-	return val.(bool)
+func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) *bool {
+	val, err := e.annotations[sslPassthrough].Parse(ing)
+	if errors.IsMissingAnnotations(err) {
+		return nil
+	}
+	b := val.(bool)
+	return &b
 }
