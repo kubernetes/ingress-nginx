@@ -44,6 +44,8 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
 |[ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[ingress.kubernetes.io/auth-tls-secret](#Certificate Authentication)|string|
+|[ingress.kubernetes.io/auth-tls-verify-depth](#Certificate Authentication)|number|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
@@ -125,6 +127,27 @@ ingress.kubernetes.io/auth-realm: "realm string"
 ```
 
 Please check the [auth](examples/auth/README.md) example.
+
+### Certificate Authentication
+
+It's possible to enable Certificate based authentication using additional annotations in Ingres Rule.
+
+The annotations are:
+
+```
+ingress.kubernetes.io/auth-tls-secret: secretName
+```
+
+The name of the secret that contains the full Certificate Authority chain that is enabled to authenticate against this ingress. It's composed of namespace/secretName
+
+```
+ingress.kubernetes.io/auth-tls-verify-depth
+```
+
+The validation depth between the provided client certificate and the Certification Authority chain.
+
+Please check the [tls-auth](examples/auth/client-certs/README.md) example.
+
 
 ### Enable CORS
 

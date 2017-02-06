@@ -225,10 +225,11 @@ http {
         {{ $path := buildLocation $location }}
         {{ $authPath := buildAuthLocation $location }}
 
-        {{ if not (empty $location.CertificateAuth.CertFileName) }}
-        # PEM sha: {{ $location.CertificateAuth.PemSHA }}
-        ssl_client_certificate              {{ $location.CertificateAuth.CAFileName }};
+        {{ if not (empty $location.CertificateAuth.AuthSSLCert.CAFileName) }}
+        # PEM sha: {{ $location.CertificateAuth.AuthSSLCert.PemSHA }}
+        ssl_client_certificate              {{ $location.CertificateAuth.AuthSSLCert.CAFileName }};
         ssl_verify_client on;
+        ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
         {{ end }}
 
         {{ if not (empty $authPath) }}
@@ -294,6 +295,11 @@ http {
             client_max_body_size                    "{{ $location.Proxy.BodySize }}";
 
             proxy_set_header Host                   $host;
+
+            # Pass the extracted client certificate to the backend
+            {{ if not (empty $location.CertificateAuth.AuthSSLCert.CAFileName) }}
+            proxy_set_header ssl-client-cert        $ssl_client_cert;
+            {{ end }}
 
             # Pass Real IP
             proxy_set_header X-Real-IP              $remote_addr;
