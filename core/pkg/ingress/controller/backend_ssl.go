@@ -98,6 +98,8 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 	return nil
 }
 
+// getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
+// It parses the secret and verifies if it's a keypair, or a 'ca.crt' secret only.
 func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
 	secretInterface, exists, err := ic.secrLister.Store.GetByKey(secretName)
 	if err != nil {
@@ -108,19 +110,24 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 	}
 
 	secret := secretInterface.(*api.Secret)
-	cert, ok := secret.Data[api.TLSCertKey]
-	if !ok {
-		return nil, fmt.Errorf("secret named %v has no private key", secretName)
-	}
-	key, ok := secret.Data[api.TLSPrivateKeyKey]
-	if !ok {
-		return nil, fmt.Errorf("secret named %v has no cert", secretName)
-	}
+	cert, okcert := secret.Data[api.TLSCertKey]
+	key, okkey := secret.Data[api.TLSPrivateKeyKey]
 
 	ca := secret.Data["ca.crt"]
 
 	nsSecName := strings.Replace(secretName, "/", "-", -1)
-	s, err := ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
+
+	var s *ingress.SSLCert
+	if okcert && okkey {
+		glog.V(3).Infof("Found certificate and private key, configuring %v as a TLS Secret", secretName)
+		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
+	} else if ca != nil {
+		glog.V(3).Infof("Found only ca.crt, configuring %v as an AuthCert secret", secretName)
+		s, err = ssl.AddOrUpdateCertAuth(nsSecName, ca)
+	} else {
+		return nil, fmt.Errorf("No keypair or CA cert could be found in %v", secretName)
+	}
+
 	if err != nil {
 		return nil, err
 	}

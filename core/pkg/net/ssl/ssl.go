@@ -37,6 +37,8 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 	pemFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, pemName)
 
 	tempPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, pemName)
+
+	glog.V(3).Infof("AddOrUpdateCertAndKey: Creating temp file %v for Keypair: %v", tempPemFile.Name(), pemName)
 	if err != nil {
 		return nil, fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
 	}
@@ -122,6 +124,56 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		PemFileName: pemFileName,
 		PemSHA:      pemSHA1(pemFileName),
 		CN:          cn,
+	}, nil
+}
+
+// AddOrUpdateCertAuth creates a .pem file with the specified CAs to be used in Cert Authentication
+func AddOrUpdateCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
+
+	caName := fmt.Sprintf("ca-%v.pem", name)
+	caFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, caName)
+
+	tempCAPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, caName)
+	glog.V(3).Infof("AddOrUpdateCertAuth: Creating temp file %v for CA: %v", tempCAPemFile.Name(), caName)
+
+	if err != nil {
+		return nil, fmt.Errorf("could not create temp CA pem file %v: %v", tempCAPemFile.Name(), err)
+	}
+
+	_, err = tempCAPemFile.Write(ca)
+	if err != nil {
+		return nil, fmt.Errorf("could not write to CA pem file %v: %v", tempCAPemFile.Name(), err)
+	}
+
+	err = tempCAPemFile.Close()
+	if err != nil {
+		return nil, fmt.Errorf("could not close CA temp pem file %v: %v", tempCAPemFile.Name(), err)
+	}
+
+	pemCACerts, err := ioutil.ReadFile(tempCAPemFile.Name())
+	if err != nil {
+		return nil, err
+	}
+
+	pemCABlock, _ := pem.Decode(pemCACerts)
+	if pemCABlock == nil {
+		return nil, fmt.Errorf("No valid PEM formatted block found")
+	}
+
+	_, err = x509.ParseCertificate(pemCABlock.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Rename(tempCAPemFile.Name(), caFileName)
+	if err != nil {
+		return nil, fmt.Errorf("could not move temp pem file %v to destination %v: %v", tempCAPemFile.Name(), caFileName, err)
+	}
+
+	return &ingress.SSLCert{
+		CAFileName:  caFileName,
+		PemFileName: caFileName,
+		PemSHA:      pemSHA1(caFileName),
 	}, nil
 }
 

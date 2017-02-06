@@ -221,10 +221,13 @@ http {
         {{ $path := buildLocation $location }}
         {{ $authPath := buildAuthLocation $location }}
 
-        {{ if not (empty $location.CertificateAuth.CertFileName) }}
+        {{ if not (empty $location.CertificateAuth.CAFileName) }}
         # PEM sha: {{ $location.CertificateAuth.PemSHA }}
         ssl_client_certificate              {{ $location.CertificateAuth.CAFileName }};
         ssl_verify_client on;
+        ssl_verify_depth 10;
+        proxy_set_header SSL_CLIENT_CERT $ssl_client_cert;
+
         {{ end }}
 
         {{ if not (empty $authPath) }}
