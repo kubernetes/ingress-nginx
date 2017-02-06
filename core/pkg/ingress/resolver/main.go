@@ -28,7 +28,7 @@ type DefaultBackend interface {
 	GetDefaultBackend() defaults.Backend
 }
 
-// Secret has a method that searchs for secrets contenating
+// Secret has a method that searches for secrets contenating
 // the namespace and name using a the character /
 type Secret interface {
 	GetSecret(string) (*api.Secret, error)
