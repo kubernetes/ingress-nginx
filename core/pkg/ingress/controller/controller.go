@@ -676,6 +676,15 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 // GetAuthCertificate ...
 func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
+	key, err := ic.GetSecret(secretName)
+	if err != nil {
+		return &resolver.AuthSSLCert{}, fmt.Errorf("unexpected error: %v", err)
+	}
+	if key != nil {
+		ic.secretQueue.Enqueue(key)
+	}
+	// Enough time to enqueue the new certificate
+	time.Sleep(5 * time.Second)
 	bc, exists := ic.sslCertTracker.Get(secretName)
 	if !exists {
 		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exists", secretName)
