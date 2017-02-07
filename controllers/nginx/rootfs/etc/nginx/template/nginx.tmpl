@@ -1,4 +1,4 @@
-{{ $cfg := .Cfg }}{{ $healthzURI := .HealthzURI }}{{ $backends := .Backends }}
+{{ $cfg := .Cfg }}{{ $healthzURI := .HealthzURI }}{{ $backends := .Backends }}{{ $proxyHeaders := .ProxySetHeaders }}
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -306,6 +306,11 @@ http {
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
             proxy_set_header Proxy                  "";
+
+            # Custom headers
+            {{ range $k, $v := $proxyHeaders }}
+            proxy_set_header {{ $k }}                    "{{ $v }}";
+            {{ end }}
 
             proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
             proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;

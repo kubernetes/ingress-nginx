@@ -304,6 +304,14 @@ func newIngressController(config *Configuration) *GenericController {
 
 	ic.annotations = newAnnotationExtractor(ic)
 
+	ic.cfg.Backend.SetListers(ingress.StoreLister{
+		Ingress:   ic.ingLister,
+		Service:   ic.svcLister,
+		Endpoint:  ic.endpLister,
+		Secret:    ic.secrLister,
+		ConfigMap: ic.mapLister,
+	})
+
 	return &ic
 }
 
