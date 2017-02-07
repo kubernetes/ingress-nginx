@@ -391,7 +391,7 @@ func (ic *GenericController) sync(key interface{}) error {
 		Backends:            upstreams,
 		Servers:             servers,
 		TCPEndpoints:        ic.getStreamServices(ic.cfg.TCPConfigMapName, api.ProtocolTCP),
-		UPDEndpoints:        ic.getStreamServices(ic.cfg.UDPConfigMapName, api.ProtocolUDP),
+		UDPEndpoints:        ic.getStreamServices(ic.cfg.UDPConfigMapName, api.ProtocolUDP),
 		PassthroughBackends: passUpstreams,
 	})
 	if err != nil {
