@@ -99,21 +99,21 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 			return nil, errors.New(oe)
 		}
 
-		caName := fmt.Sprintf("ca-%v.pem", name)
-		caFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, caName)
-		f, err := os.Create(caFileName)
+		caFile, err := os.OpenFile(pemFileName, os.O_RDWR|os.O_APPEND, 0600)
 		if err != nil {
-			return nil, fmt.Errorf("could not create ca pem file %v: %v", caFileName, err)
+			return nil, fmt.Errorf("Could not open file %v for writing additional CA chains: %v", pemFileName, err)
 		}
-		defer f.Close()
-		_, err = f.Write(ca)
+
+		defer caFile.Close()
+		_, err = caFile.Write([]byte("\n"))
 		if err != nil {
-			return nil, fmt.Errorf("could not create ca pem file %v: %v", caFileName, err)
+			return nil, fmt.Errorf("could not append CA to cert file %v: %v", pemFileName, err)
 		}
-		f.Write([]byte("\n"))
+		caFile.Write(ca)
+		caFile.Write([]byte("\n"))
 
 		return &ingress.SSLCert{
-			CAFileName:  caFileName,
+			CAFileName:  pemFileName,
 			PemFileName: pemFileName,
 			PemSHA:      pemSHA1(pemFileName),
 			CN:          cn,
