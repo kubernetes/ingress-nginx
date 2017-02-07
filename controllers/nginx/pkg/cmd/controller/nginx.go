@@ -331,7 +331,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		PassthroughBackends: ingressCfg.PassthroughBackends,
 		Servers:             ingressCfg.Servers,
 		TCPBackends:         ingressCfg.TCPEndpoints,
-		UDPBackends:         ingressCfg.UPDEndpoints,
+		UDPBackends:         ingressCfg.UDPEndpoints,
 		HealthzURI:          ngxHealthPath,
 		CustomErrors:        len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                 cfg,
