@@ -1,107 +1,151 @@
 # Deploying HAProxy Ingress Controller
 
-Don't have a Kubernetes cluster? Single-node of [CoreOS Kubernetes](https://github.com/coreos/coreos-kubernetes/) is a good starting point.
+If you don't have a Kubernetes cluster, please refer to [setup](/docs/dev/setup.md)
+for instructions on how to create a new one.
+
+## Prerequisites
+
+This ingress controller doesn't yet have support for
+[ingress classes](/examples/PREREQUISITES.md#ingress-class). You MUST turn
+down any existing ingress controllers before running HAProxy Ingress controller or
+they will fight for Ingresses. This includes any cloudprovider controller.
+
+This document has also the following prerequisites:
+
+* Deploy a [web app](/examples/PREREQUISITES.md#test-http-service) for testing
+* Create a [TLS secret](/examples/PREREQUISITES.md#tls-certificates) named `tls-secret` to be used as default TLS certificate
+
+The web app can be created as follow:
+
+```console
+$ kubectl run http-svc \
+  --image=gcr.io/google_containers/echoserver:1.3 \
+  --port=8080 \
+  --replicas=2 \
+  --expose
+```
+
+Creating the TLS secret:
+
+```console
+$ openssl req \
+  -x509 -newkey rsa:2048 -nodes -days 365 \
+  -keyout tls.key -out tls.crt -subj '/CN=localhost'
+$ kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key
+$ rm -v tls.crt tls.key
+```
+
+## Default backend
 
 Deploy a default backend used to serve `404 Not Found` pages:
 
-    kubectl run ingress-default-backend \
-      --image=gcr.io/google_containers/defaultbackend:1.0 \
-      --port=8080 \
-      --limits=cpu=10m,memory=20Mi \
-      --expose
+```console
+$ kubectl run ingress-default-backend \
+  --image=gcr.io/google_containers/defaultbackend:1.0 \
+  --port=8080 \
+  --limits=cpu=10m,memory=20Mi \
+  --expose
+```
 
 Check if the default backend is up and running:
 
-    kubectl get pod
-    NAME                                       READY     STATUS    RESTARTS   AGE
-    ingress-default-backend-1110790216-gqr61   1/1       Running   0          10s
+```console
+$ kubectl get pod
+NAME                                       READY     STATUS    RESTARTS   AGE
+ingress-default-backend-1110790216-gqr61   1/1       Running   0          10s
+```
 
-Deploy certificate and private key used to serve https on ingress that doesn't provide it's own certificate. For testing purposes a self signed certificate is ok:
+## Controller
 
-    openssl req \
-      -x509 -newkey rsa:2048 -nodes -days 365 \
-      -keyout tls.key -out tls.crt -subj '/CN=localhost'
-    kubectl create secret tls ingress-default-ssl --cert=tls.crt --key=tls.key
-    rm -v tls.crt tls.key
+Deploy HAProxy Ingress:
 
-Deploy HAProxy Ingress. Note that `hostNetwork: true` could be uncommented if your cluster has IPs that doesn't use ports 80, 443 and 1936.
-
-    kubectl create -f haproxy-ingress.yaml
+```console
+$ kubectl create -f haproxy-ingress.yaml
+```
 
 Check if the controller was successfully deployed:
 
-    kubectl get pod -w
-    NAME                                       READY     STATUS    RESTARTS   AGE
-    haproxy-ingress-2556761959-tv20k           1/1       Running   0          12s
-    ingress-default-backend-1110790216-gqr61   1/1       Running   0          3m
-    ^C
+```console
+$ kubectl get pod -w
+NAME                                       READY     STATUS    RESTARTS   AGE
+haproxy-ingress-2556761959-tv20k           1/1       Running   0          12s
+ingress-default-backend-1110790216-gqr61   1/1       Running   0          3m
+^C
+```
 
-Problem? Check logs and events of the POD:
+Deploy the ingress resource of our already deployed web app:
 
-    kubectl logs haproxy-ingress-2556761959-tv20k
-    kubectl describe haproxy-ingress-2556761959-tv20k
+```console
+$ kubectl create -f - <<EOF
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: app
+spec:
+  rules:
+  - host: foo.bar
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: http-svc
+          servicePort: 80
+EOF
+```
 
-Deploy some web application and it's ingress resource:
+Exposing the controller as a `type=NodePort` service:
 
-    kubectl run nginx --image=nginx:alpine --port=80 --expose
-    kubectl create -f - <<EOF
-      apiVersion: extensions/v1beta1
-      kind: Ingress
-      metadata:
-        name: app
-      spec:
-        rules:
-        - host: foo.bar
-          http:
-            paths:
-            - path: /
-              backend:
-                serviceName: nginx
-                servicePort: 80
-    EOF
-
-Exposing HAProxy Ingress depend on your Kubernetes environment. If `hostNetwork` was defined just use host's public IP, otherwise expose the controller as a `type=NodePort` service:
-
-    kubectl expose deploy/haproxy-ingress --type=NodePort
-    kubectl get svc/haproxy-ingress -oyaml
+```console
+$ kubectl expose deploy/haproxy-ingress --type=NodePort
+$ kubectl get svc/haproxy-ingress -oyaml
+```
 
 Look for `nodePort` field next to `port: 80`.
 
-Change below `172.17.4.99` to the host's IP and `30876` to the `nodePort`, or remove `:30876` if using `hostNetwork`:
+Change below `172.17.4.99` to the host's IP and `30876` to the `nodePort`:
 
-    curl -i 172.17.4.99:30876
-    HTTP/1.1 404 Not Found
-    Date: Mon, 05 Feb 2017 22:59:36 GMT
-    Content-Length: 21
-    Content-Type: text/plain; charset=utf-8
+```console
+$ curl -i 172.17.4.99:30876
+HTTP/1.1 404 Not Found
+Date: Mon, 05 Feb 2017 22:59:36 GMT
+Content-Length: 21
+Content-Type: text/plain; charset=utf-8
 
-    default backend - 404
+default backend - 404
+```
 
 Using default backend because host was not found.
 
 Now try to send a header:
 
-    curl -i 172.17.4.99:30876 -H 'Host: foo.bar'
-    HTTP/1.1 200 OK
-    Server: nginx/1.11.9
-    Date: Mon, 05 Feb 2017 23:00:33 GMT
-    Content-Type: text/html
-    Content-Length: 612
-    Last-Modified: Tue, 24 Jan 2017 18:53:46 GMT
-    ETag: "5887a2ba-264"
-    Accept-Ranges: bytes
+```console
+$ curl -i 172.17.4.99:30876 -H 'Host: foo.bar'
+HTTP/1.1 200 OK
+Server: nginx/1.9.11
+Date: Mon, 05 Feb 2017 23:00:33 GMT
+Content-Type: text/plain
+Transfer-Encoding: chunked
 
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <title>Welcome to nginx!</title>
-    ...
+CLIENT VALUES:
+client_address=10.2.18.5
+command=GET
+real path=/
+query=nil
+request_version=1.1
+request_uri=http://foo.bar:8080/
+...
+```
 
-Not what you were looking for? Have a look at controller's logs:
+## Troubleshooting
 
-    kubectl get pod
-    NAME                                       READY     STATUS    RESTARTS   AGE
-    haproxy-ingress-2556761959-tv20k           1/1       Running   0          9m
-    ...
+If you have any problem, check logs and events of HAProxy Ingress POD:
 
-    kubectl logs haproxy-ingress-2556761959-tv20k | less -S
+```console
+$ kubectl get pod
+NAME                                       READY     STATUS    RESTARTS   AGE
+haproxy-ingress-2556761959-tv20k           1/1       Running   0          9m
+...
+
+$ kubectl logs haproxy-ingress-2556761959-tv20k
+$ kubectl describe haproxy-ingress-2556761959-tv20k
+```

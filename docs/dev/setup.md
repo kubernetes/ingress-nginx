@@ -81,6 +81,14 @@ You may want to consider [using the VM's docker
 daemon](https://github.com/kubernetes/minikube/blob/master/README.md#reusing-the-docker-daemon)
 when developing.
 
+### CoreOS Kubernetes
+
+[CoreOS Kubernetes](https://github.com/coreos/coreos-kubernetes/) repository has `Vagrantfile`
+scripts to easily create a new Kubernetes cluster on VirtualBox, VMware or AWS.
+
+Follow the CoreOS [doc](https://coreos.com/kubernetes/docs/latest/kubernetes-on-vagrant-single.html)
+for detailed instructions.
+
 ## Deploy the ingress controller
 
 You can deploy an ingress controller on the cluster setup in the previous step
