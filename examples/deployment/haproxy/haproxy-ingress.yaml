@@ -14,13 +14,12 @@ spec:
       labels:
         run: haproxy-ingress
     spec:
-      # hostNetwork: true
       containers:
       - name: haproxy-ingress
         image: quay.io/jcmoraisjr/haproxy-ingress
         args:
         - --default-backend-service=default/ingress-default-backend
-        - --default-ssl-certificate=default/ingress-default-ssl
+        - --default-ssl-certificate=default/tls-secret
         ports:
         - name: http
           containerPort: 80
