@@ -226,8 +226,6 @@ http {
         ssl_client_certificate              {{ $location.CertificateAuth.CAFileName }};
         ssl_verify_client on;
         ssl_verify_depth 10;
-        proxy_set_header SSL_CLIENT_CERT $ssl_client_cert;
-
         {{ end }}
 
         {{ if not (empty $authPath) }}
@@ -293,6 +291,11 @@ http {
             client_max_body_size                    "{{ $location.Proxy.BodySize }}";
 
             proxy_set_header Host                   $host;
+
+            # Pass the extracted client certificate to the backend
+            {{ if not (empty $location.CertificateAuth.CAFileName) }}
+            proxy_set_header ssl-client-cert        $ssl_client_cert;
+            {{ end }}
 
             # Pass Real IP
             proxy_set_header X-Real-IP              $remote_addr;
