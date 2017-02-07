@@ -113,9 +113,9 @@ type Configuration struct {
 	// TCPEndpoints contain endpoints for tcp streams handled by this backend
 	// +optional
 	TCPEndpoints []*Location `json:"tcpEndpoints,omitempty"`
-	// UPDEndpoints contain endpoints for udp streams handled by this backend
+	// UDPEndpoints contain endpoints for udp streams handled by this backend
 	// +optional
-	UPDEndpoints []*Location `json:"udpEndpoints,omitempty"`
+	UDPEndpoints []*Location `json:"udpEndpoints,omitempty"`
 	// PassthroughBackend contains the backends used for SSL passthrough.
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
