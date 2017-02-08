@@ -24,18 +24,18 @@ metadata:
   name: l7-lb-controller
   labels:
     k8s-app: glbc
-    version: v0.9.0
+    version: v0.9.1
 spec:
   # There should never be more than 1 controller alive simultaneously.
   replicas: 1
   selector:
     k8s-app: glbc
-    version: v0.9.0
+    version: v0.9.1
   template:
     metadata:
       labels:
         k8s-app: glbc
-        version: v0.9.0
+        version: v0.9.1
         name: glbc
     spec:
       terminationGracePeriodSeconds: 600
@@ -61,7 +61,7 @@ spec:
           requests:
             cpu: 10m
             memory: 20Mi
-      - image: gcr.io/google_containers/glbc:0.9.0
+      - image: gcr.io/google_containers/glbc:0.9.1
         livenessProbe:
           httpGet:
             path: /healthz
