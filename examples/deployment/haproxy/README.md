@@ -89,7 +89,7 @@ spec:
       - path: /
         backend:
           serviceName: http-svc
-          servicePort: 80
+          servicePort: 8080
 EOF
 ```
 
