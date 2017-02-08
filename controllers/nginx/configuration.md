@@ -66,7 +66,7 @@ In addition to the built-in functions provided by the Go package the following f
 
   - empty: returns true if the specified parameter (string) is empty
   - contains: [strings.Contains](https://golang.org/pkg/strings/#Contains)
-  - hasPrefix: [strings.HasPrefix](https://golang.org/pkg/strings/#Contains)
+  - hasPrefix: [strings.HasPrefix](https://golang.org/pkg/strings/#HasPrefix)
   - hasSuffix: [strings.HasSuffix](https://golang.org/pkg/strings/#HasSuffix)
   - toUpper: [strings.ToUpper](https://golang.org/pkg/strings/#ToUpper)
   - toLower: [strings.ToLower](https://golang.org/pkg/strings/#ToLower)
