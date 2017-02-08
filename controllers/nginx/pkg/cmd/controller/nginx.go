@@ -132,10 +132,10 @@ NGINX master process died (%v): %v
 		// we wait until the workers are killed
 		for {
 			conn, err := net.DialTimeout("tcp", "127.0.0.1:80", 1*time.Second)
-			if err == nil {
-				conn.Close()
+			if err != nil {
 				break
 			}
+			conn.Close()
 			time.Sleep(1 * time.Second)
 		}
 		// start a new nginx master process
@@ -331,7 +331,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		PassthroughBackends: ingressCfg.PassthroughBackends,
 		Servers:             ingressCfg.Servers,
 		TCPBackends:         ingressCfg.TCPEndpoints,
-		UDPBackends:         ingressCfg.UPDEndpoints,
+		UDPBackends:         ingressCfg.UDPEndpoints,
 		HealthzURI:          ngxHealthPath,
 		CustomErrors:        len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                 cfg,

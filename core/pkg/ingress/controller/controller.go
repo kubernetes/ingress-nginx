@@ -330,7 +330,7 @@ func (ic GenericController) GetDefaultBackend() defaults.Backend {
 	return ic.cfg.Backend.BackendDefaults()
 }
 
-// GetSecret searchs for a secret in the local secrets Store
+// GetSecret searches for a secret in the local secrets Store
 func (ic GenericController) GetSecret(name string) (*api.Secret, error) {
 	s, exists, err := ic.secrLister.Store.GetByKey(name)
 	if err != nil {
@@ -390,8 +390,8 @@ func (ic *GenericController) sync(key interface{}) error {
 	data, err := ic.cfg.Backend.OnUpdate(ingress.Configuration{
 		Backends:            upstreams,
 		Servers:             servers,
-		TCPEndpoints:        ic.getTCPServices(),
-		UPDEndpoints:        ic.getUDPServices(),
+		TCPEndpoints:        ic.getStreamServices(ic.cfg.TCPConfigMapName, api.ProtocolTCP),
+		UDPEndpoints:        ic.getStreamServices(ic.cfg.UDPConfigMapName, api.ProtocolUDP),
 		PassthroughBackends: passUpstreams,
 	})
 	if err != nil {
@@ -411,54 +411,31 @@ func (ic *GenericController) sync(key interface{}) error {
 	return nil
 }
 
-func (ic *GenericController) getTCPServices() []*ingress.Location {
-	if ic.cfg.TCPConfigMapName == "" {
-		// no configmap for TCP services
+func (ic *GenericController) getStreamServices(configmapName string, proto api.Protocol) []*ingress.Location {
+	if configmapName == "" {
+		// no configmap configured
 		return []*ingress.Location{}
 	}
 
-	ns, name, err := k8s.ParseNameNS(ic.cfg.TCPConfigMapName)
+	ns, name, err := k8s.ParseNameNS(configmapName)
 	if err != nil {
-		glog.Warningf("%v", err)
+		glog.Errorf("unexpected error reading configmap %v: %v", name, err)
 		return []*ingress.Location{}
 	}
-	tcpMap, err := ic.getConfigMap(ns, name)
+
+	configmap, err := ic.getConfigMap(ns, name)
 	if err != nil {
-		glog.V(5).Infof("no configured tcp services found: %v", err)
+		glog.Errorf("unexpected error reading configmap %v: %v", name, err)
 		return []*ingress.Location{}
 	}
 
-	return ic.getStreamServices(tcpMap.Data, api.ProtocolTCP)
-}
-
-func (ic *GenericController) getUDPServices() []*ingress.Location {
-	if ic.cfg.UDPConfigMapName == "" {
-		// no configmap for TCP services
-		return []*ingress.Location{}
-	}
-
-	ns, name, err := k8s.ParseNameNS(ic.cfg.UDPConfigMapName)
-	if err != nil {
-		glog.Warningf("%v", err)
-		return []*ingress.Location{}
-	}
-	tcpMap, err := ic.getConfigMap(ns, name)
-	if err != nil {
-		glog.V(3).Infof("no configured tcp services found: %v", err)
-		return []*ingress.Location{}
-	}
-
-	return ic.getStreamServices(tcpMap.Data, api.ProtocolUDP)
-}
-
-func (ic *GenericController) getStreamServices(data map[string]string, proto api.Protocol) []*ingress.Location {
 	var svcs []*ingress.Location
 	// k -> port to expose
 	// v -> <namespace>/<service name>:<port from service to be used>
-	for k, v := range data {
+	for k, v := range configmap.Data {
 		_, err := strconv.Atoi(k)
 		if err != nil {
-			glog.Warningf("%v is not valid as a TCP port", k)
+			glog.Warningf("%v is not valid as a TCP/UDP port", k)
 			continue
 		}
 
