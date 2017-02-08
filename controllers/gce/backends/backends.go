@@ -175,8 +175,16 @@ func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.Named
 			PortName:     namedPort.Name,
 		}
 		if err := b.cloud.CreateBackendService(backend); err != nil {
-			glog.Infof("Error creating backend service with balancing mode %v", bm)
-			errs = append(errs, fmt.Sprintf("%v", err))
+			// This is probably a failure because we tried to create the backend
+			// with balancingMode=RATE when there are already backends with
+			// balancingMode=UTILIZATION. Just ignore it and retry setting
+			// balancingMode=UTILIZATION (b/35102911).
+			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
+				glog.Infof("Error creating backend service with balancing mode %v:%v", bm, err)
+				errs = append(errs, fmt.Sprintf("%v", err))
+				continue
+			}
+			return nil, err
 		}
 		return b.Get(namedPort.Port)
 	}
