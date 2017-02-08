@@ -327,7 +327,7 @@ So simply delete the replication controller:
 $ kubectl get rc glbc
 CONTROLLER   CONTAINER(S)           IMAGE(S)                                      SELECTOR                    REPLICAS   AGE
 glbc         default-http-backend   gcr.io/google_containers/defaultbackend:1.0   k8s-app=glbc,version=v0.5   1          2m
-             l7-lb-controller       gcr.io/google_containers/glbc:0.9.0
+             l7-lb-controller       gcr.io/google_containers/glbc:0.9.1
 
 $ kubectl delete rc glbc
 replicationcontroller "glbc" deleted
