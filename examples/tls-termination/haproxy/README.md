@@ -1,4 +1,4 @@
-# TLS termination
+# HAProxy Ingress TLS termination
 
 ## Prerequisites
 
@@ -102,13 +102,13 @@ Here is the difference:
 Now `foo.bar` certificate should be used to terminate TLS:
 
 ```console
-openssl s_client -connect 172.17.4.99:31692
+$ openssl s_client -connect 172.17.4.99:31692
 ...
 subject=/CN=localhost
 issuer=/CN=localhost
 ---
 
-openssl s_client -connect 172.17.4.99:31692 -servername foo.bar
+$ openssl s_client -connect 172.17.4.99:31692 -servername foo.bar
 ...
 subject=/CN=foo.bar
 issuer=/CN=foo.bar

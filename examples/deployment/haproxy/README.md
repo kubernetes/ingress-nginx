@@ -89,7 +89,7 @@ spec:
       - path: /
         backend:
           serviceName: http-svc
-          servicePort: 80
+          servicePort: 8080
 EOF
 ```
 
@@ -147,5 +147,5 @@ haproxy-ingress-2556761959-tv20k           1/1       Running   0          9m
 ...
 
 $ kubectl logs haproxy-ingress-2556761959-tv20k
-$ kubectl describe haproxy-ingress-2556761959-tv20k
+$ kubectl describe pod/haproxy-ingress-2556761959-tv20k
 ```
