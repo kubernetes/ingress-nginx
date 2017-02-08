@@ -153,6 +153,12 @@ func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.Named
 		return nil, err
 	}
 	errs := []string{}
+	// We first try to create the backend with balancingMode=RATE.  If this
+	// fails, it's mostly likely because there are existing backends with
+	// balancingMode=UTILIZATION. This failure mode throws a googleapi error
+	// which wraps a HTTP 400 status code. We handle it in the loop below
+	// and come around to retry with the right balancing mode. The goal is to
+	// switch everyone to using RATE.
 	for _, bm := range []BalancingMode{Rate, Utilization} {
 		backends := getBackendsForIGs(igs)
 		for _, b := range backends {
@@ -175,8 +181,16 @@ func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.Named
 			PortName:     namedPort.Name,
 		}
 		if err := b.cloud.CreateBackendService(backend); err != nil {
-			glog.Infof("Error creating backend service with balancing mode %v", bm)
-			errs = append(errs, fmt.Sprintf("%v", err))
+			// This is probably a failure because we tried to create the backend
+			// with balancingMode=RATE when there are already backends with
+			// balancingMode=UTILIZATION. Just ignore it and retry setting
+			// balancingMode=UTILIZATION (b/35102911).
+			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
+				glog.Infof("Error creating backend service with balancing mode %v:%v", bm, err)
+				errs = append(errs, fmt.Sprintf("%v", err))
+				continue
+			}
+			return nil, err
 		}
 		return b.Get(namedPort.Port)
 	}
