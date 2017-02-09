@@ -34,7 +34,7 @@ const (
 )
 
 func newFakeLoadBalancerPool(f LoadBalancers, t *testing.T) LoadBalancerPool {
-	fakeBackends := backends.NewFakeBackendServices()
+	fakeBackends := backends.NewFakeBackendServices(func(op int, be *compute.BackendService) error { return nil })
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	fakeHCs := healthchecks.NewFakeHealthChecks()
 	namer := &utils.Namer{}
