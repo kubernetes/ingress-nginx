@@ -20,6 +20,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/util/sets"
 
+	compute "google.golang.org/api/compute/v1"
 	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/firewalls"
 	"k8s.io/ingress/controllers/gce/healthchecks"
@@ -45,7 +46,7 @@ type fakeClusterManager struct {
 // NewFakeClusterManager creates a new fake ClusterManager.
 func NewFakeClusterManager(clusterName string) *fakeClusterManager {
 	fakeLbs := loadbalancers.NewFakeLoadBalancers(clusterName)
-	fakeBackends := backends.NewFakeBackendServices()
+	fakeBackends := backends.NewFakeBackendServices(func(op int, be *compute.BackendService) error { return nil })
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	fakeHCs := healthchecks.NewFakeHealthChecks()
 	namer := utils.NewNamer(clusterName)
