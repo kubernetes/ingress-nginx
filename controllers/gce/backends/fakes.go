@@ -25,8 +25,9 @@ import (
 )
 
 // NewFakeBackendServices creates a new fake backend services manager.
-func NewFakeBackendServices() *FakeBackendServices {
+func NewFakeBackendServices(ef func(op int, be *compute.BackendService) error) *FakeBackendServices {
 	return &FakeBackendServices{
+		errFunc: ef,
 		backendServices: cache.NewStore(func(obj interface{}) (string, error) {
 			svc := obj.(*compute.BackendService)
 			return svc.Name, nil
@@ -38,6 +39,7 @@ func NewFakeBackendServices() *FakeBackendServices {
 type FakeBackendServices struct {
 	backendServices cache.Store
 	calls           []int
+	errFunc         func(op int, be *compute.BackendService) error
 }
 
 // GetBackendService fakes getting a backend service from the cloud.
@@ -60,6 +62,11 @@ func (f *FakeBackendServices) GetBackendService(name string) (*compute.BackendSe
 
 // CreateBackendService fakes backend service creation.
 func (f *FakeBackendServices) CreateBackendService(be *compute.BackendService) error {
+	if f.errFunc != nil {
+		if err := f.errFunc(utils.Create, be); err != nil {
+			return err
+		}
+	}
 	f.calls = append(f.calls, utils.Create)
 	be.SelfLink = be.Name
 	return f.backendServices.Update(be)
