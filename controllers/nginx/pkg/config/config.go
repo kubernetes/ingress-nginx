@@ -88,6 +88,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
 	ClientHeaderBufferSize string `json:"client-header-buffer-size"`
 
+	// DisableAccessLog disables the Access Log globally from NGINX ingress controller
+	//http://nginx.org/en/docs/http/ngx_http_log_module.html
+	DisableAccessLog bool `json:"disable-access-log,omitempty"`
+
 	// EnableSPDY enables spdy and use ALPN and NPN to advertise the availability of the two protocols
 	// https://blog.cloudflare.com/open-sourcing-our-nginx-http-2-spdy-code
 	// By default this is enabled
@@ -233,6 +237,7 @@ type Configuration struct {
 func NewDefault() Configuration {
 	cfg := Configuration{
 		ClientHeaderBufferSize:  "1k",
+		DisableAccessLog:        false,
 		EnableDynamicTLSRecords: true,
 		EnableSPDY:              false,
 		ErrorLogLevel:           errorLevel,

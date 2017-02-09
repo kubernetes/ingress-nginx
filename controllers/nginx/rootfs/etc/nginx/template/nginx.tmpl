@@ -87,7 +87,11 @@ http {
         default 1;
     }
 
+    {{ if $cfg.DisableAccessLog }}
+    access_log off;
+    {{ else }}
     access_log /var/log/nginx/access.log upstreaminfo if=$loggable;
+    {{ end }}
     error_log  /var/log/nginx/error.log {{ $cfg.ErrorLogLevel }};
 
     {{ buildResolvers $cfg.Resolver }}
@@ -424,7 +428,12 @@ stream {
 
     log_format log_stream '$remote_addr [$time_local] $protocol [$ssl_preread_server_name] [$stream_upstream] $status $bytes_sent $bytes_received $session_time';
 
+    {{ if $cfg.DisableAccessLog }}
+    access_log off;
+    {{ else }}
     access_log /var/log/nginx/access.log log_stream;
+    {{ end }}
+
     error_log  /var/log/nginx/error.log;
 
     # configure default backend for SSL

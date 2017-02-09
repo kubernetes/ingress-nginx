@@ -39,12 +39,14 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"proxy-send-timeout":         "2",
 		"skip-access-log-urls":       "/log,/demo,/test",
 		"use-proxy-protocol":         "true",
+		"disable-access-log":         "true",
 		"use-gzip":                   "true",
 		"enable-dynamic-tls-records": "false",
 		"gzip-types":                 "text/html",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
+	def.DisableAccessLog = true
 	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
 	def.ProxyReadTimeout = 1
 	def.ProxySendTimeout = 2
