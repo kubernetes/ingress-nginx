@@ -188,6 +188,9 @@ Setting at least one code also enables [proxy_intercept_errors](http://nginx.org
 Example usage: `custom-http-errors: 404,415`
 
 
+**disable-access-log:** Disables the Access Log from the entire Ingress Controller. This is 'false' by default.
+
+
 **enable-dynamic-tls-records:** Enables dynamically sized TLS records to improve time-to-first-byte. Enabled by default. See [CloudFlare's blog](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency) for more information.
 
 
