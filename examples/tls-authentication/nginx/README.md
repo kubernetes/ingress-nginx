@@ -2,15 +2,30 @@
 
 This example demonstrates how to enable the TLS Authentication through the nginx Ingress controller.
 
+## Terminology
+* CA Certificate(s) - Certificate Authority public key. Client certs must chain back to this cert, 
+meaning the Issuer field of some certificate in the chain leading up to the client cert must contain 
+the name of this CA. For purposes of this example, this is a self signed certificate.
+
+* Client Cert: Certificate used by the clients to authenticate themselves with the loadbalancer/backends.
+
+* CA: Certificate authority signing the client cert, in this example we will play the role of a CA. 
+You can generate a CA cert as show in this doc.
+
+* CA chains: A chain of certificates where the parent has a Subject field matching the Issuer field of 
+the child, except for the root, which has Issuer == Subject.
+
 ## Prerequisites
 
 You need a valid CA File, composed of a group of valid enabled CAs. This MUST be in PEM Format.
-Also the Ingress must terminate TLS, otherwise this makes no sense ;)
+The instructions are described here: https://github.com/kubernetes/ingress/blob/master/examples/PREREQUISITES.md#ca-authentication
+
+Also your ingress must be configured as a HTTPs/TLS Ingress.
 
 ## Deployment
 
-The following command instructs the controller to enable the TLS Authentication using
-the secret containing the valid CA chains.
+The following command instructs the controller to enalbe TLS authentication using the secret from the ``ingress.kubernetes.io/auth-tls-secret``
+annotation on the Ingress. Clients must present this cert to the loadbalancer, or they will receive a HTTP 400 response
 
 ```console
 $ kubectl create -f nginx-tls-auth.yaml
@@ -18,7 +33,7 @@ $ kubectl create -f nginx-tls-auth.yaml
 
 ## Validation
 
-You can confirm that the Ingress works.
+You can confirm that the Ingress works. 
 
 ```console
 $ kubectl describe ing nginx-test
@@ -54,3 +69,5 @@ HTTP/1.1 200 OK
 Server: nginx/1.11.9
 
 ```
+
+You must use the full DNS name while testing, as NGINX relies on the Server Name (SNI) to select the correct Ingress to be used.
