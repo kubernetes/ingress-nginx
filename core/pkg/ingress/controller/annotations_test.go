@@ -32,6 +32,9 @@ const (
 	annotationUpsMaxFails    = "ingress.kubernetes.io/upstream-max-fails"
 	annotationUpsFailTimeout = "ingress.kubernetes.io/upstream-fail-timeout"
 	annotationPassthrough    = "ingress.kubernetes.io/ssl-passthrough"
+	annotationStickyEnabled  = "ingress.kubernetes.io/sticky-enabled"
+	annotationStickyName     = "ingress.kubernetes.io/sticky-name"
+	annotationStickyHash     = "ingress.kubernetes.io/sticky-hash"
 )
 
 type mockCfg struct {
@@ -176,6 +179,40 @@ func TestSSLPassthrough(t *testing.T) {
 		r := ec.SSLPassthrough(ing)
 		if r != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
+		}
+	}
+}
+
+func TestStickySession(t *testing.T) {
+	ec := newAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		enabled     bool
+		hash        string
+		name        string
+	}{
+		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "md5", annotationStickyName: "route"}, true, "md5", "route"},
+		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "", annotationStickyName: "xpto"}, true, "md5", "xpto"},
+		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "", annotationStickyName: ""}, true, "md5", "route"},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.StickySession(ing)
+
+		if r == nil {
+			t.Errorf("Returned nil but expected a StickySesion.StickyConfig")
+			continue
+		}
+
+		if r.Hash != foo.hash {
+			t.Errorf("Returned %v but expected %v for Hash", r.Hash, foo.hash)
+		}
+
+		if r.Name != foo.name {
+			t.Errorf("Returned %v but expected %v for Name", r.Name, foo.name)
 		}
 	}
 }

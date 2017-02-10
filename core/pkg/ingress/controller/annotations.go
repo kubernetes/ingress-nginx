@@ -34,6 +34,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
+	"k8s.io/ingress/core/pkg/ingress/annotations/stickysession"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
@@ -63,6 +64,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"Redirect":           rewrite.NewParser(cfg),
 			"SecureUpstream":     secureupstream.NewParser(),
 			"SSLPassthrough":     sslpassthrough.NewParser(),
+			"StickySession":      stickysession.NewParser(),
 		},
 	}
 }
@@ -99,6 +101,7 @@ const (
 	secureUpstream = "SecureUpstream"
 	healthCheck    = "HealthCheck"
 	sslPassthrough = "SSLPassthrough"
+	stickySession  = "StickySession"
 )
 
 func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) bool {
@@ -114,4 +117,9 @@ func (e *annotationExtractor) HealthCheck(ing *extensions.Ingress) *healthcheck.
 func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 	val, _ := e.annotations[sslPassthrough].Parse(ing)
 	return val.(bool)
+}
+
+func (e *annotationExtractor) StickySession(ing *extensions.Ingress) *stickysession.StickyConfig {
+	val, _ := e.annotations[stickySession].Parse(ing)
+	return val.(*stickysession.StickyConfig)
 }

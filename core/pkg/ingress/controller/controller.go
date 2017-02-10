@@ -700,6 +700,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 		secUpstream := ic.annotations.SecureUpstream(ing)
 		hz := ic.annotations.HealthCheck(ing)
+		sticky := ic.annotations.StickySession(ing)
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -739,6 +740,12 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 				if !upstreams[name].Secure {
 					upstreams[name].Secure = secUpstream
 				}
+				if !upstreams[name].StickySession.Enabled || upstreams[name].StickySession.Name == "" || upstreams[name].StickySession.Hash == "" {
+					upstreams[name].StickySession.Enabled = sticky.Enabled
+					upstreams[name].StickySession.Name = sticky.Name
+					upstreams[name].StickySession.Hash = sticky.Hash
+				}
+
 				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
 				endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
 				if err != nil {

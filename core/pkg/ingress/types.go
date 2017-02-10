@@ -26,6 +26,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
+	"k8s.io/ingress/core/pkg/ingress/annotations/stickysession"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
@@ -134,6 +135,8 @@ type Backend struct {
 	Secure bool `json:"secure"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints"`
+	// StickySession contains the StickyConfig object with stickness configuration
+	StickySession *stickysession.StickyConfig `json:"stickysession"`
 }
 
 // Endpoint describes a kubernetes endpoint in an backend
