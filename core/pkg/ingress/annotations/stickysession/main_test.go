@@ -59,7 +59,7 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
-func TestIngressHealthCheck(t *testing.T) {
+func TestIngressStickySession(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}

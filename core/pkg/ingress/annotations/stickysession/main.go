@@ -59,34 +59,27 @@ func NewParser() parser.IngressAnnotation {
 // rule used to configure the sticky directives
 func (a sticky) Parse(ing *extensions.Ingress) (interface{}, error) {
 	// Check if the sticky is enabled
-	se, err := parser.GetBoolAnnotation(stickyEnabled, ing)
-	if err != nil {
-		return nil, err
-	}
+	se, _ := parser.GetBoolAnnotation(stickyEnabled, ing)
 
 	// Get the Sticky Cookie Name
-	sn, err := parser.GetStringAnnotation(stickyName, ing)
-	if err != nil {
-		return nil, err
-	}
+	sn, _ := parser.GetStringAnnotation(stickyName, ing)
 
 	if sn == "" {
 		sn = defaultStickyName
 	}
 
-	sh, err := parser.GetStringAnnotation(stickyHash, ing)
-
-	if err != nil {
-		return nil, err
-	}
+	sh, _ := parser.GetStringAnnotation(stickyHash, ing)
 
 	if sh == "" {
 		sh = defaultStickyHash
 	}
 
 	if !stickyHashRegex.MatchString(sh) {
-		return nil, ing_errors.NewInvalidAnnotationContent(stickyHash, sh)
-	}
+		return &StickyConfig{
+		Name:    "",
+		Enabled: false,
+		Hash:    "",
+	}, ing_errors.NewInvalidAnnotationContent(stickyHash, sh)
 
 	return &StickyConfig{
 		Name:    sn,
