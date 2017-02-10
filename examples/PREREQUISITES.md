@@ -40,7 +40,7 @@ secret "tls-secret" created
 You can act as your very own CA, or use an existing one. As an exercise / learning, we're going to generate our
 own CA, and also generate a client certificate.
 
-These instructions are based in CoreOS OpenSSL instructions: https://coreos.com/kubernetes/docs/latest/openssl.html
+These instructions are based in CoreOS OpenSSL [instructions](https://coreos.com/kubernetes/docs/latest/openssl.html)
 
 ### Generating a CA
 
@@ -114,7 +114,7 @@ all the authorized CAs. You must download them from your CA site in PEM format (
 -----END CERTIFICATE-----
 ``` 
 
-You can have as many certificates as you wan't. If they're in the binary DER format, 
+You can have as many certificates as you want. If they're in the binary DER format, 
 you can convert them as the following:
 
 ```console
