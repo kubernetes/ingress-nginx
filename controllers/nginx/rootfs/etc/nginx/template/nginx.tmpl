@@ -185,8 +185,8 @@ http {
 
     {{range $name, $upstream := $backends}}
     upstream {{$upstream.Name}} {
-        {{ if $cfg.EnableStickySessions }}
-        sticky hash=sha1 httponly;
+        {{ if $upstream.StickySession.Enabled }}
+        sticky hash={{$upstream.StickySession.Hash}} route={{$upstream.StickySession.Hash}}  httponly;
         {{ else }}
         least_conn;
         {{ end }}
