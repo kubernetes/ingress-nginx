@@ -136,7 +136,7 @@ type Backend struct {
 	Endpoints []Endpoint `json:"endpoints"`
 }
 
-// Endpoint describes a kubernetes endpoint in an backend
+// Endpoint describes a kubernetes endpoint in a backend
 type Endpoint struct {
 	// Address IP address of the endpoint
 	Address string `json:"address"`
