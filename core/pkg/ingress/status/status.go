@@ -33,7 +33,7 @@ import (
 
 	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/k8s"
-	strings "k8s.io/ingress/core/pkg/strings"
+	"k8s.io/ingress/core/pkg/strings"
 	"k8s.io/ingress/core/pkg/task"
 )
 
@@ -251,7 +251,7 @@ func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
 				return
 			}
 
-			curIPs := ing.Status.LoadBalancer.Ingress
+			curIPs := currIng.Status.LoadBalancer.Ingress
 			sort.Sort(loadBalancerIngressByIP(curIPs))
 			if ingressSliceEqual(newIPs, curIPs) {
 				glog.V(3).Infof("skipping update of Ingress %v/%v (there is no change)", currIng.Namespace, currIng.Name)
