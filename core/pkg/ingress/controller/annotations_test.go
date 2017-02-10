@@ -196,6 +196,8 @@ func TestStickySession(t *testing.T) {
 		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "md5", annotationStickyName: "route"}, true, "md5", "route"},
 		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "", annotationStickyName: "xpto"}, true, "md5", "xpto"},
 		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "", annotationStickyName: ""}, true, "md5", "route"},
+		{map[string]string{}, false, "md5", "route"},
+		{nil, false, "md5", "route"},
 	}
 
 	for _, foo := range fooAnns {
