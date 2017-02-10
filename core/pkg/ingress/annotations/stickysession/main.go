@@ -19,10 +19,11 @@ package stickysession
 import (
 	"regexp"
 
+	"github.com/golang/glog"
+
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
 )
 
 const (
@@ -59,27 +60,27 @@ func NewParser() parser.IngressAnnotation {
 // rule used to configure the sticky directives
 func (a sticky) Parse(ing *extensions.Ingress) (interface{}, error) {
 	// Check if the sticky is enabled
-	se, _ := parser.GetBoolAnnotation(stickyEnabled, ing)
+	se, err := parser.GetBoolAnnotation(stickyEnabled, ing)
+	if err != nil {
+		se = false
+	}
+
+	glog.V(3).Infof("Ingress %v: Setting stickness to %v", ing.Name, se)
 
 	// Get the Sticky Cookie Name
-	sn, _ := parser.GetStringAnnotation(stickyName, ing)
+	sn, err := parser.GetStringAnnotation(stickyName, ing)
 
-	if sn == "" {
+	if err != nil || sn == "" {
+		glog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, stickyName, defaultStickyName)
 		sn = defaultStickyName
 	}
 
-	sh, _ := parser.GetStringAnnotation(stickyHash, ing)
+	sh, err := parser.GetStringAnnotation(stickyHash, ing)
 
-	if sh == "" {
+	if err != nil || !stickyHashRegex.MatchString(sh) {
+		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v: %v. Setting it to default %v", ing.Name, stickyHash, sh, defaultStickyHash)
 		sh = defaultStickyHash
 	}
-
-	if !stickyHashRegex.MatchString(sh) {
-		return &StickyConfig{
-		Name:    "",
-		Enabled: false,
-		Hash:    "",
-	}, ing_errors.NewInvalidAnnotationContent(stickyHash, sh)
 
 	return &StickyConfig{
 		Name:    sn,

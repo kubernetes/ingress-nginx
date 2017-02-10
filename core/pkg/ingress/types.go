@@ -136,7 +136,7 @@ type Backend struct {
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints"`
 	// StickySession contains the StickyConfig object with stickness configuration
-	StickySession *stickysession.StickyConfig `json:"stickysession"`
+	StickySession stickysession.StickyConfig `json:"stickysession,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in an backend
