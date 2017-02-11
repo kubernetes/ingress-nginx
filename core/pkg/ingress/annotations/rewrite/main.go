@@ -52,11 +52,7 @@ func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
-	rt, err := parser.GetStringAnnotation(rewriteTo, ing)
-	if err != nil {
-		return nil, err
-	}
-
+	rt, _ := parser.GetStringAnnotation(rewriteTo, ing)
 	sslRe, err := parser.GetBoolAnnotation(sslRedirect, ing)
 	if err != nil {
 		sslRe = a.backendResolver.GetDefaultBackend().SSLRedirect
