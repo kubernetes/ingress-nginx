@@ -20,6 +20,42 @@ NAME                                    READY     STATUS    RESTARTS   AGE
 default-http-backend-2657704409-qgwdd   1/1       Running   0          28s
 ```
 
+## Custom configuration
+
+```console
+$ cat nginx-load-balancer-conf.yaml
+apiVersion: v1
+data:
+  proxy-set-headers: "default/custom-headers"
+kind: ConfigMap
+metadata:
+  name: nginx-load-balancer-conf
+```
+
+```console
+$ kubectl create -f nginx-load-balancer-conf.yaml
+```
+
+## Custom headers
+
+```console
+$ cat custom-headers.yaml
+apiVersion: v1
+data:
+  X-Different-Name: "true"
+  X-Request-Start: t=${msec}
+  X-Using-Nginx-Controller: "true"
+kind: ConfigMap
+metadata:
+  name: proxy-headers
+  namespace: default
+
+```
+
+```console
+$ kubectl create -f custom-headers.yaml
+```
+
 ## Controller
 
 You can deploy the controller as follows:
@@ -34,7 +70,7 @@ default-http-backend-2657704409-qgwdd      1/1       Running   0          2m
 nginx-ingress-controller-873061567-4n3k2   1/1       Running   0          42s
 ```
 
-Note the default settings of this controller:
-* serves a `/healthz` url on port 10254, as both a liveness and readiness probe
-* takes a `--default-backend-service` argument pointing to the Service created above
+## Test
 
+Check the contents of the configmap is present in the nginx.conf file using:
+`kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf`
