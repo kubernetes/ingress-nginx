@@ -102,6 +102,7 @@ type Controller interface {
 type StoreLister struct {
 	Ingress   cache_store.StoreToIngressLister
 	Service   cache.StoreToServiceLister
+	Node      cache.StoreToNodeLister
 	Endpoint  cache.StoreToEndpointsLister
 	Secret    cache_store.StoreToSecretsLister
 	ConfigMap cache_store.StoreToConfigmapLister
