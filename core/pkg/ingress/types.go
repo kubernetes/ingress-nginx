@@ -26,7 +26,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
-	"k8s.io/ingress/core/pkg/ingress/annotations/stickysession"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
@@ -136,7 +135,25 @@ type Backend struct {
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints"`
 	// StickySession contains the StickyConfig object with stickness configuration
-	StickySession stickysession.StickyConfig `json:"stickysession,omitempty"`
+
+	SessionAffinity SessionAffinityConfig
+}
+
+// SessionAffinityConfig describes different affinity configurations for new sessions.
+// Once a session is mapped to a backend based on some affinity setting, it
+// retains that mapping till the backend goes down, or the ingress controller
+// restarts. Exactly one of these values will be set on the upstream, since multiple
+// affinity values are incompatible. Once set, the backend makes no guarantees
+// about honoring updates.
+type SessionAffinityConfig struct {
+	AffinityType          string `json:"name"`
+	CookieSessionAffinity CookieSessionAffinity
+}
+
+// CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
+type CookieSessionAffinity struct {
+	Name string `json:"name"`
+	Hash string `json:"hash"`
 }
 
 // Endpoint describes a kubernetes endpoint in an backend
