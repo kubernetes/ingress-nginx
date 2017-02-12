@@ -33,8 +33,8 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
+	"k8s.io/ingress/core/pkg/ingress/annotations/sessionaffinity"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
-	"k8s.io/ingress/core/pkg/ingress/annotations/stickysession"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
@@ -63,8 +63,8 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"RateLimit":          ratelimit.NewParser(),
 			"Redirect":           rewrite.NewParser(cfg),
 			"SecureUpstream":     secureupstream.NewParser(),
+			"SessionAffinity":    sessionaffinity.NewParser(),
 			"SSLPassthrough":     sslpassthrough.NewParser(),
-			"StickySession":      stickysession.NewParser(),
 		},
 	}
 }
@@ -98,10 +98,10 @@ func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interf
 }
 
 const (
-	secureUpstream = "SecureUpstream"
-	healthCheck    = "HealthCheck"
-	sslPassthrough = "SSLPassthrough"
-	stickySession  = "StickySession"
+	secureUpstream  = "SecureUpstream"
+	healthCheck     = "HealthCheck"
+	sslPassthrough  = "SSLPassthrough"
+	sessionAffinity = "SessionAffinity"
 )
 
 func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) bool {
@@ -119,7 +119,7 @@ func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 	return val.(bool)
 }
 
-func (e *annotationExtractor) StickySession(ing *extensions.Ingress) *stickysession.StickyConfig {
-	val, _ := e.annotations[stickySession].Parse(ing)
-	return val.(*stickysession.StickyConfig)
+func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
+	val, _ := e.annotations[sessionAffinity].Parse(ing)
+	return val.(*sessionaffinity.AffinityConfig)
 }

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package stickysession
+package sessionaffinity
 
 import (
 	"testing"
@@ -59,30 +59,30 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
-func TestIngressStickySession(t *testing.T) {
+func TestIngressAffinityCookieConfig(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[stickyEnabled] = "true"
-	data[stickyHash] = "md5"
-	data[stickyName] = "route1"
+	data[annotationAffinityType] = "cookie"
+	data[annotationAffinityCookieHash] = "sha123"
+	data[annotationAffinityCookieName] = "route"
 	ing.SetAnnotations(data)
 
-	sti, _ := NewParser().Parse(ing)
-	nginxSti, ok := sti.(*StickyConfig)
+	affin, _ := NewParser().Parse(ing)
+	nginxAffinity, ok := affin.(*AffinityConfig)
 	if !ok {
-		t.Errorf("expected a StickyConfig type")
+		t.Errorf("expected a Config type")
 	}
 
-	if nginxSti.Hash != "md5" {
-		t.Errorf("expected md5 as sticky-hash but returned %v", nginxSti.Hash)
+	if nginxAffinity.AffinityType != "cookie" {
+		t.Errorf("expected cookie as sticky-type but returned %v", nginxAffinity.AffinityType)
 	}
 
-	if nginxSti.Hash != "md5" {
-		t.Errorf("expected md5 as sticky-hash but returned %v", nginxSti.Hash)
+	if nginxAffinity.CookieAffinityConfig.Hash != "md5" {
+		t.Errorf("expected md5 as sticky-hash but returned %v", nginxAffinity.CookieAffinityConfig.Hash)
 	}
 
-	if !nginxSti.Enabled {
-		t.Errorf("expected sticky-enabled  but returned %v", nginxSti.Enabled)
+	if nginxAffinity.CookieAffinityConfig.Name != "route" {
+		t.Errorf("expected route as sticky-name but returned %v", nginxAffinity.CookieAffinityConfig.Name)
 	}
 }

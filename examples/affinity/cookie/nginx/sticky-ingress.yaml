@@ -4,9 +4,9 @@ metadata:
   name: nginx-test
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    ingress.kubernetes.io/sticky-enabled: "true"
-    ingress.kubernetes.io/sticky-name: "route"
-    ingress.kubernetes.io/sticky-hash: "sha1"
+    ingress.kubernetes.io/affinity: "cookie"
+    ingress.kubernetes.io/session-cookie-name: "route"
+    ingress.kubernetes.io/session-cookie-hash: "sha1"
 
 spec:
   rules:

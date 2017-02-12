@@ -28,13 +28,13 @@ import (
 )
 
 const (
-	annotationSecureUpstream = "ingress.kubernetes.io/secure-backends"
-	annotationUpsMaxFails    = "ingress.kubernetes.io/upstream-max-fails"
-	annotationUpsFailTimeout = "ingress.kubernetes.io/upstream-fail-timeout"
-	annotationPassthrough    = "ingress.kubernetes.io/ssl-passthrough"
-	annotationStickyEnabled  = "ingress.kubernetes.io/sticky-enabled"
-	annotationStickyName     = "ingress.kubernetes.io/sticky-name"
-	annotationStickyHash     = "ingress.kubernetes.io/sticky-hash"
+	annotationSecureUpstream     = "ingress.kubernetes.io/secure-backends"
+	annotationUpsMaxFails        = "ingress.kubernetes.io/upstream-max-fails"
+	annotationUpsFailTimeout     = "ingress.kubernetes.io/upstream-fail-timeout"
+	annotationPassthrough        = "ingress.kubernetes.io/ssl-passthrough"
+	annotationAffinityType       = "ingress.kubernetes.io/affinity"
+	annotationAffinityCookieName = "ingress.kubernetes.io/session-cookie-name"
+	annotationAffinityCookieHash = "ingress.kubernetes.io/session-cookie-hash"
 )
 
 type mockCfg struct {
@@ -183,38 +183,38 @@ func TestSSLPassthrough(t *testing.T) {
 	}
 }
 
-func TestStickySession(t *testing.T) {
+func TestAffinitySession(t *testing.T) {
 	ec := newAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
 	fooAnns := []struct {
-		annotations map[string]string
-		enabled     bool
-		hash        string
-		name        string
+		annotations  map[string]string
+		affinitytype string
+		hash         string
+		name         string
 	}{
-		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "md5", annotationStickyName: "route"}, true, "md5", "route"},
-		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "", annotationStickyName: "xpto"}, true, "md5", "xpto"},
-		{map[string]string{annotationStickyEnabled: "true", annotationStickyHash: "", annotationStickyName: ""}, true, "md5", "route"},
-		{map[string]string{}, false, "md5", "route"},
-		{nil, false, "md5", "route"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "md5", annotationAffinityCookieName: "route"}, "cookie", "md5", "route"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "xpto", annotationAffinityCookieName: "route1"}, "cookie", "md5", "route1"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "", annotationAffinityCookieName: ""}, "cookie", "md5", "route"},
+		{map[string]string{}, "", "", ""},
+		{nil, "", "", ""},
 	}
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.StickySession(ing)
-
+		r := ec.SessionAffinity(ing)
+		t.Logf("Testing pass %v %v %v", foo.affinitytype, foo.hash, foo.name)
 		if r == nil {
-			t.Errorf("Returned nil but expected a StickySesion.StickyConfig")
+			t.Errorf("Returned nil but expected a SessionAffinity.AffinityConfig")
 			continue
 		}
 
-		if r.Hash != foo.hash {
-			t.Errorf("Returned %v but expected %v for Hash", r.Hash, foo.hash)
+		if r.CookieAffinityConfig.Hash != foo.hash {
+			t.Errorf("Returned %v but expected %v for Hash", r.CookieAffinityConfig.Hash, foo.hash)
 		}
 
-		if r.Name != foo.name {
-			t.Errorf("Returned %v but expected %v for Name", r.Name, foo.name)
+		if r.CookieAffinityConfig.Name != foo.name {
+			t.Errorf("Returned %v but expected %v for Name", r.CookieAffinityConfig.Name, foo.name)
 		}
 	}
 }
