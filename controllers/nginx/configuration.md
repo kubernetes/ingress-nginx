@@ -43,6 +43,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
 |[ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
@@ -120,6 +121,10 @@ ingress.kubernetes.io/auth-realm: "realm string"
 
 Please check the [auth](examples/auth/README.md) example.
 
+### Enable CORS
+
+To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule add the annotation `ingress.kubernetes.io/enable-cors: "true"`. This will add a section in the server location enabling this functionality.
+For more information please check https://enable-cors.org/server_nginx.html
 
 ### External Authentication
 
