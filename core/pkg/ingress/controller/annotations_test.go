@@ -195,7 +195,7 @@ func TestAffinitySession(t *testing.T) {
 	}{
 		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "md5", annotationAffinityCookieName: "route"}, "cookie", "md5", "route"},
 		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "xpto", annotationAffinityCookieName: "route1"}, "cookie", "md5", "route1"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "", annotationAffinityCookieName: ""}, "cookie", "md5", "route"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "", annotationAffinityCookieName: ""}, "cookie", "md5", "INGRESSCOOKIE"},
 		{map[string]string{}, "", "", ""},
 		{nil, "", "", ""},
 	}
@@ -209,12 +209,12 @@ func TestAffinitySession(t *testing.T) {
 			continue
 		}
 
-		if r.CookieAffinityConfig.Hash != foo.hash {
-			t.Errorf("Returned %v but expected %v for Hash", r.CookieAffinityConfig.Hash, foo.hash)
+		if r.CookieConfig.Hash != foo.hash {
+			t.Errorf("Returned %v but expected %v for Hash", r.CookieConfig.Hash, foo.hash)
 		}
 
-		if r.CookieAffinityConfig.Name != foo.name {
-			t.Errorf("Returned %v but expected %v for Name", r.CookieAffinityConfig.Name, foo.name)
+		if r.CookieConfig.Name != foo.name {
+			t.Errorf("Returned %v but expected %v for Name", r.CookieConfig.Name, foo.name)
 		}
 	}
 }
