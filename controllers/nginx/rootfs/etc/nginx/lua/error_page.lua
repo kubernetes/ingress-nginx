@@ -8,17 +8,17 @@ local get_upstreams = upstream.get_upstreams
 local random = math.random
 local us = get_upstreams()
 
-function openURL(status)
+function openURL(headers, status)
     local httpc = http.new()
+
+    headers["X-Code"] = status or "404"
+    headers["X-Format"] = headers["Accept"] or "html",
 
     local random_backend = get_destination()
     local res, err = httpc:request_uri(random_backend, {
         path = "/",
         method = "GET",
-        headers = {
-            ["X-Code"] = status or "404",
-            ["X-Format"] = ngx.var.httpAccept or "html",
-        }
+        headers = headers,
     })
 
     if not res then
@@ -26,8 +26,9 @@ function openURL(status)
         ngx.exit(500)
     end
 
-    if ngx.var.http_cookie then
-        ngx.header["Cookie"] = ngx.var.http_cookie
+    for k,v in pairs(res.headers) do
+        ngx.log(ngx.DEBUG, k, ": ", v)
+        ngx.header[k] = v
     end
 
     ngx.status = tonumber(status)

@@ -407,7 +407,7 @@ http {
         location / {
             {{ if .CustomErrors }}
             content_by_lua_block {
-                openURL(503)
+                openURL(ngx.req.get_headers(), 503)
             }
             {{ else }}
             return 503;
@@ -477,7 +477,7 @@ stream {
         location @custom_{{ $errCode }} {
             internal;
             content_by_lua_block {
-                openURL({{ $errCode }})
+                openURL(ngx.req.get_headers(), {{ $errCode }})
             }
         }    
         {{ end }}
