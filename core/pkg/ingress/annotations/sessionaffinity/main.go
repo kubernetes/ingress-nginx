@@ -31,7 +31,7 @@ const (
 	// If a cookie with this name exists,
 	// its value is used as an index into the list of available backends.
 	annotationAffinityCookieName = "ingress.kubernetes.io/session-cookie-name"
-	defaultAffinityCookieName    = "route"
+	defaultAffinityCookieName    = "INGRESSCOOKIE"
 	// This is the algorithm used by nginx to generate a value for the session cookie, if
 	// one isn't supplied and affintiy is set to "cookie".
 	annotationAffinityCookieHash = "ingress.kubernetes.io/session-cookie-hash"
@@ -45,24 +45,21 @@ var (
 // AffinityConfig describes the per ingress session affinity config
 type AffinityConfig struct {
 	// The type of affinity that will be used
-	AffinityType         string               `json:"type"`
-	CookieAffinityConfig CookieAffinityConfig `json:"cookieconfig"`
+	AffinityType string `json:"type"`
+	CookieConfig
 }
 
-// CookieAffinityConfig describes the Config of cookie type affinity
-type CookieAffinityConfig struct {
+// CookieConfig describes the Config of cookie type affinity
+type CookieConfig struct {
 	// The name of the cookie that will be used in case of cookie affinity type.
 	Name string `json:"name"`
 	// The hash that will be used to encode the cookie in case of cookie affinity type
 	Hash string `json:"hash"`
 }
 
-type affinity struct {
-}
-
 // CookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
-func CookieAffinityParse(ing *extensions.Ingress) *CookieAffinityConfig {
+func CookieAffinityParse(ing *extensions.Ingress) *CookieConfig {
 
 	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing)
 
@@ -78,7 +75,7 @@ func CookieAffinityParse(ing *extensions.Ingress) *CookieAffinityConfig {
 		sh = defaultAffinityCookieHash
 	}
 
-	return &CookieAffinityConfig{
+	return &CookieConfig{
 		Name: sn,
 		Hash: sh,
 	}
@@ -89,19 +86,22 @@ func NewParser() parser.IngressAnnotation {
 	return affinity{}
 }
 
+type affinity struct {
+}
+
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure the affinity directives
 func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
 
-	var cookieAffinityConfig *CookieAffinityConfig
-	cookieAffinityConfig = &CookieAffinityConfig{}
+	var cookieAffinityConfig *CookieConfig
+	cookieAffinityConfig = &CookieConfig{}
 
 	// Check the type of affinity that will be used
 	at, err := parser.GetStringAnnotation(annotationAffinityType, ing)
 	if err != nil {
 		at = ""
 	}
-	//cookieAffinityConfig = CookieAffinityParse(ing)
+
 	switch at {
 	case "cookie":
 		cookieAffinityConfig = CookieAffinityParse(ing)
@@ -111,8 +111,8 @@ func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	}
 	return &AffinityConfig{
-		AffinityType:         at,
-		CookieAffinityConfig: *cookieAffinityConfig,
+		AffinityType: at,
+		CookieConfig: *cookieAffinityConfig,
 	}, nil
 
 }

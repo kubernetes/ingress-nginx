@@ -65,7 +65,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data := map[string]string{}
 	data[annotationAffinityType] = "cookie"
 	data[annotationAffinityCookieHash] = "sha123"
-	data[annotationAffinityCookieName] = "route"
+	data[annotationAffinityCookieName] = "INGRESSCOOKIE"
 	ing.SetAnnotations(data)
 
 	affin, _ := NewParser().Parse(ing)
@@ -82,7 +82,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 		t.Errorf("expected md5 as sticky-hash but returned %v", nginxAffinity.CookieAffinityConfig.Hash)
 	}
 
-	if nginxAffinity.CookieAffinityConfig.Name != "route" {
+	if nginxAffinity.CookieAffinityConfig.Name != "INGRESSCOOKIE" {
 		t.Errorf("expected route as sticky-name but returned %v", nginxAffinity.CookieAffinityConfig.Name)
 	}
 }

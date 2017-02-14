@@ -16,6 +16,7 @@ Using a deployment with only one replica doesn't set the 'sticky' cookie.
 Session stickyness is achieved through 3 annotations on the Ingress, as shown in the [example](sticky-ingress.yaml).
 
 |Name|Description|Values|
+| --- | --- | --- |
 |ingress.kubernetes.io/affinity|Sets the affinity type|string (in NGINX only ``cookie`` is possible|
 |ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be used|string (default to route)|
 |ingress.kubernetes.io/session-cookie-hash|Type of hash that will be used in cookie value|sha1/md5/index|
