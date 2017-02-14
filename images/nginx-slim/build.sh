@@ -17,7 +17,7 @@
 
 set -e
 
-export NGINX_VERSION=1.11.9
+export NGINX_VERSION=1.11.10
 export NDK_VERSION=0.3.0
 export VTS_VERSION=0.1.11
 export SETMISC_VERSION=0.31
@@ -67,11 +67,11 @@ apt-get update && apt-get install --no-install-recommends -y \
   openssl \
   libluajit-5.1 \
   libluajit-5.1-dev \
-  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libcurl4-gnutls-dev libxml2 libpcre++-dev libxml2-dev \
+  afl git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libcurl4-gnutls-dev libxml2 libpcre++-dev libxml2-dev \
   linux-headers-generic || exit 1
 
 # download, verify and extract the source files
-get_src dc22b71f16b551705930544dc042f1ad1af2f9715f565187ec22c7a4b2625748 \
+get_src 778b3cabb07633f754cd9dee32fc8e22582bce22bfa407be76a806abd935533d \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
