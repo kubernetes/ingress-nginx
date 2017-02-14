@@ -84,6 +84,8 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		ingress controller should update the Ingress status IP/hostname. Default is true`)
 	)
 
+	backend.OverrideFlags(flags)
+
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
 
