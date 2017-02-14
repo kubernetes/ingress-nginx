@@ -40,7 +40,7 @@ Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). Y
 - Default backend [404-server](https://github.com/kubernetes/contrib/tree/master/404-server)
 
 
-## Dry running the Ingress controller
+## Try running the Ingress controller
 
 Before deploying the controller to production you might want to run it outside the cluster and observe it.
 
