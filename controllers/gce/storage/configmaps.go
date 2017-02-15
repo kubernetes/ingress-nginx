@@ -27,15 +27,11 @@ import (
 	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 )
 
-// UIDVault stores UIDs.
-type UIDVault interface {
-	Get() (string, bool, error)
-	Put(string) error
-	Delete() error
-}
-
-// uidDataKey is the key used in config maps to store the UID.
-const uidDataKey = "uid"
+const (
+	// UidDataKey is the key used in config maps to store the UID.
+	UidDataKey      = "uid"
+	FirewallRuleKey = "fwName"
+)
 
 // ConfigMapVault stores cluster UIDs in config maps.
 // It's a layer on top of ConfigMapStore that just implements the utils.uidVault
@@ -50,46 +46,59 @@ type ConfigMapVault struct {
 // If this method returns an error, it's guaranteed to be apiserver flake.
 // If the error is a not found error it sets the boolean to false and
 // returns and error of nil instead.
-func (c *ConfigMapVault) Get() (string, bool, error) {
+func (c *ConfigMapVault) Get() (map[string]string, bool, error) {
 	key := fmt.Sprintf("%v/%v", c.namespace, c.name)
 	item, found, err := c.ConfigMapStore.GetByKey(key)
 	if err != nil || !found {
-		return "", false, err
+		return nil, false, err
 	}
 	cfg := item.(*api.ConfigMap)
-	if k, ok := cfg.Data[uidDataKey]; ok {
-		return k, true, nil
-	}
-	return "", false, fmt.Errorf("Found config map %v but it doesn't contain uid key: %+v", key, cfg.Data)
+	return cfg.Data, true, nil
 }
 
-// Put stores the given UID in the cluster config map.
-func (c *ConfigMapVault) Put(uid string) error {
+// Put stores the given UID and EUID in the cluster config map.
+func (c *ConfigMapVault) Put(keyvals map[string]string) error {
+	if len(keyvals) == 0 {
+		return nil
+	}
 	apiObj := &api.ConfigMap{
 		ObjectMeta: api.ObjectMeta{
 			Name:      c.name,
 			Namespace: c.namespace,
 		},
-		Data: map[string]string{uidDataKey: uid},
+		Data: keyvals,
 	}
 	cfgMapKey := fmt.Sprintf("%v/%v", c.namespace, c.name)
 
 	item, exists, err := c.ConfigMapStore.GetByKey(cfgMapKey)
 	if err == nil && exists {
 		data := item.(*api.ConfigMap).Data
-		if k, ok := data[uidDataKey]; ok && k == uid {
-			return nil
-		} else if ok {
-			glog.Infof("Configmap %v has key %v but wrong value %v, updating", cfgMapKey, k, uid)
+
+		updated_needed := false
+
+		// Dump everything from keyvals into data.
+		for key, val := range keyvals {
+			if val_stored, ok := data[key]; !ok {
+				glog.Infof("Configmap %v will be updated with %v = %v", cfgMapKey, key, val)
+				data[key] = val
+				updated_needed = true
+			} else if val_stored != val {
+				glog.Infof("Configmap %v has key %v but wrong value %v, updating to %v", cfgMapKey, key, val_stored, val)
+				data[key] = val
+				updated_needed = true
+			}
 		}
 
-		if err := c.ConfigMapStore.Update(apiObj); err != nil {
-			return fmt.Errorf("Failed to update %v: %v", cfgMapKey, err)
+		if updated_needed {
+			if err := c.ConfigMapStore.Update(apiObj); err != nil {
+				return fmt.Errorf("Failed to update %v: %v", cfgMapKey, err)
+			}
 		}
+
 	} else if err := c.ConfigMapStore.Add(apiObj); err != nil {
 		return fmt.Errorf("Failed to add %v: %v", cfgMapKey, err)
 	}
-	glog.Infof("Successfully stored uid %q in config map %v", uid, cfgMapKey)
+	glog.Infof("Successfully stored map in config map %v", cfgMapKey)
 	return nil
 }
 

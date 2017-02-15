@@ -17,6 +17,7 @@ limitations under the License.
 package storage
 
 import (
+	"reflect"
 	"testing"
 
 	"k8s.io/kubernetes/pkg/api"
@@ -24,31 +25,61 @@ import (
 
 func TestConfigMapUID(t *testing.T) {
 	vault := NewFakeConfigMapVault(api.NamespaceSystem, "ingress-uid")
-	uid := ""
-	k, exists, err := vault.Get()
+	//uid := ""
+	keyvals, exists, err := vault.Get()
 	if exists {
-		t.Errorf("Got a key from an empyt vault")
+		t.Errorf("Got keyvals from an empty vault")
 	}
-	vault.Put(uid)
-	k, exists, err = vault.Get()
+
+	// Store empty value for UidDataKey.
+	uidmap := map[string]string{UidDataKey: ""}
+	vault.Put(uidmap)
+	keyvals, exists, err = vault.Get()
 	if !exists || err != nil {
 		t.Errorf("Failed to retrieve value from vault")
 	}
-	if k != "" {
+	if val, ok := keyvals[UidDataKey]; !ok {
+		t.Errorf("Failed to retried UidDataKey from vault")
+	} else if val != "" {
 		t.Errorf("Failed to store empty string as a key in the vault")
 	}
-	vault.Put("newuid")
-	k, exists, err = vault.Get()
+
+	// Store actual value in key.
+	uidmap[UidDataKey] = "newuid"
+	vault.Put(uidmap)
+	keyvals, exists, err = vault.Get()
 	if !exists || err != nil {
 		t.Errorf("Failed to retrieve value from vault")
+	} else if val, ok := keyvals[UidDataKey]; !ok {
+		t.Errorf("Failed to retried UidDataKey from vault")
+	} else if val != "newuid" {
+		t.Errorf("Failed to store empty string as a key in the vault")
 	}
-	if k != "newuid" {
-		t.Errorf("Failed to modify uid")
-	}
+
+	// Delete value.
 	if err := vault.Delete(); err != nil {
 		t.Errorf("Failed to delete uid %v", err)
 	}
-	if uid, exists, _ := vault.Get(); exists {
-		t.Errorf("Found uid %v, expected none", uid)
+	if keyvals, exists, _ = vault.Get(); exists {
+		t.Errorf("Found uid but expected none after deletion")
 	}
+
+	// Ensure Keystore is not wiped on second update.
+	uidmap[UidDataKey] = "newuid"
+	uidmap[FirewallRuleKey] = "fwrule"
+	vault.Put(uidmap)
+	keyvals, exists, err = vault.Get()
+	if !exists || err != nil || len(keyvals) != 2 {
+		t.Errorf("Failed to retrieve value from vault")
+	}
+	uidmap[UidDataKey] = "newnewuid"
+	vault.Put(uidmap)
+	keyvals, exists, err = vault.Get()
+	if !exists || err != nil || len(keyvals) != 2 {
+		t.Errorf("Failed to retrieve value from vault")
+	}
+	if !reflect.DeepEqual(keyvals, uidmap) {
+		t.Errorf("Failed to provide equal maps from vault after a partial update")
+	}
+
 }
