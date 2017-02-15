@@ -78,11 +78,11 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 		t.Errorf("expected cookie as sticky-type but returned %v", nginxAffinity.AffinityType)
 	}
 
-	if nginxAffinity.CookieAffinityConfig.Hash != "md5" {
-		t.Errorf("expected md5 as sticky-hash but returned %v", nginxAffinity.CookieAffinityConfig.Hash)
+	if nginxAffinity.CookieConfig.Hash != "md5" {
+		t.Errorf("expected md5 as sticky-hash but returned %v", nginxAffinity.CookieConfig.Hash)
 	}
 
-	if nginxAffinity.CookieAffinityConfig.Name != "INGRESSCOOKIE" {
-		t.Errorf("expected route as sticky-name but returned %v", nginxAffinity.CookieAffinityConfig.Name)
+	if nginxAffinity.CookieConfig.Name != "INGRESSCOOKIE" {
+		t.Errorf("expected route as sticky-name but returned %v", nginxAffinity.CookieConfig.Name)
 	}
 }
