@@ -213,7 +213,7 @@ func main() {
 
 	if *inCluster || *useRealCloud {
 		// Create cluster manager
-		namer, err := newNamer(kubeClient, *clusterName)
+		namer, err := newNamer(kubeClient, *clusterName, controller.DefaultFirewallName)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
@@ -223,7 +223,7 @@ func main() {
 		}
 	} else {
 		// Create fake cluster manager
-		clusterManager = controller.NewFakeClusterManager(*clusterName).ClusterManager
+		clusterManager = controller.NewFakeClusterManager(*clusterName, controller.DefaultFirewallName).ClusterManager
 	}
 
 	// Start loadbalancer controller
@@ -245,30 +245,93 @@ func main() {
 	}
 }
 
-func newNamer(kubeClient client.Interface, clusterName string) (*utils.Namer, error) {
+func newNamer(kubeClient client.Interface, clusterName string, fwName string) (*utils.Namer, error) {
 	name, err := getClusterUID(kubeClient, clusterName)
 	if err != nil {
 		return nil, err
 	}
+	fw_name, err := getFirewallName(kubeClient, fwName, name)
+	if err != nil {
+		return nil, err
+	}
 
-	namer := utils.NewNamer(name)
-	vault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	namer := utils.NewNamerWithFirewall(name, fw_name)
+	uidVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
 
 	// Start a goroutine to poll the cluster UID config map
 	// We don't watch because we know exactly which configmap we want and this
 	// controller already watches 5 other resources, so it isn't worth the cost
 	// of another connection and complexity.
 	go wait.Forever(func() {
-		uid, found, err := vault.Get()
-		existing := namer.GetClusterName()
-		if found && uid != existing {
-			glog.Infof("Cluster uid changed from %v -> %v", existing, uid)
-			namer.SetClusterName(uid)
-		} else if err != nil {
-			glog.Errorf("Failed to reconcile cluster uid %v, currently set to %v", err, existing)
+		for _, key := range [...]string{storage.UidDataKey, storage.ProviderDataKey} {
+			val, found, err := uidVault.Get(key)
+			if err != nil {
+				glog.Errorf("Can't read uidConfigMap %v", uidConfigMapName)
+			} else if !found {
+				glog.Errorf("Can't read %v from uidConfigMap %v", key, uidConfigMapName)
+				continue
+			}
+
+			switch key {
+			case storage.UidDataKey:
+				if uid := namer.GetClusterName(); uid != val {
+					glog.Infof("Cluster uid changed from %v -> %v", uid, val)
+					namer.SetClusterName(val)
+				}
+			case storage.ProviderDataKey:
+				if fw_name := namer.GetFirewallName(); fw_name != val {
+					glog.Infof("Cluster firewall name changed from %v -> %v", fw_name, val)
+					namer.SetFirewallName(val)
+				}
+			}
 		}
 	}, 5*time.Second)
 	return namer, nil
+}
+
+// getFlagOrLookupVault returns the name to use associated to a flag and configmap.
+// The returned value follows this priority:
+// If the provided 'name' is not empty, that name is used.
+//       This is effectively a client override via a command line flag.
+// else, check configmap under 'configmap_name' as a key and if found, use the associated value
+// else, return an empty 'name' and pass along an error iff the configmap lookup is erroneous.
+func getFlagOrLookupVault(cfgVault *storage.ConfigMapVault, cm_key string, name string) (string, error) {
+	if name != "" {
+		glog.Infof("Using user provided %v %v", cm_key, name)
+		// Don't save the uid in the vault, so users can rollback through
+		// setting the accompany flag to ""
+		return name, nil
+	}
+	val, found, err := cfgVault.Get(cm_key)
+	if found {
+		glog.Infof("Using %v = %q saved in ConfigMap", cm_key, val)
+		return val, nil
+	} else if err != nil {
+		// This can fail because of:
+		// 1. No such config map - found=false, err=nil
+		// 2. No such key in config map - found=false, err=nil
+		// 3. Apiserver flake - found=false, err!=nil
+		// It is not safe to proceed in 3.
+		return "", fmt.Errorf("Failed to retrieve %v: %v, using %q as name", cm_key, err, name)
+	}
+	// Not found but safe to proceed.
+	return "", nil
+}
+
+// getFirewallName returns the firewall rule name to use for this cluster. For
+// backwards compatibility, the firewall name will default to the cluster UID.
+// Use getFlagOrLookupVault to obtain a stored or overridden value for the firewall name.
+// else, use the cluster UID as a backup (this retains backwards compatibility).
+func getFirewallName(kubeClient client.Interface, name string, cluster_uid string) (string, error) {
+	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	if fw_name, err := getFlagOrLookupVault(cfgVault, storage.ProviderDataKey, name); err != nil {
+		return "", err
+	} else if fw_name != "" {
+		return fw_name, cfgVault.Put(storage.ProviderDataKey, fw_name)
+	} else {
+		glog.Infof("Using cluster UID %v as firewall name", cluster_uid)
+		return cluster_uid, cfgVault.Put(storage.ProviderDataKey, cluster_uid)
+	}
 }
 
 // getClusterUID returns the cluster UID. Rules for UID generation:
@@ -279,24 +342,10 @@ func newNamer(kubeClient client.Interface, clusterName string) (*utils.Namer, er
 // else, allocate a new uid
 func getClusterUID(kubeClient client.Interface, name string) (string, error) {
 	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
-	if name != "" {
-		glog.Infof("Using user provided cluster uid %v", name)
-		// Don't save the uid in the vault, so users can rollback through
-		// --cluster-uid=""
+	if name, err := getFlagOrLookupVault(cfgVault, storage.UidDataKey, name); err != nil {
+		return "", err
+	} else if name != "" {
 		return name, nil
-	}
-
-	existingUID, found, err := cfgVault.Get()
-	if found {
-		glog.Infof("Using saved cluster uid %q", existingUID)
-		return existingUID, nil
-	} else if err != nil {
-		// This can fail because of:
-		// 1. No such config map - found=false, err=nil
-		// 2. No such key in config map - found=false, err=nil
-		// 3. Apiserver flake - found=false, err!=nil
-		// It is not safe to proceed in 3.
-		return "", fmt.Errorf("Failed to retrieve current uid: %v, using %q as name", err, name)
 	}
 
 	// Check if the cluster has an Ingress with ip
@@ -309,10 +358,10 @@ func getClusterUID(kubeClient client.Interface, name string) (string, error) {
 		if len(ing.Status.LoadBalancer.Ingress) != 0 {
 			c := namer.ParseName(loadbalancers.GCEResourceName(ing.Annotations, "forwarding-rule"))
 			if c.ClusterName != "" {
-				return c.ClusterName, cfgVault.Put(c.ClusterName)
+				return c.ClusterName, cfgVault.Put(storage.UidDataKey, c.ClusterName)
 			}
 			glog.Infof("Found a working Ingress, assuming uid is empty string")
-			return "", cfgVault.Put("")
+			return "", cfgVault.Put(storage.UidDataKey, "")
 		}
 	}
 
@@ -327,7 +376,7 @@ func getClusterUID(kubeClient client.Interface, name string) (string, error) {
 		return "", err
 	}
 	uid := fmt.Sprintf("%x", b)
-	return uid, cfgVault.Put(uid)
+	return uid, cfgVault.Put(storage.UidDataKey, uid)
 }
 
 // getNodePort waits for the Service, and returns it's first node port.
