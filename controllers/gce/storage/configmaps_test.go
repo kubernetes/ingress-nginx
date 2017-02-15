@@ -24,31 +24,51 @@ import (
 
 func TestConfigMapUID(t *testing.T) {
 	vault := NewFakeConfigMapVault(api.NamespaceSystem, "ingress-uid")
-	uid := ""
-	k, exists, err := vault.Get()
+	// Get value from an empty vault.
+	val, exists, err := vault.Get(UidDataKey)
 	if exists {
-		t.Errorf("Got a key from an empyt vault")
+		t.Errorf("Got value from an empty vault")
 	}
-	vault.Put(uid)
-	k, exists, err = vault.Get()
+
+	// Store empty value for UidDataKey.
+	uid := ""
+	vault.Put(UidDataKey, uid)
+	val, exists, err = vault.Get(UidDataKey)
 	if !exists || err != nil {
-		t.Errorf("Failed to retrieve value from vault")
+		t.Errorf("Failed to retrieve value from vault: %v", err)
 	}
-	if k != "" {
+	if val != "" {
 		t.Errorf("Failed to store empty string as a key in the vault")
 	}
-	vault.Put("newuid")
-	k, exists, err = vault.Get()
+
+	// Store actual value in key.
+	storedVal := "newuid"
+	vault.Put(UidDataKey, storedVal)
+	val, exists, err = vault.Get(UidDataKey)
 	if !exists || err != nil {
 		t.Errorf("Failed to retrieve value from vault")
+	} else if val != storedVal {
+		t.Errorf("Failed to store empty string as a key in the vault")
 	}
-	if k != "newuid" {
-		t.Errorf("Failed to modify uid")
+
+	// Store second value which will have the affect of updating to Store
+	// rather than adding.
+	secondVal := "bar"
+	vault.Put("foo", secondVal)
+	val, exists, err = vault.Get("foo")
+	if !exists || err != nil || val != secondVal {
+		t.Errorf("Failed to retrieve second value from vault")
 	}
+	val, exists, err = vault.Get(UidDataKey)
+	if !exists || err != nil || val != storedVal {
+		t.Errorf("Failed to retrieve first value from vault")
+	}
+
+	// Delete value.
 	if err := vault.Delete(); err != nil {
 		t.Errorf("Failed to delete uid %v", err)
 	}
-	if uid, exists, _ := vault.Get(); exists {
-		t.Errorf("Found uid %v, expected none", uid)
+	if _, exists, _ := vault.Get(UidDataKey); exists {
+		t.Errorf("Found uid but expected none after deletion")
 	}
 }

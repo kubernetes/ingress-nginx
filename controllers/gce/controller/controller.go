@@ -46,6 +46,10 @@ var (
 	// L7 controller created without specifying the --cluster-uid flag.
 	DefaultClusterUID = ""
 
+	// DefaultFirewallName is the name to user for firewall rules created
+	// by an L7 controller when the --fireall-rule is not used.
+	DefaultFirewallName = ""
+
 	// Frequency to poll on local stores to sync.
 	storeSyncPollPeriod = 5 * time.Second
 )
