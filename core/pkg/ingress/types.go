@@ -20,8 +20,10 @@ import (
 	"github.com/spf13/pflag"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/healthz"
 
+	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
@@ -83,6 +85,9 @@ type Controller interface {
 	OnUpdate(Configuration) ([]byte, error)
 	// ConfigMap content of --configmap
 	SetConfig(*api.ConfigMap)
+	// SetListers allows the access of store listers present in the generic controller
+	// This avoid the use of the kubernetes client.
+	SetListers(StoreLister)
 	// BackendDefaults returns the minimum settings required to configure the
 	// communication to endpoints
 	BackendDefaults() defaults.Backend
@@ -90,6 +95,16 @@ type Controller interface {
 	Info() *BackendInfo
 	// OverrideFlags allow the customization of the flags in the backend
 	OverrideFlags(*pflag.FlagSet)
+}
+
+// StoreLister returns the configured stores for ingresses, services,
+// endpoints, secrets and configmaps.
+type StoreLister struct {
+	Ingress   cache_store.StoreToIngressLister
+	Service   cache.StoreToServiceLister
+	Endpoint  cache.StoreToEndpointsLister
+	Secret    cache_store.StoreToSecretsLister
+	ConfigMap cache_store.StoreToConfigmapLister
 }
 
 // BackendInfo returns information about the backend.

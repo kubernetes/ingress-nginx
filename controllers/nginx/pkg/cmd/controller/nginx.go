@@ -102,6 +102,8 @@ type NGINXController struct {
 
 	configmap *api.ConfigMap
 
+	storeLister ingress.StoreLister
+
 	binary string
 }
 
@@ -282,9 +284,14 @@ Error: %v
 	return nil
 }
 
-// SetConfig ...
+// SetConfig sets the configured configmap
 func (n *NGINXController) SetConfig(cmap *api.ConfigMap) {
 	n.configmap = cmap
+}
+
+// SetListers sets the configured store listers in the generic ingress controller
+func (n *NGINXController) SetListers(lister ingress.StoreLister) {
+	n.storeLister = lister
 }
 
 // OnUpdate is called by syncQueue in https://github.com/aledbf/ingress-controller/blob/master/pkg/ingress/controller/controller.go#L82
@@ -330,7 +337,20 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	// and we leave some room to avoid consuming all the FDs available
 	maxOpenFiles := (sysctlFSFileMax() / cfg.WorkerProcesses) - 1024
 
+	setHeaders := map[string]string{}
+	if cfg.ProxySetHeaders != "" {
+		cmap, exists, err := n.storeLister.ConfigMap.GetByKey(cfg.ProxySetHeaders)
+		if err != nil {
+			glog.Warningf("unexpected error reading configmap %v: %v", cfg.ProxySetHeaders, err)
+		}
+
+		if exists {
+			setHeaders = cmap.(*api.ConfigMap).Data
+		}
+	}
+
 	return n.t.Write(config.TemplateConfig{
+		ProxySetHeaders:     setHeaders,
 		MaxOpenFiles:        maxOpenFiles,
 		BacklogSize:         sysctlSomaxconn(),
 		Backends:            ingressCfg.Backends,
