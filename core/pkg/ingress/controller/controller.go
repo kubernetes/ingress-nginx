@@ -165,6 +165,7 @@ func newIngressController(config *Configuration) *GenericController {
 			addIng := obj.(*extensions.Ingress)
 			if !IsValidClass(addIng, config.IngressClass) {
 				glog.Infof("ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
+				ic.ingLister.Store.Delete(addIng)
 				return
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
@@ -183,6 +184,7 @@ func newIngressController(config *Configuration) *GenericController {
 			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
 			if !IsValidClass(curIng, config.IngressClass) {
+				ic.ingLister.Store.Delete(curIng)
 				return
 			}
 
