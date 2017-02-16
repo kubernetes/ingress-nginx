@@ -17,7 +17,9 @@ limitations under the License.
 package controller
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
@@ -35,6 +37,7 @@ import (
 	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/internalversion"
 	"k8s.io/kubernetes/pkg/client/record"
 	"k8s.io/kubernetes/pkg/fields"
+	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/util/flowcontrol"
 	"k8s.io/kubernetes/pkg/util/intstr"
 
@@ -66,7 +69,8 @@ const (
 
 var (
 	// list of ports that cannot be used by TCP or UDP services
-	reservedPorts = []string{"80", "443", "8181", "18080"}
+	reservedPorts    = []string{"80", "443", "8181", "18080"}
+	httpSendReplacer = strings.NewReplacer("\r", "\\r", "\n", "\\n", "\"", "\\\"")
 )
 
 // GenericController holds the boilerplate code required to build an Ingress controlller.
@@ -79,6 +83,7 @@ type GenericController struct {
 	nodeController *cache.Controller
 	secrController *cache.Controller
 	mapController  *cache.Controller
+	podController  *cache.Controller
 
 	ingLister  cache_store.StoreToIngressLister
 	svcLister  cache.StoreToServiceLister
@@ -86,6 +91,7 @@ type GenericController struct {
 	endpLister cache.StoreToEndpointsLister
 	secrLister cache_store.StoreToSecretsLister
 	mapLister  cache_store.StoreToConfigmapLister
+	podLister  cache.StoreToPodLister
 
 	annotations annotationExtractor
 
@@ -308,6 +314,19 @@ func newIngressController(config *Configuration) *GenericController {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
 	}
 
+	ic.podLister.Indexer, ic.podController = cache.NewIndexerInformer(
+		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "pods", ic.cfg.Namespace, fields.Everything()),
+		&api.Pod{},
+		ic.cfg.ResyncPeriod,
+		cache.ResourceEventHandlerFuncs{},
+		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
+
+	ic.syncStatus = status.NewStatusSyncer(status.Config{
+		Client:         config.Client,
+		PublishService: ic.cfg.PublishService,
+		IngressLister:  ic.ingLister,
+	})
+
 	ic.annotations = newAnnotationExtractor(ic)
 
 	ic.cfg.Backend.SetListers(ingress.StoreLister{
@@ -327,6 +346,7 @@ func (ic *GenericController) controllersInSync() bool {
 		ic.svcController.HasSynced() &&
 		ic.endpController.HasSynced() &&
 		ic.secrController.HasSynced() &&
+		ic.podController.HasSynced() &&
 		ic.mapController.HasSynced()
 }
 
@@ -769,11 +789,82 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 					continue
 				}
 				upstreams[name].Endpoints = endp
+
+				probe, err := ic.findProbeForService(svcKey, &path.Backend.ServicePort)
+				if err != nil {
+					glog.Errorf("Failed to check for readinessProbe for %v: %v", name, err)
+				}
+				if probe != nil {
+					check, err := ic.getUpstreamCheckForProbe(probe)
+					if err != nil {
+						glog.Errorf("Failed to create health check for probe: %v", err)
+					} else {
+						upstreams[name].UpstreamCheck = check
+					}
+				}
+
 			}
 		}
 	}
 
 	return upstreams
+}
+
+func (ic *GenericController) findProbeForService(svcKey string, servicePort *intstr.IntOrString) (*api.Probe, error) {
+	svcObj, svcExists, err := ic.svcLister.Indexer.GetByKey(svcKey)
+	if err != nil {
+		return nil, fmt.Errorf("error getting service %v from the cache: %v", svcKey, err)
+	}
+
+	if !svcExists {
+		err = fmt.Errorf("service %v does not exists", svcKey)
+		return nil, err
+	}
+
+	svc := svcObj.(*api.Service)
+
+	selector := labels.SelectorFromSet(svc.Spec.Selector)
+	pods, err := ic.podLister.List(selector)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get pod listing: %v", err)
+	}
+	for _, pod := range pods {
+		for _, container := range pod.Spec.Containers {
+			for _, port := range container.Ports {
+				if servicePort.Type == intstr.Int && int(port.ContainerPort) == servicePort.IntValue() ||
+					servicePort.Type == intstr.String && port.Name == servicePort.String() {
+					if container.ReadinessProbe != nil {
+						if container.ReadinessProbe.HTTPGet == nil || container.ReadinessProbe.HTTPGet.Scheme != "HTTP" {
+							continue
+						}
+						return container.ReadinessProbe, nil
+					}
+				}
+			}
+		}
+	}
+	return nil, nil
+}
+
+func (ic *GenericController) getUpstreamCheckForProbe(probe *api.Probe) (*ingress.UpstreamCheck, error) {
+	var headers http.Header = make(http.Header)
+	for _, header := range probe.HTTPGet.HTTPHeaders {
+		headers.Add(header.Name, header.Value)
+	}
+	headersWriter := new(bytes.Buffer)
+	headers.Write(headersWriter)
+
+	httpSend := httpSendReplacer.Replace(
+		fmt.Sprintf("GET %s HTTP/1.0\r\n%s\r\n", probe.HTTPGet.Path, string(headersWriter.Bytes())))
+
+	return &ingress.UpstreamCheck{
+		HttpSend:       httpSend,
+		Port:           probe.HTTPGet.Port.IntValue(),
+		Rise:           probe.SuccessThreshold,
+		Fall:           probe.FailureThreshold,
+		TimeoutMillis:  probe.TimeoutSeconds * 1000,
+		IntervalMillis: probe.PeriodSeconds * 1000,
+	}, nil
 }
 
 // serviceEndpoints returns the upstream servers (endpoints) associated
@@ -1049,6 +1140,7 @@ func (ic GenericController) Start() {
 	go ic.nodeController.Run(ic.stopCh)
 	go ic.secrController.Run(ic.stopCh)
 	go ic.mapController.Run(ic.stopCh)
+	go ic.podController.Run(ic.stopCh)
 
 	go ic.secretQueue.Run(5*time.Second, ic.stopCh)
 	go ic.syncQueue.Run(5*time.Second, ic.stopCh)
