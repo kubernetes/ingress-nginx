@@ -156,6 +156,9 @@ type Configuration struct {
 	// of your external load balancer
 	ProxyRealIPCIDR string `json:"proxy-real-ip-cidr,omitempty"`
 
+	// Sets the name of the configmap that contains the headers to pass to the backend
+	ProxySetHeaders string `json:"proxy-set-headers,omitempty"`
+
 	// Maximum size of the server names hash tables used in server names, map directive’s values,
 	// MIME types, names of request header strings, etcd.
 	// http://nginx.org/en/docs/hash.html
@@ -288,6 +291,7 @@ func NewDefault() Configuration {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
+	ProxySetHeaders     map[string]string
 	MaxOpenFiles        int
 	BacklogSize         int
 	Backends            []*ingress.Backend

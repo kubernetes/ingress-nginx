@@ -75,4 +75,8 @@ Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 Dummy  | A simple dummy controller that logs updates | * | Advanced
 
+## Custommization
 
+Name | Description | Platform   | Complexity Level
+-----| ----------- | ---------- | ----------------
+custom-headers  | set custom headers before send traffic to backends  | nginx | Advanced
