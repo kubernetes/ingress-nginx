@@ -185,8 +185,8 @@ http {
 
     {{range $name, $upstream := $backends}}
     upstream {{$upstream.Name}} {
-        {{ if $cfg.EnableStickySessions }}
-        sticky hash=sha1 httponly;
+        {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
+        sticky hash={{$upstream.SessionAffinity.CookieSessionAffinity.Hash}} name={{$upstream.SessionAffinity.CookieSessionAffinity.Name}}  httponly;
         {{ else }}
         least_conn;
         {{ end }}
