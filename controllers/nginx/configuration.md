@@ -51,9 +51,9 @@ The following annotations are supported:
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
-|[ingress.kubernetes.io/sticky-enabled](#sticky-session)|true or false|
-|[ingress.kubernetes.io/sticky-name](#sticky-session)|string|
-|[ingress.kubernetes.io/sticky-hash](#sticky-session)|string|
+|[ingress.kubernetes.io/affinity](#session-affinity)|true or false|
+|[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
+|[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 
 
 
@@ -180,7 +180,7 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 Please check the [whitelist](examples/affinity/cookie/nginx/README.md) example.
 
 
-### Sticky Session
+### Session Affinity
 
 The annotation `ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server. 
 
