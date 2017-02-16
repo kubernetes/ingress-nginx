@@ -173,7 +173,7 @@ func newIngressController(config *Configuration) *GenericController {
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
 			if !IsValidClass(delIng, config.IngressClass) {
-				glog.Infof("ignoring add for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
+				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
 				return
 			}
 			ic.recorder.Eventf(delIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", delIng.Namespace, delIng.Name))
@@ -182,7 +182,7 @@ func newIngressController(config *Configuration) *GenericController {
 		UpdateFunc: func(old, cur interface{}) {
 			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
-			if !IsValidClass(curIng, config.IngressClass) {
+			if !IsValidClass(curIng, config.IngressClass) && !IsValidClass(oldIng, config.IngressClass) {
 				return
 			}
 
@@ -564,6 +564,10 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
 
+		if !IsValidClass(ing, ic.cfg.IngressClass) {
+			continue
+		}
+
 		anns := ic.annotations.Extract(ing)
 
 		for _, rule := range ing.Spec.Rules {
@@ -697,6 +701,10 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
+
+		if !IsValidClass(ing, ic.cfg.IngressClass) {
+			continue
+		}
 
 		secUpstream := ic.annotations.SecureUpstream(ing)
 		hz := ic.annotations.HealthCheck(ing)
@@ -840,6 +848,10 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 	// initialize all the servers
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
+		if !IsValidClass(ing, ic.cfg.IngressClass) {
+			continue
+		}
+
 		// check if ssl passthrough is configured
 		sslpt := ic.annotations.SSLPassthrough(ing)
 
@@ -868,6 +880,9 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 	// configure default location and SSL
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
+		if !IsValidClass(ing, ic.cfg.IngressClass) {
+			continue
+		}
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host

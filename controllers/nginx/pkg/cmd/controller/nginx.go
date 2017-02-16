@@ -30,6 +30,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/mitchellh/mapstructure"
+	"github.com/spf13/pflag"
 
 	"k8s.io/kubernetes/pkg/api"
 
@@ -249,6 +250,11 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 		Build:      version.COMMIT,
 		Repository: version.REPO,
 	}
+}
+
+// OverrideFlags customize NGINX controller flags
+func (n NGINXController) OverrideFlags(flags *pflag.FlagSet) {
+	flags.Set("ingress-class", "nginx")
 }
 
 // testTemplate checks if the NGINX configuration inside the byte array is valid

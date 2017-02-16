@@ -17,6 +17,8 @@ limitations under the License.
 package ingress
 
 import (
+	"github.com/spf13/pflag"
+
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/healthz"
 
@@ -86,6 +88,8 @@ type Controller interface {
 	BackendDefaults() defaults.Backend
 	// Info returns information about the ingress controller
 	Info() *BackendInfo
+	// OverrideFlags allow the customization of the flags in the backend
+	OverrideFlags(*pflag.FlagSet)
 }
 
 // BackendInfo returns information about the backend.

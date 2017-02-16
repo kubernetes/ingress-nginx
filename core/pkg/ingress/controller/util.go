@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	"k8s.io/ingress/core/pkg/ingress/errors"
 )
 
 // DeniedKeyName name of the key that contains the reason to deny a location
@@ -92,7 +93,10 @@ func IsValidClass(ing *extensions.Ingress, class string) bool {
 		return true
 	}
 
-	cc, _ := parser.GetStringAnnotation(ingressClassKey, ing)
+	cc, err := parser.GetStringAnnotation(ingressClassKey, ing)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		glog.Warningf("unexpected error reading ingress annotation: %v", err)
+	}
 	if cc == "" {
 		return true
 	}
