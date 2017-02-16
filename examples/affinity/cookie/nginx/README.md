@@ -72,3 +72,6 @@ If the backend pool grows up NGINX will keep sending the requests through the sa
 
 When the backend server is removed, the requests are then re-routed to another upstream server and NGINX creates a new cookie, as the previous hash became invalid.
 
+When you have more than one Ingress Object pointing to the same Service, but one containing affinity configuration and other don't, the first created Ingress will be used. 
+This means that you can face the situation that you've configured Session Affinity in one Ingress and it doesn't reflects in NGINX configuration, because there is another Ingress Object pointing to the same service that doesn't configure this.
+
