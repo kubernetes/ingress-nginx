@@ -76,11 +76,13 @@ type GenericController struct {
 	ingController  *cache.Controller
 	endpController *cache.Controller
 	svcController  *cache.Controller
+	nodeController *cache.Controller
 	secrController *cache.Controller
 	mapController  *cache.Controller
 
 	ingLister  cache_store.StoreToIngressLister
 	svcLister  cache.StoreToServiceLister
+	nodeLister cache.StoreToNodeLister
 	endpLister cache.StoreToEndpointsLister
 	secrLister cache_store.StoreToSecretsLister
 	mapLister  cache_store.StoreToConfigmapLister
@@ -292,6 +294,10 @@ func newIngressController(config *Configuration) *GenericController {
 		cache.ResourceEventHandlerFuncs{},
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 
+	ic.nodeLister.Store, ic.nodeController = cache.NewInformer(
+		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "nodes", ic.cfg.Namespace, fields.Everything()),
+		&api.Node{}, ic.cfg.ResyncPeriod, eventHandler)
+
 	if config.UpdateStatus {
 		ic.syncStatus = status.NewStatusSyncer(status.Config{
 			Client:         config.Client,
@@ -307,6 +313,7 @@ func newIngressController(config *Configuration) *GenericController {
 	ic.cfg.Backend.SetListers(ingress.StoreLister{
 		Ingress:   ic.ingLister,
 		Service:   ic.svcLister,
+		Node:      ic.nodeLister,
 		Endpoint:  ic.endpLister,
 		Secret:    ic.secrLister,
 		ConfigMap: ic.mapLister,
@@ -1039,6 +1046,7 @@ func (ic GenericController) Start() {
 	go ic.ingController.Run(ic.stopCh)
 	go ic.endpController.Run(ic.stopCh)
 	go ic.svcController.Run(ic.stopCh)
+	go ic.nodeController.Run(ic.stopCh)
 	go ic.secrController.Run(ic.stopCh)
 	go ic.mapController.Run(ic.stopCh)
 
