@@ -52,6 +52,9 @@ The following annotations are supported:
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
+|[ingress.kubernetes.io/affinity](#session-affinity)|true or false|
+|[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
+|[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 
 
 
@@ -179,7 +182,22 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 
 *Note:* Adding an annotation to an Ingress rule overrides any global restriction.
 
-Please check the [whitelist](examples/whitelist/README.md) example.
+Please check the [whitelist](examples/affinity/cookie/nginx/README.md) example.
+
+
+### Session Affinity
+
+The annotation `ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server. 
+
+
+#### Cookie affinity
+If you use the ``cookie`` type you can also specify the name of the cookie that will be used to route the requests with the annotation `ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'route'.
+
+In case of NGINX the annotation `ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
+The `index` option  is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranted to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!
+
+In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here]https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf
+
 
 
 ### **Allowed parameters in configuration ConfigMap**

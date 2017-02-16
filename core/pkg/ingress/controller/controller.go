@@ -723,6 +723,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 		secUpstream := ic.annotations.SecureUpstream(ing)
 		hz := ic.annotations.HealthCheck(ing)
+		affinity := ic.annotations.SessionAffinity(ing)
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -762,6 +763,14 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 				if !upstreams[name].Secure {
 					upstreams[name].Secure = secUpstream
 				}
+				if upstreams[name].SessionAffinity.AffinityType == "" {
+					upstreams[name].SessionAffinity.AffinityType = affinity.AffinityType
+					if affinity.AffinityType == "cookie" {
+						upstreams[name].SessionAffinity.CookieSessionAffinity.Name = affinity.CookieConfig.Name
+						upstreams[name].SessionAffinity.CookieSessionAffinity.Hash = affinity.CookieConfig.Hash
+					}
+				}
+
 				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
 				endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
 				if err != nil {
