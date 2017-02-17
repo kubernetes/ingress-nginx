@@ -23,6 +23,8 @@ Table of Contents
 * [How does Ingress work across 2 GCE clusters?](#how-does-ingress-work-across-2-gce-clusters)
 * [I shutdown a cluster without deleting all Ingresses, how do I manually cleanup?](#i-shutdown-a-cluster-without-deleting-all-ingresses-how-do-i-manually-cleanup)
 * [How do I disable the GCE Ingress controller?](#how-do-i-disable-the-gce-ingress-controller)
+* [What GCE resources are shared between Ingresses?](#what-gce-resources-are-shared-between-ingresses)
+* [How do I debug a controller spin loop?](#host-do-i-debug-a-controller-spinloop)
 
 
 ## How do I deploy an Ingress controller?
@@ -30,6 +32,9 @@ Table of Contents
 On GCP (either GCE or GKE), every Kubernetes cluster has an Ingress controller
 running on the master, no deployment necessary. You can deploy a second,
 different (i.e non-GCE) controller, like [this](README.md#how-do-i-deploy-an-ingress-controller).
+If you wish to deploy a GCE controller as a pod in your cluster, make sure to
+turn down the existing auto-deployed Ingress controller as shown in this
+[example](/examples/deployment/gce/).
 
 ## I created an Ingress and nothing happens, now what?
 
@@ -87,7 +92,24 @@ for how to request more.
 ## Why does the Ingress need a different instance group then the GKE cluster?
 
 The controller adds/removes Kubernets nodes that are `NotReady` from the lb
-instance group.
+instance group. We cannot simply rely on health checks to achieve this for
+a few reasons.
+
+First, older Kubernetes versions (<=1.3) did not mark
+endpoints on unreachable nodes as NotReady. Meaning if the Kubelet didn't
+heart beat for 10s, the node was marked NotReady, but there was no other signal
+at the Service level to stop routing requests to endpoints on that node. In
+later Kubernetes version this is handled a little better, if the Kubelet
+doesn't heart beat for 10s it's marked NotReady, if it stays in NotReady
+for 40s all endpoints are marked NotReady. So it is still advantageous
+to pull the node out of the GCE LB Instance Group in 10s, because we
+save 30s of bad requests.
+
+Second, continuing to send requests to NotReady nodes is not a great idea.
+The NotReady condition is an aggregate of various factors. For example,
+a NotReady node might still pass health checks but have the wrong
+nodePort to endpoint mappings. The health check will pass as long as *something*
+returns a HTTP 200.
 
 ## Why does the cloud console show 0/N healthy instances?
 
@@ -228,6 +250,17 @@ controller will inject the default-http-backend Service that runs in the
 `kube-system` namespace as the default backend for the GCE HTTP lb allocated
 for that Ingress resource.
 
+Some caveats concerning the default backend:
+
+* It is the only Backend Service that doesn't directly map to a user specified
+NodePort Service
+* It's created when the first Ingress is created, and deleted when the last
+Ingress is deleted, since we don't want to waste quota if the user is not going
+to need L7 loadbalancing through Ingress
+* It has a http health check pointing at `/healthz`, not the default `/`, because
+`/` serves a 404 by design
+
+
 ## How does Ingress work across 2 GCE clusters?
 
 See federation [documentation](http://kubernetes.io/docs/user-guide/federation/federated-ingress/).
@@ -259,4 +292,58 @@ $ gcloud container clusters create mycluster --network "default" --num-nodes 1 \
 --disk-size 50 --scopes storage-full
 ```
 
+## What GCE resources are shared between Ingresses?
+
+Every Ingress creates a pipeline of GCE cloud resources behind an IP. Some of
+these are shared between Ingresses out of necessity, while some are shared
+because there was no perceived need for duplication (all resources consume
+quota and usually cost money).
+
+Shared:
+
+* Backend Services: because of low quota and high reuse. A single Service in a
+Kubernetes cluster has one NodePort, common throughout the cluster. GCE has
+a hard limit of the number of allowed BackendServices, so if multiple Ingresses
+all point to a single Service, that creates a single BackendService in GCE
+pointing to that Service's NodePort.
+
+* Instance Group: since an instance can only be part of a single loadbalanced
+Instance Group, these must be shared. There is 1 Ingress Instance Group per
+zone containing Kubernetes nodes.
+
+* HTTP Health Checks: currently the http health checks point at  the NodePort
+of a BackendService. They don't *need* to be shared, but they are since
+BackendServices are shared.
+
+* Firewall rule: In a non-federated cluster there is a single firewall rule
+that covers HTTP health check traffic from the range of [GCE loadbalancer IPs](https://cloud.google.com/compute/docs/load-balancing/http/#troubleshooting)
+to Service nodePorts.
+
+Unique:
+
+Currently, a single Ingress on GCE creates a unique IP and url map. In this
+model the following resources cannot be shared:
+* Url Map
+* Target HTTP(S) Proxies
+* SSL Certificates
+* Static-ip
+* Forwarding rules
+
+
+## How do I debug a controller spinloop?
+
+The most likely cause of a controller spin loop is some form of GCE validation
+failure, eg:
+* It's trying to delete a BackendService already in use, say in a UrlMap
+* It's trying to add an Instance to more than 1 loadbalanced InstanceGroups
+* It's trying to flip the loadbalancing algorithm on a BackendService to RATE,
+when some other BackendService is pointing at the same InstanceGroup and asking
+for UTILIZATION
+
+In all such cases, the work queue will put a single key (ingress namespace/name)
+that's getting continuously requeued into exponential backoff. However, currently
+the Informers that watch the Kubernetes api are setup to periodically resync,
+so even though a particular key is in backoff, we might end up syncing all other
+keys every, say, 10m, which might trigger the same validation-error-condition
+when syncing a shared resource.
 
