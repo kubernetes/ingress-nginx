@@ -4,6 +4,7 @@ TAG ?= 0.7
 PREFIX ?= gcr.io/google_containers/ubuntu-slim
 BUILD_IMAGE ?= ubuntu-build
 TAR_FILE ?= rootfs.tar
+PUSH_TOOL ?= gcloud
 
 container: clean
 	docker build --pull -t $(BUILD_IMAGE) -f Dockerfile.build .
@@ -12,7 +13,7 @@ container: clean
 	docker build --pull -t $(PREFIX):$(TAG) .
 
 push: container
-	docker push $(PREFIX):$(TAG)
+	$(PUSH_TOOL) docker push $(PREFIX):$(TAG)
 
 clean:
 	docker rmi -f $(PREFIX):$(TAG) || true
