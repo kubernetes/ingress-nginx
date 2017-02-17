@@ -24,7 +24,7 @@ container: build
 	docker build --pull -t $(PREFIX):$(RELEASE) rootfs
 
 push: container
-	gcloud docker push $(PREFIX):$(RELEASE)
+	gcloud docker -- push $(PREFIX):$(RELEASE)
 
 fmt:
 	@echo "+ $@"
