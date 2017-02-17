@@ -38,7 +38,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 	tempPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, pemName)
 
-	glog.V(3).Infof("AddOrUpdateCertAndKey: Creating temp file %v for Keypair: %v", tempPemFile.Name(), pemName)
+	glog.V(3).Infof("Creating temp file %v for Keypair: %v", tempPemFile.Name(), pemName)
 	if err != nil {
 		return nil, fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
 	}
@@ -66,12 +66,12 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		return nil, err
 	}
 
-	pembBock, _ := pem.Decode(pemCerts)
-	if pembBock == nil {
+	pemBlock, _ := pem.Decode(pemCerts)
+	if pemBlock == nil {
 		return nil, fmt.Errorf("No valid PEM formatted block found")
 	}
 
-	pemCert, err := x509.ParseCertificate(pembBock.Bytes)
+	pemCert, err := x509.ParseCertificate(pemBlock.Bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -127,49 +127,29 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 	}, nil
 }
 
-// AddOrUpdateCertAuth creates a .pem file with the specified CAs to be used in Cert Authentication
-func AddOrUpdateCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
+// AddCertAuth creates a .pem file with the specified CAs to be used in Cert Authentication
+// If it's already exists, it's clobbered.
+func AddCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
 
 	caName := fmt.Sprintf("ca-%v.pem", name)
 	caFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, caName)
 
-	tempCAPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, caName)
-	glog.V(3).Infof("AddOrUpdateCertAuth: Creating temp file %v for CA: %v", tempCAPemFile.Name(), caName)
-
-	if err != nil {
-		return nil, fmt.Errorf("could not create temp CA pem file %v: %v", tempCAPemFile.Name(), err)
-	}
-
-	_, err = tempCAPemFile.Write(ca)
-	if err != nil {
-		return nil, fmt.Errorf("could not write to CA pem file %v: %v", tempCAPemFile.Name(), err)
-	}
-
-	err = tempCAPemFile.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close CA temp pem file %v: %v", tempCAPemFile.Name(), err)
-	}
-
-	pemCACerts, err := ioutil.ReadFile(tempCAPemFile.Name())
-	if err != nil {
-		return nil, err
-	}
-
-	pemCABlock, _ := pem.Decode(pemCACerts)
+	pemCABlock, _ := pem.Decode(ca)
 	if pemCABlock == nil {
 		return nil, fmt.Errorf("No valid PEM formatted block found")
 	}
 
-	_, err = x509.ParseCertificate(pemCABlock.Bytes)
+	_, err := x509.ParseCertificate(pemCABlock.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	err = os.Rename(tempCAPemFile.Name(), caFileName)
+	err = ioutil.WriteFile(caFileName, ca, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("could not move temp pem file %v to destination %v: %v", tempCAPemFile.Name(), caFileName, err)
+		return nil, fmt.Errorf("could not write CA file %v: %v", caFileName, err)
 	}
 
+	glog.V(3).Infof("Created CA Certificate for authentication: %v", caFileName)
 	return &ingress.SSLCert{
 		CAFileName:  caFileName,
 		PemFileName: caFileName,

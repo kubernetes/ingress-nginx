@@ -3,7 +3,8 @@ kind: Ingress
 metadata:
   annotations:
     # Create this with kubectl create secret generic caingress --from-file=ca.crt --namespace=default
-    ingress.kubernetes.io/auth-tls-secret: default/caingress
+    ingress.kubernetes.io/auth-tls-secret: "default/caingress"
+    ingress.kubernetes.io/auth-tls-verify-depth: "3"
     kubernetes.io/ingress.class: "nginx"
   name: nginx-test 
   namespace: default

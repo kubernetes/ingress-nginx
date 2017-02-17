@@ -26,12 +26,12 @@ import (
 	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
+	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
-	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 var (
@@ -273,7 +273,7 @@ type Location struct {
 	// CertificateAuth indicates the access to this location requires
 	// external authentication
 	// +optional
-	CertificateAuth resolver.AuthSSLCert `json:"certificateAuth,omitempty"`
+	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"use-port-in-redirects"`

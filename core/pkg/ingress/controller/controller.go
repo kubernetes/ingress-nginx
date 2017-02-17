@@ -702,18 +702,16 @@ func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.Aut
 	if key != nil {
 		ic.secretQueue.Enqueue(key)
 	}
-	// Enough time to enqueue the new certificate
-	time.Sleep(5 * time.Second)
+
 	bc, exists := ic.sslCertTracker.Get(secretName)
 	if !exists {
 		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exists", secretName)
 	}
 	cert := bc.(*ingress.SSLCert)
 	return &resolver.AuthSSLCert{
-		Secret:       secretName,
-		CertFileName: cert.PemFileName,
-		CAFileName:   cert.CAFileName,
-		PemSHA:       cert.PemSHA,
+		Secret:     secretName,
+		CAFileName: cert.CAFileName,
+		PemSHA:     cert.PemSHA,
 	}, nil
 }
 

@@ -26,7 +26,15 @@ Also your ingress must be configured as a HTTPs/TLS Ingress.
 
 ## Deployment
 
-The following command instructs the controller to enalbe TLS authentication using the secret from the ``ingress.kubernetes.io/auth-tls-secret``
+Certificate Authentication is achieved through 2 annotations on the Ingress, as shown in the [example](nginx-tls-auth.yaml).
+
+|Name|Description|Values|
+| --- | --- | --- |
+|ingress.kubernetes.io/auth-tls-secret|Sets the secret that contains the authorized CA Chain|string|
+|ingress.kubernetes.io/auth-tls-verify-depth|The verification depth Certificate Authentication will make|number (default to 1)|
+
+
+The following command instructs the controller to enable TLS authentication using the secret from the ``ingress.kubernetes.io/auth-tls-secret``
 annotation on the Ingress. Clients must present this cert to the loadbalancer, or they will receive a HTTP 400 response
 
 ```console
@@ -52,6 +60,7 @@ Rules:
     	 	http-svc:80 (<none>)
 Annotations:
   auth-tls-secret:	default/caingress
+  auth-tls-verify-depth: 3
 
 Events:
   FirstSeen	LastSeen	Count	From				SubObjectPath	Type		Reason	Message
