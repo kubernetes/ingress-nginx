@@ -32,7 +32,7 @@ container: server
 	docker build --pull -t $(PREFIX)-$(ARCH):$(TAG) .
 
 push: container
-	gcloud docker push $(PREFIX)-$(ARCH):$(TAG)
+	gcloud docker -- push $(PREFIX)-$(ARCH):$(TAG)
 
 clean:
 	rm -f server
