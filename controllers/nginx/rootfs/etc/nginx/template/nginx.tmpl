@@ -1,4 +1,4 @@
-{{ $cfg := .Cfg }}{{ $healthzURI := .HealthzURI }}{{ $backends := .Backends }}
+{{ $cfg := .Cfg }}{{ $healthzURI := .HealthzURI }}{{ $backends := .Backends }}{{ $proxyHeaders := .ProxySetHeaders }}
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -87,7 +87,11 @@ http {
         default 1;
     }
 
+    {{ if $cfg.DisableAccessLog }}
+    access_log off;
+    {{ else }}
     access_log /var/log/nginx/access.log upstreaminfo if=$loggable;
+    {{ end }}
     error_log  /var/log/nginx/error.log {{ $cfg.ErrorLogLevel }};
 
     {{ buildResolvers $cfg.Resolver }}
@@ -181,8 +185,8 @@ http {
 
     {{range $name, $upstream := $backends}}
     upstream {{$upstream.Name}} {
-        {{ if $cfg.EnableStickySessions }}
-        sticky hash=sha1 httponly;
+        {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
+        sticky hash={{$upstream.SessionAffinity.CookieSessionAffinity.Hash}} name={{$upstream.SessionAffinity.CookieSessionAffinity.Name}}  httponly;
         {{ else }}
         least_conn;
         {{ end }}
@@ -313,6 +317,11 @@ http {
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
             proxy_set_header Proxy                  "";
 
+            # Custom headers
+            {{ range $k, $v := $proxyHeaders }}
+            proxy_set_header {{ $k }}                    "{{ $v }}";
+            {{ end }}
+
             proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
             proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;
             proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }}s;
@@ -409,7 +418,7 @@ http {
         location / {
             {{ if .CustomErrors }}
             content_by_lua_block {
-                openURL(503)
+                openURL(ngx.req.get_headers(0), 503)
             }
             {{ else }}
             return 503;
@@ -430,7 +439,12 @@ stream {
 
     log_format log_stream '$remote_addr [$time_local] $protocol [$ssl_preread_server_name] [$stream_upstream] $status $bytes_sent $bytes_received $session_time';
 
+    {{ if $cfg.DisableAccessLog }}
+    access_log off;
+    {{ else }}
     access_log /var/log/nginx/access.log log_stream;
+    {{ end }}
+
     error_log  /var/log/nginx/error.log;
 
     # configure default backend for SSL
@@ -474,7 +488,7 @@ stream {
         location @custom_{{ $errCode }} {
             internal;
             content_by_lua_block {
-                openURL({{ $errCode }})
+                openURL(ngx.req.get_headers(0), {{ $errCode }})
             }
         }    
         {{ end }}

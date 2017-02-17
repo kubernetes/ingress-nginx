@@ -17,9 +17,13 @@ limitations under the License.
 package ingress
 
 import (
+	"github.com/spf13/pflag"
+
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/healthz"
 
+	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
@@ -81,11 +85,27 @@ type Controller interface {
 	OnUpdate(Configuration) ([]byte, error)
 	// ConfigMap content of --configmap
 	SetConfig(*api.ConfigMap)
+	// SetListers allows the access of store listers present in the generic controller
+	// This avoid the use of the kubernetes client.
+	SetListers(StoreLister)
 	// BackendDefaults returns the minimum settings required to configure the
 	// communication to endpoints
 	BackendDefaults() defaults.Backend
 	// Info returns information about the ingress controller
 	Info() *BackendInfo
+	// OverrideFlags allow the customization of the flags in the backend
+	OverrideFlags(*pflag.FlagSet)
+}
+
+// StoreLister returns the configured stores for ingresses, services,
+// endpoints, secrets and configmaps.
+type StoreLister struct {
+	Ingress   cache_store.StoreToIngressLister
+	Service   cache.StoreToServiceLister
+	Node      cache.StoreToNodeLister
+	Endpoint  cache.StoreToEndpointsLister
+	Secret    cache_store.StoreToSecretsLister
+	ConfigMap cache_store.StoreToConfigmapLister
 }
 
 // BackendInfo returns information about the backend.
@@ -113,9 +133,9 @@ type Configuration struct {
 	// TCPEndpoints contain endpoints for tcp streams handled by this backend
 	// +optional
 	TCPEndpoints []*Location `json:"tcpEndpoints,omitempty"`
-	// UPDEndpoints contain endpoints for udp streams handled by this backend
+	// UDPEndpoints contain endpoints for udp streams handled by this backend
 	// +optional
-	UPDEndpoints []*Location `json:"udpEndpoints,omitempty"`
+	UDPEndpoints []*Location `json:"udpEndpoints,omitempty"`
 	// PassthroughBackend contains the backends used for SSL passthrough.
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
@@ -134,9 +154,29 @@ type Backend struct {
 	Secure bool `json:"secure"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints"`
+	// StickySession contains the StickyConfig object with stickness configuration
+
+	SessionAffinity SessionAffinityConfig
 }
 
-// Endpoint describes a kubernetes endpoint in an backend
+// SessionAffinityConfig describes different affinity configurations for new sessions.
+// Once a session is mapped to a backend based on some affinity setting, it
+// retains that mapping till the backend goes down, or the ingress controller
+// restarts. Exactly one of these values will be set on the upstream, since multiple
+// affinity values are incompatible. Once set, the backend makes no guarantees
+// about honoring updates.
+type SessionAffinityConfig struct {
+	AffinityType          string `json:"name"`
+	CookieSessionAffinity CookieSessionAffinity
+}
+
+// CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
+type CookieSessionAffinity struct {
+	Name string `json:"name"`
+	Hash string `json:"hash"`
+}
+
+// Endpoint describes a kubernetes endpoint in a backend
 type Endpoint struct {
 	// Address IP address of the endpoint
 	Address string `json:"address"`
