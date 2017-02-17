@@ -237,7 +237,10 @@ func buildLocation(input interface{}) string {
 
 	path := location.Path
 	if len(location.Redirect.Target) > 0 && location.Redirect.Target != path {
-		return fmt.Sprintf("~* %s", path)
+		if path == "/" {
+			return fmt.Sprintf("~* %s", path)
+		}
+		return fmt.Sprintf("~* ^%s", path)
 	}
 
 	return path
