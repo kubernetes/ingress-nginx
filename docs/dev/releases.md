@@ -64,19 +64,23 @@ git commit
 
 ## Testing
 
-To run unittets, enter each directory in `controllers/`
+See also [related FAQs](../faq#how-are-the-ingress-controllers-tested).
+
+### Unit tests
+
+To run unit tests, enter each directory in `controllers/`
 ```console
 $ cd $GOPATH/src/k8s.io/ingress/controllers/gce
 $ go test ./...
 ```
 
+### e2e tests
+
 If you have access to a Kubernetes cluster, you can also run e2e tests
 ```console
 $ cd $GOPATH/src/k8s.io/kubernetes
-$ ./hack/ginkgo-e2e.sh --ginkgo.focus=Ingress.* --delete-namespace-on-failure=false
+$ go run hack/e2e.go -- -v --test --test_args="--ginkgo.focus=Ingress.* --delete-namespace-on-failure=false"
 ```
-
-See also [related FAQs](../faq#how-are-the-ingress-controllers-tested).
 
 [TODO](https://github.com/kubernetes/ingress/issues/5): add instructions on running integration tests, or e2e against
 local-up/minikube.
