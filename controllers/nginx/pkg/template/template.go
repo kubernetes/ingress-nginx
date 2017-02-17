@@ -111,7 +111,13 @@ func (t *Template) Write(conf config.TemplateConfig, isValidTemplate func([]byte
 	cmd.Stdout = t.outCmdBuf
 	if err := cmd.Run(); err != nil {
 		glog.Warningf("unexpected error cleaning template: %v", err)
-		return t.tmplBuf.Bytes(), nil
+		content := t.tmplBuf.Bytes()
+		err = isValidTemplate(content)
+		if err != nil {
+			return nil, err
+		}
+
+		return content, nil
 	}
 
 	content := t.outCmdBuf.Bytes()
