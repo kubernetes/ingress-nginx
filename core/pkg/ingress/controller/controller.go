@@ -595,30 +595,9 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 				server = servers[defServerName]
 			}
 
-			// use default upstream
-			defBackend := upstreams[defUpstreamName]
-			// we need to check if the spec contains the default backend
-			if ing.Spec.Backend != nil {
-				glog.V(3).Infof("ingress rule %v/%v defines a default Backend %v/%v",
-					ing.Namespace,
-					ing.Name,
-					ing.Spec.Backend.ServiceName,
-					ing.Spec.Backend.ServicePort.String())
-
-				name := fmt.Sprintf("%v-%v-%v",
-					ing.GetNamespace(),
-					ing.Spec.Backend.ServiceName,
-					ing.Spec.Backend.ServicePort.String())
-
-				if defUps, ok := upstreams[name]; ok {
-					defBackend = defUps
-				}
-			}
-
 			if rule.HTTP == nil &&
 				host != defServerName {
 				glog.V(3).Infof("ingress rule %v/%v does not contains HTTP rules. using default backend", ing.Namespace, ing.Name)
-				server.Locations[0].Backend = defBackend.Name
 				continue
 			}
 
@@ -822,7 +801,13 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 	return upstreams, nil
 }
 
-func (ic *GenericController) createServers(data []interface{}, upstreams map[string]*ingress.Backend) map[string]*ingress.Server {
+// createServers initializes a map that contains information about the list of
+// FDQN referenced by ingress rules and the common name field in the referenced
+// SSL certificates. Each server is configured with location / using a default
+// backend specified by the user or the one inside the ingress spec.
+func (ic *GenericController) createServers(data []interface{},
+	upstreams map[string]*ingress.Backend) map[string]*ingress.Server {
+
 	servers := make(map[string]*ingress.Server)
 
 	bdef := ic.GetDefaultBackend()
@@ -834,11 +819,9 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 		BufferSize:     bdef.ProxyBufferSize,
 	}
 
-	dun := ic.getDefaultUpstream().Name
-
 	// This adds the Default Certificate to Default Backend and also for vhosts missing the secret
-	var defaultPemFileName, defaultPemSHA string
 	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
+	var defaultPemFileName, defaultPemSHA string
 	// If no default Certificate was supplied, tries to generate a new dumb one
 	if err != nil {
 		var cert *ingress.SSLCert
@@ -855,7 +838,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 		defaultPemSHA = defaultCertificate.PemSHA
 	}
 
-	// default server
+	// initialize the default server
 	servers[defServerName] = &ingress.Server{
 		Hostname:       defServerName,
 		SSLCertificate: defaultPemFileName,
@@ -864,7 +847,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 			{
 				Path:         rootLocation,
 				IsDefBackend: true,
-				Backend:      dun,
+				Backend:      ic.getDefaultUpstream().Name,
 				Proxy:        ngxProxy,
 			},
 		}}
@@ -878,16 +861,86 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 
 		// check if ssl passthrough is configured
 		sslpt := ic.annotations.SSLPassthrough(ing)
+		dun := ic.getDefaultUpstream().Name
+		if ing.Spec.Backend != nil {
+			// replace default backend
+			defUpstream := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
+			if backendUpstream, ok := upstreams[defUpstream]; ok {
+				dun = backendUpstream.Name
+			}
+		}
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
 			if host == "" {
-				host = defServerName
+				if len(ing.Spec.TLS) == 0 {
+					// default host already initialized
+					continue
+				}
+
+				for _, tls := range ing.Spec.TLS {
+					c, exists := ic.sslCertTracker.Get(fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName))
+					if !exists {
+						continue
+					}
+					cert := c.(*ingress.SSLCert)
+
+					// configure hosts defined in TLS section
+					for _, host := range tls.Hosts {
+						if _, ok := servers[host]; ok {
+							servers[host].SSLPassthrough = sslpt
+							// server already configured
+							continue
+						}
+
+						servers[host] = &ingress.Server{
+							Hostname:       host,
+							SSLCertificate: cert.PemFileName,
+							SSLPemChecksum: cert.PemSHA,
+							Locations: []*ingress.Location{
+								{
+									Path:         rootLocation,
+									IsDefBackend: true,
+									Backend:      dun,
+									Proxy:        ngxProxy,
+								},
+							}, SSLPassthrough: sslpt,
+						}
+					}
+
+					for _, cn := range cert.CN {
+						if !isDomainName(cn) {
+							glog.Warningf("'%v' is not a valid domain name (%v/%v)", cn, cert.GetNamespace, cert.GetName)
+							continue
+						}
+						if _, ok := servers[cn]; ok {
+							// server already configured
+							continue
+						}
+
+						servers[cn] = &ingress.Server{
+							Hostname:       cn,
+							SSLCertificate: cert.PemFileName,
+							SSLPemChecksum: cert.PemSHA,
+							Locations: []*ingress.Location{
+								{
+									Path:         rootLocation,
+									IsDefBackend: true,
+									Backend:      dun,
+									Proxy:        ngxProxy,
+								},
+							},
+						}
+					}
+				}
 			}
+
 			if _, ok := servers[host]; ok {
+				servers[host].SSLPassthrough = sslpt
 				// server already configured
 				continue
 			}
+
 			servers[host] = &ingress.Server{
 				Hostname: host,
 				Locations: []*ingress.Location{
@@ -897,60 +950,7 @@ func (ic *GenericController) createServers(data []interface{}, upstreams map[str
 						Backend:      dun,
 						Proxy:        ngxProxy,
 					},
-				}, SSLPassthrough: sslpt}
-		}
-	}
-
-	// configure default location and SSL
-	for _, ingIf := range data {
-		ing := ingIf.(*extensions.Ingress)
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
-			continue
-		}
-
-		for _, rule := range ing.Spec.Rules {
-			host := rule.Host
-			if host == "" {
-				host = defServerName
-			}
-
-			// only add a certificate if the server does not have one previously configured
-			// TODO: TLS without secret?
-			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate == "" {
-				tlsSecretName := ""
-				for _, tls := range ing.Spec.TLS {
-					for _, tlsHost := range tls.Hosts {
-						if tlsHost == host {
-							tlsSecretName = tls.SecretName
-							break
-						}
-					}
-				}
-
-				key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
-				bc, exists := ic.sslCertTracker.Get(key)
-				if exists {
-					cert := bc.(*ingress.SSLCert)
-					if isHostValid(host, cert) {
-						servers[host].SSLCertificate = cert.PemFileName
-						servers[host].SSLPemChecksum = cert.PemSHA
-					}
-				} else {
-
-					servers[host].SSLCertificate = defaultPemFileName
-					servers[host].SSLPemChecksum = defaultPemSHA
-				}
-			}
-
-			if ing.Spec.Backend != nil {
-				defUpstream := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
-				if backendUpstream, ok := upstreams[defUpstream]; ok {
-					if host == "" || host == defServerName {
-						ic.recorder.Eventf(ing, api.EventTypeWarning, "MAPPING", "error: rules with Spec.Backend are allowed only with hostnames")
-						continue
-					}
-					servers[host].Locations[0].Backend = backendUpstream.Name
-				}
+				}, SSLPassthrough: sslpt,
 			}
 		}
 	}
