@@ -4,8 +4,8 @@ This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kub
 
 ## Contents
 * [Conventions](#conventions)
-* [Requirements](#what-it-provides)
-* [Dry running](#dry-running-the-ingress-controller)
+* [Requirements](#requirements)
+* [Dry running](#try-running-the-ingress-controller)
 * [Deployment](#deployment)
 * [HTTP](#http)
 * [HTTPS](#https)
@@ -17,15 +17,16 @@ This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kub
 * [UDP Services](#exposing-udp-services)
 * [Proxy Protocol](#proxy-protocol)
 * [NGINX customization](configuration.md)
+* [Custom errors](#custom-errors)
 * [NGINX status page](#nginx-status-page)
 * [Running multiple ingress controllers](#running-multiple-ingress-controllers)
 * [Running on Cloudproviders](#running-on-cloudproviders)
 * [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
 * [Log format](#log-format)
 * [Local cluster](#local-cluster)
-* [Debug & Troubleshooting](#troubleshooting)
-* [Why endpoints and not services?](#why-endpoints-and-not-services)
+* [Debug & Troubleshooting](#debug--troubleshooting)
 * [Limitations](#limitations)
+* [Why endpoints and not services?](#why-endpoints-and-not-services)
 * [NGINX Notes](#nginx-notes)
 
 ## Conventions
