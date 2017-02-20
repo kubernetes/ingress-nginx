@@ -132,7 +132,7 @@ func TestTemplateWithData(t *testing.T) {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
 
-	_, err = ngxTpl.Write(dat, func(b []byte) error { return nil })
+	_, err = ngxTpl.Write(dat)
 	if err != nil {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
@@ -166,6 +166,6 @@ func BenchmarkTemplateWithData(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		ngxTpl.Write(dat, func(b []byte) error { return nil })
+		ngxTpl.Write(dat)
 	}
 }
