@@ -446,7 +446,7 @@ stream {
         server 127.0.0.1:442;
     }
 
-    {{ buildSSPassthroughUpstreams $backends .PassthroughBackends }}
+    {{ buildSSLPassthroughUpstreams $backends .PassthroughBackends }}
 
     server {
         listen                  [::]:443 ipv6only=off{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
