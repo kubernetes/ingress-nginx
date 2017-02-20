@@ -78,7 +78,7 @@ func (t *Template) Close() {
 
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
-func (t *Template) Write(conf config.TemplateConfig, isValidTemplate func([]byte) error) ([]byte, error) {
+func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	defer t.tmplBuf.Reset()
 	defer t.outCmdBuf.Reset()
 
@@ -111,22 +111,10 @@ func (t *Template) Write(conf config.TemplateConfig, isValidTemplate func([]byte
 	cmd.Stdout = t.outCmdBuf
 	if err := cmd.Run(); err != nil {
 		glog.Warningf("unexpected error cleaning template: %v", err)
-		content := t.tmplBuf.Bytes()
-		err = isValidTemplate(content)
-		if err != nil {
-			return nil, err
-		}
-
-		return content, nil
+		return t.tmplBuf.Bytes(), nil
 	}
 
-	content := t.outCmdBuf.Bytes()
-	err = isValidTemplate(content)
-	if err != nil {
-		return nil, err
-	}
-
-	return content, nil
+	return t.outCmdBuf.Bytes(), nil
 }
 
 var (
