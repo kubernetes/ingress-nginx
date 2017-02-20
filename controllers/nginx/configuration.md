@@ -15,6 +15,7 @@
 * [Websockets](#websockets)
 * [Optimizing TLS Time To First Byte (TTTFB)](#optimizing-tls-time-to-first-byte-tttfb)
 * [Retries in non-idempotent methods](#retries-in-non-idempotent-methods)
+* [Custom max body size](#custom-max-body-size)
 
 
 ### Customizing NGINX
@@ -46,6 +47,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
+|[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
 |[ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
@@ -414,3 +416,15 @@ NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/do
 
 Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error.
 The previous behavior can be restored using `retry-non-idempotent=true` in the configuration ConfigMap.
+
+
+### Custom max body size
+For NGINX, 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter [`client_max_body_size`](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
+
+To configure this setting globally for all Ingress rules, the `proxy-body-size` value may be set in the NGINX ConfigMap.
+
+To use custom values in an Ingress rule define these annotation:
+
+```
+ingress.kubernetes.io/proxy-body-size: 8m
+```
