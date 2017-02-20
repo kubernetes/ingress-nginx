@@ -137,7 +137,7 @@ var (
 		"buildProxyPass":              buildProxyPass,
 		"buildRateLimitZones":         buildRateLimitZones,
 		"buildRateLimit":              buildRateLimit,
-		"buildSSPassthroughUpstreams": buildSSPassthroughUpstreams,
+		"buildSSLPassthroughUpstreams": buildSSLPassthroughUpstreams,
 		"buildResolvers":              buildResolvers,
 		"isLocationAllowed":           isLocationAllowed,
 		"buildStreamUpstreams":        buildStreamUpstreams,
@@ -171,7 +171,7 @@ func buildResolvers(a interface{}) string {
 	return strings.Join(r, " ")
 }
 
-func buildSSPassthroughUpstreams(b interface{}, sslb interface{}) string {
+func buildSSLPassthroughUpstreams(b interface{}, sslb interface{}) string {
 	backends := b.([]*ingress.Backend)
 	sslBackends := sslb.([]*ingress.SSLPassthroughBackend)
 	buf := bytes.NewBuffer(make([]byte, 0, 10))
