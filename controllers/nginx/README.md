@@ -4,8 +4,8 @@ This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kub
 
 ## Contents
 * [Conventions](#conventions)
-* [Requirements](#what-it-provides)
-* [Dry running](#dry-running-the-ingress-controller)
+* [Requirements](#requirements)
+* [Dry running](#try-running-the-ingress-controller)
 * [Deployment](#deployment)
 * [HTTP](#http)
 * [HTTPS](#https)
@@ -23,7 +23,7 @@ This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kub
 * [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
 * [Log format](#log-format)
 * [Local cluster](#local-cluster)
-* [Debug & Troubleshooting](#troubleshooting)
+* [Debug & Troubleshooting](#debug--troubleshooting)
 * [Why endpoints and not services?](#why-endpoints-and-not-services)
 * [Limitations](#limitations)
 * [NGINX Notes](#nginx-notes)
