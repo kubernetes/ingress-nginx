@@ -256,8 +256,14 @@ http {
             {{ range $ip := $location.Whitelist.CIDR }}
             allow {{ $ip }};{{ end }}
             deny all;
+            {{ else }}
+            {{ if gt (len $cfg.WhitelistSourceRange) 0 }}
+            {{ range $ip := $cfg.WhitelistSourceRange}}
+            allow {{ $ip }};{{ end }}
+            deny all;
             {{ end }}
-            
+            {{ end }}
+
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             {{ if not (empty $authPath) }}
