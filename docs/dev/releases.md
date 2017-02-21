@@ -9,17 +9,17 @@ requirements you can build a raw server binary, a local container image,
 or push an image to a remote repository.
 
 Build a raw server binary
-```console
+```shell
 $ make controller
 ```
 
 Build a local container image
-```console
+```shell
 $ make container TAG=0.0 PREFIX=$USER/ingress-controller
 ```
 
 Push the container image to a remote repository
-```console
+```shell
 $ make push TAG=0.0 PREFIX=$USER/ingress-controller
 ```
 
@@ -28,7 +28,7 @@ $ make push TAG=0.0 PREFIX=$USER/ingress-controller
 The build should use dependencies in the `ingress/vendor` directory.
 Occasionally, you might need to update the dependencies.
 
-```console
+```shell
 $ godep version
 godep v74 (linux/amd64/go1.6.1)
 $ go version
@@ -36,12 +36,12 @@ go version go1.6.1 linux/amd64
 ```
 
 This will automatically save godeps to `vendor/`
-```console
+```shell
 $ godep save ./...
 ```
 
 If you have an older version of `godep`
-```console
+```shell
 $ go get github.com/tools/godep
 $ cd $GOPATH/src/github.com/tools/godep
 $ go build -o godep *.go
@@ -49,7 +49,7 @@ $ go build -o godep *.go
 
 In general, you can follow [this guide](https://github.com/kubernetes/kubernetes/blob/release-1.5/docs/devel/godep.md#using-godep-to-manage-dependencies)
 to update godeps. To update a particular dependency, eg: Kubernetes:
-```console
+```shell
 cd $GOPATH/src/github.com/kubernetes/ingress
 godep restore
 go get -u github.com/kubernetes/kubernetes
@@ -69,7 +69,7 @@ See also [related FAQs](../faq#how-are-the-ingress-controllers-tested).
 ### Unit tests
 
 To run unit tests, enter each directory in `controllers/`
-```console
+```shell
 $ cd $GOPATH/src/k8s.io/ingress/controllers/gce
 $ go test ./...
 ```
@@ -77,7 +77,7 @@ $ go test ./...
 ### e2e tests
 
 If you have access to a Kubernetes cluster, you can also run e2e tests
-```console
+```shell
 $ cd $GOPATH/src/k8s.io/kubernetes
 $ go run hack/e2e.go -- -v --test --test_args="--ginkgo.focus=Ingress.* --delete-namespace-on-failure=false"
 ```
