@@ -658,7 +658,6 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 			glog.V(3).Infof("upstream %v does not have any active endpoints. Using default backend", value.Name)
 			value.Endpoints = append(value.Endpoints, newDefaultServer())
 		}
-		sort.Sort(ingress.EndpointByAddrPort(value.Endpoints))
 		aUpstreams = append(aUpstreams, value)
 	}
 	sort.Sort(ingress.BackendByNameServers(aUpstreams))
@@ -794,6 +793,7 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 				glog.Warningf("service %v does not have any active endpoints", svcKey)
 			}
 
+			sort.Sort(ingress.EndpointByAddrPort(endps))
 			upstreams = append(upstreams, endps...)
 			break
 		}
