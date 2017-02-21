@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/spf13/pflag"
+
 	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/controller"
@@ -79,4 +81,11 @@ func (dc DummyController) Info() *ingress.BackendInfo {
 		Build:      "git-00000000",
 		Repository: "git://foo.bar.com",
 	}
+}
+
+func (n DummyController) OverrideFlags(*pflag.FlagSet) {
+}
+
+func (n DummyController) SetListers(lister ingress.StoreLister) {
+
 }
