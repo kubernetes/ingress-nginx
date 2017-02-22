@@ -19,7 +19,7 @@ package parser
 import (
 	"strconv"
 
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/errors"
 )

@@ -19,7 +19,7 @@ package ingress
 import (
 	"github.com/spf13/pflag"
 
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
 	"k8s.io/kubernetes/pkg/healthz"
 

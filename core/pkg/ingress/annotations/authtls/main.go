@@ -18,7 +18,7 @@ package authtls
 
 import (
 	"github.com/pkg/errors"
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"

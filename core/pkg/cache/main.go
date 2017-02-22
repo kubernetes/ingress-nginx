@@ -16,7 +16,7 @@ limitations under the License.
 
 package cache
 
-import "k8s.io/kubernetes/pkg/client/cache"
+import "k8s.io/client-go/tools/cache"
 
 // StoreToIngressLister makes a Store that lists Ingress.
 type StoreToIngressLister struct {
