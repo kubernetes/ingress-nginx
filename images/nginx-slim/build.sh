@@ -19,7 +19,7 @@ set -e
 
 export NGINX_VERSION=1.11.10
 export NDK_VERSION=0.3.0
-export VTS_VERSION=0.1.11
+export VTS_VERSION=0.1.12
 export SETMISC_VERSION=0.31
 export LUA_VERSION=0.10.7
 export STICKY_SESSIONS_VERSION=08a395c66e42                               
