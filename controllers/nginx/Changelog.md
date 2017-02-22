@@ -1,5 +1,51 @@
 Changelog
 
+### 0.9-beta.2
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.2`
+
+*New Features:*
+
+- New configuration flag `proxy-set-headers` to allow set custom headers before send traffic to backends. [Example here](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-headers/nginx)
+- Disable directive access_log globally using `disable-access-log: "true"` in the configuration ConfigMap.
+- Sticky session per Ingress rule using the annotation `ingress.kubernetes.io/affinity`. [Example here](https://github.com/kubernetes/ingress/tree/master/examples/affinity/cookie/nginx)
+
+*Changes:*
+
+- [X] [#300](https://github.com/kubernetes/ingress/pull/300) Change nginx variable to use in filter of access_log
+- [X] [#296](https://github.com/kubernetes/ingress/pull/296) Fix rewrite regex to match the start of the URL and not a substring
+- [X] [#293](https://github.com/kubernetes/ingress/pull/293) Update makefile gcloud docker command
+- [X] [#290](https://github.com/kubernetes/ingress/pull/290) Update nginx version in ingress controller to 1.11.10
+- [X] [#286](https://github.com/kubernetes/ingress/pull/286) Add logs to help debugging and simplify default upstream configuration
+- [X] [#285](https://github.com/kubernetes/ingress/pull/285) Added a Node StoreLister type
+- [X] [#281](https://github.com/kubernetes/ingress/pull/281) Add chmod up directory tree for world read/execute on directories
+- [X] [#279](https://github.com/kubernetes/ingress/pull/279) fix wrong link in the file of examples/README.md
+- [X] [#275](https://github.com/kubernetes/ingress/pull/275) Pass headers to custom error backend
+- [X] [#272](https://github.com/kubernetes/ingress/pull/272) Fix error getting class information from Ingress annotations
+- [X] [#268](https://github.com/kubernetes/ingress/pull/268) minor: Fix typo in nginx README
+- [X] [#265](https://github.com/kubernetes/ingress/pull/265) Fix rewrite annotation parser
+- [X] [#262](https://github.com/kubernetes/ingress/pull/262) Add nginx README and configuration docs back
+- [X] [#261](https://github.com/kubernetes/ingress/pull/261) types.go: fix typo in godoc
+- [X] [#258](https://github.com/kubernetes/ingress/pull/258) Nginx sticky annotations
+- [X] [#255](https://github.com/kubernetes/ingress/pull/255) Adds support for disabling access_log globally
+- [X] [#247](https://github.com/kubernetes/ingress/pull/247) Fix wrong URL in nginx ingress configuration
+- [X] [#246](https://github.com/kubernetes/ingress/pull/246) Add support for custom proxy headers using a ConfigMap
+- [X] [#244](https://github.com/kubernetes/ingress/pull/244) Add information about cors annotation
+- [X] [#241](https://github.com/kubernetes/ingress/pull/241) correct a spell mistake
+- [X] [#232](https://github.com/kubernetes/ingress/pull/232) Change searchs with searches
+- [X] [#231](https://github.com/kubernetes/ingress/pull/231) Add information about proxy_protocol in port 442
+- [X] [#228](https://github.com/kubernetes/ingress/pull/228) Fix worker check issue
+- [X] [#227](https://github.com/kubernetes/ingress/pull/227) proxy_protocol on ssl_passthrough listener
+- [X] [#223](https://github.com/kubernetes/ingress/pull/223) Fix panic if a tempfile cannot be created
+- [X] [#220](https://github.com/kubernetes/ingress/pull/220) Fixes for minikube usage instructions.
+- [X] [#219](https://github.com/kubernetes/ingress/pull/219) Fix typo, add a couple of links. 
+- [X] [#218](https://github.com/kubernetes/ingress/pull/218) Improve links from CONTRIBUTING.
+- [X] [#217](https://github.com/kubernetes/ingress/pull/217) Fix an e2e link. 
+- [X] [#212](https://github.com/kubernetes/ingress/pull/212) Simplify code to obtain TCP or UDP services
+- [X] [#208](https://github.com/kubernetes/ingress/pull/208) Fix nil HTTP field
+- [X] [#198](https://github.com/kubernetes/ingress/pull/198) Add an example for static-ip and deployment
+
+
 ### 0.9-beta.1
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.1`
