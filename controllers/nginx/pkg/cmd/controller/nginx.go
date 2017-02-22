@@ -45,6 +45,7 @@ const (
 	ngxHealthPort = 18080
 	ngxHealthPath = "/healthz"
 	ngxStatusPath = "/internal_nginx_status"
+	ngxVtsPath    = "/nginx_status/format/json"
 )
 
 var (
