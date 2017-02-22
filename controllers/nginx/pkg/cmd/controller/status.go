@@ -17,7 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/golang/glog"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -49,22 +51,147 @@ type nginxStatus struct {
 	Waiting int
 }
 
+// https://github.com/vozlt/nginx-module-vts
+type Vts struct {
+	NginxVersion string `json:"nginxVersion"`
+	LoadMsec     int    `json:"loadMsec"`
+	NowMsec      int    `json:"nowMsec"`
+	// Total connections and requests(same as stub_status_module in NGINX)
+	Connections Connections `json:"connections"`
+	// Traffic(in/out) and request and response counts and cache hit ratio per each server zone
+	ServerZones map[string]ServerZone `json:"serverZones"`
+	// Traffic(in/out) and request and response counts and cache hit ratio per each server zone filtered through
+	// the vhost_traffic_status_filter_by_set_key directive
+	FilterZones map[string]map[string]FilterZone `json:"filterZones"`
+	// Traffic(in/out) and request and response counts per server in each upstream group
+	UpstreamZones map[string][]UpstreamZone `json:"upstreamZones"`
+}
+
+type ServerZone struct {
+	RequestCounter float64  `json:"requestCounter"`
+	InBytes        float64  `json:"inBytes"`
+	OutBytes       float64  `json:"outBytes"`
+	Responses      Response `json:"responses"`
+	Cache          Cache    `json:"responses"`
+}
+
+type FilterZone struct {
+	RequestCounter float64  `json:"requestCounter"`
+	InBytes        float64  `json:"inBytes"`
+	OutBytes       float64  `json:"outBytes"`
+	Cache          Cache    `json:"responses"`
+	Responses      Response `json:"responses"`
+}
+
+type UpstreamZone struct {
+	Responses      Response      `json:"responses"`
+	Server         string        `json:"server"`
+	RequestCounter float64       `json:"requestCounter"`
+	InBytes        float64       `json:"inBytes"`
+	OutBytes       float64       `json:"outBytes"`
+	ResponseMsec   float64       `json:"responseMsec"`
+	Weight         float64       `json:"weight"`
+	MaxFails       float64       `json:"maxFails"`
+	FailTimeout    float64       `json:"failTimeout"`
+	Backup         BoolToFloat64 `json:"backup"`
+	Down           BoolToFloat64 `json:"down"`
+}
+
+type Cache struct {
+	Miss        float64 `json:"miss"`
+	Bypass      float64 `json:"bypass"`
+	Expired     float64 `json:"expired"`
+	Stale       float64 `json:"stale"`
+	Updating    float64 `json:"updating"`
+	Revalidated float64 `json:"revalidated"`
+	Hit         float64 `json:"hit"`
+	Scarce      float64 `json:"scarce"`
+}
+
+type Response struct {
+	OneXx  float64 `json:"1xx"`
+	TwoXx  float64 `json:"2xx"`
+	TheeXx float64 `json:"3xx"`
+	FourXx float64 `json:"4xx"`
+	FiveXx float64 `json:"5xx"`
+}
+
+type Connections struct {
+	Active   float64 `json:"active"`
+	Reading  float64 `json:"reading"`
+	Writing  float64 `json:"writing"`
+	Waiting  float64 `json:"waiting"`
+	Accepted float64 `json:"accepted"`
+	Handled  float64 `json:"handled"`
+	Requests float64 `json:"requests"`
+}
+
+type BoolToFloat64 float64
+
+func (bit BoolToFloat64) UnmarshalJSON(data []byte) error {
+	asString := string(data)
+	if asString == "1" || asString == "true" {
+		bit = 1
+	} else if asString == "0" || asString == "false" {
+		bit = 0
+	} else {
+		return fmt.Errorf(fmt.Sprintf("Boolean unmarshal error: invalid input %s", asString))
+	}
+	return nil
+}
+
 func getNginxStatus() (*nginxStatus, error) {
-	resp, err := http.DefaultClient.Get(fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxStatusPath))
+
+	url := fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxStatusPath)
+	glog.V(3).Infof("start scrapping url: %v", url)
+
+	data, err := httpBody(url)
+
 	if err != nil {
 		return nil, fmt.Errorf("unexpected error scraping nginx status page: %v", err)
 	}
 
+	return parse(string(data)), nil
+}
+
+func httpBody(url string) ([]byte, error) {
+	resp, err := http.DefaultClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("unexpected error scraping nginx : %v", err)
+	}
+
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("unexpected error scraping nginx status page (%v)", err)
+		return nil, fmt.Errorf("unexpected error scraping nginx (%v)", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("unexpected error scraping nginx status page (status %v)", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected error scraping nginx (status %v)", resp.StatusCode)
 	}
 
-	return parse(string(data)), nil
+	return data, nil
+
+}
+
+func getNginxVtsMetrics() (*Vts, error) {
+	url := fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxVtsPath)
+	glog.V(3).Infof("start scrapping url: %v", url)
+
+	data, err := httpBody(url)
+
+	if err != nil {
+		return nil, fmt.Errorf("unexpected error scraping nginx vts (%v)", err)
+	}
+
+	var vts Vts
+	err = json.Unmarshal(data, &vts)
+	if err != nil {
+		return nil, fmt.Errorf("unexpected error json unmarshal (%v)", err)
+	}
+
+	glog.V(3).Infof("scrap returned : %v", vts)
+
+	return &vts, nil
 }
 
 func parse(data string) *nginxStatus {
