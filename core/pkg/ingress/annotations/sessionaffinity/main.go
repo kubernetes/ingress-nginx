@@ -33,7 +33,7 @@ const (
 	annotationAffinityCookieName = "ingress.kubernetes.io/session-cookie-name"
 	defaultAffinityCookieName    = "INGRESSCOOKIE"
 	// This is the algorithm used by nginx to generate a value for the session cookie, if
-	// one isn't supplied and affintiy is set to "cookie".
+	// one isn't supplied and affinity is set to "cookie".
 	annotationAffinityCookieHash = "ingress.kubernetes.io/session-cookie-hash"
 	defaultAffinityCookieHash    = "md5"
 )
