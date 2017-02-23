@@ -349,7 +349,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		}
 	}
 
-	return n.t.Write(config.TemplateConfig{
+	content, err := n.t.Write(config.TemplateConfig{
 		ProxySetHeaders:     setHeaders,
 		MaxOpenFiles:        maxOpenFiles,
 		BacklogSize:         sysctlSomaxconn(),
@@ -361,7 +361,16 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		HealthzURI:          ngxHealthPath,
 		CustomErrors:        len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                 cfg,
-	}, n.testTemplate)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := n.testTemplate(content); err != nil {
+		return nil, err
+	}
+
+	return content, nil
 }
 
 // Name returns the healthcheck name
