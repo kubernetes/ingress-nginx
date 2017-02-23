@@ -331,6 +331,9 @@ http {
             proxy_set_header                        Accept-Encoding     "";
             {{ end }}
 
+            {{/* Add any additional configuration defined */}}
+            {{ $location.ConfigurationSnippet }}
+
             {{ buildProxyPass $backends $location }}
             {{ else }}
             #{{ $location.Denied }}

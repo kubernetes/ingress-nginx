@@ -80,3 +80,4 @@ Dummy  | A simple dummy controller that logs updates | * | Advanced
 Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 custom-headers  | set custom headers before send traffic to backends  | nginx | Advanced
+configuration-snippets | customize nginx location configuration using annotations | nginx | Advanced
