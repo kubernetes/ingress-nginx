@@ -7,7 +7,7 @@ In some cases, the Ingress controller will be required to be run at all the node
 The default backend is a service of handling all url paths and hosts the nginx controller doesn't understand. Deploy the default-http-backend as follow:
 
 ```console
-$ kubectl apply -f ../deployment/nginx/default-backend.yaml 
+$ kubectl apply -f ../../deployment/nginx/default-backend.yaml 
 deployment "default-http-backend" configured
 service "default-http-backend" configured
 
