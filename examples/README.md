@@ -75,7 +75,7 @@ Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 Dummy  | A simple dummy controller that logs updates | * | Advanced
 
-## Custommization
+## Customization
 
 Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
