@@ -43,7 +43,7 @@ func (em exeMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
 func (n *NGINXController) setupMonitor(args []string) {
 	pc, err := newProcessCollector(true, exeMatcher{"nginx", args})
 	if err != nil {
-		glog.Fatalf("unexpected error registering nginx collector: %v", err)
+		glog.Warningf("unexpected error registering nginx collector: %v", err)
 	}
 	err = prometheus.Register(pc)
 	if err != nil {
@@ -199,17 +199,17 @@ func newProcessCollector(
 
 // Describe implements prometheus.Collector.
 func (p *namedProcessCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- bytesDesc
-	ch <- cacheDesc
-	ch <- connectionsDesc
 	ch <- cpuSecsDesc
 	ch <- memResidentbytesDesc
 	ch <- memVirtualbytesDesc
-	ch <- numprocsDesc
+	ch <- startTimeDesc
+
+	ch <- bytesDesc
+	ch <- cacheDesc
+	ch <- connectionsDesc
 	ch <- readBytesDesc
 	ch <- requestDesc
 	ch <- responseDesc
-	ch <- startTimeDesc
 	ch <- writeBytesDesc
 	ch <- upstreamBackupDesc
 	ch <- upstreamBytesDesc
@@ -220,6 +220,9 @@ func (p *namedProcessCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- upstreamResponseMsecDesc
 	ch <- upstreamResponsesDesc
 	ch <- upstreamWeightDesc
+
+	ch <- numprocsDesc
+
 
 }
 
@@ -249,17 +252,19 @@ func reflectMetrics(value interface{}, desc *prometheus.Desc, ch chan<- promethe
 		ch <- prometheus.MustNewConstMetric(desc,
 			prometheus.CounterValue, float64(val.Field(i).Interface().(float64)),
 			labels...)
-
 	}
 
 }
 
 func (p *namedProcessCollector) scrape(ch chan<- prometheus.Metric) {
+
 	nginxMetrics, err := getNginxMetrics()
 	if err != nil {
 		glog.Warningf("unexpected error obtaining nginx status info: %v", err)
 		return
 	}
+
+
 
 	reflectMetrics(&nginxMetrics.Connections, connectionsDesc, ch)
 
