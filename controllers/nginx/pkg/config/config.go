@@ -274,6 +274,8 @@ func NewDefault() Configuration {
 			ProxyReadTimeout:     60,
 			ProxySendTimeout:     60,
 			ProxyBufferSize:      "4k",
+			ProxyCookieDomain:    "off",
+			ProxyCookiePath:      "off",
 			SSLRedirect:          true,
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},

@@ -37,6 +37,16 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size)
 	ProxyBufferSize string `json:"proxy-buffer-size"`
 
+	// Sets a text that should be changed in the path attribute of the “Set-Cookie” header fields of
+	// a proxied server response.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path
+	ProxyCookiePath string `json:"proxy-cookie-path"`
+
+	// Sets a text that should be changed in the domain attribute of the “Set-Cookie” header fields
+	// of a proxied server response.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain
+	ProxyCookieDomain string `json:"proxy-cookie-domain"`
+
 	// Name server/s used to resolve names of upstream servers into IP addresses.
 	// The file /etc/resolv.conf is used as DNS resolution configuration.
 	Resolver []net.IP
