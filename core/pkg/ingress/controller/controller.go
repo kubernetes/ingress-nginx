@@ -426,30 +426,30 @@ func (ic *GenericController) sync(key interface{}) error {
 	return nil
 }
 
-func (ic *GenericController) getStreamServices(configmapName string, proto api.Protocol) []*ingress.Location {
+func (ic *GenericController) getStreamServices(configmapName string, proto api.Protocol) []ingress.L4Service {
 	glog.V(3).Infof("obtaining information about stream services of type %v located in configmap %v", proto, configmapName)
 	if configmapName == "" {
 		// no configmap configured
-		return []*ingress.Location{}
+		return []ingress.L4Service{}
 	}
 
 	ns, name, err := k8s.ParseNameNS(configmapName)
 	if err != nil {
 		glog.Errorf("unexpected error reading configmap %v: %v", name, err)
-		return []*ingress.Location{}
+		return []ingress.L4Service{}
 	}
 
 	configmap, err := ic.getConfigMap(ns, name)
 	if err != nil {
 		glog.Errorf("unexpected error reading configmap %v: %v", name, err)
-		return []*ingress.Location{}
+		return []ingress.L4Service{}
 	}
 
-	var svcs []*ingress.Location
+	var svcs []ingress.L4Service
 	// k -> port to expose
 	// v -> <namespace>/<service name>:<port from service to be used>
 	for k, v := range configmap.Data {
-		_, err := strconv.Atoi(k)
+		externalPort, err := strconv.Atoi(k)
 		if err != nil {
 			glog.Warningf("%v is not valid as a TCP/UDP port", k)
 			continue
@@ -517,9 +517,15 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 			continue
 		}
 
-		svcs = append(svcs, &ingress.Location{
-			Path:    k,
-			Backend: fmt.Sprintf("%v-%v-%v", svcNs, svcName, svcPort),
+		svcs = append(svcs, ingress.L4Service{
+			Port: externalPort,
+			Backend: ingress.L4Backend{
+				Name:      svcName,
+				Namespace: svcNs,
+				Port:      intstr.FromString(svcPort),
+				Protocol:  proto,
+			},
+			Endpoints: endps,
 		})
 	}
 
@@ -817,6 +823,8 @@ func (ic *GenericController) createServers(data []interface{},
 		SendTimeout:    bdef.ProxySendTimeout,
 		ReadTimeout:    bdef.ProxyReadTimeout,
 		BufferSize:     bdef.ProxyBufferSize,
+		CookieDomain:   bdef.ProxyCookieDomain,
+		CookiePath:     bdef.ProxyCookiePath,
 	}
 
 	// This adds the Default Certificate to Default Backend and also for vhosts missing the secret
