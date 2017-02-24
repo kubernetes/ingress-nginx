@@ -1,4 +1,4 @@
-all: fmt lint vet cover
+all: fmt lint vet
 
 BUILDTAGS=
 
