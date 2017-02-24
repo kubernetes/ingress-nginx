@@ -40,8 +40,8 @@ type Configuration struct {
 	SendTimeout    int    `json:"sendTimeout"`
 	ReadTimeout    int    `json:"readTimeout"`
 	BufferSize     string `json:"bufferSize"`
-	CookieDomain   string `json:"proxyCookieDomain"`
-	CookiePath     string `json:"proxyCookiePath"`
+	CookieDomain   string `json:"cookieDomain"`
+	CookiePath     string `json:"cookiePath"`
 }
 
 type proxy struct {
@@ -83,8 +83,8 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	cd, err := parser.GetStringAnnotation(cookieDomain, ing)
-	if err != nil || cp == "" {
-		cp = defBackend.ProxyCookieDomain
+	if err != nil || cd == "" {
+		cd = defBackend.ProxyCookieDomain
 	}
 
 	bs, err := parser.GetStringAnnotation(bodySize, ing)
@@ -92,6 +92,5 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		bs = defBackend.ProxyBodySize
 	}
 
-	return &Configuration{bs, ct, st, rt, bufs,
-		cd, cp}, nil
+	return &Configuration{bs, ct, st, rt, bufs, cd, cp}, nil
 }

@@ -326,8 +326,8 @@ http {
 
             proxy_http_version                      1.1;
 
-            proxy_cookie_domain                     {{ $location.Proxy.CookiePath }};
-            proxy_cookie_path                       {{ $location.Proxy.CookieDomain }};
+            proxy_cookie_domain                     {{ $location.Proxy.CookieDomain }};
+            proxy_cookie_path                       {{ $location.Proxy.CookiePath }};
 
             {{/* rewrite only works if the content is not compressed */}}
             {{ if $location.Redirect.AddBaseURL }}
@@ -460,25 +460,33 @@ stream {
         ssl_preread             on;
     }
     
-    {{ buildStreamUpstreams "tcp" $backends .TCPBackends }}
-    
-    {{ buildStreamUpstreams "udp" $backends .UDPBackends }}
-
     # TCP services		
     {{ range $i, $tcpServer := .TCPBackends }}
-        server {
-            listen {{ $tcpServer.Path }};
-            proxy_pass             tcp-{{ $tcpServer.Backend }};		
-        }
+    upstream {{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
+    {{ range $j, $endpoint := $tcpServer.Endpoints }}
+        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+    {{ end }}
+    }
+    
+    server {
+        listen                  {{ $tcpServer.Port }};
+        proxy_pass              {{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
+    }
     {{ end }}
 
-    # UDP services		
-    {{ range $i, $udpServer := .UDPBackends }}		
-        server {		
-            listen {{ $udpServer.Path }} udp;
-            proxy_responses        1;
-            proxy_pass             udp-{{ $udpServer.Backend }};
-        }		
+    # UDP services
+    {{ range $i, $udpServer := .UDPBackends }}
+    upstream {{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
+    {{ range $j, $endpoint := $udpServer.Endpoints }}
+        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+    {{ end }}
+    }
+    
+    server {
+        listen                  {{ $udpServer.Port }};
+        proxy_responses         1;
+        proxy_pass              {{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};		
+    }
     {{ end }}
 }
 
