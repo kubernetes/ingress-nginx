@@ -52,7 +52,7 @@ const (
 var (
 	tmplPath        = "/etc/nginx/template/nginx.tmpl"
 	cfgPath         = "/etc/nginx/nginx.conf"
-	binary          = "/usr/sbin/nginx"
+	binary          = "/usr/local/bin/nginx"
 	defIngressClass = "nginx"
 )
 
