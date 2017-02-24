@@ -326,6 +326,9 @@ http {
 
             proxy_http_version                      1.1;
 
+            proxy_cookie_domain                     {{ $location.Proxy.CookiePath }};
+            proxy_cookie_path                       {{ $location.Proxy.CookieDomain }};
+
             {{/* rewrite only works if the content is not compressed */}}
             {{ if $location.Redirect.AddBaseURL }}
             proxy_set_header                        Accept-Encoding     "";

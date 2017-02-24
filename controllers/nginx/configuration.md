@@ -259,6 +259,12 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 **proxy-connect-timeout:** Sets the timeout for [establishing a connection with a proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
 
 
+**proxy-cookie-domain:** Sets a text that [should be changed in the domain attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the “Set-Cookie” header fields of a proxied server response.
+
+
+**proxy-cookie-path:** Sets a text that [should be changed in the path attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path) of the “Set-Cookie” header fields of a proxied server response.
+ 
+
 **proxy-read-timeout:** Sets the timeout in seconds for [reading a response from the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout). The timeout is set only between two successive read operations, not for the transmission of the whole response.
 
 
@@ -376,7 +382,11 @@ The following table shows the options, the default value and a description.
 |keep-alive|"75"|
 |map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|
+|proxy-body-size|same as body-size|
+|proxy-buffer-size|"4k"|
 |proxy-connect-timeout|"5"|
+|proxy-cookie-domain|"off"|
+|proxy-cookie-path|"off"|
 |proxy-read-timeout|"60"|
 |proxy-real-ip-cidr|0.0.0.0/0|
 |proxy-send-timeout|"60"|
