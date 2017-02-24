@@ -17,8 +17,8 @@ limitations under the License.
 package ingress
 
 import (
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // BackendByNameServers sorts upstreams by name
@@ -86,4 +86,4 @@ type SSLCert struct {
 }
 
 // GetObjectKind implements the ObjectKind interface as a noop
-func (s SSLCert) GetObjectKind() unversioned.ObjectKind { return unversioned.EmptyObjectKind }
+func (s SSLCert) GetObjectKind() schema.ObjectKind { return schema.EmptyObjectKind }

@@ -29,8 +29,8 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions"
 )
 
 type fakeError struct{}

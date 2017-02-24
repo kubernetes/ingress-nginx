@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	tc "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
 	"k8s.io/kubernetes/pkg/client/leaderelection/resourcelock"

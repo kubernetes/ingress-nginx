@@ -26,11 +26,11 @@ import (
 	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/task"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/cache"
-	testclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
-	"k8s.io/kubernetes/pkg/util/sets"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions"
+	"k8s.io/client-go/tools/cache"
+	testclient "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/pkg/util/sets"
 )
 
 func buildLoadBalancerIngressByIP() loadBalancerIngressByIP {

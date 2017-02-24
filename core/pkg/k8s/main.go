@@ -21,12 +21,12 @@ import (
 	"os"
 	"strings"
 
-	"k8s.io/kubernetes/pkg/api"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 // IsValidService checks if exists a service with the specified name
-func IsValidService(kubeClient clientset.Interface, name string) (*api.Service, error) {
+func IsValidService(kubeClient clientset.Interface, name string) (*v1.Service, error) {
 	ns, name, err := ParseNameNS(name)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func IsValidService(kubeClient clientset.Interface, name string) (*api.Service, 
 }
 
 // IsValidSecret checks if exists a secret with the specified name
-func IsValidSecret(kubeClient clientset.Interface, name string) (*api.Secret, error) {
+func IsValidSecret(kubeClient clientset.Interface, name string) (*v1.Secret, error) {
 	ns, name, err := ParseNameNS(name)
 	if err != nil {
 		return nil, err
@@ -62,14 +62,15 @@ func GetNodeIP(kubeClient clientset.Interface, name string) string {
 	}
 
 	for _, address := range node.Status.Addresses {
-		if address.Type == api.NodeExternalIP {
+		if address.Type == v1.NodeExternalIP {
 			if address.Address != "" {
 				externalIP = address.Address
 				break
 			}
 		}
 
-		if externalIP == "" && address.Type == api.NodeLegacyHostIP {
+		//FIXME There's no v1.NodeLegacyHostIP
+		if externalIP == "" { // && address.Type == v1.NodeLegacyHostIP {
 			externalIP = address.Address
 		}
 	}

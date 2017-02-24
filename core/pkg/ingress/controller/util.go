@@ -22,7 +22,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/imdario/mergo"
 
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"

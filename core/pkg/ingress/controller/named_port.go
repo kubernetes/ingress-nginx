@@ -24,7 +24,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/pkg/api"
 	podutil "k8s.io/kubernetes/pkg/api/pod"
 	"k8s.io/kubernetes/pkg/labels"
 

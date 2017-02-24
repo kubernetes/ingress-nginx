@@ -24,9 +24,9 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/pkg/client/leaderelection"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/util/wait"
@@ -106,7 +106,7 @@ func (s statusSync) Shutdown() {
 	}
 
 	glog.Infof("removing address from ingress status (%v)", addrs)
-	s.updateStatus([]api.LoadBalancerIngress{})
+	s.updateStatus([]v1.LoadBalancerIngress{})
 }
 
 func (s *statusSync) run() {
@@ -204,7 +204,7 @@ func (s *statusSync) runningAddresess() ([]string, error) {
 	}
 
 	// get information about all the pods running the ingress controller
-	pods, err := s.Client.Core().Pods(s.pod.Namespace).List(api.ListOptions{
+	pods, err := s.Client.Core().Pods(s.pod.Namespace).List(v1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(s.pod.Labels),
 	})
 	if err != nil {
@@ -222,13 +222,13 @@ func (s *statusSync) runningAddresess() ([]string, error) {
 }
 
 // sliceToStatus converts a slice of IP and/or hostnames to LoadBalancerIngress
-func sliceToStatus(endpoints []string) []api.LoadBalancerIngress {
-	lbi := []api.LoadBalancerIngress{}
+func sliceToStatus(endpoints []string) []v1.LoadBalancerIngress {
+	lbi := []v1.LoadBalancerIngress{}
 	for _, ep := range endpoints {
 		if net.ParseIP(ep) == nil {
-			lbi = append(lbi, api.LoadBalancerIngress{Hostname: ep})
+			lbi = append(lbi, v1.LoadBalancerIngress{Hostname: ep})
 		} else {
-			lbi = append(lbi, api.LoadBalancerIngress{IP: ep})
+			lbi = append(lbi, v1.LoadBalancerIngress{IP: ep})
 		}
 	}
 
@@ -236,7 +236,7 @@ func sliceToStatus(endpoints []string) []api.LoadBalancerIngress {
 	return lbi
 }
 
-func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
+func (s *statusSync) updateStatus(newIPs []v1.LoadBalancerIngress) {
 	ings := s.IngressLister.List()
 	var wg sync.WaitGroup
 	wg.Add(len(ings))
@@ -270,7 +270,7 @@ func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
 	wg.Wait()
 }
 
-func ingressSliceEqual(lhs, rhs []api.LoadBalancerIngress) bool {
+func ingressSliceEqual(lhs, rhs []v1.LoadBalancerIngress) bool {
 	if len(lhs) != len(rhs) {
 		return false
 	}
@@ -287,7 +287,7 @@ func ingressSliceEqual(lhs, rhs []api.LoadBalancerIngress) bool {
 }
 
 // loadBalancerIngressByIP sorts LoadBalancerIngress using the field IP
-type loadBalancerIngressByIP []api.LoadBalancerIngress
+type loadBalancerIngressByIP []v1.LoadBalancerIngress
 
 func (c loadBalancerIngressByIP) Len() int      { return len(c) }
 func (c loadBalancerIngressByIP) Swap(i, j int) { c[i], c[j] = c[j], c[i] }

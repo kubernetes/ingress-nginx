@@ -24,8 +24,8 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
@@ -121,7 +121,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 // dumpSecret dumps the content of a secret into a file
 // in the expected format for the specified authorization
-func dumpSecret(filename string, secret *api.Secret) error {
+func dumpSecret(filename string, secret *v1.Secret) error {
 	val, ok := secret.Data["auth"]
 	if !ok {
 		return ing_errors.LocationDenied{

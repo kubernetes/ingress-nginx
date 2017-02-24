@@ -17,7 +17,7 @@ limitations under the License.
 package resolver
 
 import (
-	"k8s.io/kubernetes/pkg/api"
+	api "k8s.io/client-go/pkg/api/v1"
 
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 )

@@ -19,8 +19,8 @@ package k8s
 import (
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
-	testclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
+	"k8s.io/client-go/pkg/api/v1"
+	testclient "k8s.io/client-go/kubernetes/fake"
 	"os"
 )
 

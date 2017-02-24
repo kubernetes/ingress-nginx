@@ -23,15 +23,16 @@ import (
 
 	"github.com/golang/glog"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+	client "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/errors"
-	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	"k8s.io/kubernetes/pkg/client/leaderelection"
 	"k8s.io/kubernetes/pkg/client/leaderelection/resourcelock"
-	"k8s.io/kubernetes/pkg/client/record"
 )
 
-func getCurrentLeader(electionID, namespace string, c client.Interface) (string, *api.Endpoints, error) {
+func getCurrentLeader(electionID, namespace string, c client.Interface) (string, *v1.Endpoints, error) {
 	endpoints, err := c.Core().Endpoints(namespace).Get(electionID)
 	if err != nil {
 		return "", nil, err
@@ -59,8 +60,8 @@ func NewElection(electionID,
 	_, err := c.Core().Endpoints(namespace).Get(electionID)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			_, err = c.Core().Endpoints(namespace).Create(&api.Endpoints{
-				ObjectMeta: api.ObjectMeta{
+			_, err = c.Core().Endpoints(namespace).Create(&v1.Endpoints{
+				ObjectMeta: v1.ObjectMeta{
 					Name: electionID,
 				},
 			})
@@ -93,7 +94,7 @@ func NewElection(electionID,
 	if err != nil {
 		return nil, err
 	}
-	recorder := broadcaster.NewRecorder(api.EventSource{
+	recorder := broadcaster.NewRecorder(v1.EventSource{
 		Component: "ingress-leader-elector",
 		Host:      hostname,
 	})

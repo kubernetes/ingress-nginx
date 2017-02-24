@@ -17,7 +17,7 @@ limitations under the License.
 package proxy
 
 import (
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
