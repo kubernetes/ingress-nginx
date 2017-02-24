@@ -34,6 +34,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sessionaffinity"
+	"k8s.io/ingress/core/pkg/ingress/annotations/snippet"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -52,19 +53,20 @@ type annotationExtractor struct {
 func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 	return annotationExtractor{
 		map[string]parser.IngressAnnotation{
-			"BasicDigestAuth":    auth.NewParser(auth.AuthDirectory, cfg),
-			"ExternalAuth":       authreq.NewParser(),
-			"CertificateAuth":    authtls.NewParser(cfg),
-			"EnableCORS":         cors.NewParser(),
-			"HealthCheck":        healthcheck.NewParser(cfg),
-			"Whitelist":          ipwhitelist.NewParser(cfg),
-			"UsePortInRedirects": portinredirect.NewParser(cfg),
-			"Proxy":              proxy.NewParser(cfg),
-			"RateLimit":          ratelimit.NewParser(),
-			"Redirect":           rewrite.NewParser(cfg),
-			"SecureUpstream":     secureupstream.NewParser(),
-			"SessionAffinity":    sessionaffinity.NewParser(),
-			"SSLPassthrough":     sslpassthrough.NewParser(),
+			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
+			"ExternalAuth":         authreq.NewParser(),
+			"CertificateAuth":      authtls.NewParser(cfg),
+			"EnableCORS":           cors.NewParser(),
+			"HealthCheck":          healthcheck.NewParser(cfg),
+			"Whitelist":            ipwhitelist.NewParser(cfg),
+			"UsePortInRedirects":   portinredirect.NewParser(cfg),
+			"Proxy":                proxy.NewParser(cfg),
+			"RateLimit":            ratelimit.NewParser(),
+			"Redirect":             rewrite.NewParser(cfg),
+			"SecureUpstream":       secureupstream.NewParser(),
+			"SessionAffinity":      sessionaffinity.NewParser(),
+			"SSLPassthrough":       sslpassthrough.NewParser(),
+			"ConfigurationSnippet": snippet.NewParser(),
 		},
 	}
 }
