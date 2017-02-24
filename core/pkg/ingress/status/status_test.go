@@ -213,7 +213,7 @@ func buildIngressLIstener() cache_store.StoreToIngressLister {
 			},
 		},
 	})
-	return cache_store.StoreToIngressLister{store}
+	return cache_store.StoreToIngressLister{Store: store}
 }
 
 func buildStatusSync() statusSync {
