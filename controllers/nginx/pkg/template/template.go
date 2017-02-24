@@ -126,15 +126,15 @@ var (
 			}
 			return true
 		},
-		"buildLocation":               buildLocation,
-		"buildAuthLocation":           buildAuthLocation,
-		"buildProxyPass":              buildProxyPass,
-		"buildRateLimitZones":         buildRateLimitZones,
-		"buildRateLimit":              buildRateLimit,
+		"buildLocation":                buildLocation,
+		"buildAuthLocation":            buildAuthLocation,
+		"buildProxyPass":               buildProxyPass,
+		"buildRateLimitZones":          buildRateLimitZones,
+		"buildRateLimit":               buildRateLimit,
 		"buildSSLPassthroughUpstreams": buildSSLPassthroughUpstreams,
-		"buildResolvers":              buildResolvers,
-		"isLocationAllowed":           isLocationAllowed,
-		"buildStreamUpstreams":        buildStreamUpstreams,
+		"buildResolvers":               buildResolvers,
+		"isLocationAllowed":            isLocationAllowed,
+		"buildStreamUpstreams":         buildStreamUpstreams,
 
 		"contains":  strings.Contains,
 		"hasPrefix": strings.HasPrefix,
