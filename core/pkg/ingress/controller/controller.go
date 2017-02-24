@@ -295,7 +295,7 @@ func newIngressController(config *Configuration) *GenericController {
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 
 	ic.nodeLister.Store, ic.nodeController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "nodes", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "nodes", api.NamespaceAll, fields.Everything()),
 		&api.Node{}, ic.cfg.ResyncPeriod, eventHandler)
 
 	if config.UpdateStatus {
