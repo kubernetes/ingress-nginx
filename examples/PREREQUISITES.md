@@ -27,8 +27,8 @@ key/cert pair with an arbitrarily chosen hostname, created as follows
 ```console
 $ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=nginxsvc/O=nginxsvc"
 Generating a 2048 bit RSA private key
-......................................................................................................................................+++
-....................................................................+++
+................+++
+................+++
 writing new private key to 'tls.key'
 -----
 
@@ -38,7 +38,7 @@ secret "tls-secret" created
 
 ## Test HTTP Service
 
-All examples that require a test HTTP Service use the standard echoheaders pod,
+All examples that require a test HTTP Service use the standard http-svc pod,
 which you can deploy as follows
 
 ```console
@@ -47,35 +47,35 @@ service "http-svc" created
 replicationcontroller "http-svc" created
 
 $ kubectl get po
-NAME                READY     STATUS    RESTARTS   AGE
-echoheaders-p1t3t   1/1       Running   0          1d
+NAME             READY     STATUS    RESTARTS   AGE
+http-svc-p1t3t   1/1       Running   0          1d
 
 $ kubectl get svc
-NAME          CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
-echoheaders   10.0.122.116   <none>        80/TCP                       1d
+NAME             CLUSTER-IP     EXTERNAL-IP   PORT(S)            AGE
+http-svc         10.0.122.116   <pending>     80:30301/TCP       1d
 ```
 
 You can test that the HTTP Service works by exposing it temporarily
 ```console
-$ kubectl patch svc echoheaders -p '{"spec":{"type": "LoadBalancer"}}'
-"echoheaders" patched
+$ kubectl patch svc http-svc -p '{"spec":{"type": "LoadBalancer"}}'
+"http-svc" patched
 
-$ kubectl get svc echoheaders
-NAME          CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
-echoheaders   10.0.122.116   <pending>     80:32100/TCP   1d
+$ kubectl get svc http-svc
+NAME             CLUSTER-IP     EXTERNAL-IP   PORT(S)            AGE
+http-svc         10.0.122.116   <pending>     80:30301/TCP       1d
 
-$ kubectl describe svc echoheaders
-Name:			echoheaders
-Namespace:		default
-Labels:			app=echoheaders
-Selector:		app=echoheaders
-Type:			LoadBalancer
-IP:			10.0.122.116
+$ kubectl describe svc http-svc
+Name:				    http-svc
+Namespace:			    default
+Labels:			        app=http-svc
+Selector:		        app=http-svc
+Type:			        LoadBalancer
+IP:			            10.0.122.116
 LoadBalancer Ingress:	108.59.87.136
-Port:			http	80/TCP
-NodePort:		http	32100/TCP
-Endpoints:		10.180.1.6:8080
-Session Affinity:	None
+Port:			        http	80/TCP
+NodePort:		        http	30301/TCP
+Endpoints:		        10.180.1.6:8080
+Session Affinity:	    None
 Events:
   FirstSeen	LastSeen	Count	From			SubObjectPath	Type		Reason			Message
   ---------	--------	-----	----			-------------	--------	------			-------
@@ -102,8 +102,8 @@ user-agent=curl/7.46.0
 BODY:
 -no body in request-
 
-$ kubectl patch svc echoheaders -p '{"spec":{"type": "NodePort"}}'
-"echoheaders" patched
+$ kubectl patch svc http-svc -p '{"spec":{"type": "NodePort"}}'
+"http-svc" patched
 ```
 
 ## Ingress Class
