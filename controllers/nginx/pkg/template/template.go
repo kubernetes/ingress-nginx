@@ -134,7 +134,6 @@ var (
 		"buildSSLPassthroughUpstreams": buildSSLPassthroughUpstreams,
 		"buildResolvers":               buildResolvers,
 		"isLocationAllowed":            isLocationAllowed,
-		"buildStreamUpstreams":         buildStreamUpstreams,
 
 		"contains":  strings.Contains,
 		"hasPrefix": strings.HasPrefix,
@@ -190,34 +189,6 @@ func buildSSLPassthroughUpstreams(b interface{}, sslb interface{}) string {
 		fmt.Fprint(buf, "\t}\n\n")
 	}
 
-	return buf.String()
-}
-
-func buildStreamUpstreams(proto string, b interface{}, s interface{}) string {
-	backends := b.([]*ingress.Backend)
-	streams := s.([]*ingress.Location)
-	buf := bytes.NewBuffer(make([]byte, 0, 10))
-	// multiple services can use the same upstream.
-	// avoid duplications using a map[name]=true
-	u := make(map[string]bool)
-	for _, stream := range streams {
-		if u[stream.Backend] {
-			continue
-		}
-		u[stream.Backend] = true
-		fmt.Fprintf(buf, "upstream %v-%v {\n", proto, stream.Backend)
-		// TODO: find a better way to avoid empty stream upstreams
-		fmt.Fprintf(buf, "\t\tserver 127.0.0.1:8181 down;\n")
-		for _, backend := range backends {
-			if backend.Name == stream.Backend {
-				for _, server := range backend.Endpoints {
-					fmt.Fprintf(buf, "\t\tserver %v:%v;\n", server.Address, server.Port)
-				}
-				break
-			}
-		}
-		fmt.Fprint(buf, "\t}\n\n")
-	}
 	return buf.String()
 }
 

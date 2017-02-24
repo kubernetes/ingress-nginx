@@ -57134,57 +57134,7 @@
 		}]
 	}],
 	"sslDHParam": "",
-	"tcpBackends": [{
-		"path": "2222",
-		"isDefBackend": false,
-		"backend": "default-echoheaders-2222",
-		"basicDigestAuth": {
-			"type": "",
-			"realm": "",
-			"file": "",
-			"secured": false
-		},
-		"externalAuth": {
-			"url": "",
-			"method": "",
-			"sendBody": false
-		},
-		"rateLimit": {
-			"connections": {
-				"name": "",
-				"limit": 0,
-				"burst": 0,
-				"sharedSize": 0
-			},
-			"rps": {
-				"name": "",
-				"limit": 0,
-				"burst": 0,
-				"sharedSize": 0
-			}
-		},
-		"redirect": {
-			"target": "",
-			"addBaseUrl": false,
-			"sslRedirect": false
-		},
-		"whitelist": {
-			"cidr": null
-		},
-		"proxy": {
-			"conectTimeout": 0,
-			"sendTimeout": 0,
-			"readTimeout": 0,
-			"bufferSize": ""
-		},
-		"certificateAuth": {
-			"secret": "",
-			"certFilename": "",
-			"keyFilename": "",
-			"caFilename": "",
-			"pemSha": ""
-		}
-	}],
+	"tcpBackends": [],
 	"udpBackends": [],
 	"backends": [{
 		"name": "default-echoheaders-80",
