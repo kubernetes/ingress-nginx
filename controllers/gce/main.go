@@ -39,6 +39,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/wait"
 
 	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Entrypoint of GLBC. Example invocation:
@@ -132,6 +133,7 @@ func registerHandlers(lbc *controller.LoadBalancerController) {
 		w.WriteHeader(200)
 		w.Write([]byte("ok"))
 	})
+	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/delete-all-and-quit", func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Retry failures during shutdown.
 		lbc.Stop(true)
