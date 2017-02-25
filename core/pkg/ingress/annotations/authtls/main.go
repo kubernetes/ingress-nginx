@@ -28,11 +28,16 @@ import (
 
 const (
 	// name of the secret
-	authTLSSecret = "ingress.kubernetes.io/auth-tls-secret"
+	annotationAuthTLSSecret = "ingress.kubernetes.io/auth-tls-secret"
+	annotationAuthTLSDepth  = "ingress.kubernetes.io/auth-tls-verify-depth"
+	defaultAuthTLSDepth     = 1
 )
 
-type authTLS struct {
-	certResolver resolver.AuthCertificate
+// AuthSSLConfig contains the AuthSSLCert used for muthual autentication
+// and the configured ValidationDepth
+type AuthSSLConfig struct {
+	AuthSSLCert     resolver.AuthSSLCert
+	ValidationDepth int `json:"validationDepth"`
 }
 
 // NewParser creates a new TLS authentication annotation parser
@@ -40,29 +45,42 @@ func NewParser(resolver resolver.AuthCertificate) parser.IngressAnnotation {
 	return authTLS{resolver}
 }
 
-// ParseAnnotations parses the annotations contained in the ingress
-// rule used to use an external URL as source for authentication
+type authTLS struct {
+	certResolver resolver.AuthCertificate
+}
+
+// Parse parses the annotations contained in the ingress
+// rule used to use a Certificate as authentication method
 func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
-	str, err := parser.GetStringAnnotation(authTLSSecret, ing)
+
+	tlsauthsecret, err := parser.GetStringAnnotation(annotationAuthTLSSecret, ing)
 	if err != nil {
-		return nil, err
+		return &AuthSSLConfig{}, err
 	}
 
-	if str == "" {
-		return nil, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
+	if tlsauthsecret == "" {
+		return &AuthSSLConfig{}, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
-	_, _, err = k8s.ParseNameNS(str)
+	_, _, err = k8s.ParseNameNS(tlsauthsecret)
 	if err != nil {
-		return nil, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
+		return &AuthSSLConfig{}, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
-	authCert, err := a.certResolver.GetAuthCertificate(str)
+	tlsdepth, err := parser.GetIntAnnotation(annotationAuthTLSDepth, ing)
+	if err != nil || tlsdepth == 0 {
+		tlsdepth = defaultAuthTLSDepth
+	}
+
+	authCert, err := a.certResolver.GetAuthCertificate(tlsauthsecret)
 	if err != nil {
-		return nil, ing_errors.LocationDenied{
+		return &AuthSSLConfig{}, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "error obtaining certificate"),
 		}
 	}
 
-	return authCert, nil
+	return &AuthSSLConfig{
+		AuthSSLCert:     *authCert,
+		ValidationDepth: tlsdepth,
+	}, nil
 }

@@ -37,6 +37,8 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 	pemFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, pemName)
 
 	tempPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, pemName)
+
+	glog.V(3).Infof("Creating temp file %v for Keypair: %v", tempPemFile.Name(), pemName)
 	if err != nil {
 		return nil, fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
 	}
@@ -64,12 +66,12 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		return nil, err
 	}
 
-	pembBock, _ := pem.Decode(pemCerts)
-	if pembBock == nil {
+	pemBlock, _ := pem.Decode(pemCerts)
+	if pemBlock == nil {
 		return nil, fmt.Errorf("No valid PEM formatted block found")
 	}
 
-	pemCert, err := x509.ParseCertificate(pembBock.Bytes)
+	pemCert, err := x509.ParseCertificate(pemBlock.Bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -97,21 +99,21 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 			return nil, errors.New(oe)
 		}
 
-		caName := fmt.Sprintf("ca-%v.pem", name)
-		caFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, caName)
-		f, err := os.Create(caFileName)
+		caFile, err := os.OpenFile(pemFileName, os.O_RDWR|os.O_APPEND, 0600)
 		if err != nil {
-			return nil, fmt.Errorf("could not create ca pem file %v: %v", caFileName, err)
+			return nil, fmt.Errorf("Could not open file %v for writing additional CA chains: %v", pemFileName, err)
 		}
-		defer f.Close()
-		_, err = f.Write(ca)
+
+		defer caFile.Close()
+		_, err = caFile.Write([]byte("\n"))
 		if err != nil {
-			return nil, fmt.Errorf("could not create ca pem file %v: %v", caFileName, err)
+			return nil, fmt.Errorf("could not append CA to cert file %v: %v", pemFileName, err)
 		}
-		f.Write([]byte("\n"))
+		caFile.Write(ca)
+		caFile.Write([]byte("\n"))
 
 		return &ingress.SSLCert{
-			CAFileName:  caFileName,
+			CAFileName:  pemFileName,
 			PemFileName: pemFileName,
 			PemSHA:      pemSHA1(pemFileName),
 			CN:          cn,
@@ -122,6 +124,36 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		PemFileName: pemFileName,
 		PemSHA:      pemSHA1(pemFileName),
 		CN:          cn,
+	}, nil
+}
+
+// AddCertAuth creates a .pem file with the specified CAs to be used in Cert Authentication
+// If it's already exists, it's clobbered.
+func AddCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
+
+	caName := fmt.Sprintf("ca-%v.pem", name)
+	caFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, caName)
+
+	pemCABlock, _ := pem.Decode(ca)
+	if pemCABlock == nil {
+		return nil, fmt.Errorf("No valid PEM formatted block found")
+	}
+
+	_, err := x509.ParseCertificate(pemCABlock.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ioutil.WriteFile(caFileName, ca, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("could not write CA file %v: %v", caFileName, err)
+	}
+
+	glog.V(3).Infof("Created CA Certificate for authentication: %v", caFileName)
+	return &ingress.SSLCert{
+		CAFileName:  caFileName,
+		PemFileName: caFileName,
+		PemSHA:      pemSHA1(caFileName),
 	}, nil
 }
 

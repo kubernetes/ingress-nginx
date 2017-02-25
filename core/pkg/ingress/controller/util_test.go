@@ -24,11 +24,11 @@ import (
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
+	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
-	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 )
@@ -136,7 +136,7 @@ func TestMergeLocationAnnotations(t *testing.T) {
 		"Redirect":           rewrite.Redirect{},
 		"Whitelist":          ipwhitelist.SourceRange{},
 		"Proxy":              proxy.Configuration{},
-		"CertificateAuth":    resolver.AuthSSLCert{},
+		"CertificateAuth":    authtls.AuthSSLConfig{},
 		"UsePortInRedirects": true,
 	}
 
