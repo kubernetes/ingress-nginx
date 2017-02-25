@@ -38,5 +38,5 @@ func NewParser() parser.IngressAnnotation {
 // used to indicate if the location/s contains a fragment of
 // configuration to be included inside the paths of the rules
 func (a snippet) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return  parser.GetStringAnnotation(annotation, ing)
+	return parser.GetStringAnnotation(annotation, ing)
 }
