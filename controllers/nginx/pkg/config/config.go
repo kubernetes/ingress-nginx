@@ -266,6 +266,7 @@ func NewDefault() Configuration {
 		UseProxyProtocol:         false,
 		UseGzip:                  true,
 		WorkerProcesses:          runtime.NumCPU(),
+		EnableVtsStatus:          false,
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
 		Backend: defaults.Backend{

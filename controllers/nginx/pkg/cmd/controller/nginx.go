@@ -51,7 +51,7 @@ const (
 var (
 	tmplPath = "/etc/nginx/template/nginx.tmpl"
 	cfgPath  = "/etc/nginx/nginx.conf"
-	binary   = "/usr/local/bin/nginx"
+	binary   = "/usr/sbin/nginx"
 )
 
 // newNGINXController creates a new NGINX Ingress controller.
