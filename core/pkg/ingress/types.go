@@ -17,17 +17,22 @@ limitations under the License.
 package ingress
 
 import (
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/healthz"
+	"github.com/spf13/pflag"
 
+	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/client/cache"
+	"k8s.io/kubernetes/pkg/healthz"
+	"k8s.io/kubernetes/pkg/util/intstr"
+
+	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
+	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
-	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 var (
@@ -81,11 +86,27 @@ type Controller interface {
 	OnUpdate(Configuration) ([]byte, error)
 	// ConfigMap content of --configmap
 	SetConfig(*api.ConfigMap)
+	// SetListers allows the access of store listers present in the generic controller
+	// This avoid the use of the kubernetes client.
+	SetListers(StoreLister)
 	// BackendDefaults returns the minimum settings required to configure the
 	// communication to endpoints
 	BackendDefaults() defaults.Backend
 	// Info returns information about the ingress controller
 	Info() *BackendInfo
+	// OverrideFlags allow the customization of the flags in the backend
+	OverrideFlags(*pflag.FlagSet)
+}
+
+// StoreLister returns the configured stores for ingresses, services,
+// endpoints, secrets and configmaps.
+type StoreLister struct {
+	Ingress   cache_store.StoreToIngressLister
+	Service   cache.StoreToServiceLister
+	Node      cache.StoreToNodeLister
+	Endpoint  cache.StoreToEndpointsLister
+	Secret    cache_store.StoreToSecretsLister
+	ConfigMap cache_store.StoreToConfigmapLister
 }
 
 // BackendInfo returns information about the backend.
@@ -112,10 +133,10 @@ type Configuration struct {
 	Servers []*Server `json:"servers"`
 	// TCPEndpoints contain endpoints for tcp streams handled by this backend
 	// +optional
-	TCPEndpoints []*Location `json:"tcpEndpoints,omitempty"`
+	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
 	// UDPEndpoints contain endpoints for udp streams handled by this backend
 	// +optional
-	UDPEndpoints []*Location `json:"udpEndpoints,omitempty"`
+	UDPEndpoints []L4Service `json:"udpEndpoints,omitempty"`
 	// PassthroughBackend contains the backends used for SSL passthrough.
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
@@ -134,9 +155,29 @@ type Backend struct {
 	Secure bool `json:"secure"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints"`
+	// StickySession contains the StickyConfig object with stickness configuration
+
+	SessionAffinity SessionAffinityConfig
 }
 
-// Endpoint describes a kubernetes endpoint in an backend
+// SessionAffinityConfig describes different affinity configurations for new sessions.
+// Once a session is mapped to a backend based on some affinity setting, it
+// retains that mapping till the backend goes down, or the ingress controller
+// restarts. Exactly one of these values will be set on the upstream, since multiple
+// affinity values are incompatible. Once set, the backend makes no guarantees
+// about honoring updates.
+type SessionAffinityConfig struct {
+	AffinityType          string `json:"name"`
+	CookieSessionAffinity CookieSessionAffinity
+}
+
+// CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
+type CookieSessionAffinity struct {
+	Name string `json:"name"`
+	Hash string `json:"hash"`
+}
+
+// Endpoint describes a kubernetes endpoint in a backend
 type Endpoint struct {
 	// Address IP address of the endpoint
 	Address string `json:"address"`
@@ -233,10 +274,13 @@ type Location struct {
 	// CertificateAuth indicates the access to this location requires
 	// external authentication
 	// +optional
-	CertificateAuth resolver.AuthSSLCert `json:"certificateAuth,omitempty"`
+	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"use-port-in-redirects"`
+	// ConfigurationSnippet contains additional configuration for the backend
+	// to be considered in the configuration of the location
+	ConfigurationSnippet string `json:"configuration-snippet"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
@@ -248,4 +292,22 @@ type SSLPassthroughBackend struct {
 	Backend string `json:"namespace,omitempty"`
 	// Hostname returns the FQDN of the server
 	Hostname string `json:"hostname"`
+}
+
+// L4Service describes a L4 Ingress service.
+type L4Service struct {
+	// Port external port to expose
+	Port int `json:"port"`
+	// Backend of the service
+	Backend L4Backend `json:"backend"`
+	// Endpoints active endpoints of the service
+	Endpoints []Endpoint `json:"endpoins"`
+}
+
+// L4Backend describes the kubernetes service behind L4 Ingress service
+type L4Backend struct {
+	Port      intstr.IntOrString `json:"port"`
+	Name      string             `json:"name"`
+	Namespace string             `json:"namespace"`
+	Protocol  api.Protocol       `json:"protocol"`
 }

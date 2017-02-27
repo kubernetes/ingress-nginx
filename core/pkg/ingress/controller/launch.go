@@ -82,7 +82,11 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		updateStatus = flags.Bool("update-status", true, `Indicates if the 
 		ingress controller should update the Ingress status IP/hostname. Default is true`)
+
+		electionID = flags.String("election-id", "ingress-controller-leader", `Election id to use for status update.`)
 	)
+
+	backend.OverrideFlags(flags)
 
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
@@ -135,6 +139,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 	config := &Configuration{
 		UpdateStatus:          *updateStatus,
+		ElectionID:            *electionID,
 		Client:                kubeClient,
 		ResyncPeriod:          *resyncPeriod,
 		DefaultService:        *defaultSvc,

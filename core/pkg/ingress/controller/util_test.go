@@ -19,17 +19,18 @@ package controller
 import (
 	"testing"
 
+	"reflect"
+
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
+	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
-	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
-	"reflect"
 )
 
 type fakeError struct{}
@@ -54,12 +55,17 @@ func TestIsValidClass(t *testing.T) {
 	data := map[string]string{}
 	data[ingressClassKey] = "custom"
 	ing.SetAnnotations(data)
+
 	b = IsValidClass(ing, "custom")
 	if !b {
 		t.Errorf("Expected valid class but %v returned", b)
 	}
 	b = IsValidClass(ing, "nginx")
 	if b {
+		t.Errorf("Expected invalid class but %v returned", b)
+	}
+	b = IsValidClass(ing, "")
+	if !b {
 		t.Errorf("Expected invalid class but %v returned", b)
 	}
 }
@@ -130,7 +136,7 @@ func TestMergeLocationAnnotations(t *testing.T) {
 		"Redirect":           rewrite.Redirect{},
 		"Whitelist":          ipwhitelist.SourceRange{},
 		"Proxy":              proxy.Configuration{},
-		"CertificateAuth":    resolver.AuthSSLCert{},
+		"CertificateAuth":    authtls.AuthSSLConfig{},
 		"UsePortInRedirects": true,
 	}
 

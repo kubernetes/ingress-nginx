@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginx-test
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/affinity: "cookie"
+    ingress.kubernetes.io/session-cookie-name: "route"
+    ingress.kubernetes.io/session-cookie-hash: "sha1"
+
+spec:
+  rules:
+  - host: stickyingress.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: nginx-service
+          servicePort: 80
+        path: /

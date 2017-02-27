@@ -367,6 +367,9 @@ func (l *L7) checkSSLCert() (err error) {
 	if l.sslCert != nil {
 		certName = l.sslCert.Name
 	}
+
+	// Skip error checking because error-ing out will retry and loop, when we
+	// should create/update the cert if there is an error or does not exist.
 	cert, _ := l.cloud.GetSslCertificate(certName)
 
 	// PrivateKey is write only, so compare certs alone. We're assuming that
@@ -383,7 +386,7 @@ func (l *L7) checkSSLCert() (err error) {
 			}
 		}
 
-		glog.Infof("Creating new sslCertificates %v for %v", l.Name, certName)
+		glog.Infof("Creating new sslCertificates %v for %v", certName, l.Name)
 		cert, err = l.cloud.CreateSslCertificate(&compute.SslCertificate{
 			Name:        certName,
 			Certificate: ingCert,
