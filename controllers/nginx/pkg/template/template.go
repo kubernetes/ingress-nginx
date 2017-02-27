@@ -128,8 +128,8 @@ var (
 		},
 		"buildLocation":                buildLocation,
 		"buildAuthLocation":            buildAuthLocation,
-    "buildAuthResponseHeaders":     buildAuthResponseHeaders,
-    "buildProxyPass":               buildProxyPass,
+		"buildAuthResponseHeaders":     buildAuthResponseHeaders,
+		"buildProxyPass":               buildProxyPass,
 		"buildRateLimitZones":          buildRateLimitZones,
 		"buildRateLimit":               buildRateLimit,
 		"buildSSLPassthroughUpstreams": buildSSLPassthroughUpstreams,
@@ -247,7 +247,6 @@ func buildAuthResponseHeaders(input interface{}) []string {
 	}
 	return res
 }
-
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
 // (specified through the ingress.kubernetes.io/rewrite-to annotation)
