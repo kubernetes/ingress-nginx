@@ -134,6 +134,7 @@ type Configuration struct {
 	Backend ingress.Controller
 
 	UpdateStatus bool
+	ElectionID   string
 }
 
 // newIngressController creates an Ingress controller
@@ -303,6 +304,7 @@ func newIngressController(config *Configuration) *GenericController {
 			Client:         config.Client,
 			PublishService: ic.cfg.PublishService,
 			IngressLister:  ic.ingLister,
+			ElectionID:     config.ElectionID,
 		})
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
