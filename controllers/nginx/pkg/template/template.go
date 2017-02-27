@@ -78,7 +78,7 @@ func (t *Template) Close() {
 
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
-func (t *Template) Write(conf config.TemplateConfig, isValidTemplate func([]byte) error) ([]byte, error) {
+func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	defer t.tmplBuf.Reset()
 	defer t.outCmdBuf.Reset()
 
@@ -114,13 +114,7 @@ func (t *Template) Write(conf config.TemplateConfig, isValidTemplate func([]byte
 		return t.tmplBuf.Bytes(), nil
 	}
 
-	content := t.outCmdBuf.Bytes()
-	err = isValidTemplate(content)
-	if err != nil {
-		return nil, err
-	}
-
-	return content, nil
+	return t.outCmdBuf.Bytes(), nil
 }
 
 var (
@@ -132,16 +126,15 @@ var (
 			}
 			return true
 		},
-		"buildLocation":               buildLocation,
-		"buildAuthLocation":           buildAuthLocation,
-		"buildAuthResponseHeaders":    buildAuthResponseHeaders,
-		"buildProxyPass":              buildProxyPass,
-		"buildRateLimitZones":         buildRateLimitZones,
-		"buildRateLimit":              buildRateLimit,
-		"buildSSPassthroughUpstreams": buildSSPassthroughUpstreams,
-		"buildResolvers":              buildResolvers,
-		"isLocationAllowed":           isLocationAllowed,
-		"buildStreamUpstreams":        buildStreamUpstreams,
+		"buildLocation":                buildLocation,
+		"buildAuthLocation":            buildAuthLocation,
+    "buildAuthResponseHeaders":     buildAuthResponseHeaders,
+    "buildProxyPass":               buildProxyPass,
+		"buildRateLimitZones":          buildRateLimitZones,
+		"buildRateLimit":               buildRateLimit,
+		"buildSSLPassthroughUpstreams": buildSSLPassthroughUpstreams,
+		"buildResolvers":               buildResolvers,
+		"isLocationAllowed":            isLocationAllowed,
 
 		"contains":  strings.Contains,
 		"hasPrefix": strings.HasPrefix,
@@ -172,7 +165,7 @@ func buildResolvers(a interface{}) string {
 	return strings.Join(r, " ")
 }
 
-func buildSSPassthroughUpstreams(b interface{}, sslb interface{}) string {
+func buildSSLPassthroughUpstreams(b interface{}, sslb interface{}) string {
 	backends := b.([]*ingress.Backend)
 	sslBackends := sslb.([]*ingress.SSLPassthroughBackend)
 	buf := bytes.NewBuffer(make([]byte, 0, 10))
@@ -200,34 +193,6 @@ func buildSSPassthroughUpstreams(b interface{}, sslb interface{}) string {
 	return buf.String()
 }
 
-func buildStreamUpstreams(proto string, b interface{}, s interface{}) string {
-	backends := b.([]*ingress.Backend)
-	streams := s.([]*ingress.Location)
-	buf := bytes.NewBuffer(make([]byte, 0, 10))
-	// multiple services can use the same upstream.
-	// avoid duplications using a map[name]=true
-	u := make(map[string]bool)
-	for _, stream := range streams {
-		if u[stream.Backend] {
-			continue
-		}
-		u[stream.Backend] = true
-		fmt.Fprintf(buf, "upstream %v-%v {\n", proto, stream.Backend)
-		// TODO: find a better way to avoid empty stream upstreams
-		fmt.Fprintf(buf, "\t\tserver 127.0.0.1:8181 down;\n")
-		for _, backend := range backends {
-			if backend.Name == stream.Backend {
-				for _, server := range backend.Endpoints {
-					fmt.Fprintf(buf, "\t\tserver %v:%v;\n", server.Address, server.Port)
-				}
-				break
-			}
-		}
-		fmt.Fprint(buf, "\t}\n\n")
-	}
-	return buf.String()
-}
-
 // buildLocation produces the location string, if the ingress has redirects
 // (specified through the ingress.kubernetes.io/rewrite-to annotation)
 func buildLocation(input interface{}) string {
@@ -238,7 +203,10 @@ func buildLocation(input interface{}) string {
 
 	path := location.Path
 	if len(location.Redirect.Target) > 0 && location.Redirect.Target != path {
-		return fmt.Sprintf("~* %s", path)
+		if path == "/" {
+			return fmt.Sprintf("~* %s", path)
+		}
+		return fmt.Sprintf("~* ^%s", path)
 	}
 
 	return path

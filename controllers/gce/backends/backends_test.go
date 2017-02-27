@@ -17,6 +17,7 @@ limitations under the License.
 package backends
 
 import (
+	"net/http"
 	"testing"
 
 	compute "google.golang.org/api/compute/v1"
@@ -25,9 +26,13 @@ import (
 	"k8s.io/ingress/controllers/gce/storage"
 	"k8s.io/ingress/controllers/gce/utils"
 	"k8s.io/kubernetes/pkg/util/sets"
+
+	"google.golang.org/api/googleapi"
 )
 
 const defaultZone = "zone-a"
+
+var noOpErrFunc = func(op int, be *compute.BackendService) error { return nil }
 
 func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWithCloud bool) BackendPool {
 	namer := &utils.Namer{}
@@ -40,7 +45,7 @@ func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWit
 }
 
 func TestBackendPoolAdd(t *testing.T) {
-	f := NewFakeBackendServices()
+	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	pool := newBackendPool(f, fakeIGs, false)
 	namer := utils.Namer{}
@@ -110,7 +115,7 @@ func TestBackendPoolSync(t *testing.T) {
 	// Call sync on a backend pool with a list of ports, make sure the pool
 	// creates/deletes required ports.
 	svcNodePorts := []int64{81, 82, 83}
-	f := NewFakeBackendServices()
+	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	pool := newBackendPool(f, fakeIGs, true)
 	pool.Add(81)
@@ -174,7 +179,7 @@ func TestBackendPoolSync(t *testing.T) {
 }
 
 func TestBackendPoolShutdown(t *testing.T) {
-	f := NewFakeBackendServices()
+	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	pool := newBackendPool(f, fakeIGs, false)
 	namer := utils.Namer{}
@@ -187,7 +192,7 @@ func TestBackendPoolShutdown(t *testing.T) {
 }
 
 func TestBackendInstanceGroupClobbering(t *testing.T) {
-	f := NewFakeBackendServices()
+	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	pool := newBackendPool(f, fakeIGs, false)
 	namer := utils.Namer{}
@@ -228,5 +233,42 @@ func TestBackendInstanceGroupClobbering(t *testing.T) {
 	}
 	if !expectedGroups.Equal(gotGroups) {
 		t.Fatalf("Expected %v Got %v", expectedGroups, gotGroups)
+	}
+}
+
+func TestBackendCreateBalancingMode(t *testing.T) {
+	f := NewFakeBackendServices(noOpErrFunc)
+
+	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
+	pool := newBackendPool(f, fakeIGs, false)
+	namer := utils.Namer{}
+	nodePort := int64(8080)
+	modes := []BalancingMode{Rate, Utilization}
+
+	// block the creation of Backends with the given balancingMode
+	// and verify that a backend with the other balancingMode is
+	// created
+	for i, bm := range modes {
+		f.errFunc = func(op int, be *compute.BackendService) error {
+			for _, b := range be.Backends {
+				if b.BalancingMode == string(bm) {
+					return &googleapi.Error{Code: http.StatusBadRequest}
+				}
+			}
+			return nil
+		}
+
+		pool.Add(nodePort)
+		be, err := f.GetBackendService(namer.BeName(nodePort))
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+
+		for _, b := range be.Backends {
+			if b.BalancingMode != string(modes[(i+1)%len(modes)]) {
+				t.Fatalf("Wrong balancing mode, expected %v got %v", modes[(i+1)%len(modes)], b.BalancingMode)
+			}
+		}
+		pool.GC([]int64{})
 	}
 }

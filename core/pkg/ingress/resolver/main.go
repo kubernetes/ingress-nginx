@@ -37,8 +37,6 @@ type Secret interface {
 // AuthCertificate resolves a given secret name into an SSL certificate.
 // The secret must contain 3 keys named:
 //   ca.crt: contains the certificate chain used for authentication
-//   tls.crt: (ignored) contains the tls certificate chain, or any other valid base64 data
-//   tls.key: (ignored) contains the tls secret key, or any other valid base64 data
 type AuthCertificate interface {
 	GetAuthCertificate(string) (*AuthSSLCert, error)
 }
@@ -48,10 +46,6 @@ type AuthCertificate interface {
 type AuthSSLCert struct {
 	// Secret contains the name of the secret this was fetched from
 	Secret string `json:"secret"`
-	// CertFileName contains the filename the secret's 'tls.crt' was saved to
-	CertFileName string `json:"certFilename"`
-	// KeyFileName contains the path the secret's 'tls.key'
-	KeyFileName string `json:"keyFilename"`
 	// CAFileName contains the path to the secrets 'ca.crt'
 	CAFileName string `json:"caFilename"`
 	// PemSHA contains the SHA1 hash of the 'tls.crt' value

@@ -24,11 +24,13 @@ import (
 )
 
 const (
-	bodySize   = "ingress.kubernetes.io/proxy-body-size"
-	connect    = "ingress.kubernetes.io/proxy-connect-timeout"
-	send       = "ingress.kubernetes.io/proxy-send-timeout"
-	read       = "ingress.kubernetes.io/proxy-read-timeout"
-	bufferSize = "ingress.kubernetes.io/proxy-buffer-size"
+	bodySize     = "ingress.kubernetes.io/proxy-body-size"
+	connect      = "ingress.kubernetes.io/proxy-connect-timeout"
+	send         = "ingress.kubernetes.io/proxy-send-timeout"
+	read         = "ingress.kubernetes.io/proxy-read-timeout"
+	bufferSize   = "ingress.kubernetes.io/proxy-buffer-size"
+	cookiePath   = "ingress.kubernetes.io/proxy-cookie-path"
+	cookieDomain = "ingress.kubernetes.io/proxy-cookie-domain"
 )
 
 // Configuration returns the proxy timeout to use in the upstream server/s
@@ -38,6 +40,8 @@ type Configuration struct {
 	SendTimeout    int    `json:"sendTimeout"`
 	ReadTimeout    int    `json:"readTimeout"`
 	BufferSize     string `json:"bufferSize"`
+	CookieDomain   string `json:"cookieDomain"`
+	CookiePath     string `json:"cookiePath"`
 }
 
 type proxy struct {
@@ -73,10 +77,20 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		bufs = defBackend.ProxyBufferSize
 	}
 
+	cp, err := parser.GetStringAnnotation(cookiePath, ing)
+	if err != nil || cp == "" {
+		cp = defBackend.ProxyCookiePath
+	}
+
+	cd, err := parser.GetStringAnnotation(cookieDomain, ing)
+	if err != nil || cd == "" {
+		cd = defBackend.ProxyCookieDomain
+	}
+
 	bs, err := parser.GetStringAnnotation(bodySize, ing)
 	if err != nil || bs == "" {
 		bs = defBackend.ProxyBodySize
 	}
 
-	return &Configuration{bs, ct, st, rt, bufs}, nil
+	return &Configuration{bs, ct, st, rt, bufs, cd, cp}, nil
 }

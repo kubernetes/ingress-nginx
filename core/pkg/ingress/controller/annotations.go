@@ -33,6 +33,8 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
+	"k8s.io/ingress/core/pkg/ingress/annotations/sessionaffinity"
+	"k8s.io/ingress/core/pkg/ingress/annotations/snippet"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -51,18 +53,20 @@ type annotationExtractor struct {
 func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 	return annotationExtractor{
 		map[string]parser.IngressAnnotation{
-			"BasicDigestAuth":    auth.NewParser(auth.AuthDirectory, cfg),
-			"ExternalAuth":       authreq.NewParser(),
-			"CertificateAuth":    authtls.NewParser(cfg),
-			"EnableCORS":         cors.NewParser(),
-			"HealthCheck":        healthcheck.NewParser(cfg),
-			"Whitelist":          ipwhitelist.NewParser(cfg),
-			"UsePortInRedirects": portinredirect.NewParser(cfg),
-			"Proxy":              proxy.NewParser(cfg),
-			"RateLimit":          ratelimit.NewParser(),
-			"Redirect":           rewrite.NewParser(cfg),
-			"SecureUpstream":     secureupstream.NewParser(),
-			"SSLPassthrough":     sslpassthrough.NewParser(),
+			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
+			"ExternalAuth":         authreq.NewParser(),
+			"CertificateAuth":      authtls.NewParser(cfg),
+			"EnableCORS":           cors.NewParser(),
+			"HealthCheck":          healthcheck.NewParser(cfg),
+			"Whitelist":            ipwhitelist.NewParser(cfg),
+			"UsePortInRedirects":   portinredirect.NewParser(cfg),
+			"Proxy":                proxy.NewParser(cfg),
+			"RateLimit":            ratelimit.NewParser(),
+			"Redirect":             rewrite.NewParser(cfg),
+			"SecureUpstream":       secureupstream.NewParser(),
+			"SessionAffinity":      sessionaffinity.NewParser(),
+			"SSLPassthrough":       sslpassthrough.NewParser(),
+			"ConfigurationSnippet": snippet.NewParser(),
 		},
 	}
 }
@@ -96,9 +100,10 @@ func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interf
 }
 
 const (
-	secureUpstream = "SecureUpstream"
-	healthCheck    = "HealthCheck"
-	sslPassthrough = "SSLPassthrough"
+	secureUpstream  = "SecureUpstream"
+	healthCheck     = "HealthCheck"
+	sslPassthrough  = "SSLPassthrough"
+	sessionAffinity = "SessionAffinity"
 )
 
 func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) bool {
@@ -114,4 +119,9 @@ func (e *annotationExtractor) HealthCheck(ing *extensions.Ingress) *healthcheck.
 func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 	val, _ := e.annotations[sslPassthrough].Parse(ing)
 	return val.(bool)
+}
+
+func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
+	val, _ := e.annotations[sessionAffinity].Parse(ing)
+	return val.(*sessionaffinity.AffinityConfig)
 }

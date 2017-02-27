@@ -88,6 +88,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
 	ClientHeaderBufferSize string `json:"client-header-buffer-size"`
 
+	// DisableAccessLog disables the Access Log globally from NGINX ingress controller
+	//http://nginx.org/en/docs/http/ngx_http_log_module.html
+	DisableAccessLog bool `json:"disable-access-log,omitempty"`
+
 	// EnableSPDY enables spdy and use ALPN and NPN to advertise the availability of the two protocols
 	// https://blog.cloudflare.com/open-sourcing-our-nginx-http-2-spdy-code
 	// By default this is enabled
@@ -151,6 +155,9 @@ type Configuration struct {
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
 	ProxyRealIPCIDR string `json:"proxy-real-ip-cidr,omitempty"`
+
+	// Sets the name of the configmap that contains the headers to pass to the backend
+	ProxySetHeaders string `json:"proxy-set-headers,omitempty"`
 
 	// Maximum size of the server names hash tables used in server names, map directive’s values,
 	// MIME types, names of request header strings, etcd.
@@ -233,6 +240,7 @@ type Configuration struct {
 func NewDefault() Configuration {
 	cfg := Configuration{
 		ClientHeaderBufferSize:  "1k",
+		DisableAccessLog:        false,
 		EnableDynamicTLSRecords: true,
 		EnableSPDY:              false,
 		ErrorLogLevel:           errorLevel,
@@ -266,6 +274,8 @@ func NewDefault() Configuration {
 			ProxyReadTimeout:     60,
 			ProxySendTimeout:     60,
 			ProxyBufferSize:      "4k",
+			ProxyCookieDomain:    "off",
+			ProxyCookiePath:      "off",
 			SSLRedirect:          true,
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},
@@ -283,13 +293,14 @@ func NewDefault() Configuration {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
+	ProxySetHeaders     map[string]string
 	MaxOpenFiles        int
 	BacklogSize         int
 	Backends            []*ingress.Backend
 	PassthroughBackends []*ingress.SSLPassthroughBackend
 	Servers             []*ingress.Server
-	TCPBackends         []*ingress.Location
-	UDPBackends         []*ingress.Location
+	TCPBackends         []ingress.L4Service
+	UDPBackends         []ingress.L4Service
 	HealthzURI          string
 	CustomErrors        bool
 	Cfg                 Configuration

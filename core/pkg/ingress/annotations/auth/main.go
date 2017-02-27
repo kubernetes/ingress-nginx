@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -59,8 +60,17 @@ type auth struct {
 
 // NewParser creates a new authentication annotation parser
 func NewParser(authDirectory string, sr resolver.Secret) parser.IngressAnnotation {
-	// TODO: check permissions required
-	os.MkdirAll(authDirectory, 0655)
+	os.MkdirAll(authDirectory, 0755)
+
+	currPath := authDirectory
+	for currPath != "/" {
+		currPath = path.Dir(currPath)
+		err := os.Chmod(currPath, 0755)
+		if err != nil {
+			break
+		}
+	}
+
 	return auth{sr, authDirectory}
 }
 

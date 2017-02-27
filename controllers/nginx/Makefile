@@ -3,7 +3,7 @@ all: push
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-RELEASE?=0.9.0-beta.1-1
+RELEASE?=0.9.0-beta.2
 PREFIX?=gcr.io/google_containers/nginx-ingress-controller
 GOOS?=linux
 
@@ -24,7 +24,7 @@ container: build
 	docker build --pull -t $(PREFIX):$(RELEASE) rootfs
 
 push: container
-	gcloud docker push $(PREFIX):$(RELEASE)
+	gcloud docker -- push $(PREFIX):$(RELEASE)
 
 fmt:
 	@echo "+ $@"

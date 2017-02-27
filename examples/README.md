@@ -1,7 +1,7 @@
 # Ingress examples
 
 This directory contains a catalog of examples on how to run, configure and
-scale Ingress. Please review the [prerequisities](prerequisites.md) before
+scale Ingress. Please review the [prerequisities](PREREQUISITES.md) before
 trying them.
 
 ## Basic cross platform
@@ -75,4 +75,9 @@ Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 Dummy  | A simple dummy controller that logs updates | * | Advanced
 
+## Customization
 
+Name | Description | Platform   | Complexity Level
+-----| ----------- | ---------- | ----------------
+custom-headers  | set custom headers before send traffic to backends  | nginx | Advanced
+configuration-snippets | customize nginx location configuration using annotations | nginx | Advanced

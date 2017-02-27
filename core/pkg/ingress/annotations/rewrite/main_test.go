@@ -76,8 +76,8 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 func TestWithoutAnnotations(t *testing.T) {
 	ing := buildIngress()
 	_, err := NewParser(mockBackend{}).Parse(ing)
-	if err == nil {
-		t.Error("Expected error with ingress without annotations")
+	if err != nil {
+		t.Errorf("unexpected error with ingress without annotations: %v", err)
 	}
 }
 

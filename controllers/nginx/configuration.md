@@ -15,6 +15,7 @@
 * [Websockets](#websockets)
 * [Optimizing TLS Time To First Byte (TTTFB)](#optimizing-tls-time-to-first-byte-tttfb)
 * [Retries in non-idempotent methods](#retries-in-non-idempotent-methods)
+* [Custom max body size](#custom-max-body-size)
 
 
 ### Customizing NGINX
@@ -43,14 +44,21 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
 |[ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[ingress.kubernetes.io/auth-tls-secret](#Certificate Authentication)|string|
+|[ingress.kubernetes.io/auth-tls-verify-depth](#Certificate Authentication)|number|
+|[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
+|[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
 |[ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
+|[ingress.kubernetes.io/affinity](#session-affinity)|true or false|
+|[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
+|[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 
 
 
@@ -120,6 +128,31 @@ ingress.kubernetes.io/auth-realm: "realm string"
 
 Please check the [auth](examples/auth/README.md) example.
 
+### Certificate Authentication
+
+It's possible to enable Certificate based authentication using additional annotations in Ingres Rule.
+
+The annotations are:
+
+```
+ingress.kubernetes.io/auth-tls-secret: secretName
+```
+
+The name of the secret that contains the full Certificate Authority chain that is enabled to authenticate against this ingress. It's composed of namespace/secretName
+
+```
+ingress.kubernetes.io/auth-tls-verify-depth
+```
+
+The validation depth between the provided client certificate and the Certification Authority chain.
+
+Please check the [tls-auth](examples/auth/client-certs/README.md) example.
+
+
+### Enable CORS
+
+To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule add the annotation `ingress.kubernetes.io/enable-cors: "true"`. This will add a section in the server location enabling this functionality.
+For more information please check https://enable-cors.org/server_nginx.html
 
 ### External Authentication
 
@@ -174,7 +207,22 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 
 *Note:* Adding an annotation to an Ingress rule overrides any global restriction.
 
-Please check the [whitelist](examples/whitelist/README.md) example.
+Please check the [whitelist](examples/affinity/cookie/nginx/README.md) example.
+
+
+### Session Affinity
+
+The annotation `ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server. 
+
+
+#### Cookie affinity
+If you use the ``cookie`` type you can also specify the name of the cookie that will be used to route the requests with the annotation `ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'route'.
+
+In case of NGINX the annotation `ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
+The `index` option  is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranted to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!
+
+In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here]https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf
+
 
 
 ### **Allowed parameters in configuration ConfigMap**
@@ -186,6 +234,9 @@ Please check the [whitelist](examples/whitelist/README.md) example.
 Setting at least one code also enables [proxy_intercept_errors](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) which are required to process error_page.
 
 Example usage: `custom-http-errors: 404,415`
+
+
+**disable-access-log:** Disables the Access Log from the entire Ingress Controller. This is 'false' by default.
 
 
 **enable-dynamic-tls-records:** Enables dynamically sized TLS records to improve time-to-first-byte. Enabled by default. See [CloudFlare's blog](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency) for more information.
@@ -230,6 +281,12 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 
 **proxy-connect-timeout:** Sets the timeout for [establishing a connection with a proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
 
+
+**proxy-cookie-domain:** Sets a text that [should be changed in the domain attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the “Set-Cookie” header fields of a proxied server response.
+
+
+**proxy-cookie-path:** Sets a text that [should be changed in the path attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path) of the “Set-Cookie” header fields of a proxied server response.
+ 
 
 **proxy-read-timeout:** Sets the timeout in seconds for [reading a response from the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout). The timeout is set only between two successive read operations, not for the transmission of the whole response.
 
@@ -348,7 +405,11 @@ The following table shows the options, the default value and a description.
 |keep-alive|"75"|
 |map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|
+|proxy-body-size|same as body-size|
+|proxy-buffer-size|"4k"|
 |proxy-connect-timeout|"5"|
+|proxy-cookie-domain|"off"|
+|proxy-cookie-path|"off"|
 |proxy-read-timeout|"60"|
 |proxy-real-ip-cidr|0.0.0.0/0|
 |proxy-send-timeout|"60"|
@@ -388,3 +449,15 @@ NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/do
 
 Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error.
 The previous behavior can be restored using `retry-non-idempotent=true` in the configuration ConfigMap.
+
+
+### Custom max body size
+For NGINX, 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter [`client_max_body_size`](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
+
+To configure this setting globally for all Ingress rules, the `proxy-body-size` value may be set in the NGINX ConfigMap.
+
+To use custom values in an Ingress rule define these annotation:
+
+```
+ingress.kubernetes.io/proxy-body-size: 8m
+```
