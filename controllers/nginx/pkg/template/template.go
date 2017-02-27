@@ -31,6 +31,7 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
+	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	ing_net "k8s.io/ingress/core/pkg/net"
 	"k8s.io/ingress/core/pkg/watch"
@@ -134,12 +135,12 @@ var (
 		"buildSSLPassthroughUpstreams": buildSSLPassthroughUpstreams,
 		"buildResolvers":               buildResolvers,
 		"isLocationAllowed":            isLocationAllowed,
-
-		"contains":  strings.Contains,
-		"hasPrefix": strings.HasPrefix,
-		"hasSuffix": strings.HasSuffix,
-		"toUpper":   strings.ToUpper,
-		"toLower":   strings.ToLower,
+		"buildLogFormatUpstream":       buildLogFormatUpstream,
+		"contains":                     strings.Contains,
+		"hasPrefix":                    strings.HasPrefix,
+		"hasSuffix":                    strings.HasSuffix,
+		"toUpper":                      strings.ToUpper,
+		"toLower":                      strings.ToLower,
 	}
 )
 
@@ -225,6 +226,17 @@ func buildAuthLocation(input interface{}) string {
 	// avoid locations containing the = char
 	str = strings.Replace(str, "=", "", -1)
 	return fmt.Sprintf("/_external-auth-%v", str)
+}
+
+func buildLogFormatUpstream(input interface{}) string {
+	config, ok := input.(config.Configuration)
+
+	if !ok {
+		glog.Errorf("error  an ingress.buildLogFormatUpstream type but %T was returned", input)
+	}
+
+	return nginxconfig.BuildLogFormatUpstream(config.UseProxyProtocol)
+
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
