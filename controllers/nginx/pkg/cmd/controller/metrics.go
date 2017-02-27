@@ -42,17 +42,23 @@ func (em exeMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
 }
 
 func (n *NGINXController) setupMonitor(args []string) {
-	var enableVts = true
 
 	// TODO fix true
-	pc, err := newProcessCollector(true, exeMatcher{"nginx", args}, enableVts)
+	pc, err := newProcessCollector(true, exeMatcher{"nginx", args}, false)
 	if err != nil {
-		glog.Fatalf("unexpected error registering nginx collector: %v", err)
+		glog.Warningf("unexpected error registering nginx collector: %v", err)
 	}
+	n.namedProcessCollector = pc
+
 	err = prometheus.Register(pc)
 	if err != nil {
 		glog.Warningf("unexpected error registering nginx collector: %v", err)
 	}
+
+}
+
+func (n *NGINXController) reloadMonitor(enableVts *bool) {
+	n.namedProcessCollector.vtsCollector = enableVts
 }
 
 var (
@@ -225,7 +231,7 @@ type (
 		scrapeChan chan scrapeRequest
 		*proc.Grouper
 		fs           *proc.FS
-		vtsCollector bool
+		vtsCollector *bool
 	}
 )
 
@@ -234,21 +240,21 @@ func newProcessCollector(
 	n common.MatchNamer,
 	vtsCollector bool) (*namedProcessCollector, error) {
 
-	fs, err := proc.NewFS("/proc")
-	if err != nil {
-		return nil, err
-	}
+	//fs, err := proc.NewFS("/proc")
+	//if err != nil {
+	//	return nil, err
+	//}
 	p := &namedProcessCollector{
 		scrapeChan:   make(chan scrapeRequest),
 		Grouper:      proc.NewGrouper(children, n),
-		fs:           fs,
-		vtsCollector: vtsCollector,
+		//fs:           fs,
+		vtsCollector: &vtsCollector,
 	}
 
-	_, err = p.Update(p.fs.AllProcs())
-	if err != nil {
-		return nil, err
-	}
+	//_, err = p.Update(p.fs.AllProcs())
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	go p.start()
 
@@ -266,7 +272,7 @@ func (p *namedProcessCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- memVirtualbytesDesc
 	ch <- startTimeDesc
 
-	if p.vtsCollector {
+	if p.vtsCollector == true {
 
 		ch <- vtsBytesDesc
 		ch <- vtsCacheDesc
@@ -306,7 +312,7 @@ func (p *namedProcessCollector) start() {
 		ch := req.results
 		p.scrapeNginxStatus(ch)
 
-		if p.vtsCollector {
+		if &p.vtsCollector {
 			p.scrapeVts(ch)
 		}
 

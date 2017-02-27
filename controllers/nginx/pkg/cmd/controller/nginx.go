@@ -108,6 +108,8 @@ type NGINXController struct {
 	storeLister ingress.StoreLister
 
 	binary string
+
+	namedProcessCollector *namedProcessCollector
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -168,16 +170,21 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 // Reload checks if the running configuration file is different
 // to the specified and reload nginx if required
 func (n NGINXController) Reload(data []byte) ([]byte, bool, error) {
-	if !n.isReloadRequired(data) {
-		return []byte("Reload not required"), false, nil
-	}
+	//if !n.isReloadRequired(data) {
+	//	return []byte("Reload not required"), false, nil
+	//}
+
+	cfg := ngx_template.ReadConfig(n.configmap.Data)
 
 	err := ioutil.WriteFile(cfgPath, data, 0644)
 	if err != nil {
 		return nil, false, err
 	}
 
+	n.reloadMonitor(&cfg.EnableVtsStatus)
+
 	o, e := exec.Command(n.binary, "-s", "reload").CombinedOutput()
+
 	return o, true, e
 }
 
