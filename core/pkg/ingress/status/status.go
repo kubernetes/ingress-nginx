@@ -52,6 +52,7 @@ type Config struct {
 	Client         clientset.Interface
 	PublishService string
 	IngressLister  cache_store.StoreToIngressLister
+	ElectionID     string
 }
 
 // statusSync keeps the status IP in each Ingress rule updated executing a periodic check
@@ -171,7 +172,7 @@ func NewStatusSyncer(config Config) Sync {
 	}
 	st.syncQueue = task.NewCustomTaskQueue(st.sync, st.keyfunc)
 
-	le, err := NewElection("ingress-controller-leader",
+	le, err := NewElection(config.ElectionID,
 		pod.Name, pod.Namespace, 30*time.Second,
 		st.callback, config.Client)
 	if err != nil {
