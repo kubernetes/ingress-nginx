@@ -17,14 +17,19 @@ limitations under the License.
 package ssl
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"os"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -115,14 +120,14 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		return &ingress.SSLCert{
 			CAFileName:  pemFileName,
 			PemFileName: pemFileName,
-			PemSHA:      pemSHA1(pemFileName),
+			PemSHA:      PemSHA1(pemFileName),
 			CN:          cn,
 		}, nil
 	}
 
 	return &ingress.SSLCert{
 		PemFileName: pemFileName,
-		PemSHA:      pemSHA1(pemFileName),
+		PemSHA:      PemSHA1(pemFileName),
 		CN:          cn,
 	}, nil
 }
@@ -178,9 +183,9 @@ func SearchDHParamFile(baseDir string) string {
 	return ""
 }
 
-// pemSHA1 returns the SHA1 of a pem file. This is used to
+// PemSHA1 returns the SHA1 of a pem file. This is used to
 // reload NGINX in case a secret with a SSL certificate changed.
-func pemSHA1(filename string) string {
+func PemSHA1(filename string) string {
 	hasher := sha1.New()
 	s, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -191,23 +196,52 @@ func pemSHA1(filename string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-const (
-	snakeOilPem = "/etc/ssl/certs/ssl-cert-snakeoil.pem"
-	snakeOilKey = "/etc/ssl/private/ssl-cert-snakeoil.key"
-)
-
-// GetFakeSSLCert returns the snake oil ssl certificate created by the command
-// make-ssl-cert generate-default-snakeoil --force-overwrite
+// GetFakeSSLCert creates a Self Signed Certificate
+// Based in the code https://golang.org/src/crypto/tls/generate_cert.go
 func GetFakeSSLCert() ([]byte, []byte) {
-	cert, err := ioutil.ReadFile(snakeOilPem)
+
+	var priv interface{}
+	var err error
+
+	priv, err = rsa.GenerateKey(rand.Reader, 2048)
+
 	if err != nil {
-		return nil, nil
+		glog.Fatalf("failed to generate fake private key: %s", err)
 	}
 
-	key, err := ioutil.ReadFile(snakeOilKey)
+	notBefore := time.Now()
+	// This certificate is valid for 365 days
+	notAfter := notBefore.Add(365 * 24 * time.Hour)
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+
 	if err != nil {
-		return nil, nil
+		glog.Fatalf("failed to generate fake serial number: %s", err)
 	}
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"Acme Co"},
+			CommonName:   "Kubernetes Ingress Controller Fake Certificate",
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		DNSNames:              []string{"ingress.local"},
+	}
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.(*rsa.PrivateKey).PublicKey, priv)
+	if err != nil {
+		glog.Fatalf("Failed to create fake certificate: %s", err)
+	}
+
+	cert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+
+	key := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv.(*rsa.PrivateKey))})
 
 	return cert, key
 }
