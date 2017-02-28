@@ -342,37 +342,6 @@ func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespa
 		"Could not find matching nodeport from service.")}
 }
 
-// toNodePorts converts a pathlist to a flat list of nodeports.
-func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
-	knownPorts := []int64{}
-	for _, ing := range ings.Items {
-		defaultBackend := ing.Spec.Backend
-		if defaultBackend != nil {
-			port, err := t.getServiceNodePort(*defaultBackend, ing.Namespace)
-			if err != nil {
-				glog.Infof("%v", err)
-			} else {
-				knownPorts = append(knownPorts, int64(port))
-			}
-		}
-		for _, rule := range ing.Spec.Rules {
-			if rule.HTTP == nil {
-				glog.Errorf("Ignoring non http Ingress rule.")
-				continue
-			}
-			for _, path := range rule.HTTP.Paths {
-				port, err := t.getServiceNodePort(path.Backend, ing.Namespace)
-				if err != nil {
-					glog.Infof("%v", err)
-					continue
-				}
-				knownPorts = append(knownPorts, int64(port))
-			}
-		}
-	}
-	return knownPorts
-}
-
 func getZone(n *api.Node) string {
 	zone, ok := n.Labels[zoneKey]
 	if !ok {

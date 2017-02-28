@@ -162,23 +162,36 @@ func (l *L7s) Delete(name string) error {
 
 // Sync loadbalancers with the given runtime info from the controller.
 func (l *L7s) Sync(lbs []*L7RuntimeInfo) error {
-	glog.V(3).Infof("Creating loadbalancers %+v", lbs)
+	glog.V(4).Infof("Syncing %d loadbalancers", len(lbs))
 
-	if len(lbs) != 0 {
-		// Lazily create a default backend so we don't tax users who don't care
-		// about Ingress by consuming 1 of their 3 GCE BackendServices. This
-		// BackendService is GC'd when there are no more Ingresses.
-		if err := l.defaultBackendPool.Add(l.defaultBackendNodePort); err != nil {
-			return err
-		}
-		defaultBackend, err := l.defaultBackendPool.Get(l.defaultBackendNodePort)
-		if err != nil {
-			return err
-		}
-		l.glbcDefaultBackend = defaultBackend
-	}
-	// create new loadbalancers, validate existing
+	// Make sure there is at least one active port in the set of LBs, before we
+	// do any work.
+	validLBs := []*L7RuntimeInfo{}
 	for _, ri := range lbs {
+		if len(ri.NodePorts) > 0 {
+			validLBs = append(validLBs, ri)
+		}
+	}
+
+	glog.V(4).Infof("%d of %d loadbalancers are valid", len(validLBs), len(lbs))
+	if len(validLBs) == 0 {
+		return nil
+	}
+
+	// Lazily create a default backend so we don't tax users who don't care
+	// about Ingress by consuming 1 of their 3 GCE BackendServices. This
+	// BackendService is GC'd when there are no more Ingresses.
+	if err := l.defaultBackendPool.Add(l.defaultBackendNodePort); err != nil {
+		return err
+	}
+	defaultBackend, err := l.defaultBackendPool.Get(l.defaultBackendNodePort)
+	if err != nil {
+		return err
+	}
+	l.glbcDefaultBackend = defaultBackend
+
+	// create new loadbalancers, validate existing
+	for _, ri := range validLBs {
 		if err := l.Add(ri); err != nil {
 			return err
 		}
@@ -244,6 +257,8 @@ type L7RuntimeInfo struct {
 	Name string
 	// IP is the desired ip of the loadbalancer, eg from a staticIP.
 	IP string
+	// NodePorts is the set of ports being used by this L7.
+	NodePorts []int64
 	// TLS are the tls certs to use in termination.
 	TLS *TLSCerts
 	// AllowHTTP will not setup :80, if TLS is nil and AllowHTTP is set,
