@@ -97,15 +97,8 @@ type Namer struct {
 	nameLock     sync.Mutex
 }
 
-// NewNamer creates a new namer.
-func NewNamer(clusterName string) *Namer {
-	namer := &Namer{}
-	namer.SetClusterName(clusterName)
-	return namer
-}
-
-// NewNamer creates a new namer with a Firewall Name
-func NewNamerWithFirewall(clusterName string, firewallName string) *Namer {
+// NewNamer creates a new namer with a Cluster and Firewall name.
+func NewNamer(clusterName, firewallName string) *Namer {
 	namer := &Namer{}
 	namer.SetClusterName(clusterName)
 	namer.SetFirewallName(firewallName)

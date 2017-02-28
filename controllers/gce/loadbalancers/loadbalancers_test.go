@@ -236,7 +236,8 @@ func TestUpdateUrlMapNoChanges(t *testing.T) {
 
 func TestNameParsing(t *testing.T) {
 	clusterName := "123"
-	namer := utils.NewNamer(clusterName)
+	firewallName := clusterName
+	namer := utils.NewNamer(clusterName, firewallName)
 	fullName := namer.Truncate(fmt.Sprintf("%v-%v", forwardingRulePrefix, namer.LBName("testlb")))
 	annotationsMap := map[string]string{
 		fmt.Sprintf("%v/forwarding-rule", utils.K8sAnnotationPrefix): fullName,
@@ -308,7 +309,7 @@ func TestClusterNameChange(t *testing.T) {
 }
 
 func TestInvalidClusterNameChange(t *testing.T) {
-	namer := utils.NewNamer("test--123")
+	namer := utils.NewNamer("test--123", "test--123")
 	if got := namer.GetClusterName(); got != "123" {
 		t.Fatalf("Expected name 123, got %v", got)
 	}
