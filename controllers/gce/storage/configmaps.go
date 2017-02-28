@@ -33,7 +33,7 @@ const (
 	UidDataKey = "uid"
 	// ProviderDataKey is the key used in config maps to store the Provider
 	// UID which we use to ensure unique firewalls.
-	ProviderDataKey = "providerUid"
+	ProviderDataKey = "provider-uid"
 )
 
 // ConfigMapVault stores cluster UIDs in config maps.
