@@ -953,9 +953,6 @@ func (ic *GenericController) createServers(data []interface{},
 						servers[host].SSLCertificate = cert.PemFileName
 						servers[host].SSLPemChecksum = cert.PemSHA
 					}
-				} else {
-					servers[host].SSLCertificate = defaultPemFileName
-					servers[host].SSLPemChecksum = defaultPemSHA
 				}
 			}
 		}
