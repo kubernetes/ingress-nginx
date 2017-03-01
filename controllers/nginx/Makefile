@@ -6,6 +6,7 @@ BUILDTAGS=
 RELEASE?=0.9.0-beta.2
 PREFIX?=gcr.io/google_containers/nginx-ingress-controller
 GOOS?=linux
+DOCKER?=gcloud docker --
 
 REPO_INFO=$(shell git config --get remote.origin.url)
 
@@ -21,10 +22,10 @@ build: clean
 		-o rootfs/nginx-ingress-controller ${PKG}/pkg/cmd/controller
 
 container: build
-	docker build --pull -t $(PREFIX):$(RELEASE) rootfs
+	$(DOCKER) build --pull -t $(PREFIX):$(RELEASE) rootfs
 
 push: container
-	gcloud docker -- push $(PREFIX):$(RELEASE)
+	$(DOCKER) push $(PREFIX):$(RELEASE)
 
 fmt:
 	@echo "+ $@"
