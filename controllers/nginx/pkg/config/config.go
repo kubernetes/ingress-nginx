@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"fmt"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
@@ -45,6 +46,10 @@ const (
 	defIPCIDR = "0.0.0.0/0"
 
 	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
+
+	logFormatUpstream = "'%v - [$proxy_add_x_forwarded_for] - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status'"
+
+	logFormatStream = "'$remote_addr [$time_local] $protocol [$ssl_preread_server_name] [$stream_upstream] $status $bytes_sent $bytes_received $session_time'"
 
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
@@ -142,6 +147,14 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers
 	// Default: 4 8k
 	LargeClientHeaderBuffers string `json:"large-client-header-buffers"`
+
+	// Customize upstream log_format
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	LogFormatUpstream string `json:"log-format-upstream,omitempty"`
+
+	// Customize stream log_format
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	LogFormatStream string `json:"log-format-stream,omitempty"`
 
 	// Maximum number of simultaneous connections that can be opened by each worker process
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
@@ -250,6 +263,8 @@ func NewDefault() Configuration {
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
 		LargeClientHeaderBuffers: "4 8k",
+		LogFormatStream:          logFormatStream,
+		LogFormatUpstream:        BuildLogFormatUpstream(false),
 		MaxWorkerConnections:     16384,
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
@@ -289,6 +304,15 @@ func NewDefault() Configuration {
 	}
 
 	return cfg
+}
+
+// BuildLogFormatUpstream format the log_format upstream based on proxy_protocol
+func BuildLogFormatUpstream(useProxyProtocol bool) string {
+
+	if useProxyProtocol {
+		return fmt.Sprintf(logFormatUpstream, "$proxy_protocol_addr")
+	}
+	return fmt.Sprintf(logFormatUpstream, "$remote_addr")
 }
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf

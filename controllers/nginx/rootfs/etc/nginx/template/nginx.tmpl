@@ -77,11 +77,9 @@ http {
     gzip_proxied any;
     {{ end }}
 
-    server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};   
+    server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
 
-    log_format upstreaminfo '{{ if $cfg.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
-        '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
-        '$request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
+    log_format upstreaminfo {{ buildLogFormatUpstream $cfg }};
 
     {{/* map urls that should not appear in access.log */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
@@ -448,7 +446,7 @@ stream {
         default                         nginx-ssl-backend;
     }
 
-    log_format log_stream '$remote_addr [$time_local] $protocol [$ssl_preread_server_name] [$stream_upstream] $status $bytes_sent $bytes_received $session_time';
+    log_format log_stream {{ $cfg.LogFormatStream }};
 
     {{ if $cfg.DisableAccessLog }}
     access_log off;
