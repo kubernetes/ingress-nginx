@@ -71,6 +71,11 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		return nil, fmt.Errorf("No valid PEM formatted block found")
 	}
 
+	// If the file does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
+	if pemBlock.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("Certificate %v contains invalid data, and must be created with 'kubectl create secret tls'", name)
+	}
+
 	pemCert, err := x509.ParseCertificate(pemBlock.Bytes)
 	if err != nil {
 		return nil, err
@@ -137,6 +142,10 @@ func AddCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
 	pemCABlock, _ := pem.Decode(ca)
 	if pemCABlock == nil {
 		return nil, fmt.Errorf("No valid PEM formatted block found")
+	}
+	// If the first certificate does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
+	if pemCABlock.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("CA File %v contains invalid data, and must be created only with PEM formated certificates", name)
 	}
 
 	_, err := x509.ParseCertificate(pemCABlock.Bytes)
