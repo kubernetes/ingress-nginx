@@ -136,6 +136,7 @@ func TestHeaderAnnotations(t *testing.T) {
 	for _, test := range tests {
 		data[authURL] = test.url
 		data[authHeaders] = test.headers
+		data[authMethod] = "GET"
 
 		i, err := NewParser().Parse(ing)
 		if test.expErr {
@@ -145,9 +146,11 @@ func TestHeaderAnnotations(t *testing.T) {
 			continue
 		}
 
+		t.Log(i)
 		u, ok := i.(*External)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)
+			continue
 		}
 
 		if !reflect.DeepEqual(u.ResponseHeaders, test.parsedHeaders) {
