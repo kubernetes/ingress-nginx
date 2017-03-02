@@ -331,6 +331,7 @@ http {
             proxy_redirect                          off;
             proxy_buffering                         off;
             proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
+            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
 
             proxy_http_version                      1.1;
 
