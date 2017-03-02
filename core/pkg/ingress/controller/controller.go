@@ -127,6 +127,7 @@ type Configuration struct {
 	UDPConfigMapName      string
 	DefaultSSLCertificate string
 	DefaultHealthzURL     string
+	DefaultIngressClass   string
 	// optional
 	PublishService string
 	// Backend is the particular implementation to be used.
@@ -166,7 +167,7 @@ func newIngressController(config *Configuration) *GenericController {
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
-			if !IsValidClass(addIng, config.IngressClass) {
+			if !IsValidClass(addIng, config) {
 				glog.Infof("ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
 				return
 			}
@@ -175,7 +176,7 @@ func newIngressController(config *Configuration) *GenericController {
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
-			if !IsValidClass(delIng, config.IngressClass) {
+			if !IsValidClass(delIng, config) {
 				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
 				return
 			}
@@ -185,7 +186,7 @@ func newIngressController(config *Configuration) *GenericController {
 		UpdateFunc: func(old, cur interface{}) {
 			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
-			if !IsValidClass(curIng, config.IngressClass) && !IsValidClass(oldIng, config.IngressClass) {
+			if !IsValidClass(curIng, config) && !IsValidClass(oldIng, config) {
 				return
 			}
 
@@ -588,7 +589,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
 
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
+		if !IsValidClass(ing, ic.cfg) {
 			continue
 		}
 
@@ -711,7 +712,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
 
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
+		if !IsValidClass(ing, ic.cfg) {
 			continue
 		}
 
@@ -872,7 +873,7 @@ func (ic *GenericController) createServers(data []interface{},
 	// initialize all the servers
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
+		if !IsValidClass(ing, ic.cfg) {
 			continue
 		}
 
@@ -912,7 +913,7 @@ func (ic *GenericController) createServers(data []interface{},
 	// configure default location and SSL
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
+		if !IsValidClass(ing, ic.cfg) {
 			continue
 		}
 
