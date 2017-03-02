@@ -39,6 +39,13 @@ func (fe *fakeError) Error() string {
 	return "fakeError"
 }
 
+// just 2 combinations are valid
+// 1 - ingress with default class (or no args) | blank annotation on ingress | valid
+// 2 - ingress with specified class | same annotation on ingress | valid
+//
+// this combinations are invalid
+// 3 - ingress with default class (or no args) | fixed annotation on ingress | invalid
+// 4 - ingress with specified class | different annotation on ingress | invalid
 func TestIsValidClass(t *testing.T) {
 	ing := &extensions.Ingress{
 		ObjectMeta: api.ObjectMeta{
@@ -47,27 +54,46 @@ func TestIsValidClass(t *testing.T) {
 		},
 	}
 
-	b := IsValidClass(ing, "")
+	config := &Configuration{DefaultIngressClass: "nginx", IngressClass: ""}
+	b := IsValidClass(ing, config)
 	if !b {
 		t.Error("Expected a valid class (missing annotation)")
+	}
+
+	config.IngressClass = "custom"
+	b = IsValidClass(ing, config)
+	if b {
+		t.Error("Expected a invalid class (missing annotation)")
 	}
 
 	data := map[string]string{}
 	data[ingressClassKey] = "custom"
 	ing.SetAnnotations(data)
-
-	b = IsValidClass(ing, "custom")
+	b = IsValidClass(ing, config)
 	if !b {
 		t.Errorf("Expected valid class but %v returned", b)
 	}
-	b = IsValidClass(ing, "nginx")
+
+	config.IngressClass = "killer"
+	b = IsValidClass(ing, config)
 	if b {
 		t.Errorf("Expected invalid class but %v returned", b)
 	}
-	b = IsValidClass(ing, "")
-	if !b {
+
+	data[ingressClassKey] = ""
+	ing.SetAnnotations(data)
+	config.IngressClass = "killer"
+	b = IsValidClass(ing, config)
+	if b {
 		t.Errorf("Expected invalid class but %v returned", b)
 	}
+
+	config.IngressClass = ""
+	b = IsValidClass(ing, config)
+	if !b {
+		t.Errorf("Expected valid class but %v returned", b)
+	}
+
 }
 
 func TestIsHostValid(t *testing.T) {
