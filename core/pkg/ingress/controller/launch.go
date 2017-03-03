@@ -135,7 +135,10 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		}
 	}
 
-	os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
+	err = os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
+	if err != nil {
+		glog.Errorf("Failed to mkdir SSL directory: %v", err)
+	}
 
 	config := &Configuration{
 		UpdateStatus:          *updateStatus,
