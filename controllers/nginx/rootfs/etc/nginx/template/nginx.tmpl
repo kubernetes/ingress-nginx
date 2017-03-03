@@ -14,7 +14,7 @@ worker_rlimit_nofile {{ .MaxOpenFiles }};
 events {
     multi_accept        on;
     worker_connections  {{ $cfg.MaxWorkerConnections }};
-    use                 epoll; 
+    use                 epoll;
 }
 
 http {
@@ -26,7 +26,7 @@ http {
     real_ip_header      X-Forwarded-For;
     set_real_ip_from    0.0.0.0/0;
     {{ end }}
-    
+
     real_ip_recursive   on;
 
     {{/* databases used to determine the country depending on the client IP address */}}
@@ -51,7 +51,7 @@ http {
     aio                 threads;
     tcp_nopush          on;
     tcp_nodelay         on;
-    
+
     log_subrequest      on;
 
     reset_timedout_connection on;
@@ -73,7 +73,7 @@ http {
     gzip_comp_level 5;
     gzip_http_version 1.1;
     gzip_min_length 256;
-    gzip_types {{ $cfg.GzipTypes }};    
+    gzip_types {{ $cfg.GzipTypes }};
     gzip_proxied any;
     {{ end }}
 
@@ -241,16 +241,16 @@ http {
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
             {{ end }}
-            {{ if not (empty $location.ExternalAuth.Method) }}           
+            {{ if not (empty $location.ExternalAuth.Method) }}
             proxy_method {{ $location.ExternalAuth.Method }};
             {{ end }}
-            proxy_set_header            Host $host;            
+            proxy_set_header            Host $host;
             proxy_pass_request_headers  on;
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
         }
         {{ end }}
-        
+
         location {{ $path }} {
             set $proxy_upstream_name "{{ $location.Backend }}";
 
@@ -260,17 +260,17 @@ http {
             allow {{ $ip }};{{ end }}
             deny all;
             {{ end }}
-            
+
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             {{ if not (empty $authPath) }}
             # this location requires authentication
             auth_request {{ $authPath }};
             {{ end }}
-            
-            {{ if (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect) }}
+
+            {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
             # enforce ssl on server side
-            if ($scheme = http) {
+            if ($pass_access_scheme = http) {
                 return 301 https://$host$request_uri;
             }
             {{ end }}
@@ -278,7 +278,7 @@ http {
             {{ $limits := buildRateLimit $location }}
             {{ range $limit := $limits }}
             {{ $limit }}{{ end }}
-            
+
             {{ if $location.BasicDigestAuth.Secured }}
             {{ if eq $location.BasicDigestAuth.Type "basic" }}
             auth_basic "{{ $location.BasicDigestAuth.Realm }}";
@@ -289,7 +289,7 @@ http {
             {{ end }}
             proxy_set_header Authorization "";
             {{ end }}
-            
+
             {{ if $location.EnableCORS }}
             {{ template "CORS" }}
             {{ end }}
@@ -353,7 +353,7 @@ http {
             {{ end }}
         }
         {{ end }}
-        
+
         {{ if eq $server.Hostname "_" }}
         # health checks in cloud providers require the use of port 80
         location {{ $healthzURI }} {
@@ -375,9 +375,9 @@ http {
 
         {{ template "CUSTOM_ERRORS" $cfg }}
     }
-	
+
     {{ end }}
-    
+
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
         # Use the port 18080 (random value just to avoid known ports) as default port for nginx.
@@ -389,7 +389,7 @@ http {
             access_log off;
             return 200;
         }
-       
+
         location /nginx_status {
             {{ if $cfg.EnableVtsStatus }}
             vhost_traffic_status_display;
@@ -443,7 +443,7 @@ stream {
         {{ range $i, $passthrough := .PassthroughBackends }}
         {{ $passthrough.Hostname }}         {{  $passthrough.Backend }};
         {{ end }}
-        # send SSL traffic to this nginx in a different port 
+        # send SSL traffic to this nginx in a different port
         default                         nginx-ssl-backend;
     }
 
@@ -470,15 +470,15 @@ stream {
         ssl_preread             on;
     }
     {{ end }}
-    
-    # TCP services		
+
+    # TCP services
     {{ range $i, $tcpServer := .TCPBackends }}
     upstream {{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
     {{ range $j, $endpoint := $tcpServer.Endpoints }}
         server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
     {{ end }}
     }
-    
+
     server {
         listen                  {{ $tcpServer.Port }};
         proxy_pass              {{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
@@ -492,11 +492,11 @@ stream {
         server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
     {{ end }}
     }
-    
+
     server {
         listen                  {{ $udpServer.Port }};
         proxy_responses         1;
-        proxy_pass              {{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};		
+        proxy_pass              {{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
     }
     {{ end }}
 }
@@ -509,7 +509,7 @@ stream {
             content_by_lua_block {
                 openURL(ngx.req.get_headers(0), {{ $errCode }})
             }
-        }    
+        }
         {{ end }}
 {{ end }}
 
