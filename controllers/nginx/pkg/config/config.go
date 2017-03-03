@@ -264,7 +264,7 @@ func NewDefault() Configuration {
 		KeepAlive:                75,
 		LargeClientHeaderBuffers: "4 8k",
 		LogFormatStream:          logFormatStream,
-		LogFormatUpstream:        BuildLogFormatUpstream(false),
+		LogFormatUpstream:        BuildLogFormatUpstream(false, ""),
 		MaxWorkerConnections:     16384,
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
@@ -308,7 +308,14 @@ func NewDefault() Configuration {
 }
 
 // BuildLogFormatUpstream format the log_format upstream based on proxy_protocol
-func BuildLogFormatUpstream(useProxyProtocol bool) string {
+func BuildLogFormatUpstream(useProxyProtocol bool, curLogFormatUpstream string) string {
+
+	// test if log_format comes from configmap
+	if curLogFormatUpstream != "" &&
+		curLogFormatUpstream != fmt.Sprintf(logFormatUpstream, "$proxy_protocol_addr") &&
+		curLogFormatUpstream != fmt.Sprintf(logFormatUpstream, "$remote_addr") {
+		return curLogFormatUpstream
+	}
 
 	if useProxyProtocol {
 		return fmt.Sprintf(logFormatUpstream, "$proxy_protocol_addr")
