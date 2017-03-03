@@ -292,6 +292,7 @@ func NewDefault() Configuration {
 			ProxyCookieDomain:    "off",
 			ProxyCookiePath:      "off",
 			SSLRedirect:          true,
+			ForceSSLRedirect:     false,
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
