@@ -117,10 +117,6 @@ func TestSSLRedirect(t *testing.T) {
 		t.Errorf("Expected true but returned false")
 	}
 
-	if !redirect.SSLRedirect {
-		t.Errorf("Expected true but returned false")
-	}
-
 	data[sslRedirect] = "false"
 	ing.SetAnnotations(data)
 
@@ -131,5 +127,34 @@ func TestSSLRedirect(t *testing.T) {
 	}
 	if redirect.SSLRedirect {
 		t.Errorf("Expected false but returned true")
+	}
+}
+
+func TestForceSSLRedirect(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[rewriteTo] = defRoute
+	ing.SetAnnotations(data)
+
+	i, _ := NewParser(mockBackend{true}).Parse(ing)
+	redirect, ok := i.(*Redirect)
+	if !ok {
+		t.Errorf("expected a Redirect type")
+	}
+	if redirect.ForceSSLRedirect {
+		t.Errorf("Expected false but returned true")
+	}
+
+	data[forceSSLRedirect] = "true"
+	ing.SetAnnotations(data)
+
+	i, _ = NewParser(mockBackend{false}).Parse(ing)
+	redirect, ok = i.(*Redirect)
+	if !ok {
+		t.Errorf("expected a Redirect type")
+	}
+	if !redirect.ForceSSLRedirect {
+		t.Errorf("Expected true but returned false")
 	}
 }
