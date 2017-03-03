@@ -235,7 +235,7 @@ func buildLogFormatUpstream(input interface{}) string {
 		glog.Errorf("error  an ingress.buildLogFormatUpstream type but %T was returned", input)
 	}
 
-	return nginxconfig.BuildLogFormatUpstream(config.UseProxyProtocol)
+	return nginxconfig.BuildLogFormatUpstream(config.UseProxyProtocol, config.LogFormatUpstream)
 
 }
 
