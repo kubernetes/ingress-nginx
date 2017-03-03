@@ -40,6 +40,7 @@ The following annotations are supported:
 |Name                 |type|
 |---------------------------|------|
 |[ingress.kubernetes.io/add-base-url](#rewrite)|true or false|
+|[ingress.kubernetes.io/affinity](#session-affinity)|true or false|
 |[ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
@@ -47,18 +48,18 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-tls-secret](#Certificate Authentication)|string|
 |[ingress.kubernetes.io/auth-tls-verify-depth](#Certificate Authentication)|number|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
+|[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
+|[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
+|[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 |[ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
-|[ingress.kubernetes.io/affinity](#session-affinity)|true or false|
-|[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
-|[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 
 
 
@@ -197,6 +198,8 @@ By default NGINX uses `http` to reach the services. Adding the annotation `ingre
 By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map.
 
 To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
+
+When using SSL offloading outside of cluster (e.g. AWS ELB) it may be usefull to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
 
 
 ### Whitelist source range
