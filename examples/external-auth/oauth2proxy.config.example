@@ -1,0 +1,7 @@
+http_address = "0.0.0.0:4180"
+upstreams = [ "http://default-http-backend" ]
+provider = "azure"
+client_id = ""
+client_secret = ""
+cookie_secret = ""
+authenticated_emails_file = "/var/run/secrets/oauth2proxy/authenticated_emails"

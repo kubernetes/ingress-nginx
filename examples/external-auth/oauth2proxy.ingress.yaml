@@ -1,0 +1,18 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: oauth2proxy
+spec:
+  tls:
+  - secretName: 'ingress-tls'
+    hosts:
+    - '__DOMAIN__'
+  rules:
+  - host: '__DOMAIN__'
+    http: 
+      paths:
+      - path: /oauth2
+        backend:
+          serviceName: oauth2proxy
+          servicePort: 4180

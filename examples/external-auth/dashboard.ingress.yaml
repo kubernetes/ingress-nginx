@@ -1,0 +1,22 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: dashboard
+  namespace: kube-system
+  annotations:
+    "ingress.kubernetes.io/auth-url": "https://$host/oauth2/auth"
+    "ingress.kubernetes.io/auth-signin": "https://$host/oauth2/sign_in"
+spec:
+  tls:
+  - secretName: 'ingress-tls'
+    hosts:
+    - '__DOMAIN__'
+  rules:
+  - host: '__DOMAIN__'
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: kubernetes-dashboard
+          servicePort: 80
