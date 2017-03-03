@@ -41,10 +41,10 @@ func (em exeMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
 	return em.name == cmd, ""
 }
 
-func (n *NGINXController) setupMonitor(args []string) {
+func (n *NGINXController) setupMonitor(args []string, vtsCollector *bool) {
 
 	// TODO fix true
-	pc, err := newProcessCollector(true, exeMatcher{"nginx", args}, false)
+	pc, err := newProcessCollector(true, exeMatcher{"nginx", args}, vtsCollector)
 	if err != nil {
 		glog.Warningf("unexpected error registering nginx collector: %v", err)
 	}
@@ -58,7 +58,14 @@ func (n *NGINXController) setupMonitor(args []string) {
 }
 
 func (n *NGINXController) reloadMonitor(enableVts *bool) {
-	n.namedProcessCollector.vtsCollector = enableVts
+
+	if enableVts == nil {
+		falseVar := false
+		n.namedProcessCollector.vtsCollector = &falseVar
+		return
+	}
+	falseVar := true
+	n.namedProcessCollector.vtsCollector = &falseVar
 }
 
 var (
@@ -238,7 +245,7 @@ type (
 func newProcessCollector(
 	children bool,
 	n common.MatchNamer,
-	vtsCollector bool) (*namedProcessCollector, error) {
+	vtsCollector *bool) (*namedProcessCollector, error) {
 
 	//fs, err := proc.NewFS("/proc")
 	//if err != nil {
@@ -248,7 +255,7 @@ func newProcessCollector(
 		scrapeChan:   make(chan scrapeRequest),
 		Grouper:      proc.NewGrouper(children, n),
 		//fs:           fs,
-		vtsCollector: &vtsCollector,
+		vtsCollector: vtsCollector,
 	}
 
 	//_, err = p.Update(p.fs.AllProcs())
@@ -272,7 +279,7 @@ func (p *namedProcessCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- memVirtualbytesDesc
 	ch <- startTimeDesc
 
-	if p.vtsCollector == true {
+	if *p.vtsCollector {
 
 		ch <- vtsBytesDesc
 		ch <- vtsCacheDesc
@@ -312,7 +319,7 @@ func (p *namedProcessCollector) start() {
 		ch := req.results
 		p.scrapeNginxStatus(ch)
 
-		if &p.vtsCollector {
+		if *p.vtsCollector {
 			p.scrapeVts(ch)
 		}
 
@@ -471,3 +478,4 @@ func reflectMetrics(value interface{}, desc *prometheus.Desc, ch chan<- promethe
 	}
 
 }
+

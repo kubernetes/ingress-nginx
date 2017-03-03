@@ -159,8 +159,8 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 		done <- err
 		return
 	}
-
-	n.setupMonitor(cmd.Args)
+	falseVar := false
+	n.setupMonitor(cmd.Args, &falseVar)
 
 	go func() {
 		done <- cmd.Wait()
