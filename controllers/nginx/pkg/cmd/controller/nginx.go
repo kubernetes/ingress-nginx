@@ -48,9 +48,10 @@ const (
 )
 
 var (
-	tmplPath = "/etc/nginx/template/nginx.tmpl"
-	cfgPath  = "/etc/nginx/nginx.conf"
-	binary   = "/usr/sbin/nginx"
+	tmplPath        = "/etc/nginx/template/nginx.tmpl"
+	cfgPath         = "/etc/nginx/nginx.conf"
+	binary          = "/usr/sbin/nginx"
+	defIngressClass = "nginx"
 )
 
 // newNGINXController creates a new NGINX Ingress controller.
@@ -259,7 +260,12 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 
 // OverrideFlags customize NGINX controller flags
 func (n NGINXController) OverrideFlags(flags *pflag.FlagSet) {
-	flags.Set("ingress-class", "nginx")
+	flags.Set("ingress-class", defIngressClass)
+}
+
+// DefaultIngressClass just return the default ingress class
+func (n NGINXController) DefaultIngressClass() string {
+	return defIngressClass
 }
 
 // testTemplate checks if the NGINX configuration inside the byte array is valid

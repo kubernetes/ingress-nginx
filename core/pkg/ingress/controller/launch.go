@@ -147,6 +147,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		ResyncPeriod:          *resyncPeriod,
 		DefaultService:        *defaultSvc,
 		IngressClass:          *ingressClass,
+		DefaultIngressClass:   backend.DefaultIngressClass(),
 		Namespace:             *watchNamespace,
 		ConfigMapName:         *configMap,
 		TCPConfigMapName:      *tcpConfigMapName,
