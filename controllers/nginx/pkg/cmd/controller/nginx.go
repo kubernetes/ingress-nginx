@@ -200,7 +200,10 @@ func (n *NGINXController) backendDefaults() defaults.Backend {
 	if err != nil {
 		glog.Warningf("unexpected error merging defaults: %v", err)
 	}
-	decoder.Decode(n.configmap.Data)
+	err = decoder.Decode(n.configmap.Data)
+	if err != nil {
+		glog.Warningf("unexpected error decoding: %v", err)
+	}
 	return d.Backend
 }
 
@@ -267,7 +270,10 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 		return err
 	}
 	defer tmpfile.Close()
-	ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
+	err = ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
+	if err != nil {
+		return err
+	}
 	out, err := exec.Command(n.binary, "-t", "-c", tmpfile.Name()).CombinedOutput()
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
