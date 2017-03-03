@@ -59,6 +59,10 @@ type Backend struct {
 	// Enables or disables the redirect (301) to the HTTPS port
 	SSLRedirect bool `json:"ssl-redirect"`
 
+	// Enables or disables the redirect (301) to the HTTPS port even without TLS cert
+	// This is useful if doing SSL offloading outside of cluster eg AWS ELB
+	ForceSSLRedirect bool `json:"force-ssl-redirect"`
+
 	// Enables or disables the specification of port in redirects
 	// Default: false
 	UsePortInRedirects bool `json:"use-port-in-redirects"`
