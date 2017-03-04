@@ -97,11 +97,6 @@ type Configuration struct {
 	//http://nginx.org/en/docs/http/ngx_http_log_module.html
 	DisableAccessLog bool `json:"disable-access-log,omitempty"`
 
-	// EnableSPDY enables spdy and use ALPN and NPN to advertise the availability of the two protocols
-	// https://blog.cloudflare.com/open-sourcing-our-nginx-http-2-spdy-code
-	// By default this is enabled
-	EnableSPDY bool `json:"enable-spdy"`
-
 	// EnableStickySessions enabled sticky sessions using cookies
 	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
 	// By default this is disabled
@@ -255,7 +250,6 @@ func NewDefault() Configuration {
 		ClientHeaderBufferSize:  "1k",
 		DisableAccessLog:        false,
 		EnableDynamicTLSRecords: true,
-		EnableSPDY:              false,
 		ErrorLogLevel:           errorLevel,
 		HSTS:                    true,
 		HSTSIncludeSubdomains:    true,
