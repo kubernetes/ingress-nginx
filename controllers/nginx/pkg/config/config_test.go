@@ -12,19 +12,19 @@ func TestBuildLogFormatUpstream(t *testing.T) {
 		curLogFormat     string
 		expected         string
 	}{
-		{true, "", fmt.Sprintf(logFormatUpstream, "$proxy_protocol_addr")},
-		{false, "", fmt.Sprintf(logFormatUpstream, "$remote_addr")},
-		{true, "my-log-format", "my-log-format"},
-		{false, "john-log-format", "john-log-format"},
+		{true, logFormatUpstream, fmt.Sprintf("$proxy_protocol_addr - %s", logFormatUpstream)},
+		{false, logFormatUpstream, fmt.Sprintf("$remote_addr - %s", logFormatUpstream)},
+		{true, "my-log-format", "$proxy_protocol_addr - my-log-format"},
+		{false, "john-log-format", "$remote_addr - john-log-format"},
 	}
 
 	for _, testCase := range testCases {
-
-		result := BuildLogFormatUpstream(testCase.useProxyProtocol, testCase.curLogFormat)
-
+		cfg := NewDefault()
+		cfg.UseProxyProtocol = testCase.useProxyProtocol
+		cfg.LogFormatUpstream = testCase.curLogFormat
+		result := cfg.BuildLogFormatUpstream()
 		if result != testCase.expected {
 			t.Errorf(" expected %v but return %v", testCase.expected, result)
 		}
-
 	}
 }
