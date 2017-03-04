@@ -260,6 +260,10 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 
 // OverrideFlags customize NGINX controller flags
 func (n NGINXController) OverrideFlags(flags *pflag.FlagSet) {
+	ig, err := flags.GetString("ingress-class")
+	if err == nil && ig != "" && ig != defIngressClass {
+		glog.Warningf("only Ingress with class %v will be processed by this ingress controller", ig)
+	}
 	flags.Set("ingress-class", defIngressClass)
 }
 
