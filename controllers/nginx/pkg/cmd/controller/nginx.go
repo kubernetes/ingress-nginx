@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/pflag"
 
 	"k8s.io/kubernetes/pkg/api"
@@ -186,26 +185,7 @@ func (n NGINXController) BackendDefaults() defaults.Backend {
 		return d.Backend
 	}
 
-	return n.backendDefaults()
-}
-
-func (n *NGINXController) backendDefaults() defaults.Backend {
-	d := config.NewDefault()
-	config := &mapstructure.DecoderConfig{
-		Metadata:         nil,
-		WeaklyTypedInput: true,
-		Result:           &d,
-		TagName:          "json",
-	}
-	decoder, err := mapstructure.NewDecoder(config)
-	if err != nil {
-		glog.Warningf("unexpected error merging defaults: %v", err)
-	}
-	err = decoder.Decode(n.configmap.Data)
-	if err != nil {
-		glog.Warningf("unexpected error decoding: %v", err)
-	}
-	return d.Backend
+	return ngx_template.ReadConfig(n.configmap.Data).Backend
 }
 
 // isReloadRequired check if the new configuration file is different
