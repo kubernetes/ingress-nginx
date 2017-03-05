@@ -213,11 +213,8 @@ func buildLocation(input interface{}) string {
 
 func buildAuthLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
-	if !ok {
-		return ""
-	}
 
-	if location.ExternalAuth.URL == "" {
+	if !ok || location.ExternalAuth.URL == "" {
 		return ""
 	}
 
