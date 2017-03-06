@@ -78,6 +78,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 	// If the file does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
 	if pemBlock.Type != "CERTIFICATE" {
+		_ = os.Remove(tempPemFile.Name())
 		return nil, fmt.Errorf("Certificate %v contains invalid data, and must be created with 'kubectl create secret tls'", name)
 	}
 
