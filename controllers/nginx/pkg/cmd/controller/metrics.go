@@ -192,6 +192,7 @@ var (
 type exeMatcher struct {
 	name string
 	args []string
+	enableVtsCollector bool
 }
 
 func (em exeMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
@@ -202,9 +203,9 @@ func (em exeMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
 	return em.name == cmd, ""
 }
 
-func (n *NGINXController) setupMonitor(args[] string, vtsCollector *bool) {
-	// TODO fix true
-	pc, err := newProcessCollector(true, exeMatcher{"nginx", args}, vtsCollector)
+func (n *NGINXController) setupMonitor(args[] string, vtsCollector bool) {
+	glog.Warning("vtsCollector now is  ", vtsCollector)
+	pc, err := newProcessCollector(true, exeMatcher{"nginx", args, vtsCollector})
 
 	if err != nil {
 		glog.Warningf("unexpected error registering nginx collector: %v", err)
@@ -213,8 +214,9 @@ func (n *NGINXController) setupMonitor(args[] string, vtsCollector *bool) {
 	err = prometheus.Register(pc)
 
 	if err != nil {
-		if err, ok := err.(prometheus.AlreadyRegisteredError); ok {
-			glog.Warningf("unexpected error registering nginx collector: %v", err)
+		if reg, ok := err.(prometheus.AlreadyRegisteredError); ok {
+			*reg.ExistingCollector.(prometheus.Collector).(*namedProcessCollector) = *pc
+
 		}else{
 			glog.Warningf("unexpected error registering nginx collector: %v", err)
 		}
@@ -230,17 +232,16 @@ type (
 	}
 
 	namedProcessCollector struct {
-		scrapeChan chan scrapeRequest
-		*proc.Grouper
-		fs           *proc.FS
-		vtsCollector *bool
+		scrapeChan         chan scrapeRequest
+		grouper *proc.Grouper
+		fs                 *proc.FS
+		//enableVtsCollector *bool
 	}
 )
 
 func newProcessCollector(
 	children bool,
-	n common.MatchNamer,
-	vtsCollector *bool) (*namedProcessCollector, error) {
+	n common.MatchNamer) (*namedProcessCollector, error) {
 
 	//fs, err := proc.NewFS("/proc")
 	//if err != nil {
@@ -248,12 +249,12 @@ func newProcessCollector(
 	//}
 	p := &namedProcessCollector{
 		scrapeChan: make(chan scrapeRequest),
-		Grouper:    proc.NewGrouper(children, n),
+		grouper:    proc.NewGrouper(children, n),
 		//fs:           fs,
-		vtsCollector: vtsCollector,
+		//enableVtsCollector: vtsCollector,
 	}
 
-	//p.Update(p.fs.AllProcs())
+//	p.Update(p.fs.AllProcs())
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -273,14 +274,13 @@ func (p *namedProcessCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- memResidentbytesDesc
 	ch <- memVirtualbytesDesc
 	ch <- startTimeDesc
-
-	if *p.vtsCollector {
+	x := p.grouper.(exeMatcher)
+	if true { //x.(execMatcher) == nil  { //.(exeMatcher).enableVtsCollector {
 		glog.Info("registering vts describe")
 
 		ch <- vtsBytesDesc
 		ch <- vtsCacheDesc
 		ch <- vtsConnectionsDesc
-		ch <- readBytesDesc
 		ch <- vtsRequestDesc
 		ch <- vtsResponseDesc
 		ch <- vtsUpstreamBackupDesc
@@ -347,11 +347,12 @@ func (p *namedProcessCollector) scrapeNginxStatus(ch chan<- prometheus.Metric) {
 
 func (p *namedProcessCollector) scrapeVts(ch chan<- prometheus.Metric) {
 
-	if ! *p.vtsCollector {
-		glog.Warningf("vts metrics not enabled")
+	if ! true {
+		glog.V(3).Info("vts metrics not enabled")
 		return
 	}
-	glog.Info("starting scrap on vts")
+
+	glog.V(3).Info("starting scrap on vts")
 	nginxMetrics, err := getNginxVtsMetrics()
 	if err != nil {
 		glog.Warningf("unexpected error obtaining nginx status info: %v", err)
@@ -435,7 +436,7 @@ func (p *namedProcessCollector) scrapeVts(ch chan<- prometheus.Metric) {
 }
 
 func (p *namedProcessCollector) scrapeProcs(ch chan<- prometheus.Metric) {
-
+	return
 	//_, err := p.Update(p.fs.AllProcs())
 	//if err != nil {
 	//	glog.Warningf("unexpected error obtaining nginx process info: %v", err)

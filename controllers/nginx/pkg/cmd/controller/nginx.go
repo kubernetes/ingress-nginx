@@ -25,7 +25,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 	"time"
 
@@ -159,8 +158,8 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 		done <- err
 		return
 	}
-	falseVar := false
-	n.setupMonitor(cmd.Args, &falseVar)
+	cfg := ngx_template.ReadConfig(n.configmap.Data)
+	n.setupMonitor(cmd.Args,  cfg.EnableVtsStatus)
 
 	go func() {
 		done <- cmd.Wait()
@@ -170,18 +169,14 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 // Reload checks if the running configuration file is different
 // to the specified and reload nginx if required
 func (n NGINXController) Reload(data []byte) ([]byte, bool, error) {
-	//if !n.isReloadRequired(data) {
-	//	return []byte("Reload not required"), false, nil
-	//}
-
-	cfg := ngx_template.ReadConfig(n.configmap.Data)
+	if !n.isReloadRequired(data) {
+		return []byte("Reload not required"), false, nil
+	}
 
 	err := ioutil.WriteFile(cfgPath, data, 0644)
 	if err != nil {
 		return nil, false, err
 	}
-
-	n.reloadMonitor(&cfg.EnableVtsStatus)
 
 	o, e := exec.Command(n.binary, "-s", "reload").CombinedOutput()
 
@@ -212,6 +207,10 @@ func (n NGINXController) isReloadRequired(data []byte) bool {
 	}
 
 	if !bytes.Equal(src, data) {
+
+		cfg := ngx_template.ReadConfig(n.configmap.Data)
+		n.setupMonitor([]string{""}, &cfg.EnableVtsStatus)
+
 		tmpfile, err := ioutil.TempFile("", "nginx-cfg-diff")
 		if err != nil {
 			glog.Errorf("error creating temporal file: %s", err)
