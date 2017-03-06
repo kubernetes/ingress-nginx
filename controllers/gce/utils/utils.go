@@ -92,14 +92,16 @@ const (
 
 // Namer handles centralized naming for the cluster.
 type Namer struct {
-	clusterName string
-	nameLock    sync.Mutex
+	clusterName  string
+	firewallName string
+	nameLock     sync.Mutex
 }
 
-// NewNamer creates a new namer.
-func NewNamer(clusterName string) *Namer {
+// NewNamer creates a new namer with a Cluster and Firewall name.
+func NewNamer(clusterName, firewallName string) *Namer {
 	namer := &Namer{}
 	namer.SetClusterName(clusterName)
+	namer.SetFirewallName(firewallName)
 	return namer
 }
 
@@ -123,11 +125,33 @@ func (n *Namer) SetClusterName(name string) {
 	n.clusterName = name
 }
 
+// SetFirewallName sets the firewall name of this cluster.
+func (n *Namer) SetFirewallName(firewall_name string) {
+	n.nameLock.Lock()
+	defer n.nameLock.Unlock()
+	if n.firewallName != firewall_name {
+		glog.Infof("Changing firewall name from %v to %v", n.firewallName, firewall_name)
+		n.firewallName = firewall_name
+	}
+}
+
 // GetClusterName returns the UID/name of this cluster.
 func (n *Namer) GetClusterName() string {
 	n.nameLock.Lock()
 	defer n.nameLock.Unlock()
 	return n.clusterName
+}
+
+// GetFirewallName returns the firewall name of this cluster.
+func (n *Namer) GetFirewallName() string {
+	n.nameLock.Lock()
+	defer n.nameLock.Unlock()
+	// Retain backwards compatible behavior where firewallName == clusterName.
+	if n.firewallName == "" {
+		return n.clusterName
+	} else {
+		return n.firewallName
+	}
 }
 
 // Truncate truncates the given key to a GCE length limit.
@@ -216,12 +240,12 @@ func (n *Namer) IGName() string {
 
 // FrSuffix constructs the glbc specific suffix for the FirewallRule.
 func (n *Namer) FrSuffix() string {
-	clusterName := n.GetClusterName()
+	firewallName := n.GetFirewallName()
 	// The entire cluster only needs a single firewall rule.
-	if clusterName == "" {
+	if firewallName == "" {
 		return globalFirewallSuffix
 	}
-	return n.Truncate(fmt.Sprintf("%v%v%v", globalFirewallSuffix, clusterNameDelimiter, clusterName))
+	return n.Truncate(fmt.Sprintf("%v%v%v", globalFirewallSuffix, clusterNameDelimiter, firewallName))
 }
 
 // FrName constructs the full firewall rule name, this is the name assigned by
