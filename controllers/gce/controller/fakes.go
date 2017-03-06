@@ -44,12 +44,12 @@ type fakeClusterManager struct {
 }
 
 // NewFakeClusterManager creates a new fake ClusterManager.
-func NewFakeClusterManager(clusterName string) *fakeClusterManager {
+func NewFakeClusterManager(clusterName, firewallName string) *fakeClusterManager {
 	fakeLbs := loadbalancers.NewFakeLoadBalancers(clusterName)
 	fakeBackends := backends.NewFakeBackendServices(func(op int, be *compute.BackendService) error { return nil })
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	fakeHCs := healthchecks.NewFakeHealthChecks()
-	namer := utils.NewNamer(clusterName)
+	namer := utils.NewNamer(clusterName, firewallName)
 
 	nodePool := instances.NewNodePool(fakeIGs)
 	nodePool.Init(&instances.FakeZoneLister{Zones: []string{"zone-a"}})
