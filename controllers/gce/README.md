@@ -327,7 +327,7 @@ So simply delete the replication controller:
 $ kubectl get rc glbc
 CONTROLLER   CONTAINER(S)           IMAGE(S)                                      SELECTOR                    REPLICAS   AGE
 glbc         default-http-backend   gcr.io/google_containers/defaultbackend:1.0   k8s-app=glbc,version=v0.5   1          2m
-             l7-lb-controller       gcr.io/google_containers/glbc:0.9.1
+             l7-lb-controller       gcr.io/google_containers/glbc:0.9.2
 
 $ kubectl delete rc glbc
 replicationcontroller "glbc" deleted
@@ -340,7 +340,7 @@ glbc-6m6b6              1/1       Terminating   0          13m
 __The prod way__: If you didn't start the controller with `--delete-all-on-quit`, you can execute a GET on the `/delete-all-and-quit` endpoint. This endpoint is deliberately not exported.
 
 ```
-$ kubectl exec -it glbc-6m6b6  -- curl http://localhost:8081/delete-all-and-quit
+$ kubectl exec -it glbc-6m6b6  -- wget -q -O- http://localhost:8081/delete-all-and-quit
 ..Hangs till quit is done..
 
 $ kubectl logs glbc-6m6b6  --follow
