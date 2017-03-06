@@ -838,26 +838,27 @@ func (ic *GenericController) createServers(data []interface{},
 		CookiePath:     bdef.ProxyCookiePath,
 	}
 
-	// This adds the Default Certificate to Default Backend and also for vhosts missing the secret
+	// This adds the Default Certificate to Default Backend (or generates a new self signed one)
 	var defaultPemFileName, defaultPemSHA string
-	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
-	// If no default Certificate was supplied, tries to generate a new dumb one
-	if err != nil {
-		var cert *ingress.SSLCert
 
+	// Tries to fetch the default Certificate. If it does not exists, generate a new self signed one.
+	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
+	if err != nil {
+		// This means the Default Secret does not exists, so we will create a new one.
 		fakeCertificate := "default-fake-certificate"
 		fakeCertificatePath := fmt.Sprintf("%v/%v.pem", ingress.DefaultSSLDirectory, fakeCertificate)
 
 		// Only generates a new certificate if it doesn't exists physically
 		_, err := os.Stat(fakeCertificatePath)
 		if err != nil {
+			glog.V(3).Infof("No Default SSL Certificate found. Generating a new one")
 			defCert, defKey := ssl.GetFakeSSLCert()
-			cert, err = ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
+			defaultCertificate, err = ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
 			if err != nil {
 				glog.Fatalf("Error generating self signed certificate: %v", err)
 			}
-			defaultPemFileName = cert.PemFileName
-			defaultPemSHA = cert.PemSHA
+			defaultPemFileName = defaultCertificate.PemFileName
+			defaultPemSHA = defaultCertificate.PemSHA
 		} else {
 			defaultPemFileName = fakeCertificatePath
 			defaultPemSHA = ssl.PemSHA1(fakeCertificatePath)
