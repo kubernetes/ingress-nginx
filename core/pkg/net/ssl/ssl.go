@@ -68,11 +68,13 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 	pemCerts, err := ioutil.ReadFile(tempPemFile.Name())
 	if err != nil {
+		_ = os.Remove(tempPemFile.Name())
 		return nil, err
 	}
 
 	pemBlock, _ := pem.Decode(pemCerts)
 	if pemBlock == nil {
+		_ = os.Remove(tempPemFile.Name())
 		return nil, fmt.Errorf("No valid PEM formatted block found")
 	}
 
@@ -84,6 +86,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 	pemCert, err := x509.ParseCertificate(pemBlock.Bytes)
 	if err != nil {
+		_ = os.Remove(tempPemFile.Name())
 		return nil, err
 	}
 
