@@ -43,10 +43,10 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 	tempPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, pemName)
 
-	glog.V(3).Infof("Creating temp file %v for Keypair: %v", tempPemFile.Name(), pemName)
 	if err != nil {
 		return nil, fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
 	}
+	glog.V(3).Infof("Creating temp file %v for Keypair: %v", tempPemFile.Name(), pemName)
 
 	_, err = tempPemFile.Write(cert)
 	if err != nil {
