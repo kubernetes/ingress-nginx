@@ -356,11 +356,6 @@ func (l *L7) checkSSLCert() (err error) {
 
 	// Use the named GCE cert when it is specified by the annotation.
 	if certName != "" {
-		// Use the targetHTTPSProxy's cert name if it already has one set.
-		if l.sslCert != nil {
-			certName = l.sslCert.Name
-		}
-
 		// Ask GCE for the cert, checking for problems and existence.
 		cert, err := l.cloud.GetSslCertificate(certName)
 		if err != nil {
@@ -871,8 +866,8 @@ func (l *L7) Cleanup() error {
 		}
 		l.tps = nil
 	}
-	// Delete the SSL cert if it is not a pre-created GCE cert.
-	if l.sslCert != nil && l.sslCert.Name != l.runtimeInfo.TLSName {
+	// Delete the SSL cert if it is from a secret, not referencing a pre-created GCE cert.
+	if l.sslCert != nil && l.runtimeInfo.TLSName == "" {
 		glog.Infof("Deleting sslcert %v", l.sslCert.Name)
 		if err := l.cloud.DeleteSslCertificate(l.sslCert.Name); err != nil {
 			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
