@@ -43,28 +43,9 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 		return fmt.Errorf("deferring sync till endpoints controller has synced")
 	}
 
-	// check if the default certificate is configured
-	key := fmt.Sprintf("default/%v", defServerName)
-	_, exists := ic.sslCertTracker.Get(key)
+	var key string
 	var cert *ingress.SSLCert
 	var err error
-	if !exists {
-		if ic.cfg.DefaultSSLCertificate != "" {
-			cert, err = ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
-			if err != nil {
-				return err
-			}
-		} else {
-			defCert, defKey := ssl.GetFakeSSLCert()
-			cert, err = ssl.AddOrUpdateCertAndKey("system-snake-oil-certificate", defCert, defKey, []byte{})
-			if err != nil {
-				return nil
-			}
-		}
-		cert.Name = defServerName
-		cert.Namespace = api.NamespaceDefault
-		ic.sslCertTracker.Add(key, cert)
-	}
 
 	key = k.(string)
 
