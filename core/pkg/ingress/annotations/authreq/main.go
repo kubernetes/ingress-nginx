@@ -92,11 +92,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("invalid url host")
 	}
 
-	m, err := parser.GetStringAnnotation(authMethod, ing)
-	if err != nil {
-		return nil, err
-	}
-
+	m, _ := parser.GetStringAnnotation(authMethod, ing)
 	if len(m) != 0 && !validMethod(m) {
 		return nil, ing_errors.NewLocationDenied("invalid HTTP method")
 	}
