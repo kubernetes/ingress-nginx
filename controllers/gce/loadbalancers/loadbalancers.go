@@ -356,11 +356,6 @@ func (l *L7) checkSSLCert() (err error) {
 
 	// Use the named GCE cert when it is specified by the annotation.
 	if certName != "" {
-		// Use the targetHTTPSProxy's cert name if it already has one set.
-		if l.sslCert != nil {
-			certName = l.sslCert.Name
-		}
-
 		// Ask GCE for the cert, checking for problems and existence.
 		cert, err := l.cloud.GetSslCertificate(certName)
 		if err != nil {
