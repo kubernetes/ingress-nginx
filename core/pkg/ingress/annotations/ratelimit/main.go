@@ -36,10 +36,10 @@ const (
 	defSharedSize = 5
 )
 
-// RateLimit returns rate limit configuration for an Ingress rule
-// Is possible to limit the number of connections per IP address or
-// connections per second.
-// Note: Is possible to specify both limits
+// RateLimit returns rate limit configuration for an Ingress rule limiting the
+// number of connections per IP address and/or connections per second.
+// If you both annotations are specified in a single Ingress rule, RPS limits
+// takes precedence
 type RateLimit struct {
 	// Connections indicates a limit with the number of connections per IP address
 	Connections Zone `json:"connections"`
