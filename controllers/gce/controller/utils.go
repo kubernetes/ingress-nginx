@@ -87,7 +87,6 @@ func (ing ingAnnotations) allowHTTP() bool {
 }
 
 // useNamedTLS returns the name of the GCE SSL certificate. Empty by default.
-// TODO: naming this (ie: external-ssl-cert)
 func (ing ingAnnotations) useNamedTLS() string {
 	val, ok := ing[preSharedCertKey]
 	if !ok {
