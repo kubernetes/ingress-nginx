@@ -103,6 +103,40 @@ func TestCreateHTTPSLoadBalancer(t *testing.T) {
 	}
 }
 
+func TestCreateHTTPSLoadBalancerAnnotationCert(t *testing.T) {
+	// This should NOT create the forwarding rule and target proxy
+	// associated with the HTTP branch of this loadbalancer.
+	tlsName := "external-cert-name"
+	lbInfo := &L7RuntimeInfo{
+		Name:      "test",
+		AllowHTTP: false,
+		TLSName:   tlsName,
+	}
+	f := NewFakeLoadBalancers(lbInfo.Name)
+	f.CreateSslCertificate(&compute.SslCertificate{
+		Name: tlsName,
+	})
+	pool := newFakeLoadBalancerPool(f, t)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
+	l7, err := pool.Get(lbInfo.Name)
+	if err != nil || l7 == nil {
+		t.Fatalf("Expected l7 not created")
+	}
+	um, err := f.GetUrlMap(f.umName())
+	if err != nil ||
+		um.DefaultService != pool.(*L7s).glbcDefaultBackend.SelfLink {
+		t.Fatalf("%v", err)
+	}
+	tps, err := f.GetTargetHttpsProxy(f.tpName(true))
+	if err != nil || tps.UrlMap != um.SelfLink {
+		t.Fatalf("%v", err)
+	}
+	fws, err := f.GetGlobalForwardingRule(f.fwName(true))
+	if err != nil || fws.Target != tps.SelfLink {
+		t.Fatalf("%v", err)
+	}
+}
+
 func TestCreateBothLoadBalancers(t *testing.T) {
 	// This should create 2 forwarding rules and target proxies
 	// but they should use the same urlmap, and have the same

@@ -246,6 +246,8 @@ type L7RuntimeInfo struct {
 	IP string
 	// TLS are the tls certs to use in termination.
 	TLS *TLSCerts
+	// TLSName is the name of/for the tls cert to use.
+	TLSName string
 	// AllowHTTP will not setup :80, if TLS is nil and AllowHTTP is set,
 	// no loadbalancer is created.
 	AllowHTTP bool
@@ -350,6 +352,29 @@ func (l *L7) deleteOldSSLCert() (err error) {
 }
 
 func (l *L7) checkSSLCert() (err error) {
+	certName := l.runtimeInfo.TLSName
+
+	// Use the named GCE cert when it is specified by the annotation.
+	if certName != "" {
+		// Use the targetHTTPSProxy's cert name if it already has one set.
+		if l.sslCert != nil {
+			certName = l.sslCert.Name
+		}
+
+		// Ask GCE for the cert, checking for problems and existence.
+		cert, err := l.cloud.GetSslCertificate(certName)
+		if err != nil {
+			return err
+		}
+		if cert == nil {
+			return fmt.Errorf("Cannot find existing sslCertificate %v for %v", certName, l.Name)
+		}
+
+		glog.Infof("Using existing sslCertificate %v for %v", certName, l.Name)
+		l.sslCert = cert
+		return nil
+	}
+
 	// TODO: Currently, GCE only supports a single certificate per static IP
 	// so we don't need to bother with disambiguation. Naming the cert after
 	// the loadbalancer is a simplification.
@@ -363,7 +388,7 @@ func (l *L7) checkSSLCert() (err error) {
 	// TODO: Clean this code up into a ring buffer.
 	primaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%v", sslCertPrefix, l.Name))
 	secondaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%d-%v", sslCertPrefix, 1, l.Name))
-	certName := primaryCertName
+	certName = primaryCertName
 	if l.sslCert != nil {
 		certName = l.sslCert.Name
 	}
@@ -581,12 +606,12 @@ func (l *L7) edgeHop() error {
 		}
 	}
 	// Defer promoting an emphemral to a static IP till it's really needed.
-	if l.runtimeInfo.AllowHTTP && l.runtimeInfo.TLS != nil {
+	if l.runtimeInfo.AllowHTTP && (l.runtimeInfo.TLS != nil || l.runtimeInfo.TLSName != "") {
 		if err := l.checkStaticIP(); err != nil {
 			return err
 		}
 	}
-	if l.runtimeInfo.TLS != nil {
+	if l.runtimeInfo.TLS != nil || l.runtimeInfo.TLSName != "" {
 		glog.V(3).Infof("validating https for %v", l.Name)
 		if err := l.edgeHopHttps(); err != nil {
 			return err
@@ -846,7 +871,8 @@ func (l *L7) Cleanup() error {
 		}
 		l.tps = nil
 	}
-	if l.sslCert != nil {
+	// Delete the SSL cert if it is not a pre-created GCE cert.
+	if l.sslCert != nil && l.sslCert.Name != l.runtimeInfo.TLSName {
 		glog.Infof("Deleting sslcert %v", l.sslCert.Name)
 		if err := l.cloud.DeleteSslCertificate(l.sslCert.Name); err != nil {
 			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
@@ -935,6 +961,9 @@ func GetLBAnnotations(l7 *L7, existing map[string]string, backendPool backends.B
 	}
 	if l7.ip != nil {
 		existing[fmt.Sprintf("%v/static-ip", utils.K8sAnnotationPrefix)] = l7.ip.Name
+	}
+	if l7.sslCert != nil {
+		existing[fmt.Sprintf("%v/ssl-cert", utils.K8sAnnotationPrefix)] = l7.sslCert.Name
 	}
 	// TODO: We really want to know *when* a backend flipped states.
 	existing[fmt.Sprintf("%v/backends", utils.K8sAnnotationPrefix)] = jsonBackendState
