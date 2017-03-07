@@ -223,6 +223,7 @@ func (n NGINXController) isReloadRequired(data []byte) bool {
 			glog.Infof("NGINX configuration diff\n")
 			glog.Infof("%v", string(diffOutput))
 		}
+		os.Remove(tmpfile.Name())
 		return len(diffOutput) > 0
 	}
 	return false
