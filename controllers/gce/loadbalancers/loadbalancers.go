@@ -867,7 +867,7 @@ func (l *L7) Cleanup() error {
 		l.tps = nil
 	}
 	// Delete the SSL cert if it is not a pre-created GCE cert.
-	if l.sslCert != nil && l.sslCert.Name != l.runtimeInfo.TLSName {
+	if l.sslCert != nil && l.runtimeInfo.TLSName != "" {
 		glog.Infof("Deleting sslcert %v", l.sslCert.Name)
 		if err := l.cloud.DeleteSslCertificate(l.sslCert.Name); err != nil {
 			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
