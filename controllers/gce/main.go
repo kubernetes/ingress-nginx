@@ -70,7 +70,7 @@ const (
 
 var (
 	flags = flag.NewFlagSet(
-		`gclb: gclb --runngin-in-cluster=false --default-backend-node-port=123`,
+		`glbc: glbc --running-in-cluster=false`,
 		flag.ExitOnError)
 
 	clusterName = flags.String("cluster-uid", controller.DefaultClusterUID,
