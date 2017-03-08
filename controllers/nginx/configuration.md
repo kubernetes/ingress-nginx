@@ -127,7 +127,7 @@ The secret must be created in the same namespace as the Ingress rule.
 ingress.kubernetes.io/auth-realm: "realm string"
 ```
 
-Please check the [auth](examples/auth/README.md) example.
+Please check the [auth](/examples/auth/nginx/README.md) example.
 
 ### Certificate Authentication
 
@@ -147,7 +147,7 @@ ingress.kubernetes.io/auth-tls-verify-depth
 
 The validation depth between the provided client certificate and the Certification Authority chain.
 
-Please check the [tls-auth](examples/auth/client-certs/README.md) example.
+Please check the [tls-auth](/examples/auth/client-certs/nginx/README.md) example.
 
 
 ### Enable CORS
@@ -164,7 +164,7 @@ Additionally it is possible to set `ingress.kubernetes.io/auth-method` to specif
 ingress.kubernetes.io/auth-url: "URL to the authentication service"
 ```
 
-Please check the [external-auth](examples/external-auth/README.md) example.
+Please check the [external-auth](/examples/auth/external-auth/nginx/README.md) example.
 
 
 ### Rewrite
@@ -210,7 +210,7 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 
 *Note:* Adding an annotation to an Ingress rule overrides any global restriction.
 
-Please check the [whitelist](examples/affinity/cookie/nginx/README.md) example.
+Please check the [whitelist](/examples/affinity/cookie/nginx/README.md) example.
 
 
 ### Session Affinity
@@ -224,7 +224,7 @@ If you use the ``cookie`` type you can also specify the name of the cookie that 
 In case of NGINX the annotation `ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
 The `index` option  is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranted to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!
 
-In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here]https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf
+In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf)
 
 
 

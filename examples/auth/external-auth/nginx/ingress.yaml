@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/auth-url: "https://httpbin.org/basic-auth/user/passwd"
+  name: external-auth
+spec:
+  rules:
+  - host: external-auth-01.sample.com
+    http:
+      paths:
+      - backend:
+          serviceName: echoheaders
+          servicePort: 80
+        path: /
