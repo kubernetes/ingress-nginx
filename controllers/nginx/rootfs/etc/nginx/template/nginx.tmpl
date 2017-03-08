@@ -60,7 +60,9 @@ http {
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
-    http2_max_field_size            {{ $cfg.ClientHeaderBufferSize }};
+    
+    http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
+    http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
 
     types_hash_max_size             2048;
     server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};
