@@ -57,7 +57,7 @@ SNI + TCP | TLS routing based on SNI hostname | nginx | Advanced
 Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 Basic auth | password protect your website | nginx | Intermediate
-[External auth plugin](external-auth/README.md) | defer to an external auth service | nginx | Intermediate
+[External auth plugin](external-auth/nginx/README.md) | defer to an external auth service | nginx | Intermediate
 
 ## Protocols
 
