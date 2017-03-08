@@ -12,23 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO: use radial/busyboxplus:curl or alping instead
-FROM ubuntu:14.04
-MAINTAINER Prashanth B <beeps@google.com>
+FROM alpine:3.5
 
-# so apt-get doesn't complain
-ENV DEBIAN_FRONTEND=noninteractive
-RUN sed -i 's/^exit 101/exit 0/' /usr/sbin/policy-rc.d
+RUN apk add --no-cache ca-certificates
 
-# TODO: Move to using haproxy:1.5 image instead. Honestly,
-# that image isn't much smaller and the convenience of having
-# an ubuntu container for dev purposes trumps the tiny amounts
-# of disk and bandwidth we'd save in doing so.
-RUN \
-  apt-get update && \
-  apt-get install -y ca-certificates && \
-  apt-get install -y curl && \
-  rm -rf /var/lib/apt/lists/*
-
-ADD glbc glbc
+COPY glbc glbc
 ENTRYPOINT ["/glbc"]

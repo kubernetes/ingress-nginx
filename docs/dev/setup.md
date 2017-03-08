@@ -105,7 +105,7 @@ $ glbc --help
 		 pod secrets for creating a Kubernetes client. (default true)
 
 $ ./glbc --running-in-cluster=false
-I1210 17:49:53.202149   27767 main.go:179] Starting GLBC image: glbc:0.8.0, cluster name
+I1210 17:49:53.202149   27767 main.go:179] Starting GLBC image: glbc:0.9.2, cluster name
 ```
 
 Note that this is equivalent to running the ingress controller on your local

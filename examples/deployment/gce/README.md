@@ -43,7 +43,7 @@ $ kubectl create -f gce-tls-ingress.yaml
 ingress "test" created
 
 $ kubectl logs l7-lb-controller-1s22c -c l7-lb-controller
-I0201 01:03:17.387548       1 main.go:179] Starting GLBC image: glbc:0.9.0, cluster name
+I0201 01:03:17.387548       1 main.go:179] Starting GLBC image: glbc:0.9.2, cluster name
 I0201 01:03:18.459740       1 main.go:291] Using saved cluster uid "32658fa96c080068"
 I0201 01:03:18.459771       1 utils.go:122] Changing cluster name from  to 32658fa96c080068
 I0201 01:03:18.461652       1 gce.go:331] Using existing Token Source &oauth2.reuseTokenSource{new:google.computeSource{account:""}, mu:sync.Mutex{state:0, sema:0x0}, t:(*oauth2.Token)(nil)}
