@@ -208,10 +208,10 @@ http {
     {{ range $index, $server := .Servers }}
     server {
         server_name {{ $server.Hostname }};
-        listen [::]:80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server ipv6only=off reuseport backlog={{ $backlogSize }}{{end}};
+        listen {{ if not $cfg.DisableIpv6 }}[::]:{{ end }}80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if not $cfg.DisableIpv6 }}ipv6only=off{{end}} reuseport backlog={{ $backlogSize }}{{end}};
         {{/* Listen on 442 because port 443 is used in the stream section */}}
         {{/* This listen on port 442 cannot contains proxy_protocol directive because port 443 is in charge of decoding the protocol */}}
-        {{ if not (empty $server.SSLCertificate) }}listen {{ if gt (len $passthroughBackends) 0 }}442{{ else }}[::]:443 {{ if $cfg.UseProxyProtocol }} proxy_protocol {{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server ipv6only=off reuseport backlog={{ $backlogSize }}{{end}} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
+        {{ if not (empty $server.SSLCertificate) }}listen {{ if gt (len $passthroughBackends) 0 }}442{{ else }}{{ if not $cfg.DisableIpv6 }}[::]:{{ end }}443 {{ if $cfg.UseProxyProtocol }} proxy_protocol {{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if not $cfg.DisableIpv6 }}ipv6only=off{{end}} reuseport backlog={{ $backlogSize }}{{end}} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate                         {{ $server.SSLCertificate }};
@@ -366,7 +366,7 @@ http {
         # with an external software (like sysdig)
         location /nginx_status {
             allow 127.0.0.1;
-            allow ::1;
+            {{ if not $cfg.DisableIpv6 }}allow ::1;{{ end }}
             deny all;
 
             access_log off;
@@ -384,7 +384,7 @@ http {
         # Use the port 18080 (random value just to avoid known ports) as default port for nginx.
         # Changing this value requires a change in:
         # https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/nginx/command.go#L104
-        listen [::]:18080 ipv6only=off default_server reuseport backlog={{ .BacklogSize }};
+        listen {{ if not $cfg.DisableIpv6 }}[::]:{{ end }}18080 {{ if not $cfg.DisableIpv6 }}ipv6only=off{{end}} default_server reuseport backlog={{ .BacklogSize }};
 
         location {{ $healthzURI }} {
             access_log off;
@@ -406,7 +406,7 @@ http {
         # TODO: enable extraction for vts module.
         location /internal_nginx_status {
             allow 127.0.0.1;
-            allow ::1;
+            {{ if not $cfg.DisableIpv6 }}allow ::1;{{ end }}
             deny all;
 
             access_log off;
@@ -466,7 +466,7 @@ stream {
     {{ buildSSLPassthroughUpstreams $backends .PassthroughBackends }}
 
     server {
-        listen                  [::]:443 ipv6only=off{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  {{ if not $cfg.DisableIpv6 }}[::]:{{ end }}443 {{ if not $cfg.DisableIpv6 }}ipv6only=off{{ end }}{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
         proxy_pass              $stream_upstream;
         ssl_preread             on;
     }
