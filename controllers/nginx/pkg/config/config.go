@@ -121,6 +121,14 @@ type Configuration struct {
 	// Log levels above are listed in the order of increasing severity
 	ErrorLogLevel string `json:"error-log-level,omitempty"`
 
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
+	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
+	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
+	// HTTP2MaxHeaderSize Limits the maximum size of the entire request header list after HPACK decompression
+	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
+
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
 
@@ -252,9 +260,11 @@ func NewDefault() Configuration {
 	cfg := Configuration{
 		ClientHeaderBufferSize:  "1k",
 		DisableAccessLog:        false,
-		DisableIpv6:		 false,
+		DisableIpv6:             false,
 		EnableDynamicTLSRecords: true,
 		ErrorLogLevel:           errorLevel,
+		HTTP2MaxFieldSize:       "4k",
+		HTTP2MaxHeaderSize:      "16k",
 		HSTS:                    true,
 		HSTSIncludeSubdomains:    true,
 		HSTSMaxAge:               hstsMaxAge,
