@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 
@@ -38,6 +39,7 @@ import (
 	"k8s.io/ingress/controllers/nginx/pkg/version"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/net/ssl"
 )
 
 const (
@@ -345,6 +347,32 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 			setHeaders = cmap.(*api.ConfigMap).Data
 		}
 	}
+
+	sslDHParam := ""
+	if cfg.SSLDHParam != "" {
+		secretName := cfg.SSLDHParam
+		s, exists, err := n.storeLister.Secret.GetByKey(secretName)
+		if err != nil {
+			glog.Warningf("unexpected error reading secret %v: %v", secretName, err)
+		}
+
+		if exists {
+			secret := s.(*api.Secret)
+			nsSecName := strings.Replace(secretName, "/", "-", -1)
+
+			dh, ok := secret.Data["dhparam.pem"]
+			if ok {
+				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
+				if err != nil {
+					glog.Warningf("unexpected error adding or updating dhparam %v file: %v", nsSecName, err)
+				} else {
+					sslDHParam = pemFileName
+				}
+			}
+		}
+	}
+
+	cfg.SSLDHParam = sslDHParam
 
 	content, err := n.t.Write(config.TemplateConfig{
 		ProxySetHeaders:     setHeaders,

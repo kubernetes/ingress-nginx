@@ -175,25 +175,52 @@ func AddCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
 	}, nil
 }
 
-// SearchDHParamFile iterates all the secrets mounted inside the /etc/nginx-ssl directory
-// in order to find a file with the name dhparam.pem. If such file exists it will
-// returns the path. If not it just returns an empty string
-func SearchDHParamFile(baseDir string) string {
-	files, _ := ioutil.ReadDir(baseDir)
-	for _, file := range files {
-		if !file.IsDir() {
-			continue
-		}
+// AddOrUpdateDHParam creates a dh parameters file with the specified name
+func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
+	pemName := fmt.Sprintf("%v.pem", name)
+	pemFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, pemName)
 
-		dhPath := fmt.Sprintf("%v/%v/dhparam.pem", baseDir, file.Name())
-		if _, err := os.Stat(dhPath); err == nil {
-			glog.Infof("using file '%v' for parameter ssl_dhparam", dhPath)
-			return dhPath
-		}
+	tempPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, pemName)
+
+	glog.V(3).Infof("Creating temp file %v for DH param: %v", tempPemFile.Name(), pemName)
+	if err != nil {
+		return "", fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
 	}
 
-	glog.Warning("no file dhparam.pem found in secrets")
-	return ""
+	_, err = tempPemFile.Write(dh)
+	if err != nil {
+		return "", fmt.Errorf("could not write to pem file %v: %v", tempPemFile.Name(), err)
+	}
+
+	err = tempPemFile.Close()
+	if err != nil {
+		return "", fmt.Errorf("could not close temp pem file %v: %v", tempPemFile.Name(), err)
+	}
+
+	pemCerts, err := ioutil.ReadFile(tempPemFile.Name())
+	if err != nil {
+		_ = os.Remove(tempPemFile.Name())
+		return "", err
+	}
+
+	pemBlock, _ := pem.Decode(pemCerts)
+	if pemBlock == nil {
+		_ = os.Remove(tempPemFile.Name())
+		return "", fmt.Errorf("No valid PEM formatted block found")
+	}
+
+	// If the file does not start with 'BEGIN DH PARAMETERS' it's invalid and must not be used.
+	if pemBlock.Type != "DH PARAMETERS" {
+		_ = os.Remove(tempPemFile.Name())
+		return "", fmt.Errorf("Certificate %v contains invalid data", name)
+	}
+
+	err = os.Rename(tempPemFile.Name(), pemFileName)
+	if err != nil {
+		return "", fmt.Errorf("could not move temp pem file %v to destination %v: %v", tempPemFile.Name(), pemFileName, err)
+	}
+
+	return pemFileName, nil
 }
 
 // PemSHA1 returns the SHA1 of a pem file. This is used to
