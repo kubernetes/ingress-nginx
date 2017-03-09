@@ -76,9 +76,9 @@ type ServerZone struct {
 }
 
 type FilterZone struct {
-	RequestCounter float64 `json:"requestCounter"`
-	InBytes        float64 `json:"inBytes"`
-	OutBytes       float64 `json:"outBytes"`
+	RequestCounter float64  `json:"requestCounter"`
+	InBytes        float64  `json:"inBytes"`
+	OutBytes       float64  `json:"outBytes"`
 	Cache          Cache    `json:"responses"`
 	Responses      Response `json:"responses"`
 }
@@ -143,7 +143,7 @@ func (bit BoolToFloat64) UnmarshalJSON(data []byte) error {
 func getNginxStatus() (*nginxStatus, error) {
 
 	url := fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxStatusPath)
-	glog.V(3).Infof("scrapping url: %v", url)
+	glog.V(3).Infof("start scrapping url: %v", url)
 
 	data, err := httpBody(url)
 
@@ -172,9 +172,10 @@ func httpBody(url string) ([]byte, error) {
 	return data, nil
 
 }
+
 func getNginxVtsMetrics() (*Vts, error) {
 	url := fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxVtsPath)
-	glog.V(3).Infof("scrapping url: %v", url)
+	glog.V(3).Infof("start scrapping url: %v", url)
 
 	data, err := httpBody(url)
 
@@ -187,6 +188,8 @@ func getNginxVtsMetrics() (*Vts, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unexpected error json unmarshal (%v)", err)
 	}
+
+	glog.V(3).Infof("scrap returned : %v", vts)
 
 	return &vts, nil
 }

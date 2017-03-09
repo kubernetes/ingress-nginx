@@ -68,21 +68,3 @@ func TestToint(t *testing.T) {
 		}
 	}
 }
-//
-//func TestUnmarshalJSON (t *testing.T){
-//	tests := []struct{
-//		in []byte
-//		exp float64
-//		error error
-//	}{
-//		{in: "false",exp: 0},
-//		{"0", 0},
-//		{"true", 1},
-//		{"1", 1},
-//		{" errr", error},
-//	}
-//
-//	for _,test := range tests
-//
-//
-//}

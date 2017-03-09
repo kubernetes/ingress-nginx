@@ -25,10 +25,10 @@ import (
 	"github.com/ncabatoff/process-exporter/proc"
 	"github.com/prometheus/client_golang/prometheus"
 	"reflect"
-	"strings"
 )
 
-
+// TODO add current namespace
+// TODO add ingress class
 var (
 	// descriptions borrow from https://github.com/vozlt/nginx-module-vts
 
@@ -192,7 +192,6 @@ var (
 type exeMatcher struct {
 	name string
 	args []string
-	enableVtsCollector bool
 }
 
 func (em exeMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
@@ -203,27 +202,23 @@ func (em exeMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
 	return em.name == cmd, ""
 }
 
-func (n *NGINXController) setupMonitor(args[] string, vtsCollector bool) {
-	glog.Warning("vtsCollector now is  ", vtsCollector)
-	pc, err := newProcessCollector(true, exeMatcher{"nginx", args, vtsCollector})
+func (n *NGINXController) setupMonitor(args []string, vtsCollector bool) {
+
+	pc, err := newProcessCollector(true, exeMatcher{"nginx", args}, vtsCollector)
 
 	if err != nil {
-		glog.Warningf("unexpected error registering nginx collector: %v", err)
+		glog.Fatalf("unexpected error registering nginx collector: %v", err)
 	}
 
 	err = prometheus.Register(pc)
 
 	if err != nil {
-		if reg, ok := err.(prometheus.AlreadyRegisteredError); ok {
-			*reg.ExistingCollector.(prometheus.Collector).(*namedProcessCollector) = *pc
-
-		}else{
+		if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
 			glog.Warningf("unexpected error registering nginx collector: %v", err)
 		}
 	}
 
 }
-
 
 type (
 	scrapeRequest struct {
@@ -232,32 +227,32 @@ type (
 	}
 
 	namedProcessCollector struct {
-		scrapeChan         chan scrapeRequest
-		grouper *proc.Grouper
+		scrapeChan chan scrapeRequest
+		*proc.Grouper
 		fs                 *proc.FS
-		//enableVtsCollector *bool
+		enableVtsCollector bool
 	}
 )
 
 func newProcessCollector(
 	children bool,
-	n common.MatchNamer) (*namedProcessCollector, error) {
+	n common.MatchNamer,
+	enableVtsCollector bool) (*namedProcessCollector, error) {
 
-	//fs, err := proc.NewFS("/proc")
-	//if err != nil {
-	//	return nil, err
-	//}
-	p := &namedProcessCollector{
-		scrapeChan: make(chan scrapeRequest),
-		grouper:    proc.NewGrouper(children, n),
-		//fs:           fs,
-		//enableVtsCollector: vtsCollector,
+	fs, err := proc.NewFS("/proc")
+	if err != nil {
+		return nil, err
 	}
-
-//	p.Update(p.fs.AllProcs())
-	//if err != nil {
-	//	return nil, err
-	//}
+	p := &namedProcessCollector{
+		scrapeChan:         make(chan scrapeRequest),
+		Grouper:            proc.NewGrouper(children, n),
+		fs:                 fs,
+		enableVtsCollector: enableVtsCollector,
+	}
+	_, err = p.Update(p.fs.AllProcs())
+	if err != nil {
+		return nil, err
+	}
 
 	go p.start()
 
@@ -274,28 +269,25 @@ func (p *namedProcessCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- memResidentbytesDesc
 	ch <- memVirtualbytesDesc
 	ch <- startTimeDesc
-	x := p.grouper.(exeMatcher)
-	if true { //x.(execMatcher) == nil  { //.(exeMatcher).enableVtsCollector {
-		glog.Info("registering vts describe")
 
-		ch <- vtsBytesDesc
-		ch <- vtsCacheDesc
-		ch <- vtsConnectionsDesc
-		ch <- vtsRequestDesc
-		ch <- vtsResponseDesc
-		ch <- vtsUpstreamBackupDesc
-		ch <- vtsUpstreamBytesDesc
-		ch <- vtsUpstreamDownDesc
-		ch <- vtsUpstreamFailTimeoutDesc
-		ch <- vtsUpstreamMaxFailsDesc
-		ch <- vtsUpstreamRequestDesc
-		ch <- vtsUpstreamResponseMsecDesc
-		ch <- vtsUpstreamResponsesDesc
-		ch <- vtsUpstreamWeightDesc
-		ch <- vtsFilterZoneBytesDesc
-		ch <- vtsFilterZoneCacheDesc
-		ch <- vtsFilterZoneResponseDesc
-	}
+	//vts metrics
+	ch <- vtsBytesDesc
+	ch <- vtsCacheDesc
+	ch <- vtsConnectionsDesc
+	ch <- vtsRequestDesc
+	ch <- vtsResponseDesc
+	ch <- vtsUpstreamBackupDesc
+	ch <- vtsUpstreamBytesDesc
+	ch <- vtsUpstreamDownDesc
+	ch <- vtsUpstreamFailTimeoutDesc
+	ch <- vtsUpstreamMaxFailsDesc
+	ch <- vtsUpstreamRequestDesc
+	ch <- vtsUpstreamResponseMsecDesc
+	ch <- vtsUpstreamResponsesDesc
+	ch <- vtsUpstreamWeightDesc
+	ch <- vtsFilterZoneBytesDesc
+	ch <- vtsFilterZoneCacheDesc
+	ch <- vtsFilterZoneResponseDesc
 
 }
 
@@ -308,25 +300,24 @@ func (p *namedProcessCollector) Collect(ch chan<- prometheus.Metric) {
 
 func (p *namedProcessCollector) start() {
 
-
 	for req := range p.scrapeChan {
 		ch := req.results
 		p.scrapeNginxStatus(ch)
 		p.scrapeProcs(ch)
 		p.scrapeVts(ch)
 
-
 		req.done <- struct{}{}
 	}
 }
 
+// scrapeNginxStatus scrap the nginx status
 func (p *namedProcessCollector) scrapeNginxStatus(ch chan<- prometheus.Metric) {
 	s, err := getNginxStatus()
+
 	if err != nil {
 		glog.Warningf("unexpected error obtaining nginx status info: %v", err)
 		return
 	}
-
 
 	ch <- prometheus.MustNewConstMetric(activeDesc,
 		prometheus.GaugeValue, float64(s.Active))
@@ -345,14 +336,9 @@ func (p *namedProcessCollector) scrapeNginxStatus(ch chan<- prometheus.Metric) {
 
 }
 
+// scrapeVts scrape nginx vts metrics
 func (p *namedProcessCollector) scrapeVts(ch chan<- prometheus.Metric) {
 
-	if ! true {
-		glog.V(3).Info("vts metrics not enabled")
-		return
-	}
-
-	glog.V(3).Info("starting scrap on vts")
 	nginxMetrics, err := getNginxVtsMetrics()
 	if err != nil {
 		glog.Warningf("unexpected error obtaining nginx status info: %v", err)
@@ -417,8 +403,6 @@ func (p *namedProcessCollector) scrapeVts(ch chan<- prometheus.Metric) {
 
 		for country, zone := range countries {
 
-			serverZone = strings.Replace(serverZone, "country::", "", 1)
-
 			reflectMetrics(&zone.Responses, vtsFilterZoneResponseDesc, ch, serverZone, country)
 			reflectMetrics(&zone.Cache, vtsFilterZoneCacheDesc, ch, serverZone, country)
 
@@ -432,35 +416,34 @@ func (p *namedProcessCollector) scrapeVts(ch chan<- prometheus.Metric) {
 
 	}
 
-
 }
 
 func (p *namedProcessCollector) scrapeProcs(ch chan<- prometheus.Metric) {
-	return
-	//_, err := p.Update(p.fs.AllProcs())
-	//if err != nil {
-	//	glog.Warningf("unexpected error obtaining nginx process info: %v", err)
-	//	return
-	//}
-	//
-	//for gname, gcounts := range p.Groups() {
-	//	glog.Infof("%v", gname)
-	//	glog.Infof("%v", gcounts)
-	//	ch <- prometheus.MustNewConstMetric(numprocsDesc,
-	//		prometheus.GaugeValue, float64(gcounts.Procs))
-	//	ch <- prometheus.MustNewConstMetric(memResidentbytesDesc,
-	//		prometheus.GaugeValue, float64(gcounts.Memresident))
-	//	ch <- prometheus.MustNewConstMetric(memVirtualbytesDesc,
-	//		prometheus.GaugeValue, float64(gcounts.Memvirtual))
-	//	ch <- prometheus.MustNewConstMetric(startTimeDesc,
-	//		prometheus.GaugeValue, float64(gcounts.OldestStartTime.Unix()))
-	//	ch <- prometheus.MustNewConstMetric(cpuSecsDesc,
-	//		prometheus.CounterValue, gcounts.Cpu)
-	//	ch <- prometheus.MustNewConstMetric(readBytesDesc,
-	//		prometheus.CounterValue, float64(gcounts.ReadBytes))
-	//	ch <- prometheus.MustNewConstMetric(writeBytesDesc,
-	//		prometheus.CounterValue, float64(gcounts.WriteBytes))
-	//}
+
+	_, err := p.Update(p.fs.AllProcs())
+	if err != nil {
+		glog.Warningf("unexpected error obtaining nginx process info: %v", err)
+		return
+	}
+
+	for gname, gcounts := range p.Groups() {
+		glog.Infof("%v", gname)
+		glog.Infof("%v", gcounts)
+		ch <- prometheus.MustNewConstMetric(numprocsDesc,
+			prometheus.GaugeValue, float64(gcounts.Procs))
+		ch <- prometheus.MustNewConstMetric(memResidentbytesDesc,
+			prometheus.GaugeValue, float64(gcounts.Memresident))
+		ch <- prometheus.MustNewConstMetric(memVirtualbytesDesc,
+			prometheus.GaugeValue, float64(gcounts.Memvirtual))
+		ch <- prometheus.MustNewConstMetric(startTimeDesc,
+			prometheus.GaugeValue, float64(gcounts.OldestStartTime.Unix()))
+		ch <- prometheus.MustNewConstMetric(cpuSecsDesc,
+			prometheus.CounterValue, gcounts.Cpu)
+		ch <- prometheus.MustNewConstMetric(readBytesDesc,
+			prometheus.CounterValue, float64(gcounts.ReadBytes))
+		ch <- prometheus.MustNewConstMetric(writeBytesDesc,
+			prometheus.CounterValue, float64(gcounts.WriteBytes))
+	}
 }
 
 func reflectMetrics(value interface{}, desc *prometheus.Desc, ch chan<- prometheus.Metric, labels ...string) {

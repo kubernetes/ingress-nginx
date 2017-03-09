@@ -51,7 +51,7 @@ const (
 var (
 	tmplPath        = "/etc/nginx/template/nginx.tmpl"
 	cfgPath         = "/etc/nginx/nginx.conf"
-	binary          = "/usr/local/bin/nginx"
+	binary          = "/usr/sbin/nginx"
 	defIngressClass = "nginx"
 )
 
@@ -107,8 +107,6 @@ type NGINXController struct {
 	storeLister ingress.StoreLister
 
 	binary string
-
-	namedProcessCollector *namedProcessCollector
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -159,7 +157,7 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 		return
 	}
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
-	n.setupMonitor(cmd.Args,  cfg.EnableVtsStatus)
+	n.setupMonitor(cmd.Args, cfg.EnableVtsStatus)
 
 	go func() {
 		done <- cmd.Wait()
@@ -207,9 +205,6 @@ func (n NGINXController) isReloadRequired(data []byte) bool {
 	}
 
 	if !bytes.Equal(src, data) {
-
-		cfg := ngx_template.ReadConfig(n.configmap.Data)
-		n.setupMonitor([]string{""}, &cfg.EnableVtsStatus)
 
 		tmpfile, err := ioutil.TempFile("", "nginx-cfg-diff")
 		if err != nil {
@@ -319,6 +314,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	}
 
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
+	n.setupMonitor([]string{""}, cfg.EnableVtsStatus)
 
 	// NGINX cannot resize the has tables used to store server names.
 	// For this reason we check if the defined size defined is correct
