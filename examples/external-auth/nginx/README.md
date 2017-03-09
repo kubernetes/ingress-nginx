@@ -31,7 +31,7 @@ metadata:
 ### Example: OAuth2 Proxy + Kubernetes-Dashboard
 
 This example will show you how to deploy [`oauth2_proxy`](https://github.com/bitly/oauth2_proxy)
-into a Kubernetes cluster and use it to protect the Kubernetes Dashboard.
+into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using github as oAuth2 provider
 
 #### Prepare:
 
@@ -43,8 +43,15 @@ kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addon
 
 2. Create a custom Github OAuth application https://github.com/settings/applications/new
 
+![Register OAuth2 Application](images/regiter-oauth-app.png)
+
+
 - Homepage URL is the FQDN in the Ingress rule, like `https://foo.bar.com`
 - Authorization callback URL is the same as the base FQDN plus `/oauth2`, like `https://foo.bar.com/oauth2`
+
+
+![Register OAuth2 Application](images/regiter-oauth-app-2.png)
+
 
 3. Configure oauth2_proxy values in the file oauth2-proxy.yaml with the values:
 
@@ -62,3 +69,10 @@ $ kubectl create -f oauth2-proxy.yaml,dashboard-ingress.yaml
 ```
 
 Test the oauth integration accessing the configured URL, like `https://foo.bar.com`
+
+
+![Register OAuth2 Application](images/oauth-login.png)
+
+![Register OAuth2 Application](images/github-auth.png)
+
+![Register OAuth2 Application](images/dashboard.png)
