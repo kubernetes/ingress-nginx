@@ -600,8 +600,9 @@ func (l *L7) edgeHop() error {
 			return err
 		}
 	}
-	// Defer promoting an emphemral to a static IP till it's really needed.
+	// Defer promoting an ephemeral to a static IP until it's really needed.
 	if l.runtimeInfo.AllowHTTP && (l.runtimeInfo.TLS != nil || l.runtimeInfo.TLSName != "") {
+		glog.V(3).Infof("checking static ip for %v", l.Name)
 		if err := l.checkStaticIP(); err != nil {
 			return err
 		}
