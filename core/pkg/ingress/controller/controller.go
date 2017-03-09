@@ -41,6 +41,7 @@ import (
 
 	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/service"
@@ -58,11 +59,6 @@ const (
 	defServerName            = "_"
 	podStoreSyncedPollPeriod = 1 * time.Second
 	rootLocation             = "/"
-
-	// ingressClassKey picks a specific "class" for the Ingress. The controller
-	// only processes Ingresses with this annotation either unset, or set
-	// to either the configured value or the empty string.
-	ingressClassKey = "kubernetes.io/ingress.class"
 )
 
 var (
@@ -168,8 +164,8 @@ func newIngressController(config *Configuration) *GenericController {
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
-			if !IsValidClass(addIng, config) {
-				glog.Infof("ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
+			if !class.IsValid(addIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+				glog.Infof("ignoring add for ingress %v based on annotation %v", addIng.Name, class.IngressKey)
 				return
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
@@ -177,8 +173,8 @@ func newIngressController(config *Configuration) *GenericController {
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
-			if !IsValidClass(delIng, config) {
-				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
+			if !class.IsValid(delIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, class.IngressKey)
 				return
 			}
 			ic.recorder.Eventf(delIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", delIng.Namespace, delIng.Name))
@@ -187,7 +183,8 @@ func newIngressController(config *Configuration) *GenericController {
 		UpdateFunc: func(old, cur interface{}) {
 			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
-			if !IsValidClass(curIng, config) && !IsValidClass(oldIng, config) {
+			if !class.IsValid(curIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) &&
+				!class.IsValid(oldIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 				return
 			}
 
@@ -303,10 +300,12 @@ func newIngressController(config *Configuration) *GenericController {
 
 	if config.UpdateStatus {
 		ic.syncStatus = status.NewStatusSyncer(status.Config{
-			Client:         config.Client,
-			PublishService: ic.cfg.PublishService,
-			IngressLister:  ic.ingLister,
-			ElectionID:     config.ElectionID,
+			Client:              config.Client,
+			PublishService:      ic.cfg.PublishService,
+			IngressLister:       ic.ingLister,
+			ElectionID:          config.ElectionID,
+			IngressClass:        config.IngressClass,
+			DefaultIngressClass: config.DefaultIngressClass,
 		})
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
@@ -590,7 +589,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
 
-		if !IsValidClass(ing, ic.cfg) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
@@ -713,7 +712,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
 
-		if !IsValidClass(ing, ic.cfg) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
@@ -885,7 +884,7 @@ func (ic *GenericController) createServers(data []interface{},
 	// initialize all the servers
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
-		if !IsValidClass(ing, ic.cfg) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
@@ -925,7 +924,7 @@ func (ic *GenericController) createServers(data []interface{},
 	// configure default location and SSL
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
-		if !IsValidClass(ing, ic.cfg) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
