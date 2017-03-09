@@ -246,6 +246,8 @@ http {
             {{ end }}
             {{ if not (empty $location.ExternalAuth.Method) }}
             proxy_method {{ $location.ExternalAuth.Method }};
+            proxy_set_header X-Original-URI $request_uri;
+            proxy_set_header X-Scheme       $pass_access_scheme;
             {{ end }}
             proxy_set_header            Host $host;
             proxy_pass_request_headers  on;
@@ -269,6 +271,10 @@ http {
             {{ if not (empty $authPath) }}
             # this location requires authentication
             auth_request {{ $authPath }};
+            {{ end }}
+
+            {{ if not (empty $location.ExternalAuth.SigninURL) }}
+            error_page 401 = {{ $location.ExternalAuth.SigninURL }};
             {{ end }}
 
             {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
@@ -317,6 +323,8 @@ http {
             proxy_set_header X-Forwarded-Host       $host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            proxy_set_header X-Original-URI         $request_uri;
+            proxy_set_header X-Scheme               $pass_access_scheme;
 
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
