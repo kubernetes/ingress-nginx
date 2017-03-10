@@ -25,7 +25,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 	"time"
 
@@ -40,12 +39,14 @@ import (
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/net/ssl"
+	"strings"
 )
 
 const (
 	ngxHealthPort = 18080
 	ngxHealthPath = "/healthz"
 	ngxStatusPath = "/internal_nginx_status"
+	ngxVtsPath    = "/nginx_status/format/json"
 )
 
 var (
@@ -156,8 +157,8 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 		done <- err
 		return
 	}
-
-	n.setupMonitor(cmd.Args)
+	cfg := ngx_template.ReadConfig(n.configmap.Data)
+	n.setupMonitor(cmd.Args, cfg.EnableVtsStatus)
 
 	go func() {
 		done <- cmd.Wait()
@@ -177,6 +178,7 @@ func (n NGINXController) Reload(data []byte) ([]byte, bool, error) {
 	}
 
 	o, e := exec.Command(n.binary, "-s", "reload").CombinedOutput()
+
 	return o, true, e
 }
 
@@ -204,6 +206,7 @@ func (n NGINXController) isReloadRequired(data []byte) bool {
 	}
 
 	if !bytes.Equal(src, data) {
+
 		tmpfile, err := ioutil.TempFile("", "nginx-cfg-diff")
 		if err != nil {
 			glog.Errorf("error creating temporal file: %s", err)
@@ -312,6 +315,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	}
 
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
+	n.setupMonitor([]string{""}, cfg.EnableVtsStatus)
 
 	// NGINX cannot resize the has tables used to store server names.
 	// For this reason we check if the defined size defined is correct
