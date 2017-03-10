@@ -259,8 +259,6 @@ type Configuration struct {
 func NewDefault() Configuration {
 	cfg := Configuration{
 		ClientHeaderBufferSize:  "1k",
-		DisableAccessLog:        false,
-		DisableIpv6:             false,
 		EnableDynamicTLSRecords: true,
 		ErrorLogLevel:           errorLevel,
 		HTTP2MaxFieldSize:       "4k",
@@ -286,10 +284,8 @@ func NewDefault() Configuration {
 		SSLSessionCacheSize:      sslSessionCacheSize,
 		SSLSessionTickets:        true,
 		SSLSessionTimeout:        sslSessionTimeout,
-		UseProxyProtocol:         false,
 		UseGzip:                  true,
 		WorkerProcesses:          runtime.NumCPU(),
-		EnableVtsStatus:          false,
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
 		Backend: defaults.Backend{
@@ -301,11 +297,9 @@ func NewDefault() Configuration {
 			ProxyCookieDomain:    "off",
 			ProxyCookiePath:      "off",
 			SSLRedirect:          true,
-			ForceSSLRedirect:     false,
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
-			UsePortInRedirects:   false,
 		},
 	}
 

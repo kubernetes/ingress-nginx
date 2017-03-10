@@ -33,20 +33,26 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 
+	"strings"
+
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
 	"k8s.io/ingress/controllers/nginx/pkg/version"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/net/ssl"
-	"strings"
 )
+
+type statusModule string
 
 const (
 	ngxHealthPort = 18080
 	ngxHealthPath = "/healthz"
 	ngxStatusPath = "/internal_nginx_status"
 	ngxVtsPath    = "/nginx_status/format/json"
+
+	defaultStatusModule statusModule = "default"
+	vtsStatusModule     statusModule = "vts"
 )
 
 var (
@@ -108,6 +114,10 @@ type NGINXController struct {
 	storeLister ingress.StoreLister
 
 	binary string
+
+	cmdArgs []string
+
+	statusModule statusModule
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -157,8 +167,17 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 		done <- err
 		return
 	}
+
+	n.cmdArgs = cmd.Args
+
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
-	n.setupMonitor(cmd.Args, cfg.EnableVtsStatus)
+	n.statusModule = defaultStatusModule
+	if cfg.EnableVtsStatus {
+		n.statusModule = vtsStatusModule
+		n.setupMonitor(vtsStatusModule)
+	} else {
+		n.setupMonitor(defaultStatusModule)
+	}
 
 	go func() {
 		done <- cmd.Wait()
@@ -315,7 +334,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	}
 
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
-	n.setupMonitor([]string{""}, cfg.EnableVtsStatus)
+
+	// we need to check if the status module configuration changed
+	n.setupMonitor()
 
 	// NGINX cannot resize the has tables used to store server names.
 	// For this reason we check if the defined size defined is correct
