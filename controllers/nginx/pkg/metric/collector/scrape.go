@@ -18,6 +18,12 @@ package collector
 
 import "github.com/prometheus/client_golang/prometheus"
 
+// Stopable defines a prometheus collector that can be stopped
+type Stopable interface {
+	prometheus.Collector
+	Stop()
+}
+
 type scrapeRequest struct {
 	results chan<- prometheus.Metric
 	done    chan struct{}

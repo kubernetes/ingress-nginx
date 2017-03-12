@@ -73,14 +73,14 @@ type serverZone struct {
 	InBytes        float64  `json:"inBytes"`
 	OutBytes       float64  `json:"outBytes"`
 	Responses      response `json:"responses"`
-	Cache          cache    `json:"responses"`
+	Cache          cache    `json:"cache"`
 }
 
 type filterZone struct {
 	RequestCounter float64  `json:"requestCounter"`
 	InBytes        float64  `json:"inBytes"`
 	OutBytes       float64  `json:"outBytes"`
-	Cache          cache    `json:"responses"`
+	Cache          cache    `json:"cache"`
 	Responses      response `json:"responses"`
 }
 
@@ -127,8 +127,10 @@ type connections struct {
 	Requests float64 `json:"requests"`
 }
 
+// BoolToFloat64 ...
 type BoolToFloat64 float64
 
+// UnmarshalJSON ...
 func (bit BoolToFloat64) UnmarshalJSON(data []byte) error {
 	asString := string(data)
 	if asString == "1" || asString == "true" {
@@ -141,7 +143,7 @@ func (bit BoolToFloat64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func getNginxStatus() (*basicStatus, error) {
+func getNginxStatus(ngxHealthPort int, ngxStatusPath string) (*basicStatus, error) {
 	url := fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxStatusPath)
 	glog.V(3).Infof("start scrapping url: %v", url)
 
@@ -172,7 +174,7 @@ func httpBody(url string) ([]byte, error) {
 	return data, nil
 }
 
-func getNginxVtsMetrics() (*vts, error) {
+func getNginxVtsMetrics(ngxHealthPort int, ngxVtsPath string) (*vts, error) {
 	url := fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxVtsPath)
 	glog.V(3).Infof("start scrapping url: %v", url)
 

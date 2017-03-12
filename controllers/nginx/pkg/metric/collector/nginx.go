@@ -17,72 +17,103 @@ limitations under the License.
 package collector
 
 import (
+	"fmt"
+
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var (
-	activeDesc = prometheus.NewDesc(
-		"nginx_active_connections",
-		"total number of active connections",
-		nil, nil)
-
-	acceptedDesc = prometheus.NewDesc(
-		"nginx_accepted_connections",
-		"total number of accepted client connections",
-		nil, nil)
-
-	handledDesc = prometheus.NewDesc(
-		"nginx_handled_connections",
-		"total number of handled connections",
-		nil, nil)
-
-	requestsDesc = prometheus.NewDesc(
-		"nginx_total_requests",
-		"total number of client requests",
-		nil, nil)
-
-	readingDesc = prometheus.NewDesc(
-		"nginx_current_reading_connections",
-		"current number of connections where nginx is reading the request header",
-		nil, nil)
-
-	writingDesc = prometheus.NewDesc(
-		"nginx_current_writing_connections",
-		"current number of connections where nginx is writing the response back to the client",
-		nil, nil)
-
-	waitingDesc = prometheus.NewDesc(
-		"nginx_current_waiting_connections",
-		"current number of idle client connections waiting for a request",
-		nil, nil)
-)
-
 type (
 	nginxStatusCollector struct {
-		scrapeChan chan scrapeRequest
+		scrapeChan    chan scrapeRequest
+		ngxHealthPort int
+		ngxVtsPath    string
+		data          *nginxStatusData
+	}
+
+	nginxStatusData struct {
+		active   *prometheus.Desc
+		accepted *prometheus.Desc
+		handled  *prometheus.Desc
+		requests *prometheus.Desc
+		reading  *prometheus.Desc
+		writing  *prometheus.Desc
+		waiting  *prometheus.Desc
 	}
 )
 
-func NewNginxStatus() (prometheus.Collector, error) {
+func buildNS(namespace, class string) string {
+	if namespace == "" {
+		namespace = "all"
+	}
+	if class == "" {
+		class = "all"
+	}
+
+	return fmt.Sprintf("%v_%v", namespace, class)
+}
+
+// NewNginxStatus returns a new prometheus collector the default nginx status module
+func NewNginxStatus(namespace, class string, ngxHealthPort int, ngxVtsPath string) Stopable {
 	p := nginxStatusCollector{
-		scrapeChan: make(chan scrapeRequest),
+		scrapeChan:    make(chan scrapeRequest),
+		ngxHealthPort: ngxHealthPort,
+		ngxVtsPath:    ngxVtsPath,
+	}
+
+	ns := buildNS(namespace, class)
+
+	p.data = &nginxStatusData{
+		active: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "active_connections"),
+			"total number of active connections",
+			nil, nil),
+
+		accepted: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "accepted_connections"),
+			"total number of accepted client connections",
+			nil, nil),
+
+		handled: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "handled_connections"),
+			"total number of handled connections",
+			nil, nil),
+
+		requests: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "total_requests"),
+			"total number of client requests",
+			nil, nil),
+
+		reading: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "current_reading_connections"),
+			"current number of connections where nginx is reading the request header",
+			nil, nil),
+
+		writing: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "current_writing_connections"),
+			"current number of connections where nginx is writing the response back to the client",
+			nil, nil),
+
+		waiting: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "current_waiting_connections"),
+			"current number of idle client connections waiting for a request",
+			nil, nil),
 	}
 
 	go p.start()
 
-	return p, nil
+	return p
 }
 
 // Describe implements prometheus.Collector.
 func (p nginxStatusCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- activeDesc
-	ch <- acceptedDesc
-	ch <- handledDesc
-	ch <- requestsDesc
-	ch <- readingDesc
-	ch <- writingDesc
-	ch <- waitingDesc
+	ch <- p.data.active
+	ch <- p.data.accepted
+	ch <- p.data.handled
+	ch <- p.data.requests
+	ch <- p.data.reading
+	ch <- p.data.writing
+	ch <- p.data.waiting
 }
 
 // Collect implements prometheus.Collector.
@@ -106,25 +137,24 @@ func (p nginxStatusCollector) Stop() {
 
 // nginxStatusCollector scrap the nginx status
 func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
-	s, err := getNginxStatus()
+	s, err := getNginxStatus(p.ngxHealthPort, p.ngxVtsPath)
 	if err != nil {
 		glog.Warningf("unexpected error obtaining nginx status info: %v", err)
 		return
 	}
 
-	ch <- prometheus.MustNewConstMetric(activeDesc,
+	ch <- prometheus.MustNewConstMetric(p.data.active,
 		prometheus.GaugeValue, float64(s.Active))
-	ch <- prometheus.MustNewConstMetric(acceptedDesc,
+	ch <- prometheus.MustNewConstMetric(p.data.accepted,
 		prometheus.GaugeValue, float64(s.Accepted))
-	ch <- prometheus.MustNewConstMetric(handledDesc,
+	ch <- prometheus.MustNewConstMetric(p.data.handled,
 		prometheus.GaugeValue, float64(s.Handled))
-	ch <- prometheus.MustNewConstMetric(requestsDesc,
+	ch <- prometheus.MustNewConstMetric(p.data.requests,
 		prometheus.GaugeValue, float64(s.Requests))
-	ch <- prometheus.MustNewConstMetric(readingDesc,
+	ch <- prometheus.MustNewConstMetric(p.data.reading,
 		prometheus.GaugeValue, float64(s.Reading))
-	ch <- prometheus.MustNewConstMetric(writingDesc,
+	ch <- prometheus.MustNewConstMetric(p.data.writing,
 		prometheus.GaugeValue, float64(s.Writing))
-	ch <- prometheus.MustNewConstMetric(waitingDesc,
+	ch <- prometheus.MustNewConstMetric(p.data.waiting,
 		prometheus.GaugeValue, float64(s.Waiting))
-
 }
