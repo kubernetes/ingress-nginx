@@ -240,6 +240,8 @@ http {
         {{ if not (empty $authPath) }}
         location = {{ $authPath }} {
             internal;
+            set $proxy_upstream_name "internal";
+
             {{ if not $location.ExternalAuth.SendBody }}
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
@@ -402,6 +404,8 @@ http {
         }
 
         location /nginx_status {
+            set $proxy_upstream_name "internal";
+
             {{ if $cfg.EnableVtsStatus }}
             vhost_traffic_status_display;
             vhost_traffic_status_display_format html;
@@ -415,6 +419,8 @@ http {
         # using prometheus.
         # TODO: enable extraction for vts module.
         location /internal_nginx_status {
+            set $proxy_upstream_name "internal";
+
             allow 127.0.0.1;
             {{ if not $cfg.DisableIpv6 }}allow ::1;{{ end }}
             deny all;

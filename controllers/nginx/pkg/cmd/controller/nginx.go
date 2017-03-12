@@ -48,8 +48,6 @@ type statusModule string
 const (
 	ngxHealthPort = 18080
 	ngxHealthPath = "/healthz"
-	ngxStatusPath = "/internal_nginx_status"
-	ngxVtsPath    = "/nginx_status/format/json"
 
 	defaultStatusModule statusModule = "default"
 	vtsStatusModule     statusModule = "vts"
@@ -70,7 +68,7 @@ func newNGINXController() ingress.Controller {
 	if ngx == "" {
 		ngx = binary
 	}
-	n := NGINXController{
+	n := &NGINXController{
 		binary:    ngx,
 		configmap: &api.ConfigMap{},
 	}
@@ -102,7 +100,7 @@ Error loading new template : %v
 
 	go n.Start()
 
-	return ingress.Controller(&n)
+	return ingress.Controller(n)
 }
 
 // NGINXController ...
@@ -117,11 +115,15 @@ type NGINXController struct {
 
 	cmdArgs []string
 
+	watchClass string
+	namespace  string
+
+	stats        *statsCollector
 	statusModule statusModule
 }
 
 // Start start a new NGINX master process running in foreground.
-func (n NGINXController) Start() {
+func (n *NGINXController) Start() {
 	glog.Info("starting NGINX process...")
 
 	done := make(chan error, 1)
@@ -169,15 +171,6 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 	}
 
 	n.cmdArgs = cmd.Args
-
-	cfg := ngx_template.ReadConfig(n.configmap.Data)
-	n.statusModule = defaultStatusModule
-	if cfg.EnableVtsStatus {
-		n.statusModule = vtsStatusModule
-		n.setupMonitor(vtsStatusModule)
-	} else {
-		n.setupMonitor(defaultStatusModule)
-	}
 
 	go func() {
 		done <- cmd.Wait()
@@ -264,12 +257,20 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 }
 
 // OverrideFlags customize NGINX controller flags
-func (n NGINXController) OverrideFlags(flags *pflag.FlagSet) {
-	ig, err := flags.GetString("ingress-class")
-	if err == nil && ig != "" && ig != defIngressClass {
-		glog.Warningf("only Ingress with class %v will be processed by this ingress controller", ig)
+func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
+	ic, _ := flags.GetString("ingress-class")
+	wc, _ := flags.GetString("watch-namespace")
+
+	if ic == "" {
+		ic = defIngressClass
 	}
-	flags.Set("ingress-class", defIngressClass)
+
+	if ic != defIngressClass {
+		glog.Warningf("only Ingress with class %v will be processed by this ingress controller", ic)
+	}
+
+	flags.Set("ingress-class", ic)
+	n.stats = newStatsCollector(ic, wc, n.binary)
 }
 
 // DefaultIngressClass just return the default ingress class
@@ -336,7 +337,11 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
 
 	// we need to check if the status module configuration changed
-	n.setupMonitor()
+	if cfg.EnableVtsStatus {
+		n.setupMonitor(vtsStatusModule)
+	} else {
+		n.setupMonitor(defaultStatusModule)
+	}
 
 	// NGINX cannot resize the has tables used to store server names.
 	// For this reason we check if the defined size defined is correct

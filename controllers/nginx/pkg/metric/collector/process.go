@@ -25,63 +25,42 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// BinaryNameMatcher ...
 type BinaryNameMatcher struct {
-	name string
-	args []string
+	Name   string
+	Binary string
 }
 
+// MatchAndName returns false if the match failed, otherwise
+// true and the resulting name.
 func (em BinaryNameMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
 	if len(nacl.Cmdline) == 0 {
 		return false, ""
 	}
-	cmd := filepath.Base(nacl.Cmdline[0])
-	return em.name == cmd, ""
+	cmd := filepath.Base(em.Binary)
+	return em.Name == cmd, ""
 }
 
-var (
-	numprocsDesc = prometheus.NewDesc(
-		"nginx_num_procs",
-		"number of processes",
-		nil, nil)
-
-	cpuSecsDesc = prometheus.NewDesc(
-		"nginx_cpu_seconds_total",
-		"Cpu usage in seconds",
-		nil, nil)
-
-	readBytesDesc = prometheus.NewDesc(
-		"nginx_read_bytes_total",
-		"number of bytes read",
-		nil, nil)
-
-	writeBytesDesc = prometheus.NewDesc(
-		"nginx_write_bytes_total",
-		"number of bytes written",
-		nil, nil)
-
-	memResidentbytesDesc = prometheus.NewDesc(
-		"nginx_resident_memory_bytes",
-		"number of bytes of memory in use",
-		nil, nil)
-
-	memVirtualbytesDesc = prometheus.NewDesc(
-		"nginx_virtual_memory_bytes",
-		"number of bytes of memory in use",
-		nil, nil)
-
-	startTimeDesc = prometheus.NewDesc(
-		"nginx_oldest_start_time_seconds",
-		"start time in seconds since 1970/01/01",
-		nil, nil)
-)
+type namedProcessData struct {
+	numProcs         *prometheus.Desc
+	cpuSecs          *prometheus.Desc
+	readBytes        *prometheus.Desc
+	writeBytes       *prometheus.Desc
+	memResidentbytes *prometheus.Desc
+	memVirtualbytes  *prometheus.Desc
+	startTime        *prometheus.Desc
+}
 
 type namedProcess struct {
-	scrapeChan chan scrapeRequest
 	*proc.Grouper
-	fs *proc.FS
+
+	scrapeChan chan scrapeRequest
+	fs         *proc.FS
+	data       namedProcessData
 }
 
-func NewNamedProcessCollector(children bool, mn common.MatchNamer) (prometheus.Collector, error) {
+// NewNamedProcess returns a new prometheus collector for the nginx process
+func NewNamedProcess(children bool, mn common.MatchNamer) (prometheus.Collector, error) {
 	fs, err := proc.NewFS("/proc")
 	if err != nil {
 		return nil, err
@@ -96,6 +75,43 @@ func NewNamedProcessCollector(children bool, mn common.MatchNamer) (prometheus.C
 		return nil, err
 	}
 
+	p.data = namedProcessData{
+		numProcs: prometheus.NewDesc(
+			"num_procs",
+			"number of processes",
+			nil, nil),
+
+		cpuSecs: prometheus.NewDesc(
+			"cpu_seconds_total",
+			"Cpu usage in seconds",
+			nil, nil),
+
+		readBytes: prometheus.NewDesc(
+			"read_bytes_total",
+			"number of bytes read",
+			nil, nil),
+
+		writeBytes: prometheus.NewDesc(
+			"write_bytes_total",
+			"number of bytes written",
+			nil, nil),
+
+		memResidentbytes: prometheus.NewDesc(
+			"resident_memory_bytes",
+			"number of bytes of memory in use",
+			nil, nil),
+
+		memVirtualbytes: prometheus.NewDesc(
+			"virtual_memory_bytes",
+			"number of bytes of memory in use",
+			nil, nil),
+
+		startTime: prometheus.NewDesc(
+			"oldest_start_time_seconds",
+			"start time in seconds since 1970/01/01",
+			nil, nil),
+	}
+
 	go p.start()
 
 	return p, nil
@@ -103,13 +119,13 @@ func NewNamedProcessCollector(children bool, mn common.MatchNamer) (prometheus.C
 
 // Describe implements prometheus.Collector.
 func (p namedProcess) Describe(ch chan<- *prometheus.Desc) {
-	ch <- cpuSecsDesc
-	ch <- numprocsDesc
-	ch <- readBytesDesc
-	ch <- writeBytesDesc
-	ch <- memResidentbytesDesc
-	ch <- memVirtualbytesDesc
-	ch <- startTimeDesc
+	ch <- p.data.cpuSecs
+	ch <- p.data.numProcs
+	ch <- p.data.readBytes
+	ch <- p.data.writeBytes
+	ch <- p.data.memResidentbytes
+	ch <- p.data.memVirtualbytes
+	ch <- p.data.startTime
 }
 
 // Collect implements prometheus.Collector.
@@ -138,20 +154,20 @@ func (p namedProcess) scrape(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	for gname, gcounts := range p.Groups() {
-		ch <- prometheus.MustNewConstMetric(numprocsDesc,
+	for _, gcounts := range p.Groups() {
+		ch <- prometheus.MustNewConstMetric(p.data.numProcs,
 			prometheus.GaugeValue, float64(gcounts.Procs))
-		ch <- prometheus.MustNewConstMetric(memResidentbytesDesc,
+		ch <- prometheus.MustNewConstMetric(p.data.memResidentbytes,
 			prometheus.GaugeValue, float64(gcounts.Memresident))
-		ch <- prometheus.MustNewConstMetric(memVirtualbytesDesc,
+		ch <- prometheus.MustNewConstMetric(p.data.memVirtualbytes,
 			prometheus.GaugeValue, float64(gcounts.Memvirtual))
-		ch <- prometheus.MustNewConstMetric(startTimeDesc,
+		ch <- prometheus.MustNewConstMetric(p.data.startTime,
 			prometheus.GaugeValue, float64(gcounts.OldestStartTime.Unix()))
-		ch <- prometheus.MustNewConstMetric(cpuSecsDesc,
+		ch <- prometheus.MustNewConstMetric(p.data.cpuSecs,
 			prometheus.CounterValue, gcounts.Cpu)
-		ch <- prometheus.MustNewConstMetric(readBytesDesc,
+		ch <- prometheus.MustNewConstMetric(p.data.readBytes,
 			prometheus.CounterValue, float64(gcounts.ReadBytes))
-		ch <- prometheus.MustNewConstMetric(writeBytesDesc,
+		ch <- prometheus.MustNewConstMetric(p.data.writeBytes,
 			prometheus.CounterValue, float64(gcounts.WriteBytes))
 	}
 }

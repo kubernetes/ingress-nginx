@@ -23,31 +23,73 @@ import (
 	"k8s.io/ingress/controllers/nginx/pkg/metric/collector"
 )
 
+const (
+	ngxStatusPath = "/internal_nginx_status"
+	ngxVtsPath    = "/nginx_status/format/json"
+)
+
 func (n *NGINXController) setupMonitor(sm statusModule) {
 	csm := n.statusModule
 	if csm != sm {
-		prometheus
+		glog.Infof("changing prometheus collector from %v to %v", csm, sm)
+		n.stats.stop(csm)
+		n.stats.start(sm)
 		n.statusModule = sm
 	}
 }
 
 type statsCollector struct {
 	process prometheus.Collector
-	basic   prometheus.Collector
-	vts     prometheus.Collector
+	basic   collector.Stopable
+	vts     collector.Stopable
+
+	namespace  string
+	watchClass string
 }
 
-func newStatsCollector() (*statsCollector, error) {
-	pc, err := collector.NewNamedProcess(true, collector.BinaryNameMatcher{"nginx", n.cmdArgs})
+func (s *statsCollector) stop(sm statusModule) {
+	switch sm {
+	case defaultStatusModule:
+		s.basic.Stop()
+		prometheus.Unregister(s.basic)
+		break
+	case vtsStatusModule:
+		s.vts.Stop()
+		prometheus.Unregister(s.vts)
+		break
+	}
+}
+
+func (s *statsCollector) start(sm statusModule) {
+	switch sm {
+	case defaultStatusModule:
+		s.basic = collector.NewNginxStatus(s.namespace, s.watchClass, ngxHealthPort, ngxStatusPath)
+		prometheus.Register(s.basic)
+		break
+	case vtsStatusModule:
+		s.vts = collector.NewNGINXVTSCollector(s.namespace, s.watchClass, ngxHealthPort, ngxVtsPath)
+		prometheus.Register(s.vts)
+		break
+	}
+}
+
+func newStatsCollector(ns, class, binary string) *statsCollector {
+	glog.Infof("starting new nginx stats collector for Ingress controller running in namespace %v (class %v)", ns, class)
+	pc, err := collector.NewNamedProcess(true, collector.BinaryNameMatcher{
+		Name:   "nginx",
+		Binary: binary,
+	})
 	if err != nil {
-		return nil, err
+		glog.Fatalf("unexpected error registering nginx collector: %v", err)
 	}
 	err = prometheus.Register(pc)
 	if err != nil {
 		glog.Fatalf("unexpected error registering nginx collector: %v", err)
 	}
 
-	return nil, &statsCollector{
-		process: pc,
+	return &statsCollector{
+		namespace:  ns,
+		watchClass: class,
+		process:    pc,
 	}
 }

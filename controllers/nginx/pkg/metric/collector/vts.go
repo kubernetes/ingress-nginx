@@ -23,136 +23,168 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var (
-	vtsBytesDesc = prometheus.NewDesc(
-		"nginx_vts_bytes_total",
-		"Nginx bytes count",
-		[]string{"server_zone", "direction"}, nil)
+const system = "nginx"
 
-	vtsCacheDesc = prometheus.NewDesc(
-		"nginx_vts_cache_total",
-		"Nginx cache count",
-		[]string{"server_zone", "type"}, nil)
-
-	vtsConnectionsDesc = prometheus.NewDesc(
-		"nginx_vts_connections_total",
-		"Nginx connections count",
-		[]string{"type"}, nil)
-
-	vtsResponseDesc = prometheus.NewDesc(
-		"nginx_vts_responses_total",
-		"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-		[]string{"server_zone", "status_code"}, nil)
-
-	vtsRequestDesc = prometheus.NewDesc(
-		"nginx_vts_requests_total",
-		"The total number of requested client connections.",
-		[]string{"server_zone"}, nil)
-
-	vtsFilterZoneBytesDesc = prometheus.NewDesc(
-		"nginx_vts_filterzone_bytes_total",
-		"Nginx bytes count",
-		[]string{"server_zone", "country", "direction"}, nil)
-
-	vtsFilterZoneResponseDesc = prometheus.NewDesc(
-		"nginx_vts_filterzone_responses_total",
-		"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-		[]string{"server_zone", "country", "status_code"}, nil)
-
-	vtsFilterZoneCacheDesc = prometheus.NewDesc(
-		"nginx_vts_filterzone_cache_total",
-		"Nginx cache count",
-		[]string{"server_zone", "country", "type"}, nil)
-
-	vtsUpstreamBackupDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_backup",
-		"Current backup setting of the server.",
-		[]string{"upstream", "server"}, nil)
-
-	vtsUpstreamBytesDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_bytes_total",
-		"The total number of bytes sent to this server.",
-		[]string{"upstream", "server", "direction"}, nil)
-
-	vtsUpstreamDownDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_down_total",
-		"Current down setting of the server.",
-		[]string{"upstream", "server"}, nil)
-
-	vtsUpstreamFailTimeoutDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_fail_timeout",
-		"Current fail_timeout setting of the server.",
-		[]string{"upstream", "server"}, nil)
-
-	vtsUpstreamMaxFailsDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_maxfails",
-		"Current max_fails setting of the server.",
-		[]string{"upstream", "server"}, nil)
-
-	vtsUpstreamResponsesDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_responses_total",
-		"The number of upstream responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-		[]string{"upstream", "server", "status_code"}, nil)
-
-	vtsUpstreamRequestDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_requests_total",
-		"The total number of client connections forwarded to this server.",
-		[]string{"upstream", "server"}, nil)
-
-	vtsUpstreamResponseMsecDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_response_msecs_avg",
-		"The average of only upstream response processing times in milliseconds.",
-		[]string{"upstream", "server"}, nil)
-
-	vtsUpstreamWeightDesc = prometheus.NewDesc(
-		"nginx_vts_upstream_weight",
-		"Current upstream weight setting of the server.",
-		[]string{"upstream", "server"}, nil)
-)
-
-type vtsCollector struct {
-		scrapeChan chan scrapeRequest
+type (
+	vtsCollector struct {
+		scrapeChan    chan scrapeRequest
+		ngxHealthPort int
+		ngxVtsPath    string
+		data          *vtsData
 	}
 
-func NewNGINXVTSCollector() (prometheus.Collector, error) {
+	vtsData struct {
+		bytes                *prometheus.Desc
+		cache                *prometheus.Desc
+		connections          *prometheus.Desc
+		response             *prometheus.Desc
+		request              *prometheus.Desc
+		filterZoneBytes      *prometheus.Desc
+		filterZoneResponse   *prometheus.Desc
+		filterZoneCache      *prometheus.Desc
+		upstreamBackup       *prometheus.Desc
+		upstreamBytes        *prometheus.Desc
+		upstreamDown         *prometheus.Desc
+		upstreamFailTimeout  *prometheus.Desc
+		upstreamMaxFails     *prometheus.Desc
+		upstreamResponses    *prometheus.Desc
+		upstreamRequest      *prometheus.Desc
+		upstreamResponseMsec *prometheus.Desc
+		upstreamWeight       *prometheus.Desc
+	}
+)
+
+// NewNGINXVTSCollector returns a new prometheus collector for the VTS module
+func NewNGINXVTSCollector(namespace, class string, ngxHealthPort int, ngxVtsPath string) Stopable {
 	p := vtsCollector{
-		scrapeChan: make(chan scrapeRequest),
+		scrapeChan:    make(chan scrapeRequest),
+		ngxHealthPort: ngxHealthPort,
+		ngxVtsPath:    ngxVtsPath,
+	}
+
+	ns := buildNS(namespace, class)
+
+	p.data = &vtsData{
+		bytes: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "bytes_total"),
+			"Nginx bytes count",
+			[]string{"server_zone", "direction"}, nil),
+
+		cache: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "cache_total"),
+			"Nginx cache count",
+			[]string{"server_zone", "type"}, nil),
+
+		connections: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "connections_total"),
+			"Nginx connections count",
+			[]string{"type"}, nil),
+
+		response: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "responses_total"),
+			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
+			[]string{"server_zone", "status_code"}, nil),
+
+		request: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "requests_total"),
+			"The total number of requested client connections.",
+			[]string{"server_zone"}, nil),
+
+		filterZoneBytes: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "filterzone_bytes_total"),
+			"Nginx bytes count",
+			[]string{"server_zone", "country", "direction"}, nil),
+
+		filterZoneResponse: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "filterzone_responses_total"),
+			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
+			[]string{"server_zone", "country", "status_code"}, nil),
+
+		filterZoneCache: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "filterzone_cache_total"),
+			"Nginx cache count",
+			[]string{"server_zone", "country", "type"}, nil),
+
+		upstreamBackup: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "upstream_backup"),
+			"Current backup setting of the server.",
+			[]string{"upstream", "server"}, nil),
+
+		upstreamBytes: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "upstream_bytes_total"),
+			"The total number of bytes sent to this server.",
+			[]string{"upstream", "server", "direction"}, nil),
+
+		upstreamDown: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "vts_upstream_down_total"),
+			"Current down setting of the server.",
+			[]string{"upstream", "server"}, nil),
+
+		upstreamFailTimeout: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "upstream_fail_timeout"),
+			"Current fail_timeout setting of the server.",
+			[]string{"upstream", "server"}, nil),
+
+		upstreamMaxFails: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "upstream_maxfails"),
+			"Current max_fails setting of the server.",
+			[]string{"upstream", "server"}, nil),
+
+		upstreamResponses: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "upstream_responses_total"),
+			"The number of upstream responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
+			[]string{"upstream", "server", "status_code"}, nil),
+
+		upstreamRequest: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "upstream_requests_total"),
+			"The total number of client connections forwarded to this server.",
+			[]string{"upstream", "server"}, nil),
+
+		upstreamResponseMsec: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "upstream_response_msecs_avg"),
+			"The average of only upstream response processing times in milliseconds.",
+			[]string{"upstream", "server"}, nil),
+
+		upstreamWeight: prometheus.NewDesc(
+			prometheus.BuildFQName(system, ns, "upstream_weight"),
+			"Current upstream weight setting of the server.",
+			[]string{"upstream", "server"}, nil),
 	}
 
 	go p.start()
 
-	return p, nil
+	return p
 }
 
 // Describe implements prometheus.Collector.
-func (p *vtsCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- vtsBytesDesc
-	ch <- vtsCacheDesc
-	ch <- vtsConnectionsDesc
-	ch <- vtsRequestDesc
-	ch <- vtsResponseDesc
-	ch <- vtsUpstreamBackupDesc
-	ch <- vtsUpstreamBytesDesc
-	ch <- vtsUpstreamDownDesc
-	ch <- vtsUpstreamFailTimeoutDesc
-	ch <- vtsUpstreamMaxFailsDesc
-	ch <- vtsUpstreamRequestDesc
-	ch <- vtsUpstreamResponseMsecDesc
-	ch <- vtsUpstreamResponsesDesc
-	ch <- vtsUpstreamWeightDesc
-	ch <- vtsFilterZoneBytesDesc
-	ch <- vtsFilterZoneCacheDesc
-	ch <- vtsFilterZoneResponseDesc
+func (p vtsCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- p.data.bytes
+	ch <- p.data.cache
+	ch <- p.data.connections
+	ch <- p.data.request
+	ch <- p.data.response
+	ch <- p.data.upstreamBackup
+	ch <- p.data.upstreamBytes
+	ch <- p.data.upstreamDown
+	ch <- p.data.upstreamFailTimeout
+	ch <- p.data.upstreamMaxFails
+	ch <- p.data.upstreamRequest
+	ch <- p.data.upstreamResponseMsec
+	ch <- p.data.upstreamResponses
+	ch <- p.data.upstreamWeight
+	ch <- p.data.filterZoneBytes
+	ch <- p.data.filterZoneCache
+	ch <- p.data.filterZoneResponse
 }
 
 // Collect implements prometheus.Collector.
-func (p *vtsCollector) Collect(ch chan<- prometheus.Metric) {
+func (p vtsCollector) Collect(ch chan<- prometheus.Metric) {
 	req := scrapeRequest{results: ch, done: make(chan struct{})}
 	p.scrapeChan <- req
 	<-req.done
 }
 
-func (p *vtsCollector) start() {
+func (p vtsCollector) start() {
 	for req := range p.scrapeChan {
 		ch := req.results
 		p.scrapeVts(ch)
@@ -160,65 +192,65 @@ func (p *vtsCollector) start() {
 	}
 }
 
-func (p *vtsCollector) Stop() {
+func (p vtsCollector) Stop() {
 	close(p.scrapeChan)
 }
 
 // scrapeVts scrape nginx vts metrics
-func (p *vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
-	nginxMetrics, err := getNginxVtsMetrics()
+func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
+	nginxMetrics, err := getNginxVtsMetrics(p.ngxHealthPort, p.ngxVtsPath)
 	if err != nil {
 		glog.Warningf("unexpected error obtaining nginx status info: %v", err)
 		return
 	}
 
-	reflectMetrics(&nginxMetrics.Connections, vtsConnectionsDesc, ch)
+	reflectMetrics(&nginxMetrics.Connections, p.data.connections, ch)
 
 	for name, zones := range nginxMetrics.UpstreamZones {
 		for pos, value := range zones {
-			reflectMetrics(&zones[pos].Responses, vtsUpstreamResponsesDesc, ch, name, value.Server)
+			reflectMetrics(&zones[pos].Responses, p.data.upstreamResponses, ch, name, value.Server)
 
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamRequestDesc,
-				prometheus.CounterValue, float64(zones[pos].RequestCounter), name, value.Server)
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamDownDesc,
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamRequest,
+				prometheus.CounterValue, zones[pos].RequestCounter, name, value.Server)
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamDown,
 				prometheus.CounterValue, float64(zones[pos].Down), name, value.Server)
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamWeightDesc,
-				prometheus.CounterValue, float64(zones[pos].Weight), name, value.Server)
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamResponseMsecDesc,
-				prometheus.CounterValue, float64(zones[pos].ResponseMsec), name, value.Server)
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamBackupDesc,
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamWeight,
+				prometheus.CounterValue, zones[pos].Weight, name, value.Server)
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamResponseMsec,
+				prometheus.CounterValue, zones[pos].ResponseMsec, name, value.Server)
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamBackup,
 				prometheus.CounterValue, float64(zones[pos].Backup), name, value.Server)
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamFailTimeoutDesc,
-				prometheus.CounterValue, float64(zones[pos].FailTimeout), name, value.Server)
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamMaxFailsDesc,
-				prometheus.CounterValue, float64(zones[pos].MaxFails), name, value.Server)
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamBytesDesc,
-				prometheus.CounterValue, float64(zones[pos].InBytes), name, value.Server, "in")
-			ch <- prometheus.MustNewConstMetric(vtsUpstreamBytesDesc,
-				prometheus.CounterValue, float64(zones[pos].OutBytes), name, value.Server, "out")
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamFailTimeout,
+				prometheus.CounterValue, zones[pos].FailTimeout, name, value.Server)
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamMaxFails,
+				prometheus.CounterValue, zones[pos].MaxFails, name, value.Server)
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamBytes,
+				prometheus.CounterValue, zones[pos].InBytes, name, value.Server, "in")
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamBytes,
+				prometheus.CounterValue, zones[pos].OutBytes, name, value.Server, "out")
 		}
 	}
 
 	for name, zone := range nginxMetrics.ServerZones {
-		reflectMetrics(&zone.Responses, vtsResponseDesc, ch, name)
-		reflectMetrics(&zone.Cache, vtsCacheDesc, ch, name)
+		reflectMetrics(&zone.Responses, p.data.response, ch, name)
+		reflectMetrics(&zone.Cache, p.data.cache, ch, name)
 
-		ch <- prometheus.MustNewConstMetric(vtsRequestDesc,
-			prometheus.CounterValue, float64(zone.RequestCounter), name)
-		ch <- prometheus.MustNewConstMetric(vtsBytesDesc,
-			prometheus.CounterValue, float64(zone.InBytes), name, "in")
-		ch <- prometheus.MustNewConstMetric(vtsBytesDesc,
-			prometheus.CounterValue, float64(zone.OutBytes), name, "out")
+		ch <- prometheus.MustNewConstMetric(p.data.request,
+			prometheus.CounterValue, zone.RequestCounter, name)
+		ch <- prometheus.MustNewConstMetric(p.data.bytes,
+			prometheus.CounterValue, zone.InBytes, name, "in")
+		ch <- prometheus.MustNewConstMetric(p.data.bytes,
+			prometheus.CounterValue, zone.OutBytes, name, "out")
 	}
 
 	for serverZone, countries := range nginxMetrics.FilterZones {
 		for country, zone := range countries {
-			reflectMetrics(&zone.Responses, vtsFilterZoneResponseDesc, ch, serverZone, country)
-			reflectMetrics(&zone.Cache, vtsFilterZoneCacheDesc, ch, serverZone, country)
+			reflectMetrics(&zone.Responses, p.data.filterZoneResponse, ch, serverZone, country)
+			reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, serverZone, country)
 
-			ch <- prometheus.MustNewConstMetric(vtsFilterZoneBytesDesc,
+			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
 				prometheus.CounterValue, float64(zone.InBytes), serverZone, country, "in")
-			ch <- prometheus.MustNewConstMetric(vtsFilterZoneBytesDesc,
+			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
 				prometheus.CounterValue, float64(zone.OutBytes), serverZone, country, "out")
 		}
 	}
@@ -229,9 +261,9 @@ func reflectMetrics(value interface{}, desc *prometheus.Desc, ch chan<- promethe
 
 	for i := 0; i < val.NumField(); i++ {
 		tag := val.Type().Field(i).Tag
-		labels := append(labels, tag.Get("json"))
+		l := append(labels, tag.Get("json"))
 		ch <- prometheus.MustNewConstMetric(desc,
 			prometheus.CounterValue, float64(val.Field(i).Interface().(float64)),
-			labels...)
+			l...)
 	}
 }

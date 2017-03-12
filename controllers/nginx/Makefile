@@ -21,7 +21,7 @@ build: clean
 		-ldflags "-s -w -X ${PKG}/pkg/version.RELEASE=${RELEASE} -X ${PKG}/pkg/version.COMMIT=${COMMIT} -X ${PKG}/pkg/version.REPO=${REPO_INFO}" \
 		-o rootfs/nginx-ingress-controller ${PKG}/pkg/cmd/controller
 
-container: build
+container:
 	$(DOCKER) build --pull -t $(PREFIX):$(RELEASE) rootfs
 
 push: container
