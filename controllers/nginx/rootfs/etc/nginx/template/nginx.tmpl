@@ -236,7 +236,11 @@ http {
         ssl_verify_client on;
         ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
         {{ end }}
-
+        {{ if not (empty $location.Redirect.AppRoot)}}
+        location = / {
+            return 302 ${{ location.Redirect.AppRoot }};
+        }
+        {{ end }}
         {{ if not (empty $authPath) }}
         location = {{ $authPath }} {
             internal;
