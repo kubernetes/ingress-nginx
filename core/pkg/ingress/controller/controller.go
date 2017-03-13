@@ -170,6 +170,12 @@ func newIngressController(config *Configuration) *GenericController {
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
 			ic.syncQueue.Enqueue(obj)
+			if ic.annotations.ContainsCertificateAuth(addIng) {
+				s, err := ic.annotations.CertificateAuthSecret(addIng)
+				if err == nil {
+					ic.syncSecret(fmt.Sprintf("%v/%v", s.Namespace, s.Name))
+				}
+			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
@@ -209,6 +215,13 @@ func newIngressController(config *Configuration) *GenericController {
 						}()
 					}
 				}
+				if ic.annotations.ContainsCertificateAuth(upIng) {
+					s, err := ic.annotations.CertificateAuthSecret(upIng)
+					if err == nil {
+						ic.syncSecret(fmt.Sprintf("%v/%v", s.Namespace, s.Name))
+					}
+				}
+
 				ic.syncQueue.Enqueue(cur)
 			}
 		},
@@ -280,11 +293,11 @@ func newIngressController(config *Configuration) *GenericController {
 		&api.Endpoints{}, ic.cfg.ResyncPeriod, eventHandler)
 
 	ic.secrLister.Store, ic.secrController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "secrets", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "secrets", api.NamespaceAll, fields.Everything()),
 		&api.Secret{}, ic.cfg.ResyncPeriod, secrEventHandler)
 
 	ic.mapLister.Store, ic.mapController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "configmaps", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "configmaps", api.NamespaceAll, fields.Everything()),
 		&api.ConfigMap{}, ic.cfg.ResyncPeriod, mapEventHandler)
 
 	ic.svcLister.Indexer, ic.svcController = cache.NewIndexerInformer(

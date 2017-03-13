@@ -17,8 +17,11 @@ limitations under the License.
 package controller
 
 import (
+	"fmt"
+
 	"github.com/golang/glog"
 
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
@@ -47,11 +50,13 @@ type extractorConfig interface {
 }
 
 type annotationExtractor struct {
-	annotations map[string]parser.IngressAnnotation
+	secretResolver resolver.Secret
+	annotations    map[string]parser.IngressAnnotation
 }
 
 func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 	return annotationExtractor{
+		cfg,
 		map[string]parser.IngressAnnotation{
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
 			"ExternalAuth":         authreq.NewParser(),
@@ -104,6 +109,7 @@ const (
 	healthCheck     = "HealthCheck"
 	sslPassthrough  = "SSLPassthrough"
 	sessionAffinity = "SessionAffinity"
+	certificateAuth = "CertificateAuth"
 )
 
 func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) bool {
@@ -124,4 +130,18 @@ func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
 	val, _ := e.annotations[sessionAffinity].Parse(ing)
 	return val.(*sessionaffinity.AffinityConfig)
+}
+
+func (e *annotationExtractor) ContainsCertificateAuth(ing *extensions.Ingress) bool {
+	val, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+	return val != ""
+}
+
+func (e *annotationExtractor) CertificateAuthSecret(ing *extensions.Ingress) (*api.Secret, error) {
+	val, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+	if val == "" {
+		return nil, fmt.Errorf("ingress rule %v/%v does not contains the auth-tls-secret annotation", ing.Namespace, ing.Name)
+	}
+
+	return e.secretResolver.GetSecret(val)
 }
