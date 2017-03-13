@@ -252,7 +252,7 @@ func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
 			continue
 		}
 
-		go func(wg *sync.WaitGroup) {
+		go func(wg *sync.WaitGroup, ing *extensions.Ingress) {
 			defer wg.Done()
 			ingClient := s.Client.Extensions().Ingresses(ing.Namespace)
 			currIng, err := ingClient.Get(ing.Name)
@@ -274,7 +274,7 @@ func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
 			if err != nil {
 				glog.Warningf("error updating ingress rule: %v", err)
 			}
-		}(&wg)
+		}(&wg, ing)
 	}
 
 	wg.Wait()
