@@ -236,9 +236,17 @@ http {
         ssl_verify_client on;
         ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
         {{ end }}
+        
+        {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
+        # enforce ssl on server side
+        if ($pass_access_scheme = http) {
+            return 301 https://$host$request_uri;
+        }
+        {{ end }}
+
         {{ if not (empty $location.Redirect.AppRoot)}}
-        location = / {
-            return 302 ${{ location.Redirect.AppRoot }};
+        if ($uri = /) {
+            return 302 {{ $location.Redirect.AppRoot }};
         }
         {{ end }}
         {{ if not (empty $authPath) }}
@@ -283,12 +291,7 @@ http {
             error_page 401 = {{ $location.ExternalAuth.SigninURL }};
             {{ end }}
 
-            {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
-            # enforce ssl on server side
-            if ($pass_access_scheme = http) {
-                return 301 https://$host$request_uri;
-            }
-            {{ end }}
+
             {{/* if the location contains a rate limit annotation, create one */}}
             {{ $limits := buildRateLimit $location }}
             {{ range $limit := $limits }}
