@@ -177,7 +177,7 @@ If the application contains relative links it is possible to add an additional a
 
 If the Application Root is exposed in a different path and needs to be redirected, the annotation `ingress.kubernetes.io/app-root` might be used.
 
-Please check the [rewrite](examples/rewrite/README.md) example.
+Please check the [rewrite](/examples/rewrite/README.md) example.
 
 
 ### Rate limiting

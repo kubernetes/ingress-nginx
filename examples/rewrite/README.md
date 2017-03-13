@@ -1,3 +1,28 @@
+# Sticky Session
+
+This example demonstrates how to use the Rewrite annotations
+
+## Prerequisites
+
+You will need to make sure you Ingress targets exactly one Ingress
+controller by specifying the [ingress.class annotation](/examples/PREREQUISITES.md#ingress-class),
+and that you have an ingress controller [running](/examples/deployment) in your cluster.
+
+## Deployment
+
+Rewriting can be controlled using the following annotations:
+
+|Name|Description|Values|
+| --- | --- | --- |
+|ingress.kubernetes.io/rewrite-target|Target URI where the traffic must be redirected|string|
+|ingress.kubernetes.io/add-base-url|indicates if is required to add a base tag in the head of the responses from the upstream servers|bool|
+|ingress.kubernetes.io/ssl-redirect|Indicates if the location section is accessible SSL only (defaults to True when Ingress contains a Certificate)|bool|
+|ingress.kubernetes.io/force-ssl-redirect|Forces the redirection to HTTPS even if the Ingress is not TLS Enabled|bool|
+|ingress.kubernetes.io/app-root|Defines the Application Root that the Controller must redirect if it's not in '/' context|string|
+
+## Validation
+
+### Rewrite Target
 Create an Ingress rule with a rewrite annotation:
 ```
 $ echo "
@@ -64,3 +89,39 @@ BODY:
 -no body in request-
 ```
 
+### App Root
+
+Create an Ingress rule with a app-root annotation:
+```
+$ echo "
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/app-root: /app1
+  name: approot
+  namespace: default
+spec:
+  rules:
+  - host: approot.bar.com
+    http:
+      paths:
+      - backend:
+          serviceName: echoheaders
+          servicePort: 80
+        path: /
+" | kubectl create -f -
+```
+
+Check the rewrite is working
+
+```
+$ curl -I -k http://approot.bar.com/
+HTTP/1.1 302 Moved Temporarily
+Server: nginx/1.11.10
+Date: Mon, 13 Mar 2017 14:57:15 GMT
+Content-Type: text/html
+Content-Length: 162
+Location: http://stickyingress.example.com/app1
+Connection: keep-alive
+```

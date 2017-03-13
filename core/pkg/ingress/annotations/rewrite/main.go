@@ -41,8 +41,9 @@ type Redirect struct {
 	// SSLRedirect indicates if the location section is accessible SSL only
 	SSLRedirect bool `json:"sslRedirect"`
 	// ForceSSLRedirect indicates if the location section is accessible SSL only
-	ForceSSLRedirect bool   `json:"forceSSLRedirect"`
-	AppRoot          string `json:"appRoot"`
+	ForceSSLRedirect bool `json:"forceSSLRedirect"`
+	// AppRoot defines the Application Root that the Controller must redirect if it's not in '/' context
+	AppRoot string `json:"appRoot"`
 }
 
 type rewrite struct {
