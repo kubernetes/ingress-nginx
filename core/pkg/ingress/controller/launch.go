@@ -128,10 +128,20 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 	}
 
-	if *configMap != "" {
-		_, _, err = k8s.ParseNameNS(*configMap)
+	for _, configMap := range []string{*configMap, *tcpConfigMapName, *udpConfigMapName} {
+		_, err = k8s.IsValidConfigMap(kubeClient, configMap)
+
 		if err != nil {
-			glog.Fatalf("configmap error: %v", err)
+			glog.Fatalf("%v", err)
+		}
+	}
+
+	if *watchNamespace != "" {
+
+		_, err = k8s.IsValidNamespace(kubeClient, *watchNamespace)
+
+		if err != nil {
+			glog.Fatalf("no watchNamespace with name %v found: %v", *watchNamespace, err)
 		}
 	}
 
@@ -230,6 +240,13 @@ func createApiserverClient(apiserverHost string, kubeConfig string) (*client.Cli
 	glog.Infof("Creating API server client for %s", cfg.Host)
 
 	client, err := client.NewForConfig(cfg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// test connection
+	_, err = client.ServerVersion()
 
 	if err != nil {
 		return nil, err
