@@ -52,6 +52,13 @@ const (
 	// responsibility to create/delete it.
 	staticIPNameKey = "kubernetes.io/ingress.global-static-ip-name"
 
+	// preSharedCertKey represents the specific pre-shared SSL
+	// certicate for the Ingress controller to use. The controller *does not*
+	// manage this certificate, it is the users responsibility to create/delete it.
+	// In GCP, the Ingress controller assigns the SSL certificate with this name
+	// to the target proxies of the Ingress.
+	preSharedCertKey = "ingress.gcp.kubernetes.io/pre-shared-cert"
+
 	// ingressClassKey picks a specific "class" for the Ingress. The controller
 	// only processes Ingresses with this annotation either unset, or set
 	// to either gceIngessClass or the empty string.
@@ -77,6 +84,16 @@ func (ing ingAnnotations) allowHTTP() bool {
 		return true
 	}
 	return v
+}
+
+// useNamedTLS returns the name of the GCE SSL certificate. Empty by default.
+func (ing ingAnnotations) useNamedTLS() string {
+	val, ok := ing[preSharedCertKey]
+	if !ok {
+		return ""
+	}
+
+	return val
 }
 
 func (ing ingAnnotations) staticIPName() string {

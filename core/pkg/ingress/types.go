@@ -96,6 +96,8 @@ type Controller interface {
 	Info() *BackendInfo
 	// OverrideFlags allow the customization of the flags in the backend
 	OverrideFlags(*pflag.FlagSet)
+	// DefaultIngressClass just return the default ingress class
+	DefaultIngressClass() string
 }
 
 // StoreLister returns the configured stores for ingresses, services,

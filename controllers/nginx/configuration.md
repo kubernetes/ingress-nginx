@@ -40,6 +40,7 @@ The following annotations are supported:
 |Name                 |type|
 |---------------------------|------|
 |[ingress.kubernetes.io/add-base-url](#rewrite)|true or false|
+|[ingress.kubernetes.io/affinity](#session-affinity)|true or false|
 |[ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
@@ -47,18 +48,18 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-tls-secret](#Certificate Authentication)|string|
 |[ingress.kubernetes.io/auth-tls-verify-depth](#Certificate Authentication)|number|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
+|[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
+|[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
+|[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 |[ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
-|[ingress.kubernetes.io/affinity](#session-affinity)|true or false|
-|[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
-|[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 
 
 
@@ -126,7 +127,7 @@ The secret must be created in the same namespace as the Ingress rule.
 ingress.kubernetes.io/auth-realm: "realm string"
 ```
 
-Please check the [auth](examples/auth/README.md) example.
+Please check the [auth](/examples/auth/nginx/README.md) example.
 
 ### Certificate Authentication
 
@@ -146,7 +147,7 @@ ingress.kubernetes.io/auth-tls-verify-depth
 
 The validation depth between the provided client certificate and the Certification Authority chain.
 
-Please check the [tls-auth](examples/auth/client-certs/README.md) example.
+Please check the [tls-auth](/examples/auth/client-certs/nginx/README.md) example.
 
 
 ### Enable CORS
@@ -163,7 +164,7 @@ Additionally it is possible to set `ingress.kubernetes.io/auth-method` to specif
 ingress.kubernetes.io/auth-url: "URL to the authentication service"
 ```
 
-Please check the [external-auth](examples/external-auth/README.md) example.
+Please check the [external-auth](/examples/auth/external-auth/nginx/README.md) example.
 
 
 ### Rewrite
@@ -198,6 +199,8 @@ By default the controller redirects (301) to `HTTPS` if TLS is enabled for that 
 
 To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
+When using SSL offloading outside of cluster (e.g. AWS ELB) it may be usefull to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
+
 
 ### Whitelist source range
 
@@ -207,7 +210,7 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 
 *Note:* Adding an annotation to an Ingress rule overrides any global restriction.
 
-Please check the [whitelist](examples/affinity/cookie/nginx/README.md) example.
+Please check the [whitelist](/examples/affinity/cookie/nginx/README.md) example.
 
 
 ### Session Affinity
@@ -221,7 +224,7 @@ If you use the ``cookie`` type you can also specify the name of the cookie that 
 In case of NGINX the annotation `ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
 The `index` option  is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranted to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!
 
-In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here]https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf
+In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf)
 
 
 
@@ -237,6 +240,9 @@ Example usage: `custom-http-errors: 404,415`
 
 
 **disable-access-log:** Disables the Access Log from the entire Ingress Controller. This is 'false' by default.
+
+
+**disable-ipv6:** Disable listening on IPV6. This is 'false' by default.
 
 
 **enable-dynamic-tls-records:** Enables dynamically sized TLS records to improve time-to-first-byte. Enabled by default. See [CloudFlare's blog](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency) for more information.
@@ -330,7 +336,7 @@ The recommendation above prioritizes algorithms that provide perfect [forward se
 Please check the [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/).
 
 
-**ssl-dh-param:** sets the Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy".
+**ssl-dh-param:** Sets the name of the secret that contains Diffie-Hellman key to help with "Perfect Forward Secrecy".
 https://www.openssl.org/docs/manmaster/apps/dhparam.html
 https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam

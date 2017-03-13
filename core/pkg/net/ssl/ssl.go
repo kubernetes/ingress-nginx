@@ -17,14 +17,19 @@ limitations under the License.
 package ssl
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"os"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -63,21 +68,25 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 	pemCerts, err := ioutil.ReadFile(tempPemFile.Name())
 	if err != nil {
+		_ = os.Remove(tempPemFile.Name())
 		return nil, err
 	}
 
 	pemBlock, _ := pem.Decode(pemCerts)
 	if pemBlock == nil {
+		_ = os.Remove(tempPemFile.Name())
 		return nil, fmt.Errorf("No valid PEM formatted block found")
 	}
 
 	// If the file does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
 	if pemBlock.Type != "CERTIFICATE" {
+		_ = os.Remove(tempPemFile.Name())
 		return nil, fmt.Errorf("Certificate %v contains invalid data, and must be created with 'kubectl create secret tls'", name)
 	}
 
 	pemCert, err := x509.ParseCertificate(pemBlock.Bytes)
 	if err != nil {
+		_ = os.Remove(tempPemFile.Name())
 		return nil, err
 	}
 
@@ -120,14 +129,14 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		return &ingress.SSLCert{
 			CAFileName:  pemFileName,
 			PemFileName: pemFileName,
-			PemSHA:      pemSHA1(pemFileName),
+			PemSHA:      PemSHA1(pemFileName),
 			CN:          cn,
 		}, nil
 	}
 
 	return &ingress.SSLCert{
 		PemFileName: pemFileName,
-		PemSHA:      pemSHA1(pemFileName),
+		PemSHA:      PemSHA1(pemFileName),
 		CN:          cn,
 	}, nil
 }
@@ -162,34 +171,61 @@ func AddCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
 	return &ingress.SSLCert{
 		CAFileName:  caFileName,
 		PemFileName: caFileName,
-		PemSHA:      pemSHA1(caFileName),
+		PemSHA:      PemSHA1(caFileName),
 	}, nil
 }
 
-// SearchDHParamFile iterates all the secrets mounted inside the /etc/nginx-ssl directory
-// in order to find a file with the name dhparam.pem. If such file exists it will
-// returns the path. If not it just returns an empty string
-func SearchDHParamFile(baseDir string) string {
-	files, _ := ioutil.ReadDir(baseDir)
-	for _, file := range files {
-		if !file.IsDir() {
-			continue
-		}
+// AddOrUpdateDHParam creates a dh parameters file with the specified name
+func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
+	pemName := fmt.Sprintf("%v.pem", name)
+	pemFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, pemName)
 
-		dhPath := fmt.Sprintf("%v/%v/dhparam.pem", baseDir, file.Name())
-		if _, err := os.Stat(dhPath); err == nil {
-			glog.Infof("using file '%v' for parameter ssl_dhparam", dhPath)
-			return dhPath
-		}
+	tempPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, pemName)
+
+	glog.V(3).Infof("Creating temp file %v for DH param: %v", tempPemFile.Name(), pemName)
+	if err != nil {
+		return "", fmt.Errorf("could not create temp pem file %v: %v", pemFileName, err)
 	}
 
-	glog.Warning("no file dhparam.pem found in secrets")
-	return ""
+	_, err = tempPemFile.Write(dh)
+	if err != nil {
+		return "", fmt.Errorf("could not write to pem file %v: %v", tempPemFile.Name(), err)
+	}
+
+	err = tempPemFile.Close()
+	if err != nil {
+		return "", fmt.Errorf("could not close temp pem file %v: %v", tempPemFile.Name(), err)
+	}
+
+	pemCerts, err := ioutil.ReadFile(tempPemFile.Name())
+	if err != nil {
+		_ = os.Remove(tempPemFile.Name())
+		return "", err
+	}
+
+	pemBlock, _ := pem.Decode(pemCerts)
+	if pemBlock == nil {
+		_ = os.Remove(tempPemFile.Name())
+		return "", fmt.Errorf("No valid PEM formatted block found")
+	}
+
+	// If the file does not start with 'BEGIN DH PARAMETERS' it's invalid and must not be used.
+	if pemBlock.Type != "DH PARAMETERS" {
+		_ = os.Remove(tempPemFile.Name())
+		return "", fmt.Errorf("Certificate %v contains invalid data", name)
+	}
+
+	err = os.Rename(tempPemFile.Name(), pemFileName)
+	if err != nil {
+		return "", fmt.Errorf("could not move temp pem file %v to destination %v: %v", tempPemFile.Name(), pemFileName, err)
+	}
+
+	return pemFileName, nil
 }
 
-// pemSHA1 returns the SHA1 of a pem file. This is used to
+// PemSHA1 returns the SHA1 of a pem file. This is used to
 // reload NGINX in case a secret with a SSL certificate changed.
-func pemSHA1(filename string) string {
+func PemSHA1(filename string) string {
 	hasher := sha1.New()
 	s, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -200,23 +236,52 @@ func pemSHA1(filename string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-const (
-	snakeOilPem = "/etc/ssl/certs/ssl-cert-snakeoil.pem"
-	snakeOilKey = "/etc/ssl/private/ssl-cert-snakeoil.key"
-)
-
-// GetFakeSSLCert returns the snake oil ssl certificate created by the command
-// make-ssl-cert generate-default-snakeoil --force-overwrite
+// GetFakeSSLCert creates a Self Signed Certificate
+// Based in the code https://golang.org/src/crypto/tls/generate_cert.go
 func GetFakeSSLCert() ([]byte, []byte) {
-	cert, err := ioutil.ReadFile(snakeOilPem)
+
+	var priv interface{}
+	var err error
+
+	priv, err = rsa.GenerateKey(rand.Reader, 2048)
+
 	if err != nil {
-		return nil, nil
+		glog.Fatalf("failed to generate fake private key: %s", err)
 	}
 
-	key, err := ioutil.ReadFile(snakeOilKey)
+	notBefore := time.Now()
+	// This certificate is valid for 365 days
+	notAfter := notBefore.Add(365 * 24 * time.Hour)
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+
 	if err != nil {
-		return nil, nil
+		glog.Fatalf("failed to generate fake serial number: %s", err)
 	}
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"Acme Co"},
+			CommonName:   "Kubernetes Ingress Controller Fake Certificate",
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		DNSNames:              []string{"ingress.local"},
+	}
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.(*rsa.PrivateKey).PublicKey, priv)
+	if err != nil {
+		glog.Fatalf("Failed to create fake certificate: %s", err)
+	}
+
+	cert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+
+	key := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv.(*rsa.PrivateKey))})
 
 	return cert, key
 }

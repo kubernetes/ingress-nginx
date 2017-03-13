@@ -1,6 +1,6 @@
 # Nginx Ingress Controller
 
-This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kubernetes/kubernetes/blob/master/docs/design/configmap.md) to store the nginx configuration. See [Ingress controller documentation](../README.md) for details on how it works.
+This is an nginx Ingress controller that uses [ConfigMap](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/configmap.md) to store the nginx configuration. See [Ingress controller documentation](../README.md) for details on how it works.
 
 ## Contents
 * [Conventions](#conventions)

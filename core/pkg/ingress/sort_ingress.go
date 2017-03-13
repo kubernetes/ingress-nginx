@@ -54,10 +54,6 @@ type ServerByName []*Server
 func (c ServerByName) Len() int      { return len(c) }
 func (c ServerByName) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 func (c ServerByName) Less(i, j int) bool {
-	// special case for catch all server
-	if c[j].Hostname == "_" {
-		return false
-	}
 	return c[i].Hostname < c[j].Hostname
 }
 

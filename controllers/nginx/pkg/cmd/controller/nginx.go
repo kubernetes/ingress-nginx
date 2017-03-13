@@ -29,28 +29,35 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/pflag"
 
 	"k8s.io/kubernetes/pkg/api"
+
+	"strings"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
 	"k8s.io/ingress/controllers/nginx/pkg/version"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/net/ssl"
 )
+
+type statusModule string
 
 const (
 	ngxHealthPort = 18080
 	ngxHealthPath = "/healthz"
-	ngxStatusPath = "/internal_nginx_status"
+
+	defaultStatusModule statusModule = "default"
+	vtsStatusModule     statusModule = "vts"
 )
 
 var (
-	tmplPath = "/etc/nginx/template/nginx.tmpl"
-	cfgPath  = "/etc/nginx/nginx.conf"
-	binary   = "/usr/sbin/nginx"
+	tmplPath        = "/etc/nginx/template/nginx.tmpl"
+	cfgPath         = "/etc/nginx/nginx.conf"
+	binary          = "/usr/sbin/nginx"
+	defIngressClass = "nginx"
 )
 
 // newNGINXController creates a new NGINX Ingress controller.
@@ -61,7 +68,7 @@ func newNGINXController() ingress.Controller {
 	if ngx == "" {
 		ngx = binary
 	}
-	n := NGINXController{
+	n := &NGINXController{
 		binary:    ngx,
 		configmap: &api.ConfigMap{},
 	}
@@ -93,7 +100,7 @@ Error loading new template : %v
 
 	go n.Start()
 
-	return ingress.Controller(&n)
+	return ingress.Controller(n)
 }
 
 // NGINXController ...
@@ -105,10 +112,18 @@ type NGINXController struct {
 	storeLister ingress.StoreLister
 
 	binary string
+
+	cmdArgs []string
+
+	watchClass string
+	namespace  string
+
+	stats        *statsCollector
+	statusModule statusModule
 }
 
 // Start start a new NGINX master process running in foreground.
-func (n NGINXController) Start() {
+func (n *NGINXController) Start() {
 	glog.Info("starting NGINX process...")
 
 	done := make(chan error, 1)
@@ -155,7 +170,7 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 		return
 	}
 
-	n.setupMonitor(cmd.Args)
+	n.cmdArgs = cmd.Args
 
 	go func() {
 		done <- cmd.Wait()
@@ -175,6 +190,7 @@ func (n NGINXController) Reload(data []byte) ([]byte, bool, error) {
 	}
 
 	o, e := exec.Command(n.binary, "-s", "reload").CombinedOutput()
+
 	return o, true, e
 }
 
@@ -185,23 +201,7 @@ func (n NGINXController) BackendDefaults() defaults.Backend {
 		return d.Backend
 	}
 
-	return n.backendDefaults()
-}
-
-func (n *NGINXController) backendDefaults() defaults.Backend {
-	d := config.NewDefault()
-	config := &mapstructure.DecoderConfig{
-		Metadata:         nil,
-		WeaklyTypedInput: true,
-		Result:           &d,
-		TagName:          "json",
-	}
-	decoder, err := mapstructure.NewDecoder(config)
-	if err != nil {
-		glog.Warningf("unexpected error merging defaults: %v", err)
-	}
-	decoder.Decode(n.configmap.Data)
-	return d.Backend
+	return ngx_template.ReadConfig(n.configmap.Data).Backend
 }
 
 // isReloadRequired check if the new configuration file is different
@@ -218,6 +218,7 @@ func (n NGINXController) isReloadRequired(data []byte) bool {
 	}
 
 	if !bytes.Equal(src, data) {
+
 		tmpfile, err := ioutil.TempFile("", "nginx-cfg-diff")
 		if err != nil {
 			glog.Errorf("error creating temporal file: %s", err)
@@ -239,6 +240,7 @@ func (n NGINXController) isReloadRequired(data []byte) bool {
 			glog.Infof("NGINX configuration diff\n")
 			glog.Infof("%v", string(diffOutput))
 		}
+		os.Remove(tmpfile.Name())
 		return len(diffOutput) > 0
 	}
 	return false
@@ -255,8 +257,25 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 }
 
 // OverrideFlags customize NGINX controller flags
-func (n NGINXController) OverrideFlags(flags *pflag.FlagSet) {
-	flags.Set("ingress-class", "nginx")
+func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
+	ic, _ := flags.GetString("ingress-class")
+	wc, _ := flags.GetString("watch-namespace")
+
+	if ic == "" {
+		ic = defIngressClass
+	}
+
+	if ic != defIngressClass {
+		glog.Warningf("only Ingress with class %v will be processed by this ingress controller", ic)
+	}
+
+	flags.Set("ingress-class", ic)
+	n.stats = newStatsCollector(ic, wc, n.binary)
+}
+
+// DefaultIngressClass just return the default ingress class
+func (n NGINXController) DefaultIngressClass() string {
+	return defIngressClass
 }
 
 // testTemplate checks if the NGINX configuration inside the byte array is valid
@@ -267,7 +286,10 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 		return err
 	}
 	defer tmpfile.Close()
-	ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
+	err = ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
+	if err != nil {
+		return err
+	}
 	out, err := exec.Command(n.binary, "-t", "-c", tmpfile.Name()).CombinedOutput()
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
@@ -314,6 +336,13 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
 
+	// we need to check if the status module configuration changed
+	if cfg.EnableVtsStatus {
+		n.setupMonitor(vtsStatusModule)
+	} else {
+		n.setupMonitor(defaultStatusModule)
+	}
+
 	// NGINX cannot resize the has tables used to store server names.
 	// For this reason we check if the defined size defined is correct
 	// for the FQDN defined in the ingress rules adjusting the value
@@ -348,6 +377,32 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 			setHeaders = cmap.(*api.ConfigMap).Data
 		}
 	}
+
+	sslDHParam := ""
+	if cfg.SSLDHParam != "" {
+		secretName := cfg.SSLDHParam
+		s, exists, err := n.storeLister.Secret.GetByKey(secretName)
+		if err != nil {
+			glog.Warningf("unexpected error reading secret %v: %v", secretName, err)
+		}
+
+		if exists {
+			secret := s.(*api.Secret)
+			nsSecName := strings.Replace(secretName, "/", "-", -1)
+
+			dh, ok := secret.Data["dhparam.pem"]
+			if ok {
+				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
+				if err != nil {
+					glog.Warningf("unexpected error adding or updating dhparam %v file: %v", nsSecName, err)
+				} else {
+					sslDHParam = pemFileName
+				}
+			}
+		}
+	}
+
+	cfg.SSLDHParam = sslDHParam
 
 	content, err := n.t.Write(config.TemplateConfig{
 		ProxySetHeaders:     setHeaders,

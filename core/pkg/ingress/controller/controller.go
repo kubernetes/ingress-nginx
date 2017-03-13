@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -40,6 +41,7 @@ import (
 
 	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/service"
@@ -57,11 +59,6 @@ const (
 	defServerName            = "_"
 	podStoreSyncedPollPeriod = 1 * time.Second
 	rootLocation             = "/"
-
-	// ingressClassKey picks a specific "class" for the Ingress. The controller
-	// only processes Ingresses with this annotation either unset, or set
-	// to either the configured value or the empty string.
-	ingressClassKey = "kubernetes.io/ingress.class"
 )
 
 var (
@@ -127,6 +124,7 @@ type Configuration struct {
 	UDPConfigMapName      string
 	DefaultSSLCertificate string
 	DefaultHealthzURL     string
+	DefaultIngressClass   string
 	// optional
 	PublishService string
 	// Backend is the particular implementation to be used.
@@ -166,8 +164,8 @@ func newIngressController(config *Configuration) *GenericController {
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
-			if !IsValidClass(addIng, config.IngressClass) {
-				glog.Infof("ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
+			if !class.IsValid(addIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+				glog.Infof("ignoring add for ingress %v based on annotation %v", addIng.Name, class.IngressKey)
 				return
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
@@ -175,8 +173,8 @@ func newIngressController(config *Configuration) *GenericController {
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
-			if !IsValidClass(delIng, config.IngressClass) {
-				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
+			if !class.IsValid(delIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, class.IngressKey)
 				return
 			}
 			ic.recorder.Eventf(delIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", delIng.Namespace, delIng.Name))
@@ -185,7 +183,8 @@ func newIngressController(config *Configuration) *GenericController {
 		UpdateFunc: func(old, cur interface{}) {
 			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
-			if !IsValidClass(curIng, config.IngressClass) && !IsValidClass(oldIng, config.IngressClass) {
+			if !class.IsValid(curIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) &&
+				!class.IsValid(oldIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 				return
 			}
 
@@ -301,10 +300,12 @@ func newIngressController(config *Configuration) *GenericController {
 
 	if config.UpdateStatus {
 		ic.syncStatus = status.NewStatusSyncer(status.Config{
-			Client:         config.Client,
-			PublishService: ic.cfg.PublishService,
-			IngressLister:  ic.ingLister,
-			ElectionID:     config.ElectionID,
+			Client:              config.Client,
+			PublishService:      ic.cfg.PublishService,
+			IngressLister:       ic.ingLister,
+			ElectionID:          config.ElectionID,
+			IngressClass:        config.IngressClass,
+			DefaultIngressClass: config.DefaultIngressClass,
 		})
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
@@ -588,7 +589,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
 
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
@@ -711,7 +712,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
 
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
@@ -836,19 +837,30 @@ func (ic *GenericController) createServers(data []interface{},
 		CookiePath:     bdef.ProxyCookiePath,
 	}
 
-	// This adds the Default Certificate to Default Backend and also for vhosts missing the secret
+	// This adds the Default Certificate to Default Backend (or generates a new self signed one)
 	var defaultPemFileName, defaultPemSHA string
+
+	// Tries to fetch the default Certificate. If it does not exists, generate a new self signed one.
 	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
-	// If no default Certificate was supplied, tries to generate a new dumb one
 	if err != nil {
-		var cert *ingress.SSLCert
-		defCert, defKey := ssl.GetFakeSSLCert()
-		cert, err = ssl.AddOrUpdateCertAndKey("system-snake-oil-certificate", defCert, defKey, []byte{})
+		// This means the Default Secret does not exists, so we will create a new one.
+		fakeCertificate := "default-fake-certificate"
+		fakeCertificatePath := fmt.Sprintf("%v/%v.pem", ingress.DefaultSSLDirectory, fakeCertificate)
+
+		// Only generates a new certificate if it doesn't exists physically
+		_, err := os.Stat(fakeCertificatePath)
 		if err != nil {
-			glog.Fatalf("Error generating self signed certificate: %v", err)
+			glog.V(3).Infof("No Default SSL Certificate found. Generating a new one")
+			defCert, defKey := ssl.GetFakeSSLCert()
+			defaultCertificate, err = ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
+			if err != nil {
+				glog.Fatalf("Error generating self signed certificate: %v", err)
+			}
+			defaultPemFileName = defaultCertificate.PemFileName
+			defaultPemSHA = defaultCertificate.PemSHA
 		} else {
-			defaultPemFileName = cert.PemFileName
-			defaultPemSHA = cert.PemSHA
+			defaultPemFileName = fakeCertificatePath
+			defaultPemSHA = ssl.PemSHA1(fakeCertificatePath)
 		}
 	} else {
 		defaultPemFileName = defaultCertificate.PemFileName
@@ -872,7 +884,7 @@ func (ic *GenericController) createServers(data []interface{},
 	// initialize all the servers
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
@@ -912,7 +924,7 @@ func (ic *GenericController) createServers(data []interface{},
 	// configure default location and SSL
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
-		if !IsValidClass(ing, ic.cfg.IngressClass) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
@@ -943,9 +955,6 @@ func (ic *GenericController) createServers(data []interface{},
 						servers[host].SSLCertificate = cert.PemFileName
 						servers[host].SSLPemChecksum = cert.PemSHA
 					}
-				} else {
-					servers[host].SSLCertificate = defaultPemFileName
-					servers[host].SSLPemChecksum = defaultPemSHA
 				}
 			}
 		}

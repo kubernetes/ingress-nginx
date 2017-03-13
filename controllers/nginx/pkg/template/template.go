@@ -31,7 +31,6 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
-	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	ing_net "k8s.io/ingress/core/pkg/net"
 	"k8s.io/ingress/core/pkg/watch"
@@ -250,14 +249,12 @@ func buildAuthResponseHeaders(input interface{}) []string {
 }
 
 func buildLogFormatUpstream(input interface{}) string {
-	config, ok := input.(config.Configuration)
-
+	cfg, ok := input.(config.Configuration)
 	if !ok {
 		glog.Errorf("error  an ingress.buildLogFormatUpstream type but %T was returned", input)
 	}
 
-	return nginxconfig.BuildLogFormatUpstream(config.UseProxyProtocol)
-
+	return cfg.BuildLogFormatUpstream()
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects

@@ -32,6 +32,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/wait"
 
 	cache_store "k8s.io/ingress/core/pkg/cache"
+	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/strings"
 	"k8s.io/ingress/core/pkg/task"
@@ -53,6 +54,9 @@ type Config struct {
 	PublishService string
 	IngressLister  cache_store.StoreToIngressLister
 	ElectionID     string
+
+	DefaultIngressClass string
+	IngressClass        string
 }
 
 // statusSync keeps the status IP in each Ingress rule updated executing a periodic check
@@ -243,6 +247,11 @@ func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
 	wg.Add(len(ings))
 	for _, cur := range ings {
 		ing := cur.(*extensions.Ingress)
+
+		if !class.IsValid(ing, s.Config.IngressClass, s.Config.DefaultIngressClass) {
+			continue
+		}
+
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
 			ingClient := s.Client.Extensions().Ingresses(ing.Namespace)
