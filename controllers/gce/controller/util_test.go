@@ -32,7 +32,7 @@ import (
 var firstPodCreationTime = time.Date(2006, 01, 02, 15, 04, 05, 0, time.UTC)
 
 func TestZoneListing(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	zoneToNode := map[string][]string{
 		"zone-1": {"n1"},
@@ -57,7 +57,7 @@ func TestZoneListing(t *testing.T) {
 }
 
 func TestInstancesAddedToZones(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	zoneToNode := map[string][]string{
 		"zone-1": {"n1", "n2"},
@@ -92,7 +92,7 @@ func TestInstancesAddedToZones(t *testing.T) {
 }
 
 func TestProbeGetter(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	nodePortToHealthCheck := map[int64]string{
 		3001: "/healthz",
@@ -110,7 +110,7 @@ func TestProbeGetter(t *testing.T) {
 }
 
 func TestProbeGetterNamedPort(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	nodePortToHealthCheck := map[int64]string{
 		3001: "/healthz",
@@ -133,7 +133,7 @@ func TestProbeGetterNamedPort(t *testing.T) {
 }
 
 func TestProbeGetterCrossNamespace(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 
 	firstPod := &api.Pod{

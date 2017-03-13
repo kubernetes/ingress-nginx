@@ -22,11 +22,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/imdario/mergo"
 
-	"k8s.io/kubernetes/pkg/apis/extensions"
-
 	"k8s.io/ingress/core/pkg/ingress"
-	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
-	"k8s.io/ingress/core/pkg/ingress/errors"
 )
 
 // DeniedKeyName name of the key that contains the reason to deny a location
@@ -83,25 +79,6 @@ func matchHostnames(pattern, host string) bool {
 	}
 
 	return true
-}
-
-// IsValidClass returns true if the given Ingress either doesn't specify
-// the ingress.class annotation, or it's set to the configured in the
-// ingress controller.
-func IsValidClass(ing *extensions.Ingress, class string) bool {
-	if class == "" {
-		return true
-	}
-
-	cc, err := parser.GetStringAnnotation(ingressClassKey, ing)
-	if err != nil && !errors.IsMissingAnnotations(err) {
-		glog.Warningf("unexpected error reading ingress annotation: %v", err)
-	}
-	if cc == "" {
-		return true
-	}
-
-	return cc == class
 }
 
 func mergeLocationAnnotations(loc *ingress.Location, anns map[string]interface{}) {

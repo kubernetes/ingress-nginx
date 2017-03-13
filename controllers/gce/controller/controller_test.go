@@ -199,7 +199,8 @@ func addIngress(lbc *LoadBalancerController, ing *extensions.Ingress, pm *nodePo
 }
 
 func TestLbCreateDelete(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	testFirewallName := "quux"
+	cm := NewFakeClusterManager(DefaultClusterUID, testFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	inputMap1 := map[string]utils.FakeIngressRuleValueMap{
 		"foo.example.com": {
@@ -240,6 +241,7 @@ func TestLbCreateDelete(t *testing.T) {
 	unexpected := []int{pm.portMap["foo2svc"], pm.portMap["bar2svc"]}
 	expected := []int{pm.portMap["foo1svc"], pm.portMap["bar1svc"]}
 	firewallPorts := sets.NewString()
+	pm.namer.SetFirewallName(testFirewallName)
 	firewallName := pm.namer.FrName(pm.namer.FrSuffix())
 
 	if firewallRule, err := cm.firewallPool.(*firewalls.FirewallRules).GetFirewall(firewallName); err != nil {
@@ -290,7 +292,7 @@ func TestLbCreateDelete(t *testing.T) {
 }
 
 func TestLbFaultyUpdate(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	inputMap := map[string]utils.FakeIngressRuleValueMap{
 		"foo.example.com": {
@@ -327,7 +329,7 @@ func TestLbFaultyUpdate(t *testing.T) {
 }
 
 func TestLbDefaulting(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	// Make sure the controller plugs in the default values accepted by GCE.
 	ing := newIngress(map[string]utils.FakeIngressRuleValueMap{"": {"": "foo1svc"}})
@@ -345,7 +347,7 @@ func TestLbDefaulting(t *testing.T) {
 }
 
 func TestLbNoService(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	inputMap := map[string]utils.FakeIngressRuleValueMap{
 		"foo.example.com": {
@@ -389,7 +391,7 @@ func TestLbNoService(t *testing.T) {
 }
 
 func TestLbChangeStaticIP(t *testing.T) {
-	cm := NewFakeClusterManager(DefaultClusterUID)
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm, "")
 	inputMap := map[string]utils.FakeIngressRuleValueMap{
 		"foo.example.com": {

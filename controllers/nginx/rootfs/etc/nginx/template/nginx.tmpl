@@ -14,7 +14,7 @@ worker_rlimit_nofile {{ .MaxOpenFiles }};
 events {
     multi_accept        on;
     worker_connections  {{ $cfg.MaxWorkerConnections }};
-    use                 epoll; 
+    use                 epoll;
 }
 
 http {
@@ -26,7 +26,7 @@ http {
     real_ip_header      X-Forwarded-For;
     set_real_ip_from    0.0.0.0/0;
     {{ end }}
-    
+
     real_ip_recursive   on;
 
     {{/* databases used to determine the country depending on the client IP address */}}
@@ -51,7 +51,7 @@ http {
     aio                 threads;
     tcp_nopush          on;
     tcp_nodelay         on;
-    
+
     log_subrequest      on;
 
     reset_timedout_connection on;
@@ -60,6 +60,9 @@ http {
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
+    
+    http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
+    http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
 
     types_hash_max_size             2048;
     server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};
@@ -73,13 +76,13 @@ http {
     gzip_comp_level 5;
     gzip_http_version 1.1;
     gzip_min_length 256;
-    gzip_types {{ $cfg.GzipTypes }};    
+    gzip_types {{ $cfg.GzipTypes }};
     gzip_proxied any;
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
 
-    log_format upstreaminfo {{ buildLogFormatUpstream $cfg }};
+    log_format upstreaminfo '{{ buildLogFormatUpstream $cfg }}';
 
     {{/* map urls that should not appear in access.log */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
@@ -207,10 +210,10 @@ http {
     {{ range $index, $server := .Servers }}
     server {
         server_name {{ $server.Hostname }};
-        listen [::]:80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $index 0 }} ipv6only=off{{end}}{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $backlogSize }}{{end}};
+        listen {{ if not $cfg.DisableIpv6 }}[::]:{{ end }}80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if not $cfg.DisableIpv6 }}ipv6only=off{{end}} reuseport backlog={{ $backlogSize }}{{end}};
         {{/* Listen on 442 because port 443 is used in the stream section */}}
-        {{/* This listen cannot contains proxy_protocol directive because port 443 is in charge of decoding the protocol */}}
-        {{ if not (empty $server.SSLCertificate) }}listen {{ if gt (len $passthroughBackends) 0 }}442{{ else }}[::]:443 {{ end }}{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $backlogSize }}{{end}} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
+        {{/* This listen on port 442 cannot contains proxy_protocol directive because port 443 is in charge of decoding the protocol */}}
+        {{ if not (empty $server.SSLCertificate) }}listen {{ if gt (len $passthroughBackends) 0 }}442{{ else }}{{ if not $cfg.DisableIpv6 }}[::]:{{ end }}443 {{ if $cfg.UseProxyProtocol }} proxy_protocol {{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if not $cfg.DisableIpv6 }}ipv6only=off{{end}} reuseport backlog={{ $backlogSize }}{{end}} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate                         {{ $server.SSLCertificate }};
@@ -237,20 +240,24 @@ http {
         {{ if not (empty $authPath) }}
         location = {{ $authPath }} {
             internal;
+            set $proxy_upstream_name "internal";
+
             {{ if not $location.ExternalAuth.SendBody }}
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
             {{ end }}
-            {{ if not (empty $location.ExternalAuth.Method) }}           
+            {{ if not (empty $location.ExternalAuth.Method) }}
             proxy_method {{ $location.ExternalAuth.Method }};
+            proxy_set_header X-Original-URI $request_uri;
+            proxy_set_header X-Scheme       $pass_access_scheme;
             {{ end }}
-            proxy_set_header            Host $host;            
+            proxy_set_header            Host $host;
             proxy_pass_request_headers  on;
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
         }
         {{ end }}
-        
+
         location {{ $path }} {
             set $proxy_upstream_name "{{ $location.Backend }}";
 
@@ -260,7 +267,7 @@ http {
             allow {{ $ip }};{{ end }}
             deny all;
             {{ end }}
-            
+
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             {{ if not (empty $authPath) }}
@@ -270,10 +277,14 @@ http {
             {{ $line }}
             {{- end }}
             {{ end }}
-            
-            {{ if (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect) }}
+
+            {{ if not (empty $location.ExternalAuth.SigninURL) }}
+            error_page 401 = {{ $location.ExternalAuth.SigninURL }};
+            {{ end }}
+
+            {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
             # enforce ssl on server side
-            if ($scheme = http) {
+            if ($pass_access_scheme = http) {
                 return 301 https://$host$request_uri;
             }
             {{ end }}
@@ -281,7 +292,7 @@ http {
             {{ $limits := buildRateLimit $location }}
             {{ range $limit := $limits }}
             {{ $limit }}{{ end }}
-            
+
             {{ if $location.BasicDigestAuth.Secured }}
             {{ if eq $location.BasicDigestAuth.Type "basic" }}
             auth_basic "{{ $location.BasicDigestAuth.Realm }}";
@@ -292,7 +303,7 @@ http {
             {{ end }}
             proxy_set_header Authorization "";
             {{ end }}
-            
+
             {{ if $location.EnableCORS }}
             {{ template "CORS" }}
             {{ end }}
@@ -317,6 +328,8 @@ http {
             proxy_set_header X-Forwarded-Host       $host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            proxy_set_header X-Original-URI         $request_uri;
+            proxy_set_header X-Scheme               $pass_access_scheme;
 
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
@@ -334,6 +347,7 @@ http {
             proxy_redirect                          off;
             proxy_buffering                         off;
             proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
+            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
 
             proxy_http_version                      1.1;
 
@@ -355,7 +369,7 @@ http {
             {{ end }}
         }
         {{ end }}
-        
+
         {{ if eq $server.Hostname "_" }}
         # health checks in cloud providers require the use of port 80
         location {{ $healthzURI }} {
@@ -367,7 +381,7 @@ http {
         # with an external software (like sysdig)
         location /nginx_status {
             allow 127.0.0.1;
-            allow ::1;
+            {{ if not $cfg.DisableIpv6 }}allow ::1;{{ end }}
             deny all;
 
             access_log off;
@@ -377,22 +391,24 @@ http {
 
         {{ template "CUSTOM_ERRORS" $cfg }}
     }
-	
+
     {{ end }}
-    
+
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
         # Use the port 18080 (random value just to avoid known ports) as default port for nginx.
         # Changing this value requires a change in:
         # https://github.com/kubernetes/contrib/blob/master/ingress/controllers/nginx/nginx/command.go#L104
-        listen [::]:18080 ipv6only=off default_server reuseport backlog={{ .BacklogSize }};
+        listen {{ if not $cfg.DisableIpv6 }}[::]:{{ end }}18080 {{ if not $cfg.DisableIpv6 }}ipv6only=off{{end}} default_server reuseport backlog={{ .BacklogSize }};
 
         location {{ $healthzURI }} {
             access_log off;
             return 200;
         }
-       
+
         location /nginx_status {
+            set $proxy_upstream_name "internal";
+
             {{ if $cfg.EnableVtsStatus }}
             vhost_traffic_status_display;
             vhost_traffic_status_display_format html;
@@ -406,8 +422,10 @@ http {
         # using prometheus.
         # TODO: enable extraction for vts module.
         location /internal_nginx_status {
+            set $proxy_upstream_name "internal";
+
             allow 127.0.0.1;
-            allow ::1;
+            {{ if not $cfg.DisableIpv6 }}allow ::1;{{ end }}
             deny all;
 
             access_log off;
@@ -445,7 +463,7 @@ stream {
         {{ range $i, $passthrough := .PassthroughBackends }}
         {{ $passthrough.Hostname }}         {{  $passthrough.Backend }};
         {{ end }}
-        # send SSL traffic to this nginx in a different port 
+        # send SSL traffic to this nginx in a different port
         default                         nginx-ssl-backend;
     }
 
@@ -467,20 +485,20 @@ stream {
     {{ buildSSLPassthroughUpstreams $backends .PassthroughBackends }}
 
     server {
-        listen                  [::]:443 ipv6only=off{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  {{ if not $cfg.DisableIpv6 }}[::]:{{ end }}443 {{ if not $cfg.DisableIpv6 }}ipv6only=off{{ end }}{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
         proxy_pass              $stream_upstream;
         ssl_preread             on;
     }
     {{ end }}
-    
-    # TCP services		
+
+    # TCP services
     {{ range $i, $tcpServer := .TCPBackends }}
     upstream {{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
     {{ range $j, $endpoint := $tcpServer.Endpoints }}
         server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
     {{ end }}
     }
-    
+
     server {
         listen                  {{ $tcpServer.Port }};
         proxy_pass              {{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
@@ -494,11 +512,11 @@ stream {
         server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
     {{ end }}
     }
-    
+
     server {
         listen                  {{ $udpServer.Port }};
         proxy_responses         1;
-        proxy_pass              {{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};		
+        proxy_pass              {{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
     }
     {{ end }}
 }
@@ -511,7 +529,7 @@ stream {
             content_by_lua_block {
                 openURL(ngx.req.get_headers(0), {{ $errCode }})
             }
-        }    
+        }
         {{ end }}
 {{ end }}
 

@@ -17,11 +17,11 @@ limitations under the License.
 package config
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/golang/glog"
 
-	"fmt"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
@@ -47,9 +47,9 @@ const (
 
 	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
 
-	logFormatUpstream = "'%v - [$proxy_add_x_forwarded_for] - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status'"
+	logFormatUpstream = `%v - [$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status"`
 
-	logFormatStream = "'$remote_addr [$time_local] $protocol [$ssl_preread_server_name] [$stream_upstream] $status $bytes_sent $bytes_received $session_time'"
+	logFormatStream = `[$time_local] $protocol [$ssl_preread_server_name] [$stream_upstream] $status $bytes_sent $bytes_received $session_time`
 
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
@@ -97,10 +97,8 @@ type Configuration struct {
 	//http://nginx.org/en/docs/http/ngx_http_log_module.html
 	DisableAccessLog bool `json:"disable-access-log,omitempty"`
 
-	// EnableSPDY enables spdy and use ALPN and NPN to advertise the availability of the two protocols
-	// https://blog.cloudflare.com/open-sourcing-our-nginx-http-2-spdy-code
-	// By default this is enabled
-	EnableSPDY bool `json:"enable-spdy"`
+	// DisableIpv6 disable listening on ipv6 address
+	DisableIpv6 bool `json:"disable-ipv6,omitempty"`
 
 	// EnableStickySessions enabled sticky sessions using cookies
 	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
@@ -122,6 +120,14 @@ type Configuration struct {
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
 	// Log levels above are listed in the order of increasing severity
 	ErrorLogLevel string `json:"error-log-level,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
+	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
+	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
+	// HTTP2MaxHeaderSize Limits the maximum size of the entire request header list after HPACK decompression
+	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
 
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
@@ -193,7 +199,7 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
 	SSLCiphers string `json:"ssl-ciphers,omitempty"`
 
-	// Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
+	// The secret that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
 	// https://www.openssl.org/docs/manmaster/apps/dhparam.html
 	// https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
@@ -253,10 +259,10 @@ type Configuration struct {
 func NewDefault() Configuration {
 	cfg := Configuration{
 		ClientHeaderBufferSize:  "1k",
-		DisableAccessLog:        false,
 		EnableDynamicTLSRecords: true,
-		EnableSPDY:              false,
 		ErrorLogLevel:           errorLevel,
+		HTTP2MaxFieldSize:       "4k",
+		HTTP2MaxHeaderSize:      "16k",
 		HSTS:                    true,
 		HSTSIncludeSubdomains:    true,
 		HSTSMaxAge:               hstsMaxAge,
@@ -264,7 +270,7 @@ func NewDefault() Configuration {
 		KeepAlive:                75,
 		LargeClientHeaderBuffers: "4 8k",
 		LogFormatStream:          logFormatStream,
-		LogFormatUpstream:        BuildLogFormatUpstream(false),
+		LogFormatUpstream:        logFormatUpstream,
 		MaxWorkerConnections:     16384,
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
@@ -278,7 +284,6 @@ func NewDefault() Configuration {
 		SSLSessionCacheSize:      sslSessionCacheSize,
 		SSLSessionTickets:        true,
 		SSLSessionTimeout:        sslSessionTimeout,
-		UseProxyProtocol:         false,
 		UseGzip:                  true,
 		WorkerProcesses:          runtime.NumCPU(),
 		VtsStatusZoneSize:        "10m",
@@ -295,7 +300,6 @@ func NewDefault() Configuration {
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
-			UsePortInRedirects:   false,
 		},
 	}
 
@@ -306,13 +310,18 @@ func NewDefault() Configuration {
 	return cfg
 }
 
-// BuildLogFormatUpstream format the log_format upstream based on proxy_protocol
-func BuildLogFormatUpstream(useProxyProtocol bool) string {
-
-	if useProxyProtocol {
-		return fmt.Sprintf(logFormatUpstream, "$proxy_protocol_addr")
+// BuildLogFormatUpstream format the log_format upstream using
+// proxy_protocol_addr as remote client address if UseProxyProtocol
+// is enabled.
+func (cfg Configuration) BuildLogFormatUpstream() string {
+	if cfg.LogFormatUpstream == logFormatUpstream {
+		if cfg.UseProxyProtocol {
+			return fmt.Sprintf(cfg.LogFormatUpstream, "$proxy_protocol_addr")
+		}
+		return fmt.Sprintf(cfg.LogFormatUpstream, "$remote_addr")
 	}
-	return fmt.Sprintf(logFormatUpstream, "$remote_addr")
+
+	return cfg.LogFormatUpstream
 }
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
