@@ -17,8 +17,11 @@ limitations under the License.
 package controller
 
 import (
+	"fmt"
+
 	"github.com/golang/glog"
 
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
@@ -33,6 +36,8 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
+	"k8s.io/ingress/core/pkg/ingress/annotations/sessionaffinity"
+	"k8s.io/ingress/core/pkg/ingress/annotations/snippet"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -45,24 +50,28 @@ type extractorConfig interface {
 }
 
 type annotationExtractor struct {
-	annotations map[string]parser.IngressAnnotation
+	secretResolver resolver.Secret
+	annotations    map[string]parser.IngressAnnotation
 }
 
 func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 	return annotationExtractor{
+		cfg,
 		map[string]parser.IngressAnnotation{
-			"BasicDigestAuth":    auth.NewParser(auth.AuthDirectory, cfg),
-			"ExternalAuth":       authreq.NewParser(),
-			"CertificateAuth":    authtls.NewParser(cfg),
-			"EnableCORS":         cors.NewParser(),
-			"HealthCheck":        healthcheck.NewParser(cfg),
-			"Whitelist":          ipwhitelist.NewParser(cfg),
-			"UsePortInRedirects": portinredirect.NewParser(cfg),
-			"Proxy":              proxy.NewParser(cfg),
-			"RateLimit":          ratelimit.NewParser(),
-			"Redirect":           rewrite.NewParser(cfg),
-			"SecureUpstream":     secureupstream.NewParser(),
-			"SSLPassthrough":     sslpassthrough.NewParser(),
+			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
+			"ExternalAuth":         authreq.NewParser(),
+			"CertificateAuth":      authtls.NewParser(cfg),
+			"EnableCORS":           cors.NewParser(),
+			"HealthCheck":          healthcheck.NewParser(cfg),
+			"Whitelist":            ipwhitelist.NewParser(cfg),
+			"UsePortInRedirects":   portinredirect.NewParser(cfg),
+			"Proxy":                proxy.NewParser(cfg),
+			"RateLimit":            ratelimit.NewParser(),
+			"Redirect":             rewrite.NewParser(cfg),
+			"SecureUpstream":       secureupstream.NewParser(),
+			"SessionAffinity":      sessionaffinity.NewParser(),
+			"SSLPassthrough":       sslpassthrough.NewParser(),
+			"ConfigurationSnippet": snippet.NewParser(),
 		},
 	}
 }
@@ -96,9 +105,11 @@ func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interf
 }
 
 const (
-	secureUpstream = "SecureUpstream"
-	healthCheck    = "HealthCheck"
-	sslPassthrough = "SSLPassthrough"
+	secureUpstream  = "SecureUpstream"
+	healthCheck     = "HealthCheck"
+	sslPassthrough  = "SSLPassthrough"
+	sessionAffinity = "SessionAffinity"
+	certificateAuth = "CertificateAuth"
 )
 
 func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) bool {
@@ -114,4 +125,23 @@ func (e *annotationExtractor) HealthCheck(ing *extensions.Ingress) *healthcheck.
 func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 	val, _ := e.annotations[sslPassthrough].Parse(ing)
 	return val.(bool)
+}
+
+func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
+	val, _ := e.annotations[sessionAffinity].Parse(ing)
+	return val.(*sessionaffinity.AffinityConfig)
+}
+
+func (e *annotationExtractor) ContainsCertificateAuth(ing *extensions.Ingress) bool {
+	val, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+	return val != ""
+}
+
+func (e *annotationExtractor) CertificateAuthSecret(ing *extensions.Ingress) (*api.Secret, error) {
+	val, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+	if val == "" {
+		return nil, fmt.Errorf("ingress rule %v/%v does not contains the auth-tls-secret annotation", ing.Namespace, ing.Name)
+	}
+
+	return e.secretResolver.GetSecret(val)
 }

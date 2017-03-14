@@ -82,7 +82,11 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		updateStatus = flags.Bool("update-status", true, `Indicates if the 
 		ingress controller should update the Ingress status IP/hostname. Default is true`)
+
+		electionID = flags.String("election-id", "ingress-controller-leader", `Election id to use for status update.`)
 	)
+
+	backend.OverrideFlags(flags)
 
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
@@ -124,21 +128,41 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 	}
 
-	if *configMap != "" {
-		_, _, err = k8s.ParseNameNS(*configMap)
+	for _, configMap := range []string{*configMap, *tcpConfigMapName, *udpConfigMapName} {
+
+		if configMap == "" {
+			continue
+		}
+
+		_, err = k8s.IsValidConfigMap(kubeClient, configMap)
+
 		if err != nil {
-			glog.Fatalf("configmap error: %v", err)
+			glog.Fatalf("%v", err)
 		}
 	}
 
-	os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
+	if *watchNamespace != "" {
+
+		_, err = k8s.IsValidNamespace(kubeClient, *watchNamespace)
+
+		if err != nil {
+			glog.Fatalf("no watchNamespace with name %v found: %v", *watchNamespace, err)
+		}
+	}
+
+	err = os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
+	if err != nil {
+		glog.Errorf("Failed to mkdir SSL directory: %v", err)
+	}
 
 	config := &Configuration{
 		UpdateStatus:          *updateStatus,
+		ElectionID:            *electionID,
 		Client:                kubeClient,
 		ResyncPeriod:          *resyncPeriod,
 		DefaultService:        *defaultSvc,
 		IngressClass:          *ingressClass,
+		DefaultIngressClass:   backend.DefaultIngressClass(),
 		Namespace:             *watchNamespace,
 		ConfigMapName:         *configMap,
 		TCPConfigMapName:      *tcpConfigMapName,

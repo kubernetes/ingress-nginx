@@ -17,6 +17,7 @@ limitations under the License.
 package config
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/golang/glog"
@@ -45,6 +46,10 @@ const (
 	defIPCIDR = "0.0.0.0/0"
 
 	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
+
+	logFormatUpstream = `%v - [$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status"`
+
+	logFormatStream = `[$time_local] $protocol [$ssl_preread_server_name] [$stream_upstream] $status $bytes_sent $bytes_received $session_time`
 
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
@@ -88,10 +93,12 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
 	ClientHeaderBufferSize string `json:"client-header-buffer-size"`
 
-	// EnableSPDY enables spdy and use ALPN and NPN to advertise the availability of the two protocols
-	// https://blog.cloudflare.com/open-sourcing-our-nginx-http-2-spdy-code
-	// By default this is enabled
-	EnableSPDY bool `json:"enable-spdy"`
+	// DisableAccessLog disables the Access Log globally from NGINX ingress controller
+	//http://nginx.org/en/docs/http/ngx_http_log_module.html
+	DisableAccessLog bool `json:"disable-access-log,omitempty"`
+
+	// DisableIpv6 disable listening on ipv6 address
+	DisableIpv6 bool `json:"disable-ipv6,omitempty"`
 
 	// EnableStickySessions enabled sticky sessions using cookies
 	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
@@ -113,6 +120,14 @@ type Configuration struct {
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
 	// Log levels above are listed in the order of increasing severity
 	ErrorLogLevel string `json:"error-log-level,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
+	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
+	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
+	// HTTP2MaxHeaderSize Limits the maximum size of the entire request header list after HPACK decompression
+	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
 
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
@@ -139,6 +154,14 @@ type Configuration struct {
 	// Default: 4 8k
 	LargeClientHeaderBuffers string `json:"large-client-header-buffers"`
 
+	// Customize upstream log_format
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	LogFormatUpstream string `json:"log-format-upstream,omitempty"`
+
+	// Customize stream log_format
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	LogFormatStream string `json:"log-format-stream,omitempty"`
+
 	// Maximum number of simultaneous connections that can be opened by each worker process
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
 	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
@@ -151,6 +174,9 @@ type Configuration struct {
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
 	ProxyRealIPCIDR string `json:"proxy-real-ip-cidr,omitempty"`
+
+	// Sets the name of the configmap that contains the headers to pass to the backend
+	ProxySetHeaders string `json:"proxy-set-headers,omitempty"`
 
 	// Maximum size of the server names hash tables used in server names, map directive’s values,
 	// MIME types, names of request header strings, etcd.
@@ -173,7 +199,7 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
 	SSLCiphers string `json:"ssl-ciphers,omitempty"`
 
-	// Base64 string that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
+	// The secret that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
 	// https://www.openssl.org/docs/manmaster/apps/dhparam.html
 	// https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
@@ -234,14 +260,17 @@ func NewDefault() Configuration {
 	cfg := Configuration{
 		ClientHeaderBufferSize:  "1k",
 		EnableDynamicTLSRecords: true,
-		EnableSPDY:              false,
 		ErrorLogLevel:           errorLevel,
+		HTTP2MaxFieldSize:       "4k",
+		HTTP2MaxHeaderSize:      "16k",
 		HSTS:                    true,
 		HSTSIncludeSubdomains:    true,
 		HSTSMaxAge:               hstsMaxAge,
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
 		LargeClientHeaderBuffers: "4 8k",
+		LogFormatStream:          logFormatStream,
+		LogFormatUpstream:        logFormatUpstream,
 		MaxWorkerConnections:     16384,
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
@@ -255,7 +284,6 @@ func NewDefault() Configuration {
 		SSLSessionCacheSize:      sslSessionCacheSize,
 		SSLSessionTickets:        true,
 		SSLSessionTimeout:        sslSessionTimeout,
-		UseProxyProtocol:         false,
 		UseGzip:                  true,
 		WorkerProcesses:          runtime.NumCPU(),
 		VtsStatusZoneSize:        "10m",
@@ -266,11 +294,12 @@ func NewDefault() Configuration {
 			ProxyReadTimeout:     60,
 			ProxySendTimeout:     60,
 			ProxyBufferSize:      "4k",
+			ProxyCookieDomain:    "off",
+			ProxyCookiePath:      "off",
 			SSLRedirect:          true,
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
-			UsePortInRedirects:   false,
 		},
 	}
 
@@ -281,15 +310,30 @@ func NewDefault() Configuration {
 	return cfg
 }
 
+// BuildLogFormatUpstream format the log_format upstream using
+// proxy_protocol_addr as remote client address if UseProxyProtocol
+// is enabled.
+func (cfg Configuration) BuildLogFormatUpstream() string {
+	if cfg.LogFormatUpstream == logFormatUpstream {
+		if cfg.UseProxyProtocol {
+			return fmt.Sprintf(cfg.LogFormatUpstream, "$proxy_protocol_addr")
+		}
+		return fmt.Sprintf(cfg.LogFormatUpstream, "$remote_addr")
+	}
+
+	return cfg.LogFormatUpstream
+}
+
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
+	ProxySetHeaders     map[string]string
 	MaxOpenFiles        int
 	BacklogSize         int
 	Backends            []*ingress.Backend
 	PassthroughBackends []*ingress.SSLPassthroughBackend
 	Servers             []*ingress.Server
-	TCPBackends         []*ingress.Location
-	UDPBackends         []*ingress.Location
+	TCPBackends         []ingress.L4Service
+	UDPBackends         []ingress.L4Service
 	HealthzURI          string
 	CustomErrors        bool
 	Cfg                 Configuration

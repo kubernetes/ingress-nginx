@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"k8s.io/kubernetes/pkg/util/sets"
@@ -31,6 +32,41 @@ import (
 	"k8s.io/ingress/controllers/gce/storage"
 	"k8s.io/ingress/controllers/gce/utils"
 )
+
+// BalancingMode represents the loadbalancing configuration of an individual
+// Backend in a BackendService. This is *effectively* a cluster wide setting
+// since you can't mix modes across Backends pointing to the same IG, and you
+// can't have a single node in more than 1 loadbalanced IG.
+type BalancingMode string
+
+const (
+	// Rate balances incoming requests based on observed RPS.
+	// As of this writing, it's the only balancing mode supported by GCE's
+	// internal LB. This setting doesn't make sense for Kubernets clusters
+	// because requests can get proxied between instance groups in different
+	// zones by kube-proxy without GCE even knowing it. Setting equal RPS on
+	// all IGs should achieve roughly equal distribution of requests.
+	Rate BalancingMode = "RATE"
+	// Utilization balances incoming requests based on observed utilization.
+	// This mode is only useful if you want to divert traffic away from IGs
+	// running other compute intensive workloads. Utilization statistics are
+	// aggregated per instances, not per container, and requests can get proxied
+	// between instance groups in different zones by kube-proxy without GCE even
+	// knowing about it.
+	Utilization BalancingMode = "UTILIZATION"
+	// Connections balances incoming requests based on a connection counter.
+	// This setting currently doesn't make sense for Kubernetes clusters,
+	// because we use NodePort Services as HTTP LB backends, so GCE's connection
+	// counters don't accurately represent connections per container.
+	Connections BalancingMode = "CONNECTION"
+)
+
+// maxRPS is the RPS setting for all Backends with BalancingMode RATE. The exact
+// value doesn't matter, as long as it's the same for all Backends. Requests
+// received by GCLB above this RPS are NOT dropped, GCLB continues to distribute
+// them across IGs.
+// TODO: Should this be math.MaxInt64?
+const maxRPS = 1
 
 // Backends implements BackendPool.
 type Backends struct {
@@ -116,20 +152,49 @@ func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.Named
 	if err != nil {
 		return nil, err
 	}
-	// Create a new backend
-	backend := &compute.BackendService{
-		Name:     name,
-		Protocol: "HTTP",
-		Backends: getBackendsForIGs(igs),
-		// Api expects one, means little to kubernetes.
-		HealthChecks: []string{hc.SelfLink},
-		Port:         namedPort.Port,
-		PortName:     namedPort.Name,
+	errs := []string{}
+	// We first try to create the backend with balancingMode=RATE.  If this
+	// fails, it's mostly likely because there are existing backends with
+	// balancingMode=UTILIZATION. This failure mode throws a googleapi error
+	// which wraps a HTTP 400 status code. We handle it in the loop below
+	// and come around to retry with the right balancing mode. The goal is to
+	// switch everyone to using RATE.
+	for _, bm := range []BalancingMode{Rate, Utilization} {
+		backends := getBackendsForIGs(igs)
+		for _, b := range backends {
+			switch bm {
+			case Rate:
+				b.MaxRate = maxRPS
+			default:
+				// TODO: Set utilization and connection limits when we accept them
+				// as valid fields.
+			}
+			b.BalancingMode = string(bm)
+		}
+		// Create a new backend
+		backend := &compute.BackendService{
+			Name:         name,
+			Protocol:     "HTTP",
+			Backends:     backends,
+			HealthChecks: []string{hc.SelfLink},
+			Port:         namedPort.Port,
+			PortName:     namedPort.Name,
+		}
+		if err := b.cloud.CreateBackendService(backend); err != nil {
+			// This is probably a failure because we tried to create the backend
+			// with balancingMode=RATE when there are already backends with
+			// balancingMode=UTILIZATION. Just ignore it and retry setting
+			// balancingMode=UTILIZATION (b/35102911).
+			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
+				glog.Infof("Error creating backend service with balancing mode %v:%v", bm, err)
+				errs = append(errs, fmt.Sprintf("%v", err))
+				continue
+			}
+			return nil, err
+		}
+		return b.Get(namedPort.Port)
 	}
-	if err := b.cloud.CreateBackendService(backend); err != nil {
-		return nil, err
-	}
-	return b.Get(namedPort.Port)
+	return nil, fmt.Errorf("%v", strings.Join(errs, "\n"))
 }
 
 // Add will get or create a Backend for the given port.

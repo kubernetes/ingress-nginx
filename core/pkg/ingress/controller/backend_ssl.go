@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -43,28 +44,9 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 		return fmt.Errorf("deferring sync till endpoints controller has synced")
 	}
 
-	// check if the default certificate is configured
-	key := fmt.Sprintf("default/%v", defServerName)
-	_, exists := ic.sslCertTracker.Get(key)
+	var key string
 	var cert *ingress.SSLCert
 	var err error
-	if !exists {
-		if ic.cfg.DefaultSSLCertificate != "" {
-			cert, err = ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
-			if err != nil {
-				return err
-			}
-		} else {
-			defCert, defKey := ssl.GetFakeSSLCert()
-			cert, err = ssl.AddOrUpdateCertAndKey("system-snake-oil-certificate", defCert, defKey, []byte{})
-			if err != nil {
-				return nil
-			}
-		}
-		cert.Name = defServerName
-		cert.Namespace = api.NamespaceDefault
-		ic.sslCertTracker.Add(key, cert)
-	}
 
 	key = k.(string)
 
@@ -87,40 +69,52 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 	}
 
 	// create certificates and add or update the item in the store
-	_, exists = ic.sslCertTracker.Get(key)
+	cur, exists := ic.sslCertTracker.Get(key)
 	if exists {
-		glog.V(3).Infof("updating secret %v/%v in the store ", sec.Namespace, sec.Name)
+		s := cur.(*ingress.SSLCert)
+		if reflect.DeepEqual(s, cert) {
+			// no need to update
+			return nil
+		}
+		glog.V(3).Infof("updating secret %v/%v in the store", sec.Namespace, sec.Name)
 		ic.sslCertTracker.Update(key, cert)
 		return nil
 	}
-	glog.V(3).Infof("adding secret %v/%v to the store ", sec.Namespace, sec.Name)
+	glog.V(3).Infof("adding secret %v/%v to the store", sec.Namespace, sec.Name)
 	ic.sslCertTracker.Add(key, cert)
 	return nil
 }
 
+// getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
+// It parses the secret and verifies if it's a keypair, or a 'ca.crt' secret only.
 func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
 	secretInterface, exists, err := ic.secrLister.Store.GetByKey(secretName)
 	if err != nil {
-		return nil, fmt.Errorf("error retriveing secret %v: %v", secretName, err)
+		return nil, fmt.Errorf("error retrieving secret %v: %v", secretName, err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("secret named %v does not exists", secretName)
+		return nil, fmt.Errorf("secret named %v does not exist", secretName)
 	}
 
 	secret := secretInterface.(*api.Secret)
-	cert, ok := secret.Data[api.TLSCertKey]
-	if !ok {
-		return nil, fmt.Errorf("secret named %v has no private key", secretName)
-	}
-	key, ok := secret.Data[api.TLSPrivateKeyKey]
-	if !ok {
-		return nil, fmt.Errorf("secret named %v has no cert", secretName)
-	}
+	cert, okcert := secret.Data[api.TLSCertKey]
+	key, okkey := secret.Data[api.TLSPrivateKeyKey]
 
 	ca := secret.Data["ca.crt"]
 
 	nsSecName := strings.Replace(secretName, "/", "-", -1)
-	s, err := ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
+
+	var s *ingress.SSLCert
+	if okcert && okkey {
+		glog.V(3).Infof("found certificate and private key, configuring %v as a TLS Secret", secretName)
+		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
+	} else if ca != nil {
+		glog.V(3).Infof("found only ca.crt, configuring %v as an Certificate Authentication secret", secretName)
+		s, err = ssl.AddCertAuth(nsSecName, ca)
+	} else {
+		return nil, fmt.Errorf("ko keypair or CA cert could be found in %v", secretName)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -134,10 +128,14 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 func (ic *GenericController) secrReferenced(name, namespace string) bool {
 	for _, ingIf := range ic.ingLister.Store.List() {
 		ing := ingIf.(*extensions.Ingress)
-		str, err := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
-		if err == nil && str == fmt.Sprintf("%v/%v", namespace, name) {
-			return true
+
+		if ic.annotations.ContainsCertificateAuth(ing) {
+			str, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+			if str == fmt.Sprintf("%v/%v", namespace, name) {
+				return true
+			}
 		}
+
 		if ing.Namespace != namespace {
 			continue
 		}

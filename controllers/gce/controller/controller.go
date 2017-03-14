@@ -46,6 +46,10 @@ var (
 	// L7 controller created without specifying the --cluster-uid flag.
 	DefaultClusterUID = ""
 
+	// DefaultFirewallName is the name to user for firewall rules created
+	// by an L7 controller when the --fireall-rule is not used.
+	DefaultFirewallName = ""
+
 	// Frequency to poll on local stores to sync.
 	storeSyncPollPeriod = 5 * time.Second
 )
@@ -423,14 +427,23 @@ func (lbc *LoadBalancerController) ListRuntimeInfo() (lbs []*loadbalancers.L7Run
 			glog.Warningf("Cannot get key for Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
 			continue
 		}
-		tls, err := lbc.tlsLoader.load(&ing)
-		if err != nil {
-			glog.Warningf("Cannot get certs for Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
-		}
+
+		var tls *loadbalancers.TLSCerts
+
 		annotations := ingAnnotations(ing.ObjectMeta.Annotations)
+		// Load the TLS cert from the API Spec if it is not specified in the annotation.
+		// TODO: enforce this with validation.
+		if annotations.useNamedTLS() == "" {
+			tls, err = lbc.tlsLoader.load(&ing)
+			if err != nil {
+				glog.Warningf("Cannot get certs for Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
+			}
+		}
+
 		lbs = append(lbs, &loadbalancers.L7RuntimeInfo{
 			Name:         k,
 			TLS:          tls,
+			TLSName:      annotations.useNamedTLS(),
 			AllowHTTP:    annotations.allowHTTP(),
 			StaticIPName: annotations.staticIPName(),
 		})

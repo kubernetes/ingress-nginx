@@ -32,7 +32,7 @@ import (
 )
 
 // checkSvcForUpdate verifies if one of the running pods for a service contains
-// named port. If the annotation in the service does not exists or is not equals
+// named port. If the annotation in the service does not exist or is not equals
 // to the port mapping obtained from the pod the service must be updated to reflect
 // the current state
 func (ic *GenericController) checkSvcForUpdate(svc *api.Service) error {

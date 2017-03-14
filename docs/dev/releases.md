@@ -4,7 +4,7 @@ This doc explains how to build, test and release ingress controllers.
 
 ## Building
 
-All ingress controllers are build through a Makefile. Depending on your
+All ingress controllers are built through a Makefile. Depending on your
 requirements you can build a raw server binary, a local container image,
 or push an image to a remote repository.
 
@@ -76,7 +76,9 @@ $ cd $GOPATH/src/k8s.io/kubernetes
 $ ./hack/ginkgo-e2e.sh --ginkgo.focus=Ingress.* --delete-namespace-on-failure=false
 ```
 
-TODO: add instructions on running integration tests, or e2e against
+See also [related FAQs](../faq#how-are-the-ingress-controllers-tested).
+
+[TODO](https://github.com/kubernetes/ingress/issues/5): add instructions on running integration tests, or e2e against
 local-up/minikube.
 
 ## Releasing

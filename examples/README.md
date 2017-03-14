@@ -1,7 +1,7 @@
 # Ingress examples
 
 This directory contains a catalog of examples on how to run, configure and
-scale Ingress. Please review the [prerequisities](prerequisites.md) before
+scale Ingress. Please review the [prerequisities](PREREQUISITES.md) before
 trying them.
 
 ## Basic cross platform
@@ -57,7 +57,7 @@ SNI + TCP | TLS routing based on SNI hostname | nginx | Advanced
 Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 Basic auth | password protect your website | nginx | Intermediate
-External auth plugin | defer to an external auth service | nginx | Intermediate
+[External auth plugin](external-auth/nginx/README.md) | defer to an external auth service | nginx | Intermediate
 
 ## Protocols
 
@@ -69,4 +69,15 @@ Websockets | websockets loadbalancing | nginx | Intermediate
 HTTP/2 | HTTP/2 loadbalancing | * | Intermediate
 Proxy protocol | leverage the proxy protocol for source IP | nginx | Advanced
 
+## Custom controllers
 
+Name | Description | Platform   | Complexity Level
+-----| ----------- | ---------- | ----------------
+Dummy  | A simple dummy controller that logs updates | * | Advanced
+
+## Customization
+
+Name | Description | Platform   | Complexity Level
+-----| ----------- | ---------- | ----------------
+custom-headers  | set custom headers before send traffic to backends  | nginx | Advanced
+configuration-snippets | customize nginx location configuration using annotations | nginx | Advanced

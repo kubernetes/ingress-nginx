@@ -49,7 +49,7 @@ NAME        STATUS    AGE       VERSION
 a sandboxed local cluster. You will first need to [install](https://github.com/kubernetes/minikube/releases)
 the minikube binary, then bring up a cluster
 ```console
-$ minikube up
+$ minikube start
 ```
 
 Check for Ready nodes
@@ -71,11 +71,23 @@ $ minikube addons list
 If this list already contains the ingress controller, you don't need to
 redeploy it. If the addon controller is disabled, you can enable it with
 ```console
-$ minikube enable addons ingress
+$ minikube addons enable ingress
 ```
 
 If the list *does not* contain the ingress controller, you can either update
 minikube, or deploy it yourself as shown in the next section.
+
+You may want to consider [using the VM's docker
+daemon](https://github.com/kubernetes/minikube/blob/master/README.md#reusing-the-docker-daemon)
+when developing.
+
+### CoreOS Kubernetes
+
+[CoreOS Kubernetes](https://github.com/coreos/coreos-kubernetes/) repository has `Vagrantfile`
+scripts to easily create a new Kubernetes cluster on VirtualBox, VMware or AWS.
+
+Follow the CoreOS [doc](https://coreos.com/kubernetes/docs/latest/kubernetes-on-vagrant-single.html)
+for detailed instructions.
 
 ## Deploy the ingress controller
 
@@ -93,7 +105,7 @@ $ glbc --help
 		 pod secrets for creating a Kubernetes client. (default true)
 
 $ ./glbc --running-in-cluster=false
-I1210 17:49:53.202149   27767 main.go:179] Starting GLBC image: glbc:0.8.0, cluster name
+I1210 17:49:53.202149   27767 main.go:179] Starting GLBC image: glbc:0.9.2, cluster name
 ```
 
 Note that this is equivalent to running the ingress controller on your local

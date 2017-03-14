@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    # Create this with kubectl create secret generic caingress --from-file=ca.crt --namespace=default
+    ingress.kubernetes.io/auth-tls-secret: "default/caingress"
+    ingress.kubernetes.io/auth-tls-verify-depth: "3"
+    kubernetes.io/ingress.class: "nginx"
+  name: nginx-test
+  namespace: default
+spec:
+  rules:
+  - host: ingress.test.com
+    http:
+      paths:
+      - backend:
+          serviceName: http-svc:80
+          servicePort: 80
+        path: /
+  tls:
+  - hosts:
+    - ingress.test.com
+    # Create this cert as described in 'multi-tls' example
+    secretName: cert
+

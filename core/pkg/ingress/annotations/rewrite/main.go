@@ -24,9 +24,10 @@ import (
 )
 
 const (
-	rewriteTo   = "ingress.kubernetes.io/rewrite-target"
-	addBaseURL  = "ingress.kubernetes.io/add-base-url"
-	sslRedirect = "ingress.kubernetes.io/ssl-redirect"
+	rewriteTo        = "ingress.kubernetes.io/rewrite-target"
+	addBaseURL       = "ingress.kubernetes.io/add-base-url"
+	sslRedirect      = "ingress.kubernetes.io/ssl-redirect"
+	forceSSLRedirect = "ingress.kubernetes.io/force-ssl-redirect"
 )
 
 // Redirect describes the per location redirect config
@@ -38,6 +39,8 @@ type Redirect struct {
 	AddBaseURL bool `json:"addBaseUrl"`
 	// SSLRedirect indicates if the location section is accessible SSL only
 	SSLRedirect bool `json:"sslRedirect"`
+	// ForceSSLRedirect indicates if the location section is accessible SSL only
+	ForceSSLRedirect bool `json:"forceSSLRedirect"`
 }
 
 type rewrite struct {
@@ -52,19 +55,20 @@ func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
-	rt, err := parser.GetStringAnnotation(rewriteTo, ing)
-	if err != nil {
-		return nil, err
-	}
-
+	rt, _ := parser.GetStringAnnotation(rewriteTo, ing)
 	sslRe, err := parser.GetBoolAnnotation(sslRedirect, ing)
 	if err != nil {
 		sslRe = a.backendResolver.GetDefaultBackend().SSLRedirect
 	}
+	fSslRe, err := parser.GetBoolAnnotation(forceSSLRedirect, ing)
+	if err != nil {
+		fSslRe = a.backendResolver.GetDefaultBackend().ForceSSLRedirect
+	}
 	abu, _ := parser.GetBoolAnnotation(addBaseURL, ing)
 	return &Redirect{
-		Target:      rt,
-		AddBaseURL:  abu,
-		SSLRedirect: sslRe,
+		Target:           rt,
+		AddBaseURL:       abu,
+		SSLRedirect:      sslRe,
+		ForceSSLRedirect: fSslRe,
 	}, nil
 }

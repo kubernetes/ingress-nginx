@@ -34,7 +34,7 @@ const (
 )
 
 func newFakeLoadBalancerPool(f LoadBalancers, t *testing.T) LoadBalancerPool {
-	fakeBackends := backends.NewFakeBackendServices()
+	fakeBackends := backends.NewFakeBackendServices(func(op int, be *compute.BackendService) error { return nil })
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	fakeHCs := healthchecks.NewFakeHealthChecks()
 	namer := &utils.Namer{}
@@ -82,6 +82,40 @@ func TestCreateHTTPSLoadBalancer(t *testing.T) {
 		TLS:       &TLSCerts{Key: "key", Cert: "cert"},
 	}
 	f := NewFakeLoadBalancers(lbInfo.Name)
+	pool := newFakeLoadBalancerPool(f, t)
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
+	l7, err := pool.Get(lbInfo.Name)
+	if err != nil || l7 == nil {
+		t.Fatalf("Expected l7 not created")
+	}
+	um, err := f.GetUrlMap(f.umName())
+	if err != nil ||
+		um.DefaultService != pool.(*L7s).glbcDefaultBackend.SelfLink {
+		t.Fatalf("%v", err)
+	}
+	tps, err := f.GetTargetHttpsProxy(f.tpName(true))
+	if err != nil || tps.UrlMap != um.SelfLink {
+		t.Fatalf("%v", err)
+	}
+	fws, err := f.GetGlobalForwardingRule(f.fwName(true))
+	if err != nil || fws.Target != tps.SelfLink {
+		t.Fatalf("%v", err)
+	}
+}
+
+func TestCreateHTTPSLoadBalancerAnnotationCert(t *testing.T) {
+	// This should NOT create the forwarding rule and target proxy
+	// associated with the HTTP branch of this loadbalancer.
+	tlsName := "external-cert-name"
+	lbInfo := &L7RuntimeInfo{
+		Name:      "test",
+		AllowHTTP: false,
+		TLSName:   tlsName,
+	}
+	f := NewFakeLoadBalancers(lbInfo.Name)
+	f.CreateSslCertificate(&compute.SslCertificate{
+		Name: tlsName,
+	})
 	pool := newFakeLoadBalancerPool(f, t)
 	pool.Sync([]*L7RuntimeInfo{lbInfo})
 	l7, err := pool.Get(lbInfo.Name)
@@ -236,7 +270,8 @@ func TestUpdateUrlMapNoChanges(t *testing.T) {
 
 func TestNameParsing(t *testing.T) {
 	clusterName := "123"
-	namer := utils.NewNamer(clusterName)
+	firewallName := clusterName
+	namer := utils.NewNamer(clusterName, firewallName)
 	fullName := namer.Truncate(fmt.Sprintf("%v-%v", forwardingRulePrefix, namer.LBName("testlb")))
 	annotationsMap := map[string]string{
 		fmt.Sprintf("%v/forwarding-rule", utils.K8sAnnotationPrefix): fullName,
@@ -308,7 +343,7 @@ func TestClusterNameChange(t *testing.T) {
 }
 
 func TestInvalidClusterNameChange(t *testing.T) {
-	namer := utils.NewNamer("test--123")
+	namer := utils.NewNamer("test--123", "test--123")
 	if got := namer.GetClusterName(); got != "123" {
 		t.Fatalf("Expected name 123, got %v", got)
 	}

@@ -243,7 +243,7 @@ func NewClusterManager(
 	defaultHealthCheckPath string) (*ClusterManager, error) {
 
 	// TODO: Make this more resilient. Currently we create the cloud client
-	// and pass it through to all the pools. This makes unittesting easier.
+	// and pass it through to all the pools. This makes unit testing easier.
 	// However if the cloud client suddenly fails, we should try to re-create it
 	// and continue.
 	var cloud *gce.GCECloud
