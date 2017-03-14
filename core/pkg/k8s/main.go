@@ -34,6 +34,30 @@ func IsValidService(kubeClient clientset.Interface, name string) (*api.Service, 
 	return kubeClient.Core().Services(ns).Get(name)
 }
 
+// isValidConfigMap check if exists a configmap with the specified name
+func IsValidConfigMap(kubeClient clientset.Interface, fullName string) (*api.ConfigMap, error) {
+
+	ns, name, err := ParseNameNS(fullName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	configMap, err := kubeClient.Core().ConfigMaps(ns).Get(name)
+
+	if err != nil {
+		return nil, fmt.Errorf("configmap not found: %v", err)
+	}
+
+	return configMap, nil
+
+}
+
+// isValidNamespace chck if exists a namespace with the specified name
+func IsValidNamespace(kubeClient clientset.Interface, name string) (*api.Namespace, error) {
+	return kubeClient.Core().Namespaces().Get(name)
+}
+
 // IsValidSecret checks if exists a secret with the specified name
 func IsValidSecret(kubeClient clientset.Interface, name string) (*api.Secret, error) {
 	ns, name, err := ParseNameNS(name)
