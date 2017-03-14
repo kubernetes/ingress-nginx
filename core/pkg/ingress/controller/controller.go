@@ -564,7 +564,7 @@ func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 	}
 
 	if !svcExists {
-		glog.Warningf("service %v does not exists", svcKey)
+		glog.Warningf("service %v does not exist", svcKey)
 		upstream.Endpoints = append(upstream.Endpoints, newDefaultServer())
 		return upstream
 	}
@@ -706,7 +706,7 @@ func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.Aut
 
 	bc, exists := ic.sslCertTracker.Get(secretName)
 	if !exists {
-		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exists", secretName)
+		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exist", secretName)
 	}
 	cert := bc.(*ingress.SSLCert)
 	return &resolver.AuthSSLCert{
@@ -805,7 +805,7 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 	}
 
 	if !svcExists {
-		err = fmt.Errorf("service %v does not exists", svcKey)
+		err = fmt.Errorf("service %v does not exist", svcKey)
 		return upstreams, err
 	}
 
