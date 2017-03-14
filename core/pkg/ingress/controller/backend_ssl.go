@@ -90,10 +90,10 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
 	secretInterface, exists, err := ic.secrLister.Store.GetByKey(secretName)
 	if err != nil {
-		return nil, fmt.Errorf("error retriveing secret %v: %v", secretName, err)
+		return nil, fmt.Errorf("error retrieving secret %v: %v", secretName, err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("secret named %v does not exists", secretName)
+		return nil, fmt.Errorf("secret named %v does not exist", secretName)
 	}
 
 	secret := secretInterface.(*api.Secret)
