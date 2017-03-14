@@ -1,5 +1,74 @@
 Changelog
 
+### 0.9-beta.3
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.3`
+
+*New Features:*
+
+- Custom log formats using `log-format-upstream` directive in the configuration configmap.
+- Force redirect to SSL using the annotation `ngress.kubernetes.io/force-ssl-redirect`
+- Prometheus metric for VTS status module (transparent, just enable vts stats)
+- Improved external authentication adding `ingress.kubernetes.io/auth-signin` annotation. Please check this [example](https://github.com/kubernetes/ingress/tree/master/examples/external-auth/nginx)
+
+
+*Breaking changes:*
+
+- `ssl-dh-param` configuration in configmap is now the name of a secret that contains the Diffie-Hellman key
+
+*Changes:*
+
+- [X] [#433](https://github.com/kubernetes/ingress/pull/433) close over the ingress variable or the last assignment will be used 
+- [X] [#424](https://github.com/kubernetes/ingress/pull/424) Manually sync secrets from certificate authentication annotations 
+- [X] [#423](https://github.com/kubernetes/ingress/pull/423) Scrap json metrics from nginx vts module when enabled 
+- [X] [#418](https://github.com/kubernetes/ingress/pull/418) Only update Ingress status for the configured class     
+- [X] [#415](https://github.com/kubernetes/ingress/pull/415) Improve external authentication docs 
+- [X] [#410](https://github.com/kubernetes/ingress/pull/410) Add support for "signin url" 
+- [X] [#409](https://github.com/kubernetes/ingress/pull/409) Allow custom http2 header sizes 
+- [X] [#408](https://github.com/kubernetes/ingress/pull/408) Review docs 
+- [X] [#406](https://github.com/kubernetes/ingress/pull/406) Add debug info and fix spelling 
+- [X] [#402](https://github.com/kubernetes/ingress/pull/402) allow specifying custom dh param 
+- [X] [#397](https://github.com/kubernetes/ingress/pull/397) Fix external auth
+- [X] [#394](https://github.com/kubernetes/ingress/pull/394) Update README.md 
+- [X] [#392](https://github.com/kubernetes/ingress/pull/392) Fix http2 header size
+- [X] [#391](https://github.com/kubernetes/ingress/pull/391) remove tmp nginx-diff files 
+- [X] [#390](https://github.com/kubernetes/ingress/pull/390) Fix RateLimit comment 
+- [X] [#385](https://github.com/kubernetes/ingress/pull/385) add Copyright 
+- [X] [#382](https://github.com/kubernetes/ingress/pull/382) Ingress Fake Certificate generation 
+- [X] [#380](https://github.com/kubernetes/ingress/pull/380) Fix custom log format 
+- [X] [#373](https://github.com/kubernetes/ingress/pull/373) Cleanup 
+- [X] [#371](https://github.com/kubernetes/ingress/pull/371) add configuration to disable listening on ipv6 
+- [X] [#370](https://github.com/kubernetes/ingress/pull/270) Add documentation for ingress.kubernetes.io/force-ssl-redirect 
+- [X] [#369](https://github.com/kubernetes/ingress/pull/369) Minor text fix for "ApiServer" 
+- [X] [#367](https://github.com/kubernetes/ingress/pull/367) BuildLogFormatUpstream was always using the default log-format
+- [X] [#366](https://github.com/kubernetes/ingress/pull/366) add_judgment 
+- [X] [#365](https://github.com/kubernetes/ingress/pull/365) add ForceSSLRedirect ingress annotation 
+- [X] [#364](https://github.com/kubernetes/ingress/pull/364) Fix error caused by increasing proxy_buffer_size (#363) 
+- [X] [#362](https://github.com/kubernetes/ingress/pull/362) Fix ingress class 
+- [X] [#360](https://github.com/kubernetes/ingress/pull/360) add example of 'run multiple nginx ingress controllers as a deployment' 
+- [X] [#358](https://github.com/kubernetes/ingress/pull/358) Checks if the TLS secret contains a valid keypair structure 
+- [X] [#356](https://github.com/kubernetes/ingress/pull/356) Disable listen only on ipv6 and fix proxy_protocol 
+- [X] [#354](https://github.com/kubernetes/ingress/pull/354) add judgment 
+- [X] [#352](https://github.com/kubernetes/ingress/pull/352) Add ability to customize upstream and stream log format 
+- [X] [#351](https://github.com/kubernetes/ingress/pull/351) Enable custom election id for status sync. 
+- [X] [#347](https://github.com/kubernetes/ingress/pull/347) Fix client source IP address 
+- [X] [#345](https://github.com/kubernetes/ingress/pull/345) Fix lint error
+- [X] [#344](https://github.com/kubernetes/ingress/pull/344) Refactoring of TCP and UDP services 
+- [X] [#343](https://github.com/kubernetes/ingress/pull/343) Fix node lister when --watch-namespace is used 
+- [X] [#341](https://github.com/kubernetes/ingress/pull/341) Do not run coverage check in the default target. 
+- [X] [#340](https://github.com/kubernetes/ingress/pull/340) Add support for specify proxy cookie path/domain 
+- [X] [#337](https://github.com/kubernetes/ingress/pull/337) Fix for formatting error introduced in #304 
+- [X] [#335](https://github.com/kubernetes/ingress/pull/335) Fix for vet complaints: 
+- [X] [#332](https://github.com/kubernetes/ingress/pull/332) Add annotation to customize nginx configuration 
+- [X] [#331](https://github.com/kubernetes/ingress/pull/331) Correct spelling mistake 
+- [X] [#328](https://github.com/kubernetes/ingress/pull/328) fix misspell "affinity" in main.go 
+- [X] [#326](https://github.com/kubernetes/ingress/pull/326) add nginx daemonset example 
+- [X] [#311](https://github.com/kubernetes/ingress/pull/311) Sort stream service ports to avoid extra reloads 
+- [X] [#307](https://github.com/kubernetes/ingress/pull/307) Add docs for body-size annotation
+- [X] [#306](https://github.com/kubernetes/ingress/pull/306) modify nginx readme 
+- [X] [#304](https://github.com/kubernetes/ingress/pull/304) change 'buildSSPassthrouthUpstreams' to 'buildSSLPassthroughUpstreams' 
+
+
 ### 0.9-beta.2
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.2`
