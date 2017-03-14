@@ -93,7 +93,7 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 		return nil, fmt.Errorf("error retriveing secret %v: %v", secretName, err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("secret named %v does not exists", secretName)
+		return nil, fmt.Errorf("secret named %v does not exist", secretName)
 	}
 
 	secret := secretInterface.(*api.Secret)
