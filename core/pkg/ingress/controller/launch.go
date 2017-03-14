@@ -129,6 +129,11 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	}
 
 	for _, configMap := range []string{*configMap, *tcpConfigMapName, *udpConfigMapName} {
+
+		if configMap == "" {
+			continue
+		}
+
 		_, err = k8s.IsValidConfigMap(kubeClient, configMap)
 
 		if err != nil {
