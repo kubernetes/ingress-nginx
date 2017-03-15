@@ -1,4 +1,4 @@
-# Sticky Session
+# Rewrite
 
 This example demonstrates how to use the Rewrite annotations
 
