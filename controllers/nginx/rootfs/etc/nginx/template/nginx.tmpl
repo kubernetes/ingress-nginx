@@ -490,7 +490,7 @@ stream {
 
     # TCP services
     {{ range $i, $tcpServer := .TCPBackends }}
-    upstream {{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
+    upstream tcp-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
     {{ range $j, $endpoint := $tcpServer.Endpoints }}
         server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
     {{ end }}
@@ -498,22 +498,22 @@ stream {
 
     server {
         listen                  {{ $tcpServer.Port }};
-        proxy_pass              {{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
+        proxy_pass              tcp-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
     }
     {{ end }}
 
     # UDP services
     {{ range $i, $udpServer := .UDPBackends }}
-    upstream {{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
+    upstream udp-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
     {{ range $j, $endpoint := $udpServer.Endpoints }}
         server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
     {{ end }}
     }
 
     server {
-        listen                  {{ $udpServer.Port }};
+        listen                  {{ $udpServer.Port }} udp;
         proxy_responses         1;
-        proxy_pass              {{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
+        proxy_pass              udp-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
     }
     {{ end }}
 }
