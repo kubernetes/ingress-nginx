@@ -17,9 +17,9 @@
 
 set -e
 
-export NGINX_VERSION=1.11.10
+export NGINX_VERSION=1.11.12
 export NDK_VERSION=0.3.0
-export VTS_VERSION=0.1.11
+export VTS_VERSION=0.1.13
 export SETMISC_VERSION=0.31
 export LUA_VERSION=0.10.7
 export STICKY_SESSIONS_VERSION=08a395c66e42                               
@@ -69,7 +69,7 @@ apt-get update && apt-get install --no-install-recommends -y \
   linux-headers-generic || exit 1
 
 # download, verify and extract the source files
-get_src 778b3cabb07633f754cd9dee32fc8e22582bce22bfa407be76a806abd935533d \
+get_src 2aff7f9396d1f77256efc363e1cc05ba52d40a29e6de4d9bc08aa444eea14122 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
@@ -78,7 +78,7 @@ get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
 get_src 97946a68937b50ab8637e1a90a13198fe376d801dc3e7447052e43c28e9ee7de \
         "https://github.com/openresty/set-misc-nginx-module/archive/v$SETMISC_VERSION.tar.gz"
 
-get_src 31db853251a631a6b6a0b96b10806c9c32eda3c3d08fe46a38ff944b22dba636 \
+get_src 17042d50318a07db3366d59c24a05aab303f2e32096d56b379c2ef46e70e02ba \
         "https://github.com/vozlt/nginx-module-vts/archive/v$VTS_VERSION.tar.gz"
 
 get_src c21c8937dcdd6fc2b6a955f929e3f4d1388610f47180e60126e6dcab06786f77 \
@@ -108,6 +108,11 @@ get_src 8eabbcd5950fdcc718bb0ef9165206c2ed60f67cd9da553d7bc3e6fe4e338461 \
 
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
+
+# https://github.com/openresty/lua-nginx-module/issues/1016
+curl -sSL -o patch-src-ngx_http_lua_headers.c.diff https://raw.githubusercontent.com/macports/macports-ports/master/www/nginx/files/patch-src-ngx_http_lua_headers.c.diff
+cd "$BUILD_PATH/lua-nginx-module-$LUA_VERSION"
+patch -p1 < $BUILD_PATH/patch-src-ngx_http_lua_headers.c.diff
 
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
