@@ -991,6 +991,11 @@ func (ic *GenericController) getEndpoints(
 
 	upsServers := []ingress.Endpoint{}
 
+	// avoid duplicated upstream servers when the service
+	// contains multiple port definitions sharing the same
+	// targetport.
+	adus := make(map[string]bool, 0)
+
 	for _, ss := range ep.Subsets {
 		for _, epPort := range ss.Ports {
 
@@ -1031,6 +1036,10 @@ func (ic *GenericController) getEndpoints(
 			}
 
 			for _, epAddress := range ss.Addresses {
+				ep := fmt.Sprintf("%v:%v", epAddress.IP, targetPort)
+				if _, exists := adus[ep]; exists {
+					continue
+				}
 				ups := ingress.Endpoint{
 					Address:     epAddress.IP,
 					Port:        fmt.Sprintf("%v", targetPort),
@@ -1038,6 +1047,7 @@ func (ic *GenericController) getEndpoints(
 					FailTimeout: hz.FailTimeout,
 				}
 				upsServers = append(upsServers, ups)
+				adus[ep] = true
 			}
 		}
 	}
