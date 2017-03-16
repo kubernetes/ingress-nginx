@@ -46,7 +46,7 @@ func isHostValid(host string, cert *ingress.SSLCert) bool {
 		return false
 	}
 	for _, cn := range cert.CN {
-		if matchHostnames(cn, host) {
+		if matchHostnames(cn, strings.ToLower(host)) {
 			return true
 		}
 	}

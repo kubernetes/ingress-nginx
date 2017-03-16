@@ -76,11 +76,11 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 			// no need to update
 			return nil
 		}
-		glog.V(3).Infof("updating secret %v/%v in the store", sec.Namespace, sec.Name)
+		glog.Infof("updating secret %v/%v in the local store", sec.Namespace, sec.Name)
 		ic.sslCertTracker.Update(key, cert)
 		return nil
 	}
-	glog.V(3).Infof("adding secret %v/%v to the store", sec.Namespace, sec.Name)
+	glog.Infof("adding secret %v/%v to the local store", sec.Namespace, sec.Name)
 	ic.sslCertTracker.Add(key, cert)
 	return nil
 }
@@ -106,10 +106,10 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 
 	var s *ingress.SSLCert
 	if okcert && okkey {
-		glog.V(3).Infof("found certificate and private key, configuring %v as a TLS Secret", secretName)
+		glog.Infof("found certificate and private key, configuring %v as a TLS Secret", secretName)
 		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
 	} else if ca != nil {
-		glog.V(3).Infof("found only ca.crt, configuring %v as an Certificate Authentication secret", secretName)
+		glog.Infof("found only ca.crt, configuring %v as an Certificate Authentication secret", secretName)
 		s, err = ssl.AddCertAuth(nsSecName, ca)
 	} else {
 		return nil, fmt.Errorf("ko keypair or CA cert could be found in %v", secretName)
