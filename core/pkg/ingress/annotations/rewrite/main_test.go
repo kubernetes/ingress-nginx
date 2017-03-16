@@ -158,3 +158,20 @@ func TestForceSSLRedirect(t *testing.T) {
 		t.Errorf("Expected true but returned false")
 	}
 }
+func TestAppRoot(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[appRoot] = "/app1"
+	ing.SetAnnotations(data)
+
+	i, _ := NewParser(mockBackend{true}).Parse(ing)
+	redirect, ok := i.(*Redirect)
+	if !ok {
+		t.Errorf("expected a App Context")
+	}
+	if redirect.AppRoot != "/app1" {
+		t.Errorf("Unexpected value got in AppRoot")
+	}
+
+}

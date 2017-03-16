@@ -28,6 +28,7 @@ const (
 	addBaseURL       = "ingress.kubernetes.io/add-base-url"
 	sslRedirect      = "ingress.kubernetes.io/ssl-redirect"
 	forceSSLRedirect = "ingress.kubernetes.io/force-ssl-redirect"
+	appRoot          = "ingress.kubernetes.io/app-root"
 )
 
 // Redirect describes the per location redirect config
@@ -41,6 +42,8 @@ type Redirect struct {
 	SSLRedirect bool `json:"sslRedirect"`
 	// ForceSSLRedirect indicates if the location section is accessible SSL only
 	ForceSSLRedirect bool `json:"forceSSLRedirect"`
+	// AppRoot defines the Application Root that the Controller must redirect if it's not in '/' context
+	AppRoot string `json:"appRoot"`
 }
 
 type rewrite struct {
@@ -65,10 +68,12 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 		fSslRe = a.backendResolver.GetDefaultBackend().ForceSSLRedirect
 	}
 	abu, _ := parser.GetBoolAnnotation(addBaseURL, ing)
+	ar, _ := parser.GetStringAnnotation(appRoot, ing)
 	return &Redirect{
 		Target:           rt,
 		AddBaseURL:       abu,
 		SSLRedirect:      sslRe,
 		ForceSSLRedirect: fSslRe,
+		AppRoot:          ar,
 	}, nil
 }
