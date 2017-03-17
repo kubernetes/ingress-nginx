@@ -23,16 +23,19 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/errors"
-	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/leaderelection"
-	"k8s.io/kubernetes/pkg/client/leaderelection/resourcelock"
-	"k8s.io/kubernetes/pkg/client/record"
+	"k8s.io/apimachinery/pkg/api/errors"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	client "k8s.io/client-go/kubernetes"
+	def_api "k8s.io/client-go/pkg/api"
+	api "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/tools/record"
+
+	"k8s.io/ingress/core/pkg/ingress/status/leaderelection"
+	"k8s.io/ingress/core/pkg/ingress/status/leaderelection/resourcelock"
 )
 
 func getCurrentLeader(electionID, namespace string, c client.Interface) (string, *api.Endpoints, error) {
-	endpoints, err := c.Core().Endpoints(namespace).Get(electionID)
+	endpoints, err := c.Core().Endpoints(namespace).Get(electionID, meta_v1.GetOptions{})
 	if err != nil {
 		return "", nil, err
 	}
@@ -56,11 +59,11 @@ func NewElection(electionID,
 	callback func(leader string),
 	c client.Interface) (*leaderelection.LeaderElector, error) {
 
-	_, err := c.Core().Endpoints(namespace).Get(electionID)
+	_, err := c.Core().Endpoints(namespace).Get(electionID, meta_v1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			_, err = c.Core().Endpoints(namespace).Create(&api.Endpoints{
-				ObjectMeta: api.ObjectMeta{
+				ObjectMeta: meta_v1.ObjectMeta{
 					Name: electionID,
 				},
 			})
@@ -93,13 +96,13 @@ func NewElection(electionID,
 	if err != nil {
 		return nil, err
 	}
-	recorder := broadcaster.NewRecorder(api.EventSource{
+	recorder := broadcaster.NewRecorder(def_api.Scheme, api.EventSource{
 		Component: "ingress-leader-elector",
 		Host:      hostname,
 	})
 
 	lock := resourcelock.EndpointsLock{
-		EndpointsMeta: api.ObjectMeta{Namespace: namespace, Name: electionID},
+		EndpointsMeta: meta_v1.ObjectMeta{Namespace: namespace, Name: electionID},
 		Client:        c,
 		LockConfig: resourcelock.ResourceLockConfig{
 			Identity:      id,
