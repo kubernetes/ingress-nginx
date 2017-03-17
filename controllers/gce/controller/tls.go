@@ -65,11 +65,11 @@ func (t *apiServerTLSLoader) load(ing *extensions.Ingress) (*loadbalancers.TLSCe
 	}
 	cert, ok := secret.Data[api.TLSCertKey]
 	if !ok {
-		return nil, fmt.Errorf("Secret %v has no private key", secretName)
+		return nil, fmt.Errorf("secret %v has no private key", secretName)
 	}
 	key, ok := secret.Data[api.TLSPrivateKeyKey]
 	if !ok {
-		return nil, fmt.Errorf("Secret %v has no cert", secretName)
+		return nil, fmt.Errorf("secret %v has no cert", secretName)
 	}
 	certs := &loadbalancers.TLSCerts{Key: string(key), Cert: string(cert)}
 	if err := t.validate(certs); err != nil {
@@ -95,5 +95,5 @@ func (f *fakeTLSSecretLoader) load(ing *extensions.Ingress) (*loadbalancers.TLSC
 			return cert, nil
 		}
 	}
-	return nil, fmt.Errorf("Couldn't find secret for ingress %v", ing.Name)
+	return nil, fmt.Errorf("couldn't find secret for ingress %v", ing.Name)
 }
