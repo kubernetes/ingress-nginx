@@ -75,7 +75,7 @@ func (f *FakeInstanceGroups) GetInstanceGroup(name, zone string) (*compute.Insta
 		}
 	}
 	// TODO: Return googleapi 404 error
-	return nil, fmt.Errorf("Instance group %v not found", name)
+	return nil, fmt.Errorf("instance group %v not found", name)
 }
 
 // CreateInstanceGroup fakes instance group creation.
@@ -97,7 +97,7 @@ func (f *FakeInstanceGroups) DeleteInstanceGroup(name, zone string) error {
 		newGroups = append(newGroups, ig)
 	}
 	if !found {
-		return fmt.Errorf("Instance Group %v not found", name)
+		return fmt.Errorf("instance group %v not found", name)
 	}
 	f.instanceGroups = newGroups
 	return nil
