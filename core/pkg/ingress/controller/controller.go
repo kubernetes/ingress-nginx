@@ -960,6 +960,12 @@ func (ic *GenericController) createServers(data []interface{},
 					}
 				}
 
+				if tlsSecretName == "" {
+					glog.Warningf("ingress rule %v/%v for host %v does not contains a matching tls host", ing.Namespace, ing.Name, host)
+					glog.V(2).Infof("%v", ing.Spec.TLS)
+					continue
+				}
+
 				key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 				bc, exists := ic.sslCertTracker.Get(key)
 				if exists {
@@ -967,7 +973,11 @@ func (ic *GenericController) createServers(data []interface{},
 					if isHostValid(host, cert) {
 						servers[host].SSLCertificate = cert.PemFileName
 						servers[host].SSLPemChecksum = cert.PemSHA
+					} else {
+						glog.Warningf("ssl certificate %v does not contains a common name for host %v", key, host)
 					}
+				} else {
+					glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
 				}
 			}
 		}
