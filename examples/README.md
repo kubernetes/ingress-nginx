@@ -28,8 +28,8 @@ Re-encrypty | terminate, apply routing rules, re-encrypt | nginx | Advanced
 
 Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
-Daemonset | run multiple controllers in a daemonset | nginx | Intermediate
-Deployment | run multiple controllers as a deployment | nginx | Intermediate
+Daemonset | run multiple controllers in a daemonset | nginx/haproxy | Intermediate
+Deployment | run multiple controllers as a deployment | nginx/haproxy | Intermediate
 Multi-zone | bridge different zones in a single cluster | gce | Intermediate
 Static-ip | a single ingress gets a single static ip | * | Intermediate
 Geo-routing | route to geographically closest endpoint | nginx | Advanced
