@@ -374,7 +374,7 @@ func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
 		}
 		for _, rule := range ing.Spec.Rules {
 			if rule.HTTP == nil {
-				glog.Errorf("ignoring non http Ingress rule.")
+				glog.Errorf("ignoring non http Ingress rule")
 				continue
 			}
 			for _, path := range rule.HTTP.Paths {
