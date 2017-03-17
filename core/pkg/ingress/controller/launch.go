@@ -14,11 +14,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 
-	"k8s.io/kubernetes/pkg/api"
-	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
-	clientcmdapi "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
-	"k8s.io/kubernetes/pkg/healthz"
+	"k8s.io/apiserver/pkg/server/healthz"
+	"k8s.io/client-go/kubernetes"
+	api "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmd_api "k8s.io/client-go/tools/clientcmd/api"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/k8s"
@@ -208,19 +209,35 @@ const (
 	defaultBurst = 1e6
 )
 
+// buildConfigFromFlags builds REST config based on master URL and kubeconfig path.
+// If both of them are empty then in cluster config is used.
+func buildConfigFromFlags(masterURL, kubeconfigPath string) (*rest.Config, error) {
+	if kubeconfigPath == "" && masterURL == "" {
+		kubeconfig, err := rest.InClusterConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		return kubeconfig, nil
+	}
+
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
+		&clientcmd.ConfigOverrides{
+			ClusterInfo: clientcmd_api.Cluster{
+				Server: masterURL,
+			},
+		}).ClientConfig()
+}
+
 // createApiserverClient creates new Kubernetes Apiserver client. When kubeconfig or apiserverHost param is empty
 // the function assumes that it is running inside a Kubernetes cluster and attempts to
 // discover the Apiserver. Otherwise, it connects to the Apiserver specified.
 //
 // apiserverHost param is in the format of protocol://address:port/pathPrefix, e.g.http://localhost:8001.
 // kubeConfig location of kubeconfig file
-func createApiserverClient(apiserverHost string, kubeConfig string) (*client.Clientset, error) {
-
-	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeConfig},
-		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: apiserverHost}})
-
-	cfg, err := clientConfig.ClientConfig()
+func createApiserverClient(apiserverHost string, kubeConfig string) (*kubernetes.Clientset, error) {
+	cfg, err := buildConfigFromFlags(apiserverHost, kubeConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +248,7 @@ func createApiserverClient(apiserverHost string, kubeConfig string) (*client.Cli
 
 	glog.Infof("Creating API server client for %s", cfg.Host)
 
-	client, err := client.NewForConfig(cfg)
+	client, err := kubernetes.NewForConfig(cfg)
 
 	if err != nil {
 		return nil, err

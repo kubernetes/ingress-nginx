@@ -19,9 +19,10 @@ package controller
 import (
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/util/intstr"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	api "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -75,7 +76,7 @@ func buildIngress() *extensions.Ingress {
 	}
 
 	return &extensions.Ingress{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
@@ -251,7 +252,7 @@ func TestCertificateAuthSecret(t *testing.T) {
 	resolver := mockCfg{}
 	resolver.MockSecrets = map[string]*api.Secret{
 		"default/foo_secret": {
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Name: "foo_secret_name",
 			},
 		},

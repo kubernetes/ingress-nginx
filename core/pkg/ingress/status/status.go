@@ -24,15 +24,16 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/leaderelection"
-	"k8s.io/kubernetes/pkg/labels"
-	"k8s.io/kubernetes/pkg/util/wait"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/wait"
+	clientset "k8s.io/client-go/kubernetes"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
-	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
+	"k8s.io/ingress/core/pkg/ingress/status/leaderelection"
+	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/strings"
 	"k8s.io/ingress/core/pkg/task"
@@ -52,7 +53,7 @@ type Sync interface {
 type Config struct {
 	Client         clientset.Interface
 	PublishService string
-	IngressLister  cache_store.StoreToIngressLister
+	IngressLister  store.IngressLister
 	ElectionID     string
 
 	DefaultIngressClass string
@@ -111,7 +112,7 @@ func (s statusSync) Shutdown() {
 	}
 
 	glog.Infof("removing address from ingress status (%v)", addrs)
-	s.updateStatus([]api.LoadBalancerIngress{})
+	s.updateStatus([]api_v1.LoadBalancerIngress{})
 }
 
 func (s *statusSync) run() {
@@ -196,7 +197,7 @@ func NewStatusSyncer(config Config) Sync {
 func (s *statusSync) runningAddresess() ([]string, error) {
 	if s.PublishService != "" {
 		ns, name, _ := k8s.ParseNameNS(s.PublishService)
-		svc, err := s.Client.Core().Services(ns).Get(name)
+		svc, err := s.Client.Core().Services(ns).Get(name, meta_v1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -214,8 +215,8 @@ func (s *statusSync) runningAddresess() ([]string, error) {
 	}
 
 	// get information about all the pods running the ingress controller
-	pods, err := s.Client.Core().Pods(s.pod.Namespace).List(api.ListOptions{
-		LabelSelector: labels.SelectorFromSet(s.pod.Labels),
+	pods, err := s.Client.Core().Pods(s.pod.Namespace).List(meta_v1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
 	})
 	if err != nil {
 		return nil, err
@@ -232,13 +233,13 @@ func (s *statusSync) runningAddresess() ([]string, error) {
 }
 
 // sliceToStatus converts a slice of IP and/or hostnames to LoadBalancerIngress
-func sliceToStatus(endpoints []string) []api.LoadBalancerIngress {
-	lbi := []api.LoadBalancerIngress{}
+func sliceToStatus(endpoints []string) []api_v1.LoadBalancerIngress {
+	lbi := []api_v1.LoadBalancerIngress{}
 	for _, ep := range endpoints {
 		if net.ParseIP(ep) == nil {
-			lbi = append(lbi, api.LoadBalancerIngress{Hostname: ep})
+			lbi = append(lbi, api_v1.LoadBalancerIngress{Hostname: ep})
 		} else {
-			lbi = append(lbi, api.LoadBalancerIngress{IP: ep})
+			lbi = append(lbi, api_v1.LoadBalancerIngress{IP: ep})
 		}
 	}
 
@@ -246,7 +247,7 @@ func sliceToStatus(endpoints []string) []api.LoadBalancerIngress {
 	return lbi
 }
 
-func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
+func (s *statusSync) updateStatus(newIPs []api_v1.LoadBalancerIngress) {
 	ings := s.IngressLister.List()
 	var wg sync.WaitGroup
 	wg.Add(len(ings))
@@ -261,7 +262,7 @@ func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
 		go func(wg *sync.WaitGroup, ing *extensions.Ingress) {
 			defer wg.Done()
 			ingClient := s.Client.Extensions().Ingresses(ing.Namespace)
-			currIng, err := ingClient.Get(ing.Name)
+			currIng, err := ingClient.Get(ing.Name, meta_v1.GetOptions{})
 			if err != nil {
 				glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
 				return
@@ -286,7 +287,7 @@ func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
 	wg.Wait()
 }
 
-func ingressSliceEqual(lhs, rhs []api.LoadBalancerIngress) bool {
+func ingressSliceEqual(lhs, rhs []api_v1.LoadBalancerIngress) bool {
 	if len(lhs) != len(rhs) {
 		return false
 	}
@@ -303,7 +304,7 @@ func ingressSliceEqual(lhs, rhs []api.LoadBalancerIngress) bool {
 }
 
 // loadBalancerIngressByIP sorts LoadBalancerIngress using the field IP
-type loadBalancerIngressByIP []api.LoadBalancerIngress
+type loadBalancerIngressByIP []api_v1.LoadBalancerIngress
 
 func (c loadBalancerIngressByIP) Len() int      { return len(c) }
 func (c loadBalancerIngressByIP) Swap(i, j int) { c[i], c[j] = c[j], c[i] }

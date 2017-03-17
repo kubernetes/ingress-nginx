@@ -8,11 +8,12 @@ import (
 
 	"github.com/spf13/pflag"
 
+	api "k8s.io/client-go/pkg/api/v1"
+
 	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/controller"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
-	"k8s.io/kubernetes/pkg/api"
 )
 
 func main() {
