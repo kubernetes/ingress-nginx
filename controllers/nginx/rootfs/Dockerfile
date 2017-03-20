@@ -16,10 +16,8 @@ FROM gcr.io/google_containers/nginx-slim:0.14
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
   diffutils \
-  ssl-cert \
   --no-install-recommends \
-  && rm -rf /var/lib/apt/lists/* \
-  && make-ssl-cert generate-default-snakeoil --force-overwrite
+  && rm -rf /var/lib/apt/lists/*
 
 COPY . /
 

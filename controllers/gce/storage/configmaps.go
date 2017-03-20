@@ -95,12 +95,12 @@ func (c *ConfigMapVault) Put(key, val string) error {
 			glog.Infof("Configmap %v will be updated with %v = %v", cfgMapKey, key, val)
 		}
 		if err := c.ConfigMapStore.Update(apiObj); err != nil {
-			return fmt.Errorf("Failed to update %v: %v", cfgMapKey, err)
+			return fmt.Errorf("failed to update %v: %v", cfgMapKey, err)
 		}
 	} else {
 		apiObj.Data = map[string]string{key: val}
 		if err := c.ConfigMapStore.Add(apiObj); err != nil {
-			return fmt.Errorf("Failed to add %v: %v", cfgMapKey, err)
+			return fmt.Errorf("failed to add %v: %v", cfgMapKey, err)
 		}
 	}
 	glog.Infof("Successfully stored key %v = %v in config map %v", key, val, cfgMapKey)
@@ -176,7 +176,7 @@ func (a *APIServerConfigMapStore) Delete(obj interface{}) error {
 func (a *APIServerConfigMapStore) GetByKey(key string) (item interface{}, exists bool, err error) {
 	nsName := strings.Split(key, "/")
 	if len(nsName) != 2 {
-		return nil, false, fmt.Errorf("Failed to get key %v, unexpecte format, expecting ns/name", key)
+		return nil, false, fmt.Errorf("failed to get key %v, unexpecte format, expecting ns/name", key)
 	}
 	ns, name := nsName[0], nsName[1]
 	cfg, err := a.client.Core().ConfigMaps(ns).Get(name)

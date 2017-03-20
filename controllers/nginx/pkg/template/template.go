@@ -205,7 +205,13 @@ func buildLocation(input interface{}) string {
 		if path == slash {
 			return fmt.Sprintf("~* %s", path)
 		}
-		return fmt.Sprintf("~* ^%s", path)
+		// baseuri regex will parse basename from the given location
+		baseuri := `(?<baseuri>.*)`
+		if !strings.HasSuffix(path, slash) {
+			// Not treat the slash after "location path" as a part of baseuri
+			baseuri = fmt.Sprintf(`\/?%s`, baseuri)
+		}
+		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
 	}
 
 	return path
@@ -273,13 +279,10 @@ func buildProxyPass(b interface{}, loc interface{}) string {
 	if len(location.Redirect.Target) > 0 {
 		abu := ""
 		if location.Redirect.AddBaseURL {
-			bPath := location.Redirect.Target
-			if !strings.HasSuffix(bPath, slash) {
-				bPath = fmt.Sprintf("%s/", bPath)
-			}
-
-			abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="$scheme://$server_name%v">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$server_name%v">' r;
+			// path has a slash suffix, so that it can be connected with baseuri directly
+			bPath := fmt.Sprintf("%s%s", path, "$baseuri")
+			abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host%v">' r;
+	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host%v">' r;
 	`, bPath, bPath)
 		}
 

@@ -960,6 +960,12 @@ func (ic *GenericController) createServers(data []interface{},
 					}
 				}
 
+				if tlsSecretName == "" {
+					glog.Warningf("ingress rule %v/%v for host %v does not contains a matching tls host", ing.Namespace, ing.Name, host)
+					glog.V(2).Infof("%v", ing.Spec.TLS)
+					continue
+				}
+
 				key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 				bc, exists := ic.sslCertTracker.Get(key)
 				if exists {
@@ -967,7 +973,11 @@ func (ic *GenericController) createServers(data []interface{},
 					if isHostValid(host, cert) {
 						servers[host].SSLCertificate = cert.PemFileName
 						servers[host].SSLPemChecksum = cert.PemSHA
+					} else {
+						glog.Warningf("ssl certificate %v does not contains a common name for host %v", key, host)
 					}
+				} else {
+					glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
 				}
 			}
 		}
@@ -990,6 +1000,11 @@ func (ic *GenericController) getEndpoints(
 	}
 
 	upsServers := []ingress.Endpoint{}
+
+	// avoid duplicated upstream servers when the service
+	// contains multiple port definitions sharing the same
+	// targetport.
+	adus := make(map[string]bool, 0)
 
 	for _, ss := range ep.Subsets {
 		for _, epPort := range ss.Ports {
@@ -1031,6 +1046,10 @@ func (ic *GenericController) getEndpoints(
 			}
 
 			for _, epAddress := range ss.Addresses {
+				ep := fmt.Sprintf("%v:%v", epAddress.IP, targetPort)
+				if _, exists := adus[ep]; exists {
+					continue
+				}
 				ups := ingress.Endpoint{
 					Address:     epAddress.IP,
 					Port:        fmt.Sprintf("%v", targetPort),
@@ -1038,6 +1057,7 @@ func (ic *GenericController) getEndpoints(
 					FailTimeout: hz.FailTimeout,
 				}
 				upsServers = append(upsServers, ups)
+				adus[ep] = true
 			}
 		}
 	}
