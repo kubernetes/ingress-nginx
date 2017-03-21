@@ -29,11 +29,10 @@ import (
 	"k8s.io/ingress/controllers/gce/utils"
 )
 
-const (
-	testDefaultBeNodePort = int64(3000)
+var (
+	testDefaultBeNodePort = backends.ServicePort{Port: 3000, Protocol: utils.HTTP}
+	testBackendPort       = intstr.IntOrString{Type: intstr.Int, IntVal: 80}
 )
-
-var testBackendPort = intstr.IntOrString{Type: intstr.Int, IntVal: 80}
 
 // ClusterManager fake
 type fakeClusterManager struct {
@@ -48,14 +47,13 @@ func NewFakeClusterManager(clusterName, firewallName string) *fakeClusterManager
 	fakeLbs := loadbalancers.NewFakeLoadBalancers(clusterName)
 	fakeBackends := backends.NewFakeBackendServices(func(op int, be *compute.BackendService) error { return nil })
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	fakeHCs := healthchecks.NewFakeHealthChecks()
+	fakeHCP := healthchecks.NewFakeHealthCheckProvider()
 	namer := utils.NewNamer(clusterName, firewallName)
 
 	nodePool := instances.NewNodePool(fakeIGs)
 	nodePool.Init(&instances.FakeZoneLister{Zones: []string{"zone-a"}})
 
-	healthChecker := healthchecks.NewHealthChecker(fakeHCs, "/", namer)
-	healthChecker.Init(&healthchecks.FakeHealthCheckGetter{})
+	healthChecker := healthchecks.NewHealthChecker(fakeHCP, "/", namer)
 
 	backendPool := backends.NewBackendPool(
 		fakeBackends,

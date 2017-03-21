@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -37,6 +38,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
+	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 	"k8s.io/ingress/controllers/gce/utils"
 )
@@ -62,6 +64,12 @@ const (
 	// In GCP, the Ingress controller assigns the SSL certificate with this name
 	// to the target proxies of the Ingress.
 	preSharedCertKey = "ingress.gcp.kubernetes.io/pre-shared-cert"
+
+	// serviceApplicationProtocolKey is a stringified JSON map of port names to
+	// protocol strings. Possible values are HTTP, HTTPS
+	// Example:
+	// '{"my-https-port":"HTTPS","my-http-port":"HTTP"}'
+	serviceApplicationProtocolKey = "service.alpha.kubernetes.io/app-protocols"
 
 	// ingressClassKey picks a specific "class" for the Ingress. The controller
 	// only processes Ingresses with this annotation either unset, or set
@@ -116,6 +124,30 @@ func (ing ingAnnotations) ingressClass() string {
 	return val
 }
 
+// svcAnnotations represents Service annotations.
+type svcAnnotations map[string]string
+
+func (svc svcAnnotations) ApplicationProtocols() (map[string]utils.AppProtocol, error) {
+	val, ok := svc[serviceApplicationProtocolKey]
+	if !ok {
+		return map[string]utils.AppProtocol{}, nil
+	}
+
+	var portToProtos map[string]utils.AppProtocol
+	err := json.Unmarshal([]byte(val), &portToProtos)
+
+	// Verify protocol is an accepted value
+	for _, proto := range portToProtos {
+		switch proto {
+		case utils.HTTP, utils.HTTPS:
+		default:
+			return nil, fmt.Errorf("unexpected port application protocol: %v", proto)
+		}
+	}
+
+	return portToProtos, err
+}
+
 // isGCEIngress returns true if the given Ingress either doesn't specify the
 // ingress.class annotation, or it's set to "gce".
 func isGCEIngress(ing *extensions.Ingress) bool {
@@ -132,6 +164,15 @@ type errorNodePortNotFound struct {
 func (e errorNodePortNotFound) Error() string {
 	return fmt.Sprintf("Could not find nodeport for backend %+v: %v",
 		e.backend, e.origErr)
+}
+
+type errorSvcAppProtosParsing struct {
+	svc     *api_v1.Service
+	origErr error
+}
+
+func (e errorSvcAppProtosParsing) Error() string {
+	return fmt.Sprintf("could not parse %v annotation on Service %v/%v, err: %v", serviceApplicationProtocolKey, e.svc.Namespace, e.svc.Name, e.origErr)
 }
 
 // taskQueue manages a work queue through an independent worker that
@@ -221,6 +262,7 @@ type StoreToPodLister struct {
 	cache.Indexer
 }
 
+// List returns a list of all pods based on selector
 func (s *StoreToPodLister) List(selector labels.Selector) (ret []*api_v1.Pod, err error) {
 	err = ListAll(s.Indexer, selector, func(m interface{}) {
 		ret = append(ret, m.(*api_v1.Pod))
@@ -228,6 +270,7 @@ func (s *StoreToPodLister) List(selector labels.Selector) (ret []*api_v1.Pod, er
 	return ret, err
 }
 
+// ListAll iterates a store and passes selected item to a func
 func ListAll(store cache.Store, selector labels.Selector, appendFn cache.AppendFunc) error {
 	for _, m := range store.List() {
 		metadata, err := meta.Accessor(m)
@@ -362,17 +405,17 @@ func (t *GCETranslator) toGCEBackend(be *extensions.IngressBackend, ns string) (
 	if err != nil {
 		return nil, err
 	}
-	backend, err := t.CloudClusterManager.backendPool.Get(int64(port))
+	backend, err := t.CloudClusterManager.backendPool.Get(port.Port)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"no GCE backend exists for port %v, kube backend %+v", port, be)
+		return nil, fmt.Errorf("no GCE backend exists for port %v, kube backend %+v", port, be)
 	}
 	return backend, nil
 }
 
 // getServiceNodePort looks in the svc store for a matching service:port,
 // and returns the nodeport.
-func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespace string) (int, error) {
+func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespace string) (backends.ServicePort, error) {
+	invalidPort := backends.ServicePort{}
 	obj, exists, err := t.svcLister.Indexer.Get(
 		&api_v1.Service{
 			ObjectMeta: meta_v1.ObjectMeta{
@@ -381,37 +424,51 @@ func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespa
 			},
 		})
 	if !exists {
-		return invalidPort, errorNodePortNotFound{be, fmt.Errorf(
-			"service %v/%v not found in store", namespace, be.ServiceName)}
+		return invalidPort, errorNodePortNotFound{be, fmt.Errorf("service %v/%v not found in store", namespace, be.ServiceName)}
 	}
 	if err != nil {
 		return invalidPort, errorNodePortNotFound{be, err}
 	}
-	var nodePort int
-	for _, p := range obj.(*api_v1.Service).Spec.Ports {
+	svc := obj.(*api_v1.Service)
+	appProtocols, err := svcAnnotations(svc.GetAnnotations()).ApplicationProtocols()
+	if err != nil {
+		return invalidPort, errorSvcAppProtosParsing{svc, err}
+	}
+
+	var port *api_v1.ServicePort
+PortLoop:
+	for _, p := range svc.Spec.Ports {
+		np := p
 		switch be.ServicePort.Type {
 		case intstr.Int:
 			if p.Port == be.ServicePort.IntVal {
-				nodePort = int(p.NodePort)
-				break
+				port = &np
+				break PortLoop
 			}
 		default:
 			if p.Name == be.ServicePort.StrVal {
-				nodePort = int(p.NodePort)
-				break
+				port = &np
+				break PortLoop
 			}
 		}
 	}
-	if nodePort != invalidPort {
-		return nodePort, nil
+
+	if port == nil {
+		return invalidPort, errorNodePortNotFound{be, fmt.Errorf("could not find matching nodeport from service")}
 	}
-	return invalidPort, errorNodePortNotFound{be, fmt.Errorf(
-		"could not find matching nodeport from service")}
+
+	proto := utils.HTTP
+	if protoStr, exists := appProtocols[port.Name]; exists {
+		proto = utils.AppProtocol(protoStr)
+	}
+
+	p := backends.ServicePort{Port: int64(port.NodePort), Protocol: proto}
+	return p, nil
 }
 
 // toNodePorts converts a pathlist to a flat list of nodeports.
-func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
-	knownPorts := []int64{}
+func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []backends.ServicePort {
+	var knownPorts []backends.ServicePort
 	for _, ing := range ings.Items {
 		defaultBackend := ing.Spec.Backend
 		if defaultBackend != nil {
@@ -419,7 +476,7 @@ func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
 			if err != nil {
 				glog.Infof("%v", err)
 			} else {
-				knownPorts = append(knownPorts, int64(port))
+				knownPorts = append(knownPorts, port)
 			}
 		}
 		for _, rule := range ing.Spec.Rules {
@@ -433,7 +490,7 @@ func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
 					glog.Infof("%v", err)
 					continue
 				}
-				knownPorts = append(knownPorts, int64(port))
+				knownPorts = append(knownPorts, port)
 			}
 		}
 	}
@@ -529,80 +586,39 @@ func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOr
 
 // isSimpleHTTPProbe returns true if the given Probe is:
 // - an HTTPGet probe, as opposed to a tcp or exec probe
-// - has a scheme of HTTP, as opposed to HTTPS
 // - has no special host or headers fields
 func isSimpleHTTPProbe(probe *api_v1.Probe) bool {
 	return (probe != nil && probe.Handler.HTTPGet != nil && probe.Handler.HTTPGet.Host == "" &&
-		probe.Handler.HTTPGet.Scheme == api_v1.URISchemeHTTP && len(probe.Handler.HTTPGet.HTTPHeaders) == 0)
+		len(probe.Handler.HTTPGet.HTTPHeaders) == 0)
 }
 
-// HealthCheck returns the http readiness probe for the endpoint backing the
-// given nodePort. If no probe is found it returns a health check with "" as
-// the request path, callers are responsible for swapping this out for the
-// appropriate default.
-func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error) {
+// GetProbe returns a probe that's used for the given nodeport
+func (t *GCETranslator) GetProbe(port int64) (*api_v1.Probe, error) {
 	sl := t.svcLister.List()
-	var ingresses []extensions.Ingress
-	var healthCheck *compute.HttpHealthCheck
-	// Find the label and target port of the one service with the given nodePort
-	for _, as := range sl {
-		s := as.(*api_v1.Service)
-		for _, p := range s.Spec.Ports {
 
+	// Find the label and target port of the one service with the given nodePort
+	var service api_v1.Service
+	var svcPort api_v1.ServicePort
+	var found bool
+OuterLoop:
+	for _, as := range sl {
+		service = *as.(*api_v1.Service)
+		for _, sp := range service.Spec.Ports {
+			svcPort = sp
 			// only one Service can match this nodePort, try and look up
 			// the readiness probe of the pods behind it
-			if int32(port) != p.NodePort {
-				continue
+			if int32(port) == sp.NodePort {
+				found = true
+				break OuterLoop
 			}
-			rp, err := t.getHTTPProbe(*s, p.TargetPort)
-			if err != nil {
-				return nil, err
-			}
-			if rp == nil {
-				glog.Infof("No pod in service %v with node port %v has declared a matching readiness probe for health checks.", s.Name, port)
-				break
-			}
-
-			healthPath := rp.Handler.HTTPGet.Path
-			// GCE requires a leading "/" for health check urls.
-			if string(healthPath[0]) != "/" {
-				healthPath = fmt.Sprintf("/%v", healthPath)
-			}
-
-			host := rp.Handler.HTTPGet.Host
-			glog.Infof("Found custom health check for Service %v nodeport %v: %v%v", s.Name, port, host, healthPath)
-			// remember the ingresses that use this Service so we can send
-			// the right events
-			ingresses, err = t.ingLister.GetServiceIngress(s)
-			if err != nil {
-				glog.Warningf("Failed to list ingresses for service %v", s.Name)
-			}
-
-			healthCheck = &compute.HttpHealthCheck{
-				Port:        port,
-				RequestPath: healthPath,
-				Host:        host,
-				Description: "kubernetes L7 health check from readiness probe.",
-				// set a low health threshold and a high failure threshold.
-				// We're just trying to detect if the node networking is
-				// borked, service level outages will get detected sooner
-				// by kube-proxy.
-				CheckIntervalSec:   int64(rp.PeriodSeconds + utils.DefaultHealthCheckInterval),
-				TimeoutSec:         int64(rp.TimeoutSeconds),
-				HealthyThreshold:   utils.DefaultHealthyThreshold,
-				UnhealthyThreshold: utils.DefaultUnhealthyThreshold,
-				// TODO: include headers after updating compute godep.
-			}
-			break
 		}
 	}
-	if healthCheck == nil {
-		healthCheck = utils.DefaultHealthCheckTemplate(port)
+
+	if !found {
+		return nil, fmt.Errorf("unable to find nodeport %v in any service", port)
 	}
-	for _, ing := range ingresses {
-		t.recorder.Eventf(&ing, api_v1.EventTypeNormal, "GCE", fmt.Sprintf("health check using %v:%v%v", healthCheck.Host, healthCheck.Port, healthCheck.RequestPath))
-	}
-	return healthCheck, nil
+
+	return t.getHTTPProbe(service, svcPort.TargetPort)
 }
 
 // PodsByCreationTimestamp sorts a list of Pods by creation timestamp, using their names as a tie breaker.

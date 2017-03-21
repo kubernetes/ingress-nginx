@@ -30,17 +30,19 @@ import (
 )
 
 const (
-	testDefaultBeNodePort = int64(3000)
-	defaultZone           = "zone-a"
+	defaultZone = "zone-a"
+)
+
+var (
+	testDefaultBeNodePort = backends.ServicePort{Port: 3000, Protocol: utils.HTTP}
 )
 
 func newFakeLoadBalancerPool(f LoadBalancers, t *testing.T) LoadBalancerPool {
 	fakeBackends := backends.NewFakeBackendServices(func(op int, be *compute.BackendService) error { return nil })
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	fakeHCs := healthchecks.NewFakeHealthChecks()
+	fakeHCP := healthchecks.NewFakeHealthCheckProvider()
 	namer := &utils.Namer{}
-	healthChecker := healthchecks.NewHealthChecker(fakeHCs, "/", namer)
-	healthChecker.Init(&healthchecks.FakeHealthCheckGetter{})
+	healthChecker := healthchecks.NewHealthChecker(fakeHCP, "/", namer)
 	nodePool := instances.NewNodePool(fakeIGs)
 	nodePool.Init(&instances.FakeZoneLister{Zones: []string{defaultZone}})
 	backendPool := backends.NewBackendPool(

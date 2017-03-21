@@ -40,6 +40,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
+	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/controller"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 	"k8s.io/ingress/controllers/gce/storage"
@@ -226,11 +227,13 @@ func main() {
 		glog.Fatalf("Default backend should take the form namespace/name: %v",
 			*defaultSvc)
 	}
-	defaultBackendNodePort, err := getNodePort(kubeClient, parts[0], parts[1])
+	nodePort, err := getNodePort(kubeClient, parts[0], parts[1])
 	if err != nil {
 		glog.Fatalf("Could not configure default backend %v: %v",
 			*defaultSvc, err)
 	}
+	// The default backend is known to be HTTP
+	defaultBackendNodePort := backends.ServicePort{Port: nodePort, Protocol: utils.HTTP}
 
 	if *inCluster || *useRealCloud {
 		// Create cluster manager

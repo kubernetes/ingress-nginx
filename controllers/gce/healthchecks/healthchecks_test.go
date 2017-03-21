@@ -17,47 +17,170 @@ limitations under the License.
 package healthchecks
 
 import (
+	"net/http"
 	"testing"
+
+	compute "google.golang.org/api/compute/v1"
 
 	"k8s.io/ingress/controllers/gce/utils"
 )
 
-func TestFakeHealthCheckActions(t *testing.T) {
+func TestHealthCheckAdd(t *testing.T) {
+	namer := utils.NewNamer("ABC", "XYZ")
+	hcp := NewFakeHealthCheckProvider()
+	healthChecks := NewHealthChecker(hcp, "/", namer)
+
+	hc := healthChecks.New(80, utils.HTTP)
+	_, err := healthChecks.Sync(hc)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Verify the health check exists
+	_, err = hcp.GetHealthCheck(namer.BeName(80))
+	if err != nil {
+		t.Fatalf("expected the health check to exist, err: %v", err)
+	}
+
+	hc = healthChecks.New(443, utils.HTTPS)
+	_, err = healthChecks.Sync(hc)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Verify the health check exists
+	_, err = hcp.GetHealthCheck(namer.BeName(443))
+	if err != nil {
+		t.Fatalf("expected the health check to exist, err: %v", err)
+	}
+}
+
+func TestHealthCheckAddExisting(t *testing.T) {
 	namer := &utils.Namer{}
-	healthChecks := NewHealthChecker(NewFakeHealthChecks(), "/", namer)
-	healthChecks.Init(&FakeHealthCheckGetter{DefaultHealthCheck: nil})
+	hcp := NewFakeHealthCheckProvider()
+	healthChecks := NewHealthChecker(hcp, "/", namer)
 
-	err := healthChecks.Add(80)
+	// HTTP
+	// Manually insert a health check
+	httpHC := DefaultHealthCheck(3000, utils.HTTP)
+	httpHC.Name = namer.BeName(3000)
+	httpHC.RequestPath = "/my-probes-health"
+	hcp.CreateHealthCheck(httpHC.Out())
+
+	// Should not fail adding the same type of health check
+	hc := healthChecks.New(3000, utils.HTTP)
+	_, err := healthChecks.Sync(hc)
 	if err != nil {
-		t.Fatalf("unexpected error")
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Verify the health check exists
+	_, err = hcp.GetHealthCheck(httpHC.Name)
+	if err != nil {
+		t.Fatalf("expected the health check to continue existing, err: %v", err)
 	}
 
-	_, err1 := healthChecks.Get(8080)
-	if err1 == nil {
-		t.Errorf("expected error")
+	// HTTPS
+	// Manually insert a health check
+	httpsHC := DefaultHealthCheck(4000, utils.HTTPS)
+	httpsHC.Name = namer.BeName(4000)
+	httpsHC.RequestPath = "/my-probes-health"
+	hcp.CreateHealthCheck(httpsHC.Out())
+
+	hc = healthChecks.New(4000, utils.HTTPS)
+	_, err = healthChecks.Sync(hc)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Verify the health check exists
+	_, err = hcp.GetHealthCheck(httpsHC.Name)
+	if err != nil {
+		t.Fatalf("expected the health check to continue existing, err: %v", err)
+	}
+}
+
+func TestHealthCheckDelete(t *testing.T) {
+	namer := &utils.Namer{}
+	hcp := NewFakeHealthCheckProvider()
+	healthChecks := NewHealthChecker(hcp, "/", namer)
+
+	// Create HTTP HC for 1234
+	hc := DefaultHealthCheck(1234, utils.HTTP)
+	hc.Name = namer.BeName(1234)
+	hcp.CreateHealthCheck(hc.Out())
+
+	// Create HTTPS HC for 1234)
+	hc.Type = string(utils.HTTPS)
+	hcp.CreateHealthCheck(hc.Out())
+
+	// Delete only HTTP 1234
+	err := healthChecks.Delete(1234)
+	if err != nil {
+		t.Errorf("unexpected error when deleting health check, err: %v", err)
 	}
 
-	hc, err2 := healthChecks.Get(80)
-	if err2 != nil {
-		t.Errorf("unexpected error")
-	} else {
-		if hc == nil {
-			t.Errorf("expected a *compute.HttpHealthCheck")
-		}
+	// Validate port is deleted
+	_, err = hcp.GetHealthCheck(hc.Name)
+	if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+		t.Errorf("expected not-found error, actual: %v", err)
 	}
 
-	err = healthChecks.Delete(8080)
+	// Delete only HTTP 1234
+	err = healthChecks.Delete(1234)
 	if err == nil {
-		t.Errorf("expected error")
+		t.Errorf("expected not-found error when deleting health check, err: %v", err)
 	}
+}
 
-	err = healthChecks.Delete(80)
+func TestHealthCheckUpdate(t *testing.T) {
+	namer := &utils.Namer{}
+	hcp := NewFakeHealthCheckProvider()
+	healthChecks := NewHealthChecker(hcp, "/", namer)
+
+	// HTTP
+	// Manually insert a health check
+	hc := DefaultHealthCheck(3000, utils.HTTP)
+	hc.Name = namer.BeName(3000)
+	hc.RequestPath = "/my-probes-health"
+	hcp.CreateHealthCheck(hc.Out())
+
+	// Verify the health check exists
+	_, err := healthChecks.Get(3000)
 	if err != nil {
-		t.Errorf("unexpected error")
+		t.Fatalf("expected the health check to exist, err: %v", err)
 	}
 
-	_, err3 := healthChecks.Get(80)
-	if err3 == nil {
-		t.Errorf("expected error")
+	// Change to HTTPS
+	hc.Type = string(utils.HTTPS)
+	_, err = healthChecks.Sync(hc)
+	if err != nil {
+		t.Fatalf("unexpected err while syncing healthcheck, err %v", err)
 	}
+
+	// Verify the health check exists
+	_, err = healthChecks.Get(3000)
+	if err != nil {
+		t.Fatalf("expected the health check to exist, err: %v", err)
+	}
+
+	// Verify the check is now HTTPS
+	if hc.Protocol() != utils.HTTPS {
+		t.Fatalf("expected check to be of type HTTPS")
+	}
+}
+
+func TestHealthCheckDeleteLegacy(t *testing.T) {
+	namer := &utils.Namer{}
+	hcp := NewFakeHealthCheckProvider()
+	healthChecks := NewHealthChecker(hcp, "/", namer)
+
+	err := hcp.CreateHttpHealthCheck(&compute.HttpHealthCheck{
+		Name: namer.BeName(80),
+	})
+	if err != nil {
+		t.Fatalf("expected health check to be created, err: %v", err)
+	}
+
+	err = healthChecks.DeleteLegacy(80)
+	if err != nil {
+		t.Fatalf("expected health check to be deleted, err: %v", err)
+	}
+
 }

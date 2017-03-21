@@ -18,16 +18,23 @@ package backends
 
 import (
 	compute "google.golang.org/api/compute/v1"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 )
+
+// ProbeProvider retrieves a probe struct given a nodePort
+type probeProvider interface {
+	GetProbe(nodePort int64) (*api_v1.Probe, error)
+}
 
 // BackendPool is an interface to manage a pool of kubernetes nodePort services
 // as gce backendServices, and sync them through the BackendServices interface.
 type BackendPool interface {
-	Add(port int64) error
+	Init(p probeProvider)
+	Add(port ServicePort) error
 	Get(port int64) (*compute.BackendService, error)
 	Delete(port int64) error
-	Sync(ports []int64) error
-	GC(ports []int64) error
+	Sync(ports []ServicePort) error
+	GC(ports []ServicePort) error
 	Shutdown() error
 	Status(name string) string
 	List() ([]interface{}, error)

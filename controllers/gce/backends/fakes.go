@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	compute "google.golang.org/api/compute/v1"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress/controllers/gce/utils"
@@ -117,4 +118,22 @@ func (f *FakeBackendServices) GetHealth(name, instanceGroupLink string) (*comput
 	}
 	return &compute.BackendServiceGroupHealth{
 		HealthStatus: states}, nil
+}
+
+// FakeProbeProvider implements the probeProvider interface for tests.
+type FakeProbeProvider struct {
+	probes map[int64]*api_v1.Probe
+}
+
+// NewFakeProbeProvider returns a struct which satifies probeProvider interface
+func NewFakeProbeProvider(probes map[int64]*api_v1.Probe) *FakeProbeProvider {
+	return &FakeProbeProvider{probes}
+}
+
+// GetProbe returns the probe for a given nodePort
+func (pp *FakeProbeProvider) GetProbe(port int64) (*api_v1.Probe, error) {
+	if probe, exists := pp.probes[port]; exists {
+		return probe, nil
+	}
+	return nil, nil
 }

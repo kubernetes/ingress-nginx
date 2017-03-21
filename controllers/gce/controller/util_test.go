@@ -100,11 +100,11 @@ func TestProbeGetter(t *testing.T) {
 	}
 	addPods(lbc, nodePortToHealthCheck, api_v1.NamespaceDefault)
 	for p, exp := range nodePortToHealthCheck {
-		got, err := lbc.tr.HealthCheck(p)
-		if err != nil {
-			t.Errorf("Failed to get health check for node port %v: %v", p, err)
-		} else if got.RequestPath != exp {
-			t.Errorf("Wrong health check for node port %v, got %v expected %v", p, got.RequestPath, exp)
+		got, err := lbc.tr.GetProbe(p)
+		if err != nil || got == nil {
+			t.Errorf("Failed to get probe for node port %v: %v", p, err)
+		} else if getProbePath(got) != exp {
+			t.Errorf("Wrong path for node port %v, got %v expected %v", p, getProbePath(got), exp)
 		}
 	}
 }
@@ -122,11 +122,11 @@ func TestProbeGetterNamedPort(t *testing.T) {
 		pod.Spec.Containers[0].ReadinessProbe.Handler.HTTPGet.Port = intstr.IntOrString{Type: intstr.String, StrVal: "test"}
 	}
 	for p, exp := range nodePortToHealthCheck {
-		got, err := lbc.tr.HealthCheck(p)
-		if err != nil {
-			t.Errorf("Failed to get health check for node port %v: %v", p, err)
-		} else if got.RequestPath != exp {
-			t.Errorf("Wrong health check for node port %v, got %v expected %v", p, got.RequestPath, exp)
+		got, err := lbc.tr.GetProbe(p)
+		if err != nil || got == nil {
+			t.Errorf("Failed to get probe for node port %v: %v", p, err)
+		} else if getProbePath(got) != exp {
+			t.Errorf("Wrong path for node port %v, got %v expected %v", p, getProbePath(got), exp)
 		}
 	}
 
@@ -173,11 +173,11 @@ func TestProbeGetterCrossNamespace(t *testing.T) {
 	addPods(lbc, nodePortToHealthCheck, api_v1.NamespaceDefault)
 
 	for p, exp := range nodePortToHealthCheck {
-		got, err := lbc.tr.HealthCheck(p)
-		if err != nil {
-			t.Errorf("Failed to get health check for node port %v: %v", p, err)
-		} else if got.RequestPath != exp {
-			t.Errorf("Wrong health check for node port %v, got %v expected %v", p, got.RequestPath, exp)
+		got, err := lbc.tr.GetProbe(p)
+		if err != nil || got == nil {
+			t.Errorf("Failed to get probe for node port %v: %v", p, err)
+		} else if getProbePath(got) != exp {
+			t.Errorf("Wrong path for node port %v, got %v expected %v", p, getProbePath(got), exp)
 		}
 	}
 }
@@ -256,4 +256,8 @@ func addNodes(lbc *LoadBalancerController, zoneToNode map[string][]string) {
 		}
 	}
 	lbc.CloudClusterManager.instancePool.Init(lbc.tr)
+}
+
+func getProbePath(p *api_v1.Probe) string {
+	return p.Handler.HTTPGet.Path
 }
