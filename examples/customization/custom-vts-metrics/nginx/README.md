@@ -36,24 +36,6 @@ metadata:
 $ kubectl create -f nginx-vts-metrics-conf.yaml
 ```
 
-## Custom DH parameters secret
-
-```console
-$> openssl dhparam 1024 2> /dev/null | base64
-LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ...
-```
-
-```console
-$ cat ssl-dh-param.yaml
-apiVersion: v1
-data:
-  dhparam.pem: "LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ..."
-kind: Secret
-type: Opaque
-metadata:
-  name: lb-dhparam
-  namespace: kube-system
-```
 ## Controller
 
 You can deploy the controller as follows:
@@ -68,7 +50,7 @@ default-http-backend-2657704409-qgwdd      1/1       Running   0          2m
 nginx-ingress-controller-873061567-4n3k2   1/1       Running   0          42s
 ```
 
-## Test
+## Result
 
 Check the contents of the configmap is present in the nginx.conf file using:
-`kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf`
+`kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system curl localhost:10254/metrics`
