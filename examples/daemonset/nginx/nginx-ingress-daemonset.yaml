@@ -10,6 +10,9 @@ spec:
     metadata:
       labels:
         name: nginx-ingress-lb
+      annotations:
+        prometheus.io/port: '10254'
+        prometheus.io/scrape: 'true'
     spec:
       terminationGracePeriodSeconds: 60
       containers:
