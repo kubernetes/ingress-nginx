@@ -649,12 +649,12 @@ If you hit that it means the controller isn't even starting. Re-check your input
 A default GKE/GCE cluster needs at least 1 firewall rule for GLBC to function. The Ingress controller should create this for you automatically. You can also create it thus:
 ```console
 $ gcloud compute firewall-rules create allow-130-211-0-0-22 \
-  --source-ranges 130.211.0.0/22 \
+  --source-ranges 130.211.0.0/22,35.191.0.0/16 \
   --target-tags $TAG \
   --allow tcp:$NODE_PORT
 ```
 
-Where `130.211.0.0/22` is the source range of the GCE L7, `$NODE_PORT` is the node port your Service is exposed on, i.e:
+Where `130.211.0.0/22` and `35.191.0.0/16` are the source ranges of the GCE L7, `$NODE_PORT` is the node port your Service is exposed on, i.e:
 ```console
 $ kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services ${SERVICE_NAME}
 ```
