@@ -51,6 +51,9 @@ nginx-ingress-controller-873061567-4n3k2   1/1       Running   0          42s
 ```
 
 ## Result
-
-Check the contents of the configmap is present in the nginx.conf file using:
-`kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system curl localhost:10254/metrics`
+Check  wether to open the vts status:
+```console
+$ kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf|grep vhost_traffic_status_display
+ vhost_traffic_status_display;
+ vhost_traffic_status_display_format html;
+```
