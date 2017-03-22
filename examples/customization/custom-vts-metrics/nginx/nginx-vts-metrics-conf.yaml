@@ -1,4 +1,4 @@
-piVersion: v1
+apiVersion: v1
 data:
   enable-vts-status: "true"
 kind: ConfigMap
