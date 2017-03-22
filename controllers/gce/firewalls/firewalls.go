@@ -26,25 +26,25 @@ import (
 	"k8s.io/kubernetes/pkg/util/sets"
 )
 
-// Src range from which the GCE L7 performs health checks.
-const l7SrcRange = "130.211.0.0/22"
+// Src ranges from which the GCE L7 performs health checks.
+var l7SrcRanges = []string{"130.211.0.0/22", "35.191.0.0/16"}
 
 // FirewallRules manages firewall rules.
 type FirewallRules struct {
-	cloud    Firewall
-	namer    *utils.Namer
-	srcRange netset.IPNet
+	cloud     Firewall
+	namer     *utils.Namer
+	srcRanges netset.IPNet
 }
 
 // NewFirewallPool creates a new firewall rule manager.
 // cloud: the cloud object implementing Firewall.
 // namer: cluster namer.
 func NewFirewallPool(cloud Firewall, namer *utils.Namer) SingleFirewallPool {
-	srcNetSet, err := netset.ParseIPNets(l7SrcRange)
+	srcNetSet, err := netset.ParseIPNets(l7SrcRanges...)
 	if err != nil {
-		glog.Fatalf("Could not parse L7 src range %v for firewall rule: %v", l7SrcRange, err)
+		glog.Fatalf("Could not parse L7 src ranges %v for firewall rule: %v", l7SrcRanges, err)
 	}
-	return &FirewallRules{cloud: cloud, namer: namer, srcRange: srcNetSet}
+	return &FirewallRules{cloud: cloud, namer: namer, srcRanges: srcNetSet}
 }
 
 // Sync sync firewall rules with the cloud.
@@ -60,7 +60,7 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 	rule, _ := fr.cloud.GetFirewall(name)
 	if rule == nil {
 		glog.Infof("Creating global l7 firewall rule %v", name)
-		return fr.cloud.CreateFirewall(suffix, "GCE L7 firewall rule", fr.srcRange, nodePorts, nodeNames)
+		return fr.cloud.CreateFirewall(suffix, "GCE L7 firewall rule", fr.srcRanges, nodePorts, nodeNames)
 	}
 
 	requiredPorts := sets.NewString()
@@ -77,7 +77,7 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 		return nil
 	}
 	glog.V(3).Infof("Firewall rule %v already exists, updating nodeports %v", name, nodePorts)
-	return fr.cloud.UpdateFirewall(suffix, "GCE L7 firewall rule", fr.srcRange, nodePorts, nodeNames)
+	return fr.cloud.UpdateFirewall(suffix, "GCE L7 firewall rule", fr.srcRanges, nodePorts, nodeNames)
 }
 
 // Shutdown shuts down this firewall rules manager.
