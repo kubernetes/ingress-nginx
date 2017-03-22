@@ -18,6 +18,7 @@ package collector
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -42,12 +43,15 @@ type (
 	}
 )
 
-func buildNS(namespace, class string) string {
+func buildNS(system, namespace, class string) string {
 	if namespace == "" {
 		namespace = "all"
 	}
 	if class == "" {
 		class = "all"
+	}
+	if strings.Compare(system, namespace) == 1 {
+		namespace = ""
 	}
 
 	return fmt.Sprintf("%v_%v", namespace, class)
@@ -61,7 +65,7 @@ func NewNginxStatus(namespace, class string, ngxHealthPort int, ngxVtsPath strin
 		ngxVtsPath:    ngxVtsPath,
 	}
 
-	ns := buildNS(namespace, class)
+	ns := buildNS(system, namespace, class)
 
 	p.data = &nginxStatusData{
 		active: prometheus.NewDesc(
