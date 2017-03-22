@@ -216,18 +216,28 @@ func (s *StoreToIngressLister) List() (ing extensions.IngressList, err error) {
 // GetServiceIngress gets all the Ingress' that have rules pointing to a service.
 // Note that this ignores services without the right nodePorts.
 func (s *StoreToIngressLister) GetServiceIngress(svc *api.Service) (ings []extensions.Ingress, err error) {
+IngressLoop:
 	for _, m := range s.Store.List() {
 		ing := *m.(*extensions.Ingress)
 		if ing.Namespace != svc.Namespace {
 			continue
 		}
-		for _, rules := range ing.Spec.Rules {
-			if rules.IngressRuleValue.HTTP == nil {
+
+		// Check service of default backend
+		if ing.Spec.Backend != nil && ing.Spec.Backend.ServiceName == svc.Name {
+			ings = append(ings, ing)
+			continue
+		}
+
+		// Check the target service for each path rule
+		for _, rule := range ing.Spec.Rules {
+			if rule.IngressRuleValue.HTTP == nil {
 				continue
 			}
-			for _, p := range rules.IngressRuleValue.HTTP.Paths {
+			for _, p := range rule.IngressRuleValue.HTTP.Paths {
 				if p.Backend.ServiceName == svc.Name {
 					ings = append(ings, ing)
+					continue IngressLoop
 				}
 			}
 		}
