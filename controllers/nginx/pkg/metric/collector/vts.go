@@ -62,7 +62,7 @@ func NewNGINXVTSCollector(namespace, class string, ngxHealthPort int, ngxVtsPath
 		ngxVtsPath:    ngxVtsPath,
 	}
 
-	ns := buildNS(system, namespace, class)
+	ns := buildNS(namespace, class)
 
 	p.data = &vtsData{
 		bytes: prometheus.NewDesc(

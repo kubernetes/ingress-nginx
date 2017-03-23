@@ -43,13 +43,15 @@ type (
 	}
 )
 
-func buildNS(system, namespace, class string) string {
+func buildNS(namespace, class string) string {
 	if namespace == "" {
 		namespace = "all"
 	}
+
 	if class == "" {
 		class = "all"
 	}
+
 	if strings.Compare(system, namespace) == 1 {
 		namespace = ""
 	}
@@ -65,7 +67,7 @@ func NewNginxStatus(namespace, class string, ngxHealthPort int, ngxVtsPath strin
 		ngxVtsPath:    ngxVtsPath,
 	}
 
-	ns := buildNS(system, namespace, class)
+	ns := buildNS(namespace, class)
 
 	p.data = &nginxStatusData{
 		active: prometheus.NewDesc(
