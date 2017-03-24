@@ -111,7 +111,7 @@ type GenericController struct {
 
 // Configuration contains all the settings required by an Ingress controller
 type Configuration struct {
-	Client *clientset.Clientset
+	Client clientset.Interface
 
 	ResyncPeriod   time.Duration
 	DefaultService string
