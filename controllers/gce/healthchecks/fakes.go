@@ -60,7 +60,7 @@ func (f *FakeHealthChecks) GetHttpHealthCheck(name string) (*compute.HttpHealthC
 			return h, nil
 		}
 	}
-	return nil, fmt.Errorf("Health check %v not found.", name)
+	return nil, fmt.Errorf("health check %v not found", name)
 }
 
 // DeleteHttpHealthCheck fakes out deleting a http health check.
@@ -75,7 +75,7 @@ func (f *FakeHealthChecks) DeleteHttpHealthCheck(name string) error {
 		healthChecks = append(healthChecks, h)
 	}
 	if !exists {
-		return fmt.Errorf("Failed to find health check %v", name)
+		return fmt.Errorf("failed to find health check %v", name)
 	}
 	f.hc = healthChecks
 	return nil
@@ -94,7 +94,7 @@ func (f *FakeHealthChecks) UpdateHttpHealthCheck(hc *compute.HttpHealthCheck) er
 		}
 	}
 	if !found {
-		return fmt.Errorf("Cannot update a non-existent health check %v", hc.Name)
+		return fmt.Errorf("cannot update a non-existent health check %v", hc.Name)
 	}
 	f.hc = healthChecks
 	return nil

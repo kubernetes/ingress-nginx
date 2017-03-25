@@ -216,24 +216,35 @@ func (s *StoreToIngressLister) List() (ing extensions.IngressList, err error) {
 // GetServiceIngress gets all the Ingress' that have rules pointing to a service.
 // Note that this ignores services without the right nodePorts.
 func (s *StoreToIngressLister) GetServiceIngress(svc *api.Service) (ings []extensions.Ingress, err error) {
+IngressLoop:
 	for _, m := range s.Store.List() {
 		ing := *m.(*extensions.Ingress)
 		if ing.Namespace != svc.Namespace {
 			continue
 		}
-		for _, rules := range ing.Spec.Rules {
-			if rules.IngressRuleValue.HTTP == nil {
+
+		// Check service of default backend
+		if ing.Spec.Backend != nil && ing.Spec.Backend.ServiceName == svc.Name {
+			ings = append(ings, ing)
+			continue
+		}
+
+		// Check the target service for each path rule
+		for _, rule := range ing.Spec.Rules {
+			if rule.IngressRuleValue.HTTP == nil {
 				continue
 			}
-			for _, p := range rules.IngressRuleValue.HTTP.Paths {
+			for _, p := range rule.IngressRuleValue.HTTP.Paths {
 				if p.Backend.ServiceName == svc.Name {
 					ings = append(ings, ing)
+					// Skip the rest of the rules to avoid duplicate ingresses in list
+					continue IngressLoop
 				}
 			}
 		}
 	}
 	if len(ings) == 0 {
-		err = fmt.Errorf("No ingress for service %v", svc.Name)
+		err = fmt.Errorf("no ingress for service %v", svc.Name)
 	}
 	return
 }
@@ -315,7 +326,7 @@ func (t *GCETranslator) toGCEBackend(be *extensions.IngressBackend, ns string) (
 	backend, err := t.CloudClusterManager.backendPool.Get(int64(port))
 	if err != nil {
 		return nil, fmt.Errorf(
-			"No GCE backend exists for port %v, kube backend %+v", port, be)
+			"no GCE backend exists for port %v, kube backend %+v", port, be)
 	}
 	return backend, nil
 }
@@ -332,7 +343,7 @@ func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespa
 		})
 	if !exists {
 		return invalidPort, errorNodePortNotFound{be, fmt.Errorf(
-			"Service %v/%v not found in store", namespace, be.ServiceName)}
+			"service %v/%v not found in store", namespace, be.ServiceName)}
 	}
 	if err != nil {
 		return invalidPort, errorNodePortNotFound{be, err}
@@ -356,7 +367,7 @@ func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespa
 		return nodePort, nil
 	}
 	return invalidPort, errorNodePortNotFound{be, fmt.Errorf(
-		"Could not find matching nodeport from service.")}
+		"could not find matching nodeport from service")}
 }
 
 // toNodePorts converts a pathlist to a flat list of nodeports.
@@ -374,7 +385,7 @@ func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
 		}
 		for _, rule := range ing.Spec.Rules {
 			if rule.HTTP == nil {
-				glog.Errorf("Ignoring non http Ingress rule.")
+				glog.Errorf("ignoring non http Ingress rule")
 				continue
 			}
 			for _, path := range rule.HTTP.Paths {
@@ -411,7 +422,7 @@ func (t *GCETranslator) GetZoneForNode(name string) (string, error) {
 			return getZone(n), nil
 		}
 	}
-	return "", fmt.Errorf("Node not found %v", name)
+	return "", fmt.Errorf("node not found %v", name)
 }
 
 // ListZones returns a list of zones this Kubernetes cluster spans.

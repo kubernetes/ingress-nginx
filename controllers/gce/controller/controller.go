@@ -290,7 +290,7 @@ func (lbc *LoadBalancerController) storesSynced() bool {
 func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if !lbc.hasSynced() {
 		time.Sleep(storeSyncPollPeriod)
-		return fmt.Errorf("Waiting for stores to sync")
+		return fmt.Errorf("waiting for stores to sync")
 	}
 	glog.V(3).Infof("Syncing %v", key)
 
@@ -326,7 +326,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 
 	defer func() {
 		if deferErr := lbc.CloudClusterManager.GC(lbNames, nodePorts); deferErr != nil {
-			err = fmt.Errorf("Error during sync %v, error during GC %v", err, deferErr)
+			err = fmt.Errorf("error during sync %v, error during GC %v", err, deferErr)
 		}
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
@@ -343,7 +343,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		if ingExists {
 			lbc.recorder.Eventf(obj.(*extensions.Ingress), api.EventTypeWarning, eventMsg, err.Error())
 		} else {
-			err = fmt.Errorf("%v Error: %v", eventMsg, err)
+			err = fmt.Errorf("%v, error: %v", eventMsg, err)
 		}
 		syncError = err
 	}

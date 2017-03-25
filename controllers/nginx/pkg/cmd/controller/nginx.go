@@ -441,7 +441,7 @@ func (n NGINXController) Check(_ *http.Request) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		return fmt.Errorf("Ingress controller is not healthy")
+		return fmt.Errorf("ingress controller is not healthy")
 	}
 	return nil
 }

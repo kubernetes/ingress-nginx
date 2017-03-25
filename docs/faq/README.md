@@ -23,7 +23,7 @@ Table of Contents
 The Kubernetes Service is an abstraction over endpoints (pod-ip:port pairings).
 The Ingress is an abstraction over Services. This doesn't mean all Ingress
 controller must route *through* a Service, but rather, that routing, security
-and auth configuration is represented in the Ingerss resource per Service, and
+and auth configuration is represented in the Ingress resource per Service, and
 not per pod. As long as this configuration is respected, a given Ingress
 controller is free to route to the DNS name of a Service, the VIP, a NodePort,
 or directly to the Service's endpoints.

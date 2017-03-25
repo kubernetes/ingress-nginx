@@ -85,6 +85,64 @@ func TestIsValidService(t *testing.T) {
 	}
 }
 
+func TestIsValidNamespace(t *testing.T) {
+
+	fk := testclient.NewSimpleClientset(&api.Namespace{
+		ObjectMeta: api.ObjectMeta{
+			Name: "default",
+		},
+	})
+
+	_, err := IsValidNamespace(fk, "empty")
+	if err == nil {
+		t.Errorf("expected error but return nill")
+	}
+
+	ns, err := IsValidNamespace(fk, "default")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if ns == nil {
+		t.Errorf("expected a configmap but returned nil")
+	}
+
+}
+
+func TestIsValidConfigMap(t *testing.T) {
+
+	fk := testclient.NewSimpleClientset(&api.ConfigMap{
+		ObjectMeta: api.ObjectMeta{
+			Namespace: api.NamespaceDefault,
+			Name:      "demo",
+		},
+	})
+
+	_, err := IsValidConfigMap(fk, "")
+	if err == nil {
+		t.Errorf("expected error but return nill")
+	}
+
+	s, err := IsValidConfigMap(fk, "default/demo")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if s == nil {
+		t.Errorf("expected a configmap but returned nil")
+	}
+
+	fk = testclient.NewSimpleClientset()
+	s, err = IsValidConfigMap(fk, "default/demo")
+	if err == nil {
+		t.Errorf("expected an error but returned nil")
+	}
+	if s != nil {
+		t.Errorf("unexpected Configmap returned: %v", s)
+	}
+
+}
+
 func TestIsValidSecret(t *testing.T) {
 	fk := testclient.NewSimpleClientset(&api.Secret{
 		ObjectMeta: api.ObjectMeta{

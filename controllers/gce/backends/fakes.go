@@ -47,7 +47,7 @@ func (f *FakeBackendServices) GetBackendService(name string) (*compute.BackendSe
 	f.calls = append(f.calls, utils.Get)
 	obj, exists, err := f.backendServices.GetByKey(name)
 	if !exists {
-		return nil, fmt.Errorf("Backend service %v not found", name)
+		return nil, fmt.Errorf("backend service %v not found", name)
 	}
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (f *FakeBackendServices) GetBackendService(name string) (*compute.BackendSe
 	if name == svc.Name {
 		return svc, nil
 	}
-	return nil, fmt.Errorf("Backend service %v not found", name)
+	return nil, fmt.Errorf("backend service %v not found", name)
 }
 
 // CreateBackendService fakes backend service creation.
@@ -77,7 +77,7 @@ func (f *FakeBackendServices) DeleteBackendService(name string) error {
 	f.calls = append(f.calls, utils.Delete)
 	svc, exists, err := f.backendServices.GetByKey(name)
 	if !exists {
-		return fmt.Errorf("Backend service %v not found", name)
+		return fmt.Errorf("backend service %v not found", name)
 	}
 	if err != nil {
 		return err

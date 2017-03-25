@@ -10,10 +10,13 @@ spec:
     metadata:
       labels:
         name: nginx-ingress-lb
+      annotations:
+        prometheus.io/port: '10254'
+        prometheus.io/scrape: 'true'
     spec:
       terminationGracePeriodSeconds: 60
       containers:
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.2
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.3
         name: nginx-ingress-lb
         readinessProbe:
           httpGet:
