@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -68,13 +69,18 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 	}
 
 	// create certificates and add or update the item in the store
-	_, exists = ic.sslCertTracker.Get(key)
+	cur, exists := ic.sslCertTracker.Get(key)
 	if exists {
-		glog.V(3).Infof("updating secret %v/%v in the store ", sec.Namespace, sec.Name)
+		s := cur.(*ingress.SSLCert)
+		if reflect.DeepEqual(s, cert) {
+			// no need to update
+			return nil
+		}
+		glog.Infof("updating secret %v/%v in the local store", sec.Namespace, sec.Name)
 		ic.sslCertTracker.Update(key, cert)
 		return nil
 	}
-	glog.V(3).Infof("adding secret %v/%v to the store ", sec.Namespace, sec.Name)
+	glog.Infof("adding secret %v/%v to the local store", sec.Namespace, sec.Name)
 	ic.sslCertTracker.Add(key, cert)
 	return nil
 }
@@ -84,10 +90,10 @@ func (ic *GenericController) syncSecret(k interface{}) error {
 func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
 	secretInterface, exists, err := ic.secrLister.Store.GetByKey(secretName)
 	if err != nil {
-		return nil, fmt.Errorf("error retriveing secret %v: %v", secretName, err)
+		return nil, fmt.Errorf("error retrieving secret %v: %v", secretName, err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("secret named %v does not exists", secretName)
+		return nil, fmt.Errorf("secret named %v does not exist", secretName)
 	}
 
 	secret := secretInterface.(*api.Secret)
@@ -100,13 +106,13 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 
 	var s *ingress.SSLCert
 	if okcert && okkey {
-		glog.V(3).Infof("Found certificate and private key, configuring %v as a TLS Secret", secretName)
+		glog.Infof("found certificate and private key, configuring %v as a TLS Secret", secretName)
 		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
 	} else if ca != nil {
-		glog.V(3).Infof("Found only ca.crt, configuring %v as an Certificate Authentication secret", secretName)
+		glog.Infof("found only ca.crt, configuring %v as an Certificate Authentication secret", secretName)
 		s, err = ssl.AddCertAuth(nsSecName, ca)
 	} else {
-		return nil, fmt.Errorf("No keypair or CA cert could be found in %v", secretName)
+		return nil, fmt.Errorf("ko keypair or CA cert could be found in %v", secretName)
 	}
 
 	if err != nil {
@@ -122,10 +128,14 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 func (ic *GenericController) secrReferenced(name, namespace string) bool {
 	for _, ingIf := range ic.ingLister.Store.List() {
 		ing := ingIf.(*extensions.Ingress)
-		str, err := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
-		if err == nil && str == fmt.Sprintf("%v/%v", namespace, name) {
-			return true
+
+		if ic.annotations.ContainsCertificateAuth(ing) {
+			str, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+			if str == fmt.Sprintf("%v/%v", namespace, name) {
+				return true
+			}
 		}
+
 		if ing.Namespace != namespace {
 			continue
 		}

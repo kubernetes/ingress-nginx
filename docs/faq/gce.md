@@ -72,7 +72,7 @@ In addition to this pipeline:
   Service
 * Each port on the Backend Service has a matching port on the Instance Group
 * Each port on the Backend Service is exposed through a firewall-rule open
-  to the GCE LB IP range (`130.211.0.0/22`)
+  to the GCE LB IP ranges (`130.211.0.0/22` and `35.191.0.0/16`)
 
 ## The Ingress controller events complain about quota, how do I increase it?
 

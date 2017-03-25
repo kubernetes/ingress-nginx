@@ -128,10 +128,12 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 	}
 
-	if *configMap != "" {
-		_, _, err = k8s.ParseNameNS(*configMap)
+	if *watchNamespace != "" {
+
+		_, err = k8s.IsValidNamespace(kubeClient, *watchNamespace)
+
 		if err != nil {
-			glog.Fatalf("configmap error: %v", err)
+			glog.Fatalf("no watchNamespace with name %v found: %v", *watchNamespace, err)
 		}
 	}
 

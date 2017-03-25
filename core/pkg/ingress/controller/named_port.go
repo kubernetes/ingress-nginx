@@ -32,13 +32,13 @@ import (
 )
 
 // checkSvcForUpdate verifies if one of the running pods for a service contains
-// named port. If the annotation in the service does not exists or is not equals
+// named port. If the annotation in the service does not exist or is not equals
 // to the port mapping obtained from the pod the service must be updated to reflect
 // the current state
 func (ic *GenericController) checkSvcForUpdate(svc *api.Service) error {
 	// get the pods associated with the service
 	// TODO: switch this to a watch
-	pods, err := ic.cfg.Client.Pods(svc.Namespace).List(api.ListOptions{
+	pods, err := ic.cfg.Client.Core().Pods(svc.Namespace).List(api.ListOptions{
 		LabelSelector: labels.Set(svc.Spec.Selector).AsSelector(),
 	})
 
@@ -82,7 +82,7 @@ func (ic *GenericController) checkSvcForUpdate(svc *api.Service) error {
 	if len(namedPorts) > 0 && !reflect.DeepEqual(curNamedPort, namedPorts) {
 		data, _ := json.Marshal(namedPorts)
 
-		newSvc, err := ic.cfg.Client.Services(svc.Namespace).Get(svc.Name)
+		newSvc, err := ic.cfg.Client.Core().Services(svc.Namespace).Get(svc.Name)
 		if err != nil {
 			return fmt.Errorf("error getting service %v/%v: %v", svc.Namespace, svc.Name, err)
 		}
@@ -93,7 +93,7 @@ func (ic *GenericController) checkSvcForUpdate(svc *api.Service) error {
 
 		newSvc.ObjectMeta.Annotations[service.NamedPortAnnotation] = string(data)
 		glog.Infof("updating service %v with new named port mappings", svc.Name)
-		_, err = ic.cfg.Client.Services(svc.Namespace).Update(newSvc)
+		_, err = ic.cfg.Client.Core().Services(svc.Namespace).Update(newSvc)
 		if err != nil {
 			return fmt.Errorf("error syncing service %v/%v: %v", svc.Namespace, svc.Name, err)
 		}

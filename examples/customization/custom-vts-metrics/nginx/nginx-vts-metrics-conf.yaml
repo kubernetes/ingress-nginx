@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  enable-vts-status: "true"
+kind: ConfigMap
+metadata:
+  name: nginx-vts-metrics-conf
+  namespace: kube-system

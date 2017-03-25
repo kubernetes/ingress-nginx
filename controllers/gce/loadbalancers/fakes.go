@@ -109,7 +109,7 @@ func (f *FakeLoadBalancers) GetGlobalForwardingRule(name string) (*compute.Forwa
 			return f.Fw[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Forwarding rule %v not found", name)
+	return nil, fmt.Errorf("forwarding rule %v not found", name)
 }
 
 // CreateGlobalForwardingRule fakes forwarding rule creation.
@@ -176,7 +176,7 @@ func (f *FakeLoadBalancers) GetUrlMap(name string) (*compute.UrlMap, error) {
 			return f.Um[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Url Map %v not found", name)
+	return nil, fmt.Errorf("url map %v not found", name)
 }
 
 // CreateUrlMap fakes url-map creation.
@@ -226,7 +226,7 @@ func (f *FakeLoadBalancers) GetTargetHttpProxy(name string) (*compute.TargetHttp
 			return f.Tp[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Targetproxy %v not found", name)
+	return nil, fmt.Errorf("target http proxy %v not found", name)
 }
 
 // CreateTargetHttpProxy fakes creating a target http proxy.
@@ -275,7 +275,7 @@ func (f *FakeLoadBalancers) GetTargetHttpsProxy(name string) (*compute.TargetHtt
 			return f.Tps[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Targetproxy %v not found", name)
+	return nil, fmt.Errorf("target https proxy %v not found", name)
 }
 
 // CreateTargetHttpsProxy fakes creating a target http proxy.
@@ -326,7 +326,7 @@ func (f *FakeLoadBalancers) SetSslCertificateForTargetHttpsProxy(proxy *compute.
 		}
 	}
 	if !found {
-		return fmt.Errorf("Failed to find proxy %v", proxy.Name)
+		return fmt.Errorf("failed to find proxy %v", proxy.Name)
 	}
 	return nil
 }
@@ -415,7 +415,7 @@ func (f *FakeLoadBalancers) GetGlobalStaticIP(name string) (*compute.Address, er
 			return f.IP[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Static IP %v not found", name)
+	return nil, fmt.Errorf("static IP %v not found", name)
 }
 
 // DeleteGlobalStaticIP fakes out static IP deletion.
@@ -441,7 +441,7 @@ func (f *FakeLoadBalancers) GetSslCertificate(name string) (*compute.SslCertific
 			return f.Certs[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Cert %v not found", name)
+	return nil, fmt.Errorf("cert %v not found", name)
 }
 
 // CreateSslCertificate fakes out certificate creation.

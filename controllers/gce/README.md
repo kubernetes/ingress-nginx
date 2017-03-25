@@ -18,7 +18,7 @@ __A reminder on Services__: A Kubernetes Service defines a set of pods and a mea
 
 ### L7 Load balancing on Kubernetes
 
-To achive L7 loadbalancing through Kubernetes, we employ a resource called `Ingress`. The Ingress is consumed by this loadbalancer controller, which creates the following GCE resource graph:
+To achieve L7 loadbalancing through Kubernetes, we employ a resource called `Ingress`. The Ingress is consumed by this loadbalancer controller, which creates the following GCE resource graph:
 
 [Global Forwarding Rule](https://cloud.google.com/compute/docs/load-balancing/http/global-forwarding-rules) -> [TargetHttpProxy](https://cloud.google.com/compute/docs/load-balancing/http/target-proxies) -> [Url Map](https://cloud.google.com/compute/docs/load-balancing/http/url-map) -> [Backend Service](https://cloud.google.com/compute/docs/load-balancing/http/backend-service) -> [Instance Group](https://cloud.google.com/compute/docs/instance-groups/)
 
@@ -649,12 +649,12 @@ If you hit that it means the controller isn't even starting. Re-check your input
 A default GKE/GCE cluster needs at least 1 firewall rule for GLBC to function. The Ingress controller should create this for you automatically. You can also create it thus:
 ```console
 $ gcloud compute firewall-rules create allow-130-211-0-0-22 \
-  --source-ranges 130.211.0.0/22 \
+  --source-ranges 130.211.0.0/22,35.191.0.0/16 \
   --target-tags $TAG \
   --allow tcp:$NODE_PORT
 ```
 
-Where `130.211.0.0/22` is the source range of the GCE L7, `$NODE_PORT` is the node port your Service is exposed on, i.e:
+Where `130.211.0.0/22` and `35.191.0.0/16` are the source ranges of the GCE L7, `$NODE_PORT` is the node port your Service is exposed on, i.e:
 ```console
 $ kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services ${SERVICE_NAME}
 ```
