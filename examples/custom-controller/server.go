@@ -90,3 +90,7 @@ func (n DummyController) OverrideFlags(*pflag.FlagSet) {
 func (n DummyController) SetListers(lister ingress.StoreLister) {
 
 }
+
+func (n DummyController) DefaultIngressClass() string {
+	return "dummy"
+}

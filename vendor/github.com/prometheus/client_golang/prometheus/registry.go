@@ -243,7 +243,7 @@ func (r *Registry) Register(c Collector) error {
 	}()
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
-	// Coduct various tests...
+	// Conduct various tests...
 	for desc := range descChan {
 
 		// Is the descriptor valid at all?

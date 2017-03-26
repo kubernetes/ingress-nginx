@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -59,7 +58,7 @@ func NewIPVSStats() (IPVSStats, error) {
 
 // NewIPVSStats reads the IPVS statistics from the specified `proc` filesystem.
 func (fs FS) NewIPVSStats() (IPVSStats, error) {
-	file, err := os.Open(fs.Path("net/ip_vs_stats"))
+	file, err := fs.open("net/ip_vs_stats")
 	if err != nil {
 		return IPVSStats{}, err
 	}
@@ -128,7 +127,7 @@ func NewIPVSBackendStatus() ([]IPVSBackendStatus, error) {
 
 // NewIPVSBackendStatus reads and returns the status of all (virtual,real) server pairs from the specified `proc` filesystem.
 func (fs FS) NewIPVSBackendStatus() ([]IPVSBackendStatus, error) {
-	file, err := os.Open(fs.Path("net/ip_vs"))
+	file, err := fs.open("net/ip_vs")
 	if err != nil {
 		return nil, err
 	}
