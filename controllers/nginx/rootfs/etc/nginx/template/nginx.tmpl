@@ -545,11 +545,11 @@ stream {
         # Om nom nom cookies
         #
         add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Methods' 'GET, PUT, POST, DELETE, OPTIONS';
         #
         # Custom headers and headers various browsers *should* be OK with but aren't
         #
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
         #
         # Tell client that this pre-flight info is valid for 20 days
         #
@@ -558,16 +558,24 @@ stream {
         add_header 'Content-Length' 0;
         return 204;
      }
-     if ($request_method = 'POST') {
-        add_header 'Access-Control-Allow-Origin' '*';
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-     }
+     set $cors_method 0;
      if ($request_method = 'GET') {
-        add_header 'Access-Control-Allow-Origin' '*';
+        set $cors_method 1;
+     }
+     if ($request_method = 'PUT') {
+        set $cors_method 1;
+     }
+     if ($request_method = 'POST') {
+        set $cors_method 1;
+     }
+     if ($request_method = 'DELETE') {
+        set $cors_method 1;
+     }
+
+     if ($cors_method = 1) {
+        add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+        add_header 'Access-Control-Allow-Methods' 'GET, PUT, POST, DELETE, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
      }
 {{ end }}
