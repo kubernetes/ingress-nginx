@@ -15,6 +15,13 @@ Path routing | URL regex routing | * | Beginner
 Health checking | configure/optimize health checks | * | Intermediate
 Pipeline | pipeline cloud and nginx | * | Advanced
 
+## AWS
+
+Name | Description | Platform   | Complexity Level
+-----| ----------- | ---------- | ----------------
+AWS | basic deployment | nginx | Intermediate
+
+
 ## TLS
 
 Name | Description | Platform   | Complexity Level
