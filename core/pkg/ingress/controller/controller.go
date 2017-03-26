@@ -173,7 +173,7 @@ func newIngressController(config *Configuration) *GenericController {
 			if ic.annotations.ContainsCertificateAuth(addIng) {
 				s, err := ic.annotations.CertificateAuthSecret(addIng)
 				if err == nil {
-					ic.syncSecret(fmt.Sprintf("%v/%v", s.Namespace, s.Name))
+					ic.secretQueue.Enqueue(s)
 				}
 			}
 		},
@@ -218,7 +218,7 @@ func newIngressController(config *Configuration) *GenericController {
 				if ic.annotations.ContainsCertificateAuth(upIng) {
 					s, err := ic.annotations.CertificateAuthSecret(upIng)
 					if err == nil {
-						ic.syncSecret(fmt.Sprintf("%v/%v", s.Namespace, s.Name))
+						ic.secretQueue.Enqueue(s)
 					}
 				}
 
