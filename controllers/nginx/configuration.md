@@ -46,12 +46,13 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
 |[ingress.kubernetes.io/auth-url](#external-authentication)|string|
-|[ingress.kubernetes.io/auth-tls-secret](#Certificate Authentication)|string|
-|[ingress.kubernetes.io/auth-tls-verify-depth](#Certificate Authentication)|number|
+|[ingress.kubernetes.io/auth-tls-secret](#certificate-authentication)|string|
+|[ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
 |[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
+|[ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|true or false|
 |[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
@@ -189,6 +190,14 @@ The annotations `ingress.kubernetes.io/limit-connections` and `ingress.kubernete
 `ingress.kubernetes.io/limit-rps`: number of connections that may be accepted from a given IP each second.
 
 If you specify both annotations in a single Ingress rule, `limit-rps` takes precedence.
+
+
+### SSL Passthrough
+
+The annotation `ingress.kubernetes.io/ssl-lassthrough` allows to configure TLS termination in the pod and not in NGINX.
+This is possible thanks to the [ngx_stream_ssl_preread_module](https://nginx.org/en/docs/stream/ngx_stream_ssl_preread_module.html) that enables the extraction of the server name information requested through SNI from the ClientHello message at the preread phase.
+
+**Important:** using the annotation `ingress.kubernetes.io/ssl-lassthrough` invalidate all the other availables annotations. This is because SSL Passthrough works in L4 (TCP).
 
 
 ### Secure backends
