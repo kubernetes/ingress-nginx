@@ -200,19 +200,25 @@ func newIngressController(config *Configuration) *GenericController {
 				// the referenced secret is different?
 				if diff := pretty.Compare(curIng.Spec.TLS, oldIng.Spec.TLS); diff != "" {
 					for _, secretName := range curIng.Spec.TLS {
-						secKey := fmt.Sprintf("%v/%v", curIng.Namespace, secretName.SecretName)
-						go func() {
-							glog.Infof("TLS section in ingress %v/%v changed (secret is now %v)", upIng.Namespace, upIng.Name, secKey)
-							// we need to wait until the ingress store is updated
-							time.Sleep(10 * time.Second)
-							key, err := ic.GetSecret(secKey)
-							if err != nil {
-								glog.Errorf("unexpected error: %v", err)
-							}
-							if key != nil {
-								ic.secretQueue.Enqueue(key)
-							}
-						}()
+						secKey := ""
+						if secretName.SecretName != "" {
+							secKey = fmt.Sprintf("%v/%v", curIng.Namespace, secretName.SecretName)
+						}
+						glog.Infof("TLS section in ingress %v/%v changed (secret is now \"%v\")", upIng.Namespace, upIng.Name, secKey)
+						// default cert is already queued
+						if secKey != "" {
+							go func() {
+								// we need to wait until the ingress store is updated
+								time.Sleep(10 * time.Second)
+								key, err := ic.GetSecret(secKey)
+								if err != nil {
+									glog.Errorf("unexpected error: %v", err)
+								}
+								if key != nil {
+									ic.secretQueue.Enqueue(key)
+								}
+							}()
+						}
 					}
 				}
 				if ic.annotations.ContainsCertificateAuth(upIng) {
@@ -951,18 +957,28 @@ func (ic *GenericController) createServers(data []interface{},
 			// TODO: TLS without secret?
 			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate == "" {
 				tlsSecretName := ""
+				found := false
 				for _, tls := range ing.Spec.TLS {
 					for _, tlsHost := range tls.Hosts {
 						if tlsHost == host {
 							tlsSecretName = tls.SecretName
+							found = true
 							break
 						}
 					}
 				}
 
+				// the current ing.Spec.Rules[].Host doesn't have an entry at
+				// ing.Spec.TLS[].Hosts[], skipping to the next Rule
+				if !found {
+					continue
+				}
+
+				// Current Host listed on ing.Spec.TLS[].Hosts[]
+				// but TLS[].SecretName is empty; using default cert
 				if tlsSecretName == "" {
-					glog.Warningf("ingress rule %v/%v for host %v does not contains a matching tls host", ing.Namespace, ing.Name, host)
-					glog.V(2).Infof("%v", ing.Spec.TLS)
+					servers[host].SSLCertificate = defaultPemFileName
+					servers[host].SSLPemChecksum = defaultPemSHA
 					continue
 				}
 
