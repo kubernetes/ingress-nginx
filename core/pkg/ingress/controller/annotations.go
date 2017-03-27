@@ -109,7 +109,6 @@ const (
 	healthCheck     = "HealthCheck"
 	sslPassthrough  = "SSLPassthrough"
 	sessionAffinity = "SessionAffinity"
-	certificateAuth = "CertificateAuth"
 )
 
 func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) bool {
