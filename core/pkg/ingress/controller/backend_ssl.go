@@ -28,7 +28,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress/core/pkg/ingress"
-	ssl "k8s.io/ingress/core/pkg/net/ssl"
+	"k8s.io/ingress/core/pkg/net/ssl"
 )
 
 // syncSecret keeps in sync Secrets used by Ingress rules with the files on
