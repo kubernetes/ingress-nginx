@@ -159,8 +159,8 @@ func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.Named
 	// which wraps a HTTP 400 status code. We handle it in the loop below
 	// and come around to retry with the right balancing mode. The goal is to
 	// switch everyone to using RATE.
+	backends := getBackendsForIGs(igs)
 	for _, bm := range []BalancingMode{Rate, Utilization} {
-		backends := getBackendsForIGs(igs)
 		for _, b := range backends {
 			switch bm {
 			case Rate:
@@ -224,7 +224,7 @@ func (b *Backends) Add(port int64) error {
 	if err := b.edgeHop(be, igs); err != nil {
 		return err
 	}
-	return err
+	return nil
 }
 
 // Delete deletes the Backend for the given port.
@@ -334,7 +334,8 @@ func (b *Backends) GC(svcNodePorts []int64) error {
 			continue
 		}
 		glog.V(3).Infof("GCing backend for port %v", p)
-		if err := b.Delete(nodePort); err != nil {
+		if err := b.Delete(nodePort); err != nil &&
+			!utils.IsHTTPErrorCode(err, http.StatusNotFound) {
 			return err
 		}
 	}
