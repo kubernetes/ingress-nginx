@@ -56,8 +56,9 @@ func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
 	sort.Strings(defBackend.WhitelistSourceRange)
 
 	val, err := parser.GetStringAnnotation(whitelist, ing)
-	if err != nil {
-		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, err
+	// A missing annotation is not a problem, just use the default
+	if err == ing_errors.ErrMissingAnnotations {
+		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, nil
 	}
 
 	values := strings.Split(val, ",")
