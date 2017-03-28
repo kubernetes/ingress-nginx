@@ -56,8 +56,16 @@ func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
 	sort.Strings(defBackend.WhitelistSourceRange)
 
 	val, err := parser.GetStringAnnotation(whitelist, ing)
-	if err != nil {
-		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, err
+	// A missing annotation is not a problem, just use the default
+	if err == ing_errors.ErrMissingAnnotations {
+		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, nil
+	} else if err != nil {
+		// This case is unlikely to be hit as right now as ErrMissingAnnotations is
+		// the only error GetStringAnnotation can currently return. Better safe
+		// than sorry though.
+		return nil, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "the annotation was not a string"),
+		}
 	}
 
 	values := strings.Split(val, ",")
