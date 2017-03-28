@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -364,7 +365,11 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 
 	// the limit of open files is per worker process
 	// and we leave some room to avoid consuming all the FDs available
-	maxOpenFiles := (sysctlFSFileMax() / cfg.WorkerProcesses) - 1024
+	wp, err := strconv.Atoi(cfg.WorkerProcesses)
+	if err != nil {
+		wp = 1
+	}
+	maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
 
 	setHeaders := map[string]string{}
 	if cfg.ProxySetHeaders != "" {

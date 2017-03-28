@@ -19,6 +19,7 @@ package config
 import (
 	"fmt"
 	"runtime"
+	"strconv"
 
 	"github.com/golang/glog"
 
@@ -252,7 +253,7 @@ type Configuration struct {
 
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
-	WorkerProcesses int `json:"worker-processes,omitempty"`
+	WorkerProcesses string `json:"worker-processes,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -285,7 +286,7 @@ func NewDefault() Configuration {
 		SSLSessionTickets:        true,
 		SSLSessionTimeout:        sslSessionTimeout,
 		UseGzip:                  true,
-		WorkerProcesses:          runtime.NumCPU(),
+		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
 		Backend: defaults.Backend{
