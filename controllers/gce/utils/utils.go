@@ -206,7 +206,13 @@ func (n *Namer) NameBelongsToCluster(name string) bool {
 		glog.Warningf("Too many parts to name %v, ignoring", name)
 		return false
 	}
-	return parts[1] == clusterName
+
+	if len(name) > nameLenLimit {
+		glog.V(4).Infof("%s has been truncated", name)
+		return strings.HasPrefix(clusterName, strings.TrimSuffix(parts[1], alphaNumericChar))
+	}else{
+		return parts[1] == clusterName
+	}
 }
 
 // BeName constructs the name for a backend.
