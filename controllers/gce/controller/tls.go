@@ -19,13 +19,14 @@ package controller
 import (
 	"fmt"
 
-	"k8s.io/ingress/controllers/gce/loadbalancers"
-
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-
 	"github.com/golang/glog"
+
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	api "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+
+	"k8s.io/ingress/controllers/gce/loadbalancers"
 )
 
 // secretLoaders returns a type containing all the secrets of an Ingress.
@@ -44,7 +45,7 @@ func (n *noOPValidator) validate(certs *loadbalancers.TLSCerts) error {
 // apiServerTLSLoader loads TLS certs from the apiserver.
 type apiServerTLSLoader struct {
 	noOPValidator
-	client client.Interface
+	client kubernetes.Interface
 }
 
 func (t *apiServerTLSLoader) load(ing *extensions.Ingress) (*loadbalancers.TLSCerts, error) {
@@ -59,7 +60,7 @@ func (t *apiServerTLSLoader) load(ing *extensions.Ingress) (*loadbalancers.TLSCe
 	secretName := ing.Spec.TLS[0].SecretName
 	// TODO: Replace this for a secret watcher.
 	glog.V(3).Infof("Retrieving secret for ing %v with name %v", ing.Name, secretName)
-	secret, err := t.client.Core().Secrets(ing.Namespace).Get(secretName)
+	secret, err := t.client.Core().Secrets(ing.Namespace).Get(secretName, meta_v1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

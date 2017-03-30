@@ -20,8 +20,9 @@ import (
 	"fmt"
 
 	compute "google.golang.org/api/compute/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"k8s.io/ingress/controllers/gce/utils"
-	"k8s.io/kubernetes/pkg/util/sets"
 )
 
 // NewFakeInstanceGroups creates a new FakeInstanceGroups.
