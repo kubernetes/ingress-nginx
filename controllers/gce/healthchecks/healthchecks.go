@@ -17,11 +17,12 @@ limitations under the License.
 package healthchecks
 
 import (
-	compute "google.golang.org/api/compute/v1"
+	"net/http"
 
 	"github.com/golang/glog"
+	compute "google.golang.org/api/compute/v1"
+
 	"k8s.io/ingress/controllers/gce/utils"
-	"net/http"
 )
 
 // HealthChecks manages health checks.

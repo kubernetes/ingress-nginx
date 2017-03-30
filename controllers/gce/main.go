@@ -26,20 +26,23 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/golang/glog"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	flag "github.com/spf13/pflag"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
 	"k8s.io/ingress/controllers/gce/controller"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 	"k8s.io/ingress/controllers/gce/storage"
 	"k8s.io/ingress/controllers/gce/utils"
-	"k8s.io/kubernetes/pkg/api"
-	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/restclient"
-	kubectl_util "k8s.io/kubernetes/pkg/kubectl/cmd/util"
-	"k8s.io/kubernetes/pkg/labels"
-	"k8s.io/kubernetes/pkg/util/wait"
-
-	"github.com/golang/glog"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Entrypoint of GLBC. Example invocation:
@@ -50,9 +53,9 @@ import (
 // $ glbc --proxy="http://localhost:proxyport"
 
 const (
-	// lbApiPort is the port on which the loadbalancer controller serves a
+	// lbAPIPort is the port on which the loadbalancer controller serves a
 	// minimal api (/healthz, /delete-all-and-quit etc).
-	lbApiPort = 8081
+	lbAPIPort = 8081
 
 	// A delimiter used for clarity in naming GCE resources.
 	clusterNameDelimiter = "--"
@@ -119,7 +122,7 @@ var (
 		`Path to a file containing the gce config. If left unspecified this
 		controller only works with default zones.`)
 
-	healthzPort = flags.Int("healthz-port", lbApiPort,
+	healthzPort = flags.Int("healthz-port", lbAPIPort,
 		`Port to run healthz server. Must match the health check port in yaml.`)
 )
 
@@ -171,7 +174,7 @@ func main() {
 	// We only really need a binary switch from light, v(2) logging to
 	// heavier debug style V(4) logging, which we use --verbose for.
 	flags.Parse(os.Args)
-	clientConfig := kubectl_util.DefaultClientConfig(flags)
+	//clientConfig := kubectl_util.DefaultClientConfig(flags)
 
 	// Set glog verbosity levels, unconditionally set --alsologtostderr.
 	go_flag.Lookup("logtostderr").Value.Set("true")
@@ -183,20 +186,23 @@ func main() {
 		glog.Fatalf("Please specify --default-backend")
 	}
 
-	var config *restclient.Config
+	var config *rest.Config
 	// Create kubeclient
 	if *inCluster {
-		if config, err = restclient.InClusterConfig(); err != nil {
+		if config, err = rest.InClusterConfig(); err != nil {
 			glog.Fatalf("error creating client configuration: %v", err)
 		}
 	} else {
-		config, err = clientConfig.ClientConfig()
+		config, err = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+			&clientcmd.ClientConfigLoadingRules{},
+			&clientcmd.ConfigOverrides{}).ClientConfig()
+
 		if err != nil {
 			glog.Fatalf("error creating client configuration: %v", err)
 		}
 	}
 
-	kubeClient, err := client.NewForConfig(config)
+	kubeClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		glog.Fatalf("Failed to create client: %v.", err)
 	}
@@ -247,7 +253,7 @@ func main() {
 	}
 }
 
-func newNamer(kubeClient client.Interface, clusterName string, fwName string) (*utils.Namer, error) {
+func newNamer(kubeClient kubernetes.Interface, clusterName string, fwName string) (*utils.Namer, error) {
 	name, err := getClusterUID(kubeClient, clusterName)
 	if err != nil {
 		return nil, err
@@ -329,7 +335,7 @@ func useDefaultOrLookupVault(cfgVault *storage.ConfigMapVault, cm_key, default_n
 // backwards compatibility, the firewall name will default to the cluster UID.
 // Use getFlagOrLookupVault to obtain a stored or overridden value for the firewall name.
 // else, use the cluster UID as a backup (this retains backwards compatibility).
-func getFirewallName(kubeClient client.Interface, name, cluster_uid string) (string, error) {
+func getFirewallName(kubeClient kubernetes.Interface, name, cluster_uid string) (string, error) {
 	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
 	if fw_name, err := useDefaultOrLookupVault(cfgVault, storage.ProviderDataKey, name); err != nil {
 		return "", err
@@ -347,7 +353,7 @@ func getFirewallName(kubeClient client.Interface, name, cluster_uid string) (str
 // else, check if there are any working Ingresses
 //	- remember that "" is the cluster uid
 // else, allocate a new uid
-func getClusterUID(kubeClient client.Interface, name string) (string, error) {
+func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error) {
 	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
 	if name, err := useDefaultOrLookupVault(cfgVault, storage.UidDataKey, name); err != nil {
 		return "", err
@@ -356,7 +362,9 @@ func getClusterUID(kubeClient client.Interface, name string) (string, error) {
 	}
 
 	// Check if the cluster has an Ingress with ip
-	ings, err := kubeClient.Extensions().Ingresses(api.NamespaceAll).List(api.ListOptions{LabelSelector: labels.Everything()})
+	ings, err := kubeClient.Extensions().Ingresses(api.NamespaceAll).List(meta_v1.ListOptions{
+		LabelSelector: labels.Everything().String(),
+	})
 	if err != nil {
 		return "", err
 	}
@@ -387,11 +395,11 @@ func getClusterUID(kubeClient client.Interface, name string) (string, error) {
 }
 
 // getNodePort waits for the Service, and returns it's first node port.
-func getNodePort(client client.Interface, ns, name string) (nodePort int64, err error) {
-	var svc *api.Service
+func getNodePort(client kubernetes.Interface, ns, name string) (nodePort int64, err error) {
+	var svc *api_v1.Service
 	glog.V(3).Infof("Waiting for %v/%v", ns, name)
 	wait.Poll(1*time.Second, 5*time.Minute, func() (bool, error) {
-		svc, err = client.Core().Services(ns).Get(name)
+		svc, err = client.Core().Services(ns).Get(name, meta_v1.GetOptions{})
 		if err != nil {
 			return false, nil
 		}

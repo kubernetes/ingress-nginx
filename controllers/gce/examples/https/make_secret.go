@@ -26,9 +26,11 @@ import (
 	"io/ioutil"
 	"log"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apimachinery/registered"
-	"k8s.io/kubernetes/pkg/runtime"
+	registered "k8s.io/apimachinery/pkg/apimachinery/registered"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/pkg/api"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 
 	// This installs the legacy v1 API
 	_ "k8s.io/kubernetes/pkg/api/install"
@@ -58,14 +60,19 @@ func main() {
 	}
 	tlsCrt := read(*crt)
 	tlsKey := read(*key)
-	secret := &api.Secret{
-		ObjectMeta: api.ObjectMeta{
+	secret := &api_v1.Secret{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Name: *name,
 		},
 		Data: map[string][]byte{
-			api.TLSCertKey:       tlsCrt,
-			api.TLSPrivateKeyKey: tlsKey,
+			api_v1.TLSCertKey:       tlsCrt,
+			api_v1.TLSPrivateKeyKey: tlsKey,
 		},
 	}
-	fmt.Printf(runtime.EncodeOrDie(api.Codecs.LegacyCodec(registered.EnabledVersions()...), secret))
+
+	arm, err := registered.NewAPIRegistrationManager("")
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+	fmt.Printf(runtime.EncodeOrDie(api.Codecs.LegacyCodec(arm.EnabledVersions()...), secret))
 }
