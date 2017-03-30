@@ -370,6 +370,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		wp = 1
 	}
 	maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
+	if maxOpenFiles < 0 {
+		// this means the value of RLIMIT_NOFILE is too low.
+		maxOpenFiles = 1024
+	}
 
 	setHeaders := map[string]string{}
 	if cfg.ProxySetHeaders != "" {
