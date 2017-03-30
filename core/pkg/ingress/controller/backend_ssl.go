@@ -112,7 +112,7 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 		glog.Infof("found only ca.crt, configuring %v as an Certificate Authentication secret", secretName)
 		s, err = ssl.AddCertAuth(nsSecName, ca)
 	} else {
-		return nil, fmt.Errorf("ko keypair or CA cert could be found in %v", secretName)
+		return nil, fmt.Errorf("no keypair or CA cert could be found in %v", secretName)
 	}
 
 	if err != nil {
