@@ -60,11 +60,11 @@ controllers:
 	make -C controllers/nginx build
 
 .PHONY: docker-build
-docker-build: controllers
+docker-build:
 	make -C controllers/nginx container
 
 .PHONY: docker-push
-docker-push: docker-build
+docker-push:
 	make -C controllers/nginx push
 
 .PHONY: ginkgo
