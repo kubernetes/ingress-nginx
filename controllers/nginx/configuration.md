@@ -31,7 +31,7 @@ There are 3 ways to customize NGINX:
 
 It is possible to customize the defaults in NGINX using a ConfigMap.
 
-Please check the [custom configuration](examples/customization/custom-configuration/nginx/README.md) example.
+Please check the [custom configuration](../../examples/customization/custom-configuration/nginx/README.md) example.
 
 #### Annotations
 
@@ -68,7 +68,7 @@ The following annotations are supported:
 #### Custom NGINX template
 
 The NGINX template is located in the file `/etc/nginx/template/nginx.tmpl`. Mounting a volume is possible to use a custom version.
-Use the [custom-template](examples/custom-template/README.md) example as a guide.
+Use the [custom-template](../../examples/customization/custom-template/README.md) example as a guide.
 
 **Please note the template is tied to the Go code. Do not change names in the variable `$cfg`.**
 
@@ -103,7 +103,7 @@ In NGINX, backend server pools are called "[upstreams](http://nginx.org/en/docs/
 
 **Important:** All Ingress rules using the same service will use the same upstream. Only one of the Ingress rules should define annotations to configure the upstream servers.
 
-Please check the [custom upstream check](examples/custom-upstream-check/README.md) example.
+Please check the [custom upstream check](../../examples/customization/custom-upstream-check/README.md) example.
 
 
 ### Authentication
