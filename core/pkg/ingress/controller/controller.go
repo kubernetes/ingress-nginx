@@ -624,6 +624,12 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 				server = servers[defServerName]
 			}
 
+			// Add annotations to location of default backend (root context)
+			if len(server.Locations) > 0 {
+				loc := server.Locations[0]
+				mergeLocationAnnotations(loc, anns)
+			}
+
 			if rule.HTTP == nil &&
 				host != defServerName {
 				glog.V(3).Infof("ingress rule %v/%v does not contains HTTP rules. using default backend", ing.Namespace, ing.Name)
