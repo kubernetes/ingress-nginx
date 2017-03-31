@@ -183,6 +183,8 @@ http {
     ssl_dyn_rec_size_lo 0;
     {{ end }}
 
+    ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
+
     {{ if .CustomErrors }}
     # Custom error pages
     proxy_intercept_errors on;
