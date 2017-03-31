@@ -31,7 +31,7 @@ There are 3 ways to customize NGINX:
 
 It is possible to customize the defaults in NGINX using a ConfigMap.
 
-Please check the [custom configuration](examples/custom-configuration/README.md) example.
+Please check the [custom configuration](examples/customization/custom-configuration/nginx/README.md) example.
 
 #### Annotations
 
