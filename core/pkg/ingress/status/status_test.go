@@ -23,14 +23,15 @@ import (
 	"testing"
 	"time"
 
-	cache_store "k8s.io/ingress/core/pkg/cache"
-	"k8s.io/ingress/core/pkg/k8s"
-	"k8s.io/ingress/core/pkg/task"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/cache"
 	testclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
-	"k8s.io/kubernetes/pkg/util/sets"
+
+	cache_store "k8s.io/ingress/core/pkg/cache"
+	"k8s.io/ingress/core/pkg/ingress/annotations/class"
+	"k8s.io/ingress/core/pkg/k8s"
+	"k8s.io/ingress/core/pkg/task"
 )
 
 func buildLoadBalancerIngressByIP() loadBalancerIngressByIP {
@@ -150,6 +151,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 				ObjectMeta: api.ObjectMeta{
 					Name:      "ingress-controller-leader",
 					Namespace: api.NamespaceDefault,
+					SelfLink:  "/api/v1/namespaces/default/endpoints/ingress-controller-leader",
 				},
 			}}},
 		&extensions.IngressList{Items: buildExtensionsIngresses()},
@@ -180,6 +182,25 @@ func buildExtensionsIngresses() []extensions.Ingress {
 		},
 		{
 			ObjectMeta: api.ObjectMeta{
+				Name:      "foo_ingress_different_class",
+				Namespace: api.NamespaceDefault,
+				Annotations: map[string]string{
+					class.IngressKey: "no-nginx",
+				},
+			},
+			Status: extensions.IngressStatus{
+				LoadBalancer: api.LoadBalancerStatus{
+					Ingress: []api.LoadBalancerIngress{
+						{
+							IP:       "0.0.0.0",
+							Hostname: "foo.bar.com",
+						},
+					},
+				},
+			},
+		},
+		{
+			ObjectMeta: api.ObjectMeta{
 				Name:      "foo_ingress_2",
 				Namespace: api.NamespaceDefault,
 			},
@@ -192,16 +213,13 @@ func buildExtensionsIngresses() []extensions.Ingress {
 	}
 }
 
-func buildIngressLIstener() cache_store.StoreToIngressLister {
+func buildIngressListener() cache_store.StoreToIngressLister {
 	store := cache.NewStore(cache.MetaNamespaceKeyFunc)
-	ids := sets.NewString("foo_ingress_non_01")
-	for id := range ids {
-		store.Add(&extensions.Ingress{
-			ObjectMeta: api.ObjectMeta{
-				Name:      id,
-				Namespace: api.NamespaceDefault,
-			}})
-	}
+	store.Add(&extensions.Ingress{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "foo_ingress_non_01",
+			Namespace: api.NamespaceDefault,
+		}})
 	store.Add(&extensions.Ingress{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "foo_ingress_1",
@@ -230,7 +248,7 @@ func buildStatusSync() statusSync {
 		Config: Config{
 			Client:         buildSimpleClientSet(),
 			PublishService: api.NamespaceDefault + "/" + "foo",
-			IngressLister:  buildIngressLIstener(),
+			IngressLister:  buildIngressListener(),
 		},
 	}
 }
@@ -240,9 +258,11 @@ func TestStatusActions(t *testing.T) {
 	os.Setenv("POD_NAME", "foo1")
 	os.Setenv("POD_NAMESPACE", api.NamespaceDefault)
 	c := Config{
-		Client:         buildSimpleClientSet(),
-		PublishService: "",
-		IngressLister:  buildIngressLIstener(),
+		Client:              buildSimpleClientSet(),
+		PublishService:      "",
+		IngressLister:       buildIngressListener(),
+		DefaultIngressClass: "nginx",
+		IngressClass:        "",
 	}
 	// create object
 	fkSync := NewStatusSyncer(c)
@@ -253,7 +273,7 @@ func TestStatusActions(t *testing.T) {
 	fk := fkSync.(statusSync)
 
 	ns := make(chan struct{})
-	// start it and wait for the election and syn actions
+	// start it and wait for the election and sync actions
 	go fk.Run(ns)
 	//  wait for the election
 	time.Sleep(100 * time.Millisecond)
@@ -284,6 +304,14 @@ func TestStatusActions(t *testing.T) {
 	fooIngress2CurIPs := fooIngress2.Status.LoadBalancer.Ingress
 	if !ingressSliceEqual(fooIngress2CurIPs, newIPs2) {
 		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, newIPs2)
+	}
+
+	oic, err := fk.Client.Extensions().Ingresses(api.NamespaceDefault).Get("foo_ingress_different_class")
+	if err != nil {
+		t.Fatalf("unexpected error")
+	}
+	if oic.Status.LoadBalancer.Ingress[0].IP != "0.0.0.0" && oic.Status.LoadBalancer.Ingress[0].Hostname != "foo.bar.com" {
+		t.Fatalf("invalid ingress status for rule with different class")
 	}
 
 	// end test
