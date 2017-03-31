@@ -200,6 +200,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
 	SSLCiphers string `json:"ssl-ciphers,omitempty"`
 
+	// Specifies a curve for ECDHE ciphers.
+	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve
+	SSLECDHCurve string `json:"ssl-ecdh-curve,omitempty"`
+
 	// The secret that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
 	// https://www.openssl.org/docs/manmaster/apps/dhparam.html
 	// https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
@@ -280,6 +284,7 @@ func NewDefault() Configuration {
 		ShowServerTokens:         true,
 		SSLBufferSize:            sslBufferSize,
 		SSLCiphers:               sslCiphers,
+		SSLECDHCurve:             "secp384r1",
 		SSLProtocols:             sslProtocols,
 		SSLSessionCache:          true,
 		SSLSessionCacheSize:      sslSessionCacheSize,
