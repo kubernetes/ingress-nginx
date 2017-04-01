@@ -18,6 +18,7 @@ package utils
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,7 +26,6 @@ import (
 	"github.com/golang/glog"
 	compute "google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
-	"regexp"
 )
 
 const (

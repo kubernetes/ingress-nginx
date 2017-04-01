@@ -24,18 +24,18 @@ import (
 
 	compute "google.golang.org/api/compute/v1"
 
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/pkg/api"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+
 	"k8s.io/ingress/controllers/gce/firewalls"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 	"k8s.io/ingress/controllers/gce/utils"
-
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/testapi"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/restclient"
-	"k8s.io/kubernetes/pkg/util/intstr"
-	"k8s.io/kubernetes/pkg/util/sets"
-	"k8s.io/kubernetes/pkg/util/uuid"
 )
 
 const testClusterName = "testcluster"
@@ -51,9 +51,9 @@ func defaultBackendName(clusterName string) string {
 }
 
 // newLoadBalancerController create a loadbalancer controller.
-func newLoadBalancerController(t *testing.T, cm *fakeClusterManager, masterURL string) *LoadBalancerController {
-	client := client.NewForConfigOrDie(&restclient.Config{Host: masterURL, ContentConfig: restclient.ContentConfig{GroupVersion: testapi.Default.GroupVersion()}})
-	lb, err := NewLoadBalancerController(client, cm.ClusterManager, 1*time.Second, api.NamespaceAll)
+func newLoadBalancerController(t *testing.T, cm *fakeClusterManager) *LoadBalancerController {
+	kubeClient := fake.NewSimpleClientset()
+	lb, err := NewLoadBalancerController(kubeClient, cm.ClusterManager, 1*time.Second, api_v1.NamespaceAll)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -95,7 +95,7 @@ func toIngressRules(hostRules map[string]utils.FakeIngressRuleValueMap) []extens
 // newIngress returns a new Ingress with the given path map.
 func newIngress(hostRules map[string]utils.FakeIngressRuleValueMap) *extensions.Ingress {
 	return &extensions.Ingress{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      fmt.Sprintf("%v", uuid.NewUUID()),
 			Namespace: api.NamespaceNone,
 		},
@@ -107,8 +107,8 @@ func newIngress(hostRules map[string]utils.FakeIngressRuleValueMap) *extensions.
 			Rules: toIngressRules(hostRules),
 		},
 		Status: extensions.IngressStatus{
-			LoadBalancer: api.LoadBalancerStatus{
-				Ingress: []api.LoadBalancerIngress{
+			LoadBalancer: api_v1.LoadBalancerStatus{
+				Ingress: []api_v1.LoadBalancerIngress{
 					{IP: testIPManager.ip()},
 				},
 			},
@@ -178,21 +178,21 @@ func addIngress(lbc *LoadBalancerController, ing *extensions.Ingress, pm *nodePo
 	}
 	for _, rule := range ing.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
-			svc := &api.Service{
-				ObjectMeta: api.ObjectMeta{
+			svc := &api_v1.Service{
+				ObjectMeta: meta_v1.ObjectMeta{
 					Name:      path.Backend.ServiceName,
 					Namespace: ing.Namespace,
 				},
 			}
-			var svcPort api.ServicePort
+			var svcPort api_v1.ServicePort
 			switch path.Backend.ServicePort.Type {
 			case intstr.Int:
-				svcPort = api.ServicePort{Port: path.Backend.ServicePort.IntVal}
+				svcPort = api_v1.ServicePort{Port: path.Backend.ServicePort.IntVal}
 			default:
-				svcPort = api.ServicePort{Name: path.Backend.ServicePort.StrVal}
+				svcPort = api_v1.ServicePort{Name: path.Backend.ServicePort.StrVal}
 			}
 			svcPort.NodePort = int32(pm.getNodePort(path.Backend.ServiceName))
-			svc.Spec.Ports = []api.ServicePort{svcPort}
+			svc.Spec.Ports = []api_v1.ServicePort{svcPort}
 			lbc.svcLister.Indexer.Add(svc)
 		}
 	}
@@ -201,7 +201,7 @@ func addIngress(lbc *LoadBalancerController, ing *extensions.Ingress, pm *nodePo
 func TestLbCreateDelete(t *testing.T) {
 	testFirewallName := "quux"
 	cm := NewFakeClusterManager(DefaultClusterUID, testFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	inputMap1 := map[string]utils.FakeIngressRuleValueMap{
 		"foo.example.com": {
 			"/foo1": "foo1svc",
@@ -293,7 +293,7 @@ func TestLbCreateDelete(t *testing.T) {
 
 func TestLbFaultyUpdate(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	inputMap := map[string]utils.FakeIngressRuleValueMap{
 		"foo.example.com": {
 			"/foo1": "foo1svc",
@@ -330,7 +330,7 @@ func TestLbFaultyUpdate(t *testing.T) {
 
 func TestLbDefaulting(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	// Make sure the controller plugs in the default values accepted by GCE.
 	ing := newIngress(map[string]utils.FakeIngressRuleValueMap{"": {"": "foo1svc"}})
 	pm := newPortManager(1, 65536)
@@ -348,7 +348,7 @@ func TestLbDefaulting(t *testing.T) {
 
 func TestLbNoService(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	inputMap := map[string]utils.FakeIngressRuleValueMap{
 		"foo.example.com": {
 			"/foo1": "foo1svc",
@@ -373,8 +373,8 @@ func TestLbNoService(t *testing.T) {
 	// Creates the service, next sync should have complete url map.
 	pm := newPortManager(1, 65536)
 	addIngress(lbc, ing, pm)
-	lbc.enqueueIngressForService(&api.Service{
-		ObjectMeta: api.ObjectMeta{
+	lbc.enqueueIngressForService(&api_v1.Service{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo1svc",
 			Namespace: ing.Namespace,
 		},
@@ -392,7 +392,7 @@ func TestLbNoService(t *testing.T) {
 
 func TestLbChangeStaticIP(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	inputMap := map[string]utils.FakeIngressRuleValueMap{
 		"foo.example.com": {
 			"/foo1": "foo1svc",

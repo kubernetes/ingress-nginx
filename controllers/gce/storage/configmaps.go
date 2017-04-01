@@ -22,10 +22,12 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/errors"
-	"k8s.io/kubernetes/pkg/client/cache"
-	client "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	api "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/tools/cache"
 )
 
 const (
@@ -72,7 +74,7 @@ func (c *ConfigMapVault) Put(key, val string) error {
 	c.storeLock.Lock()
 	defer c.storeLock.Unlock()
 	apiObj := &api.ConfigMap{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.name,
 			Namespace: c.namespace,
 		},
@@ -121,7 +123,7 @@ func (c *ConfigMapVault) Delete() error {
 // NewConfigMapVault creates a config map client.
 // This client is essentially meant to abstract out the details of
 // configmaps and the API, and just store/retrieve a single value, the cluster uid.
-func NewConfigMapVault(c client.Interface, uidNs, uidConfigMapName string) *ConfigMapVault {
+func NewConfigMapVault(c kubernetes.Interface, uidNs, uidConfigMapName string) *ConfigMapVault {
 	return &ConfigMapVault{
 		ConfigMapStore: NewConfigMapStore(c),
 		namespace:      uidNs,
@@ -148,7 +150,7 @@ type ConfigMapStore interface {
 // through cache.
 type APIServerConfigMapStore struct {
 	ConfigMapStore
-	client client.Interface
+	client kubernetes.Interface
 }
 
 // Add adds the given config map to the apiserver's store.
@@ -168,7 +170,7 @@ func (a *APIServerConfigMapStore) Update(obj interface{}) error {
 // Delete deletes the existing config map object.
 func (a *APIServerConfigMapStore) Delete(obj interface{}) error {
 	cfg := obj.(*api.ConfigMap)
-	return a.client.Core().ConfigMaps(cfg.Namespace).Delete(cfg.Name, &api.DeleteOptions{})
+	return a.client.Core().ConfigMaps(cfg.Namespace).Delete(cfg.Name, &metav1.DeleteOptions{})
 }
 
 // GetByKey returns the config map for a given key.
@@ -179,7 +181,7 @@ func (a *APIServerConfigMapStore) GetByKey(key string) (item interface{}, exists
 		return nil, false, fmt.Errorf("failed to get key %v, unexpecte format, expecting ns/name", key)
 	}
 	ns, name := nsName[0], nsName[1]
-	cfg, err := a.client.Core().ConfigMaps(ns).Get(name)
+	cfg, err := a.client.Core().ConfigMaps(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		// Translate not found errors to found=false, err=nil
 		if errors.IsNotFound(err) {
@@ -192,6 +194,6 @@ func (a *APIServerConfigMapStore) GetByKey(key string) (item interface{}, exists
 
 // NewConfigMapStore returns a config map store capable of persisting updates
 // to apiserver.
-func NewConfigMapStore(c client.Interface) ConfigMapStore {
+func NewConfigMapStore(c kubernetes.Interface) ConfigMapStore {
 	return &APIServerConfigMapStore{ConfigMapStore: cache.NewStore(cache.MetaNamespaceKeyFunc), client: c}
 }
