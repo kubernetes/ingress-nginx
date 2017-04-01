@@ -91,7 +91,7 @@ for how to request more.
 
 ## Why does the Ingress need a different instance group then the GKE cluster?
 
-The controller adds/removes Kubernets nodes that are `NotReady` from the lb
+The controller adds/removes Kubernetes nodes that are `NotReady` from the lb
 instance group. We cannot simply rely on health checks to achieve this for
 a few reasons.
 
@@ -159,7 +159,7 @@ are therefore better suited for experimentation.
 
 Yes, please see [this](/examples/static-ip) example.
 
-## Does updating a Kubernetes secrete update the GCE TLS certs?
+## Does updating a Kubernetes secret update the GCE TLS certs?
 
 Yes, expect O(30s) delay.
 
