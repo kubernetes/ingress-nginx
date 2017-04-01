@@ -1,5 +1,5 @@
 ci:
-	! gofmt -l *.go | read nothing
+	go fmt
 	go vet
 	go test -v ./...
 	go get github.com/golang/lint/golint
