@@ -20,8 +20,9 @@ import (
 	"fmt"
 
 	compute "google.golang.org/api/compute/v1"
+	"k8s.io/client-go/tools/cache"
+
 	"k8s.io/ingress/controllers/gce/utils"
-	"k8s.io/kubernetes/pkg/client/cache"
 )
 
 // NewFakeBackendServices creates a new fake backend services manager.
