@@ -132,6 +132,11 @@ func (s *statusSync) sync(key interface{}) error {
 	s.runLock.Lock()
 	defer s.runLock.Unlock()
 
+	if s.syncQueue.IsShuttingDown() {
+		glog.V(2).Infof("skipping Ingress status update (shutting down in progress)")
+		return nil
+	}
+
 	if !s.elector.IsLeader() {
 		glog.V(2).Infof("skipping Ingress status update (I am not the current leader)")
 		return nil
@@ -249,6 +254,7 @@ func (s *statusSync) updateStatus(newIPs []api.LoadBalancerIngress) {
 		ing := cur.(*extensions.Ingress)
 
 		if !class.IsValid(ing, s.Config.IngressClass, s.Config.DefaultIngressClass) {
+			wg.Done()
 			continue
 		}
 
