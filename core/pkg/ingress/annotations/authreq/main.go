@@ -19,6 +19,7 @@ package authreq
 import (
 	"net/url"
 	"strings"
+	"regexp"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
@@ -32,6 +33,7 @@ const (
 	authSigninURL = "ingress.kubernetes.io/auth-signin"
 	authMethod    = "ingress.kubernetes.io/auth-method"
 	authBody      = "ingress.kubernetes.io/auth-send-body"
+	authHeaders = "ingress.kubernetes.io/auth-response-headers"
 )
 
 // External returns external authentication configuration for an Ingress rule
@@ -40,10 +42,12 @@ type External struct {
 	SigninURL string `json:"signinUrl"`
 	Method    string `json:"method"`
 	SendBody  bool   `json:"sendBody"`
+	ResponseHeaders []string `json:"responseHeaders"`
 }
 
 var (
 	methods = []string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE"}
+	headerRegexp = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
 )
 
 func validMethod(method string) bool {
@@ -57,6 +61,10 @@ func validMethod(method string) bool {
 		}
 	}
 	return false
+}
+
+func validHeader(header string) bool {
+	return headerRegexp.Match([]byte(header))
 }
 
 type authReq struct {
@@ -101,6 +109,22 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("invalid HTTP method")
 	}
 
+	h := []string{}
+	hstr, _ := parser.GetStringAnnotation(authHeaders, ing)
+	if len(hstr) != 0 {
+
+		harr := strings.Split(hstr, ",")
+		for _, header := range harr {
+			header := strings.TrimSpace(header)
+			if len(header) > 0 {
+				if !validHeader(header) {
+					return nil, ing_errors.NewLocationDenied("invalid headers list")
+				}
+				h = append(h, header)
+			}
+		}
+	}
+
 	sb, _ := parser.GetBoolAnnotation(authBody, ing)
 
 	return &External{
@@ -108,5 +132,6 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		SigninURL: signin,
 		Method:    m,
 		SendBody:  sb,
+		ResponseHeaders: h,
 	}, nil
 }

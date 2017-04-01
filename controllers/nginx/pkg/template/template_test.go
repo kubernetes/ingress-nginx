@@ -21,6 +21,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"reflect"
 	"testing"
 
 	"io/ioutil"
@@ -28,6 +29,7 @@ import (
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
+	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 )
 
 var (
@@ -112,6 +114,23 @@ func TestBuildProxyPass(t *testing.T) {
 		if !strings.EqualFold(tc.ProxyPass, pp) {
 			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, tc.ProxyPass, pp)
 		}
+	}
+}
+
+func TestBuildAuthResponseHeaders(t *testing.T) {
+	loc := &ingress.Location{
+		ExternalAuth: authreq.External{ResponseHeaders: []string{"h1", "H-With-Caps-And-Dashes"}},
+	}
+	headers := buildAuthResponseHeaders(loc)
+	expected := []string{
+		"auth_request_set $authHeader0 $upstream_http_h1;",
+		"proxy_set_header 'h1' $authHeader0;",
+		"auth_request_set $authHeader1 $upstream_http_h_with_caps_and_dashes;",
+		"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
+	}
+
+	if !reflect.DeepEqual(expected, headers) {
+		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
 	}
 }
 

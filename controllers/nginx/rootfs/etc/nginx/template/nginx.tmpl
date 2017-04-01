@@ -293,6 +293,9 @@ http {
             {{ if not (empty $authPath) }}
             # this location requires authentication
             auth_request {{ $authPath }};
+            {{- range $idx, $line := buildAuthResponseHeaders $location }}
+            {{ $line }}
+            {{- end }}
             {{ end }}
 
             {{ if not (empty $location.ExternalAuth.SigninURL) }}
