@@ -32,7 +32,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
 
-	"k8s.io/kubernetes/pkg/api"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 
 	"strings"
 
@@ -71,7 +71,7 @@ func newNGINXController() ingress.Controller {
 	}
 	n := &NGINXController{
 		binary:    ngx,
-		configmap: &api.ConfigMap{},
+		configmap: &api_v1.ConfigMap{},
 	}
 
 	var onChange func()
@@ -108,7 +108,7 @@ Error loading new template : %v
 type NGINXController struct {
 	t *ngx_template.Template
 
-	configmap *api.ConfigMap
+	configmap *api_v1.ConfigMap
 
 	storeLister ingress.StoreLister
 
@@ -308,7 +308,7 @@ Error: %v
 }
 
 // SetConfig sets the configured configmap
-func (n *NGINXController) SetConfig(cmap *api.ConfigMap) {
+func (n *NGINXController) SetConfig(cmap *api_v1.ConfigMap) {
 	n.configmap = cmap
 }
 
@@ -383,7 +383,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		}
 
 		if exists {
-			setHeaders = cmap.(*api.ConfigMap).Data
+			setHeaders = cmap.(*api_v1.ConfigMap).Data
 		}
 	}
 
@@ -396,7 +396,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		}
 
 		if exists {
-			secret := s.(*api.Secret)
+			secret := s.(*api_v1.Secret)
 			nsSecName := strings.Replace(secretName, "/", "-", -1)
 
 			dh, ok := secret.Data["dhparam.pem"]

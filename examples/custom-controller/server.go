@@ -8,11 +8,12 @@ import (
 
 	"github.com/spf13/pflag"
 
+	api "k8s.io/client-go/pkg/api/v1"
+
 	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/controller"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
-	"k8s.io/kubernetes/pkg/api"
 )
 
 func main() {
@@ -88,4 +89,8 @@ func (n DummyController) OverrideFlags(*pflag.FlagSet) {
 
 func (n DummyController) SetListers(lister ingress.StoreLister) {
 
+}
+
+func (n DummyController) DefaultIngressClass() string {
+	return "dummy"
 }

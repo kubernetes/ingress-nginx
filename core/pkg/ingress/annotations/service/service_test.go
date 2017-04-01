@@ -18,9 +18,10 @@ package service
 
 import (
 	"encoding/json"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
 	"testing"
+
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	api "k8s.io/client-go/pkg/api/v1"
 )
 
 func fakeService(npa bool, ps bool, expectedP string) *api.Service {
@@ -41,11 +42,11 @@ func fakeService(npa bool, ps bool, expectedP string) *api.Service {
 
 	// fake service
 	return &api.Service{
-		TypeMeta: unversioned.TypeMeta{
+		TypeMeta: meta_v1.TypeMeta{
 			Kind:       "ingress",
 			APIVersion: "v1",
 		},
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Annotations: map[string]string{
 				fakeNpa: string(fakePs),
 			},
