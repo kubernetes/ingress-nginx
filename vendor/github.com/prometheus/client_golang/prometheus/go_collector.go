@@ -8,8 +8,9 @@ import (
 )
 
 type goCollector struct {
-	goroutines Gauge
-	gcDesc     *Desc
+	goroutinesDesc *Desc
+	threadsDesc    *Desc
+	gcDesc         *Desc
 
 	// metrics to describe and collect
 	metrics memStatsMetrics
@@ -19,11 +20,14 @@ type goCollector struct {
 // go process.
 func NewGoCollector() Collector {
 	return &goCollector{
-		goroutines: NewGauge(GaugeOpts{
-			Namespace: "go",
-			Name:      "goroutines",
-			Help:      "Number of goroutines that currently exist.",
-		}),
+		goroutinesDesc: NewDesc(
+			"go_goroutines",
+			"Number of goroutines that currently exist.",
+			nil, nil),
+		threadsDesc: NewDesc(
+			"go_threads",
+			"Number of OS threads created",
+			nil, nil),
 		gcDesc: NewDesc(
 			"go_gc_duration_seconds",
 			"A summary of the GC invocation durations.",
@@ -213,6 +217,14 @@ func NewGoCollector() Collector {
 				),
 				eval:    func(ms *runtime.MemStats) float64 { return float64(ms.LastGC) / 1e9 },
 				valType: GaugeValue,
+			}, {
+				desc: NewDesc(
+					memstatNamespace("gc_cpu_fraction"),
+					"The fraction of this program's available CPU time used by the GC since the program started.",
+					nil, nil,
+				),
+				eval:    func(ms *runtime.MemStats) float64 { return ms.GCCPUFraction },
+				valType: GaugeValue,
 			},
 		},
 	}
@@ -224,9 +236,9 @@ func memstatNamespace(s string) string {
 
 // Describe returns all descriptions of the collector.
 func (c *goCollector) Describe(ch chan<- *Desc) {
-	ch <- c.goroutines.Desc()
+	ch <- c.goroutinesDesc
+	ch <- c.threadsDesc
 	ch <- c.gcDesc
-
 	for _, i := range c.metrics {
 		ch <- i.desc
 	}
@@ -234,8 +246,9 @@ func (c *goCollector) Describe(ch chan<- *Desc) {
 
 // Collect returns the current state of all metrics of the collector.
 func (c *goCollector) Collect(ch chan<- Metric) {
-	c.goroutines.Set(float64(runtime.NumGoroutine()))
-	ch <- c.goroutines
+	ch <- MustNewConstMetric(c.goroutinesDesc, GaugeValue, float64(runtime.NumGoroutine()))
+	n, _ := runtime.ThreadCreateProfile(nil)
+	ch <- MustNewConstMetric(c.threadsDesc, GaugeValue, float64(n))
 
 	var stats debug.GCStats
 	stats.PauseQuantiles = make([]time.Duration, 5)
