@@ -17,11 +17,12 @@ limitations under the License.
 package k8s
 
 import (
+	"os"
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
-	testclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
-	"os"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	testclient "k8s.io/client-go/kubernetes/fake"
+	api "k8s.io/client-go/pkg/api/v1"
 )
 
 func TestParseNameNS(t *testing.T) {
@@ -57,7 +58,7 @@ func TestParseNameNS(t *testing.T) {
 
 func TestIsValidService(t *testing.T) {
 	fk := testclient.NewSimpleClientset(&api.Service{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Namespace: api.NamespaceDefault,
 			Name:      "demo",
 		},
@@ -88,7 +89,7 @@ func TestIsValidService(t *testing.T) {
 func TestIsValidNamespace(t *testing.T) {
 
 	fk := testclient.NewSimpleClientset(&api.Namespace{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Name: "default",
 		},
 	})
@@ -112,7 +113,7 @@ func TestIsValidNamespace(t *testing.T) {
 func TestIsValidConfigMap(t *testing.T) {
 
 	fk := testclient.NewSimpleClientset(&api.ConfigMap{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Namespace: api.NamespaceDefault,
 			Name:      "demo",
 		},
@@ -145,7 +146,7 @@ func TestIsValidConfigMap(t *testing.T) {
 
 func TestIsValidSecret(t *testing.T) {
 	fk := testclient.NewSimpleClientset(&api.Secret{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Namespace: api.NamespaceDefault,
 			Name:      "demo",
 		},
@@ -184,7 +185,7 @@ func TestGetNodeIP(t *testing.T) {
 
 		// node not exist
 		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Name: "demo",
 			},
 			Status: api.NodeStatus{
@@ -199,7 +200,7 @@ func TestGetNodeIP(t *testing.T) {
 
 		// node  exist
 		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Name: "demo",
 			},
 			Status: api.NodeStatus{
@@ -215,7 +216,7 @@ func TestGetNodeIP(t *testing.T) {
 		// search the correct node
 		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{
 			{
-				ObjectMeta: api.ObjectMeta{
+				ObjectMeta: meta_v1.ObjectMeta{
 					Name: "demo1",
 				},
 				Status: api.NodeStatus{
@@ -228,7 +229,7 @@ func TestGetNodeIP(t *testing.T) {
 				},
 			},
 			{
-				ObjectMeta: api.ObjectMeta{
+				ObjectMeta: meta_v1.ObjectMeta{
 					Name: "demo2",
 				},
 				Status: api.NodeStatus{
@@ -244,7 +245,7 @@ func TestGetNodeIP(t *testing.T) {
 
 		// get NodeExternalIP
 		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Name: "demo",
 			},
 			Status: api.NodeStatus{
@@ -262,7 +263,7 @@ func TestGetNodeIP(t *testing.T) {
 
 		// get NodeLegacyHostIP
 		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Name: "demo",
 			},
 			Status: api.NodeStatus{
@@ -307,7 +308,7 @@ func TestGetPodDetails(t *testing.T) {
 	// success to get PodInfo
 	fkClient := testclient.NewSimpleClientset(
 		&api.PodList{Items: []api.Pod{{
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Name:      "testpod",
 				Namespace: api.NamespaceDefault,
 				Labels: map[string]string{
@@ -317,7 +318,7 @@ func TestGetPodDetails(t *testing.T) {
 			},
 		}}},
 		&api.NodeList{Items: []api.Node{{
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Name: "demo",
 			},
 			Status: api.NodeStatus{

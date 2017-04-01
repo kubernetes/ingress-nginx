@@ -24,9 +24,10 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/api"
-	podutil "k8s.io/kubernetes/pkg/api/pod"
-	"k8s.io/kubernetes/pkg/labels"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/service"
 )
@@ -35,11 +36,11 @@ import (
 // named port. If the annotation in the service does not exist or is not equals
 // to the port mapping obtained from the pod the service must be updated to reflect
 // the current state
-func (ic *GenericController) checkSvcForUpdate(svc *api.Service) error {
+func (ic *GenericController) checkSvcForUpdate(svc *api_v1.Service) error {
 	// get the pods associated with the service
 	// TODO: switch this to a watch
-	pods, err := ic.cfg.Client.Core().Pods(svc.Namespace).List(api.ListOptions{
-		LabelSelector: labels.Set(svc.Spec.Selector).AsSelector(),
+	pods, err := ic.cfg.Client.Core().Pods(svc.Namespace).List(meta_v1.ListOptions{
+		LabelSelector: labels.Set(svc.Spec.Selector).AsSelector().String(),
 	})
 
 	if err != nil {
@@ -60,7 +61,7 @@ func (ic *GenericController) checkSvcForUpdate(svc *api.Service) error {
 
 		_, err := strconv.Atoi(servicePort.TargetPort.StrVal)
 		if err != nil {
-			portNum, err := podutil.FindPort(pod, servicePort)
+			portNum, err := findPort(pod, servicePort)
 			if err != nil {
 				glog.V(4).Infof("failed to find port for service %s/%s: %v", portNum, svc.Namespace, svc.Name, err)
 				continue
@@ -82,7 +83,7 @@ func (ic *GenericController) checkSvcForUpdate(svc *api.Service) error {
 	if len(namedPorts) > 0 && !reflect.DeepEqual(curNamedPort, namedPorts) {
 		data, _ := json.Marshal(namedPorts)
 
-		newSvc, err := ic.cfg.Client.Core().Services(svc.Namespace).Get(svc.Name)
+		newSvc, err := ic.cfg.Client.Core().Services(svc.Namespace).Get(svc.Name, meta_v1.GetOptions{})
 		if err != nil {
 			return fmt.Errorf("error getting service %v/%v: %v", svc.Namespace, svc.Name, err)
 		}
@@ -102,4 +103,27 @@ func (ic *GenericController) checkSvcForUpdate(svc *api.Service) error {
 	}
 
 	return nil
+}
+
+// FindPort locates the container port for the given pod and portName.  If the
+// targetPort is a number, use that.  If the targetPort is a string, look that
+// string up in all named ports in all containers in the target pod.  If no
+// match is found, fail.
+func findPort(pod *api_v1.Pod, svcPort *api_v1.ServicePort) (int, error) {
+	portName := svcPort.TargetPort
+	switch portName.Type {
+	case intstr.String:
+		name := portName.StrVal
+		for _, container := range pod.Spec.Containers {
+			for _, port := range container.Ports {
+				if port.Name == name && port.Protocol == svcPort.Protocol {
+					return int(port.ContainerPort), nil
+				}
+			}
+		}
+	case intstr.Int:
+		return portName.IntValue(), nil
+	}
+
+	return 0, fmt.Errorf("no suitable port for manifest: %s", pod.UID)
 }

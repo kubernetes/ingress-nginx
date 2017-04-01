@@ -19,8 +19,9 @@ package snippet
 import (
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	api "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 func TestParse(t *testing.T) {
@@ -40,7 +41,7 @@ func TestParse(t *testing.T) {
 	}
 
 	ing := &extensions.Ingress{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
