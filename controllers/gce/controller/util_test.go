@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/util/intstr"
-	"k8s.io/kubernetes/pkg/util/sets"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 )
 
 // Pods created in loops start from this time, for routines that
@@ -33,7 +33,7 @@ var firstPodCreationTime = time.Date(2006, 01, 02, 15, 04, 05, 0, time.UTC)
 
 func TestZoneListing(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	zoneToNode := map[string][]string{
 		"zone-1": {"n1"},
 		"zone-2": {"n2"},
@@ -58,7 +58,7 @@ func TestZoneListing(t *testing.T) {
 
 func TestInstancesAddedToZones(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	zoneToNode := map[string][]string{
 		"zone-1": {"n1", "n2"},
 		"zone-2": {"n3"},
@@ -93,12 +93,12 @@ func TestInstancesAddedToZones(t *testing.T) {
 
 func TestProbeGetter(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	nodePortToHealthCheck := map[int64]string{
 		3001: "/healthz",
 		3002: "/foo",
 	}
-	addPods(lbc, nodePortToHealthCheck, api.NamespaceDefault)
+	addPods(lbc, nodePortToHealthCheck, api_v1.NamespaceDefault)
 	for p, exp := range nodePortToHealthCheck {
 		got, err := lbc.tr.HealthCheck(p)
 		if err != nil {
@@ -111,13 +111,13 @@ func TestProbeGetter(t *testing.T) {
 
 func TestProbeGetterNamedPort(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 	nodePortToHealthCheck := map[int64]string{
 		3001: "/healthz",
 	}
-	addPods(lbc, nodePortToHealthCheck, api.NamespaceDefault)
+	addPods(lbc, nodePortToHealthCheck, api_v1.NamespaceDefault)
 	for _, p := range lbc.podLister.Indexer.List() {
-		pod := p.(*api.Pod)
+		pod := p.(*api_v1.Pod)
 		pod.Spec.Containers[0].Ports[0].Name = "test"
 		pod.Spec.Containers[0].ReadinessProbe.Handler.HTTPGet.Port = intstr.IntOrString{Type: intstr.String, StrVal: "test"}
 	}
@@ -134,26 +134,26 @@ func TestProbeGetterNamedPort(t *testing.T) {
 
 func TestProbeGetterCrossNamespace(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
-	lbc := newLoadBalancerController(t, cm, "")
+	lbc := newLoadBalancerController(t, cm)
 
-	firstPod := &api.Pod{
-		ObjectMeta: api.ObjectMeta{
+	firstPod := &api_v1.Pod{
+		ObjectMeta: meta_v1.ObjectMeta{
 			// labels match those added by "addPods", but ns and health check
 			// path is different. If this pod was created in the same ns, it
 			// would become the health check.
 			Labels:            map[string]string{"app-3001": "test"},
 			Name:              fmt.Sprintf("test-pod-new-ns"),
 			Namespace:         "new-ns",
-			CreationTimestamp: unversioned.NewTime(firstPodCreationTime.Add(-time.Duration(time.Hour))),
+			CreationTimestamp: meta_v1.NewTime(firstPodCreationTime.Add(-time.Duration(time.Hour))),
 		},
-		Spec: api.PodSpec{
-			Containers: []api.Container{
+		Spec: api_v1.PodSpec{
+			Containers: []api_v1.Container{
 				{
-					Ports: []api.ContainerPort{{ContainerPort: 80}},
-					ReadinessProbe: &api.Probe{
-						Handler: api.Handler{
-							HTTPGet: &api.HTTPGetAction{
-								Scheme: api.URISchemeHTTP,
+					Ports: []api_v1.ContainerPort{{ContainerPort: 80}},
+					ReadinessProbe: &api_v1.Probe{
+						Handler: api_v1.Handler{
+							HTTPGet: &api_v1.HTTPGetAction{
+								Scheme: api_v1.URISchemeHTTP,
 								Path:   "/badpath",
 								Port: intstr.IntOrString{
 									Type:   intstr.Int,
@@ -170,7 +170,7 @@ func TestProbeGetterCrossNamespace(t *testing.T) {
 	nodePortToHealthCheck := map[int64]string{
 		3001: "/healthz",
 	}
-	addPods(lbc, nodePortToHealthCheck, api.NamespaceDefault)
+	addPods(lbc, nodePortToHealthCheck, api_v1.NamespaceDefault)
 
 	for p, exp := range nodePortToHealthCheck {
 		got, err := lbc.tr.HealthCheck(p)
@@ -186,10 +186,10 @@ func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string
 	delay := time.Minute
 	for np, u := range nodePortToHealthCheck {
 		l := map[string]string{fmt.Sprintf("app-%d", np): "test"}
-		svc := &api.Service{
-			Spec: api.ServiceSpec{
+		svc := &api_v1.Service{
+			Spec: api_v1.ServiceSpec{
 				Selector: l,
-				Ports: []api.ServicePort{
+				Ports: []api_v1.ServicePort{
 					{
 						NodePort: int32(np),
 						TargetPort: intstr.IntOrString{
@@ -204,21 +204,21 @@ func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string
 		svc.Namespace = ns
 		lbc.svcLister.Indexer.Add(svc)
 
-		pod := &api.Pod{
-			ObjectMeta: api.ObjectMeta{
+		pod := &api_v1.Pod{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Labels:            l,
 				Name:              fmt.Sprintf("%d", np),
 				Namespace:         ns,
-				CreationTimestamp: unversioned.NewTime(firstPodCreationTime.Add(delay)),
+				CreationTimestamp: meta_v1.NewTime(firstPodCreationTime.Add(delay)),
 			},
-			Spec: api.PodSpec{
-				Containers: []api.Container{
+			Spec: api_v1.PodSpec{
+				Containers: []api_v1.Container{
 					{
-						Ports: []api.ContainerPort{{Name: "test", ContainerPort: 80}},
-						ReadinessProbe: &api.Probe{
-							Handler: api.Handler{
-								HTTPGet: &api.HTTPGetAction{
-									Scheme: api.URISchemeHTTP,
+						Ports: []api_v1.ContainerPort{{Name: "test", ContainerPort: 80}},
+						ReadinessProbe: &api_v1.Probe{
+							Handler: api_v1.Handler{
+								HTTPGet: &api_v1.HTTPGetAction{
+									Scheme: api_v1.URISchemeHTTP,
 									Path:   u,
 									Port: intstr.IntOrString{
 										Type:   intstr.Int,
@@ -239,20 +239,20 @@ func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string
 func addNodes(lbc *LoadBalancerController, zoneToNode map[string][]string) {
 	for zone, nodes := range zoneToNode {
 		for _, node := range nodes {
-			n := &api.Node{
-				ObjectMeta: api.ObjectMeta{
+			n := &api_v1.Node{
+				ObjectMeta: meta_v1.ObjectMeta{
 					Name: node,
 					Labels: map[string]string{
 						zoneKey: zone,
 					},
 				},
-				Status: api.NodeStatus{
-					Conditions: []api.NodeCondition{
-						{Type: api.NodeReady, Status: api.ConditionTrue},
+				Status: api_v1.NodeStatus{
+					Conditions: []api_v1.NodeCondition{
+						{Type: api_v1.NodeReady, Status: api_v1.ConditionTrue},
 					},
 				},
 			}
-			lbc.nodeLister.Store.Add(n)
+			lbc.nodeLister.Indexer.Add(n)
 		}
 	}
 	lbc.CloudClusterManager.instancePool.Init(lbc.tr)

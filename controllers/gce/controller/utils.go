@@ -22,19 +22,23 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/glog"
+
 	compute "google.golang.org/api/compute/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
+	listers "k8s.io/client-go/listers/core/v1"
+	api "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/workqueue"
+
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 	"k8s.io/ingress/controllers/gce/utils"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/cache"
-	"k8s.io/kubernetes/pkg/labels"
-	"k8s.io/kubernetes/pkg/util/intstr"
-	"k8s.io/kubernetes/pkg/util/sets"
-	"k8s.io/kubernetes/pkg/util/wait"
-	"k8s.io/kubernetes/pkg/util/workqueue"
-
-	"github.com/golang/glog"
 )
 
 const (
@@ -202,6 +206,41 @@ type StoreToIngressLister struct {
 	cache.Store
 }
 
+// StoreToNodeLister makes a Store that lists Node.
+type StoreToNodeLister struct {
+	cache.Indexer
+}
+
+// StoreToServiceLister makes a Store that lists Service.
+type StoreToServiceLister struct {
+	cache.Indexer
+}
+
+// StoreToPodLister makes a Store that lists Pods.
+type StoreToPodLister struct {
+	cache.Indexer
+}
+
+func (s *StoreToPodLister) List(selector labels.Selector) (ret []*api.Pod, err error) {
+	err = ListAll(s.Indexer, selector, func(m interface{}) {
+		ret = append(ret, m.(*api.Pod))
+	})
+	return ret, err
+}
+
+func ListAll(store cache.Store, selector labels.Selector, appendFn cache.AppendFunc) error {
+	for _, m := range store.List() {
+		metadata, err := meta.Accessor(m)
+		if err != nil {
+			return err
+		}
+		if selector.Matches(labels.Set(metadata.GetLabels())) {
+			appendFn(m)
+		}
+	}
+	return nil
+}
+
 // List lists all Ingress' in the store.
 func (s *StoreToIngressLister) List() (ing extensions.IngressList, err error) {
 	for _, m := range s.Store.List() {
@@ -336,7 +375,7 @@ func (t *GCETranslator) toGCEBackend(be *extensions.IngressBackend, ns string) (
 func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespace string) (int, error) {
 	obj, exists, err := t.svcLister.Indexer.Get(
 		&api.Service{
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: meta_v1.ObjectMeta{
 				Name:      be.ServiceName,
 				Namespace: namespace,
 			},
@@ -411,7 +450,7 @@ func getZone(n *api.Node) string {
 
 // GetZoneForNode returns the zone for a given node by looking up its zone label.
 func (t *GCETranslator) GetZoneForNode(name string) (string, error) {
-	nodes, err := t.nodeLister.NodeCondition(getNodeReadyPredicate()).List()
+	nodes, err := listers.NewNodeLister(t.nodeLister.Indexer).ListWithPredicate(getNodeReadyPredicate())
 	if err != nil {
 		return "", err
 	}
@@ -428,7 +467,7 @@ func (t *GCETranslator) GetZoneForNode(name string) (string, error) {
 // ListZones returns a list of zones this Kubernetes cluster spans.
 func (t *GCETranslator) ListZones() ([]string, error) {
 	zones := sets.String{}
-	readyNodes, err := t.nodeLister.NodeCondition(getNodeReadyPredicate()).List()
+	readyNodes, err := listers.NewNodeLister(t.nodeLister.Indexer).ListWithPredicate(getNodeReadyPredicate())
 	if err != nil {
 		return zones.List(), err
 	}
@@ -502,14 +541,12 @@ func isSimpleHTTPProbe(probe *api.Probe) bool {
 // the request path, callers are responsible for swapping this out for the
 // appropriate default.
 func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error) {
-	sl, err := t.svcLister.List(labels.Everything())
-	if err != nil {
-		return nil, err
-	}
+	sl := t.svcLister.List()
 	var ingresses []extensions.Ingress
 	var healthCheck *compute.HttpHealthCheck
 	// Find the label and target port of the one service with the given nodePort
-	for _, s := range sl {
+	for _, as := range sl {
+		s := as.(*api.Service)
 		for _, p := range s.Spec.Ports {
 
 			// only one Service can match this nodePort, try and look up
