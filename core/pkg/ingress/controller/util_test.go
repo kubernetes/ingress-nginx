@@ -17,9 +17,8 @@ limitations under the License.
 package controller
 
 import (
-	"testing"
-
 	"reflect"
+	"testing"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
