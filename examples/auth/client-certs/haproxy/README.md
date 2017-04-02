@@ -16,7 +16,6 @@ following these steps you should have a secret named `caingress`, a certificate 
 `client.crt` and it's private key `client.key`
 * Use these same steps and create another CA and generate another certificate and private
 key `fake.crt` and `fake.key` just for testing
-* Feature not on stable version yet; use `canary` tag
 
 As mentioned in the deployment instructions, you MUST turn down any existing
 ingress controllers before running HAProxy Ingress.
