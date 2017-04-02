@@ -34,7 +34,7 @@ func IsValidService(kubeClient clientset.Interface, name string) (*api.Service, 
 	return kubeClient.Core().Services(ns).Get(name)
 }
 
-// isValidConfigMap check if exists a configmap with the specified name
+// IsValidConfigMap check if exists a configmap with the specified name
 func IsValidConfigMap(kubeClient clientset.Interface, fullName string) (*api.ConfigMap, error) {
 
 	ns, name, err := ParseNameNS(fullName)
@@ -53,7 +53,7 @@ func IsValidConfigMap(kubeClient clientset.Interface, fullName string) (*api.Con
 
 }
 
-// isValidNamespace chck if exists a namespace with the specified name
+// IsValidNamespace chck if exists a namespace with the specified name
 func IsValidNamespace(kubeClient clientset.Interface, name string) (*api.Namespace, error) {
 	return kubeClient.Core().Namespaces().Get(name)
 }
