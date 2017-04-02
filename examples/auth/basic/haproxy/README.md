@@ -11,7 +11,6 @@ This document has the following prerequisites:
 * Deploy [HAProxy Ingress controller](/examples/deployment/haproxy), you should
 end up with controller, a sample web app and an ingress resource to the `foo.bar`
 domain
-* Feature not on stable version; use `canary` tag
 
 As mentioned in the deployment instructions, you MUST turn down any existing
 ingress controllers before running HAProxy Ingress.
