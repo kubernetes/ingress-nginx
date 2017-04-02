@@ -155,6 +155,8 @@ type Backend struct {
 	// The certificate used in the endpoint cannot be a self signed certificate
 	// TODO: add annotation to allow the load of ca certificate
 	Secure bool `json:"secure"`
+	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
+	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints"`
 	// StickySession contains the StickyConfig object with stickness configuration
