@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"strings"
 	"math/rand"
+	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Sample authentication service returning several HTTP headers in response

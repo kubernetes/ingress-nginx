@@ -6,7 +6,8 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "UserID: %s, UserRole: %s", r.Header.Get("UserID"), r.Header.Get("UserRole"))}
+	fmt.Fprintf(w, "UserID: %s, UserRole: %s", r.Header.Get("UserID"), r.Header.Get("UserRole"))
+}
 
 // Sample  "echo" service displaying UserID and UserRole HTTP request headers
 func main() {

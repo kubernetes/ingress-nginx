@@ -20,16 +20,16 @@ import (
 	"encoding/json"
 	"os"
 	"path"
-	"strings"
 	"reflect"
+	"strings"
 	"testing"
 
 	"io/ioutil"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
-	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
+	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 )
 
 var (

@@ -18,8 +18,8 @@ package authreq
 
 import (
 	"net/url"
-	"strings"
 	"regexp"
+	"strings"
 
 	"k8s.io/kubernetes/pkg/apis/extensions"
 
@@ -33,20 +33,20 @@ const (
 	authSigninURL = "ingress.kubernetes.io/auth-signin"
 	authMethod    = "ingress.kubernetes.io/auth-method"
 	authBody      = "ingress.kubernetes.io/auth-send-body"
-	authHeaders = "ingress.kubernetes.io/auth-response-headers"
+	authHeaders   = "ingress.kubernetes.io/auth-response-headers"
 )
 
 // External returns external authentication configuration for an Ingress rule
 type External struct {
-	URL       string `json:"url"`
-	SigninURL string `json:"signinUrl"`
-	Method    string `json:"method"`
-	SendBody  bool   `json:"sendBody"`
+	URL             string   `json:"url"`
+	SigninURL       string   `json:"signinUrl"`
+	Method          string   `json:"method"`
+	SendBody        bool     `json:"sendBody"`
 	ResponseHeaders []string `json:"responseHeaders"`
 }
 
 var (
-	methods = []string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE"}
+	methods      = []string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE"}
 	headerRegexp = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
 )
 
@@ -128,10 +128,10 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	sb, _ := parser.GetBoolAnnotation(authBody, ing)
 
 	return &External{
-		URL:       str,
-		SigninURL: signin,
-		Method:    m,
-		SendBody:  sb,
+		URL:             str,
+		SigninURL:       signin,
+		Method:          m,
+		SendBody:        sb,
 		ResponseHeaders: h,
 	}, nil
 }
