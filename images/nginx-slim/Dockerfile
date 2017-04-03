@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM gcr.io/google_containers/ubuntu-slim:0.7
+FROM gcr.io/google_containers/ubuntu-slim:0.8
 
 COPY build.sh /tmp
 
