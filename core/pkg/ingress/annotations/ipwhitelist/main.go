@@ -65,7 +65,7 @@ func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
 	ipnets, err := sets.ParseIPNets(values...)
 	if err != nil {
 		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, ing_errors.LocationDenied{
-			Reason: errors.Wrap(err, "the annotation does not contains a valid IP address or network"),
+			Reason: errors.Wrap(err, "the annotation does not contain a valid IP address or network"),
 		}
 	}
 
