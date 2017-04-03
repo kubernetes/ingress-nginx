@@ -29,6 +29,7 @@ export LUA_UPSTREAM_VERSION=0.06
 export MORE_HEADERS_VERSION=0.32
 export NGINX_DIGEST_AUTH=7955af9c77598c697ac292811914ce1e2b3b824c
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
+export MODSECURITY=134bd364892373b4852e3e73cf363ffb71b9dd6b
 
 export BUILD_PATH=/tmp/build
 
@@ -66,6 +67,7 @@ apt-get update && apt-get install --no-install-recommends -y \
   openssl \
   libluajit-5.1 \
   libluajit-5.1-dev \
+  afl git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libcurl4-gnutls-dev libxml2 libpcre++-dev libxml2-dev \
   linux-headers-generic || exit 1
 
 # download, verify and extract the source files
@@ -105,9 +107,26 @@ get_src 9b1d0075df787338bb607f14925886249bda60b6b3156713923d5d59e99a708b \
 get_src 8eabbcd5950fdcc718bb0ef9165206c2ed60f67cd9da553d7bc3e6fe4e338461 \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
+get_src c40c78711fab3a619aa175d2c27c8a6d138255e48bbcc7c58c20f63ad5df6cb7 \
+        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY.tar.gz"
 
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
+
+cd "$BUILD_PATH"
+
+git clone https://github.com/SpiderLabs/ModSecurity
+cd ModSecurity/
+git checkout -b v3/master origin/v3/master
+sh build.sh
+git submodule init
+git submodule update
+autoreconf -i
+automake
+autoconf
+./configure
+make
+make install
 
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
@@ -158,6 +177,7 @@ patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
   --add-module="$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION" \
   --add-module="$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH" \
   --add-module="$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS" \
+  --add-module="$BUILD_PATH/ModSecurity-nginx-$MODSECURITY" \
   --add-module="$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION" || exit 1 \
   && make || exit 1 \
   && make install || exit 1
@@ -188,6 +208,9 @@ apt-mark unmarkauto \
   libluajit-5.1-2 \
   xz-utils \
   geoip-bin \
+  libyajl2 \
+  liblmdb0  \
+  libxml2 \
   openssl
 
 apt-get remove -y --purge \
@@ -202,6 +225,7 @@ apt-get remove -y --purge \
   libluajit-5.1-dev \
   linux-libc-dev \
   perl-modules-5.22 \
+  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libcurl4-gnutls-dev libpcre++-dev libxml2-dev \
   linux-headers-generic
 
 apt-get autoremove -y
