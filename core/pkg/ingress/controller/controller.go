@@ -632,7 +632,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 			if rule.HTTP == nil &&
 				host != defServerName {
-				glog.V(3).Infof("ingress rule %v/%v does not contains HTTP rules. using default backend", ing.Namespace, ing.Name)
+				glog.V(3).Infof("ingress rule %v/%v does not contain HTTP rules, using default backend", ing.Namespace, ing.Name)
 				continue
 			}
 
@@ -996,7 +996,7 @@ func (ic *GenericController) createServers(data []interface{},
 						servers[host].SSLCertificate = cert.PemFileName
 						servers[host].SSLPemChecksum = cert.PemSHA
 					} else {
-						glog.Warningf("ssl certificate %v does not contains a common name for host %v", key, host)
+						glog.Warningf("ssl certificate %v does not contain a common name for host %v", key, host)
 					}
 				} else {
 					glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
