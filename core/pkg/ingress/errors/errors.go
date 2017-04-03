@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	// ErrMissingAnnotations the ingress rule does not contains annotations
+	// ErrMissingAnnotations the ingress rule does not contain annotations
 	// This is an error only when annotations are being parsed
 	ErrMissingAnnotations = errors.New("ingress rule without annotations")
 
@@ -39,7 +39,7 @@ var (
 // NewInvalidAnnotationContent returns a new InvalidContent error
 func NewInvalidAnnotationContent(name string, val interface{}) error {
 	return InvalidContent{
-		Name: fmt.Sprintf("the annotation %v does not contains a valid value (%v)", name, val),
+		Name: fmt.Sprintf("the annotation %v does not contain a valid value (%v)", name, val),
 	}
 }
 
@@ -76,7 +76,7 @@ func IsLocationDenied(e error) bool {
 }
 
 // IsMissingAnnotations checks if the err is an error which
-// indicates the ingress does not contains annotations
+// indicates the ingress does not contain annotations
 func IsMissingAnnotations(e error) bool {
 	return e == ErrMissingAnnotations
 }

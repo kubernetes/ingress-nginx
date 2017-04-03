@@ -125,7 +125,7 @@ func dumpSecret(filename string, secret *api.Secret) error {
 	val, ok := secret.Data["auth"]
 	if !ok {
 		return ing_errors.LocationDenied{
-			Reason: errors.Errorf("the secret %v does not contains a key with value auth", secret.Name),
+			Reason: errors.Errorf("the secret %v does not contain a key with value auth", secret.Name),
 		}
 	}
 

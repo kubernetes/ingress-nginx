@@ -139,7 +139,7 @@ func (e *annotationExtractor) ContainsCertificateAuth(ing *extensions.Ingress) b
 func (e *annotationExtractor) CertificateAuthSecret(ing *extensions.Ingress) (*api.Secret, error) {
 	val, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
 	if val == "" {
-		return nil, fmt.Errorf("ingress rule %v/%v does not contains the auth-tls-secret annotation", ing.Namespace, ing.Name)
+		return nil, fmt.Errorf("ingress rule %v/%v does not contain the auth-tls-secret annotation", ing.Namespace, ing.Name)
 	}
 
 	return e.secretResolver.GetSecret(val)
