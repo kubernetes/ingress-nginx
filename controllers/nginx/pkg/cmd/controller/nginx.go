@@ -271,7 +271,7 @@ func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
 	}
 
 	flags.Set("ingress-class", ic)
-	n.stats = newStatsCollector(ic, wc, n.binary)
+	n.stats = newStatsCollector(wc, ic, n.binary)
 }
 
 // DefaultIngressClass just return the default ingress class
