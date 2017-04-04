@@ -86,10 +86,10 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		electionID = flags.String("election-id", "ingress-controller-leader", `Election id to use for status update.`)
 	)
 
-	backend.OverrideFlags(flags)
-
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
+
+	backend.OverrideFlags(flags)
 
 	flag.Set("logtostderr", "true")
 
