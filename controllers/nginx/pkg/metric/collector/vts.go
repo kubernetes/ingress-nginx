@@ -23,14 +23,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const system = "nginx"
+const ns = "nginx"
 
 type (
 	vtsCollector struct {
-		scrapeChan    chan scrapeRequest
-		ngxHealthPort int
-		ngxVtsPath    string
-		data          *vtsData
+		scrapeChan                               chan scrapeRequest
+		ngxHealthPort                            int
+		ngxVtsPath, watchNamespace, ingressClass string
+		data                                     *vtsData
 	}
 
 	vtsData struct {
@@ -55,100 +55,101 @@ type (
 )
 
 // NewNGINXVTSCollector returns a new prometheus collector for the VTS module
-func NewNGINXVTSCollector(namespace, class string, ngxHealthPort int, ngxVtsPath string) Stopable {
-	p := vtsCollector{
-		scrapeChan:    make(chan scrapeRequest),
-		ngxHealthPort: ngxHealthPort,
-		ngxVtsPath:    ngxVtsPath,
-	}
+func NewNGINXVTSCollector(watchNamespace, ingressClass string, ngxHealthPort int, ngxVtsPath string) Stopable {
 
-	ns := buildNS(namespace, class)
+	p := vtsCollector{
+		scrapeChan:     make(chan scrapeRequest),
+		ngxHealthPort:  ngxHealthPort,
+		ngxVtsPath:     ngxVtsPath,
+		watchNamespace: watchNamespace,
+		ingressClass:   ingressClass,
+	}
 
 	p.data = &vtsData{
 		bytes: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "bytes_total"),
+			prometheus.BuildFQName(ns, "", "bytes_total"),
 			"Nginx bytes count",
-			[]string{"server_zone", "direction"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "direction"}, nil),
 
 		cache: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "cache_total"),
+			prometheus.BuildFQName(ns, "", "cache_total"),
 			"Nginx cache count",
-			[]string{"server_zone", "type"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "type"}, nil),
 
 		connections: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "connections_total"),
+			prometheus.BuildFQName(ns, "", "connections_total"),
 			"Nginx connections count",
-			[]string{"type"}, nil),
+			[]string{"ingress_class", "namespace", "type"}, nil),
 
 		response: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "responses_total"),
+			prometheus.BuildFQName(ns, "", "responses_total"),
 			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-			[]string{"server_zone", "status_code"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "status_code"}, nil),
 
 		request: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "requests_total"),
+			prometheus.BuildFQName(ns, "", "requests_total"),
 			"The total number of requested client connections.",
-			[]string{"server_zone"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone"}, nil),
 
 		filterZoneBytes: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "filterzone_bytes_total"),
+			prometheus.BuildFQName(ns, "", "filterzone_bytes_total"),
 			"Nginx bytes count",
-			[]string{"server_zone", "country", "direction"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "country", "direction"}, nil),
 
 		filterZoneResponse: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "filterzone_responses_total"),
+			prometheus.BuildFQName(ns, "", "filterzone_responses_total"),
 			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-			[]string{"server_zone", "country", "status_code"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "country", "status_code"}, nil),
 
 		filterZoneCache: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "filterzone_cache_total"),
+			prometheus.BuildFQName(ns, "", "filterzone_cache_total"),
 			"Nginx cache count",
-			[]string{"server_zone", "country", "type"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "country", "type"}, nil),
 
 		upstreamBackup: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "upstream_backup"),
+			prometheus.BuildFQName(ns, "", "upstream_backup"),
 			"Current backup setting of the server.",
-			[]string{"upstream", "server"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
 
 		upstreamBytes: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "upstream_bytes_total"),
+			prometheus.BuildFQName(ns, "", "upstream_bytes_total"),
 			"The total number of bytes sent to this server.",
-			[]string{"upstream", "server", "direction"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server", "direction"}, nil),
 
 		upstreamDown: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "vts_upstream_down_total"),
+			prometheus.BuildFQName(ns, "", "vts_upstream_down_total"),
 			"Current down setting of the server.",
-			[]string{"upstream", "server"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
 
 		upstreamFailTimeout: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "upstream_fail_timeout"),
+			prometheus.BuildFQName(ns, "", "upstream_fail_timeout"),
 			"Current fail_timeout setting of the server.",
-			[]string{"upstream", "server"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
 
 		upstreamMaxFails: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "upstream_maxfails"),
+			prometheus.BuildFQName(ns, "", "upstream_maxfails"),
 			"Current max_fails setting of the server.",
-			[]string{"upstream", "server"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
 
 		upstreamResponses: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "upstream_responses_total"),
+			prometheus.BuildFQName(ns, "", "upstream_responses_total"),
 			"The number of upstream responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-			[]string{"upstream", "server", "status_code"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server", "status_code"}, nil),
 
 		upstreamRequest: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "upstream_requests_total"),
+			prometheus.BuildFQName(ns, "", "upstream_requests_total"),
 			"The total number of client connections forwarded to this server.",
-			[]string{"upstream", "server"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
 
 		upstreamResponseMsec: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "upstream_response_msecs_avg"),
+			prometheus.BuildFQName(ns, "", "upstream_response_msecs_avg"),
 			"The average of only upstream response processing times in milliseconds.",
-			[]string{"upstream", "server"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
 
 		upstreamWeight: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "upstream_weight"),
+			prometheus.BuildFQName(ns, "", "upstream_weight"),
 			"Current upstream weight setting of the server.",
-			[]string{"upstream", "server"}, nil),
+			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
 	}
 
 	go p.start()
@@ -204,54 +205,54 @@ func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	reflectMetrics(&nginxMetrics.Connections, p.data.connections, ch)
+	reflectMetrics(&nginxMetrics.Connections, p.data.connections, ch, p.ingressClass, p.watchNamespace)
 
 	for name, zones := range nginxMetrics.UpstreamZones {
 		for pos, value := range zones {
-			reflectMetrics(&zones[pos].Responses, p.data.upstreamResponses, ch, name, value.Server)
+			reflectMetrics(&zones[pos].Responses, p.data.upstreamResponses, ch, p.ingressClass, p.watchNamespace, name, value.Server)
 
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamRequest,
-				prometheus.CounterValue, zones[pos].RequestCounter, name, value.Server)
+				prometheus.CounterValue, zones[pos].RequestCounter, p.ingressClass, p.watchNamespace, name, value.Server)
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamDown,
-				prometheus.CounterValue, float64(zones[pos].Down), name, value.Server)
+				prometheus.CounterValue, float64(zones[pos].Down), p.ingressClass, p.watchNamespace, name, value.Server)
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamWeight,
-				prometheus.CounterValue, zones[pos].Weight, name, value.Server)
+				prometheus.CounterValue, zones[pos].Weight, p.ingressClass, p.watchNamespace, name, value.Server)
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamResponseMsec,
-				prometheus.CounterValue, zones[pos].ResponseMsec, name, value.Server)
+				prometheus.CounterValue, zones[pos].ResponseMsec, p.ingressClass, p.watchNamespace, name, value.Server)
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamBackup,
-				prometheus.CounterValue, float64(zones[pos].Backup), name, value.Server)
+				prometheus.CounterValue, float64(zones[pos].Backup), p.ingressClass, p.watchNamespace, name, value.Server)
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamFailTimeout,
-				prometheus.CounterValue, zones[pos].FailTimeout, name, value.Server)
+				prometheus.CounterValue, zones[pos].FailTimeout, p.ingressClass, p.watchNamespace, name, value.Server)
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamMaxFails,
-				prometheus.CounterValue, zones[pos].MaxFails, name, value.Server)
+				prometheus.CounterValue, zones[pos].MaxFails, p.ingressClass, p.watchNamespace, name, value.Server)
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamBytes,
-				prometheus.CounterValue, zones[pos].InBytes, name, value.Server, "in")
+				prometheus.CounterValue, zones[pos].InBytes, p.ingressClass, p.watchNamespace, name, value.Server, "in")
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamBytes,
-				prometheus.CounterValue, zones[pos].OutBytes, name, value.Server, "out")
+				prometheus.CounterValue, zones[pos].OutBytes, p.ingressClass, p.watchNamespace, name, value.Server, "out")
 		}
 	}
 
 	for name, zone := range nginxMetrics.ServerZones {
-		reflectMetrics(&zone.Responses, p.data.response, ch, name)
-		reflectMetrics(&zone.Cache, p.data.cache, ch, name)
+		reflectMetrics(&zone.Responses, p.data.response, ch, p.ingressClass, p.watchNamespace, name)
+		reflectMetrics(&zone.Cache, p.data.cache, ch, p.ingressClass, p.watchNamespace, name)
 
 		ch <- prometheus.MustNewConstMetric(p.data.request,
-			prometheus.CounterValue, zone.RequestCounter, name)
+			prometheus.CounterValue, zone.RequestCounter, p.ingressClass, p.watchNamespace, name)
 		ch <- prometheus.MustNewConstMetric(p.data.bytes,
-			prometheus.CounterValue, zone.InBytes, name, "in")
+			prometheus.CounterValue, zone.InBytes, p.ingressClass, p.watchNamespace, name, "in")
 		ch <- prometheus.MustNewConstMetric(p.data.bytes,
-			prometheus.CounterValue, zone.OutBytes, name, "out")
+			prometheus.CounterValue, zone.OutBytes, p.ingressClass, p.watchNamespace, name, "out")
 	}
 
 	for serverZone, countries := range nginxMetrics.FilterZones {
 		for country, zone := range countries {
-			reflectMetrics(&zone.Responses, p.data.filterZoneResponse, ch, serverZone, country)
-			reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, serverZone, country)
+			reflectMetrics(&zone.Responses, p.data.filterZoneResponse, ch, p.ingressClass, p.watchNamespace, serverZone, country)
+			reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, p.ingressClass, p.watchNamespace, serverZone, country)
 
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
-				prometheus.CounterValue, float64(zone.InBytes), serverZone, country, "in")
+				prometheus.CounterValue, float64(zone.InBytes), p.ingressClass, p.watchNamespace, serverZone, country, "in")
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
-				prometheus.CounterValue, float64(zone.OutBytes), serverZone, country, "out")
+				prometheus.CounterValue, float64(zone.OutBytes), p.ingressClass, p.watchNamespace, serverZone, country, "out")
 		}
 	}
 }

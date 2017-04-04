@@ -17,18 +17,16 @@ limitations under the License.
 package collector
 
 import (
-	"fmt"
-
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type (
 	nginxStatusCollector struct {
-		scrapeChan    chan scrapeRequest
-		ngxHealthPort int
-		ngxVtsPath    string
-		data          *nginxStatusData
+		scrapeChan                               chan scrapeRequest
+		ngxHealthPort                            int
+		ngxVtsPath, watchNamespace, ingressClass string
+		data                                     *nginxStatusData
 	}
 
 	nginxStatusData struct {
@@ -42,62 +40,52 @@ type (
 	}
 )
 
-func buildNS(namespace, class string) string {
-	if namespace == "" {
-		namespace = "all"
-	}
-	if class == "" {
-		class = "all"
-	}
-
-	return fmt.Sprintf("%v_%v", namespace, class)
-}
-
 // NewNginxStatus returns a new prometheus collector the default nginx status module
-func NewNginxStatus(namespace, class string, ngxHealthPort int, ngxVtsPath string) Stopable {
-	p := nginxStatusCollector{
-		scrapeChan:    make(chan scrapeRequest),
-		ngxHealthPort: ngxHealthPort,
-		ngxVtsPath:    ngxVtsPath,
-	}
+func NewNginxStatus(watchNamespace, ingressClass string, ngxHealthPort int, ngxVtsPath string) Stopable {
 
-	ns := buildNS(namespace, class)
+	p := nginxStatusCollector{
+		scrapeChan:     make(chan scrapeRequest),
+		ngxHealthPort:  ngxHealthPort,
+		ngxVtsPath:     ngxVtsPath,
+		watchNamespace: watchNamespace,
+		ingressClass:   ingressClass,
+	}
 
 	p.data = &nginxStatusData{
 		active: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "active_connections"),
+			prometheus.BuildFQName(ns, "", "active_connections"),
 			"total number of active connections",
-			nil, nil),
+			[]string{"ingress_class", "namespace"}, nil),
 
 		accepted: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "accepted_connections"),
+			prometheus.BuildFQName(ns, "", "accepted_connections"),
 			"total number of accepted client connections",
-			nil, nil),
+			[]string{"ingress_class", "namespace"}, nil),
 
 		handled: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "handled_connections"),
+			prometheus.BuildFQName(ns, "", "handled_connections"),
 			"total number of handled connections",
-			nil, nil),
+			[]string{"ingress_class", "namespace"}, nil),
 
 		requests: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "total_requests"),
+			prometheus.BuildFQName(ns, "", "total_requests"),
 			"total number of client requests",
-			nil, nil),
+			[]string{"ingress_class", "namespace"}, nil),
 
 		reading: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "current_reading_connections"),
+			prometheus.BuildFQName(ns, "", "current_reading_connections"),
 			"current number of connections where nginx is reading the request header",
-			nil, nil),
+			[]string{"ingress_class", "namespace"}, nil),
 
 		writing: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "current_writing_connections"),
+			prometheus.BuildFQName(ns, "", "current_writing_connections"),
 			"current number of connections where nginx is writing the response back to the client",
-			nil, nil),
+			[]string{"ingress_class", "namespace"}, nil),
 
 		waiting: prometheus.NewDesc(
-			prometheus.BuildFQName(system, ns, "current_waiting_connections"),
+			prometheus.BuildFQName(ns, "", "current_waiting_connections"),
 			"current number of idle client connections waiting for a request",
-			nil, nil),
+			[]string{"ingress_class", "namespace"}, nil),
 	}
 
 	go p.start()
@@ -144,17 +132,17 @@ func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
 	}
 
 	ch <- prometheus.MustNewConstMetric(p.data.active,
-		prometheus.GaugeValue, float64(s.Active))
+		prometheus.GaugeValue, float64(s.Active), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.accepted,
-		prometheus.GaugeValue, float64(s.Accepted))
+		prometheus.GaugeValue, float64(s.Accepted), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.handled,
-		prometheus.GaugeValue, float64(s.Handled))
+		prometheus.GaugeValue, float64(s.Handled), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.requests,
-		prometheus.GaugeValue, float64(s.Requests))
+		prometheus.GaugeValue, float64(s.Requests), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.reading,
-		prometheus.GaugeValue, float64(s.Reading))
+		prometheus.GaugeValue, float64(s.Reading), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.writing,
-		prometheus.GaugeValue, float64(s.Writing))
+		prometheus.GaugeValue, float64(s.Writing), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.waiting,
-		prometheus.GaugeValue, float64(s.Waiting))
+		prometheus.GaugeValue, float64(s.Waiting), p.ingressClass, p.watchNamespace)
 }
