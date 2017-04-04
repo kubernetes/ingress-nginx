@@ -18,6 +18,7 @@ package collector
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -46,8 +47,13 @@ func buildNS(namespace, class string) string {
 	if namespace == "" {
 		namespace = "all"
 	}
+
 	if class == "" {
 		class = "all"
+	}
+
+	if strings.Compare(system, namespace) == 1 {
+		namespace = ""
 	}
 
 	return fmt.Sprintf("%v_%v", namespace, class)
