@@ -13,6 +13,8 @@ import (
 	"golang.org/x/oauth2/google"
 
 	compute "google.golang.org/api/compute/v1"
+	"k8s.io/kubernetes/pkg/cloudprovider"
+	"k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 )
 
 var (
@@ -23,7 +25,7 @@ var (
 	instanceGroupName string
 
 	s         *compute.Service
-	region    *compute.Region
+	g         *gce.GCECloud
 	zones     []*compute.Zone
 	igs       map[string]*compute.InstanceGroup
 	instances []*compute.Instance
@@ -54,6 +56,12 @@ func main() {
 		panic(fmt.Errorf("expected either %s or %s, actual: %v", balancingModeRATE, balancingModeUTIL, targetBalancingMode))
 	}
 
+	switch regionName {
+	case "asia-east1", "asia-northeast1", "europe-west1", "us-central1", "us-east1", "us-west1":
+	default:
+		panic(fmt.Errorf("expected a valid GCP region, actual: %v", regionName))
+	}
+
 	igs = make(map[string]*compute.InstanceGroup)
 
 	tokenSource, err := google.DefaultTokenSource(
@@ -70,14 +78,14 @@ func main() {
 		panic(err)
 	}
 
-	// Get Region
-	region, err = s.Regions.Get(projectID, regionName).Do()
+	cloudInterface, err := cloudprovider.GetCloudProvider("gce", nil)
 	if err != nil {
 		panic(err)
 	}
+	g = cloudInterface.(*gce.GCECloud)
 
 	// Get Zones
-	zoneFilter := fmt.Sprintf("(region eq %s)", region.SelfLink)
+	zoneFilter := fmt.Sprintf("(region eq %s)", createRegionLink(regionName))
 	zoneList, err := s.Zones.List(projectID).Filter(zoneFilter).Do()
 	if err != nil {
 		panic(err)
@@ -125,7 +133,6 @@ func main() {
 	}
 
 	bs := getBackendServices()
-	fmt.Println("Region:", region.Name)
 	fmt.Println("Backend Services:", len(bs))
 	fmt.Println("Instance Groups:", len(igs))
 
@@ -241,6 +248,7 @@ func getBackendServices() (bs []*compute.BackendService) {
 	}
 
 	for _, bsli := range bsl.Items {
+		// Ignore regional backend-services and only grab Kubernetes resources
 		if bsli.Region == "" && strings.HasPrefix(bsli.Name, "k8s-be-") {
 			bs = append(bs, bsli)
 		}
@@ -279,6 +287,10 @@ func migrateInstances(fromIG, toIG string) error {
 
 func createInstanceGroupLink(zone, igName string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/instanceGroups/%s", projectID, zone, igName)
+}
+
+func createRegionLink(region string) string {
+	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/nicksardo-playground/regions/%v", region)
 }
 
 func getResourceName(link string, resourceType string) string {
