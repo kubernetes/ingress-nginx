@@ -412,6 +412,7 @@ func (ic *GenericController) sync(key interface{}) error {
 
 		for _, loc := range server.Locations {
 			if loc.Path != rootLocation {
+				glog.Warningf("ignoring path %v of ssl passthrough host %v", loc.Path, server.Hostname)
 				continue
 			}
 			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
@@ -677,6 +678,40 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 					mergeLocationAnnotations(loc, anns)
 					server.Locations = append(server.Locations, loc)
 				}
+			}
+		}
+	}
+
+	// Configure Backends[].SSLPassthrough
+	for _, upstream := range upstreams {
+		isHTTP := false
+		isHTTPSfrom := []*ingress.Server{}
+		for _, server := range servers {
+			for _, location := range server.Locations {
+				if upstream.Name == location.Backend {
+					if server.SSLPassthrough {
+						if location.Path == rootLocation {
+							if location.Backend == defUpstreamName {
+								glog.Warningf("ignoring ssl passthrough of %v as it doesn't have a default backend (root context)", server.Hostname)
+							} else {
+								isHTTPSfrom = append(isHTTPSfrom, server)
+							}
+						}
+					} else {
+						isHTTP = true
+					}
+				}
+			}
+		}
+		if len(isHTTPSfrom) > 0 {
+			if isHTTP {
+				for _, server := range isHTTPSfrom {
+					glog.Warningf("backend type mismatch on %v, assuming HTTP on ssl passthrough host %v", upstream.Name, server.Hostname)
+					// removing this server from the PassthroughBackends slice
+					server.SSLPassthrough = false
+				}
+			} else {
+				upstream.SSLPassthrough = true
 			}
 		}
 	}
