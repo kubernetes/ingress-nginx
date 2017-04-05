@@ -10,12 +10,12 @@ Unless you're running on a cloudprovider that supports Ingress out of the box
 
 ## Firewall rules
 
-If you're using a bare-metal controller (eg the nginx ingress controller), you
+If you're using a generic controller (eg the nginx ingress controller), you
 will need to create a firewall rule that targets port 80/443 on the specific VMs
 the nginx controller is running on. On cloudproviders, the respective backend
 will auto-create firewall rules for your Ingress.
 
-If you'd like to auto-create firewall rules for an OSS Ingress controller,
+If you'd like to auto-create firewall rules for an Ingress controller,
 you can put it behind a Service of `Type=Loadbalancer` as shown in
 [this example](/examples/static-ip/nginx#acquiring-an-ip).
 
