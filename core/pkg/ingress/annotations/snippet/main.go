@@ -17,7 +17,7 @@ limitations under the License.
 package snippet
 
 import (
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 )

@@ -17,8 +17,8 @@ limitations under the License.
 package ingress
 
 import (
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // BackendByNameServers sorts upstreams by name
@@ -69,7 +69,7 @@ func (c LocationByPath) Less(i, j int) bool {
 
 // SSLCert describes a SSL certificate to be used in a server
 type SSLCert struct {
-	api.ObjectMeta `json:"metadata,omitempty"`
+	meta_v1.ObjectMeta `json:"metadata,omitempty"`
 	// CAFileName contains the path to the file with the root certificate
 	CAFileName string `json:"caFileName"`
 	// PemFileName contains the path to the file with the certificate and key concatenated
@@ -82,4 +82,6 @@ type SSLCert struct {
 }
 
 // GetObjectKind implements the ObjectKind interface as a noop
-func (s SSLCert) GetObjectKind() unversioned.ObjectKind { return unversioned.EmptyObjectKind }
+func (s SSLCert) GetObjectKind() schema.ObjectKind {
+	return schema.EmptyObjectKind
+}

@@ -29,17 +29,17 @@ import (
 	"github.com/golang/glog"
 	"github.com/kylelemons/godebug/pretty"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/cache"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/internalversion"
-	"k8s.io/kubernetes/pkg/client/record"
-	"k8s.io/kubernetes/pkg/fields"
-	"k8s.io/kubernetes/pkg/util/flowcontrol"
-	"k8s.io/kubernetes/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	clientset "k8s.io/client-go/kubernetes"
+	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
+	def_api "k8s.io/client-go/pkg/api"
+	api "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/flowcontrol"
 
-	cache_store "k8s.io/ingress/core/pkg/cache"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
@@ -48,6 +48,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
+	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
 	ssl "k8s.io/ingress/core/pkg/net/ssl"
 	local_strings "k8s.io/ingress/core/pkg/strings"
@@ -70,19 +71,19 @@ var (
 type GenericController struct {
 	cfg *Configuration
 
-	ingController  *cache.Controller
-	endpController *cache.Controller
-	svcController  *cache.Controller
-	nodeController *cache.Controller
-	secrController *cache.Controller
-	mapController  *cache.Controller
+	ingController  cache.Controller
+	endpController cache.Controller
+	svcController  cache.Controller
+	nodeController cache.Controller
+	secrController cache.Controller
+	mapController  cache.Controller
 
-	ingLister  cache_store.StoreToIngressLister
-	svcLister  cache.StoreToServiceLister
-	nodeLister cache.StoreToNodeLister
-	endpLister cache.StoreToEndpointsLister
-	secrLister cache_store.StoreToSecretsLister
-	mapLister  cache_store.StoreToConfigmapLister
+	ingLister  store.IngressLister
+	svcLister  store.ServiceLister
+	nodeLister store.NodeLister
+	endpLister store.EndpointLister
+	secrLister store.SecretLister
+	mapLister  store.ConfigMapLister
 
 	annotations annotationExtractor
 
@@ -149,7 +150,7 @@ func newIngressController(config *Configuration) *GenericController {
 		stopLock:        &sync.Mutex{},
 		stopCh:          make(chan struct{}),
 		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.1, 1),
-		recorder: eventBroadcaster.NewRecorder(api.EventSource{
+		recorder: eventBroadcaster.NewRecorder(def_api.Scheme, api.EventSource{
 			Component: "ingress-controller",
 		}),
 		sslCertTracker: newSSLCertTracker(),
@@ -306,12 +307,9 @@ func newIngressController(config *Configuration) *GenericController {
 		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "configmaps", api.NamespaceAll, fields.Everything()),
 		&api.ConfigMap{}, ic.cfg.ResyncPeriod, mapEventHandler)
 
-	ic.svcLister.Indexer, ic.svcController = cache.NewIndexerInformer(
+	ic.svcLister.Store, ic.svcController = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "services", ic.cfg.Namespace, fields.Everything()),
-		&api.Service{},
-		ic.cfg.ResyncPeriod,
-		cache.ResourceEventHandlerFuncs{},
-		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
+		&api.Service{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	ic.nodeLister.Store, ic.nodeController = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "nodes", api.NamespaceAll, fields.Everything()),
@@ -498,7 +496,7 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 			continue
 		}
 
-		svcObj, svcExists, err := ic.svcLister.Indexer.GetByKey(nsName)
+		svcObj, svcExists, err := ic.svcLister.Store.GetByKey(nsName)
 		if err != nil {
 			glog.Warningf("error getting service %v: %v", nsName, err)
 			continue
@@ -562,7 +560,7 @@ func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 		Name: defUpstreamName,
 	}
 	svcKey := ic.cfg.DefaultService
-	svcObj, svcExists, err := ic.svcLister.Indexer.GetByKey(svcKey)
+	svcObj, svcExists, err := ic.svcLister.Store.GetByKey(svcKey)
 	if err != nil {
 		glog.Warningf("unexpected error searching the default backend %v: %v", ic.cfg.DefaultService, err)
 		upstream.Endpoints = append(upstream.Endpoints, newDefaultServer())
@@ -809,7 +807,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 // to a service.
 func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 	hz *healthcheck.Upstream) ([]ingress.Endpoint, error) {
-	svcObj, svcExists, err := ic.svcLister.Indexer.GetByKey(svcKey)
+	svcObj, svcExists, err := ic.svcLister.Store.GetByKey(svcKey)
 
 	var upstreams []ingress.Endpoint
 	if err != nil {
