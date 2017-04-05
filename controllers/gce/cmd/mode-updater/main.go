@@ -33,9 +33,12 @@ const (
 	instanceGroupTemp = "k8s-ig--migrate"
 	balancingModeRATE = "RATE"
 	balancingModeUTIL = "UTILIZATION"
+
+	version = 0.1
 )
 
 func main() {
+	fmt.Println("Backend-Service BalancingMode Updater", "version:", version)
 	//flag.Usage
 	flag.Parse()
 

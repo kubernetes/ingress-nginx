@@ -1,5 +1,5 @@
 
-## Backend-Service BalancingMode Updater
+## (ALPHA) Backend-Service BalancingMode Updater
 **For non-GKE Users**
 
 Earlier versions of the GLBC created GCP BackendService resources with no balancing mode specified. By default the API used CPU UTILIZATION. The "internal load balancer" feature provided by GCP requires backend services to have the balancing mode RATE. In order to have a K8s cluster with an internal load balancer and ingress resources, you'll need to perform some manual steps.
@@ -29,6 +29,18 @@ There are two GCP requirements that complicate changing the backend service bala
 
 - Run this updater tool
 
+#### How to run
+```shell
+go run main.go {project-id} {region} {target-balance-mode}
+
+#Examples
+# for upgrading
+go run main.go my-project us-central1 RATE
+
+# for reversing
+go run main.go my-project us-central1 UTILIZATION
+```
+
 #### How the updater works
 1. Create temporary instance groups `k8s-ig-migrate` in each zone where a `k8s-ig-{cluster_id}` exists.
 1. Update all backend-services to point to both original and temporary instance groups (mode of the new backend doesn't matter)
@@ -44,4 +56,10 @@ There are two GCP requirements that complicate changing the backend service bala
 - [ ] An active GLBC does not negatively interfere with this updater
 
 #### TODO
+- [ ] If only one backend-service exists, just update it in place.
+- [ ] If all backend-services are already the target balancing mode, early return.
 - [ ] Use GCE CloudProvider package in order to utilize the `waitForOp` functionality in order to remove some sleeps.
+- [ ] Adjust/remove warning
+
+#### Warning
+This tool hasn't been fully tested. Use at your own risk.
