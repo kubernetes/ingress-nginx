@@ -38,6 +38,7 @@ import (
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"k8s.io/ingress/controllers/gce/controller"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
@@ -86,6 +87,12 @@ var (
 	inCluster = flags.Bool("running-in-cluster", true,
 		`Optional, if this controller is running in a kubernetes cluster, use the
 		 pod secrets for creating a Kubernetes client.`)
+
+	apiServerHost = flags.String("apiserver-host", "", "The address of the Kubernetes Apiserver "+
+		"to connect to in the format of protocol://address:port, e.g., "+
+		"http://localhost:8080. If not specified, the assumption is that the binary runs inside a "+
+		"Kubernetes cluster and local discovery is attempted.")
+	kubeConfigFile = flags.String("kubeconfig", "", "Path to kubeconfig file with authorization and master location information.")
 
 	// TODO: Consolidate this flag and running-in-cluster. People already use
 	// the first one to mean "running in dev", unfortunately.
@@ -174,7 +181,6 @@ func main() {
 	// We only really need a binary switch from light, v(2) logging to
 	// heavier debug style V(4) logging, which we use --verbose for.
 	flags.Parse(os.Args)
-	//clientConfig := kubectl_util.DefaultClientConfig(flags)
 
 	// Set glog verbosity levels, unconditionally set --alsologtostderr.
 	go_flag.Lookup("logtostderr").Value.Set("true")
@@ -193,10 +199,17 @@ func main() {
 			glog.Fatalf("error creating client configuration: %v", err)
 		}
 	} else {
-		config, err = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-			&clientcmd.ClientConfigLoadingRules{},
-			&clientcmd.ConfigOverrides{}).ClientConfig()
+		if *apiServerHost == "" {
+			glog.Fatalf("please specify the api server address using the flag --apiserver-host")
+		}
 
+		config, err = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+			&clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeConfigFile},
+			&clientcmd.ConfigOverrides{
+				ClusterInfo: clientcmdapi.Cluster{
+					Server: *apiServerHost,
+				},
+			}).ClientConfig()
 		if err != nil {
 			glog.Fatalf("error creating client configuration: %v", err)
 		}
