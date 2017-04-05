@@ -19,7 +19,7 @@ package storage
 import (
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/pkg/api"
 )
 
 func TestConfigMapUID(t *testing.T) {

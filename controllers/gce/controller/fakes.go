@@ -17,10 +17,10 @@ limitations under the License.
 package controller
 
 import (
-	"k8s.io/kubernetes/pkg/util/intstr"
-	"k8s.io/kubernetes/pkg/util/sets"
-
 	compute "google.golang.org/api/compute/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/firewalls"
 	"k8s.io/ingress/controllers/gce/healthchecks"

@@ -21,7 +21,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"k8s.io/kubernetes/pkg/apis/extensions"
+
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/kubernetes/pkg/util/net/sets"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"

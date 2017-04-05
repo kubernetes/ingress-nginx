@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"k8s.io/kubernetes/pkg/api"
-
 	"github.com/golang/glog"
+
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 )
 
 const (
@@ -54,7 +54,7 @@ func (npm namedPortMapping) getPortMappings() map[string]string {
 }
 
 // GetPortMapping returns the number of the named port or an error if is not valid
-func GetPortMapping(name string, s *api.Service) (int32, error) {
+func GetPortMapping(name string, s *api_v1.Service) (int32, error) {
 	if s == nil {
 		return -1, fmt.Errorf("impossible to extract por mapping from %v (missing service)", name)
 	}
