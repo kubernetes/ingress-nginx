@@ -42,49 +42,52 @@ var (
 		AddBaseURL bool
 	}{
 		"invalid redirect / to /": {"/", "/", "/", "proxy_pass http://upstream-name;", false},
-		"redirect / to /jenkins": {"/", "/jenkins", "~* /",
-			`
-	rewrite /(.*) /jenkins/$1 break;
-	proxy_pass http://upstream-name;
-	`, false},
-		"redirect /something to /": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
-	rewrite /something/(.*) /$1 break;
-	rewrite /something / break;
-	proxy_pass http://upstream-name;
-	`, false},
-		"redirect /end-with-slash/ to /not-root": {"/end-with-slash/", "/not-root", "~* ^/end-with-slash/(?<baseuri>.*)", `
-	rewrite /end-with-slash/(.*) /not-root/$1 break;
-	proxy_pass http://upstream-name;
-	`, false},
-		"redirect /something-complex to /not-root": {"/something-complex", "/not-root", `~* ^/something-complex\/?(?<baseuri>.*)`, `
-	rewrite /something-complex/(.*) /not-root/$1 break;
-	proxy_pass http://upstream-name;
-	`, false},
-		"redirect / to /jenkins and rewrite": {"/", "/jenkins", "~* /", `
-	rewrite /(.*) /jenkins/$1 break;
-	proxy_pass http://upstream-name;
-	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/$baseuri">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/$baseuri">' r;
-	`, true},
-		"redirect /something to / and rewrite": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
-	rewrite /something/(.*) /$1 break;
-	rewrite /something / break;
-	proxy_pass http://upstream-name;
-	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something/$baseuri">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something/$baseuri">' r;
-	`, true},
-		"redirect /end-with-slash/ to /not-root and rewrite": {"/end-with-slash/", "/not-root", `~* ^/end-with-slash/(?<baseuri>.*)`, `
-	rewrite /end-with-slash/(.*) /not-root/$1 break;
-	proxy_pass http://upstream-name;
-	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
-	`, true},
-		"redirect /something-complex to /not-root and rewrite": {"/something-complex", "/not-root", `~* ^/something-complex\/?(?<baseuri>.*)`, `
-	rewrite /something-complex/(.*) /not-root/$1 break;
-	proxy_pass http://upstream-name;
-	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
-	`, true},
+		"redirect / to /jenkins": {"/", "/jenkins", "/", `
+				rewrite /(.*) /jenkins/$1 break;
+				proxy_pass http://upstream-name;`, false},
+		"redirect /something to /": {"/something", "/", "/something", `
+				rewrite /something/(.*) /$1 break;
+				rewrite /something / break;
+				proxy_pass http://upstream-name;`, false},
+		"redirect /end-with-slash/ to /not-root": {"/end-with-slash/", "/not-root", "/end-with-slash/", `
+				rewrite /end-with-slash/(.*) /not-root/$1 break;
+				proxy_pass http://upstream-name;`, false},
+		"redirect /something-complex to /not-root": {"/something-complex", "/not-root", "/something-complex", `
+				rewrite /something-complex/(.*) /not-root/$1 break;
+				proxy_pass http://upstream-name;`, false},
+		"redirect / to /jenkins and rewrite": {"/", "/jenkins", "/", `
+				location ~* /(?<baseuri>.*) {
+					subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/$baseuri">' r;
+					subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/$baseuri">' r;
+					
+				rewrite /(.*) /jenkins/$1 break;
+				proxy_pass http://upstream-name;
+				}`, true},
+		"redirect /something to / and rewrite": {"/something", "/", "/something", `
+				location ~* /something/(?<baseuri>.*) {
+					subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something/$baseuri">' r;
+					subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something/$baseuri">' r;
+					
+				rewrite /something/(.*) /$1 break;
+				rewrite /something / break;
+				proxy_pass http://upstream-name;
+				}`, true},
+		"redirect /end-with-slash/ to /not-root and rewrite": {"/end-with-slash/", "/not-root", "/end-with-slash/", `
+				location ~* /end-with-slash/(?<baseuri>.*) {
+					subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
+					subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
+					
+				rewrite /end-with-slash/(.*) /not-root/$1 break;
+				proxy_pass http://upstream-name;
+				}`, true},
+		"redirect /something-complex to /not-root and rewrite": {"/something-complex", "/not-root", "/something-complex", `
+				location ~* /something-complex/(?<baseuri>.*) {
+					subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
+					subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
+					
+				rewrite /something-complex/(.*) /not-root/$1 break;
+				proxy_pass http://upstream-name;
+				}`, true},
 	}
 )
 
