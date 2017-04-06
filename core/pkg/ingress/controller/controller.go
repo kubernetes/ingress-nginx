@@ -697,7 +697,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 								isHTTPSfrom = append(isHTTPSfrom, server)
 							}
 						}
-					} else {
+					} else if !upstream.Secure {
 						isHTTP = true
 					}
 				}
