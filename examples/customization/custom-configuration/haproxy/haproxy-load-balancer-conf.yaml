@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  timeout http-request: "10s"
+  timeout connect: "10s"
+  timeout check: "10s"
+kind: ConfigMap
+metadata:
+  name: haproxy-custom-configuration
