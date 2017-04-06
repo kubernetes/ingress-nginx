@@ -807,30 +807,36 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 					path.Backend.ServiceName,
 					path.Backend.ServicePort.String())
 
-				if _, ok := upstreams[name]; ok {
-					continue
+				upstream, ok := upstreams[name]
+				isNewUpstream := !ok
+
+				if isNewUpstream {
+					glog.V(3).Infof("creating upstream %v", name)
+					upstream = newUpstream(name)
+					upstreams[name] = upstream
 				}
 
-				glog.V(3).Infof("creating upstream %v", name)
-				upstreams[name] = newUpstream(name)
-				if !upstreams[name].Secure {
-					upstreams[name].Secure = secUpstream
+				if !upstream.Secure {
+					upstream.Secure = secUpstream
 				}
-				if upstreams[name].SessionAffinity.AffinityType == "" {
-					upstreams[name].SessionAffinity.AffinityType = affinity.AffinityType
+
+				if upstream.SessionAffinity.AffinityType == "" {
+					upstream.SessionAffinity.AffinityType = affinity.AffinityType
 					if affinity.AffinityType == "cookie" {
-						upstreams[name].SessionAffinity.CookieSessionAffinity.Name = affinity.CookieConfig.Name
-						upstreams[name].SessionAffinity.CookieSessionAffinity.Hash = affinity.CookieConfig.Hash
+						upstream.SessionAffinity.CookieSessionAffinity.Name = affinity.CookieConfig.Name
+						upstream.SessionAffinity.CookieSessionAffinity.Hash = affinity.CookieConfig.Hash
 					}
 				}
 
-				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
-				endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
-				if err != nil {
-					glog.Warningf("error obtaining service endpoints: %v", err)
-					continue
+				if isNewUpstream {
+					svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
+					endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
+					if err != nil {
+						glog.Warningf("error obtaining service endpoints: %v", err)
+						continue
+					}
+					upstream.Endpoints = endp
 				}
-				upstreams[name].Endpoints = endp
 			}
 		}
 	}
