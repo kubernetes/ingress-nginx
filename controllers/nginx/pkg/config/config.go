@@ -144,6 +144,9 @@ type Configuration struct {
 	// accessed using HTTPS.
 	HSTSMaxAge string `json:"hsts-max-age,omitempty"`
 
+	// Enables or disables the preload attribute in HSTS feature
+	HSTSPreload bool `json:"hsts-preload,omitempty"`
+
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
@@ -271,6 +274,7 @@ func NewDefault() Configuration {
 		HSTS:                    true,
 		HSTSIncludeSubdomains:    true,
 		HSTSMaxAge:               hstsMaxAge,
+		HSTSPreload:              false,
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
 		LargeClientHeaderBuffers: "4 8k",
