@@ -285,6 +285,7 @@ https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-
 
 **hsts-max-age:** Sets the time, in seconds, that the browser should remember that this site is only to be accessed using HTTPS.
 
+**hsts-preload:** Enables or disables the preload attribute in the HSTS feature (if is enabled)
 
 **keep-alive:** Sets the time during which a keep-alive client connection will stay open on the server side.
 The zero value disables keep-alive client connections.
@@ -420,6 +421,7 @@ The following table shows the options, the default value and a description.
 |hsts|"true"|
 |hsts-include-subdomains|"true"|
 |hsts-max-age|"15724800"|
+|hsts-preload|"false"|
 |keep-alive|"75"|
 |map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|

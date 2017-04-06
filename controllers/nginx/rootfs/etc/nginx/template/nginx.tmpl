@@ -229,7 +229,7 @@ http {
         {{ end }}
 
         {{ if (and (not (empty $server.SSLCertificate)) $cfg.HSTS) }}
-        more_set_headers                        "Strict-Transport-Security: max-age={{ $cfg.HSTSMaxAge }}{{ if $cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}; preload";
+        more_set_headers                        "Strict-Transport-Security: max-age={{ $cfg.HSTSMaxAge }}{{ if $cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}; {{ if $cfg.HSTSPreload }}preload{{ end }}";
         {{ end }}
 
         {{ if $cfg.EnableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
