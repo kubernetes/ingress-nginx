@@ -31,7 +31,7 @@ import (
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
 	listers "k8s.io/client-go/listers/core/v1"
 	base_api "k8s.io/client-go/pkg/api"
-	api "k8s.io/client-go/pkg/api/v1"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
@@ -103,7 +103,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 		CloudClusterManager: clusterManager,
 		stopCh:              make(chan struct{}),
 		recorder: eventBroadcaster.NewRecorder(base_api.Scheme,
-			api.EventSource{Component: "loadbalancer-controller"}),
+			api_v1.EventSource{Component: "loadbalancer-controller"}),
 	}
 	lbc.nodeQueue = NewTaskQueue(lbc.syncNodes)
 	lbc.ingQueue = NewTaskQueue(lbc.sync)
@@ -117,7 +117,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 				glog.Infof("Ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
 				return
 			}
-			lbc.recorder.Eventf(addIng, api.EventTypeNormal, "ADD", fmt.Sprintf("%s/%s", addIng.Namespace, addIng.Name))
+			lbc.recorder.Eventf(addIng, api_v1.EventTypeNormal, "ADD", fmt.Sprintf("%s/%s", addIng.Namespace, addIng.Name))
 			lbc.ingQueue.enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -157,7 +157,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 
 	lbc.svcLister.Indexer, lbc.svcController = cache.NewIndexerInformer(
 		cache.NewListWatchFromClient(lbc.client.Core().RESTClient(), "services", namespace, fields.Everything()),
-		&api.Service{},
+		&api_v1.Service{},
 		resyncPeriod,
 		svcHandlers,
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
@@ -165,7 +165,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 
 	lbc.podLister.Indexer, lbc.podController = cache.NewIndexerInformer(
 		cache.NewListWatchFromClient(lbc.client.Core().RESTClient(), "pods", namespace, fields.Everything()),
-		&api.Pod{},
+		&api_v1.Pod{},
 		resyncPeriod,
 		cache.ResourceEventHandlerFuncs{},
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
@@ -173,8 +173,8 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 
 	// Node watch handlers
 	lbc.nodeLister.Indexer, lbc.nodeController = cache.NewIndexerInformer(
-		cache.NewListWatchFromClient(lbc.client.Core().RESTClient(), "nodes", api.NamespaceAll, fields.Everything()),
-		&api.Node{},
+		cache.NewListWatchFromClient(lbc.client.Core().RESTClient(), "nodes", api_v1.NamespaceAll, fields.Everything()),
+		&api_v1.Node{},
 		resyncPeriod,
 		cache.ResourceEventHandlerFuncs{},
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
@@ -189,7 +189,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 
 // enqueueIngressForService enqueues all the Ingress' for a Service.
 func (lbc *LoadBalancerController) enqueueIngressForService(obj interface{}) {
-	svc := obj.(*api.Service)
+	svc := obj.(*api_v1.Service)
 	ings, err := lbc.ingLister.GetServiceIngress(svc)
 	if err != nil {
 		glog.V(5).Infof("ignoring service %v: %v", svc.Name, err)
@@ -311,7 +311,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 			eventMsg += " :Quota"
 		}
 		if ingExists {
-			lbc.recorder.Eventf(obj.(*extensions.Ingress), api.EventTypeWarning, eventMsg, err.Error())
+			lbc.recorder.Eventf(obj.(*extensions.Ingress), api_v1.EventTypeWarning, eventMsg, err.Error())
 		} else {
 			err = fmt.Errorf("%v, error: %v", eventMsg, err)
 		}
@@ -331,10 +331,10 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if urlMap, err := lbc.tr.toURLMap(&ing); err != nil {
 		syncError = fmt.Errorf("%v, convert to url map error %v", syncError, err)
 	} else if err := l7.UpdateUrlMap(urlMap); err != nil {
-		lbc.recorder.Eventf(&ing, api.EventTypeWarning, "UrlMap", err.Error())
+		lbc.recorder.Eventf(&ing, api_v1.EventTypeWarning, "UrlMap", err.Error())
 		syncError = fmt.Errorf("%v, update url map error: %v", syncError, err)
 	} else if err := lbc.updateIngressStatus(l7, ing); err != nil {
-		lbc.recorder.Eventf(&ing, api.EventTypeWarning, "Status", err.Error())
+		lbc.recorder.Eventf(&ing, api_v1.EventTypeWarning, "Status", err.Error())
 		syncError = fmt.Errorf("%v, update ingress error: %v", syncError, err)
 	}
 	return syncError
@@ -352,8 +352,8 @@ func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing
 		return err
 	}
 	currIng.Status = extensions.IngressStatus{
-		LoadBalancer: api.LoadBalancerStatus{
-			Ingress: []api.LoadBalancerIngress{
+		LoadBalancer: api_v1.LoadBalancerStatus{
+			Ingress: []api_v1.LoadBalancerIngress{
 				{IP: ip},
 			},
 		},
@@ -367,7 +367,7 @@ func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing
 			if _, err := ingClient.UpdateStatus(currIng); err != nil {
 				return err
 			}
-			lbc.recorder.Eventf(currIng, api.EventTypeNormal, "CREATE", "ip: %v", ip)
+			lbc.recorder.Eventf(currIng, api_v1.EventTypeNormal, "CREATE", "ip: %v", ip)
 		}
 	}
 	// Update annotations through /update endpoint
@@ -435,11 +435,11 @@ func (lbc *LoadBalancerController) syncNodes(key string) error {
 }
 
 func getNodeReadyPredicate() listers.NodeConditionPredicate {
-	return func(node *api.Node) bool {
+	return func(node *api_v1.Node) bool {
 		for ix := range node.Status.Conditions {
 			condition := &node.Status.Conditions[ix]
-			if condition.Type == api.NodeReady {
-				return condition.Status == api.ConditionTrue
+			if condition.Type == api_v1.NodeReady {
+				return condition.Status == api_v1.ConditionTrue
 			}
 		}
 		return false
