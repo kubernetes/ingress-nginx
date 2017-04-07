@@ -23,7 +23,7 @@ import (
 
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	api "k8s.io/client-go/pkg/api/v1"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/controllers/gce/loadbalancers"
@@ -64,11 +64,11 @@ func (t *apiServerTLSLoader) load(ing *extensions.Ingress) (*loadbalancers.TLSCe
 	if err != nil {
 		return nil, err
 	}
-	cert, ok := secret.Data[api.TLSCertKey]
+	cert, ok := secret.Data[api_v1.TLSCertKey]
 	if !ok {
 		return nil, fmt.Errorf("secret %v has no private key", secretName)
 	}
-	key, ok := secret.Data[api.TLSPrivateKeyKey]
+	key, ok := secret.Data[api_v1.TLSPrivateKeyKey]
 	if !ok {
 		return nil, fmt.Errorf("secret %v has no cert", secretName)
 	}
