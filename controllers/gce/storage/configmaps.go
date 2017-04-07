@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	api "k8s.io/client-go/pkg/api/v1"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -58,7 +58,7 @@ func (c *ConfigMapVault) Get(key string) (string, bool, error) {
 	if err != nil || !found {
 		return "", false, err
 	}
-	data := item.(*api.ConfigMap).Data
+	data := item.(*api_v1.ConfigMap).Data
 	c.storeLock.Lock()
 	defer c.storeLock.Unlock()
 	if k, ok := data[key]; ok {
@@ -73,7 +73,7 @@ func (c *ConfigMapVault) Get(key string) (string, bool, error) {
 func (c *ConfigMapVault) Put(key, val string) error {
 	c.storeLock.Lock()
 	defer c.storeLock.Unlock()
-	apiObj := &api.ConfigMap{
+	apiObj := &api_v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.name,
 			Namespace: c.namespace,
@@ -83,7 +83,7 @@ func (c *ConfigMapVault) Put(key, val string) error {
 
 	item, exists, err := c.ConfigMapStore.GetByKey(cfgMapKey)
 	if err == nil && exists {
-		data := item.(*api.ConfigMap).Data
+		data := item.(*api_v1.ConfigMap).Data
 		existingVal, ok := data[key]
 		if ok && existingVal == val {
 			// duplicate, no need to update.
@@ -155,21 +155,21 @@ type APIServerConfigMapStore struct {
 
 // Add adds the given config map to the apiserver's store.
 func (a *APIServerConfigMapStore) Add(obj interface{}) error {
-	cfg := obj.(*api.ConfigMap)
+	cfg := obj.(*api_v1.ConfigMap)
 	_, err := a.client.Core().ConfigMaps(cfg.Namespace).Create(cfg)
 	return err
 }
 
 // Update updates the existing config map object.
 func (a *APIServerConfigMapStore) Update(obj interface{}) error {
-	cfg := obj.(*api.ConfigMap)
+	cfg := obj.(*api_v1.ConfigMap)
 	_, err := a.client.Core().ConfigMaps(cfg.Namespace).Update(cfg)
 	return err
 }
 
 // Delete deletes the existing config map object.
 func (a *APIServerConfigMapStore) Delete(obj interface{}) error {
-	cfg := obj.(*api.ConfigMap)
+	cfg := obj.(*api_v1.ConfigMap)
 	return a.client.Core().ConfigMaps(cfg.Namespace).Delete(cfg.Name, &metav1.DeleteOptions{})
 }
 
