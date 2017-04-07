@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	listers "k8s.io/client-go/listers/core/v1"
-	api "k8s.io/client-go/pkg/api/v1"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -221,9 +221,9 @@ type StoreToPodLister struct {
 	cache.Indexer
 }
 
-func (s *StoreToPodLister) List(selector labels.Selector) (ret []*api.Pod, err error) {
+func (s *StoreToPodLister) List(selector labels.Selector) (ret []*api_v1.Pod, err error) {
 	err = ListAll(s.Indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*api.Pod))
+		ret = append(ret, m.(*api_v1.Pod))
 	})
 	return ret, err
 }
@@ -254,7 +254,7 @@ func (s *StoreToIngressLister) List() (ing extensions.IngressList, err error) {
 
 // GetServiceIngress gets all the Ingress' that have rules pointing to a service.
 // Note that this ignores services without the right nodePorts.
-func (s *StoreToIngressLister) GetServiceIngress(svc *api.Service) (ings []extensions.Ingress, err error) {
+func (s *StoreToIngressLister) GetServiceIngress(svc *api_v1.Service) (ings []extensions.Ingress, err error) {
 IngressLoop:
 	for _, m := range s.Store.List() {
 		ing := *m.(*extensions.Ingress)
@@ -309,7 +309,7 @@ func (t *GCETranslator) toURLMap(ing *extensions.Ingress) (utils.GCEURLMap, erro
 				// to all other services under the assumption that the user will
 				// modify nodeport.
 				if _, ok := err.(errorNodePortNotFound); ok {
-					t.recorder.Eventf(ing, api.EventTypeWarning, "Service", err.(errorNodePortNotFound).Error())
+					t.recorder.Eventf(ing, api_v1.EventTypeWarning, "Service", err.(errorNodePortNotFound).Error())
 					continue
 				}
 
@@ -343,12 +343,12 @@ func (t *GCETranslator) toURLMap(ing *extensions.Ingress) (utils.GCEURLMap, erro
 			if _, ok := err.(errorNodePortNotFound); ok {
 				msg = fmt.Sprintf("couldn't find nodeport for %v/%v", ing.Namespace, ing.Spec.Backend.ServiceName)
 			}
-			t.recorder.Eventf(ing, api.EventTypeWarning, "Service", fmt.Sprintf("failed to identify user specified default backend, %v, using system default", msg))
+			t.recorder.Eventf(ing, api_v1.EventTypeWarning, "Service", fmt.Sprintf("failed to identify user specified default backend, %v, using system default", msg))
 		} else if defaultBackend != nil {
-			t.recorder.Eventf(ing, api.EventTypeNormal, "Service", fmt.Sprintf("default backend set to %v:%v", ing.Spec.Backend.ServiceName, defaultBackend.Port))
+			t.recorder.Eventf(ing, api_v1.EventTypeNormal, "Service", fmt.Sprintf("default backend set to %v:%v", ing.Spec.Backend.ServiceName, defaultBackend.Port))
 		}
 	} else {
-		t.recorder.Eventf(ing, api.EventTypeNormal, "Service", "no user specified default backend, using system default")
+		t.recorder.Eventf(ing, api_v1.EventTypeNormal, "Service", "no user specified default backend, using system default")
 	}
 	hostPathBackend.PutDefaultBackend(defaultBackend)
 	return hostPathBackend, nil
@@ -374,7 +374,7 @@ func (t *GCETranslator) toGCEBackend(be *extensions.IngressBackend, ns string) (
 // and returns the nodeport.
 func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespace string) (int, error) {
 	obj, exists, err := t.svcLister.Indexer.Get(
-		&api.Service{
+		&api_v1.Service{
 			ObjectMeta: meta_v1.ObjectMeta{
 				Name:      be.ServiceName,
 				Namespace: namespace,
@@ -388,7 +388,7 @@ func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespa
 		return invalidPort, errorNodePortNotFound{be, err}
 	}
 	var nodePort int
-	for _, p := range obj.(*api.Service).Spec.Ports {
+	for _, p := range obj.(*api_v1.Service).Spec.Ports {
 		switch be.ServicePort.Type {
 		case intstr.Int:
 			if p.Port == be.ServicePort.IntVal {
@@ -440,7 +440,7 @@ func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []int64 {
 	return knownPorts
 }
 
-func getZone(n *api.Node) string {
+func getZone(n *api_v1.Node) string {
 	zone, ok := n.Labels[zoneKey]
 	if !ok {
 		return defaultZone
@@ -479,7 +479,7 @@ func (t *GCETranslator) ListZones() ([]string, error) {
 
 // geHTTPProbe returns the http readiness probe from the first container
 // that matches targetPort, from the set of pods matching the given labels.
-func (t *GCETranslator) getHTTPProbe(svc api.Service, targetPort intstr.IntOrString) (*api.Probe, error) {
+func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOrString) (*api_v1.Probe, error) {
 	l := svc.Spec.Selector
 
 	// Lookup any container with a matching targetPort from the set of pods
@@ -531,9 +531,9 @@ func (t *GCETranslator) getHTTPProbe(svc api.Service, targetPort intstr.IntOrStr
 // - an HTTPGet probe, as opposed to a tcp or exec probe
 // - has a scheme of HTTP, as opposed to HTTPS
 // - has no special host or headers fields
-func isSimpleHTTPProbe(probe *api.Probe) bool {
+func isSimpleHTTPProbe(probe *api_v1.Probe) bool {
 	return (probe != nil && probe.Handler.HTTPGet != nil && probe.Handler.HTTPGet.Host == "" &&
-		probe.Handler.HTTPGet.Scheme == api.URISchemeHTTP && len(probe.Handler.HTTPGet.HTTPHeaders) == 0)
+		probe.Handler.HTTPGet.Scheme == api_v1.URISchemeHTTP && len(probe.Handler.HTTPGet.HTTPHeaders) == 0)
 }
 
 // HealthCheck returns the http readiness probe for the endpoint backing the
@@ -546,7 +546,7 @@ func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error
 	var healthCheck *compute.HttpHealthCheck
 	// Find the label and target port of the one service with the given nodePort
 	for _, as := range sl {
-		s := as.(*api.Service)
+		s := as.(*api_v1.Service)
 		for _, p := range s.Spec.Ports {
 
 			// only one Service can match this nodePort, try and look up
@@ -600,13 +600,13 @@ func (t *GCETranslator) HealthCheck(port int64) (*compute.HttpHealthCheck, error
 		healthCheck = utils.DefaultHealthCheckTemplate(port)
 	}
 	for _, ing := range ingresses {
-		t.recorder.Eventf(&ing, api.EventTypeNormal, "GCE", fmt.Sprintf("health check using %v:%v%v", healthCheck.Host, healthCheck.Port, healthCheck.RequestPath))
+		t.recorder.Eventf(&ing, api_v1.EventTypeNormal, "GCE", fmt.Sprintf("health check using %v:%v%v", healthCheck.Host, healthCheck.Port, healthCheck.RequestPath))
 	}
 	return healthCheck, nil
 }
 
 // PodsByCreationTimestamp sorts a list of Pods by creation timestamp, using their names as a tie breaker.
-type PodsByCreationTimestamp []*api.Pod
+type PodsByCreationTimestamp []*api_v1.Pod
 
 func (o PodsByCreationTimestamp) Len() int      { return len(o) }
 func (o PodsByCreationTimestamp) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
