@@ -63,6 +63,7 @@ func (f *fakeFirewallsProvider) CreateFirewall(name, msgTag string, srcRange net
 		Name:         prefixedName,
 		SourceRanges: srcRange.StringSlice(),
 		Allowed:      []*compute.FirewallAllowed{{Ports: strPorts}},
+		TargetTags:   hosts, // WARNING: This is actually not correct, but good enough for testing this package
 	}
 	return nil
 }
@@ -96,6 +97,7 @@ func (f *fakeFirewallsProvider) UpdateFirewall(name, msgTag string, srcRange net
 		Name:         name,
 		SourceRanges: srcRange.StringSlice(),
 		Allowed:      []*compute.FirewallAllowed{{Ports: strPorts}},
+		TargetTags:   hosts, // WARNING: This is actually not correct, but good enough for testing this package
 	}
 	return nil
 }

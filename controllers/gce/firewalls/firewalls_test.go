@@ -47,7 +47,8 @@ func TestSyncFirewallPool(t *testing.T) {
 	}
 	verifyFirewallRule(fwp, ruleName, nodePorts, nodes, l7SrcRanges, t)
 
-	// Add node and expect firwall to change nodes list
+	// Add node and expect firwall to remain the same
+	// NOTE: See computeHostTag(..) in gce cloudprovider
 	nodes = []string{"node-a", "node-b", "node-c", "node-d"}
 	err = fp.Sync(nodePorts, nodes)
 	if err != nil {
@@ -89,7 +90,4 @@ func verifyFirewallRule(fwp *fakeFirewallsProvider, ruleName string, expectedPor
 	if !sets.NewString(f.SourceRanges...).Equal(sets.NewString(expectedCIDRs...)) {
 		t.Errorf("source CIDRs doesn't equal expected CIDRs. Actual: %v, Expected: %v", f.SourceRanges, expectedCIDRs)
 	}
-
-	// Verify firwall rule has correct nodes
-	// TODO: Check host tags are updated
 }

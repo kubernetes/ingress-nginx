@@ -79,6 +79,8 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 	requiredCIDRs := sets.NewString(l7SrcRanges...)
 	existingCIDRs := sets.NewString(rule.SourceRanges...)
 
+	// Do not update if ports and source cidrs are not outdated.
+	// NOTE: We are not checking if nodeNames matches the firwall targetTags
 	if requiredPorts.Equal(existingPorts) && requiredCIDRs.Equal(existingCIDRs) {
 		return nil
 	}
