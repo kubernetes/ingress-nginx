@@ -13,8 +13,6 @@ import (
 	"golang.org/x/oauth2/google"
 
 	compute "google.golang.org/api/compute/v1"
-	"k8s.io/kubernetes/pkg/cloudprovider"
-	"k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 )
 
 var (
@@ -25,7 +23,6 @@ var (
 	instanceGroupName string
 
 	s         *compute.Service
-	g         *gce.GCECloud
 	zones     []*compute.Zone
 	igs       map[string]*compute.InstanceGroup
 	instances []*compute.Instance
@@ -40,7 +37,7 @@ const (
 )
 
 func main() {
-	fmt.Println("Backend-Service BalancingMode Updater", "version:", version)
+	fmt.Println("Backend-Service BalancingMode Updater", version)
 	//flag.Usage
 	flag.Parse()
 
@@ -77,12 +74,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	cloudInterface, err := cloudprovider.GetCloudProvider("gce", nil)
-	if err != nil {
-		panic(err)
-	}
-	g = cloudInterface.(*gce.GCECloud)
 
 	// Get Zones
 	zoneFilter := fmt.Sprintf("(region eq %s)", createRegionLink(regionName))
@@ -136,9 +127,41 @@ func main() {
 	fmt.Println("Backend Services:", len(bs))
 	fmt.Println("Instance Groups:", len(igs))
 
+	// Early return for special cases
+	switch len(bs) {
+	case 0:
+		fmt.Println("There are 0 backend services - no action necessary")
+		return
+	case 1:
+		updateSingleBackend(bs[0])
+		return
+	}
+
+	// Check there's work to be done
+	if typeOfBackends(bs) == targetBalancingMode {
+		fmt.Println("Backends are already set to target mode")
+		return
+	}
+
+	// Check no orphan instance groups will throw us off
+	clusters := getIGClusterIds()
+	if len(clusters) != 1 {
+		fmt.Println("Expecting only cluster of instance groups in GCE, found", clusters)
+		return
+	}
+
+	if true {
+		return
+	}
+
+	// Performing update for 2+ backend services
+	updateMultipleBackends()
+}
+
+func updateMultipleBackends() {
 	// Create temoprary instance groups
 	for zone, ig := range igs {
-		_, err = s.InstanceGroups.Get(projectID, zone, instanceGroupTemp).Do()
+		_, err := s.InstanceGroups.Get(projectID, zone, instanceGroupTemp).Do()
 		if err != nil {
 			newIg := &compute.InstanceGroup{
 				Name:       instanceGroupTemp,
@@ -152,6 +175,8 @@ func main() {
 			}
 		}
 	}
+
+	sleep(10 * time.Second)
 
 	// Straddle both groups
 	fmt.Println("Straddle both groups in backend services")
@@ -186,7 +211,7 @@ func main() {
 
 	fmt.Println("Delete temporary instance groups")
 	for z := range igs {
-		_, err = s.InstanceGroups.Delete(projectID, z, instanceGroupTemp).Do()
+		_, err := s.InstanceGroups.Delete(projectID, z, instanceGroupTemp).Do()
 		if err != nil {
 			fmt.Println("Couldn't delete temporary instance group", instanceGroupTemp)
 		}
@@ -256,6 +281,13 @@ func getBackendServices() (bs []*compute.BackendService) {
 	return bs
 }
 
+func typeOfBackends(bs []*compute.BackendService) string {
+	if len(bs) == 0 {
+		return ""
+	}
+	return bs[0].Backends[0].BalancingMode
+}
+
 func migrateInstances(fromIG, toIG string) error {
 	wg := sync.WaitGroup{}
 	for _, i := range instances {
@@ -304,4 +336,40 @@ func getResourceName(link string, resourceType string) string {
 		}
 	}
 	return ""
+}
+
+func updateSingleBackend(bs *compute.BackendService) {
+	needsUpdate := false
+	for _, b := range bs.Backends {
+		if b.BalancingMode != targetBalancingMode {
+			needsUpdate = true
+			b.BalancingMode = targetBalancingMode
+		}
+	}
+
+	if !needsUpdate {
+		fmt.Println("Single backend had all targetBalancingMode - no change necessary")
+		return
+	}
+
+	if _, err := s.BackendServices.Update(projectID, bs.Name, bs).Do(); err != nil {
+		panic(err)
+	}
+	fmt.Println("Updated single backend service to target balancing mode.")
+}
+
+func getIGClusterIds() []string {
+	clusterIds := make(map[string]struct{})
+	for _, ig := range igs {
+		s := strings.Split(ig.Name, "--")
+		if len(s) > 2 {
+			panic(fmt.Errorf("Expected two parts to instance group name, got %v", s))
+		}
+		clusterIds[s[1]] = struct{}{}
+	}
+	var ids []string
+	for v, _ := range clusterIds {
+		ids = append(ids, v)
+	}
+	return ids
 }

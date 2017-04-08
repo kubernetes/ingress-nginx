@@ -56,10 +56,10 @@ go run main.go my-project us-central1 UTILIZATION
 - [ ] An active GLBC does not negatively interfere with this updater
 
 #### TODO
-- [ ] If only one backend-service exists, just update it in place.
-- [ ] If all backend-services are already the target balancing mode, early return.
-- [ ] Use GCE CloudProvider package in order to utilize the `waitForOp` functionality in order to remove some sleeps.
-- [ ] Adjust/remove warning
+- [x] If only one backend-service exists, just update it in place.
+- [x] If all backend-services are already the target balancing mode, early return.
+- [ ] Wait for op completion instead of sleeping
+- [ ] Adjust warning
 
 #### Warning
 This tool hasn't been fully tested. Use at your own risk.
