@@ -28,6 +28,14 @@ import (
 )
 
 func main() {
+	callback := func(pid int, wstatus syscall.WaitStatus) {
+		glog.V(2).Infof("removing child process pid %d, wstatus: %+v\n", pid, wstatus)
+	}
+
+	sig := make(chan os.Signal, 1024)
+	signal.Notify(sig, syscall.SIGCHLD)
+	go reapChildren(sig, callback)
+
 	// start a new nginx controller
 	ngx := newNGINXController()
 	// create a custom Ingress controller using NGINX as backend
@@ -57,4 +65,19 @@ func handleSigterm(ic *controller.GenericController) {
 
 	glog.Infof("Exiting with %v", exitCode)
 	os.Exit(exitCode)
+}
+
+func reapChildren(signal chan os.Signal, callback func(int, syscall.WaitStatus)) {
+	for {
+		<-signal
+		for {
+			var status syscall.WaitStatus
+			pid, _ := syscall.Wait4(-1, &status, 0, nil)
+			if pid <= 0 {
+				break
+			}
+			callback(pid, status)
+			break
+		}
+	}
 }
