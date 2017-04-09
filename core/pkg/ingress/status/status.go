@@ -295,7 +295,7 @@ func (s *statusSync) updateStatus(newIPs []api_v1.LoadBalancerIngress) {
 			curIPs := currIng.Status.LoadBalancer.Ingress
 			sort.Sort(loadBalancerIngressByIP(curIPs))
 			if ingressSliceEqual(newIPs, curIPs) {
-				glog.V(3).Infof("skipping update of Ingress %v/%v (there is no change)", currIng.Namespace, currIng.Name)
+				glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", currIng.Namespace, currIng.Name)
 				return
 			}
 

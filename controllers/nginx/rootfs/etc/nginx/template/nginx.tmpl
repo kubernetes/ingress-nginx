@@ -3,7 +3,6 @@
 {{ $healthzURI := .HealthzURI }}
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
-{{ $passthroughBackends := .PassthroughBackends }}
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -222,10 +221,10 @@ http {
         listen 80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $backlogSize }}{{end}};
         {{ if $IsIPV6Enabled }}listen [::]:80{{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $backlogSize }}{{ end }};{{ end }}
 
-        {{/* Listen on 442 because port 443 is used in the stream section */}}
+        {{/* Listen on 442 because port 443 is used in the TLS sni server */}}
         {{/* This listen on port 442 cannot contains proxy_protocol directive because port 443 is in charge of decoding the protocol */}}
-        {{ if not (empty $server.SSLCertificate) }}listen {{ if gt (len $passthroughBackends) 0 }}442{{ else }}443 {{ if $cfg.UseProxyProtocol }} proxy_protocol {{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $backlogSize }}{{end}} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
-        {{ if $IsIPV6Enabled }}{{ if not (empty $server.SSLCertificate) }}listen {{ if gt (len $passthroughBackends) 0 }}[::]:442{{ else }}[::]:443 {{ end }}{{ if $cfg.UseProxyProtocol }} proxy_protocol {{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $backlogSize }}{{end}} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};{{ end }}
+        {{ if not (empty $server.SSLCertificate) }}listen 442{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $backlogSize }}{{end}} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};
+        {{ if $IsIPV6Enabled }}{{ if not (empty $server.SSLCertificate) }}listen [::]:442{{ end }} {{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $backlogSize }}{{end}} ssl {{ if $cfg.UseHTTP2 }}http2{{ end }};{{ end }}
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate                         {{ $server.SSLCertificate }};
@@ -476,17 +475,6 @@ http {
 }
 
 stream {
-    {{ if gt (len $passthroughBackends) 0 }}
-    # map FQDN that requires SSL passthrough
-    map $ssl_preread_server_name $stream_upstream {
-        hostnames;
-        {{ range $i, $passthrough := .PassthroughBackends }}
-        {{ $passthrough.Hostname }}         {{  $passthrough.Backend }};
-        {{ end }}
-        # send SSL traffic to this nginx in a different port
-        default                         nginx-ssl-backend;
-    }
-
     log_format log_stream {{ $cfg.LogFormatStream }};
 
     {{ if $cfg.DisableAccessLog }}
@@ -496,21 +484,6 @@ stream {
     {{ end }}
 
     error_log  /var/log/nginx/error.log;
-
-    # configure default backend for SSL
-    upstream nginx-ssl-backend {
-        server 127.0.0.1:442;
-    }
-
-    {{ buildSSLPassthroughUpstreams $backends .PassthroughBackends }}
-
-    server {
-        listen                  443 {{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        {{ if $IsIPV6Enabled }}listen                  [::]:443 {{ if $cfg.UseProxyProtocol }} proxy_protocol{{ end }};{{ end }}
-        proxy_pass              $stream_upstream;
-        ssl_preread             on;
-    }
-    {{ end }}
 
     # TCP services
     {{ range $i, $tcpServer := .TCPBackends }}
