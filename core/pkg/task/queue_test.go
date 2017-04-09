@@ -65,7 +65,7 @@ func TestEnqueueSuccess(t *testing.T) {
 	q := NewCustomTaskQueue(mockSynFn, mockKeyFn)
 	stopCh := make(chan struct{})
 	// run queue
-	go q.Run(10*time.Second, stopCh)
+	go q.Run(5*time.Second, stopCh)
 	// mock object whichi will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
@@ -88,7 +88,7 @@ func TestEnqueueFailed(t *testing.T) {
 	q := NewCustomTaskQueue(mockSynFn, mockKeyFn)
 	stopCh := make(chan struct{})
 	// run queue
-	go q.Run(10*time.Second, stopCh)
+	go q.Run(5*time.Second, stopCh)
 	// mock object whichi will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
@@ -114,7 +114,7 @@ func TestEnqueueKeyError(t *testing.T) {
 	q := NewCustomTaskQueue(mockSynFn, mockErrorKeyFn)
 	stopCh := make(chan struct{})
 	// run queue
-	go q.Run(10*time.Second, stopCh)
+	go q.Run(5*time.Second, stopCh)
 	// mock object whichi will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
