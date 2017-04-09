@@ -27,10 +27,10 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/kylelemons/godebug/pretty"
 
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
 	def_api "k8s.io/client-go/pkg/api"
@@ -43,6 +43,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
+	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/service"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
@@ -96,9 +97,8 @@ type GenericController struct {
 	// local store of SSL certificates
 	// (only certificates used in ingress)
 	sslCertTracker *sslCertTracker
-	// TaskQueue in charge of keep the secrets referenced from Ingress
-	// in sync with the files on disk
-	secretQueue *task.Queue
+	// store of secret names referenced from Ingress
+	secretTracker *secretTracker
 
 	syncRateLimiter flowcontrol.RateLimiter
 
@@ -154,10 +154,10 @@ func newIngressController(config *Configuration) *GenericController {
 			Component: "ingress-controller",
 		}),
 		sslCertTracker: newSSLCertTracker(),
+		secretTracker:  newSecretTracker(),
 	}
 
-	ic.syncQueue = task.NewTaskQueue(ic.sync)
-	ic.secretQueue = task.NewTaskQueue(ic.syncSecret)
+	ic.syncQueue = task.NewTaskQueue(ic.syncIngress)
 
 	// from here to the end of the method all the code is just boilerplate
 	// required to watch Ingress, Secrets, ConfigMaps and Endoints.
@@ -171,12 +171,7 @@ func newIngressController(config *Configuration) *GenericController {
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
 			ic.syncQueue.Enqueue(obj)
-			if ic.annotations.ContainsCertificateAuth(addIng) {
-				s, err := ic.annotations.CertificateAuthSecret(addIng)
-				if err == nil {
-					ic.secretQueue.Enqueue(s)
-				}
-			}
+			ic.extractSecretNames(addIng)
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
@@ -198,56 +193,16 @@ func newIngressController(config *Configuration) *GenericController {
 			if !reflect.DeepEqual(old, cur) {
 				upIng := cur.(*extensions.Ingress)
 				ic.recorder.Eventf(upIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", upIng.Namespace, upIng.Name))
-				// the referenced secret is different?
-				if diff := pretty.Compare(curIng.Spec.TLS, oldIng.Spec.TLS); diff != "" {
-					for _, secretName := range curIng.Spec.TLS {
-						secKey := ""
-						if secretName.SecretName != "" {
-							secKey = fmt.Sprintf("%v/%v", curIng.Namespace, secretName.SecretName)
-						}
-						glog.Infof("TLS section in ingress %v/%v changed (secret is now \"%v\")", upIng.Namespace, upIng.Name, secKey)
-						// default cert is already queued
-						if secKey != "" {
-							go func() {
-								// we need to wait until the ingress store is updated
-								time.Sleep(10 * time.Second)
-								key, err := ic.GetSecret(secKey)
-								if err != nil {
-									glog.Errorf("unexpected error: %v", err)
-								}
-								if key != nil {
-									ic.secretQueue.Enqueue(key)
-								}
-							}()
-						}
-					}
-				}
-				if ic.annotations.ContainsCertificateAuth(upIng) {
-					s, err := ic.annotations.CertificateAuthSecret(upIng)
-					if err == nil {
-						ic.secretQueue.Enqueue(s)
-					}
-				}
-
 				ic.syncQueue.Enqueue(cur)
+				ic.extractSecretNames(upIng)
 			}
 		},
 	}
 
 	secrEventHandler := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			sec := obj.(*api.Secret)
-			ic.secretQueue.Enqueue(sec)
-		},
 		DeleteFunc: func(obj interface{}) {
 			sec := obj.(*api.Secret)
 			ic.sslCertTracker.Delete(fmt.Sprintf("%v/%v", sec.Namespace, sec.Name))
-		},
-		UpdateFunc: func(old, cur interface{}) {
-			if !reflect.DeepEqual(old, cur) {
-				sec := cur.(*api.Secret)
-				ic.secretQueue.Enqueue(sec)
-			}
 		},
 	}
 
@@ -391,7 +346,7 @@ func (ic *GenericController) getConfigMap(ns, name string) (*api.ConfigMap, erro
 // sync collects all the pieces required to assemble the configuration file and
 // then sends the content to the backend (OnUpdate) receiving the populated
 // template as response reloading the backend if is required.
-func (ic *GenericController) sync(key interface{}) error {
+func (ic *GenericController) syncIngress(key interface{}) error {
 	ic.syncRateLimiter.Accept()
 
 	if ic.syncQueue.IsShuttingDown() {
@@ -735,12 +690,9 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 // GetAuthCertificate ...
 func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
-	key, err := ic.GetSecret(secretName)
+	_, err := ic.GetSecret(secretName)
 	if err != nil {
 		return &resolver.AuthSSLCert{}, fmt.Errorf("unexpected error: %v", err)
-	}
-	if key != nil {
-		ic.secretQueue.Enqueue(key)
 	}
 
 	bc, exists := ic.sslCertTracker.Get(secretName)
@@ -1121,6 +1073,27 @@ func (ic *GenericController) getEndpoints(
 	return upsServers
 }
 
+// extractSecretNames extracts information about secrets inside the Ingress rule
+func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
+	if ic.annotations.ContainsCertificateAuth(ing) {
+		key, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+		if key != "" {
+			_, exists := ic.secretTracker.Get(key)
+			if !exists {
+				ic.secretTracker.Add(key, key)
+			}
+		}
+	}
+
+	for _, tls := range ing.Spec.TLS {
+		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+		_, exists := ic.secretTracker.Get(key)
+		if !exists {
+			ic.secretTracker.Add(key, key)
+		}
+	}
+}
+
 // Stop stops the loadbalancer controller.
 func (ic GenericController) Stop() error {
 	ic.stopLock.Lock()
@@ -1131,7 +1104,6 @@ func (ic GenericController) Stop() error {
 		glog.Infof("shutting down controller queues")
 		close(ic.stopCh)
 		go ic.syncQueue.Shutdown()
-		go ic.secretQueue.Shutdown()
 		if ic.syncStatus != nil {
 			ic.syncStatus.Shutdown()
 		}
@@ -1152,8 +1124,9 @@ func (ic GenericController) Start() {
 	go ic.secrController.Run(ic.stopCh)
 	go ic.mapController.Run(ic.stopCh)
 
-	go ic.secretQueue.Run(5*time.Second, ic.stopCh)
 	go ic.syncQueue.Run(5*time.Second, ic.stopCh)
+
+	go wait.Forever(ic.syncSecret, 10*time.Second)
 
 	if ic.syncStatus != nil {
 		go ic.syncStatus.Run(ic.stopCh)
