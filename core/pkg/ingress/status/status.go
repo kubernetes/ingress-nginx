@@ -111,6 +111,11 @@ func (s statusSync) Shutdown() {
 		return
 	}
 
+	if s.isRunningMultiplePods() {
+		glog.V(2).Infof("skipping Ingress status update (multiple pods running - another one will be elected as master)")
+		return
+	}
+
 	glog.Infof("removing address from ingress status (%v)", addrs)
 	s.updateStatus([]api_v1.LoadBalancerIngress{})
 }
@@ -230,6 +235,17 @@ func (s *statusSync) runningAddresess() ([]string, error) {
 		}
 	}
 	return addrs, nil
+}
+
+func (s *statusSync) isRunningMultiplePods() bool {
+	pods, err := s.Client.Core().Pods(s.pod.Namespace).List(meta_v1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
+	})
+	if err != nil {
+		return false
+	}
+
+	return len(pods.Items) > 1
 }
 
 // sliceToStatus converts a slice of IP and/or hostnames to LoadBalancerIngress
