@@ -130,21 +130,20 @@ var (
 			}
 			return true
 		},
-		"buildLocation":                buildLocation,
-		"buildAuthLocation":            buildAuthLocation,
-		"buildAuthResponseHeaders":     buildAuthResponseHeaders,
-		"buildProxyPass":               buildProxyPass,
-		"buildRateLimitZones":          buildRateLimitZones,
-		"buildRateLimit":               buildRateLimit,
-		"buildSSLPassthroughUpstreams": buildSSLPassthroughUpstreams,
-		"buildResolvers":               buildResolvers,
-		"isLocationAllowed":            isLocationAllowed,
-		"buildLogFormatUpstream":       buildLogFormatUpstream,
-		"contains":                     strings.Contains,
-		"hasPrefix":                    strings.HasPrefix,
-		"hasSuffix":                    strings.HasSuffix,
-		"toUpper":                      strings.ToUpper,
-		"toLower":                      strings.ToLower,
+		"buildLocation":            buildLocation,
+		"buildAuthLocation":        buildAuthLocation,
+		"buildAuthResponseHeaders": buildAuthResponseHeaders,
+		"buildProxyPass":           buildProxyPass,
+		"buildRateLimitZones":      buildRateLimitZones,
+		"buildRateLimit":           buildRateLimit,
+		"buildResolvers":           buildResolvers,
+		"isLocationAllowed":        isLocationAllowed,
+		"buildLogFormatUpstream":   buildLogFormatUpstream,
+		"contains":                 strings.Contains,
+		"hasPrefix":                strings.HasPrefix,
+		"hasSuffix":                strings.HasSuffix,
+		"toUpper":                  strings.ToUpper,
+		"toLower":                  strings.ToLower,
 	}
 )
 
@@ -167,34 +166,6 @@ func buildResolvers(a interface{}) string {
 	r = append(r, "valid=30s;")
 
 	return strings.Join(r, " ")
-}
-
-func buildSSLPassthroughUpstreams(b interface{}, sslb interface{}) string {
-	backends := b.([]*ingress.Backend)
-	sslBackends := sslb.([]*ingress.SSLPassthroughBackend)
-	buf := bytes.NewBuffer(make([]byte, 0, 10))
-
-	// multiple services can use the same upstream.
-	// avoid duplications using a map[name]=true
-	u := make(map[string]bool)
-	for _, passthrough := range sslBackends {
-		if u[passthrough.Backend] {
-			continue
-		}
-		u[passthrough.Backend] = true
-		fmt.Fprintf(buf, "upstream %v {\n", passthrough.Backend)
-		for _, backend := range backends {
-			if backend.Name == passthrough.Backend {
-				for _, server := range backend.Endpoints {
-					fmt.Fprintf(buf, "\t\tserver %v:%v;\n", server.Address, server.Port)
-				}
-				break
-			}
-		}
-		fmt.Fprint(buf, "\t}\n\n")
-	}
-
-	return buf.String()
 }
 
 // buildLocation produces the location string, if the ingress has redirects

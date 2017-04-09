@@ -790,6 +790,12 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 						continue
 					}
 					upstream.Endpoints = endp
+
+					s, e, _ := ic.svcLister.Store.GetByKey(svcKey)
+					if e {
+						upstream.Service = s.(*api.Service)
+					}
+					upstream.Port = path.Backend.ServicePort
 				}
 			}
 		}
