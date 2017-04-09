@@ -70,8 +70,9 @@ func newNGINXController() ingress.Controller {
 		ngx = binary
 	}
 	n := &NGINXController{
-		binary:    ngx,
-		configmap: &api_v1.ConfigMap{},
+		binary:        ngx,
+		configmap:     &api_v1.ConfigMap{},
+		isIPV6Enabled: isIPv6Enabled(),
 	}
 
 	var onChange func()
@@ -121,6 +122,9 @@ type NGINXController struct {
 
 	stats        *statsCollector
 	statusModule statusModule
+
+	// returns true if IPV6 is enabled in the pod
+	isIPV6Enabled bool
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -425,6 +429,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		HealthzURI:          ngxHealthPath,
 		CustomErrors:        len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                 cfg,
+		IsIPV6Enabled:       n.isIPV6Enabled && !cfg.DisableIpv6,
 	})
 	if err != nil {
 		return nil, err
@@ -467,4 +472,9 @@ func nextPowerOf2(v int) int {
 	v++
 
 	return v
+}
+
+func isIPv6Enabled() bool {
+	cmd := exec.Command("test", "-f", "/proc/net/if_inet6")
+	return cmd.Run() == nil
 }

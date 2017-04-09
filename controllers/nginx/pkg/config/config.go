@@ -347,4 +347,5 @@ type TemplateConfig struct {
 	HealthzURI          string
 	CustomErrors        bool
 	Cfg                 Configuration
+	IsIPV6Enabled       bool
 }
