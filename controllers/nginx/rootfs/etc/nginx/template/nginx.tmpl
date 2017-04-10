@@ -3,7 +3,6 @@
 {{ $healthzURI := .HealthzURI }}
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
-{{ $passthroughBackends := .PassthroughBackends }}
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -476,20 +475,6 @@ http {
 }
 
 stream {
-<<<<<<< fc67b1d5e2a51cc0037a434583af6530efa1a59c
-    {{ if gt (len $passthroughBackends) 0 }}
-    # map FQDN that requires SSL passthrough
-    map $ssl_preread_server_name $stream_upstream {
-        hostnames;
-        {{ range $i, $passthrough := .PassthroughBackends }}
-        {{ $passthrough.Hostname }}         {{  $passthrough.Backend }};
-        {{ end }}
-        # send SSL traffic to this nginx in a different port
-        default                         nginx-ssl-backend;
-    }
-=======
->>>>>>> 
-
     log_format log_stream {{ $cfg.LogFormatStream }};
 
     {{ if $cfg.DisableAccessLog }}

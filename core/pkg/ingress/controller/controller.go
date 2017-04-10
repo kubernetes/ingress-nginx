@@ -381,6 +381,8 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
 				Backend:  loc.Backend,
 				Hostname: server.Hostname,
+				Service:  loc.Service,
+				Port:     loc.Port,
 			})
 			break
 		}
@@ -620,6 +622,8 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						loc.Backend = ups.Name
 						loc.IsDefBackend = false
 						loc.Backend = ups.Name
+						loc.Port = ups.Port
+						loc.Service = ups.Service
 						mergeLocationAnnotations(loc, anns)
 						break
 					}
@@ -631,6 +635,8 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						Path:         nginxPath,
 						Backend:      ups.Name,
 						IsDefBackend: false,
+						Service:      ups.Service,
+						Port:         ups.Port,
 					}
 					mergeLocationAnnotations(loc, anns)
 					server.Locations = append(server.Locations, loc)
@@ -641,7 +647,6 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 	// Configure Backends[].SSLPassthrough
 	for _, upstream := range upstreams {
-		isHTTP := false
 		isHTTPSfrom := []*ingress.Server{}
 		for _, server := range servers {
 			for _, location := range server.Locations {
@@ -650,26 +655,18 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						if location.Path == rootLocation {
 							if location.Backend == defUpstreamName {
 								glog.Warningf("ignoring ssl passthrough of %v as it doesn't have a default backend (root context)", server.Hostname)
-							} else {
-								isHTTPSfrom = append(isHTTPSfrom, server)
+								continue
 							}
+
+							isHTTPSfrom = append(isHTTPSfrom, server)
 						}
-					} else {
-						isHTTP = true
+						continue
 					}
 				}
 			}
 		}
 		if len(isHTTPSfrom) > 0 {
-			if isHTTP {
-				for _, server := range isHTTPSfrom {
-					glog.Warningf("backend type mismatch on %v, assuming HTTP on ssl passthrough host %v", upstream.Name, server.Hostname)
-					// removing this server from the PassthroughBackends slice
-					server.SSLPassthrough = false
-				}
-			} else {
-				upstream.SSLPassthrough = true
-			}
+			upstream.SSLPassthrough = true
 		}
 	}
 
@@ -761,42 +758,43 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 					path.Backend.ServiceName,
 					path.Backend.ServicePort.String())
 
-				upstream, ok := upstreams[name]
-				isNewUpstream := !ok
-
-				if isNewUpstream {
-					glog.V(3).Infof("creating upstream %v", name)
-					upstream = newUpstream(name)
-					upstreams[name] = upstream
+				if _, ok := upstreams[name]; ok {
+					continue
 				}
 
-				if !upstream.Secure {
-					upstream.Secure = secUpstream
+				glog.V(3).Infof("creating upstream %v", name)
+				upstreams[name] = newUpstream(name)
+				if !upstreams[name].Secure {
+					upstreams[name].Secure = secUpstream
 				}
-
-				if upstream.SessionAffinity.AffinityType == "" {
-					upstream.SessionAffinity.AffinityType = affinity.AffinityType
+				if upstreams[name].SessionAffinity.AffinityType == "" {
+					upstreams[name].SessionAffinity.AffinityType = affinity.AffinityType
 					if affinity.AffinityType == "cookie" {
-						upstream.SessionAffinity.CookieSessionAffinity.Name = affinity.CookieConfig.Name
-						upstream.SessionAffinity.CookieSessionAffinity.Hash = affinity.CookieConfig.Hash
+						upstreams[name].SessionAffinity.CookieSessionAffinity.Name = affinity.CookieConfig.Name
+						upstreams[name].SessionAffinity.CookieSessionAffinity.Hash = affinity.CookieConfig.Hash
 					}
 				}
 
-				if isNewUpstream {
-					svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
-					endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
-					if err != nil {
-						glog.Warningf("error obtaining service endpoints: %v", err)
-						continue
-					}
-					upstream.Endpoints = endp
-
-					s, e, _ := ic.svcLister.Store.GetByKey(svcKey)
-					if e {
-						upstream.Service = s.(*api.Service)
-					}
-					upstream.Port = path.Backend.ServicePort
+				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
+				endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
+				if err != nil {
+					glog.Warningf("error obtaining service endpoints: %v", err)
+					continue
 				}
+				upstreams[name].Endpoints = endp
+
+				s, exists, err := ic.svcLister.Store.GetByKey(svcKey)
+				if err != nil {
+					glog.Warningf("error obtaining service: %v", err)
+					continue
+				}
+
+				if exists {
+					upstreams[name].Service = s.(*api.Service)
+				} else {
+					glog.Warningf("service %v does not exists", svcKey)
+				}
+				upstreams[name].Port = path.Backend.ServicePort
 			}
 		}
 	}
@@ -932,6 +930,7 @@ func (ic *GenericController) createServers(data []interface{},
 				// server already configured
 				continue
 			}
+
 			servers[host] = &ingress.Server{
 				Hostname: host,
 				Locations: []*ingress.Location{

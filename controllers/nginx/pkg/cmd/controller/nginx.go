@@ -80,11 +80,8 @@ func newNGINXController() ingress.Controller {
 		binary:        ngx,
 		configmap:     &api_v1.ConfigMap{},
 		isIPV6Enabled: isIPv6Enabled(),
-<<<<<<< fc67b1d5e2a51cc0037a434583af6530efa1a59c
 		resolver:      h,
-=======
 		proxy:         &proxy{},
->>>>>>> 
 	}
 
 	listener, err := net.Listen("tcp", ":443")
@@ -143,7 +140,8 @@ type NGINXController struct {
 
 	storeLister ingress.StoreLister
 
-	binary string
+	binary   string
+	resolver []net.IP
 
 	cmdArgs []string
 
@@ -156,11 +154,7 @@ type NGINXController struct {
 	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
 
-<<<<<<< fc67b1d5e2a51cc0037a434583af6530efa1a59c
-	resolver []net.IP
-=======
 	proxy *proxy
->>>>>>> 
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -476,6 +470,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	for _, pb := range ingressCfg.PassthroughBackends {
 		svc := pb.Service
 		if svc == nil {
+			glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
 			continue
 		}
 		port, err := strconv.Atoi(pb.Port.String())

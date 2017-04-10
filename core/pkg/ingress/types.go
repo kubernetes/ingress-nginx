@@ -147,9 +147,9 @@ type Configuration struct {
 // Backend describes one or more remote server/s (endpoints) associated with a service
 type Backend struct {
 	// Name represents an unique api.Service name formatted as <namespace>-<name>-<port>
-	Name    string `json:"name"`
-	Service *api.Service
-	Port    intstr.IntOrString
+	Name    string             `json:"name"`
+	Service *api.Service       `json:"service"`
+	Port    intstr.IntOrString `json:"port"`
 	// This indicates if the communication protocol between the backend and the endpoint is HTTP or HTTPS
 	// Allowing the use of HTTPS
 	// The endpoint/s must provide a TLS connection.
@@ -245,6 +245,9 @@ type Location struct {
 	IsDefBackend bool `json:"isDefBackend"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
+
+	Service *api.Service       `json:"service"`
+	Port    intstr.IntOrString `json:"port"`
 	// BasicDigestAuth returns authentication configuration for
 	// an Ingress rule.
 	// +optional
@@ -292,9 +295,8 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Namespace string
-	Service   *api.Service
-	Port      intstr.IntOrString
+	Service *api.Service       `json:"service"`
+	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
 	// Hostname returns the FQDN of the server

@@ -40,14 +40,14 @@ func (p *proxy) Handle(conn net.Conn) {
 
 	length, err := conn.Read(data)
 	if err != nil {
-		glog.V(4).Infof("Error reading the first 4k of the connection: %s", err)
+		glog.V(4).Infof("error reading the first 4k of the connection: %s", err)
 		return
 	}
 
 	var proxy *server
 	hostname, err := parser.GetHostname(data[:])
 	if err == nil {
-		glog.V(2).Infof("Parsed hostname: %s", hostname)
+		glog.V(2).Infof("parsed hostname: %s", hostname)
 		proxy = p.Get(hostname)
 		if proxy == nil {
 			return
