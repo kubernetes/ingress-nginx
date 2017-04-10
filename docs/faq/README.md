@@ -79,7 +79,7 @@ To completely stop the Ingress controller on GCE/GKE, please see [this](gce.md#h
 
 Multiple Ingress controllers can co-exist and key off the `ingress-class`
 annotation, as shown in this [faq](#how-do-i-run-multiple-ingress-controllers-in-the-same-cluster),
-as well as in [this](/examples/pipeline) example.
+as well as in [this](/examples/daemonset/nginx) example.
 
 ## How do I contribute a backend to the generic Ingress controller?
 
