@@ -24,7 +24,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
-	"k8s.io/ingress/core/pkg/net/dns"
 )
 
 const (
@@ -71,13 +70,6 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
 	to.WhitelistSourceRange = whitelist
-
-	h, err := dns.GetSystemNameServers()
-	if err != nil {
-		glog.Warningf("unexpected error reading system nameservers: %v", err)
-	} else {
-		to.Resolver = h
-	}
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,
