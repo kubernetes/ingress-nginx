@@ -22,7 +22,6 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
-	"k8s.io/ingress/core/pkg/net/dns"
 )
 
 func TestFilterErrors(t *testing.T) {
@@ -54,26 +53,18 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.UseProxyProtocol = true
 	def.GzipTypes = "text/html"
 
-	h, err := dns.GetSystemNameServers()
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	def.Resolver = h
-
 	to := ReadConfig(conf)
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 
 	def = config.NewDefault()
-	def.Resolver = h
 	to = ReadConfig(map[string]string{})
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 
 	def = config.NewDefault()
-	def.Resolver = h
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
 	to = ReadConfig(map[string]string{
 		"whitelist-source-range": "1.1.1.1/32",
