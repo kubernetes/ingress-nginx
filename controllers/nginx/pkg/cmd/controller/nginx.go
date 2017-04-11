@@ -41,6 +41,7 @@ import (
 	"k8s.io/ingress/controllers/nginx/pkg/version"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/net/dns"
 	"k8s.io/ingress/core/pkg/net/ssl"
 )
 
@@ -69,10 +70,17 @@ func newNGINXController() ingress.Controller {
 	if ngx == "" {
 		ngx = binary
 	}
+
+	h, err := dns.GetSystemNameServers()
+	if err != nil {
+		glog.Warningf("unexpected error reading system nameservers: %v", err)
+	}
+
 	n := &NGINXController{
 		binary:        ngx,
 		configmap:     &api_v1.ConfigMap{},
 		isIPV6Enabled: isIPv6Enabled(),
+		resolver:      h,
 	}
 
 	var onChange func()
@@ -125,6 +133,8 @@ type NGINXController struct {
 
 	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
+
+	resolver []net.IP
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -340,6 +350,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	}
 
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
+	cfg.Resolver = n.resolver
 
 	// we need to check if the status module configuration changed
 	if cfg.EnableVtsStatus {
