@@ -51,7 +51,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/status"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
-	ssl "k8s.io/ingress/core/pkg/net/ssl"
+	"k8s.io/ingress/core/pkg/net/ssl"
 	local_strings "k8s.io/ingress/core/pkg/strings"
 	"k8s.io/ingress/core/pkg/task"
 )
