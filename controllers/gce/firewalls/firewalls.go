@@ -75,17 +75,30 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 			existingPorts.Insert(p)
 		}
 	}
-	if requiredPorts.Equal(existingPorts) {
+
+	requiredCIDRs := sets.NewString(l7SrcRanges...)
+	existingCIDRs := sets.NewString(rule.SourceRanges...)
+
+	// Do not update if ports and source cidrs are not outdated.
+	// NOTE: We are not checking if nodeNames matches the firewall targetTags
+	if requiredPorts.Equal(existingPorts) && requiredCIDRs.Equal(existingCIDRs) {
+		glog.V(4).Info("Firewall does not need update of ports or source ranges")
 		return nil
 	}
-	glog.V(3).Infof("Firewall rule %v already exists, updating nodeports %v", name, nodePorts)
-	return fr.cloud.UpdateFirewall(suffix, "GCE L7 firewall rule", fr.srcRanges, nodePorts, nodeNames)
+
+	glog.V(3).Infof("Firewall %v already exists, updating nodeports %v", name, nodePorts)
+	return fr.cloud.UpdateFirewall(suffix, "GCE L7 firewall", fr.srcRanges, nodePorts, nodeNames)
 }
 
 // Shutdown shuts down this firewall rules manager.
 func (fr *FirewallRules) Shutdown() error {
-	glog.Infof("Deleting firewall rule with suffix %v", fr.namer.FrSuffix())
-	return fr.cloud.DeleteFirewall(fr.namer.FrSuffix())
+	glog.Infof("Deleting firewall with suffix %v", fr.namer.FrSuffix())
+	err := fr.cloud.DeleteFirewall(fr.namer.FrSuffix())
+	if err != nil && utils.IsHTTPErrorCode(err, 404) {
+		glog.Infof("Firewall with suffix %v didn't exist at Shutdown", fr.namer.FrSuffix())
+		return nil
+	}
+	return err
 }
 
 // GetFirewall just returns the firewall object corresponding to the given name.
