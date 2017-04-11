@@ -312,6 +312,11 @@ func (g GCEURLMap) PutDefaultBackend(d *compute.BackendService) {
 	}
 }
 
+// FakeNotFoundErr creates a NotFound error with type googleapi.Error
+func FakeGoogleAPINotFoundErr() *googleapi.Error {
+	return &googleapi.Error{Code: 404}
+}
+
 // IsHTTPErrorCode checks if the given error matches the given HTTP Error code.
 // For this to work the error must be a googleapi Error.
 func IsHTTPErrorCode(err error, code int) bool {
