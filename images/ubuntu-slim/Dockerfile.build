@@ -1,6 +1,8 @@
-FROM ubuntu:16.04
+FROM BASEIMAGE
 
 ENV DEBIAN_FRONTEND=noninteractive
+
+CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
 
 COPY excludes /etc/dpkg/dpkg.cfg.d/excludes
 
