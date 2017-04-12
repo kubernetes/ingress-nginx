@@ -43,7 +43,7 @@ http {
     {{ end }}
 
     # lua section to return proper error codes when custom pages are used
-    lua_package_path '.?.lua;./etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
+    lua_package_path '.?.lua;/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/lua-resty-http/lib/?.lua;';
     init_by_lua_block {
         require("error_page")
     }
