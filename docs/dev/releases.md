@@ -10,17 +10,17 @@ or push an image to a remote repository.
 
 Build a raw server binary
 ```console
-$ make controller
+$ make controllers
 ```
 
 Build a local container image
 ```console
-$ make container TAG=0.0 PREFIX=$USER/ingress-controller
+$ make docker-build TAG=0.0 PREFIX=$USER/ingress-controller
 ```
 
 Push the container image to a remote repository
 ```console
-$ make push TAG=0.0 PREFIX=$USER/ingress-controller
+$ make docker-push TAG=0.0 PREFIX=$USER/ingress-controller
 ```
 
 ## Dependencies
@@ -50,12 +50,12 @@ $ go build -o godep *.go
 In general, you can follow [this guide](https://github.com/kubernetes/kubernetes/blob/release-1.5/docs/devel/godep.md#using-godep-to-manage-dependencies)
 to update godeps. To update a particular dependency, eg: Kubernetes:
 ```console
-cd $GOPATH/src/github.com/kubernetes/ingress
+cd $GOPATH/src/k8s.io/ingress
 godep restore
-go get -u github.com/kubernetes/kubernetes
-cd $GOPATH/src/github.com/kubernetes/kubernetes
+go get -u k8s.io/kubernetes
+cd $GOPATH/src/k8s.io/kubernetes
 godep restore
-cd $GOPATH/src/github/kubernetes/ingress
+cd $GOPATH/src/k8s.io/kubernetes/ingress
 rm -rf Godeps
 godep save ./...
 git [add/remove] as needed
