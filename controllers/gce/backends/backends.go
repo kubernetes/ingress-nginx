@@ -224,11 +224,6 @@ func newBackendService(igs []*compute.InstanceGroup, bm BalancingMode, namedPort
 	}
 }
 
-func (b *Backends) updateProtocol(bs *compute.BackendService, hcLink string, protocol utils.AppProtocol) (*compute.BackendService, error) {
-
-	return bs, nil
-}
-
 // Add will get or create a Backend for the given port.
 func (b *Backends) Add(p ServicePort) error {
 	// We must track the port even if creating the backend failed, because

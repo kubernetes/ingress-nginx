@@ -559,8 +559,8 @@ func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOr
 				continue
 			}
 			for _, p := range c.Ports {
-				if targetPort.Type == intstr.Int && targetPort.IntVal == p.ContainerPort ||
-					targetPort.Type == intstr.String && targetPort.StrVal == p.Name {
+				if (targetPort.Type == intstr.Int && targetPort.IntVal == p.ContainerPort) ||
+					(targetPort.Type == intstr.String && targetPort.StrVal == p.Name) {
 
 					readinessProbePort := c.ReadinessProbe.Handler.HTTPGet.Port
 					switch readinessProbePort.Type {
