@@ -275,7 +275,6 @@ http {
             proxy_set_header X-Original-URI $request_uri;
             proxy_set_header X-Scheme       $pass_access_scheme;
             {{ end }}
-            proxy_set_header            Host $best_http_host;
             proxy_pass_request_headers  on;
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
