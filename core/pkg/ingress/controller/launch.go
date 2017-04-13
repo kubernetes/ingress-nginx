@@ -85,6 +85,10 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		ingress controller should update the Ingress status IP/hostname. Default is true`)
 
 		electionID = flags.String("election-id", "ingress-controller-leader", `Election id to use for status update.`)
+
+		forceIsolation = flags.Bool("force-namespace-isolation", false,
+			`Force namespace isolation. This flag is required to avoid the reference of secrets or 
+		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
@@ -144,21 +148,22 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	}
 
 	config := &Configuration{
-		UpdateStatus:          *updateStatus,
-		ElectionID:            *electionID,
-		Client:                kubeClient,
-		ResyncPeriod:          *resyncPeriod,
-		DefaultService:        *defaultSvc,
-		IngressClass:          *ingressClass,
-		DefaultIngressClass:   backend.DefaultIngressClass(),
-		Namespace:             *watchNamespace,
-		ConfigMapName:         *configMap,
-		TCPConfigMapName:      *tcpConfigMapName,
-		UDPConfigMapName:      *udpConfigMapName,
-		DefaultSSLCertificate: *defSSLCertificate,
-		DefaultHealthzURL:     *defHealthzURL,
-		PublishService:        *publishSvc,
-		Backend:               backend,
+		UpdateStatus:            *updateStatus,
+		ElectionID:              *electionID,
+		Client:                  kubeClient,
+		ResyncPeriod:            *resyncPeriod,
+		DefaultService:          *defaultSvc,
+		IngressClass:            *ingressClass,
+		DefaultIngressClass:     backend.DefaultIngressClass(),
+		Namespace:               *watchNamespace,
+		ConfigMapName:           *configMap,
+		TCPConfigMapName:        *tcpConfigMapName,
+		UDPConfigMapName:        *udpConfigMapName,
+		DefaultSSLCertificate:   *defSSLCertificate,
+		DefaultHealthzURL:       *defHealthzURL,
+		PublishService:          *publishSvc,
+		Backend:                 backend,
+		ForceNamespaceIsolation: *forceIsolation,
 	}
 
 	ic := newIngressController(config)
