@@ -479,6 +479,7 @@ stream {
     {{ if gt (len $passthroughBackends) 0 }}
     # map FQDN that requires SSL passthrough
     map $ssl_preread_server_name $stream_upstream {
+        hostnames;
         {{ range $i, $passthrough := .PassthroughBackends }}
         {{ $passthrough.Hostname }}         {{  $passthrough.Backend }};
         {{ end }}
