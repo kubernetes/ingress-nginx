@@ -42,7 +42,7 @@ Please check the following:
 
 1. Output of `kubectl describe`, as shown [here](README.md#i-created-an-ingress-and-nothing-happens-what-now)
 2. Do your Services all have a `NodePort`?
-3. Do your Services either serve a http 200 on `/`, or have a readiness probe
+3. Do your Services either serve an HTTP status code 200 on `/`, or have a readiness probe
    as described in [this section](#can-i-configure-gce-health-checks-through-the-ingress)?
 4. Do you have enough GCP quota?
 
@@ -68,8 +68,7 @@ Global Forwarding Rule -> TargetHTTPSProxy
 ```
 
 In addition to this pipeline:
-* Each Backend Service requires a HTTP health check to the NodePort of the
-  Service
+* Each Backend Service requires a HTTP or HTTPS health check to the NodePort of the Service
 * Each port on the Backend Service has a matching port on the Instance Group
 * Each port on the Backend Service is exposed through a firewall-rule open
   to the GCE LB IP ranges (`130.211.0.0/22` and `35.191.0.0/16`)
@@ -126,12 +125,12 @@ Please check the following:
 
 Currently health checks are not exposed through the Ingress resource, they're
 handled at the node level by Kubernetes daemons (kube-proxy and the kubelet).
-However the GCE HTTP lb still requires a HTTP health check to measure node
+However the GCE L7 lb still requires a HTTP(S) health check to measure node
 health. By default, this health check points at `/` on the nodePort associated
 with a given backend. Note that the purpose of this health check is NOT to
 determine when endpoint pods are overloaded, but rather, to detect when a
 given node is incapable of proxying requests for the Service:nodePort
-alltogether. Overloaded endpoints are removed from the working set of a
+altogether. Overloaded endpoints are removed from the working set of a
 Service via readiness probes conducted by the kubelet.
 
 If `/` doesn't work for your application, you can have the Ingress controller
@@ -311,12 +310,12 @@ pointing to that Service's NodePort.
 Instance Group, these must be shared. There is 1 Ingress Instance Group per
 zone containing Kubernetes nodes.
 
-* HTTP Health Checks: currently the http health checks point at  the NodePort
+* Health Checks: currently the health checks point at the NodePort
 of a BackendService. They don't *need* to be shared, but they are since
 BackendServices are shared.
 
 * Firewall rule: In a non-federated cluster there is a single firewall rule
-that covers HTTP health check traffic from the range of [GCE loadbalancer IPs](https://cloud.google.com/compute/docs/load-balancing/http/#troubleshooting)
+that covers health check traffic from the range of [GCE loadbalancer IPs](https://cloud.google.com/compute/docs/load-balancing/http/#troubleshooting)
 to Service nodePorts.
 
 Unique:

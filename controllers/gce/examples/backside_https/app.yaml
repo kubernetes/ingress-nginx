@@ -1,0 +1,50 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: my-echo-deploy
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: echo
+    spec:
+      containers:
+      - name: echoserver
+        image: nicksardo/echoserver:latest
+        imagePullPolicy: Always
+        ports:
+        - name: echo-443
+          containerPort: 443
+        # readinessProbe:   # Health check settings can be retrieved from an HTTPS readinessProbe as well
+        #   httpGet:
+        #     path: /healthcheck   # Custom health check path for testing
+        #     scheme: HTTPS
+        #     port: echo-443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-echo-svc
+  annotations:
+      service.alpha.kubernetes.io/app-protocols: '{"my-https-port":"HTTPS"}'   # Must map port-name to HTTPS for the GCP ingress controller
+  labels:
+    app: echo
+spec:
+  type: NodePort
+  ports:
+  - port: 12345  # Port doesn't matter as nodeport is used for Ingress
+    targetPort: echo-443
+    protocol: TCP
+    name: my-https-port
+  selector:
+    app: echo
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: my-echo-ingress
+spec:
+  backend:
+    serviceName: my-echo-svc
+    servicePort: my-https-port

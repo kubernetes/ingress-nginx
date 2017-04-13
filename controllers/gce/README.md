@@ -360,15 +360,14 @@ You just instructed the loadbalancer controller to quit, however if it had done 
 
 #### Health checks
 
-Currently, all service backends must satisfy *either* of the following requirements to pass the HTTP health checks sent to it from the GCE loadbalancer:
+Currently, all service backends must satisfy *either* of the following requirements to pass the HTTP(S) health checks sent to it from the GCE loadbalancer:
 1. Respond with a 200 on '/'. The content does not matter.
 2. Expose an arbitrary url as a `readiness` probe on the pods backing the Service.
 
-The Ingress controller looks for a compatible readiness probe first, if it finds one, it adopts it as the GCE loadbalancer's HTTP health check. If there's no readiness probe, or the readiness probe requires special HTTP headers, or HTTPS, the Ingress controller points the GCE loadbalancer's HTTP health check at '/'. [This is an example](examples/health_checks/README.md) of an Ingress that adopts the readiness probe from the endpoints as its health check.
+The Ingress controller looks for a compatible readiness probe first, if it finds one, it adopts it as the GCE loadbalancer's HTTP(S) health check. If there's no readiness probe, or the readiness probe requires special HTTP headers, the Ingress controller points the GCE loadbalancer's HTTP health check at '/'. [This is an example](examples/health_checks/README.md) of an Ingress that adopts the readiness probe from the endpoints as its health check.
 
-## TLS
-
-You can secure an Ingress by specifying a [secret](http://kubernetes.io/docs/user-guide/secrets) that contains a TLS private key and certificate. Currently the Ingress only supports a single TLS port, 443, and assumes TLS termination. This controller does not support SNI, so it will ignore all but the first cert in the TLS configuration section. The TLS secret must [contain keys](https://github.com/kubernetes/kubernetes/blob/master/pkg/api/types.go#L2696) named `tls.crt` and `tls.key` that contain the certificate and private key to use for TLS, eg:
+## Frontend HTTPS
+For encrypted communication between the client to the load balancer, you can secure an Ingress by specifying a [secret](http://kubernetes.io/docs/user-guide/secrets) that contains a TLS private key and certificate. Currently the Ingress only supports a single TLS port, 443, and assumes TLS termination. This controller does not support SNI, so it will ignore all but the first cert in the TLS configuration section. The TLS secret must [contain keys](https://github.com/kubernetes/kubernetes/blob/master/pkg/api/types.go#L2696) named `tls.crt` and `tls.key` that contain the certificate and private key to use for TLS, eg:
 
 ```yaml
 apiVersion: v1
@@ -398,6 +397,29 @@ spec:
 ```
 
 This creates 2 GCE forwarding rules that use a single static ip. Both `:80` and `:443` will direct traffic to your backend, which serves HTTP requests on the target port mentioned in the Service associated with the Ingress.
+
+## Backend HTTPS
+For encrypted communication between the load balancer and your Kubernetes service, you need to decorate the the service's port as expecting HTTPS. There's an alpha [Service annotation](examples/backside_https/app.yaml) for specifying the expected protocol per service port. Upon seeing the protocol as HTTPS, the ingress controller will assemble a GCP L7 load balancer with an HTTPS backend-service with a HTTPS health check.
+
+The annotation value is a stringified JSON map of port-name to "HTTPS" or "HTTP".  If you do not specify the port, "HTTP" is assumed.
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-echo-svc
+  annotations:
+      service.alpha.kubernetes.io/app-protocols: '{"my-https-port":"HTTPS"}'
+  labels:
+    app: echo
+spec:
+  type: NodePort
+  ports:
+  - port: 443
+    protocol: TCP
+    name: my-https-port
+  selector:
+    app: echo
+```
 
 #### Redirecting HTTP to HTTPS
 

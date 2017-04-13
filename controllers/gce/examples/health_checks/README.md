@@ -1,6 +1,6 @@
 # Simple HTTP health check example
 
-The GCE Ingress controller adopts the readiness probe from the matching endpoints, provided the readiness probe doesn't require HTTPS or special headers.
+The GCE Ingress controller adopts the readiness probe from the matching endpoints, provided the readiness probe doesn't require special headers.
 
 Create the following app:
 ```console
