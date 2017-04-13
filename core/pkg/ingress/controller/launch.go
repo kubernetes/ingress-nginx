@@ -183,7 +183,10 @@ func registerHandlers(enableProfiling bool, port int, ic *GenericController) {
 	})
 
 	mux.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		err := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		if err != nil {
+			glog.Errorf("unexpected error: %v", err)
+		}
 	})
 
 	if enableProfiling {
