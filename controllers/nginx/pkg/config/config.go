@@ -283,8 +283,6 @@ func NewDefault() Configuration {
 		MaxWorkerConnections:     16384,
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
-		ServerNameHashMaxSize:    512,
-		ServerNameHashBucketSize: 64,
 		ShowServerTokens:         true,
 		SSLBufferSize:            sslBufferSize,
 		SSLCiphers:               sslCiphers,
