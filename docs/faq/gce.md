@@ -347,3 +347,36 @@ so even though a particular key is in backoff, we might end up syncing all other
 keys every, say, 10m, which might trigger the same validation-error-condition
 when syncing a shared resource.
 
+## Creating an Internal Load Balancer without existing ingress
+**How the GCE ingress controller Works**  
+To assemble an L7 Load Balancer, the ingress controller creates an [unmanaged instance-group](https://cloud.google.com/compute/docs/instance-groups/creating-groups-of-unmanaged-instances) named `k8s-ig--{UID}` and adds every known non-master node to the group. For every service specified in all ingresses, a backend service is created to point to that instance group.
+
+**How the Internal Load Balancer Works**  
+K8s does not yet assemble ILB's for you, but you can manually create one via the GCP Console. The ILB is composed of a regional forwarding rule and a regional backend service. Similar to the L7 LB, the backend-service points to an unmanaged instance-group containing your K8s nodes.
+
+**The Complication**  
+GCP will only allow one load balanced unmanaged instance-group for a given instance.
+If you manually created an instance group named something like `my-kubernetes-group` containing all your nodes and put an ILB in front of it, then you will probably encounter a GCP error when setting up an ingress resource. The controller doesn't know to use your `my-kubernetes-group` group and will create it's own. Unfortunately, it won't be able to add any nodes to that group because they already belong to the ILB group.
+
+As mentioned before, the instance group name is composed of a hard-coded prefix `k8s-ig--` and a cluster-specific UID. The ingress controller will check the K8s configmap for an existing UID value at process start. If it doesn't exist, the controller will create one randomly and update the configmap.
+
+#### Solutions  
+**Want an ILB and Ingress?**  
+If you plan on creating both ingresses and internal load balancers, simply create the ingress resource first then use the GCP Console to create an ILB pointing to the existing instance group.
+
+**Want just an ILB for now, ingress maybe later?**  
+Retrieve the UID via configmap, create an instance-group per used zone, then add all respective nodes to the group.
+```shell
+# Fetch instance group name from config map
+GROUPNAME=`kubectl get configmaps ingress-uid -o jsonpath='k8s-ig--{.data.uid}' --namespace=kube-system`
+
+# Create an instance group for every zone you have nodes. If you use GKE, this is probably a single zone.
+gcloud compute instance-groups unmanaged create $GROUPNAME --zone {ZONE}
+
+# Look at your list of your nodes
+kubectl get nodes
+
+# Add NON-MASTER nodes that exist in zone X to the instance group in zone X.
+gcloud compute instance-groups unmanaged add-instances $GROUPNAME --zone {ZONE} --instances=A,B,C...
+```
+You can now follow the GCP Console wizard for creating an internal load balancer and point to the `k8s-ig--{UID}` instance group.
