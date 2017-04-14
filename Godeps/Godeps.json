@@ -110,6 +110,10 @@
 			"Rev": "44d81051d367757e1c7c6a5a86423ece9afcf63c"
 		},
 		{
+			"ImportPath": "github.com/hashicorp/go-reap",
+			"Rev": "04ce4d0638f3b39b8a8030e2a22c4c90771fa5d6"
+		},
+		{
 			"ImportPath": "github.com/howeyc/gopass",
 			"Rev": "3ca23474a7c7203e0a0a070fd33508f6efdb9b3d"
 		},
