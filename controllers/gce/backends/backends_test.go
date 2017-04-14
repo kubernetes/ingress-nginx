@@ -40,11 +40,11 @@ var noOpErrFunc = func(op int, be *compute.BackendService) error { return nil }
 var existingProbe = &api_v1.Probe{
 	Handler: api_v1.Handler{
 		HTTPGet: &api_v1.HTTPGetAction{
-			Scheme: api_v1.URISchemeHTTP,
+			Scheme: api_v1.URISchemeHTTPS,
 			Path:   "/my-special-path",
 			Port: intstr.IntOrString{
 				Type:   intstr.Int,
-				IntVal: 80,
+				IntVal: 443,
 			},
 		},
 	},
@@ -56,7 +56,7 @@ func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWit
 	nodePool.Init(&instances.FakeZoneLister{Zones: []string{defaultZone}})
 	healthChecks := healthchecks.NewHealthChecker(healthchecks.NewFakeHealthCheckProvider(), "/", namer)
 	bp := NewBackendPool(f, healthChecks, nodePool, namer, []int64{}, syncWithCloud)
-	probes := map[int64]*api_v1.Probe{80: existingProbe}
+	probes := map[ServicePort]*api_v1.Probe{{Port: 443, Protocol: utils.ProtocolHTTPS}: existingProbe}
 	bp.Init(NewFakeProbeProvider(probes))
 	return bp
 }
@@ -68,11 +68,12 @@ func TestBackendPoolAdd(t *testing.T) {
 	namer := utils.Namer{}
 
 	testCases := []ServicePort{
-		{80, utils.HTTP},
-		{443, utils.HTTPS},
+		{80, utils.ProtocolHTTP},
+		{443, utils.ProtocolHTTPS},
 	}
 
 	for _, nodePort := range testCases {
+		// For simplicity, these tests use 80/443 as nodeports
 		t.Run(fmt.Sprintf("Port:%v Protocol:%v", nodePort.Port, nodePort.Protocol), func(t *testing.T) {
 			// Add a backend for a port, then re-add the same port and
 			// make sure it corrects a broken link from the backend to
@@ -113,6 +114,10 @@ func TestBackendPoolAdd(t *testing.T) {
 			if hc.Protocol() != nodePort.Protocol {
 				t.Fatalf("Healthcheck scheme does not match nodeport scheme: hc:%v np:%v", hc.Protocol(), nodePort.Protocol)
 			}
+
+			if nodePort.Port == 443 && hc.RequestPath != "/my-special-path" {
+				t.Fatalf("Healthcheck for 443 should have special request path from probe")
+			}
 		})
 	}
 }
@@ -123,7 +128,7 @@ func TestBackendPoolUpdate(t *testing.T) {
 	pool := newBackendPool(f, fakeIGs, false)
 	namer := utils.Namer{}
 
-	p := ServicePort{Port: 3000, Protocol: utils.HTTP}
+	p := ServicePort{Port: 3000, Protocol: utils.ProtocolHTTP}
 	pool.Add(p)
 	beName := namer.BeName(p.Port)
 
@@ -143,7 +148,7 @@ func TestBackendPoolUpdate(t *testing.T) {
 	}
 
 	// Update service port to encrypted
-	p.Protocol = utils.HTTPS
+	p.Protocol = utils.ProtocolHTTPS
 	pool.Sync([]ServicePort{p})
 
 	be, err = f.GetBackendService(beName)
@@ -169,7 +174,7 @@ func TestBackendPoolChaosMonkey(t *testing.T) {
 	pool := newBackendPool(f, fakeIGs, false)
 	namer := utils.Namer{}
 
-	nodePort := ServicePort{Port: 8080, Protocol: utils.HTTP}
+	nodePort := ServicePort{Port: 8080, Protocol: utils.ProtocolHTTP}
 	pool.Add(nodePort)
 	beName := namer.BeName(nodePort.Port)
 
@@ -212,7 +217,7 @@ func TestBackendPoolChaosMonkey(t *testing.T) {
 func TestBackendPoolSync(t *testing.T) {
 	// Call sync on a backend pool with a list of ports, make sure the pool
 	// creates/deletes required ports.
-	svcNodePorts := []ServicePort{{Port: 81, Protocol: utils.HTTP}, {Port: 82, Protocol: utils.HTTPS}, {Port: 83, Protocol: utils.HTTP}}
+	svcNodePorts := []ServicePort{{Port: 81, Protocol: utils.ProtocolHTTP}, {Port: 82, Protocol: utils.ProtocolHTTPS}, {Port: 83, Protocol: utils.ProtocolHTTP}}
 	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	pool := newBackendPool(f, fakeIGs, true)
@@ -292,7 +297,7 @@ func TestBackendPoolDeleteLegacyHealthChecks(t *testing.T) {
 	hcp := healthchecks.NewFakeHealthCheckProvider()
 	healthChecks := healthchecks.NewHealthChecker(hcp, "/", namer)
 	bp := NewBackendPool(f, healthChecks, nodePool, namer, []int64{}, false)
-	probes := map[int64]*api_v1.Probe{}
+	probes := map[ServicePort]*api_v1.Probe{}
 	bp.Init(NewFakeProbeProvider(probes))
 
 	// Create a legacy HTTP health check
@@ -317,7 +322,7 @@ func TestBackendPoolDeleteLegacyHealthChecks(t *testing.T) {
 	})
 
 	// Have pool sync the above backend service
-	bp.Add(ServicePort{Port: 80, Protocol: utils.HTTPS})
+	bp.Add(ServicePort{Port: 80, Protocol: utils.ProtocolHTTPS})
 
 	// Verify the legacy health check has been deleted
 	_, err = hcp.GetHttpHealthCheck(beName)
@@ -332,8 +337,8 @@ func TestBackendPoolDeleteLegacyHealthChecks(t *testing.T) {
 	}
 
 	// Verify the newer health check is of type HTTPS
-	if hcNew.Type != string(utils.HTTPS) {
-		t.Fatalf("expected health check type to be %v, actual %v", string(utils.HTTPS), hcNew.Type)
+	if hcNew.Type != string(utils.ProtocolHTTPS) {
+		t.Fatalf("expected health check type to be %v, actual %v", string(utils.ProtocolHTTPS), hcNew.Type)
 	}
 }
 
@@ -435,7 +440,7 @@ func TestBackendCreateBalancingMode(t *testing.T) {
 
 func TestApplyProbeSettingsToHC(t *testing.T) {
 	p := "healthz"
-	hc := healthchecks.DefaultHealthCheck(8080, utils.HTTPS)
+	hc := healthchecks.DefaultHealthCheck(8080, utils.ProtocolHTTPS)
 	probe := &api_v1.Probe{
 		Handler: api_v1.Handler{
 			HTTPGet: &api_v1.HTTPGetAction{
@@ -451,7 +456,7 @@ func TestApplyProbeSettingsToHC(t *testing.T) {
 
 	applyProbeSettingsToHC(probe, hc)
 
-	if hc.Protocol() != utils.HTTPS || hc.Port != 8080 {
+	if hc.Protocol() != utils.ProtocolHTTPS || hc.Port != 8080 {
 		t.Errorf("Basic HC settings changed")
 	}
 	if hc.RequestPath != "/"+p {

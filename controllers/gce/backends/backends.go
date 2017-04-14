@@ -157,15 +157,15 @@ func (b *Backends) Get(port int64) (*compute.BackendService, error) {
 	return be, nil
 }
 
-func (b *Backends) ensureHealthCheck(port int64, protocol utils.AppProtocol) (string, error) {
-	hc := b.healthChecker.New(port, protocol)
+func (b *Backends) ensureHealthCheck(sp ServicePort) (string, error) {
+	hc := b.healthChecker.New(sp.Port, sp.Protocol)
 	if b.prober != nil {
-		probe, err := b.prober.GetProbe(port)
+		probe, err := b.prober.GetProbe(sp)
 		if err != nil {
 			return "", err
 		}
 		if probe != nil {
-			glog.Infof("Applying httpGet settings of readinessProbe to health check on port %v", port)
+			glog.V(1).Infof("Applying httpGet settings of readinessProbe to health check on port %+v", sp)
 			applyProbeSettingsToHC(probe, hc)
 		}
 	}
@@ -237,7 +237,7 @@ func (b *Backends) Add(p ServicePort) error {
 	}
 
 	// Ensure health check for backend service exists
-	hcLink, err := b.ensureHealthCheck(p.Port, p.Protocol)
+	hcLink, err := b.ensureHealthCheck(p)
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func (b *Backends) Add(p ServicePort) error {
 	pName := b.namer.BeName(p.Port)
 	be, _ = b.Get(p.Port)
 	if be == nil {
-		glog.Infof("Creating backend for %d instance groups, port %v named port %v", len(igs), p.Port, namedPort)
+		glog.V(1).Infof("Creating backend for %d instance groups, port %v named port %v", len(igs), p.Port, namedPort)
 		be, err = b.create(igs, namedPort, hcLink, p.Protocol, pName)
 		if err != nil {
 			return err
@@ -421,20 +421,12 @@ func applyProbeSettingsToHC(p *api_v1.Probe, hc *healthchecks.HealthCheck) {
 	healthPath := p.Handler.HTTPGet.Path
 	// GCE requires a leading "/" for health check urls.
 	if !strings.HasPrefix(healthPath, "/") {
-		healthPath = fmt.Sprintf("/%v", healthPath)
+		healthPath = "/" + healthPath
 	}
 
-	host := p.Handler.HTTPGet.Host
-	// remember the ingresses that use this Service so we can send
-	// the right events
-
 	hc.RequestPath = healthPath
-	hc.Host = host
+	hc.Host = p.Handler.HTTPGet.Host
 	hc.Description = "Kubernetes L7 health check generated with readiness probe settings."
-	// set a low health threshold and a high failure threshold.
-	// We're just trying to detect if the node networking is
-	// borked, service level outages will get detected sooner
-	// by kube-proxy.
 	hc.CheckIntervalSec = int64(p.PeriodSeconds + healthchecks.DefaultHealthCheckInterval)
 	hc.TimeoutSec = int64(p.TimeoutSeconds)
 }

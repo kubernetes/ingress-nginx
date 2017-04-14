@@ -27,6 +27,10 @@ import (
 )
 
 const (
+	// These values set a low health threshold and a high failure threshold.
+	// We're just trying to detect if the node networking is
+	// borked, service level outages will get detected sooner
+	// by kube-proxy.
 	// DefaultHealthCheckInterval defines how frequently a probe runs
 	DefaultHealthCheckInterval = 60
 	// DefaultHealthyThreshold defines the threshold of success probes that declare a backend "healthy"
@@ -173,9 +177,9 @@ func NewHealthCheck(hc *compute.HealthCheck) *HealthCheck {
 
 	v := &HealthCheck{HealthCheck: *hc}
 	switch utils.AppProtocol(hc.Type) {
-	case utils.HTTP:
+	case utils.ProtocolHTTP:
 		v.HTTPHealthCheck = *hc.HttpHealthCheck
-	case utils.HTTPS:
+	case utils.ProtocolHTTPS:
 		// HTTPHealthCheck and HTTPSHealthChecks have identical fields
 		v.HTTPHealthCheck = compute.HTTPHealthCheck(*hc.HttpsHealthCheck)
 	}
@@ -201,9 +205,9 @@ func (hc *HealthCheck) Out() *compute.HealthCheck {
 	hc.HealthCheck.HttpHealthCheck = nil
 
 	switch hc.Protocol() {
-	case utils.HTTP:
+	case utils.ProtocolHTTP:
 		hc.HealthCheck.HttpHealthCheck = &hc.HTTPHealthCheck
-	case utils.HTTPS:
+	case utils.ProtocolHTTPS:
 		https := compute.HTTPSHealthCheck(hc.HTTPHealthCheck)
 		hc.HealthCheck.HttpsHealthCheck = &https
 	}

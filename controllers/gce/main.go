@@ -233,7 +233,7 @@ func main() {
 			*defaultSvc, err)
 	}
 	// The default backend is known to be HTTP
-	defaultBackendNodePort := backends.ServicePort{Port: nodePort, Protocol: utils.HTTP}
+	defaultBackendNodePort := backends.ServicePort{Port: nodePort, Protocol: utils.ProtocolHTTP}
 
 	if *inCluster || *useRealCloud {
 		// Create cluster manager

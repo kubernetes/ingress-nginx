@@ -139,7 +139,7 @@ func (svc svcAnnotations) ApplicationProtocols() (map[string]utils.AppProtocol, 
 	// Verify protocol is an accepted value
 	for _, proto := range portToProtos {
 		switch proto {
-		case utils.HTTP, utils.HTTPS:
+		case utils.ProtocolHTTP, utils.ProtocolHTTPS:
 		default:
 			return nil, fmt.Errorf("unexpected port application protocol: %v", proto)
 		}
@@ -457,7 +457,7 @@ PortLoop:
 		return invalidPort, errorNodePortNotFound{be, fmt.Errorf("could not find matching nodeport from service")}
 	}
 
-	proto := utils.HTTP
+	proto := utils.ProtocolHTTP
 	if protoStr, exists := appProtocols[port.Name]; exists {
 		proto = utils.AppProtocol(protoStr)
 	}
@@ -536,7 +536,7 @@ func (t *GCETranslator) ListZones() ([]string, error) {
 
 // geHTTPProbe returns the http readiness probe from the first container
 // that matches targetPort, from the set of pods matching the given labels.
-func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOrString) (*api_v1.Probe, error) {
+func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOrString, protocol utils.AppProtocol) (*api_v1.Probe, error) {
 	l := svc.Spec.Selector
 
 	// Lookup any container with a matching targetPort from the set of pods
@@ -555,9 +555,10 @@ func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOr
 		}
 		logStr := fmt.Sprintf("Pod %v matching service selectors %v (targetport %+v)", pod.Name, l, targetPort)
 		for _, c := range pod.Spec.Containers {
-			if !isSimpleHTTPProbe(c.ReadinessProbe) {
+			if !isSimpleHTTPProbe(c.ReadinessProbe) || string(protocol) != string(c.ReadinessProbe.HTTPGet.Scheme) {
 				continue
 			}
+
 			for _, p := range c.Ports {
 				if (targetPort.Type == intstr.Int && targetPort.IntVal == p.ContainerPort) ||
 					(targetPort.Type == intstr.String && targetPort.StrVal == p.Name) {
@@ -593,7 +594,7 @@ func isSimpleHTTPProbe(probe *api_v1.Probe) bool {
 }
 
 // GetProbe returns a probe that's used for the given nodeport
-func (t *GCETranslator) GetProbe(port int64) (*api_v1.Probe, error) {
+func (t *GCETranslator) GetProbe(port backends.ServicePort) (*api_v1.Probe, error) {
 	sl := t.svcLister.List()
 
 	// Find the label and target port of the one service with the given nodePort
@@ -607,7 +608,7 @@ OuterLoop:
 			svcPort = sp
 			// only one Service can match this nodePort, try and look up
 			// the readiness probe of the pods behind it
-			if int32(port) == sp.NodePort {
+			if int32(port.Port) == sp.NodePort {
 				found = true
 				break OuterLoop
 			}
@@ -618,7 +619,7 @@ OuterLoop:
 		return nil, fmt.Errorf("unable to find nodeport %v in any service", port)
 	}
 
-	return t.getHTTPProbe(service, svcPort.TargetPort)
+	return t.getHTTPProbe(service, svcPort.TargetPort, port.Protocol)
 }
 
 // PodsByCreationTimestamp sorts a list of Pods by creation timestamp, using their names as a tie breaker.

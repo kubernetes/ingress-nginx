@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	testDefaultBeNodePort = backends.ServicePort{Port: 3000, Protocol: utils.HTTP}
+	testDefaultBeNodePort = backends.ServicePort{Port: 3000, Protocol: utils.ProtocolHTTP}
 	testBackendPort       = intstr.IntOrString{Type: intstr.Int, IntVal: 80}
 )
 

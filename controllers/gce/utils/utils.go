@@ -80,10 +80,10 @@ const (
 	// debug information in the Ingress annotations.
 	K8sAnnotationPrefix = "ingress.kubernetes.io"
 
-	// HTTP protocol for a service
-	HTTP AppProtocol = "HTTP"
-	// HTTPS protocol for a service
-	HTTPS AppProtocol = "HTTPS"
+	// ProtocolHTTP protocol for a service
+	ProtocolHTTP AppProtocol = "HTTP"
+	// ProtocolHTTPS protocol for a service
+	ProtocolHTTPS AppProtocol = "HTTPS"
 )
 
 type AppProtocol string
