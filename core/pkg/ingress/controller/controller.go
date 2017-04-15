@@ -119,6 +119,9 @@ type Configuration struct {
 	IngressClass   string
 	Namespace      string
 	ConfigMapName  string
+
+	ForceNamespaceIsolation bool
+
 	// optional
 	TCPConfigMapName string
 	// optional
@@ -246,6 +249,11 @@ func newIngressController(config *Configuration) *GenericController {
 		},
 	}
 
+	watchNs := api.NamespaceAll
+	if ic.cfg.ForceNamespaceIsolation && ic.cfg.Namespace != api.NamespaceAll {
+		watchNs = ic.cfg.Namespace
+	}
+
 	ic.ingLister.Store, ic.ingController = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.Extensions().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
 		&extensions.Ingress{}, ic.cfg.ResyncPeriod, ingEventHandler)
@@ -255,11 +263,11 @@ func newIngressController(config *Configuration) *GenericController {
 		&api.Endpoints{}, ic.cfg.ResyncPeriod, eventHandler)
 
 	ic.secrLister.Store, ic.secrController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "secrets", api.NamespaceAll, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "secrets", watchNs, fields.Everything()),
 		&api.Secret{}, ic.cfg.ResyncPeriod, secrEventHandler)
 
 	ic.mapLister.Store, ic.mapController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "configmaps", api.NamespaceAll, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "configmaps", watchNs, fields.Everything()),
 		&api.ConfigMap{}, ic.cfg.ResyncPeriod, mapEventHandler)
 
 	ic.svcLister.Store, ic.svcController = cache.NewInformer(
