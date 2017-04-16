@@ -17,6 +17,7 @@ limitations under the License.
 package status
 
 import (
+	"fmt"
 	"net"
 	"sort"
 	"sync"
@@ -187,7 +188,14 @@ func NewStatusSyncer(config Config) Sync {
 	}
 	st.syncQueue = task.NewCustomTaskQueue(st.sync, st.keyfunc)
 
-	le, err := NewElection(config.ElectionID,
+	// we need to use the defined ingress class to allow multiple leaders
+	// in order to update information about ingress status
+	id := fmt.Sprintf("%v-%v", config.ElectionID, config.DefaultIngressClass)
+	if config.IngressClass != "" {
+		id = fmt.Sprintf("%v-%v", config.ElectionID, config.IngressClass)
+	}
+
+	le, err := NewElection(id,
 		pod.Name, pod.Namespace, 30*time.Second,
 		st.callback, config.Client)
 	if err != nil {
