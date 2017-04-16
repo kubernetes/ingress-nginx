@@ -254,7 +254,7 @@ func buildProxyPass(b interface{}, loc interface{}) string {
 
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
-			if backend.Secure {
+			if backend.Secure || backend.SSLPassthrough {
 				proto = "https"
 			}
 			break
