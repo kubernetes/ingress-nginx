@@ -128,24 +128,7 @@ cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 echo "Applying tls nginx patches..."
 patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
 
-CC_OPT='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64'
-if [[ ${ARCH} == "x86_64" ]]; then
-  CC_OPT+=' -mtune=generic'
-fi
-
-./configure \
-  --prefix=/usr/share/nginx \
-  --conf-path=/etc/nginx/nginx.conf \
-  --http-log-path=/var/log/nginx/access.log \
-  --error-log-path=/var/log/nginx/error.log \
-  --lock-path=/var/lock/nginx.lock \
-  --pid-path=/run/nginx.pid \
-  --http-client-body-temp-path=/var/lib/nginx/body \
-  --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
-  --http-proxy-temp-path=/var/lib/nginx/proxy \
-  --http-scgi-temp-path=/var/lib/nginx/scgi \
-  --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
-  --with-debug \
+WITH_FLAGS="--with-debug \
   --with-pcre-jit \
   --with-http_ssl_module \
   --with-http_stub_status_module \
@@ -160,8 +143,31 @@ fi
   --with-stream \
   --with-stream_ssl_module \
   --with-stream_ssl_preread_module \
-  --with-threads \
-  --with-file-aio \
+  --with-threads"
+
+if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
+  WITH_FLAGS+=" --with-file-aio"
+fi
+
+CC_OPT='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4'
+
+if [[ ${ARCH} == "x86_64" ]]; then
+  CC_OPT+=' -m64 -mtune=generic'
+fi
+
+./configure \
+  --prefix=/usr/share/nginx \
+  --conf-path=/etc/nginx/nginx.conf \
+  --http-log-path=/var/log/nginx/access.log \
+  --error-log-path=/var/log/nginx/error.log \
+  --lock-path=/var/lock/nginx.lock \
+  --pid-path=/run/nginx.pid \
+  --http-client-body-temp-path=/var/lib/nginx/body \
+  --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
+  --http-proxy-temp-path=/var/lib/nginx/proxy \
+  --http-scgi-temp-path=/var/lib/nginx/scgi \
+  --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
+  ${WITH_FLAGS} \
   --without-mail_pop3_module \
   --without-mail_smtp_module \
   --without-mail_imap_module \

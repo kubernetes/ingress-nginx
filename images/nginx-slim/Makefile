@@ -27,9 +27,19 @@ MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 # Set default base image dynamically for each arch
 BASEIMAGE?=gcr.io/google_containers/ubuntu-slim-$(ARCH):0.9
 
+ifeq ($(ARCH),arm)
+        QEMUARCH=arm
+endif
+#ifeq ($(ARCH),arm64)
+#        QEMUARCH=aarch64
+#endif
 ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
 endif
+#ifeq ($(ARCH),s390x)
+#        QEMUARCH=s390x
+#endif
+
 
 TEMP_DIR := $(shell mktemp -d)
 
