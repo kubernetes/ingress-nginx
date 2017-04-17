@@ -473,6 +473,16 @@ http {
             {{ end }}
         }
     }
+    
+    {{- if $cfg.enableVtsStatus }}
+      server {
+           listen 18081 {{ if $cfg.useProxyProtocol -}} proxy_protocol {{ end -}} reuseport;
+            
+            location /nginx_status {
+                  proxy_pass http://127.0.0.1:18080;
+                }
+            }
+         {{ end -}}
 }
 
 stream {
