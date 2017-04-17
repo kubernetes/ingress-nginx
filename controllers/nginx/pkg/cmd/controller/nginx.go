@@ -53,6 +53,8 @@ const (
 
 	defaultStatusModule statusModule = "default"
 	vtsStatusModule     statusModule = "vts"
+
+	errNoChild = "wait: no child processes"
 )
 
 var (
@@ -326,7 +328,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 		return err
 	}
 	out, err := exec.Command(n.binary, "-t", "-c", tmpfile.Name()).CombinedOutput()
-	if err != nil {
+	if err != nil && err.Error() != errNoChild {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
 -------------------------------------------------------------------------------
@@ -497,7 +499,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 		})
 	}
 
-	glog.Infof("%v", servers)
 	n.proxy.ServerList = servers
 
 	return content, nil
