@@ -31,10 +31,24 @@ PUSH_TOOL ?= gcloud
 ifeq ($(ARCH),amd64)
 	BASEIMAGE?=ubuntu:16.04
 endif
+ifeq ($(ARCH),arm)
+	BASEIMAGE?=armhf/ubuntu:16.04
+	QEMUARCH=arm
+endif
+ifeq ($(ARCH),arm64)
+	BASEIMAGE?=aarch64/ubuntu:16.04
+	QEMUARCH=aarch64
+endif
 ifeq ($(ARCH),ppc64le)
 	BASEIMAGE?=ppc64le/ubuntu:16.04
 	QEMUARCH=ppc64le
 endif
+
+#ifeq ($(ARCH),s390x)
+#	BASEIMAGE?=s390x/ubuntu:16.04
+#	QEMUARCH=s390x
+#endif
+
 
 TEMP_DIR := $(shell mktemp -d)
 
