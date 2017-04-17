@@ -39,6 +39,7 @@ import (
 const (
 	slash         = "/"
 	defBufferSize = 65535
+	errNoChild    = "wait: no child processes"
 )
 
 // Template ...
@@ -100,7 +101,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	}
 
 	err := t.tmpl.Execute(t.tmplBuf, conf)
-	if err != nil {
+	if err != nil && err.Error() != errNoChild {
 		return nil, err
 	}
 
@@ -110,7 +111,10 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	cmd.Stdin = t.tmplBuf
 	cmd.Stdout = t.outCmdBuf
 	if err := cmd.Run(); err != nil {
-		glog.Warningf("unexpected error cleaning template: %v", err)
+		if err.Error() != errNoChild {
+			glog.Warningf("unexpected error cleaning template: %v", err)
+		}
+
 		return t.tmplBuf.Bytes(), nil
 	}
 
