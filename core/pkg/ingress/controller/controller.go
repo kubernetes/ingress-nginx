@@ -49,6 +49,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
+	"k8s.io/ingress/core/pkg/ingress/status/leaderelection/resourcelock"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/net/ssl"
@@ -211,6 +212,11 @@ func newIngressController(config *Configuration) *GenericController {
 
 	eventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
+			ep := obj.(*api.Endpoints)
+			_, found := ep.Annotations[resourcelock.LeaderElectionRecordAnnotationKey]
+			if found {
+				return
+			}
 			ic.syncQueue.Enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -218,6 +224,12 @@ func newIngressController(config *Configuration) *GenericController {
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
+				ep := cur.(*api.Endpoints)
+				_, found := ep.Annotations[resourcelock.LeaderElectionRecordAnnotationKey]
+				if found {
+					return
+				}
+
 				ic.syncQueue.Enqueue(cur)
 			}
 		},
@@ -276,7 +288,7 @@ func newIngressController(config *Configuration) *GenericController {
 
 	ic.nodeLister.Store, ic.nodeController = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "nodes", api.NamespaceAll, fields.Everything()),
-		&api.Node{}, ic.cfg.ResyncPeriod, eventHandler)
+		&api.Node{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	if config.UpdateStatus {
 		ic.syncStatus = status.NewStatusSyncer(status.Config{
@@ -1137,7 +1149,7 @@ func (ic GenericController) Start() {
 	go ic.secrController.Run(ic.stopCh)
 	go ic.mapController.Run(ic.stopCh)
 
-	go ic.syncQueue.Run(5*time.Second, ic.stopCh)
+	go ic.syncQueue.Run(10*time.Second, ic.stopCh)
 
 	go wait.Forever(ic.syncSecret, 10*time.Second)
 
