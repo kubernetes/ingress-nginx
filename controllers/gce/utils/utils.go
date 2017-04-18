@@ -80,15 +80,13 @@ const (
 	// debug information in the Ingress annotations.
 	K8sAnnotationPrefix = "ingress.kubernetes.io"
 
-	// DefaultHealthCheckInterval defines how frequently a probe runs
-	DefaultHealthCheckInterval = 60
-	// DefaultHealthyThreshold defines the threshold of success probes that declare a backend "healthy"
-	DefaultHealthyThreshold = 1
-	// DefaultUnhealthyThreshold defines the threshold of failure probes that declare a backend "unhealthy"
-	DefaultUnhealthyThreshold = 10
-	// DefaultTimeoutSeconds defines the timeout of each probe
-	DefaultTimeoutSeconds = 60
+	// ProtocolHTTP protocol for a service
+	ProtocolHTTP AppProtocol = "HTTP"
+	// ProtocolHTTPS protocol for a service
+	ProtocolHTTPS AppProtocol = "HTTPS"
 )
+
+type AppProtocol string
 
 // Namer handles centralized naming for the cluster.
 type Namer struct {
@@ -333,22 +331,3 @@ func CompareLinks(l1, l2 string) bool {
 // FakeIngressRuleValueMap is a convenience type used by multiple submodules
 // that share the same testing methods.
 type FakeIngressRuleValueMap map[string]string
-
-// DefaultHealthCheckTemplate simply returns the default health check template.
-func DefaultHealthCheckTemplate(port int64) *compute.HttpHealthCheck {
-	return &compute.HttpHealthCheck{
-		Port: port,
-		// Empty string is used as a signal to the caller to use the appropriate
-		// default.
-		RequestPath: "",
-		Description: "Default kubernetes L7 Loadbalancing health check.",
-		// How often to health check.
-		CheckIntervalSec: DefaultHealthCheckInterval,
-		// How long to wait before claiming failure of a health check.
-		TimeoutSec: DefaultTimeoutSeconds,
-		// Number of healthchecks to pass for a vm to be deemed healthy.
-		HealthyThreshold: DefaultHealthyThreshold,
-		// Number of healthchecks to fail before the vm is deemed unhealthy.
-		UnhealthyThreshold: DefaultUnhealthyThreshold,
-	}
-}

@@ -70,7 +70,7 @@ type L7s struct {
 	// TODO: Remove this field and always ask the BackendPool using the NodePort.
 	glbcDefaultBackend     *compute.BackendService
 	defaultBackendPool     backends.BackendPool
-	defaultBackendNodePort int64
+	defaultBackendNodePort backends.ServicePort
 	namer                  *utils.Namer
 }
 
@@ -84,7 +84,7 @@ type L7s struct {
 func NewLoadBalancerPool(
 	cloud LoadBalancers,
 	defaultBackendPool backends.BackendPool,
-	defaultBackendNodePort int64, namer *utils.Namer) LoadBalancerPool {
+	defaultBackendNodePort backends.ServicePort, namer *utils.Namer) LoadBalancerPool {
 	return &L7s{cloud, storage.NewInMemoryPool(), nil, defaultBackendPool, defaultBackendNodePort, namer}
 }
 
@@ -172,7 +172,7 @@ func (l *L7s) Sync(lbs []*L7RuntimeInfo) error {
 		if err := l.defaultBackendPool.Add(l.defaultBackendNodePort); err != nil {
 			return err
 		}
-		defaultBackend, err := l.defaultBackendPool.Get(l.defaultBackendNodePort)
+		defaultBackend, err := l.defaultBackendPool.Get(l.defaultBackendNodePort.Port)
 		if err != nil {
 			return err
 		}
@@ -209,7 +209,7 @@ func (l *L7s) GC(names []string) error {
 	// This needs to happen after we've deleted all url-maps that might be
 	// using it.
 	if len(names) == 0 {
-		if err := l.defaultBackendPool.Delete(l.defaultBackendNodePort); err != nil {
+		if err := l.defaultBackendPool.Delete(l.defaultBackendNodePort.Port); err != nil {
 			return err
 		}
 		l.glbcDefaultBackend = nil

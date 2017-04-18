@@ -18,27 +18,28 @@ package healthchecks
 
 import (
 	compute "google.golang.org/api/compute/v1"
+
+	"k8s.io/ingress/controllers/gce/utils"
 )
 
-// healthCheckGetter retrieves health checks.
-type healthCheckGetter interface {
-	// HealthCheck returns the HTTP readiness check for a node port.
-	HealthCheck(nodePort int64) (*compute.HttpHealthCheck, error)
-}
-
-// SingleHealthCheck is an interface to manage a single GCE health check.
-type SingleHealthCheck interface {
+// HealthCheckProvider is an interface to manage a single GCE health check.
+type HealthCheckProvider interface {
 	CreateHttpHealthCheck(hc *compute.HttpHealthCheck) error
 	UpdateHttpHealthCheck(hc *compute.HttpHealthCheck) error
 	DeleteHttpHealthCheck(name string) error
 	GetHttpHealthCheck(name string) (*compute.HttpHealthCheck, error)
+
+	CreateHealthCheck(hc *compute.HealthCheck) error
+	UpdateHealthCheck(hc *compute.HealthCheck) error
+	DeleteHealthCheck(name string) error
+	GetHealthCheck(name string) (*compute.HealthCheck, error)
 }
 
 // HealthChecker is an interface to manage cloud HTTPHealthChecks.
 type HealthChecker interface {
-	Init(h healthCheckGetter)
-
-	Add(port int64) error
+	New(port int64, protocol utils.AppProtocol) *HealthCheck
+	Sync(hc *HealthCheck) (string, error)
 	Delete(port int64) error
-	Get(port int64) (*compute.HttpHealthCheck, error)
+	Get(port int64) (*HealthCheck, error)
+	DeleteLegacy(port int64) error
 }
