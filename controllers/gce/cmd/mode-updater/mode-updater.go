@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/golang/glog"
@@ -125,8 +124,14 @@ func main() {
 	}
 
 	bs := getBackendServices()
-	fmt.Println("Backend Services:", len(bs))
-	fmt.Println("Instance Groups:", len(igs))
+	fmt.Println("Backend Services:")
+	for _, b := range bs {
+		fmt.Println(" - ", b.Name)
+	}
+	fmt.Println("Instance Groups:")
+	for z, g := range igs {
+		fmt.Printf(" - %v (%v)\n", g.Name, z)
+	}
 
 	// Early return for special cases
 	switch len(bs) {
@@ -156,6 +161,7 @@ func main() {
 }
 
 func updateMultipleBackends() {
+	fmt.Println("Creating temporary instance groups in relevant zones")
 	// Create temoprary instance groups
 	for zone, ig := range igs {
 		_, err := s.InstanceGroups.Get(projectID, zone, instanceGroupTemp).Do()
@@ -165,7 +171,7 @@ func updateMultipleBackends() {
 				Zone:       zone,
 				NamedPorts: ig.NamedPorts,
 			}
-			fmt.Println("Creating", instanceGroupTemp, "zone:", zone)
+			fmt.Printf(" - %v (%v)\n", instanceGroupTemp, zone)
 			op, err := s.InstanceGroups.Insert(projectID, zone, newIg).Do()
 			if err != nil {
 				panic(err)
@@ -178,28 +184,29 @@ func updateMultipleBackends() {
 	}
 
 	// Straddle both groups
-	fmt.Println("Straddle both groups in backend services")
+	fmt.Println("Update backend services to point to original and temporary instance groups")
 	setBackendsTo(true, balancingModeInverse(targetBalancingMode), true, balancingModeInverse(targetBalancingMode))
 
 	fmt.Println("Migrate instances to temporary group")
 	migrateInstances(instanceGroupName, instanceGroupTemp)
 
 	// Remove original backends to get rid of old balancing mode
-	fmt.Println("Remove original backends")
+	fmt.Println("Update backend services to point only to temporary instance groups")
 	setBackendsTo(false, "", true, balancingModeInverse(targetBalancingMode))
 
 	// Straddle both groups (creates backend services to original groups with target mode)
-	fmt.Println("Create backends pointing to original instance groups")
+	fmt.Println("Update backend services to point to both temporary and original (with new balancing mode) instance groups")
 	setBackendsTo(true, targetBalancingMode, true, balancingModeInverse(targetBalancingMode))
 
 	fmt.Println("Migrate instances back to original groups")
 	migrateInstances(instanceGroupTemp, instanceGroupName)
 
-	fmt.Println("Remove temporary backends")
+	fmt.Println("Update backend services to point only to original instance groups")
 	setBackendsTo(true, targetBalancingMode, false, "")
 
 	fmt.Println("Delete temporary instance groups")
 	for z := range igs {
+		fmt.Printf(" - %v (%v)\n", instanceGroupTemp, z)
 		op, err := s.InstanceGroups.Delete(projectID, z, instanceGroupTemp).Do()
 		if err != nil {
 			fmt.Println("Couldn't delete temporary instance group", instanceGroupTemp)
@@ -209,11 +216,6 @@ func updateMultipleBackends() {
 			fmt.Println("Couldn't wait for operation: deleting temporary instance group", instanceGroupName)
 		}
 	}
-}
-
-func sleep(d time.Duration) {
-	fmt.Println("Sleeping for", d.String())
-	time.Sleep(d)
 }
 
 func setBackendsTo(orig bool, origMode string, temp bool, tempMode string) {
@@ -241,6 +243,7 @@ func setBackendsTo(orig bool, origMode string, temp bool, tempMode string) {
 			}
 		}
 		bsi.Backends = union
+		fmt.Printf(" - %v\n", bsi.Name)
 		op, err := s.BackendServices.Update(projectID, bsi.Name, bsi).Do()
 		if err != nil {
 			panic(err)
@@ -286,38 +289,33 @@ func typeOfBackends(bs []*compute.BackendService) string {
 }
 
 func migrateInstances(fromIG, toIG string) error {
-	wg := sync.WaitGroup{}
 	for _, i := range instances {
-		wg.Add(1)
-		go func(i *compute.Instance) {
-			z := getResourceName(i.Zone, "zones")
-			fmt.Printf(" - %s (%s)\n", i.Name, z)
-			rr := &compute.InstanceGroupsRemoveInstancesRequest{Instances: []*compute.InstanceReference{{Instance: i.SelfLink}}}
-			op, err := s.InstanceGroups.RemoveInstances(projectID, z, fromIG, rr).Do()
-			if err != nil {
-				fmt.Println("Skipping error when removing instance from group", err)
-			}
+		z := getResourceName(i.Zone, "zones")
+		fmt.Printf(" - %s (%s): ", i.Name, z)
+		rr := &compute.InstanceGroupsRemoveInstancesRequest{Instances: []*compute.InstanceReference{{Instance: i.SelfLink}}}
+		op, err := s.InstanceGroups.RemoveInstances(projectID, z, fromIG, rr).Do()
+		if err != nil {
+			fmt.Println("Skipping error when removing instance from group", err)
+		}
 
-			if err = waitForZoneOp(op, z); err != nil {
-				fmt.Println("Failed to wait for operation: removing instance from group", err)
-			}
+		if err = waitForZoneOp(op, z); err != nil {
+			fmt.Println("Failed to wait for operation: removing instance from group", err)
+		}
+		fmt.Printf("removed from %v, ", fromIG)
 
-			ra := &compute.InstanceGroupsAddInstancesRequest{Instances: []*compute.InstanceReference{{Instance: i.SelfLink}}}
-			op, err = s.InstanceGroups.AddInstances(projectID, z, toIG, ra).Do()
-			if err != nil {
-				if !strings.Contains(err.Error(), "memberAlreadyExists") { // GLBC already added the instance back to the IG
-					fmt.Println("failed to add instance to new IG", i.Name, err)
-				}
+		ra := &compute.InstanceGroupsAddInstancesRequest{Instances: []*compute.InstanceReference{{Instance: i.SelfLink}}}
+		op, err = s.InstanceGroups.AddInstances(projectID, z, toIG, ra).Do()
+		if err != nil {
+			if !strings.Contains(err.Error(), "memberAlreadyExists") { // GLBC already added the instance back to the IG
+				fmt.Println("failed to add instance to new IG", i.Name, err)
 			}
+		}
 
-			if err = waitForZoneOp(op, z); err != nil {
-				fmt.Println("Failed to wait for operation: adding instance to group", err)
-			}
-			wg.Done()
-		}(i)
-		time.Sleep(10 * time.Second)
+		if err = waitForZoneOp(op, z); err != nil {
+			fmt.Println("Failed to wait for operation: adding instance to group", err)
+		}
+		fmt.Printf("added to %v\n", toIG)
 	}
-	wg.Wait()
 	return nil
 }
 
@@ -383,6 +381,8 @@ func getIGClusterIds() []string {
 	}
 	return ids
 }
+
+// Below operations are copied from the GCE CloudProvider and modified to be static
 
 func waitForOp(op *compute.Operation, getOperation func(operationName string) (*compute.Operation, error)) error {
 	if op == nil {
