@@ -1,6 +1,6 @@
 # GCE Ingress controller FAQ
 
-This page contains general FAQ for the gce Ingress controller.
+This page contains general FAQ for the GCE Ingress controller.
 
 Table of Contents
 =================
@@ -25,6 +25,7 @@ Table of Contents
 * [How do I disable the GCE Ingress controller?](#how-do-i-disable-the-gce-ingress-controller)
 * [What GCE resources are shared between Ingresses?](#what-gce-resources-are-shared-between-ingresses)
 * [How do I debug a controller spin loop?](#host-do-i-debug-a-controller-spinloop)
+* [Creating an Internal Load Balancer without existing ingress](#creating-an-internal-load-balancer-without-existing-ingress)
 
 
 ## How do I deploy an Ingress controller?
@@ -348,7 +349,7 @@ when syncing a shared resource.
 
 ## Creating an Internal Load Balancer without existing ingress
 **How the GCE ingress controller Works**  
-To assemble an L7 Load Balancer, the ingress controller creates an [unmanaged instance-group](https://cloud.google.com/compute/docs/instance-groups/creating-groups-of-unmanaged-instances) named `k8s-ig--{UID}` and adds every known non-master node to the group. For every service specified in all ingresses, a backend service is created to point to that instance group.
+To assemble an L7 Load Balancer, the ingress controller creates an [unmanaged instance-group](https://cloud.google.com/compute/docs/instance-groups/creating-groups-of-unmanaged-instances) named `k8s-ig--{UID}` and adds every known minion node to the group. For every service specified in all ingresses, a backend service is created to point to that instance group.
 
 **How the Internal Load Balancer Works**  
 K8s does not yet assemble ILB's for you, but you can manually create one via the GCP Console. The ILB is composed of a regional forwarding rule and a regional backend service. Similar to the L7 LB, the backend-service points to an unmanaged instance-group containing your K8s nodes.
@@ -375,7 +376,7 @@ gcloud compute instance-groups unmanaged create $GROUPNAME --zone {ZONE}
 # Look at your list of your nodes
 kubectl get nodes
 
-# Add NON-MASTER nodes that exist in zone X to the instance group in zone X.
+# Add minion nodes that exist in zone X to the instance group in zone X. (Do not add the master!)
 gcloud compute instance-groups unmanaged add-instances $GROUPNAME --zone {ZONE} --instances=A,B,C...
 ```
 You can now follow the GCP Console wizard for creating an internal load balancer and point to the `k8s-ig--{UID}` instance group.
