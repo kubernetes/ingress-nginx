@@ -36,15 +36,14 @@ const (
 	balancingModeRATE = "RATE"
 	balancingModeUTIL = "UTILIZATION"
 
-	operationPollInterval = 3 * time.Second
-	// Creating Route in very large clusters, may take more than half an hour.
+	operationPollInterval        = 3 * time.Second
 	operationPollTimeoutDuration = time.Hour
-	version                      = 0.1
+
+	version = 0.1
 )
 
 func main() {
 	fmt.Println("Backend-Service BalancingMode Updater", version)
-	//flag.Usage
 	flag.Parse()
 
 	args := flag.Args()

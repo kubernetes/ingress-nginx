@@ -41,6 +41,50 @@ go run main.go my-project us-central1 RATE
 go run main.go my-project us-central1 UTILIZATION
 ```
 
+**Example Run**
+```shell
+➜  go run mode-updater.go nicksardo-project us-central1 RATE    
+
+Backend-Service BalancingMode Updater 0.1
+Backend Services:
+ -  k8s-be-31165--c4424dd5f02d3cad
+ -  k8s-be-31696--c4424dd5f02d3cad
+Instance Groups:
+ - k8s-ig--c4424dd5f02d3cad (us-central1-a)
+
+Step 1: Creating temporary instance groups in relevant zones
+ - k8s-ig--migrate (us-central1-a)
+
+Step 2: Update backend services to point to original and temporary instance groups
+ - k8s-be-31165--c4424dd5f02d3cad
+ - k8s-be-31696--c4424dd5f02d3cad
+
+Step 3: Migrate instances to temporary group
+ - kubernetes-minion-group-f060 (us-central1-a): removed from k8s-ig--c4424dd5f02d3cad, added to k8s-ig--migrate
+ - kubernetes-minion-group-pnbl (us-central1-a): removed from k8s-ig--c4424dd5f02d3cad, added to k8s-ig--migrate
+ - kubernetes-minion-group-t6dl (us-central1-a): removed from k8s-ig--c4424dd5f02d3cad, added to k8s-ig--migrate
+
+Step 4: Update backend services to point only to temporary instance groups
+ - k8s-be-31165--c4424dd5f02d3cad
+ - k8s-be-31696--c4424dd5f02d3cad
+
+Step 5: Update backend services to point to both temporary and original (with new balancing mode) instance groups
+ - k8s-be-31165--c4424dd5f02d3cad
+ - k8s-be-31696--c4424dd5f02d3cad
+
+Step 6: Migrate instances back to original groups
+ - kubernetes-minion-group-f060 (us-central1-a): removed from k8s-ig--migrate, added to k8s-ig--c4424dd5f02d3cad
+ - kubernetes-minion-group-pnbl (us-central1-a): removed from k8s-ig--migrate, added to k8s-ig--c4424dd5f02d3cad
+ - kubernetes-minion-group-t6dl (us-central1-a): removed from k8s-ig--migrate, added to k8s-ig--c4424dd5f02d3cad
+
+Step 7: Update backend services to point only to original instance groups
+ - k8s-be-31165--c4424dd5f02d3cad
+ - k8s-be-31696--c4424dd5f02d3cad
+
+Step 8: Delete temporary instance groups
+ - k8s-ig--migrate (us-central1-a)
+```
+
 #### How the updater works
 1. Create temporary instance groups `k8s-ig-migrate` in each zone where a `k8s-ig-{cluster_id}` exists.
 1. Update all backend-services to point to both original and temporary instance groups (mode of the new backend doesn't matter)
