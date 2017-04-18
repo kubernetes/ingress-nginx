@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -20,6 +19,7 @@ import (
 
 var (
 	projectID           string
+	clusterID           string
 	regionName          string
 	targetBalancingMode string
 
@@ -47,10 +47,10 @@ func main() {
 	flag.Parse()
 
 	args := flag.Args()
-	if len(args) != 3 {
-		log.Fatalf("Expected three arguments: project_id region balancing_mode")
+	if len(args) != 4 {
+		log.Fatalf("Expected four arguments: project_id cluster_id region balancing_mode")
 	}
-	projectID, regionName, targetBalancingMode = args[0], args[1], args[2]
+	projectID, clusterID, regionName, targetBalancingMode = args[0], args[1], args[2], args[3]
 
 	switch targetBalancingMode {
 	case balancingModeRATE, balancingModeUTIL:
@@ -82,6 +82,12 @@ func main() {
 	}
 	zones = zoneList.Items
 
+	if len(zones) == 0 {
+		panic(fmt.Errorf("Expected at least one zone in region: %v", regionName))
+	}
+
+	instanceGroupName = fmt.Sprintf("k8s-ig--%s", clusterID)
+
 	// Get instance groups
 	for _, z := range zones {
 		igl, err := s.InstanceGroups.List(projectID, z.Name).Do()
@@ -89,12 +95,8 @@ func main() {
 			panic(err)
 		}
 		for _, ig := range igl.Items {
-			if !strings.HasPrefix(ig.Name, "k8s-ig--") {
+			if instanceGroupName != ig.Name {
 				continue
-			}
-
-			if instanceGroupName == "" {
-				instanceGroupName = ig.Name
 			}
 
 			// Note instances
@@ -118,8 +120,12 @@ func main() {
 		}
 	}
 
-	if instanceGroupName == "" {
-		panic(errors.New("Could not determine k8s load balancer instance group"))
+	if len(igs) == 0 {
+		panic(fmt.Errorf("Expected at least one instance group named: %v", instanceGroupName))
+	}
+
+	if len(instances) == 0 {
+		panic(fmt.Errorf("Expected at least one instance within instance group: %v", instanceGroupName))
 	}
 
 	bs := getBackendServices()
@@ -135,7 +141,7 @@ func main() {
 	// Early return for special cases
 	switch len(bs) {
 	case 0:
-		fmt.Println("There are 0 backend services - no action necessary")
+		fmt.Println("\nThere are 0 backend services - no action necessary")
 		return
 	case 1:
 		updateSingleBackend(bs[0])
@@ -144,14 +150,7 @@ func main() {
 
 	// Check there's work to be done
 	if typeOfBackends(bs) == targetBalancingMode {
-		fmt.Println("Backends are already set to target mode")
-		return
-	}
-
-	// Check no orphan instance groups will throw us off
-	clusters := getIGClusterIds()
-	if len(clusters) != 1 {
-		fmt.Println("Expecting only cluster of instance groups in GCE, found", clusters)
+		fmt.Println("\nBackends are already set to target mode")
 		return
 	}
 
@@ -273,7 +272,7 @@ func getBackendServices() (bs []*compute.BackendService) {
 
 	for _, bsli := range bsl.Items {
 		// Ignore regional backend-services and only grab Kubernetes resources
-		if bsli.Region == "" && strings.HasPrefix(bsli.Name, "k8s-be-") {
+		if bsli.Region == "" && strings.HasPrefix(bsli.Name, "k8s-be-") && strings.HasSuffix(bsli.Name, clusterID) {
 			bs = append(bs, bsli)
 		}
 	}
@@ -361,22 +360,6 @@ func updateSingleBackend(bs *compute.BackendService) {
 	}
 
 	fmt.Println("Updated single backend service to target balancing mode.")
-}
-
-func getIGClusterIds() []string {
-	clusterIds := make(map[string]struct{})
-	for _, ig := range igs {
-		s := strings.Split(ig.Name, "--")
-		if len(s) > 2 {
-			panic(fmt.Errorf("Expected two parts to instance group name, got %v", s))
-		}
-		clusterIds[s[1]] = struct{}{}
-	}
-	var ids []string
-	for v, _ := range clusterIds {
-		ids = append(ids, v)
-	}
-	return ids
 }
 
 // Below operations are copied from the GCE CloudProvider and modified to be static

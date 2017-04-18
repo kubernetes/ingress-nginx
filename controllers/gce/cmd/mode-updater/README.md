@@ -31,19 +31,21 @@ There are two GCP requirements that complicate changing the backend service bala
 
 #### How to run
 ```shell
-go run main.go {project-id} {region} {target-balance-mode}
+go run main.go {project-id} {cluster-id} {region} {target-balance-mode}
 
 #Examples
+# Fetch cluster id
+CLUSTERID=`kubectl get configmaps ingress-uid -o jsonpath='{.data.uid}' --namespace=kube-system`
 # for upgrading
-go run main.go my-project us-central1 RATE
+go run main.go my-project $CLUSTERID us-central1 RATE
 
 # for reversing
-go run main.go my-project us-central1 UTILIZATION
+go run main.go my-project $CLUSTERID us-central1 UTILIZATION
 ```
 
 **Example Run**
 ```shell
-➜  go run mode-updater.go nicksardo-project us-central1 RATE    
+➜  go run mode-updater.go nicksardo-project c4424dd5f02d3cad us-central1 RATE    
 
 Backend-Service BalancingMode Updater 0.1
 Backend Services:
@@ -102,7 +104,7 @@ Step 8: Delete temporary instance groups
 #### TODO
 - [x] If only one backend-service exists, just update it in place.
 - [x] If all backend-services are already the target balancing mode, early return.
-- [ ] Wait for op completion instead of sleeping
+- [x] Wait for op completion instead of sleeping
 - [ ] Adjust warning
 
 #### Warning
