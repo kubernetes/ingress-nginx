@@ -427,6 +427,6 @@ func applyProbeSettingsToHC(p *api_v1.Probe, hc *healthchecks.HealthCheck) {
 	hc.RequestPath = healthPath
 	hc.Host = p.Handler.HTTPGet.Host
 	hc.Description = "Kubernetes L7 health check generated with readiness probe settings."
-	hc.CheckIntervalSec = int64(p.PeriodSeconds + healthchecks.DefaultHealthCheckInterval)
+	hc.CheckIntervalSec = int64(p.PeriodSeconds) + int64(healthchecks.DefaultHealthCheckInterval.Seconds())
 	hc.TimeoutSec = int64(p.TimeoutSeconds)
 }
