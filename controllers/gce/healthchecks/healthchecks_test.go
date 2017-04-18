@@ -63,7 +63,7 @@ func TestHealthCheckAddExisting(t *testing.T) {
 	httpHC := DefaultHealthCheck(3000, utils.ProtocolHTTP)
 	httpHC.Name = namer.BeName(3000)
 	httpHC.RequestPath = "/my-probes-health"
-	hcp.CreateHealthCheck(httpHC.Out())
+	hcp.CreateHealthCheck(httpHC.ToComputeHealthCheck())
 
 	// Should not fail adding the same type of health check
 	hc := healthChecks.New(3000, utils.ProtocolHTTP)
@@ -82,7 +82,7 @@ func TestHealthCheckAddExisting(t *testing.T) {
 	httpsHC := DefaultHealthCheck(4000, utils.ProtocolHTTPS)
 	httpsHC.Name = namer.BeName(4000)
 	httpsHC.RequestPath = "/my-probes-health"
-	hcp.CreateHealthCheck(httpsHC.Out())
+	hcp.CreateHealthCheck(httpsHC.ToComputeHealthCheck())
 
 	hc = healthChecks.New(4000, utils.ProtocolHTTPS)
 	_, err = healthChecks.Sync(hc)
@@ -104,11 +104,11 @@ func TestHealthCheckDelete(t *testing.T) {
 	// Create HTTP HC for 1234
 	hc := DefaultHealthCheck(1234, utils.ProtocolHTTP)
 	hc.Name = namer.BeName(1234)
-	hcp.CreateHealthCheck(hc.Out())
+	hcp.CreateHealthCheck(hc.ToComputeHealthCheck())
 
 	// Create HTTPS HC for 1234)
 	hc.Type = string(utils.ProtocolHTTPS)
-	hcp.CreateHealthCheck(hc.Out())
+	hcp.CreateHealthCheck(hc.ToComputeHealthCheck())
 
 	// Delete only HTTP 1234
 	err := healthChecks.Delete(1234)
@@ -139,7 +139,7 @@ func TestHealthCheckUpdate(t *testing.T) {
 	hc := DefaultHealthCheck(3000, utils.ProtocolHTTP)
 	hc.Name = namer.BeName(3000)
 	hc.RequestPath = "/my-probes-health"
-	hcp.CreateHealthCheck(hc.Out())
+	hcp.CreateHealthCheck(hc.ToComputeHealthCheck())
 
 	// Verify the health check exists
 	_, err := healthChecks.Get(3000)

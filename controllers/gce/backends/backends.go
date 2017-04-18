@@ -165,7 +165,7 @@ func (b *Backends) ensureHealthCheck(sp ServicePort) (string, error) {
 			return "", err
 		}
 		if probe != nil {
-			glog.V(1).Infof("Applying httpGet settings of readinessProbe to health check on port %+v", sp)
+			glog.V(2).Infof("Applying httpGet settings of readinessProbe to health check on port %+v", sp)
 			applyProbeSettingsToHC(probe, hc)
 		}
 	}
@@ -245,7 +245,7 @@ func (b *Backends) Add(p ServicePort) error {
 	pName := b.namer.BeName(p.Port)
 	be, _ = b.Get(p.Port)
 	if be == nil {
-		glog.V(1).Infof("Creating backend for %d instance groups, port %v named port %v", len(igs), p.Port, namedPort)
+		glog.V(2).Infof("Creating backend for %d instance groups, port %v named port %v", len(igs), p.Port, namedPort)
 		be, err = b.create(igs, namedPort, hcLink, p.Protocol, pName)
 		if err != nil {
 			return err
@@ -258,7 +258,7 @@ func (b *Backends) Add(p ServicePort) error {
 	}
 
 	if be.Protocol != string(p.Protocol) || existingHCLink != hcLink {
-		glog.Infof("Updating backend protocol %v (%v) for change in protocol (%v) or health check", pName, be.Protocol, string(p.Protocol))
+		glog.V(2).Infof("Updating backend protocol %v (%v) for change in protocol (%v) or health check", pName, be.Protocol, string(p.Protocol))
 		be.Protocol = string(p.Protocol)
 		be.HealthChecks = []string{hcLink}
 		if err = b.cloud.UpdateBackendService(be); err != nil {
@@ -286,7 +286,7 @@ func (b *Backends) Add(p ServicePort) error {
 // Delete deletes the Backend for the given port.
 func (b *Backends) Delete(port int64) (err error) {
 	name := b.namer.BeName(port)
-	glog.Infof("Deleting backend service %v", name)
+	glog.V(2).Infof("Deleting backend service %v", name)
 	defer func() {
 		if utils.IsHTTPErrorCode(err, http.StatusNotFound) {
 			err = nil
@@ -377,7 +377,7 @@ func (b *Backends) GC(svcNodePorts []ServicePort) error {
 	}
 	pool := b.snapshotter.Snapshot()
 	for port := range pool {
-		p, err := strconv.ParseInt(port, 10, 64)
+		p, err := strconv.ParseUint(port, 10, 16)
 		if err != nil {
 			return err
 		}

@@ -76,8 +76,8 @@ func (h *HealthChecks) Sync(hc *HealthCheck) (string, error) {
 			return "", err
 		}
 
-		glog.Infof("Creating health check for port %v with protocol %v", hc.Port, hc.Type)
-		if err = h.cloud.CreateHealthCheck(hc.Out()); err != nil {
+		glog.V(2).Infof("Creating health check for port %v with protocol %v", hc.Port, hc.Type)
+		if err = h.cloud.CreateHealthCheck(hc.ToComputeHealthCheck()); err != nil {
 			return "", err
 		}
 
@@ -85,8 +85,8 @@ func (h *HealthChecks) Sync(hc *HealthCheck) (string, error) {
 	}
 
 	if existingHC.Protocol() != hc.Protocol() {
-		glog.Infof("Updating health check %v because it has protocol %v but need %v", existingHC.Name, existingHC.Type, hc.Type)
-		err = h.cloud.UpdateHealthCheck(hc.Out())
+		glog.V(2).Infof("Updating health check %v because it has protocol %v but need %v", existingHC.Name, existingHC.Type, hc.Type)
+		err = h.cloud.UpdateHealthCheck(hc.ToComputeHealthCheck())
 		return existingHC.SelfLink, err
 	}
 
@@ -94,9 +94,9 @@ func (h *HealthChecks) Sync(hc *HealthCheck) (string, error) {
 		// TODO: reconcile health checks, and compare headers interval etc.
 		// Currently Ingress doesn't expose all the health check params
 		// natively, so some users prefer to hand modify the check.
-		glog.Infof("Unexpected request path on health check %v, has %v want %v, NOT reconciling", hc.Name, existingHC.RequestPath, hc.RequestPath)
+		glog.V(2).Infof("Unexpected request path on health check %v, has %v want %v, NOT reconciling", hc.Name, existingHC.RequestPath, hc.RequestPath)
 	} else {
-		glog.Infof("Health check %v already exists and has the expected path %v", hc.Name, hc.RequestPath)
+		glog.V(2).Infof("Health check %v already exists and has the expected path %v", hc.Name, hc.RequestPath)
 	}
 
 	return existingHC.SelfLink, nil
@@ -113,7 +113,7 @@ func (h *HealthChecks) getHealthCheckLink(port int64) (string, error) {
 // Delete deletes the health check by port.
 func (h *HealthChecks) Delete(port int64) error {
 	name := h.namer.BeName(port)
-	glog.Infof("Deleting health check %v", name)
+	glog.V(2).Infof("Deleting health check %v", name)
 	return h.cloud.DeleteHealthCheck(name)
 }
 
@@ -127,7 +127,7 @@ func (h *HealthChecks) Get(port int64) (*HealthCheck, error) {
 // DeleteLegacy deletes legacy HTTP health checks
 func (h *HealthChecks) DeleteLegacy(port int64) error {
 	name := h.namer.BeName(port)
-	glog.Infof("Deleting legacy HTTP health check %v", name)
+	glog.V(2).Infof("Deleting legacy HTTP health check %v", name)
 	return h.cloud.DeleteHttpHealthCheck(name)
 }
 
@@ -197,8 +197,8 @@ func (hc *HealthCheck) Protocol() utils.AppProtocol {
 	return utils.AppProtocol(hc.Type)
 }
 
-// Out returns a valid compute.HealthCheck object
-func (hc *HealthCheck) Out() *compute.HealthCheck {
+// ToComputeHealthCheck returns a valid compute.HealthCheck object
+func (hc *HealthCheck) ToComputeHealthCheck() *compute.HealthCheck {
 	// Zeroing out child settings as a precaution. GoogleAPI throws an error
 	// if the wrong child struct is set.
 	hc.HealthCheck.HttpsHealthCheck = nil

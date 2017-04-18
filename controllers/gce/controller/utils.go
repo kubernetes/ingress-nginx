@@ -141,7 +141,7 @@ func (svc svcAnnotations) ApplicationProtocols() (map[string]utils.AppProtocol, 
 		switch proto {
 		case utils.ProtocolHTTP, utils.ProtocolHTTPS:
 		default:
-			return nil, fmt.Errorf("unexpected port application protocol: %v", proto)
+			return nil, fmt.Errorf("invalid port application protocol: %v", proto)
 		}
 	}
 
@@ -415,7 +415,6 @@ func (t *GCETranslator) toGCEBackend(be *extensions.IngressBackend, ns string) (
 // getServiceNodePort looks in the svc store for a matching service:port,
 // and returns the nodeport.
 func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespace string) (backends.ServicePort, error) {
-	invalidPort := backends.ServicePort{}
 	obj, exists, err := t.svcLister.Indexer.Get(
 		&api_v1.Service{
 			ObjectMeta: meta_v1.ObjectMeta{
@@ -424,15 +423,15 @@ func (t *GCETranslator) getServiceNodePort(be extensions.IngressBackend, namespa
 			},
 		})
 	if !exists {
-		return invalidPort, errorNodePortNotFound{be, fmt.Errorf("service %v/%v not found in store", namespace, be.ServiceName)}
+		return backends.ServicePort{}, errorNodePortNotFound{be, fmt.Errorf("service %v/%v not found in store", namespace, be.ServiceName)}
 	}
 	if err != nil {
-		return invalidPort, errorNodePortNotFound{be, err}
+		return backends.ServicePort{}, errorNodePortNotFound{be, err}
 	}
 	svc := obj.(*api_v1.Service)
 	appProtocols, err := svcAnnotations(svc.GetAnnotations()).ApplicationProtocols()
 	if err != nil {
-		return invalidPort, errorSvcAppProtosParsing{svc, err}
+		return backends.ServicePort{}, errorSvcAppProtosParsing{svc, err}
 	}
 
 	var port *api_v1.ServicePort
@@ -454,7 +453,7 @@ PortLoop:
 	}
 
 	if port == nil {
-		return invalidPort, errorNodePortNotFound{be, fmt.Errorf("could not find matching nodeport from service")}
+		return backends.ServicePort{}, errorNodePortNotFound{be, fmt.Errorf("could not find matching nodeport from service")}
 	}
 
 	proto := utils.ProtocolHTTP
