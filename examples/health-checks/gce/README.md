@@ -67,8 +67,6 @@ You can confirm the health check endpoint point it's using one of 2 ways:
 
 A few points to note:
 * The readiness probe must be exposed on the port matching the `servicePort` specified in the Ingress
-* The readiness probe cannot have special requirements, like headers or HTTPS
+* The readiness probe cannot have special requirements like headers
 * The probe timeouts are translated to GCE health check timeouts
 * You must create the pods backing the endpoints with the given readiness probe. This *will not* work if you update the replication controller with a different readiness probe.
-
-

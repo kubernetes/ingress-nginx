@@ -25,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/ingress/controllers/gce/backends"
+	"k8s.io/ingress/controllers/gce/utils"
 )
 
 // Pods created in loops start from this time, for routines that
@@ -94,17 +96,18 @@ func TestInstancesAddedToZones(t *testing.T) {
 func TestProbeGetter(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm)
-	nodePortToHealthCheck := map[int64]string{
-		3001: "/healthz",
-		3002: "/foo",
+
+	nodePortToHealthCheck := map[backends.ServicePort]string{
+		{Port: 3001, Protocol: utils.ProtocolHTTP}:  "/healthz",
+		{Port: 3002, Protocol: utils.ProtocolHTTPS}: "/foo",
 	}
 	addPods(lbc, nodePortToHealthCheck, api_v1.NamespaceDefault)
 	for p, exp := range nodePortToHealthCheck {
-		got, err := lbc.tr.HealthCheck(p)
-		if err != nil {
-			t.Errorf("Failed to get health check for node port %v: %v", p, err)
-		} else if got.RequestPath != exp {
-			t.Errorf("Wrong health check for node port %v, got %v expected %v", p, got.RequestPath, exp)
+		got, err := lbc.tr.GetProbe(p)
+		if err != nil || got == nil {
+			t.Errorf("Failed to get probe for node port %v: %v", p, err)
+		} else if getProbePath(got) != exp {
+			t.Errorf("Wrong path for node port %v, got %v expected %v", p, getProbePath(got), exp)
 		}
 	}
 }
@@ -112,8 +115,8 @@ func TestProbeGetter(t *testing.T) {
 func TestProbeGetterNamedPort(t *testing.T) {
 	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
 	lbc := newLoadBalancerController(t, cm)
-	nodePortToHealthCheck := map[int64]string{
-		3001: "/healthz",
+	nodePortToHealthCheck := map[backends.ServicePort]string{
+		{Port: 3001, Protocol: utils.ProtocolHTTP}: "/healthz",
 	}
 	addPods(lbc, nodePortToHealthCheck, api_v1.NamespaceDefault)
 	for _, p := range lbc.podLister.Indexer.List() {
@@ -122,11 +125,11 @@ func TestProbeGetterNamedPort(t *testing.T) {
 		pod.Spec.Containers[0].ReadinessProbe.Handler.HTTPGet.Port = intstr.IntOrString{Type: intstr.String, StrVal: "test"}
 	}
 	for p, exp := range nodePortToHealthCheck {
-		got, err := lbc.tr.HealthCheck(p)
-		if err != nil {
-			t.Errorf("Failed to get health check for node port %v: %v", p, err)
-		} else if got.RequestPath != exp {
-			t.Errorf("Wrong health check for node port %v, got %v expected %v", p, got.RequestPath, exp)
+		got, err := lbc.tr.GetProbe(p)
+		if err != nil || got == nil {
+			t.Errorf("Failed to get probe for node port %v: %v", p, err)
+		} else if getProbePath(got) != exp {
+			t.Errorf("Wrong path for node port %v, got %v expected %v", p, getProbePath(got), exp)
 		}
 	}
 
@@ -167,31 +170,31 @@ func TestProbeGetterCrossNamespace(t *testing.T) {
 		},
 	}
 	lbc.podLister.Indexer.Add(firstPod)
-	nodePortToHealthCheck := map[int64]string{
-		3001: "/healthz",
+	nodePortToHealthCheck := map[backends.ServicePort]string{
+		{Port: 3001, Protocol: utils.ProtocolHTTP}: "/healthz",
 	}
 	addPods(lbc, nodePortToHealthCheck, api_v1.NamespaceDefault)
 
 	for p, exp := range nodePortToHealthCheck {
-		got, err := lbc.tr.HealthCheck(p)
-		if err != nil {
-			t.Errorf("Failed to get health check for node port %v: %v", p, err)
-		} else if got.RequestPath != exp {
-			t.Errorf("Wrong health check for node port %v, got %v expected %v", p, got.RequestPath, exp)
+		got, err := lbc.tr.GetProbe(p)
+		if err != nil || got == nil {
+			t.Errorf("Failed to get probe for node port %v: %v", p, err)
+		} else if getProbePath(got) != exp {
+			t.Errorf("Wrong path for node port %v, got %v expected %v", p, getProbePath(got), exp)
 		}
 	}
 }
 
-func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string, ns string) {
+func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[backends.ServicePort]string, ns string) {
 	delay := time.Minute
 	for np, u := range nodePortToHealthCheck {
-		l := map[string]string{fmt.Sprintf("app-%d", np): "test"}
+		l := map[string]string{fmt.Sprintf("app-%d", np.Port): "test"}
 		svc := &api_v1.Service{
 			Spec: api_v1.ServiceSpec{
 				Selector: l,
 				Ports: []api_v1.ServicePort{
 					{
-						NodePort: int32(np),
+						NodePort: int32(np.Port),
 						TargetPort: intstr.IntOrString{
 							Type:   intstr.Int,
 							IntVal: 80,
@@ -200,14 +203,14 @@ func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string
 				},
 			},
 		}
-		svc.Name = fmt.Sprintf("%d", np)
+		svc.Name = fmt.Sprintf("%d", np.Port)
 		svc.Namespace = ns
 		lbc.svcLister.Indexer.Add(svc)
 
 		pod := &api_v1.Pod{
 			ObjectMeta: meta_v1.ObjectMeta{
 				Labels:            l,
-				Name:              fmt.Sprintf("%d", np),
+				Name:              fmt.Sprintf("%d", np.Port),
 				Namespace:         ns,
 				CreationTimestamp: meta_v1.NewTime(firstPodCreationTime.Add(delay)),
 			},
@@ -218,7 +221,7 @@ func addPods(lbc *LoadBalancerController, nodePortToHealthCheck map[int64]string
 						ReadinessProbe: &api_v1.Probe{
 							Handler: api_v1.Handler{
 								HTTPGet: &api_v1.HTTPGetAction{
-									Scheme: api_v1.URISchemeHTTP,
+									Scheme: api_v1.URIScheme(string(np.Protocol)),
 									Path:   u,
 									Port: intstr.IntOrString{
 										Type:   intstr.Int,
@@ -256,4 +259,8 @@ func addNodes(lbc *LoadBalancerController, zoneToNode map[string][]string) {
 		}
 	}
 	lbc.CloudClusterManager.instancePool.Init(lbc.tr)
+}
+
+func getProbePath(p *api_v1.Probe) string {
+	return p.Handler.HTTPGet.Path
 }

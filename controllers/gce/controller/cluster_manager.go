@@ -65,7 +65,7 @@ const (
 // ClusterManager manages cluster resource pools.
 type ClusterManager struct {
 	ClusterNamer           *utils.Namer
-	defaultBackendNodePort int64
+	defaultBackendNodePort backends.ServicePort
 	instancePool           instances.NodePool
 	backendPool            backends.BackendPool
 	l7Pool                 loadbalancers.LoadBalancerPool
@@ -83,9 +83,7 @@ type ClusterManager struct {
 // Init initializes the cluster manager.
 func (c *ClusterManager) Init(tr *GCETranslator) {
 	c.instancePool.Init(tr)
-	for _, h := range c.healthCheckers {
-		h.Init(tr)
-	}
+	c.backendPool.Init(tr)
 	// TODO: Initialize other members as needed.
 }
 
@@ -126,17 +124,17 @@ func (c *ClusterManager) shutdown() error {
 //   these ports must also be opened on the corresponding Instance Group.
 // If in performing the checkpoint the cluster manager runs out of quota, a
 // googleapi 403 is returned.
-func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, nodePorts []int64) error {
+func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, nodePorts []backends.ServicePort) error {
 	// Multiple ingress paths can point to the same service (and hence nodePort)
 	// but each nodePort can only have one set of cloud resources behind it. So
 	// don't waste time double validating GCE BackendServices.
-	portMap := map[int64]struct{}{}
+	portMap := map[int64]backends.ServicePort{}
 	for _, p := range nodePorts {
-		portMap[p] = struct{}{}
+		portMap[p.Port] = p
 	}
-	nodePorts = []int64{}
-	for p := range portMap {
-		nodePorts = append(nodePorts, p)
+	nodePorts = []backends.ServicePort{}
+	for _, sp := range portMap {
+		nodePorts = append(nodePorts, sp)
 	}
 	if err := c.backendPool.Sync(nodePorts); err != nil {
 		return err
@@ -158,7 +156,12 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 		// we shouldn't leak the firewall rule.
 		fwNodePorts = append(fwNodePorts, c.defaultBackendNodePort)
 	}
-	if err := c.firewallPool.Sync(fwNodePorts, nodeNames); err != nil {
+
+	var np []int64
+	for _, p := range fwNodePorts {
+		np = append(np, p.Port)
+	}
+	if err := c.firewallPool.Sync(np, nodeNames); err != nil {
 		return err
 	}
 
@@ -171,7 +174,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 // - nodePorts are the ports for which we want BackendServies. BackendServices
 //   for ports not in this list are deleted.
 // This method ignores googleapi 404 errors (StatusNotFound).
-func (c *ClusterManager) GC(lbNames []string, nodePorts []int64) error {
+func (c *ClusterManager) GC(lbNames []string, nodePorts []backends.ServicePort) error {
 
 	// On GC:
 	// * Loadbalancers need to get deleted before backends.
@@ -240,7 +243,7 @@ func getGCEClient(config io.Reader) *gce.GCECloud {
 func NewClusterManager(
 	configFilePath string,
 	namer *utils.Namer,
-	defaultBackendNodePort int64,
+	defaultBackendNodePort backends.ServicePort,
 	defaultHealthCheckPath string) (*ClusterManager, error) {
 
 	// TODO: Make this more resilient. Currently we create the cloud client
@@ -279,15 +282,12 @@ func NewClusterManager(
 	cluster.healthCheckers = []healthchecks.HealthChecker{healthChecker, defaultBackendHealthChecker}
 
 	// TODO: This needs to change to a consolidated management of the default backend.
-	cluster.backendPool = backends.NewBackendPool(
-		cloud, healthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{defaultBackendNodePort}, true)
-	defaultBackendPool := backends.NewBackendPool(
-		cloud, defaultBackendHealthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{}, false)
+	cluster.backendPool = backends.NewBackendPool(cloud, healthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{defaultBackendNodePort.Port}, true)
+	defaultBackendPool := backends.NewBackendPool(cloud, defaultBackendHealthChecker, cluster.instancePool, cluster.ClusterNamer, []int64{}, false)
 	cluster.defaultBackendNodePort = defaultBackendNodePort
 
 	// L7 pool creates targetHTTPProxy, ForwardingRules, UrlMaps, StaticIPs.
-	cluster.l7Pool = loadbalancers.NewLoadBalancerPool(
-		cloud, defaultBackendPool, defaultBackendNodePort, cluster.ClusterNamer)
+	cluster.l7Pool = loadbalancers.NewLoadBalancerPool(cloud, defaultBackendPool, defaultBackendNodePort, cluster.ClusterNamer)
 	cluster.firewallPool = firewalls.NewFirewallPool(cloud, cluster.ClusterNamer)
 	return &cluster, nil
 }
