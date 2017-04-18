@@ -18,6 +18,7 @@ package healthchecks
 
 import (
 	"net/http"
+	"time"
 
 	compute "google.golang.org/api/compute/v1"
 
@@ -32,13 +33,13 @@ const (
 	// borked, service level outages will get detected sooner
 	// by kube-proxy.
 	// DefaultHealthCheckInterval defines how frequently a probe runs
-	DefaultHealthCheckInterval = 60
+	DefaultHealthCheckInterval = 60 * time.Second
 	// DefaultHealthyThreshold defines the threshold of success probes that declare a backend "healthy"
 	DefaultHealthyThreshold = 1
 	// DefaultUnhealthyThreshold defines the threshold of failure probes that declare a backend "unhealthy"
 	DefaultUnhealthyThreshold = 10
-	// DefaultTimeoutSeconds defines the timeout of each probe
-	DefaultTimeoutSeconds = 60
+	// DefaultTimeout defines the timeout of each probe
+	DefaultTimeout = 60 * time.Second
 )
 
 // HealthChecks manages health checks.
@@ -142,9 +143,9 @@ func DefaultHealthCheck(port int64, protocol utils.AppProtocol) *HealthCheck {
 
 	hcSettings := compute.HealthCheck{
 		// How often to health check.
-		CheckIntervalSec: DefaultHealthCheckInterval,
+		CheckIntervalSec: int64(DefaultHealthCheckInterval.Seconds()),
 		// How long to wait before claiming failure of a health check.
-		TimeoutSec: DefaultTimeoutSeconds,
+		TimeoutSec: int64(DefaultTimeout.Seconds()),
 		// Number of healthchecks to pass for a vm to be deemed healthy.
 		HealthyThreshold: DefaultHealthyThreshold,
 		// Number of healthchecks to fail before the vm is deemed unhealthy.
