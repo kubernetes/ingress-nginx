@@ -161,7 +161,7 @@ func main() {
 }
 
 func updateMultipleBackends() {
-	fmt.Println("Creating temporary instance groups in relevant zones")
+	fmt.Println("\nStep 1: Creating temporary instance groups in relevant zones")
 	// Create temoprary instance groups
 	for zone, ig := range igs {
 		_, err := s.InstanceGroups.Get(projectID, zone, instanceGroupTemp).Do()
@@ -184,27 +184,27 @@ func updateMultipleBackends() {
 	}
 
 	// Straddle both groups
-	fmt.Println("Update backend services to point to original and temporary instance groups")
+	fmt.Println("\nStep 2: Update backend services to point to original and temporary instance groups")
 	setBackendsTo(true, balancingModeInverse(targetBalancingMode), true, balancingModeInverse(targetBalancingMode))
 
-	fmt.Println("Migrate instances to temporary group")
+	fmt.Println("\nStep 3: Migrate instances to temporary group")
 	migrateInstances(instanceGroupName, instanceGroupTemp)
 
 	// Remove original backends to get rid of old balancing mode
-	fmt.Println("Update backend services to point only to temporary instance groups")
+	fmt.Println("\nStep 4: Update backend services to point only to temporary instance groups")
 	setBackendsTo(false, "", true, balancingModeInverse(targetBalancingMode))
 
 	// Straddle both groups (creates backend services to original groups with target mode)
-	fmt.Println("Update backend services to point to both temporary and original (with new balancing mode) instance groups")
+	fmt.Println("\nStep 5: Update backend services to point to both temporary and original (with new balancing mode) instance groups")
 	setBackendsTo(true, targetBalancingMode, true, balancingModeInverse(targetBalancingMode))
 
-	fmt.Println("Migrate instances back to original groups")
+	fmt.Println("\nStep 6: Migrate instances back to original groups")
 	migrateInstances(instanceGroupTemp, instanceGroupName)
 
-	fmt.Println("Update backend services to point only to original instance groups")
+	fmt.Println("\nStep 7: Update backend services to point only to original instance groups")
 	setBackendsTo(true, targetBalancingMode, false, "")
 
-	fmt.Println("Delete temporary instance groups")
+	fmt.Println("\nStep 8: Delete temporary instance groups")
 	for z := range igs {
 		fmt.Printf(" - %v (%v)\n", instanceGroupTemp, z)
 		op, err := s.InstanceGroups.Delete(projectID, z, instanceGroupTemp).Do()
@@ -295,24 +295,22 @@ func migrateInstances(fromIG, toIG string) error {
 		rr := &compute.InstanceGroupsRemoveInstancesRequest{Instances: []*compute.InstanceReference{{Instance: i.SelfLink}}}
 		op, err := s.InstanceGroups.RemoveInstances(projectID, z, fromIG, rr).Do()
 		if err != nil {
-			fmt.Println("Skipping error when removing instance from group", err)
-		}
-
-		if err = waitForZoneOp(op, z); err != nil {
-			fmt.Println("Failed to wait for operation: removing instance from group", err)
+			fmt.Printf("skipping error when removing instance from group, err: %v", err)
+		} else if err = waitForZoneOp(op, z); err != nil {
+			fmt.Printf("failed to wait for operation: removing instance from group, err: %v", err)
 		}
 		fmt.Printf("removed from %v, ", fromIG)
 
 		ra := &compute.InstanceGroupsAddInstancesRequest{Instances: []*compute.InstanceReference{{Instance: i.SelfLink}}}
 		op, err = s.InstanceGroups.AddInstances(projectID, z, toIG, ra).Do()
 		if err != nil {
-			if !strings.Contains(err.Error(), "memberAlreadyExists") { // GLBC already added the instance back to the IG
-				fmt.Println("failed to add instance to new IG", i.Name, err)
+			if strings.Contains(err.Error(), "memberAlreadyExists") { // GLBC already added the instance back to the IG
+				fmt.Printf("already added to %v (ingress controller probably added it)\n", toIG)
+			} else {
+				fmt.Printf("failed to add instance %v, err: %v\n", i.Name, err)
 			}
-		}
-
-		if err = waitForZoneOp(op, z); err != nil {
-			fmt.Println("Failed to wait for operation: adding instance to group", err)
+		} else if err = waitForZoneOp(op, z); err != nil {
+			fmt.Printf("Failed to wait for operation: adding instance to group, err: %v", err)
 		}
 		fmt.Printf("added to %v\n", toIG)
 	}
