@@ -53,12 +53,6 @@ func main() {
 		panic(fmt.Errorf("expected either %s or %s, actual: %v", balancingModeRATE, balancingModeUTIL, targetBalancingMode))
 	}
 
-	switch regionName {
-	case "asia-east1", "asia-northeast1", "europe-west1", "us-central1", "us-east1", "us-west1":
-	default:
-		panic(fmt.Errorf("expected a valid GCP region, actual: %v", regionName))
-	}
-
 	igs = make(map[string]*compute.InstanceGroup)
 
 	tokenSource, err := google.DefaultTokenSource(
@@ -147,10 +141,6 @@ func main() {
 	clusters := getIGClusterIds()
 	if len(clusters) != 1 {
 		fmt.Println("Expecting only cluster of instance groups in GCE, found", clusters)
-		return
-	}
-
-	if true {
 		return
 	}
 
