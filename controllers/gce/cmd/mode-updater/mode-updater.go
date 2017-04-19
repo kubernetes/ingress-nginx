@@ -186,6 +186,8 @@ func updateMultipleBackends() {
 	fmt.Println("\nStep 3: Migrate instances to temporary group")
 	migrateInstances(instanceGroupName, instanceGroupTemp)
 
+	sleep(loadBalancerUpdateTime)
+
 	// Remove original backends to get rid of old balancing mode
 	fmt.Println("\nStep 4: Update backend services to point only to temporary instance groups")
 	setBackendsTo(false, "", true, balancingModeInverse(targetBalancingMode))
