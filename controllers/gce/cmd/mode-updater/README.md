@@ -97,9 +97,12 @@ Step 8: Delete temporary instance groups
 1. Update all backend-services to remove pointers to temporary instance groups.
 1. Delete temporary instance groups
 
+#### Interaction with GCE Ingress Controller
+After one or more instances have been removed from their instance group, the controller will start throwing validation errors and will try to sync the instances back.  However, the instance will hopefully belong to `k8s-ig--migrate` already and the controller does not have logic to take it out of that group. Therefore, the controller only interrupts the migration process in between the removal from a group and the insertion to a group. On the second set of migrations, this interaction is fine since the destination group is the same for updater and controller. If the controller interrupts an instance from being added to the migrate IG, the updater will attempt migration again. Do not be alarmed by multiple attempts.
+
 #### Required Testing
 - [ ] Up time is not effected when switching instance groups
-- [ ] An active GLBC does not negatively interfere with this updater
+- [x] An active GLBC does not negatively interfere with this updater
 
 #### TODO
 - [x] If only one backend-service exists, just update it in place.
