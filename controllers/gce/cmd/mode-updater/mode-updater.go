@@ -36,6 +36,8 @@ const (
 	balancingModeRATE = "RATE"
 	balancingModeUTIL = "UTILIZATION"
 
+	loadBalancerUpdateTime = 3 * time.Minute
+
 	operationPollInterval        = 1 * time.Second
 	operationPollTimeoutDuration = time.Hour
 
@@ -179,6 +181,8 @@ func updateMultipleBackends() {
 	fmt.Println("\nStep 2: Update backend services to point to original and temporary instance groups")
 	setBackendsTo(true, balancingModeInverse(targetBalancingMode), true, balancingModeInverse(targetBalancingMode))
 
+	sleep(loadBalancerUpdateTime)
+
 	fmt.Println("\nStep 3: Migrate instances to temporary group")
 	migrateInstances(instanceGroupName, instanceGroupTemp)
 
@@ -190,8 +194,12 @@ func updateMultipleBackends() {
 	fmt.Println("\nStep 5: Update backend services to point to both temporary and original (with new balancing mode) instance groups")
 	setBackendsTo(true, targetBalancingMode, true, balancingModeInverse(targetBalancingMode))
 
+	sleep(loadBalancerUpdateTime)
+
 	fmt.Println("\nStep 6: Migrate instances back to original groups")
 	migrateInstances(instanceGroupTemp, instanceGroupName)
+
+	sleep(loadBalancerUpdateTime)
 
 	fmt.Println("\nStep 7: Update backend services to point only to original instance groups")
 	setBackendsTo(true, targetBalancingMode, false, "")
@@ -208,6 +216,11 @@ func updateMultipleBackends() {
 			fmt.Println("Couldn't wait for operation: deleting temporary instance group", instanceGroupName)
 		}
 	}
+}
+
+func sleep(t time.Duration) {
+	fmt.Println("\nSleeping for", t)
+	time.Sleep(t)
 }
 
 func setBackendsTo(orig bool, origMode string, temp bool, tempMode string) {
@@ -317,7 +330,7 @@ func migrateInstance(zone, instanceLink, fromIG, toIG string) error {
 		op, err = s.InstanceGroups.AddInstances(projectID, zone, toIG, ra).Do()
 		if err != nil {
 			if strings.Contains(err.Error(), "memberAlreadyExists") { // GLBC already added the instance back to the IG
-				fmt.Printf(" already exists in %v\n", toIG)
+				fmt.Printf(" already exists in %v", toIG)
 			} else {
 				fmt.Printf(" failed to add to group %v, err: %v\n", toIG, err)
 				return false, nil

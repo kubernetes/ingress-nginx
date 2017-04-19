@@ -100,9 +100,10 @@ Step 8: Delete temporary instance groups
 #### Interaction with GCE Ingress Controller
 After one or more instances have been removed from their instance group, the controller will start throwing validation errors and will try to sync the instances back.  However, the instance will hopefully belong to `k8s-ig--migrate` already and the controller does not have logic to take it out of that group. Therefore, the controller only interrupts the migration process in between the removal from a group and the insertion to a group. On the second set of migrations, this interaction is fine since the destination group is the same for updater and controller. If the controller interrupts an instance from being added to the migrate IG, the updater will attempt migration again. Do not be alarmed by multiple attempts.
 
-#### Required Testing
-- [ ] Up time is not effected when switching instance groups
-- [x] An active GLBC does not negatively interfere with this updater
+
+#### Maintaining Up-time
+This may not be a perfect solution, but the updater will sleep for 3 minutes between sensitive changes to the load balancer. For instance, it will sleep after updating the backend-services to point to the new migration instance groups before migrating instances. Without these occasional sleeps, the updater will result in some 502s for a short period of time (order of seconds to minutes). When testing with sleeps, 502s were not detected.
+
 
 #### TODO
 - [x] If only one backend-service exists, just update it in place.
@@ -112,3 +113,4 @@ After one or more instances have been removed from their instance group, the con
 
 #### Warning
 This tool hasn't been fully tested. Use at your own risk.
+You should run on a test cluster before running on important clusters.
