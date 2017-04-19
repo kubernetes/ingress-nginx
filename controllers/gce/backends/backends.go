@@ -277,10 +277,7 @@ func (b *Backends) Add(p ServicePort) error {
 	if len(igs) == 0 {
 		return nil
 	}
-	if err = b.edgeHop(be, igs); err != nil {
-		return err
-	}
-	return err
+	return b.edgeHop(be, igs)
 }
 
 // Delete deletes the Backend for the given port.
@@ -386,7 +383,7 @@ func (b *Backends) GC(svcNodePorts []ServicePort) error {
 			continue
 		}
 		glog.V(3).Infof("GCing backend for port %v", p)
-		if err := b.Delete(nodePort); err != nil {
+		if err := b.Delete(nodePort); err != nil && !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
 			return err
 		}
 	}
