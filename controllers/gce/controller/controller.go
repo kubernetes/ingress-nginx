@@ -371,10 +371,6 @@ func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing
 		}
 	}
 	// Update annotations through /update endpoint
-	currIng, err = ingClient.Get(ing.Name, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
 	currIng.Annotations = loadbalancers.GetLBAnnotations(l7, currIng.Annotations, lbc.CloudClusterManager.backendPool)
 	if !reflect.DeepEqual(ing.Annotations, currIng.Annotations) {
 		glog.V(3).Infof("Updating annotations of %v/%v", ing.Namespace, ing.Name)
