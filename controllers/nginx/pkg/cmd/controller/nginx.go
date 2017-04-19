@@ -363,7 +363,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	// if is required.
 	// https://trac.nginx.org/nginx/ticket/352
 	// https://trac.nginx.org/nginx/ticket/631
-	nameHashBucketSize := nextPowerOf2(longestName)
+	nameHashBucketSize := nginxHashBucketSize(longestName)
 	if cfg.ServerNameHashBucketSize == 0 {
 		glog.V(3).Infof("adjusting ServerNameHashBucketSize variable to %v", nameHashBucketSize)
 		cfg.ServerNameHashBucketSize = nameHashBucketSize
@@ -447,6 +447,16 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	}
 
 	return content, nil
+}
+
+// nginxHashBucketSize computes the correct nginx hash_bucket_size for a hash with the given longest key
+func nginxHashBucketSize(longestString int) int {
+	// See https://github.com/kubernetes/ingress/issues/623 for an explanation
+	wordSize := 8 // Assume 64 bit CPU
+	n := longestString + 2
+	aligned := (n + wordSize - 1) & ^(wordSize - 1)
+	rawSize := wordSize + wordSize + aligned
+	return nextPowerOf2(rawSize)
 }
 
 // Name returns the healthcheck name
