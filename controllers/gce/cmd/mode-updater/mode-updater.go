@@ -28,7 +28,7 @@ var (
 	s         *compute.Service
 	zones     []*compute.Zone
 	igs       map[string]*compute.InstanceGroup
-	instances []*compute.Instance
+	instances map[string][]string
 )
 
 const (
@@ -36,7 +36,7 @@ const (
 	balancingModeRATE = "RATE"
 	balancingModeUTIL = "UTILIZATION"
 
-	operationPollInterval        = 3 * time.Second
+	operationPollInterval        = 1 * time.Second
 	operationPollTimeoutDuration = time.Hour
 
 	version = 0.1
@@ -87,6 +87,7 @@ func main() {
 	}
 
 	instanceGroupName = fmt.Sprintf("k8s-ig--%s", clusterID)
+	instances = make(map[string][]string)
 
 	// Get instance groups
 	for _, z := range zones {
@@ -106,26 +107,19 @@ func main() {
 				panic(err)
 			}
 
+			var instanceLinks []string
 			for _, i := range instList.Items {
-				inst, err := s.Instances.Get(projectID, getResourceName(ig.Zone, "zones"), getResourceName(i.Instance, "instances")).Do()
-				if err != nil {
-					panic(err)
-				}
-
-				instances = append(instances, inst)
+				instanceLinks = append(instanceLinks, i.Instance)
 			}
 
 			// Note instance group in zone
 			igs[z.Name] = ig
+			instances[z.Name] = instanceLinks
 		}
 	}
 
 	if len(igs) == 0 {
 		panic(fmt.Errorf("Expected at least one instance group named: %v", instanceGroupName))
-	}
-
-	if len(instances) == 0 {
-		panic(fmt.Errorf("Expected at least one instance within instance group: %v", instanceGroupName))
 	}
 
 	bs := getBackendServices()
@@ -286,33 +280,56 @@ func typeOfBackends(bs []*compute.BackendService) string {
 	return bs[0].Backends[0].BalancingMode
 }
 
-func migrateInstances(fromIG, toIG string) error {
-	for _, i := range instances {
-		z := getResourceName(i.Zone, "zones")
-		fmt.Printf(" - %s (%s): ", i.Name, z)
-		rr := &compute.InstanceGroupsRemoveInstancesRequest{Instances: []*compute.InstanceReference{{Instance: i.SelfLink}}}
-		op, err := s.InstanceGroups.RemoveInstances(projectID, z, fromIG, rr).Do()
-		if err != nil {
-			fmt.Printf("skipping error when removing instance from group, err: %v", err)
-		} else if err = waitForZoneOp(op, z); err != nil {
-			fmt.Printf("failed to wait for operation: removing instance from group, err: %v", err)
+func migrateInstances(fromIG, toIG string) {
+	for z, links := range instances {
+		for _, i := range links {
+			name := getResourceName(i, "instances")
+			fmt.Printf(" - %s (%s): ", name, z)
+			if err := migrateInstance(z, i, fromIG, toIG); err != nil {
+				fmt.Printf(" err: %v", err)
+			} else {
+				fmt.Println()
+			}
 		}
-		fmt.Printf("removed from %v, ", fromIG)
+	}
+}
 
-		ra := &compute.InstanceGroupsAddInstancesRequest{Instances: []*compute.InstanceReference{{Instance: i.SelfLink}}}
-		op, err = s.InstanceGroups.AddInstances(projectID, z, toIG, ra).Do()
+func migrateInstance(zone, instanceLink, fromIG, toIG string) error {
+	attempts := 0
+	return wait.Poll(3*time.Second, 10*time.Minute, func() (bool, error) {
+		attempts++
+		if attempts > 1 {
+			fmt.Printf(" (attempt %v) ", attempts)
+		}
+		// Remove from old group
+		rr := &compute.InstanceGroupsRemoveInstancesRequest{Instances: []*compute.InstanceReference{{Instance: instanceLink}}}
+		op, err := s.InstanceGroups.RemoveInstances(projectID, zone, fromIG, rr).Do()
+		if err != nil {
+			fmt.Printf("failed to remove from group %v, err: %v,", fromIG, err)
+		} else if err = waitForZoneOp(op, zone); err != nil {
+			fmt.Printf("failed to wait for operation: removing instance from %v, err: %v,", fromIG, err)
+		} else {
+			fmt.Printf("removed from %v,", fromIG)
+		}
+
+		// Add to new group
+		ra := &compute.InstanceGroupsAddInstancesRequest{Instances: []*compute.InstanceReference{{Instance: instanceLink}}}
+		op, err = s.InstanceGroups.AddInstances(projectID, zone, toIG, ra).Do()
 		if err != nil {
 			if strings.Contains(err.Error(), "memberAlreadyExists") { // GLBC already added the instance back to the IG
-				fmt.Printf("already added to %v (ingress controller probably added it)\n", toIG)
+				fmt.Printf(" already exists in %v\n", toIG)
 			} else {
-				fmt.Printf("failed to add instance %v, err: %v\n", i.Name, err)
+				fmt.Printf(" failed to add to group %v, err: %v\n", toIG, err)
+				return false, nil
 			}
-		} else if err = waitForZoneOp(op, z); err != nil {
-			fmt.Printf("Failed to wait for operation: adding instance to group, err: %v", err)
+		} else if err = waitForZoneOp(op, zone); err != nil {
+			fmt.Printf(" failed to wait for operation: adding instance to %v, err: %v", toIG, err)
+		} else {
+			fmt.Printf(" added to %v", toIG)
 		}
-		fmt.Printf("added to %v\n", toIG)
-	}
-	return nil
+
+		return true, nil
+	})
 }
 
 func createInstanceGroupLink(zone, igName string) string {
