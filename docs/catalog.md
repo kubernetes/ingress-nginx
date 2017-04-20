@@ -6,3 +6,4 @@ This is a non-comprehensive list of existing ingress controllers.
 * [HAProxy Ingress controller](https://github.com/jcmoraisjr/haproxy-ingress)
 * [Linkerd](https://linkerd.io/config/0.9.1/linkerd/index.html#ingress-identifier)
 * [traefik](https://docs.traefik.io/toml/#kubernetes-ingress-backend)
+* [AWS Application Load Balancer Ingress Controller](https://github.com/coreos/alb-ingress-controller)
