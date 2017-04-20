@@ -55,7 +55,7 @@ query=nil
 Now turn ssl-redirect true:
 
 ```console
-$ kubectl annotate ingress/app --overwrite ingress.kubernetes.io/ssl-redirect=false
+$ kubectl annotate ingress/app --overwrite ingress.kubernetes.io/ssl-redirect=true
 ingress "app" annotated
 
 $ curl -iL 172.17.4.99:30876 -H 'Host: foo.bar'
@@ -72,7 +72,7 @@ using a [ConfigMap](https://github.com/jcmoraisjr/haproxy-ingress#configmap).
 
 ### App root context redirect
 
-Annotate the `app` ingress resource with `app-root` and also `ssl-redirect` for simplicity:
+Annotate the `app` ingress resource with `app-root`, and also `ssl-redirect` to `false` for simplicity:
 
 ```console
 $ kubectl annotate ingress/app --overwrite ingress.kubernetes.io/app-root=/web
