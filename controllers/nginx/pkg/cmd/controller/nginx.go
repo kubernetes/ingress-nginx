@@ -112,7 +112,7 @@ func newNGINXController() ingress.Controller {
 				continue
 			}
 
-			glog.V(3).Infof("remote adress %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
+			glog.V(3).Infof("remote address %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
 			go n.proxy.Handle(conn)
 		}
 	}()
