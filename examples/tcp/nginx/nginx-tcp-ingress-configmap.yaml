@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-tcp-ingress-configmap
+  namespace: kube-system
+data:
+  9000: "default/http-svc:80"
