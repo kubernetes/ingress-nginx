@@ -69,6 +69,9 @@ http {
     server_names_hash_bucket_size   {{ $cfg.ServerNameHashBucketSize }};
     map_hash_bucket_size            {{ $cfg.MapHashBucketSize }};
 
+    underscores_in_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }};
+    ignore_invalid_headers          {{ if $cfg.EnableUnderscoresInHeaders }}on{{ else }}off{{ end }};
+
     include /etc/nginx/mime.types;
     default_type text/html;
     {{ if $cfg.UseGzip }}
