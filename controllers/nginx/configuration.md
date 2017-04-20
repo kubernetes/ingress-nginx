@@ -262,6 +262,7 @@ Example usage: `custom-http-errors: 404,415`
 
 **enable-sticky-sessions:**  Enables sticky sessions using cookies. This is provided by [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng) module.
 
+**enable-underscores-in-headers:** Enables underscores in header names. This is disabled by default.
 
 **enable-vts-status:** Allows the replacement of the default status page with a third party module named [nginx-module-vts](https://github.com/vozlt/nginx-module-vts).
 
@@ -286,6 +287,8 @@ https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-
 **hsts-max-age:** Sets the time, in seconds, that the browser should remember that this site is only to be accessed using HTTPS.
 
 **hsts-preload:** Enables or disables the preload attribute in the HSTS feature (if is enabled)
+
+**ignore-invalid-headers:** set if header fields with invalid names should be ignored. This is 'true' by default.
 
 **keep-alive:** Sets the time during which a keep-alive client connection will stay open on the server side.
 The zero value disables keep-alive client connections.
@@ -415,6 +418,7 @@ The following table shows the options, the default value and a description.
 |custom-http-errors|" "|
 |enable-dynamic-tls-records|"true"|
 |enable-sticky-sessions|"false"|
+|enable-underscores-in-headers|"false"|
 |enable-vts-status|"false"|
 |error-log-level|notice|
 |gzip-types|see use-gzip description above|
@@ -422,6 +426,7 @@ The following table shows the options, the default value and a description.
 |hsts-include-subdomains|"true"|
 |hsts-max-age|"15724800"|
 |hsts-preload|"false"|
+|ignore-invalid-headers|"true"|
 |keep-alive|"75"|
 |map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|
