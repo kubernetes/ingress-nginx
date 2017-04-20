@@ -101,6 +101,16 @@ type Configuration struct {
 	// DisableIpv6 disable listening on ipv6 address
 	DisableIpv6 bool `json:"disable-ipv6,omitempty"`
 
+	// EnableUnderscoresInHeaders enables underscores in header names
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#underscores_in_headers
+	// By default this is disabled
+	EnableUnderscoresInHeaders bool `json:"enable-underscores-in-headers"`
+
+	// IgnoreInvalidHeaders set if header fields with invalid names should be ignored
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#ignore_invalid_headers
+	// By default this is enabled
+	IgnoreInvalidHeaders bool `json:"ignore-invalid-headers"`
+
 	// EnableStickySessions enabled sticky sessions using cookies
 	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
 	// By default this is disabled
@@ -266,15 +276,17 @@ type Configuration struct {
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	cfg := Configuration{
-		ClientHeaderBufferSize:  "1k",
-		EnableDynamicTLSRecords: true,
-		ErrorLogLevel:           errorLevel,
-		HTTP2MaxFieldSize:       "4k",
-		HTTP2MaxHeaderSize:      "16k",
-		HSTS:                    true,
+		ClientHeaderBufferSize:     "1k",
+		EnableDynamicTLSRecords:    true,
+		EnableUnderscoresInHeaders: false,
+		ErrorLogLevel:              errorLevel,
+		HTTP2MaxFieldSize:          "4k",
+		HTTP2MaxHeaderSize:         "16k",
+		HSTS:                       true,
 		HSTSIncludeSubdomains:    true,
 		HSTSMaxAge:               hstsMaxAge,
 		HSTSPreload:              false,
+		IgnoreInvalidHeaders:     true,
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
 		LargeClientHeaderBuffers: "4 8k",
