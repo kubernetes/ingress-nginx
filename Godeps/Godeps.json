@@ -31,6 +31,10 @@
 			"Rev": "5bd2802263f21d8788851d5305584c82a5c75d7e"
 		},
 		{
+			"ImportPath": "github.com/armon/go-proxyproto",
+			"Rev": "3daa90aec0039a806299b9078f4422fee950f33c"
+		},
+		{
 			"ImportPath": "github.com/beorn7/perks/quantile",
 			"Rev": "3ac7bf7a47d159a033b107610db8a1b6575507a4"
 		},
@@ -163,6 +167,10 @@
 			"ImportPath": "github.com/ncabatoff/process-exporter/proc",
 			"Comment": "v0.1.0",
 			"Rev": "2942f905437b665326fe044c49edb2094df13b37"
+		},
+		{
+			"ImportPath": "github.com/paultag/sniff/parser",
+			"Rev": "c36b8585a41425573d9e3e1890bf3b6ac89a3828"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",

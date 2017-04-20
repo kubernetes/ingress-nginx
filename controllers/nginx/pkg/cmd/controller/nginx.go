@@ -26,15 +26,15 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
 
+	proxyproto "github.com/armon/go-proxyproto"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
-
-	"strings"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
@@ -53,6 +53,8 @@ const (
 
 	defaultStatusModule statusModule = "default"
 	vtsStatusModule     statusModule = "vts"
+
+	errNoChild = "wait: no child processes"
 )
 
 var (
@@ -81,7 +83,39 @@ func newNGINXController() ingress.Controller {
 		configmap:     &api_v1.ConfigMap{},
 		isIPV6Enabled: isIPv6Enabled(),
 		resolver:      h,
+		proxy:         &proxy{},
 	}
+
+	listener, err := net.Listen("tcp", ":443")
+	if err != nil {
+		glog.Fatalf("%v", err)
+	}
+
+	proxyList := &proxyproto.Listener{Listener: listener}
+
+	// start goroutine that accepts tcp connections in port 443
+	go func() {
+		for {
+			var conn net.Conn
+			var err error
+
+			if n.isProxyProtocolEnabled {
+				// we need to wrap the listener in order to decode
+				// proxy protocol before handling the connection
+				conn, err = proxyList.Accept()
+			} else {
+				conn, err = listener.Accept()
+			}
+
+			if err != nil {
+				glog.Warningf("unexpected error accepting tcp connection: %v", err)
+				continue
+			}
+
+			glog.V(3).Infof("remote adress %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
+			go n.proxy.Handle(conn)
+		}
+	}()
 
 	var onChange func()
 	onChange = func() {
@@ -121,7 +155,8 @@ type NGINXController struct {
 
 	storeLister ingress.StoreLister
 
-	binary string
+	binary   string
+	resolver []net.IP
 
 	cmdArgs []string
 
@@ -134,7 +169,10 @@ type NGINXController struct {
 	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
 
-	resolver []net.IP
+	// returns true if proxy protocol es enabled
+	isProxyProtocolEnabled bool
+
+	proxy *proxy
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -306,7 +344,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 		return err
 	}
 	out, err := exec.Command(n.binary, "-t", "-c", tmpfile.Name()).CombinedOutput()
-	if err != nil {
+	if err != nil && err.Error() != errNoChild {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
 -------------------------------------------------------------------------------
@@ -324,6 +362,20 @@ Error: %v
 // SetConfig sets the configured configmap
 func (n *NGINXController) SetConfig(cmap *api_v1.ConfigMap) {
 	n.configmap = cmap
+
+	n.isProxyProtocolEnabled = false
+	if cmap == nil {
+		return
+	}
+
+	val, ok := cmap.Data["use-proxy-protocol"]
+	if ok {
+		b, err := strconv.ParseBool(val)
+		if err == nil {
+			n.isProxyProtocolEnabled = b
+			return
+		}
+	}
 }
 
 // SetListers sets the configured store listers in the generic ingress controller
@@ -445,6 +497,39 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	if err := n.testTemplate(content); err != nil {
 		return nil, err
 	}
+
+	servers := []*server{}
+	for _, pb := range ingressCfg.PassthroughBackends {
+		svc := pb.Service
+		if svc == nil {
+			glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
+			continue
+		}
+		port, err := strconv.Atoi(pb.Port.String())
+		if err != nil {
+			for _, sp := range svc.Spec.Ports {
+				if sp.Name == pb.Port.String() {
+					port = int(sp.Port)
+					break
+				}
+			}
+		} else {
+			for _, sp := range svc.Spec.Ports {
+				if sp.Port == int32(port) {
+					port = int(sp.Port)
+					break
+				}
+			}
+		}
+
+		servers = append(servers, &server{
+			Hostname: pb.Hostname,
+			IP:       svc.Spec.ClusterIP,
+			Port:     port,
+		})
+	}
+
+	n.proxy.ServerList = servers
 
 	return content, nil
 }

@@ -50,7 +50,7 @@ const (
 
 	logFormatUpstream = `%v - [$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status`
 
-	logFormatStream = `[$time_local] $protocol [$ssl_preread_server_name] [$stream_upstream] $status $bytes_sent $bytes_received $session_time`
+	logFormatStream = `[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`
 
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
