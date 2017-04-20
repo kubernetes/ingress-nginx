@@ -1024,12 +1024,6 @@ func (ic *GenericController) getEndpoints(
 	servicePort intstr.IntOrString,
 	proto api.Protocol,
 	hz *healthcheck.Upstream) []ingress.Endpoint {
-	glog.V(3).Infof("getting endpoints for service %v/%v and port %v", s.Namespace, s.Name, servicePort.String())
-	ep, err := ic.endpLister.GetServiceEndpoints(s)
-	if err != nil {
-		glog.Warningf("unexpected error obtaining service endpoints: %v", err)
-		return []ingress.Endpoint{}
-	}
 
 	upsServers := []ingress.Endpoint{}
 
@@ -1037,6 +1031,53 @@ func (ic *GenericController) getEndpoints(
 	// contains multiple port definitions sharing the same
 	// targetport.
 	adus := make(map[string]bool, 0)
+
+	// ExternalName services
+	if s.Spec.Type == api.ServiceTypeExternalName {
+		var targetPort int
+
+		switch servicePort.Type {
+		case intstr.Int:
+			targetPort = servicePort.IntValue()
+		case intstr.String:
+			port, err := service.GetPortMapping(servicePort.StrVal, s)
+			if err == nil {
+				targetPort = int(port)
+				break
+			}
+
+			glog.Warningf("error mapping service port: %v", err)
+			err = ic.checkSvcForUpdate(s)
+			if err != nil {
+				glog.Warningf("error mapping service ports: %v", err)
+				return upsServers
+			}
+
+			port, err = service.GetPortMapping(servicePort.StrVal, s)
+			if err == nil {
+				targetPort = int(port)
+			}
+		}
+
+		// check for invalid port value
+		if targetPort <= 0 {
+			return upsServers
+		}
+
+		return append(upsServers, ingress.Endpoint{
+			Address:     s.Spec.ExternalName,
+			Port:        fmt.Sprintf("%v", targetPort),
+			MaxFails:    hz.MaxFails,
+			FailTimeout: hz.FailTimeout,
+		})
+	}
+
+	glog.V(3).Infof("getting endpoints for service %v/%v and port %v", s.Namespace, s.Name, servicePort.String())
+	ep, err := ic.endpLister.GetServiceEndpoints(s)
+	if err != nil {
+		glog.Warningf("unexpected error obtaining service endpoints: %v", err)
+		return upsServers
+	}
 
 	for _, ss := range ep.Subsets {
 		for _, epPort := range ss.Ports {
