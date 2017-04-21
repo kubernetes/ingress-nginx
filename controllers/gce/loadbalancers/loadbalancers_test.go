@@ -106,6 +106,118 @@ func TestCreateHTTPSLoadBalancer(t *testing.T) {
 	}
 }
 
+// Tests that a certificate is created from the provided Key/Cert combo
+// and the proxy is updated to another cert when the provided cert changes
+func TestCertUpdate(t *testing.T) {
+	primaryCertName := "k8s-ssl-test"
+	secondaryCertName := "k8s-ssl-1-test"
+	lbInfo := &L7RuntimeInfo{
+		Name:      "test",
+		AllowHTTP: false,
+		TLS:       &TLSCerts{Key: "key", Cert: "cert"},
+	}
+
+	f := NewFakeLoadBalancers(lbInfo.Name)
+	pool := newFakeLoadBalancerPool(f, t)
+
+	// Sync first cert
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
+	verifyCertAndProxyLink(primaryCertName, lbInfo.TLS.Cert, f, t)
+
+	// Sync with different cert
+	lbInfo.TLS = &TLSCerts{Key: "key2", Cert: "cert2"}
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
+	verifyCertAndProxyLink(secondaryCertName, lbInfo.TLS.Cert, f, t)
+}
+
+// Tests that controller can overwrite existing, unused certificates
+func TestCertCreationWithCollision(t *testing.T) {
+	primaryCertName := "k8s-ssl-test"
+	secondaryCertName := "k8s-ssl-1-test"
+	lbInfo := &L7RuntimeInfo{
+		Name:      "test",
+		AllowHTTP: false,
+		TLS:       &TLSCerts{Key: "key", Cert: "cert"},
+	}
+
+	f := NewFakeLoadBalancers(lbInfo.Name)
+	pool := newFakeLoadBalancerPool(f, t)
+
+	// Have both names already used by orphaned certs
+	f.CreateSslCertificate(&compute.SslCertificate{
+		Name:        primaryCertName,
+		Certificate: "abc",
+		SelfLink:    "existing",
+	})
+	f.CreateSslCertificate(&compute.SslCertificate{
+		Name:        secondaryCertName,
+		Certificate: "xyz",
+		SelfLink:    "existing",
+	})
+
+	// Sync first cert
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
+	verifyCertAndProxyLink(primaryCertName, lbInfo.TLS.Cert, f, t)
+
+	// Sync with different cert
+	lbInfo.TLS = &TLSCerts{Key: "key2", Cert: "cert2"}
+	pool.Sync([]*L7RuntimeInfo{lbInfo})
+	verifyCertAndProxyLink(secondaryCertName, lbInfo.TLS.Cert, f, t)
+}
+
+func TestCertRetentionAfterRestart(t *testing.T) {
+	primaryCertName := "k8s-ssl-test"
+	secondaryCertName := "k8s-ssl-1-test"
+	lbInfo := &L7RuntimeInfo{
+		Name:      "test",
+		AllowHTTP: false,
+		TLS:       &TLSCerts{Key: "key", Cert: "cert"},
+	}
+
+	f := NewFakeLoadBalancers(lbInfo.Name)
+	firstPool := newFakeLoadBalancerPool(f, t)
+
+	// Sync twice so the expected certificate uses the secondary name
+	firstPool.Sync([]*L7RuntimeInfo{lbInfo})
+	verifyCertAndProxyLink(primaryCertName, lbInfo.TLS.Cert, f, t)
+	lbInfo.TLS = &TLSCerts{Key: "key2", Cert: "cert2"}
+	firstPool.Sync([]*L7RuntimeInfo{lbInfo})
+	verifyCertAndProxyLink(secondaryCertName, lbInfo.TLS.Cert, f, t)
+
+	// Restart of controller represented by a new pool
+	secondPool := newFakeLoadBalancerPool(f, t)
+	secondPool.Sync([]*L7RuntimeInfo{lbInfo})
+
+	// Verify second name is still used
+	verifyCertAndProxyLink(secondaryCertName, lbInfo.TLS.Cert, f, t)
+
+	// Update cert one more time to verify loop
+	lbInfo.TLS = &TLSCerts{Key: "key3", Cert: "cert3"}
+	secondPool.Sync([]*L7RuntimeInfo{lbInfo})
+	verifyCertAndProxyLink(primaryCertName, lbInfo.TLS.Cert, f, t)
+
+}
+
+func verifyCertAndProxyLink(certName, certValue string, f *FakeLoadBalancers, t *testing.T) {
+	cert, err := f.GetSslCertificate(certName)
+	if err != nil {
+		t.Fatalf("expected ssl certificate to exist: %v, err: %v", certName, err)
+	}
+
+	if cert.Certificate != certValue {
+		t.Fatalf("unexpected certificate value; expected %v, actual %v", certValue, cert.Certificate)
+	}
+
+	tps, err := f.GetTargetHttpsProxy(f.tpName(true))
+	if err != nil {
+		t.Fatalf("expected https proxy to exist: %v, err: %v", certName, err)
+	}
+
+	if len(tps.SslCertificates) == 0 || tps.SslCertificates[0] != cert.SelfLink {
+		t.Fatalf("expected ssl certificate to be linked in target proxy; Cert Link: %q; Target Proxy Certs: %v", cert.SelfLink, tps.SslCertificates)
+	}
+}
+
 func TestCreateHTTPSLoadBalancerAnnotationCert(t *testing.T) {
 	// This should NOT create the forwarding rule and target proxy
 	// associated with the HTTP branch of this loadbalancer.
