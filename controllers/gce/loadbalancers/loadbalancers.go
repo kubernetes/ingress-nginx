@@ -392,15 +392,13 @@ func (l *L7) checkSSLCert() (err error) {
 	}
 
 	// Retrieve known ssl certificate
-	var usedCert *compute.SslCertificate
 	if expectedCertName != "" {
-		usedCert, _ = l.cloud.GetSslCertificate(expectedCertName)
+		l.sslCert, _ = l.cloud.GetSslCertificate(expectedCertName)
 	}
 
 	// TODO: Currently, GCE only supports a single certificate per static IP
 	// so we don't need to bother with disambiguation. Naming the cert after
 	// the loadbalancer is a simplification.
-
 	ingCert := l.runtimeInfo.TLS.Cert
 	ingKey := l.runtimeInfo.TLS.Key
 
@@ -414,10 +412,10 @@ func (l *L7) checkSSLCert() (err error) {
 	// PrivateKey is write only, so compare certs alone. We're assuming that
 	// no one will change just the key. We can remember the key and compare,
 	// but a bug could end up leaking it, which feels worse.
-	if usedCert == nil || ingCert != usedCert.Certificate {
+	if l.sslCert == nil || ingCert != l.sslCert.Certificate {
 		newCertName := primaryCertName
-		if usedCert != nil && (ingCert != usedCert.Certificate) {
-			if usedCert.Name == primaryCertName {
+		if l.sslCert != nil && (ingCert != l.sslCert.Certificate) {
+			if l.sslCert.Name == primaryCertName {
 				newCertName = secondaryCertName
 			}
 		}
@@ -439,7 +437,7 @@ func (l *L7) checkSSLCert() (err error) {
 			return err
 		}
 		// Save the current cert for cleanup after we update the target proxy.
-		l.oldSSLCert = usedCert
+		l.oldSSLCert = l.sslCert
 		l.sslCert = cert
 	}
 
