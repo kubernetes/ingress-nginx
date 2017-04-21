@@ -352,23 +352,48 @@ func (l *L7) deleteOldSSLCert() (err error) {
 	return nil
 }
 
-func (l *L7) checkSSLCert() (err error) {
-	certName := l.runtimeInfo.TLSName
+// Returns the name portion of a link - which is the last section
+func getResourceNameFromLink(link string) string {
+	s := strings.Split(link, "/")
+	if len(s) == 0 {
+		return ""
+	}
+	return s[len(s)-1]
+}
 
+func (l *L7) checkSSLCert() (err error) {
+	// Handle Pre-Shared cert
+	preSharedCertName := l.runtimeInfo.TLSName
 	// Use the named GCE cert when it is specified by the annotation.
-	if certName != "" {
+	if preSharedCertName != "" {
 		// Ask GCE for the cert, checking for problems and existence.
-		cert, err := l.cloud.GetSslCertificate(certName)
+		cert, err := l.cloud.GetSslCertificate(preSharedCertName)
 		if err != nil {
 			return err
 		}
 		if cert == nil {
-			return fmt.Errorf("cannot find existing sslCertificate %v for %v", certName, l.Name)
+			return fmt.Errorf("cannot find existing sslCertificate %v for %v", preSharedCertName, l.Name)
 		}
 
-		glog.Infof("Using existing sslCertificate %v for %v", certName, l.Name)
+		glog.V(2).Infof("Using existing sslCertificate %v for %v", preSharedCertName, l.Name)
 		l.sslCert = cert
 		return nil
+	}
+
+	// Handle secret-created cert
+	// Determine what certificate name is being used
+	var expectedCertName string
+	if l.sslCert != nil {
+		expectedCertName = l.sslCert.Name
+	} else {
+		// Retrieve the ssl certificate in use by the expected target proxy (if exists)
+		expectedCertName = getResourceNameFromLink(l.getSslCertInUse())
+	}
+
+	// Retrieve known ssl certificate
+	var usedCert *compute.SslCertificate
+	if expectedCertName != "" {
+		usedCert, _ = l.cloud.GetSslCertificate(expectedCertName)
 	}
 
 	// TODO: Currently, GCE only supports a single certificate per static IP
@@ -384,32 +409,28 @@ func (l *L7) checkSSLCert() (err error) {
 	// TODO: Clean this code up into a ring buffer.
 	primaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%v", sslCertPrefix, l.Name))
 	secondaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%d-%v", sslCertPrefix, 1, l.Name))
-	certName = primaryCertName
-	if l.sslCert != nil {
-		certName = l.sslCert.Name
-	}
-
-	// Skip error checking because error-ing out will retry and loop, when we
-	// should create/update the cert if there is an error or does not exist.
-	cert, _ := l.cloud.GetSslCertificate(certName)
 
 	// PrivateKey is write only, so compare certs alone. We're assuming that
 	// no one will change just the key. We can remember the key and compare,
 	// but a bug could end up leaking it, which feels worse.
-	if cert == nil || ingCert != cert.Certificate {
-
-		certChanged := cert != nil && (ingCert != cert.Certificate)
-		if certChanged {
-			if certName == primaryCertName {
-				certName = secondaryCertName
-			} else {
-				certName = primaryCertName
+	if usedCert == nil || ingCert != usedCert.Certificate {
+		newCertName := primaryCertName
+		if usedCert != nil && (ingCert != usedCert.Certificate) {
+			if usedCert.Name == primaryCertName {
+				newCertName = secondaryCertName
 			}
 		}
 
-		glog.Infof("Creating new sslCertificates %v for %v", certName, l.Name)
-		cert, err = l.cloud.CreateSslCertificate(&compute.SslCertificate{
-			Name:        certName,
+		// Perform a delete in case a certificate exists with the exact name
+		// This certificate should be unused since we check the target proxy's certificate prior
+		// to this point. Although, it's possible an actor pointed a target proxy to this certificate.
+		if err = l.cloud.DeleteSslCertificate(newCertName); err != nil && !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+			return fmt.Errorf("unable to delete ssl certificate with name %q, expected it to be unused. err: %v", newCertName, err)
+		}
+
+		glog.Infof("Creating new sslCertificates %v for %v", newCertName, l.Name)
+		cert, err := l.cloud.CreateSslCertificate(&compute.SslCertificate{
+			Name:        newCertName,
 			Certificate: ingCert,
 			PrivateKey:  ingKey,
 		})
@@ -417,11 +438,20 @@ func (l *L7) checkSSLCert() (err error) {
 			return err
 		}
 		// Save the current cert for cleanup after we update the target proxy.
-		l.oldSSLCert = l.sslCert
+		l.oldSSLCert = usedCert
+		l.sslCert = cert
 	}
 
-	l.sslCert = cert
 	return nil
+}
+
+func (l *L7) getSslCertInUse() string {
+	proxyName := l.namer.Truncate(fmt.Sprintf("%v-%v", targetHTTPSProxyPrefix, l.Name))
+	proxy, _ := l.cloud.GetTargetHttpsProxy(proxyName)
+	if proxy != nil && len(proxy.SslCertificates) > 0 {
+		return proxy.SslCertificates[0]
+	}
+	return ""
 }
 
 func (l *L7) checkHttpsProxy() (err error) {
