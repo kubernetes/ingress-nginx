@@ -111,11 +111,6 @@ type Configuration struct {
 	// By default this is enabled
 	IgnoreInvalidHeaders bool `json:"ignore-invalid-headers"`
 
-	// EnableStickySessions enabled sticky sessions using cookies
-	// https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng
-	// By default this is disabled
-	EnableStickySessions bool `json:"enable-sticky-sessions,omitempty"`
-
 	// EnableVtsStatus allows the replacement of the default status page with a third party module named
 	// nginx-module-vts - https://github.com/vozlt/nginx-module-vts
 	// By default this is disabled
