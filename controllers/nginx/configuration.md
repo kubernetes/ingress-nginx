@@ -260,8 +260,6 @@ Example usage: `custom-http-errors: 404,415`
 **enable-dynamic-tls-records:** Enables dynamically sized TLS records to improve time-to-first-byte. Enabled by default. See [CloudFlare's blog](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency) for more information.
 
 
-**enable-sticky-sessions:**  Enables sticky sessions using cookies. This is provided by [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng) module.
-
 **enable-underscores-in-headers:** Enables underscores in header names. This is disabled by default.
 
 **enable-vts-status:** Allows the replacement of the default status page with a third party module named [nginx-module-vts](https://github.com/vozlt/nginx-module-vts).
