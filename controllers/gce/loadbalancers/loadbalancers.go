@@ -339,7 +339,8 @@ func (l *L7) checkProxy() (err error) {
 }
 
 func (l *L7) deleteOldSSLCert() (err error) {
-	if l.oldSSLCert == nil || l.sslCert == nil || l.oldSSLCert.Name == l.sslCert.Name {
+	if l.oldSSLCert == nil || l.sslCert == nil ||
+		l.oldSSLCert.Name == l.sslCert.Name || !strings.HasPrefix(l.oldSSLCert.Name, sslCertPrefix) {
 		return nil
 	}
 	glog.Infof("Cleaning up old SSL Certificate %v, current name %v", l.oldSSLCert.Name, l.sslCert.Name)
