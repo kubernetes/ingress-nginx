@@ -412,7 +412,7 @@ The following table shows the options, the default value and a description.
 
 |name                 |default|
 |---------------------------|------|
-|body-size|1m|
+|body-size|0 (unlimited)|
 |custom-http-errors|" "|
 |enable-dynamic-tls-records|"true"|
 |enable-sticky-sessions|"false"|

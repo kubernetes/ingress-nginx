@@ -30,7 +30,8 @@ import (
 const (
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
-	bodySize = "1m"
+	// Default: unlimited.
+	bodySize = "0"
 
 	// http://nginx.org/en/docs/ngx_core_module.html#error_log
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
