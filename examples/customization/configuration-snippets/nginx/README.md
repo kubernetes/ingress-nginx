@@ -20,10 +20,6 @@ NAME                                    READY     STATUS    RESTARTS   AGE
 default-http-backend-2657704409-qgwdd   1/1       Running   0          28s
 ```
 
-```console
-$ kubectl create -f nginx-load-balancer-conf.yaml
-```
-
 ## Controller
 
 You can deploy the controller as follows:
