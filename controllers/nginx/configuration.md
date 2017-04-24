@@ -48,6 +48,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[ingress.kubernetes.io/auth-tls-secret](#certificate-authentication)|string|
 |[ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
+|[ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
 |[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
@@ -151,6 +152,14 @@ The validation depth between the provided client certificate and the Certificati
 
 Please check the [tls-auth](/examples/auth/client-certs/nginx/README.md) example.
 
+### Configuration snippet
+
+Using this annotion you can add additional configuration to the NGINX location. For example:
+
+```
+ingress.kubernetes.io/configuration-snippet: |
+  more_set_headers "Request-Id: $request_id";
+```
 
 ### Enable CORS
 
