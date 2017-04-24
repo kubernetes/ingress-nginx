@@ -131,10 +131,22 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	return &External{
 		URL:             str,
-		Host:            ur.Hostname(),
+		Host:            stripPort(ur.Host),
 		SigninURL:       signin,
 		Method:          m,
 		SendBody:        sb,
 		ResponseHeaders: h,
 	}, nil
+}
+
+// TODO: Remove after upgrade to Go 1.8
+func stripPort(hostport string) string {
+	colon := strings.IndexByte(hostport, ':')
+	if colon == -1 {
+		return hostport
+	}
+	if i := strings.IndexByte(hostport, ']'); i != -1 {
+		return strings.TrimPrefix(hostport[:i], "[")
+	}
+	return hostport[:colon]
 }
