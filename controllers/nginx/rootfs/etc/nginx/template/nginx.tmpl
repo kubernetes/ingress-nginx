@@ -158,6 +158,8 @@ http {
     port_in_redirect        off;
 
     ssl_protocols {{ $cfg.SSLProtocols }};
+    proxy_ssl_protocols {{ $cfg.SSLProtocols }};
+    proxy_ssl_session_reuse on;
 
     # turn on session caching to drastically improve performance
     {{ if $cfg.SSLSessionCache }}
@@ -175,6 +177,7 @@ http {
     # allow configuring custom ssl ciphers
     ssl_ciphers '{{ $cfg.SSLCiphers }}';
     ssl_prefer_server_ciphers on;
+    proxy_ssl_ciphers {{ $cfg.SSLCiphers }};
     {{ end }}
 
     {{ if not (empty $cfg.SSLDHParam) }}
@@ -278,6 +281,8 @@ http {
             proxy_set_header X-Scheme       $pass_access_scheme;
             {{ end }}
             proxy_pass_request_headers  on;
+            proxy_set_header Host {{ $location.ExternalAuth.Host }};
+            proxy_ssl_server_name on;
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
         }

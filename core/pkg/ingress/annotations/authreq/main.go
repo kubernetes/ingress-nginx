@@ -38,7 +38,9 @@ const (
 
 // External returns external authentication configuration for an Ingress rule
 type External struct {
-	URL             string   `json:"url"`
+	URL string `json:"url"`
+	// Host contains the hostname defined in the URL
+	Host            string   `json:"host"`
 	SigninURL       string   `json:"signinUrl"`
 	Method          string   `json:"method"`
 	SendBody        bool     `json:"sendBody"`
@@ -129,6 +131,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	return &External{
 		URL:             str,
+		Host:            ur.Hostname(),
 		SigninURL:       signin,
 		Method:          m,
 		SendBody:        sb,
