@@ -38,7 +38,9 @@ const (
 
 // External returns external authentication configuration for an Ingress rule
 type External struct {
-	URL             string   `json:"url"`
+	URL string `json:"url"`
+	// Host contains the hostname defined in the URL
+	Host            string   `json:"host"`
 	SigninURL       string   `json:"signinUrl"`
 	Method          string   `json:"method"`
 	SendBody        bool     `json:"sendBody"`
@@ -129,9 +131,22 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	return &External{
 		URL:             str,
+		Host:            stripPort(ur.Host),
 		SigninURL:       signin,
 		Method:          m,
 		SendBody:        sb,
 		ResponseHeaders: h,
 	}, nil
+}
+
+// TODO: Remove after upgrade to Go 1.8
+func stripPort(hostport string) string {
+	colon := strings.IndexByte(hostport, ':')
+	if colon == -1 {
+		return hostport
+	}
+	if i := strings.IndexByte(hostport, ']'); i != -1 {
+		return strings.TrimPrefix(hostport[:i], "[")
+	}
+	return hostport[:colon]
 }
