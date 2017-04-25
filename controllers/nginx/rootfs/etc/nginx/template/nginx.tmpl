@@ -199,6 +199,8 @@ http {
     # In case of errors try the next upstream server before returning an error
     proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504{{ if $cfg.RetryNonIdempotent }} non_idempotent{{ end }};
 
+    proxy_ssl_session_reuse on;
+
     {{range $name, $upstream := $backends}}
     upstream {{$upstream.Name}} {
         {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
@@ -273,11 +275,14 @@ http {
             proxy_set_header            Content-Length "";
             {{ end }}
             {{ if not (empty $location.ExternalAuth.Method) }}
-            proxy_method {{ $location.ExternalAuth.Method }};
-            proxy_set_header X-Original-URI $request_uri;
-            proxy_set_header X-Scheme       $pass_access_scheme;
+            proxy_method                {{ $location.ExternalAuth.Method }};
+            proxy_set_header            X-Original-URI $request_uri;
+            proxy_set_header            X-Scheme       $pass_access_scheme;
             {{ end }}
             proxy_pass_request_headers  on;
+            proxy_set_header            Host {{ $location.ExternalAuth.Host }};
+            proxy_ssl_server_name       on;            
+
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
         }
