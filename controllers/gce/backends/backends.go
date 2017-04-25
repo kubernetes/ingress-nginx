@@ -202,18 +202,7 @@ func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.Named
 }
 
 func newBackendService(igs []*compute.InstanceGroup, bm BalancingMode, namedPort *compute.NamedPort, healthCheckLinks []string, protocol utils.AppProtocol, name string) *compute.BackendService {
-	backends := getBackendsForIGs(igs)
-	for _, b := range backends {
-		switch bm {
-		case Rate:
-			b.MaxRatePerInstance = maxRPS
-		default:
-			// TODO: Set utilization and connection limits when we accept them
-			// as valid fields.
-		}
-		b.BalancingMode = string(bm)
-	}
-
+	backends := getBackendsForIGs(igs, bm)
 	return &compute.BackendService{
 		Name:         name,
 		Protocol:     string(protocol),
@@ -315,10 +304,22 @@ func (b *Backends) List() ([]interface{}, error) {
 	return interList, nil
 }
 
-func getBackendsForIGs(igs []*compute.InstanceGroup) []*compute.Backend {
-	backends := []*compute.Backend{}
+func getBackendsForIGs(igs []*compute.InstanceGroup, bm BalancingMode) []*compute.Backend {
+	var backends []*compute.Backend
 	for _, ig := range igs {
-		backends = append(backends, &compute.Backend{Group: ig.SelfLink})
+		b := &compute.Backend{
+			Group:         ig.SelfLink,
+			BalancingMode: string(bm),
+		}
+		switch bm {
+		case Rate:
+			b.MaxRatePerInstance = maxRPS
+		default:
+			// TODO: Set utilization and connection limits when we accept them
+			// as valid fields.
+		}
+
+		backends = append(backends, b)
 	}
 	return backends
 }
@@ -340,17 +341,30 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 	glog.Infof("Backend %v has a broken edge, expected igs %+v, current igs %+v",
 		be.Name, igLinks.List(), beIGs.List())
 
-	newBackends := []*compute.Backend{}
-	for _, b := range getBackendsForIGs(igs) {
-		if !beIGs.Has(b.Group) {
-			newBackends = append(newBackends, b)
+	originalBackends := be.Backends
+	var addIGs []*compute.InstanceGroup
+	for _, ig := range igs {
+		if !beIGs.Has(ig.SelfLink) {
+			addIGs = append(addIGs, ig)
 		}
 	}
-	be.Backends = append(be.Backends, newBackends...)
-	if err := b.cloud.UpdateBackendService(be); err != nil {
-		return err
+
+	var errs []string
+	for _, bm := range []BalancingMode{Rate, Utilization} {
+		addBEs := getBackendsForIGs(addIGs, bm)
+		be.Backends = append(originalBackends, addBEs...)
+
+		if err := b.cloud.UpdateBackendService(be); err != nil {
+			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
+				glog.Infof("Error updating backend service backends with balancing mode %v:%v", bm, err)
+				errs = append(errs, err.Error())
+				continue
+			}
+			return err
+		}
+		return nil
 	}
-	return nil
+	return fmt.Errorf("%v", strings.Join(errs, "\n"))
 }
 
 // Sync syncs backend services corresponding to ports in the given list.
