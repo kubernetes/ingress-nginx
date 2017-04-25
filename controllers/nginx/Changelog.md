@@ -1,5 +1,84 @@
 Changelog
 
+### 0.9-beta.4
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.4`
+
+*New Features:*
+
+- Add support for services of type ExternalName
+
+
+*Changes:*
+
+- [X] [#635](https://github.com/kubernetes/ingress/pull/635) Allow configuration of features underscores_in_headers and ignore_invalid_headers
+- [X] [#633](https://github.com/kubernetes/ingress/pull/633) Fix lint errors
+- [X] [#630](https://github.com/kubernetes/ingress/pull/630) Add example of TCP loadbalancing
+- [X] [#629](https://github.com/kubernetes/ingress/pull/629) Add support for services of type ExternalName
+- [X] [#624](https://github.com/kubernetes/ingress/pull/624) Compute server_names_hash_bucket_size correctly
+- [X] [#615](https://github.com/kubernetes/ingress/pull/615) Process exited cleanly before we hit wait4
+- [X] [#614](https://github.com/kubernetes/ingress/pull/614) Refactor nginx ssl passthrough
+- [X] [#613](https://github.com/kubernetes/ingress/pull/613) Status leader election must consired the ingress class
+- [X] [#607](https://github.com/kubernetes/ingress/pull/607) Allow custom server_names_hash_max_size & server_names_hash_bucket_size
+- [X] [#601](https://github.com/kubernetes/ingress/pull/601) add a judgment
+- [X] [#601](https://github.com/kubernetes/ingress/pull/600) Replace custom child reap code with go-reap
+- [X] [#597](https://github.com/kubernetes/ingress/pull/599) Add flag to force namespace isolation
+- [X] [#595](https://github.com/kubernetes/ingress/pull/595) Remove Host header from auth_request proxy configuration
+- [X] [#588](https://github.com/kubernetes/ingress/pull/588) Read resolv.conf file just once
+- [X] [#586](https://github.com/kubernetes/ingress/pull/586) Updated instructions to create an ingress controller build
+- [X] [#583](https://github.com/kubernetes/ingress/pull/583) fixed lua_package_path in nginx.tmpl 
+- [X] [#580](https://github.com/kubernetes/ingress/pull/580) Updated faq for running multiple ingress controller
+- [X] [#579](https://github.com/kubernetes/ingress/pull/579) Detect if the ingress controller is running with multiple replicas
+- [X] [#578](https://github.com/kubernetes/ingress/pull/578) Set different listeners per protocol version
+- [X] [#577](https://github.com/kubernetes/ingress/pull/577) Avoid zombie child processes
+- [X] [#576](https://github.com/kubernetes/ingress/pull/576) Replace secret workqueue
+- [X] [#568](https://github.com/kubernetes/ingress/pull/568) Revert merge annotations to the implicit root context 
+- [X] [#563](https://github.com/kubernetes/ingress/pull/563) Add option to disable hsts preload
+- [X] [#560](https://github.com/kubernetes/ingress/pull/560) Fix intermittent misconfiguration of backend.secure and SessionAffinity
+- [X] [#556](https://github.com/kubernetes/ingress/pull/556) Update nginx version and remove dumb-init
+- [X] [#551](https://github.com/kubernetes/ingress/pull/551) Build namespace and ingress class as label
+- [X] [#546](https://github.com/kubernetes/ingress/pull/546) Fix a couple of 'does not contains' typos
+- [X] [#542](https://github.com/kubernetes/ingress/pull/542) Fix lint errors
+- [X] [#540](https://github.com/kubernetes/ingress/pull/540) Add Backends.SSLPassthrough attribute
+- [X] [#539](https://github.com/kubernetes/ingress/pull/539) Migrate to client-go
+- [X] [#536](https://github.com/kubernetes/ingress/pull/536) add unit test cases for core/pkg/ingress/controller/backend_ssl
+- [X] [#535](https://github.com/kubernetes/ingress/pull/535) Add test for ingress status update
+- [X] [#532](https://github.com/kubernetes/ingress/pull/532) Add setting to configure ecdh curve
+- [X] [#531](https://github.com/kubernetes/ingress/pull/531) Fix link to examples
+- [X] [#530](https://github.com/kubernetes/ingress/pull/530) Fix link to custom nginx configuration
+- [X] [#528](https://github.com/kubernetes/ingress/pull/528) Add reference to apiserver-host flag
+- [X] [#527](https://github.com/kubernetes/ingress/pull/527) Add annotations to location of default backend (root context)
+- [X] [#525](https://github.com/kubernetes/ingress/pull/525) Avoid negative values configuring the max number of open files
+- [X] [#523](https://github.com/kubernetes/ingress/pull/523) Fix a typo in an error message
+- [X] [#521](https://github.com/kubernetes/ingress/pull/521) nginx-ingress-controller is built twice by docker-build target
+- [X] [#517](https://github.com/kubernetes/ingress/pull/517) Use whitelist-source-range from configmap when no annotation on ingress
+- [X] [#516](https://github.com/kubernetes/ingress/pull/516) Convert WorkerProcesses setting to string to allow the value auto
+- [X] [#512](https://github.com/kubernetes/ingress/pull/512) Fix typos regarding the ssl-passthrough annotation documentation
+- [X] [#505](https://github.com/kubernetes/ingress/pull/505) add unit test cases for core/pkg/ingress/controller/annotations
+- [X] [#503](https://github.com/kubernetes/ingress/pull/503) Add example for nginx in aws
+- [X] [#502](https://github.com/kubernetes/ingress/pull/502) Add information about SSL Passthrough annotation 
+- [X] [#500](https://github.com/kubernetes/ingress/pull/500) Improve TLS secret configuration
+- [X] [#498](https://github.com/kubernetes/ingress/pull/498) Proper enqueue a secret on the secret queue
+- [X] [#493](https://github.com/kubernetes/ingress/pull/493) Update nginx and vts module
+- [X] [#490](https://github.com/kubernetes/ingress/pull/490) Add unit test case for named_port
+- [X] [#488](https://github.com/kubernetes/ingress/pull/488) Adds support for CORS on error responses and Authorization header
+- [X] [#485](https://github.com/kubernetes/ingress/pull/485) Fix typo nginx configMap vts metrics customization
+- [X] [#481](https://github.com/kubernetes/ingress/pull/481) Remove unnecessary quote in nginx log format
+- [X] [#471](https://github.com/kubernetes/ingress/pull/471) prometheus scrape annotations
+- [X] [#460](https://github.com/kubernetes/ingress/pull/460) add example of 'run multiple haproxy ingress controllers as a deployment' 
+- [X] [#459](https://github.com/kubernetes/ingress/pull/459) Add information about SSL certificates in the default log level
+- [X] [#456](https://github.com/kubernetes/ingress/pull/456) Avoid upstreams with multiple servers with the same port
+- [X] [#454](https://github.com/kubernetes/ingress/pull/454) Pass request port to real server
+- [X] [#450](https://github.com/kubernetes/ingress/pull/450) fix nginx-tcp-and-udp on same port
+- [X] [#446](https://github.com/kubernetes/ingress/pull/446) remove configmap validations
+- [X] [#445](https://github.com/kubernetes/ingress/pull/445) Remove snakeoil certificate generation
+- [X] [#442](https://github.com/kubernetes/ingress/pull/442) Fix a few bugs in the nginx-ingress-controller Makefile
+- [X] [#441](https://github.com/kubernetes/ingress/pull/441) skip validation when configmap is empty
+- [X] [#439](https://github.com/kubernetes/ingress/pull/439) Avoid a nil-reference when the temporary file cannot be created
+- [X] [#438](https://github.com/kubernetes/ingress/pull/438) Improve English in error messages
+- [X] [#437](https://github.com/kubernetes/ingress/pull/437) Reference constant
+
+
 ### 0.9-beta.3
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.3`
