@@ -295,7 +295,7 @@ data:
 ```
 
 
-Please check the [tcp services](examples/tcp/README.md) example
+Please check the [tcp services](../../examples/tcp/nginx/README.md) example
 
 ## Exposing UDP services
 
