@@ -339,89 +339,141 @@ func (l *L7) checkProxy() (err error) {
 }
 
 func (l *L7) deleteOldSSLCert() (err error) {
-	if l.oldSSLCert == nil || l.sslCert == nil || l.oldSSLCert.Name == l.sslCert.Name {
+	if l.oldSSLCert == nil || l.sslCert == nil ||
+		l.oldSSLCert.Name == l.sslCert.Name || !strings.HasPrefix(l.oldSSLCert.Name, sslCertPrefix) {
 		return nil
 	}
 	glog.Infof("Cleaning up old SSL Certificate %v, current name %v", l.oldSSLCert.Name, l.sslCert.Name)
-	if err := l.cloud.DeleteSslCertificate(l.oldSSLCert.Name); err != nil {
-		if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-			return err
-		}
+	if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteSslCertificate(l.oldSSLCert.Name)); err != nil {
+		return err
 	}
 	l.oldSSLCert = nil
 	return nil
 }
 
-func (l *L7) checkSSLCert() (err error) {
-	certName := l.runtimeInfo.TLSName
+// Returns the name portion of a link - which is the last section
+func getResourceNameFromLink(link string) string {
+	s := strings.Split(link, "/")
+	if len(s) == 0 {
+		return ""
+	}
+	return s[len(s)-1]
+}
 
+func (l *L7) usePreSharedCert() (bool, error) {
 	// Use the named GCE cert when it is specified by the annotation.
-	if certName != "" {
-		// Ask GCE for the cert, checking for problems and existence.
-		cert, err := l.cloud.GetSslCertificate(certName)
-		if err != nil {
-			return err
-		}
-		if cert == nil {
-			return fmt.Errorf("cannot find existing sslCertificate %v for %v", certName, l.Name)
-		}
-
-		glog.Infof("Using existing sslCertificate %v for %v", certName, l.Name)
-		l.sslCert = cert
-		return nil
+	preSharedCertName := l.runtimeInfo.TLSName
+	if preSharedCertName == "" {
+		return false, nil
 	}
 
-	// TODO: Currently, GCE only supports a single certificate per static IP
-	// so we don't need to bother with disambiguation. Naming the cert after
-	// the loadbalancer is a simplification.
+	// Ask GCE for the cert, checking for problems and existence.
+	cert, err := l.cloud.GetSslCertificate(preSharedCertName)
+	if err != nil {
+		return true, err
+	}
+	if cert == nil {
+		return true, fmt.Errorf("cannot find existing sslCertificate %v for %v", preSharedCertName, l.Name)
+	}
 
-	ingCert := l.runtimeInfo.TLS.Cert
-	ingKey := l.runtimeInfo.TLS.Key
+	glog.V(2).Infof("Using existing sslCertificate %v for %v", preSharedCertName, l.Name)
+	l.sslCert = cert
+	return true, nil
+}
 
+func (l *L7) populateSSLCert() error {
+	// Determine what certificate name is being used
+	var expectedCertName string
+	if l.sslCert != nil {
+		expectedCertName = l.sslCert.Name
+	} else {
+		// Retrieve the ssl certificate in use by the expected target proxy (if exists)
+		expectedCertName = getResourceNameFromLink(l.getSslCertLinkInUse())
+	}
+
+	var err error
+	if expectedCertName != "" {
+		// Retrieve the certificate and ignore error if certificate wasn't found
+		l.sslCert, err = l.cloud.GetSslCertificate(expectedCertName)
+		if err != nil {
+			return utils.IgnoreHTTPNotFound(err)
+		}
+	}
+	return nil
+}
+
+func (l *L7) nextCertificateName() string {
 	// The name of the cert for this lb flip-flops between these 2 on
 	// every certificate update. We don't append the index at the end so we're
 	// sure it isn't truncated.
 	// TODO: Clean this code up into a ring buffer.
 	primaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%v", sslCertPrefix, l.Name))
 	secondaryCertName := l.namer.Truncate(fmt.Sprintf("%v-%d-%v", sslCertPrefix, 1, l.Name))
-	certName = primaryCertName
-	if l.sslCert != nil {
-		certName = l.sslCert.Name
+
+	if l.sslCert != nil && l.sslCert.Name == primaryCertName {
+		return secondaryCertName
+	}
+	return primaryCertName
+}
+
+func (l *L7) checkSSLCert() error {
+	// Handle Pre-Shared cert and early return if used
+	if used, err := l.usePreSharedCert(); used {
+		return err
 	}
 
-	// Skip error checking because error-ing out will retry and loop, when we
-	// should create/update the cert if there is an error or does not exist.
-	cert, _ := l.cloud.GetSslCertificate(certName)
+	// Get updated value of certificate for comparison
+	if err := l.populateSSLCert(); err != nil {
+		return err
+	}
+
+	// TODO: Currently, GCE only supports a single certificate per static IP
+	// so we don't need to bother with disambiguation. Naming the cert after
+	// the loadbalancer is a simplification.
+	ingCert := l.runtimeInfo.TLS.Cert
+	ingKey := l.runtimeInfo.TLS.Key
 
 	// PrivateKey is write only, so compare certs alone. We're assuming that
 	// no one will change just the key. We can remember the key and compare,
 	// but a bug could end up leaking it, which feels worse.
-	if cert == nil || ingCert != cert.Certificate {
-
-		certChanged := cert != nil && (ingCert != cert.Certificate)
-		if certChanged {
-			if certName == primaryCertName {
-				certName = secondaryCertName
-			} else {
-				certName = primaryCertName
-			}
-		}
-
-		glog.Infof("Creating new sslCertificates %v for %v", certName, l.Name)
-		cert, err = l.cloud.CreateSslCertificate(&compute.SslCertificate{
-			Name:        certName,
-			Certificate: ingCert,
-			PrivateKey:  ingKey,
-		})
-		if err != nil {
-			return err
-		}
-		// Save the current cert for cleanup after we update the target proxy.
-		l.oldSSLCert = l.sslCert
+	if l.sslCert != nil && ingCert == l.sslCert.Certificate {
+		return nil
 	}
 
+	// Controller needs to create or update the certificate.
+	// Generate the next certificate name to use.
+	newCertName := l.nextCertificateName()
+
+	// Perform a delete in case a certificate exists with the exact name
+	// This certificate should be unused since we check the target proxy's certificate prior
+	// to this point. Although, it's possible an actor pointed a target proxy to this certificate.
+	if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteSslCertificate(newCertName)); err != nil {
+		return fmt.Errorf("unable to delete ssl certificate with name %q, expected it to be unused. err: %v", newCertName, err)
+	}
+
+	glog.V(2).Infof("Creating new sslCertificate %v for %v", newCertName, l.Name)
+	cert, err := l.cloud.CreateSslCertificate(&compute.SslCertificate{
+		Name:        newCertName,
+		Certificate: ingCert,
+		PrivateKey:  ingKey,
+	})
+	if err != nil {
+		return err
+	}
+	// Save the current cert for cleanup after we update the target proxy.
+	l.oldSSLCert = l.sslCert
 	l.sslCert = cert
+
 	return nil
+}
+
+func (l *L7) getSslCertLinkInUse() string {
+	proxyName := l.namer.Truncate(fmt.Sprintf("%v-%v", targetHTTPSProxyPrefix, l.Name))
+	proxy, _ := l.cloud.GetTargetHttpsProxy(proxyName)
+	if proxy != nil && len(proxy.SslCertificates) > 0 {
+		return proxy.SslCertificates[0]
+	}
+	return ""
 }
 
 func (l *L7) checkHttpsProxy() (err error) {
@@ -468,10 +520,8 @@ func (l *L7) checkForwardingRule(name, proxyLink, ip, portRange string) (fw *com
 	if fw != nil && (ip != "" && fw.IPAddress != ip || fw.PortRange != portRange) {
 		glog.Warningf("Recreating forwarding rule %v(%v), so it has %v(%v)",
 			fw.IPAddress, fw.PortRange, ip, portRange)
-		if err := l.cloud.DeleteGlobalForwardingRule(name); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-				return nil, err
-			}
+		if err = utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalForwardingRule(name)); err != nil {
+			return nil, err
 		}
 		fw = nil
 	}
@@ -833,66 +883,52 @@ func mapsEqual(a, b *compute.UrlMap) bool {
 // This leaves backends and health checks, which are shared across loadbalancers.
 func (l *L7) Cleanup() error {
 	if l.fw != nil {
-		glog.Infof("Deleting global forwarding rule %v", l.fw.Name)
-		if err := l.cloud.DeleteGlobalForwardingRule(l.fw.Name); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-				return err
-			}
+		glog.V(2).Infof("Deleting global forwarding rule %v", l.fw.Name)
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalForwardingRule(l.fw.Name)); err != nil {
+			return err
 		}
 		l.fw = nil
 	}
 	if l.fws != nil {
-		glog.Infof("Deleting global forwarding rule %v", l.fws.Name)
-		if err := l.cloud.DeleteGlobalForwardingRule(l.fws.Name); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-				return err
-			}
-			l.fws = nil
+		glog.V(2).Infof("Deleting global forwarding rule %v", l.fws.Name)
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalForwardingRule(l.fws.Name)); err != nil {
+			return err
 		}
+		l.fws = nil
 	}
 	if l.ip != nil {
-		glog.Infof("Deleting static IP %v(%v)", l.ip.Name, l.ip.Address)
-		if err := l.cloud.DeleteGlobalStaticIP(l.ip.Name); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-				return err
-			}
-			l.ip = nil
+		glog.V(2).Infof("Deleting static IP %v(%v)", l.ip.Name, l.ip.Address)
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalStaticIP(l.ip.Name)); err != nil {
+			return err
 		}
+		l.ip = nil
 	}
 	if l.tps != nil {
-		glog.Infof("Deleting target https proxy %v", l.tps.Name)
-		if err := l.cloud.DeleteTargetHttpsProxy(l.tps.Name); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-				return err
-			}
+		glog.V(2).Infof("Deleting target https proxy %v", l.tps.Name)
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteTargetHttpsProxy(l.tps.Name)); err != nil {
+			return err
 		}
 		l.tps = nil
 	}
 	// Delete the SSL cert if it is from a secret, not referencing a pre-created GCE cert.
 	if l.sslCert != nil && l.runtimeInfo.TLSName == "" {
-		glog.Infof("Deleting sslcert %v", l.sslCert.Name)
-		if err := l.cloud.DeleteSslCertificate(l.sslCert.Name); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-				return err
-			}
+		glog.V(2).Infof("Deleting sslcert %v", l.sslCert.Name)
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteSslCertificate(l.sslCert.Name)); err != nil {
+			return err
 		}
 		l.sslCert = nil
 	}
 	if l.tp != nil {
-		glog.Infof("Deleting target http proxy %v", l.tp.Name)
-		if err := l.cloud.DeleteTargetHttpProxy(l.tp.Name); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-				return err
-			}
+		glog.V(2).Infof("Deleting target http proxy %v", l.tp.Name)
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteTargetHttpProxy(l.tp.Name)); err != nil {
+			return err
 		}
 		l.tp = nil
 	}
 	if l.um != nil {
-		glog.Infof("Deleting url map %v", l.um.Name)
-		if err := l.cloud.DeleteUrlMap(l.um.Name); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
-				return err
-			}
+		glog.V(2).Infof("Deleting url map %v", l.um.Name)
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteUrlMap(l.um.Name)); err != nil {
+			return err
 		}
 		l.um = nil
 	}
