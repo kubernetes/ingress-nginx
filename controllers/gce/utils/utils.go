@@ -18,6 +18,7 @@ package utils
 
 import (
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -310,7 +311,7 @@ func (g GCEURLMap) PutDefaultBackend(d *compute.BackendService) {
 	}
 }
 
-// FakeNotFoundErr creates a NotFound error with type googleapi.Error
+// FakeGoogleAPINotFoundErr creates a NotFound error with type googleapi.Error
 func FakeGoogleAPINotFoundErr() *googleapi.Error {
 	return &googleapi.Error{Code: 404}
 }
@@ -320,6 +321,15 @@ func FakeGoogleAPINotFoundErr() *googleapi.Error {
 func IsHTTPErrorCode(err error, code int) bool {
 	apiErr, ok := err.(*googleapi.Error)
 	return ok && apiErr.Code == code
+}
+
+// IgnoreHTTPNotFound returns the passed err if it's not a GoogleAPI error
+// with a NotFound status code.
+func IgnoreHTTPNotFound(err error) error {
+	if err != nil && IsHTTPErrorCode(err, http.StatusNotFound) {
+		return nil
+	}
+	return err
 }
 
 // CompareLinks returns true if the 2 self links are equal.
