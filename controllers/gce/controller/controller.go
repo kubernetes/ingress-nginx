@@ -324,7 +324,8 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	// Update the UrlMap of the single loadbalancer that came through the watch.
 	l7, err := lbc.CloudClusterManager.l7Pool.Get(key)
 	if err != nil {
-		return fmt.Errorf("%v, unable to get loadbalancer: %v", syncError, err)
+		syncError = fmt.Errorf("%v, unable to get loadbalancer: %v", syncError, err)
+		return syncError
 	}
 
 	ing := *obj.(*extensions.Ingress)
