@@ -436,29 +436,33 @@ func (l *L7) checkSSLCert() error {
 	// PrivateKey is write only, so compare certs alone. We're assuming that
 	// no one will change just the key. We can remember the key and compare,
 	// but a bug could end up leaking it, which feels worse.
-	if l.sslCert == nil || ingCert != l.sslCert.Certificate {
-		newCertName := l.nextCertificateName()
-
-		// Perform a delete in case a certificate exists with the exact name
-		// This certificate should be unused since we check the target proxy's certificate prior
-		// to this point. Although, it's possible an actor pointed a target proxy to this certificate.
-		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteSslCertificate(newCertName)); err != nil {
-			return fmt.Errorf("unable to delete ssl certificate with name %q, expected it to be unused. err: %v", newCertName, err)
-		}
-
-		glog.V(2).Infof("Creating new sslCertificate %v for %v", newCertName, l.Name)
-		cert, err := l.cloud.CreateSslCertificate(&compute.SslCertificate{
-			Name:        newCertName,
-			Certificate: ingCert,
-			PrivateKey:  ingKey,
-		})
-		if err != nil {
-			return err
-		}
-		// Save the current cert for cleanup after we update the target proxy.
-		l.oldSSLCert = l.sslCert
-		l.sslCert = cert
+	if l.sslCert != nil && ingCert == l.sslCert.Certificate {
+		return nil
 	}
+
+	// Controller needs to create or update the certificate.
+	// Generate the next certificate name to use.
+	newCertName := l.nextCertificateName()
+
+	// Perform a delete in case a certificate exists with the exact name
+	// This certificate should be unused since we check the target proxy's certificate prior
+	// to this point. Although, it's possible an actor pointed a target proxy to this certificate.
+	if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteSslCertificate(newCertName)); err != nil {
+		return fmt.Errorf("unable to delete ssl certificate with name %q, expected it to be unused. err: %v", newCertName, err)
+	}
+
+	glog.V(2).Infof("Creating new sslCertificate %v for %v", newCertName, l.Name)
+	cert, err := l.cloud.CreateSslCertificate(&compute.SslCertificate{
+		Name:        newCertName,
+		Certificate: ingCert,
+		PrivateKey:  ingKey,
+	})
+	if err != nil {
+		return err
+	}
+	// Save the current cert for cleanup after we update the target proxy.
+	l.oldSSLCert = l.sslCert
+	l.sslCert = cert
 
 	return nil
 }
