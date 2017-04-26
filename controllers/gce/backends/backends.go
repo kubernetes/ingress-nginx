@@ -209,7 +209,7 @@ func (b *Backends) Add(p ServicePort) error {
 	pName := b.namer.BeName(p.Port)
 	be, _ = b.Get(p.Port)
 	if be == nil {
-		glog.V(2).Infof("Creating backend for %d instance groups, port %v named port %v", len(igs), p.Port, namedPort)
+		glog.V(2).Infof("Creating backend service for port %v named port %v", p.Port, namedPort)
 		be, err = b.create(namedPort, hcLink, p.Protocol, pName)
 		if err != nil {
 			return err
@@ -315,8 +315,8 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 	if beIGs.IsSuperset(igLinks) {
 		return nil
 	}
-	glog.V(2).Infof("Backend service %v has missing backends, expected igs %+v, current igs %+v",
-		be.Name, igLinks.List(), beIGs.List())
+	glog.V(2).Infof("Updating backend service %v with %d backends: expected igs %+v, current igs %+v",
+		be.Name, igLinks.Len(), igLinks.List(), beIGs.List())
 
 	originalBackends := be.Backends
 	var addIGs []*compute.InstanceGroup
