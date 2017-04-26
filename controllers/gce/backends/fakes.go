@@ -99,6 +99,11 @@ func (f *FakeBackendServices) ListBackendServices() (*compute.BackendServiceList
 
 // UpdateBackendService fakes updating a backend service.
 func (f *FakeBackendServices) UpdateBackendService(be *compute.BackendService) error {
+	if f.errFunc != nil {
+		if err := f.errFunc(utils.Update, be); err != nil {
+			return err
+		}
+	}
 	f.calls = append(f.calls, utils.Update)
 	return f.backendServices.Update(be)
 }
