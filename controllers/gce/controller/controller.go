@@ -294,16 +294,16 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	//   successful GC we know that there are no dangling cloud resources that
 	//   don't have an associated Kubernetes Ingress/Service/Endpoint.
 
+	var syncError error
 	defer func() {
 		if deferErr := lbc.CloudClusterManager.GC(lbNames, nodePorts); deferErr != nil {
-			err = fmt.Errorf("error during sync %v, error during GC %v", err, deferErr)
+			err = fmt.Errorf("error during sync %v, error during GC %v", syncError, deferErr)
 		}
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
 
 	// Record any errors during sync and throw a single error at the end. This
 	// allows us to free up associated cloud resources ASAP.
-	var syncError error
 	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, nodePorts); err != nil {
 		// TODO: Implement proper backoff for the queue.
 		eventMsg := "GCE"
@@ -324,7 +324,8 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	// Update the UrlMap of the single loadbalancer that came through the watch.
 	l7, err := lbc.CloudClusterManager.l7Pool.Get(key)
 	if err != nil {
-		return fmt.Errorf("%v, unable to get loadbalancer: %v", syncError, err)
+		syncError = fmt.Errorf("%v, unable to get loadbalancer: %v", syncError, err)
+		return syncError
 	}
 
 	ing := *obj.(*extensions.Ingress)
