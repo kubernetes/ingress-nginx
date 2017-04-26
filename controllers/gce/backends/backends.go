@@ -338,7 +338,7 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 	if beIGs.IsSuperset(igLinks) {
 		return nil
 	}
-	glog.Infof("Backend %v has a broken edge, expected igs %+v, current igs %+v",
+	glog.V(2).Infof("Backend %v has a broken edge, expected igs %+v, current igs %+v",
 		be.Name, igLinks.List(), beIGs.List())
 
 	originalBackends := be.Backends
@@ -356,15 +356,16 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 
 		if err := b.cloud.UpdateBackendService(be); err != nil {
 			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
-				glog.Infof("Error updating backend service backends with balancing mode %v:%v", bm, err)
+				glog.V(2).Infof("Updating backend service backends with balancing mode %v failed, will try another mode. err:%v", bm, err)
 				errs = append(errs, err.Error())
 				continue
 			}
+			glog.V(2).Infof("Error updating backend service backends with balancing mode %v:%v", bm, err)
 			return err
 		}
 		return nil
 	}
-	return fmt.Errorf("%v", strings.Join(errs, "\n"))
+	return fmt.Errorf("received errors when updating backend service: %v", strings.Join(errs, "\n"))
 }
 
 // Sync syncs backend services corresponding to ports in the given list.
