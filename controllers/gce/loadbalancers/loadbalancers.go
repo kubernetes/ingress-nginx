@@ -893,9 +893,10 @@ func (l *L7) Cleanup() error {
 		l.fws = nil
 	}
 	if l.ip != nil {
-		glog.Infof("Deleting static IP %v(%v)", l.ip.Name, l.ip.Address)
+		glog.V(2).Infof("Deleting static IP %v(%v)", l.ip.Name, l.ip.Address)
+		// Ignore err when deleting static IP since multiple ingresses could be sharing one
 		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalStaticIP(l.ip.Name)); err != nil {
-			return err
+			glog.Warningf("Failed to delete global static ip %v (%v), but will continue with remaining cleanup. err: %v", l.ip.Name, l.ip.Address, err)
 		}
 		l.ip = nil
 	}
