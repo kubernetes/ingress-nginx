@@ -173,44 +173,18 @@ func (b *Backends) ensureHealthCheck(sp ServicePort) (string, error) {
 	return b.healthChecker.Sync(hc)
 }
 
-func (b *Backends) create(igs []*compute.InstanceGroup, namedPort *compute.NamedPort, hcLink string, protocol utils.AppProtocol, name string) (*compute.BackendService, error) {
-	var errs []string
-	// We first try to create the backend with balancingMode=RATE.  If this
-	// fails, it's mostly likely because there are existing backends with
-	// balancingMode=UTILIZATION. This failure mode throws a googleapi error
-	// which wraps a HTTP 400 status code. We handle it in the loop below
-	// and come around to retry with the right balancing mode. The goal is to
-	// switch everyone to using RATE.
-	for _, bm := range []BalancingMode{Rate, Utilization} {
-		// Create a new backend
-		bs := newBackendService(igs, bm, namedPort, []string{hcLink}, protocol, name)
-		if err := b.cloud.CreateBackendService(bs); err != nil {
-			// This is probably a failure because we tried to create the backend
-			// with balancingMode=RATE when there are already backends with
-			// balancingMode=UTILIZATION. Just ignore it and retry setting
-			// balancingMode=UTILIZATION (b/35102911).
-			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
-				glog.Infof("Error creating backend service with balancing mode %v:%v", bm, err)
-				errs = append(errs, fmt.Sprintf("%v", err))
-				continue
-			}
-			return nil, err
-		}
-		return b.Get(namedPort.Port)
-	}
-	return nil, fmt.Errorf("%v", strings.Join(errs, "\n"))
-}
-
-func newBackendService(igs []*compute.InstanceGroup, bm BalancingMode, namedPort *compute.NamedPort, healthCheckLinks []string, protocol utils.AppProtocol, name string) *compute.BackendService {
-	backends := getBackendsForIGs(igs, bm)
-	return &compute.BackendService{
+func (b *Backends) create(namedPort *compute.NamedPort, hcLink string, protocol utils.AppProtocol, name string) (*compute.BackendService, error) {
+	bs := &compute.BackendService{
 		Name:         name,
 		Protocol:     string(protocol),
-		Backends:     backends,
-		HealthChecks: healthCheckLinks,
+		HealthChecks: []string{hcLink},
 		Port:         namedPort.Port,
 		PortName:     namedPort.Name,
 	}
+	if err := b.cloud.CreateBackendService(bs); err != nil {
+		return nil, err
+	}
+	return b.Get(namedPort.Port)
 }
 
 // Add will get or create a Backend for the given port.
@@ -231,21 +205,22 @@ func (b *Backends) Add(p ServicePort) error {
 		return err
 	}
 
+	// Verify existance of a backend service for the proper port, but do not specify any backends/igs
 	pName := b.namer.BeName(p.Port)
 	be, _ = b.Get(p.Port)
 	if be == nil {
 		glog.V(2).Infof("Creating backend for %d instance groups, port %v named port %v", len(igs), p.Port, namedPort)
-		be, err = b.create(igs, namedPort, hcLink, p.Protocol, pName)
+		be, err = b.create(namedPort, hcLink, p.Protocol, pName)
 		if err != nil {
 			return err
 		}
 	}
 
+	// Check that the backend service has the correct protocol and health check link
 	existingHCLink := ""
 	if len(be.HealthChecks) == 1 {
 		existingHCLink = be.HealthChecks[0]
 	}
-
 	if be.Protocol != string(p.Protocol) || existingHCLink != hcLink {
 		glog.V(2).Infof("Updating backend protocol %v (%v) for change in protocol (%v) or health check", pName, be.Protocol, string(p.Protocol))
 		be.Protocol = string(p.Protocol)
@@ -266,6 +241,8 @@ func (b *Backends) Add(p ServicePort) error {
 	if len(igs) == 0 {
 		return nil
 	}
+
+	// Verify that backend service contains links to all backends/instance-groups
 	return b.edgeHop(be, igs)
 }
 
@@ -338,7 +315,7 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 	if beIGs.IsSuperset(igLinks) {
 		return nil
 	}
-	glog.V(2).Infof("Backend %v has a broken edge, expected igs %+v, current igs %+v",
+	glog.V(2).Infof("Backend service %v has missing backends, expected igs %+v, current igs %+v",
 		be.Name, igLinks.List(), beIGs.List())
 
 	originalBackends := be.Backends
@@ -349,15 +326,26 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 		}
 	}
 
+	// We first try to create the backend with balancingMode=RATE.  If this
+	// fails, it's mostly likely because there are existing backends with
+	// balancingMode=UTILIZATION. This failure mode throws a googleapi error
+	// which wraps a HTTP 400 status code. We handle it in the loop below
+	// and come around to retry with the right balancing mode. The goal is to
+	// switch everyone to using RATE.
 	var errs []string
 	for _, bm := range []BalancingMode{Rate, Utilization} {
-		addBEs := getBackendsForIGs(addIGs, bm)
-		be.Backends = append(originalBackends, addBEs...)
+		// Generate backends with given instance groups with a specific mode
+		newBackends := getBackendsForIGs(addIGs, bm)
+		be.Backends = append(originalBackends, newBackends...)
 
 		if err := b.cloud.UpdateBackendService(be); err != nil {
 			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
 				glog.V(2).Infof("Updating backend service backends with balancing mode %v failed, will try another mode. err:%v", bm, err)
 				errs = append(errs, err.Error())
+				// This is probably a failure because we tried to create the backend
+				// with balancingMode=RATE when there are already backends with
+				// balancingMode=UTILIZATION. Just ignore it and retry setting
+				// balancingMode=UTILIZATION (b/35102911).
 				continue
 			}
 			glog.V(2).Infof("Error updating backend service backends with balancing mode %v:%v", bm, err)
