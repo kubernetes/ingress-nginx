@@ -82,17 +82,16 @@ func (t *Queue) worker() {
 			close(t.workerDone)
 			return
 		}
-		defer t.queue.Done(key)
 
 		glog.V(3).Infof("syncing %v", key)
-		err := t.sync(key)
-		if err == nil {
+		if err := t.sync(key); err != nil {
+			glog.Warningf("requeuing %v, err %v", key, err)
+			t.queue.AddRateLimited(key)
+		} else {
 			t.queue.Forget(key)
-			return
 		}
 
-		glog.Warningf("requeuing %v, err %v", key, err)
-		t.queue.AddRateLimited(key)
+		t.queue.Done(key)
 	}
 }
 
