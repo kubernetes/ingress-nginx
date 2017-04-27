@@ -24,18 +24,18 @@ metadata:
   name: l7-lb-controller
   labels:
     k8s-app: glbc
-    version: v0.9.1
+    version: v0.9.2
 spec:
   # There should never be more than 1 controller alive simultaneously.
   replicas: 1
   selector:
     k8s-app: glbc
-    version: v0.9.1
+    version: v0.9.2
   template:
     metadata:
       labels:
         k8s-app: glbc
-        version: v0.9.1
+        version: v0.9.2
         name: glbc
     spec:
       terminationGracePeriodSeconds: 600
