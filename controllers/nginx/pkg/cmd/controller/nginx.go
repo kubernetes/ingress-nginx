@@ -334,6 +334,9 @@ func (n NGINXController) DefaultIngressClass() string {
 // testTemplate checks if the NGINX configuration inside the byte array is valid
 // running the command "nginx -t" using a temporal file.
 func (n NGINXController) testTemplate(cfg []byte) error {
+	if len(cfg) == 0 {
+		return fmt.Errorf("invalid nginx configuration (empty)")
+	}
 	tmpfile, err := ioutil.TempFile("", "nginx-cfg")
 	if err != nil {
 		return err
