@@ -153,7 +153,7 @@ func newIngressController(config *Configuration) *GenericController {
 		cfg:             config,
 		stopLock:        &sync.Mutex{},
 		stopCh:          make(chan struct{}),
-		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.1, 1),
+		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.5, 1),
 		recorder: eventBroadcaster.NewRecorder(def_api.Scheme, api.EventSource{
 			Component: "ingress-controller",
 		}),
