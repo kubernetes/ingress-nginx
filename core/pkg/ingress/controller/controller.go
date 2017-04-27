@@ -170,7 +170,8 @@ func newIngressController(config *Configuration) *GenericController {
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
 			if !class.IsValid(addIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-				glog.Infof("ignoring add for ingress %v based on annotation %v", addIng.Name, class.IngressKey)
+				a, _ := parser.GetStringAnnotation(class.IngressKey, addIng)
+				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", addIng.Name, class.IngressKey, a)
 				return
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
@@ -187,10 +188,8 @@ func newIngressController(config *Configuration) *GenericController {
 			ic.syncQueue.Enqueue(obj)
 		},
 		UpdateFunc: func(old, cur interface{}) {
-			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
-			if !class.IsValid(curIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) &&
-				!class.IsValid(oldIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			if !class.IsValid(curIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 				return
 			}
 
