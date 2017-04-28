@@ -1,4 +1,4 @@
-{{ $cfg := .Cfg }} 
+{{ $cfg := .Cfg }}
 {{ $IsIPV6Enabled := .IsIPV6Enabled }}
 {{ $healthzURI := .HealthzURI }}
 {{ $backends := .Backends }}
@@ -60,7 +60,7 @@ http {
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
-    
+
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
     http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
 
@@ -206,7 +206,8 @@ http {
         {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
         sticky hash={{$upstream.SessionAffinity.CookieSessionAffinity.Hash}} name={{$upstream.SessionAffinity.CookieSessionAffinity.Name}}  httponly;
         {{ else }}
-        least_conn;
+        # Load balance algorithm; empty for round robin, which is the default
+        {{ $cfg.LoadBalanceAlgorithm }}
         {{ end }}
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
@@ -252,7 +253,7 @@ http {
         ssl_verify_client on;
         ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
         {{ end }}
-        
+
         {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
         # enforce ssl on server side
         if ($pass_access_scheme = http) {
@@ -281,7 +282,7 @@ http {
             {{ end }}
             proxy_pass_request_headers  on;
             proxy_set_header            Host {{ $location.ExternalAuth.Host }};
-            proxy_ssl_server_name       on;            
+            proxy_ssl_server_name       on;
 
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;

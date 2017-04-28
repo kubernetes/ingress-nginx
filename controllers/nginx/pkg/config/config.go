@@ -266,6 +266,9 @@ type Configuration struct {
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerProcesses string `json:"worker-processes,omitempty"`
+
+	// Defines the load balancing algorithm to use. The deault is round-robin
+	LoadBalanceAlgorithm string `json:"load-balance",omitempty`
 }
 
 // NewDefault returns the default nginx configuration
@@ -301,6 +304,7 @@ func NewDefault() Configuration {
 		SSLSessionTimeout:        sslSessionTimeout,
 		UseGzip:                  true,
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
+		LoadBalanceAlgorithm:     "least_conn;",
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
 		Backend: defaults.Backend{
