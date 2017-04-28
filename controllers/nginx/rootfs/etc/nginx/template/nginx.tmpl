@@ -242,17 +242,17 @@ http {
 
         {{ if $cfg.EnableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
 
+        {{ if not (empty $server.CertificateAuth.AuthSSLCert.CAFileName) }}
+        # PEM sha: {{ $server.CertificateAuth.AuthSSLCert.PemSHA }}
+        ssl_client_certificate              {{ $server.CertificateAuth.AuthSSLCert.CAFileName }};
+        ssl_verify_client on;
+        ssl_verify_depth {{ $server.CertificateAuth.ValidationDepth }};
+        {{ end }}
+
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
         {{ $authPath := buildAuthLocation $location }}
 
-        {{ if not (empty $location.CertificateAuth.AuthSSLCert.CAFileName) }}
-        # PEM sha: {{ $location.CertificateAuth.AuthSSLCert.PemSHA }}
-        ssl_client_certificate              {{ $location.CertificateAuth.AuthSSLCert.CAFileName }};
-        ssl_verify_client on;
-        ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
-        {{ end }}
-        
         {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
         # enforce ssl on server side
         if ($pass_access_scheme = http) {
@@ -338,7 +338,7 @@ http {
             proxy_set_header Host                   $best_http_host;
 
             # Pass the extracted client certificate to the backend
-            {{ if not (empty $location.CertificateAuth.AuthSSLCert.CAFileName) }}
+            {{ if not (empty $server.CertificateAuth.AuthSSLCert.CAFileName) }}
             proxy_set_header ssl-client-cert        $ssl_client_cert;
             {{ end }}
 
