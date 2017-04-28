@@ -13,6 +13,7 @@ type server struct {
 	Hostname string
 	IP       string
 	Port     int
+	ProxyProtocol bool
 }
 
 type proxy struct {
@@ -61,10 +62,31 @@ func (p *proxy) Handle(conn net.Conn) {
 	}
 	defer clientConn.Close()
 
-	_, err = clientConn.Write(data[:length])
-	if err != nil {
-		clientConn.Close()
+	if proxy.ProxyProtocol {
+		//Write out the proxy-protocol header
+		localAddr := conn.LocalAddr().(*net.TCPAddr)
+		remoteAddr := conn.RemoteAddr().(*net.TCPAddr)
+		protocol := "UNKNOWN"
+		if remoteAddr.IP.To4() != nil {
+			protocol = "TCP4"
+		} else if remoteAddr.IP.To16() != nil {
+			protocol = "TCP6"
+		}
+		proxyProtocolHeader := fmt.Sprintf("PROXY %s %s %s %d %d\r\n", protocol, remoteAddr.IP.String(), localAddr.IP.String(), remoteAddr.Port, localAddr.Port)
+		glog.V(4).Infof("Writing proxy protocol header - %s", proxyProtocolHeader)
+		_, err = fmt.Fprintf(clientConn, proxyProtocolHeader)
 	}
+	if err != nil {
+		glog.Errorf("unexpected error writing proxy-protocol header: %s", err)
+		clientConn.Close()
+	} else {
+		_, err = clientConn.Write(data[:length])
+		if err != nil {
+			glog.Errorf("unexpected error writing first 4k of proxy data: %s", err)
+			clientConn.Close()
+		}
+	}
+
 	pipe(clientConn, conn)
 }
 
