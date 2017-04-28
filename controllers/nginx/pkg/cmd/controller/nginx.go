@@ -88,6 +88,7 @@ func newNGINXController() ingress.Controller {
 				Hostname: "localhost",
 				IP:       "127.0.0.1",
 				Port:     442,
+				ProxyProtocol: true,
 			},
 		},
 	}
@@ -531,10 +532,12 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 			}
 		}
 
+		//TODO: Allow PassthroughBackends to specify they support proxy-protocol
 		servers = append(servers, &server{
 			Hostname: pb.Hostname,
 			IP:       svc.Spec.ClusterIP,
 			Port:     port,
+			ProxyProtocol: false,
 		})
 	}
 
