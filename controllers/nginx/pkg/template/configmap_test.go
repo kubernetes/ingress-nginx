@@ -74,3 +74,32 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 }
+
+func TestDefaultLoadBalance(t *testing.T) {
+  conf := map[string]string{
+  }
+  to := ReadConfig(conf)
+  if to.LoadBalanceAlgorithm != "least_conn;" {
+    t.Errorf("default load balance algorithm wrong")
+  }
+}
+
+  func TestDefaultLoadRoundRobin(t *testing.T) {
+    conf := map[string]string{
+      "load-balance": "round_robin",
+    }
+    to := ReadConfig(conf)
+    if to.LoadBalanceAlgorithm != "" {
+      t.Errorf("round_robin load balance algorithm wrong")
+    }
+}
+
+func TestDefaultAddSemiColon(t *testing.T) {
+  conf := map[string]string{
+    "load-balance": "least_conn",
+  }
+  to := ReadConfig(conf)
+  if to.LoadBalanceAlgorithm != "least_conn;" {
+    t.Errorf("load balance algorithm wrong")
+  }
+}
