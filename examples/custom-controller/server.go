@@ -39,10 +39,9 @@ func (dc DummyController) SetConfig(cfgMap *api.ConfigMap) {
 func (dc DummyController) Reload(data []byte) ([]byte, bool, error) {
 	out, err := exec.Command("echo", string(data)).CombinedOutput()
 	if err != nil {
-		log.Printf("Reloaded new config %s", out)
-	} else {
 		return out, false, err
 	}
+	log.Printf("Reloaded new config %s", out)
 	return out, true, err
 }
 
