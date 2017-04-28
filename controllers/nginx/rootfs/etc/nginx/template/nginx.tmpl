@@ -207,7 +207,9 @@ http {
         sticky hash={{$upstream.SessionAffinity.CookieSessionAffinity.Hash}} name={{$upstream.SessionAffinity.CookieSessionAffinity.Name}}  httponly;
         {{ else }}
         # Load balance algorithm; empty for round robin, which is the default
-        {{ $cfg.LoadBalanceAlgorithm }}
+        {{ if ne $cfg.LoadBalanceAlgorithm "round_robin" }}
+        {{ $cfg.LoadBalanceAlgorithm }};
+        {{ end }}
         {{ end }}
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}

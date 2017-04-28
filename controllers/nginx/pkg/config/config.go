@@ -73,6 +73,9 @@ const (
 	// Size of the SSL shared cache between all worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
 	sslSessionCacheSize = "10m"
+
+	// Default setting for load balancer algorithm
+	defaultLoadBalancerAlgorithm = "least_conn"
 )
 
 var (
@@ -304,7 +307,7 @@ func NewDefault() Configuration {
 		SSLSessionTimeout:        sslSessionTimeout,
 		UseGzip:                  true,
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
-		LoadBalanceAlgorithm:     "least_conn;",
+		LoadBalanceAlgorithm:     defaultLoadBalancerAlgorithm,
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
 		Backend: defaults.Backend{

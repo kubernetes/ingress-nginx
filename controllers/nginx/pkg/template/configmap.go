@@ -87,14 +87,6 @@ func ReadConfig(src map[string]string) config.Configuration {
 		glog.Warningf("unexpected error merging defaults: %v", err)
 	}
 
-	if len(to.LoadBalanceAlgorithm) == 0 {
-		to.LoadBalanceAlgorithm = "least_conn;"
-	} else if to.LoadBalanceAlgorithm == "round_robin" {
-		to.LoadBalanceAlgorithm = ""
-	} else if !strings.HasSuffix(to.LoadBalanceAlgorithm, ";") {
-		to.LoadBalanceAlgorithm += ";"
-	}
-
 	return to
 }
 
