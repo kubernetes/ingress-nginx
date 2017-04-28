@@ -90,9 +90,9 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if len(to.LoadBalanceAlgorithm) == 0 {
 		to.LoadBalanceAlgorithm = "least_conn;"
 	} else if to.LoadBalanceAlgorithm == "round_robin" {
-			to.LoadBalanceAlgorithm = ""
+		to.LoadBalanceAlgorithm = ""
 	} else if !strings.HasSuffix(to.LoadBalanceAlgorithm, ";") {
-		    to.LoadBalanceAlgorithm += ";"
+		to.LoadBalanceAlgorithm += ";"
 	}
 
 	return to
