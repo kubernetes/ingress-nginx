@@ -1,5 +1,18 @@
 Changelog
 
+### 0.9-beta.5
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.5`
+
+*Changes:*
+
+- [X] [#663](https://github.com/kubernetes/ingress/pull/663) Remove helper required in go < 1.8
+- [X] [#662](https://github.com/kubernetes/ingress/pull/662) Add debug information about ingress class
+- [X] [#661](https://github.com/kubernetes/ingress/pull/661) Avoid running nginx if the configuration file is empty  
+- [X] [#660](https://github.com/kubernetes/ingress/pull/660) Rollback queue refactoring  
+- [X] [#654](https://github.com/kubernetes/ingress/pull/654) Update go version to 1.8
+
+
 ### 0.9-beta.4
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.4`
