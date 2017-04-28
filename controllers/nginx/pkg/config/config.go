@@ -268,7 +268,7 @@ type Configuration struct {
 	WorkerProcesses string `json:"worker-processes,omitempty"`
 
 	// Defines the load balancing algorithm to use. The deault is round-robin
-	LoadBalanceAlgorithm string `json:"load-balance",omitempty`
+	LoadBalanceAlgorithm string `json:"load-balance,omitempty`
 }
 
 // NewDefault returns the default nginx configuration
