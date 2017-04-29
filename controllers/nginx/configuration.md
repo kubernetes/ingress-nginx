@@ -304,6 +304,12 @@ The zero value disables keep-alive client connections.
 http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 
 
+**load-balance:** Sets the algorithm to use for load balancing. The value can either be round_robin to
+use the default round robin load balancer, least_conn to use the least connected method, or
+ip_hash to use a hash of the server for routing. The default is least_conn.
+http://nginx.org/en/docs/http/load_balancing.html.
+
+
 **max-worker-connections:** Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections).
 
 
