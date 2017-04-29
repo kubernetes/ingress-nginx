@@ -73,6 +73,9 @@ const (
 	// Size of the SSL shared cache between all worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
 	sslSessionCacheSize = "10m"
+
+	// Default setting for load balancer algorithm
+	defaultLoadBalancerAlgorithm = "least_conn"
 )
 
 var (
@@ -266,6 +269,9 @@ type Configuration struct {
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerProcesses string `json:"worker-processes,omitempty"`
+
+	// Defines the load balancing algorithm to use. The deault is round-robin
+	LoadBalanceAlgorithm string `json:"load-balance,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -301,6 +307,7 @@ func NewDefault() Configuration {
 		SSLSessionTimeout:        sslSessionTimeout,
 		UseGzip:                  true,
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
+		LoadBalanceAlgorithm:     defaultLoadBalancerAlgorithm,
 		VtsStatusZoneSize:        "10m",
 		UseHTTP2:                 true,
 		Backend: defaults.Backend{
