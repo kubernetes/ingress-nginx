@@ -18,6 +18,7 @@ package controller
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"github.com/golang/glog"
 	"github.com/imdario/mergo"
@@ -45,8 +46,10 @@ func isHostValid(host string, cert *ingress.SSLCert) bool {
 	if cert == nil {
 		return false
 	}
+
+	lowered := toLowerCaseASCII(host)
 	for _, cn := range cert.CN {
-		if matchHostnames(cn, strings.ToLower(host)) {
+		if matchHostnames(toLowerCaseASCII(cn), lowered) {
 			return true
 		}
 	}
@@ -79,6 +82,38 @@ func matchHostnames(pattern, host string) bool {
 	}
 
 	return true
+}
+
+// toLowerCaseASCII returns a lower-case version of in. See RFC 6125 6.4.1. We use
+// an explicitly ASCII function to avoid any sharp corners resulting from
+// performing Unicode operations on DNS labels.
+func toLowerCaseASCII(in string) string {
+	// If the string is already lower-case then there's nothing to do.
+	isAlreadyLowerCase := true
+	for _, c := range in {
+		if c == utf8.RuneError {
+			// If we get a UTF-8 error then there might be
+			// upper-case ASCII bytes in the invalid sequence.
+			isAlreadyLowerCase = false
+			break
+		}
+		if 'A' <= c && c <= 'Z' {
+			isAlreadyLowerCase = false
+			break
+		}
+	}
+
+	if isAlreadyLowerCase {
+		return in
+	}
+
+	out := []byte(in)
+	for i, c := range out {
+		if 'A' <= c && c <= 'Z' {
+			out[i] += 'a' - 'A'
+		}
+	}
+	return string(out)
 }
 
 func mergeLocationAnnotations(loc *ingress.Location, anns map[string]interface{}) {
