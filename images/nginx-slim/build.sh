@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2015 The Kubernetes Authors.
 #
@@ -32,6 +32,8 @@ export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 
 export BUILD_PATH=/tmp/build
 
+ARCH=$(uname -p)
+
 get_src()
 {
   hash="$1"
@@ -46,6 +48,12 @@ get_src()
 
 mkdir "$BUILD_PATH"
 cd "$BUILD_PATH"
+
+if [[ ${ARCH} == "ppc64le" ]]; then
+  apt-get update && apt-get install --no-install-recommends -y software-properties-common && \
+    add-apt-repository -y ppa:ibmpackages/luajit
+  apt-get update && apt-get install --no-install-recommends -y lua5.1 lua5.1-dev
+fi
 
 # install required packages to build
 apt-get update && apt-get install --no-install-recommends -y \
@@ -120,19 +128,7 @@ cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 echo "Applying tls nginx patches..."
 patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
 
-./configure \
-  --prefix=/usr/share/nginx \
-  --conf-path=/etc/nginx/nginx.conf \
-  --http-log-path=/var/log/nginx/access.log \
-  --error-log-path=/var/log/nginx/error.log \
-  --lock-path=/var/lock/nginx.lock \
-  --pid-path=/run/nginx.pid \
-  --http-client-body-temp-path=/var/lib/nginx/body \
-  --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
-  --http-proxy-temp-path=/var/lib/nginx/proxy \
-  --http-scgi-temp-path=/var/lib/nginx/scgi \
-  --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
-  --with-debug \
+WITH_FLAGS="--with-debug \
   --with-pcre-jit \
   --with-http_ssl_module \
   --with-http_stub_status_module \
@@ -147,14 +143,37 @@ patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
   --with-stream \
   --with-stream_ssl_module \
   --with-stream_ssl_preread_module \
-  --with-threads \
-  --with-file-aio \
+  --with-threads"
+
+if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
+  WITH_FLAGS+=" --with-file-aio"
+fi
+
+CC_OPT='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4'
+
+if [[ ${ARCH} == "x86_64" ]]; then
+  CC_OPT+=' -m64 -mtune=generic'
+fi
+
+./configure \
+  --prefix=/usr/share/nginx \
+  --conf-path=/etc/nginx/nginx.conf \
+  --http-log-path=/var/log/nginx/access.log \
+  --error-log-path=/var/log/nginx/error.log \
+  --lock-path=/var/lock/nginx.lock \
+  --pid-path=/run/nginx.pid \
+  --http-client-body-temp-path=/var/lib/nginx/body \
+  --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
+  --http-proxy-temp-path=/var/lib/nginx/proxy \
+  --http-scgi-temp-path=/var/lib/nginx/scgi \
+  --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
+  ${WITH_FLAGS} \
   --without-mail_pop3_module \
   --without-mail_smtp_module \
   --without-mail_imap_module \
   --without-http_uwsgi_module \
   --without-http_scgi_module \
-  --with-cc-opt='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic' \
+  --with-cc-opt="${CC_OPT}" \
   --add-module="$BUILD_PATH/ngx_devel_kit-$NDK_VERSION" \
   --add-module="$BUILD_PATH/set-misc-nginx-module-$SETMISC_VERSION" \
   --add-module="$BUILD_PATH/nginx-module-vts-$VTS_VERSION" \
@@ -169,7 +188,13 @@ patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
 
 echo "Installing CJSON module"
 cd "$BUILD_PATH/lua-cjson-$LUA_CJSON_VERSION"
-make LUA_INCLUDE_DIR=/usr/include/luajit-2.0 && make install
+
+if [[ ${ARCH} == "ppc64le" ]];then
+  LUA_DIR=/usr/include/luajit-2.1
+else
+  LUA_DIR=/usr/include/luajit-2.0
+fi
+make LUA_INCLUDE_DIR=${LUA_DIR} && make install
 
 echo "Installing lua-resty-http module"
 # copy lua module
@@ -194,6 +219,10 @@ apt-mark unmarkauto \
   xz-utils \
   geoip-bin \
   openssl
+
+if [[ ${ARCH} == "ppc64le" ]]; then
+  apt-mark unmarkauto liblua5.1-0
+fi
 
 apt-get remove -y --purge \
   build-essential \
