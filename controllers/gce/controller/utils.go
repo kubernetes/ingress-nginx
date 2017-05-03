@@ -461,7 +461,13 @@ PortLoop:
 		proto = utils.AppProtocol(protoStr)
 	}
 
-	p := backends.ServicePort{Port: int64(port.NodePort), Protocol: proto}
+	p := backends.ServicePort{
+		Port:         int64(port.NodePort),
+		Protocol:     proto,
+		SvcNamespace: namespace,
+		SvcName:      be.ServiceName,
+		SvcPort:      be.ServicePort,
+	}
 	return p, nil
 }
 
