@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
-FROM gcr.io/google_containers/ubuntu-slim:0.8
+FROM BASEIMAGE
+
+CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
 
 COPY build.sh /tmp
 
