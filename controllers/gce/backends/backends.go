@@ -26,6 +26,7 @@ import (
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
@@ -91,19 +92,18 @@ func portKey(port int64) string {
 
 // ServicePort for tupling port and protocol
 type ServicePort struct {
-	Port         int64
-	Protocol     utils.AppProtocol
-	SvcNamespace string
-	SvcName      string
-	SvcPort      intstr.IntOrString
+	Port     int64
+	Protocol utils.AppProtocol
+	SvcName  types.NamespacedName
+	SvcPort  intstr.IntOrString
 }
 
 // Description returns a string describing the ServicePort.
 func (sp ServicePort) Description() string {
-	if sp.SvcNamespace == "" || sp.SvcName == "" || sp.SvcPort.String() == "" {
+	if sp.SvcName.String() == "" || sp.SvcPort.String() == "" {
 		return ""
 	}
-	return fmt.Sprintf("%v/%v (%v %s)", sp.SvcNamespace, sp.SvcName, sp.SvcPort.String(), sp.Protocol)
+	return fmt.Sprintf(`{"kubernetes.io/service-name":"%s","kubernetes.io/service-port":"%s"}`, sp.SvcName.String(), sp.SvcPort.String())
 }
 
 // NewBackendPool returns a new backend pool.

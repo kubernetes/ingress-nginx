@@ -32,6 +32,7 @@ import (
 	flag "github.com/spf13/pflag"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -235,11 +236,10 @@ func main() {
 	}
 	// The default backend is known to be HTTP
 	defaultBackendNodePort := backends.ServicePort{
-		Port:         int64(nodePort),
-		Protocol:     utils.ProtocolHTTP,
-		SvcNamespace: parts[0],
-		SvcName:      parts[1],
-		SvcPort:      intstr.FromInt(int(port)),
+		Port:     int64(nodePort),
+		Protocol: utils.ProtocolHTTP,
+		SvcName:  types.NamespacedName{Namespace: parts[0], Name: parts[1]},
+		SvcPort:  intstr.FromInt(int(port)),
 	}
 
 	if *inCluster || *useRealCloud {
