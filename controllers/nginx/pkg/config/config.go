@@ -78,11 +78,6 @@ const (
 	defaultLoadBalancerAlgorithm = "least_conn"
 )
 
-var (
-	// SSLDirectory contains the mounted secrets with SSL certificates, keys and
-	SSLDirectory = "/etc/ingress-controller/ssl"
-)
-
 // Configuration represents the content of nginx.conf file
 type Configuration struct {
 	defaults.Backend `json:",squash"`
