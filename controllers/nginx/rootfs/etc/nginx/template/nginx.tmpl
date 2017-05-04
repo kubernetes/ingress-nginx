@@ -56,7 +56,7 @@ http {
 
     reset_timedout_connection on;
 
-    keepalive_timeout {{ $cfg.KeepAlive }}s;
+    keepalive_timeout {{if not $cfg.KeepAlive}}0{{end}}{{if $cfg.KeepAlive}}{{ $cfg.KeepAlive }}{{end}}s;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
