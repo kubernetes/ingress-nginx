@@ -41,7 +41,7 @@ The following annotations are supported:
 |---------------------------|------|
 |[ingress.kubernetes.io/add-base-url](#rewrite)|true or false|
 |[ingress.kubernetes.io/app-root](#rewrite)|string|
-|[ingress.kubernetes.io/affinity](#session-affinity)|true or false|
+|[ingress.kubernetes.io/affinity](#session-affinity)|cookie|
 |[ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
@@ -236,7 +236,9 @@ Please check the [whitelist](/examples/affinity/cookie/nginx/README.md) example.
 
 ### Session Affinity
 
-The annotation `ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server. 
+The annotation `ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
+
+The only affinity type available for NGINX is `cookie`.
 
 
 #### Cookie affinity
