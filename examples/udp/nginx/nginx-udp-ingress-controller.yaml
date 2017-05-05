@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: nginx-udp-ingress-controller
+  labels:
+    k8s-app: nginx-udp-ingress-lb
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    k8s-app: nginx-udp-ingress-lb
+  template:
+    metadata:
+      labels:
+        k8s-app: nginx-udp-ingress-lb
+        name: nginx-udp-ingress-lb
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.5
+        name: nginx-udp-ingress-lb
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        ports:
+        - containerPort: 80
+          hostPort: 80
+        - containerPort: 443
+          hostPort: 443
+        - containerPort: 9001
+          hostPort: 9001
+        args:
+        - /nginx-ingress-controller
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
+        - --udp-services-configmap=$(POD_NAMESPACE)/nginx-udp-ingress-configmap
