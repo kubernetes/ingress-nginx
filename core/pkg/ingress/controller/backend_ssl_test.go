@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"fmt"
+
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
@@ -166,7 +167,7 @@ func TestSyncSecret(t *testing.T) {
 			ic.secrLister.Add(secret)
 
 			// for add
-			ic.syncSecret()
+			ic.syncSecret("")
 			if foo.expectSuccess {
 				// validate
 				_, exist := ic.sslCertTracker.Get(foo.secretName)
@@ -174,7 +175,7 @@ func TestSyncSecret(t *testing.T) {
 					t.Errorf("Failed to sync secret: %s", foo.secretName)
 				} else {
 					// for update
-					ic.syncSecret()
+					ic.syncSecret("")
 				}
 			}
 		})

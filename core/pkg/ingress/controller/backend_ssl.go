@@ -34,7 +34,7 @@ import (
 // syncSecret keeps in sync Secrets used by Ingress rules with the files on
 // disk to allow copy of the content of the secret to disk to be used
 // by external processes.
-func (ic *GenericController) syncSecret() {
+func (ic *GenericController) syncSecret(key string) {
 	glog.V(3).Infof("starting syncing of secrets")
 
 	if !ic.controllersInSync() {
@@ -46,7 +46,13 @@ func (ic *GenericController) syncSecret() {
 	var cert *ingress.SSLCert
 	var err error
 
-	keys := ic.secretTracker.List()
+	// by default we sync just one secret
+	keys := []interface{}{key}
+	// if the key is empty we check all the secrets
+	if key == "" {
+		keys = ic.secretTracker.List()
+	}
+
 	for _, k := range keys {
 		key := k.(string)
 		cert, err = ic.getPemCertificate(key)

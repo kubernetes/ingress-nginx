@@ -30,7 +30,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
 	def_api "k8s.io/client-go/pkg/api"
@@ -203,6 +202,12 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	secrEventHandler := cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(old, cur interface{}) {
+			if !reflect.DeepEqual(old, cur) {
+				sec := cur.(*api.Secret)
+				ic.syncSecret(fmt.Sprintf("%v/%v", sec.Namespace, sec.Name))
+			}
+		},
 		DeleteFunc: func(obj interface{}) {
 			sec := obj.(*api.Secret)
 			ic.sslCertTracker.Delete(fmt.Sprintf("%v/%v", sec.Namespace, sec.Name))
@@ -1151,6 +1156,10 @@ func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
 	}
 
 	for _, tls := range ing.Spec.TLS {
+		if tls.SecretName == "" {
+			continue
+		}
+
 		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
 		_, exists := ic.secretTracker.Get(key)
 		if !exists {
@@ -1190,8 +1199,6 @@ func (ic GenericController) Start() {
 	go ic.mapController.Run(ic.stopCh)
 
 	go ic.syncQueue.Run(10*time.Second, ic.stopCh)
-
-	go wait.Forever(ic.syncSecret, 10*time.Second)
 
 	if ic.syncStatus != nil {
 		go ic.syncStatus.Run(ic.stopCh)
