@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -461,7 +462,12 @@ PortLoop:
 		proto = utils.AppProtocol(protoStr)
 	}
 
-	p := backends.ServicePort{Port: int64(port.NodePort), Protocol: proto}
+	p := backends.ServicePort{
+		Port:     int64(port.NodePort),
+		Protocol: proto,
+		SvcName:  types.NamespacedName{Namespace: namespace, Name: be.ServiceName},
+		SvcPort:  be.ServicePort,
+	}
 	return p, nil
 }
 
