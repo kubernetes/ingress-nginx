@@ -68,8 +68,8 @@ func TestBackendPoolAdd(t *testing.T) {
 	namer := utils.Namer{}
 
 	testCases := []ServicePort{
-		{80, utils.ProtocolHTTP},
-		{443, utils.ProtocolHTTPS},
+		{Port: 80, Protocol: utils.ProtocolHTTP},
+		{Port: 443, Protocol: utils.ProtocolHTTPS},
 	}
 
 	for _, nodePort := range testCases {

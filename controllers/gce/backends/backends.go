@@ -26,6 +26,8 @@ import (
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 
@@ -92,6 +94,16 @@ func portKey(port int64) string {
 type ServicePort struct {
 	Port     int64
 	Protocol utils.AppProtocol
+	SvcName  types.NamespacedName
+	SvcPort  intstr.IntOrString
+}
+
+// Description returns a string describing the ServicePort.
+func (sp ServicePort) Description() string {
+	if sp.SvcName.String() == "" || sp.SvcPort.String() == "" {
+		return ""
+	}
+	return fmt.Sprintf(`{"kubernetes.io/service-name":"%s","kubernetes.io/service-port":"%s"}`, sp.SvcName.String(), sp.SvcPort.String())
 }
 
 // NewBackendPool returns a new backend pool.
@@ -173,10 +185,11 @@ func (b *Backends) ensureHealthCheck(sp ServicePort) (string, error) {
 	return b.healthChecker.Sync(hc)
 }
 
-func (b *Backends) create(namedPort *compute.NamedPort, hcLink string, protocol utils.AppProtocol, name string) (*compute.BackendService, error) {
+func (b *Backends) create(namedPort *compute.NamedPort, hcLink string, sp ServicePort, name string) (*compute.BackendService, error) {
 	bs := &compute.BackendService{
 		Name:         name,
-		Protocol:     string(protocol),
+		Description:  sp.Description(),
+		Protocol:     string(sp.Protocol),
 		HealthChecks: []string{hcLink},
 		Port:         namedPort.Port,
 		PortName:     namedPort.Name,
@@ -210,7 +223,7 @@ func (b *Backends) Add(p ServicePort) error {
 	be, _ = b.Get(p.Port)
 	if be == nil {
 		glog.V(2).Infof("Creating backend service for port %v named port %v", p.Port, namedPort)
-		be, err = b.create(namedPort, hcLink, p.Protocol, pName)
+		be, err = b.create(namedPort, hcLink, p, pName)
 		if err != nil {
 			return err
 		}
@@ -225,6 +238,7 @@ func (b *Backends) Add(p ServicePort) error {
 		glog.V(2).Infof("Updating backend protocol %v (%v) for change in protocol (%v) or health check", pName, be.Protocol, string(p.Protocol))
 		be.Protocol = string(p.Protocol)
 		be.HealthChecks = []string{hcLink}
+		be.Description = p.Description()
 		if err = b.cloud.UpdateBackendService(be); err != nil {
 			return err
 		}

@@ -32,6 +32,8 @@ import (
 	flag "github.com/spf13/pflag"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
@@ -227,13 +229,18 @@ func main() {
 		glog.Fatalf("Default backend should take the form namespace/name: %v",
 			*defaultSvc)
 	}
-	nodePort, err := getNodePort(kubeClient, parts[0], parts[1])
+	port, nodePort, err := getNodePort(kubeClient, parts[0], parts[1])
 	if err != nil {
 		glog.Fatalf("Could not configure default backend %v: %v",
 			*defaultSvc, err)
 	}
 	// The default backend is known to be HTTP
-	defaultBackendNodePort := backends.ServicePort{Port: nodePort, Protocol: utils.ProtocolHTTP}
+	defaultBackendNodePort := backends.ServicePort{
+		Port:     int64(nodePort),
+		Protocol: utils.ProtocolHTTP,
+		SvcName:  types.NamespacedName{Namespace: parts[0], Name: parts[1]},
+		SvcPort:  intstr.FromInt(int(port)),
+	}
 
 	if *inCluster || *useRealCloud {
 		// Create cluster manager
@@ -411,7 +418,7 @@ func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error)
 }
 
 // getNodePort waits for the Service, and returns it's first node port.
-func getNodePort(client kubernetes.Interface, ns, name string) (nodePort int64, err error) {
+func getNodePort(client kubernetes.Interface, ns, name string) (port, nodePort int32, err error) {
 	var svc *api_v1.Service
 	glog.V(3).Infof("Waiting for %v/%v", ns, name)
 	wait.Poll(1*time.Second, 5*time.Minute, func() (bool, error) {
@@ -421,7 +428,8 @@ func getNodePort(client kubernetes.Interface, ns, name string) (nodePort int64, 
 		}
 		for _, p := range svc.Spec.Ports {
 			if p.NodePort != 0 {
-				nodePort = int64(p.NodePort)
+				port = p.Port
+				nodePort = p.NodePort
 				glog.V(3).Infof("Node port %v", nodePort)
 				break
 			}
