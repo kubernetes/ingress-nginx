@@ -27,11 +27,7 @@ func (p *proxy) Get(host string) *server {
 		}
 	}
 
-	return &server{
-		Hostname: "localhost",
-		IP:       "127.0.0.1",
-		Port:     442,
-	}
+	return p.Default
 }
 
 func (p *proxy) Handle(conn net.Conn) {
