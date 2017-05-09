@@ -83,7 +83,13 @@ func newNGINXController() ingress.Controller {
 		configmap:     &api_v1.ConfigMap{},
 		isIPV6Enabled: isIPv6Enabled(),
 		resolver:      h,
-		proxy:         &proxy{},
+		proxy: &proxy{
+			Default: &server{
+				Hostname: "localhost",
+				IP:       "127.0.0.1",
+				Port:     442,
+			},
+		},
 	}
 
 	listener, err := net.Listen("tcp", ":443")
