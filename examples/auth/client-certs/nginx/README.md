@@ -84,3 +84,7 @@ Server: nginx/1.11.9
 You must use the full DNS name while testing, as NGINX relies on the Server Name (SNI) to select the correct Ingress to be used.
 
 The curl version used here was ``curl 7.47.0``
+
+## Which certificate was used for authentication?
+
+In your backend application you might want to know which certificate was used for authentication. For this purpose, we pass the full certificate in PEM format to the backend in the `ssl_client_cert` header.
