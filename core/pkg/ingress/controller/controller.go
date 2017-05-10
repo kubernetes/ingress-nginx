@@ -1151,7 +1151,12 @@ func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
 	}
 
 	for _, tls := range ing.Spec.TLS {
-		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+		var key string
+		if tls.SecretName == "" {
+			key = ic.cfg.DefaultSSLCertificate
+		} else {
+			key = fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+		}
 		_, exists := ic.secretTracker.Get(key)
 		if !exists {
 			ic.secretTracker.Add(key, key)
