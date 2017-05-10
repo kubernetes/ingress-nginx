@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
 	text_template "text/template"
@@ -139,6 +140,7 @@ var (
 		"buildResolvers":           buildResolvers,
 		"isLocationAllowed":        isLocationAllowed,
 		"buildLogFormatUpstream":   buildLogFormatUpstream,
+		"getenv":                   os.Getenv,
 		"contains":                 strings.Contains,
 		"hasPrefix":                strings.HasPrefix,
 		"hasSuffix":                strings.HasSuffix,
