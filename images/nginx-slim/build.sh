@@ -19,10 +19,10 @@ set -e
 
 export NGINX_VERSION=1.11.12
 export NDK_VERSION=0.3.0
-export VTS_VERSION=0.1.13
+export VTS_VERSION=0.1.14
 export SETMISC_VERSION=0.31
 export LUA_VERSION=0.10.7
-export STICKY_SESSIONS_VERSION=08a395c66e42                               
+export STICKY_SESSIONS_VERSION=08a395c66e42
 export LUA_CJSON_VERSION=2.1.0.4
 export LUA_RESTY_HTTP_VERSION=0.07
 export LUA_UPSTREAM_VERSION=0.06
@@ -86,7 +86,7 @@ get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
 get_src 97946a68937b50ab8637e1a90a13198fe376d801dc3e7447052e43c28e9ee7de \
         "https://github.com/openresty/set-misc-nginx-module/archive/v$SETMISC_VERSION.tar.gz"
 
-get_src 17042d50318a07db3366d59c24a05aab303f2e32096d56b379c2ef46e70e02ba \
+get_src e3b0018959ac899b73d3843e07351023f02be0ff421214426e3fe32193138963 \
         "https://github.com/vozlt/nginx-module-vts/archive/v$VTS_VERSION.tar.gz"
 
 get_src c21c8937dcdd6fc2b6a955f929e3f4d1388610f47180e60126e6dcab06786f77 \
