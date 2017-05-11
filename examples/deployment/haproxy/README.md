@@ -12,18 +12,8 @@ they will fight for Ingresses. This includes any cloudprovider controller.
 
 This document has also the following prerequisites:
 
-* Deploy a [web app](/examples/PREREQUISITES.md#test-http-service) for testing
 * Create a [TLS secret](/examples/PREREQUISITES.md#tls-certificates) named `tls-secret` to be used as default TLS certificate
-
-The web app can be created as follow:
-
-```console
-$ kubectl run http-svc \
-  --image=gcr.io/google_containers/echoserver:1.3 \
-  --port=8080 \
-  --replicas=2 \
-  --expose
-```
+* Optional: deploy a [web app](/examples/PREREQUISITES.md#test-http-service) for testing
 
 Creating the TLS secret:
 
@@ -33,6 +23,16 @@ $ openssl req \
   -keyout tls.key -out tls.crt -subj '/CN=localhost'
 $ kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key
 $ rm -v tls.crt tls.key
+```
+
+The optional web app can be created as follow:
+
+```console
+$ kubectl run http-svc \
+  --image=gcr.io/google_containers/echoserver:1.3 \
+  --port=8080 \
+  --replicas=1 \
+  --expose
 ```
 
 ## Default backend
@@ -73,7 +73,9 @@ ingress-default-backend-1110790216-gqr61   1/1       Running   0          3m
 ^C
 ```
 
-Deploy the ingress resource of our already deployed web app:
+## Testing
+
+From now the optional web app should be deployed. Deploy an ingress resource to expose this app:
 
 ```console
 $ kubectl create -f - <<EOF
@@ -93,7 +95,7 @@ spec:
 EOF
 ```
 
-Exposing the controller as a `type=NodePort` service:
+Expose the Ingress controller as a `type=NodePort` service:
 
 ```console
 $ kubectl expose deploy/haproxy-ingress --type=NodePort
