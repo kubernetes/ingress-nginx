@@ -20,6 +20,7 @@ spec:
         args:
         - --default-backend-service=default/ingress-default-backend
         - --default-ssl-certificate=default/tls-secret
+        - --configmap=default/haproxy-ingress
         ports:
         - name: http
           containerPort: 80
