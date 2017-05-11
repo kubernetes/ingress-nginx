@@ -87,4 +87,4 @@ The curl version used here was ``curl 7.47.0``
 
 ## Which certificate was used for authentication?
 
-In your backend application you might want to know which certificate was used for authentication. For this purpose, we pass the full certificate in PEM format to the backend in the `ssl_client_cert` header.
+In your backend application you might want to know which certificate was used for authentication. For this purpose, we pass the full certificate in PEM format to the backend in the `ssl-client-cert` header.
