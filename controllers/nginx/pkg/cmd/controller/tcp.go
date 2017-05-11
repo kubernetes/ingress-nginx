@@ -10,9 +10,9 @@ import (
 )
 
 type server struct {
-	Hostname string
-	IP       string
-	Port     int
+	Hostname      string
+	IP            string
+	Port          int
 	ProxyProtocol bool
 }
 
@@ -41,19 +41,16 @@ func (p *proxy) Handle(conn net.Conn) {
 		return
 	}
 
-	var proxy *server
+	proxy := p.Default
 	hostname, err := parser.GetHostname(data[:])
 	if err == nil {
-		glog.V(3).Infof("parsed hostname from TLS Client Hello: %s", hostname)
+		glog.V(4).Infof("parsed hostname from TLS Client Hello: %s", hostname)
 		proxy = p.Get(hostname)
-		if proxy == nil {
-			return
-		}
-	} else {
-		proxy = p.Default
-		if proxy == nil {
-			return
-		}
+	}
+
+	if proxy == nil {
+		glog.V(4).Infof("there is no configured proxy for SSL connections")
+		return
 	}
 
 	clientConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", proxy.IP, proxy.Port))
