@@ -4,9 +4,9 @@ BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
 RELEASE?=0.9.0-beta.5
-PREFIX?=gcr.io/google_containers/nginx-ingress-controller
+PREFIX?=docker.cloudin.com/google_containers/nginx-ingress-controller
 GOOS?=linux
-DOCKER?=gcloud docker --
+DOCKER?=docker
 
 REPO_INFO=$(shell git config --get remote.origin.url)
 
@@ -22,7 +22,7 @@ build: clean
 		-o rootfs/nginx-ingress-controller ${PKG}/pkg/cmd/controller
 
 container: build
-	$(DOCKER) build --pull -t $(PREFIX):$(RELEASE) rootfs
+	$(DOCKER) build --no-cache -t $(PREFIX):$(RELEASE) rootfs
 
 push: container
 	$(DOCKER) push $(PREFIX):$(RELEASE)
@@ -51,3 +51,4 @@ vet:
 
 clean:
 	rm -f rootfs/nginx-ingress-controller
+	$(DOCKER) rmi -f $(PREFIX):$(RELEASE) || true

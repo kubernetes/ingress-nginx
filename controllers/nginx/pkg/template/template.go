@@ -100,6 +100,14 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 		glog.Infof("NGINX configuration: %v", string(b))
 	}
 
+	if glog.V(5) {
+		for _, svr := range conf.Servers {
+			for _, loc := range svr.Locations {
+				glog.Infof("svr %s template config location: %+v", svr.Hostname, loc.IpPort)
+			}
+		}
+	}
+	
 	err := t.tmpl.Execute(t.tmplBuf, conf)
 	if err != nil && err.Error() != errNoChild {
 		return nil, err

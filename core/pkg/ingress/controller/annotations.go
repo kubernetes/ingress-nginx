@@ -29,6 +29,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/cors"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
+	"k8s.io/ingress/core/pkg/ingress/annotations/ipport"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/annotations/portinredirect"
@@ -72,6 +73,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"SessionAffinity":      sessionaffinity.NewParser(),
 			"SSLPassthrough":       sslpassthrough.NewParser(),
 			"ConfigurationSnippet": snippet.NewParser(),
+			"IpPort":               ipport.NewParser(),
 		},
 	}
 }

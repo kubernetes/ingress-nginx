@@ -22,3 +22,7 @@ Session.vim
 # coverage artifacts
 .coverprofile
 /gover.coverprofile
+
+# nginx ingress build files
+controllers/nginx/nic*
+controllers/nginx/rootfs/nginx-ingress-controller

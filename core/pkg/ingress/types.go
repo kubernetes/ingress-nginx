@@ -26,6 +26,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
+	"k8s.io/ingress/core/pkg/ingress/annotations/ipport"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
@@ -288,6 +289,8 @@ type Location struct {
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
 	ConfigurationSnippet string `json:"configuration-snippet"`
+	// IpPort contains additional configuration which indicate the location whether
+	IpPort ipport.IpPort `json:"ip-port"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

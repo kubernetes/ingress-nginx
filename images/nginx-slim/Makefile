@@ -2,13 +2,13 @@ all: push
 
 # 0.0.0 shouldn't clobber any released builds
 TAG = 0.15
-PREFIX = gcr.io/google_containers/nginx-slim
+PREFIX = docker.cloudin.com/google_containers/nginx-slim
 
-container:
-	docker build --pull -t $(PREFIX):$(TAG) .
+container: clean
+	docker build --no-cache -t $(PREFIX):$(TAG) .
 
 push: container
-	gcloud docker -- push $(PREFIX):$(TAG)
+	docker push $(PREFIX):$(TAG)
 
 clean:
 	docker rmi -f $(PREFIX):$(TAG) || true
