@@ -249,7 +249,7 @@ func (n NGINXController) Reload(data []byte) ([]byte, bool, error) {
 		return nil, false, err
 	}
 
-	o, e := exec.Command(n.binary, "-s", "reload").CombinedOutput()
+	o, e := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
 
 	return o, true, e
 }
