@@ -85,6 +85,9 @@ http {
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
 
+    # disable warnings
+    uninitialized_variable_warn off;
+
     log_format upstreaminfo '{{ buildLogFormatUpstream $cfg }}';
 
     {{/* map urls that should not appear in access.log */}}
@@ -125,6 +128,16 @@ http {
     map $http_x_forwarded_port $pass_server_port {
        default           $http_x_forwarded_port;
        ''                $server_port;
+    }
+
+    map $pass_access_scheme $the_x_forwarded_for {
+       default           $remote_addr;
+       https             $proxy_protocol_addr;
+    }
+
+    map $pass_access_scheme $the_real_ip {
+       default           $remote_addr;
+       https             $proxy_protocol_addr;
     }
 
     # map port 442 to 443 for header X-Forwarded-Port
@@ -352,7 +365,8 @@ http {
             proxy_set_header                        Upgrade           $http_upgrade;
             proxy_set_header                        Connection        $connection_upgrade;
 
-            proxy_set_header X-Forwarded-For        $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP              $the_real_ip;
+            proxy_set_header X-Forwarded-For        $the_x_forwarded_for;
             proxy_set_header X-Forwarded-Host       $best_http_host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
