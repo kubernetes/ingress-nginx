@@ -203,9 +203,16 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	secrEventHandler := cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(old, cur interface{}) {
+			if !reflect.DeepEqual(old, cur) {
+				ic.syncSecret()
+			}
+		},
 		DeleteFunc: func(obj interface{}) {
 			sec := obj.(*api.Secret)
-			ic.sslCertTracker.Delete(fmt.Sprintf("%v/%v", sec.Namespace, sec.Name))
+			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
+			ic.sslCertTracker.Delete(key)
+			ic.secretTracker.Delete(key)
 		},
 	}
 
@@ -1007,9 +1014,11 @@ func (ic *GenericController) createServers(data []interface{},
 					} else {
 						glog.Warningf("ssl certificate %v does not contain a common name for host %v", key, host)
 					}
-				} else {
-					glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
+
+					continue
 				}
+
+				glog.Infof("ssl certificate \"%v\" does not exist in local store", key)
 			}
 		}
 	}
@@ -1151,6 +1160,10 @@ func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
 	}
 
 	for _, tls := range ing.Spec.TLS {
+		if tls.SecretName == "" {
+			continue
+		}
+
 		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
 		_, exists := ic.secretTracker.Get(key)
 		if !exists {

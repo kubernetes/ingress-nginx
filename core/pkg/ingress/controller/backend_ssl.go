@@ -46,8 +46,7 @@ func (ic *GenericController) syncSecret() {
 	var cert *ingress.SSLCert
 	var err error
 
-	keys := ic.secretTracker.List()
-	for _, k := range keys {
+	for _, k := range ic.secretTracker.List() {
 		key := k.(string)
 		cert, err = ic.getPemCertificate(key)
 		if err != nil {
