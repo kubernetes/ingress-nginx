@@ -76,8 +76,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 }
 
 func TestDefaultLoadBalance(t *testing.T) {
-	conf := map[string]string{
-	}
+	conf := map[string]string{}
 	to := ReadConfig(conf)
 	if to.LoadBalanceAlgorithm != "least_conn" {
 		t.Errorf("default load balance algorithm wrong")
