@@ -783,7 +783,10 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 				glog.V(3).Infof("creating upstream %v", name)
 				upstreams[name] = newUpstream(name)
 				if !upstreams[name].Secure {
-					upstreams[name].Secure = secUpstream
+					upstreams[name].Secure = secUpstream.Secure
+				}
+				if upstreams[name].SecureCACert.Secret == "" {
+					upstreams[name].SecureCACert = secUpstream.CACert
 				}
 				if upstreams[name].SessionAffinity.AffinityType == "" {
 					upstreams[name].SessionAffinity.AffinityType = affinity.AffinityType

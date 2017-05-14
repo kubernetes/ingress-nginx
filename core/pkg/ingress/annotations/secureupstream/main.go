@@ -17,25 +17,61 @@ limitations under the License.
 package secureupstream
 
 import (
+	"fmt"
+	"github.com/pkg/errors"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
-	secureUpstream = "ingress.kubernetes.io/secure-backends"
+	secureUpstream       = "ingress.kubernetes.io/secure-backends"
+	secureVerifyCASecret = "ingress.kubernetes.io/secure-verify-ca-secret"
 )
 
+// Secure describes SSL backend configuration
+type Secure struct {
+	Secure bool
+	CACert resolver.AuthSSLCert
+}
+
 type su struct {
+	certResolver resolver.AuthCertificate
 }
 
 // NewParser creates a new secure upstream annotation parser
-func NewParser() parser.IngressAnnotation {
-	return su{}
+func NewParser(resolver resolver.AuthCertificate) parser.IngressAnnotation {
+	return su{
+		certResolver: resolver,
+	}
 }
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the upstream servers should use SSL
 func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation(secureUpstream, ing)
+	s, _ := parser.GetBoolAnnotation(secureUpstream, ing)
+	ca, _ := parser.GetStringAnnotation(secureVerifyCASecret, ing)
+	secure := &Secure{
+		Secure: s,
+		CACert: resolver.AuthSSLCert{},
+	}
+	if !s && ca != "" {
+		return secure,
+			errors.Errorf("trying to use CA from secret %v/%v on a non secure backend", ing.Namespace, ca)
+	}
+	if ca == "" {
+		return secure, nil
+	}
+	caCert, err := a.certResolver.GetAuthCertificate(fmt.Sprintf("%v/%v", ing.Namespace, ca))
+	if err != nil {
+		return secure, errors.Wrap(err, "error obtaining certificate")
+	}
+	if caCert == nil {
+		return secure, nil
+	}
+	return &Secure{
+		Secure: s,
+		CACert: *caCert,
+	}, nil
 }
