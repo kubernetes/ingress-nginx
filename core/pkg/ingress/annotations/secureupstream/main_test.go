@@ -23,7 +23,9 @@ import (
 	api "k8s.io/client-go/pkg/api/v1"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
+	"fmt"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -61,22 +63,58 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
+type mockCfg struct {
+	certs map[string]resolver.AuthSSLCert
+}
+
+func (cfg mockCfg) GetAuthCertificate(secret string) (*resolver.AuthSSLCert, error) {
+	if cert, ok := cfg.certs[secret]; ok {
+		return &cert, nil
+	}
+	return nil, fmt.Errorf("secret not found: %v", secret)
+}
+
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
 	data[secureUpstream] = "true"
+	data[secureVerifyCASecret] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 
-	_, err := NewParser().Parse(ing)
+	_, err := NewParser(mockCfg{
+		certs: map[string]resolver.AuthSSLCert{
+			"default/secure-verify-ca": resolver.AuthSSLCert{},
+		},
+	}).Parse(ing)
 	if err != nil {
-		t.Error("Expected error with ingress without annotations")
+		t.Errorf("Unexpected error on ingress: %v", err)
 	}
 }
 
-func TestWithoutAnnotations(t *testing.T) {
+func TestSecretNotFound(t *testing.T) {
 	ing := buildIngress()
-	_, err := NewParser().Parse(ing)
+	data := map[string]string{}
+	data[secureUpstream] = "true"
+	data[secureVerifyCASecret] = "secure-verify-ca"
+	ing.SetAnnotations(data)
+	_, err := NewParser(mockCfg{}).Parse(ing)
 	if err == nil {
-		t.Error("Expected error with ingress without annotations")
+		t.Error("Expected secret not found error on ingress")
+	}
+}
+
+func TestSecretOnNonSecure(t *testing.T) {
+	ing := buildIngress()
+	data := map[string]string{}
+	data[secureUpstream] = "false"
+	data[secureVerifyCASecret] = "secure-verify-ca"
+	ing.SetAnnotations(data)
+	_, err := NewParser(mockCfg{
+		certs: map[string]resolver.AuthSSLCert{
+			"default/secure-verify-ca": resolver.AuthSSLCert{},
+		},
+	}).Parse(ing)
+	if err == nil {
+		t.Error("Expected CA secret on non secure backend error on ingress")
 	}
 }

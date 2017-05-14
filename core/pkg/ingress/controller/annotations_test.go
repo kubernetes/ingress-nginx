@@ -30,6 +30,7 @@ import (
 
 const (
 	annotationSecureUpstream     = "ingress.kubernetes.io/secure-backends"
+	annotationSecureVerifyCACert = "ingress.kubernetes.io/secure-verify-ca-secret"
 	annotationUpsMaxFails        = "ingress.kubernetes.io/upstream-max-fails"
 	annotationUpsFailTimeout     = "ingress.kubernetes.io/upstream-fail-timeout"
 	annotationPassthrough        = "ingress.kubernetes.io/ssl-passthrough"
@@ -51,7 +52,14 @@ func (m mockCfg) GetSecret(name string) (*api.Secret, error) {
 	return m.MockSecrets[name], nil
 }
 
-func (m mockCfg) GetAuthCertificate(string) (*resolver.AuthSSLCert, error) {
+func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
+	if secret, _ := m.GetSecret(name); secret != nil {
+		return &resolver.AuthSSLCert{
+			Secret:     name,
+			CAFileName: "/opt/ca.pem",
+			PemSHA:     "123",
+		}, nil
+	}
 	return nil, nil
 }
 
@@ -122,8 +130,43 @@ func TestSecureUpstream(t *testing.T) {
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
 		r := ec.SecureUpstream(ing)
-		if r != foo.er {
+		if r.Secure != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
+		}
+	}
+}
+
+func TestSecureVerifyCACert(t *testing.T) {
+	ec := newAnnotationExtractor(mockCfg{
+		MockSecrets: map[string]*api.Secret{
+			"default/secure-verify-ca": {
+				ObjectMeta: meta_v1.ObjectMeta{
+					Name: "secure-verify-ca",
+				},
+			},
+		},
+	})
+
+	anns := []struct {
+		it          int
+		annotations map[string]string
+		exists      bool
+	}{
+		{1, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert: "not"}, false},
+		{2, map[string]string{annotationSecureUpstream: "false", annotationSecureVerifyCACert: "secure-verify-ca"}, false},
+		{3, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert: "secure-verify-ca"}, true},
+		{4, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert + "_not": "secure-verify-ca"}, false},
+		{5, map[string]string{annotationSecureUpstream: "true"}, false},
+		{6, map[string]string{}, false},
+		{7, nil, false},
+	}
+
+	for _, ann := range anns {
+		ing := buildIngress()
+		ing.SetAnnotations(ann.annotations)
+		res := ec.SecureUpstream(ing)
+		if (res.CACert.CAFileName != "") != ann.exists {
+			t.Errorf("Expected exists was %v on iteration %v", ann.exists, ann.it)
 		}
 	}
 }

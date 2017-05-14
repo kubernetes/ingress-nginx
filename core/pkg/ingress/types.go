@@ -31,6 +31,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/store"
 )
 
@@ -154,8 +155,10 @@ type Backend struct {
 	// Allowing the use of HTTPS
 	// The endpoint/s must provide a TLS connection.
 	// The certificate used in the endpoint cannot be a self signed certificate
-	// TODO: add annotation to allow the load of ca certificate
 	Secure bool `json:"secure"`
+	// SecureCACert has the filename and SHA1 of the certificate authorities used to validate
+	// a secured connection to the backend
+	SecureCACert resolver.AuthSSLCert `json:"secureCert"`
 	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
