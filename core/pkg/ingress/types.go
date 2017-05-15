@@ -273,6 +273,10 @@ type Location struct {
 	Service *api.Service `json:"service,omitempty"`
 	// Port describes to which port from the service
 	Port intstr.IntOrString `json:"port"`
+	// Overwrite the Host header passed into the backend. Defaults to
+	// vhost of the incoming request.
+	// +optional
+	UpstreamVhost string `json:"upstream-vhost"`
 	// BasicDigestAuth returns authentication configuration for
 	// an Ingress rule.
 	// +optional
