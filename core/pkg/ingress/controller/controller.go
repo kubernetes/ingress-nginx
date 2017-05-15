@@ -328,7 +328,8 @@ func (ic *GenericController) controllersInSync() bool {
 		ic.svcController.HasSynced() &&
 		ic.endpController.HasSynced() &&
 		ic.secrController.HasSynced() &&
-		ic.mapController.HasSynced()
+		ic.mapController.HasSynced() &&
+		ic.nodeController.HasSynced()
 }
 
 // Info returns information about the backend
