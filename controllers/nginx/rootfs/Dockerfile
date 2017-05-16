@@ -19,6 +19,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
   --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
+RUN curl -sSL -o /sbin/tini https://github.com/krallin/tini/releases/download/v0.14.0/tini-amd64 && \
+  chmod +x /sbin/tini
+		
+ENTRYPOINT ["/sbin/tini", "--"]
+
 COPY . /
 
 CMD ["/nginx-ingress-controller"]
