@@ -23,14 +23,10 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	go_reap "github.com/hashicorp/go-reap"
-
 	"k8s.io/ingress/core/pkg/ingress/controller"
 )
 
 func main() {
-	go go_reap.ReapChildren(nil, nil, nil, nil)
-
 	// start a new nginx controller
 	ngx := newNGINXController()
 	// create a custom Ingress controller using NGINX as backend
