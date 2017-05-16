@@ -30,10 +30,6 @@ var (
 	// ErrInvalidAnnotationName the ingress rule does contains an invalid
 	// annotation name
 	ErrInvalidAnnotationName = errors.New("invalid annotation name")
-
-	// ErrInvalidAnnotationContent the ingress rule annotation content is
-	// invalid
-	ErrInvalidAnnotationContent = errors.New("invalid annotation content")
 )
 
 // NewInvalidAnnotationContent returns a new InvalidContent error
