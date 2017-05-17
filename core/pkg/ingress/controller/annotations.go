@@ -68,7 +68,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"Proxy":                proxy.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(),
 			"Redirect":             rewrite.NewParser(cfg),
-			"SecureUpstream":       secureupstream.NewParser(),
+			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"SessionAffinity":      sessionaffinity.NewParser(),
 			"SSLPassthrough":       sslpassthrough.NewParser(),
 			"ConfigurationSnippet": snippet.NewParser(),
@@ -111,9 +111,13 @@ const (
 	sessionAffinity = "SessionAffinity"
 )
 
-func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) bool {
-	val, _ := e.annotations[secureUpstream].Parse(ing)
-	return val.(bool)
+func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) *secureupstream.Secure {
+	val, err := e.annotations[secureUpstream].Parse(ing)
+	if err != nil {
+		glog.Errorf("error parsing secure upstream: %v", err)
+	}
+	secure := val.(*secureupstream.Secure)
+	return secure
 }
 
 func (e *annotationExtractor) HealthCheck(ing *extensions.Ingress) *healthcheck.Upstream {
