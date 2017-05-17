@@ -1,7 +1,11 @@
 # Deploying the Nginx Ingress controller
 
 This example aims to demonstrate the deployment of an nginx ingress controller and
-use a ConfigMap to enable nginx vts module and export metrics for prometheus.
+use a ConfigMap to enable nginx vts module and export metrics for prometheus,to enable 
+vts metric,you can simply run `kubectl apply -f nginx`,a deployment and service will be
+created which already has a `prometheus.io/scrap: 'true'` annotation and if you added
+the recommended Prometheus service-endpoint scraping [configuration](https://raw.githubusercontent.com/prometheus/prometheus/master/documentation/examples/prometheus-kubernetes.yml),
+Prometheus will scrape it automatically and you start using the generated metrics right away.
 
 ## Default Backend
 
