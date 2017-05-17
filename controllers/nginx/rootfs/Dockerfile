@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google_containers/nginx-slim:0.16
+FROM gcr.io/google_containers/nginx-slim:0.17
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
   diffutils \
@@ -21,7 +21,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
 
 RUN curl -sSL -o /sbin/tini https://github.com/krallin/tini/releases/download/v0.14.0/tini-amd64 && \
   chmod +x /sbin/tini
-		
+
 ENTRYPOINT ["/sbin/tini", "--"]
 
 COPY . /
