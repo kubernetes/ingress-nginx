@@ -14,7 +14,7 @@
 
 all: push
 
-TAG ?= 0.9
+TAG ?= 0.10
 REGISTRY = gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
 QEMUVERSION=v2.7.0
