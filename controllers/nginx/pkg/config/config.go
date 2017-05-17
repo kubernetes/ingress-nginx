@@ -92,6 +92,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
 	ClientHeaderBufferSize string `json:"client-header-buffer-size"`
 
+	// Sets buffer size for reading client request body
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
+	ClientBodyBufferSize string `json:"client-body-buffer-size,omitempty"`
+
 	// DisableAccessLog disables the Access Log globally from NGINX ingress controller
 	//http://nginx.org/en/docs/http/ngx_http_log_module.html
 	DisableAccessLog bool `json:"disable-access-log,omitempty"`
@@ -154,6 +158,10 @@ type Configuration struct {
 	// The zero value disables keep-alive client connections
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 	KeepAlive int `json:"keep-alive,omitempty"`
+
+	// Sets the maximum number of requests that can be served through one keep-alive connection.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests
+	KeepAliveRequests int `json:"keep-alive-requests,omitempty"`
 
 	// LargeClientHeaderBuffers Sets the maximum number and size of buffers used for reading
 	// large client request header.
@@ -273,6 +281,7 @@ type Configuration struct {
 func NewDefault() Configuration {
 	cfg := Configuration{
 		ClientHeaderBufferSize:     "1k",
+		ClientBodyBufferSize:       "8k",
 		EnableDynamicTLSRecords:    true,
 		EnableUnderscoresInHeaders: false,
 		ErrorLogLevel:              errorLevel,
@@ -285,6 +294,7 @@ func NewDefault() Configuration {
 		IgnoreInvalidHeaders:     true,
 		GzipTypes:                gzipTypes,
 		KeepAlive:                75,
+		KeepAliveRequests:        100,
 		LargeClientHeaderBuffers: "4 8k",
 		LogFormatStream:          logFormatStream,
 		LogFormatUpstream:        logFormatUpstream,
