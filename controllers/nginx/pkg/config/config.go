@@ -83,6 +83,9 @@ const (
 type Configuration struct {
 	defaults.Backend `json:",squash"`
 
+	// Sets the name of the configmap that contains the headers to pass to the client
+	AddHeaders string `json:"add-headers,omitempty"`
+
 	// AllowBackendServerHeader enables the return of the header Server from the backend
 	// instead of the generic nginx string.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header
@@ -368,7 +371,7 @@ func NewDefault() Configuration {
 			SkipAccessLogURLs:    []string{},
 		},
 		UpstreamKeepaliveConnections: 0,
-		LimitConnZoneVariable: defaultLimitConnZoneVariable,
+		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
 	}
 
 	if glog.V(5) {
@@ -392,6 +395,7 @@ func (cfg Configuration) BuildLogFormatUpstream() string {
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
 	ProxySetHeaders     map[string]string
+	AddHeaders          map[string]string
 	MaxOpenFiles        int
 	BacklogSize         int
 	Backends            []*ingress.Backend

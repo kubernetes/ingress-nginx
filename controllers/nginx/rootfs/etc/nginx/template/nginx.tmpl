@@ -3,6 +3,7 @@
 {{ $healthzURI := .HealthzURI }}
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
+{{ $addHeaders := .AddHeaders }}
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -90,6 +91,11 @@ http {
     gzip_min_length 256;
     gzip_types {{ $cfg.GzipTypes }};
     gzip_proxied any;
+    {{ end }}
+
+    # Custom headers for response
+    {{ range $k, $v := $addHeaders }}
+    add_header {{ $k }}            "{{ $v }}";
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
@@ -324,6 +330,7 @@ http {
             return 302 {{ $location.Redirect.AppRoot }};
         }
         {{ end }}
+
         {{ if not (empty $authPath) }}
         location = {{ $authPath }} {
             internal;
@@ -427,7 +434,7 @@ http {
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
             proxy_set_header Proxy                  "";
 
-            # Custom headers
+            # Custom headers to proxied server
             {{ range $k, $v := $proxyHeaders }}
             proxy_set_header {{ $k }}                    "{{ $v }}";
             {{ end }}

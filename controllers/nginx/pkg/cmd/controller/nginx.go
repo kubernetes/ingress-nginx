@@ -479,6 +479,18 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 	}
 
+	addHeaders := map[string]string{}
+	if cfg.AddHeaders != "" {
+		cmap, exists, err := n.storeLister.ConfigMap.GetByKey(cfg.AddHeaders)
+		if err != nil {
+			glog.Warningf("unexpected error reading configmap %v: %v", cfg.AddHeaders, err)
+		}
+
+		if exists {
+			addHeaders = cmap.(*api_v1.ConfigMap).Data
+		}
+	}
+
 	sslDHParam := ""
 	if cfg.SSLDHParam != "" {
 		secretName := cfg.SSLDHParam
@@ -507,6 +519,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	content, err := n.t.Write(config.TemplateConfig{
 		ProxySetHeaders:     setHeaders,
+		AddHeaders:          addHeaders,
 		MaxOpenFiles:        maxOpenFiles,
 		BacklogSize:         sysctlSomaxconn(),
 		Backends:            ingressCfg.Backends,
