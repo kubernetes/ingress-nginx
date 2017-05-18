@@ -15,7 +15,7 @@
 all: push
 
 # 0.0.0 shouldn't clobber any released builds
-TAG = 0.16
+TAG = 0.17
 REGISTRY = gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
 QEMUVERSION=v2.7.0
@@ -25,7 +25,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=gcr.io/google_containers/ubuntu-slim-$(ARCH):0.9
+BASEIMAGE?=gcr.io/google_containers/ubuntu-slim-$(ARCH):0.10
 
 ifeq ($(ARCH),arm)
         QEMUARCH=arm
