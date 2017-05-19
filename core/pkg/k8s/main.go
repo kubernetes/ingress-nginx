@@ -32,7 +32,7 @@ func IsValidService(kubeClient clientset.Interface, name string) (*api.Service, 
 	if err != nil {
 		return nil, err
 	}
-	return kubeClient.Core().Services(ns).Get(name, meta_v1.GetOptions{})
+	return kubeClient.CoreV1().Services(ns).Get(name, meta_v1.GetOptions{})
 }
 
 // IsValidConfigMap check if exists a configmap with the specified name
@@ -44,7 +44,7 @@ func IsValidConfigMap(kubeClient clientset.Interface, fullName string) (*api.Con
 		return nil, err
 	}
 
-	configMap, err := kubeClient.Core().ConfigMaps(ns).Get(name, meta_v1.GetOptions{})
+	configMap, err := kubeClient.CoreV1().ConfigMaps(ns).Get(name, meta_v1.GetOptions{})
 
 	if err != nil {
 		return nil, fmt.Errorf("configmap not found: %v", err)
@@ -56,7 +56,7 @@ func IsValidConfigMap(kubeClient clientset.Interface, fullName string) (*api.Con
 
 // IsValidNamespace chck if exists a namespace with the specified name
 func IsValidNamespace(kubeClient clientset.Interface, name string) (*api.Namespace, error) {
-	return kubeClient.Core().Namespaces().Get(name, meta_v1.GetOptions{})
+	return kubeClient.CoreV1().Namespaces().Get(name, meta_v1.GetOptions{})
 }
 
 // IsValidSecret checks if exists a secret with the specified name
@@ -65,7 +65,7 @@ func IsValidSecret(kubeClient clientset.Interface, name string) (*api.Secret, er
 	if err != nil {
 		return nil, err
 	}
-	return kubeClient.Core().Secrets(ns).Get(name, meta_v1.GetOptions{})
+	return kubeClient.CoreV1().Secrets(ns).Get(name, meta_v1.GetOptions{})
 }
 
 // ParseNameNS parses a string searching a namespace and name
@@ -81,7 +81,7 @@ func ParseNameNS(input string) (string, string, error) {
 // GetNodeIP returns the IP address of a node in the cluster
 func GetNodeIP(kubeClient clientset.Interface, name string) string {
 	var externalIP string
-	node, err := kubeClient.Core().Nodes().Get(name, meta_v1.GetOptions{})
+	node, err := kubeClient.CoreV1().Nodes().Get(name, meta_v1.GetOptions{})
 	if err != nil {
 		return externalIP
 	}
@@ -121,7 +121,7 @@ func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
 		return nil, fmt.Errorf("unable to get POD information (missing POD_NAME or POD_NAMESPACE environment variable")
 	}
 
-	pod, _ := kubeClient.Core().Pods(podNs).Get(podName, meta_v1.GetOptions{})
+	pod, _ := kubeClient.CoreV1().Pods(podNs).Get(podName, meta_v1.GetOptions{})
 	if pod == nil {
 		return nil, fmt.Errorf("unable to get POD information")
 	}

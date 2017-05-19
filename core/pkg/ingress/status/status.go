@@ -210,7 +210,7 @@ func NewStatusSyncer(config Config) Sync {
 func (s *statusSync) runningAddresess() ([]string, error) {
 	if s.PublishService != "" {
 		ns, name, _ := k8s.ParseNameNS(s.PublishService)
-		svc, err := s.Client.Core().Services(ns).Get(name, meta_v1.GetOptions{})
+		svc, err := s.Client.CoreV1().Services(ns).Get(name, meta_v1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -228,7 +228,7 @@ func (s *statusSync) runningAddresess() ([]string, error) {
 	}
 
 	// get information about all the pods running the ingress controller
-	pods, err := s.Client.Core().Pods(s.pod.Namespace).List(meta_v1.ListOptions{
+	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(meta_v1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
 	})
 	if err != nil {
@@ -246,7 +246,7 @@ func (s *statusSync) runningAddresess() ([]string, error) {
 }
 
 func (s *statusSync) isRunningMultiplePods() bool {
-	pods, err := s.Client.Core().Pods(s.pod.Namespace).List(meta_v1.ListOptions{
+	pods, err := s.Client.CoreV1().Pods(s.pod.Namespace).List(meta_v1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(s.pod.Labels).String(),
 	})
 	if err != nil {

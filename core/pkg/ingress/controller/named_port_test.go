@@ -184,7 +184,7 @@ func TestCheckSvcForUpdate(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			rs, _ := gc.cfg.Client.Core().Services(api.NamespaceDefault).Get("named_port_test_service", meta_v1.GetOptions{})
+			rs, _ := gc.cfg.Client.CoreV1().Services(api.NamespaceDefault).Get("named_port_test_service", meta_v1.GetOptions{})
 			rr := rs.ObjectMeta.Annotations[service.NamedPortAnnotation]
 			if !reflect.DeepEqual(rr, foo.er) {
 				t.Errorf("Returned %s, but expected %s for %s", rr, foo.er, foo.n)

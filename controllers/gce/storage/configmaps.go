@@ -156,21 +156,21 @@ type APIServerConfigMapStore struct {
 // Add adds the given config map to the apiserver's store.
 func (a *APIServerConfigMapStore) Add(obj interface{}) error {
 	cfg := obj.(*api_v1.ConfigMap)
-	_, err := a.client.Core().ConfigMaps(cfg.Namespace).Create(cfg)
+	_, err := a.client.CoreV1().ConfigMaps(cfg.Namespace).Create(cfg)
 	return err
 }
 
 // Update updates the existing config map object.
 func (a *APIServerConfigMapStore) Update(obj interface{}) error {
 	cfg := obj.(*api_v1.ConfigMap)
-	_, err := a.client.Core().ConfigMaps(cfg.Namespace).Update(cfg)
+	_, err := a.client.CoreV1().ConfigMaps(cfg.Namespace).Update(cfg)
 	return err
 }
 
 // Delete deletes the existing config map object.
 func (a *APIServerConfigMapStore) Delete(obj interface{}) error {
 	cfg := obj.(*api_v1.ConfigMap)
-	return a.client.Core().ConfigMaps(cfg.Namespace).Delete(cfg.Name, &metav1.DeleteOptions{})
+	return a.client.CoreV1().ConfigMaps(cfg.Namespace).Delete(cfg.Name, &metav1.DeleteOptions{})
 }
 
 // GetByKey returns the config map for a given key.
@@ -181,7 +181,7 @@ func (a *APIServerConfigMapStore) GetByKey(key string) (item interface{}, exists
 		return nil, false, fmt.Errorf("failed to get key %v, unexpecte format, expecting ns/name", key)
 	}
 	ns, name := nsName[0], nsName[1]
-	cfg, err := a.client.Core().ConfigMaps(ns).Get(name, metav1.GetOptions{})
+	cfg, err := a.client.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		// Translate not found errors to found=false, err=nil
 		if errors.IsNotFound(err) {
