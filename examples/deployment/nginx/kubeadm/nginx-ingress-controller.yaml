@@ -51,14 +51,13 @@ spec:
     k8s-app: default-http-backend
 ---
 apiVersion: extensions/v1beta1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: nginx-ingress-controller
   labels:
     k8s-app: nginx-ingress-controller
   namespace: kube-system
 spec:
-  replicas: 1
   template:
     metadata:
       labels:
