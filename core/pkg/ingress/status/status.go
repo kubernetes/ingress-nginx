@@ -285,7 +285,7 @@ func (s *statusSync) updateStatus(newIPs []api_v1.LoadBalancerIngress) {
 
 		go func(wg *sync.WaitGroup, ing *extensions.Ingress) {
 			defer wg.Done()
-			ingClient := s.Client.Extensions().Ingresses(ing.Namespace)
+			ingClient := s.Client.ExtensionsV1beta1().Ingresses(ing.Namespace)
 			currIng, err := ingClient.Get(ing.Name, meta_v1.GetOptions{})
 			if err != nil {
 				glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)

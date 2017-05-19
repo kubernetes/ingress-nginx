@@ -385,7 +385,7 @@ func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error)
 	}
 
 	// Check if the cluster has an Ingress with ip
-	ings, err := kubeClient.Extensions().Ingresses(api.NamespaceAll).List(meta_v1.ListOptions{
+	ings, err := kubeClient.ExtensionsV1beta1().Ingresses(api.NamespaceAll).List(meta_v1.ListOptions{
 		LabelSelector: labels.Everything().String(),
 	})
 	if err != nil {

@@ -286,7 +286,7 @@ func TestStatusActions(t *testing.T) {
 	newIPs := []api_v1.LoadBalancerIngress{{
 		IP: "11.0.0.2",
 	}}
-	fooIngress1, err1 := fk.Client.Extensions().Ingresses(api_v1.NamespaceDefault).Get("foo_ingress_1", meta_v1.GetOptions{})
+	fooIngress1, err1 := fk.Client.ExtensionsV1beta1().Ingresses(api_v1.NamespaceDefault).Get("foo_ingress_1", meta_v1.GetOptions{})
 	if err1 != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -299,7 +299,7 @@ func TestStatusActions(t *testing.T) {
 	fk.Shutdown()
 	// ingress should be empty
 	newIPs2 := []api_v1.LoadBalancerIngress{}
-	fooIngress2, err2 := fk.Client.Extensions().Ingresses(api_v1.NamespaceDefault).Get("foo_ingress_1", meta_v1.GetOptions{})
+	fooIngress2, err2 := fk.Client.ExtensionsV1beta1().Ingresses(api_v1.NamespaceDefault).Get("foo_ingress_1", meta_v1.GetOptions{})
 	if err2 != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -308,7 +308,7 @@ func TestStatusActions(t *testing.T) {
 		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, newIPs2)
 	}
 
-	oic, err := fk.Client.Extensions().Ingresses(api.NamespaceDefault).Get("foo_ingress_different_class", meta_v1.GetOptions{})
+	oic, err := fk.Client.ExtensionsV1beta1().Ingresses(api.NamespaceDefault).Get("foo_ingress_different_class", meta_v1.GetOptions{})
 	if err != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -376,7 +376,7 @@ func TestUpdateStatus(t *testing.T) {
 	sort.Sort(loadBalancerIngressByIP(newIPs))
 	fk.updateStatus(newIPs)
 
-	fooIngress1, err1 := fk.Client.Extensions().Ingresses(api_v1.NamespaceDefault).Get("foo_ingress_1", meta_v1.GetOptions{})
+	fooIngress1, err1 := fk.Client.ExtensionsV1beta1().Ingresses(api_v1.NamespaceDefault).Get("foo_ingress_1", meta_v1.GetOptions{})
 	if err1 != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -385,7 +385,7 @@ func TestUpdateStatus(t *testing.T) {
 		t.Fatalf("returned %v but expected %v", fooIngress1CurIPs, newIPs)
 	}
 
-	fooIngress2, err2 := fk.Client.Extensions().Ingresses(api_v1.NamespaceDefault).Get("foo_ingress_2", meta_v1.GetOptions{})
+	fooIngress2, err2 := fk.Client.ExtensionsV1beta1().Ingresses(api_v1.NamespaceDefault).Get("foo_ingress_2", meta_v1.GetOptions{})
 	if err2 != nil {
 		t.Fatalf("unexpected error")
 	}

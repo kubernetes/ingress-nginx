@@ -273,7 +273,7 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	ic.ingLister.Store, ic.ingController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Extensions().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.ExtensionsV1beta1().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
 		&extensions.Ingress{}, ic.cfg.ResyncPeriod, ingEventHandler)
 
 	ic.endpLister.Store, ic.endpController = cache.NewInformer(

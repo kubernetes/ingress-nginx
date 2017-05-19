@@ -141,7 +141,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 		},
 	}
 	lbc.ingLister.Store, lbc.ingController = cache.NewInformer(
-		cache.NewListWatchFromClient(lbc.client.Extensions().RESTClient(), "ingresses", namespace, fields.Everything()),
+		cache.NewListWatchFromClient(lbc.client.ExtensionsV1beta1().RESTClient(), "ingresses", namespace, fields.Everything()),
 		&extensions.Ingress{}, resyncPeriod, pathHandlers)
 
 	// Service watch handlers
@@ -344,7 +344,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 // updateIngressStatus updates the IP and annotations of a loadbalancer.
 // The annotations are parsed by kubectl describe.
 func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing extensions.Ingress) error {
-	ingClient := lbc.client.Extensions().Ingresses(ing.Namespace)
+	ingClient := lbc.client.ExtensionsV1beta1().Ingresses(ing.Namespace)
 
 	// Update IP through update/status endpoint
 	ip := l7.GetIP()
