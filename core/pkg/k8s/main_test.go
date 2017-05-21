@@ -191,7 +191,7 @@ func TestGetNodeIP(t *testing.T) {
 			Status: api.NodeStatus{
 				Addresses: []api.NodeAddress{
 					{
-						Type:    api.NodeLegacyHostIP,
+						Type:    api.NodeInternalIP,
 						Address: "10.0.0.1",
 					},
 				},
@@ -206,7 +206,7 @@ func TestGetNodeIP(t *testing.T) {
 			Status: api.NodeStatus{
 				Addresses: []api.NodeAddress{
 					{
-						Type:    api.NodeLegacyHostIP,
+						Type:    api.NodeInternalIP,
 						Address: "10.0.0.1",
 					},
 				},
@@ -222,7 +222,7 @@ func TestGetNodeIP(t *testing.T) {
 				Status: api.NodeStatus{
 					Addresses: []api.NodeAddress{
 						{
-							Type:    api.NodeLegacyHostIP,
+							Type:    api.NodeInternalIP,
 							Address: "10.0.0.1",
 						},
 					},
@@ -235,7 +235,7 @@ func TestGetNodeIP(t *testing.T) {
 				Status: api.NodeStatus{
 					Addresses: []api.NodeAddress{
 						{
-							Type:    api.NodeLegacyHostIP,
+							Type:    api.NodeInternalIP,
 							Address: "10.0.0.2",
 						},
 					},
@@ -251,7 +251,7 @@ func TestGetNodeIP(t *testing.T) {
 			Status: api.NodeStatus{
 				Addresses: []api.NodeAddress{
 					{
-						Type:    api.NodeLegacyHostIP,
+						Type:    api.NodeInternalIP,
 						Address: "10.0.0.1",
 					}, {
 						Type:    api.NodeExternalIP,
@@ -261,7 +261,7 @@ func TestGetNodeIP(t *testing.T) {
 			},
 		}}}), "demo", "10.0.0.2"},
 
-		// get NodeLegacyHostIP
+		// get NodeInternalIP
 		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
 			ObjectMeta: meta_v1.ObjectMeta{
 				Name: "demo",
@@ -272,7 +272,7 @@ func TestGetNodeIP(t *testing.T) {
 						Type:    api.NodeExternalIP,
 						Address: "",
 					}, {
-						Type:    api.NodeLegacyHostIP,
+						Type:    api.NodeInternalIP,
 						Address: "10.0.0.2",
 					},
 				},
@@ -324,7 +324,7 @@ func TestGetPodDetails(t *testing.T) {
 			Status: api.NodeStatus{
 				Addresses: []api.NodeAddress{
 					{
-						Type:    api.NodeLegacyHostIP,
+						Type:    api.NodeInternalIP,
 						Address: "10.0.0.1",
 					},
 				},

@@ -94,7 +94,7 @@ func GetNodeIP(kubeClient clientset.Interface, name string) string {
 			}
 		}
 
-		if externalIP == "" && address.Type == api.NodeLegacyHostIP {
+		if externalIP == "" && address.Type == api.NodeInternalIP {
 			externalIP = address.Address
 		}
 	}
