@@ -275,6 +275,8 @@ type Configuration struct {
 
 	// Defines the load balancing algorithm to use. The deault is round-robin
 	LoadBalanceAlgorithm string `json:"load-balance,omitempty"`
+
+	UseRegexpLocationPath bool `json:"use-regexp-location-path,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -328,6 +330,7 @@ func NewDefault() Configuration {
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
 		},
+		UseRegexpLocationPath:        false,
 	}
 
 	if glog.V(5) {

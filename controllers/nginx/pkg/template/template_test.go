@@ -102,6 +102,26 @@ func TestBuildLocation(t *testing.T) {
 	}
 }
 
+func TestWithLocationPathType(t *testing.T) {
+	conf := config.NewDefault()
+
+	path0 := "/foo"
+	if "/foo" != withLocationPathType(path0, conf) {
+		t.Errorf("%s: expected not to be regexp path", path0)
+	}
+
+	conf.UseRegexpLocationPath = true
+	path1 := "/foo"
+	if "~ ^/foo" != withLocationPathType(path1, conf) {
+		t.Errorf("%s: expected to be regexp path", path1)
+	}
+
+	path2 := "~* /foo"
+	if "~* /foo" != withLocationPathType(path2, conf) {
+		t.Errorf("%s: expected to be regexp path", path2)
+	}
+}
+
 func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{

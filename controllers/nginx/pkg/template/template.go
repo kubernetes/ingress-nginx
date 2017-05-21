@@ -129,6 +129,7 @@ var (
 		},
 		"buildLocation":            buildLocation,
 		"buildAuthLocation":        buildAuthLocation,
+		"withLocationPathType":     withLocationPathType,
 		"buildAuthResponseHeaders": buildAuthResponseHeaders,
 		"buildProxyPass":           buildProxyPass,
 		"buildRateLimitZones":      buildRateLimitZones,
@@ -189,6 +190,20 @@ func buildLocation(input interface{}) string {
 	}
 
 	return path
+}
+
+func withLocationPathType(input interface{}, cfgInput interface{}) string {
+	cfg, ok := cfgInput.(config.Configuration)
+	if !ok {
+		glog.Errorf("error an ingress.withLocationPathType type but %T was returned", cfgInput)
+	}
+	path := input.(string)
+
+	if cfg.UseRegexpLocationPath && strings.HasPrefix(path, "/") {
+		return fmt.Sprintf("~ ^%s", path)
+	} else {
+		return path
+	}
 }
 
 func buildAuthLocation(input interface{}) string {
