@@ -121,7 +121,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 				Status: api_v1.NodeStatus{
 					Addresses: []api_v1.NodeAddress{
 						{
-							Type:    api_v1.NodeLegacyHostIP,
+							Type:    api_v1.NodeInternalIP,
 							Address: "10.0.0.1",
 						}, {
 							Type:    api_v1.NodeExternalIP,
@@ -137,7 +137,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 				Status: api_v1.NodeStatus{
 					Addresses: []api_v1.NodeAddress{
 						{
-							Type:    api_v1.NodeLegacyHostIP,
+							Type:    api_v1.NodeInternalIP,
 							Address: "11.0.0.1",
 						},
 						{
