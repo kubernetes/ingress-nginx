@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-all: push
-
 TAG ?= 0.10
 REGISTRY = gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
+ALL_ARCH = amd64 arm arm64 ppc64le
+
 QEMUVERSION=v2.7.0
 
 IMGNAME = ubuntu-slim
@@ -52,7 +52,20 @@ endif
 
 TEMP_DIR := $(shell mktemp -d)
 
-container: clean
+all: all-container
+
+sub-container-%:
+	$(MAKE) ARCH=$* container
+
+sub-push-%:
+	$(MAKE) ARCH=$* push
+
+all-container: $(addprefix sub-container-,$(ALL_ARCH))
+
+all-push: $(addprefix sub-push-,$(ALL_ARCH))
+
+container: .container-$(ARCH)
+.container-$(ARCH): clean
 	cp ./* $(TEMP_DIR)
 	cd $(TEMP_DIR) && sed -i 's|BASEIMAGE|$(BASEIMAGE)|g' Dockerfile.build
 	cd $(TEMP_DIR) && sed -i "s|ARCH|$(QEMUARCH)|g" Dockerfile.build
@@ -79,7 +92,8 @@ ifeq ($(ARCH), amd64)
 	docker tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
-push: container
+push: .push-$(ARCH)
+.push-$(ARCH): .container-$(ARCH)
 	$(PUSH_TOOL) docker -- push $(MULTI_ARCH_IMG):$(TAG)
 
 ifeq ($(ARCH),amd64)
