@@ -37,7 +37,7 @@ able to function as an ingress across the cluster.  These permissions are
 granted to the ClusterRole named `nginx-ingress-clusterrole`
 
 * `configmaps`, `endpoints`, `nodes`, `pods`, `secrets`: list, watch
-* `services`: get, list, watch, update
+* `services`: get, list, watch
 * `ingresses`: get, list, watch
 * `events`: create
 * `ingresses/status`: update
