@@ -16,7 +16,6 @@ metadata:
 rules:
   - apiGroups:
       - ""
-      - "extensions"
     resources:
       - configmaps
       - secrets
