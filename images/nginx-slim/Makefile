@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-all: push
-
 # 0.0.0 shouldn't clobber any released builds
 TAG = 0.17
 REGISTRY = gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
+ALL_ARCH = amd64 arm ppc64le
+
 QEMUVERSION=v2.7.0
 
 IMGNAME = nginx-slim
@@ -43,7 +43,21 @@ endif
 
 TEMP_DIR := $(shell mktemp -d)
 
-container:
+all: all-container
+
+sub-container-%:
+	$(MAKE) ARCH=$* container
+
+sub-push-%:
+	$(MAKE) ARCH=$* push
+
+all-container: $(addprefix sub-container-,$(ALL_ARCH))
+
+all-push: $(addprefix sub-push-,$(ALL_ARCH))
+
+
+container: .container-$(ARCH)
+.container-$(ARCH):
 	cp ./* $(TEMP_DIR)
 	cd $(TEMP_DIR) && sed -i 's|BASEIMAGE|$(BASEIMAGE)|g' Dockerfile
 	cd $(TEMP_DIR) && sed -i "s|ARCH|$(QEMUARCH)|g" Dockerfile
@@ -66,11 +80,13 @@ ifeq ($(ARCH), amd64)
 	docker tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
-push: container
+push: .push-$(ARCH)
+.push-$(ARCH): .container-$(ARCH)
 	gcloud docker -- push $(MULTI_ARCH_IMG):$(TAG)
 ifeq ($(ARCH), amd64)
 	gcloud docker -- push $(IMAGE):$(TAG)
 endif
 
-clean:
-	docker rmi -f $(PREFIX):$(TAG) || true
+clean: $(addprefix sub-clean-,$(ALL_ARCH))
+sub-clean-%:
+	docker rmi -f $(IMAGE)-$*:$(TAG) || true
