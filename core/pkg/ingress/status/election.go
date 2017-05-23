@@ -35,7 +35,7 @@ import (
 )
 
 func getCurrentLeader(electionID, namespace string, c client.Interface) (string, *api.Endpoints, error) {
-	endpoints, err := c.Core().Endpoints(namespace).Get(electionID, meta_v1.GetOptions{})
+	endpoints, err := c.CoreV1().Endpoints(namespace).Get(electionID, meta_v1.GetOptions{})
 	if err != nil {
 		return "", nil, err
 	}
@@ -59,10 +59,10 @@ func NewElection(electionID,
 	callback func(leader string),
 	c client.Interface) (*leaderelection.LeaderElector, error) {
 
-	_, err := c.Core().Endpoints(namespace).Get(electionID, meta_v1.GetOptions{})
+	_, err := c.CoreV1().Endpoints(namespace).Get(electionID, meta_v1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
-			_, err = c.Core().Endpoints(namespace).Create(&api.Endpoints{
+			_, err = c.CoreV1().Endpoints(namespace).Create(&api.Endpoints{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Name: electionID,
 				},

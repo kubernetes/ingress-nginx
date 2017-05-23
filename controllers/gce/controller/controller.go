@@ -96,7 +96,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{
-		Interface: kubeClient.Core().Events(""),
+		Interface: kubeClient.CoreV1().Events(""),
 	})
 	lbc := LoadBalancerController{
 		client:              kubeClient,
@@ -141,7 +141,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 		},
 	}
 	lbc.ingLister.Store, lbc.ingController = cache.NewInformer(
-		cache.NewListWatchFromClient(lbc.client.Extensions().RESTClient(), "ingresses", namespace, fields.Everything()),
+		cache.NewListWatchFromClient(lbc.client.ExtensionsV1beta1().RESTClient(), "ingresses", namespace, fields.Everything()),
 		&extensions.Ingress{}, resyncPeriod, pathHandlers)
 
 	// Service watch handlers
@@ -156,7 +156,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 	}
 
 	lbc.svcLister.Indexer, lbc.svcController = cache.NewIndexerInformer(
-		cache.NewListWatchFromClient(lbc.client.Core().RESTClient(), "services", namespace, fields.Everything()),
+		cache.NewListWatchFromClient(lbc.client.CoreV1().RESTClient(), "services", namespace, fields.Everything()),
 		&api_v1.Service{},
 		resyncPeriod,
 		svcHandlers,
@@ -164,7 +164,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 	)
 
 	lbc.podLister.Indexer, lbc.podController = cache.NewIndexerInformer(
-		cache.NewListWatchFromClient(lbc.client.Core().RESTClient(), "pods", namespace, fields.Everything()),
+		cache.NewListWatchFromClient(lbc.client.CoreV1().RESTClient(), "pods", namespace, fields.Everything()),
 		&api_v1.Pod{},
 		resyncPeriod,
 		cache.ResourceEventHandlerFuncs{},
@@ -173,7 +173,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 
 	// Node watch handlers
 	lbc.nodeLister.Indexer, lbc.nodeController = cache.NewIndexerInformer(
-		cache.NewListWatchFromClient(lbc.client.Core().RESTClient(), "nodes", api_v1.NamespaceAll, fields.Everything()),
+		cache.NewListWatchFromClient(lbc.client.CoreV1().RESTClient(), "nodes", api_v1.NamespaceAll, fields.Everything()),
 		&api_v1.Node{},
 		resyncPeriod,
 		cache.ResourceEventHandlerFuncs{},
@@ -344,7 +344,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 // updateIngressStatus updates the IP and annotations of a loadbalancer.
 // The annotations are parsed by kubectl describe.
 func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing extensions.Ingress) error {
-	ingClient := lbc.client.Extensions().Ingresses(ing.Namespace)
+	ingClient := lbc.client.ExtensionsV1beta1().Ingresses(ing.Namespace)
 
 	// Update IP through update/status endpoint
 	ip := l7.GetIP()

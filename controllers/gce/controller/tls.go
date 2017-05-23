@@ -60,7 +60,7 @@ func (t *apiServerTLSLoader) load(ing *extensions.Ingress) (*loadbalancers.TLSCe
 	secretName := ing.Spec.TLS[0].SecretName
 	// TODO: Replace this for a secret watcher.
 	glog.V(3).Infof("Retrieving secret for ing %v with name %v", ing.Name, secretName)
-	secret, err := t.client.Core().Secrets(ing.Namespace).Get(secretName, meta_v1.GetOptions{})
+	secret, err := t.client.CoreV1().Secrets(ing.Namespace).Get(secretName, meta_v1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
