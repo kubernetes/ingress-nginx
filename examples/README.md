@@ -88,3 +88,9 @@ Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 custom-headers  | set custom headers before send traffic to backends  | nginx | Advanced
 configuration-snippets | customize nginx location configuration using annotations | nginx | Advanced
+
+## RBAC
+
+Name | Description | Platform   | Complexity Level
+-----| ----------- | ---------- | ----------------
+rbac | Configuring Role Base Access Control | nginx | intermediate
