@@ -17,13 +17,8 @@ limitations under the License.
 package controller
 
 import (
-	"fmt"
-
 	"github.com/golang/glog"
-
-	api "k8s.io/client-go/pkg/api/v1"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
@@ -133,18 +128,4 @@ func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
 	val, _ := e.annotations[sessionAffinity].Parse(ing)
 	return val.(*sessionaffinity.AffinityConfig)
-}
-
-func (e *annotationExtractor) ContainsCertificateAuth(ing *extensions.Ingress) bool {
-	val, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
-	return val != ""
-}
-
-func (e *annotationExtractor) CertificateAuthSecret(ing *extensions.Ingress) (*api.Secret, error) {
-	val, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
-	if val == "" {
-		return nil, fmt.Errorf("ingress rule %v/%v does not contain the auth-tls-secret annotation", ing.Namespace, ing.Name)
-	}
-
-	return e.secretResolver.GetSecret(val)
 }
