@@ -234,7 +234,7 @@ func (b *Backends) Add(p ServicePort) error {
 	if len(be.HealthChecks) == 1 {
 		existingHCLink = be.HealthChecks[0]
 	}
-	if be.Protocol != string(p.Protocol) || existingHCLink != hcLink {
+	if be.Protocol != string(p.Protocol) || existingHCLink != hcLink || be.Description != p.Description() {
 		glog.V(2).Infof("Updating backend protocol %v (%v) for change in protocol (%v) or health check", pName, be.Protocol, string(p.Protocol))
 		be.Protocol = string(p.Protocol)
 		be.HealthChecks = []string{hcLink}
