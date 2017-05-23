@@ -45,7 +45,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
-	"k8s.io/ingress/core/pkg/ingress/annotations/service"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
@@ -1046,31 +1045,7 @@ func (ic *GenericController) getEndpoints(
 
 	// ExternalName services
 	if s.Spec.Type == api.ServiceTypeExternalName {
-		var targetPort int
-
-		switch servicePort.Type {
-		case intstr.Int:
-			targetPort = servicePort.IntValue()
-		case intstr.String:
-			port, err := service.GetPortMapping(servicePort.StrVal, s)
-			if err == nil {
-				targetPort = int(port)
-				break
-			}
-
-			glog.Warningf("error mapping service port: %v", err)
-			err = ic.checkSvcForUpdate(s)
-			if err != nil {
-				glog.Warningf("error mapping service ports: %v", err)
-				return upsServers
-			}
-
-			port, err = service.GetPortMapping(servicePort.StrVal, s)
-			if err == nil {
-				targetPort = int(port)
-			}
-		}
-
+		targetPort := servicePort.IntValue()
 		// check for invalid port value
 		if targetPort <= 0 {
 			return upsServers
@@ -1106,22 +1081,8 @@ func (ic *GenericController) getEndpoints(
 					targetPort = epPort.Port
 				}
 			case intstr.String:
-				port, err := service.GetPortMapping(servicePort.StrVal, s)
-				if err == nil {
-					targetPort = port
-					break
-				}
-
-				glog.Warningf("error mapping service port: %v", err)
-				err = ic.checkSvcForUpdate(s)
-				if err != nil {
-					glog.Warningf("error mapping service ports: %v", err)
-					continue
-				}
-
-				port, err = service.GetPortMapping(servicePort.StrVal, s)
-				if err == nil {
-					targetPort = port
+				if epPort.Name == servicePort.StrVal {
+					targetPort = epPort.Port
 				}
 			}
 

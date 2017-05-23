@@ -17,15 +17,10 @@ limitations under the License.
 package controller
 
 import (
-	"reflect"
-	"testing"
-
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
-	"k8s.io/ingress/core/pkg/ingress/annotations/service"
 )
 
 func buildSimpleClientSet() *fake.Clientset {
@@ -94,101 +89,5 @@ func buildService() *api_v1.Service {
 		Spec: api_v1.ServiceSpec{
 			ClusterIP: "10.10.10.10",
 		},
-	}
-}
-
-func TestCheckSvcForUpdate(t *testing.T) {
-	foos := []struct {
-		n   string
-		ns  string
-		sps []api_v1.ServicePort
-		sl  map[string]string
-		er  string
-	}{
-		{
-			"pods_have_not_been_found_in_this_namespace",
-			api.NamespaceSystem,
-			[]api_v1.ServicePort{
-				{Name: "foo_port_1", Port: 8080, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("foo1_named_port_c1")},
-				{Name: "foo_port_2", Port: 8181, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromInt(81)},
-				{Name: "foo_port_3", Port: 8282, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("")},
-			},
-			map[string]string{
-				"lable_sig": "foo_pod",
-			},
-			"",
-		},
-		{
-			"ports_have_not_been_found_in_this_pod",
-			api.NamespaceDefault,
-			[]api_v1.ServicePort{
-				{Name: "foo_port_1", Port: 8080, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("foo1_named_port_cXX")},
-				{Name: "foo_port_2", Port: 8181, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromInt(81)},
-				{Name: "foo_port_3", Port: 8282, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("")},
-			},
-			map[string]string{
-				"lable_sig": "foo_pod",
-			},
-			"",
-		},
-
-		{
-			"ports_fixed",
-			api.NamespaceDefault,
-			[]api_v1.ServicePort{
-				{Name: "foo_port_1", Port: 8080, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromInt(80)},
-				{Name: "foo_port_2", Port: 8181, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromInt(81)},
-				{Name: "foo_port_3", Port: 8282, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("")},
-			},
-			map[string]string{
-				"lable_sig": "foo_pod",
-			},
-			"",
-		},
-		{
-			"nil_selector",
-			api.NamespaceDefault,
-			[]api_v1.ServicePort{
-				{Name: "foo_port_1", Port: 8080, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("foo1_named_port_c1")},
-				{Name: "foo_port_2", Port: 8181, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromInt(81)},
-				{Name: "foo_port_3", Port: 8282, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("")},
-			},
-			nil,
-			"{\"foo1_named_port_c1\":\"80\"}",
-		},
-		{
-			"normal_update",
-			api.NamespaceDefault,
-			[]api_v1.ServicePort{
-				{Name: "foo_port_1", Port: 8080, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("foo1_named_port_c1")},
-				{Name: "foo_port_2", Port: 8181, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromInt(81)},
-				{Name: "foo_port_3", Port: 8282, Protocol: api_v1.ProtocolTCP, TargetPort: intstr.FromString("")},
-			},
-			map[string]string{
-				"lable_sig": "foo_pod",
-			},
-			"{\"foo1_named_port_c1\":\"80\"}",
-		},
-	}
-
-	for _, foo := range foos {
-		t.Run(foo.n, func(t *testing.T) {
-			gc := buildGenericController()
-			s := buildService()
-			s.SetNamespace(foo.ns)
-			s.Spec.Ports = foo.sps
-			s.Spec.Selector = foo.sl
-
-			err := gc.checkSvcForUpdate(s)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
-			rs, _ := gc.cfg.Client.Core().Services(api.NamespaceDefault).Get("named_port_test_service", meta_v1.GetOptions{})
-			rr := rs.ObjectMeta.Annotations[service.NamedPortAnnotation]
-			if !reflect.DeepEqual(rr, foo.er) {
-				t.Errorf("Returned %s, but expected %s for %s", rr, foo.er, foo.n)
-			}
-		})
 	}
 }
