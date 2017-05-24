@@ -31,9 +31,11 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/kubernetes/pkg/client/leaderelection"
+	"k8s.io/kubernetes/pkg/client/leaderelection/resourcelock"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
-	"k8s.io/ingress/core/pkg/ingress/status/leaderelection"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/strings"
@@ -52,13 +54,15 @@ type Sync interface {
 
 // Config ...
 type Config struct {
-	Client         clientset.Interface
+	Client         *clientset.Clientset
 	PublishService string
 	IngressLister  store.IngressLister
 	ElectionID     string
 
 	DefaultIngressClass string
 	IngressClass        string
+
+	Recorder record.EventRecorder
 }
 
 // statusSync keeps the status IP in each Ingress rule updated executing a periodic check
@@ -195,12 +199,26 @@ func NewStatusSyncer(config Config) Sync {
 		id = fmt.Sprintf("%v-%v", config.ElectionID, config.IngressClass)
 	}
 
-	le, err := NewElection(id,
-		pod.Name, pod.Namespace, 30*time.Second,
-		st.callback, config.Client)
+	rl, err := resourcelock.New("ConfigMapsResourceLock",
+		pod.Namespace,
+		id,
+		config.Client,
+		resourcelock.ResourceLockConfig{
+			Identity:      id,
+			EventRecorder: config.Recorder,
+		})
 	if err != nil {
-		glog.Fatalf("unexpected error starting leader election: %v", err)
+		glog.Fatalf("error creating lock: %v", err)
 	}
+
+	le, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
+		Lock:          rl,
+		LeaseDuration: updateInterval,
+		RenewDeadline: updateInterval,
+		RetryPeriod:   updateInterval,
+		Callbacks:     st.callback,
+	})
+
 	st.elector = le
 	return st
 }

@@ -39,6 +39,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
+	"k8s.io/kubernetes/pkg/client/leaderelection/resourcelock"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
@@ -48,7 +49,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
-	"k8s.io/ingress/core/pkg/ingress/status/leaderelection/resourcelock"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/net/ssl"
