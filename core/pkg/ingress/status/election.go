@@ -101,8 +101,8 @@ func NewElection(electionID,
 		Host:      hostname,
 	})
 
-	lock := resourcelock.EndpointsLock{
-		EndpointsMeta: meta_v1.ObjectMeta{Namespace: namespace, Name: electionID},
+	lock := resourcelock.ConfigMapLock{
+		ConfigMapMeta: meta_v1.ObjectMeta{Namespace: namespace, Name: electionID},
 		Client:        c,
 		LockConfig: resourcelock.ResourceLockConfig{
 			Identity:      id,
