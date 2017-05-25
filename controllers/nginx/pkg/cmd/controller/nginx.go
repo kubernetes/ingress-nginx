@@ -314,6 +314,11 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 	}
 }
 
+// ConfigureFlags allow to configure more flags before the parsing of
+// command line arguments
+func (n *NGINXController) ConfigureFlags(flags *pflag.FlagSet) {
+}
+
 // OverrideFlags customize NGINX controller flags
 func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
 	ic, _ := flags.GetString("ingress-class")
