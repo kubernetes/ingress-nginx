@@ -83,6 +83,9 @@ func (dc DummyController) Info() *ingress.BackendInfo {
 	}
 }
 
+func (n DummyController) ConfigureFlags(*pflag.FlagSet) {
+}
+
 func (n DummyController) OverrideFlags(*pflag.FlagSet) {
 }
 

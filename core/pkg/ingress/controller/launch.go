@@ -92,8 +92,8 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
+	backend.ConfigureFlags(flags)
 	flags.Parse(os.Args)
-
 	backend.OverrideFlags(flags)
 
 	flag.Set("logtostderr", "true")
