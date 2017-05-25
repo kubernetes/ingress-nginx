@@ -94,6 +94,9 @@ type Controller interface {
 	BackendDefaults() defaults.Backend
 	// Info returns information about the ingress controller
 	Info() *BackendInfo
+	// ConfigureFlags allow to configure more flags before the parsing of
+	// command line arguments
+	ConfigureFlags(*pflag.FlagSet)
 	// OverrideFlags allow the customization of the flags in the backend
 	OverrideFlags(*pflag.FlagSet)
 	// DefaultIngressClass just return the default ingress class
