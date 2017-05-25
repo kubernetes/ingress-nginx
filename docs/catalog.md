@@ -8,3 +8,4 @@ This is a non-comprehensive list of existing ingress controllers.
 * [traefik](https://docs.traefik.io/toml/#kubernetes-ingress-backend)
 * [AWS Application Load Balancer Ingress Controller](https://github.com/coreos/alb-ingress-controller)
 * [kube-ingress-aws-controller](https://github.com/zalando-incubator/kube-ingress-aws-controller)
+* [Voyager: HAProxy Ingress Controller](https://github.com/appscode/voyager)
