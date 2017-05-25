@@ -1,8 +1,55 @@
 Changelog
 
+### 0.9-beta.6
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.6`
+
+*Changes:*
+
+- [X] [#647](https://github.com/kubernetes/ingress/pull/647) ingress.class enhancement for debugging.
+- [X] [#708](https://github.com/kubernetes/ingress/pull/708) ingress losing real source IP when tls enabled
+- [X] [#760](https://github.com/kubernetes/ingress/pull/760) Change recorder event scheme
+- [X] [#704](https://github.com/kubernetes/ingress/pull/704) fix nginx reload flags '-c'
+- [X] [#757](https://github.com/kubernetes/ingress/pull/757) Replace use of endpoints as locks with configmap
+- [X] [#752](https://github.com/kubernetes/ingress/pull/752) nginx ingress header config backwards
+- [X] [#756](https://github.com/kubernetes/ingress/pull/756) Fix bad variable assignment in template nginx
+- [X] [#729](https://github.com/kubernetes/ingress/pull/729) Release nginx-slim 0.17
+- [X] [#755](https://github.com/kubernetes/ingress/pull/755) Fix server name hash maxSize default value
+- [X] [#741](https://github.com/kubernetes/ingress/pull/741) Update golang dependencies
+- [X] [#749](https://github.com/kubernetes/ingress/pull/749) Remove service annotation for namedPorts
+- [X] [#740](https://github.com/kubernetes/ingress/pull/740) Refactoring whitelist source IP verification
+- [X] [#734](https://github.com/kubernetes/ingress/pull/734) Specify nginx image arch
+- [X] [#728](https://github.com/kubernetes/ingress/pull/728) Update nginx image
+- [X] [#723](https://github.com/kubernetes/ingress/pull/723) update readme about vts metrics
+- [X] [#726](https://github.com/kubernetes/ingress/pull/726) Release ubuntu-slim 0.10
+- [X] [#727](https://github.com/kubernetes/ingress/pull/727) [nginx] whitelist-source-range doesn’t work on ssl port
+- [X] [#709](https://github.com/kubernetes/ingress/pull/709) Add config for X-Forwarded-For trust
+- [X] [#679](https://github.com/kubernetes/ingress/pull/679) add getenv
+- [X] [#680](https://github.com/kubernetes/ingress/pull/680) nginx/pkg/config: delete unuseful variable
+- [X] [#716](https://github.com/kubernetes/ingress/pull/716) Add secure-verify-ca-secret annotation
+- [X] [#722](https://github.com/kubernetes/ingress/pull/722) Remove go-reap and use tini as process reaper
+- [X] [#725](https://github.com/kubernetes/ingress/pull/725) Add keepalive_requests and client_body_buffer_size options
+- [X] [#724](https://github.com/kubernetes/ingress/pull/724) change the directory of default-backend.yaml
+- [X] [#656](https://github.com/kubernetes/ingress/pull/656) Nginx Ingress Controller - Specify load balancing method
+- [X] [#717](https://github.com/kubernetes/ingress/pull/717) delete unuseful variable
+- [X] [#712](https://github.com/kubernetes/ingress/pull/712) Set $proxy_upstream_name before location directive
+- [X] [#715](https://github.com/kubernetes/ingress/pull/715) Corrected annotation ex `signin-url` to `auth-url`
+- [X] [#718](https://github.com/kubernetes/ingress/pull/718) nodeController sync
+- [X] [#694](https://github.com/kubernetes/ingress/pull/694) SSL-Passthrough broken in beta.5
+- [X] [#678](https://github.com/kubernetes/ingress/pull/678) Convert CN SSL Certificate to lowercase before comparison
+- [X] [#690](https://github.com/kubernetes/ingress/pull/690) Fix IP in logs for https traffic
+- [X] [#673](https://github.com/kubernetes/ingress/pull/673) Override load balancer alg view config map
+- [X] [#675](https://github.com/kubernetes/ingress/pull/675) Use proxy-protocol to pass through source IP to nginx
+- [X] [#707](https://github.com/kubernetes/ingress/pull/707) use nginx vts module version 0.1.14
+- [X] [#702](https://github.com/kubernetes/ingress/pull/702) Document passing of ssl_client_cert to backend
+- [X] [#688](https://github.com/kubernetes/ingress/pull/688) Add example of UDP loadbalancing
+- [X] [#696](https://github.com/kubernetes/ingress/pull/696) [nginx] pass non-SNI TLS hello to default backend, Fixes #693
+- [X] [#685](https://github.com/kubernetes/ingress/pull/685) Fix error in generated nginx.conf for optional hsts-preload
+
+
 ### 0.9-beta.5
 
-**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.5`
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.6`
 
 *Changes:*
 
