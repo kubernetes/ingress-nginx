@@ -259,7 +259,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 60
       containers:
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.6
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.7
         name: ingress-nginx
         imagePullPolicy: Always
         ports:
