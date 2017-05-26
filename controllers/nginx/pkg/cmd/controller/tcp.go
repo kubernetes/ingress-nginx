@@ -22,6 +22,10 @@ type proxy struct {
 }
 
 func (p *proxy) Get(host string) *server {
+	if p.ServerList == nil {
+		return p.Default
+	}
+
 	for _, s := range p.ServerList {
 		if s.Hostname == host {
 			return s

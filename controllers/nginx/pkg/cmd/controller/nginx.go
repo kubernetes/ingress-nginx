@@ -417,6 +417,41 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
 	cfg.Resolver = n.resolver
 
+	servers := []*server{}
+	for _, pb := range ingressCfg.PassthroughBackends {
+		svc := pb.Service
+		if svc == nil {
+			glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
+			continue
+		}
+		port, err := strconv.Atoi(pb.Port.String())
+		if err != nil {
+			for _, sp := range svc.Spec.Ports {
+				if sp.Name == pb.Port.String() {
+					port = int(sp.Port)
+					break
+				}
+			}
+		} else {
+			for _, sp := range svc.Spec.Ports {
+				if sp.Port == int32(port) {
+					port = int(sp.Port)
+					break
+				}
+			}
+		}
+
+		//TODO: Allow PassthroughBackends to specify they support proxy-protocol
+		servers = append(servers, &server{
+			Hostname:      pb.Hostname,
+			IP:            svc.Spec.ClusterIP,
+			Port:          port,
+			ProxyProtocol: false,
+		})
+	}
+
+	n.proxy.ServerList = servers
+
 	// we need to check if the status module configuration changed
 	if cfg.EnableVtsStatus {
 		n.setupMonitor(vtsStatusModule)
@@ -512,41 +547,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	if err := n.testTemplate(content); err != nil {
 		return nil, err
 	}
-
-	servers := []*server{}
-	for _, pb := range ingressCfg.PassthroughBackends {
-		svc := pb.Service
-		if svc == nil {
-			glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
-			continue
-		}
-		port, err := strconv.Atoi(pb.Port.String())
-		if err != nil {
-			for _, sp := range svc.Spec.Ports {
-				if sp.Name == pb.Port.String() {
-					port = int(sp.Port)
-					break
-				}
-			}
-		} else {
-			for _, sp := range svc.Spec.Ports {
-				if sp.Port == int32(port) {
-					port = int(sp.Port)
-					break
-				}
-			}
-		}
-
-		//TODO: Allow PassthroughBackends to specify they support proxy-protocol
-		servers = append(servers, &server{
-			Hostname:      pb.Hostname,
-			IP:            svc.Spec.ClusterIP,
-			Port:          port,
-			ProxyProtocol: false,
-		})
-	}
-
-	n.proxy.ServerList = servers
 
 	return content, nil
 }
