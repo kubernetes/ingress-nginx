@@ -134,7 +134,7 @@ Please check the [auth](/examples/auth/nginx/README.md) example.
 
 ### Certificate Authentication
 
-It's possible to enable Certificate based authentication using additional annotations in Ingres Rule.
+It's possible to enable Certificate based authentication using additional annotations in Ingress Rule.
 
 The annotations are:
 
