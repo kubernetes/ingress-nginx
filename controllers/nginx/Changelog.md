@@ -1,5 +1,13 @@
 Changelog
 
+### 0.9-beta.7
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.7`
+
+*Changes:*
+
+- [X] [#777](https://github.com/kubernetes/ingress/pull/777) Update sniff parser to fix index out of bound error 
+
 ### 0.9-beta.6
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.6`
@@ -49,7 +57,7 @@ Changelog
 
 ### 0.9-beta.5
 
-**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.6`
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.7`
 
 *Changes:*
 
