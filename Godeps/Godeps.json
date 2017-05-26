@@ -191,7 +191,7 @@
 		},
 		{
 			"ImportPath": "github.com/paultag/sniff/parser",
-			"Rev": "c36b8585a41425573d9e3e1890bf3b6ac89a3828"
+			"Rev": "558797aed1e6daa735d8fada0b863b89d72dcfba"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",
