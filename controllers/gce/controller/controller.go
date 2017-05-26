@@ -28,9 +28,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
+	scheme "k8s.io/client-go/kubernetes/scheme"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
 	listers "k8s.io/client-go/listers/core/v1"
-	base_api "k8s.io/client-go/pkg/api"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
@@ -102,7 +102,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 		client:              kubeClient,
 		CloudClusterManager: clusterManager,
 		stopCh:              make(chan struct{}),
-		recorder: eventBroadcaster.NewRecorder(base_api.Scheme,
+		recorder: eventBroadcaster.NewRecorder(scheme.Scheme,
 			api_v1.EventSource{Component: "loadbalancer-controller"}),
 	}
 	lbc.nodeQueue = NewTaskQueue(lbc.syncNodes)
