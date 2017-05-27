@@ -46,9 +46,9 @@ Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). Y
 Before deploying the controller to production you might want to run it outside the cluster and observe it.
 
 ```console
-$ make controller
+$ make build
 $ mkdir /etc/nginx-ssl
-$ ./nginx-ingress-controller --running-in-cluster=false --default-backend-service=kube-system/default-http-backend
+$ ./rootfs/nginx-ingress-controller --running-in-cluster=false --default-backend-service=kube-system/default-http-backend
 ```
 
 ## Deployment
