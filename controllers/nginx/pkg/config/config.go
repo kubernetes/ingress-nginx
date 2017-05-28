@@ -275,6 +275,14 @@ type Configuration struct {
 
 	// Defines the load balancing algorithm to use. The deault is round-robin
 	LoadBalanceAlgorithm string `json:"load-balance,omitempty"`
+
+	// Sets the bucket size for the variables hash table.
+	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size
+	VariablesHashBucketSize int `json:"variables-hash-bucket-size,omitempty"`
+
+	// Sets the maximum size of the variables hash table.
+	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
+	VariablesHashMaxSize int `json:"variables-hash-max-size,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -315,6 +323,8 @@ func NewDefault() Configuration {
 		WorkerProcesses:          strconv.Itoa(runtime.NumCPU()),
 		LoadBalanceAlgorithm:     defaultLoadBalancerAlgorithm,
 		VtsStatusZoneSize:        "10m",
+		VariablesHashBucketSize:  64,
+		VariablesHashMaxSize:     2048,
 		UseHTTP2:                 true,
 		Backend: defaults.Backend{
 			ProxyBodySize:        bodySize,
