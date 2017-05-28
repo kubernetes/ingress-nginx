@@ -71,6 +71,9 @@ http {
     server_names_hash_bucket_size   {{ $cfg.ServerNameHashBucketSize }};
     map_hash_bucket_size            {{ $cfg.MapHashBucketSize }};
 
+    variables_hash_bucket_size      {{ $cfg.VariablesHashBucketSize }};
+    variables_hash_max_size         {{ $cfg.VariablesHashMaxSize }};
+
     underscores_in_headers          {{ if $cfg.EnableUnderscoresInHeaders }}on{{ else }}off{{ end }};
     ignore_invalid_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }};
 
