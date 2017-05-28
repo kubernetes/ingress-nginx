@@ -9,7 +9,7 @@ Key:
 * `nginx`: the `kubernetes/ingress` nginx controller
 * `gce`: the `kubernetes/ingress` GCE controller
 * `traefik`: Traefik's built-in Ingress controller 
-* `haproxy`: Joao Morais' [haproxy controller](https://github.com/jcmoraisjr/haproxy-ingress)
+* `haproxy`: Joao Morais' [HAProxy Ingress controller](https://github.com/jcmoraisjr/haproxy-ingress)
 * `trafficserver`: Torchbox's [Apache Traffic Server controller plugin](https://github.com/torchbox/k8s-ts-ingress)
 
 ## TLS-related
@@ -17,7 +17,7 @@ Key:
 | Name | Meaning
 | --- | ---
 | `ssl-passthrough` | Pass TLS connections directly to backend; do not offload.  Default `false`.  (nginx)
-| `ssl-redirect` | Redirect non-TLS requests to TLS when TLS is enabled.  Default `true`.  (nginx, trafficserver)
+| `ssl-redirect` | Redirect non-TLS requests to TLS when TLS is enabled.  Default `true`.  (nginx, haproxy, trafficserver)
 | `force-ssl-redirect` | Redirect non-TLS requests to TLS even when TLS is not configured.  Default `false`.  (nginx, trafficserver).
 | `secure-backends` | Use TLS to communicate with origin (pods).  Default `false`. (nginx, trafficserver)
 | `kubernetes.io/ingress.allow-http` | Whether to accept non-TLS HTTP connections.  (gce)
@@ -40,7 +40,7 @@ Key:
 
 | Name | Meaning
 | --- | ---
-| `app-root` | Redirect requests outside this path prefix to this prefix. (nginx, trafficserver)
+| `app-root` | Redirect requests without a path (i.e., for `/`) to this location. (nginx, trafficserver)
 | `rewrite-target` | Replace matched Ingress `path` with this value. (nginx, trafficserver)
 | `add-base-url` | Add `<base>` tag to HTML. (nginx)
 | `preserve-host` | Whether to pass the client request host (`true`) or the origin hostname (`false`) in the HTTP Host field.  (trafficserver)
