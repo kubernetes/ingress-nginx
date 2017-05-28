@@ -82,6 +82,12 @@ const (
 type Configuration struct {
 	defaults.Backend `json:",squash"`
 
+	// AllowBackendServerHeader enables the return of the header Server from the backend
+	// instead of the generic nginx string.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header
+	// By default this is disabled
+	AllowBackendServerHeader bool `json:"allow-backend-server-header"`
+
 	// EnableDynamicTLSRecords enables dynamic TLS record sizes
 	// https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency
 	// By default this is enabled
@@ -288,6 +294,7 @@ type Configuration struct {
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	cfg := Configuration{
+		AllowBackendServerHeader:   false,
 		ClientHeaderBufferSize:     "1k",
 		ClientBodyBufferSize:       "8k",
 		EnableDynamicTLSRecords:    true,

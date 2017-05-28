@@ -219,6 +219,10 @@ http {
 
     proxy_ssl_session_reuse on;
 
+    {{ if $cfg.AllowBackendServerHeader }}
+    proxy_pass_header Server;
+    {{ end }}
+
     {{range $name, $upstream := $backends}}
     upstream {{$upstream.Name}} {
         {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
