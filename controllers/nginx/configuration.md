@@ -185,9 +185,9 @@ Set the annotation `ingress.kubernetes.io/rewrite-target` to the path expected b
 
 If the application contains relative links it is possible to add an additional annotation `ingress.kubernetes.io/add-base-url` that will prepend a [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) in the header of the returned HTML from the backend.
 
-If the Application Root is exposed in a different path and needs to be redirected, the annotation `ingress.kubernetes.io/app-root` might be used.
+If the Application Root is exposed in a different path and needs to be redirected, set the annotation `ingress.kubernetes.io/app-root` to redirect requests for `/`.
 
-Please check the [rewrite](/examples/rewrite/README.md) example.
+Please check the [rewrite](/examples/rewrite/nginx/README.md) example.
 
 
 ### Rate limiting
