@@ -713,6 +713,10 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 // GetAuthCertificate ...
 func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
+	if _, exists := ic.secretTracker.Get(secretName); !exists {
+		ic.secretTracker.Add(secretName, secretName)
+	}
+
 	_, err := ic.GetSecret(secretName)
 	if err != nil {
 		return &resolver.AuthSSLCert{}, fmt.Errorf("unexpected error: %v", err)
@@ -1114,16 +1118,6 @@ func (ic *GenericController) getEndpoints(
 
 // extractSecretNames extracts information about secrets inside the Ingress rule
 func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
-	if ic.annotations.ContainsCertificateAuth(ing) {
-		key, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
-		if key != "" {
-			_, exists := ic.secretTracker.Get(key)
-			if !exists {
-				ic.secretTracker.Add(key, key)
-			}
-		}
-	}
-
 	for _, tls := range ing.Spec.TLS {
 		if tls.SecretName == "" {
 			continue
