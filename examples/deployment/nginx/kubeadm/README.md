@@ -1,7 +1,7 @@
 # Deploying the Nginx Ingress controller on kubeadm clusters
 
 This example aims to demonstrate the deployment of an nginx ingress controller with kubeadm, 
-and is nearly the same as the the example above, but here the Ingress Controller is using 
+and is nearly the same as the example above, but here the Ingress Controller is using 
 `hostNetwork: true` until the CNI kubelet networking plugin is compatible with `hostPort`
 (see issue: [kubernetes/kubernetes#31307](https://github.com/kubernetes/kubernetes/issues/31307))
 
