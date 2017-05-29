@@ -386,9 +386,6 @@ http {
             proxy_set_header ssl-client-cert        $ssl_client_cert;
             {{ end }}
 
-            # Pass Real IP
-            proxy_set_header X-Real-IP              $the_real_ip;
-
             # Allow websocket connections
             proxy_set_header                        Upgrade           $http_upgrade;
             proxy_set_header                        Connection        $connection_upgrade;
