@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/golang/glog"
 
@@ -36,12 +35,6 @@ import (
 // by external processes.
 func (ic *GenericController) syncSecret() {
 	glog.V(3).Infof("starting syncing of secrets")
-
-	if !ic.controllersInSync() {
-		time.Sleep(podStoreSyncedPollPeriod)
-		glog.Warningf("deferring sync till endpoints controller has synced")
-		return
-	}
 
 	var cert *ingress.SSLCert
 	var err error
