@@ -48,11 +48,11 @@ import (
 type statusModule string
 
 const (
-	ngxHealthPort = 18080
 	ngxHealthPath = "/healthz"
 
 	defaultStatusModule statusModule = "default"
 	vtsStatusModule     statusModule = "vts"
+	defaultServerPort                = "default-server-port"
 )
 
 var (
@@ -317,6 +317,7 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 // ConfigureFlags allow to configure more flags before the parsing of
 // command line arguments
 func (n *NGINXController) ConfigureFlags(flags *pflag.FlagSet) {
+	flags.Int(defaultServerPort, 18080, `Port used to expose the default server in NGINX.`)
 }
 
 // OverrideFlags customize NGINX controller flags
@@ -334,6 +335,9 @@ func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
 
 	flags.Set("ingress-class", ic)
 	n.stats = newStatsCollector(wc, ic, n.binary)
+
+	dlp, _ := flags.GetInt(defaultServerPort)
+	n.DefaultServerPort = dlp
 }
 
 // DefaultIngressClass just return the default ingress class
@@ -568,7 +572,7 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n NGINXController) Check(_ *http.Request) error {
-	res, err := http.Get(fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxHealthPath))
+	res, err := http.Get(fmt.Sprintf("http://localhost:%v%v", n.DefaultServerPort, ngxHealthPath))
 	if err != nil {
 		return err
 	}
