@@ -30,6 +30,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -322,15 +323,6 @@ func newIngressController(config *Configuration) *GenericController {
 	return &ic
 }
 
-func (ic *GenericController) controllersInSync() bool {
-	return ic.ingController.HasSynced() &&
-		ic.svcController.HasSynced() &&
-		ic.endpController.HasSynced() &&
-		ic.secrController.HasSynced() &&
-		ic.mapController.HasSynced() &&
-		ic.nodeController.HasSynced()
-}
-
 // Info returns information about the backend
 func (ic GenericController) Info() *ingress.BackendInfo {
 	return ic.cfg.Backend.Info()
@@ -377,11 +369,6 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 
 	if ic.syncQueue.IsShuttingDown() {
 		return nil
-	}
-
-	if !ic.controllersInSync() {
-		time.Sleep(podStoreSyncedPollPeriod)
-		return fmt.Errorf("deferring sync till endpoints controller has synced")
 	}
 
 	upstreams, servers := ic.getBackendServers()
@@ -1160,6 +1147,18 @@ func (ic GenericController) Start() {
 	go ic.nodeController.Run(ic.stopCh)
 	go ic.secrController.Run(ic.stopCh)
 	go ic.mapController.Run(ic.stopCh)
+
+	// Wait for all involved caches to be synced, before processing items from the queue is started
+	if !cache.WaitForCacheSync(ic.stopCh,
+		ic.ingController.HasSynced,
+		ic.svcController.HasSynced,
+		ic.endpController.HasSynced,
+		ic.secrController.HasSynced,
+		ic.mapController.HasSynced,
+		ic.nodeController.HasSynced,
+	) {
+		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+	}
 
 	go ic.syncQueue.Run(10*time.Second, ic.stopCh)
 
