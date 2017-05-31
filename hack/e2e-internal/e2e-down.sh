@@ -2,13 +2,8 @@
 
 [[ $DEBUG ]] && set -x
 
-set -eof pipefail
-
 # include env
 . hack/e2e-internal/e2e-env.sh
 
-echo "Destroying running docker containers..."
-# do not failt if the container is not running
-docker rm -f kubelet    || true
-docker rm -f apiserver  || true
-docker rm -f etcd       || true
+echo "Destroying running e2e cluster..."
+${MINIKUBE} --profile ingress-e2e delete || echo "e2e cluster already destroyed"
