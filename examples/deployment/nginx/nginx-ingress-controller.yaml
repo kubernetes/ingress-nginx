@@ -21,6 +21,7 @@ spec:
       # like with kubeadm
       # hostNetwork: true
       terminationGracePeriodSeconds: 60
+      hostNetwork: true
       containers:
       - image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.7
         name: nginx-ingress-controller
