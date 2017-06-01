@@ -64,11 +64,20 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - configmaps
       - pods
       - secrets
     verbs:
       - get
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    resourceNames:
+      - "ingress-controller-leader-nginx"
+    verbs:
+      - create
+      - get
+      - update
   - apiGroups:
       - ""
     resources:
