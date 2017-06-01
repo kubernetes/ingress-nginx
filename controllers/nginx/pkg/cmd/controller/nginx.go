@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -525,6 +526,22 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, er
 	}
 
 	cfg.SSLDHParam = sslDHParam
+
+	rand.Seed(time.Now().UnixNano())
+
+	glog.Warningf("Randomize upstreams: %v", cfg.RandomizeUpstreams)
+
+	if cfg.RandomizeUpstreams {
+		// randomize the upstreams. In the case where you are using sticky sessions the backend
+		// with the lowest IP will always recieve more traffic as whenever nginx is reloaded the
+		// internal pointer it uses for loadbalancing will be reset to 0
+		for _, be := range ingressCfg.Backends {
+			for i := range be.Endpoints {
+				j := rand.Intn(i + 1)
+				be.Endpoints[i], be.Endpoints[j] = be.Endpoints[j], be.Endpoints[i]
+			}
+		}
+	}
 
 	content, err := n.t.Write(config.TemplateConfig{
 		ProxySetHeaders:     setHeaders,
