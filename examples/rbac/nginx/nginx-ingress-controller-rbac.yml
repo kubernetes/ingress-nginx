@@ -23,6 +23,7 @@ rules:
       - pods
       - secrets
     verbs:
+      - get
       - list
       - watch
   - apiGroups:
@@ -69,6 +70,7 @@ rules:
       - secrets
     verbs:
       - get
+      - update
   - apiGroups:
       - ""
     resources:
