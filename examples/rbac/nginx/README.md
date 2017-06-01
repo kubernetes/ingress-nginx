@@ -46,8 +46,23 @@ granted to the ClusterRole named `nginx-ingress-clusterrole`
 These permissions are granted specific to the nginx-ingress namespace.  These
 permissions are granted to the Role named `nginx-ingress-role`
 
-* `configmaps`, `pods`, `secrets`: get
 * `endpoints`: create, get, update
+* `pods`, `secrets`: get
+
+Furthermore to support leader-election, the nginx-ingress-controller needs to
+have access to a `configmap` using the resourceName `ingress-controller-leader-nginx`
+
+* `configmaps`: create, get, update (for resourceName `ingress-controller-leader-nginx`)
+
+This resourceName is the concatenation of the `election-id` and the
+`ingress-class` as defined by the ingress-controller, which default to:
+
+* `election-id`: `ingress-controller-leader`
+* `ingress-class`: `nginx`
+* `resourceName` : `<election-id>-<ingress-class>`
+
+Please adapt accordingly if you overwrite either parameter when launching the
+nginx-ingress-controller.
 
 ### Bindings
 
