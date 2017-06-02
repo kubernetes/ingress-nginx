@@ -18,7 +18,7 @@ if [ ! -e ${KUBECTL} ]; then
 fi
 
 if [ ! -e ${MINIKUBE} ]; then
-  echo "kubectl binary is missing. downloading..."
+  echo "minikube binary is missing. downloading..."
   curl -sSLo ${MINIKUBE} https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VERSION}/minikube-linux-amd64
   chmod +x ${MINIKUBE}
 fi

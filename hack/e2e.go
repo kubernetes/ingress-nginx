@@ -34,11 +34,12 @@ var (
 	build      = flag.Bool("build", true, "Build the backends images indicated by the env var BACKENDS required to run e2e tests.")
 	up         = flag.Bool("up", true, "Creates a kubernetes cluster using hyperkube (containerized kubelet).")
 	down       = flag.Bool("down", true, "destroys the created cluster.")
-	test       = flag.Bool("test", true, "Run Ginkgo tests.")
+	test       = flag.Bool("test", true, "Run tests.")
 	dump       = flag.String("dump", "", "If set, dump cluster logs to this location on test or cluster-up failure")
-	testArgs   = flag.String("test-args", "", "Space-separated list of arguments to pass to Ginkgo test runner.")
+	testArgs   = flag.String("test-args", "", "Space-separated list of arguments to pass to the test runner.")
 	deployment = flag.String("deployment", "bash", "up/down mechanism")
-	verbose    = flag.Bool("v", false, "If true, print all command output.")
+	verbose    = flag.Bool("verbose", false, "If true, print all command output.")
+	files      = flag.String("files", "", "Path to a file/S descriptor that will create an Ingress controller")
 )
 
 func appendError(errs []error, err error) []error {
@@ -139,6 +140,10 @@ func main() {
 }
 
 func run(deploy deployer) error {
+	if *files == "" {
+		return fmt.Errorf("missing required flag --files")
+	}
+
 	if *dump != "" {
 		defer writeXML(time.Now())
 	}
@@ -172,7 +177,7 @@ func run(deploy deployer) error {
 			return fmt.Errorf("starting e2e cluster: %s", err)
 		}
 		if *dump != "" {
-			cmd := exec.Command("./cluster/kubectl.sh", "--match-server-version=false", "get", "nodes", "-oyaml")
+			cmd := exec.Command("./hack/e2e-internal/kubectl", "get", "nodes", "-oyaml")
 			b, err := cmd.CombinedOutput()
 			if *verbose {
 				log.Printf("kubectl get nodes:\n%s", string(b))
@@ -185,6 +190,10 @@ func run(deploy deployer) error {
 				errs = appendError(errs, fmt.Errorf("error running get nodes: %v", err))
 			}
 		}
+	}
+
+	if err := deploy.SetupController(*files); err != nil {
+		errs = appendError(errs, err)
 	}
 
 	if *test {
@@ -226,6 +235,7 @@ type deployer interface {
 	Up() error
 	IsUp() error
 	SetupKubecfg() error
+	SetupController(p string) error
 	Down() error
 }
 
@@ -252,6 +262,18 @@ func (b bash) SetupKubecfg() error {
 	return nil
 }
 
+func (b bash) SetupController(p string) error {
+	files := strings.Split(p, ",")
+	for _, f := range files {
+		err := finishRunning("setup controller", exec.Command("./hack/e2e-internal/kubectl", "create", "-f", f))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (b bash) Down() error {
 	return finishRunning("teardown", exec.Command("./hack/e2e-internal/e2e-down.sh"))
 }
@@ -262,10 +284,7 @@ func DumpClusterLogs(location string) error {
 }
 
 func Test() error {
-	if *testArgs == "" {
-		*testArgs = "--ginkgo.focus=\\[Feature:Ingress\\]"
-	}
-	return finishRunning("Ginkgo tests", exec.Command("./hack/e2e-internal/ginkgo-e2e.sh", strings.Fields(*testArgs)...))
+	return finishRunning("Ingress tests", exec.Command("./hack/e2e-internal/run-e2e.sh", strings.Fields(*testArgs)...))
 }
 
 func finishRunning(stepName string, cmd *exec.Cmd) error {

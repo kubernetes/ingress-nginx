@@ -38,8 +38,8 @@ test:
 	@go test -v -race -tags "$(BUILDTAGS) cgo" ${GO_LIST_FILES}
 
 .PHONY: test-e2e
-test-e2e: ginkgo
-	@go run hack/e2e.go -v --up --test --down
+test-e2e:
+	@go run hack/e2e.go --verbose --up --test --down --files="hack/nginx-ingress-controller.yaml,hack/default-backend.yaml"
 
 .PHONY: cover
 cover:
@@ -66,7 +66,3 @@ docker-build:
 .PHONY: docker-push
 docker-push:
 	make -C controllers/nginx push
-
-.PHONY: ginkgo
-ginkgo:
-	go get github.com/onsi/ginkgo/ginkgo
