@@ -198,3 +198,11 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		ngxTpl.Write(dat)
 	}
 }
+
+func TestBuildDenyVariable(t *testing.T) {
+	a := buildDenyVariable("host1.example.com_/.well-known/acme-challenge")
+	b := buildDenyVariable("host1.example.com_/.well-known/acme-challenge")
+	if !reflect.DeepEqual(a, b) {
+		t.Errorf("Expected '%v' but returned '%v'", a, b)
+	}
+}
