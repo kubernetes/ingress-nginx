@@ -28,6 +28,12 @@ rules:
   - apiGroups:
       - ""
     resources:
+      - nodes
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
       - services
     verbs:
       - get
