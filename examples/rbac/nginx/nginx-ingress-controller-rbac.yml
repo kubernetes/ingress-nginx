@@ -70,7 +70,6 @@ rules:
       - secrets
     verbs:
       - get
-      - update
   - apiGroups:
       - ""
     resources:
