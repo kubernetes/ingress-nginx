@@ -24,6 +24,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	text_template "text/template"
 
@@ -31,6 +32,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"github.com/pborman/uuid"
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	ing_net "k8s.io/ingress/core/pkg/net"
@@ -136,6 +138,7 @@ var (
 		"buildResolvers":           buildResolvers,
 		"isLocationAllowed":        isLocationAllowed,
 		"buildLogFormatUpstream":   buildLogFormatUpstream,
+		"buildDenyVariable":        buildDenyVariable,
 		"getenv":                   os.Getenv,
 		"contains":                 strings.Contains,
 		"hasPrefix":                strings.HasPrefix,
@@ -371,4 +374,24 @@ func isLocationAllowed(input interface{}) bool {
 	}
 
 	return loc.Denied == nil
+}
+
+var (
+	nonAlpha        = regexp.MustCompile("[^a-zA-Z0-9]+")
+	denyPathSlugMap = map[string]string{}
+)
+
+// buildDenyVariable returns a nginx variable for a location in a
+// server to be used in the whitelist check
+// This method uses a unique id generator library to reduce the
+// size of the string to be used as a variable in nginx to avoid
+// issue with the size of the variable bucket size directive
+func buildDenyVariable(a interface{}) string {
+	l := a.(string)
+
+	if _, ok := denyPathSlugMap[l]; !ok {
+		denyPathSlugMap[l] = uuid.New()
+	}
+
+	return fmt.Sprintf("$deny_%v", denyPathSlugMap[l])
 }

@@ -245,7 +245,7 @@ http {
 
     {{ if isLocationAllowed $location }}
     {{ if gt (len $location.Whitelist.CIDR) 0 }}
-    geo $the_real_ip $deny_{{ $server.Hostname }}_{{ $path }} {
+    geo $the_real_ip {{ buildDenyVariable (print $server.Hostname "_"  $path) }} {
         default 1;
 
         {{ range $ip := $location.Whitelist.CIDR }}
@@ -337,7 +337,7 @@ http {
 
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
-            if ($deny_{{ $server.Hostname }}_{{ $path }}) {
+            if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
                 return 403;
             }
             {{ end }}
