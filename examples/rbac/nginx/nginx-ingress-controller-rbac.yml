@@ -86,9 +86,14 @@ rules:
       # when launching the nginx-ingress-controller.
       - "ingress-controller-leader-nginx"
     verbs:
-      - create
       - get
       - update
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - create
   - apiGroups:
       - ""
     resources:
