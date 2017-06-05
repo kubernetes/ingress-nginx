@@ -14,7 +14,9 @@
 
 FROM gcr.io/google_containers/nginx-slim-amd64:0.17
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
+RUN export DEBIAN_FRONTEND=noninteractive \
+  && apt-get update \
+  && apt-get install -y \
   diffutils \
   --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
