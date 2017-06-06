@@ -327,6 +327,9 @@ http {
             proxy_set_header            Host {{ $location.ExternalAuth.Host }};
             proxy_ssl_server_name       on;
 
+            client_max_body_size        "{{ $location.Proxy.BodySize }}";
+
+
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
         }
