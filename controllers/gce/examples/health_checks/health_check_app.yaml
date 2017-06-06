@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: echoheaders
-        image: gcr.io/google_containers/echoserver:1.4
+        image: gcr.io/google_containers/echoserver:1.5
         ports:
         - containerPort: 8080
         readinessProbe:
@@ -22,6 +22,24 @@ spec:
           timeoutSeconds: 1
           successThreshold: 1
           failureThreshold: 10
+        env:
+           - name: NODE_NAME
+             valueFrom:
+               fieldRef:
+                 fieldPath: spec.nodeName
+           - name: POD_NAME
+             valueFrom:
+               fieldRef:
+                 fieldPath: metadata.name
+           - name: POD_NAMESPACE
+             valueFrom:
+               fieldRef:
+                 fieldPath: metadata.namespace
+           - name: POD_IP
+             valueFrom:
+               fieldRef:
+                 fieldPath: status.podIP
+          
 ---
 apiVersion: v1
 kind: Service
