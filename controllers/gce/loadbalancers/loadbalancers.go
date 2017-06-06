@@ -829,7 +829,7 @@ func mapsEqual(a, b *compute.UrlMap) bool {
 		if a.Description != b.Description {
 			return false
 		}
-		if len(a.Hosts) != len(a.Hosts) {
+		if len(a.Hosts) != len(b.Hosts) {
 			return false
 		}
 		for i := range a.Hosts {
@@ -856,13 +856,13 @@ func mapsEqual(a, b *compute.UrlMap) bool {
 		if a.Name != b.Name {
 			return false
 		}
-		if len(a.PathRules) != len(a.PathRules) {
+		if len(a.PathRules) != len(b.PathRules) {
 			return false
 		}
 		for i := range a.PathRules {
 			a := a.PathRules[i]
 			b := b.PathRules[i]
-			if len(a.Paths) != len(a.Paths) {
+			if len(a.Paths) != len(b.Paths) {
 				return false
 			}
 			for i := range a.Paths {
