@@ -419,9 +419,11 @@ func (b *Backends) Shutdown() error {
 // Status returns the status of the given backend by name.
 func (b *Backends) Status(name string) string {
 	backend, err := b.cloud.GetBackendService(name)
-	if err != nil {
+	if err != nil || len(backend.Backends) == 0 {
 		return "Unknown"
 	}
+
+	// TODO: Look at more than one backend's status
 	// TODO: Include port, ip in the status, since it's in the health info.
 	hs, err := b.cloud.GetHealth(name, backend.Backends[0].Group)
 	if err != nil || len(hs.HealthStatus) == 0 || hs.HealthStatus[0] == nil {
