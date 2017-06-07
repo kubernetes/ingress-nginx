@@ -188,17 +188,24 @@ func newIngressController(config *Configuration) *GenericController {
 			ic.syncQueue.Enqueue(obj)
 		},
 		UpdateFunc: func(old, cur interface{}) {
+			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
-			if !class.IsValid(curIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			validOld := class.IsValid(oldIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass)
+			validCur := class.IsValid(curIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass)
+			if !validOld && validCur {
+				glog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				ic.recorder.Eventf(curIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+			} else if validOld && !validCur {
+				glog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				ic.recorder.Eventf(curIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+			} else if validCur && !reflect.DeepEqual(old, cur) {
+				ic.recorder.Eventf(curIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+			} else {
+				// old and cur are invalid or old and cur doesn't have changes, so ignore
 				return
 			}
-
-			if !reflect.DeepEqual(old, cur) {
-				upIng := cur.(*extensions.Ingress)
-				ic.recorder.Eventf(upIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", upIng.Namespace, upIng.Name))
-				ic.syncQueue.Enqueue(cur)
-				ic.extractSecretNames(upIng)
-			}
+			ic.syncQueue.Enqueue(cur)
+			ic.extractSecretNames(curIng)
 		},
 	}
 
