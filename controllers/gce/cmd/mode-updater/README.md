@@ -1,7 +1,5 @@
 
 ## (ALPHA) Backend-Service BalancingMode Updater
-**For non-GKE Users**
-
 Earlier versions of the GLBC created GCP BackendService resources with no balancing mode specified. By default the API used CPU UTILIZATION. The "internal load balancer" feature provided by GCP requires backend services to have the balancing mode RATE. In order to have a K8s cluster with an internal load balancer and ingress resources, you'll need to perform some manual steps.
 
 #### Why
@@ -28,6 +26,17 @@ There are two GCP requirements that complicate changing the backend service bala
 
 
 - Run this updater tool
+
+
+#### How the updater works
+1. Create temporary instance groups `k8s-ig-migrate` in each zone where a `k8s-ig-{cluster_id}` exists.
+1. Update all backend-services to point to both original and temporary instance groups (mode of the new backend doesn't matter)
+1. Slowly migrate instances from original to temporary groups.
+1. Update all backend-services to remove pointers to original instance groups.
+1. Update all backend-services to point to original groups (with new balancing mode!)
+1. Slowly migrate instances from temporary to original groups.
+1. Update all backend-services to remove pointers to temporary instance groups.
+1. Delete temporary instance groups
 
 #### How to run
 ```shell
@@ -87,16 +96,6 @@ Step 8: Delete temporary instance groups
  - k8s-ig--migrate (us-central1-a)
 ```
 
-#### How the updater works
-1. Create temporary instance groups `k8s-ig-migrate` in each zone where a `k8s-ig-{cluster_id}` exists.
-1. Update all backend-services to point to both original and temporary instance groups (mode of the new backend doesn't matter)
-1. Slowly migrate instances from original to temporary groups.
-1. Update all backend-services to remove pointers to original instance groups.
-1. Update all backend-services to point to original groups (with new balancing mode!)
-1. Slowly migrate instances from temporary to original groups.
-1. Update all backend-services to remove pointers to temporary instance groups.
-1. Delete temporary instance groups
-
 #### Interaction with GCE Ingress Controller
 After one or more instances have been removed from their instance group, the controller will start throwing validation errors and will try to sync the instances back.  However, the instance will hopefully belong to `k8s-ig--migrate` already and the controller does not have logic to take it out of that group. Therefore, the controller only interrupts the migration process in between the removal from a group and the insertion to a group. On the second set of migrations, this interaction is fine since the destination group is the same for updater and controller. If the controller interrupts an instance from being added to the migrate IG, the updater will attempt migration again. Do not be alarmed by multiple attempts.
 
@@ -109,7 +108,6 @@ This may not be a perfect solution, but the updater will sleep for 3 minutes bet
 - [x] If only one backend-service exists, just update it in place.
 - [x] If all backend-services are already the target balancing mode, early return.
 - [x] Wait for op completion instead of sleeping
-- [ ] Adjust warning
 
 #### Warning
 This tool hasn't been fully tested. Use at your own risk.
