@@ -284,6 +284,10 @@ http {
         more_set_headers                        "Strict-Transport-Security: max-age={{ $cfg.HSTSMaxAge }}{{ if $cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }};{{ if $cfg.HSTSPreload }} preload{{ end }}";
         {{ end }}
 
+        {{ if not (eq $server.Hostname "_") }}
+        proxy_redirect ~https?://{{ $server.Hostname }}:?[0-9]*/(.*) /$1;
+        {{ end }}
+
         {{ if $cfg.EnableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
 
         {{ range $location := $server.Locations }}
@@ -414,7 +418,6 @@ http {
             proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;
             proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }}s;
 
-            proxy_redirect                          off;
             proxy_buffering                         off;
             proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
             proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
