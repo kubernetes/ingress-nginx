@@ -527,6 +527,8 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 		})
 	}
 
+	sort.Sort(ingress.LocationByPath(svcs))
+
 	return svcs
 }
 
