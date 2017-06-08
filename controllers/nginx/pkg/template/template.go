@@ -170,28 +170,14 @@ func buildResolvers(a interface{}) string {
 }
 
 // buildLocation produces the location string, if the ingress has redirects
-// (specified through the ingress.kubernetes.io/rewrite-to annotation)
+// (specified through the ingress.kubernetes.io/rewrite-target annotation)
 func buildLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		return slash
 	}
 
-	path := location.Path
-	if len(location.Redirect.Target) > 0 && location.Redirect.Target != path {
-		if path == slash {
-			return fmt.Sprintf("~* %s", path)
-		}
-		// baseuri regex will parse basename from the given location
-		baseuri := `(?<baseuri>.*)`
-		if !strings.HasSuffix(path, slash) {
-			// Not treat the slash after "location path" as a part of baseuri
-			baseuri = fmt.Sprintf(`\/?%s`, baseuri)
-		}
-		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
-	}
-
-	return path
+	return location.Path
 }
 
 func buildAuthLocation(input interface{}) string {
@@ -240,7 +226,7 @@ func buildLogFormatUpstream(input interface{}) string {
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
-// (specified through the ingress.kubernetes.io/rewrite-to annotation)
+// (specified through the ingress.kubernetes.io/rewrite-target annotation)
 // If the annotation ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
 func buildProxyPass(b interface{}, loc interface{}) string {
@@ -274,29 +260,31 @@ func buildProxyPass(b interface{}, loc interface{}) string {
 	}
 
 	if len(location.Redirect.Target) > 0 {
-		abu := ""
-		if location.Redirect.AddBaseURL {
-			// path has a slash suffix, so that it can be connected with baseuri directly
-			bPath := fmt.Sprintf("%s%s", path, "$baseuri")
-			abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host%v">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host%v">' r;
-	`, bPath, bPath)
-		}
-
+		rewrite := ""
 		if location.Redirect.Target == slash {
 			// special case redirect to /
 			// ie /something to /
-			return fmt.Sprintf(`
-	rewrite %s(.*) /$1 break;
-	rewrite %s / break;
-	proxy_pass %s://%s;
-	%v`, path, location.Path, proto, location.Backend, abu)
+			rewrite = fmt.Sprintf(`
+				rewrite %s(.*) /$1 break;
+				rewrite %s / break;
+				proxy_pass %s://%s;`, path, location.Path, proto, location.Backend)
+		} else {
+			rewrite = fmt.Sprintf(`
+				rewrite %s(.*) %s/$1 break;
+				proxy_pass %s://%s;`, path, location.Redirect.Target, proto, location.Backend)
 		}
 
-		return fmt.Sprintf(`
-	rewrite %s(.*) %s/$1 break;
-	proxy_pass %s://%s;
-	%v`, path, location.Redirect.Target, proto, location.Backend, abu)
+		if location.Redirect.AddBaseURL {
+			// path has a slash suffix, so that it can be connected with baseuri directly
+			return fmt.Sprintf(`
+				location ~* %s(?<baseuri>.*) {
+					subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host%s$baseuri">' r;
+					subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host%s$baseuri">' r;
+					%v
+				}`, path, path, path, rewrite)
+		}
+
+		return rewrite
 	}
 
 	// default proxy_pass
