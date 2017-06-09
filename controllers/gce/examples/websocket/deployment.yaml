@@ -1,0 +1,47 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ws-example
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: wseg
+    spec:
+      containers:
+      - name: websocketexample
+        image: nicksardo/websocketexample
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: podname
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ws-example-svc
+  labels:
+    app: wseg
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: wseg
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ws-example-ing
+spec:
+  backend:
+    serviceName: ws-example-svc
+    servicePort: 80
