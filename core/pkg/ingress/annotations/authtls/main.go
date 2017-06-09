@@ -40,6 +40,23 @@ type AuthSSLConfig struct {
 	ValidationDepth int `json:"validationDepth"`
 }
 
+func (assl1 *AuthSSLConfig) Equal(assl2 *AuthSSLConfig) bool {
+	if assl1 == assl2 {
+		return true
+	}
+	if assl1 == nil || assl2 == nil {
+		return false
+	}
+	if (&assl1.AuthSSLCert).Equal(&assl2.AuthSSLCert) {
+		return false
+	}
+	if assl1.ValidationDepth != assl2.ValidationDepth {
+		return false
+	}
+
+	return true
+}
+
 // NewParser creates a new TLS authentication annotation parser
 func NewParser(resolver resolver.AuthCertificate) parser.IngressAnnotation {
 	return authTLS{resolver}

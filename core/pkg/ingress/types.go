@@ -50,14 +50,11 @@ type Controller interface {
 	// controller status
 	healthz.HealthzChecker
 
-	// Reload takes a byte array representing the new loadbalancer configuration,
-	// and returns a byte array containing any output/errors from the backend and
-	// if a reload was required.
-	// Before returning the backend must load the configuration in the given array
-	// into the loadbalancer and restart it, or fail with an error and message string.
-	// If reloading fails, there should be not change in the running configuration or
-	// the given byte array.
-	Reload(data []byte) ([]byte, bool, error)
+	// Reload takes the new loadbalancer configuration,
+	// Before returning the backend must load the configuration into the loadbalancer
+	// and update the running configuration.
+	// If reloading fails, there should be not change in the running configuration
+	Reload(Configuration) error
 	// OnUpdate callback invoked from the sync queue https://k8s.io/ingress/core/blob/master/pkg/ingress/controller/controller.go#L387
 	// when an update occurs. This is executed frequently because Ingress
 	// controllers watches changes in:
@@ -78,12 +75,9 @@ type Controller interface {
 	// servers (FQDN) and all the locations inside each server. Each
 	// location contains information about all the annotations were configured
 	// https://k8s.io/ingress/core/blob/master/pkg/ingress/types.go#L83
-	// The backend returns the contents of the configuration file or an error
-	// with the reason why was not possible to generate the file.
+	// The backend returns an error if was not possible to update the configuration.
 	//
-	// The returned configuration is then passed to test, and then to reload
-	// if there is no errors.
-	OnUpdate(Configuration) ([]byte, error)
+	OnUpdate(Configuration) error
 	// ConfigMap content of --configmap
 	SetConfig(*api.ConfigMap)
 	// SetListers allows the access of store listers present in the generic controller

@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"reflect"
 	"sort"
@@ -109,6 +110,8 @@ type GenericController struct {
 	stopLock *sync.Mutex
 
 	stopCh chan struct{}
+
+	runningConfig *ingress.Configuration
 }
 
 // Configuration contains all the settings required by an Ingress controller
@@ -393,27 +396,38 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		}
 	}
 
-	data, err := ic.cfg.Backend.OnUpdate(ingress.Configuration{
+	pcfg := ingress.Configuration{
 		Backends:            upstreams,
 		Servers:             servers,
 		TCPEndpoints:        ic.getStreamServices(ic.cfg.TCPConfigMapName, api.ProtocolTCP),
 		UDPEndpoints:        ic.getStreamServices(ic.cfg.UDPConfigMapName, api.ProtocolUDP),
 		PassthroughBackends: passUpstreams,
-	})
+	}
+
+	if ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg) {
+		glog.Infof("skipping backend reload (no changes detected)")
+		return nil
+	}
+
+	glog.Infof("backend reload required")
+
+	err := ic.cfg.Backend.OnUpdate(pcfg)
 	if err != nil {
 		return err
 	}
 
-	out, reloaded, err := ic.cfg.Backend.Reload(data)
+	err = ic.cfg.Backend.Reload(pcfg)
 	if err != nil {
 		incReloadErrorCount()
-		glog.Errorf("unexpected failure restarting the backend: \n%v", string(out))
+		glog.Errorf("unexpected failure restarting the backend: \n%v", err)
 		return err
 	}
-	if reloaded {
-		glog.Infof("ingress backend successfully reloaded...")
-		incReloadCount()
-	}
+
+	glog.Infof("ingress backend successfully reloaded...")
+	incReloadCount()
+
+	ic.runningConfig = &pcfg
+
 	return nil
 }
 
@@ -686,7 +700,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 		}
 		aUpstreams = append(aUpstreams, value)
 	}
-	sort.Sort(ingress.BackendByNameServers(aUpstreams))
+	//sort.Sort(ingress.BackendByNameServers(aUpstreams))
 
 	aServers := make([]*ingress.Server, 0, len(servers))
 	for _, value := range servers {
@@ -843,12 +857,16 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 				glog.Warningf("service %v does not have any active endpoints", svcKey)
 			}
 
-			sort.Sort(ingress.EndpointByAddrPort(endps))
 			upstreams = append(upstreams, endps...)
 			break
 		}
 	}
 
+	rand.Seed(time.Now().UnixNano())
+	for i := range upstreams {
+		j := rand.Intn(i + 1)
+		upstreams[i], upstreams[j] = upstreams[j], upstreams[i]
+	}
 	return upstreams, nil
 }
 
