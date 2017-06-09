@@ -88,6 +88,25 @@ var (
 	}
 )
 
+func TestFormatIP(t *testing.T) {
+	cases := map[string]struct {
+		Input, Output string
+	}{
+		"ipv4-localhost": {"127.0.0.1", "127.0.0.1"},
+		"ipv4-internet":  {"8.8.8.8", "8.8.8.8"},
+		"ipv6-localhost": {"::1", "[::1]"},
+		"ipv6-internet":  {"2001:4860:4860::8888", "[2001:4860:4860::8888]"},
+		"invalid-ip":     {"nonsense", "nonsense"},
+		"empty-ip":       {"", ""},
+	}
+	for k, tc := range cases {
+		res := formatIP(tc.Input)
+		if res != tc.Output {
+			t.Errorf("%s: called formatIp('%s'); expected '%v' but returned '%v'", k, tc.Input, tc.Output, res)
+		}
+	}
+}
+
 func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
