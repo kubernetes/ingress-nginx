@@ -26,6 +26,7 @@ Table of Contents
 * [What GCE resources are shared between Ingresses?](#what-gce-resources-are-shared-between-ingresses)
 * [How do I debug a controller spin loop?](#host-do-i-debug-a-controller-spinloop)
 * [Creating an Internal Load Balancer without existing ingress](#creating-an-internal-load-balancer-without-existing-ingress)
+* [Can I use websockets?](#can-i-use-websockets)
 
 
 ## How do I deploy an Ingress controller?
@@ -380,3 +381,9 @@ kubectl get nodes
 gcloud compute instance-groups unmanaged add-instances $GROUPNAME --zone {ZONE} --instances=A,B,C...
 ```
 You can now follow the GCP Console wizard for creating an internal load balancer and point to the `k8s-ig--{UID}` instance group.
+
+## Can I use websockets?
+Yes!  
+The GCP HTTP(S) Load Balancer supports websockets. You do not need to change your http server or Kubernetes deployment. You will need to manually configure the created Backend Service's `timeout` setting. This value is the interpreted as the max connection duration. The default value of 30 seconds is probably too small for you. You can increase it to the supported maximum: 86400 (a day) through the GCP Console or the gcloud CLI.
+
+View the [example](/controllers/gce/examples/websocket/).
