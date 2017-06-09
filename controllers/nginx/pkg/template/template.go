@@ -142,8 +142,23 @@ var (
 		"hasSuffix":                strings.HasSuffix,
 		"toUpper":                  strings.ToUpper,
 		"toLower":                  strings.ToLower,
+		"formatIP":                 formatIP,
 	}
 )
+
+// fomatIP will wrap IPv6 addresses in [] and return IPv4 addresses
+// without modification. If the input cannot be parsed as an IP address
+// it is returned without modification.
+func formatIP(input string) string {
+	ip := net.ParseIP(input)
+	if ip == nil {
+		return input
+	}
+	if v4 := ip.To4(); v4 != nil {
+		return input
+	}
+	return fmt.Sprintf("[%s]", input)
+}
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
 func buildResolvers(a interface{}) string {
