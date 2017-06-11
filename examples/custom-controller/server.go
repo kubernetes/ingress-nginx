@@ -52,20 +52,11 @@ func (dc DummyController) SetConfig(cfgMap *api.ConfigMap) {
 	log.Printf("Config map %+v", cfgMap)
 }
 
-func (dc DummyController) Reload(data []byte) ([]byte, bool, error) {
-	out, err := exec.Command("echo", string(data)).CombinedOutput()
-	if err != nil {
-		return out, false, err
-	}
-	log.Printf("Reloaded new config %s", out)
-	return out, true, err
-}
-
 func (dc DummyController) Test(file string) *exec.Cmd {
 	return exec.Command("echo", file)
 }
 
-func (dc DummyController) OnUpdate(updatePayload ingress.Configuration) ([]byte, error) {
+func (dc DummyController) OnUpdate(updatePayload ingress.Configuration) error {
 	log.Printf("Received OnUpdate notification")
 	for _, b := range updatePayload.Backends {
 		eps := []string{}
@@ -74,7 +65,9 @@ func (dc DummyController) OnUpdate(updatePayload ingress.Configuration) ([]byte,
 		}
 		log.Printf("%v: %v", b.Name, strings.Join(eps, ", "))
 	}
-	return []byte(`<string containing a configuration file>`), nil
+
+	log.Printf("Reloaded new config")
+	return nil
 }
 
 func (dc DummyController) BackendDefaults() defaults.Backend {
