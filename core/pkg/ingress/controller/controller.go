@@ -153,7 +153,7 @@ func newIngressController(config *Configuration) *GenericController {
 		cfg:             config,
 		stopLock:        &sync.Mutex{},
 		stopCh:          make(chan struct{}),
-		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.5, 1),
+		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.3, 1),
 		recorder: eventBroadcaster.NewRecorder(scheme.Scheme, api.EventSource{
 			Component: "ingress-controller",
 		}),
@@ -400,27 +400,23 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		}
 	}
 
-	data, err := ic.cfg.Backend.OnUpdate(ingress.Configuration{
+	err := ic.cfg.Backend.OnUpdate(ingress.Configuration{
 		Backends:            upstreams,
 		Servers:             servers,
 		TCPEndpoints:        ic.getStreamServices(ic.cfg.TCPConfigMapName, api.ProtocolTCP),
 		UDPEndpoints:        ic.getStreamServices(ic.cfg.UDPConfigMapName, api.ProtocolUDP),
 		PassthroughBackends: passUpstreams,
 	})
+
 	if err != nil {
+		incReloadErrorCount()
+		glog.Errorf("unexpected failure restarting the backend: \n%v", err)
 		return err
 	}
 
-	out, reloaded, err := ic.cfg.Backend.Reload(data)
-	if err != nil {
-		incReloadErrorCount()
-		glog.Errorf("unexpected failure restarting the backend: \n%v", string(out))
-		return err
-	}
-	if reloaded {
-		glog.Infof("ingress backend successfully reloaded...")
-		incReloadCount()
-	}
+	glog.Infof("ingress backend successfully reloaded...")
+	incReloadCount()
+
 	return nil
 }
 
