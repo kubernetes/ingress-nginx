@@ -33,6 +33,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/store"
+	"time"
 )
 
 var (
@@ -203,6 +204,8 @@ type Server struct {
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// SSLCertificate path to the SSL certificate on disk
 	SSLCertificate string `json:"sslCertificate"`
+	// SSLExpireTime has the expire date of this certificate
+	SSLExpireTime time.Time `json:"sslExpireTime"`
 	// SSLPemChecksum returns the checksum of the certificate file on disk.
 	// There is no restriction in the hash generator. This checksim can be
 	// used to  determine if the secret changed without the use of file

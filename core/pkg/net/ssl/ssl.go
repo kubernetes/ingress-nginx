@@ -131,6 +131,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 			PemFileName: pemFileName,
 			PemSHA:      PemSHA1(pemFileName),
 			CN:          cn,
+			ExpireTime:  pemCert.NotAfter,
 		}, nil
 	}
 
@@ -138,6 +139,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		PemFileName: pemFileName,
 		PemSHA:      PemSHA1(pemFileName),
 		CN:          cn,
+		ExpireTime:  pemCert.NotAfter,
 	}, nil
 }
 
