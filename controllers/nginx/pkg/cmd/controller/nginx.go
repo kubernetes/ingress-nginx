@@ -459,11 +459,13 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	// the limit of open files is per worker process
 	// and we leave some room to avoid consuming all the FDs available
 	wp, err := strconv.Atoi(cfg.WorkerProcesses)
+	glog.V(3).Infof("number of worker processes: %v", wp)
 	if err != nil {
 		wp = 1
 	}
 	maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
-	if maxOpenFiles < 0 {
+	glog.V(3).Infof("maximum number of open file descriptors : %v", sysctlFSFileMax())
+	if maxOpenFiles < 1024 {
 		// this means the value of RLIMIT_NOFILE is too low.
 		maxOpenFiles = 1024
 	}
