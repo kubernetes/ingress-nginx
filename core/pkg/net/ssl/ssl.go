@@ -20,6 +20,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/hex"
@@ -86,6 +87,12 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 	pemCert, err := x509.ParseCertificate(pemBlock.Bytes)
 	if err != nil {
+		_ = os.Remove(tempPemFile.Name())
+		return nil, err
+	}
+
+	//Ensure that certificate and private key have a matching public key
+	if _, err := tls.X509KeyPair(cert, key); err != nil {
 		_ = os.Remove(tempPemFile.Name())
 		return nil, err
 	}
