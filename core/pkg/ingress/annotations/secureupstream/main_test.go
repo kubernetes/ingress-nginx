@@ -83,7 +83,7 @@ func TestAnnotations(t *testing.T) {
 
 	_, err := NewParser(mockCfg{
 		certs: map[string]resolver.AuthSSLCert{
-			"default/secure-verify-ca": resolver.AuthSSLCert{},
+			"default/secure-verify-ca": {},
 		},
 	}).Parse(ing)
 	if err != nil {
@@ -111,7 +111,7 @@ func TestSecretOnNonSecure(t *testing.T) {
 	ing.SetAnnotations(data)
 	_, err := NewParser(mockCfg{
 		certs: map[string]resolver.AuthSSLCert{
-			"default/secure-verify-ca": resolver.AuthSSLCert{},
+			"default/secure-verify-ca": {},
 		},
 	}).Parse(ing)
 	if err == nil {
