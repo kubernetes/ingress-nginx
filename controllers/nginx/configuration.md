@@ -498,7 +498,7 @@ The previous behavior can be restored using `retry-non-idempotent=true` in the c
 ### Custom max body size
 For NGINX, 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter [`client_max_body_size`](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
 
-To configure this setting globally for all Ingress rules, the `proxy-body-size` value may be set in the NGINX ConfigMap.
+To configure this setting globally for all Ingress rules, the `body-size` value may be set in the NGINX ConfigMap.
 
 To use custom values in an Ingress rule define these annotation:
 
