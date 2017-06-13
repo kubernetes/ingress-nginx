@@ -549,7 +549,7 @@ stream {
 
     server {
         listen                  {{ $tcpServer.Port }};
-        {{ if $IsIPV6Enabled }}listen [::]:{{ $tcpServer.Port }};{{ end }}
+        {{ if $IsIPV6Enabled }}listen                  [::]:{{ $tcpServer.Port }};{{ end }}
         proxy_pass              tcp-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
     }
     {{ end }}
@@ -564,7 +564,7 @@ stream {
 
     server {
         listen                  {{ $udpServer.Port }} udp;
-        {{ if $IsIPV6Enabled }}listen [::]:{{ $udpServer.Port }}{{ end }}
+        {{ if $IsIPV6Enabled }}listen                  [::]:{{ $udpServer.Port }} udp;{{ end }} 
         proxy_responses         1;
         proxy_pass              udp-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
     }
