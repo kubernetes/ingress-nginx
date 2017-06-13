@@ -305,13 +305,29 @@ https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-
 The zero value disables keep-alive client connections.
 http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 
-
 **load-balance:** Sets the algorithm to use for load balancing. The value can either be round_robin to
 use the default round robin load balancer, least_conn to use the least connected method, or
 ip_hash to use a hash of the server for routing. The default is least_conn.
 http://nginx.org/en/docs/http/load_balancing.html.
 
+**log-format-upstream:** Sets the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).
 
+Example for json output:
+
+```
+log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr",
+    "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$request_id", "remote_user":
+    "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":
+    $status, "vhost": "$host", "request_proto": "$server_protocol", "path": "$uri",
+    "request_query": "$args", "request_length": $request_length, "duration": $request_time,
+    "method": "$request_method", "http_referrer": "$http_referer", "http_user_agent":
+    "$http_user_agent" }' 
+  ```
+
+**log-format-stream:** Sets the nginx [stream format](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format)
+.
+
+    
 **max-worker-connections:** Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections).
 
 
@@ -444,7 +460,9 @@ The following table shows the options, the default value and a description.
 |hsts-max-age|"15724800"|
 |hsts-preload|"false"|
 |ignore-invalid-headers|"true"|
-|keep-alive|"75"|
+|keep-alive|"75"| 
+|log-format-stream|[$time_local] $protocol $status $bytes_sent $bytes_received $session_time|
+|log-format-upstream|[$the_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status|
 |map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|
 |proxy-body-size|same as body-size|
