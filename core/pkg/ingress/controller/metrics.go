@@ -57,7 +57,7 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: ns,
 			Name:      sslLabelExpire,
-			Help:      "Number of seconds since 1970 to the SSL Certificate expire. An example to check if this " +
+			Help: "Number of seconds since 1970 to the SSL Certificate expire. An example to check if this " +
 				"certificate will expire in 10 days is: \"ingress_controller_ssl_expire_time_seconds < (time() + (10 * 24 * 3600))\"",
 		},
 		[]string{sslLabelHost},
