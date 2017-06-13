@@ -1,7 +1,7 @@
 all: push
 
 # 0.0 shouldn't clobber any released builds
-TAG = 0.9.3
+TAG = 0.9.4
 PREFIX = gcr.io/google_containers/glbc
 
 server:
