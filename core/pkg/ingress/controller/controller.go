@@ -489,7 +489,7 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 			glog.V(3).Infof("searching service %v/%v endpoints using the name '%v'", svcNs, svcName, svcPort)
 			for _, sp := range svc.Spec.Ports {
 				if sp.Name == svcPort {
-					endps = ic.getEndpoints(svc, sp.TargetPort, proto, &healthcheck.Upstream{})
+					endps = ic.getEndpoints(svc, &sp, proto, &healthcheck.Upstream{})
 					break
 				}
 			}
@@ -498,7 +498,7 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 			glog.V(3).Infof("searching service %v/%v endpoints using the target port '%v'", svcNs, svcName, targetPort)
 			for _, sp := range svc.Spec.Ports {
 				if sp.Port == int32(targetPort) {
-					endps = ic.getEndpoints(svc, sp.TargetPort, proto, &healthcheck.Upstream{})
+					endps = ic.getEndpoints(svc, &sp, proto, &healthcheck.Upstream{})
 					break
 				}
 			}
@@ -548,7 +548,7 @@ func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 	}
 
 	svc := svcObj.(*api.Service)
-	endps := ic.getEndpoints(svc, svc.Spec.Ports[0].TargetPort, api.ProtocolTCP, &healthcheck.Upstream{})
+	endps := ic.getEndpoints(svc, &svc.Spec.Ports[0], api.ProtocolTCP, &healthcheck.Upstream{})
 	if len(endps) == 0 {
 		glog.Warningf("service %v does not have any active endpoints", svcKey)
 		endps = []ingress.Endpoint{newDefaultServer()}
@@ -841,7 +841,7 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 			servicePort.TargetPort.String() == backendPort ||
 			servicePort.Name == backendPort {
 
-			endps := ic.getEndpoints(svc, servicePort.TargetPort, api.ProtocolTCP, hz)
+			endps := ic.getEndpoints(svc, &servicePort, api.ProtocolTCP, hz)
 			if len(endps) == 0 {
 				glog.Warningf("service %v does not have any active endpoints", svcKey)
 			}
@@ -1026,7 +1026,7 @@ func (ic *GenericController) createServers(data []interface{},
 // getEndpoints returns a list of <endpoint ip>:<port> for a given service/target port combination.
 func (ic *GenericController) getEndpoints(
 	s *api.Service,
-	servicePort intstr.IntOrString,
+	servicePort *api.ServicePort,
 	proto api.Protocol,
 	hz *healthcheck.Upstream) []ingress.Endpoint {
 
@@ -1039,7 +1039,7 @@ func (ic *GenericController) getEndpoints(
 
 	// ExternalName services
 	if s.Spec.Type == api.ServiceTypeExternalName {
-		targetPort := servicePort.IntValue()
+		targetPort := servicePort.TargetPort.IntValue()
 		// check for invalid port value
 		if targetPort <= 0 {
 			return upsServers
@@ -1069,15 +1069,11 @@ func (ic *GenericController) getEndpoints(
 
 			var targetPort int32
 
-			switch servicePort.Type {
-			case intstr.Int:
-				if int(epPort.Port) == servicePort.IntValue() {
-					targetPort = epPort.Port
-				}
-			case intstr.String:
-				if epPort.Name == servicePort.StrVal {
-					targetPort = epPort.Port
-				}
+			if servicePort.Name == "" {
+				// ServicePort.Name is optional if there is only one port
+				targetPort = epPort.Port
+			} else if servicePort.Name == epPort.Name {
+				targetPort = epPort.Port
 			}
 
 			// check for invalid port value
