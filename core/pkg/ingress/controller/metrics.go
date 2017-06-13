@@ -18,17 +18,22 @@ package controller
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/ingress/core/pkg/ingress"
 )
 
 const (
-	ns          = "ingress_controller"
-	operation   = "count"
-	reloadLabel = "reloads"
+	ns             = "ingress_controller"
+	operation      = "count"
+	reloadLabel    = "reloads"
+	sslLabelExpire = "ssl_expire_time_seconds"
+	sslLabelHost   = "host"
 )
 
 func init() {
 	prometheus.MustRegister(reloadOperation)
 	prometheus.MustRegister(reloadOperationErrors)
+	prometheus.MustRegister(sslExpireTime)
+
 }
 
 var (
@@ -48,6 +53,15 @@ var (
 		},
 		[]string{operation},
 	)
+	sslExpireTime = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: ns,
+			Name:      sslLabelExpire,
+			Help:      "Number of seconds since 1970 to the SSL Certificate expire. An example to check if this " +
+				"certificate will expire in 10 days is: \"ingress_controller_ssl_expire_time_seconds < (time() + (10 * 24 * 3600))\"",
+		},
+		[]string{sslLabelHost},
+	)
 )
 
 func incReloadCount() {
@@ -56,4 +70,12 @@ func incReloadCount() {
 
 func incReloadErrorCount() {
 	reloadOperationErrors.WithLabelValues(reloadLabel).Inc()
+}
+
+func setSSLExpireTime(servers []*ingress.Server) {
+
+	for _, s := range servers {
+		sslExpireTime.WithLabelValues(s.Hostname).Set(float64(s.SSLExpireTime.Unix()))
+	}
+
 }

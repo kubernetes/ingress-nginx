@@ -380,6 +380,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 
 	upstreams, servers := ic.getBackendServers()
 	var passUpstreams []*ingress.SSLPassthroughBackend
+
 	for _, server := range servers {
 		if !server.SSLPassthrough {
 			continue
@@ -416,6 +417,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 
 	glog.Infof("ingress backend successfully reloaded...")
 	incReloadCount()
+	setSSLExpireTime(servers)
 
 	return nil
 }
@@ -1008,6 +1010,12 @@ func (ic *GenericController) createServers(data []interface{},
 					if isHostValid(host, cert) {
 						servers[host].SSLCertificate = cert.PemFileName
 						servers[host].SSLPemChecksum = cert.PemSHA
+						servers[host].SSLExpireTime = cert.ExpireTime
+
+						if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
+							glog.Warningf("ssl certificate for host %v is about to expire in 10 days", host)
+						}
+
 					} else {
 						glog.Warningf("ssl certificate %v does not contain a common name for host %v", key, host)
 					}
