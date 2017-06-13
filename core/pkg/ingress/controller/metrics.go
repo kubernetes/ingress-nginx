@@ -75,7 +75,9 @@ func incReloadErrorCount() {
 func setSSLExpireTime(servers []*ingress.Server) {
 
 	for _, s := range servers {
-		sslExpireTime.WithLabelValues(s.Hostname).Set(float64(s.SSLExpireTime.Unix()))
+		if s.Hostname != defServerName {
+			sslExpireTime.WithLabelValues(s.Hostname).Set(float64(s.SSLExpireTime.Unix()))
+		}
 	}
 
 }
