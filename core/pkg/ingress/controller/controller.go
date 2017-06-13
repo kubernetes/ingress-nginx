@@ -836,20 +836,24 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 	svc := svcObj.(*api.Service)
 	glog.V(3).Infof("obtaining port information for service %v", svcKey)
 	for _, servicePort := range svc.Spec.Ports {
-		// targetPort could be a string, use the name or the port (int)
-		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
-			servicePort.TargetPort.String() == backendPort ||
-			servicePort.Name == backendPort {
-
-			endps := ic.getEndpoints(svc, servicePort.TargetPort, api.ProtocolTCP, hz)
-			if len(endps) == 0 {
-				glog.Warningf("service %v does not have any active endpoints", svcKey)
-			}
-
-			sort.Sort(ingress.EndpointByAddrPort(endps))
-			upstreams = append(upstreams, endps...)
-			break
+		var p intstr.IntOrString
+		switch {
+		case backendPort == strconv.Itoa(int(servicePort.Port)):
+			p = intstr.FromInt(int(servicePort.Port))
+		case backendPort == servicePort.Name:
+			p = intstr.FromString(servicePort.Name)
+		default:
+			continue
 		}
+
+		endps := ic.getEndpoints(svc, p, api.ProtocolTCP, hz)
+		if len(endps) == 0 {
+			glog.Warningf("service %v does not have any active endpoints", svcKey)
+		}
+
+		sort.Sort(ingress.EndpointByAddrPort(endps))
+		upstreams = append(upstreams, endps...)
+		break
 	}
 
 	return upstreams, nil
