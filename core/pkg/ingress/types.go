@@ -17,6 +17,8 @@ limitations under the License.
 package ingress
 
 import (
+	"time"
+
 	"github.com/spf13/pflag"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -33,7 +35,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/store"
-	"time"
 )
 
 var (
@@ -73,8 +74,6 @@ type Controller interface {
 	// https://k8s.io/ingress/core/blob/master/pkg/ingress/types.go#L83
 	// The backend returns an error if was not possible to update the configuration.
 	//
-	// The returned configuration is then passed to test, and then to reload
-	// if there is no errors.
 	OnUpdate(Configuration) error
 	// ConfigMap content of --configmap
 	SetConfig(*api.ConfigMap)
