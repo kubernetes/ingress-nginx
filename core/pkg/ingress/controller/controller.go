@@ -58,10 +58,9 @@ import (
 )
 
 const (
-	defUpstreamName          = "upstream-default-backend"
-	defServerName            = "_"
-	podStoreSyncedPollPeriod = 1 * time.Second
-	rootLocation             = "/"
+	defUpstreamName = "upstream-default-backend"
+	defServerName   = "_"
+	rootLocation    = "/"
 )
 
 var (
@@ -1043,7 +1042,7 @@ func (ic *GenericController) getEndpoints(
 	// avoid duplicated upstream servers when the service
 	// contains multiple port definitions sharing the same
 	// targetport.
-	adus := make(map[string]bool, 0)
+	adus := make(map[string]bool)
 
 	// ExternalName services
 	if s.Spec.Type == api.ServiceTypeExternalName {
