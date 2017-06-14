@@ -44,7 +44,7 @@ type External struct {
 	SigninURL       string   `json:"signinUrl"`
 	Method          string   `json:"method"`
 	SendBody        bool     `json:"sendBody"`
-	ResponseHeaders []string `json:"responseHeaders"`
+	ResponseHeaders []string `json:"responseHeaders,omitEmpty"`
 }
 
 func (e1 *External) Equal(e2 *External) bool {

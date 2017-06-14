@@ -36,7 +36,7 @@ const (
 
 // SourceRange returns the CIDR
 type SourceRange struct {
-	CIDR []string `json:"cidr"`
+	CIDR []string `json:"cidr,omitEmpty"`
 }
 
 func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
@@ -44,6 +44,10 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 		return true
 	}
 	if sr1 == nil || sr2 == nil {
+		return false
+	}
+
+	if len(sr1.CIDR) != len(sr2.CIDR) {
 		return false
 	}
 
