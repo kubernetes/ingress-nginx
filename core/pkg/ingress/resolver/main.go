@@ -51,3 +51,17 @@ type AuthSSLCert struct {
 	// PemSHA contains the SHA1 hash of the 'tls.crt' value
 	PemSHA string `json:"pemSha"`
 }
+
+func (asslc1 *AuthSSLCert) Equal(assl2 *AuthSSLCert) bool {
+	if asslc1.Secret != assl2.Secret {
+		return false
+	}
+	if asslc1.CAFileName != assl2.CAFileName {
+		return false
+	}
+	if asslc1.PemSHA != assl2.PemSHA {
+		return false
+	}
+
+	return true
+}

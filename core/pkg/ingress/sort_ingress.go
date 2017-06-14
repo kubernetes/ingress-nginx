@@ -17,9 +17,10 @@ limitations under the License.
 package ingress
 
 import (
+	"time"
+
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"time"
 )
 
 // BackendByNameServers sorts upstreams by name
