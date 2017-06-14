@@ -3,7 +3,7 @@ all: push
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-RELEASE?=0.9.0-beta.7
+RELEASE?=0.9.0-beta.8
 PREFIX?=gcr.io/google_containers/nginx-ingress-controller
 GOOS?=linux
 DOCKER?=gcloud docker --
