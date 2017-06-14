@@ -1,5 +1,51 @@
 Changelog
 
+### 0.9-beta.8
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.8`
+
+*Changes:*
+
+- [X] [#761](https://github.com/kubernetes/ingress/pull/761) NGINX TCP Ingresses do not bind on IPv6
+- [X] [#850](https://github.com/kubernetes/ingress/pull/850) Fix IPv6 UDP stream section
+- [X] [#851](https://github.com/kubernetes/ingress/pull/851) ensure private key and certificate match
+- [X] [#852](https://github.com/kubernetes/ingress/pull/852) Don't expose certificate metrics for default server
+- [X] [#846](https://github.com/kubernetes/ingress/pull/846) Match ServicePort to Endpoints by Name
+- [X] [#854](https://github.com/kubernetes/ingress/pull/854) Document log-format-stream and log-format-upstream
+- [X] [#847](https://github.com/kubernetes/ingress/pull/847) fix semicolon
+- [X] [#848](https://github.com/kubernetes/ingress/pull/848) Add metric "ssl certificate expiration"
+- [X] [#839](https://github.com/kubernetes/ingress/pull/839) "No endpoints" issue
+- [X] [#845](https://github.com/kubernetes/ingress/pull/845) Fix no endpoints issue when named ports are used
+- [X] [#822](https://github.com/kubernetes/ingress/pull/822) Release ubuntu-slim 0.11
+- [X] [#824](https://github.com/kubernetes/ingress/pull/824) Update nginx-slim to 0.18
+- [X] [#823](https://github.com/kubernetes/ingress/pull/823) Release nginx-slim 0.18
+- [X] [#827](https://github.com/kubernetes/ingress/pull/827) Introduce working example of nginx controller with rbac
+- [X] [#835](https://github.com/kubernetes/ingress/pull/835) Make log format json escaping configurable
+- [X] [#843](https://github.com/kubernetes/ingress/pull/843) Avoid setting maximum number of open file descriptors lower than 1024
+- [X] [#837](https://github.com/kubernetes/ingress/pull/837) Cleanup interface
+- [X] [#836](https://github.com/kubernetes/ingress/pull/836) Make log format json escaping configurable
+- [X] [#828](https://github.com/kubernetes/ingress/pull/828) Wrap IPv6 endpoints in []
+- [X] [#821](https://github.com/kubernetes/ingress/pull/821) nginx-ingress: occasional 503 Service Temporarily Unavailable
+- [X] [#829](https://github.com/kubernetes/ingress/pull/829) feat(template): wrap IPv6 addresses in []
+- [X] [#786](https://github.com/kubernetes/ingress/pull/786) Update echoserver image version in examples
+- [X] [#825](https://github.com/kubernetes/ingress/pull/825) Create or delete ingress based on class annotation
+- [X] [#790](https://github.com/kubernetes/ingress/pull/790) #789 removing duplicate X-Real-IP header 
+- [X] [#792](https://github.com/kubernetes/ingress/pull/792) Avoid checking if the controllers are synced
+- [X] [#798](https://github.com/kubernetes/ingress/pull/798) nginx: RBAC for leader election
+- [X] [#799](https://github.com/kubernetes/ingress/pull/799) could not build variables_hash
+- [X] [#809](https://github.com/kubernetes/ingress/pull/809) Fix dynamic variable name
+- [X] [#804](https://github.com/kubernetes/ingress/pull/804) Fix #798 - RBAC for leader election
+- [X] [#806](https://github.com/kubernetes/ingress/pull/806) fix ingress rbac roles
+- [X] [#811](https://github.com/kubernetes/ingress/pull/811) external auth - proxy_pass_request_body off + big bodies give 500/413
+- [X] [#785](https://github.com/kubernetes/ingress/pull/785) Publish echoheader image
+- [X] [#813](https://github.com/kubernetes/ingress/pull/813) Added client_max_body_size to authPath location
+- [X] [#814](https://github.com/kubernetes/ingress/pull/814) rbac-nginx: resourceNames cannot filter create verb
+- [X] [#774](https://github.com/kubernetes/ingress/pull/774) Add IPv6 support in TCP and UDP stream section
+- [X] [#784](https://github.com/kubernetes/ingress/pull/784) Allow customization of variables hash tables
+- [X] [#782](https://github.com/kubernetes/ingress/pull/782) Set "proxy_pass_header Server;"
+- [X] [#783](https://github.com/kubernetes/ingress/pull/783) nginx/README.md: clarify app-root and fix example hyperlink
+- [X] [#787](https://github.com/kubernetes/ingress/pull/787) Add setting to allow returning the Server header from the backend
+
 ### 0.9-beta.7
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.7`
