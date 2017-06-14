@@ -54,7 +54,7 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	for _, c1b := range c1.Backends {
 		found := false
 		for _, c2b := range c2.Backends {
-			if (c1b).Equal(c2b) {
+			if c1b.Equal(c2b) {
 				found = true
 				break
 			}
@@ -67,7 +67,7 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	for _, c1s := range c1.Servers {
 		found := false
 		for _, c2s := range c2.Servers {
-			if (c1s).Equal(c2s) {
+			if c1s.Equal(c2s) {
 				found = true
 				break
 			}
@@ -272,6 +272,7 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if s1.SSLPemChecksum != s2.SSLPemChecksum {
 		return false
 	}
+
 	if len(s1.Locations) != len(s2.Locations) {
 		return false
 	}
@@ -279,7 +280,7 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	for _, s1l := range s1.Locations {
 		found := false
 		for _, sl2 := range s2.Locations {
-			if (s1l).Equal(sl2) {
+			if s1l.Equal(sl2) {
 				found = true
 				break
 			}
@@ -308,6 +309,7 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.Backend != l2.Backend {
 		return false
 	}
+
 	if (l1.Service == nil && l2.Service != nil) ||
 		(l1.Service != nil && l2.Service == nil) {
 		return false
@@ -325,10 +327,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		}
 	}
 
-	if l1.Port != l2.Port {
+	if l1.Port.StrVal != l2.Port.StrVal {
 		return false
 	}
-	if (&l1.BasicDigestAuth).Equal(&l2.BasicDigestAuth) {
+	if !(&l1.BasicDigestAuth).Equal(&l2.BasicDigestAuth) {
 		return false
 	}
 	if l1.Denied != l2.Denied {
@@ -337,22 +339,22 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.EnableCORS != l2.EnableCORS {
 		return false
 	}
-	if (&l1.ExternalAuth).Equal(&l2.ExternalAuth) {
+	if !(&l1.ExternalAuth).Equal(&l2.ExternalAuth) {
 		return false
 	}
-	if (&l1.RateLimit).Equal(&l2.RateLimit) {
+	if !(&l1.RateLimit).Equal(&l2.RateLimit) {
 		return false
 	}
-	if (&l1.Redirect).Equal(&l2.Redirect) {
+	if !(&l1.Redirect).Equal(&l2.Redirect) {
 		return false
 	}
-	if (&l1.Whitelist).Equal(&l2.Whitelist) {
+	if !(&l1.Whitelist).Equal(&l2.Whitelist) {
 		return false
 	}
-	if (&l1.Proxy).Equal(&l2.Proxy) {
+	if !(&l1.Proxy).Equal(&l2.Proxy) {
 		return false
 	}
-	if (&l1.CertificateAuth).Equal(&l2.CertificateAuth) {
+	if !(&l1.CertificateAuth).Equal(&l2.CertificateAuth) {
 		return false
 	}
 	if l1.UsePortInRedirects != l2.UsePortInRedirects {

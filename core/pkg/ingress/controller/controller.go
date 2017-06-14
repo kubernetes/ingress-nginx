@@ -412,7 +412,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 	}
 
 	if ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg) {
-		glog.Infof("skipping backend reload (no changes detected)")
+		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
 	}
 

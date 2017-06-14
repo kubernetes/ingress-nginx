@@ -124,9 +124,9 @@ type BackendInfo struct {
 type Configuration struct {
 	// Backends are a list of backends used by all the Ingress rules in the
 	// ingress controller. This list includes the default backend
-	Backends []*Backend `json:"namespace"`
+	Backends []*Backend `json:"backends,omitEmpty"`
 	// Servers
-	Servers []*Server `json:"servers"`
+	Servers []*Server `json:"servers,omitEmpty"`
 	// TCPEndpoints contain endpoints for tcp streams handled by this backend
 	// +optional
 	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
@@ -143,7 +143,7 @@ type Configuration struct {
 type Backend struct {
 	// Name represents an unique api.Service name formatted as <namespace>-<name>-<port>
 	Name    string             `json:"name"`
-	Service *api.Service       `json:"service"`
+	Service *api.Service       `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
 	// This indicates if the communication protocol between the backend and the endpoint is HTTP or HTTPS
 	// Allowing the use of HTTPS
@@ -156,9 +156,9 @@ type Backend struct {
 	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
-	Endpoints []Endpoint `json:"endpoints"`
+	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// StickySessionAffinitySession contains the StickyConfig object with stickness configuration
-	SessionAffinity SessionAffinityConfig
+	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
 }
 
 // SessionAffinityConfig describes different affinity configurations for new sessions.
@@ -168,8 +168,8 @@ type Backend struct {
 // affinity values are incompatible. Once set, the backend makes no guarantees
 // about honoring updates.
 type SessionAffinityConfig struct {
-	AffinityType          string `json:"name"`
-	CookieSessionAffinity CookieSessionAffinity
+	AffinityType          string                `json:"name"`
+	CookieSessionAffinity CookieSessionAffinity `json:"cookieSessionAffinity"`
 }
 
 // CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
@@ -253,7 +253,7 @@ type Location struct {
 	BasicDigestAuth auth.BasicDigest `json:"basicDigestAuth,omitempty"`
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
-	Denied error
+	Denied error `json:"denied,omitempty"`
 	// EnableCORS indicates if path must support CORS
 	// +optional
 	EnableCORS bool `json:"enableCors,omitempty"`
@@ -294,7 +294,7 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *api.Service       `json:"service"`
+	Service *api.Service       `json:"service,omitEmpty"`
 	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
@@ -309,7 +309,7 @@ type L4Service struct {
 	// Backend of the service
 	Backend L4Backend `json:"backend"`
 	// Endpoints active endpoints of the service
-	Endpoints []Endpoint `json:"endpoins"`
+	Endpoints []Endpoint `json:"endpoins,omitEmpty"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service

@@ -18,6 +18,7 @@ package secureupstream
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
@@ -32,8 +33,8 @@ const (
 
 // Secure describes SSL backend configuration
 type Secure struct {
-	Secure bool
-	CACert resolver.AuthSSLCert
+	Secure bool                 `json:"secure"`
+	CACert resolver.AuthSSLCert `json:"caCert"`
 }
 
 type su struct {

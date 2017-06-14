@@ -54,10 +54,10 @@ func (rt1 *RateLimit) Equal(rt2 *RateLimit) bool {
 	if rt1 == nil || rt2 == nil {
 		return false
 	}
-	if (&rt1.Connections).Equal(&rt2.Connections) {
+	if !(&rt1.Connections).Equal(&rt2.Connections) {
 		return false
 	}
-	if (&rt1.RPS).Equal(&rt2.RPS) {
+	if !(&rt1.RPS).Equal(&rt2.RPS) {
 		return false
 	}
 
