@@ -41,5 +41,6 @@ type HealthChecker interface {
 	Sync(hc *HealthCheck) (string, error)
 	Delete(port int64) error
 	Get(port int64) (*HealthCheck, error)
+	GetLegacy(port int64) (*compute.HttpHealthCheck, error)
 	DeleteLegacy(port int64) error
 }

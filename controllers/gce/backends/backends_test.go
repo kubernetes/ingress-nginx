@@ -50,21 +50,23 @@ var existingProbe = &api_v1.Probe{
 	},
 }
 
-func newBackendPool(f BackendServices, fakeIGs instances.InstanceGroups, syncWithCloud bool) *Backends {
+func newTestJig(f BackendServices, fakeIGs instances.InstanceGroups, syncWithCloud bool) (*Backends, healthchecks.HealthCheckProvider) {
 	namer := &utils.Namer{}
 	nodePool := instances.NewNodePool(fakeIGs)
 	nodePool.Init(&instances.FakeZoneLister{Zones: []string{defaultZone}})
-	healthChecks := healthchecks.NewHealthChecker(healthchecks.NewFakeHealthCheckProvider(), "/", namer)
+	healthCheckProvider := healthchecks.NewFakeHealthCheckProvider()
+	healthChecks := healthchecks.NewHealthChecker(healthCheckProvider, "/", namer)
 	bp := NewBackendPool(f, healthChecks, nodePool, namer, []int64{}, syncWithCloud)
 	probes := map[ServicePort]*api_v1.Probe{{Port: 443, Protocol: utils.ProtocolHTTPS}: existingProbe}
 	bp.Init(NewFakeProbeProvider(probes))
-	return bp
+
+	return bp, healthCheckProvider
 }
 
 func TestBackendPoolAdd(t *testing.T) {
 	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	pool := newBackendPool(f, fakeIGs, false)
+	pool, _ := newTestJig(f, fakeIGs, false)
 	namer := utils.Namer{}
 
 	testCases := []ServicePort{
@@ -105,7 +107,6 @@ func TestBackendPoolAdd(t *testing.T) {
 			}
 
 			// Check the created healthcheck is the correct protocol
-			// pool.healthChecker.
 			hc, err := pool.healthChecker.Get(nodePort.Port)
 			if err != nil {
 				t.Fatalf("Unexpected err when querying fake healthchecker: %v", err)
@@ -122,10 +123,46 @@ func TestBackendPoolAdd(t *testing.T) {
 	}
 }
 
+func TestHealthCheckMigration(t *testing.T) {
+	f := NewFakeBackendServices(noOpErrFunc)
+	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
+	pool, hcp := newTestJig(f, fakeIGs, false)
+	namer := utils.Namer{}
+
+	p := ServicePort{Port: 7000, Protocol: utils.ProtocolHTTP}
+
+	// Create a legacy health check and insert it into the HC provider.
+	legacyHC := &compute.HttpHealthCheck{
+		Name:               namer.BeName(p.Port),
+		RequestPath:        "/my-healthz-path",
+		Host:               "k8s.io",
+		UnhealthyThreshold: 30,
+		CheckIntervalSec:   40,
+	}
+	hcp.CreateHttpHealthCheck(legacyHC)
+
+	// Add the service port to the backend pool
+	pool.Add(p)
+
+	// Assert the proper health check was created
+	hc, _ := pool.healthChecker.Get(p.Port)
+	if hc == nil || hc.Protocol() != p.Protocol {
+		t.Fatalf("Expected %s health check, received %v: ", p.Protocol, hc)
+	}
+
+	// Assert the newer health check has the legacy health check settings
+	if hc.RequestPath != legacyHC.RequestPath ||
+		hc.Host != legacyHC.Host ||
+		hc.UnhealthyThreshold != legacyHC.UnhealthyThreshold ||
+		hc.CheckIntervalSec != legacyHC.CheckIntervalSec {
+		t.Fatalf("Expected newer health check to have identical settings to legacy health check. Legacy: %+v, New: %+v", legacyHC, hc)
+	}
+}
+
 func TestBackendPoolUpdate(t *testing.T) {
 	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	pool := newBackendPool(f, fakeIGs, false)
+	pool, _ := newTestJig(f, fakeIGs, false)
 	namer := utils.Namer{}
 
 	p := ServicePort{Port: 3000, Protocol: utils.ProtocolHTTP}
@@ -171,7 +208,7 @@ func TestBackendPoolUpdate(t *testing.T) {
 func TestBackendPoolChaosMonkey(t *testing.T) {
 	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	pool := newBackendPool(f, fakeIGs, false)
+	pool, _ := newTestJig(f, fakeIGs, false)
 	namer := utils.Namer{}
 
 	nodePort := ServicePort{Port: 8080, Protocol: utils.ProtocolHTTP}
@@ -220,7 +257,7 @@ func TestBackendPoolSync(t *testing.T) {
 	svcNodePorts := []ServicePort{{Port: 81, Protocol: utils.ProtocolHTTP}, {Port: 82, Protocol: utils.ProtocolHTTPS}, {Port: 83, Protocol: utils.ProtocolHTTP}}
 	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	pool := newBackendPool(f, fakeIGs, true)
+	pool, _ := newTestJig(f, fakeIGs, true)
 	pool.Add(ServicePort{Port: 81})
 	pool.Add(ServicePort{Port: 90})
 	if err := pool.Sync(svcNodePorts); err != nil {
@@ -345,7 +382,7 @@ func TestBackendPoolDeleteLegacyHealthChecks(t *testing.T) {
 func TestBackendPoolShutdown(t *testing.T) {
 	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	pool := newBackendPool(f, fakeIGs, false)
+	pool, _ := newTestJig(f, fakeIGs, false)
 	namer := utils.Namer{}
 
 	// Add a backend-service and verify that it doesn't exist after Shutdown()
@@ -359,7 +396,7 @@ func TestBackendPoolShutdown(t *testing.T) {
 func TestBackendInstanceGroupClobbering(t *testing.T) {
 	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	pool := newBackendPool(f, fakeIGs, false)
+	pool, _ := newTestJig(f, fakeIGs, false)
 	namer := utils.Namer{}
 
 	// This will add the instance group k8s-ig to the instance pool
@@ -405,7 +442,7 @@ func TestBackendCreateBalancingMode(t *testing.T) {
 	f := NewFakeBackendServices(noOpErrFunc)
 
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
-	pool := newBackendPool(f, fakeIGs, false)
+	pool, _ := newTestJig(f, fakeIGs, false)
 	namer := utils.Namer{}
 	nodePort := ServicePort{Port: 8080}
 	modes := []BalancingMode{Rate, Utilization}
