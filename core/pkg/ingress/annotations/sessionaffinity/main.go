@@ -92,10 +92,7 @@ type affinity struct {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure the affinity directives
 func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
-
-	var cookieAffinityConfig *CookieConfig
-	cookieAffinityConfig = &CookieConfig{}
-
+	cookieAffinityConfig := &CookieConfig{}
 	// Check the type of affinity that will be used
 	at, err := parser.GetStringAnnotation(annotationAffinityType, ing)
 	if err != nil {
