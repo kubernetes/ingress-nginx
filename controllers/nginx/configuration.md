@@ -348,6 +348,7 @@ log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol
 
 **proxy-send-timeout:** Sets the timeout in seconds for [transmitting a request to the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
 
+**randomize-upstreams:** By default the upstream servers are sorted in the configuration by ip. If sticky sessions are enabled this can lead to a lumpy distribution of sessions to upstreams in the presence of frequent nginx restarts (the pod with the "lowest" ip will get any new session after a restart). Setting this to true randomizes the order of the upstreams and therefore new sessions will be assigned to a random pod after a restart.
 
 **retry-non-idempotent:** Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error in the upstream server.
 

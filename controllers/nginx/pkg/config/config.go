@@ -203,6 +203,11 @@ type Configuration struct {
 	// Sets the name of the configmap that contains the headers to pass to the backend
 	ProxySetHeaders string `json:"proxy-set-headers,omitempty"`
 
+	// If RandomizeUpstreams is true the upstream ips are not sorted before writing the config. This is
+	// useful to get better random distribution of sticky sessions. This will increase the number of
+	// reloads nginx will incur.
+	RandomizeUpstreams bool `json:"randomize-upstreams,omitempty"`
+
 	// Maximum size of the server names hash tables used in server names, map directive’s values,
 	// MIME types, names of request header strings, etcd.
 	// http://nginx.org/en/docs/hash.html
@@ -321,6 +326,7 @@ func NewDefault() Configuration {
 		MaxWorkerConnections:     16384,
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
+		RandomizeUpstreams:       false,
 		ServerNameHashMaxSize:    1024,
 		ShowServerTokens:         true,
 		SSLBufferSize:            sslBufferSize,
