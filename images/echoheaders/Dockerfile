@@ -15,4 +15,5 @@
 FROM gcr.io/google_containers/nginx-slim:0.17
 
 ADD nginx.conf /etc/nginx/nginx.conf
+ADD template.lua /usr/local/share/lua/5.1/
 ADD README.md README.md
