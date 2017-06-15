@@ -137,12 +137,10 @@ http {
 
     map $pass_access_scheme $the_x_forwarded_for {
        default           $remote_addr;
-       https             $proxy_protocol_addr;
     }
 
     map $pass_access_scheme $the_real_ip {
        default           $remote_addr;
-       https             $proxy_protocol_addr;
     }
 
     # map port 442 to 443 for header X-Forwarded-Port
