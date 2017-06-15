@@ -165,9 +165,6 @@ type NGINXController struct {
 
 	cmdArgs []string
 
-	watchClass string
-	namespace  string
-
 	stats        *statsCollector
 	statusModule statusModule
 
