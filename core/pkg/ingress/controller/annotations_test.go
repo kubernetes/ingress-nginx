@@ -37,7 +37,6 @@ const (
 	annotationAffinityType       = "ingress.kubernetes.io/affinity"
 	annotationAffinityCookieName = "ingress.kubernetes.io/session-cookie-name"
 	annotationAffinityCookieHash = "ingress.kubernetes.io/session-cookie-hash"
-	annotationAuthTlsSecret      = "ingress.kubernetes.io/auth-tls-secret"
 )
 
 type mockCfg struct {

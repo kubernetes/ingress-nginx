@@ -72,7 +72,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 }
 
 func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interface{} {
-	anns := make(map[string]interface{}, 0)
+	anns := make(map[string]interface{})
 	for name, annotationParser := range e.annotations {
 		val, err := annotationParser.Parse(ing)
 		glog.V(5).Infof("annotation %v in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), val)
