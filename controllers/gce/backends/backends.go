@@ -173,7 +173,7 @@ func (b *Backends) ensureHealthCheck(sp ServicePort) (string, error) {
 	hc := b.healthChecker.New(sp.Port, sp.Protocol)
 
 	existingLegacyHC, err := b.healthChecker.GetLegacy(sp.Port)
-	if err != nil && !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+	if err != nil && !utils.IsNotFoundError(err) {
 		return "", err
 	}
 
@@ -256,7 +256,7 @@ func (b *Backends) Add(p ServicePort) error {
 	// If previous health check was legacy type, we need to delete it.
 	if existingHCLink != hcLink && strings.Contains(existingHCLink, "/httpHealthChecks/") {
 		if err = b.healthChecker.DeleteLegacy(p.Port); err != nil {
-			return err
+			glog.Warning("Failed to delete legacy HttpHealthCheck %v; Will not try again, err: %v", pName, err)
 		}
 	}
 
