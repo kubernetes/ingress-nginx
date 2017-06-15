@@ -69,7 +69,7 @@ const (
 	alphaNumericChar = "0"
 
 	// Current docker image version. Only used in debug logging.
-	imageVersion = "glbc:0.9.4"
+	imageVersion = "glbc:0.9.5"
 
 	// Key used to persist UIDs to configmaps.
 	uidConfigMapName = "ingress-uid"
