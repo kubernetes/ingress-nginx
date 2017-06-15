@@ -332,6 +332,20 @@ func IgnoreHTTPNotFound(err error) error {
 	return err
 }
 
+// IsInUsedByError returns true if the resource is being used by another GCP resource
+func IsInUsedByError(err error) bool {
+	apiErr, ok := err.(*googleapi.Error)
+	if !ok || apiErr.Code != http.StatusBadRequest {
+		return false
+	}
+	return strings.Contains(apiErr.Message, "being used by")
+}
+
+// IsNotFoundError returns true if the resource does not exist
+func IsNotFoundError(err error) bool {
+	return IsHTTPErrorCode(err, http.StatusNotFound)
+}
+
 // CompareLinks returns true if the 2 self links are equal.
 func CompareLinks(l1, l2 string) bool {
 	// TODO: These can be partial links
