@@ -171,13 +171,22 @@ func (b *Backends) Get(port int64) (*compute.BackendService, error) {
 
 func (b *Backends) ensureHealthCheck(sp ServicePort) (string, error) {
 	hc := b.healthChecker.New(sp.Port, sp.Protocol)
-	if b.prober != nil {
+
+	existingLegacyHC, err := b.healthChecker.GetLegacy(sp.Port)
+	if err != nil && !utils.IsNotFoundError(err) {
+		return "", err
+	}
+
+	if existingLegacyHC != nil {
+		glog.V(4).Infof("Applying settings of existing health check to newer health check on port %+v", sp)
+		applyLegacyHCToHC(existingLegacyHC, hc)
+	} else if b.prober != nil {
 		probe, err := b.prober.GetProbe(sp)
 		if err != nil {
 			return "", err
 		}
 		if probe != nil {
-			glog.V(2).Infof("Applying httpGet settings of readinessProbe to health check on port %+v", sp)
+			glog.V(4).Infof("Applying httpGet settings of readinessProbe to health check on port %+v", sp)
 			applyProbeSettingsToHC(probe, hc)
 		}
 	}
@@ -247,7 +256,7 @@ func (b *Backends) Add(p ServicePort) error {
 	// If previous health check was legacy type, we need to delete it.
 	if existingHCLink != hcLink && strings.Contains(existingHCLink, "/httpHealthChecks/") {
 		if err = b.healthChecker.DeleteLegacy(p.Port); err != nil {
-			return err
+			glog.Warning("Failed to delete legacy HttpHealthCheck %v; Will not try again, err: %v", pName, err)
 		}
 	}
 
@@ -431,6 +440,16 @@ func (b *Backends) Status(name string) string {
 	}
 	// TODO: State transition are important, not just the latest.
 	return hs.HealthStatus[0].HealthState
+}
+
+func applyLegacyHCToHC(existing *compute.HttpHealthCheck, hc *healthchecks.HealthCheck) {
+	hc.CheckIntervalSec = existing.CheckIntervalSec
+	hc.HealthyThreshold = existing.HealthyThreshold
+	hc.Host = existing.Host
+	hc.Port = existing.Port
+	hc.RequestPath = existing.RequestPath
+	hc.TimeoutSec = existing.TimeoutSec
+	hc.UnhealthyThreshold = existing.UnhealthyThreshold
 }
 
 func applyProbeSettingsToHC(p *api_v1.Probe, hc *healthchecks.HealthCheck) {

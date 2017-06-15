@@ -125,6 +125,12 @@ func (h *HealthChecks) Get(port int64) (*HealthCheck, error) {
 	return NewHealthCheck(hc), err
 }
 
+// GetLegacy deletes legacy HTTP health checks
+func (h *HealthChecks) GetLegacy(port int64) (*compute.HttpHealthCheck, error) {
+	name := h.namer.BeName(port)
+	return h.cloud.GetHttpHealthCheck(name)
+}
+
 // DeleteLegacy deletes legacy HTTP health checks
 func (h *HealthChecks) DeleteLegacy(port int64) error {
 	name := h.namer.BeName(port)
