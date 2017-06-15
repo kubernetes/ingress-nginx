@@ -177,7 +177,7 @@ type Configuration struct {
 
 	// Enable json escaping
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
-	LogFormatEscapeJson bool `json:"log-format-escape-json,omitempty"`
+	LogFormatEscapeJSON bool `json:"log-format-escape-json,omitempty"`
 
 	// Customize upstream log_format
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
@@ -315,7 +315,7 @@ func NewDefault() Configuration {
 		KeepAlive:                75,
 		KeepAliveRequests:        100,
 		LargeClientHeaderBuffers: "4 8k",
-		LogFormatEscapeJson:      false,
+		LogFormatEscapeJSON:      false,
 		LogFormatStream:          logFormatStream,
 		LogFormatUpstream:        logFormatUpstream,
 		MaxWorkerConnections:     16384,

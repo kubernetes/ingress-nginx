@@ -24,7 +24,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 	text_template "text/template"
 
@@ -392,7 +391,6 @@ func isLocationAllowed(input interface{}) bool {
 }
 
 var (
-	nonAlpha        = regexp.MustCompile("[^a-zA-Z0-9]+")
 	denyPathSlugMap = map[string]string{}
 )
 
