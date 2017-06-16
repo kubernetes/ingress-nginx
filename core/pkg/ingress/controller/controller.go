@@ -791,14 +791,21 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 				if !upstreams[name].Secure {
 					upstreams[name].Secure = secUpstream.Secure
 				}
+
 				if upstreams[name].SecureCACert.Secret == "" {
 					upstreams[name].SecureCACert = secUpstream.CACert
 				}
+
 				if upstreams[name].SessionAffinity.AffinityType == "" {
 					upstreams[name].SessionAffinity.AffinityType = affinity.AffinityType
 					if affinity.AffinityType == "cookie" {
 						upstreams[name].SessionAffinity.CookieSessionAffinity.Name = affinity.CookieConfig.Name
 						upstreams[name].SessionAffinity.CookieSessionAffinity.Hash = affinity.CookieConfig.Hash
+
+						if _, ok := upstreams[name].SessionAffinity.CookieSessionAffinity.Locations[rule.Host]; !ok {
+							upstreams[name].SessionAffinity.CookieSessionAffinity.Locations[rule.Host] = []string{}
+						}
+						upstreams[name].SessionAffinity.CookieSessionAffinity.Locations[rule.Host] = append(upstreams[name].SessionAffinity.CookieSessionAffinity.Locations[rule.Host], path.Path)
 					}
 				}
 

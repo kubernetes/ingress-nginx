@@ -174,8 +174,9 @@ type SessionAffinityConfig struct {
 
 // CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
 type CookieSessionAffinity struct {
-	Name string `json:"name"`
-	Hash string `json:"hash"`
+	Name      string              `json:"name"`
+	Hash      string              `json:"hash"`
+	Locations map[string][]string `json:"locations,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
