@@ -1,0 +1,97 @@
+{
+	"backends": [{
+		"name": "upstream-default-backend",
+		"port": 0,
+		"secure": false,
+		"secureCert": {
+			"secret": "",
+			"caFilename": "",
+			"pemSha": ""
+		},
+		"sslPassthrough": false,
+		"endpoints": [{
+			"address": "172.17.0.5",
+			"port": "8080",
+			"maxFails": 0,
+			"failTimeout": 0
+		}],
+		"sessionAffinityConfig": {
+			"name": "",
+			"cookieSessionAffinity": {
+				"name": "",
+				"hash": ""
+			}
+		}
+	}],
+	"servers": [{
+		"hostname": "_",
+		"sslPassthrough": false,
+		"sslCertificate": "/ingress-controller/ssl/default-fake-certificate.pem",
+		"sslExpireTime": "0001-01-01T00:00:00Z",
+		"sslPemChecksum": "4302f26460e2c49c9a69229449efefb30dc42a9a",
+		"locations": [{
+			"path": "/",
+			"isDefBackend": true,
+			"backend": "upstream-default-backend",
+			"service": null,
+			"port": 0,
+			"basicDigestAuth": {
+				"type": "",
+				"realm": "",
+				"file": "",
+				"secured": false
+			},
+			"externalAuth": {
+				"url": "",
+				"host": "",
+				"signinUrl": "",
+				"method": "",
+				"sendBody": false,
+				"responseHeaders": null
+			},
+			"rateLimit": {
+				"connections": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rps": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				}
+			},
+			"redirect": {
+				"target": "",
+				"addBaseUrl": false,
+				"sslRedirect": false,
+				"forceSSLRedirect": false,
+				"appRoot": ""
+			},
+			"whitelist": {
+				"cidr": null
+			},
+			"proxy": {
+				"bodySize": "1m",
+				"conectTimeout": 5,
+				"sendTimeout": 60,
+				"readTimeout": 60,
+				"bufferSize": "4k",
+				"cookieDomain": "off",
+				"cookiePath": "off"
+			},
+			"certificateAuth": {
+				"authSSLCert": {
+					"secret": "",
+					"caFilename": "",
+					"pemSha": ""
+				},
+				"validationDepth": 0
+			},
+			"use-port-in-redirects": false,
+			"configuration-snippet": ""
+		}]
+	}]
+}

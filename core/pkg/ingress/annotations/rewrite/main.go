@@ -46,6 +46,32 @@ type Redirect struct {
 	AppRoot string `json:"appRoot"`
 }
 
+func (r1 *Redirect) Equal(r2 *Redirect) bool {
+	if r1 == r2 {
+		return true
+	}
+	if r1 == nil || r2 == nil {
+		return false
+	}
+	if r1.Target != r2.Target {
+		return false
+	}
+	if r1.AddBaseURL != r2.AddBaseURL {
+		return false
+	}
+	if r1.SSLRedirect != r2.SSLRedirect {
+		return false
+	}
+	if r1.ForceSSLRedirect != r2.ForceSSLRedirect {
+		return false
+	}
+	if r1.AppRoot != r2.AppRoot {
+		return false
+	}
+
+	return true
+}
+
 type rewrite struct {
 	backendResolver resolver.DefaultBackend
 }

@@ -44,7 +44,49 @@ type External struct {
 	SigninURL       string   `json:"signinUrl"`
 	Method          string   `json:"method"`
 	SendBody        bool     `json:"sendBody"`
-	ResponseHeaders []string `json:"responseHeaders"`
+	ResponseHeaders []string `json:"responseHeaders,omitEmpty"`
+}
+
+func (e1 *External) Equal(e2 *External) bool {
+	if e1 == e2 {
+		return true
+	}
+	if e1 == nil || e2 == nil {
+		return false
+	}
+	if e1.URL != e2.URL {
+		return false
+	}
+	if e1.Host != e2.Host {
+		return false
+	}
+	if e1.SigninURL != e2.SigninURL {
+		return false
+	}
+	if e1.Method != e2.Method {
+		return false
+	}
+	if e1.SendBody != e2.SendBody {
+		return false
+	}
+	if e1.Method != e2.Method {
+		return false
+	}
+
+	for _, ep1 := range e1.ResponseHeaders {
+		found := false
+		for _, ep2 := range e2.ResponseHeaders {
+			if ep1 == ep2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	return true
 }
 
 var (
