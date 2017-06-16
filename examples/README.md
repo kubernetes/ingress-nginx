@@ -47,7 +47,7 @@ Multi-cluster | bridge Kubernetes clusters with Ingress | gce | Advanced
 Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 Session stickyness | route requests consistently to the same endpoint | nginx | Advanced
-Least connections | route requests based on least connections | on-perm | Advanced
+Least connections | route requests based on least connections | on-prem | Advanced
 Weights | route requrests to backends based on weights | nginx | Advanced
 
 ## Routing
