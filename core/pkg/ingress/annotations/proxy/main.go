@@ -44,6 +44,38 @@ type Configuration struct {
 	CookiePath     string `json:"cookiePath"`
 }
 
+func (l1 *Configuration) Equal(l2 *Configuration) bool {
+	if l1 == l2 {
+		return true
+	}
+	if l1 == nil || l2 == nil {
+		return false
+	}
+	if l1.BodySize != l2.BodySize {
+		return false
+	}
+	if l1.ConnectTimeout != l2.ConnectTimeout {
+		return false
+	}
+	if l1.SendTimeout != l2.SendTimeout {
+		return false
+	}
+	if l1.ReadTimeout != l2.ReadTimeout {
+		return false
+	}
+	if l1.BufferSize != l2.BufferSize {
+		return false
+	}
+	if l1.CookieDomain != l2.CookieDomain {
+		return false
+	}
+	if l1.CookiePath != l2.CookiePath {
+		return false
+	}
+
+	return true
+}
+
 type proxy struct {
 	backendResolver resolver.DefaultBackend
 }

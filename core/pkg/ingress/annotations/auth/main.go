@@ -53,6 +53,29 @@ type BasicDigest struct {
 	Secured bool   `json:"secured"`
 }
 
+func (bd1 *BasicDigest) Equal(bd2 *BasicDigest) bool {
+	if bd1 == bd2 {
+		return true
+	}
+	if bd1 == nil || bd2 == nil {
+		return false
+	}
+	if bd1.Type != bd2.Type {
+		return false
+	}
+	if bd1.Realm != bd2.Realm {
+		return false
+	}
+	if bd1.File != bd2.File {
+		return false
+	}
+	if bd1.Secured != bd2.Secured {
+		return false
+	}
+
+	return true
+}
+
 type auth struct {
 	secretResolver resolver.Secret
 	authDirectory  string

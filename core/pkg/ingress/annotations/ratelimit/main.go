@@ -47,6 +47,23 @@ type RateLimit struct {
 	RPS Zone `json:"rps"`
 }
 
+func (rt1 *RateLimit) Equal(rt2 *RateLimit) bool {
+	if rt1 == rt2 {
+		return true
+	}
+	if rt1 == nil || rt2 == nil {
+		return false
+	}
+	if !(&rt1.Connections).Equal(&rt2.Connections) {
+		return false
+	}
+	if !(&rt1.RPS).Equal(&rt2.RPS) {
+		return false
+	}
+
+	return true
+}
+
 // Zone returns information about the NGINX rate limit (limit_req_zone)
 // http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_zone
 type Zone struct {
@@ -55,6 +72,29 @@ type Zone struct {
 	Burst int    `json:"burst"`
 	// SharedSize amount of shared memory for the zone
 	SharedSize int `json:"sharedSize"`
+}
+
+func (z1 *Zone) Equal(z2 *Zone) bool {
+	if z1 == z2 {
+		return true
+	}
+	if z1 == nil || z2 == nil {
+		return false
+	}
+	if z1.Name != z2.Name {
+		return false
+	}
+	if z1.Limit != z2.Limit {
+		return false
+	}
+	if z1.Burst != z2.Burst {
+		return false
+	}
+	if z1.SharedSize != z2.SharedSize {
+		return false
+	}
+
+	return true
 }
 
 type ratelimit struct {
