@@ -592,10 +592,11 @@ func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOr
 
 // isSimpleHTTPProbe returns true if the given Probe is:
 // - an HTTPGet probe, as opposed to a tcp or exec probe
-// - has no special host or headers fields
+// - has no special host or headers fields, except for possibly an HTTP Host header
 func isSimpleHTTPProbe(probe *api_v1.Probe) bool {
 	return (probe != nil && probe.Handler.HTTPGet != nil && probe.Handler.HTTPGet.Host == "" &&
-		len(probe.Handler.HTTPGet.HTTPHeaders) == 0)
+	        (len(probe.Handler.HTTPGet.HTTPHeaders) == 0 ||
+	        (len(probe.Handler.HTTPGet.HTTPHeaders) == 1 && probe.Handler.HTTPGet.HTTPHeaders[0].Name == "Host")))
 }
 
 // GetProbe returns a probe that's used for the given nodeport
