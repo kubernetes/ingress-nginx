@@ -29,6 +29,43 @@ spec:
     spec:
       containers:
       - name: nginxslim
-        image: gcr.io/google_containers/nginx-slim:0.16
+        image: gcr.io/google_containers/nginx-slim:0.19
         ports:
-        - containerPort: 80
+        - containerPort: 8080
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 105
+          privileged: false
+          capabilities:
+            drop:
+            - AUDIT_WRITE
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+            - FSETID
+            - KILL
+            - MKNOD
+            - NET_BIND_SERVICE
+            - NET_RAW
+            - SETFCAP
+            - SETGID
+            - SETUID
+            - SETPCAP
+            - SYS_CHROOT
+        volumeMounts:
+        - name: proxy
+          mountPath: /var/lib/nginx/proxy
+        - name: fastcgi
+          mountPath: /var/lib/nginx/fastcgi
+        - name: pidfile
+          mountPath: /run/nginx
+      securityContext:
+        fsGroup: 106
+      volumes:
+        - name: proxy
+          emptyDir: {}
+        - name: fastcgi
+          emptyDir: {}
+        - name: pidfile
+          emptyDir: {}
