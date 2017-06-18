@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google_containers/nginx-slim:0.18
+FROM gcr.io/google_containers/nginx-slim:0.19
 
 ADD nginx.conf /etc/nginx/nginx.conf
 ADD template.lua /usr/local/share/lua/5.1/
