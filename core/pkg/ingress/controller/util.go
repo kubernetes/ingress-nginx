@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -30,8 +31,11 @@ import (
 const DeniedKeyName = "Denied"
 
 // newDefaultServer return an BackendServer to be use as default server that returns 503.
-func newDefaultServer() ingress.Endpoint {
-	return ingress.Endpoint{Address: "127.0.0.1", Port: "8181"}
+func (ic *GenericController) newDefaultServer() ingress.Endpoint {
+	return ingress.Endpoint{
+		Address: "127.0.0.1",
+		Port:    strconv.Itoa(ic.cfg.Ports.DefaultBackend),
+	}
 }
 
 // newUpstream creates an upstream without servers.

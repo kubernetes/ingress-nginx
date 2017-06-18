@@ -73,6 +73,12 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		healthzPort = flags.Int("healthz-port", 10254, "port for healthz endpoint.")
 
+		httpPort = flags.Int("http-port", 80, "port used to expose HTTP protocol")
+
+		httpsPort = flags.Int("https-port", 443, "port used to expose HTTPS protocol")
+
+		localDefaultBackendPort = flags.Int("local-default-backend-port", 8181, "port used to expose the default backend service")
+
 		profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
 
 		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret 
@@ -164,6 +170,12 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		PublishService:          *publishSvc,
 		Backend:                 backend,
 		ForceNamespaceIsolation: *forceIsolation,
+		Ports: &ListenPort{
+			HTTP:           *httpPort,
+			HTTPS:          *httpsPort,
+			DefaultBackend: *localDefaultBackendPort,
+			Health:         *healthzPort,
+		},
 	}
 
 	ic := newIngressController(config)

@@ -64,11 +64,6 @@ const (
 	rootLocation    = "/"
 )
 
-var (
-	// list of ports that cannot be used by TCP or UDP services
-	reservedPorts = []string{"80", "443", "8181", "18080"}
-)
-
 // GenericController holds the boilerplate code required to build an Ingress controlller.
 type GenericController struct {
 	cfg *Configuration
@@ -113,6 +108,14 @@ type GenericController struct {
 	runningConfig *ingress.Configuration
 }
 
+// ListenPort contains all the ports used in the ingress controller.
+type ListenPort struct {
+	HTTP           int
+	HTTPS          int
+	DefaultBackend int
+	Health         int
+}
+
 // Configuration contains all the settings required by an Ingress controller
 type Configuration struct {
 	Client clientset.Interface
@@ -140,6 +143,9 @@ type Configuration struct {
 
 	UpdateStatus bool
 	ElectionID   string
+
+	// Ports contains the configuration of the used ports in the controller
+	Ports *ListenPort
 }
 
 // newIngressController creates an Ingress controller
@@ -453,6 +459,13 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 		return []ingress.L4Service{}
 	}
 
+	usedPorts := []string{
+		strconv.Itoa(ic.cfg.Ports.DefaultBackend),
+		strconv.Itoa(ic.cfg.Ports.HTTP),
+		strconv.Itoa(ic.cfg.Ports.HTTPS),
+		strconv.Itoa(ic.cfg.Ports.Health),
+	}
+
 	var svcs []ingress.L4Service
 	// k -> port to expose
 	// v -> <namespace>/<service name>:<port from service to be used>
@@ -463,8 +476,8 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 			continue
 		}
 
-		// this ports used by the backend
-		if local_strings.StringInSlice(k, reservedPorts) {
+		// this ports used are already used by the controller
+		if local_strings.StringInSlice(k, usedPorts) {
 			glog.Warningf("port %v cannot be used for TCP or UDP services. It is reserved for the Ingress controller", k)
 			continue
 		}
