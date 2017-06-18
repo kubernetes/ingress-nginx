@@ -55,6 +55,9 @@ if [[ ${ARCH} == "ppc64le" ]]; then
   apt-get update && apt-get install --no-install-recommends -y lua5.1 lua5.1-dev
 fi
 
+# add user and group
+adduser --system --group nginx
+
 # install required packages to build
 apt-get update && apt-get install --no-install-recommends -y \
   bash \
@@ -161,7 +164,7 @@ fi
   --http-log-path=/var/log/nginx/access.log \
   --error-log-path=/var/log/nginx/error.log \
   --lock-path=/var/lock/nginx.lock \
-  --pid-path=/run/nginx.pid \
+  --pid-path=/run/nginx/nginx.pid \
   --http-client-body-temp-path=/var/lib/nginx/body \
   --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
   --http-proxy-temp-path=/var/lib/nginx/proxy \
@@ -240,7 +243,19 @@ apt-get remove -y --purge \
 
 apt-get autoremove -y
 
-mkdir -p /var/lib/nginx/body /usr/share/nginx/html
+# Download of GeoIP databases
+curl -sSL -o /etc/nginx/GeoIP.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz \
+  && curl -sSL -o /etc/nginx/GeoLiteCity.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz \
+  && gunzip /etc/nginx/GeoIP.dat.gz \
+  && gunzip /etc/nginx/GeoLiteCity.dat.gz
+
+# create runtime directories
+mkdir -p /var/lib/nginx/body /usr/share/nginx/html /run/nginx
+
+chown -R nginx:nginx /etc/nginx /var/lib/nginx /run/nginx
+
+# use non privileged port by default
+sed -i 's/listen       80;/listen       8080;/' /etc/nginx/nginx.conf
 
 mv /usr/share/nginx/sbin/nginx /usr/sbin
 
@@ -249,9 +264,3 @@ rm -Rf /usr/share/man /usr/share/doc
 rm -rf /tmp/* /var/tmp/*
 rm -rf /var/lib/apt/lists/*
 rm -rf /var/cache/apt/archives/*
-
-# Download of GeoIP databases
-curl -sSL -o /etc/nginx/GeoIP.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz \
-  && curl -sSL -o /etc/nginx/GeoLiteCity.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz \
-  && gunzip /etc/nginx/GeoIP.dat.gz \
-  && gunzip /etc/nginx/GeoLiteCity.dat.gz

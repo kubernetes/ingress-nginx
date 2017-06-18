@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG = 0.18
+TAG = 0.19
 REGISTRY = gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
 ALL_ARCH = amd64 arm ppc64le
