@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google_containers/nginx-slim-amd64:0.18
+FROM gcr.io/google_containers/nginx-slim-amd64:0.19
 
+USER root
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
   diffutils \
   --no-install-recommends \
@@ -26,4 +27,5 @@ ENTRYPOINT ["/sbin/tini", "--"]
 
 COPY . /
 
+USER nginx
 CMD ["/nginx-ingress-controller"]
