@@ -55,7 +55,10 @@ type Config struct {
 	Client         clientset.Interface
 	PublishService string
 	IngressLister  store.IngressLister
-	ElectionID     string
+
+	ElectionID string
+
+	UpdateStatusOnShutdown bool
 
 	DefaultIngressClass string
 	IngressClass        string
@@ -95,6 +98,11 @@ func (s statusSync) Shutdown() {
 	go s.syncQueue.Shutdown()
 	// remove IP from Ingress
 	if !s.elector.IsLeader() {
+		return
+	}
+
+	if !s.UpdateStatusOnShutdown {
+		glog.Warningf("skipping update of status of Ingress rules")
 		return
 	}
 
