@@ -23,18 +23,25 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
+	"net"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/golang/glog"
 
 	"k8s.io/ingress/core/pkg/ingress"
+)
+
+var (
+	oidExtensionSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 )
 
 // AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
@@ -102,6 +109,17 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		cn = append(cn, pemCert.DNSNames...)
 	}
 
+	if len(pemCert.Extensions) > 0 {
+		for _, ext := range getExtension(pemCert, oidExtensionSubjectAltName) {
+			dns, _, _, err := parseSANExtension(ext.Value)
+			if err != nil {
+				glog.Warningf("unexpected error parsing certificate extensions: %v", err)
+				continue
+			}
+			cn = append(cn, dns...)
+		}
+	}
+
 	err = os.Rename(tempPemFile.Name(), pemFileName)
 	if err != nil {
 		return nil, fmt.Errorf("could not move temp pem file %v to destination %v: %v", tempPemFile.Name(), pemFileName, err)
@@ -148,6 +166,72 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		CN:          cn,
 		ExpireTime:  pemCert.NotAfter,
 	}, nil
+}
+
+func getExtension(c *x509.Certificate, id asn1.ObjectIdentifier) []pkix.Extension {
+	var exts []pkix.Extension
+	for _, ext := range c.Extensions {
+		if ext.Id.Equal(id) {
+			exts = append(exts, ext)
+		}
+	}
+	return exts
+}
+
+func parseSANExtension(value []byte) (dnsNames, emailAddresses []string, ipAddresses []net.IP, err error) {
+	// RFC 5280, 4.2.1.6
+
+	// SubjectAltName ::= GeneralNames
+	//
+	// GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
+	//
+	// GeneralName ::= CHOICE {
+	//      otherName                       [0]     OtherName,
+	//      rfc822Name                      [1]     IA5String,
+	//      dNSName                         [2]     IA5String,
+	//      x400Address                     [3]     ORAddress,
+	//      directoryName                   [4]     Name,
+	//      ediPartyName                    [5]     EDIPartyName,
+	//      uniformResourceIdentifier       [6]     IA5String,
+	//      iPAddress                       [7]     OCTET STRING,
+	//      registeredID                    [8]     OBJECT IDENTIFIER }
+	var seq asn1.RawValue
+	var rest []byte
+	if rest, err = asn1.Unmarshal(value, &seq); err != nil {
+		return
+	} else if len(rest) != 0 {
+		err = errors.New("x509: trailing data after X.509 extension")
+		return
+	}
+	if !seq.IsCompound || seq.Tag != 16 || seq.Class != 0 {
+		err = asn1.StructuralError{Msg: "bad SAN sequence"}
+		return
+	}
+
+	rest = seq.Bytes
+	for len(rest) > 0 {
+		var v asn1.RawValue
+		rest, err = asn1.Unmarshal(rest, &v)
+		if err != nil {
+			return
+		}
+		switch v.Tag {
+		case 1:
+			emailAddresses = append(emailAddresses, string(v.Bytes))
+		case 2:
+			dnsNames = append(dnsNames, string(v.Bytes))
+		case 7:
+			switch len(v.Bytes) {
+			case net.IPv4len, net.IPv6len:
+				ipAddresses = append(ipAddresses, v.Bytes)
+			default:
+				err = errors.New("x509: certificate contained IP address of length " + strconv.Itoa(len(v.Bytes)))
+				return
+			}
+		}
+	}
+
+	return
 }
 
 // AddCertAuth creates a .pem file with the specified CAs to be used in Cert Authentication
