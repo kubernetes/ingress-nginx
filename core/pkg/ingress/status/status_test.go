@@ -260,11 +260,12 @@ func TestStatusActions(t *testing.T) {
 	os.Setenv("POD_NAME", "foo1")
 	os.Setenv("POD_NAMESPACE", api_v1.NamespaceDefault)
 	c := Config{
-		Client:              buildSimpleClientSet(),
-		PublishService:      "",
-		IngressLister:       buildIngressListener(),
-		DefaultIngressClass: "nginx",
-		IngressClass:        "",
+		Client:                 buildSimpleClientSet(),
+		PublishService:         "",
+		IngressLister:          buildIngressListener(),
+		DefaultIngressClass:    "nginx",
+		IngressClass:           "",
+		UpdateStatusOnShutdown: true,
 	}
 	// create object
 	fkSync := NewStatusSyncer(c)
