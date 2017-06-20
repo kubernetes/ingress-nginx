@@ -138,8 +138,9 @@ type Configuration struct {
 	// (for instance NGINX)
 	Backend ingress.Controller
 
-	UpdateStatus bool
-	ElectionID   string
+	UpdateStatus           bool
+	ElectionID             string
+	UpdateStatusOnShutdown bool
 }
 
 // newIngressController creates an Ingress controller
@@ -307,12 +308,13 @@ func newIngressController(config *Configuration) *GenericController {
 
 	if config.UpdateStatus {
 		ic.syncStatus = status.NewStatusSyncer(status.Config{
-			Client:              config.Client,
-			PublishService:      ic.cfg.PublishService,
-			IngressLister:       ic.ingLister,
-			ElectionID:          config.ElectionID,
-			IngressClass:        config.IngressClass,
-			DefaultIngressClass: config.DefaultIngressClass,
+			Client:                 config.Client,
+			PublishService:         ic.cfg.PublishService,
+			IngressLister:          ic.ingLister,
+			ElectionID:             config.ElectionID,
+			IngressClass:           config.IngressClass,
+			DefaultIngressClass:    config.DefaultIngressClass,
+			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
 		})
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
