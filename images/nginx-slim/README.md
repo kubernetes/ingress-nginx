@@ -1,5 +1,5 @@
 
-nginx 1.11.x base image using [ubuntu-slim](https://github.com/kubernetes/contrib/tree/master/images/ubuntu-slim)
+nginx 1.13.x base image using [ubuntu-slim](https://github.com/kubernetes/contrib/tree/master/images/ubuntu-slim)
 
 nginx [engine x] is an HTTP and reverse proxy server, a mail proxy server, and a generic TCP proxy server.
 
@@ -15,7 +15,7 @@ This image does provides a default configuration file with no backend servers.
 
 *Using docker*
 ```
-$ docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro gcr.io/google_containers/nginx-slim:0.12
+$ docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro gcr.io/google_containers/nginx-slim:0.19
 ```
 
 *Creating a replication controller*
