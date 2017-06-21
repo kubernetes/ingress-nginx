@@ -137,12 +137,12 @@ http {
 
     map $pass_access_scheme $the_x_forwarded_for {
        default           $remote_addr;
-       https             $proxy_protocol_addr;
+    #   https             $proxy_protocol_addr;
     }
 
     map $pass_access_scheme $the_real_ip {
        default           $remote_addr;
-       https             $proxy_protocol_addr;
+    #   https             $proxy_protocol_addr;
     }
 
     # map port 442 to 443 for header X-Forwarded-Port
@@ -165,12 +165,18 @@ http {
         xml              application/xml;
         text             text/plain;
     }
-
-    # Obtain best http host
-    map $http_host $best_http_host {
-        default          $http_host;
+    
+    # Obtain CUSTOM host (PHOST)
+    map $http_phost $best_http_host {
+        default          $http_phost;
         ''               $host;
     }
+
+    # Obtain best http host
+    #map $http_host $best_http_host {
+    #    default          $http_host;
+    #    ''               $host;
+    #}
 
     server_name_in_redirect off;
     port_in_redirect        off;
