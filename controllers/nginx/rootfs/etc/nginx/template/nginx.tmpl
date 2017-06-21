@@ -135,15 +135,17 @@ http {
        ''                $server_port;
     }
 
-    map $pass_access_scheme $the_x_forwarded_for {
-       default           $remote_addr;
-       https             $proxy_protocol_addr;
+    {{ if $cfg.UseProxyProtocol }}
+    map $http_x_forwarded_for $the_real_ip {
+        default          $http_x_forwarded_for;
+        ''               $proxy_protocol_addr;
     }
-
-    map $pass_access_scheme $the_real_ip {
-       default           $remote_addr;
-       https             $proxy_protocol_addr;
+    {{ else }}
+    map $http_x_forwarded_for $the_real_ip {
+        default          $http_x_forwarded_for;
+        ''               $remote_addr;
     }
+    {{ end }}
 
     # map port 442 to 443 for header X-Forwarded-Port
     map $pass_server_port $pass_port {
@@ -394,7 +396,7 @@ http {
             proxy_set_header                        Connection        $connection_upgrade;
 
             proxy_set_header X-Real-IP              $the_real_ip;
-            proxy_set_header X-Forwarded-For        $the_x_forwarded_for;
+            proxy_set_header X-Forwarded-For        $the_real_ip;
             proxy_set_header X-Forwarded-Host       $best_http_host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
@@ -564,7 +566,7 @@ stream {
 
     server {
         listen                  {{ $udpServer.Port }} udp;
-        {{ if $IsIPV6Enabled }}listen                  [::]:{{ $udpServer.Port }} udp;{{ end }} 
+        {{ if $IsIPV6Enabled }}listen                  [::]:{{ $udpServer.Port }} udp;{{ end }}
         proxy_responses         1;
         proxy_pass              udp-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
     }
