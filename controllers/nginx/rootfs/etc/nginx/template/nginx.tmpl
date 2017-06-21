@@ -289,7 +289,8 @@ http {
         {{ if $cfg.EnableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
 
         {{ range $location := $server.Locations }}
-        {{ $path := buildLocation $location }}
+        {{ $builtPath := buildLocation $location }}
+        {{ $path := withLocationPathType $builtPath $cfg }}
         {{ $authPath := buildAuthLocation $location }}
 
         {{ if not (empty $location.CertificateAuth.AuthSSLCert.CAFileName) }}

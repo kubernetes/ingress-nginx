@@ -192,7 +192,7 @@ type Configuration struct {
 	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
 
 	// Sets the bucket size for the map variables hash tables.
-	// Default value depends on the processor’s cache line size.
+	// Default value depends on the processor?s cache line size.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
 	MapHashBucketSize int `json:"map-hash-bucket-size,omitempty"`
 
@@ -203,7 +203,7 @@ type Configuration struct {
 	// Sets the name of the configmap that contains the headers to pass to the backend
 	ProxySetHeaders string `json:"proxy-set-headers,omitempty"`
 
-	// Maximum size of the server names hash tables used in server names, map directive’s values,
+	// Maximum size of the server names hash tables used in server names, map directive?s values,
 	// MIME types, names of request header strings, etcd.
 	// http://nginx.org/en/docs/hash.html
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size
@@ -214,7 +214,7 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
 	ServerNameHashBucketSize int `json:"server-name-hash-bucket-size,omitempty"`
 
-	// Enables or disables emitting nginx version in error messages and in the “Server” response header field.
+	// Enables or disables emitting nginx version in error messages and in the ?Server? response header field.
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens
 	// Default: true
 	ShowServerTokens bool `json:"server-tokens"`
@@ -275,8 +275,8 @@ type Configuration struct {
 	// Default: true
 	UseHTTP2 bool `json:"use-http2,omitempty"`
 
-	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
-	// Responses with the “text/html” type are always compressed if UseGzip is enabled
+	// MIME types in addition to "text/html" to compress. The special value ?*? matches any MIME type.
+	// Responses with the ?text/html? type are always compressed if UseGzip is enabled
 	GzipTypes string `json:"gzip-types,omitempty"`
 
 	// Defines the number of worker processes. By default auto means number of available CPU cores
@@ -293,6 +293,7 @@ type Configuration struct {
 	// Sets the maximum size of the variables hash table.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
 	VariablesHashMaxSize int `json:"variables-hash-max-size,omitempty"`
+	UseRegexpLocationPath bool `json:"use-regexp-location-path,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -351,6 +352,7 @@ func NewDefault() Configuration {
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
 		},
+		UseRegexpLocationPath:        false,
 	}
 
 	if glog.V(5) {

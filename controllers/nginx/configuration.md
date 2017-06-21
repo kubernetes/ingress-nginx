@@ -441,6 +441,9 @@ The default mime type list to compress is: `application/atom+xml application/jav
 **worker-processes:** Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). The default of "auto" means number of available CPU cores.
 
 
+**use-regexp-location-path:** Handles a path in Ingress pathes rules as a regexp location directive.
+The default is: `false`.
+
 ### Default configuration options
 
 The following table shows the options, the default value and a description.
