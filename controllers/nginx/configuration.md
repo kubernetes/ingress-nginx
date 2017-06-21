@@ -462,7 +462,7 @@ The following table shows the options, the default value and a description.
 |ignore-invalid-headers|"true"|
 |keep-alive|"75"| 
 |log-format-stream|[$time_local] $protocol $status $bytes_sent $bytes_received $session_time|
-|log-format-upstream|[$the_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status|
+|log-format-upstream|[$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status|
 |map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|
 |proxy-body-size|same as body-size|

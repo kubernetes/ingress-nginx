@@ -28,8 +28,8 @@ func TestBuildLogFormatUpstream(t *testing.T) {
 		curLogFormat     string
 		expected         string
 	}{
-		{true, logFormatUpstream, fmt.Sprintf(logFormatUpstream, "$the_x_forwarded_for")},
-		{false, logFormatUpstream, fmt.Sprintf(logFormatUpstream, "$the_x_forwarded_for")},
+		{true, logFormatUpstream, fmt.Sprintf(logFormatUpstream, "$the_real_ip")},
+		{false, logFormatUpstream, fmt.Sprintf(logFormatUpstream, "$the_real_ip")},
 		{true, "my-log-format", "my-log-format"},
 		{false, "john-log-format", "john-log-format"},
 	}
