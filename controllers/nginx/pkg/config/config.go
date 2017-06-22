@@ -293,6 +293,14 @@ type Configuration struct {
 	// Sets the maximum size of the variables hash table.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
 	VariablesHashMaxSize int `json:"variables-hash-max-size,omitempty"`
+
+	// Activates the cache for connections to upstream servers.
+	// The connections parameter sets the maximum number of idle keepalive connections to
+	// upstream servers that are preserved in the cache of each worker process. When this
+	// number is exceeded, the least recently used connections are closed.
+	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
+	// Default: 0 (disabled)
+	UpstreamKeepaliveConnections int `json:"upstream-keepalive-connections,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -351,6 +359,7 @@ func NewDefault() Configuration {
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
 		},
+		UpstreamKeepaliveConnections: 0,
 	}
 
 	if glog.V(5) {

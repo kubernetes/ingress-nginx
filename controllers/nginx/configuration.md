@@ -487,6 +487,7 @@ The following table shows the options, the default value and a description.
 |ssl-session-timeout|10m|
 |use-gzip|"true"|
 |use-http2|"true"|
+|upstream-keepalive-connections|"0" (disabled)|
 |variables-hash-bucket-size|64|
 |variables-hash-max-size|2048|
 |vts-status-zone-size|10m|
