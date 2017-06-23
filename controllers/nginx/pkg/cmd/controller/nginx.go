@@ -536,9 +536,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	o, e := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
+	o, err := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%v\n%v", e, string(o))
+		return fmt.Errorf("%v\n%v", err, string(o))
 	}
 
 	return nil
