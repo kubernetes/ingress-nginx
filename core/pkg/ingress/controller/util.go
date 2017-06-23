@@ -39,6 +39,11 @@ func newUpstream(name string) *ingress.Backend {
 	return &ingress.Backend{
 		Name:      name,
 		Endpoints: []ingress.Endpoint{},
+		SessionAffinity: ingress.SessionAffinityConfig{
+			CookieSessionAffinity: ingress.CookieSessionAffinity{
+				Locations: make(map[string][]string),
+			},
+		},
 	}
 }
 

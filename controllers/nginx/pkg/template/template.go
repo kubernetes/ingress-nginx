@@ -135,6 +135,7 @@ var (
 		"buildRateLimitZones":      buildRateLimitZones,
 		"buildRateLimit":           buildRateLimit,
 		"buildResolvers":           buildResolvers,
+		"buildUpstreamName":        buildUpstreamName,
 		"isLocationAllowed":        isLocationAllowed,
 		"buildLogFormatUpstream":   buildLogFormatUpstream,
 		"buildDenyVariable":        buildDenyVariable,
@@ -257,7 +258,7 @@ func buildLogFormatUpstream(input interface{}) string {
 // (specified through the ingress.kubernetes.io/rewrite-to annotation)
 // If the annotation ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
-func buildProxyPass(b interface{}, loc interface{}) string {
+func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	backends := b.([]*ingress.Backend)
 	location, ok := loc.(*ingress.Location)
 	if !ok {
@@ -267,17 +268,23 @@ func buildProxyPass(b interface{}, loc interface{}) string {
 	path := location.Path
 	proto := "http"
 
+	upstreamName := location.Backend
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
 			if backend.Secure || backend.SSLPassthrough {
 				proto = "https"
 			}
+
+			if isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
+				upstreamName = fmt.Sprintf("sticky-%v", upstreamName)
+			}
+
 			break
 		}
 	}
 
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
-	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, location.Backend)
+	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, upstreamName)
 	// if the path in the ingress rule is equals to the target: no special rewrite
 	if path == location.Redirect.Target {
 		return defProxyPass
@@ -407,4 +414,39 @@ func buildDenyVariable(a interface{}) string {
 	}
 
 	return fmt.Sprintf("$deny_%v", denyPathSlugMap[l])
+}
+
+func buildUpstreamName(host string, b interface{}, loc interface{}) string {
+	backends := b.([]*ingress.Backend)
+	location, ok := loc.(*ingress.Location)
+	if !ok {
+		return ""
+	}
+
+	upstreamName := location.Backend
+
+	for _, backend := range backends {
+		if backend.Name == location.Backend {
+			if backend.SessionAffinity.AffinityType == "cookie" &&
+				isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
+				upstreamName = fmt.Sprintf("sticky-%v", upstreamName)
+			}
+
+			break
+		}
+	}
+
+	return upstreamName
+}
+
+func isSticky(host string, loc *ingress.Location, stickyLocations map[string][]string) bool {
+	if _, ok := stickyLocations[host]; ok {
+		for _, sl := range stickyLocations[host] {
+			if sl == loc.Path {
+				return true
+			}
+		}
+	}
+
+	return false
 }

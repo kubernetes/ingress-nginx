@@ -225,15 +225,24 @@ http {
     proxy_pass_header Server;
     {{ end }}
 
-    {{range $name, $upstream := $backends}}
-    upstream {{$upstream.Name}} {
-        {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
-        sticky hash={{$upstream.SessionAffinity.CookieSessionAffinity.Hash}} name={{$upstream.SessionAffinity.CookieSessionAffinity.Name}}  httponly;
-        {{ else }}
+    {{ range $name, $upstream := $backends }}
+    {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
+    upstream sticky-{{ $upstream.Name }} {
+        sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}  httponly;
+
+        {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
+        keepalive {{ $cfg.UpstreamKeepaliveConnections }};
+        {{ end }}
+
+        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
+        {{ end }}
+    }
+    {{ end }}
+
+    upstream {{ $upstream.Name }} {
         # Load balance algorithm; empty for round robin, which is the default
         {{ if ne $cfg.LoadBalanceAlgorithm "round_robin" }}
         {{ $cfg.LoadBalanceAlgorithm }};
-        {{ end }}
         {{ end }}
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
@@ -343,8 +352,7 @@ http {
         {{ end }}
 
         location {{ $path }} {
-            set $proxy_upstream_name "{{ $location.Backend }}";
-
+            set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $backends $location }}";
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
             if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
@@ -439,7 +447,7 @@ http {
             {{/* Add any additional configuration defined */}}
             {{ $location.ConfigurationSnippet }}
 
-            {{ buildProxyPass $backends $location }}
+            {{ buildProxyPass $server.Hostname $backends $location }}
             {{ else }}
             #{{ $location.Denied }}
             return 503;

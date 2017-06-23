@@ -129,7 +129,7 @@ func TestBuildProxyPass(t *testing.T) {
 			Backend:  "upstream-name",
 		}
 
-		pp := buildProxyPass([]*ingress.Backend{}, loc)
+		pp := buildProxyPass("", []*ingress.Backend{}, loc)
 		if !strings.EqualFold(tc.ProxyPass, pp) {
 			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, tc.ProxyPass, pp)
 		}
