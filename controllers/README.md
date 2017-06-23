@@ -8,4 +8,4 @@ Configuring a webserver or loadbalancer is harder than it should be. Most webser
 
 ## What is an Ingress Controller?
 
-An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches the apiserver's `/ingresses` endpoint for updates to the [Ingress resource](https://github.com/kubernetes/kubernetes/blob/master/docs/user-guide/ingress.md). Its job is to satisfy requests for ingress.
+An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches the apiserver's `/ingresses` endpoint for updates to the [Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/). Its job is to satisfy requests for ingress.
