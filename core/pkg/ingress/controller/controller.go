@@ -110,7 +110,11 @@ type GenericController struct {
 
 	stopCh chan struct{}
 
+	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
+
+	// configmapChanged indicates the configmap
+	configmapChanged bool
 }
 
 // Configuration contains all the settings required by an Ingress controller
@@ -258,6 +262,7 @@ func newIngressController(config *Configuration) *GenericController {
 			if mapKey == ic.cfg.ConfigMapName {
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
 				ic.cfg.Backend.SetConfig(upCmap)
+				ic.configmapChanged = true
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
@@ -267,6 +272,7 @@ func newIngressController(config *Configuration) *GenericController {
 				if mapKey == ic.cfg.ConfigMapName {
 					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
 					ic.cfg.Backend.SetConfig(upCmap)
+					ic.configmapChanged = true
 				}
 				// updates to configuration configmaps can trigger an update
 				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
@@ -413,7 +419,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		PassthroughBackends: passUpstreams,
 	}
 
-	if ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg) {
+	if !ic.configmapChanged && (ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg)) {
 		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
 	}
@@ -427,6 +433,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		return err
 	}
 
+	ic.configmapChanged = false
 	glog.Infof("ingress backend successfully reloaded...")
 	incReloadCount()
 	setSSLExpireTime(servers)
