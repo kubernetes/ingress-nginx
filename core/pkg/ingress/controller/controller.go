@@ -603,6 +603,8 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
 
+		affinity := ic.annotations.SessionAffinity(ing)
+
 		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
@@ -671,6 +673,22 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 					}
 					mergeLocationAnnotations(loc, anns)
 					server.Locations = append(server.Locations, loc)
+				}
+
+				if ups.SessionAffinity.AffinityType == "" {
+					ups.SessionAffinity.AffinityType = affinity.AffinityType
+				}
+
+				if affinity.AffinityType == "cookie" {
+					ups.SessionAffinity.CookieSessionAffinity.Name = affinity.CookieConfig.Name
+					ups.SessionAffinity.CookieSessionAffinity.Hash = affinity.CookieConfig.Hash
+
+					locs := ups.SessionAffinity.CookieSessionAffinity.Locations
+					if _, ok := locs[host]; !ok {
+						locs[host] = []string{}
+					}
+
+					locs[host] = append(locs[host], path.Path)
 				}
 			}
 		}
@@ -758,7 +776,6 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 		secUpstream := ic.annotations.SecureUpstream(ing)
 		hz := ic.annotations.HealthCheck(ing)
-		affinity := ic.annotations.SessionAffinity(ing)
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -801,19 +818,6 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 				if upstreams[name].SecureCACert.Secret == "" {
 					upstreams[name].SecureCACert = secUpstream.CACert
-				}
-
-				if upstreams[name].SessionAffinity.AffinityType == "" {
-					upstreams[name].SessionAffinity.AffinityType = affinity.AffinityType
-					if affinity.AffinityType == "cookie" {
-						upstreams[name].SessionAffinity.CookieSessionAffinity.Name = affinity.CookieConfig.Name
-						upstreams[name].SessionAffinity.CookieSessionAffinity.Hash = affinity.CookieConfig.Hash
-
-						if _, ok := upstreams[name].SessionAffinity.CookieSessionAffinity.Locations[rule.Host]; !ok {
-							upstreams[name].SessionAffinity.CookieSessionAffinity.Locations[rule.Host] = []string{}
-						}
-						upstreams[name].SessionAffinity.CookieSessionAffinity.Locations[rule.Host] = append(upstreams[name].SessionAffinity.CookieSessionAffinity.Locations[rule.Host], path.Path)
-					}
 				}
 
 				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
