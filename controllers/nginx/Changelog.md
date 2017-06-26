@@ -1,5 +1,38 @@
 Changelog
 
+### 0.9-beta.9
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.9`
+
+*Changes:*
+
+- [X] [#864](https://github.com/kubernetes/ingress/pull/864) Remove dead code
+- [X] [#900](https://github.com/kubernetes/ingress/pull/900) After #862 changes in the configmap do not trigger a reload
+- [X] [#902](https://github.com/kubernetes/ingress/pull/902) Always reload after a change in the configuration
+- [X] [#620](https://github.com/kubernetes/ingress/pull/620) [nginx] Listening ports are not configurable, so ingress can't be run multiple times per node when using CNI
+- [X] [#901](https://github.com/kubernetes/ingress/pull/901) [doc] Update NGinX status port to 18080
+- [X] [#898](https://github.com/kubernetes/ingress/pull/898) add error check right when reload nginx fail
+- [X] [#899](https://github.com/kubernetes/ingress/pull/899) Fix nginx error check
+- [X] [#897](https://github.com/kubernetes/ingress/pull/897) Update outdated ingress resource link
+- [X] [#844](https://github.com/kubernetes/ingress/pull/844) ingress annotations affinity is not working
+- [X] [#888](https://github.com/kubernetes/ingress/pull/888) Update nginx-slim to 0.19
+- [X] [#548](https://github.com/kubernetes/ingress/pull/548) nginx: support multidomain certificates
+- [X] [#886](https://github.com/kubernetes/ingress/pull/886) Add support for SubjectAltName in SSL certificates
+- [X] [#892](https://github.com/kubernetes/ingress/pull/892) Add upstream keepalive connections cache
+- [X] [#838](https://github.com/kubernetes/ingress/pull/838) Feature request: Add ingress annotation to enable upstream "keepalive" option
+- [X] [#885](https://github.com/kubernetes/ingress/pull/885) Don't use $proxy_protocol var which may be undefined.
+- [X] [#889](https://github.com/kubernetes/ingress/pull/889) Add PHOST to backend
+- [X] [#890](https://github.com/kubernetes/ingress/pull/890) Improve variable configuration for source IP address
+- [X] [#868](https://github.com/kubernetes/ingress/pull/868) Lint nginx code
+- [X] [#876](https://github.com/kubernetes/ingress/pull/876) Add information about nginx controller flags
+- [X] [#882](https://github.com/kubernetes/ingress/pull/882) Add flag to skip the update of Ingress status on shutdown
+- [X] [#878](https://github.com/kubernetes/ingress/pull/878) Update go to 1.8.3
+- [X] [#881](https://github.com/kubernetes/ingress/pull/881) Option to not remove loadBalancer status record?
+- [X] [#862](https://github.com/kubernetes/ingress/pull/862) Avoid reloads implementing Equaler interface
+- [X] [#648](https://github.com/kubernetes/ingress/pull/648) publish-service argument isn't honored when ELB is internal only facing.
+- [X] [#833](https://github.com/kubernetes/ingress/pull/833) WIP: Avoid reloads implementing Equals in structs
+- [X] [#873](https://github.com/kubernetes/ingress/pull/873) Update README.md
+
 ### 0.9-beta.8
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.8`
