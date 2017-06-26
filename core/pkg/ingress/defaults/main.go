@@ -49,6 +49,10 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain
 	ProxyCookieDomain string `json:"proxy-cookie-domain"`
 
+	// Specifies in which cases a request should be passed to the next server.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
+	ProxyNextUpstream string `json:"proxy-next-upstream"`
+
 	// Name server/s used to resolve names of upstream servers into IP addresses.
 	// The file /etc/resolv.conf is used as DNS resolution configuration.
 	Resolver []net.IP

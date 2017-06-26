@@ -146,6 +146,7 @@ var (
 		"toUpper":                  strings.ToUpper,
 		"toLower":                  strings.ToLower,
 		"formatIP":                 formatIP,
+		"buildNextUpstream":        buildNextUpstream,
 	}
 )
 
@@ -449,4 +450,22 @@ func isSticky(host string, loc *ingress.Location, stickyLocations map[string][]s
 	}
 
 	return false
+}
+
+func buildNextUpstream(input interface{}) string {
+	nextUpstream, ok := input.(string)
+	if !ok {
+		glog.Errorf("expected an string type but %T was returned", input)
+	}
+
+	parts := strings.Split(nextUpstream, " ")
+
+	nextUpstreamCodes := make([]string, 0, len(parts))
+	for _, v := range parts {
+		if v != "" && v != "non_idempotent" {
+			nextUpstreamCodes = append(nextUpstreamCodes, v)
+		}
+	}
+
+	return strings.Join(nextUpstreamCodes, " ")
 }
