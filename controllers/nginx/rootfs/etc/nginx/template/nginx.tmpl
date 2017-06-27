@@ -169,9 +169,14 @@ http {
     }
 
     # Obtain best http host
-    map $http_host $best_http_host {
+    map $http_host $this_host {
         default          $http_host;
         ''               $host;
+    }
+
+    map $http_x_forwarded_host $best_http_host {
+        default          $http_x_forwarded_host;
+        ''               $this_host;
     }
 
     server_name_in_redirect off;
