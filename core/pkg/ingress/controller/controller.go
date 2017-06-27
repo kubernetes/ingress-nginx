@@ -907,6 +907,7 @@ func (ic *GenericController) createServers(data []interface{},
 		BufferSize:     bdef.ProxyBufferSize,
 		CookieDomain:   bdef.ProxyCookieDomain,
 		CookiePath:     bdef.ProxyCookiePath,
+		NextUpstream:   bdef.ProxyNextUpstream,
 	}
 
 	// This adds the Default Certificate to Default Backend (or generates a new self signed one)
