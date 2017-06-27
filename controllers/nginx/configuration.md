@@ -349,6 +349,9 @@ log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol
 **proxy-send-timeout:** Sets the timeout in seconds for [transmitting a request to the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
 
 
+**proxy-next-upstream:** Specifies in [which cases](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream) a request should be passed to the next server.
+
+
 **retry-non-idempotent:** Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error in the upstream server.
 
 The previous behavior can be restored using the value "true".

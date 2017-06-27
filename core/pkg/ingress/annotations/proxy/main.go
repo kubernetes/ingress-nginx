@@ -31,6 +31,7 @@ const (
 	bufferSize   = "ingress.kubernetes.io/proxy-buffer-size"
 	cookiePath   = "ingress.kubernetes.io/proxy-cookie-path"
 	cookieDomain = "ingress.kubernetes.io/proxy-cookie-domain"
+	nextUpstream = "ingress.kubernetes.io/proxy-next-upstream"
 )
 
 // Configuration returns the proxy timeout to use in the upstream server/s
@@ -42,6 +43,7 @@ type Configuration struct {
 	BufferSize     string `json:"bufferSize"`
 	CookieDomain   string `json:"cookieDomain"`
 	CookiePath     string `json:"cookiePath"`
+	NextUpstream   string `json:"nextUpstream"`
 }
 
 func (l1 *Configuration) Equal(l2 *Configuration) bool {
@@ -124,5 +126,10 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		bs = defBackend.ProxyBodySize
 	}
 
-	return &Configuration{bs, ct, st, rt, bufs, cd, cp}, nil
+	nu, err := parser.GetStringAnnotation(nextUpstream, ing)
+	if err != nil || nu == "" {
+		nu = defBackend.ProxyNextUpstream
+	}
+
+	return &Configuration{bs, ct, st, rt, bufs, cd, cp, nu}, nil
 }
