@@ -17,9 +17,9 @@
 
 set -e
 
-export NGINX_VERSION=1.13.1
+export NGINX_VERSION=1.13.2
 export NDK_VERSION=0.3.0
-export VTS_VERSION=0.1.14
+export VTS_VERSION=0.1.15
 export SETMISC_VERSION=0.31
 export LUA_VERSION=0.10.8
 export STICKY_SESSIONS_VERSION=08a395c66e42
@@ -77,7 +77,7 @@ apt-get update && apt-get install --no-install-recommends -y \
   linux-headers-generic || exit 1
 
 # download, verify and extract the source files
-get_src a5856c72a6609a4dc68c88a7f3c33b79e6693343b62952e021e043fe347b6776 \
+get_src d77f234d14989d273a363f570e1d892395c006fef2ec04789be90f41a1919b70 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
@@ -86,7 +86,7 @@ get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
 get_src 97946a68937b50ab8637e1a90a13198fe376d801dc3e7447052e43c28e9ee7de \
         "https://github.com/openresty/set-misc-nginx-module/archive/v$SETMISC_VERSION.tar.gz"
 
-get_src e3b0018959ac899b73d3843e07351023f02be0ff421214426e3fe32193138963 \
+get_src 5112a054b1b1edb4c0042a9a840ef45f22abb3c05c68174e28ebf483164fb7e1 \
         "https://github.com/vozlt/nginx-module-vts/archive/v$VTS_VERSION.tar.gz"
 
 get_src d67449c71051b3cc2d6dd60df0ae0d21fca08aa19c9b30c5b95ee21ff38ef8dd \
