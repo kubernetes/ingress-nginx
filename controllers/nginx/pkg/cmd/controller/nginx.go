@@ -85,20 +85,20 @@ func newNGINXController() ingress.Controller {
 			Default: &server{
 				Hostname:      "localhost",
 				IP:            "127.0.0.1",
-				Port:          442,
+				Port:          8442,
 				ProxyProtocol: true,
 			},
 		},
 	}
 
-	listener, err := net.Listen("tcp", ":443")
+	listener, err := net.Listen("tcp", ":8443")
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
 
 	proxyList := &proxyproto.Listener{Listener: listener}
 
-	// start goroutine that accepts tcp connections in port 443
+	// start goroutine that accepts tcp connections in port 8443
 	go func() {
 		for {
 			var conn net.Conn
@@ -204,7 +204,7 @@ NGINX master process died (%v): %v
 		cmd = exec.Command(n.binary, "-c", cfgPath)
 		// we wait until the workers are killed
 		for {
-			conn, err := net.DialTimeout("tcp", "127.0.0.1:80", 1*time.Second)
+			conn, err := net.DialTimeout("tcp", "127.0.0.1:8080", 1*time.Second)
 			if err != nil {
 				break
 			}

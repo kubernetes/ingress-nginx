@@ -6,7 +6,7 @@
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
-pid /run/nginx.pid;
+pid /run/nginx/nginx.pid;
 {{ if ne .MaxOpenFiles 0 }}
 worker_rlimit_nofile {{ .MaxOpenFiles }};
 {{ end}}
