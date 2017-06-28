@@ -315,13 +315,6 @@ http {
         ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
         {{ end }}
 
-        {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
-        # enforce ssl on server side
-        if ($pass_access_scheme = http) {
-            return 301 https://$best_http_host$request_uri;
-        }
-        {{ end }}
-
         {{ if not (empty $location.Redirect.AppRoot)}}
         if ($uri = /) {
             return 302 {{ $location.Redirect.AppRoot }};
@@ -355,6 +348,14 @@ http {
 
         location {{ $path }} {
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $backends $location }}";
+
+            {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
+            # enforce ssl on server side
+            if ($pass_access_scheme = http) {
+                return 301 https://$best_http_host$request_uri;
+            }
+            {{ end }}
+
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
             if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
