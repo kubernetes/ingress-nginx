@@ -43,9 +43,6 @@ const (
 	// max-age is the time, in seconds, that the browser should remember that this site is only to be accessed using HTTPS.
 	hstsMaxAge = "15724800"
 
-	// If UseProxyProtocol is enabled defIPCIDR defines the default the IP/network address of your external load balancer
-	defIPCIDR = "0.0.0.0/0"
-
 	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
 
 	logFormatUpstream = `%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status`
@@ -198,7 +195,7 @@ type Configuration struct {
 
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
-	ProxyRealIPCIDR string `json:"proxy-real-ip-cidr,omitempty"`
+	ProxyRealIPCIDR []string `json:"proxy-real-ip-cidr,omitempty"`
 
 	// Sets the name of the configmap that contains the headers to pass to the backend
 	ProxySetHeaders string `json:"proxy-set-headers,omitempty"`
@@ -305,6 +302,8 @@ type Configuration struct {
 
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
+    defIPCIDR := make([]string, 0)
+    defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
 		ClientHeaderBufferSize:     "1k",

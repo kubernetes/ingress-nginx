@@ -30,6 +30,7 @@ const (
 	customHTTPErrors     = "custom-http-errors"
 	skipAccessLogUrls    = "skip-access-log-urls"
 	whitelistSourceRange = "whitelist-source-range"
+    proxyRealIPCIDR      = "proxy-real-ip-cidr"
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
@@ -45,6 +46,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
 	whitelist := make([]string, 0)
+    proxylist := make([]string, 0)
 
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
@@ -65,11 +67,18 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, whitelistSourceRange)
 		whitelist = append(whitelist, strings.Split(val, ",")...)
 	}
+	if val, ok := conf[proxyRealIPCIDR]; ok {
+		delete(conf, proxyRealIPCIDR)
+		proxylist = append(proxylist, strings.Split(val, ",")...)
+	} else {
+        proxylist = append(proxylist, "0.0.0.0/0")
+    }
 
 	to := config.NewDefault()
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
 	to.WhitelistSourceRange = whitelist
+    to.ProxyRealIPCIDR = proxylist
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,
