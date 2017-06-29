@@ -1,5 +1,53 @@
 Changelog
 
+### 0.9-beta.9
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.9`
+
+*New Features:*
+
+- Add support for arm and ppc64le
+
+
+*Changes:*
+
+- [X] [#548](https://github.com/kubernetes/ingress/pull/548) nginx: support multidomain certificates
+- [X] [#620](https://github.com/kubernetes/ingress/pull/620) [nginx] Listening ports are not configurable, so ingress can't be run multiple times per node when using CNI
+- [X] [#648](https://github.com/kubernetes/ingress/pull/648) publish-service argument isn't honored when ELB is internal only facing.
+- [X] [#833](https://github.com/kubernetes/ingress/pull/833) WIP: Avoid reloads implementing Equals in structs
+- [X] [#838](https://github.com/kubernetes/ingress/pull/838) Feature request: Add ingress annotation to enable upstream "keepalive" option
+- [X] [#844](https://github.com/kubernetes/ingress/pull/844) ingress annotations affinity is not working
+- [X] [#862](https://github.com/kubernetes/ingress/pull/862) Avoid reloads implementing Equaler interface
+- [X] [#864](https://github.com/kubernetes/ingress/pull/864) Remove dead code
+- [X] [#868](https://github.com/kubernetes/ingress/pull/868) Lint nginx code
+- [X] [#871](https://github.com/kubernetes/ingress/pull/871) Add feature to allow sticky sessions per location
+- [X] [#873](https://github.com/kubernetes/ingress/pull/873) Update README.md
+- [X] [#876](https://github.com/kubernetes/ingress/pull/876) Add information about nginx controller flags
+- [X] [#878](https://github.com/kubernetes/ingress/pull/878) Update go to 1.8.3
+- [X] [#881](https://github.com/kubernetes/ingress/pull/881) Option to not remove loadBalancer status record?
+- [X] [#882](https://github.com/kubernetes/ingress/pull/882) Add flag to skip the update of Ingress status on shutdown
+- [X] [#885](https://github.com/kubernetes/ingress/pull/885) Don't use $proxy_protocol var which may be undefined.
+- [X] [#886](https://github.com/kubernetes/ingress/pull/886) Add support for SubjectAltName in SSL certificates
+- [X] [#888](https://github.com/kubernetes/ingress/pull/888) Update nginx-slim to 0.19
+- [X] [#889](https://github.com/kubernetes/ingress/pull/889) Add PHOST to backend
+- [X] [#890](https://github.com/kubernetes/ingress/pull/890) Improve variable configuration for source IP address
+- [X] [#892](https://github.com/kubernetes/ingress/pull/892) Add upstream keepalive connections cache
+- [X] [#897](https://github.com/kubernetes/ingress/pull/897) Update outdated ingress resource link
+- [X] [#898](https://github.com/kubernetes/ingress/pull/898) add error check right when reload nginx fail
+- [X] [#899](https://github.com/kubernetes/ingress/pull/899) Fix nginx error check
+- [X] [#900](https://github.com/kubernetes/ingress/pull/900) After #862 changes in the configmap do not trigger a reload
+- [X] [#901](https://github.com/kubernetes/ingress/pull/901) [doc] Update NGinX status port to 18080
+- [X] [#902](https://github.com/kubernetes/ingress/pull/902) Always reload after a change in the configuration
+- [X] [#904](https://github.com/kubernetes/ingress/pull/904) Fix nginx sticky sessions
+- [X] [#906](https://github.com/kubernetes/ingress/pull/906) Fix race condition with closed channels
+- [X] [#907](https://github.com/kubernetes/ingress/pull/907) nginx/proxy: allow specifying next upstream behaviour
+- [X] [#910](https://github.com/kubernetes/ingress/pull/910) Feature request: use `X-Forwarded-Host` from the reverse proxy before
+- [X] [#911](https://github.com/kubernetes/ingress/pull/911) Improve X-Forwarded-Host support
+- [X] [#915](https://github.com/kubernetes/ingress/pull/915) Release nginx-slim 0.20
+- [X] [#916](https://github.com/kubernetes/ingress/pull/916) Add arm and ppc64le support
+- [X] [#919](https://github.com/kubernetes/ingress/pull/919) Apply the 'ssl-redirect' annotation per-location
+- [X] [#922](https://github.com/kubernetes/ingress/pull/922) Add example of TLS termination using a classic ELB
+
 ### 0.9-beta.8
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.8`
