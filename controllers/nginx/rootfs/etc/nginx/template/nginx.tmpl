@@ -221,9 +221,6 @@ http {
     {{ range $errCode := $cfg.CustomHTTPErrors }}
     error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
 
-    # In case of errors try the next upstream server before returning an error
-    proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504{{ if $cfg.RetryNonIdempotent }} non_idempotent{{ end }};
-
     proxy_ssl_session_reuse on;
 
     {{ if $cfg.AllowBackendServerHeader }}
@@ -318,13 +315,6 @@ http {
         ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
         {{ end }}
 
-        {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
-        # enforce ssl on server side
-        if ($pass_access_scheme = http) {
-            return 301 https://$best_http_host$request_uri;
-        }
-        {{ end }}
-
         {{ if not (empty $location.Redirect.AppRoot)}}
         if ($uri = /) {
             return 302 {{ $location.Redirect.AppRoot }};
@@ -358,6 +348,14 @@ http {
 
         location {{ $path }} {
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $backends $location }}";
+
+            {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
+            # enforce ssl on server side
+            if ($pass_access_scheme = http) {
+                return 301 https://$best_http_host$request_uri;
+            }
+            {{ end }}
+
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Whitelist.CIDR) 0 }}
             if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
@@ -443,6 +441,9 @@ http {
 
             proxy_cookie_domain                     {{ $location.Proxy.CookieDomain }};
             proxy_cookie_path                       {{ $location.Proxy.CookiePath }};
+
+            # In case of errors try the next upstream server before returning an error
+            proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream }}{{ if $cfg.RetryNonIdempotent }} non_idempotent{{ end }};
 
             {{/* rewrite only works if the content is not compressed */}}
             {{ if $location.Redirect.AddBaseURL }}
