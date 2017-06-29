@@ -4,6 +4,11 @@ Changelog
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.9`
 
+*New Features:*
+
+- Add support for arm and ppc64le
+
+
 *Changes:*
 
 - [X] [#548](https://github.com/kubernetes/ingress/pull/548) nginx: support multidomain certificates
@@ -34,8 +39,14 @@ Changelog
 - [X] [#901](https://github.com/kubernetes/ingress/pull/901) [doc] Update NGinX status port to 18080
 - [X] [#902](https://github.com/kubernetes/ingress/pull/902) Always reload after a change in the configuration
 - [X] [#904](https://github.com/kubernetes/ingress/pull/904) Fix nginx sticky sessions
-- [X] [#911](https://github.com/kubernetes/ingress/pull/911) Improve X-Forwarded-Host support 
-
+- [X] [#906](https://github.com/kubernetes/ingress/pull/906) Fix race condition with closed channels
+- [X] [#907](https://github.com/kubernetes/ingress/pull/907) nginx/proxy: allow specifying next upstream behaviour
+- [X] [#910](https://github.com/kubernetes/ingress/pull/910) Feature request: use `X-Forwarded-Host` from the reverse proxy before
+- [X] [#911](https://github.com/kubernetes/ingress/pull/911) Improve X-Forwarded-Host support
+- [X] [#915](https://github.com/kubernetes/ingress/pull/915) Release nginx-slim 0.20
+- [X] [#916](https://github.com/kubernetes/ingress/pull/916) Add arm and ppc64le support
+- [X] [#919](https://github.com/kubernetes/ingress/pull/919) Apply the 'ssl-redirect' annotation per-location
+- [X] [#922](https://github.com/kubernetes/ingress/pull/922) Add example of TLS termination using a classic ELB
 
 ### 0.9-beta.8
 
