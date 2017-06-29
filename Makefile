@@ -61,7 +61,7 @@ controllers:
 
 .PHONY: docker-build
 docker-build:
-	make -C controllers/nginx container
+	make -C controllers/nginx all-container
 
 .PHONY: docker-push
 docker-push:
