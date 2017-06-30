@@ -65,7 +65,7 @@ docker-build:
 
 .PHONY: docker-push
 docker-push:
-	make -C controllers/nginx push
+	make -C controllers/nginx all-push
 
 .PHONY: ginkgo
 ginkgo:
