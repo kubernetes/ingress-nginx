@@ -67,6 +67,10 @@ docker-build:
 docker-push:
 	make -C controllers/nginx all-push
 
+.PHONE: release
+release:
+	make -C controllers/nginx release
+
 .PHONY: ginkgo
 ginkgo:
 	go get github.com/onsi/ginkgo/ginkgo
