@@ -1,5 +1,11 @@
 Changelog
 
+### 0.9-beta.10
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.10`
+
+Fix release 0.9-beta.9
+
 ### 0.9-beta.9
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.9`
