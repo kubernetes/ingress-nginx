@@ -88,13 +88,13 @@ ifeq ($(ARCH), amd64)
 endif
 
 push: .push-$(ARCH)
-.push-$(ARCH): .container-$(ARCH)
+.push-$(ARCH):
 	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
 ifeq ($(ARCH), amd64)
 	$(DOCKER) push $(IMAGE):$(TAG)
 endif
 
-clean: 
+clean:
 	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
 
 build: clean
@@ -123,3 +123,6 @@ cover:
 vet:
 	@echo "+ $@"
 	@go vet $(shell go list ${PKG}/... | grep -v vendor)
+
+release: all-container all-push
+	echo "done"
