@@ -319,4 +319,6 @@ type L4Backend struct {
 	Name      string             `json:"name"`
 	Namespace string             `json:"namespace"`
 	Protocol  api.Protocol       `json:"protocol"`
+	// +optional
+	UseProxyProtocol bool `json:"useProxyProtocol"`
 }
