@@ -320,3 +320,11 @@ type L4Backend struct {
 	Namespace string             `json:"namespace"`
 	Protocol  api.Protocol       `json:"protocol"`
 }
+
+// ControllerPorts describe the ports required to run the Ingress controller
+type ControllerPorts struct {
+	HTTP   int
+	HTTPS  int
+	Status int
+	Health int
+}
