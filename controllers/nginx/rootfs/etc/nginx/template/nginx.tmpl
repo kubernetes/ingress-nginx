@@ -280,7 +280,7 @@ http {
 
     {{/* build all the required rate limit zones. Each annotation requires a dedicated zone */}}
     {{/* 1MB -> 16 thousand 64-byte states or about 8 thousand 128-byte states */}}
-    {{ range $zone := (buildRateLimitZones .Servers) }}
+    {{ range $zone := (buildRateLimitZones $cfg.LimitConnZoneVariable .Servers) }}
     {{ $zone }}
     {{ end }}
 
