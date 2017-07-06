@@ -302,8 +302,8 @@ type Configuration struct {
 
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
-    defIPCIDR := make([]string, 0)
-    defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
+	defIPCIDR := make([]string, 0)
+	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
 		ClientHeaderBufferSize:     "1k",
