@@ -328,7 +328,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 // buildRateLimitZones produces an array of limit_conn_zone in order to allow
 // rate limiting of request. Each Ingress rule could have up to two zones, one
 // for connection limit by IP address and other for limiting request per second
-func buildRateLimitZones(input interface{}) []string {
+func buildRateLimitZones(variable string, input interface{}) []string {
 	zones := sets.String{}
 
 	servers, ok := input.([]*ingress.Server)
@@ -340,7 +340,8 @@ func buildRateLimitZones(input interface{}) []string {
 		for _, loc := range server.Locations {
 
 			if loc.RateLimit.Connections.Limit > 0 {
-				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%vm;",
+				zone := fmt.Sprintf("limit_conn_zone %v zone=%v:%vm;",
+					variable,
 					loc.RateLimit.Connections.Name,
 					loc.RateLimit.Connections.SharedSize)
 				if !zones.Has(zone) {
@@ -349,7 +350,8 @@ func buildRateLimitZones(input interface{}) []string {
 			}
 
 			if loc.RateLimit.RPS.Limit > 0 {
-				zone := fmt.Sprintf("limit_req_zone $binary_remote_addr zone=%v:%vm rate=%vr/s;",
+				zone := fmt.Sprintf("limit_req_zone %v zone=%v:%vm rate=%vr/s;",
+					variable,
 					loc.RateLimit.RPS.Name,
 					loc.RateLimit.RPS.SharedSize,
 					loc.RateLimit.RPS.Limit)

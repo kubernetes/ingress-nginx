@@ -73,6 +73,10 @@ const (
 
 	// Default setting for load balancer algorithm
 	defaultLoadBalancerAlgorithm = "least_conn"
+
+	// Parameters for a shared memory zone that will keep states for various keys.
+	// http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone
+	defaultLimitConnZoneVariable = "$binary_remote_addr"
 )
 
 // Configuration represents the content of nginx.conf file
@@ -298,6 +302,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
 	// Default: 0 (disabled)
 	UpstreamKeepaliveConnections int `json:"upstream-keepalive-connections,omitempty"`
+
+	// Sets the maximum size of the variables hash table.
+	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
+	LimitConnZoneVariable string `json:"limit-conn-zone-variable,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -360,6 +368,7 @@ func NewDefault() Configuration {
 			SkipAccessLogURLs:    []string{},
 		},
 		UpstreamKeepaliveConnections: 0,
+		LimitConnZoneVariable: defaultLimitConnZoneVariable,
 	}
 
 	if glog.V(5) {
