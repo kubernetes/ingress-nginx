@@ -444,6 +444,9 @@ The default mime type list to compress is: `application/atom+xml application/jav
 **worker-processes:** Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). The default of "auto" means number of available CPU cores.
 
 
+**limit-conn-zone-variable:** Sets parameters for a shared memory zone that will keep states for various keys of [limit_conn_zone](http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone). The default of "$binary_remote_addr" variable’s size is always 4 bytes for IPv4 addresses or 16 bytes for IPv6 addresses.
+
+
 ### Default configuration options
 
 The following table shows the options, the default value and a description.
@@ -496,6 +499,7 @@ The following table shows the options, the default value and a description.
 |vts-status-zone-size|10m|
 |whitelist-source-range|permit all|
 |worker-processes|number of CPUs|
+|limit-conn-zone-variable|$binary_remote_addr|
 
 
 ### Websockets

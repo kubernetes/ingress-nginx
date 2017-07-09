@@ -39,7 +39,8 @@
 		"useGzip": true,
 		"useHttp2": true,
 		"vtsStatusZoneSize": "10m",
-		"workerProcesses": 1
+		"workerProcesses": 1,
+		"limitConnZoneVariable": "$the_real_ip"
 	},
 	"customErrors": true,
 	"defResolver": "",
