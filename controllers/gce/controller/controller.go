@@ -18,7 +18,6 @@ package controller
 
 import (
 	"fmt"
-	"net/http"
 	"reflect"
 	"sync"
 	"time"
@@ -37,7 +36,6 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"k8s.io/ingress/controllers/gce/loadbalancers"
-	"k8s.io/ingress/controllers/gce/utils"
 )
 
 var (
@@ -307,9 +305,6 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, nodePorts); err != nil {
 		// TODO: Implement proper backoff for the queue.
 		eventMsg := "GCE"
-		if utils.IsHTTPErrorCode(err, http.StatusForbidden) {
-			eventMsg += " :Quota"
-		}
 		if ingExists {
 			lbc.recorder.Eventf(obj.(*extensions.Ingress), api_v1.EventTypeWarning, eventMsg, err.Error())
 		} else {
