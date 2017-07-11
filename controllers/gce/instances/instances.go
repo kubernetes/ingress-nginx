@@ -63,7 +63,9 @@ func (i *Instances) Init(zl zoneLister) {
 // all of which have the exact same named port.
 func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.InstanceGroup, *compute.NamedPort, error) {
 	igs := []*compute.InstanceGroup{}
-	namedPort := &compute.NamedPort{}
+	namedPort := &compute.NamedPort{Name: fmt.Sprintf("port%v", port), Port: port}
+
+	defer i.snapshotter.Add(name, struct{}{})
 
 	zones, err := i.ListZones()
 	if err != nil {
@@ -79,14 +81,25 @@ func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.Instan
 			if err != nil {
 				return nil, nil, err
 			}
-		} else {
-			glog.V(3).Infof("Instance group %v already exists in zone %v, adding port %d to it", name, zone, port)
 		}
-		defer i.snapshotter.Add(name, struct{}{})
-		namedPort, err = i.cloud.AddPortToInstanceGroup(ig, port)
-		if err != nil {
-			return nil, nil, err
+
+		found := false
+		for _, np := range ig.NamedPorts {
+			if np.Name == namedPort.Name && np.Port == namedPort.Port {
+				glog.V(3).Infof("Instance group %v/%v already has named port %+v", zone, name, np)
+				found = true
+				break
+			}
 		}
+
+		if !found {
+			glog.V(3).Infof("Adding port %d to instance group %v/%v", port, zone, name)
+			namedPort, err = i.cloud.AddPortToInstanceGroup(ig, port)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+
 		igs = append(igs, ig)
 	}
 	return igs, namedPort, nil
