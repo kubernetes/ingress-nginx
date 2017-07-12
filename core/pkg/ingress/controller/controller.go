@@ -42,6 +42,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
 
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
@@ -113,8 +114,8 @@ type GenericController struct {
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
-	// configmapChanged indicates the configmap
-	configmapChanged bool
+	// reloadRequired indicates the configmap
+	reloadRequired bool
 }
 
 // Configuration contains all the settings required by an Ingress controller
@@ -262,7 +263,7 @@ func newIngressController(config *Configuration) *GenericController {
 			if mapKey == ic.cfg.ConfigMapName {
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
 				ic.cfg.Backend.SetConfig(upCmap)
-				ic.configmapChanged = true
+				ic.reloadRequired = true
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
@@ -272,7 +273,7 @@ func newIngressController(config *Configuration) *GenericController {
 				if mapKey == ic.cfg.ConfigMapName {
 					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
 					ic.cfg.Backend.SetConfig(upCmap)
-					ic.configmapChanged = true
+					ic.reloadRequired = true
 				}
 				// updates to configuration configmaps can trigger an update
 				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
@@ -419,7 +420,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		PassthroughBackends: passUpstreams,
 	}
 
-	if !ic.configmapChanged && (ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg)) {
+	if !ic.reloadRequired && (ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg)) {
 		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
 	}
@@ -433,7 +434,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		return err
 	}
 
-	ic.configmapChanged = false
+	ic.reloadRequired = false
 	glog.Infof("ingress backend successfully reloaded...")
 	incReloadCount()
 	setSSLExpireTime(servers)
@@ -1018,55 +1019,52 @@ func (ic *GenericController) createServers(data []interface{},
 			}
 
 			// only add a certificate if the server does not have one previously configured
-			// TODO: TLS without secret?
-			if len(ing.Spec.TLS) > 0 && servers[host].SSLCertificate == "" {
-				tlsSecretName := ""
-				found := false
-				for _, tls := range ing.Spec.TLS {
-					for _, tlsHost := range tls.Hosts {
-						if tlsHost == host {
-							tlsSecretName = tls.SecretName
-							found = true
-							break
-						}
-					}
+			if len(ing.Spec.TLS) == 0 || servers[host].SSLCertificate != "" {
+				continue
+			}
+
+			tlsSecretName := ""
+			found := false
+			for _, tls := range ing.Spec.TLS {
+				if sets.NewString(tls.Hosts...).Has(host) {
+					tlsSecretName = tls.SecretName
+					found = true
+					break
 				}
+			}
 
-				// the current ing.Spec.Rules[].Host doesn't have an entry at
-				// ing.Spec.TLS[].Hosts[], skipping to the next Rule
-				if !found {
-					continue
-				}
+			// the current ing.Spec.Rules[].Host doesn't have an entry at
+			// ing.Spec.TLS[].Hosts[] skipping to the next Rule
+			if !found {
+				continue
+			}
 
-				// Current Host listed on ing.Spec.TLS[].Hosts[]
-				// but TLS[].SecretName is empty; using default cert
-				if tlsSecretName == "" {
-					servers[host].SSLCertificate = defaultPemFileName
-					servers[host].SSLPemChecksum = defaultPemSHA
-					continue
-				}
+			if tlsSecretName == "" {
+				glog.Warningf("host %v is listed on tls section but secretName is empty. Using default cert", host)
+				servers[host].SSLCertificate = defaultPemFileName
+				servers[host].SSLPemChecksum = defaultPemSHA
+				continue
+			}
 
-				key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
-				bc, exists := ic.sslCertTracker.Get(key)
-				if exists {
-					cert := bc.(*ingress.SSLCert)
-					if isHostValid(host, cert) {
-						servers[host].SSLCertificate = cert.PemFileName
-						servers[host].SSLPemChecksum = cert.PemSHA
-						servers[host].SSLExpireTime = cert.ExpireTime
-
-						if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
-							glog.Warningf("ssl certificate for host %v is about to expire in 10 days", host)
-						}
-
-					} else {
-						glog.Warningf("ssl certificate %v does not contain a common name for host %v", key, host)
-					}
-
-					continue
-				}
-
+			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
+			bc, exists := ic.sslCertTracker.Get(key)
+			if !exists {
 				glog.Infof("ssl certificate \"%v\" does not exist in local store", key)
+				continue
+			}
+
+			cert := bc.(*ingress.SSLCert)
+			if !isHostValid(host, cert) {
+				glog.Warningf("ssl certificate %v does not contain a common name for host %v", key, host)
+				continue
+			}
+
+			servers[host].SSLCertificate = cert.PemFileName
+			servers[host].SSLPemChecksum = cert.PemSHA
+			servers[host].SSLExpireTime = cert.ExpireTime
+
+			if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
+				glog.Warningf("ssl certificate for host %v is about to expire in 10 days", host)
 			}
 		}
 	}
