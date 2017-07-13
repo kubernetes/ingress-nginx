@@ -218,6 +218,16 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
 	ServerNameHashBucketSize int `json:"server-name-hash-bucket-size,omitempty"`
 
+	// Size of the bucket for the proxy headers hash tables
+	// http://nginx.org/en/docs/hash.html
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size
+	ProxyHeadersHashMaxSize int `json:"proxy-headers-hash-max-size,omitempty"`
+
+	// Maximum size of the bucket for the proxy headers hash tables
+	// http://nginx.org/en/docs/hash.html
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size
+	ProxyHeadersHashBucketSize int `json:"proxy-headers-hash-bucket-size,omitempty"`
+
 	// Enables or disables emitting nginx version in error messages and in the “Server” response header field.
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens
 	// Default: true
@@ -340,6 +350,8 @@ func NewDefault() Configuration {
 		MapHashBucketSize:        64,
 		ProxyRealIPCIDR:          defIPCIDR,
 		ServerNameHashMaxSize:    1024,
+		ProxyHeadersHashMaxSize:  512,
+		ProxyHeadersHashBucketSize: 64,
 		ShowServerTokens:         true,
 		SSLBufferSize:            sslBufferSize,
 		SSLCiphers:               sslCiphers,

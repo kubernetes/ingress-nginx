@@ -365,6 +365,13 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket
 **server-name-hash-max-size:** Sets the maximum size of the [server names hash tables](http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) used in server names, map directive’s values, MIME types, names of request header strings, etc.
 http://nginx.org/en/docs/hash.html
 
+**proxy-headers-hash-bucket-size:** Sets the size of the bucket for the proxy headers hash tables.
+http://nginx.org/en/docs/hash.html
+https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size
+
+**proxy-headers-hash-max-size:** Sets the maximum size of the proxy headers hash tables.
+http://nginx.org/en/docs/hash.html
+https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size
 
 **server-tokens:** Send NGINX Server header in responses and display NGINX version in error pages. Enabled by default.
 
