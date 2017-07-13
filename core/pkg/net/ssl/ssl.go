@@ -37,6 +37,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/core/pkg/ingress"
 )
 
@@ -104,19 +105,27 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		return nil, err
 	}
 
-	cn := []string{pemCert.Subject.CommonName}
-	if len(pemCert.DNSNames) > 0 {
-		cn = append(cn, pemCert.DNSNames...)
+	cn := sets.NewString(pemCert.Subject.CommonName)
+	for _, dns := range pemCert.DNSNames {
+		if !cn.Has(dns) {
+			cn.Insert(dns)
+		}
 	}
 
 	if len(pemCert.Extensions) > 0 {
+		glog.V(3).Info("parsing ssl certificate extensions")
 		for _, ext := range getExtension(pemCert, oidExtensionSubjectAltName) {
 			dns, _, _, err := parseSANExtension(ext.Value)
 			if err != nil {
 				glog.Warningf("unexpected error parsing certificate extensions: %v", err)
 				continue
 			}
-			cn = append(cn, dns...)
+
+			for _, dns := range dns {
+				if !cn.Has(dns) {
+					cn.Insert(dns)
+				}
+			}
 		}
 	}
 
@@ -155,7 +164,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 			CAFileName:  pemFileName,
 			PemFileName: pemFileName,
 			PemSHA:      PemSHA1(pemFileName),
-			CN:          cn,
+			CN:          cn.List(),
 			ExpireTime:  pemCert.NotAfter,
 		}, nil
 	}
@@ -163,7 +172,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 	return &ingress.SSLCert{
 		PemFileName: pemFileName,
 		PemSHA:      PemSHA1(pemFileName),
-		CN:          cn,
+		CN:          cn.List(),
 		ExpireTime:  pemCert.NotAfter,
 	}, nil
 }
