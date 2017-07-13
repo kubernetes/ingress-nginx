@@ -76,6 +76,9 @@ http {
     server_names_hash_bucket_size   {{ $cfg.ServerNameHashBucketSize }};
     map_hash_bucket_size            {{ $cfg.MapHashBucketSize }};
 
+    proxy_headers_hash_max_size     {{ $cfg.ProxyHeadersHashMaxSize }};
+    proxy_headers_hash_bucket_size  {{ $cfg.ProxyHeadersHashBucketSize }};
+
     variables_hash_bucket_size      {{ $cfg.VariablesHashBucketSize }};
     variables_hash_max_size         {{ $cfg.VariablesHashMaxSize }};
 
