@@ -93,6 +93,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		UpdateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the 
 		ingress controller should update the Ingress status IP/hostname when the controller 
 		is being stopped. Default is true`)
+
+		SortBackends = flags.Bool("sort-backends", false,
+			`Defines if backends and it's endpoints should be sorted`)
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
@@ -169,6 +172,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		Backend:                 backend,
 		ForceNamespaceIsolation: *forceIsolation,
 		UpdateStatusOnShutdown:  *UpdateStatusOnShutdown,
+		SortBackends:            *SortBackends,
 	}
 
 	ic := newIngressController(config)

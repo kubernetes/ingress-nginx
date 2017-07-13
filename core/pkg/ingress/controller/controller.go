@@ -146,6 +146,7 @@ type Configuration struct {
 	UpdateStatus           bool
 	ElectionID             string
 	UpdateStatusOnShutdown bool
+	SortBackends           bool
 }
 
 // newIngressController creates an Ingress controller
@@ -737,6 +738,9 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 		}
 		aUpstreams = append(aUpstreams, value)
 	}
+	if ic.cfg.SortBackends {
+		sort.Sort(ingress.BackendByNameServers(aUpstreams))
+	}
 
 	aServers := make([]*ingress.Server, 0, len(servers))
 	for _, value := range servers {
@@ -886,15 +890,20 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 				glog.Warningf("service %v does not have any active endpoints", svcKey)
 			}
 
+			if ic.cfg.SortBackends {
+				sort.Sort(ingress.EndpointByAddrPort(endps))
+			}
 			upstreams = append(upstreams, endps...)
 			break
 		}
 	}
 
-	rand.Seed(time.Now().UnixNano())
-	for i := range upstreams {
-		j := rand.Intn(i + 1)
-		upstreams[i], upstreams[j] = upstreams[j], upstreams[i]
+	if !ic.cfg.SortBackends {
+		rand.Seed(time.Now().UnixNano())
+		for i := range upstreams {
+			j := rand.Intn(i + 1)
+			upstreams[i], upstreams[j] = upstreams[j], upstreams[i]
+		}
 	}
 
 	return upstreams, nil
