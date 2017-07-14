@@ -26,7 +26,7 @@ spec:
                valueFrom:
                  fieldRef:
                    fieldPath: metadata.name
-               name: POD_NAMESPACE
+             - name: POD_NAMESPACE
                valueFrom:
                  fieldRef:
                    fieldPath: metadata.namespace
