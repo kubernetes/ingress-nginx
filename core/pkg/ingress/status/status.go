@@ -108,7 +108,7 @@ func (s statusSync) Shutdown() {
 
 	glog.Infof("updating status of Ingress rules (remove)")
 
-	addrs, err := s.runningAddresess()
+	addrs, err := s.runningAddresses()
 	if err != nil {
 		glog.Errorf("error obtaining running IPs: %v", addrs)
 		return
@@ -157,7 +157,7 @@ func (s *statusSync) sync(key interface{}) error {
 		return nil
 	}
 
-	addrs, err := s.runningAddresess()
+	addrs, err := s.runningAddresses()
 	if err != nil {
 		return err
 	}
@@ -213,9 +213,9 @@ func NewStatusSyncer(config Config) Sync {
 	return st
 }
 
-// runningAddresess returns a list of IP addresses and/or FQDN where the
+// runningAddresses returns a list of IP addresses and/or FQDN where the
 // ingress controller is currently running
-func (s *statusSync) runningAddresess() ([]string, error) {
+func (s *statusSync) runningAddresses() ([]string, error) {
 	if s.PublishService != "" {
 		ns, name, _ := k8s.ParseNameNS(s.PublishService)
 		svc, err := s.Client.Core().Services(ns).Get(name, meta_v1.GetOptions{})
