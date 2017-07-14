@@ -297,11 +297,27 @@ func TestGetPodDetails(t *testing.T) {
 		t.Errorf("expected an error but returned nil")
 	}
 
-	// POD not exist
-	os.Setenv("POD_NAME", "testpod")
+	// POD_NAME not exist
+	os.Setenv("POD_NAME", "")
 	os.Setenv("POD_NAMESPACE", api.NamespaceDefault)
 	_, err2 := GetPodDetails(testclient.NewSimpleClientset())
 	if err2 == nil {
+		t.Errorf("expected an error but returned nil")
+	}
+
+	// POD_NAMESPACE not exist
+	os.Setenv("POD_NAME", "testpod")
+	os.Setenv("POD_NAMESPACE", "")
+	_, err3 := GetPodDetails(testclient.NewSimpleClientset())
+	if err3 == nil {
+		t.Errorf("expected an error but returned nil")
+	}
+
+	// POD not exist
+	os.Setenv("POD_NAME", "testpod")
+	os.Setenv("POD_NAMESPACE", api.NamespaceDefault)
+	_, err4 := GetPodDetails(testclient.NewSimpleClientset())
+	if err4 == nil {
 		t.Errorf("expected an error but returned nil")
 	}
 
@@ -331,8 +347,8 @@ func TestGetPodDetails(t *testing.T) {
 			},
 		}}})
 
-	epi, err3 := GetPodDetails(fkClient)
-	if err3 != nil {
+	epi, err5 := GetPodDetails(fkClient)
+	if err5 != nil {
 		t.Errorf("expected a PodInfo but returned error")
 		return
 	}
