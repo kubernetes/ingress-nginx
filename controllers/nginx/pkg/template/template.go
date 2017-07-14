@@ -185,8 +185,7 @@ func buildResolvers(a interface{}) string {
 	return strings.Join(r, " ")
 }
 
-// buildLocation produces the location string, if the ingress has redirects
-// (specified through the ingress.kubernetes.io/rewrite-to annotation)
+// Helper to create the correct path for location blocks
 func buildLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -194,10 +193,19 @@ func buildLocation(input interface{}) string {
 	}
 
 	path := location.Path
+
+	// Although per spec all paths should be treated as regex
+	// returning slash directly will result in a fall through catchall
+	// prefix style location block instead which will match any path
+	// for which a regex is not defined
+	if path == slash {
+		return slash
+	}
+
+	// When rewrite is enabled via the rewrite target annotation
+	// (ingress.kubernetes.io/rewrite-target) this allows the baseuri to be
+	// appended to the path
 	if len(location.Redirect.Target) > 0 && location.Redirect.Target != path {
-		if path == slash {
-			return fmt.Sprintf("~* %s", path)
-		}
 		// baseuri regex will parse basename from the given location
 		baseuri := `(?<baseuri>.*)`
 		if !strings.HasSuffix(path, slash) {
@@ -207,7 +215,10 @@ func buildLocation(input interface{}) string {
 		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
 	}
 
-	return path
+	// Return an anchored regex location block, although not identical to the
+	// spec due to the type of regex used this is the closest nginx equivalent
+	// to the intended regex based path as defined in HTTPIngressPath
+	return fmt.Sprintf(`~* ^%s`, path)
 }
 
 func buildAuthLocation(input interface{}) string {

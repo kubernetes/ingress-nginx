@@ -42,7 +42,7 @@ var (
 		AddBaseURL bool
 	}{
 		"invalid redirect / to /": {"/", "/", "/", "proxy_pass http://upstream-name;", false},
-		"redirect / to /jenkins": {"/", "/jenkins", "~* /",
+		"redirect / to /jenkins": {"/", "/jenkins", "/",
 			`
 	rewrite /(.*) /jenkins/$1 break;
 	proxy_pass http://upstream-name;
@@ -60,7 +60,7 @@ var (
 	rewrite /something-complex/(.*) /not-root/$1 break;
 	proxy_pass http://upstream-name;
 	`, false},
-		"redirect / to /jenkins and rewrite": {"/", "/jenkins", "~* /", `
+		"redirect / to /jenkins and rewrite": {"/", "/jenkins", "/", `
 	rewrite /(.*) /jenkins/$1 break;
 	proxy_pass http://upstream-name;
 	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/$baseuri">' r;
