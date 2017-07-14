@@ -28,7 +28,8 @@ RUN echo "Yes, do as I say!" | apt-get purge \
     ncurses-base \
     ncurses-bin \
     locales \
-    tzdata
+    tzdata \
+    systemd
 
 # cleanup
 RUN apt-get autoremove -y && \
