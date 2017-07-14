@@ -343,7 +343,7 @@ func TestKeyfunc(t *testing.T) {
 func TestRunningAddresessWithPublishService(t *testing.T) {
 	fk := buildStatusSync()
 
-	r, _ := fk.runningAddresess()
+	r, _ := fk.runningAddresses()
 	if r == nil {
 		t.Fatalf("returned nil but expected valid []string")
 	}
@@ -357,7 +357,7 @@ func TestRunningAddresessWithPods(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishService = ""
 
-	r, _ := fk.runningAddresess()
+	r, _ := fk.runningAddresses()
 	if r == nil {
 		t.Fatalf("returned nil but expected valid []string")
 	}
