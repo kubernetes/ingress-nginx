@@ -1,5 +1,35 @@
 Changelog
 
+Changelog
+
+### 0.9-beta.11
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.11`
+
+Fixes NGINX [CVE-2017-7529](http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-7529)
+
+*Changes:*
+
+- [X] [#659](https://github.com/kubernetes/ingress/pull/659) [nginx] TCP configmap should allow listen proxy_protocol per service
+- [X] [#730](https://github.com/kubernetes/ingress/pull/730) Add support for add_headers
+- [X] [#808](https://github.com/kubernetes/ingress/pull/808) HTTP->HTTPS redirect does not work with use-proxy-protocol: "true"
+- [X] [#921](https://github.com/kubernetes/ingress/pull/921) Make proxy-real-ip-cidr a comma separated list
+- [X] [#930](https://github.com/kubernetes/ingress/pull/930) Add support for proxy protocol in TCP services
+- [X] [#933](https://github.com/kubernetes/ingress/pull/933) Lint code
+- [X] [#937](https://github.com/kubernetes/ingress/pull/937) Fix lint code errors
+- [X] [#940](https://github.com/kubernetes/ingress/pull/940) Sets parameters for a shared memory zone of limit_conn_zone
+- [X] [#949](https://github.com/kubernetes/ingress/pull/949) fix nginx version to 1.13.3 to fix integer overflow
+- [X] [#956](https://github.com/kubernetes/ingress/pull/956) Simplify handling of ssl certificates
+- [X] [#958](https://github.com/kubernetes/ingress/pull/958) Release ubuntu-slim:0.13
+- [X] [#959](https://github.com/kubernetes/ingress/pull/959) Release nginx-slim 0.21
+- [X] [#960](https://github.com/kubernetes/ingress/pull/960) Update nginx in ingress controller
+- [X] [#964](https://github.com/kubernetes/ingress/pull/964) Support for proxy_headers_hash_bucket_size and proxy_headers_hash_max_size
+- [X] [#966](https://github.com/kubernetes/ingress/pull/966) Fix error checking for pod name & NS
+- [X] [#967](https://github.com/kubernetes/ingress/pull/967) Fix runningAddresses typo
+- [X] [#968](https://github.com/kubernetes/ingress/pull/968) Fix missing hyphen in yaml for nginx RBAC example
+- [X] [#973](https://github.com/kubernetes/ingress/pull/973) check number of servers in configuration comparator
+
+
 ### 0.9-beta.10
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.10`
