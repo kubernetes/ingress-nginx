@@ -47,7 +47,7 @@ nginx-ingress-controller   1         1         1         3m
 $ kubectl -n kube-system describe rc nginx-ingress-controller
 Name:           nginx-ingress-controller
 Namespace:      kube-system
-Image(s):       gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.10
+Image(s):       gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.11
 Selector:       k8s-app=nginx-tcp-ingress-lb
 Labels:         k8s-app=nginx-ingress-lb
 Annotations:    <none>

@@ -3,7 +3,7 @@ all: push
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.9.0-beta.10
+TAG?=0.9.0-beta.11
 REGISTRY?=gcr.io/google_containers
 GOOS?=linux
 DOCKER?=gcloud docker --
