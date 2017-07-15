@@ -64,6 +64,10 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
+	if len(c1.Servers) != len(c2.Servers) {
+		return false
+	}
+
 	for _, c1s := range c1.Servers {
 		found := false
 		for _, c2s := range c2.Servers {
