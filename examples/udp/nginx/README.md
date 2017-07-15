@@ -53,7 +53,7 @@ nginx-udp-ingress-controller   1         1         1         13m
 $ kubectl -n kube-system describe rc nginx-udp-ingress-controller
 Name:           nginx-udp-ingress-controller
 Namespace:      kube-system
-Image(s):       gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.10
+Image(s):       gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.11
 Selector:       k8s-app=nginx-udp-ingress-lb
 Labels:         k8s-app=nginx-udp-ingress-lb
 Annotations:    <none>
