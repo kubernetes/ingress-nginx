@@ -790,6 +790,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 		secUpstream := ic.annotations.SecureUpstream(ing)
 		hz := ic.annotations.HealthCheck(ing)
+		serviceUpstream := ic.annotations.ServiceUpstream(ing)
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -800,13 +801,27 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 			glog.V(3).Infof("creating upstream %v", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
-
 			svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName)
-			endps, err := ic.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String(), hz)
-			upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
-			if err != nil {
-				glog.Warningf("error creating upstream %v: %v", defBackend, err)
+
+			// Add the service cluster endpoint as the upstream instead of individual endpoints
+			// if the serviceUpstream annotation is enabled
+			if serviceUpstream {
+				endpoint, err := ic.getServiceClusterEndpoint(svcKey, ing.Spec.Backend)
+				if err != nil {
+					glog.Errorf("Failed to get service cluster endpoint for service %s: %v", svcKey, err)
+				} else {
+					upstreams[defBackend].Endpoints = []ingress.Endpoint{endpoint}
+				}
 			}
+
+			if len(upstreams[defBackend].Endpoints) == 0 {
+				endps, err := ic.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String(), hz)
+				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
+				if err != nil {
+					glog.Warningf("error creating upstream %v: %v", defBackend, err)
+				}
+			}
+
 		}
 
 		for _, rule := range ing.Spec.Rules {
@@ -835,12 +850,26 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 				}
 
 				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
-				endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
-				if err != nil {
-					glog.Warningf("error obtaining service endpoints: %v", err)
-					continue
+
+				// Add the service cluster endpoint as the upstream instead of individual endpoints
+				// if the serviceUpstream annotation is enabled
+				if serviceUpstream {
+					endpoint, err := ic.getServiceClusterEndpoint(svcKey, &path.Backend)
+					if err != nil {
+						glog.Errorf("Failed to get service cluster endpoint for service %s: %v", svcKey, err)
+					} else {
+						upstreams[name].Endpoints = []ingress.Endpoint{endpoint}
+					}
 				}
-				upstreams[name].Endpoints = endp
+
+				if len(upstreams[name].Endpoints) == 0 {
+					endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
+					if err != nil {
+						glog.Warningf("error obtaining service endpoints: %v", err)
+						continue
+					}
+					upstreams[name].Endpoints = endp
+				}
 
 				s, exists, err := ic.svcLister.Store.GetByKey(svcKey)
 				if err != nil {
@@ -859,6 +888,24 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 	}
 
 	return upstreams
+}
+
+func (ic *GenericController) getServiceClusterEndpoint(svcKey string, backend *extensions.IngressBackend) (endpoint ingress.Endpoint, err error) {
+	svcObj, svcExists, err := ic.svcLister.Store.GetByKey(svcKey)
+
+	if !svcExists {
+		return endpoint, fmt.Errorf("service %v does not exist", svcKey)
+	}
+
+	svc := svcObj.(*api.Service)
+	if svc.Spec.ClusterIP == "" {
+		return endpoint, fmt.Errorf("No ClusterIP found for service %s", svcKey)
+	}
+
+	endpoint.Address = svc.Spec.ClusterIP
+	endpoint.Port = backend.ServicePort.String()
+
+	return endpoint, err
 }
 
 // serviceEndpoints returns the upstream servers (endpoints) associated

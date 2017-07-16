@@ -57,6 +57,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
+|[ingress.kubernetes.io/service-upstream](#service-upstream)|true or false|
 |[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 |[ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
@@ -213,6 +214,17 @@ This is possible thanks to the [ngx_stream_ssl_preread_module](https://nginx.org
 
 By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to `https`.
 
+### Service Upstream
+
+By default the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration. This annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port. This can be desirable for things like zero-downtime deployments as it reduces the need to reload NGINX configuration when Pods come up and down. See issue [#257](https://github.com/kubernetes/ingress/issues/257).
+
+
+#### Known Issues
+
+If the `service-upstream` annotation is specified the following things should be taken into consideration:
+
+* Sticky Sessions will not work as only round-robin load balancing is supported. 
+* The `proxy_next_upstream` directive will not have any effect meaning on error the request will not be dispatched to another upstream.
 
 ### Server-side HTTPS enforcement through redirect
 
