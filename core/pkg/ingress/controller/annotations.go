@@ -31,6 +31,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
+	"k8s.io/ingress/core/pkg/ingress/annotations/serviceupstream"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sessionaffinity"
 	"k8s.io/ingress/core/pkg/ingress/annotations/snippet"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
@@ -64,6 +65,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"RateLimit":            ratelimit.NewParser(),
 			"Redirect":             rewrite.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
+			"ServiceUpstream":      serviceupstream.NewParser(),
 			"SessionAffinity":      sessionaffinity.NewParser(),
 			"SSLPassthrough":       sslpassthrough.NewParser(),
 			"ConfigurationSnippet": snippet.NewParser(),
@@ -104,7 +106,13 @@ const (
 	healthCheck     = "HealthCheck"
 	sslPassthrough  = "SSLPassthrough"
 	sessionAffinity = "SessionAffinity"
+	serviceUpstream = "ServiceUpstream"
 )
+
+func (e *annotationExtractor) ServiceUpstream(ing *extensions.Ingress) bool {
+	val, _ := e.annotations[serviceUpstream].Parse(ing)
+	return val.(bool)
+}
 
 func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) *secureupstream.Secure {
 	val, err := e.annotations[secureUpstream].Parse(ing)
