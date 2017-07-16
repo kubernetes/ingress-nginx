@@ -18,7 +18,7 @@ package backends
 
 import (
 	compute "google.golang.org/api/compute/v1"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
+	api_v1 "k8s.io/api/core/v1"
 )
 
 // ProbeProvider retrieves a probe struct given a nodePort
