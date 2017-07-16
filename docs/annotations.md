@@ -16,10 +16,10 @@ Key:
 
 | Name | Meaning
 | --- | ---
-| `ssl-passthrough` | Pass TLS connections directly to backend; do not offload.  Default `false`.  (nginx)
+| `ssl-passthrough` | Pass TLS connections directly to backend; do not offload.  Default `false`.  (nginx, haproxy)
 | `ssl-redirect` | Redirect non-TLS requests to TLS when TLS is enabled.  Default `true`.  (nginx, haproxy, trafficserver)
 | `force-ssl-redirect` | Redirect non-TLS requests to TLS even when TLS is not configured.  Default `false`.  (nginx, trafficserver).
-| `secure-backends` | Use TLS to communicate with origin (pods).  Default `false`. (nginx, trafficserver)
+| `secure-backends` | Use TLS to communicate with origin (pods).  Default `false`. (nginx, haproxy, trafficserver)
 | `kubernetes.io/ingress.allow-http` | Whether to accept non-TLS HTTP connections.  (gce)
 | `hsts-max-age` | Set an HSTS header with this lifetime. (trafficserver)
 | `hsts-include-subdomains` | Add includeSubdomains to the HSTS header. (trafficserver)
@@ -40,7 +40,7 @@ Key:
 
 | Name | Meaning
 | --- | ---
-| `app-root` | Redirect requests without a path (i.e., for `/`) to this location. (nginx, trafficserver)
+| `app-root` | Redirect requests without a path (i.e., for `/`) to this location. (nginx, haproxy, trafficserver)
 | `rewrite-target` | Replace matched Ingress `path` with this value. (nginx, trafficserver)
 | `add-base-url` | Add `<base>` tag to HTML. (nginx)
 | `preserve-host` | Whether to pass the client request host (`true`) or the origin hostname (`false`) in the HTTP Host field.  (trafficserver)
@@ -56,7 +56,7 @@ Key:
 | `affinity` | Specify a method to stick clients to origins across requests.  Found in `nginx`, where the only supported value is `cookie`. (nginx) 
 | `session-cookie-name` | When `affinity` is set to `cookie`, the name of the cookie to use. (nginx) 
 | `session-cookie-hash` | When `affinity` is set to `cookie`, the hash algorithm used: `md5`, `sha`, `index`. (nginx) 
-| `proxy-body-size` | Maximum request body size. (nginx)
+| `proxy-body-size` | Maximum request body size. (nginx, haproxy)
 | `follow-redirects` | Follow HTTP redirects in the response and deliver the redirect target to the client.  (trafficserver)
 
 [1] The documentation for the `nginx` controller says that only one of `limit-connections` or `limit-rps` may be specified; it's not clear why this is.
