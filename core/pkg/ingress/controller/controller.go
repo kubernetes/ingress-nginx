@@ -146,6 +146,8 @@ type Configuration struct {
 	UpdateStatus           bool
 	ElectionID             string
 	UpdateStatusOnShutdown bool
+
+	ControllerPorts ingress.ControllerPorts
 }
 
 // newIngressController creates an Ingress controller

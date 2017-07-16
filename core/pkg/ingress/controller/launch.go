@@ -90,9 +90,14 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 			`Force namespace isolation. This flag is required to avoid the reference of secrets or 
 		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
 
-		UpdateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the 
+		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the 
 		ingress controller should update the Ingress status IP/hostname when the controller 
 		is being stopped. Default is true`)
+
+		httpPort  = flags.Int("http-port", 80, `Indicates the TCP port to use for HTTP traffic`)
+		httpsPort = flags.Int("https-port", 443, `Indicates the TCP port to use for HTTPS traffic`)
+
+		statusPort = flags.Int("https-port", 18080, `Indicates the TCP port to use for exposing the status of the backend`)
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
@@ -151,6 +156,13 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		glog.Errorf("Failed to mkdir SSL directory: %v", err)
 	}
 
+	ports := ingress.ControllerPorts{
+		HTTP:   *httpPort,
+		HTTPS:  *httpsPort,
+		Health: *healthzPort,
+		Status: *statusPort,
+	}
+
 	config := &Configuration{
 		UpdateStatus:            *updateStatus,
 		ElectionID:              *electionID,
@@ -168,7 +180,8 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		PublishService:          *publishSvc,
 		Backend:                 backend,
 		ForceNamespaceIsolation: *forceIsolation,
-		UpdateStatusOnShutdown:  *UpdateStatusOnShutdown,
+		UpdateStatusOnShutdown:  *updateStatusOnShutdown,
+		ControllerPorts:         ports,
 	}
 
 	ic := newIngressController(config)

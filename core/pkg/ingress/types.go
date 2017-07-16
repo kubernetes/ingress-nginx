@@ -322,3 +322,11 @@ type L4Backend struct {
 	// +optional
 	UseProxyProtocol bool `json:"useProxyProtocol"`
 }
+
+// ControllerPorts describe the ports required to run the Ingress controller
+type ControllerPorts struct {
+	HTTP   int
+	HTTPS  int
+	Status int
+	Health int
+}
