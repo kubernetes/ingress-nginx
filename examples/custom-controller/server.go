@@ -24,7 +24,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	api "k8s.io/client-go/pkg/api/v1"
+	api "k8s.io/api/core/v1"
 
 	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
