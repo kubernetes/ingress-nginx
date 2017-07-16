@@ -130,7 +130,7 @@ The secret must be created in the same namespace as the Ingress rule.
 ingress.kubernetes.io/auth-realm: "realm string"
 ```
 
-Please check the [auth](/examples/auth/nginx/README.md) example.
+Please check the [auth](/examples/auth/basic/nginx/README.md) example.
 
 ### Certificate Authentication
 
