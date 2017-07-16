@@ -23,12 +23,12 @@ import (
 	"testing"
 	"time"
 
+	api_v1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	cache_store "k8s.io/ingress/core/pkg/ingress/store"
