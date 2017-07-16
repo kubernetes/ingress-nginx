@@ -20,8 +20,11 @@ import (
 	"net/http"
 )
 
-func newDelegator(w http.ResponseWriter) delegator {
-	d := &responseWriterDelegator{ResponseWriter: w}
+func newDelegator(w http.ResponseWriter, observeWriteHeaderFunc func(int)) delegator {
+	d := &responseWriterDelegator{
+		ResponseWriter:     w,
+		observeWriteHeader: observeWriteHeaderFunc,
+	}
 
 	_, cn := w.(http.CloseNotifier)
 	_, fl := w.(http.Flusher)
