@@ -62,6 +62,8 @@ type Config struct {
 
 	DefaultIngressClass string
 	IngressClass        string
+
+	CustomIngressStatus func(*extensions.Ingress) []api_v1.LoadBalancerIngress
 }
 
 // statusSync keeps the status IP in each Ingress rule updated executing a periodic check
@@ -298,6 +300,11 @@ func (s *statusSync) updateStatus(newIPs []api_v1.LoadBalancerIngress) {
 			if err != nil {
 				glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
 				return
+			}
+
+			addrs := s.CustomIngressStatus(currIng)
+			if addrs != nil {
+				newIPs = addrs
 			}
 
 			curIPs := currIng.Status.LoadBalancer.Ingress
