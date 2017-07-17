@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apiserver/pkg/server/healthz"
 	api "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
@@ -92,6 +93,10 @@ type Controller interface {
 	OverrideFlags(*pflag.FlagSet)
 	// DefaultIngressClass just return the default ingress class
 	DefaultIngressClass() string
+	// UpdateIngressStatus custom callback used to update the status in an Ingress rule
+	// This allows custom implementations
+	// If the function returns nil the standard functions will be executed.
+	UpdateIngressStatus(*extensions.Ingress) []api.LoadBalancerIngress
 }
 
 // StoreLister returns the configured stores for ingresses, services,

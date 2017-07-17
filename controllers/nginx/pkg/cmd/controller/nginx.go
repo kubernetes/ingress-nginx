@@ -35,6 +35,7 @@ import (
 
 	proxyproto "github.com/armon/go-proxyproto"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
+	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
@@ -294,6 +295,11 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 // ConfigureFlags allow to configure more flags before the parsing of
 // command line arguments
 func (n *NGINXController) ConfigureFlags(flags *pflag.FlagSet) {
+}
+
+// UpdateIngressStatus custom Ingress status update
+func (n *NGINXController) UpdateIngressStatus(*extensions.Ingress) []api_v1.LoadBalancerIngress {
+	return nil
 }
 
 // OverrideFlags customize NGINX controller flags
