@@ -443,6 +443,7 @@ func (b *Backends) Status(name string) string {
 }
 
 func applyLegacyHCToHC(existing *compute.HttpHealthCheck, hc *healthchecks.HealthCheck) {
+	hc.Description = existing.Description
 	hc.CheckIntervalSec = existing.CheckIntervalSec
 	hc.HealthyThreshold = existing.HealthyThreshold
 	hc.Host = existing.Host
