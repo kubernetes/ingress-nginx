@@ -18,17 +18,16 @@ package firewalls
 
 import (
 	"fmt"
-	"strconv"
 
 	compute "google.golang.org/api/compute/v1"
-	netset "k8s.io/kubernetes/pkg/util/net/sets"
 
 	"k8s.io/ingress/controllers/gce/utils"
 )
 
 type fakeFirewallsProvider struct {
-	fw    map[string]*compute.Firewall
-	namer *utils.Namer
+	fw         map[string]*compute.Firewall
+	namer      *utils.Namer
+	networkUrl string
 }
 
 // NewFakeFirewallsProvider creates a fake for firewall rules.
@@ -39,65 +38,49 @@ func NewFakeFirewallsProvider(namer *utils.Namer) *fakeFirewallsProvider {
 	}
 }
 
-func (f *fakeFirewallsProvider) GetFirewall(prefixedName string) (*compute.Firewall, error) {
-	rule, exists := f.fw[prefixedName]
+func (ff *fakeFirewallsProvider) GetFirewall(prefixedName string) (*compute.Firewall, error) {
+	rule, exists := ff.fw[prefixedName]
 	if exists {
 		return rule, nil
 	}
 	return nil, utils.FakeGoogleAPINotFoundErr()
 }
 
-func (f *fakeFirewallsProvider) CreateFirewall(name, msgTag string, srcRange netset.IPNet, ports []int64, hosts []string) error {
-	prefixedName := f.namer.FrName(name)
-	strPorts := []string{}
-	for _, p := range ports {
-		strPorts = append(strPorts, strconv.FormatInt(p, 10))
+func (ff *fakeFirewallsProvider) CreateFirewall(f *compute.Firewall) error {
+	if _, exists := ff.fw[f.Name]; exists {
+		return fmt.Errorf("firewall rule %v already exists", f.Name)
 	}
-	if _, exists := f.fw[prefixedName]; exists {
-		return fmt.Errorf("firewall rule %v already exists", prefixedName)
-	}
-
-	f.fw[prefixedName] = &compute.Firewall{
-		// To accurately mimic the cloudprovider we need to add the k8s-fw
-		// prefix to the given rule name.
-		Name:         prefixedName,
-		SourceRanges: srcRange.StringSlice(),
-		Allowed:      []*compute.FirewallAllowed{{Ports: strPorts}},
-		TargetTags:   hosts, // WARNING: This is actually not correct, but good enough for testing this package
-	}
+	ff.fw[f.Name] = f
 	return nil
 }
 
-func (f *fakeFirewallsProvider) DeleteFirewall(name string) error {
+func (ff *fakeFirewallsProvider) DeleteFirewall(name string) error {
 	// We need the full name for the same reason as CreateFirewall.
-	prefixedName := f.namer.FrName(name)
-	_, exists := f.fw[prefixedName]
+	prefixedName := ff.namer.FrName(name)
+	_, exists := ff.fw[prefixedName]
 	if !exists {
 		return utils.FakeGoogleAPINotFoundErr()
 	}
 
-	delete(f.fw, prefixedName)
+	delete(ff.fw, prefixedName)
 	return nil
 }
 
-func (f *fakeFirewallsProvider) UpdateFirewall(name, msgTag string, srcRange netset.IPNet, ports []int64, hosts []string) error {
-	strPorts := []string{}
-	for _, p := range ports {
-		strPorts = append(strPorts, strconv.FormatInt(p, 10))
-	}
-
+func (ff *fakeFirewallsProvider) UpdateFirewall(f *compute.Firewall) error {
 	// We need the full name for the same reason as CreateFirewall.
-	prefixedName := f.namer.FrName(name)
-	_, exists := f.fw[prefixedName]
+	_, exists := ff.fw[f.Name]
 	if !exists {
-		return fmt.Errorf("update failed for rule %v, srcRange %v ports %v, rule not found", prefixedName, srcRange, ports)
+		return fmt.Errorf("update failed for rule %v, srcRange %v ports %+v, rule not found", f.Name, f.SourceRanges, f.Allowed)
 	}
 
-	f.fw[prefixedName] = &compute.Firewall{
-		Name:         name,
-		SourceRanges: srcRange.StringSlice(),
-		Allowed:      []*compute.FirewallAllowed{{Ports: strPorts}},
-		TargetTags:   hosts, // WARNING: This is actually not correct, but good enough for testing this package
-	}
+	ff.fw[f.Name] = f
 	return nil
+}
+
+func (ff *fakeFirewallsProvider) NetworkURL() string {
+	return ff.networkUrl
+}
+
+func (ff *fakeFirewallsProvider) GetNodeTags(nodeNames []string) ([]string, error) {
+	return nodeNames, nil
 }

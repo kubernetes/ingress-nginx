@@ -132,10 +132,10 @@ func (f *FakeLoadBalancers) CreateGlobalForwardingRule(proxyLink, ip, name, port
 }
 
 // SetProxyForGlobalForwardingRule fakes setting a global forwarding rule.
-func (f *FakeLoadBalancers) SetProxyForGlobalForwardingRule(fw *compute.ForwardingRule, proxyLink string) error {
+func (f *FakeLoadBalancers) SetProxyForGlobalForwardingRule(forwardingRuleName, proxyLink string) error {
 	f.calls = append(f.calls, "SetProxyForGlobalForwardingRule")
 	for i := range f.Fw {
-		if f.Fw[i].Name == fw.Name {
+		if f.Fw[i].Name == forwardingRuleName {
 			f.Fw[i].Target = proxyLink
 		}
 	}
@@ -397,20 +397,16 @@ func (f *FakeLoadBalancers) CheckURLMap(t *testing.T, l7 *L7, expectedMap map[st
 
 // Static IP fakes
 
-// ReserveGlobalStaticIP fakes out static IP reservation.
-func (f *FakeLoadBalancers) ReserveGlobalStaticIP(name, IPAddress string) (*compute.Address, error) {
-	f.calls = append(f.calls, "ReserveGlobalStaticIP")
-	ip := &compute.Address{
-		Name:    name,
-		Address: IPAddress,
-	}
-	f.IP = append(f.IP, ip)
-	return ip, nil
+// ReserveGlobalAddress fakes out static IP reservation.
+func (f *FakeLoadBalancers) ReserveGlobalAddress(addr *compute.Address) error {
+	f.calls = append(f.calls, "ReserveGlobalAddress")
+	f.IP = append(f.IP, addr)
+	return nil
 }
 
-// GetGlobalStaticIP fakes out static IP retrieval.
-func (f *FakeLoadBalancers) GetGlobalStaticIP(name string) (*compute.Address, error) {
-	f.calls = append(f.calls, "GetGlobalStaticIP")
+// GetGlobalAddress fakes out static IP retrieval.
+func (f *FakeLoadBalancers) GetGlobalAddress(name string) (*compute.Address, error) {
+	f.calls = append(f.calls, "GetGlobalAddress")
 	for i := range f.IP {
 		if f.IP[i].Name == name {
 			return f.IP[i], nil
@@ -419,9 +415,9 @@ func (f *FakeLoadBalancers) GetGlobalStaticIP(name string) (*compute.Address, er
 	return nil, fmt.Errorf("static IP %v not found", name)
 }
 
-// DeleteGlobalStaticIP fakes out static IP deletion.
-func (f *FakeLoadBalancers) DeleteGlobalStaticIP(name string) error {
-	f.calls = append(f.calls, "DeleteGlobalStaticIP")
+// DeleteGlobalAddress fakes out static IP deletion.
+func (f *FakeLoadBalancers) DeleteGlobalAddress(name string) error {
+	f.calls = append(f.calls, "DeleteGlobalAddress")
 	ip := []*compute.Address{}
 	for i := range f.IP {
 		if f.IP[i].Name != name {
