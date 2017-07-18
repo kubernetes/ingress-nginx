@@ -191,7 +191,6 @@ func (n *Namer) ParseName(name string) *NameComponents {
 // NameBelongsToCluster checks if a given name is tagged with this cluster's UID.
 func (n *Namer) NameBelongsToCluster(name string) bool {
 	if !strings.HasPrefix(name, "k8s-") {
-		glog.V(4).Infof("%v not part of cluster", name)
 		return false
 	}
 	parts := strings.Split(name, clusterNameDelimiter)
@@ -203,7 +202,6 @@ func (n *Namer) NameBelongsToCluster(name string) bool {
 		return false
 	}
 	if len(parts) > 2 {
-		glog.Warningf("Too many parts to name %v, ignoring", name)
 		return false
 	}
 	return parts[1] == clusterName

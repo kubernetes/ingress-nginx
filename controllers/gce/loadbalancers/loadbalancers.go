@@ -163,7 +163,7 @@ func (l *L7s) Delete(name string) error {
 
 // Sync loadbalancers with the given runtime info from the controller.
 func (l *L7s) Sync(lbs []*L7RuntimeInfo) error {
-	glog.V(3).Infof("Creating loadbalancers %+v", lbs)
+	glog.V(3).Infof("Syncing loadbalancers %v", lbs)
 
 	if len(lbs) != 0 {
 		// Lazily create a default backend so we don't tax users who don't care
@@ -255,6 +255,11 @@ type L7RuntimeInfo struct {
 	// The name of a Global Static IP. If specified, the IP associated with
 	// this name is used in the Forwarding Rules for this loadbalancer.
 	StaticIPName string
+}
+
+// String returns the load balancer name
+func (l *L7RuntimeInfo) String() string {
+	return l.Name
 }
 
 // L7 represents a single L7 loadbalancer.
@@ -757,7 +762,6 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 	if l.um == nil {
 		return fmt.Errorf("cannot add url without an urlmap")
 	}
-	glog.V(3).Infof("Updating urlmap for l7 %v", l.Name)
 
 	// All UrlMaps must have a default backend. If the Ingress has a default
 	// backend, it applies to all host rules as well as to the urlmap itself.
@@ -807,7 +811,8 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 		glog.Infof("UrlMap for l7 %v is unchanged", l.Name)
 		return nil
 	}
-	glog.Infof("Updating url map: %+v", ingressRules)
+
+	glog.V(3).Infof("Updating URLMap: %q", l.Name)
 	um, err := l.cloud.UpdateUrlMap(l.um)
 	if err != nil {
 		return err
