@@ -136,6 +136,7 @@ func TestHealthCheckMigration(t *testing.T) {
 		Name:               namer.BeName(p.Port),
 		RequestPath:        "/my-healthz-path",
 		Host:               "k8s.io",
+		Description:        "My custom HC",
 		UnhealthyThreshold: 30,
 		CheckIntervalSec:   40,
 	}
@@ -154,7 +155,8 @@ func TestHealthCheckMigration(t *testing.T) {
 	if hc.RequestPath != legacyHC.RequestPath ||
 		hc.Host != legacyHC.Host ||
 		hc.UnhealthyThreshold != legacyHC.UnhealthyThreshold ||
-		hc.CheckIntervalSec != legacyHC.CheckIntervalSec {
+		hc.CheckIntervalSec != legacyHC.CheckIntervalSec ||
+		hc.Description != legacyHC.Description {
 		t.Fatalf("Expected newer health check to have identical settings to legacy health check. Legacy: %+v, New: %+v", legacyHC, hc)
 	}
 }
