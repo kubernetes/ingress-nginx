@@ -53,7 +53,7 @@ __Lines 8-9__: Each http rule contains the following information: A host (eg: fo
 
 __Lines 10-12__: A `backend` is a service:port combination. It selects a group of pods capable of servicing traffic sent to the path specified in the parent rule. The `port` is the desired `spec.ports[*].port` from the Service Spec -- Note, though, that the L7 actually directs traffic to the corresponding `NodePort`.
 
-__Global Prameters__: For the sake of simplicity the example Ingress has no global parameters. However, one can specify a default backend (see examples below) in the absence of which requests that don't match a path in the spec are sent to the default backend of glbc. Though glbc doesn't support HTTPS yet, security configs would also be global.
+__Global Prameters__: For the sake of simplicity the example Ingress has no global parameters. However, one can specify a default backend (see examples below) in the absence of which requests that don't match a path in the spec are sent to the default backend of glbc.
 
 
 ## Load Balancer Management
@@ -281,7 +281,7 @@ nginx-tester-pod-name
 ```
 
 Note what just happened, the endpoint exposes /hostname, and the loadbalancer forwarded the entire matching url to the endpoint. This means if you had '/foo' in the Ingress and tried accessing /hostname, your endpoint would've received /foo/hostname and not known how to route it. Now update the Ingress to access static content via the /fs endpoint:
-```
+```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -339,7 +339,7 @@ glbc-6m6b6              1/1       Terminating   0          13m
 
 __The prod way__: If you didn't start the controller with `--delete-all-on-quit`, you can execute a GET on the `/delete-all-and-quit` endpoint. This endpoint is deliberately not exported.
 
-```
+```shell
 $ kubectl exec -it glbc-6m6b6  -- wget -q -O- http://localhost:8081/delete-all-and-quit
 ..Hangs till quit is done..
 
