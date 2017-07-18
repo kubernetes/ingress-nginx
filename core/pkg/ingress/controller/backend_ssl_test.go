@@ -110,7 +110,6 @@ func buildGenericControllerForBackendSSL() *GenericController {
 		mapController:  buildControllerForBackendSSL(),
 
 		sslCertTracker: newSSLCertTracker(),
-		secretTracker:  newSecretTracker(),
 	}
 }
 
@@ -157,7 +156,6 @@ func TestSyncSecret(t *testing.T) {
 	for _, foo := range foos {
 		t.Run(foo.tn, func(t *testing.T) {
 			ic := buildGenericControllerForBackendSSL()
-			ic.secretTracker.Add(foo.secretName, foo.secretName)
 
 			// init secret for getPemCertificate
 			secret := buildSecretForBackendSSL()
@@ -166,16 +164,17 @@ func TestSyncSecret(t *testing.T) {
 			secret.Data = foo.Data
 			ic.secrLister.Add(secret)
 
+			key := "default/foo_secret"
 			// for add
-			ic.syncSecret()
+			ic.syncSecret(key)
 			if foo.expectSuccess {
 				// validate
-				_, exist := ic.sslCertTracker.Get(foo.secretName)
+				_, exist := ic.sslCertTracker.Get(key)
 				if !exist {
 					t.Errorf("Failed to sync secret: %s", foo.secretName)
 				} else {
 					// for update
-					ic.syncSecret()
+					ic.syncSecret(key)
 				}
 			}
 		})
