@@ -30,7 +30,7 @@ type LoadBalancers interface {
 	GetGlobalForwardingRule(name string) (*compute.ForwardingRule, error)
 	CreateGlobalForwardingRule(proxyLink, ip, name, portRange string) (*compute.ForwardingRule, error)
 	DeleteGlobalForwardingRule(name string) error
-	SetProxyForGlobalForwardingRule(fw *compute.ForwardingRule, proxy string) error
+	SetProxyForGlobalForwardingRule(fw, proxy string) error
 
 	// UrlMaps
 	GetUrlMap(name string) (*compute.UrlMap, error)
@@ -57,9 +57,10 @@ type LoadBalancers interface {
 	DeleteSslCertificate(name string) error
 
 	// Static IP
-	ReserveGlobalStaticIP(name, IPAddress string) (*compute.Address, error)
-	GetGlobalStaticIP(name string) (*compute.Address, error)
-	DeleteGlobalStaticIP(name string) error
+
+	ReserveGlobalAddress(addr *compute.Address) error
+	GetGlobalAddress(name string) (*compute.Address, error)
+	DeleteGlobalAddress(name string) error
 }
 
 // LoadBalancerPool is an interface to manage the cloud resources associated
