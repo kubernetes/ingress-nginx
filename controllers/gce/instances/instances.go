@@ -63,13 +63,15 @@ func (i *Instances) Init(zl zoneLister) {
 // all of which have the exact same named port.
 func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.InstanceGroup, *compute.NamedPort, error) {
 	igs := []*compute.InstanceGroup{}
-	namedPort := &compute.NamedPort{}
+	// TODO: move port naming to namer
+	namedPort := &compute.NamedPort{Name: fmt.Sprintf("port%v", port), Port: port}
 
 	zones, err := i.ListZones()
 	if err != nil {
 		return igs, namedPort, err
 	}
 
+	defer i.snapshotter.Add(name, struct{}{})
 	for _, zone := range zones {
 		ig, _ := i.Get(name, zone)
 		var err error
@@ -82,10 +84,19 @@ func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.Instan
 		} else {
 			glog.V(3).Infof("Instance group %v already exists in zone %v, adding port %d to it", name, zone, port)
 		}
-		defer i.snapshotter.Add(name, struct{}{})
-		namedPort, err = i.cloud.AddPortToInstanceGroup(ig, port)
-		if err != nil {
-			return nil, nil, err
+
+		found := false
+		for _, np := range ig.NamedPorts {
+			if np.Port == port {
+				glog.V(3).Infof("Instance group %v already has named port %+v", ig.Name, np)
+				found = true
+				break
+			}
+		}
+		if !found {
+			if err := i.cloud.SetNamedPortsOfInstanceGroup(ig.Name, zone, append(ig.NamedPorts, namedPort)); err != nil {
+				return nil, nil, err
+			}
 		}
 		igs = append(igs, ig)
 	}
@@ -173,7 +184,7 @@ func (i *Instances) Add(groupName string, names []string) error {
 	errs := []error{}
 	for zone, nodeNames := range i.splitNodesByZone(names) {
 		glog.V(1).Infof("Adding nodes %v to %v in zone %v", nodeNames, groupName, zone)
-		if err := i.cloud.AddInstancesToInstanceGroup(groupName, zone, nodeNames); err != nil {
+		if err := i.cloud.AddInstancesToInstanceGroup(groupName, zone, i.cloud.ToInstanceReferences(zone, nodeNames)); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -187,8 +198,8 @@ func (i *Instances) Add(groupName string, names []string) error {
 func (i *Instances) Remove(groupName string, names []string) error {
 	errs := []error{}
 	for zone, nodeNames := range i.splitNodesByZone(names) {
-		glog.V(1).Infof("Adding nodes %v to %v in zone %v", nodeNames, groupName, zone)
-		if err := i.cloud.RemoveInstancesFromInstanceGroup(groupName, zone, nodeNames); err != nil {
+		glog.V(1).Infof("Removing nodes %v from %v in zone %v", nodeNames, groupName, zone)
+		if err := i.cloud.RemoveInstancesFromInstanceGroup(groupName, zone, i.cloud.ToInstanceReferences(zone, nodeNames)); err != nil {
 			errs = append(errs, err)
 		}
 	}

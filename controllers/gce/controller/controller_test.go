@@ -428,7 +428,7 @@ func TestLbChangeStaticIP(t *testing.T) {
 	}
 
 	ing.Annotations = map[string]string{staticIPNameKey: "testip"}
-	cm.fakeLbs.ReserveGlobalStaticIP("testip", "1.2.3.4")
+	cm.fakeLbs.ReserveGlobalAddress(&compute.Address{Name: "testip", Address: "1.2.3.4"})
 
 	// Second sync reassigns 1.2.3.4 to existing forwarding rule (by recreating it)
 	lbc.sync(ingStoreKey)
