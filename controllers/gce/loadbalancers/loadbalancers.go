@@ -544,7 +544,7 @@ func (l *L7) checkForwardingRule(name, proxyLink, ip, portRange string) (fw *com
 	} else {
 		glog.Infof("Forwarding rule %v has the wrong proxy, setting %v overwriting %v",
 			fw.Name, fw.Target, proxyLink)
-		if err := l.cloud.SetProxyForGlobalForwardingRule(fw, proxyLink); err != nil {
+		if err := l.cloud.SetProxyForGlobalForwardingRule(fw.Name, proxyLink); err != nil {
 			return nil, err
 		}
 	}
@@ -576,7 +576,7 @@ func (l *L7) getEffectiveIP() (string, bool) {
 	if l.runtimeInfo.StaticIPName != "" {
 		// Existing static IPs allocated to forwarding rules will get orphaned
 		// till the Ingress is torn down.
-		if ip, err := l.cloud.GetGlobalStaticIP(l.runtimeInfo.StaticIPName); err != nil || ip == nil {
+		if ip, err := l.cloud.GetGlobalAddress(l.runtimeInfo.StaticIPName); err != nil || ip == nil {
 			glog.Warningf("The given static IP name %v doesn't translate to an existing global static IP, ignoring it and allocating a new IP: %v",
 				l.runtimeInfo.StaticIPName, err)
 		} else {
@@ -629,10 +629,10 @@ func (l *L7) checkStaticIP() (err error) {
 		return nil
 	}
 	staticIPName := l.namer.Truncate(fmt.Sprintf("%v-%v", forwardingRulePrefix, l.Name))
-	ip, _ := l.cloud.GetGlobalStaticIP(staticIPName)
+	ip, _ := l.cloud.GetGlobalAddress(staticIPName)
 	if ip == nil {
 		glog.Infof("Creating static ip %v", staticIPName)
-		ip, err = l.cloud.ReserveGlobalStaticIP(staticIPName, l.fw.IPAddress)
+		err = l.cloud.ReserveGlobalAddress(&compute.Address{Name: staticIPName, Address: l.fw.IPAddress})
 		if err != nil {
 			if utils.IsHTTPErrorCode(err, http.StatusConflict) ||
 				utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
@@ -640,6 +640,10 @@ func (l *L7) checkStaticIP() (err error) {
 					l.fw.IPAddress, staticIPName)
 				return nil
 			}
+			return err
+		}
+		ip, err = l.cloud.GetGlobalAddress(staticIPName)
+		if err != nil {
 			return err
 		}
 	}
@@ -903,7 +907,7 @@ func (l *L7) Cleanup() error {
 	}
 	if l.ip != nil {
 		glog.V(2).Infof("Deleting static IP %v(%v)", l.ip.Name, l.ip.Address)
-		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalStaticIP(l.ip.Name)); err != nil {
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalAddress(l.ip.Name)); err != nil {
 			return err
 		}
 		l.ip = nil

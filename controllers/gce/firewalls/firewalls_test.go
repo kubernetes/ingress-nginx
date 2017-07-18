@@ -22,14 +22,11 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/gce/utils"
-	netset "k8s.io/kubernetes/pkg/util/net/sets"
 )
-
-const allCIDR = "0.0.0.0/0"
 
 func TestSyncFirewallPool(t *testing.T) {
 	namer := utils.NewNamer("ABC", "XYZ")
-	fwp := NewFakeFirewallsProvider(namer)
+	fwp := NewFakeFirewallsProvider()
 	fp := NewFirewallPool(fwp, namer)
 	ruleName := namer.FrName(namer.FrSuffix())
 
@@ -50,12 +47,16 @@ func TestSyncFirewallPool(t *testing.T) {
 	}
 	verifyFirewallRule(fwp, ruleName, nodePorts, nodes, l7SrcRanges, t)
 
-	srcRanges, _ := netset.ParseIPNets(allCIDR)
-	err = fwp.UpdateFirewall(namer.FrSuffix(), "", srcRanges, nodePorts, nodes)
+	firewall, err := fp.(*FirewallRules).createFirewallObject(namer.FrSuffix(), "", nodePorts, nodes)
+	if err != nil {
+		t.Errorf("unexpected err when creating firewall object, err: %v", err)
+	}
+
+	err = fwp.UpdateFirewall(firewall)
 	if err != nil {
 		t.Errorf("failed to update firewall rule, err: %v", err)
 	}
-	verifyFirewallRule(fwp, ruleName, nodePorts, nodes, []string{allCIDR}, t)
+	verifyFirewallRule(fwp, ruleName, nodePorts, nodes, l7SrcRanges, t)
 
 	// Run Sync and expect l7 src ranges to be returned
 	err = fp.Sync(nodePorts, nodes)
