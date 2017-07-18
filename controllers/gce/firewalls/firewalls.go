@@ -35,18 +35,18 @@ var l7SrcRanges = []string{"130.211.0.0/22", "35.191.0.0/16"}
 type FirewallRules struct {
 	cloud     Firewall
 	namer     *utils.Namer
-	srcRanges netset.IPNet
+	srcRanges []string
 }
 
 // NewFirewallPool creates a new firewall rule manager.
 // cloud: the cloud object implementing Firewall.
 // namer: cluster namer.
 func NewFirewallPool(cloud Firewall, namer *utils.Namer) SingleFirewallPool {
-	srcNetSet, err := netset.ParseIPNets(l7SrcRanges...)
+	_, err := netset.ParseIPNets(l7SrcRanges...)
 	if err != nil {
 		glog.Fatalf("Could not parse L7 src ranges %v for firewall rule: %v", l7SrcRanges, err)
 	}
-	return &FirewallRules{cloud: cloud, namer: namer, srcRanges: srcNetSet}
+	return &FirewallRules{cloud: cloud, namer: namer, srcRanges: l7SrcRanges}
 }
 
 // Sync sync firewall rules with the cloud.
@@ -60,9 +60,15 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 	// instead of the whole name.
 	name := fr.namer.FrName(suffix)
 	rule, _ := fr.cloud.GetFirewall(name)
+
+	firewall, err := fr.createFirewallObject(name, "GCE L7 firewall rule", nodePorts, nodeNames)
+	if err != nil {
+		return err
+	}
+
 	if rule == nil {
 		glog.Infof("Creating global l7 firewall rule %v", name)
-		return fr.cloud.CreateFirewall(suffix, "GCE L7 firewall rule", fr.srcRanges, nodePorts, nodeNames)
+		return fr.cloud.CreateFirewall(firewall)
 	}
 
 	requiredPorts := sets.NewString()
@@ -85,17 +91,17 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 		glog.V(4).Info("Firewall does not need update of ports or source ranges")
 		return nil
 	}
-
 	glog.V(3).Infof("Firewall %v already exists, updating nodeports %v", name, nodePorts)
-	return fr.cloud.UpdateFirewall(suffix, "GCE L7 firewall", fr.srcRanges, nodePorts, nodeNames)
+	return fr.cloud.UpdateFirewall(firewall)
 }
 
 // Shutdown shuts down this firewall rules manager.
 func (fr *FirewallRules) Shutdown() error {
-	glog.Infof("Deleting firewall with suffix %v", fr.namer.FrSuffix())
-	err := fr.cloud.DeleteFirewall(fr.namer.FrSuffix())
+	name := fr.namer.FrName(fr.namer.FrSuffix())
+	glog.Infof("Deleting firewall %v", name)
+	err := fr.cloud.DeleteFirewall(name)
 	if err != nil && utils.IsHTTPErrorCode(err, 404) {
-		glog.Infof("Firewall with suffix %v didn't exist at Shutdown", fr.namer.FrSuffix())
+		glog.Infof("Firewall with name %v didn't exist at Shutdown", name)
 		return nil
 	}
 	return err
@@ -106,4 +112,32 @@ func (fr *FirewallRules) Shutdown() error {
 // objects out of this interface by returning just the (src, ports, error).
 func (fr *FirewallRules) GetFirewall(name string) (*compute.Firewall, error) {
 	return fr.cloud.GetFirewall(name)
+}
+
+func (fr *FirewallRules) createFirewallObject(firewallName, description string, nodePorts []int64, nodeNames []string) (*compute.Firewall, error) {
+	ports := make([]string, len(nodePorts))
+	for ix := range nodePorts {
+		ports[ix] = strconv.Itoa(int(nodePorts[ix]))
+	}
+
+	// If the node tags to be used for this cluster have been predefined in the
+	// provider config, just use them. Otherwise, invoke computeHostTags method to get the tags.
+	targetTags, err := fr.cloud.GetNodeTags(nodeNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return &compute.Firewall{
+		Name:         firewallName,
+		Description:  description,
+		SourceRanges: fr.srcRanges,
+		Network:      fr.cloud.NetworkURL(),
+		Allowed: []*compute.FirewallAllowed{
+			{
+				IPProtocol: "tcp",
+				Ports:      ports,
+			},
+		},
+		TargetTags: targetTags,
+	}, nil
 }

@@ -18,7 +18,6 @@ package firewalls
 
 import (
 	compute "google.golang.org/api/compute/v1"
-	netset "k8s.io/kubernetes/pkg/util/net/sets"
 )
 
 // SingleFirewallPool syncs the firewall rule for L7 traffic.
@@ -32,8 +31,10 @@ type SingleFirewallPool interface {
 // This interface is a little different from the rest because it dovetails into
 // the same firewall methods used by the TCPLoadBalancer.
 type Firewall interface {
-	CreateFirewall(name, msgTag string, srcRange netset.IPNet, ports []int64, hosts []string) error
+	CreateFirewall(f *compute.Firewall) error
 	GetFirewall(name string) (*compute.Firewall, error)
 	DeleteFirewall(name string) error
-	UpdateFirewall(name, msgTag string, srcRange netset.IPNet, ports []int64, hosts []string) error
+	UpdateFirewall(f *compute.Firewall) error
+	GetNodeTags(nodeNames []string) ([]string, error)
+	NetworkURL() string
 }
