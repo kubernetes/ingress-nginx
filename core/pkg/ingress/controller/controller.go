@@ -29,6 +29,8 @@ import (
 
 	"github.com/golang/glog"
 
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -36,8 +38,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
-	api "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
@@ -51,7 +51,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
-	"k8s.io/ingress/core/pkg/ingress/status/leaderelection/resourcelock"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/net/ssl"
@@ -234,11 +233,6 @@ func newIngressController(config *Configuration) *GenericController {
 
 	eventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			ep := obj.(*api.Endpoints)
-			_, found := ep.Annotations[resourcelock.LeaderElectionRecordAnnotationKey]
-			if found {
-				return
-			}
 			ic.syncQueue.Enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -246,12 +240,6 @@ func newIngressController(config *Configuration) *GenericController {
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				ep := cur.(*api.Endpoints)
-				_, found := ep.Annotations[resourcelock.LeaderElectionRecordAnnotationKey]
-				if found {
-					return
-				}
-
 				ic.syncQueue.Enqueue(cur)
 			}
 		},

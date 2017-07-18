@@ -11,10 +11,12 @@ load(
 go_test(
     name = "go_default_test",
     srcs = [
+        "controller_ref_test.go",
         "duration_test.go",
         "group_version_test.go",
         "helpers_test.go",
         "labels_test.go",
+        "micro_time_test.go",
         "time_test.go",
         "types_test.go",
     ],
@@ -24,12 +26,14 @@ go_test(
         "//vendor/github.com/ghodss/yaml:go_default_library",
         "//vendor/github.com/ugorji/go/codec:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/labels:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/runtime/schema:go_default_library",
     ],
 )
 
 go_library(
     name = "go_default_library",
     srcs = [
+        "controller_ref.go",
         "conversion.go",
         "doc.go",
         "duration.go",
@@ -38,14 +42,14 @@ go_library(
         "helpers.go",
         "labels.go",
         "meta.go",
+        "micro_time.go",
+        "micro_time_proto.go",
         "register.go",
         "time.go",
         "time_proto.go",
         "types.go",
         "types_swagger_doc_generated.go",
         "watch.go",
-        "well_known_annotations.go",
-        "well_known_labels.go",
         "zz_generated.deepcopy.go",
         "zz_generated.defaults.go",
     ],

@@ -14,9 +14,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 
+	api "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"k8s.io/client-go/kubernetes"
-	api "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmd_api "k8s.io/client-go/tools/clientcmd/api"
