@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -219,16 +218,32 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	secrEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			sec := obj.(*api.Secret)
+			ic.recorder.Eventf(sec, api.EventTypeNormal, "ADD", fmt.Sprintf("Secret %s/%s", sec.Namespace, sec.Name))
+			if sec.Type == api.SecretTypeTLS {
+				ic.syncSecret(sec)
+				ic.syncQueue.Enqueue(sec)
+			}
+		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				ic.syncSecret()
+				curlSec := cur.(*api.Secret)
+				ic.recorder.Eventf(curlSec, api.EventTypeNormal, "UPDATE", fmt.Sprintf("Secret %s/%s", curlSec.Namespace, curlSec.Name))
+				if curlSec.Type == api.SecretTypeTLS {
+					ic.syncSecret(curlSec)
+					ic.syncQueue.Enqueue(cur)
+				}
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			sec := obj.(*api.Secret)
-			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
-			ic.sslCertTracker.Delete(key)
-			ic.secretTracker.Delete(key)
+			ic.recorder.Eventf(sec, api.EventTypeNormal, "DELETE", fmt.Sprintf("Secret %s/%s", sec.Namespace, sec.Name))
+			if sec.Type == api.SecretTypeTLS {
+				key := ic.secretKey(sec.Namespace, sec.Name)
+				ic.sslCertTracker.Delete(key)
+				ic.secretTracker.Delete(key)
+			}
 		},
 	}
 
@@ -328,7 +343,7 @@ func newIngressController(config *Configuration) *GenericController {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
 	}
 
-	ic.annotations = newAnnotationExtractor(ic)
+	ic.annotations = newAnnotationExtractor(&ic)
 
 	ic.cfg.Backend.SetListers(ingress.StoreLister{
 		Ingress:   ic.ingLister,
@@ -341,24 +356,26 @@ func newIngressController(config *Configuration) *GenericController {
 
 	return &ic
 }
-
+func (ic *GenericController) secretKey(ns, name string) string {
+	return fmt.Sprintf("%v/%v", ns, name)
+}
 // Info returns information about the backend
-func (ic GenericController) Info() *ingress.BackendInfo {
+func (ic *GenericController) Info() *ingress.BackendInfo {
 	return ic.cfg.Backend.Info()
 }
 
 // IngressClass returns information about the backend
-func (ic GenericController) IngressClass() string {
+func (ic *GenericController) IngressClass() string {
 	return ic.cfg.IngressClass
 }
 
 // GetDefaultBackend returns the default backend
-func (ic GenericController) GetDefaultBackend() defaults.Backend {
+func (ic *GenericController) GetDefaultBackend() defaults.Backend {
 	return ic.cfg.Backend.BackendDefaults()
 }
 
 // GetSecret searches for a secret in the local secrets Store
-func (ic GenericController) GetSecret(name string) (*api.Secret, error) {
+func (ic *GenericController) GetSecret(name string) (*api.Secret, error) {
 	s, exists, err := ic.secrLister.Store.GetByKey(name)
 	if err != nil {
 		return nil, err
@@ -753,7 +770,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 }
 
 // GetAuthCertificate ...
-func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
+func (ic *GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
 	if _, exists := ic.secretTracker.Get(secretName); !exists {
 		ic.secretTracker.Add(secretName, secretName)
 	}
@@ -1161,13 +1178,13 @@ func (ic *GenericController) getEndpoints(
 }
 
 // extractSecretNames extracts information about secrets inside the Ingress rule
-func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
+func (ic *GenericController) extractSecretNames(ing *extensions.Ingress) {
 	for _, tls := range ing.Spec.TLS {
 		if tls.SecretName == "" {
 			continue
 		}
 
-		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+		key := ic.secretKey(ing.Namespace, tls.SecretName)
 		_, exists := ic.secretTracker.Get(key)
 		if !exists {
 			ic.secretTracker.Add(key, key)
@@ -1176,7 +1193,7 @@ func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
 }
 
 // Stop stops the loadbalancer controller.
-func (ic GenericController) Stop() error {
+func (ic *GenericController) Stop() error {
 	ic.stopLock.Lock()
 	defer ic.stopLock.Unlock()
 
@@ -1195,7 +1212,7 @@ func (ic GenericController) Stop() error {
 }
 
 // Start starts the Ingress controller.
-func (ic GenericController) Start() {
+func (ic *GenericController) Start() {
 	glog.Infof("starting Ingress controller")
 
 	go ic.ingController.Run(ic.stopCh)
@@ -1218,8 +1235,6 @@ func (ic GenericController) Start() {
 	}
 
 	go ic.syncQueue.Run(10*time.Second, ic.stopCh)
-
-	go wait.Forever(ic.syncSecret, 10*time.Second)
 
 	if ic.syncStatus != nil {
 		go ic.syncStatus.Run(ic.stopCh)
