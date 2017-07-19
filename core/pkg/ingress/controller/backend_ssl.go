@@ -33,38 +33,34 @@ import (
 // syncSecret keeps in sync Secrets used by Ingress rules with the files on
 // disk to allow copy of the content of the secret to disk to be used
 // by external processes.
-func (ic *GenericController) syncSecret() {
+func (ic *GenericController) syncSecret(s *api.Secret) {
 	glog.V(3).Infof("starting syncing of secrets")
 
 	var cert *ingress.SSLCert
 	var err error
+	key := ic.secretKey(s.Namespace, s.Name)
+	ic.secretTracker.Add(key, key)
 
-	for _, k := range ic.secretTracker.List() {
-		key := k.(string)
-		cert, err = ic.getPemCertificate(key)
-		if err != nil {
-			glog.Warningf("error obtaining PEM from secret %v: %v", key, err)
-			continue
-		}
-
-		// create certificates and add or update the item in the store
-		cur, exists := ic.sslCertTracker.Get(key)
-		if exists {
-			s := cur.(*ingress.SSLCert)
-			if reflect.DeepEqual(s, cert) {
-				// no need to update
-				continue
-			}
-			glog.Infof("updating secret %v in the local store", key)
-			ic.sslCertTracker.Update(key, cert)
-			ic.reloadRequired = true
-			continue
-		}
-
-		glog.Infof("adding secret %v to the local store", key)
-		ic.sslCertTracker.Add(key, cert)
-		ic.reloadRequired = true
+	cert, err = ic.getPemCertificate(key)
+	if err != nil {
+		glog.Warningf("error obtaining PEM from secret %v: %v", key, err)
+		return
 	}
+
+	// create certificates and add or update the item in the store
+	cur, exists := ic.sslCertTracker.Get(key)
+	if exists {
+		s := cur.(*ingress.SSLCert)
+		if reflect.DeepEqual(s, cert) {
+			// no need to update
+			return
+		}
+		glog.Infof("updating secret %v in the local store", key)
+		ic.sslCertTracker.Update(key, cert)
+	}
+
+	glog.Infof("adding secret %v to the local store", key)
+	ic.sslCertTracker.Add(key, cert)
 }
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
