@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -51,7 +50,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/status"
-	"k8s.io/ingress/core/pkg/ingress/status/leaderelection/resourcelock"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/net/ssl"
@@ -99,8 +97,6 @@ type GenericController struct {
 	// local store of SSL certificates
 	// (only certificates used in ingress)
 	sslCertTracker *sslCertTracker
-	// store of secret names referenced from Ingress
-	secretTracker *secretTracker
 
 	syncRateLimiter flowcontrol.RateLimiter
 
@@ -167,7 +163,6 @@ func newIngressController(config *Configuration) *GenericController {
 			Component: "ingress-controller",
 		}),
 		sslCertTracker: newSSLCertTracker(),
-		secretTracker:  newSecretTracker(),
 	}
 
 	ic.syncQueue = task.NewTaskQueue(ic.syncIngress)
@@ -219,26 +214,29 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	secrEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			sec := obj.(*api.Secret)
+			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
+			if ic.secrReferenced(sec.Namespace, sec.Name) {
+				ic.syncSecret(key)
+			}
+		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				ic.syncSecret()
+				sec := cur.(*api.Secret)
+				key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
+				ic.syncSecret(key)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			sec := obj.(*api.Secret)
 			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
-			ic.sslCertTracker.Delete(key)
-			ic.secretTracker.Delete(key)
+			ic.sslCertTracker.DeleteAll(key)
 		},
 	}
 
 	eventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			ep := obj.(*api.Endpoints)
-			_, found := ep.Annotations[resourcelock.LeaderElectionRecordAnnotationKey]
-			if found {
-				return
-			}
 			ic.syncQueue.Enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -246,12 +244,6 @@ func newIngressController(config *Configuration) *GenericController {
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				ep := cur.(*api.Endpoints)
-				_, found := ep.Annotations[resourcelock.LeaderElectionRecordAnnotationKey]
-				if found {
-					return
-				}
-
 				ic.syncQueue.Enqueue(cur)
 			}
 		},
@@ -754,8 +746,8 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 // GetAuthCertificate ...
 func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
-	if _, exists := ic.secretTracker.Get(secretName); !exists {
-		ic.secretTracker.Add(secretName, secretName)
+	if _, exists := ic.sslCertTracker.Get(secretName); !exists {
+		ic.syncSecret(secretName)
 	}
 
 	_, err := ic.GetSecret(secretName)
@@ -1168,9 +1160,9 @@ func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
 		}
 
 		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
-		_, exists := ic.secretTracker.Get(key)
+		_, exists := ic.sslCertTracker.Get(key)
 		if !exists {
-			ic.secretTracker.Add(key, key)
+			ic.syncSecret(key)
 		}
 	}
 }
@@ -1218,8 +1210,6 @@ func (ic GenericController) Start() {
 	}
 
 	go ic.syncQueue.Run(10*time.Second, ic.stopCh)
-
-	go wait.Forever(ic.syncSecret, 10*time.Second)
 
 	if ic.syncStatus != nil {
 		go ic.syncStatus.Run(ic.stopCh)
