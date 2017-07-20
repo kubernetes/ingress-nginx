@@ -73,6 +73,7 @@ rules:
       - configmaps
       - pods
       - secrets
+      - namespaces
     verbs:
       - get
   - apiGroups:
