@@ -285,8 +285,6 @@ Example usage: `custom-http-errors: 404,415`
 
 **enable-underscores-in-headers:** Enables underscores in header names. This is disabled by default.
 
-**enable-underscores-in-headers:** Enables underscores in header names. This is disabled by default.
-
 **enable-vts-status:** Allows the replacement of the default status page with a third party module named [nginx-module-vts](https://github.com/vozlt/nginx-module-vts).
 
 
