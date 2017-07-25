@@ -39,10 +39,10 @@ type (
 		bytes                *prometheus.Desc
 		cache                *prometheus.Desc
 		connections          *prometheus.Desc
-		response             *prometheus.Desc
-		request              *prometheus.Desc
+		responses            *prometheus.Desc
+		requests             *prometheus.Desc
 		filterZoneBytes      *prometheus.Desc
-		filterZoneResponse   *prometheus.Desc
+		filterZoneResponses  *prometheus.Desc
 		filterZoneCache      *prometheus.Desc
 		upstreamBackup       *prometheus.Desc
 		upstreamBytes        *prometheus.Desc
@@ -50,7 +50,7 @@ type (
 		upstreamFailTimeout  *prometheus.Desc
 		upstreamMaxFails     *prometheus.Desc
 		upstreamResponses    *prometheus.Desc
-		upstreamRequest      *prometheus.Desc
+		upstreamRequests     *prometheus.Desc
 		upstreamResponseMsec *prometheus.Desc
 		upstreamWeight       *prometheus.Desc
 	}
@@ -83,12 +83,12 @@ func NewNGINXVTSCollector(watchNamespace, ingressClass string, ngxHealthPort int
 			"Nginx connections count",
 			[]string{"ingress_class", "namespace", "type"}, nil),
 
-		response: prometheus.NewDesc(
+		responses: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "responses_total"),
 			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
 			[]string{"ingress_class", "namespace", "server_zone", "status_code"}, nil),
 
-		request: prometheus.NewDesc(
+		requests: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "requests_total"),
 			"The total number of requested client connections.",
 			[]string{"ingress_class", "namespace", "server_zone"}, nil),
@@ -98,7 +98,7 @@ func NewNGINXVTSCollector(watchNamespace, ingressClass string, ngxHealthPort int
 			"Nginx bytes count",
 			[]string{"ingress_class", "namespace", "server_zone", "country", "direction"}, nil),
 
-		filterZoneResponse: prometheus.NewDesc(
+		filterZoneResponses: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "filterzone_responses_total"),
 			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
 			[]string{"ingress_class", "namespace", "server_zone", "country", "status_code"}, nil),
@@ -138,7 +138,7 @@ func NewNGINXVTSCollector(watchNamespace, ingressClass string, ngxHealthPort int
 			"The number of upstream responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
 			[]string{"ingress_class", "namespace", "upstream", "server", "status_code"}, nil),
 
-		upstreamRequest: prometheus.NewDesc(
+		upstreamRequests: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "upstream_requests_total"),
 			"The total number of client connections forwarded to this server.",
 			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
@@ -164,20 +164,20 @@ func (p vtsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- p.data.bytes
 	ch <- p.data.cache
 	ch <- p.data.connections
-	ch <- p.data.request
-	ch <- p.data.response
+	ch <- p.data.requests
+	ch <- p.data.responses
 	ch <- p.data.upstreamBackup
 	ch <- p.data.upstreamBytes
 	ch <- p.data.upstreamDown
 	ch <- p.data.upstreamFailTimeout
 	ch <- p.data.upstreamMaxFails
-	ch <- p.data.upstreamRequest
+	ch <- p.data.upstreamRequests
 	ch <- p.data.upstreamResponseMsec
 	ch <- p.data.upstreamResponses
 	ch <- p.data.upstreamWeight
 	ch <- p.data.filterZoneBytes
 	ch <- p.data.filterZoneCache
-	ch <- p.data.filterZoneResponse
+	ch <- p.data.filterZoneResponses
 }
 
 // Collect implements prometheus.Collector.
@@ -213,7 +213,7 @@ func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
 		for pos, value := range zones {
 			reflectMetrics(&zones[pos].Responses, p.data.upstreamResponses, ch, p.ingressClass, p.watchNamespace, name, value.Server)
 
-			ch <- prometheus.MustNewConstMetric(p.data.upstreamRequest,
+			ch <- prometheus.MustNewConstMetric(p.data.upstreamRequests,
 				prometheus.CounterValue, zones[pos].RequestCounter, p.ingressClass, p.watchNamespace, name, value.Server)
 			ch <- prometheus.MustNewConstMetric(p.data.upstreamDown,
 				prometheus.CounterValue, float64(zones[pos].Down), p.ingressClass, p.watchNamespace, name, value.Server)
@@ -235,10 +235,10 @@ func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
 	}
 
 	for name, zone := range nginxMetrics.ServerZones {
-		reflectMetrics(&zone.Responses, p.data.response, ch, p.ingressClass, p.watchNamespace, name)
+		reflectMetrics(&zone.Responses, p.data.responses, ch, p.ingressClass, p.watchNamespace, name)
 		reflectMetrics(&zone.Cache, p.data.cache, ch, p.ingressClass, p.watchNamespace, name)
 
-		ch <- prometheus.MustNewConstMetric(p.data.request,
+		ch <- prometheus.MustNewConstMetric(p.data.requests,
 			prometheus.CounterValue, zone.RequestCounter, p.ingressClass, p.watchNamespace, name)
 		ch <- prometheus.MustNewConstMetric(p.data.bytes,
 			prometheus.CounterValue, zone.InBytes, p.ingressClass, p.watchNamespace, name, "in")
@@ -248,7 +248,7 @@ func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
 
 	for serverZone, countries := range nginxMetrics.FilterZones {
 		for country, zone := range countries {
-			reflectMetrics(&zone.Responses, p.data.filterZoneResponse, ch, p.ingressClass, p.watchNamespace, serverZone, country)
+			reflectMetrics(&zone.Responses, p.data.filterZoneResponses, ch, p.ingressClass, p.watchNamespace, serverZone, country)
 			reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, p.ingressClass, p.watchNamespace, serverZone, country)
 
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
