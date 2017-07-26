@@ -463,6 +463,10 @@ The default mime type list to compress is: `application/atom+xml application/jav
 
 **limit-conn-zone-variable:** Sets parameters for a shared memory zone that will keep states for various keys of [limit_conn_zone](http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone). The default of "$binary_remote_addr" variable’s size is always 4 bytes for IPv4 addresses or 16 bytes for IPv6 addresses.
 
+**proxy-set-headers:** Sets custom headers from a configmap before sending traffic to backends. See [example](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-headers/nginx)
+
+**add-headers:** Sets custom headers from a configmap before sending traffic to the client. See `proxy-set-headers` [example](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-headers/nginx)
+
 
 ### Default configuration options
 
