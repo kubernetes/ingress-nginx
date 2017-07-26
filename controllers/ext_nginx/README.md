@@ -7,7 +7,7 @@ It functions very much like https://github.com/kubernetes/ingress/tree/master/co
 ## Why?
 
 The user case where you host your kubernetes cluster on-premise and don't want to have multiple layers of "load balancing" in front of your pods. You also really like nginx. 
-Using this ingress controller on your edge load balacing cluster, the configuration is kept up too date and you can still use nginx build in functions for zero down time deployments of config and binaries that the normal "in-cluster" ingress controller don't support.
+Using this ingress controller on your edge load balacing cluster, the configuration is kept up too date and you can still use nginx build-in functions for zero down time deployments of config and binaries that the normal "in-cluster" ingress controller don't support.
 
 This ingress controller is NOT to be used if you don't understand exaktly what you are doing.
 

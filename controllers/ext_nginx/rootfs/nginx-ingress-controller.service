@@ -1,0 +1,15 @@
+[Unit]
+Description=Kubernetes nginx-ingress controller.
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+User=root
+Environment=POD_NAMESPACE=default
+Environment=POD_NAME=default
+ExecStart=./ingress-controller/nginx-ingress-controller --default-backend-service=REPLACEME --apiserver-host=https://$K8_API --kubeconfig /path/kubeconfig
+WorkingDirectory=/ingress-controller
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
