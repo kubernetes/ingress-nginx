@@ -1,0 +1,63 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+sub file_contains ($$);
+
+my $version;
+for my $file (map glob, qw{ *.lua lib/*.lua lib/*/*.lua lib/*/*/*.lua lib/*/*/*/*.lua lib/*/*/*/*/*.lua }) {
+    # Check the sanity of each .lua file
+    open my $in, $file or
+        die "ERROR: Can't open $file for reading: $!\n";
+    my $found_ver;
+    while (<$in>) {
+        my ($ver, $skipping);
+        if (/(?x) (?:_VERSION) \s* = .*? ([\d\.]*\d+) (.*? SKIP)?/) {
+            my $orig_ver = $ver = $1;
+            $found_ver = 1;
+            #        $skipping = $2;
+            $ver =~ s{^(\d+)\.(\d{3})(\d{3})$}{join '.', int($1), int($2), int($3)}e;
+            warn "$file: $orig_ver ($ver)\n";
+
+        } elsif (/(?x) (?:_VERSION) \s* = \s* ([a-zA-Z_]\S*)/) {
+            warn "$file: $1\n";
+            $found_ver = 1;
+            last;
+        }
+
+        if ($ver and $version and !$skipping) {
+            if ($version ne $ver) {
+                #    die "$file: $ver != $version\n";
+            }
+        } elsif ($ver and !$version) {
+            $version = $ver;
+        }
+    }
+    if (!$found_ver) {
+        warn "WARNING: No \"_VERSION\" or \"version\" field found in `$file`.\n";
+    }
+    close $in;
+
+    print "Checking use of Lua global variables in file $file ...\n";
+    system("luac -p -l $file | grep ETGLOBAL | grep -vE 'require|type|tostring|error|ngx|ndk|jit|setmetatable|getmetatable|string|table|io|os|print|tonumber|math|pcall|xpcall|unpack|pairs|ipairs|assert|module|package|coroutine|[gs]etfenv|next|select|rawset|rawget|debug'");
+    #file_contains($file, "attempt to write to undeclared variable");
+    system("grep -H -n -E --color '.{120}' $file");
+}
+
+sub file_contains ($$) {
+    my ($file, $regex) = @_;
+    open my $in, $file
+        or die "Cannot open $file fo reading: $!\n";
+    my $content = do { local $/; <$in> };
+    close $in;
+    #print "$content";
+    return scalar ($content =~ /$regex/);
+}
+
+if (-d 't') {
+    for my $file (map glob, qw{ t/*.t t/*/*.t t/*/*/*.t }) {
+        system(qq{grep -H -n --color -E '\\--- ?(ONLY|LAST)' $file});
+    }
+}
+
