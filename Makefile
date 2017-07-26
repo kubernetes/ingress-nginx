@@ -54,22 +54,27 @@ vet:
 .PHONY: clean
 clean:
 	make -C controllers/nginx clean
+	make -C controllers/envoy clean
 
 .PHONY: controllers
 controllers:
 	make -C controllers/nginx build
+	make -C controllers/envoy build
 
 .PHONY: docker-build
 docker-build:
 	make -C controllers/nginx all-container
+	make -C controllers/envoy all-container
 
 .PHONY: docker-push
 docker-push:
 	make -C controllers/nginx all-push
+	make -C controllers/envoy all-push
 
 .PHONE: release
 release:
 	make -C controllers/nginx release
+	make -C controllers/envoy release
 
 .PHONY: ginkgo
 ginkgo:

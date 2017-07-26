@@ -584,7 +584,8 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 		// stream services cannot contain empty upstreams and there is no
 		// default backend equivalent
 		if len(endps) == 0 {
-			glog.Warningf("service %v/%v does not have any active endpoints for port %v and protocol %v", svcNs, svcName, svcPort, proto)
+			// TODO(cmaloney): Sooo much noise....
+			// glog.Warningf("service %v/%v does not have any active endpoints for port %v and protocol %v", svcNs, svcName, svcPort, proto)
 			continue
 		}
 
@@ -969,7 +970,8 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 				if len(upstreams[name].Endpoints) == 0 {
 					endp, err := ic.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), hz)
 					if err != nil {
-						glog.Warningf("error obtaining service endpoints: %v", err)
+						// TODO(cmaloney): Soo much noise....
+						// glog.Warningf("error obtaining service endpoints: %v", err)
 						continue
 					}
 					upstreams[name].Endpoints = endp
@@ -1038,7 +1040,8 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 
 			endps := ic.getEndpoints(svc, &servicePort, api.ProtocolTCP, hz)
 			if len(endps) == 0 {
-				glog.Warningf("service %v does not have any active endpoints", svcKey)
+				// TODO(cmaloney): Soo much logspam...
+				// glog.Warningf("service %v does not have any active endpoints", svcKey)
 			}
 
 			if ic.cfg.SortBackends {
