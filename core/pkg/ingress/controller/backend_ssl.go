@@ -24,11 +24,9 @@ import (
 	"github.com/golang/glog"
 
 	api "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress/core/pkg/ingress"
-	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/net/ssl"
 )
 
@@ -38,10 +36,7 @@ import (
 func (ic *GenericController) syncSecret(key string) {
 	glog.V(3).Infof("starting syncing of secret %v", key)
 
-	var cert *ingress.SSLCert
-	var err error
-
-	cert, err = ic.getPemCertificate(key)
+	cert, err := ic.getPemCertificate(key)
 	if err != nil {
 		glog.Warningf("error obtaining PEM from secret %v: %v", key, err)
 		return
@@ -57,13 +52,11 @@ func (ic *GenericController) syncSecret(key string) {
 		}
 		glog.Infof("updating secret %v in the local store", key)
 		ic.sslCertTracker.Update(key, cert)
-		ic.reloadRequired = true
 		return
 	}
 
 	glog.Infof("adding secret %v to the local store", key)
 	ic.sslCertTracker.Add(key, cert)
-	ic.reloadRequired = true
 }
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
@@ -109,26 +102,6 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 	s.Name = secret.Name
 	s.Namespace = secret.Namespace
 	return s, nil
-}
-
-// secrReferenced checks if a secret is referenced or not by one or more Ingress rules
-func (ic *GenericController) secrReferenced(name, namespace string) bool {
-	for _, ingIf := range ic.ingLister.Store.List() {
-		ing := ingIf.(*extensions.Ingress)
-		str, err := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
-		if err == nil && str == fmt.Sprintf("%v/%v", namespace, name) {
-			return true
-		}
-		if ing.Namespace != namespace {
-			continue
-		}
-		for _, tls := range ing.Spec.TLS {
-			if tls.SecretName == name {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // sslCertTracker holds a store of referenced Secrets in Ingress rules
