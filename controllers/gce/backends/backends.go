@@ -26,10 +26,11 @@ import (
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
+
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
 
 	"k8s.io/ingress/controllers/gce/healthchecks"
 	"k8s.io/ingress/controllers/gce/instances"
@@ -161,7 +162,7 @@ func (b *Backends) Init(pp probeProvider) {
 
 // Get returns a single backend.
 func (b *Backends) Get(port int64) (*compute.BackendService, error) {
-	be, err := b.cloud.GetBackendService(b.namer.BeName(port))
+	be, err := b.cloud.GetGlobalBackendService(b.namer.BeName(port))
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +204,7 @@ func (b *Backends) create(namedPort *compute.NamedPort, hcLink string, sp Servic
 		Port:         namedPort.Port,
 		PortName:     namedPort.Name,
 	}
-	if err := b.cloud.CreateBackendService(bs); err != nil {
+	if err := b.cloud.CreateGlobalBackendService(bs); err != nil {
 		return nil, err
 	}
 	return b.Get(namedPort.Port)
@@ -248,7 +249,7 @@ func (b *Backends) Add(p ServicePort) error {
 		be.Protocol = string(p.Protocol)
 		be.HealthChecks = []string{hcLink}
 		be.Description = p.Description()
-		if err = b.cloud.UpdateBackendService(be); err != nil {
+		if err = b.cloud.UpdateGlobalBackendService(be); err != nil {
 			return err
 		}
 	}
@@ -282,7 +283,7 @@ func (b *Backends) Delete(port int64) (err error) {
 		}
 	}()
 	// Try deleting health checks even if a backend is not found.
-	if err = b.cloud.DeleteBackendService(name); err != nil && !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+	if err = b.cloud.DeleteGlobalBackendService(name); err != nil && !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
 		return err
 	}
 
@@ -294,7 +295,7 @@ func (b *Backends) List() ([]interface{}, error) {
 	// TODO: for consistency with the rest of this sub-package this method
 	// should return a list of backend ports.
 	interList := []interface{}{}
-	be, err := b.cloud.ListBackendServices()
+	be, err := b.cloud.ListGlobalBackendServices()
 	if err != nil {
 		return interList, err
 	}
@@ -361,7 +362,7 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 		newBackends := getBackendsForIGs(addIGs, bm)
 		be.Backends = append(originalBackends, newBackends...)
 
-		if err := b.cloud.UpdateBackendService(be); err != nil {
+		if err := b.cloud.UpdateGlobalBackendService(be); err != nil {
 			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
 				glog.V(2).Infof("Updating backend service backends with balancing mode %v failed, will try another mode. err:%v", bm, err)
 				errs = append(errs, err.Error())
@@ -427,14 +428,14 @@ func (b *Backends) Shutdown() error {
 
 // Status returns the status of the given backend by name.
 func (b *Backends) Status(name string) string {
-	backend, err := b.cloud.GetBackendService(name)
+	backend, err := b.cloud.GetGlobalBackendService(name)
 	if err != nil || len(backend.Backends) == 0 {
 		return "Unknown"
 	}
 
 	// TODO: Look at more than one backend's status
 	// TODO: Include port, ip in the status, since it's in the health info.
-	hs, err := b.cloud.GetHealth(name, backend.Backends[0].Group)
+	hs, err := b.cloud.GetGlobalBackendServiceHealth(name, backend.Backends[0].Group)
 	if err != nil || len(hs.HealthStatus) == 0 || hs.HealthStatus[0] == nil {
 		return "Unknown"
 	}
@@ -453,7 +454,7 @@ func applyLegacyHCToHC(existing *compute.HttpHealthCheck, hc *healthchecks.Healt
 	hc.UnhealthyThreshold = existing.UnhealthyThreshold
 }
 
-func applyProbeSettingsToHC(p *api_v1.Probe, hc *healthchecks.HealthCheck) {
+func applyProbeSettingsToHC(p *v1.Probe, hc *healthchecks.HealthCheck) {
 	healthPath := p.Handler.HTTPGet.Path
 	// GCE requires a leading "/" for health check urls.
 	if !strings.HasPrefix(healthPath, "/") {

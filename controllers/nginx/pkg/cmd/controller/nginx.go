@@ -34,7 +34,7 @@ import (
 	"github.com/spf13/pflag"
 
 	proxyproto "github.com/armon/go-proxyproto"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
+	api_v1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"

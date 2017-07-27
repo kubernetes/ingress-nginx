@@ -30,14 +30,13 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	flag "github.com/spf13/pflag"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -122,7 +121,7 @@ var (
 		`Path used to health-check a backend service. All Services must serve
 		a 200 page on this path. Currently this is only configurable globally.`)
 
-	watchNamespace = flags.String("watch-namespace", api.NamespaceAll,
+	watchNamespace = flags.String("watch-namespace", v1.NamespaceAll,
 		`Namespace to watch for Ingress/Services/Endpoints.`)
 
 	verbose = flags.Bool("verbose", false,
@@ -287,7 +286,7 @@ func newNamer(kubeClient kubernetes.Interface, clusterName string, fwName string
 	}
 
 	namer := utils.NewNamer(name, fw_name)
-	uidVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	uidVault := storage.NewConfigMapVault(kubeClient, metav1.NamespaceSystem, uidConfigMapName)
 
 	// Start a goroutine to poll the cluster UID config map
 	// We don't watch because we know exactly which configmap we want and this
@@ -359,7 +358,7 @@ func useDefaultOrLookupVault(cfgVault *storage.ConfigMapVault, cm_key, default_n
 // Use getFlagOrLookupVault to obtain a stored or overridden value for the firewall name.
 // else, use the cluster UID as a backup (this retains backwards compatibility).
 func getFirewallName(kubeClient kubernetes.Interface, name, cluster_uid string) (string, error) {
-	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	cfgVault := storage.NewConfigMapVault(kubeClient, metav1.NamespaceSystem, uidConfigMapName)
 	if fw_name, err := useDefaultOrLookupVault(cfgVault, storage.ProviderDataKey, name); err != nil {
 		return "", err
 	} else if fw_name != "" {
@@ -377,7 +376,7 @@ func getFirewallName(kubeClient kubernetes.Interface, name, cluster_uid string) 
 //	- remember that "" is the cluster uid
 // else, allocate a new uid
 func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error) {
-	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	cfgVault := storage.NewConfigMapVault(kubeClient, metav1.NamespaceSystem, uidConfigMapName)
 	if name, err := useDefaultOrLookupVault(cfgVault, storage.UidDataKey, name); err != nil {
 		return "", err
 	} else if name != "" {
@@ -385,7 +384,7 @@ func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error)
 	}
 
 	// Check if the cluster has an Ingress with ip
-	ings, err := kubeClient.Extensions().Ingresses(api.NamespaceAll).List(meta_v1.ListOptions{
+	ings, err := kubeClient.Extensions().Ingresses(metav1.NamespaceAll).List(metav1.ListOptions{
 		LabelSelector: labels.Everything().String(),
 	})
 	if err != nil {
@@ -419,10 +418,10 @@ func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error)
 
 // getNodePort waits for the Service, and returns it's first node port.
 func getNodePort(client kubernetes.Interface, ns, name string) (port, nodePort int32, err error) {
-	var svc *api_v1.Service
+	var svc *v1.Service
 	glog.V(3).Infof("Waiting for %v/%v", ns, name)
 	wait.Poll(1*time.Second, 5*time.Minute, func() (bool, error) {
-		svc, err = client.Core().Services(ns).Get(name, meta_v1.GetOptions{})
+		svc, err = client.Core().Services(ns).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, nil
 		}

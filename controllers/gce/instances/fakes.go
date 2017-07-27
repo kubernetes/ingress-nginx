@@ -18,6 +18,7 @@ package instances
 
 import (
 	"fmt"
+	"strings"
 
 	compute "google.golang.org/api/compute/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -110,7 +111,8 @@ func (f *FakeInstanceGroups) ListInstancesInInstanceGroup(name, zone string, sta
 }
 
 // AddInstancesToInstanceGroup fakes adding instances to an instance group.
-func (f *FakeInstanceGroups) AddInstancesToInstanceGroup(name, zone string, instanceNames []string) error {
+func (f *FakeInstanceGroups) AddInstancesToInstanceGroup(name, zone string, instanceRefs []*compute.InstanceReference) error {
+	instanceNames := toInstanceNames(instanceRefs)
 	f.calls = append(f.calls, utils.AddInstances)
 	f.instances.Insert(instanceNames...)
 	if _, ok := f.zonesToInstances[zone]; !ok {
@@ -126,7 +128,8 @@ func (f *FakeInstanceGroups) GetInstancesByZone() map[string][]string {
 }
 
 // RemoveInstancesFromInstanceGroup fakes removing instances from an instance group.
-func (f *FakeInstanceGroups) RemoveInstancesFromInstanceGroup(name, zone string, instanceNames []string) error {
+func (f *FakeInstanceGroups) RemoveInstancesFromInstanceGroup(name, zone string, instanceRefs []*compute.InstanceReference) error {
+	instanceNames := toInstanceNames(instanceRefs)
 	f.calls = append(f.calls, utils.RemoveInstances)
 	f.instances.Delete(instanceNames...)
 	l, ok := f.zonesToInstances[zone]
@@ -145,10 +148,23 @@ func (f *FakeInstanceGroups) RemoveInstancesFromInstanceGroup(name, zone string,
 	return nil
 }
 
-// AddPortToInstanceGroup fakes adding ports to an Instance Group.
-func (f *FakeInstanceGroups) AddPortToInstanceGroup(ig *compute.InstanceGroup, port int64) (*compute.NamedPort, error) {
-	f.Ports = append(f.Ports, port)
-	return &compute.NamedPort{Name: f.namer.BeName(port), Port: port}, nil
+func (f *FakeInstanceGroups) SetNamedPortsOfInstanceGroup(igName, zone string, namedPorts []*compute.NamedPort) error {
+	found := false
+	for _, ig := range f.instanceGroups {
+		if ig.Name == igName && ig.Zone == zone {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("Failed to find instance group %q in zone %q", igName, zone)
+	}
+
+	f.Ports = f.Ports[:0]
+	for _, port := range namedPorts {
+		f.Ports = append(f.Ports, port.Port)
+	}
+	return nil
 }
 
 // getInstanceList returns an instance list based on the given names.
@@ -157,9 +173,7 @@ func getInstanceList(nodeNames sets.String) *compute.InstanceGroupsListInstances
 	instanceNames := nodeNames.List()
 	computeInstances := []*compute.InstanceWithNamedPorts{}
 	for _, name := range instanceNames {
-		instanceLink := fmt.Sprintf(
-			"https://www.googleapis.com/compute/v1/projects/%s/zones/%s/instances/%s",
-			"project", "zone", name)
+		instanceLink := getInstanceUrl(name)
 		computeInstances = append(
 			computeInstances, &compute.InstanceWithNamedPorts{
 				Instance: instanceLink})
@@ -167,4 +181,27 @@ func getInstanceList(nodeNames sets.String) *compute.InstanceGroupsListInstances
 	return &compute.InstanceGroupsListInstances{
 		Items: computeInstances,
 	}
+}
+
+func (f *FakeInstanceGroups) ToInstanceReferences(zone string, instanceNames []string) (refs []*compute.InstanceReference) {
+	for _, ins := range instanceNames {
+		instanceLink := getInstanceUrl(ins)
+		refs = append(refs, &compute.InstanceReference{Instance: instanceLink})
+	}
+	return refs
+}
+
+func getInstanceUrl(instanceName string) string {
+	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/instances/%s",
+		"project", "zone", instanceName)
+}
+
+func toInstanceNames(instanceRefs []*compute.InstanceReference) []string {
+	instanceNames := make([]string, len(instanceRefs))
+	for ix := range instanceRefs {
+		url := instanceRefs[ix].Instance
+		parts := strings.Split(url, "/")
+		instanceNames[ix] = parts[len(parts)-1]
+	}
+	return instanceNames
 }

@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
+	api_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/utils"
 )
@@ -76,20 +76,19 @@ func TestInstancesAddedToZones(t *testing.T) {
 	lbc.CloudClusterManager.instancePool.Sync([]string{"n1", "n2", "n3"})
 	gotZonesToNode := cm.fakeIGs.GetInstancesByZone()
 
-	i := 0
+	if cm.fakeIGs.Ports[0] != testPort {
+		t.Errorf("Expected the same node port on all igs, got ports %+v", cm.fakeIGs.Ports)
+	}
+
 	for z, nodeNames := range zoneToNode {
 		if ig, err := cm.fakeIGs.GetInstanceGroup(testIG, z); err != nil {
 			t.Errorf("Failed to find ig %v in zone %v, found %+v: %v", testIG, z, ig, err)
-		}
-		if cm.fakeIGs.Ports[i] != testPort {
-			t.Errorf("Expected the same node port on all igs, got ports %+v", cm.fakeIGs.Ports)
 		}
 		expNodes := sets.NewString(nodeNames...)
 		gotNodes := sets.NewString(gotZonesToNode[z]...)
 		if !gotNodes.Equal(expNodes) {
 			t.Errorf("Nodes not added to zones, expected %+v got %+v", expNodes, gotNodes)
 		}
-		i++
 	}
 }
 

@@ -26,6 +26,8 @@ import (
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
+	api_v1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -34,8 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	listers "k8s.io/client-go/listers/core/v1"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -595,8 +595,8 @@ func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOr
 // - has no special host or headers fields, except for possibly an HTTP Host header
 func isSimpleHTTPProbe(probe *api_v1.Probe) bool {
 	return (probe != nil && probe.Handler.HTTPGet != nil && probe.Handler.HTTPGet.Host == "" &&
-	        (len(probe.Handler.HTTPGet.HTTPHeaders) == 0 ||
-	        (len(probe.Handler.HTTPGet.HTTPHeaders) == 1 && probe.Handler.HTTPGet.HTTPHeaders[0].Name == "Host")))
+		(len(probe.Handler.HTTPGet.HTTPHeaders) == 0 ||
+			(len(probe.Handler.HTTPGet.HTTPHeaders) == 1 && probe.Handler.HTTPGet.HTTPHeaders[0].Name == "Host")))
 }
 
 // GetProbe returns a probe that's used for the given nodeport

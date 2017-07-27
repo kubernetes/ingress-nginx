@@ -224,7 +224,7 @@ func getGCEClient(config io.Reader) *gce.GCECloud {
 			// user has no need for Ingress in this case. If they grant
 			// permissions to the node they will have to restart the controller
 			// manually to re-create the client.
-			if _, err = cloud.ListBackendServices(); err == nil || utils.IsHTTPErrorCode(err, http.StatusForbidden) {
+			if _, err = cloud.ListGlobalBackendServices(); err == nil || utils.IsHTTPErrorCode(err, http.StatusForbidden) {
 				return cloud
 			}
 			glog.Warningf("Failed to list backend services, retrying: %v", err)

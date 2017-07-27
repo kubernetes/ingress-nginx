@@ -19,7 +19,7 @@ package storage
 import (
 	"testing"
 
-	"k8s.io/client-go/pkg/api"
+	api "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestConfigMapUID(t *testing.T) {

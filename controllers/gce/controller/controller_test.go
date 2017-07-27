@@ -24,14 +24,14 @@ import (
 
 	compute "google.golang.org/api/compute/v1"
 
+	api_v1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress/controllers/gce/firewalls"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
@@ -428,7 +428,7 @@ func TestLbChangeStaticIP(t *testing.T) {
 	}
 
 	ing.Annotations = map[string]string{staticIPNameKey: "testip"}
-	cm.fakeLbs.ReserveGlobalStaticIP("testip", "1.2.3.4")
+	cm.fakeLbs.ReserveGlobalAddress(&compute.Address{Name: "testip", Address: "1.2.3.4"})
 
 	// Second sync reassigns 1.2.3.4 to existing forwarding rule (by recreating it)
 	lbc.sync(ingStoreKey)
