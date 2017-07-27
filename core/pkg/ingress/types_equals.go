@@ -16,6 +16,7 @@ limitations under the License.
 
 package ingress
 
+// Equal tests for equality between two BackendInfo types
 func (bi1 *BackendInfo) Equal(bi2 *BackendInfo) bool {
 	if bi1 == bi2 {
 		return true
@@ -39,6 +40,7 @@ func (bi1 *BackendInfo) Equal(bi2 *BackendInfo) bool {
 	return true
 }
 
+// Equal tests for equality between two Configuration types
 func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	if c1 == c2 {
 		return true
@@ -135,6 +137,7 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	return true
 }
 
+// Equal tests for equality between two Backend types
 func (b1 *Backend) Equal(b2 *Backend) bool {
 	if b1 == b2 {
 		return true
@@ -199,6 +202,7 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	return true
 }
 
+// Equal tests for equality between two SessionAffinityConfig types
 func (sac1 *SessionAffinityConfig) Equal(sac2 *SessionAffinityConfig) bool {
 	if sac1 == sac2 {
 		return true
@@ -216,6 +220,7 @@ func (sac1 *SessionAffinityConfig) Equal(sac2 *SessionAffinityConfig) bool {
 	return true
 }
 
+// Equal tests for equality between two CookieSessionAffinity types
 func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	if csa1 == csa2 {
 		return true
@@ -257,6 +262,7 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 	return true
 }
 
+// Equal tests for equality between two Server types
 func (s1 *Server) Equal(s2 *Server) bool {
 	if s1 == s2 {
 		return true
@@ -297,6 +303,7 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	return true
 }
 
+// Equal tests for equality between two Location types
 func (l1 *Location) Equal(l2 *Location) bool {
 	if l1 == l2 {
 		return true
@@ -371,6 +378,7 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	return true
 }
 
+// Equal tests for equality between two SSLPassthroughBackend types
 func (ptb1 *SSLPassthroughBackend) Equal(ptb2 *SSLPassthroughBackend) bool {
 	if ptb1 == ptb2 {
 		return true
@@ -407,6 +415,7 @@ func (ptb1 *SSLPassthroughBackend) Equal(ptb2 *SSLPassthroughBackend) bool {
 	return true
 }
 
+// Equal tests for equality between two L4Service types
 func (e1 *L4Service) Equal(e2 *L4Service) bool {
 	if e1 == e2 {
 		return true
@@ -440,6 +449,7 @@ func (e1 *L4Service) Equal(e2 *L4Service) bool {
 	return true
 }
 
+// Equal tests for equality between two L4Backend types
 func (l4b1 *L4Backend) Equal(l4b2 *L4Backend) bool {
 	if l4b1 == l4b2 {
 		return true

@@ -39,6 +39,7 @@ type SourceRange struct {
 	CIDR []string `json:"cidr,omitEmpty"`
 }
 
+// Equal tests for equality between two SourceRange types
 func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 	if sr1 == sr2 {
 		return true

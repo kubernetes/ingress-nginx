@@ -40,6 +40,7 @@ type AuthSSLConfig struct {
 	ValidationDepth int                  `json:"validationDepth"`
 }
 
+// Equal tests for equality between two AuthSSLConfig types
 func (assl1 *AuthSSLConfig) Equal(assl2 *AuthSSLConfig) bool {
 	if assl1 == assl2 {
 		return true

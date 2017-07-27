@@ -47,6 +47,7 @@ type RateLimit struct {
 	RPS Zone `json:"rps"`
 }
 
+// Equal tests for equality between two RateLimit types
 func (rt1 *RateLimit) Equal(rt2 *RateLimit) bool {
 	if rt1 == rt2 {
 		return true
@@ -74,6 +75,7 @@ type Zone struct {
 	SharedSize int `json:"sharedSize"`
 }
 
+// Equal tests for equality between two Zone types
 func (z1 *Zone) Equal(z2 *Zone) bool {
 	if z1 == z2 {
 		return true
