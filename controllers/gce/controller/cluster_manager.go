@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang/glog"
 
+	compute "google.golang.org/api/compute/v1"
 	gce "k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 
 	"k8s.io/ingress/controllers/gce/backends"
@@ -132,7 +133,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	if err := c.backendPool.Sync(nodePorts); err != nil {
 		return err
 	}
-	if err := c.instancePool.Sync(nodeNames); err != nil {
+	if err := c.SyncNodesInInstanceGroups(nodeNames); err != nil {
 		return err
 	}
 	if err := c.l7Pool.Sync(lbs); err != nil {
@@ -158,6 +159,25 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 		return err
 	}
 
+	return nil
+}
+
+func (c *ClusterManager) CreateInstanceGroups(servicePorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
+	var igs []*compute.InstanceGroup
+	var err error
+	for _, p := range servicePorts {
+		igs, _, err = instances.CreateInstanceGroups(c.instancePool, c.ClusterNamer, p.Port)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return igs, nil
+}
+
+func (c *ClusterManager) SyncNodesInInstanceGroups(nodeNames []string) error {
+	if err := c.instancePool.Sync(nodeNames); err != nil {
+		return err
+	}
 	return nil
 }
 
