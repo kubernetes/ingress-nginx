@@ -214,13 +214,6 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	secrEventHandler := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			sec := obj.(*api.Secret)
-			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
-			if ic.secrReferenced(sec.Namespace, sec.Name) {
-				ic.syncSecret(key)
-			}
-		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
 				sec := cur.(*api.Secret)
