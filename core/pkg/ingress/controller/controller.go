@@ -1097,6 +1097,10 @@ func (ic *GenericController) createServers(data []interface{},
 			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 			bc, exists := ic.sslCertTracker.Get(key)
 			if !exists {
+				ic.syncSecret(key)
+				bc, exists = ic.sslCertTracker.Get(key)
+			}
+			if !exists {
 				glog.Infof("ssl certificate \"%v\" does not exist in local store", key)
 				continue
 			}
