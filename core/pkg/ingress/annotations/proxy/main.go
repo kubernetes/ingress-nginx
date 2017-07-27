@@ -46,6 +46,7 @@ type Configuration struct {
 	NextUpstream   string `json:"nextUpstream"`
 }
 
+// Equal tests for equality between two Configuration types
 func (l1 *Configuration) Equal(l2 *Configuration) bool {
 	if l1 == l2 {
 		return true

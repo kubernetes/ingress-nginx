@@ -47,6 +47,7 @@ type External struct {
 	ResponseHeaders []string `json:"responseHeaders,omitEmpty"`
 }
 
+// Equal tests for equality between two External types
 func (e1 *External) Equal(e2 *External) bool {
 	if e1 == e2 {
 		return true

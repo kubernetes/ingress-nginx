@@ -46,6 +46,7 @@ type Redirect struct {
 	AppRoot string `json:"appRoot"`
 }
 
+// Equal tests for equality between two Redirect types
 func (r1 *Redirect) Equal(r2 *Redirect) bool {
 	if r1 == r2 {
 		return true
