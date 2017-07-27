@@ -52,6 +52,7 @@ type AuthSSLCert struct {
 	PemSHA string `json:"pemSha"`
 }
 
+// Equal tests for equality between two AuthSSLCert types
 func (asslc1 *AuthSSLCert) Equal(assl2 *AuthSSLCert) bool {
 	if asslc1.Secret != assl2.Secret {
 		return false

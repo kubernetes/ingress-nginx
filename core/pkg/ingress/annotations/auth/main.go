@@ -53,6 +53,7 @@ type BasicDigest struct {
 	Secured bool   `json:"secured"`
 }
 
+// Equal tests for equality between two BasicDigest types
 func (bd1 *BasicDigest) Equal(bd2 *BasicDigest) bool {
 	if bd1 == bd2 {
 		return true
