@@ -26,6 +26,7 @@ import (
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
+
 	api_v1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -75,12 +76,19 @@ const (
 	// ingressClassKey picks a specific "class" for the Ingress. The controller
 	// only processes Ingresses with this annotation either unset, or set
 	// to either gceIngessClass or the empty string.
-	ingressClassKey = "kubernetes.io/ingress.class"
-	gceIngressClass = "gce"
+	ingressClassKey      = "kubernetes.io/ingress.class"
+	gceIngressClass      = "gce"
+	gceMultiIngressClass = "gce-multi"
 
 	// Label key to denote which GCE zone a Kubernetes node is in.
 	zoneKey     = "failure-domain.beta.kubernetes.io/zone"
 	defaultZone = ""
+
+	// instanceGroupsKey is the annotation key used by controller to specify the
+	// name and zone of instance groups created for the ingress.
+	// This is read only for users. Controller will overrite any user updates.
+	// This is only set for ingresses with ingressClass = "gce-multi"
+	instanceGroupsKey = "ingress.gcp.kubernetes.io/instance-groups"
 )
 
 // ingAnnotations represents Ingress annotations.
@@ -154,6 +162,13 @@ func (svc svcAnnotations) ApplicationProtocols() (map[string]utils.AppProtocol, 
 func isGCEIngress(ing *extensions.Ingress) bool {
 	class := ingAnnotations(ing.ObjectMeta.Annotations).ingressClass()
 	return class == "" || class == gceIngressClass
+}
+
+// isGCEMultiClusterIngress returns true if the given Ingress has
+// ingress.class annotation set to "gce-multi".
+func isGCEMultiClusterIngress(ing *extensions.Ingress) bool {
+	class := ingAnnotations(ing.ObjectMeta.Annotations).ingressClass()
+	return class == gceMultiIngressClass
 }
 
 // errorNodePortNotFound is an implementation of error.
@@ -471,32 +486,39 @@ PortLoop:
 	return p, nil
 }
 
-// toNodePorts converts a pathlist to a flat list of nodeports.
+// toNodePorts is a helper method over ingressToNodePorts to process a list of ingresses.
 func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []backends.ServicePort {
 	var knownPorts []backends.ServicePort
 	for _, ing := range ings.Items {
-		defaultBackend := ing.Spec.Backend
-		if defaultBackend != nil {
-			port, err := t.getServiceNodePort(*defaultBackend, ing.Namespace)
+		knownPorts = append(knownPorts, t.ingressToNodePorts(&ing)...)
+	}
+	return knownPorts
+}
+
+// ingressToNodePorts converts a pathlist to a flat list of nodeports for the given ingress.
+func (t *GCETranslator) ingressToNodePorts(ing *extensions.Ingress) []backends.ServicePort {
+	var knownPorts []backends.ServicePort
+	defaultBackend := ing.Spec.Backend
+	if defaultBackend != nil {
+		port, err := t.getServiceNodePort(*defaultBackend, ing.Namespace)
+		if err != nil {
+			glog.Infof("%v", err)
+		} else {
+			knownPorts = append(knownPorts, port)
+		}
+	}
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			glog.Errorf("ignoring non http Ingress rule")
+			return knownPorts
+		}
+		for _, path := range rule.HTTP.Paths {
+			port, err := t.getServiceNodePort(path.Backend, ing.Namespace)
 			if err != nil {
 				glog.Infof("%v", err)
-			} else {
-				knownPorts = append(knownPorts, port)
+				return knownPorts
 			}
-		}
-		for _, rule := range ing.Spec.Rules {
-			if rule.HTTP == nil {
-				glog.Errorf("ignoring non http Ingress rule")
-				continue
-			}
-			for _, path := range rule.HTTP.Paths {
-				port, err := t.getServiceNodePort(path.Backend, ing.Namespace)
-				if err != nil {
-					glog.Infof("%v", err)
-					continue
-				}
-				knownPorts = append(knownPorts, port)
-			}
+			knownPorts = append(knownPorts, port)
 		}
 	}
 	return knownPorts
@@ -639,4 +661,24 @@ func (o PodsByCreationTimestamp) Less(i, j int) bool {
 		return o[i].Name < o[j].Name
 	}
 	return o[i].CreationTimestamp.Before(o[j].CreationTimestamp)
+}
+
+func addInstanceGroupsAnnotation(existing map[string]string, igs []*compute.InstanceGroup) (map[string]string, error) {
+	if existing == nil {
+		existing = map[string]string{}
+	}
+	type Value struct {
+		Name string
+		Zone string
+	}
+	instanceGroups := []Value{}
+	for _, ig := range igs {
+		instanceGroups = append(instanceGroups, Value{Name: ig.Name, Zone: ig.Zone})
+	}
+	jsonValue, err := json.Marshal(instanceGroups)
+	if err != nil {
+		return existing, err
+	}
+	existing[instanceGroupsKey] = string(jsonValue)
+	return existing, nil
 }

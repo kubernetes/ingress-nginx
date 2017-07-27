@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	compute "google.golang.org/api/compute/v1"
+
 	api_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -262,4 +264,20 @@ func addNodes(lbc *LoadBalancerController, zoneToNode map[string][]string) {
 
 func getProbePath(p *api_v1.Probe) string {
 	return p.Handler.HTTPGet.Path
+}
+
+func TestAddInstanceGroupsAnnotation(t *testing.T) {
+	igs := []*compute.InstanceGroup{&compute.InstanceGroup{
+		Name: "ig-name",
+		Zone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-b",
+	},
+	}
+	expectedAnnotation := `[{"Name":"ig-name","Zone":"https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-b"}]`
+	annotations, err := addInstanceGroupsAnnotation(nil, igs)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if annotations[instanceGroupsKey] != expectedAnnotation {
+		t.Fatalf("Unexpected annotation value: %s, expected: %s", annotations[instanceGroupsKey], expectedAnnotation)
+	}
 }
