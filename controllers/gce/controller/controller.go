@@ -170,11 +170,17 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 	)
 
 	// Node watch handlers
+	nodeHandlers := cache.ResourceEventHandlerFuncs{
+		AddFunc:    lbc.nodeQueue.enqueue,
+		DeleteFunc: lbc.nodeQueue.enqueue,
+		// Nodes are updated every 10s and we don't care, so no update handler.
+	}
+
 	lbc.nodeLister.Indexer, lbc.nodeController = cache.NewIndexerInformer(
 		cache.NewListWatchFromClient(lbc.client.Core().RESTClient(), "nodes", api_v1.NamespaceAll, fields.Everything()),
 		&api_v1.Node{},
 		resyncPeriod,
-		cache.ResourceEventHandlerFuncs{},
+		nodeHandlers,
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
