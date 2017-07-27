@@ -1088,7 +1088,7 @@ func (ic *GenericController) createServers(data []interface{},
 			}
 
 			if tlsSecretName == "" {
-				glog.Warningf("host %v is listed on tls section but secretName is empty. Using default cert", host)
+				glog.V(3).Infof("host %v is listed on tls section but secretName is empty. Using default cert", host)
 				servers[host].SSLCertificate = defaultPemFileName
 				servers[host].SSLPemChecksum = defaultPemSHA
 				continue
