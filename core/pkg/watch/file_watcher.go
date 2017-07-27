@@ -19,6 +19,7 @@ package watch
 import (
 	"log"
 	"path"
+	"strings"
 
 	"gopkg.in/fsnotify.v1"
 )
@@ -42,7 +43,7 @@ func NewFileWatcher(file string, onEvent func()) (FileWatcher, error) {
 }
 
 // Close ends the watch
-func (f FileWatcher) Close() error {
+func (f *FileWatcher) Close() error {
 	return f.watcher.Close()
 }
 
@@ -59,9 +60,9 @@ func (f *FileWatcher) watch() error {
 		for {
 			select {
 			case event := <-watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write ||
-					event.Op&fsnotify.Create == fsnotify.Create &&
-						event.Name == file {
+				if (event.Op&fsnotify.Write == fsnotify.Write ||
+					event.Op&fsnotify.Create == fsnotify.Create) &&
+					strings.HasSuffix(event.Name, file) {
 					f.onEvent()
 				}
 			case err := <-watcher.Errors:
