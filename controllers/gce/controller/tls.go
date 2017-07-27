@@ -21,10 +21,10 @@ import (
 
 	"github.com/golang/glog"
 
+	api_v1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 )

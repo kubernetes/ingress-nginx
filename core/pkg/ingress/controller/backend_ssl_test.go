@@ -23,9 +23,9 @@ import (
 
 	"fmt"
 
+	api_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
 	cache_client "k8s.io/client-go/tools/cache"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/store"

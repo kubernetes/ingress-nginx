@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	compute "google.golang.org/api/compute/v1"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
+	api_v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress/controllers/gce/utils"
@@ -44,8 +44,8 @@ type FakeBackendServices struct {
 	errFunc         func(op int, be *compute.BackendService) error
 }
 
-// GetBackendService fakes getting a backend service from the cloud.
-func (f *FakeBackendServices) GetBackendService(name string) (*compute.BackendService, error) {
+// GetGlobalBackendService fakes getting a backend service from the cloud.
+func (f *FakeBackendServices) GetGlobalBackendService(name string) (*compute.BackendService, error) {
 	f.calls = append(f.calls, utils.Get)
 	obj, exists, err := f.backendServices.GetByKey(name)
 	if !exists {
@@ -62,8 +62,8 @@ func (f *FakeBackendServices) GetBackendService(name string) (*compute.BackendSe
 	return nil, fmt.Errorf("backend service %v not found", name)
 }
 
-// CreateBackendService fakes backend service creation.
-func (f *FakeBackendServices) CreateBackendService(be *compute.BackendService) error {
+// CreateGlobalBackendService fakes backend service creation.
+func (f *FakeBackendServices) CreateGlobalBackendService(be *compute.BackendService) error {
 	if f.errFunc != nil {
 		if err := f.errFunc(utils.Create, be); err != nil {
 			return err
@@ -74,8 +74,8 @@ func (f *FakeBackendServices) CreateBackendService(be *compute.BackendService) e
 	return f.backendServices.Update(be)
 }
 
-// DeleteBackendService fakes backend service deletion.
-func (f *FakeBackendServices) DeleteBackendService(name string) error {
+// DeleteGlobalBackendService fakes backend service deletion.
+func (f *FakeBackendServices) DeleteGlobalBackendService(name string) error {
 	f.calls = append(f.calls, utils.Delete)
 	svc, exists, err := f.backendServices.GetByKey(name)
 	if !exists {
@@ -87,8 +87,8 @@ func (f *FakeBackendServices) DeleteBackendService(name string) error {
 	return f.backendServices.Delete(svc)
 }
 
-// ListBackendServices fakes backend service listing.
-func (f *FakeBackendServices) ListBackendServices() (*compute.BackendServiceList, error) {
+// ListGlobalBackendServices fakes backend service listing.
+func (f *FakeBackendServices) ListGlobalBackendServices() (*compute.BackendServiceList, error) {
 	var svcs []*compute.BackendService
 	for _, s := range f.backendServices.List() {
 		svc := s.(*compute.BackendService)
@@ -97,8 +97,8 @@ func (f *FakeBackendServices) ListBackendServices() (*compute.BackendServiceList
 	return &compute.BackendServiceList{Items: svcs}, nil
 }
 
-// UpdateBackendService fakes updating a backend service.
-func (f *FakeBackendServices) UpdateBackendService(be *compute.BackendService) error {
+// UpdateGlobalBackendService fakes updating a backend service.
+func (f *FakeBackendServices) UpdateGlobalBackendService(be *compute.BackendService) error {
 	if f.errFunc != nil {
 		if err := f.errFunc(utils.Update, be); err != nil {
 			return err
@@ -108,9 +108,9 @@ func (f *FakeBackendServices) UpdateBackendService(be *compute.BackendService) e
 	return f.backendServices.Update(be)
 }
 
-// GetHealth fakes getting backend service health.
-func (f *FakeBackendServices) GetHealth(name, instanceGroupLink string) (*compute.BackendServiceGroupHealth, error) {
-	be, err := f.GetBackendService(name)
+// GetGlobalBackendServiceHealth fakes getting backend service health.
+func (f *FakeBackendServices) GetGlobalBackendServiceHealth(name, instanceGroupLink string) (*compute.BackendServiceGroupHealth, error) {
+	be, err := f.GetGlobalBackendService(name)
 	if err != nil {
 		return nil, err
 	}

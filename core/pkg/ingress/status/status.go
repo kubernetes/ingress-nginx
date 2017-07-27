@@ -19,21 +19,25 @@ package status
 import (
 	"fmt"
 	"net"
+	"os"
 	"sort"
 	"sync"
 	"time"
 
 	"github.com/golang/glog"
 
+	v1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	"k8s.io/client-go/tools/record"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
-	"k8s.io/ingress/core/pkg/ingress/status/leaderelection"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
 	"k8s.io/ingress/core/pkg/strings"
@@ -126,7 +130,7 @@ func (s statusSync) Shutdown() {
 	}
 
 	glog.Infof("removing address from ingress status (%v)", addrs)
-	s.updateStatus([]api_v1.LoadBalancerIngress{})
+	s.updateStatus([]v1.LoadBalancerIngress{})
 }
 
 func (s *statusSync) run() {
@@ -198,17 +202,49 @@ func NewStatusSyncer(config Config) Sync {
 
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
-	id := fmt.Sprintf("%v-%v", config.ElectionID, config.DefaultIngressClass)
+	electionID := fmt.Sprintf("%v-%v", config.ElectionID, config.DefaultIngressClass)
 	if config.IngressClass != "" {
-		id = fmt.Sprintf("%v-%v", config.ElectionID, config.IngressClass)
+		electionID = fmt.Sprintf("%v-%v", config.ElectionID, config.IngressClass)
 	}
 
-	le, err := NewElection(id,
-		pod.Name, pod.Namespace, 30*time.Second,
-		st.callback, config.Client)
+	callbacks := leaderelection.LeaderCallbacks{
+		OnStartedLeading: func(stop <-chan struct{}) {
+			st.callback(pod.Name)
+		},
+		OnStoppedLeading: func() {
+			st.callback("")
+		},
+	}
+
+	broadcaster := record.NewBroadcaster()
+	hostname, _ := os.Hostname()
+
+	recorder := broadcaster.NewRecorder(scheme.Scheme, v1.EventSource{
+		Component: "ingress-leader-elector",
+		Host:      hostname,
+	})
+
+	lock := resourcelock.ConfigMapLock{
+		ConfigMapMeta: meta_v1.ObjectMeta{Namespace: pod.Namespace, Name: electionID},
+		Client:        config.Client.Core(),
+		LockConfig: resourcelock.ResourceLockConfig{
+			Identity:      electionID,
+			EventRecorder: recorder,
+		},
+	}
+
+	le, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
+		Lock:          &lock,
+		LeaseDuration: 30 * time.Second,
+		RenewDeadline: 15 * time.Second,
+		RetryPeriod:   5 * time.Second,
+		Callbacks:     callbacks,
+	})
+
 	if err != nil {
 		glog.Fatalf("unexpected error starting leader election: %v", err)
 	}
+
 	st.elector = le
 	return st
 }
@@ -265,13 +301,13 @@ func (s *statusSync) isRunningMultiplePods() bool {
 }
 
 // sliceToStatus converts a slice of IP and/or hostnames to LoadBalancerIngress
-func sliceToStatus(endpoints []string) []api_v1.LoadBalancerIngress {
-	lbi := []api_v1.LoadBalancerIngress{}
+func sliceToStatus(endpoints []string) []v1.LoadBalancerIngress {
+	lbi := []v1.LoadBalancerIngress{}
 	for _, ep := range endpoints {
 		if net.ParseIP(ep) == nil {
-			lbi = append(lbi, api_v1.LoadBalancerIngress{Hostname: ep})
+			lbi = append(lbi, v1.LoadBalancerIngress{Hostname: ep})
 		} else {
-			lbi = append(lbi, api_v1.LoadBalancerIngress{IP: ep})
+			lbi = append(lbi, v1.LoadBalancerIngress{IP: ep})
 		}
 	}
 
@@ -279,7 +315,7 @@ func sliceToStatus(endpoints []string) []api_v1.LoadBalancerIngress {
 	return lbi
 }
 
-func (s *statusSync) updateStatus(newIPs []api_v1.LoadBalancerIngress) {
+func (s *statusSync) updateStatus(newIPs []v1.LoadBalancerIngress) {
 	ings := s.IngressLister.List()
 	var wg sync.WaitGroup
 	wg.Add(len(ings))
@@ -319,7 +355,7 @@ func (s *statusSync) updateStatus(newIPs []api_v1.LoadBalancerIngress) {
 	wg.Wait()
 }
 
-func ingressSliceEqual(lhs, rhs []api_v1.LoadBalancerIngress) bool {
+func ingressSliceEqual(lhs, rhs []v1.LoadBalancerIngress) bool {
 	if len(lhs) != len(rhs) {
 		return false
 	}
@@ -336,7 +372,7 @@ func ingressSliceEqual(lhs, rhs []api_v1.LoadBalancerIngress) bool {
 }
 
 // loadBalancerIngressByIP sorts LoadBalancerIngress using the field IP
-type loadBalancerIngressByIP []api_v1.LoadBalancerIngress
+type loadBalancerIngressByIP []v1.LoadBalancerIngress
 
 func (c loadBalancerIngressByIP) Len() int      { return len(c) }
 func (c loadBalancerIngressByIP) Swap(i, j int) { c[i], c[j] = c[j], c[i] }

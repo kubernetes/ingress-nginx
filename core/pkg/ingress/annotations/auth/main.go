@@ -24,8 +24,8 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
-	api "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
