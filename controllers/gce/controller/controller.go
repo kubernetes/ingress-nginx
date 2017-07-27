@@ -111,7 +111,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 	pathHandlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
-			if !isGCEIngress(addIng) {
+			if !isGCEIngress(addIng) && !isGCEMultiClusterIngress(addIng) {
 				glog.Infof("Ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
 				return
 			}
@@ -120,7 +120,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
-			if !isGCEIngress(delIng) {
+			if !isGCEIngress(delIng) && !isGCEMultiClusterIngress(delIng) {
 				glog.Infof("Ignoring delete for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
 				return
 			}
@@ -129,7 +129,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, clusterManager *
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			curIng := cur.(*extensions.Ingress)
-			if !isGCEIngress(curIng) {
+			if !isGCEIngress(curIng) && !isGCEMultiClusterIngress(curIng) {
 				return
 			}
 			if !reflect.DeepEqual(old, cur) {
@@ -306,6 +306,13 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
 
+	if ingExists {
+		ing := obj.(*extensions.Ingress)
+		if isGCEMultiClusterIngress(ing) {
+			return lbc.syncMultiClusterIngress(ing, nodeNames)
+		}
+	}
+
 	// Record any errors during sync and throw a single error at the end. This
 	// allows us to free up associated cloud resources ASAP.
 	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, nodePorts); err != nil {
@@ -342,6 +349,39 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	return syncError
 }
 
+func (lbc *LoadBalancerController) syncMultiClusterIngress(ing *extensions.Ingress, nodeNames []string) error {
+	// For multi cluster ingress, we only need to manage the instance groups and named ports on those instance groups.
+
+	// Ensure that all the required instance groups exist with the required node ports.
+	nodePorts := lbc.tr.ingressToNodePorts(ing)
+	// Add the default backend node port.
+	nodePorts = append(nodePorts, lbc.CloudClusterManager.defaultBackendNodePort)
+	igs, err := lbc.CloudClusterManager.CreateInstanceGroups(nodePorts)
+	if err != nil {
+		return err
+	}
+
+	// Ensure that instance groups have the right nodes.
+	// This is also done whenever a node is added or removed from the cluster.
+	// We need it here as well since instance group is not created until first ingress is observed.
+	if err := lbc.CloudClusterManager.SyncNodesInInstanceGroups(nodeNames); err != nil {
+		return err
+	}
+
+	// Add instance group names as annotation on the ingress.
+	if ing.Annotations == nil {
+		ing.Annotations = map[string]string{}
+	}
+	err = setInstanceGroupsAnnotation(ing.Annotations, igs)
+	if err != nil {
+		return err
+	}
+	if err := lbc.updateAnnotations(ing.Name, ing.Namespace, ing.Annotations); err != nil {
+		return err
+	}
+	return nil
+}
+
 // updateIngressStatus updates the IP and annotations of a loadbalancer.
 // The annotations are parsed by kubectl describe.
 func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing extensions.Ingress) error {
@@ -372,14 +412,23 @@ func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing
 			lbc.recorder.Eventf(currIng, api_v1.EventTypeNormal, "CREATE", "ip: %v", ip)
 		}
 	}
+	annotations := loadbalancers.GetLBAnnotations(l7, currIng.Annotations, lbc.CloudClusterManager.backendPool)
+	if err := lbc.updateAnnotations(ing.Name, ing.Namespace, annotations); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (lbc *LoadBalancerController) updateAnnotations(name, namespace string, annotations map[string]string) error {
 	// Update annotations through /update endpoint
-	currIng, err = ingClient.Get(ing.Name, metav1.GetOptions{})
+	ingClient := lbc.client.Extensions().Ingresses(namespace)
+	currIng, err := ingClient.Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-	currIng.Annotations = loadbalancers.GetLBAnnotations(l7, currIng.Annotations, lbc.CloudClusterManager.backendPool)
-	if !reflect.DeepEqual(ing.Annotations, currIng.Annotations) {
-		glog.V(3).Infof("Updating annotations of %v/%v", ing.Namespace, ing.Name)
+	if !reflect.DeepEqual(currIng.Annotations, annotations) {
+		glog.V(3).Infof("Updating annotations of %v/%v", namespace, name)
+		currIng.Annotations = annotations
 		if _, err := ingClient.Update(currIng); err != nil {
 			return err
 		}

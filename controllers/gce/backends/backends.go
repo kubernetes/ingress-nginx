@@ -217,7 +217,7 @@ func (b *Backends) Add(p ServicePort) error {
 	be := &compute.BackendService{}
 	defer func() { b.snapshotter.Add(portKey(p.Port), be) }()
 
-	igs, namedPort, err := b.nodePool.AddInstanceGroup(b.namer.IGName(), p.Port)
+	igs, namedPort, err := instances.CreateInstanceGroups(b.nodePool, b.namer, p.Port)
 	if err != nil {
 		return err
 	}
