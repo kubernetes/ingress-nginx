@@ -109,9 +109,6 @@ type GenericController struct {
 
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
-
-	// reloadRequired indicates the configmap
-	reloadRequired bool
 }
 
 // Configuration contains all the settings required by an Ingress controller
@@ -180,7 +177,6 @@ func newIngressController(config *Configuration) *GenericController {
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
 			ic.syncQueue.Enqueue(obj)
-			ic.extractSecretNames(addIng)
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
@@ -204,23 +200,13 @@ func newIngressController(config *Configuration) *GenericController {
 				ic.recorder.Eventf(curIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validCur && !reflect.DeepEqual(old, cur) {
 				ic.recorder.Eventf(curIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
-			} else {
-				// old and cur are invalid or old and cur doesn't have changes, so ignore
-				return
 			}
+
 			ic.syncQueue.Enqueue(cur)
-			ic.extractSecretNames(curIng)
 		},
 	}
 
 	secrEventHandler := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			sec := obj.(*api.Secret)
-			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
-			if ic.secrReferenced(sec.Namespace, sec.Name) {
-				ic.syncSecret(key)
-			}
-		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
 				sec := cur.(*api.Secret)
@@ -256,7 +242,6 @@ func newIngressController(config *Configuration) *GenericController {
 			if mapKey == ic.cfg.ConfigMapName {
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
 				ic.cfg.Backend.SetConfig(upCmap)
-				ic.reloadRequired = true
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
@@ -266,7 +251,6 @@ func newIngressController(config *Configuration) *GenericController {
 				if mapKey == ic.cfg.ConfigMapName {
 					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
 					ic.cfg.Backend.SetConfig(upCmap)
-					ic.reloadRequired = true
 				}
 				// updates to configuration configmaps can trigger an update
 				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
@@ -382,6 +366,13 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		return nil
 	}
 
+	if name, ok := key.(string); ok {
+		if obj, exists, _ := ic.ingLister.GetByKey(name); exists {
+			ing := obj.(*extensions.Ingress)
+			ic.readSecrets(ing)
+		}
+	}
+
 	upstreams, servers := ic.getBackendServers()
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
@@ -413,7 +404,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		PassthroughBackends: passUpstreams,
 	}
 
-	if !ic.reloadRequired && (ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg)) {
+	if ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg) {
 		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
 	}
@@ -427,7 +418,6 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		return err
 	}
 
-	ic.reloadRequired = false
 	glog.Infof("ingress backend successfully reloaded...")
 	incReloadCount()
 	setSSLExpireTime(servers)
@@ -1199,19 +1189,22 @@ func (ic *GenericController) getEndpoints(
 	return upsServers
 }
 
-// extractSecretNames extracts information about secrets inside the Ingress rule
-func (ic GenericController) extractSecretNames(ing *extensions.Ingress) {
+// readSecrets extracts information about secrets from an Ingress rule
+func (ic *GenericController) readSecrets(ing *extensions.Ingress) {
 	for _, tls := range ing.Spec.TLS {
 		if tls.SecretName == "" {
 			continue
 		}
 
 		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
-		_, exists := ic.sslCertTracker.Get(key)
-		if !exists {
-			ic.syncSecret(key)
-		}
+		ic.syncSecret(key)
 	}
+
+	key, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+	if key == "" {
+		return
+	}
+	ic.syncSecret(key)
 }
 
 // Stop stops the loadbalancer controller.
