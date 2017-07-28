@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/pflag"
 
 	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
@@ -104,4 +105,8 @@ func (n DummyController) SetListers(lister ingress.StoreLister) {
 
 func (n DummyController) DefaultIngressClass() string {
 	return "dummy"
+}
+
+func (n DummyController) UpdateIngressStatus(*extensions.Ingress) []api.LoadBalancerIngress {
+	return nil
 }
