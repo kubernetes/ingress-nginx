@@ -17,7 +17,9 @@ limitations under the License.
 package controller
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -210,12 +212,17 @@ func (c *ClusterManager) GC(lbNames []string, nodePorts []backends.ServicePort) 
 }
 
 func getGCEClient(config io.Reader) *gce.GCECloud {
+	allConfig, err := ioutil.ReadAll(config)
+	if err != nil {
+		glog.Fatalf("Error while reading entire config: %v", err)
+	}
+
 	// Creating the cloud interface involves resolving the metadata server to get
 	// an oauth token. If this fails, the token provider assumes it's not on GCE.
 	// No errors are thrown. So we need to keep retrying till it works because
 	// we know we're on GCE.
 	for {
-		cloudInterface, err := cloudprovider.GetCloudProvider("gce", config)
+		cloudInterface, err := cloudprovider.GetCloudProvider("gce", bytes.NewReader(allConfig))
 		if err == nil {
 			cloud := cloudInterface.(*gce.GCECloud)
 
