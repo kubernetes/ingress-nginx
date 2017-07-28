@@ -48,7 +48,7 @@ Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 Session stickyness | route requests consistently to the same endpoint | nginx | Advanced
 Least connections | route requests based on least connections | on-prem | Advanced
-Weights | route requrests to backends based on weights | nginx | Advanced
+Weights | route requests to backends based on weights | nginx | Advanced
 
 ## Routing
 
