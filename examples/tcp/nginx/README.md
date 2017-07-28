@@ -1,6 +1,6 @@
 # TCP loadbalancing
 
-This example show how to implement TCP loadbalancing throught the Nginx Controller
+This example show how to implement TCP loadbalancing through the Nginx Controller
 
 ## Prerequisites
 
