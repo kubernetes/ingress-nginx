@@ -1188,6 +1188,7 @@ func (ic *GenericController) getEndpoints(
 					Port:        fmt.Sprintf("%v", targetPort),
 					MaxFails:    hz.MaxFails,
 					FailTimeout: hz.FailTimeout,
+					Target:      epAddress.TargetRef,
 				}
 				upsServers = append(upsServers, ups)
 				adus[ep] = true
