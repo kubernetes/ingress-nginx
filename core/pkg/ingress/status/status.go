@@ -66,6 +66,9 @@ type Config struct {
 
 	DefaultIngressClass string
 	IngressClass        string
+
+	// CustomIngressStatus allows to set custom values in Ingress status
+	CustomIngressStatus func(*extensions.Ingress) []v1.LoadBalancerIngress
 }
 
 // statusSync keeps the status IP in each Ingress rule updated executing a periodic check
@@ -315,7 +318,10 @@ func sliceToStatus(endpoints []string) []v1.LoadBalancerIngress {
 	return lbi
 }
 
-func (s *statusSync) updateStatus(newIPs []v1.LoadBalancerIngress) {
+// updateStatus changes the status information of Ingress rules
+// If the backend function CustomIngressStatus returns a value different
+// of nil then it uses the returned value or the newIngressPoint values
+func (s *statusSync) updateStatus(newIngressPoint []v1.LoadBalancerIngress) {
 	ings := s.IngressLister.List()
 	var wg sync.WaitGroup
 	wg.Add(len(ings))
@@ -336,15 +342,21 @@ func (s *statusSync) updateStatus(newIPs []v1.LoadBalancerIngress) {
 				return
 			}
 
+			addrs := newIngressPoint
+			ca := s.CustomIngressStatus(currIng)
+			if ca != nil {
+				addrs = ca
+			}
+
 			curIPs := currIng.Status.LoadBalancer.Ingress
 			sort.Sort(loadBalancerIngressByIP(curIPs))
-			if ingressSliceEqual(newIPs, curIPs) {
+			if ingressSliceEqual(addrs, curIPs) {
 				glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", currIng.Namespace, currIng.Name)
 				return
 			}
 
-			glog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, newIPs)
-			currIng.Status.LoadBalancer.Ingress = newIPs
+			glog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, addrs)
+			currIng.Status.LoadBalancer.Ingress = addrs
 			_, err = ingClient.UpdateStatus(currIng)
 			if err != nil {
 				glog.Warningf("error updating ingress rule: %v", err)

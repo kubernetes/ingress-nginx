@@ -299,6 +299,7 @@ func newIngressController(config *Configuration) *GenericController {
 			IngressClass:           config.IngressClass,
 			DefaultIngressClass:    config.DefaultIngressClass,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
+			CustomIngressStatus:    ic.cfg.Backend.UpdateIngressStatus,
 		})
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
