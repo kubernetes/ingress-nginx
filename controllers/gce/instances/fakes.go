@@ -81,10 +81,11 @@ func (f *FakeInstanceGroups) GetInstanceGroup(name, zone string) (*compute.Insta
 }
 
 // CreateInstanceGroup fakes instance group creation.
-func (f *FakeInstanceGroups) CreateInstanceGroup(name, zone string) (*compute.InstanceGroup, error) {
-	newGroup := &compute.InstanceGroup{Name: name, SelfLink: name, Zone: zone}
-	f.instanceGroups = append(f.instanceGroups, newGroup)
-	return newGroup, nil
+func (f *FakeInstanceGroups) CreateInstanceGroup(ig *compute.InstanceGroup, zone string) error {
+	ig.SelfLink = ig.Name
+	ig.Zone = zone
+	f.instanceGroups = append(f.instanceGroups, ig)
+	return nil
 }
 
 // DeleteInstanceGroup fakes instance group deletion.
