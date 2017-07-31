@@ -309,7 +309,14 @@ func (l *L7) checkUrlMap(backend *compute.BackendService) (err error) {
 	}
 
 	glog.Infof("Creating url map %v for backend %v", urlMapName, l.glbcDefaultBackend.Name)
-	urlMap, err = l.cloud.CreateUrlMap(l.glbcDefaultBackend, urlMapName)
+	newUrlMap := &compute.UrlMap{
+		Name:           urlMapName,
+		DefaultService: l.glbcDefaultBackend.SelfLink,
+	}
+	if err = l.cloud.CreateUrlMap(newUrlMap); err != nil {
+		return err
+	}
+	urlMap, err = l.cloud.GetUrlMap(urlMapName)
 	if err != nil {
 		return err
 	}
@@ -325,7 +332,14 @@ func (l *L7) checkProxy() (err error) {
 	proxy, _ := l.cloud.GetTargetHttpProxy(proxyName)
 	if proxy == nil {
 		glog.Infof("Creating new http proxy for urlmap %v", l.um.Name)
-		proxy, err = l.cloud.CreateTargetHttpProxy(l.um, proxyName)
+		newProxy := &compute.TargetHttpProxy{
+			Name:   proxyName,
+			UrlMap: l.um.SelfLink,
+		}
+		if err = l.cloud.CreateTargetHttpProxy(newProxy); err != nil {
+			return err
+		}
+		proxy, err = l.cloud.GetTargetHttpProxy(proxyName)
 		if err != nil {
 			return err
 		}
@@ -493,10 +507,20 @@ func (l *L7) checkHttpsProxy() (err error) {
 	proxy, _ := l.cloud.GetTargetHttpsProxy(proxyName)
 	if proxy == nil {
 		glog.Infof("Creating new https proxy for urlmap %v", l.um.Name)
-		proxy, err = l.cloud.CreateTargetHttpsProxy(l.um, l.sslCert, proxyName)
+		newProxy := &compute.TargetHttpsProxy{
+			Name:            proxyName,
+			UrlMap:          l.um.SelfLink,
+			SslCertificates: []string{l.sslCert.SelfLink},
+		}
+		if err = l.cloud.CreateTargetHttpsProxy(newProxy); err != nil {
+			return err
+		}
+
+		proxy, err = l.cloud.GetTargetHttpsProxy(proxyName)
 		if err != nil {
 			return err
 		}
+
 		l.tps = proxy
 		return nil
 	}
@@ -533,7 +557,17 @@ func (l *L7) checkForwardingRule(name, proxyLink, ip, portRange string) (fw *com
 	if fw == nil {
 		parts := strings.Split(proxyLink, "/")
 		glog.Infof("Creating forwarding rule for proxy %v and ip %v:%v", parts[len(parts)-1:], ip, portRange)
-		fw, err = l.cloud.CreateGlobalForwardingRule(proxyLink, ip, name, portRange)
+		rule := &compute.ForwardingRule{
+			Name:       name,
+			IPAddress:  ip,
+			Target:     proxyLink,
+			PortRange:  portRange,
+			IPProtocol: "TCP",
+		}
+		if err = l.cloud.CreateGlobalForwardingRule(rule); err != nil {
+			return nil, err
+		}
+		fw, err = l.cloud.GetGlobalForwardingRule(name)
 		if err != nil {
 			return nil, err
 		}
@@ -817,10 +851,15 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 	}
 
 	glog.V(3).Infof("Updating URLMap: %q", l.Name)
-	um, err := l.cloud.UpdateUrlMap(l.um)
+	if err := l.cloud.UpdateUrlMap(l.um); err != nil {
+		return err
+	}
+
+	um, err := l.cloud.GetUrlMap(l.um.Name)
 	if err != nil {
 		return err
 	}
+
 	l.um = um
 	return nil
 }
