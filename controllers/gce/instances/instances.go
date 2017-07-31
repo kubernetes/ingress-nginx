@@ -77,7 +77,10 @@ func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.Instan
 		var err error
 		if ig == nil {
 			glog.Infof("Creating instance group %v in zone %v", name, zone)
-			ig, err = i.cloud.CreateInstanceGroup(name, zone)
+			if err = i.cloud.CreateInstanceGroup(&compute.InstanceGroup{Name: name}, zone); err != nil {
+				return nil, nil, err
+			}
+			ig, err = i.cloud.GetInstanceGroup(name, zone)
 			if err != nil {
 				return nil, nil, err
 			}
