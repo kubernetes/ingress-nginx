@@ -17,6 +17,7 @@ go_library(
     deps = [
         "//vendor/k8s.io/api/admissionregistration/v1alpha1:go_default_library",
         "//vendor/k8s.io/api/apps/v1beta1:go_default_library",
+        "//vendor/k8s.io/api/apps/v1beta2:go_default_library",
         "//vendor/k8s.io/api/authentication/v1:go_default_library",
         "//vendor/k8s.io/api/authentication/v1beta1:go_default_library",
         "//vendor/k8s.io/api/authorization/v1:go_default_library",
@@ -32,6 +33,7 @@ go_library(
         "//vendor/k8s.io/api/policy/v1beta1:go_default_library",
         "//vendor/k8s.io/api/rbac/v1alpha1:go_default_library",
         "//vendor/k8s.io/api/rbac/v1beta1:go_default_library",
+        "//vendor/k8s.io/api/scheduling/v1alpha1:go_default_library",
         "//vendor/k8s.io/api/settings/v1alpha1:go_default_library",
         "//vendor/k8s.io/api/storage/v1:go_default_library",
         "//vendor/k8s.io/api/storage/v1beta1:go_default_library",

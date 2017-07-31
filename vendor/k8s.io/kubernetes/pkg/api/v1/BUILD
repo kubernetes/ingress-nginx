@@ -11,11 +11,11 @@ load(
 go_library(
     name = "go_default_library",
     srcs = [
-        "builder.go",
         "conversion.go",
         "defaults.go",
         "doc.go",
         "generate.go",
+        "register.go",
         "zz_generated.conversion.go",
         "zz_generated.defaults.go",
     ],
@@ -23,8 +23,8 @@ go_library(
     deps = [
         "//pkg/api:go_default_library",
         "//pkg/apis/extensions:go_default_library",
-        "//pkg/util:go_default_library",
         "//pkg/util/parsers:go_default_library",
+        "//pkg/util/pointer:go_default_library",
         "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/conversion:go_default_library",
@@ -77,7 +77,6 @@ filegroup(
         "//pkg/api/v1/helper:all-srcs",
         "//pkg/api/v1/node:all-srcs",
         "//pkg/api/v1/pod:all-srcs",
-        "//pkg/api/v1/ref:all-srcs",
         "//pkg/api/v1/resource:all-srcs",
         "//pkg/api/v1/service:all-srcs",
         "//pkg/api/v1/validation:all-srcs",
