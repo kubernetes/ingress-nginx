@@ -5,5 +5,5 @@ data:
   X-Using-Nginx-Controller: "true"
 kind: ConfigMap
 metadata:
-  name: proxy-headers
+  name: custom-headers
   namespace: kube-system
