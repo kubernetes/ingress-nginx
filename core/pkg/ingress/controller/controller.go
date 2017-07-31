@@ -42,6 +42,7 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/ingress/core/pkg/file"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
@@ -982,7 +983,7 @@ func (ic *GenericController) createServers(data []interface{},
 			defaultPemSHA = defaultCertificate.PemSHA
 		} else {
 			defaultPemFileName = fakeCertificatePath
-			defaultPemSHA = ssl.PemSHA1(fakeCertificatePath)
+			defaultPemSHA = file.SHA1(fakeCertificatePath)
 		}
 	} else {
 		defaultPemFileName = defaultCertificate.PemFileName
