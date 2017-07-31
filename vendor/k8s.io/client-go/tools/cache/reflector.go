@@ -48,6 +48,8 @@ import (
 type Reflector struct {
 	// name identifies this reflector. By default it will be a file:line if possible.
 	name string
+	// metrics tracks basic metric information about the reflector
+	metrics *reflectorMetrics
 
 	// The type of object we expect to place in the store.
 	expectedType reflect.Type
@@ -99,7 +101,9 @@ func NewReflector(lw ListerWatcher, expectedType interface{}, store Store, resyn
 // NewNamedReflector same as NewReflector, but with a specified name for logging
 func NewNamedReflector(name string, lw ListerWatcher, expectedType interface{}, store Store, resyncPeriod time.Duration) *Reflector {
 	r := &Reflector{
-		name:          name,
+		name: name,
+		// we need this to be unique per process (some names are still the same)but obvious who it belongs to
+		metrics:       newReflectorMetrics(makeValidPromethusMetricName(fmt.Sprintf("reflector_"+name+"_%07d", rand.Intn(1000000)))),
 		listerWatcher: lw,
 		store:         store,
 		expectedType:  reflect.TypeOf(expectedType),
@@ -108,6 +112,11 @@ func NewNamedReflector(name string, lw ListerWatcher, expectedType interface{}, 
 		clock:         &clock.RealClock{},
 	}
 	return r
+}
+
+func makeValidPromethusMetricName(in string) string {
+	// this isn't perfect, but it removes our common characters
+	return strings.NewReplacer("/", "_", ".", "_", "-", "_").Replace(in)
 }
 
 // internalPackages are packages that ignored when creating a default reflector name. These packages are in the common
@@ -182,21 +191,10 @@ func extractStackCreator() (string, int, bool) {
 }
 
 // Run starts a watch and handles watch events. Will restart the watch if it is closed.
-// Run starts a goroutine and returns immediately.
-func (r *Reflector) Run() {
+// Run will exit when stopCh is closed.
+func (r *Reflector) Run(stopCh <-chan struct{}) {
 	glog.V(3).Infof("Starting reflector %v (%s) from %s", r.expectedType, r.resyncPeriod, r.name)
-	go wait.Until(func() {
-		if err := r.ListAndWatch(wait.NeverStop); err != nil {
-			utilruntime.HandleError(err)
-		}
-	}, r.period, wait.NeverStop)
-}
-
-// RunUntil starts a watch and handles watch events. Will restart the watch if it is closed.
-// RunUntil starts a goroutine and returns immediately. It will exit when stopCh is closed.
-func (r *Reflector) RunUntil(stopCh <-chan struct{}) {
-	glog.V(3).Infof("Starting reflector %v (%s) from %s", r.expectedType, r.resyncPeriod, r.name)
-	go wait.Until(func() {
+	wait.Until(func() {
 		if err := r.ListAndWatch(stopCh); err != nil {
 			utilruntime.HandleError(err)
 		}
@@ -242,10 +240,13 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 	// to be served from cache and potentially be delayed relative to
 	// etcd contents. Reflector framework will catch up via Watch() eventually.
 	options := metav1.ListOptions{ResourceVersion: "0"}
+	r.metrics.numberOfLists.Inc()
+	start := r.clock.Now()
 	list, err := r.listerWatcher.List(options)
 	if err != nil {
 		return fmt.Errorf("%s: Failed to list %v: %v", r.name, r.expectedType, err)
 	}
+	r.metrics.listDuration.Observe(time.Since(start).Seconds())
 	listMetaInterface, err := meta.ListAccessor(list)
 	if err != nil {
 		return fmt.Errorf("%s: Unable to understand list result %#v: %v", r.name, list, err)
@@ -255,6 +256,7 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 	if err != nil {
 		return fmt.Errorf("%s: Unable to understand list result %#v (%v)", r.name, list, err)
 	}
+	r.metrics.numberOfItemsInList.Observe(float64(len(items)))
 	if err := r.syncWith(items, resourceVersion); err != nil {
 		return fmt.Errorf("%s: Unable to sync list result: %v", r.name, err)
 	}
@@ -293,6 +295,7 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 			TimeoutSeconds: &timemoutseconds,
 		}
 
+		r.metrics.numberOfWatches.Inc()
 		w, err := r.listerWatcher.Watch(options)
 		if err != nil {
 			switch err {
@@ -344,6 +347,11 @@ func (r *Reflector) watchHandler(w watch.Interface, resourceVersion *string, err
 	// Stopping the watcher should be idempotent and if we return from this function there's no way
 	// we're coming back in with the same watch interface.
 	defer w.Stop()
+	// update metrics
+	defer func() {
+		r.metrics.numberOfItemsInWatch.Observe(float64(eventCount))
+		r.metrics.watchDuration.Observe(time.Since(start).Seconds())
+	}()
 
 loop:
 	for {
@@ -399,8 +407,8 @@ loop:
 
 	watchDuration := r.clock.Now().Sub(start)
 	if watchDuration < 1*time.Second && eventCount == 0 {
-		glog.V(4).Infof("%s: Unexpected watch close - watch lasted less than a second and no items received", r.name)
-		return errors.New("very short watch")
+		r.metrics.numberOfShortWatches.Inc()
+		return fmt.Errorf("very short watch: %s: Unexpected watch close - watch lasted less than a second and no items received", r.name)
 	}
 	glog.V(4).Infof("%s: Watch close - %v total %v items received", r.name, r.expectedType, eventCount)
 	return nil
@@ -418,4 +426,9 @@ func (r *Reflector) setLastSyncResourceVersion(v string) {
 	r.lastSyncResourceVersionMutex.Lock()
 	defer r.lastSyncResourceVersionMutex.Unlock()
 	r.lastSyncResourceVersion = v
+
+	rv, err := strconv.Atoi(v)
+	if err == nil {
+		r.metrics.lastResourceVersion.Set(float64(rv))
+	}
 }

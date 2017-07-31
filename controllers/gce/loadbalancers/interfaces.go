@@ -28,25 +28,25 @@ import (
 type LoadBalancers interface {
 	// Forwarding Rules
 	GetGlobalForwardingRule(name string) (*compute.ForwardingRule, error)
-	CreateGlobalForwardingRule(proxyLink, ip, name, portRange string) (*compute.ForwardingRule, error)
+	CreateGlobalForwardingRule(rule *compute.ForwardingRule) error
 	DeleteGlobalForwardingRule(name string) error
 	SetProxyForGlobalForwardingRule(fw, proxy string) error
 
 	// UrlMaps
 	GetUrlMap(name string) (*compute.UrlMap, error)
-	CreateUrlMap(backend *compute.BackendService, name string) (*compute.UrlMap, error)
-	UpdateUrlMap(urlMap *compute.UrlMap) (*compute.UrlMap, error)
+	CreateUrlMap(urlMap *compute.UrlMap) error
+	UpdateUrlMap(urlMap *compute.UrlMap) error
 	DeleteUrlMap(name string) error
 
 	// TargetProxies
 	GetTargetHttpProxy(name string) (*compute.TargetHttpProxy, error)
-	CreateTargetHttpProxy(urlMap *compute.UrlMap, name string) (*compute.TargetHttpProxy, error)
+	CreateTargetHttpProxy(proxy *compute.TargetHttpProxy) error
 	DeleteTargetHttpProxy(name string) error
 	SetUrlMapForTargetHttpProxy(proxy *compute.TargetHttpProxy, urlMap *compute.UrlMap) error
 
 	// TargetHttpsProxies
 	GetTargetHttpsProxy(name string) (*compute.TargetHttpsProxy, error)
-	CreateTargetHttpsProxy(urlMap *compute.UrlMap, SSLCerts *compute.SslCertificate, name string) (*compute.TargetHttpsProxy, error)
+	CreateTargetHttpsProxy(proxy *compute.TargetHttpsProxy) error
 	DeleteTargetHttpsProxy(name string) error
 	SetUrlMapForTargetHttpsProxy(proxy *compute.TargetHttpsProxy, urlMap *compute.UrlMap) error
 	SetSslCertificateForTargetHttpsProxy(proxy *compute.TargetHttpsProxy, SSLCerts *compute.SslCertificate) error
