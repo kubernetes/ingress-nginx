@@ -22,8 +22,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +genclient=true
-// +nonNamespaced=true
+// +genclient
+// +genclient:nonNamespaced
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Describes a certificate signing request
 type CertificateSigningRequest struct {
@@ -51,7 +52,7 @@ type CertificateSigningRequestSpec struct {
 	// valid for.
 	// See: https://tools.ietf.org/html/rfc5280#section-4.2.1.3
 	//      https://tools.ietf.org/html/rfc5280#section-4.2.1.12
-	Usages []KeyUsage `json:"usages,omitempty" protobuf:"bytes,5,opt,name=keyUsage"`
+	Usages []KeyUsage `json:"usages,omitempty" protobuf:"bytes,5,opt,name=usages"`
 
 	// Information about the requesting user.
 	// See user.Info interface for details.
@@ -111,6 +112,8 @@ type CertificateSigningRequestCondition struct {
 	// +optional
 	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty" protobuf:"bytes,4,opt,name=lastUpdateTime"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type CertificateSigningRequestList struct {
 	metav1.TypeMeta `json:",inline"`
