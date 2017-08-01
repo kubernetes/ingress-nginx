@@ -348,7 +348,7 @@ data:
 ```
 
 
-Please check the [udp services](examples/udp/README.md) example
+Please check the [udp services](../../examples/udp/nginx/README.md) example
 
 ## Proxy Protocol
 
