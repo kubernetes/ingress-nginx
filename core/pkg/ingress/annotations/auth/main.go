@@ -27,6 +27,7 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 
+	"k8s.io/ingress/core/pkg/file"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -51,6 +52,7 @@ type BasicDigest struct {
 	Realm   string `json:"realm"`
 	File    string `json:"file"`
 	Secured bool   `json:"secured"`
+	FileSHA string `json:"fileSha"`
 }
 
 // Equal tests for equality between two BasicDigest types
@@ -71,6 +73,9 @@ func (bd1 *BasicDigest) Equal(bd2 *BasicDigest) bool {
 		return false
 	}
 	if bd1.Secured != bd2.Secured {
+		return false
+	}
+	if bd1.FileSHA != bd2.FileSHA {
 		return false
 	}
 
@@ -140,6 +145,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		Realm:   realm,
 		File:    passFile,
 		Secured: true,
+		FileSHA: file.SHA1(passFile),
 	}, nil
 }
 

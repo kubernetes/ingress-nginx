@@ -19,12 +19,10 @@ package ssl
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
-	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -38,6 +36,7 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/ingress/core/pkg/file"
 	"k8s.io/ingress/core/pkg/ingress"
 )
 
@@ -163,7 +162,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		return &ingress.SSLCert{
 			CAFileName:  pemFileName,
 			PemFileName: pemFileName,
-			PemSHA:      PemSHA1(pemFileName),
+			PemSHA:      file.SHA1(pemFileName),
 			CN:          cn.List(),
 			ExpireTime:  pemCert.NotAfter,
 		}, nil
@@ -171,7 +170,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 
 	return &ingress.SSLCert{
 		PemFileName: pemFileName,
-		PemSHA:      PemSHA1(pemFileName),
+		PemSHA:      file.SHA1(pemFileName),
 		CN:          cn.List(),
 		ExpireTime:  pemCert.NotAfter,
 	}, nil
@@ -273,7 +272,7 @@ func AddCertAuth(name string, ca []byte) (*ingress.SSLCert, error) {
 	return &ingress.SSLCert{
 		CAFileName:  caFileName,
 		PemFileName: caFileName,
-		PemSHA:      PemSHA1(caFileName),
+		PemSHA:      file.SHA1(caFileName),
 	}, nil
 }
 
@@ -323,19 +322,6 @@ func AddOrUpdateDHParam(name string, dh []byte) (string, error) {
 	}
 
 	return pemFileName, nil
-}
-
-// PemSHA1 returns the SHA1 of a pem file. This is used to
-// reload NGINX in case a secret with a SSL certificate changed.
-func PemSHA1(filename string) string {
-	hasher := sha1.New()
-	s, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return ""
-	}
-
-	hasher.Write(s)
-	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 // GetFakeSSLCert creates a Self Signed Certificate
