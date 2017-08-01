@@ -81,7 +81,7 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	_, _, err = k8s.ParseNameNS(tlsauthsecret)
 	if err != nil {
-		return &AuthSSLConfig{}, ing_errors.NewLocationDenied("secret name must include the namespace")
+		return &AuthSSLConfig{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
 	tlsdepth, err := parser.GetIntAnnotation(annotationAuthTLSDepth, ing)
