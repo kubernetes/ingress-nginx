@@ -54,7 +54,7 @@ endif
 #        QEMUARCH=s390x
 #endif
 
-TEMP_DIR := $(shell mktemp -d)
+TEMP_DIR ?= $(shell mktemp -d)
 
 all: all-container
 
