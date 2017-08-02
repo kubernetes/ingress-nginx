@@ -391,8 +391,8 @@
 		},
 		{
 			"ImportPath": "gopkg.in/fsnotify.v1",
-			"Comment": "v1.2.9",
-			"Rev": "8611c35ab31c1c28aa903d33cf8b6e44a399b09e"
+			"Comment": "v1.4.2",
+			"Rev": "629574ca2a5df945712d3079857300b5e4da0236"
 		},
 		{
 			"ImportPath": "gopkg.in/gcfg.v1",
