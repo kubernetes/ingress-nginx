@@ -73,19 +73,27 @@ func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.Instan
 
 	defer i.snapshotter.Add(name, struct{}{})
 	for _, zone := range zones {
-		ig, _ := i.Get(name, zone)
-		var err error
+		ig, err := i.Get(name, zone)
+		if err != nil && !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+			glog.Errorf("Failed to get instance group %v/%v, err: %v", zone, name, err)
+			return nil, nil, err
+		}
+
 		if ig == nil {
 			glog.Infof("Creating instance group %v in zone %v", name, zone)
 			if err = i.cloud.CreateInstanceGroup(&compute.InstanceGroup{Name: name}, zone); err != nil {
-				return nil, nil, err
+				if utils.IsHTTPErrorCode(err, http.StatusConflict) {
+					glog.Warningf("Failed to create instance group %v/%v due to conflict status, but continuing sync. err: %v", zone, name, err)
+				} else {
+					glog.Errorf("Failed to create instance group %v/%v, err: %v", zone, name, err)
+					return nil, nil, err
+				}
 			}
 			ig, err = i.cloud.GetInstanceGroup(name, zone)
 			if err != nil {
+				glog.Errorf("Failed to get instance group %v/%v after ensuring existence, err: %v", zone, name, err)
 				return nil, nil, err
 			}
-		} else {
-			glog.V(3).Infof("Instance group %v already exists in zone %v, adding port %d to it", name, zone, port)
 		}
 
 		found := false
