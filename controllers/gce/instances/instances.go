@@ -130,11 +130,15 @@ func (i *Instances) DeleteInstanceGroup(name string) error {
 	}
 	for _, zone := range zones {
 		if err := i.cloud.DeleteInstanceGroup(name, zone); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+			if utils.IsNotFoundError(err) {
+				glog.V(3).Infof("Instance group %v in zone %v did not exist", name, zone)
+			} else if utils.IsInUsedByError(err) {
+				glog.V(3).Infof("Could not delete instance group %v in zone %v because it's still in use. Ignoring: %v", name, zone, err)
+			} else {
 				errs = append(errs, err)
 			}
 		} else {
-			glog.Infof("Deleted instance group %v in zone %v", name, zone)
+			glog.V(3).Infof("Deleted instance group %v in zone %v", name, zone)
 		}
 	}
 	if len(errs) == 0 {
