@@ -198,6 +198,8 @@ type Endpoint struct {
 	// of unsuccessful attempts to communicate with the server should happen
 	// to consider the endpoint unavailable
 	FailTimeout int `json:"failTimeout"`
+	// Target returns a reference to the object providing the endpoint
+	Target *api.ObjectReference `json:"target"`
 }
 
 // Server describes a website
