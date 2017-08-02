@@ -49,13 +49,14 @@ Key:
 
 | Name | Meaning
 | --- | ---
-| `configuration-snippet` | Arbitrary text to put in the generated configuration file. (nginx) 
-| `enable-cors` | Enable CORS headers in response. (nginx) 
-| `limit-connections` | Limit concurrent connections per IP address[1]. (nginx) 
-| `limit-rps` | Limit requests per second per IP address[1]. (nginx) 
-| `affinity` | Specify a method to stick clients to origins across requests.  Found in `nginx`, where the only supported value is `cookie`. (nginx) 
-| `session-cookie-name` | When `affinity` is set to `cookie`, the name of the cookie to use. (nginx) 
-| `session-cookie-hash` | When `affinity` is set to `cookie`, the hash algorithm used: `md5`, `sha`, `index`. (nginx) 
+| `configuration-snippet` | Arbitrary text to put in the generated configuration file. (nginx)
+| `enable-cors` | Enable CORS headers in response. (nginx)
+| `limit-connections` | Limit concurrent connections per IP address[1]. (nginx)
+| `limit-rps` | Limit requests per second per IP address[1]. (nginx)
+| `limit-rpm` | Limit requests per minute per IP address. (nginx)
+| `affinity` | Specify a method to stick clients to origins across requests.  Found in `nginx`, where the only supported value is `cookie`. (nginx)
+| `session-cookie-name` | When `affinity` is set to `cookie`, the name of the cookie to use. (nginx)
+| `session-cookie-hash` | When `affinity` is set to `cookie`, the hash algorithm used: `md5`, `sha`, `index`. (nginx)
 | `proxy-body-size` | Maximum request body size. (nginx, haproxy)
 | `follow-redirects` | Follow HTTP redirects in the response and deliver the redirect target to the client.  (trafficserver)
 
