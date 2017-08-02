@@ -252,7 +252,7 @@ func (i *Instances) Sync(nodes []string) (err error) {
 		}
 
 		if len(addNodes) != 0 {
-			glog.V(4).Infof("Adding nodes to IG: %v", removeNodes)
+			glog.V(4).Infof("Adding nodes to IG: %v", addNodes)
 			if err = i.Add(igName, addNodes); err != nil {
 				return err
 			}
