@@ -76,8 +76,8 @@ func (f *FakeInstanceGroups) GetInstanceGroup(name, zone string) (*compute.Insta
 			return ig, nil
 		}
 	}
-	// TODO: Return googleapi 404 error
-	return nil, fmt.Errorf("instance group %v not found", name)
+
+	return nil, utils.FakeGoogleAPINotFoundErr()
 }
 
 // CreateInstanceGroup fakes instance group creation.
