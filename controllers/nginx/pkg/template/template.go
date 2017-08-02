@@ -349,6 +349,17 @@ func buildRateLimitZones(variable string, input interface{}) []string {
 				}
 			}
 
+			if loc.RateLimit.RPM.Limit > 0 {
+				zone := fmt.Sprintf("limit_req_zone %v zone=%v:%vm rate=%vr/m;",
+					variable,
+					loc.RateLimit.RPM.Name,
+					loc.RateLimit.RPM.SharedSize,
+					loc.RateLimit.RPM.Limit)
+				if !zones.Has(zone) {
+					zones.Insert(zone)
+				}
+			}
+
 			if loc.RateLimit.RPS.Limit > 0 {
 				zone := fmt.Sprintf("limit_req_zone %v zone=%v:%vm rate=%vr/s;",
 					variable,
@@ -366,7 +377,7 @@ func buildRateLimitZones(variable string, input interface{}) []string {
 }
 
 // buildRateLimit produces an array of limit_req to be used inside the Path of
-// Ingress rules. The order: connections by IP first and RPS next.
+// Ingress rules. The order: connections by IP first, then RPS, and RPM last.
 func buildRateLimit(input interface{}) []string {
 	limits := []string{}
 
@@ -384,6 +395,12 @@ func buildRateLimit(input interface{}) []string {
 	if loc.RateLimit.RPS.Limit > 0 {
 		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
 			loc.RateLimit.RPS.Name, loc.RateLimit.RPS.Burst)
+		limits = append(limits, limit)
+	}
+
+	if loc.RateLimit.RPM.Limit > 0 {
+		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
+			loc.RateLimit.RPM.Name, loc.RateLimit.RPM.Burst)
 		limits = append(limits, limit)
 	}
 
