@@ -2,7 +2,12 @@ sudo: false
 language: go
 
 go:
-  - 1.5.2
+  - 1.6.3
+  - tip
+
+matrix:
+  allow_failures:
+    - go: tip
 
 before_script:
   - go get -u github.com/golang/lint/golint
