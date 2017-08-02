@@ -82,6 +82,8 @@ func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.Instan
 		if ig == nil {
 			glog.Infof("Creating instance group %v in zone %v", name, zone)
 			if err = i.cloud.CreateInstanceGroup(&compute.InstanceGroup{Name: name}, zone); err != nil {
+				// Error may come back with StatusConflict meaning the instance group was created by another controller
+				// possibly the Service Controller for internal load balancers.
 				if utils.IsHTTPErrorCode(err, http.StatusConflict) {
 					glog.Warningf("Failed to create instance group %v/%v due to conflict status, but continuing sync. err: %v", zone, name, err)
 				} else {
@@ -94,6 +96,8 @@ func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.Instan
 				glog.Errorf("Failed to get instance group %v/%v after ensuring existence, err: %v", zone, name, err)
 				return nil, nil, err
 			}
+		} else {
+			glog.V(3).Infof("Instance group %v already exists in zone %v", name, zone)
 		}
 
 		found := false
@@ -105,6 +109,7 @@ func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.Instan
 			}
 		}
 		if !found {
+			glog.V(3).Infof("Instance group %v/%v does not have port %+v, adding it now.", zone, name, namedPort)
 			if err := i.cloud.SetNamedPortsOfInstanceGroup(ig.Name, zone, append(ig.NamedPorts, namedPort)); err != nil {
 				return nil, nil, err
 			}
