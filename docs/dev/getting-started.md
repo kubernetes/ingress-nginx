@@ -55,14 +55,13 @@ or push an image to a remote repository.
 
 In order to use your local Docker, you may need to set the following environment variables:
 ```console
-$ export DOCKER=docker
+# "gcloud docker" (default) or "docker"
+$ export DOCKER=<docker>
+
+# "gcr.io/google_containers" (default), "index.docker.io", or your own registry
 $ export REGISTRY=<your-docker-registry>
 ```
 To find the registry simply run: `docker system info | grep Registry`
-
-Otherwise by default you will be using the [Google Cloud Platform](https://cloud.google.com/sdk/gcloud/):
-* REGISTRY=gcr.io/google_containers
-* DOCKER=gcloud docker --
 
 ### Nginx Controller
 
