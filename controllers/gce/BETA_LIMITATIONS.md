@@ -1,6 +1,6 @@
 # GLBC: Beta limitations
 
-As of the Kubernetes 1.2 release, the GCE L7 Loadbalancer controller is still a *beta* product. We expect it to go GA in 1.3.
+As of the Kubernetes 1.7 release, the GCE L7 Loadbalancer controller is still a *beta* product.
 
 This is a list of beta limitations:
 
@@ -175,4 +175,3 @@ If you deleted a GKE/GCE cluster without first deleting the associated Ingresses
 3. Delete it, check the boxes to also casade the deletion down to associated resources (eg: backend-services)
 4. Switch to the "Compute Engine" tab, then choose "Instance Groups"
 5. Delete the Instance Group allocated for the leaked Ingress, it should have a name formatted as: k8s-ig-UUID
-
