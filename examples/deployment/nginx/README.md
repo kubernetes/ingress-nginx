@@ -27,17 +27,13 @@ You can deploy the controller as follows:
 $ minikube addons disable ingress
 ```
 2. Use the [docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md)
-3. [Build the image](../../../docs/dev/getting_started.md)
-4. Create the [default-backend](default-backend.yaml):
-```console
-$ kubectl apply -f default-backend.yaml
-```
-5. Change [nginx-ingress-controller.yaml](nginx-ingress-controller.yaml) to use the appropriate image. Local images can be
+3. [Build the image](../../../docs/dev/getting-started.md)
+4. Change [nginx-ingress-controller.yaml](nginx-ingress-controller.yaml) to use the appropriate image. Local images can be
 seen by performing `docker images`.
 ```yaml
 image: <IMAGE-NAME>:<TAG>
 ```
-6. Create the nginx-ingress-controller deployment:
+5. Create the nginx-ingress-controller deployment:
 ```console
 $ kubectl apply -f nginx-ingress-controller.yaml
 deployment "nginx-ingress-controller" created

@@ -12,7 +12,7 @@ branch, but release branches of Kubernetes should not change.
 
 ## Navigation
 
-* [Build, test, release](getting_started.md) an existing controller
-* [Setup a cluster](setup_cluster.md) to hack at an existing controller
-* [Write your own](custom_controller.md) controller
+* [Build, test, release](getting-started.md) an existing controller
+* [Setup a cluster](setup-cluster.md) to hack at an existing controller
+* [Write your own](custom-controller.md) controller
 
