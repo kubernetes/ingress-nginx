@@ -13,7 +13,7 @@ a 404 page.
 
 ## Controller
 
-The Nginx Ingress Controller uses nginx (surprisingly!) to loadbalance requests that are coming to
+The Nginx Ingress Controller uses nginx (surprisingly!) to loadbalancer requests that are coming to
 ports 80 and 443 to Services in the cluster.
 
 ```console
