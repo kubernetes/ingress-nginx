@@ -1,4 +1,4 @@
-# Cluster getting Started
+# Cluster Getting Started
 
 This doc outlines the steps needed to setup a local dev cluster within which you
 can deploy/test an ingress controller. Note that you can also setup the ingress controller

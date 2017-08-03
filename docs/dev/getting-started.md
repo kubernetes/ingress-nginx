@@ -9,7 +9,7 @@ The build uses dependencies in the `ingress/vendor` directory, which
 must be installed before building a binary/image. Occasionally, you
 might need to update the dependencies. 
 
-This guide requires you to install the[godep](https://github.com/tools/godep)dependency
+This guide requires you to install the [godep](https://github.com/tools/godep) dependency
 tool.
 
 Check the version of `godep` you are using and make sure it is up to date.
@@ -32,7 +32,7 @@ $ cd $GOPATH/src/ingress
 $ godep save ./...
 ```
 
-In general, you can follow [this guide](https://github.com/kubernetes/kubernetes/blob/release-1.5/docs/devel/godep.md#using-godep-to-manage-dependencies)to update dependencies.
+In general, you can follow [this guide](https://github.com/kubernetes/kubernetes/blob/release-1.5/docs/devel/godep.md#using-godep-to-manage-dependencies) to update dependencies.
 To update a particular dependency, eg: Kubernetes:
 ```console
 $ cd $GOPATH/src/k8s.io/ingress
@@ -54,10 +54,10 @@ requirements you can build a raw server binary, a local container image,
 or push an image to a remote repository.
 
 In order to use your local Docker, you may need to set the following environment variables:
-* export TAG=0.0 # or whatever you want the version to be named
-* export DOCKER=docker
-* export REGISTRY=index.docker.io
-
+```console
+$ export DOCKER=docker
+$ export REGISTRY=<your-docker-registry>
+```
 To find the registry simply run: `docker system info | grep Registry`
 
 Otherwise by default you will be using the [Google Cloud Platform](https://cloud.google.com/sdk/gcloud/):
@@ -75,12 +75,12 @@ $ make controllers
 
 Build a local container image
 ```console
-$ make docker-build PREFIX=$USER/ingress-controller
+$ make docker-build TAG=<tag> PREFIX=$USER/ingress-controller
 ```
 
 Push the container image to a remote repository
 ```console
-$ make docker-push PREFIX=$USER/ingress-controller
+$ make docker-push TAG=<tag> PREFIX=$USER/ingress-controller
 ```
 
 ### GCE Controller
@@ -90,7 +90,7 @@ $ make docker-push PREFIX=$USER/ingress-controller
 ## Deploying
 
 There are several ways to deploy the ingress controller onto a cluster. If you don't have a cluster start by
-creating one [here](setup_cluster.md).
+creating one [here](setup-cluster.md).
 
 * [nginx controller](../../examples/deployment/nginx/README.md)
 * [gce controller](../../examples/deployment/gce/README.md)
