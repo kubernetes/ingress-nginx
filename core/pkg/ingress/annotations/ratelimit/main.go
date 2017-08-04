@@ -27,6 +27,7 @@ import (
 const (
 	limitIP  = "ingress.kubernetes.io/limit-connections"
 	limitRPS = "ingress.kubernetes.io/limit-rps"
+	limitRPM = "ingress.kubernetes.io/limit-rpm"
 
 	// allow 5 times the specified limit as burst
 	defBurst = 5
@@ -45,6 +46,8 @@ type RateLimit struct {
 	Connections Zone `json:"connections"`
 	// RPS indicates a limit with the number of connections per second
 	RPS Zone `json:"rps"`
+
+	RPM Zone `json:"rpm"`
 }
 
 // Equal tests for equality between two RateLimit types
@@ -56,6 +59,9 @@ func (rt1 *RateLimit) Equal(rt2 *RateLimit) bool {
 		return false
 	}
 	if !(&rt1.Connections).Equal(&rt2.Connections) {
+		return false
+	}
+	if !(&rt1.RPM).Equal(&rt2.RPM) {
 		return false
 	}
 	if !(&rt1.RPS).Equal(&rt2.RPS) {
@@ -111,13 +117,15 @@ func NewParser() parser.IngressAnnotation {
 // rule used to rewrite the defined paths
 func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 
+	rpm, _ := parser.GetIntAnnotation(limitRPM, ing)
 	rps, _ := parser.GetIntAnnotation(limitRPS, ing)
 	conn, _ := parser.GetIntAnnotation(limitIP, ing)
 
-	if rps == 0 && conn == 0 {
+	if rpm == 0 && rps == 0 && conn == 0 {
 		return &RateLimit{
 			Connections: Zone{},
 			RPS:         Zone{},
+			RPM:         Zone{},
 		}, nil
 	}
 
@@ -134,6 +142,12 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 			Name:       fmt.Sprintf("%v_rps", zoneName),
 			Limit:      rps,
 			Burst:      rps * defBurst,
+			SharedSize: defSharedSize,
+		},
+		RPM: Zone{
+			Name:       fmt.Sprintf("%v_rpm", zoneName),
+			Limit:      rpm,
+			Burst:      rpm * defBurst,
 			SharedSize: defSharedSize,
 		},
 	}, nil
