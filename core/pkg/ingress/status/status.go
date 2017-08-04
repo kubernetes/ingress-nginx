@@ -92,10 +92,7 @@ type statusSync struct {
 // Run starts the loop to keep the status in sync
 func (s statusSync) Run(stopCh <-chan struct{}) {
 	go wait.Forever(s.elector.Run, 0)
-	go s.run()
-
 	go s.syncQueue.Run(time.Second, stopCh)
-
 	<-stopCh
 }
 
@@ -134,20 +131,6 @@ func (s statusSync) Shutdown() {
 
 	glog.Infof("removing address from ingress status (%v)", addrs)
 	s.updateStatus([]v1.LoadBalancerIngress{})
-}
-
-func (s *statusSync) run() {
-	err := wait.PollInfinite(updateInterval, func() (bool, error) {
-		if s.syncQueue.IsShuttingDown() {
-			return true, nil
-		}
-		// send a dummy object to the queue to force a sync
-		s.syncQueue.Enqueue("dummy")
-		return false, nil
-	})
-	if err != nil {
-		glog.Errorf("error waiting shutdown: %v", err)
-	}
 }
 
 func (s *statusSync) sync(key interface{}) error {
