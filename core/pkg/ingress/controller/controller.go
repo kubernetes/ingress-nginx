@@ -232,7 +232,9 @@ func newIngressController(config *Configuration) *GenericController {
 			ic.syncQueue.Enqueue(obj)
 		},
 		UpdateFunc: func(old, cur interface{}) {
-			if !reflect.DeepEqual(old, cur) {
+			oep := old.(*api.Endpoints)
+			ocur := cur.(*api.Endpoints)
+			if !reflect.DeepEqual(ocur.Subsets, oep.Subsets) {
 				ic.syncQueue.Enqueue(cur)
 			}
 		},
@@ -410,7 +412,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		PassthroughBackends: passUpstreams,
 	}
 
-	if !ic.forceReload || ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg) {
+	if !ic.forceReload && ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg) {
 		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
 	}
@@ -1257,7 +1259,7 @@ func (ic GenericController) Start() {
 		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
 	}
 
-	go ic.syncQueue.Run(10*time.Second, ic.stopCh)
+	go ic.syncQueue.Run(time.Second, ic.stopCh)
 
 	if ic.syncStatus != nil {
 		go ic.syncStatus.Run(ic.stopCh)
