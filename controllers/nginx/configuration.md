@@ -193,13 +193,15 @@ Please check the [rewrite](/examples/rewrite/nginx/README.md) example.
 
 ### Rate limiting
 
-The annotations `ingress.kubernetes.io/limit-connections` and `ingress.kubernetes.io/limit-rps` define a limit on the connections that can be opened by a single client IP address. This can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
+The annotations `ingress.kubernetes.io/limit-connections`, `ingress.kubernetes.io/limit-rps`, and `ingress.kubernetes.io/limit-rpm` define a limit on the connections that can be opened by a single client IP address. This can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
 
 `ingress.kubernetes.io/limit-connections`: number of concurrent connections allowed from a single IP address.
 
 `ingress.kubernetes.io/limit-rps`: number of connections that may be accepted from a given IP each second.
 
-If you specify both annotations in a single Ingress rule, `limit-rps` takes precedence.
+`ingress.kubernetes.io/limit-rpm`: number of connections that may be accepted from a given IP each minute.
+
+If you specify multiple annotations in a single Ingress rule, `limit-rpm`, and then `limit-rps` takes precedence.
 
 
 ### SSL Passthrough

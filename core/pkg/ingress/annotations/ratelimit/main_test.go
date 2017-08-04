@@ -75,6 +75,7 @@ func TestBadRateLimiting(t *testing.T) {
 	data := map[string]string{}
 	data[limitIP] = "0"
 	data[limitRPS] = "0"
+	data[limitRPM] = "0"
 	ing.SetAnnotations(data)
 
 	_, err := NewParser().Parse(ing)
@@ -85,6 +86,7 @@ func TestBadRateLimiting(t *testing.T) {
 	data = map[string]string{}
 	data[limitIP] = "5"
 	data[limitRPS] = "100"
+	data[limitRPM] = "10"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser().Parse(ing)
@@ -100,5 +102,8 @@ func TestBadRateLimiting(t *testing.T) {
 	}
 	if rateLimit.RPS.Limit != 100 {
 		t.Errorf("expected 100 in limit by rps but %v was returend", rateLimit.RPS)
+	}
+	if rateLimit.RPM.Limit != 10 {
+		t.Errorf("expected 10 in limit by rpm but %v was returend", rateLimit.RPM)
 	}
 }
