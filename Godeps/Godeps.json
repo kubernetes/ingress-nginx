@@ -1076,6 +1076,11 @@
 			"Rev": "c7ed6bc9c1c981e0f0bd09dc046c9b81ab855c24"
 		},
 		{
+			"ImportPath": "k8s.io/client-go/util/cert/triple",
+			"Comment": "v2.0.0-alpha.0-488-gc7ed6bc9",
+			"Rev": "c7ed6bc9c1c981e0f0bd09dc046c9b81ab855c24"
+		},
+		{
 			"ImportPath": "k8s.io/client-go/util/flowcontrol",
 			"Comment": "v2.0.0-alpha.0-488-gc7ed6bc",
 			"Rev": "c7ed6bc9c1c981e0f0bd09dc046c9b81ab855c24"
@@ -1094,6 +1099,10 @@
 			"ImportPath": "k8s.io/client-go/util/workqueue",
 			"Comment": "v2.0.0-alpha.0-488-gc7ed6bc",
 			"Rev": "c7ed6bc9c1c981e0f0bd09dc046c9b81ab855c24"
+		},
+		{
+			"ImportPath": "k8s.io/kube-openapi/pkg/common",
+			"Rev": "80f07ef71bb4f781233c65aa8d0369e4ecafab87"
 		},
 		{
 			"ImportPath": "k8s.io/kubernetes/pkg/api",
