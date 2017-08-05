@@ -82,7 +82,7 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	_, _, err = k8s.ParseNameNS(tlsauthsecret)
 	if err != nil {
-		return &AuthSSLConfig{}, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
+		return &AuthSSLConfig{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
 	tlsdepth, err := parser.GetIntAnnotation(annotationAuthTLSDepth, ing)
