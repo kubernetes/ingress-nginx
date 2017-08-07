@@ -38,6 +38,7 @@
 		"sslSessionTimeout": "10m",
 		"useGzip": true,
 		"useHttp2": true,
+		"proxyStreamTimeout": "600s",
 		"vtsStatusZoneSize": "10m",
 		"workerProcesses": 1,
 		"limitConnZoneVariable": "$the_real_ip"
