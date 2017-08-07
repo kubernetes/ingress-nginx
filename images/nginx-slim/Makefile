@@ -13,32 +13,32 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG = 0.21
+TAG = 0.22
 REGISTRY = gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
-ALL_ARCH = amd64 arm ppc64le
+ALL_ARCH = amd64 arm arm64 ppc64le
 
-QEMUVERSION=v2.7.0
+QEMUVERSION=v2.9.1
 
 IMGNAME = nginx-slim
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=gcr.io/google_containers/ubuntu-slim-$(ARCH):0.13
+BASEIMAGE?=gcr.io/google_containers/ubuntu-slim-$(ARCH):0.14
 
 ifeq ($(ARCH),arm)
         QEMUARCH=arm
 endif
-#ifeq ($(ARCH),arm64)
-#        QEMUARCH=aarch64
-#endif
+ifeq ($(ARCH),arm64)
+        QEMUARCH=aarch64
+endif
 ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
 endif
-#ifeq ($(ARCH),s390x)
-#        QEMUARCH=s390x
-#endif
+ifeq ($(ARCH),s390x)
+        QEMUARCH=s390x
+endif
 
 
 TEMP_DIR := $(shell mktemp -d)
