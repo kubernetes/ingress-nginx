@@ -319,6 +319,11 @@ type Configuration struct {
 	// Sets the maximum size of the variables hash table.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
 	LimitConnZoneVariable string `json:"limit-conn-zone-variable,omitempty"`
+
+	// Sets the timeout between two successive read or write operations on client or proxied server connections.
+	// If no data is transmitted within this time, the connection is closed.
+	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
+	ProxyStreamTimeout string `json:"proxy-stream-timeout,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -368,6 +373,7 @@ func NewDefault() Configuration {
 		VariablesHashBucketSize:    64,
 		VariablesHashMaxSize:       2048,
 		UseHTTP2:                   true,
+		ProxyStreamTimeout:         "600s",
 		Backend: defaults.Backend{
 			ProxyBodySize:        bodySize,
 			ProxyConnectTimeout:  5,
