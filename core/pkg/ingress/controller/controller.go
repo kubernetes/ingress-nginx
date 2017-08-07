@@ -305,7 +305,6 @@ func newIngressController(config *Configuration) *GenericController {
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
 	}
-
 	ic.annotations = newAnnotationExtractor(ic)
 
 	ic.cfg.Backend.SetListers(ingress.StoreLister{
@@ -506,8 +505,10 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 			glog.V(3).Infof("searching service %v/%v endpoints using the name '%v'", svcNs, svcName, svcPort)
 			for _, sp := range svc.Spec.Ports {
 				if sp.Name == svcPort {
-					endps = ic.getEndpoints(svc, &sp, proto, &healthcheck.Upstream{})
-					break
+					if sp.Protocol == proto {
+						endps = ic.getEndpoints(svc, &sp, proto, &healthcheck.Upstream{})
+						break
+					}
 				}
 			}
 		} else {
@@ -515,8 +516,10 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 			glog.V(3).Infof("searching service %v/%v endpoints using the target port '%v'", svcNs, svcName, targetPort)
 			for _, sp := range svc.Spec.Ports {
 				if sp.Port == int32(targetPort) {
-					endps = ic.getEndpoints(svc, &sp, proto, &healthcheck.Upstream{})
-					break
+					if sp.Protocol == proto {
+						endps = ic.getEndpoints(svc, &sp, proto, &healthcheck.Upstream{})
+						break
+					}
 				}
 			}
 		}
