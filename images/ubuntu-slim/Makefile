@@ -15,7 +15,7 @@
 TAG ?= 0.14
 REGISTRY = gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
-ALL_ARCH = amd64 arm arm64 ppc64le s390x
+ALL_ARCH = amd64 arm arm64 ppc64le
 
 QEMUVERSION=v2.9.1
 
