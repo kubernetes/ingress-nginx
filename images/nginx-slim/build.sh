@@ -17,7 +17,7 @@
 
 set -e
 
-export NGINX_VERSION=1.13.3
+export NGINX_VERSION=1.13.4
 export NDK_VERSION=0.3.0
 export VTS_VERSION=0.1.15
 export SETMISC_VERSION=0.31
@@ -68,7 +68,7 @@ apt-get update && apt-get install --no-install-recommends -y \
   linux-headers-generic || exit 1
 
 # download, verify and extract the source files
-get_src 5b73f98004c302fb8e4a172abf046d9ce77739a82487e4873b39f9b0dcbb0d72 \
+get_src de21f3c49ba65c611329d8759a63d72e5fcf719bc6f2a3270e2541348ef1fbba \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
