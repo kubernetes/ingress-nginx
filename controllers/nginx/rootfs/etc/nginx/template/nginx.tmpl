@@ -327,9 +327,15 @@ http {
         ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
         {{ end }}
 
-        {{ if not (empty $location.Redirect.AppRoot)}}
+        {{ if not (empty $location.Redirect.URL) }}
+        location {{ $path }} {
+            return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
+        }
+        {{ else }}
+
+        {{ if not (empty $location.Rewrite.AppRoot) }}
         if ($uri = /) {
-            return 302 {{ $location.Redirect.AppRoot }};
+            return 302 {{ $location.Rewrite.AppRoot }};
         }
         {{ end }}
 
@@ -362,7 +368,7 @@ http {
         location {{ $path }} {
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $backends $location }}";
 
-            {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
+            {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
             # enforce ssl on server side
             if ($pass_access_scheme = http) {
                 return 301 https://$best_http_host$request_uri;
@@ -459,7 +465,7 @@ http {
             proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream }}{{ if $cfg.RetryNonIdempotent }} non_idempotent{{ end }};
 
             {{/* rewrite only works if the content is not compressed */}}
-            {{ if $location.Redirect.AddBaseURL }}
+            {{ if $location.Rewrite.AddBaseURL }}
             proxy_set_header                        Accept-Encoding     "";
             {{ end }}
 
@@ -472,6 +478,7 @@ http {
             return 503;
             {{ end }}
         }
+        {{ end }}
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}

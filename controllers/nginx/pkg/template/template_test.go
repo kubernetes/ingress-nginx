@@ -110,8 +110,8 @@ func TestFormatIP(t *testing.T) {
 func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:     tc.Path,
-			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
+			Path:    tc.Path,
+			Rewrite: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
 
 		newLoc := buildLocation(loc)
@@ -124,9 +124,9 @@ func TestBuildLocation(t *testing.T) {
 func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:     tc.Path,
-			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
-			Backend:  "upstream-name",
+			Path:    tc.Path,
+			Rewrite: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
+			Backend: "upstream-name",
 		}
 
 		pp := buildProxyPass("", []*ingress.Backend{}, loc)
