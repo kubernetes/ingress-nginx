@@ -28,6 +28,10 @@ install:
 before_script:
   - export PATH=$PATH:$PWD/hack/e2e-internal/
 
-script:  
-  - make fmt lint vet cover
-  #- make test-e2e
+jobs:
+  include:
+    - stage: Static Check
+      script: make fmt lint vet
+    - stage: Coverage
+      script: make cover
+#- make test-e2e
