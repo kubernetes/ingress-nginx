@@ -38,6 +38,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
+	"k8s.io/ingress/controllers/nginx/pkg/fastcgi"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
 	"k8s.io/ingress/controllers/nginx/pkg/version"
 	"k8s.io/ingress/core/pkg/ingress"
@@ -54,6 +55,10 @@ const (
 
 	defaultStatusModule statusModule = "default"
 	vtsStatusModule     statusModule = "vts"
+
+	defUpstreamName = "upstream-default-backend"
+
+	fastCGISocket = "/var/run/go-fastcgi.sock"
 )
 
 var (
@@ -120,6 +125,23 @@ func newNGINXController() ingress.Controller {
 
 			glog.V(3).Infof("remote address %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
 			go n.proxy.Handle(conn)
+		}
+	}()
+
+	fcgiListener, err := net.Listen("unix", fastCGISocket)
+	if err != nil {
+		glog.Fatalf("%v", err)
+	}
+
+	err = os.Chmod(fastCGISocket, 0777)
+	if err != nil {
+		glog.Fatalf("%v", err)
+	}
+
+	go func() {
+		err = fastcgi.ServeError(fcgiListener)
+		if err != nil {
+			glog.Fatalf("%v", err)
 		}
 	}()
 
@@ -523,7 +545,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	cfg.SSLDHParam = sslDHParam
 
-	content, err := n.t.Write(config.TemplateConfig{
+	tc := config.TemplateConfig{
 		ProxySetHeaders:     setHeaders,
 		AddHeaders:          addHeaders,
 		MaxOpenFiles:        maxOpenFiles,
@@ -537,7 +559,21 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		CustomErrors:        len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                 cfg,
 		IsIPV6Enabled:       n.isIPV6Enabled && !cfg.DisableIpv6,
-	})
+	}
+
+	// We need to extract the endpoints to be used in the fastcgi error handler
+	for _, b := range ingressCfg.Backends {
+		if b.Name == defUpstreamName {
+			eps := []string{}
+			for _, e := range b.Endpoints {
+				eps = append(eps, fmt.Sprintf("%v:%v", e.Address, e.Port))
+			}
+			tc.DefaultBackendEndpoints = strings.Join(eps, ",")
+			break
+		}
+	}
+
+	content, err := n.t.Write(tc)
 
 	if err != nil {
 		return err
