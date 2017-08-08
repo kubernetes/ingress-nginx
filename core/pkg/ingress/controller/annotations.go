@@ -23,6 +23,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/cors"
+	"k8s.io/ingress/core/pkg/ingress/annotations/eventsource"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
@@ -58,6 +59,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"ExternalAuth":         authreq.NewParser(),
 			"CertificateAuth":      authtls.NewParser(cfg),
 			"EnableCORS":           cors.NewParser(),
+			"Eventsource":          eventsource.NewParser(),
 			"HealthCheck":          healthcheck.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),

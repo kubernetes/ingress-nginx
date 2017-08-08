@@ -265,6 +265,9 @@ type Location struct {
 	// EnableCORS indicates if path must support CORS
 	// +optional
 	EnableCORS bool `json:"enableCors,omitempty"`
+	// Eventsource indicates the path is a server sent events endpoint
+	// +optional
+	Eventsource bool `json:"eventsource,omitempty"`
 	// ExternalAuth indicates the access to this location requires
 	// authentication using an external provider
 	// +optional

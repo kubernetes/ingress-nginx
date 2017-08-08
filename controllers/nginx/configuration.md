@@ -50,6 +50,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
 |[ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
+|[ingress.kubernetes.io/eventsource](#eventsource)|true or false|
 |[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
@@ -227,6 +228,10 @@ If the `service-upstream` annotation is specified the following things should be
 
 * Sticky Sessions will not work as only round-robin load balancing is supported. 
 * The `proxy_next_upstream` directive will not have any effect meaning on error the request will not be dispatched to another upstream.
+
+### Eventsource
+
+The annotation `ingress.kubernetes.io/eventsource` sets headers to be compatible with Server Sent Events. 
 
 ### Server-side HTTPS enforcement through redirect
 
