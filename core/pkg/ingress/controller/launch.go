@@ -65,8 +65,8 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		service with the format namespace/serviceName and the port of the service could be a 
 		number of the name of the port.`)
 
-		resyncPeriod = flags.Duration("sync-period", 60*time.Second,
-			`Relist and confirm cloud resources this often.`)
+		resyncPeriod = flags.Duration("sync-period", 600*time.Second,
+			`Relist and confirm cloud resources this often. Default is 10 minutes`)
 
 		watchNamespace = flags.String("watch-namespace", api.NamespaceAll,
 			`Namespace to watch for Ingress. Default is to watch all namespaces`)
@@ -147,6 +147,10 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		if err != nil {
 			glog.Fatalf("no watchNamespace with name %v found: %v", *watchNamespace, err)
 		}
+	}
+
+	if resyncPeriod.Seconds() < 10 {
+		glog.Fatalf("resync period (%vs) is too low", resyncPeriod.Seconds())
 	}
 
 	err = os.MkdirAll(ingress.DefaultSSLDirectory, 0655)

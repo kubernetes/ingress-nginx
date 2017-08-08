@@ -25,7 +25,7 @@ RUN curl -sSL -o /tmp/dumb-init.deb http://ftp.us.debian.org/debian/pool/main/d/
   dpkg -i /tmp/dumb-init.deb && \
   rm /tmp/dumb-init.deb
 
-ENTRYPOINT ["/usr/bin/dumb-init", "-v"]
+ENTRYPOINT ["/usr/bin/dumb-init"]
 
 COPY . /
 
