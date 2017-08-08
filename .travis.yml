@@ -28,7 +28,7 @@ install:
 before_script:
   - export PATH=$PATH:$PWD/hack/e2e-internal/
 
-jobs
+jobs:
   include:
     - stage: Static Check
       script: make fmt lint vet
