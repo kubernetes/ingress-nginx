@@ -26,9 +26,9 @@ ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
 
-ALL_ARCH = amd64 arm ppc64le
+ALL_ARCH = amd64 arm arm64 ppc64le
 
-QEMUVERSION=v2.7.0
+QEMUVERSION=v2.9.1
 
 IMGNAME = nginx-ingress-controller
 IMAGE = $(REGISTRY)/$(IMGNAME)
@@ -42,9 +42,9 @@ ifeq ($(ARCH),arm)
 	GOARCH=arm
 	DUMB_ARCH=armhf
 endif
-#ifeq ($(ARCH),arm64)
-#        QEMUARCH=aarch64
-#endif
+ifeq ($(ARCH),arm64)
+        QEMUARCH=aarch64
+endif
 ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
 	GOARCH=ppc64le
@@ -54,7 +54,7 @@ endif
 #        QEMUARCH=s390x
 #endif
 
-export TEMP_DIR ?= $(shell mktemp -d)
+TEMP_DIR := $(shell mktemp -d)
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
 
