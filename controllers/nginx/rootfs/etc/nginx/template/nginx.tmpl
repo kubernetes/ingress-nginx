@@ -13,6 +13,10 @@ pid /run/nginx.pid;
 worker_rlimit_nofile {{ .MaxOpenFiles }};
 {{ end}}
 
+{{/* http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout */}}
+{{/* avoid waiting too long during a reload */}}
+worker_shutdown_timeout 10s;
+
 events {
     multi_accept        on;
     worker_connections  {{ $cfg.MaxWorkerConnections }};
