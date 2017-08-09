@@ -97,6 +97,7 @@ func TestMergeLocationAnnotations(t *testing.T) {
 		"BasicDigestAuth":    auth.BasicDigest{},
 		DeniedKeyName:        &fakeError{},
 		"EnableCORS":         true,
+		"Eventsource":        true,
 		"ExternalAuth":       authreq.External{},
 		"RateLimit":          ratelimit.RateLimit{},
 		"Redirect":           rewrite.Redirect{},

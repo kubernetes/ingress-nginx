@@ -420,9 +420,16 @@ http {
             proxy_set_header ssl-client-cert        $ssl_client_cert;
             {{ end }}
 
+            {{ if $location.Eventsource }}
+            # Allow server sent events
+            proxy_set_header                        Connection        '';
+            proxy_cache                             off;
+            chunked_transfer_encoding               off;
+            {{ else }}
             # Allow websocket connections
             proxy_set_header                        Upgrade           $http_upgrade;
             proxy_set_header                        Connection        $connection_upgrade;
+            {{ end }}
 
             proxy_set_header X-Real-IP              $the_real_ip;
             proxy_set_header X-Forwarded-For        $the_real_ip;

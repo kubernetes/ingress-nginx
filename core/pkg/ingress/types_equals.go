@@ -353,6 +353,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.EnableCORS != l2.EnableCORS {
 		return false
 	}
+	if l1.Eventsource != l2.Eventsource {
+		return false
+	}
 	if !(&l1.ExternalAuth).Equal(&l2.ExternalAuth) {
 		return false
 	}
