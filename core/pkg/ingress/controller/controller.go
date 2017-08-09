@@ -131,6 +131,7 @@ type Configuration struct {
 	// optional
 	UDPConfigMapName      string
 	DefaultSSLCertificate string
+	AlwaysEnableTLS       bool
 	DefaultHealthzURL     string
 	DefaultIngressClass   string
 	// optional
@@ -1065,74 +1066,78 @@ func (ic *GenericController) createServers(data []interface{},
 					},
 				}, SSLPassthrough: sslpt}
 		}
-	}
 
-	// configure default location and SSL
-	for _, ingIf := range data {
-		ing := ingIf.(*extensions.Ingress)
-		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-			continue
-		}
-
-		for _, rule := range ing.Spec.Rules {
-			host := rule.Host
-			if host == "" {
-				host = defServerName
-			}
-
-			// only add a certificate if the server does not have one previously configured
-			if len(ing.Spec.TLS) == 0 || servers[host].SSLCertificate != "" {
-				continue
-			}
-
-			tlsSecretName := ""
-			found := false
-			for _, tls := range ing.Spec.TLS {
-				if sets.NewString(tls.Hosts...).Has(host) {
-					tlsSecretName = tls.SecretName
-					found = true
-					break
-				}
-			}
-
-			// the current ing.Spec.Rules[].Host doesn't have an entry at
-			// ing.Spec.TLS[].Hosts[] skipping to the next Rule
-			if !found {
-				continue
-			}
-
-			if tlsSecretName == "" {
-				glog.V(3).Infof("host %v is listed on tls section but secretName is empty. Using default cert", host)
-				servers[host].SSLCertificate = defaultPemFileName
-				servers[host].SSLPemChecksum = defaultPemSHA
-				continue
-			}
-
-			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
-			bc, exists := ic.sslCertTracker.Get(key)
-			if !exists {
-				glog.Infof("ssl certificate \"%v\" does not exist in local store", key)
-				continue
-			}
-
-			cert := bc.(*ingress.SSLCert)
-			err = cert.Certificate.VerifyHostname(host)
-			if err != nil {
-				glog.Warningf("ssl certificate %v does not contain a Common Name or Subject Alternative Name for host %v", key, host)
-				continue
-			}
-
-			servers[host].SSLCertificate = cert.PemFileName
-			servers[host].SSLPemChecksum = cert.PemSHA
-			servers[host].SSLExpireTime = cert.ExpireTime
-
-			if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
-				glog.Warningf("ssl certificate for host %v is about to expire in 10 days", host)
-			}
-		}
+		ic.configureTLSforIng(ing, servers, defaultPemFileName, defaultPemSHA)
 	}
 
 	return servers
+}
+
+func (ic *GenericController) configureTLSforIng(ing *extensions.Ingress, servers map[string]*ingress.Server, defaultPemFileName string, defaultPemSHA string) {
+	for _, rule := range ing.Spec.Rules {
+		host := rule.Host
+		if host == "" {
+			host = defServerName
+		}
+
+		// only add a certificate if the server does not have one previously configured
+		if servers[host].SSLCertificate != "" {
+			continue
+		}
+
+		tlsForHost := getTLSForHost(ing.Spec.TLS, host)
+
+		if tlsForHost == nil && ic.cfg.AlwaysEnableTLS {
+			glog.V(3).Infof("no tls host defined for %v but EnforceTLS is true. Using default cert", host)
+			servers[host].SSLCertificate = defaultPemFileName
+			servers[host].SSLPemChecksum = defaultPemSHA
+			continue
+		}
+
+		// the current ing.Spec.Rules[].Host doesn't have an entry at
+		// ing.Spec.TLS[].Hosts[] skipping to the next Rule
+		if tlsForHost == nil {
+			continue
+		}
+
+		if tlsForHost.SecretName == "" {
+			glog.V(3).Infof("host %v is listed on tls section but secretName is empty. Using default cert", host)
+			servers[host].SSLCertificate = defaultPemFileName
+			servers[host].SSLPemChecksum = defaultPemSHA
+			continue
+		}
+
+		key := fmt.Sprintf("%v/%v", ing.Namespace, tlsForHost.SecretName)
+		bc, exists := ic.sslCertTracker.Get(key)
+		if !exists {
+			glog.Infof("ssl certificate \"%v\" does not exist in local store", key)
+			continue
+		}
+
+		cert := bc.(*ingress.SSLCert)
+		err := cert.Certificate.VerifyHostname(host)
+		if err != nil {
+			glog.Warningf("ssl certificate %v does not contain a Common Name or Subject Alternative Name for host %v", key, host)
+			continue
+		}
+
+		servers[host].SSLCertificate = cert.PemFileName
+		servers[host].SSLPemChecksum = cert.PemSHA
+		servers[host].SSLExpireTime = cert.ExpireTime
+
+		if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
+			glog.Warningf("ssl certificate for host %v is about to expire in 10 days", host)
+		}
+	}
+}
+
+func getTLSForHost(ingressTLS []extensions.IngressTLS, host string) *extensions.IngressTLS {
+	for _, tls := range ingressTLS {
+		if sets.NewString(tls.Hosts...).Has(host) {
+			return &tls
+		}
+	}
+	return nil
 }
 
 // getEndpoints returns a list of <endpoint ip>:<port> for a given service/target port combination.
