@@ -26,7 +26,7 @@ If you're new to the project and want to help, but don't know where to start, we
 1. Fork the desired repo, develop and test your code changes.
 1. Submit a pull request.
 
-All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/kubernetes/tree/master/docs/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.
+All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/community/tree/master/contributors/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.
 
 ### Merge Approval
 
