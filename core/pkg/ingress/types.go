@@ -220,6 +220,8 @@ type Server struct {
 	SSLPemChecksum string `json:"sslPemChecksum"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
+	// return the alias of the server name
+	Alias string `json:"alias,omitempty"`
 }
 
 // Location describes an URI inside a server.

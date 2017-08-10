@@ -1055,11 +1055,26 @@ func (ic *GenericController) createServers(data []interface{},
 		}
 	}
 
-	// configure default location and SSL
+	// configure default location, alias, and SSL
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
 		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
+		}
+
+		// setup server-aliases based on annotations
+		aliasMap := map[string]string{}
+		aliasAnnotation := ic.annotations.Alias(ing)
+
+		// Here we parse the annotation string in the following format:
+		// ingress.kubernetes.io/server-alias: "host_0:alias_0;...;host_n:alias_n"
+		aliases := strings.Split(aliasAnnotation, ";")
+		for _, alias := range aliases {
+			aliasParts := strings.Split(alias, ":")
+			if len(aliasParts) == 2 {
+				// aliasMap[host] = alias
+				aliasMap[aliasParts[0]] = aliasParts[1]
+			}
 		}
 
 		for _, rule := range ing.Spec.Rules {
@@ -1067,6 +1082,9 @@ func (ic *GenericController) createServers(data []interface{},
 			if host == "" {
 				host = defServerName
 			}
+
+			// setup server aliases
+			servers[host].Alias = aliasMap[host]
 
 			// only add a certificate if the server does not have one previously configured
 			if len(ing.Spec.TLS) == 0 || servers[host].SSLCertificate != "" {
