@@ -7,6 +7,7 @@
 * [Authentication](#authentication)
 * [Rewrite](#rewrite)
 * [Rate limiting](#rate-limiting)
+* [SSL Passthrough](#ssl-passthrough)
 * [Secure backends](#secure-backends)
 * [Server-side HTTPS enforcement through redirect](#server-side-https-enforcement-through-redirect)
 * [Whitelist source range](#whitelist-source-range)
