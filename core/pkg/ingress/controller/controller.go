@@ -1109,8 +1109,9 @@ func (ic *GenericController) createServers(data []interface{},
 			}
 
 			cert := bc.(*ingress.SSLCert)
-			if !isHostValid(host, cert) {
-				glog.Warningf("ssl certificate %v does not contain a common name for host %v", key, host)
+			err = cert.Certificate.VerifyHostname(host)
+			if err != nil {
+				glog.Warningf("ssl certificate %v does not contain a Common Name or Subject Alternative Name for host %v", key, host)
 				continue
 			}
 

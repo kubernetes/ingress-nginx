@@ -36,57 +36,6 @@ func (fe *fakeError) Error() string {
 	return "fakeError"
 }
 
-func TestIsHostValid(t *testing.T) {
-	fkCert := &ingress.SSLCert{
-		CAFileName:  "foo",
-		PemFileName: "foo.cr",
-		PemSHA:      "perha",
-		CN: []string{
-			"*.cluster.local", "default.local",
-		},
-	}
-
-	fooTests := []struct {
-		cr   *ingress.SSLCert
-		host string
-		er   bool
-	}{
-		{nil, "foo1.cluster.local", false},
-		{fkCert, "foo1.cluster.local", true},
-		{fkCert, "default.local", true},
-		{fkCert, "foo2.cluster.local.t", false},
-		{fkCert, "", false},
-	}
-
-	for _, foo := range fooTests {
-		r := isHostValid(foo.host, foo.cr)
-		if r != foo.er {
-			t.Errorf("Returned %v but expected %v for foo=%v", r, foo.er, foo)
-		}
-	}
-}
-
-func TestMatchHostnames(t *testing.T) {
-	fooTests := []struct {
-		pattern string
-		host    string
-		er      bool
-	}{
-		{"*.cluster.local.", "foo1.cluster.local.", true},
-		{"foo1.cluster.local.", "foo2.cluster.local.", false},
-		{"cluster.local.", "foo1.cluster.local.", false},
-		{".", "foo1.cluster.local.", false},
-		{"cluster.local.", ".", false},
-	}
-
-	for _, foo := range fooTests {
-		r := matchHostnames(foo.pattern, foo.host)
-		if r != foo.er {
-			t.Errorf("Returned %v but expected %v for foo=%v", r, foo.er, foo)
-		}
-	}
-}
-
 func TestMergeLocationAnnotations(t *testing.T) {
 	// initial parameters
 	loc := ingress.Location{}
