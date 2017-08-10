@@ -34,7 +34,7 @@ Key:
 | `auth-tls-secret` | Name of secret for TLS client certification validation. (nginx, haproxy)
 | `auth-tls-verify-depth` | Maximum chain length of TLS client certificate. (nginx)
 | `auth-satisfy` | Behaviour when more than one of `auth-type`, `auth-tls-secret` or `whitelist-source-range` are configured: `all` (default) or `any`. (trafficserver) | `trafficserver`
-| `whitelist-source-range` | Comma-separate list of IP addresses to restrict access to. (nginx, haproxy, trafficserver)
+| `whitelist-source-range` | Comma-separate list of IP addresses to enable access to. (nginx, haproxy, trafficserver)
 
 ## URL related
 
