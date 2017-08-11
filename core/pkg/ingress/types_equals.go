@@ -149,21 +149,17 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		return false
 	}
 
-	if (b1.Service == nil && b2.Service != nil) ||
-		(b1.Service != nil && b2.Service == nil) {
+	if b1.Service == nil || b2.Service == nil {
 		return false
 	}
-
-	if b1.Service != nil && b2.Service != nil {
-		if b1.Service.GetNamespace() != b2.Service.GetNamespace() {
-			return false
-		}
-		if b1.Service.GetName() != b2.Service.GetName() {
-			return false
-		}
-		if b1.Service.GetResourceVersion() != b2.Service.GetResourceVersion() {
-			return false
-		}
+	if b1.Service.GetNamespace() != b2.Service.GetNamespace() {
+		return false
+	}
+	if b1.Service.GetName() != b2.Service.GetName() {
+		return false
+	}
+	if b1.Service.GetResourceVersion() != b2.Service.GetResourceVersion() {
+		return false
 	}
 
 	if b1.Port != b2.Port {
@@ -258,7 +254,14 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 	if e1.FailTimeout != e2.FailTimeout {
 		return false
 	}
-	if e1.Target != e2.Target {
+
+	if e1.Target == nil || e2.Target == nil {
+		return false
+	}
+	if e1.Target.UID != e2.Target.UID {
+		return false
+	}
+	if e1.Target.ResourceVersion != e2.Target.ResourceVersion {
 		return false
 	}
 
@@ -324,21 +327,17 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if (l1.Service == nil && l2.Service != nil) ||
-		(l1.Service != nil && l2.Service == nil) {
+	if l1.Service == nil || l2.Service == nil {
 		return false
 	}
-
-	if l1.Service != nil && l2.Service != nil {
-		if l1.Service.GetNamespace() != l2.Service.GetNamespace() {
-			return false
-		}
-		if l1.Service.GetName() != l2.Service.GetName() {
-			return false
-		}
-		if l1.Service.GetResourceVersion() != l2.Service.GetResourceVersion() {
-			return false
-		}
+	if l1.Service.GetNamespace() != l2.Service.GetNamespace() {
+		return false
+	}
+	if l1.Service.GetName() != l2.Service.GetName() {
+		return false
+	}
+	if l1.Service.GetResourceVersion() != l2.Service.GetResourceVersion() {
+		return false
 	}
 
 	if l1.Port.StrVal != l2.Port.StrVal {
@@ -398,21 +397,18 @@ func (ptb1 *SSLPassthroughBackend) Equal(ptb2 *SSLPassthroughBackend) bool {
 	if ptb1.Port != ptb2.Port {
 		return false
 	}
-	if (ptb1.Service == nil && ptb2.Service != nil) ||
-		(ptb1.Service != nil && ptb2.Service == nil) {
+
+	if ptb1.Service == nil || ptb2.Service == nil {
 		return false
 	}
-
-	if ptb1.Service != nil && ptb2.Service != nil {
-		if ptb1.Service.GetNamespace() != ptb2.Service.GetNamespace() {
-			return false
-		}
-		if ptb1.Service.GetName() != ptb2.Service.GetName() {
-			return false
-		}
-		if ptb1.Service.GetResourceVersion() != ptb2.Service.GetResourceVersion() {
-			return false
-		}
+	if ptb1.Service.GetNamespace() != ptb2.Service.GetNamespace() {
+		return false
+	}
+	if ptb1.Service.GetName() != ptb2.Service.GetName() {
+		return false
+	}
+	if ptb1.Service.GetResourceVersion() != ptb2.Service.GetResourceVersion() {
+		return false
 	}
 
 	return true

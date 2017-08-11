@@ -47,13 +47,12 @@ func TestEqualConfiguration(t *testing.T) {
 	}
 
 	if !b.Equal(a) {
-		t.Errorf("expected equal configurations (configuration-a.json and configuration-b.json)")
+		t.Errorf("expected equal configurations (configuration-b.json and configuration-a.json)")
 	}
 
 	if a.Equal(c) {
 		t.Errorf("expected equal configurations (configuration-a.json and configuration-c.json)")
 	}
-
 }
 
 func readJSON(p string) (*Configuration, error) {
