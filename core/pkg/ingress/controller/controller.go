@@ -342,7 +342,7 @@ func (ic GenericController) GetDefaultBackend() defaults.Backend {
 }
 
 // GetRecorder returns the event recorder
-func (ic GenericController) GetRecoder() record.EventRecorder {
+func (ic GenericController) GetRecorder() record.EventRecorder {
 	return ic.recorder
 }
 
