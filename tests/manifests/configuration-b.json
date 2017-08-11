@@ -1,6 +1,35 @@
 {
 	"backends": [{
 		"name": "upstream-default-backend",
+		"service": {
+			"metadata": {
+				"name": "default-http-backend",
+				"namespace": "kube-system",
+				"selfLink": "/api/v1/namespaces/kube-system/services/default-http-backend",
+				"uid": "907dc7db-5178-11e7-b3db-080027494b5d",
+				"resourceVersion": "3249707",
+				"creationTimestamp": "2017-06-15T03:13:12Z",
+				"labels": {
+					"k8s-app": "default-http-backend"
+				}
+			},
+			"spec": {
+				"ports": [{
+					"protocol": "TCP",
+					"port": 80,
+					"targetPort": 80
+				}],
+				"selector": {
+					"k8s-app": "default-http-backend"
+				},
+				"clusterIP": "10.0.0.131",
+				"type": "ClusterIP",
+				"sessionAffinity": "None"
+			},
+			"status": {
+				"loadBalancer": {}
+			}
+		},
 		"port": 0,
 		"secure": false,
 		"secureCert": {
@@ -10,10 +39,156 @@
 		},
 		"sslPassthrough": false,
 		"endpoints": [{
+			"address": "172.17.0.3",
+			"port": "80",
+			"maxFails": 0,
+			"failTimeout": 0,
+			"target": {
+				"kind": "Pod",
+				"namespace": "kube-system",
+				"name": "default-http-backend-3371703669-4dfnt",
+				"uid": "72e9c21f-793e-11e7-ac58-080027494b5d",
+				"resourceVersion": "3700969"
+			}
+		}],
+		"sessionAffinityConfig": {
+			"name": "",
+			"cookieSessionAffinity": {
+				"name": "",
+				"hash": ""
+			}
+		}
+	}, {
+		"name": "default-http-svc-80",
+		"service": {
+			"metadata": {
+				"name": "http-svc",
+				"namespace": "default",
+				"selfLink": "/api/v1/namespaces/default/services/http-svc",
+				"uid": "88b3c8a8-517e-11e7-b3db-080027494b5d",
+				"resourceVersion": "4242",
+				"creationTimestamp": "2017-06-15T03:55:55Z",
+				"labels": {
+					"app": "http-svc"
+				}
+			},
+			"spec": {
+				"ports": [{
+					"name": "http",
+					"protocol": "TCP",
+					"port": 80,
+					"targetPort": 8080,
+					"nodePort": 30301
+				}],
+				"selector": {
+					"app": "http-svc"
+				},
+				"clusterIP": "10.0.0.224",
+				"type": "NodePort",
+				"sessionAffinity": "None"
+			},
+			"status": {
+				"loadBalancer": {}
+			}
+		},
+		"port": 80,
+		"secure": false,
+		"secureCert": {
+			"secret": "",
+			"caFilename": "",
+			"pemSha": ""
+		},
+		"sslPassthrough": false,
+		"endpoints": [{
+			"address": "172.17.0.2",
+			"port": "8080",
+			"maxFails": 0,
+			"failTimeout": 0,
+			"target": {
+				"kind": "Pod",
+				"namespace": "default",
+				"name": "http-svc-w088k",
+				"uid": "283a4361-7c7c-11e7-b124-080027494b5d",
+				"resourceVersion": "3700943"
+			}
+		}, {
 			"address": "172.17.0.5",
 			"port": "8080",
 			"maxFails": 0,
-			"failTimeout": 0
+			"failTimeout": 0,
+			"target": {
+				"kind": "Pod",
+				"namespace": "default",
+				"name": "http-svc-tp758",
+				"uid": "43a82d6e-7303-11e7-ac58-080027494b5d",
+				"resourceVersion": "3700959"
+			}
+		}],
+		"sessionAffinityConfig": {
+			"name": "",
+			"cookieSessionAffinity": {
+				"name": "",
+				"hash": ""
+			}
+		}
+	}, {
+		"name": "kube-system-kubernetes-dashboard-80",
+		"service": {
+			"metadata": {
+				"name": "kubernetes-dashboard",
+				"namespace": "kube-system",
+				"selfLink": "/api/v1/namespaces/kube-system/services/kubernetes-dashboard",
+				"uid": "b957713f-5176-11e7-b3db-080027494b5d",
+				"resourceVersion": "82",
+				"creationTimestamp": "2017-06-15T03:00:01Z",
+				"labels": {
+					"addonmanager.kubernetes.io/mode": "Reconcile",
+					"app": "kubernetes-dashboard",
+					"kubernetes.io/minikube-addons": "dashboard",
+					"kubernetes.io/minikube-addons-endpoint": "dashboard"
+				},
+				"annotations": {
+					"kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\":\"Reconcile\",\"app\":\"kubernetes-dashboard\",\"kubernetes.io/minikube-addons\":\"dashboard\",\"kubernetes.io/minikube-addons-endpoint\":\"dashboard\"},\"name\":\"kubernetes-dashboard\",\"namespace\":\"kube-system\"},\"spec\":{\"ports\":[{\"nodePort\":30000,\"port\":80,\"targetPort\":9090}],\"selector\":{\"app\":\"kubernetes-dashboard\"},\"type\":\"NodePort\"}}\n"
+				}
+			},
+			"spec": {
+				"ports": [{
+					"protocol": "TCP",
+					"port": 80,
+					"targetPort": 9090,
+					"nodePort": 30000
+				}],
+				"selector": {
+					"app": "kubernetes-dashboard"
+				},
+				"clusterIP": "10.0.0.120",
+				"type": "NodePort",
+				"sessionAffinity": "None"
+			},
+			"status": {
+				"loadBalancer": {}
+			}
+		},
+		"port": 80,
+		"secure": false,
+		"secureCert": {
+			"secret": "",
+			"caFilename": "",
+			"pemSha": ""
+		},
+		"sslPassthrough": false,
+		"endpoints": [{
+			"address": "172.17.0.6",
+			"port": "9090",
+			"maxFails": 0,
+			"failTimeout": 0,
+			"target": {
+				"kind": "Pod",
+				"namespace": "kube-system",
+				"name": "kubernetes-dashboard-m3qc0",
+				"uid": "b9511631-5176-11e7-b3db-080027494b5d",
+				"resourceVersion": "3700964"
+			}
 		}],
 		"sessionAffinityConfig": {
 			"name": "",
@@ -24,22 +199,58 @@
 		}
 	}],
 	"servers": [{
-		"hostname": "_",
+		"hostname": "domain.tld",
 		"sslPassthrough": false,
-		"sslCertificate": "/ingress-controller/ssl/default-fake-certificate.pem",
+		"sslCertificate": "",
 		"sslExpireTime": "0001-01-01T00:00:00Z",
-		"sslPemChecksum": "4302f26460e2c49c9a69229449efefb30dc42a9a",
+		"sslPemChecksum": "",
 		"locations": [{
-			"path": "/",
-			"isDefBackend": true,
-			"backend": "upstream-default-backend",
-			"service": null,
-			"port": 0,
+			"path": "/dashboard",
+			"isDefBackend": false,
+			"backend": "kube-system-kubernetes-dashboard-80",
+			"service": {
+				"metadata": {
+					"name": "kubernetes-dashboard",
+					"namespace": "kube-system",
+					"selfLink": "/api/v1/namespaces/kube-system/services/kubernetes-dashboard",
+					"uid": "b957713f-5176-11e7-b3db-080027494b5d",
+					"resourceVersion": "82",
+					"creationTimestamp": "2017-06-15T03:00:01Z",
+					"labels": {
+						"addonmanager.kubernetes.io/mode": "Reconcile",
+						"app": "kubernetes-dashboard",
+						"kubernetes.io/minikube-addons": "dashboard",
+						"kubernetes.io/minikube-addons-endpoint": "dashboard"
+					},
+					"annotations": {
+						"kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\":\"Reconcile\",\"app\":\"kubernetes-dashboard\",\"kubernetes.io/minikube-addons\":\"dashboard\",\"kubernetes.io/minikube-addons-endpoint\":\"dashboard\"},\"name\":\"kubernetes-dashboard\",\"namespace\":\"kube-system\"},\"spec\":{\"ports\":[{\"nodePort\":30000,\"port\":80,\"targetPort\":9090}],\"selector\":{\"app\":\"kubernetes-dashboard\"},\"type\":\"NodePort\"}}\n"
+					}
+				},
+				"spec": {
+					"ports": [{
+						"protocol": "TCP",
+						"port": 80,
+						"targetPort": 9090,
+						"nodePort": 30000
+					}],
+					"selector": {
+						"app": "kubernetes-dashboard"
+					},
+					"clusterIP": "10.0.0.120",
+					"type": "NodePort",
+					"sessionAffinity": "None"
+				},
+				"status": {
+					"loadBalancer": {}
+				}
+			},
+			"port": 80,
 			"basicDigestAuth": {
 				"type": "",
 				"realm": "",
 				"file": "",
-				"secured": false
+				"secured": false,
+				"fileSha": ""
 			},
 			"externalAuth": {
 				"url": "",
@@ -57,6 +268,91 @@
 					"sharedSize": 0
 				},
 				"rps": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rpm": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				}
+			},
+			"redirect": {
+				"target": "/",
+				"addBaseUrl": false,
+				"sslRedirect": true,
+				"forceSSLRedirect": false,
+				"appRoot": ""
+			},
+			"whitelist": {
+				"cidr": null
+			},
+			"proxy": {
+				"bodySize": "1m",
+				"conectTimeout": 5,
+				"sendTimeout": 60,
+				"readTimeout": 60,
+				"bufferSize": "4k",
+				"cookieDomain": "off",
+				"cookiePath": "off",
+				"nextUpstream": "error timeout invalid_header http_502 http_503 http_504"
+			},
+			"certificateAuth": {
+				"authSSLCert": {
+					"secret": "",
+					"caFilename": "",
+					"pemSha": ""
+				},
+				"validationDepth": 0
+			},
+			"use-port-in-redirects": false,
+			"configuration-snippet": ""
+		}, {
+			"path": "/",
+			"isDefBackend": true,
+			"backend": "upstream-default-backend",
+			"service": {
+				"metadata": {
+					"creationTimestamp": null
+				},
+				"spec": {},
+				"status": {
+					"loadBalancer": {}
+				}
+			},
+			"port": 0,
+			"basicDigestAuth": {
+				"type": "",
+				"realm": "",
+				"file": "",
+				"secured": false,
+				"fileSha": ""
+			},
+			"externalAuth": {
+				"url": "",
+				"host": "",
+				"signinUrl": "",
+				"method": "",
+				"sendBody": false,
+				"responseHeaders": null
+			},
+			"rateLimit": {
+				"connections": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rps": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rpm": {
 					"name": "",
 					"limit": 0,
 					"burst": 0,
@@ -80,7 +376,8 @@
 				"readTimeout": 60,
 				"bufferSize": "4k",
 				"cookieDomain": "off",
-				"cookiePath": "off"
+				"cookiePath": "off",
+				"nextUpstream": "error timeout invalid_header http_502 http_503 http_504"
 			},
 			"certificateAuth": {
 				"authSSLCert": {
@@ -93,5 +390,300 @@
 			"use-port-in-redirects": false,
 			"configuration-snippet": ""
 		}]
-	}]
+	},{
+		"hostname": "_",
+		"sslPassthrough": false,
+		"sslCertificate": "/ingress-controller/ssl/default-fake-certificate.pem",
+		"sslExpireTime": "0001-01-01T00:00:00Z",
+		"sslPemChecksum": "84d4ecb651dae44d625531bf77b6265d660b60b2",
+		"locations": [{
+			"path": "/",
+			"isDefBackend": true,
+			"backend": "upstream-default-backend",
+			"service": {
+				"metadata": {
+					"name": "default-http-backend",
+					"namespace": "kube-system",
+					"selfLink": "/api/v1/namespaces/kube-system/services/default-http-backend",
+					"uid": "907dc7db-5178-11e7-b3db-080027494b5d",
+					"resourceVersion": "3249707",
+					"creationTimestamp": "2017-06-15T03:13:12Z",
+					"labels": {
+						"k8s-app": "default-http-backend"
+					}
+				},
+				"spec": {
+					"ports": [{
+						"protocol": "TCP",
+						"port": 80,
+						"targetPort": 80
+					}],
+					"selector": {
+						"k8s-app": "default-http-backend"
+					},
+					"clusterIP": "10.0.0.131",
+					"type": "ClusterIP",
+					"sessionAffinity": "None"
+				},
+				"status": {
+					"loadBalancer": {}
+				}
+			},
+			"port": 0,
+			"basicDigestAuth": {
+				"type": "",
+				"realm": "",
+				"file": "",
+				"secured": false,
+				"fileSha": ""
+			},
+			"externalAuth": {
+				"url": "",
+				"host": "",
+				"signinUrl": "",
+				"method": "",
+				"sendBody": false,
+				"responseHeaders": null
+			},
+			"rateLimit": {
+				"connections": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rps": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rpm": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				}
+			},
+			"redirect": {
+				"target": "",
+				"addBaseUrl": false,
+				"sslRedirect": false,
+				"forceSSLRedirect": false,
+				"appRoot": ""
+			},
+			"whitelist": {
+				"cidr": null
+			},
+			"proxy": {
+				"bodySize": "1m",
+				"conectTimeout": 5,
+				"sendTimeout": 60,
+				"readTimeout": 60,
+				"bufferSize": "4k",
+				"cookieDomain": "off",
+				"cookiePath": "off",
+				"nextUpstream": "error timeout invalid_header http_502 http_503 http_504"
+			},
+			"certificateAuth": {
+				"authSSLCert": {
+					"secret": "",
+					"caFilename": "",
+					"pemSha": ""
+				},
+				"validationDepth": 0
+			},
+			"use-port-in-redirects": false,
+			"configuration-snippet": ""
+		}]
+	}, {
+		"hostname": "dev.mycompany.com",
+		"sslPassthrough": false,
+		"sslCertificate": "/ingress-controller/ssl/default-mycompany.pem",
+		"sslExpireTime": "2027-06-20T20:28:25Z",
+		"sslPemChecksum": "b9282485e120e4fad8c25d15dc1b7984fcde99ba",
+		"locations": [{
+			"path": "/bar",
+			"isDefBackend": false,
+			"backend": "default-http-svc-80",
+			"service": {
+				"metadata": {
+					"name": "http-svc",
+					"namespace": "default",
+					"selfLink": "/api/v1/namespaces/default/services/http-svc",
+					"uid": "88b3c8a8-517e-11e7-b3db-080027494b5d",
+					"resourceVersion": "4242",
+					"creationTimestamp": "2017-06-15T03:55:55Z",
+					"labels": {
+						"app": "http-svc"
+					}
+				},
+				"spec": {
+					"ports": [{
+						"name": "http",
+						"protocol": "TCP",
+						"port": 80,
+						"targetPort": 8080,
+						"nodePort": 30301
+					}],
+					"selector": {
+						"app": "http-svc"
+					},
+					"clusterIP": "10.0.0.224",
+					"type": "NodePort",
+					"sessionAffinity": "None"
+				},
+				"status": {
+					"loadBalancer": {}
+				}
+			},
+			"port": 80,
+			"basicDigestAuth": {
+				"type": "",
+				"realm": "",
+				"file": "",
+				"secured": false,
+				"fileSha": ""
+			},
+			"externalAuth": {
+				"url": "",
+				"host": "",
+				"signinUrl": "",
+				"method": "",
+				"sendBody": false,
+				"responseHeaders": null
+			},
+			"rateLimit": {
+				"connections": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rps": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rpm": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				}
+			},
+			"redirect": {
+				"target": "",
+				"addBaseUrl": false,
+				"sslRedirect": true,
+				"forceSSLRedirect": false,
+				"appRoot": ""
+			},
+			"whitelist": {
+				"cidr": null
+			},
+			"proxy": {
+				"bodySize": "1m",
+				"conectTimeout": 5,
+				"sendTimeout": 60,
+				"readTimeout": 60,
+				"bufferSize": "4k",
+				"cookieDomain": "off",
+				"cookiePath": "off",
+				"nextUpstream": "error timeout invalid_header http_502 http_503 http_504"
+			},
+			"certificateAuth": {
+				"authSSLCert": {
+					"secret": "",
+					"caFilename": "",
+					"pemSha": ""
+				},
+				"validationDepth": 0
+			},
+			"use-port-in-redirects": false,
+			"configuration-snippet": ""
+		}, {
+			"path": "/",
+			"isDefBackend": true,
+			"backend": "upstream-default-backend",
+			"service": {
+				"metadata": {
+					"creationTimestamp": null
+				},
+				"spec": {},
+				"status": {
+					"loadBalancer": {}
+				}
+			},
+			"port": 0,
+			"basicDigestAuth": {
+				"type": "",
+				"realm": "",
+				"file": "",
+				"secured": false,
+				"fileSha": ""
+			},
+			"externalAuth": {
+				"url": "",
+				"host": "",
+				"signinUrl": "",
+				"method": "",
+				"sendBody": false,
+				"responseHeaders": null
+			},
+			"rateLimit": {
+				"connections": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rps": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				},
+				"rpm": {
+					"name": "",
+					"limit": 0,
+					"burst": 0,
+					"sharedSize": 0
+				}
+			},
+			"redirect": {
+				"target": "",
+				"addBaseUrl": false,
+				"sslRedirect": false,
+				"forceSSLRedirect": false,
+				"appRoot": ""
+			},
+			"whitelist": {
+				"cidr": null
+			},
+			"proxy": {
+				"bodySize": "1m",
+				"conectTimeout": 5,
+				"sendTimeout": 60,
+				"readTimeout": 60,
+				"bufferSize": "4k",
+				"cookieDomain": "off",
+				"cookiePath": "off",
+				"nextUpstream": "error timeout invalid_header http_502 http_503 http_504"
+			},
+			"certificateAuth": {
+				"authSSLCert": {
+					"secret": "",
+					"caFilename": "",
+					"pemSha": ""
+				},
+				"validationDepth": 0
+			},
+			"use-port-in-redirects": false,
+			"configuration-snippet": ""
+		}]
+	}],
+	"TCPBackends": [],
+	"UDPBackends": []
 }
