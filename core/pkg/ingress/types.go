@@ -199,7 +199,7 @@ type Endpoint struct {
 	// to consider the endpoint unavailable
 	FailTimeout int `json:"failTimeout"`
 	// Target returns a reference to the object providing the endpoint
-	Target *api.ObjectReference `json:"target"`
+	Target *api.ObjectReference `json:"target,omipempty"`
 }
 
 // Server describes a website
@@ -253,7 +253,7 @@ type Location struct {
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 
-	Service *api.Service       `json:"service"`
+	Service *api.Service       `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
 	// BasicDigestAuth returns authentication configuration for
 	// an Ingress rule.
