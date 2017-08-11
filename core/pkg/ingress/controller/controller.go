@@ -587,6 +587,7 @@ func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 		endps = []ingress.Endpoint{newDefaultServer()}
 	}
 
+	upstream.Service = svc
 	upstream.Endpoints = append(upstream.Endpoints, endps...)
 	return upstream
 }
@@ -840,6 +841,8 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 				glog.V(3).Infof("creating upstream %v", name)
 				upstreams[name] = newUpstream(name)
+				upstreams[name].Port = path.Backend.ServicePort
+
 				if !upstreams[name].Secure {
 					upstreams[name].Secure = secUpstream.Secure
 				}
@@ -876,12 +879,12 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 					continue
 				}
 
-				if exists {
-					upstreams[name].Service = s.(*api.Service)
-				} else {
+				if !exists {
 					glog.Warningf("service %v does not exists", svcKey)
+					continue
 				}
-				upstreams[name].Port = path.Backend.ServicePort
+
+				upstreams[name].Service = s.(*api.Service)
 			}
 		}
 	}
@@ -1006,6 +1009,7 @@ func (ic *GenericController) createServers(data []interface{},
 	}
 
 	// initialize the default server
+	du := ic.getDefaultUpstream()
 	servers[defServerName] = &ingress.Server{
 		Hostname:       defServerName,
 		SSLCertificate: defaultPemFileName,
@@ -1014,8 +1018,9 @@ func (ic *GenericController) createServers(data []interface{},
 			{
 				Path:         rootLocation,
 				IsDefBackend: true,
-				Backend:      ic.getDefaultUpstream().Name,
+				Backend:      du.Name,
 				Proxy:        ngxProxy,
+				Service:      du.Service,
 			},
 		}}
 
@@ -1028,12 +1033,13 @@ func (ic *GenericController) createServers(data []interface{},
 
 		// check if ssl passthrough is configured
 		sslpt := ic.annotations.SSLPassthrough(ing)
-		dun := ic.getDefaultUpstream().Name
+		du := ic.getDefaultUpstream()
+		un := du.Name
 		if ing.Spec.Backend != nil {
 			// replace default backend
 			defUpstream := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
-				dun = backendUpstream.Name
+				un = backendUpstream.Name
 			}
 		}
 
@@ -1053,8 +1059,9 @@ func (ic *GenericController) createServers(data []interface{},
 					{
 						Path:         rootLocation,
 						IsDefBackend: true,
-						Backend:      dun,
+						Backend:      un,
 						Proxy:        ngxProxy,
+						Service:      &api.Service{},
 					},
 				}, SSLPassthrough: sslpt}
 		}

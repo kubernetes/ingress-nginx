@@ -14,7 +14,14 @@
 			"address": "172.17.0.8",
 			"port": "8080",
 			"maxFails": 0,
-			"failTimeout": 0
+			"failTimeout": 0,
+			"target": {
+				"kind": "Pod",
+				"namespace": "kube-system",
+				"name": "kubernetes-dashboard-m3qc0",
+				"uid": "b9511631-5176-11e7-b3db-080027494b5d",
+				"resourceVersion": "3700964"
+			}			
 		}],
 		"SessionAffinity": {
 			"name": "",
