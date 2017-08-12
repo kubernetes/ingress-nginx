@@ -30,15 +30,15 @@ Key:
 
 ## Authentication related
 
-| Name | Meaning
-| --- | ---
-| `auth-type` | Authentication type: `basic`, `digest`, ... (nginx, haproxy, trafficserver)
-| `auth-secret` | Secret name for authentication. (nginx, haproxy, trafficserver)
-| `auth-realm` | Authentication realm. (nginx, haproxy, trafficserver)
-| `auth-tls-secret` | Name of secret for TLS client certification validation. (nginx, haproxy)
-| `auth-tls-verify-depth` | Maximum chain length of TLS client certificate. (nginx)
-| `auth-satisfy` | Behaviour when more than one of `auth-type`, `auth-tls-secret` or `whitelist-source-range` are configured: `all` (default) or `any`. (trafficserver) | `trafficserver`
-| `whitelist-source-range` | Comma-separate list of IP addresses to enable access to. (nginx, haproxy, trafficserver)
+| Name | Meaning | Default | Controller
+| --- | --- | --- | --- |
+| `auth-type` | Authentication type: `basic`, `digest`, ... | | nginx, haproxy, trafficserver
+| `auth-secret` | Secret name for authentication. | | nginx, haproxy, trafficserver
+| `auth-realm` | Authentication realm. | | nginx, haproxy, trafficserver
+| `auth-tls-secret` | Name of secret for TLS client certification validation. | | nginx, haproxy
+| `auth-tls-verify-depth` | Maximum chain length of TLS client certificate. | | nginx
+| `auth-satisfy` | Behaviour when more than one of `auth-type`, `auth-tls-secret` or `whitelist-source-range` are configured: `all` or `any`. | `all` | trafficserver | `trafficserver`
+| `whitelist-source-range` | Comma-separate list of IP addresses to enable access to. | | nginx, haproxy, trafficserver
 
 ## URL related
 
