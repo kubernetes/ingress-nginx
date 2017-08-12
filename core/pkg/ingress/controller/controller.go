@@ -175,7 +175,7 @@ func newIngressController(config *Configuration) *GenericController {
 			addIng := obj.(*extensions.Ingress)
 			if !class.IsValid(addIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 				a, _ := parser.GetStringAnnotation(class.IngressKey, addIng)
-				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", addIng.Name, class.IngressKey, a)
+				glog.V(2).Infof("ignoring add for ingress %v based on annotation %v with value %v", addIng.Name, class.IngressKey, a)
 				return
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
@@ -184,7 +184,7 @@ func newIngressController(config *Configuration) *GenericController {
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
 			if !class.IsValid(delIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, class.IngressKey)
+				glog.V(2).Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, class.IngressKey)
 				return
 			}
 			ic.recorder.Eventf(delIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", delIng.Namespace, delIng.Name))
@@ -196,10 +196,10 @@ func newIngressController(config *Configuration) *GenericController {
 			validOld := class.IsValid(oldIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass)
 			validCur := class.IsValid(curIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass)
 			if !validOld && validCur {
-				glog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				glog.V(2).Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				ic.recorder.Eventf(curIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validOld && !validCur {
-				glog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				glog.V(2).Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				ic.recorder.Eventf(curIng, api.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validCur && !reflect.DeepEqual(old, cur) {
 				ic.recorder.Eventf(curIng, api.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
@@ -416,7 +416,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		return nil
 	}
 
-	glog.Infof("backend reload required")
+	glog.V(4).Infof("backend reload required")
 
 	err := ic.cfg.Backend.OnUpdate(pcfg)
 	if err != nil {
@@ -425,7 +425,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		return err
 	}
 
-	glog.Infof("ingress backend successfully reloaded...")
+	glog.V(4).Infof("ingress backend successfully reloaded...")
 	incReloadCount()
 	setSSLExpireTime(servers)
 
@@ -1099,7 +1099,7 @@ func (ic *GenericController) createServers(data []interface{},
 			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 			bc, exists := ic.sslCertTracker.Get(key)
 			if !exists {
-				glog.Infof("ssl certificate \"%v\" does not exist in local store", key)
+				glog.V(3).Infof("ssl certificate \"%v\" does not exist in local store", key)
 				continue
 			}
 
@@ -1227,7 +1227,7 @@ func (ic GenericController) Stop() error {
 
 	// Only try draining the workqueue if we haven't already.
 	if !ic.syncQueue.IsShuttingDown() {
-		glog.Infof("shutting down controller queues")
+		glog.V(4).Infof("shutting down controller queues")
 		close(ic.stopCh)
 		go ic.syncQueue.Shutdown()
 		if ic.syncStatus != nil {
