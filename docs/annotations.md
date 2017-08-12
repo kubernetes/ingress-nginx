@@ -1,14 +1,17 @@
 # Ingress Annotations
 
-This file defines a list of annotations which are supported by various Ingress controllers (both those based on the common ingress code, and alternative implementations).  The intention is to ensure the maximum amount of compatibility between different implementations.
+This file defines a list of annotations which are supported by various Ingress controllers (both those based on the common ingress code, and alternative implementations).
+The intention is to ensure the maximum amount of compatibility between different implementations.
 
-All annotations are assumed to be prefixed with `ingress.kubernetes.io/` except where otherwise specified. There is no attempt to record implementation-specific annotations using other prefixes.  (Traefik in particular defines several of its own annotations which are not described here, and does not seem to support any of the standard annotations.)
+All annotations are assumed to be prefixed with `ingress.kubernetes.io/` except where otherwise specified.
+There is no attempt to record implementation-specific annotations using other prefixes.
+(Traefik in particular defines several of its own annotations which are not described here, and does not seem to support any of the standard annotations.)
 
 Key:
 
 * `nginx`: the `kubernetes/ingress` nginx controller
 * `gce`: the `kubernetes/ingress` GCE controller
-* `traefik`: Traefik's built-in Ingress controller 
+* `traefik`: Traefik's built-in Ingress controller
 * `haproxy`: Joao Morais' [HAProxy Ingress controller](https://github.com/jcmoraisjr/haproxy-ingress)
 * `trafficserver`: Torchbox's [Apache Traffic Server controller plugin](https://github.com/torchbox/k8s-ts-ingress)
 
