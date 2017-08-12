@@ -63,7 +63,7 @@ Key:
 | `session-cookie-hash` | When `affinity` is set to `cookie`, the hash algorithm used: `md5`, `sha`, `index`. (nginx)
 | `proxy-body-size` | Maximum request body size. (nginx, haproxy)
 | `follow-redirects` | Follow HTTP redirects in the response and deliver the redirect target to the client. (trafficserver)
-| `kubernetes.io/ingress.global-static-ip-name` | Name of the static global IP address in GCP to use when provisioning the HTTPS load balanver. (gce)
+| `kubernetes.io/ingress.global-static-ip-name` | Name of the static global IP address in GCP to use when provisioning the HTTPS load balancer. (gce)
 
 [1] The documentation for the `nginx` controller says that only one of `limit-connections` or `limit-rps` may be specified; it's not clear why this is.
 
