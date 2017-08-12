@@ -42,12 +42,12 @@ Key:
 
 ## URL related
 
-| Name | Meaning
-| --- | ---
-| `app-root` | Redirect requests without a path (i.e., for `/`) to this location. (nginx, haproxy, trafficserver)
-| `rewrite-target` | Replace matched Ingress `path` with this value. (nginx, trafficserver)
-| `add-base-url` | Add `<base>` tag to HTML. (nginx)
-| `preserve-host` | Whether to pass the client request host (`true`) or the origin hostname (`false`) in the HTTP Host field.  (trafficserver)
+| Name | Meaning | Default | Controller
+| --- | --- | --- | --- |
+| `app-root` | Redirect requests without a path (i.e., for `/`) to this location. | | nginx, haproxy, trafficserver
+| `rewrite-target` | Replace matched Ingress `path` with this value. | | nginx, trafficserver
+| `add-base-url` | Add `<base>` tag to HTML. | | nginx
+| `preserve-host` | Whether to pass the client request host (`true`) or the origin hostname (`false`) in the HTTP Host field. | | trafficserver
 
 ## Miscellaneous
 
