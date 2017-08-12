@@ -1,14 +1,17 @@
 # Ingress Annotations
 
-This file defines a list of annotations which are supported by various Ingress controllers (both those based on the common ingress code, and alternative implementations).  The intention is to ensure the maximum amount of compatibility between different implementations.
+This file defines a list of annotations which are supported by various Ingress controllers (both those based on the common ingress code, and alternative implementations).
+The intention is to ensure the maximum amount of compatibility between different implementations.
 
-All annotations are assumed to be prefixed with `ingress.kubernetes.io/` except where otherwise specified. There is no attempt to record implementation-specific annotations using other prefixes.  (Traefik in particular defines several of its own annotations which are not described here, and does not seem to support any of the standard annotations.)
+All annotations are assumed to be prefixed with `ingress.kubernetes.io/` except where otherwise specified.
+There is no attempt to record implementation-specific annotations using other prefixes.
+(Traefik in particular defines several of its own annotations which are not described here, and does not seem to support any of the standard annotations.)
 
 Key:
 
 * `nginx`: the `kubernetes/ingress` nginx controller
 * `gce`: the `kubernetes/ingress` GCE controller
-* `traefik`: Traefik's built-in Ingress controller 
+* `traefik`: Traefik's built-in Ingress controller
 * `haproxy`: Joao Morais' [HAProxy Ingress controller](https://github.com/jcmoraisjr/haproxy-ingress)
 * `trafficserver`: Torchbox's [Apache Traffic Server controller plugin](https://github.com/torchbox/k8s-ts-ingress)
 
@@ -21,6 +24,7 @@ Key:
 | `force-ssl-redirect` | Redirect non-TLS requests to TLS even when TLS is not configured.  Default `false`.  (nginx, trafficserver).
 | `secure-backends` | Use TLS to communicate with origin (pods).  Default `false`. (nginx, haproxy, trafficserver)
 | `kubernetes.io/ingress.allow-http` | Whether to accept non-TLS HTTP connections.  (gce)
+| `pre-shared-cert` | Name of the TLS certificate in GCP to use when provisioning the HTTPS load balancer. (gce)
 | `hsts-max-age` | Set an HSTS header with this lifetime. (trafficserver)
 | `hsts-include-subdomains` | Add includeSubdomains to the HSTS header. (trafficserver)
 
@@ -58,7 +62,8 @@ Key:
 | `session-cookie-name` | When `affinity` is set to `cookie`, the name of the cookie to use. (nginx)
 | `session-cookie-hash` | When `affinity` is set to `cookie`, the hash algorithm used: `md5`, `sha`, `index`. (nginx)
 | `proxy-body-size` | Maximum request body size. (nginx, haproxy)
-| `follow-redirects` | Follow HTTP redirects in the response and deliver the redirect target to the client.  (trafficserver)
+| `follow-redirects` | Follow HTTP redirects in the response and deliver the redirect target to the client. (trafficserver)
+| `kubernetes.io/ingress.global-static-ip-name` | Name of the static global IP address in GCP to use when provisioning the HTTPS load balancer. (gce)
 
 [1] The documentation for the `nginx` controller says that only one of `limit-connections` or `limit-rps` may be specified; it's not clear why this is.
 
