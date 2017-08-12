@@ -17,16 +17,16 @@ Key:
 
 ## TLS-related
 
-| Name | Meaning
-| --- | ---
-| `ssl-passthrough` | Pass TLS connections directly to backend; do not offload.  Default `false`.  (nginx, haproxy)
-| `ssl-redirect` | Redirect non-TLS requests to TLS when TLS is enabled.  Default `true`.  (nginx, haproxy, trafficserver)
-| `force-ssl-redirect` | Redirect non-TLS requests to TLS even when TLS is not configured.  Default `false`.  (nginx, trafficserver).
-| `secure-backends` | Use TLS to communicate with origin (pods).  Default `false`. (nginx, haproxy, trafficserver)
-| `kubernetes.io/ingress.allow-http` | Whether to accept non-TLS HTTP connections.  (gce)
-| `pre-shared-cert` | Name of the TLS certificate in GCP to use when provisioning the HTTPS load balancer. (gce)
-| `hsts-max-age` | Set an HSTS header with this lifetime. (trafficserver)
-| `hsts-include-subdomains` | Add includeSubdomains to the HSTS header. (trafficserver)
+| Name | Meaning | Default | Controller
+| --- | --- | --- | --- |
+| `ssl-passthrough` | Pass TLS connections directly to backend; do not offload. | `false` | nginx, haproxy
+| `ssl-redirect` | Redirect non-TLS requests to TLS when TLS is enabled. | `true` | nginx, haproxy, trafficserver
+| `force-ssl-redirect` | Redirect non-TLS requests to TLS even when TLS is not configured. | `false` | nginx, trafficserver
+| `secure-backends` | Use TLS to communicate with origin (pods). | `false` | nginx, haproxy, trafficserver
+| `kubernetes.io/ingress.allow-http` | Whether to accept non-TLS HTTP connections. | | gce
+| `pre-shared-cert` | Name of the TLS certificate in GCP to use when provisioning the HTTPS load balancer. | | gce
+| `hsts-max-age` | Set an HSTS header with this lifetime. | | trafficserver
+| `hsts-include-subdomains` | Add includeSubdomains to the HSTS header. | | trafficserver
 
 ## Authentication related
 
