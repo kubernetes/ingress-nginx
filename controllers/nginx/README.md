@@ -297,8 +297,8 @@ To disable this behavior use `hsts=false` in the NGINX config map.
 
 ### Automated Certificate Management with Kube-Lego
 
-[Kube-Lego] automatically requests missing certificates or expired from
-[Let's Encrypt] by monitoring ingress resources and its referenced secrets. To
+[Kube-Lego] automatically requests missing or expired certificates from
+[Let's Encrypt] by monitoring ingress resources and their referenced secrets. To
 enable this for an ingress resource you have to add an annotation:
 
 ```
