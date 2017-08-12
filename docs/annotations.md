@@ -69,11 +69,11 @@ Key:
 
 ## Caching
 
-| Name | Meaning
-| --- | ---
-| `cache-enable` | Cache responses according to Expires or Cache-Control headers (trafficserver)
-| `cache-generation` | An arbitrary numeric value included in the cache key; changing this effectively clears the cache for this ingress.  (trafficserver)
-| `cache-ignore-query-params` | Space-separate list of globs matching URL parameters to ignore when doing cache lookups.  (trafficserver)
-| `cache-whitelist-query-params` | Ignore any URL parameters not in this whitespace-separate list of globs.  (trafficserver)
-| `cache-sort-query-params` | Lexically sort the query parameters by name before cache lookup. (trafficserver)
-| `cache-ignore-cookies` | Requests containing a `Cookie:` header will not use the cache unless all the cookie names match this whitespace-separate list of globs.  (trafficserver)
+| Name | Meaning | Default | Controller
+| --- | --- | --- | --- |
+| `cache-enable` | Cache responses according to Expires or Cache-Control headers. | | trafficserver
+| `cache-generation` | An arbitrary numeric value included in the cache key; changing this effectively clears the cache for this ingress. | | trafficserver
+| `cache-ignore-query-params` | Space-separate list of globs matching URL parameters to ignore when doing cache lookups. | | trafficserver
+| `cache-whitelist-query-params` | Ignore any URL parameters not in this whitespace-separate list of globs. | | trafficserver
+| `cache-sort-query-params` | Lexically sort the query parameters by name before cache lookup. | | trafficserver
+| `cache-ignore-cookies` | Requests containing a `Cookie:` header will not use the cache unless all the cookie names match this whitespace-separate list of globs. | | trafficserver
