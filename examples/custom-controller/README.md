@@ -2,7 +2,7 @@
 
 This example contains the source code of a simple dummy controller. If you want
 more details on the interface, or what the generic controller is actually doing,
-please read [this doc](/docs/dev/devel.md). You can deploy the controller as
+please read [this doc](/docs/dev/getting-started.md). You can deploy the controller as
 follows:
 
 ```console
