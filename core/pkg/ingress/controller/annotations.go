@@ -62,7 +62,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
-			"RateLimit":            ratelimit.NewParser(),
+			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             rewrite.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"ServiceUpstream":      serviceupstream.NewParser(),
