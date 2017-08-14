@@ -42,7 +42,7 @@ func GetSystemNameServers() ([]net.IP, error) {
 			continue
 		}
 		fields := strings.Fields(trimmed)
-		if len(fields) == 0 {
+		if len(fields) < 2 {
 			continue
 		}
 		if fields[0] == "nameserver" {
