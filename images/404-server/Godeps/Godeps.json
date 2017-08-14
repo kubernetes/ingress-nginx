@@ -1,5 +1,5 @@
 {
-	"ImportPath": "k8s.io/contrib/404-server",
+	"ImportPath": "k8s.io/ingress/images/404-server",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v78",
 	"Packages": [
