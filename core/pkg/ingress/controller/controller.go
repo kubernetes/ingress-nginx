@@ -1062,20 +1062,8 @@ func (ic *GenericController) createServers(data []interface{},
 			continue
 		}
 
-		// setup server-aliases based on annotations
-		aliasMap := map[string]string{}
+		// setup server-alias based on annotations
 		aliasAnnotation := ic.annotations.Alias(ing)
-
-		// Here we parse the annotation string in the following format:
-		// ingress.kubernetes.io/server-alias: "host_0:alias_0;...;host_n:alias_n"
-		aliases := strings.Split(aliasAnnotation, ";")
-		for _, alias := range aliases {
-			aliasParts := strings.Split(alias, ":")
-			if len(aliasParts) == 2 {
-				// aliasMap[host] = alias
-				aliasMap[aliasParts[0]] = aliasParts[1]
-			}
-		}
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -1084,7 +1072,7 @@ func (ic *GenericController) createServers(data []interface{},
 			}
 
 			// setup server aliases
-			servers[host].Alias = aliasMap[host]
+			servers[host].Alias = aliasAnnotation
 
 			// only add a certificate if the server does not have one previously configured
 			if len(ing.Spec.TLS) == 0 || servers[host].SSLCertificate != "" {
