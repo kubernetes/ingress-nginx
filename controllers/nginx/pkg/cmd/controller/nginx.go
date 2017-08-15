@@ -464,7 +464,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		n.setupMonitor(defaultStatusModule)
 	}
 
-	// NGINX cannot resize the has tables used to store server names.
+	// NGINX cannot resize the hash tables used to store server names.
 	// For this reason we check if the defined size defined is correct
 	// for the FQDN defined in the ingress rules adjusting the value
 	// if is required.
