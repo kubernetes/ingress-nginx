@@ -147,6 +147,9 @@ var (
 		"toLower":                  strings.ToLower,
 		"formatIP":                 formatIP,
 		"buildNextUpstream":        buildNextUpstream,
+		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
+			return struct { First, Second interface{} } { all, server }
+		},
 	}
 )
 
