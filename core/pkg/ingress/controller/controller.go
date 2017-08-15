@@ -34,14 +34,13 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
-
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/core/pkg/file"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
@@ -151,7 +150,7 @@ func newIngressController(config *Configuration) *GenericController {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{
-		Interface: config.Client.Core().Events(config.Namespace),
+		Interface: config.Client.CoreV1().Events(config.Namespace),
 	})
 
 	ic := GenericController{
@@ -274,27 +273,27 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	ic.ingLister.Store, ic.ingController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Extensions().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.ExtensionsV1beta1().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
 		&extensions.Ingress{}, ic.cfg.ResyncPeriod, ingEventHandler)
 
 	ic.endpLister.Store, ic.endpController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "endpoints", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "endpoints", ic.cfg.Namespace, fields.Everything()),
 		&api.Endpoints{}, ic.cfg.ResyncPeriod, eventHandler)
 
 	ic.secrLister.Store, ic.secrController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "secrets", watchNs, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "secrets", watchNs, fields.Everything()),
 		&api.Secret{}, ic.cfg.ResyncPeriod, secrEventHandler)
 
 	ic.mapLister.Store, ic.mapController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "configmaps", watchNs, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "configmaps", watchNs, fields.Everything()),
 		&api.ConfigMap{}, ic.cfg.ResyncPeriod, mapEventHandler)
 
 	ic.svcLister.Store, ic.svcController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "services", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "services", ic.cfg.Namespace, fields.Everything()),
 		&api.Service{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	ic.nodeLister.Store, ic.nodeController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "nodes", api.NamespaceAll, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "nodes", api.NamespaceAll, fields.Everything()),
 		&api.Node{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	if config.UpdateStatus {
