@@ -401,7 +401,7 @@ func (n *NGINXController) UpdateIngressStatus(*extensions.Ingress) []api_v1.Load
 	return nil
 }
 
-// OnUpdate is called by syncQueue in https://github.com/aledbf/ingress-controller/blob/master/pkg/ingress/controller/controller.go#L82
+// OnUpdate is called by syncQueue in https://github.com/kubernetes/ingress/blob/master/core/pkg/ingress/controller/controller.go#L426
 // periodically to keep the configuration in sync.
 //
 // convert configmap to custom configuration object (different in each implementation)
@@ -464,7 +464,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		n.setupMonitor(defaultStatusModule)
 	}
 
-	// NGINX cannot resize the has tables used to store server names.
+	// NGINX cannot resize the hash tables used to store server names.
 	// For this reason we check if the defined size defined is correct
 	// for the FQDN defined in the ingress rules adjusting the value
 	// if is required.
