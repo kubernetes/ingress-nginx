@@ -212,9 +212,20 @@ func (c *ClusterManager) GC(lbNames []string, nodePorts []backends.ServicePort) 
 }
 
 func getGCEClient(config io.Reader) *gce.GCECloud {
-	allConfig, err := ioutil.ReadAll(config)
-	if err != nil {
-		glog.Fatalf("Error while reading entire config: %v", err)
+	getConfigReader := func() io.Reader { return nil }
+
+	if config != nil {
+		allConfig, err := ioutil.ReadAll(config)
+		if err != nil {
+			glog.Fatalf("Error while reading entire config: %v", err)
+		}
+		glog.V(2).Infof("Using cloudprovider config file:\n%v ", string(allConfig))
+
+		getConfigReader = func() io.Reader {
+			return bytes.NewReader(allConfig)
+		}
+	} else {
+		glog.V(2).Infoln("No cloudprovider config file provided. Continuing with default values.")
 	}
 
 	// Creating the cloud interface involves resolving the metadata server to get
@@ -222,7 +233,7 @@ func getGCEClient(config io.Reader) *gce.GCECloud {
 	// No errors are thrown. So we need to keep retrying till it works because
 	// we know we're on GCE.
 	for {
-		cloudInterface, err := cloudprovider.GetCloudProvider("gce", bytes.NewReader(allConfig))
+		cloudInterface, err := cloudprovider.GetCloudProvider("gce", getConfigReader())
 		if err == nil {
 			cloud := cloudInterface.(*gce.GCECloud)
 
