@@ -92,8 +92,14 @@ type statusSync struct {
 // Run starts the loop to keep the status in sync
 func (s statusSync) Run(stopCh <-chan struct{}) {
 	go wait.Forever(s.elector.Run, 0)
+	go wait.Forever(s.update, updateInterval)
 	go s.syncQueue.Run(time.Second, stopCh)
 	<-stopCh
+}
+
+func (s *statusSync) update() {
+	// send a dummy object to the queue to force a sync
+	s.syncQueue.Enqueue("sync status")
 }
 
 // Shutdown stop the sync. In case the instance is the leader it will remove the current IP
