@@ -119,6 +119,9 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	return t.outCmdBuf.Bytes(), nil
 }
 
+
+// TODO: Add option for passing $all and $server to template
+// https://stackoverflow.com/questions/29615224/golang-template-global-dot-within-a-template-thats-given-a-value-from-range
 var (
 	funcMap = text_template.FuncMap{
 		"empty": func(input interface{}) bool {

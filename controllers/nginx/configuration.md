@@ -169,12 +169,9 @@ For more information please check https://enable-cors.org/server_nginx.html
 
 ### Server Alias
 
-To add Server Aliases to an Ingress rule add the annotation `ingress.kubernetes.io/server-alias: "<server-name_0>:<server-alias_0>;...;<server-name_n>:<server-alias_n>"`.
-This will append a server-alias to the end of the server_name in the NGINX server. A server-alias can accept wildcards, but
-it cannot accept port numbers.
-
-The server-name must match a valid server within the ingress resource for it to append the server-alias. Multiple server-aliases
-can be added for multiple server-names using `;` as a delimiter.
+To add Server Aliases to an Ingress rule add the annotation `ingress.kubernetes.io/server-alias: "<alias>"`.
+This will create a server with the same configuration, but a different server_name as the provided host.
+A server-alias can accept wildcards, but it cannot accept port numbers.
 
 For more information please see http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name
 
