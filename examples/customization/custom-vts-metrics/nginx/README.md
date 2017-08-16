@@ -55,7 +55,7 @@ nginx-ingress-controller-873061567-4n3k2   1/1       Running   0          42s
 ```
 
 ## Result
-Check  wether to open the vts status:
+Check  whether to open the vts status:
 ```console
 $ kubectl exec nginx-ingress-controller-873061567-4n3k2 -n kube-system cat /etc/nginx/nginx.conf|grep vhost_traffic_status_display
  vhost_traffic_status_display;
