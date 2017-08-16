@@ -13,7 +13,7 @@ This is a list of beta limitations:
 * [Large clusters](#large-clusters): Ingress on GCE isn't supported on large (>1000 nodes), single-zone clusters.
 * [Teardown](README.md#deletion): The recommended way to tear down a cluster with active Ingresses is to either delete each Ingress, or hit the `/delete-all-and-quit` endpoint on GLBC, before invoking a cluster teardown script (eg: kube-down.sh). You will have to manually cleanup GCE resources through the [cloud console](https://cloud.google.com/compute/docs/console#access) or [gcloud CLI](https://cloud.google.com/compute/docs/gcloud-compute/) if you simply tear down the cluster with active Ingresses.
 * [Changing UIDs](#changing-the-cluster-uid): You can change the UID used as a suffix for all your GCE cloud resources, but this requires you to delete existing Ingresses first.
-* [Cleaning up](#cleaning-up-cloud-resources): You can delete loadbalancers that older clusters might've leaked due to permature teardown through the GCE console.
+* [Cleaning up](#cleaning-up-cloud-resources): You can delete loadbalancers that older clusters might've leaked due to premature teardown through the GCE console.
 
 ## Prerequisites
 
@@ -172,6 +172,6 @@ If you deleted a GKE/GCE cluster without first deleting the associated Ingresses
 
 1. Navigate to the [cloud console](https://console.cloud.google.com/) and click on the "Networking" tab, then choose "LoadBalancing"
 2. Find the loadbalancer you'd like to delete, it should have a name formatted as: k8s-um-ns-name--UUID
-3. Delete it, check the boxes to also casade the deletion down to associated resources (eg: backend-services)
+3. Delete it, check the boxes to also cascade the deletion down to associated resources (eg: backend-services)
 4. Switch to the "Compute Engine" tab, then choose "Instance Groups"
 5. Delete the Instance Group allocated for the leaked Ingress, it should have a name formatted as: k8s-ig-UUID
