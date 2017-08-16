@@ -8,7 +8,7 @@ __GCP__: On GCE/GKE, the Ingress controller runs on the
 master. If you wish to stop this controller and run another instance on your
 nodes instead, you can do so by following this [example](/examples/deployment/gce).
 
-__generic__: You can deploy a genric (nginx or haproxy) Ingress controller by simply
+__generic__: You can deploy a generic (nginx or haproxy) Ingress controller by simply
 running it as a pod in your cluster, as shown in the [examples](/examples/deployment).
 Please note that you must specify the `ingress.class`
 [annotation](/examples/PREREQUISITES.md#ingress-class) if you're running on a
