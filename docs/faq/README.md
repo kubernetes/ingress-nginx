@@ -6,7 +6,7 @@ in this directory with site specific information.
 Table of Contents
 =================
 
-* [How is Ingress different from Services?](#how-is-ingress-different-from-services)
+* [How is Ingress different from a Services?](#how-is-ingress-different-from-a-service)
 * [I created an Ingress and nothing happens, what now?](#i-created-an-ingress-and-nothing-happens-what-now)
 * [How do I deploy an Ingress controller?](#how-do-i-deploy-an-ingress-controller)
 * [Are Ingress controllers namespaced?](#are-ingress-controllers-namespaced)
@@ -32,7 +32,7 @@ or directly to the Service's endpoints.
 
 Run `describe` on the Ingress. If you see create/add events, you have an Ingress
 controller running in the cluster, otherwise, you either need to deploy or
-restart your Ingress controller. If the events associaged with an Ingress are
+restart your Ingress controller. If the events associated with an Ingress are
 insufficient to debug, consult the controller specific FAQ.
 
 ## How do I deploy an Ingress controller?
