@@ -1,6 +1,6 @@
 # Customize the HAProxy configuration
 
-This example use a [ConfigMap](https://kubernetes.io/docs/user-guide/configmap/) to customize the HAProxy configuration.
+This example uses a [ConfigMap](https://kubernetes.io/docs/user-guide/configmap/) to customize the HAProxy configuration.
 
 ## Prerequisites
 
