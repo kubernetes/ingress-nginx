@@ -20,7 +20,7 @@ Ingress controller behind an ELB on AWS, as shows in the [next section](#stacked
 
 ## Stacked deployments
 
-__Behind a LoadBalancer Service__: You can deploy an generic controller behind a
+__Behind a LoadBalancer Service__: You can deploy a generic controller behind a
 Service of `Type=LoadBalancer`, by following this [example](/examples/static-ip/nginx#acquiring-an-ip).
 More specifically, first create a LoadBalancer Service that selects the generic
 controller pods, then start the generic controller with the `--publish-service`
@@ -37,7 +37,7 @@ TODO: Write an example
 
 ## Daemonset
 
-Neither a single pod or bank of generic controllers scales with the cluster size.
+Neither a single pod nor bank of generic controllers scale with the cluster size.
 If you create a daemonset of generic Ingress controllers, every new node
 automatically gets an instance of the controller listening on the specified
 ports.
