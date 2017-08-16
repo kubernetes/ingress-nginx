@@ -1,6 +1,6 @@
 # UDP loadbalancing
 
-This example show how to implement UDP loadbalancing throught the Nginx Controller
+This example shows how to implement UDP loadbalancing through the Nginx Controller
 
 ## Prerequisites
 
