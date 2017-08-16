@@ -1,6 +1,6 @@
 # HAProxy Multi TLS certificate termination
 
-This examples uses 2 different certificates to terminate SSL for 2 hostnames.
+This example uses 2 different certificates to terminate SSL for 2 hostnames.
 
 ## Prerequisites
 
