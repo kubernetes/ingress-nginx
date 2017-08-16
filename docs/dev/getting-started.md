@@ -102,7 +102,7 @@ $ cd $GOPATH/src/k8s.io/ingress/controllers/<controller>
 $ go test ./...
 ```
 
-If you have access to a Kubernetes cluster, you can also run e2e tests using ginko.
+If you have access to a Kubernetes cluster, you can also run e2e tests using ginkgo.
 ```console
 $ cd $GOPATH/src/k8s.io/kubernetes
 $ ./hack/ginkgo-e2e.sh --ginkgo.focus=Ingress.* --delete-namespace-on-failure=false
