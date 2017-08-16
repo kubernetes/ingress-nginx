@@ -1,6 +1,6 @@
 # Role Based Access Control
 
-This example demontrates how to apply an nginx ingress controller with role based access control
+This example demonstrate how to apply an nginx ingress controller with role based access control
 
 ## Overview
 
