@@ -14,7 +14,7 @@ This command creates:
 
 Is the proxy protocol necessary?
 
-No but only enabling the procotol is possible to keep the real source IP address requesting the connection.
+No but only enabling the protocol is possible to keep the real source IP address requesting the connection.
 
 ### References
 
