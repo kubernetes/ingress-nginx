@@ -273,7 +273,7 @@ If you find yourself in such a situation, you can delete the resources by hand:
 
 1. Navigate to the [cloud console](https://console.cloud.google.com/) and click on the "Networking" tab, then choose "LoadBalancing"
 2. Find the loadbalancer you'd like to delete, it should have a name formatted as: k8s-um-ns-name--UUID
-3. Delete it, check the boxes to also casade the deletion down to associated resources (eg: backend-services)
+3. Delete it, check the boxes to also cascade the deletion down to associated resources (eg: backend-services)
 4. Switch to the "Compute Engine" tab, then choose "Instance Groups"
 5. Delete the Instance Group allocated for the leaked Ingress, it should have a name formatted as: k8s-ig-UUID
 
