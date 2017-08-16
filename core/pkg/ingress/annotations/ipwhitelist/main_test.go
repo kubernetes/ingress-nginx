@@ -17,7 +17,6 @@ limitations under the License.
 package ipwhitelist
 
 import (
-	"reflect"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -26,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress/core/pkg/ingress/defaults"
-	"k8s.io/ingress/core/pkg/ingress/errors"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -73,157 +71,118 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 }
 
 func TestParseAnnotations(t *testing.T) {
-	// TODO: convert test cases to tables
 	ing := buildIngress()
-
-	testNet := "10.0.0.0/24"
-	enet := []string{testNet}
-
-	data := map[string]string{}
-	data[whitelist] = testNet
-	ing.SetAnnotations(data)
-
-	expected := &SourceRange{
-		CIDR: enet,
+	tests := map[string]struct {
+		net        string
+		expectCidr []string
+		expectErr  bool
+		errOut     string
+	}{
+		"test parse a valid net": {
+			net:        "10.0.0.0/24",
+			expectCidr: []string{"10.0.0.0/24"},
+			expectErr:  false,
+		},
+		"test parse a invalid net": {
+			net:       "ww",
+			expectErr: true,
+			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ww",
+		},
+		"test parse a empty net": {
+			net:       "",
+			expectErr: true,
+			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
+		},
+		"test parse multiple valid cidr": {
+			net:        "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
+			expectCidr: []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"},
+			expectErr:  false,
+		},
 	}
 
-	p := NewParser(mockBackend{})
-
-	i, err := p.Parse(ing)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	sr, ok := i.(*SourceRange)
-	if !ok {
-		t.Errorf("expected a SourceRange type")
-	}
-
-	if !reflect.DeepEqual(sr, expected) {
-		t.Errorf("expected %v but returned %s", sr, expected)
-	}
-
-	data[whitelist] = "www"
-	_, err = p.Parse(ing)
-	if err == nil {
-		t.Errorf("expected error parsing an invalid cidr")
-	}
-
-	if !errors.IsLocationDenied(err) {
-		t.Errorf("expected LocationDenied error: %+v", err)
-	}
-
-	delete(data, whitelist)
-	i, err = p.Parse(ing)
-
-	if err != nil {
-		t.Errorf("unexpected error when no annotation present: %v", err)
-	}
-
-	sr, ok = i.(*SourceRange)
-	if !ok {
-		t.Errorf("expected a SourceRange type")
-	}
-	if !strsEquals(sr.CIDR, []string{}) {
-		t.Errorf("expected empty CIDR but %v returned", sr.CIDR)
-	}
-
-	i, _ = p.Parse(&extensions.Ingress{})
-	sr, ok = i.(*SourceRange)
-	if !ok {
-		t.Errorf("expected a SourceRange type")
-	}
-	if !strsEquals(sr.CIDR, []string{}) {
-		t.Errorf("expected empty CIDR but %v returned", sr.CIDR)
-	}
-
-	data[whitelist] = "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24"
-	i, _ = p.Parse(ing)
-	sr, ok = i.(*SourceRange)
-	if !ok {
-		t.Errorf("expected a SourceRange type")
-	}
-	ecidr := []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"}
-	if !strsEquals(sr.CIDR, ecidr) {
-		t.Errorf("Expected %v CIDR but %v returned", ecidr, sr.CIDR)
+	for testName, test := range tests {
+		data := map[string]string{}
+		data[whitelist] = test.net
+		ing.SetAnnotations(data)
+		p := NewParser(mockBackend{})
+		i, err := p.Parse(ing)
+		if err != nil && !test.expectErr {
+			t.Errorf("%v:unexpected error: %v", testName, err)
+		}
+		if test.expectErr {
+			if err.Error() != test.errOut {
+				t.Errorf("%v:expected error: %v but %v return", testName, test.errOut, err.Error())
+			}
+		}
+		if !test.expectErr {
+			sr, ok := i.(*SourceRange)
+			if !ok {
+				t.Errorf("%v:expected a SourceRange type", testName)
+			}
+			if !strsEquals(sr.CIDR, test.expectCidr) {
+				t.Errorf("%v:expected %v CIDR but %v returned", testName, test.expectCidr, sr.CIDR)
+			}
+		}
 	}
 }
 
 // Test that when we have a whitelist set on the Backend that is used when we
 // don't have the annotation
 func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
-	// TODO: convert test cases to tables
 	ing := buildIngress()
-
 	mockBackend := mockBackend{}
 	mockBackend.Backend.WhitelistSourceRange = []string{"4.4.4.0/24", "1.2.3.4/32"}
-	testNet := "10.0.0.0/24"
-	enet := []string{testNet}
-
-	data := map[string]string{}
-	data[whitelist] = testNet
-	ing.SetAnnotations(data)
-
-	expected := &SourceRange{
-		CIDR: enet,
+	tests := map[string]struct {
+		net        string
+		expectCidr []string
+		expectErr  bool
+		errOut     string
+	}{
+		"test parse a valid net": {
+			net:        "10.0.0.0/24",
+			expectCidr: []string{"10.0.0.0/24"},
+			expectErr:  false,
+		},
+		"test parse a invalid net": {
+			net:       "ww",
+			expectErr: true,
+			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ww",
+		},
+		"test parse a empty net": {
+			net:       "",
+			expectErr: true,
+			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
+		},
+		"test parse multiple valid cidr": {
+			net:        "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
+			expectCidr: []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"},
+			expectErr:  false,
+		},
 	}
 
-	p := NewParser(mockBackend)
-
-	i, err := p.Parse(ing)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	sr, ok := i.(*SourceRange)
-	if !ok {
-		t.Errorf("expected a SourceRange type")
-	}
-
-	if !reflect.DeepEqual(sr, expected) {
-		t.Errorf("expected %v but returned %s", sr, expected)
-	}
-
-	data[whitelist] = "www"
-	_, err = p.Parse(ing)
-	if err == nil {
-		t.Errorf("expected error parsing an invalid cidr")
-	}
-	if !errors.IsLocationDenied(err) {
-		t.Errorf("expected LocationDenied error: %+v", err)
-	}
-
-	delete(data, whitelist)
-	i, err = p.Parse(ing)
-
-	if err != nil {
-		t.Errorf("unexpected error when no annotation present: %v", err)
-	}
-
-	sr, ok = i.(*SourceRange)
-	if !ok {
-		t.Errorf("expected a SourceRange type")
-	}
-	if !strsEquals(sr.CIDR, mockBackend.WhitelistSourceRange) {
-		t.Errorf("expected fallback CIDR but %v returned", sr.CIDR)
-	}
-
-	i, _ = p.Parse(&extensions.Ingress{})
-	sr, ok = i.(*SourceRange)
-	if !ok {
-		t.Errorf("expected a SourceRange type")
-	}
-	if !strsEquals(sr.CIDR, mockBackend.WhitelistSourceRange) {
-		t.Errorf("expected fallback CIDR but %v returned", sr.CIDR)
-	}
-
-	data[whitelist] = "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24"
-	i, _ = p.Parse(ing)
-	sr, ok = i.(*SourceRange)
-	if !ok {
-		t.Errorf("expected a SourceRange type")
-	}
-	ecidr := []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"}
-	if !strsEquals(sr.CIDR, ecidr) {
-		t.Errorf("Expected %v CIDR but %v returned", ecidr, sr.CIDR)
+	for testName, test := range tests {
+		data := map[string]string{}
+		data[whitelist] = test.net
+		ing.SetAnnotations(data)
+		p := NewParser(mockBackend)
+		i, err := p.Parse(ing)
+		if err != nil && !test.expectErr {
+			t.Errorf("%v:unexpected error: %v", testName, err)
+		}
+		if test.expectErr {
+			if err.Error() != test.errOut {
+				t.Errorf("%v:expected error: %v but %v return", testName, test.errOut, err.Error())
+			}
+		}
+		if !test.expectErr {
+			sr, ok := i.(*SourceRange)
+			if !ok {
+				t.Errorf("%v:expected a SourceRange type", testName)
+			}
+			if !strsEquals(sr.CIDR, test.expectCidr) {
+				t.Errorf("%v:expected %v CIDR but %v returned", testName, test.expectCidr, sr.CIDR)
+			}
+		}
 	}
 }
 
