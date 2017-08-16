@@ -38,7 +38,7 @@ var errInvalidVarint = errors.New("invalid varint32 encountered")
 func ReadDelimited(r io.Reader, m proto.Message) (n int, err error) {
 	// Per AbstractParser#parsePartialDelimitedFrom with
 	// CodedInputStream#readRawVarint32.
-	var headerBuf [binary.MaxVarintLen32]byte
+	headerBuf := make([]byte, binary.MaxVarintLen32)
 	var bytesRead, varIntBytes int
 	var messageLength uint64
 	for varIntBytes == 0 { // i.e. no varint has been decoded yet.
