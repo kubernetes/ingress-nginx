@@ -20,20 +20,14 @@
 
 all: push
 
-TAG=1.3
+TAG=1.4
 PREFIX?=gcr.io/google_containers/defaultbackend
 ARCH?=amd64
-GOLANG_VERSION=1.7
-TEMP_DIR:=$(shell mktemp -d)
 
 server: server.go
 	CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH) GOARM=6 go build -a -installsuffix cgo -ldflags '-w -s' -o server
 
-container:
-	# Compile the binary inside a container for reliable builds
-	docker pull golang:$(GOLANG_VERSION)
-	docker run --rm -it -v $(PWD)/vendor:/go/src -v $(PWD):/build golang:$(GOLANG_VERSION) /bin/bash -c "make -C /build server ARCH=$(ARCH)"
-
+container: server
 	docker build --pull -t $(PREFIX)-$(ARCH):$(TAG) .
 
 push: container
