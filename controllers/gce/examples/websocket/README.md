@@ -55,7 +55,7 @@ Wait for the loadbalancer to be created and functioning. When you receive a succ
 Websocket example. Connect to /ws%   
 ```
 
-The binary we deployed does not have any html/javascript to demonstrate thwe websocket, so we'll use websocket.org's client.
+The binary we deployed does not have any html/javascript to demonstrate the websocket, so we'll use websocket.org's client.
 
 Visit http://www.websocket.org/echo.html. It's important to use `HTTP` instead of `HTTPS` since we assembled an `HTTP` load balancer. Browsers may prevent `HTTP` websocket connections as a security feature.
 Set the `Location` to

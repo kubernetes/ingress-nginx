@@ -34,14 +34,13 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
-
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/core/pkg/file"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
@@ -151,7 +150,7 @@ func newIngressController(config *Configuration) *GenericController {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{
-		Interface: config.Client.Core().Events(config.Namespace),
+		Interface: config.Client.CoreV1().Events(config.Namespace),
 	})
 
 	ic := GenericController{
@@ -274,27 +273,27 @@ func newIngressController(config *Configuration) *GenericController {
 	}
 
 	ic.ingLister.Store, ic.ingController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Extensions().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.ExtensionsV1beta1().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
 		&extensions.Ingress{}, ic.cfg.ResyncPeriod, ingEventHandler)
 
 	ic.endpLister.Store, ic.endpController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "endpoints", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "endpoints", ic.cfg.Namespace, fields.Everything()),
 		&api.Endpoints{}, ic.cfg.ResyncPeriod, eventHandler)
 
 	ic.secrLister.Store, ic.secrController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "secrets", watchNs, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "secrets", watchNs, fields.Everything()),
 		&api.Secret{}, ic.cfg.ResyncPeriod, secrEventHandler)
 
 	ic.mapLister.Store, ic.mapController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "configmaps", watchNs, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "configmaps", watchNs, fields.Everything()),
 		&api.ConfigMap{}, ic.cfg.ResyncPeriod, mapEventHandler)
 
 	ic.svcLister.Store, ic.svcController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "services", ic.cfg.Namespace, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "services", ic.cfg.Namespace, fields.Everything()),
 		&api.Service{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	ic.nodeLister.Store, ic.nodeController = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.Core().RESTClient(), "nodes", api.NamespaceAll, fields.Everything()),
+		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "nodes", api.NamespaceAll, fields.Everything()),
 		&api.Node{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	if config.UpdateStatus {
@@ -338,6 +337,11 @@ func (ic GenericController) IngressClass() string {
 // GetDefaultBackend returns the default backend
 func (ic GenericController) GetDefaultBackend() defaults.Backend {
 	return ic.cfg.Backend.BackendDefaults()
+}
+
+// GetRecorder returns the event recorder
+func (ic GenericController) GetRecoder() record.EventRecorder {
+	return ic.recorder
 }
 
 // GetSecret searches for a secret in the local secrets Store
@@ -582,6 +586,7 @@ func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 		endps = []ingress.Endpoint{newDefaultServer()}
 	}
 
+	upstream.Service = svc
 	upstream.Endpoints = append(upstream.Endpoints, endps...)
 	return upstream
 }
@@ -845,6 +850,8 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 				glog.V(3).Infof("creating upstream %v", name)
 				upstreams[name] = newUpstream(name)
+				upstreams[name].Port = path.Backend.ServicePort
+
 				if !upstreams[name].Secure {
 					upstreams[name].Secure = secUpstream.Secure
 				}
@@ -881,12 +888,12 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 					continue
 				}
 
-				if exists {
-					upstreams[name].Service = s.(*api.Service)
-				} else {
+				if !exists {
 					glog.Warningf("service %v does not exists", svcKey)
+					continue
 				}
-				upstreams[name].Port = path.Backend.ServicePort
+
+				upstreams[name].Service = s.(*api.Service)
 			}
 		}
 	}
@@ -1011,6 +1018,7 @@ func (ic *GenericController) createServers(data []interface{},
 	}
 
 	// initialize the default server
+	du := ic.getDefaultUpstream()
 	servers[defServerName] = &ingress.Server{
 		Hostname:       defServerName,
 		SSLCertificate: defaultPemFileName,
@@ -1019,8 +1027,9 @@ func (ic *GenericController) createServers(data []interface{},
 			{
 				Path:         rootLocation,
 				IsDefBackend: true,
-				Backend:      ic.getDefaultUpstream().Name,
+				Backend:      du.Name,
 				Proxy:        ngxProxy,
+				Service:      du.Service,
 			},
 		}}
 
@@ -1033,12 +1042,13 @@ func (ic *GenericController) createServers(data []interface{},
 
 		// check if ssl passthrough is configured
 		sslpt := ic.annotations.SSLPassthrough(ing)
-		dun := ic.getDefaultUpstream().Name
+		du := ic.getDefaultUpstream()
+		un := du.Name
 		if ing.Spec.Backend != nil {
 			// replace default backend
 			defUpstream := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
-				dun = backendUpstream.Name
+				un = backendUpstream.Name
 			}
 		}
 
@@ -1058,8 +1068,9 @@ func (ic *GenericController) createServers(data []interface{},
 					{
 						Path:         rootLocation,
 						IsDefBackend: true,
-						Backend:      dun,
+						Backend:      un,
 						Proxy:        ngxProxy,
+						Service:      &api.Service{},
 					},
 				}, SSLPassthrough: sslpt}
 		}
@@ -1120,8 +1131,9 @@ func (ic *GenericController) createServers(data []interface{},
 			}
 
 			cert := bc.(*ingress.SSLCert)
-			if !isHostValid(host, cert) {
-				glog.Warningf("ssl certificate %v does not contain a common name for host %v", key, host)
+			err = cert.Certificate.VerifyHostname(host)
+			if err != nil {
+				glog.Warningf("ssl certificate %v does not contain a Common Name or Subject Alternative Name for host %v", key, host)
 				continue
 			}
 

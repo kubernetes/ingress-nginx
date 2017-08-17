@@ -387,6 +387,8 @@ func NewDefault() Configuration {
 			CustomHTTPErrors:     []int{},
 			WhitelistSourceRange: []string{},
 			SkipAccessLogURLs:    []string{},
+			LimitRate:            0,
+			LimitRateAfter:       0,
 		},
 		UpstreamKeepaliveConnections: 0,
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,

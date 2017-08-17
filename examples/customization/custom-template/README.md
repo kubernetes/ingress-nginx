@@ -1,4 +1,4 @@
-This example shows how is possible to use a custom template
+This example shows how it is possible to use a custom template
 
 First create a configmap with a template inside running:
 ```

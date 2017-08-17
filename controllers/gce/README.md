@@ -53,7 +53,7 @@ __Lines 8-9__: Each http rule contains the following information: A host (eg: fo
 
 __Lines 10-12__: A `backend` is a service:port combination. It selects a group of pods capable of servicing traffic sent to the path specified in the parent rule. The `port` is the desired `spec.ports[*].port` from the Service Spec -- Note, though, that the L7 actually directs traffic to the corresponding `NodePort`.
 
-__Global Prameters__: For the sake of simplicity the example Ingress has no global parameters. However, one can specify a default backend (see examples below) in the absence of which requests that don't match a path in the spec are sent to the default backend of glbc.
+__Global Parameters__: For the sake of simplicity the example Ingress has no global parameters. However, one can specify a default backend (see examples below) in the absence of which requests that don't match a path in the spec are sent to the default backend of glbc.
 
 
 ## Load Balancer Management
@@ -135,7 +135,7 @@ Go to your GCE console and confirm that the following resources have been create
 * BackendServices (one for each Kubernetes nodePort service)
 * An Instance Group (with ports corresponding to the BackendServices)
 
-The HTTPLoadBalancing panel will also show you if your backends have responded to the health checks, wait till they do. This can take a few minutes. If you see `Health status will display here once configuration is complete.` the L7 is still bootstrapping. Wait till you have `Healthy instances: X`. Even though the GCE L7 is driven by our controller, which notices the Kubernetes healtchecks of a pod, we still need to wait on the first GCE L7 health check to complete. Once your backends are up and healthy:
+The HTTPLoadBalancing panel will also show you if your backends have responded to the health checks, wait till they do. This can take a few minutes. If you see `Health status will display here once configuration is complete.` the L7 is still bootstrapping. Wait till you have `Healthy instances: X`. Even though the GCE L7 is driven by our controller, which notices the Kubernetes healthchecks of a pod, we still need to wait on the first GCE L7 health check to complete. Once your backends are up and healthy:
 
 ```shell
 $ curl --resolve foo.bar.com:80:107.178.245.239 http://foo.bar.com/foo
