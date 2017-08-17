@@ -19,19 +19,19 @@ env:
     # docker run --rm caktux/travis-cli encrypt key=value -r kubernetes/ingress
     - RELEASE="ci-${TRAVIS_BUILD_ID}"
 
-install:
-  - go get github.com/golang/lint/golint
-  - go get github.com/mattn/goveralls
-  - go get github.com/modocache/gover
-  - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
-
 before_script:
   - export PATH=$PATH:$PWD/hack/e2e-internal/
 
 jobs:
   include:
     - stage: Static Check
-      script: make fmt lint vet
+      script: 
+        - go get github.com/golang/lint/golint
+        - make fmt lint vet
     - stage: Coverage
-      script: make cover
+      script: 
+        - go get github.com/mattn/goveralls
+        - go get github.com/modocache/gover
+        - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+        - make cover
 #- make test-e2e
