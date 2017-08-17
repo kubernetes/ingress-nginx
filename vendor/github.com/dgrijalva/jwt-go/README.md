@@ -4,14 +4,14 @@ A [go](http://www.golang.org) (or 'golang' for search engine friendliness) imple
 
 **BREAKING CHANGES:*** Version 3.0.0 is here. It includes _a lot_ of changes including a few that break the API.  We've tried to break as few things as possible, so there should just be a few type signature changes.  A full list of breaking changes is available in `VERSION_HISTORY.md`.  See `MIGRATION_GUIDE.md` for more information on updating your code.
 
-**NOTICE:** A vulnerability in JWT was [recently published](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/).  As this library doesn't force users to validate the `alg` is what they expected, it's possible your usage is effected.  There will be an update soon to remedy this, and it will likey require backwards-incompatible changes to the API.  In the short term, please make sure your implementation verifies the `alg` is what you expect.
+**NOTICE:** A vulnerability in JWT was [recently published](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/).  As this library doesn't force users to validate the `alg` is what they expected, it's possible your usage is affected.  There will be an update soon to remedy this, and it will likely require backwards-incompatible changes to the API.  In the short term, please make sure your implementation verifies the `alg` is what you expect.
 
 
 ## What the heck is a JWT?
 
 JWT.io has [a great introduction](https://jwt.io/introduction) to JSON Web Tokens.
 
-In short, it's a signed JSON object that does something useful (for example, authentication).  It's commonly used for `Bearer` tokens in Oauth 2.  A token is made of three parts, separated by `.`'s.  The first two parts are JSON objects, that have been [base64url](http://tools.ietf.org/html/rfc4648) encoded.  The last part is the signature, encoded the same way.
+In short, it's a signed JSON object that does something useful (for example, authentication).  It's commonly used for `Bearer` tokens in Oauth 2.  A token is made of three parts, separated by `.` .  The first two parts are JSON objects, that have been [base64](http://tools.ietf.org/html/rfc4648) encoded.  The last part is the signature, encoded the same way.
 
 The first part is called the header.  It contains the necessary information for verifying the last part, the signature.  For example, which encryption method was used for signing and what key was used.
 
@@ -51,9 +51,9 @@ While we try to make it obvious when we make breaking changes, there isn't a gre
 
 ## Usage Tips
 
-### Signing vs Encryption
+### Signing vs. Encryption
 
-A token is simply a JSON object that is signed by its author. this tells you exactly two things about the data:
+A token is simply a JSON object that is signed by its author. This tells you exactly two things about the data:
 
 * The author of the token was in the possession of the signing secret
 * The data has not been modified since it was signed
@@ -62,7 +62,7 @@ It's important to know that JWT does not provide encryption, which means anyone 
 
 ### Choosing a Signing Method
 
-There are several signing methods available, and you should probably take the time to learn about the various options before choosing one.  The principal design decision is most likely going to be symmetric vs asymmetric.
+There are several signing methods available, and you should probably take the time to learn about the various options before choosing one.  The principal design decision is most likely going to be symmetric vs. asymmetric.
 
 Symmetric signing methods, such as HSA, use only a single secret. This is probably the simplest signing method to use since any `[]byte` can be used as a valid secret. They are also slightly computationally faster to use, though this rarely is enough to matter. Symmetric signing methods work the best when both producers and consumers of tokens are trusted, or even the same system. Since the same secret is used to both sign and validate tokens, you can't easily distribute the key for validation.
 
@@ -80,6 +80,6 @@ Without going too far down the rabbit hole, here's a description of the interact
  
 ## More
 
-Documentation can be found [on godoc.org](http://godoc.org/github.com/dgrijalva/jwt-go).
+Documentation can be found on [godoc.org](http://godoc.org/github.com/dgrijalva/jwt-go).
 
 The command line utility included in this project (cmd/jwt) provides a straightforward example of token creation and parsing as well as a useful tool for debugging your own integration.  You'll also find several implementation examples in to documentation.
