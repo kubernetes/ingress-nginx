@@ -350,7 +350,6 @@ http {
 
             client_max_body_size        "{{ $location.Proxy.BodySize }}";
 
-
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
         }
@@ -378,13 +377,15 @@ http {
             {{ if not (empty $authPath) }}
             # this location requires authentication
             auth_request {{ $authPath }};
+            auth_request_set $auth_cookie $upstream_http_set_cookie;
+            add_header Set-Cookie $auth_cookie;            
             {{- range $idx, $line := buildAuthResponseHeaders $location }}
             {{ $line }}
             {{- end }}
             {{ end }}
 
             {{ if not (empty $location.ExternalAuth.SigninURL) }}
-            error_page 401 = {{ $location.ExternalAuth.SigninURL }};
+            error_page 401 = {{ $location.ExternalAuth.SigninURL }}?rd=$request_uri;
             {{ end }}
 
 
