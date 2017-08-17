@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,14 +29,13 @@ const (
 type alias struct {
 }
 
-// NewParser creates a new CORS annotation parser
+// NewParser creates a new Alias annotation parser
 func NewParser() parser.IngressAnnotation {
 	return alias{}
 }
 
 // Parse parses the annotations contained in the ingress rule
-// used to indicate if the location/s contains a fragment of
-// configuration to be included inside the paths of the rules
+// used to add an alias to the provided hosts
 func (a alias) Parse(ing *extensions.Ingress) (interface{}, error) {
 	return parser.GetStringAnnotation(annotation, ing)
 }
