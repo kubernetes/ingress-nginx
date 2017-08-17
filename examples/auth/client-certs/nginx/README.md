@@ -5,7 +5,7 @@ This example demonstrates how to enable the TLS Authentication through the nginx
 ## Terminology
 
 * CA: Certificate authority signing the client cert, in this example we will play the role of a CA. 
-You can generate a CA cert as show in this doc.
+You can generate a CA cert as shown in this doc.
 
 * CA Certificate(s) - Certificate Authority public key. Client certs must chain back to this cert, 
 meaning the Issuer field of some certificate in the chain leading up to the client cert must contain 

@@ -22,12 +22,15 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
+	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
-	limitIP  = "ingress.kubernetes.io/limit-connections"
-	limitRPS = "ingress.kubernetes.io/limit-rps"
-	limitRPM = "ingress.kubernetes.io/limit-rpm"
+	limitIP        = "ingress.kubernetes.io/limit-connections"
+	limitRPS       = "ingress.kubernetes.io/limit-rps"
+	limitRPM       = "ingress.kubernetes.io/limit-rpm"
+	limitRATE      = "ingress.kubernetes.io/limit-rate"
+	limitRATEAFTER = "ingress.kubernetes.io/limit-rate-after"
 
 	// allow 5 times the specified limit as burst
 	defBurst = 5
@@ -48,6 +51,10 @@ type RateLimit struct {
 	RPS Zone `json:"rps"`
 
 	RPM Zone `json:"rpm"`
+
+	LimitRate int `json:"limit-rate"`
+
+	LimitRateAfter int `json:"limit-rate-after"`
 }
 
 // Equal tests for equality between two RateLimit types
@@ -65,6 +72,12 @@ func (rt1 *RateLimit) Equal(rt2 *RateLimit) bool {
 		return false
 	}
 	if !(&rt1.RPS).Equal(&rt2.RPS) {
+		return false
+	}
+	if rt1.LimitRate != rt2.LimitRate {
+		return false
+	}
+	if rt1.LimitRateAfter != rt2.LimitRateAfter {
 		return false
 	}
 
@@ -106,16 +119,26 @@ func (z1 *Zone) Equal(z2 *Zone) bool {
 }
 
 type ratelimit struct {
+	backendResolver resolver.DefaultBackend
 }
 
 // NewParser creates a new ratelimit annotation parser
-func NewParser() parser.IngressAnnotation {
-	return ratelimit{}
+func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
+	return ratelimit{br}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
+	defBackend := a.backendResolver.GetDefaultBackend()
+	lr, err := parser.GetIntAnnotation(limitRATE, ing)
+	if err != nil {
+		lr = defBackend.LimitRate
+	}
+	lra, err := parser.GetIntAnnotation(limitRATEAFTER, ing)
+	if err != nil {
+		lra = defBackend.LimitRateAfter
+	}
 
 	rpm, _ := parser.GetIntAnnotation(limitRPM, ing)
 	rps, _ := parser.GetIntAnnotation(limitRPS, ing)
@@ -123,9 +146,11 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	if rpm == 0 && rps == 0 && conn == 0 {
 		return &RateLimit{
-			Connections: Zone{},
-			RPS:         Zone{},
-			RPM:         Zone{},
+			Connections:    Zone{},
+			RPS:            Zone{},
+			RPM:            Zone{},
+			LimitRate:      lr,
+			LimitRateAfter: lra,
 		}, nil
 	}
 
@@ -150,5 +175,7 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 			Burst:      rpm * defBurst,
 			SharedSize: defSharedSize,
 		},
+		LimitRate:      lr,
+		LimitRateAfter: lra,
 	}, nil
 }

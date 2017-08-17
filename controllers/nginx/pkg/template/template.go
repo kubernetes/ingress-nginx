@@ -407,6 +407,18 @@ func buildRateLimit(input interface{}) []string {
 		limits = append(limits, limit)
 	}
 
+	if loc.RateLimit.LimitRateAfter > 0 {
+		limit := fmt.Sprintf("limit_rate_after %vk;",
+			loc.RateLimit.LimitRateAfter)
+		limits = append(limits, limit)
+	}
+
+	if loc.RateLimit.LimitRate > 0 {
+		limit := fmt.Sprintf("limit_rate %vk;",
+			loc.RateLimit.LimitRate)
+		limits = append(limits, limit)
+	}
+
 	return limits
 }
 

@@ -27,18 +27,15 @@ events {
 http {
     {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
     {{ if $cfg.UseProxyProtocol }}
-    {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
-    set_real_ip_from    {{ $trusted_ip }};
-    {{ end }}
     real_ip_header      proxy_protocol;
     {{ else }}
-    {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
-    set_real_ip_from    {{ $trusted_ip }};
-    {{ end }}
     real_ip_header      X-Forwarded-For;
     {{ end }}
 
     real_ip_recursive   on;
+    {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
+    set_real_ip_from    {{ $trusted_ip }};
+    {{ end }}
 
     {{/* databases used to determine the country depending on the client IP address */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
@@ -156,7 +153,7 @@ http {
     {{ else }}
     map $http_x_forwarded_for $the_real_ip {
         default          $http_x_forwarded_for;
-        ''               $remote_addr;
+        ''               $realip_remote_addr;
     }
     {{ end }}
 
@@ -567,13 +564,15 @@ stream {
         {{ if not (empty $authPath) }}
         # this location requires authentication
         auth_request {{ $authPath }};
+        auth_request_set $auth_cookie $upstream_http_set_cookie;
+        add_header Set-Cookie $auth_cookie;
         {{- range $idx, $line := buildAuthResponseHeaders $location }}
         {{ $line }}
         {{- end }}
         {{ end }}
 
         {{ if not (empty $location.ExternalAuth.SigninURL) }}
-        error_page 401 = {{ $location.ExternalAuth.SigninURL }};
+        error_page 401 = {{ $location.ExternalAuth.SigninURL }}?rd=$request_uri;
         {{ end }}
 
 

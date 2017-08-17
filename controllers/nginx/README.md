@@ -173,7 +173,7 @@ spec:
 ```
 Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
-Check the [example](examples/tls/README.md)
+Check the [example](../../examples/tls-termination/nginx)
 
 ### Default SSL Certificate
 
@@ -297,8 +297,8 @@ To disable this behavior use `hsts=false` in the NGINX config map.
 
 ### Automated Certificate Management with Kube-Lego
 
-[Kube-Lego] automatically requests missing certificates or expired from
-[Let's Encrypt] by monitoring ingress resources and its referenced secrets. To
+[Kube-Lego] automatically requests missing or expired certificates from
+[Let's Encrypt] by monitoring ingress resources and their referenced secrets. To
 enable this for an ingress resource you have to add an annotation:
 
 ```
@@ -432,7 +432,7 @@ Description:
 
 ### Local cluster
 
-Using [`hack/local-up-cluster.sh`](https://github.com/kubernetes/kubernetes/blob/master/hack/local-up-cluster.sh) is possible to start a local kubernetes cluster consisting of a master and a single node. Please read [running-locally.md](https://github.com/kubernetes/kubernetes/blob/master/docs/devel/running-locally.md) for more details.
+Using [`hack/local-up-cluster.sh`](https://github.com/kubernetes/kubernetes/blob/master/hack/local-up-cluster.sh) is possible to start a local kubernetes cluster consisting of a master and a single node. Please read [running-locally.md](https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md) for more details.
 
 Use of `hostNetwork: true` in the ingress controller is required to falls back at localhost:8080 for the apiserver if every other client creation check fails (eg: service account not present, kubeconfig doesn't exist, no master env vars...)
 

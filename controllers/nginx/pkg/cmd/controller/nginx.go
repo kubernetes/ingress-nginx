@@ -268,6 +268,10 @@ func (n NGINXController) BackendDefaults() defaults.Backend {
 // printDiff returns the difference between the running configuration
 // and the new one
 func (n NGINXController) printDiff(data []byte) {
+	if !glog.V(2) {
+		return
+	}
+
 	in, err := os.Open(cfgPath)
 	if err != nil {
 		return
@@ -296,10 +300,9 @@ func (n NGINXController) printDiff(data []byte) {
 			return
 		}
 
-		if glog.V(2) {
-			glog.Infof("NGINX configuration diff\n")
-			glog.Infof("%v", string(diffOutput))
-		}
+		glog.Infof("NGINX configuration diff\n")
+		glog.Infof("%v", string(diffOutput))
+
 		os.Remove(tmpfile.Name())
 	}
 }
@@ -401,7 +404,7 @@ func (n *NGINXController) UpdateIngressStatus(*extensions.Ingress) []api_v1.Load
 	return nil
 }
 
-// OnUpdate is called by syncQueue in https://github.com/aledbf/ingress-controller/blob/master/pkg/ingress/controller/controller.go#L82
+// OnUpdate is called by syncQueue in https://github.com/kubernetes/ingress/blob/master/core/pkg/ingress/controller/controller.go#L426
 // periodically to keep the configuration in sync.
 //
 // convert configmap to custom configuration object (different in each implementation)
@@ -410,15 +413,6 @@ func (n *NGINXController) UpdateIngressStatus(*extensions.Ingress) []api_v1.Load
 // returning nill implies the backend will be reloaded.
 // if an error is returned means requeue the update
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
-	var longestName int
-	var serverNameBytes int
-	for _, srv := range ingressCfg.Servers {
-		if longestName < len(srv.Hostname) {
-			longestName = len(srv.Hostname)
-		}
-		serverNameBytes += len(srv.Hostname)
-	}
-
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
 	cfg.Resolver = n.resolver
 
@@ -465,14 +459,22 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		n.setupMonitor(defaultStatusModule)
 	}
 
-	// NGINX cannot resize the has tables used to store server names.
+	// NGINX cannot resize the hash tables used to store server names.
 	// For this reason we check if the defined size defined is correct
 	// for the FQDN defined in the ingress rules adjusting the value
 	// if is required.
 	// https://trac.nginx.org/nginx/ticket/352
 	// https://trac.nginx.org/nginx/ticket/631
-	nameHashBucketSize := nginxHashBucketSize(longestName)
+	var longestName int
+	var serverNameBytes int
+	for _, srv := range ingressCfg.Servers {
+		if longestName < len(srv.Hostname) {
+			longestName = len(srv.Hostname)
+		}
+		serverNameBytes += len(srv.Hostname)
+	}
 	if cfg.ServerNameHashBucketSize == 0 {
+		nameHashBucketSize := nginxHashBucketSize(longestName)
 		glog.V(3).Infof("adjusting ServerNameHashBucketSize variable to %v", nameHashBucketSize)
 		cfg.ServerNameHashBucketSize = nameHashBucketSize
 	}

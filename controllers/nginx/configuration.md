@@ -7,6 +7,7 @@
 * [Authentication](#authentication)
 * [Rewrite](#rewrite)
 * [Rate limiting](#rate-limiting)
+* [SSL Passthrough](#ssl-passthrough)
 * [Secure backends](#secure-backends)
 * [Server-side HTTPS enforcement through redirect](#server-side-https-enforcement-through-redirect)
 * [Whitelist source range](#whitelist-source-range)
@@ -210,6 +211,13 @@ The annotations `ingress.kubernetes.io/limit-connections`, `ingress.kubernetes.i
 
 If you specify multiple annotations in a single Ingress rule, `limit-rpm`, and then `limit-rps` takes precedence.
 
+The annotation `ingress.kubernetes.io/limit-rate`, `ingress.kubernetes.io/limit-rate-after` define a limit the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.
+
+`ingress.kubernetes.io/limit-rate-after`: sets the initial amount after which the further transmission of a response to a client will be rate limited.
+
+`ingress.kubernetes.io/limit-rate`: rate of request that accepted from a client each second.
+
+To configure this setting globally for all Ingress rules, the `limit-rate-after` and `limit-rate` value may be set in the NGINX ConfigMap. if you set the value in ingress annotation will cover global setting.
 
 ### SSL Passthrough
 
