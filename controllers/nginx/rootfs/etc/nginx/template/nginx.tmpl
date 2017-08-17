@@ -1,4 +1,5 @@
 {{ $all := . }}
+{{ $servers := .Servers }}
 {{ $cfg := .Cfg }}
 {{ $IsIPV6Enabled := .IsIPV6Enabled }}
 {{ $healthzURI := .HealthzURI }}
@@ -269,7 +270,7 @@ http {
     {{ end }}
 
     {{/* build the maps that will be use to validate the Whitelist */}}
-    {{ range $index, $server := .Servers }}
+    {{ range $index, $server := $servers }}
     {{ range $location := $server.Locations }}
     {{ $path := buildLocation $location }}
 
@@ -288,18 +289,18 @@ http {
 
     {{/* build all the required rate limit zones. Each annotation requires a dedicated zone */}}
     {{/* 1MB -> 16 thousand 64-byte states or about 8 thousand 128-byte states */}}
-    {{ range $zone := (buildRateLimitZones $cfg.LimitConnZoneVariable .Servers) }}
+    {{ range $zone := (buildRateLimitZones $cfg.LimitConnZoneVariable $servers) }}
     {{ $zone }}
     {{ end }}
 
     {{ $backlogSize := .BacklogSize }}
-    {{ range $index, $server := .Servers }}
+    {{ range $index, $server := $servers }}
     server {
         server_name {{ $server.Hostname }};
         {{ template "SERVER" serverConfig $all $server }}
         {{ template "CUSTOM_ERRORS" $all }}
     }
-    {{if $server.Alias }}
+    {{ if $server.Alias }}
     server {
         server_name {{ $server.Alias }};
         {{ template "SERVER" serverConfig $all $server }}

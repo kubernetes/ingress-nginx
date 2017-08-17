@@ -605,6 +605,16 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	upstreams := ic.createUpstreams(ings)
 	servers := ic.createServers(ings, upstreams)
 
+	// If a server has a hostname equivalent to a pre-existing alias, then we remove the alias
+	for _, server := range servers {
+		for j, alias := range servers {
+			if server.Hostname == alias.Alias {
+				glog.Warningf("There is a conflict with hostname '%v' and alias of `%v`.", server.Hostname, alias.Hostname)
+				servers[j].Alias = ""
+			}
+		}
+	}
+
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
 
