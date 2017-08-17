@@ -432,7 +432,7 @@ Description:
 
 ### Local cluster
 
-Using [`hack/local-up-cluster.sh`](https://github.com/kubernetes/kubernetes/blob/master/hack/local-up-cluster.sh) is possible to start a local kubernetes cluster consisting of a master and a single node. Please read [running-locally.md](https://github.com/kubernetes/kubernetes/blob/master/docs/devel/running-locally.md) for more details.
+Using [`hack/local-up-cluster.sh`](https://github.com/kubernetes/kubernetes/blob/master/hack/local-up-cluster.sh) is possible to start a local kubernetes cluster consisting of a master and a single node. Please read [running-locally.md](https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md) for more details.
 
 Use of `hostNetwork: true` in the ingress controller is required to falls back at localhost:8080 for the apiserver if every other client creation check fails (eg: service account not present, kubeconfig doesn't exist, no master env vars...)
 
