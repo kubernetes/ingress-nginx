@@ -173,7 +173,7 @@ spec:
 ```
 Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
-Check the [example](examples/tls/README.md)
+Check the [example](../../examples/tls-termination/nginx)
 
 ### Default SSL Certificate
 
