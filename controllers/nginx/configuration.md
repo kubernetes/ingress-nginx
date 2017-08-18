@@ -84,10 +84,10 @@ In addition to the built-in functions provided by the Go package the following f
   - hasSuffix: [strings.HasSuffix](https://golang.org/pkg/strings/#HasSuffix)
   - toUpper: [strings.ToUpper](https://golang.org/pkg/strings/#ToUpper)
   - toLower: [strings.ToLower](https://golang.org/pkg/strings/#ToLower)
-  - buildLocation: helper to build the NGINX Location section in each server
+  - buildLocation: helps to build the NGINX Location section in each server
   - buildProxyPass: builds the reverse proxy configuration
-  - buildRateLimitZones: helper to build all the required rate limit zones
-  - buildRateLimit:  helper to build a limit zone inside a location if contains a rate limit annotation
+  - buildRateLimitZones: helpes to build all the required rate limit zones
+  - buildRateLimit: helpes to build a limit zone inside a location if contains a rate limit annotation
 
 
 ### Custom NGINX upstream checks
@@ -242,7 +242,7 @@ By default the controller redirects (301) to `HTTPS` if TLS is enabled for that 
 
 To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
-When using SSL offloading outside of cluster (e.g. AWS ELB) it may be usefull to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
+When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
 
 
 ### Whitelist source range
@@ -267,7 +267,7 @@ The only affinity type available for NGINX is `cookie`.
 If you use the ``cookie`` type you can also specify the name of the cookie that will be used to route the requests with the annotation `ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'route'.
 
 In case of NGINX the annotation `ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
-The `index` option  is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranted to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!
+The `index` option is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranted to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!
 
 In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf)
 
@@ -326,7 +326,7 @@ The zero value disables keep-alive client connections.
 http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 
 **load-balance:** Sets the algorithm to use for load balancing. The value can either be round_robin to
-use the default round robin load balancer, least_conn to use the least connected method, or
+use the default round robin loadbalancer, least_conn to use the least connected method, or
 ip_hash to use a hash of the server for routing. The default is least_conn.
 http://nginx.org/en/docs/http/load_balancing.html.
 

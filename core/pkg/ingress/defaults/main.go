@@ -96,7 +96,7 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate
 	LimitRate int `json:"limit-rate"`
 
-    // Sets the initial amount after which the further transmission of a response to a client will be rate limited.
+	// Sets the initial amount after which the further transmission of a response to a client will be rate limited.
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after
 	LimitRateAfter int `json:"limit-rate-after"`
 }
