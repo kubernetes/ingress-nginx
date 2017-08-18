@@ -1,4 +1,4 @@
-# Ingress documentation and examples
+# Ingress Documentation and Examples
 
 This directory contains documentation.
 
