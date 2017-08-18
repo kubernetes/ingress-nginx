@@ -6,7 +6,7 @@ This directory contains documentation.
 
 Try to create a README file in every directory containing documentation and index
 out from there, that's what readers will notice first. Use lower case for other
-file names unless you have a reason to draw someones attention to it.
+file names unless you have a reason to draw someone's attention to it.
 Avoid CamelCase.
 
 Rationale:
