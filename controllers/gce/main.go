@@ -256,8 +256,10 @@ func main() {
 		clusterManager = controller.NewFakeClusterManager(*clusterName, controller.DefaultFirewallName).ClusterManager
 	}
 
+	ctx := controller.NewControllerContext(kubeClient, *watchNamespace, *resyncPeriod)
+
 	// Start loadbalancer controller
-	lbc, err := controller.NewLoadBalancerController(kubeClient, clusterManager, *resyncPeriod, *watchNamespace)
+	lbc, err := controller.NewLoadBalancerController(kubeClient, ctx, clusterManager)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
@@ -268,6 +270,7 @@ func main() {
 	go registerHandlers(lbc)
 	go handleSigterm(lbc, *deleteAllOnQuit)
 
+	ctx.Start()
 	lbc.Run()
 	for {
 		glog.Infof("Handled quit, awaiting pod deletion.")

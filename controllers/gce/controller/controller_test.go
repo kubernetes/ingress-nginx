@@ -53,7 +53,8 @@ func defaultBackendName(clusterName string) string {
 // newLoadBalancerController create a loadbalancer controller.
 func newLoadBalancerController(t *testing.T, cm *fakeClusterManager) *LoadBalancerController {
 	kubeClient := fake.NewSimpleClientset()
-	lb, err := NewLoadBalancerController(kubeClient, cm.ClusterManager, 1*time.Second, api_v1.NamespaceAll)
+	ctx := NewControllerContext(kubeClient, api_v1.NamespaceAll, 1*time.Second)
+	lb, err := NewLoadBalancerController(kubeClient, ctx, cm.ClusterManager)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
