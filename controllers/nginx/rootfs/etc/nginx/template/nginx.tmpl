@@ -307,7 +307,7 @@ http {
         ssl_certificate_key                     {{ $server.SSLCertificate }};
         {{ end }}
 
-        {{ if (and (not (empty $server.SSLCertificate)) $cfg.HSTS) }}
+        {{ if (and $cfg.HSTS (or (not (empty $server.SSLCertificate)) $location.Redirect.ForceSSLRedirect)) }}
         more_set_headers                        "Strict-Transport-Security: max-age={{ $cfg.HSTSMaxAge }}{{ if $cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }};{{ if $cfg.HSTSPreload }} preload{{ end }}";
         {{ end }}
 
