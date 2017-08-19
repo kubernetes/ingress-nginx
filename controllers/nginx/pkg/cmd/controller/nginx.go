@@ -446,6 +446,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 			IP:            svc.Spec.ClusterIP,
 			Port:          port,
 			ProxyProtocol: false,
+
 		})
 	}
 
