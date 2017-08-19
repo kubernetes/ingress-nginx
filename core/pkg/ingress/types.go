@@ -220,6 +220,10 @@ type Server struct {
 	SSLPemChecksum string `json:"sslPemChecksum"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
+	// CertificateAuth indicates the access to this location requires
+	// external authentication
+	// +optional
+	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth,omitempty"`
 }
 
 // Location describes an URI inside a server.
@@ -231,7 +235,6 @@ type Server struct {
 // In some cases when more than one annotations is defined a particular order in the execution
 // is required.
 // The chain in the execution order of annotations should be:
-// - CertificateAuth
 // - Whitelist
 // - RateLimit
 // - BasicDigestAuth
@@ -285,10 +288,6 @@ type Location struct {
 	// to be used in connections against endpoints
 	// +optional
 	Proxy proxy.Configuration `json:"proxy,omitempty"`
-	// CertificateAuth indicates the access to this location requires
-	// external authentication
-	// +optional
-	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"use-port-in-redirects"`
