@@ -32,6 +32,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
+	"k8s.io/ingress/core/pkg/ingress/annotations/redirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -274,9 +275,12 @@ type Location struct {
 	// The Redirect annotation precedes RateLimit
 	// +optional
 	RateLimit ratelimit.RateLimit `json:"rateLimit,omitempty"`
-	// Redirect describes the redirection this location.
+	// Redirect describes a temporal o permanent redirection this location.
+	// +optional		  	// +optional
+	Redirect redirect.Redirect `json:"redirect,omitempty"`
+	// Rewrite describes the redirection this location.
 	// +optional
-	Redirect rewrite.Redirect `json:"redirect,omitempty"`
+	Rewrite rewrite.Redirect `json:"rewrite,omitempty"`
 	// Whitelist indicates only connections from certain client
 	// addresses or networks are allowed.
 	// +optional

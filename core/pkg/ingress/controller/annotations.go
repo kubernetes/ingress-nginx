@@ -29,6 +29,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/portinredirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
+	"k8s.io/ingress/core/pkg/ingress/annotations/redirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
 	"k8s.io/ingress/core/pkg/ingress/annotations/serviceupstream"
@@ -63,7 +64,8 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
-			"Redirect":             rewrite.NewParser(cfg),
+			"Redirect":             redirect.NewParser(),
+			"Rewrite":              rewrite.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"ServiceUpstream":      serviceupstream.NewParser(),
 			"SessionAffinity":      sessionaffinity.NewParser(),
