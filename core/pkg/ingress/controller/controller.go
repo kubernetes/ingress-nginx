@@ -610,6 +610,16 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	upstreams := ic.createUpstreams(ings)
 	servers := ic.createServers(ings, upstreams)
 
+	// If a server has a hostname equivalent to a pre-existing alias, then we remove the alias
+	for _, server := range servers {
+		for j, alias := range servers {
+			if server.Hostname == alias.Alias {
+				glog.Warningf("There is a conflict with hostname '%v' and alias of `%v`.", server.Hostname, alias.Hostname)
+				servers[j].Alias = ""
+			}
+		}
+	}
+
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
 
@@ -1066,18 +1076,24 @@ func (ic *GenericController) createServers(data []interface{},
 		}
 	}
 
-	// configure default location and SSL
+	// configure default location, alias, and SSL
 	for _, ingIf := range data {
 		ing := ingIf.(*extensions.Ingress)
 		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
 
+		// setup server-alias based on annotations
+		aliasAnnotation := ic.annotations.Alias(ing)
+
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
 			if host == "" {
 				host = defServerName
 			}
+
+			// setup server aliases
+			servers[host].Alias = aliasAnnotation
 
 			// only add a certificate if the server does not have one previously configured
 			if len(ing.Spec.TLS) == 0 || servers[host].SSLCertificate != "" {

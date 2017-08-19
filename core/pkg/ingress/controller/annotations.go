@@ -37,6 +37,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
+	"k8s.io/ingress/core/pkg/ingress/annotations/alias"
 )
 
 type extractorConfig interface {
@@ -69,6 +70,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"SessionAffinity":      sessionaffinity.NewParser(),
 			"SSLPassthrough":       sslpassthrough.NewParser(),
 			"ConfigurationSnippet": snippet.NewParser(),
+			"Alias":                alias.NewParser(),
 		},
 	}
 }
@@ -107,6 +109,7 @@ const (
 	sslPassthrough  = "SSLPassthrough"
 	sessionAffinity = "SessionAffinity"
 	serviceUpstream = "ServiceUpstream"
+	serverAlias     = "Alias"
 )
 
 func (e *annotationExtractor) ServiceUpstream(ing *extensions.Ingress) bool {
@@ -131,6 +134,11 @@ func (e *annotationExtractor) HealthCheck(ing *extensions.Ingress) *healthcheck.
 func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 	val, _ := e.annotations[sslPassthrough].Parse(ing)
 	return val.(bool)
+}
+
+func (e *annotationExtractor) Alias(ing *extensions.Ingress) string {
+	val, _ := e.annotations[serverAlias].Parse(ing)
+	return val.(string)
 }
 
 func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {

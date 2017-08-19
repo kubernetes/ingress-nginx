@@ -65,7 +65,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
-
+|[ingress.kubernetes.io/server-alias](#server-alias)|string|
 
 
 #### Custom NGINX template
@@ -156,7 +156,7 @@ Please check the [tls-auth](/examples/auth/client-certs/nginx/README.md) example
 
 ### Configuration snippet
 
-Using this annotion you can add additional configuration to the NGINX location. For example:
+Using this annotation you can add additional configuration to the NGINX location. For example:
 
 ```
 ingress.kubernetes.io/configuration-snippet: |
@@ -167,6 +167,13 @@ ingress.kubernetes.io/configuration-snippet: |
 
 To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule add the annotation `ingress.kubernetes.io/enable-cors: "true"`. This will add a section in the server location enabling this functionality.
 For more information please check https://enable-cors.org/server_nginx.html
+
+### Server Alias
+
+To add Server Aliases to an Ingress rule add the annotation `ingress.kubernetes.io/server-alias: "<alias>"`.
+This will create a server with the same configuration, but a different server_name as the provided host.
+
+For more information please see http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name
 
 ### External Authentication
 
