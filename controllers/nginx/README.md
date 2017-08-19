@@ -50,6 +50,8 @@ Usage of :
       --configmap string                 Name of the ConfigMap that contains the custom configuration use
       --default-backend-service string   Service used to serve a 404 page for the default backend. Takes the form namespace/name. The controller uses the first node port of this Service for the default backend.
       --default-ssl-certificate string   Name of the secret that contains a SSL certificate to be used as default for a HTTPS catch-all server
+      --always-enable-tls bool           Enable tls using the default-ssl-certificate even if no tls section is defined
+		for the ingress.
       --election-id string               Election id to use for status update. (default "ingress-controller-leader")
       --force-namespace-isolation        Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace.
       --health-check-path string         Defines the URL to be used as health check inside in the default server in NGINX. (default "/healthz")
@@ -68,7 +70,7 @@ Usage of :
 		  The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend
       --udp-services-configmap string    Name of the ConfigMap that contains the definition of the UDP services to expose.
 		  The key in the map indicates the external port to be used. The value is the name of the service with the format namespace/serviceName and the port of the service could be a number of the name of the port.
-      --update-status                    Indicates if the ingress controller should update the Ingress status IP/hostname. Default is true (default true)
+      --update-status bool               Indicates if the ingress controller should update the Ingress status IP/hostname. Default is true (default true)
 -v, --v Level                          log level for V logs
       --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
       --watch-namespace string           Namespace to watch for Ingress. Default is to watch all namespaces

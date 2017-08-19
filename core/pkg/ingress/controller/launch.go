@@ -78,6 +78,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret 
 		that contains a SSL certificate to be used as default for a HTTPS catch-all server`)
 
+		defAlwaysEnableTLS = flags.Bool("always-enable-tls", false, `Enable tls using the default-ssl-certificate even if no tls section is defined
+		for the ingress.`)
+
 		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines 
 		the URL to be used as health check inside in the default server in NGINX.`)
 
@@ -171,6 +174,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		TCPConfigMapName:        *tcpConfigMapName,
 		UDPConfigMapName:        *udpConfigMapName,
 		DefaultSSLCertificate:   *defSSLCertificate,
+		AlwaysEnableTLS:         *defAlwaysEnableTLS,
 		DefaultHealthzURL:       *defHealthzURL,
 		PublishService:          *publishSvc,
 		Backend:                 backend,
