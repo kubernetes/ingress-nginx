@@ -312,13 +312,13 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	rewrite %s(.*) /$1 break;
 	rewrite %s / break;
 	proxy_pass %s://%s;
-	%v`, path, location.Path, proto, location.Backend, abu)
+	%v`, path, location.Path, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
 	rewrite %s(.*) %s/$1 break;
 	proxy_pass %s://%s;
-	%v`, path, location.Rewrite.Target, proto, location.Backend, abu)
+	%v`, path, location.Rewrite.Target, proto, upstreamName, abu)
 	}
 
 	// default proxy_pass
@@ -401,6 +401,18 @@ func buildRateLimit(input interface{}) []string {
 	if loc.RateLimit.RPM.Limit > 0 {
 		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
 			loc.RateLimit.RPM.Name, loc.RateLimit.RPM.Burst)
+		limits = append(limits, limit)
+	}
+
+	if loc.RateLimit.LimitRateAfter > 0 {
+		limit := fmt.Sprintf("limit_rate_after %vk;",
+			loc.RateLimit.LimitRateAfter)
+		limits = append(limits, limit)
+	}
+
+	if loc.RateLimit.LimitRate > 0 {
+		limit := fmt.Sprintf("limit_rate %vk;",
+			loc.RateLimit.LimitRate)
 		limits = append(limits, limit)
 	}
 

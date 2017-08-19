@@ -19,6 +19,7 @@ package controller
 import (
 	"github.com/golang/glog"
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/ingress/core/pkg/ingress/annotations/alias"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
@@ -63,14 +64,15 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
-			"RateLimit":            ratelimit.NewParser(),
-			"Redirect":             redirect.NewParser(),
+			"RateLimit":            ratelimit.NewParser(cfg),
+			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"ServiceUpstream":      serviceupstream.NewParser(),
 			"SessionAffinity":      sessionaffinity.NewParser(),
 			"SSLPassthrough":       sslpassthrough.NewParser(),
 			"ConfigurationSnippet": snippet.NewParser(),
+			"Alias":                alias.NewParser(),
 		},
 	}
 }
@@ -109,6 +111,7 @@ const (
 	sslPassthrough  = "SSLPassthrough"
 	sessionAffinity = "SessionAffinity"
 	serviceUpstream = "ServiceUpstream"
+	serverAlias     = "Alias"
 )
 
 func (e *annotationExtractor) ServiceUpstream(ing *extensions.Ingress) bool {
@@ -133,6 +136,11 @@ func (e *annotationExtractor) HealthCheck(ing *extensions.Ingress) *healthcheck.
 func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 	val, _ := e.annotations[sslPassthrough].Parse(ing)
 	return val.(bool)
+}
+
+func (e *annotationExtractor) Alias(ing *extensions.Ingress) string {
+	val, _ := e.annotations[serverAlias].Parse(ing)
+	return val.(string)
 }
 
 func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
