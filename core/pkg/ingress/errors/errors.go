@@ -83,3 +83,11 @@ func IsInvalidContent(e error) bool {
 	_, ok := e.(InvalidContent)
 	return ok
 }
+
+func New(m string) error {
+	return errors.New(m)
+}
+
+func Errorf(format string, args ...interface{}) error {
+	return errors.Errorf(format, args)
+}

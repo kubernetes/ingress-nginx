@@ -27,6 +27,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
+	"k8s.io/ingress/core/pkg/ingress/annotations/redirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 )
 
@@ -48,7 +49,8 @@ func TestMergeLocationAnnotations(t *testing.T) {
 		"EnableCORS":         true,
 		"ExternalAuth":       authreq.External{},
 		"RateLimit":          ratelimit.RateLimit{},
-		"Redirect":           rewrite.Redirect{},
+		"Redirect":           redirect.Redirect{},
+		"Rewrite":            rewrite.Redirect{},
 		"Whitelist":          ipwhitelist.SourceRange{},
 		"Proxy":              proxy.Configuration{},
 		"CertificateAuth":    authtls.AuthSSLConfig{},
