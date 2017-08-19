@@ -1,4 +1,4 @@
-# Ingress controller catalog
+# Ingress controller Catalog
 
 This is a non-comprehensive list of existing ingress controllers.
 
