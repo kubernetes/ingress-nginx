@@ -446,7 +446,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 			IP:            svc.Spec.ClusterIP,
 			Port:          port,
 			ProxyProtocol: false,
-
 		})
 	}
 
@@ -467,11 +466,33 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	// https://trac.nginx.org/nginx/ticket/631
 	var longestName int
 	var serverNameBytes int
+	redirectServers := make(map[string]string)
 	for _, srv := range ingressCfg.Servers {
 		if longestName < len(srv.Hostname) {
 			longestName = len(srv.Hostname)
 		}
 		serverNameBytes += len(srv.Hostname)
+		if srv.RedirectFromToWWW {
+			var n string
+			if strings.HasPrefix(srv.Hostname, "www.") {
+				n = strings.TrimLeft(srv.Hostname, "www.")
+			} else {
+				n = fmt.Sprintf("www.%v", srv.Hostname)
+			}
+			glog.V(3).Infof("creating redirect from %v to", srv.Hostname, n)
+			if _, ok := redirectServers[n]; !ok {
+				found := false
+				for _, esrv := range ingressCfg.Servers {
+					if esrv.Hostname == n {
+						found = true
+						break
+					}
+				}
+				if !found {
+					redirectServers[n] = srv.Hostname
+				}
+			}
+		}
 	}
 	if cfg.ServerNameHashBucketSize == 0 {
 		nameHashBucketSize := nginxHashBucketSize(longestName)
@@ -562,6 +583,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		CustomErrors:        len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                 cfg,
 		IsIPV6Enabled:       n.isIPV6Enabled && !cfg.DisableIpv6,
+		RedirectServers:     redirectServers,
 	}
 
 	// We need to extract the endpoints to be used in the fastcgi error handler

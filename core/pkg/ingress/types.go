@@ -32,6 +32,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
+	"k8s.io/ingress/core/pkg/ingress/annotations/redirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -220,8 +221,10 @@ type Server struct {
 	SSLPemChecksum string `json:"sslPemChecksum"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
-	// return the alias of the server name
+	// Alias return the alias of the server name
 	Alias string `json:"alias,omitempty"`
+	// RedirectFromToWWW returns if a redirect to/from prefix www is required
+	RedirectFromToWWW bool `json:"redirectFromToWWW,omitempty"`
 }
 
 // Location describes an URI inside a server.
@@ -276,9 +279,12 @@ type Location struct {
 	// The Redirect annotation precedes RateLimit
 	// +optional
 	RateLimit ratelimit.RateLimit `json:"rateLimit,omitempty"`
-	// Redirect describes the redirection this location.
+	// Redirect describes a temporal o permanent redirection this location.
 	// +optional
-	Redirect rewrite.Redirect `json:"redirect,omitempty"`
+	Redirect redirect.Redirect `json:"redirect,omitempty"`
+	// Rewrite describes the redirection this location.
+	// +optional
+	Rewrite rewrite.Redirect `json:"rewrite,omitempty"`
 	// Whitelist indicates only connections from certain client
 	// addresses or networks are allowed.
 	// +optional
