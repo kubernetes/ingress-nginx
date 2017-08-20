@@ -106,7 +106,7 @@ Please check the [custom upstream check](../../examples/customization/custom-ups
 
 ### Authentication
 
-Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the the key `auth`.
+Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the key `auth`.
 
 The annotations are:
 ```
