@@ -428,4 +428,5 @@ type TemplateConfig struct {
 	CustomErrors            bool
 	Cfg                     Configuration
 	IsIPV6Enabled           bool
+	RedirectServers         map[string]string
 }

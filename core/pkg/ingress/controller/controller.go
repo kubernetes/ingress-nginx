@@ -610,11 +610,13 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	upstreams := ic.createUpstreams(ings)
 	servers := ic.createServers(ings, upstreams)
 
-	// If a server has a hostname equivalent to a pre-existing alias, then we remove the alias
+	// If a server has a hostname equivalent to a pre-existing alias, then we
+	// remove the alias to avoid conflicts.
 	for _, server := range servers {
 		for j, alias := range servers {
 			if server.Hostname == alias.Alias {
-				glog.Warningf("There is a conflict with hostname '%v' and alias of `%v`.", server.Hostname, alias.Hostname)
+				glog.Warningf("There is a conflict with server hostname '%v' and alias '%v' (in server %v). Removing alias to avoid conflicts.",
+					server.Hostname, alias.Hostname, alias.Hostname)
 				servers[j].Alias = ""
 			}
 		}
@@ -681,6 +683,9 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						loc.Service = ups.Service
 						loc.ProxyBodySize = proxyBodySize
 						mergeLocationAnnotations(loc, anns)
+						if loc.Redirect.FromToWWW {
+							server.RedirectFromToWWW = true
+						}
 						break
 					}
 				}
@@ -696,6 +701,9 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						ProxyBodySize:  proxyBodySize,
 					}
 					mergeLocationAnnotations(loc, anns)
+					if loc.Redirect.FromToWWW {
+						server.RedirectFromToWWW = true
+					}
 					server.Locations = append(server.Locations, loc)
 				}
 
