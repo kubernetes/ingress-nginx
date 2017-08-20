@@ -39,6 +39,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
+	"k8s.io/ingress/core/pkg/ingress/annotations/proxybodysize"
 )
 
 type extractorConfig interface {
@@ -73,6 +74,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"SSLPassthrough":       sslpassthrough.NewParser(),
 			"ConfigurationSnippet": snippet.NewParser(),
 			"Alias":                alias.NewParser(),
+			"ProxyBodySize":        proxybodysize.NewParser(),
 		},
 	}
 }

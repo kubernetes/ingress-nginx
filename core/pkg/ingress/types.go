@@ -303,6 +303,10 @@ type Location struct {
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
 	ConfigurationSnippet string `json:"configuration-snippet"`
+	// ProxyBodySize allows for the configuration of the client body
+	// buffer size for a specific location.
+	// +optional
+	ProxyBodySize string `json: "proxy-body-size,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

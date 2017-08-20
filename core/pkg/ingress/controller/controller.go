@@ -663,6 +663,8 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 					nginxPath = path.Path
 				}
 
+				proxyBodySize := anns["ProxyBodySize"].(string)
+
 				addLoc := true
 				for _, loc := range server.Locations {
 					if loc.Path == nginxPath {
@@ -679,6 +681,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						loc.Backend = ups.Name
 						loc.Port = ups.Port
 						loc.Service = ups.Service
+						loc.ProxyBodySize = proxyBodySize
 						mergeLocationAnnotations(loc, anns)
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -690,11 +693,12 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 				if addLoc {
 					glog.V(3).Infof("adding location %v in ingress rule %v/%v upstream %v", nginxPath, ing.Namespace, ing.Name, ups.Name)
 					loc := &ingress.Location{
-						Path:         nginxPath,
-						Backend:      ups.Name,
-						IsDefBackend: false,
-						Service:      ups.Service,
-						Port:         ups.Port,
+						Path:           nginxPath,
+						Backend:        ups.Name,
+						IsDefBackend:   false,
+						Service:        ups.Service,
+						Port:           ups.Port,
+						ProxyBodySize:  proxyBodySize,
 					}
 					mergeLocationAnnotations(loc, anns)
 					if loc.Redirect.FromToWWW {
