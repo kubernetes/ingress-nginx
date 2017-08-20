@@ -19,6 +19,7 @@ package controller
 import (
 	"github.com/golang/glog"
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/ingress/core/pkg/ingress/annotations/alias"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
@@ -29,6 +30,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/portinredirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
+	"k8s.io/ingress/core/pkg/ingress/annotations/redirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
 	"k8s.io/ingress/core/pkg/ingress/annotations/serviceupstream"
@@ -37,7 +39,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
-	"k8s.io/ingress/core/pkg/ingress/annotations/alias"
 )
 
 type extractorConfig interface {
@@ -64,7 +65,8 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
-			"Redirect":             rewrite.NewParser(cfg),
+			"Redirect":             redirect.NewParser(),
+			"Rewrite":              rewrite.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"ServiceUpstream":      serviceupstream.NewParser(),
 			"SessionAffinity":      sessionaffinity.NewParser(),

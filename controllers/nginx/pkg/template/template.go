@@ -27,11 +27,10 @@ import (
 	"strings"
 	text_template "text/template"
 
-	"k8s.io/apimachinery/pkg/util/sets"
-
 	"github.com/golang/glog"
-
 	"github.com/pborman/uuid"
+
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	ing_net "k8s.io/ingress/core/pkg/net"
@@ -148,7 +147,7 @@ var (
 		"formatIP":                 formatIP,
 		"buildNextUpstream":        buildNextUpstream,
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
-			return struct { First, Second interface{} } { all, server }
+			return struct{ First, Second interface{} }{all, server}
 		},
 	}
 )
@@ -197,7 +196,7 @@ func buildLocation(input interface{}) string {
 	}
 
 	path := location.Path
-	if len(location.Redirect.Target) > 0 && location.Redirect.Target != path {
+	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != path {
 		if path == slash {
 			return fmt.Sprintf("~* %s", path)
 		}
@@ -290,7 +289,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
 	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, upstreamName)
 	// if the path in the ingress rule is equals to the target: no special rewrite
-	if path == location.Redirect.Target {
+	if path == location.Rewrite.Target {
 		return defProxyPass
 	}
 
@@ -298,9 +297,9 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 		path = fmt.Sprintf("%s/", path)
 	}
 
-	if len(location.Redirect.Target) > 0 {
+	if len(location.Rewrite.Target) > 0 {
 		abu := ""
-		if location.Redirect.AddBaseURL {
+		if location.Rewrite.AddBaseURL {
 			// path has a slash suffix, so that it can be connected with baseuri directly
 			bPath := fmt.Sprintf("%s%s", path, "$baseuri")
 			abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host%v">' r;
@@ -308,7 +307,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	`, bPath, bPath)
 		}
 
-		if location.Redirect.Target == slash {
+		if location.Rewrite.Target == slash {
 			// special case redirect to /
 			// ie /something to /
 			return fmt.Sprintf(`
@@ -321,7 +320,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 		return fmt.Sprintf(`
 	rewrite %s(.*) %s/$1 break;
 	proxy_pass %s://%s;
-	%v`, path, location.Redirect.Target, proto, upstreamName, abu)
+	%v`, path, location.Rewrite.Target, proto, upstreamName, abu)
 	}
 
 	// default proxy_pass

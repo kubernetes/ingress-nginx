@@ -290,6 +290,20 @@ http {
     {{ $zone }}
     {{ end }}
 
+    {{/* Build server redirects (from/to www) */}}
+    {{ range $hostname, $to := .RedirectServers }}
+    server {
+        listen 80{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen 442{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }} ssl;
+        {{ if $IsIPV6Enabled }}
+        listen  [::]:80{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen  [::]:442{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        {{ end }}        
+        server_name {{ $hostname }};
+        return 301 $scheme://{{ $to }}$request_uri;
+    }
+    {{ end }}
+
     {{ $backlogSize := .BacklogSize }}
     {{ range $index, $server := $servers }}
     server {
@@ -510,9 +524,9 @@ stream {
         ssl_verify_depth {{ $location.CertificateAuth.ValidationDepth }};
         {{ end }}
 
-        {{ if not (empty $location.Redirect.AppRoot)}}
+        {{ if not (empty $location.Rewrite.AppRoot)}}
         if ($uri = /) {
-        return 302 {{ $location.Redirect.AppRoot }};
+        return 302 {{ $location.Rewrite.AppRoot }};
         }
         {{ end }}
 
@@ -536,7 +550,6 @@ stream {
 
         client_max_body_size        "{{ $location.Proxy.BodySize }}";
 
-
         set $target {{ $location.ExternalAuth.URL }};
         proxy_pass $target;
         }
@@ -545,7 +558,7 @@ stream {
         location {{ $path }} {
         set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
 
-        {{ if (or $location.Redirect.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Redirect.SSLRedirect)) }}
+        {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
         # enforce ssl on server side
         if ($pass_access_scheme = http) {
         return 301 https://$best_http_host$request_uri;
@@ -575,7 +588,6 @@ stream {
         error_page 401 = {{ $location.ExternalAuth.SigninURL }}?rd=$request_uri;
         {{ end }}
 
-
         {{/* if the location contains a rate limit annotation, create one */}}
         {{ $limits := buildRateLimit $location }}
         {{ range $limit := $limits }}
@@ -594,6 +606,12 @@ stream {
 
         {{ if $location.EnableCORS }}
         {{ template "CORS" }}
+        {{ end }}
+
+        {{ if not (empty $location.Redirect.URL) }}
+        if ($uri ~* {{ $path }}) {
+            return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
+        }
         {{ end }}
 
         client_max_body_size                    "{{ $location.Proxy.BodySize }}";
@@ -644,7 +662,7 @@ stream {
         proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream }}{{ if $all.Cfg.RetryNonIdempotent }} non_idempotent{{ end }};
 
         {{/* rewrite only works if the content is not compressed */}}
-        {{ if $location.Redirect.AddBaseURL }}
+        {{ if $location.Rewrite.AddBaseURL }}
         proxy_set_header                        Accept-Encoding     "";
         {{ end }}
 
