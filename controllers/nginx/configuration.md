@@ -64,6 +64,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 |[ingress.kubernetes.io/server-alias](#server-alias)|string|
+|[ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 
 #### Custom NGINX template
 
@@ -171,6 +172,23 @@ annotation will be ignored. If a server-alias is created and later a new server 
 the new server configuration will take place over the alias configuration.
 
 For more information please see http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name
+
+### Client Body Buffer Size
+
+Sets buffer size for reading client request body per location. In case the request body is larger than the buffer,
+the whole body or only its part is written to a temporary file. By default, buffer size is equal to two memory pages.
+This is 8K on x86, other 32-bit platforms, and x86-64. It is usually 16K on other 64-bit platforms. This annotation is
+applied to each location provided in the ingress rule.
+
+*Note:* The annotation value must be given in a valid format otherwise the 
+For example to set the client-body-buffer-size the following can be done:
+* `ingress.kubernetes.io/client-body-buffer-size: "1000"` # 1000 bytes
+* `ingress.kubernetes.io/client-body-buffer-size: 1k` # 1 kilobyte
+* `ingress.kubernetes.io/client-body-buffer-size: 1K` # 1 kilobyte
+* `ingress.kubernetes.io/client-body-buffer-size: 1m` # 1 megabyte
+* `ingress.kubernetes.io/client-body-buffer-size: 1M` # 1 megabyte
+
+For more information please see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
 
 ### External Authentication
 

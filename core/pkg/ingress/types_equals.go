@@ -379,6 +379,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.ConfigurationSnippet != l2.ConfigurationSnippet {
 		return false
 	}
+	if l1.ClientBodyBufferSize != l2.ClientBodyBufferSize {
+		return false
+	}
 
 	return true
 }

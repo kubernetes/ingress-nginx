@@ -633,6 +633,9 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 		anns := ic.annotations.Extract(ing)
 
+		// setup client-buffer-body-size based on annotations
+		clientBufferBodySizeAnnotation := ic.annotations.ClientBodyBufferSize(ing)
+
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
 			if host == "" {
@@ -685,16 +688,18 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						}
 						break
 					}
+					loc.ClientBodyBufferSize = clientBufferBodySizeAnnotation
 				}
 				// is a new location
 				if addLoc {
 					glog.V(3).Infof("adding location %v in ingress rule %v/%v upstream %v", nginxPath, ing.Namespace, ing.Name, ups.Name)
 					loc := &ingress.Location{
-						Path:         nginxPath,
-						Backend:      ups.Name,
-						IsDefBackend: false,
-						Service:      ups.Service,
-						Port:         ups.Port,
+						Path:                 nginxPath,
+						Backend:              ups.Name,
+						IsDefBackend:         false,
+						Service:              ups.Service,
+						Port:                 ups.Port,
+						ClientBodyBufferSize: clientBufferBodySizeAnnotation,
 					}
 					mergeLocationAnnotations(loc, anns)
 					if loc.Redirect.FromToWWW {
@@ -1060,6 +1065,9 @@ func (ic *GenericController) createServers(data []interface{},
 			}
 		}
 
+		// setup client-buffer-body-size based on annotations
+		clientBufferBodySizeAnnotation := ic.annotations.ClientBodyBufferSize(ing)
+
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
 			if host == "" {
@@ -1074,11 +1082,12 @@ func (ic *GenericController) createServers(data []interface{},
 				Hostname: host,
 				Locations: []*ingress.Location{
 					{
-						Path:         rootLocation,
-						IsDefBackend: true,
-						Backend:      un,
-						Proxy:        ngxProxy,
-						Service:      &api.Service{},
+						Path:                 rootLocation,
+						IsDefBackend:         true,
+						Backend:              un,
+						Proxy:                ngxProxy,
+						Service:              &api.Service{},
+						ClientBodyBufferSize: clientBufferBodySizeAnnotation,
 					},
 				}, SSLPassthrough: sslpt}
 		}
