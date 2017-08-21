@@ -1298,6 +1298,14 @@ func (ic GenericController) Start() {
 		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
 	}
 
+	// initial sync of secrets to avoid unnecessary reloads
+	for _, key := range ic.ingLister.ListKeys() {
+		if obj, exists, _ := ic.ingLister.GetByKey(key); exists {
+			ing := obj.(*extensions.Ingress)
+			ic.readSecrets(ing)
+		}
+	}
+
 	go ic.syncQueue.Run(time.Second, ic.stopCh)
 
 	if ic.syncStatus != nil {
