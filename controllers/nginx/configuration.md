@@ -39,6 +39,7 @@ The following annotations are supported:
 |Name                 |type|
 |---------------------------|------|
 |[ingress.kubernetes.io/add-base-url](#rewrite)|true or false|
+|[ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[ingress.kubernetes.io/app-root](#rewrite)|string|
 |[ingress.kubernetes.io/affinity](#session-affinity)|cookie|
 |[ingress.kubernetes.io/auth-realm](#authentication)|string|
@@ -189,6 +190,8 @@ In some scenarios the exposed URL in the backend service differs from the specif
 Set the annotation `ingress.kubernetes.io/rewrite-target` to the path expected by the service.
 
 If the application contains relative links it is possible to add an additional annotation `ingress.kubernetes.io/add-base-url` that will prepend a [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) in the header of the returned HTML from the backend.
+
+If the scheme of [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) need to be specific, set the annotation `ingress.kubernetes.io/base-url-scheme` to the scheme such as `http` and `https`.
 
 If the Application Root is exposed in a different path and needs to be redirected, set the annotation `ingress.kubernetes.io/app-root` to redirect requests for `/`.
 
