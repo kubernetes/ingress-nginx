@@ -136,7 +136,7 @@ $ kubectl exec test-701078429-s5kca -- curl --cacert /var/run/secrets/kubernetes
 
 If it is not working, there are two possible reasons:
 
-1. The contents of the tokens is invalid. Find the secret name with `kubectl get secrets | grep service-account` and
+1. The contents of the tokens are invalid. Find the secret name with `kubectl get secrets | grep service-account` and
 delete it with `kubectl delete secret <name>`. It will automatically be recreated.
 
 2. You have a non-standard Kubernetes installation and the file containing the token
@@ -153,7 +153,7 @@ More information:
 * [User Guide: Service Accounts](http://kubernetes.io/docs/user-guide/service-accounts/)
 * [Cluster Administrator Guide: Managing Service Accounts](http://kubernetes.io/docs/admin/service-accounts-admin/)
 
-## kubeconfig
+## Kubeconfig
 If you want to use a kubeconfig file for authentication, create a deployment file similar to the one below:
 
 *Note:* the important part is the flag `--kubeconfig=/etc/kubernetes/kubeconfig.yaml`.
