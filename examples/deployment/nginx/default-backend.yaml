@@ -44,6 +44,7 @@ metadata:
   labels:
     k8s-app: default-http-backend
 spec:
+  type: NodePort
   ports:
   - port: 80
     targetPort: 8080
