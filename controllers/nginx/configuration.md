@@ -220,9 +220,10 @@ To configure this setting globally for all Ingress rules, the `limit-rate-after`
 ### SSL Passthrough
 
 The annotation `ingress.kubernetes.io/ssl-passthrough` allows to configure TLS termination in the pod and not in NGINX.
-This is possible thanks to the [ngx_stream_ssl_preread_module](https://nginx.org/en/docs/stream/ngx_stream_ssl_preread_module.html) that enables the extraction of the server name information requested through SNI from the ClientHello message at the preread phase.
 
-**Important:** using the annotation `ingress.kubernetes.io/ssl-passthrough` invalidates all the other available annotations. This is because SSL Passthrough works in L4 (TCP).
+**Important:** 
+- Using the annotation `ingress.kubernetes.io/ssl-passthrough` invalidates all the other available annotations. This is because SSL Passthrough works in L4 (TCP).
+- The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled)
 
 ### Secure backends
 
