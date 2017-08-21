@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -149,6 +150,7 @@ var (
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
+		"buildAuthSignURL": buildAuthSignURL,
 	}
 )
 
@@ -501,4 +503,19 @@ func buildNextUpstream(input interface{}) string {
 	}
 
 	return strings.Join(nextUpstreamCodes, " ")
+}
+
+func buildAuthSignURL(input interface{}) string {
+	s, ok := input.(string)
+	if !ok {
+		glog.Errorf("expected an string type but %T was returned", input)
+	}
+
+	u, _ := url.Parse(s)
+	q := u.Query()
+	if len(q) == 0 {
+		return fmt.Sprintf("%v?rd=$request_uri", s)
+	}
+
+	return fmt.Sprintf("%v&rd=$request_uri", s)
 }

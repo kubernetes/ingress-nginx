@@ -585,7 +585,7 @@ stream {
         {{ end }}
 
         {{ if not (empty $location.ExternalAuth.SigninURL) }}
-        error_page 401 = {{ $location.ExternalAuth.SigninURL }}?rd=$request_uri;
+        error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
         {{ end }}
 
         {{/* if the location contains a rate limit annotation, create one */}}
