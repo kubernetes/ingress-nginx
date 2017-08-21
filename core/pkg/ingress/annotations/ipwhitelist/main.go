@@ -23,7 +23,7 @@ import (
 	"github.com/pkg/errors"
 
 	extensions "k8s.io/api/extensions/v1beta1"
-	"k8s.io/kubernetes/pkg/util/net/sets"
+	"k8s.io/ingress/core/pkg/net"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
@@ -92,8 +92,8 @@ func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	values := strings.Split(val, ",")
-	ipnets, err := sets.ParseIPNets(values...)
-	if err != nil {
+	ipnets, ips, err := net.ParseIPNets(values...)
+	if err != nil && len(ips) == 0 {
 		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "the annotation does not contain a valid IP address or network"),
 		}
@@ -101,6 +101,9 @@ func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	cidrs := []string{}
 	for k := range ipnets {
+		cidrs = append(cidrs, k)
+	}
+	for k := range ips {
 		cidrs = append(cidrs, k)
 	}
 
