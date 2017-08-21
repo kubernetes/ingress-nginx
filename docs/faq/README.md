@@ -128,7 +128,7 @@ test project. If you think the failures are related to project quota, cleanup
 leaked resources and bump up quota before debugging the leak.
 
 If the preceding identification process fails, it's likely that the Ingress api
-is broked upstream. Try to setup a [dev environment](/docs/dev/setup.md) from
+is broken upstream. Try to setup a [dev environment](/docs/dev/setup.md) from
 HEAD and create an Ingress. You should be deploying the [latest](https://github.com/kubernetes/ingress/releases)
 release image to the local cluster.
 
