@@ -96,7 +96,7 @@
 				"sslRedirect": true
 			},
 			"whitelist": {
-				"cidr": []
+				"cidr": ["1.1.1.1"]
 			},
 			"proxy": {
 				"conectTimeout": 5,
@@ -146,7 +146,7 @@
 				"sslRedirect": false
 			},
 			"whitelist": {
-				"cidr": null
+				"cidr": ["1.1.1.1"]
 			},
 			"proxy": {
 				"conectTimeout": 5,
