@@ -26,6 +26,7 @@ import (
 const (
 	rewriteTo        = "ingress.kubernetes.io/rewrite-target"
 	addBaseURL       = "ingress.kubernetes.io/add-base-url"
+	baseURLScheme    = "ingress.kubernetes.io/base-url-scheme"
 	sslRedirect      = "ingress.kubernetes.io/ssl-redirect"
 	forceSSLRedirect = "ingress.kubernetes.io/force-ssl-redirect"
 	appRoot          = "ingress.kubernetes.io/app-root"
@@ -38,6 +39,8 @@ type Redirect struct {
 	// AddBaseURL indicates if is required to add a base tag in the head
 	// of the responses from the upstream servers
 	AddBaseURL bool `json:"addBaseUrl"`
+	// BaseURLScheme override for the scheme passed to the base tag
+	BaseURLScheme string `json:"baseUrlScheme"`
 	// SSLRedirect indicates if the location section is accessible SSL only
 	SSLRedirect bool `json:"sslRedirect"`
 	// ForceSSLRedirect indicates if the location section is accessible SSL only
@@ -58,6 +61,9 @@ func (r1 *Redirect) Equal(r2 *Redirect) bool {
 		return false
 	}
 	if r1.AddBaseURL != r2.AddBaseURL {
+		return false
+	}
+	if r1.BaseURLScheme != r2.BaseURLScheme {
 		return false
 	}
 	if r1.SSLRedirect != r2.SSLRedirect {
@@ -95,10 +101,12 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 		fSslRe = a.backendResolver.GetDefaultBackend().ForceSSLRedirect
 	}
 	abu, _ := parser.GetBoolAnnotation(addBaseURL, ing)
+	bus, _ := parser.GetStringAnnotation(baseURLScheme, ing)
 	ar, _ := parser.GetStringAnnotation(appRoot, ing)
 	return &Redirect{
 		Target:           rt,
 		AddBaseURL:       abu,
+		BaseURLScheme:    bus,
 		SSLRedirect:      sslRe,
 		ForceSSLRedirect: fSslRe,
 		AppRoot:          ar,
