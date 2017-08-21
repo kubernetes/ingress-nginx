@@ -324,12 +324,19 @@ type Configuration struct {
 	// If no data is transmitted within this time, the connection is closed.
 	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
 	ProxyStreamTimeout string `json:"proxy-stream-timeout,omitempty"`
+
+	// Sets the ipv4 addresses on which the server will accept requests.
+	BindAddressIpv4 []string `json:"bind-address-ipv4,omitempty"`
+
+	// Sets the ipv6 addresses on which the server will accept requests.
+	BindAddressIpv6 []string `json:"bind-address-ipv4,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	defIPCIDR := make([]string, 0)
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
+	defBindAddress := make([]string, 0)
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
 		ClientHeaderBufferSize:     "1k",
@@ -392,6 +399,8 @@ func NewDefault() Configuration {
 		},
 		UpstreamKeepaliveConnections: 0,
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
+		BindAddressIpv4:              defBindAddress,
+		BindAddressIpv6:              defBindAddress,
 	}
 
 	if glog.V(5) {
