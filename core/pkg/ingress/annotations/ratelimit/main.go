@@ -18,11 +18,14 @@ package ratelimit
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
+	"k8s.io/ingress/core/pkg/net"
 )
 
 const (
@@ -31,6 +34,7 @@ const (
 	limitRPM       = "ingress.kubernetes.io/limit-rpm"
 	limitRATE      = "ingress.kubernetes.io/limit-rate"
 	limitRATEAFTER = "ingress.kubernetes.io/limit-rate-after"
+	limitWhitelist = "ingress.kubernetes.io/limit-whitelist"
 
 	// allow 5 times the specified limit as burst
 	defBurst = 5
@@ -55,6 +59,10 @@ type RateLimit struct {
 	LimitRate int `json:"limit-rate"`
 
 	LimitRateAfter int `json:"limit-rate-after"`
+
+	Name string `json:"name"`
+
+	Whitelist []string `json:"whitelist"`
 }
 
 // Equal tests for equality between two RateLimit types
@@ -79,6 +87,22 @@ func (rt1 *RateLimit) Equal(rt2 *RateLimit) bool {
 	}
 	if rt1.LimitRateAfter != rt2.LimitRateAfter {
 		return false
+	}
+	if rt1.Name != rt2.Name {
+		return false
+	}
+
+	for _, r1l := range rt1.Whitelist {
+		found := false
+		for _, rl2 := range rt2.Whitelist {
+			if r1l == rl2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
 	return true
@@ -144,6 +168,13 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 	rps, _ := parser.GetIntAnnotation(limitRPS, ing)
 	conn, _ := parser.GetIntAnnotation(limitIP, ing)
 
+	val, _ := parser.GetStringAnnotation(limitWhitelist, ing)
+
+	cidrs, err := parseCIDRs(val)
+	if err != nil {
+		return nil, err
+	}
+
 	if rpm == 0 && rps == 0 && conn == 0 {
 		return &RateLimit{
 			Connections:    Zone{},
@@ -177,5 +208,33 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 		},
 		LimitRate:      lr,
 		LimitRateAfter: lra,
+		Name:           zoneName,
+		Whitelist:      cidrs,
 	}, nil
+}
+
+func parseCIDRs(s string) ([]string, error) {
+	if s == "" {
+		return []string{}, nil
+	}
+
+	values := strings.Split(s, ",")
+
+	ipnets, ips, err := net.ParseIPNets(values...)
+	if err != nil {
+		return nil, err
+	}
+
+	cidrs := []string{}
+	for k := range ipnets {
+		cidrs = append(cidrs, k)
+	}
+
+	for k := range ips {
+		cidrs = append(cidrs, k)
+	}
+
+	sort.Strings(cidrs)
+
+	return cidrs, nil
 }

@@ -132,6 +132,7 @@ var (
 		"buildAuthLocation":        buildAuthLocation,
 		"buildAuthResponseHeaders": buildAuthResponseHeaders,
 		"buildProxyPass":           buildProxyPass,
+		"buildWhitelistVariable":   buildWhitelistVariable,
 		"buildRateLimitZones":      buildRateLimitZones,
 		"buildRateLimit":           buildRateLimit,
 		"buildResolvers":           buildResolvers,
@@ -335,10 +336,23 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	return defProxyPass
 }
 
+var (
+	whitelistVarMap = map[string]string{}
+)
+
+func buildWhitelistVariable(s string) string {
+	if _, ok := whitelistVarMap[s]; !ok {
+		str := base64.URLEncoding.EncodeToString([]byte(s))
+		whitelistVarMap[s] = strings.Replace(str, "=", "", -1)
+	}
+
+	return whitelistVarMap[s]
+}
+
 // buildRateLimitZones produces an array of limit_conn_zone in order to allow
 // rate limiting of request. Each Ingress rule could have up to two zones, one
 // for connection limit by IP address and other for limiting request per second
-func buildRateLimitZones(variable string, input interface{}) []string {
+func buildRateLimitZones(input interface{}) []string {
 	zones := sets.String{}
 
 	servers, ok := input.([]*ingress.Server)
@@ -349,9 +363,11 @@ func buildRateLimitZones(variable string, input interface{}) []string {
 	for _, server := range servers {
 		for _, loc := range server.Locations {
 
+			whitelistVar := buildWhitelistVariable(loc.RateLimit.Name)
+
 			if loc.RateLimit.Connections.Limit > 0 {
-				zone := fmt.Sprintf("limit_conn_zone %v zone=%v:%vm;",
-					variable,
+				zone := fmt.Sprintf("limit_conn_zone $%s_limit zone=%v:%vm;",
+					whitelistVar,
 					loc.RateLimit.Connections.Name,
 					loc.RateLimit.Connections.SharedSize)
 				if !zones.Has(zone) {
@@ -360,8 +376,8 @@ func buildRateLimitZones(variable string, input interface{}) []string {
 			}
 
 			if loc.RateLimit.RPM.Limit > 0 {
-				zone := fmt.Sprintf("limit_req_zone %v zone=%v:%vm rate=%vr/m;",
-					variable,
+				zone := fmt.Sprintf("limit_req_zone $%s_limit zone=%v:%vm rate=%vr/m;",
+					whitelistVar,
 					loc.RateLimit.RPM.Name,
 					loc.RateLimit.RPM.SharedSize,
 					loc.RateLimit.RPM.Limit)
@@ -371,8 +387,8 @@ func buildRateLimitZones(variable string, input interface{}) []string {
 			}
 
 			if loc.RateLimit.RPS.Limit > 0 {
-				zone := fmt.Sprintf("limit_req_zone %v zone=%v:%vm rate=%vr/s;",
-					variable,
+				zone := fmt.Sprintf("limit_req_zone $%s_limit zone=%v:%vm rate=%vr/s;",
+					whitelistVar,
 					loc.RateLimit.RPS.Name,
 					loc.RateLimit.RPS.SharedSize,
 					loc.RateLimit.RPS.Limit)
