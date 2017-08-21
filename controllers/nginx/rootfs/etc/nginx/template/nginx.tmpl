@@ -573,7 +573,7 @@ stream {
 
         {{ if isLocationAllowed $location }}
         {{ if gt (len $location.Whitelist.CIDR) 0 }}
-        if ({{ buildDenyVariable (print .Hostname "_"  $path) }}) {
+        if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
         return 403;
         }
         {{ end }}
