@@ -280,6 +280,8 @@ http {
 
     {{ if isLocationAllowed $location }}
     {{ if gt (len $location.Whitelist.CIDR) 0 }}
+
+    # Deny for {{ print $server.Hostname  $path }}
     geo $the_real_ip {{ buildDenyVariable (print $server.Hostname "_"  $path) }} {
         default 1;
 
@@ -288,14 +290,18 @@ http {
     }
     {{ end }}
     {{ end }}
+
     {{ if ne $location.RateLimit.Name "" }}
-    geo ${{ buildWhitelistVariable $location.RateLimit.Name }}_whitelist {
+    # Ratelimit {{ $location.RateLimit.Name }}
+    {{ $rln := (print $server.Hostname "_" $location.RateLimit.Name) }}
+    geo $whitelist_{{ buildWhitelistVariable $rln }} {
         default 0;
         {{ range $ip := $location.RateLimit.Whitelist }}
         {{ $ip }} 1;{{ end }}
     }
 
-    map ${{ buildWhitelistVariable $location.RateLimit.Name }}_whitelist ${{ buildWhitelistVariable $location.RateLimit.Name }}_limit {
+    # Ratelimit {{ $location.RateLimit.Name }}
+    map $whitelist_{{ buildWhitelistVariable $rln }} $limit_{{ buildWhitelistVariable $rln }} {
         0 {{ $cfg.LimitConnZoneVariable }};
         1 "";
     }
