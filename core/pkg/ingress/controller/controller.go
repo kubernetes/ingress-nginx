@@ -633,8 +633,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 		anns := ic.annotations.Extract(ing)
 
-		// setup client-buffer-body-size based on annotations
-		clientBufferBodySizeAnnotation := ic.annotations.ClientBodyBufferSize(ing)
+		var clientBufferBodySizeAnnotation string
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -664,6 +663,10 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 				nginxPath := rootLocation
 				if path.Path != "" {
 					nginxPath = path.Path
+					// setup client-buffer-body-size based on annotations
+					clientBufferBodySizeAnnotation = ic.annotations.ClientBodyBufferSize(ing)
+				} else {
+					clientBufferBodySizeAnnotation = ""
 				}
 
 				addLoc := true
@@ -682,13 +685,13 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						loc.Backend = ups.Name
 						loc.Port = ups.Port
 						loc.Service = ups.Service
+						loc.ClientBodyBufferSize = clientBufferBodySizeAnnotation
 						mergeLocationAnnotations(loc, anns)
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
 						}
 						break
 					}
-					loc.ClientBodyBufferSize = clientBufferBodySizeAnnotation
 				}
 				// is a new location
 				if addLoc {
@@ -1065,9 +1068,6 @@ func (ic *GenericController) createServers(data []interface{},
 			}
 		}
 
-		// setup client-buffer-body-size based on annotations
-		clientBufferBodySizeAnnotation := ic.annotations.ClientBodyBufferSize(ing)
-
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
 			if host == "" {
@@ -1087,7 +1087,6 @@ func (ic *GenericController) createServers(data []interface{},
 						Backend:              un,
 						Proxy:                ngxProxy,
 						Service:              &api.Service{},
-						ClientBodyBufferSize: clientBufferBodySizeAnnotation,
 					},
 				}, SSLPassthrough: sslpt}
 		}
