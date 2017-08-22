@@ -399,7 +399,7 @@ spec:
 This creates 2 GCE forwarding rules that use a single static ip. Both `:80` and `:443` will direct traffic to your backend, which serves HTTP requests on the target port mentioned in the Service associated with the Ingress.
 
 ## Backend HTTPS
-For encrypted communication between the load balancer and your Kubernetes service, you need to decorate the the service's port as expecting HTTPS. There's an alpha [Service annotation](examples/backside_https/app.yaml) for specifying the expected protocol per service port. Upon seeing the protocol as HTTPS, the ingress controller will assemble a GCP L7 load balancer with an HTTPS backend-service with a HTTPS health check.
+For encrypted communication between the load balancer and your Kubernetes service, you need to decorate the service's port as expecting HTTPS. There's an alpha [Service annotation](examples/backside_https/app.yaml) for specifying the expected protocol per service port. Upon seeing the protocol as HTTPS, the ingress controller will assemble a GCP L7 load balancer with an HTTPS backend-service with a HTTPS health check.
 
 The annotation value is a stringified JSON map of port-name to "HTTPS" or "HTTP".  If you do not specify the port, "HTTP" is assumed.
 ```yaml
@@ -698,7 +698,7 @@ The controller manages cloud resources through a notion of pools. Each pool is t
 
 Periodically, each pool checks that it has a valid connection to the next hop in the above resource graph. So for example, the backend pool will check that each backend is connected to the instance group and that the node ports match, the instance group will check that all the Kubernetes nodes are a part of the instance group, and so on. Since Backends are a limited resource, they're shared (well, everything is limited by your quota, this applies doubly to backend services). This means you can setup N Ingress' exposing M services through different paths and the controller will only create M backends. When all the Ingress' are deleted, the backend pool GCs the backend.
 
-## Wishlist:
+## Wish list:
 
 * More E2e, integration tests
 * Better events
