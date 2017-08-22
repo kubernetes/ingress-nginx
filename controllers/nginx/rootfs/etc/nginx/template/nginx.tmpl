@@ -292,19 +292,20 @@ http {
     {{ end }}
 
     {{ if ne $location.RateLimit.Name "" }}
+    {{ if ne (whitelistExists $location.RateLimit.Name) true }}
     # Ratelimit {{ $location.RateLimit.Name }}
-    {{ $rln := (print $server.Hostname "_" $location.RateLimit.Name) }}
-    geo $whitelist_{{ buildWhitelistVariable $rln }} {
+    geo $whitelist_{{ buildWhitelistVariable $location.RateLimit.Name }} {
         default 0;
         {{ range $ip := $location.RateLimit.Whitelist }}
         {{ $ip }} 1;{{ end }}
     }
 
     # Ratelimit {{ $location.RateLimit.Name }}
-    map $whitelist_{{ buildWhitelistVariable $rln }} $limit_{{ buildWhitelistVariable $rln }} {
+    map $whitelist_{{ buildWhitelistVariable $location.RateLimit.Name }} $limit_{{ buildWhitelistVariable $location.RateLimit.Name }} {
         0 {{ $cfg.LimitConnZoneVariable }};
         1 "";
     }
+    {{ end }}
     {{ end }}
     {{ end }}
     {{ end }}
