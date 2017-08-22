@@ -39,7 +39,6 @@ The following annotations are supported:
 |Name                 |type|
 |---------------------------|------|
 |[ingress.kubernetes.io/add-base-url](#rewrite)|true or false|
-|[ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[ingress.kubernetes.io/app-root](#rewrite)|string|
 |[ingress.kubernetes.io/affinity](#session-affinity)|cookie|
 |[ingress.kubernetes.io/auth-realm](#authentication)|string|
@@ -48,24 +47,26 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[ingress.kubernetes.io/auth-tls-secret](#certificate-authentication)|string|
 |[ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
+|[ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
+|[ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
 |[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
+|[ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
-|[ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|true or false|
 |[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
+|[ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[ingress.kubernetes.io/service-upstream](#service-upstream)|true or false|
 |[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 |[ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
+|[ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|true or false|
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
-|[ingress.kubernetes.io/server-alias](#server-alias)|string|
-|[ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 
 #### Custom NGINX template
 
@@ -267,6 +268,15 @@ By default the controller redirects (301) to `HTTPS` if TLS is enabled for that 
 To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
 When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
+
+### Redirect from to www
+
+In some scenarios is required to redirect from `www.domain.com` to `domain.com` or viceversa.
+To enable this feature use the annotation `ingress.kubernetes.io/from-to-www-redirect: "true"`
+
+**Important:**
+If at some point a new Ingress is created with a host equals to one of the options (like `domain.com`) the annotation will be ommited.
+
 
 ### Whitelist source range
 
