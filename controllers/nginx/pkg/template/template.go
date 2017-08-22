@@ -133,6 +133,7 @@ var (
 		"buildAuthResponseHeaders": buildAuthResponseHeaders,
 		"buildProxyPass":           buildProxyPass,
 		"buildWhitelistVariable":   buildWhitelistVariable,
+		"whitelistExists":          whitelistExists,
 		"buildRateLimitZones":      buildRateLimitZones,
 		"buildRateLimit":           buildRateLimit,
 		"buildResolvers":           buildResolvers,
@@ -340,6 +341,11 @@ var (
 	whitelistVarMap = map[string]string{}
 )
 
+func whitelistExists(s string) bool {
+	_, ok := whitelistVarMap[s]
+	return ok
+}
+
 func buildWhitelistVariable(s string) string {
 	if _, ok := whitelistVarMap[s]; !ok {
 		whitelistVarMap[s] = buildRandomUUID()
@@ -360,8 +366,7 @@ func buildRateLimitZones(input interface{}) []string {
 
 	for _, server := range servers {
 		for _, loc := range server.Locations {
-			lrn := fmt.Sprintf("%v_%v", server.Hostname, loc.RateLimit.Name)
-			whitelistVar := buildWhitelistVariable(lrn)
+			whitelistVar := buildWhitelistVariable(loc.RateLimit.Name)
 
 			if loc.RateLimit.Connections.Limit > 0 {
 				zone := fmt.Sprintf("limit_conn_zone $limit_%s zone=%v:%vm;",
