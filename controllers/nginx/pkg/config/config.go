@@ -329,7 +329,7 @@ type Configuration struct {
 	BindAddressIpv4 []string `json:"bind-address-ipv4,omitempty"`
 
 	// Sets the ipv6 addresses on which the server will accept requests.
-	BindAddressIpv6 []string `json:"bind-address-ipv4,omitempty"`
+	BindAddressIpv6 []string `json:"bind-address-ipv6,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
