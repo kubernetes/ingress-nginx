@@ -225,10 +225,7 @@ func buildAuthLocation(input interface{}) string {
 		return ""
 	}
 
-	str := base64.URLEncoding.EncodeToString([]byte(location.Path))
-	// avoid locations containing the = char
-	str = strings.Replace(str, "=", "", -1)
-	return fmt.Sprintf("/_external-auth-%v", str)
+	return fmt.Sprintf("/_external-auth-%v", encode(location.Path))
 }
 
 func buildAuthResponseHeaders(input interface{}) []string {
@@ -362,11 +359,15 @@ func buildRateLimitZones(input interface{}) []string {
 		for _, loc := range server.Locations {
 			lrn := fmt.Sprintf("%v_%v", server.Hostname, loc.RateLimit.Name)
 			whitelistVar := buildWhitelistVariable(lrn)
+			sr := fmt.Sprintf("# Zone: %v %v%v", loc.RateLimit.Name, server.Hostname, loc.Path)
+			b := fmt.Sprintf("%v %v %v", loc.RateLimit.Name, server.Hostname, loc.Path)
+			zn := fmt.Sprintf("zone_%v", encode(b))
 
 			if loc.RateLimit.Connections.Limit > 0 {
-				zone := fmt.Sprintf("limit_conn_zone $limit_%s zone=%v:%vm;",
+				zone := fmt.Sprintf("%v\n\tlimit_conn_zone $limit_%s zone=%v:%vm;",
+					sr,
 					whitelistVar,
-					loc.RateLimit.Connections.Name,
+					zn,
 					loc.RateLimit.Connections.SharedSize)
 				if !zones.Has(zone) {
 					zones.Insert(zone)
@@ -374,9 +375,10 @@ func buildRateLimitZones(input interface{}) []string {
 			}
 
 			if loc.RateLimit.RPM.Limit > 0 {
-				zone := fmt.Sprintf("limit_req_zone $limit_%s zone=%v:%vm rate=%vr/m;",
+				zone := fmt.Sprintf("%v\n\tlimit_req_zone $limit_%s zone=%v:%vm rate=%vr/m;",
+					sr,
 					whitelistVar,
-					loc.RateLimit.RPM.Name,
+					zn,
 					loc.RateLimit.RPM.SharedSize,
 					loc.RateLimit.RPM.Limit)
 				if !zones.Has(zone) {
@@ -385,9 +387,10 @@ func buildRateLimitZones(input interface{}) []string {
 			}
 
 			if loc.RateLimit.RPS.Limit > 0 {
-				zone := fmt.Sprintf("limit_req_zone $limit_%s zone=%v:%vm rate=%vr/s;",
+				zone := fmt.Sprintf("%v\n\tlimit_req_zone $limit_%s zone=%v:%vm rate=%vr/s;",
+					sr,
 					whitelistVar,
-					loc.RateLimit.RPS.Name,
+					zn,
 					loc.RateLimit.RPS.SharedSize,
 					loc.RateLimit.RPS.Limit)
 				if !zones.Has(zone) {
@@ -402,7 +405,7 @@ func buildRateLimitZones(input interface{}) []string {
 
 // buildRateLimit produces an array of limit_req to be used inside the Path of
 // Ingress rules. The order: connections by IP first, then RPS, and RPM last.
-func buildRateLimit(input interface{}) []string {
+func buildRateLimit(s, input interface{}) []string {
 	limits := []string{}
 
 	loc, ok := input.(*ingress.Location)
@@ -410,21 +413,26 @@ func buildRateLimit(input interface{}) []string {
 		return limits
 	}
 
+	server, _ := s.(*ingress.Server)
+
 	if loc.RateLimit.Connections.Limit > 0 {
 		limit := fmt.Sprintf("limit_conn %v %v;",
 			loc.RateLimit.Connections.Name, loc.RateLimit.Connections.Limit)
 		limits = append(limits, limit)
 	}
 
+	b := fmt.Sprintf("%v %v %v", loc.RateLimit.Name, server.Hostname, loc.Path)
+	z := fmt.Sprintf("zone_%v", encode(b))
+
 	if loc.RateLimit.RPS.Limit > 0 {
 		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
-			loc.RateLimit.RPS.Name, loc.RateLimit.RPS.Burst)
+			z, loc.RateLimit.RPS.Burst)
 		limits = append(limits, limit)
 	}
 
 	if loc.RateLimit.RPM.Limit > 0 {
 		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
-			loc.RateLimit.RPM.Name, loc.RateLimit.RPM.Burst)
+			z, loc.RateLimit.RPM.Burst)
 		limits = append(limits, limit)
 	}
 
@@ -544,4 +552,10 @@ func buildAuthSignURL(input interface{}) string {
 func buildRandomUUID() string {
 	s := uuid.New()
 	return strings.Replace(s, "-", "", -1)
+}
+
+func encode(s string) string {
+	str := base64.URLEncoding.EncodeToString([]byte(s))
+	// avoid locations containing the = char
+	return strings.Replace(str, "=", "", -1)
 }

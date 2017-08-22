@@ -313,6 +313,7 @@ http {
     {{/* 1MB -> 16 thousand 64-byte states or about 8 thousand 128-byte states */}}
     {{ range $zone := (buildRateLimitZones $servers) }}
     {{ $zone }}
+
     {{ end }}
 
     {{/* Build server redirects (from/to www) */}}
@@ -616,7 +617,7 @@ stream {
         {{ end }}
 
         {{/* if the location contains a rate limit annotation, create one */}}
-        {{ $limits := buildRateLimit $location }}
+        {{ $limits := buildRateLimit $server $location }}
         {{ range $limit := $limits }}
         {{ $limit }}{{ end }}
 
