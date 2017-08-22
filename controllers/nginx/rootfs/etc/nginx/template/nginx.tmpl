@@ -781,6 +781,11 @@ stream {
             proxy_set_header                        Accept-Encoding     "";
             {{ end }}
 
+            {{ if (and $all.Cfg.EnableVtsStatus $location.Service) }}
+            vhost_traffic_status_filter_by_set_key  {{ $location.Service.ObjectMeta.Namespace }} kubernetes::namespace;
+            vhost_traffic_status_filter_by_set_key  {{ $location.Service.ObjectMeta.Namespace }}.{{ $location.Service.ObjectMeta.Name }} kubernetes::service;
+            {{ end }}
+
             {{/* Add any additional configuration defined */}}
             {{ $location.ConfigurationSnippet }}
 
