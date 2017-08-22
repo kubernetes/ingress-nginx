@@ -253,7 +253,7 @@ func buildAuthResponseHeaders(input interface{}) []string {
 func buildLogFormatUpstream(input interface{}) string {
 	cfg, ok := input.(config.Configuration)
 	if !ok {
-		glog.Errorf("error  an ingress.buildLogFormatUpstream type but %T was returned", input)
+		glog.Errorf("error an ingress.buildLogFormatUpstream type but %T was returned", input)
 	}
 
 	return cfg.BuildLogFormatUpstream()
