@@ -288,12 +288,24 @@ http {
     }
     {{ end }}
     {{ end }}
+    {{ if ne $location.RateLimit.Name "" }}
+    geo ${{ buildWhitelistVariable $location.RateLimit.Name }}_whitelist {
+        default 0;
+        {{ range $ip := $location.RateLimit.Whitelist }}
+        {{ $ip }} 1;{{ end }}
+    }
+
+    map ${{ buildWhitelistVariable $location.RateLimit.Name }}_whitelist ${{ buildWhitelistVariable $location.RateLimit.Name }}_limit {
+        0 {{ $cfg.LimitConnZoneVariable }};
+        1 "";
+    }
+    {{ end }}
     {{ end }}
     {{ end }}
 
     {{/* build all the required rate limit zones. Each annotation requires a dedicated zone */}}
     {{/* 1MB -> 16 thousand 64-byte states or about 8 thousand 128-byte states */}}
-    {{ range $zone := (buildRateLimitZones $cfg.LimitConnZoneVariable $servers) }}
+    {{ range $zone := (buildRateLimitZones $servers) }}
     {{ $zone }}
     {{ end }}
 
