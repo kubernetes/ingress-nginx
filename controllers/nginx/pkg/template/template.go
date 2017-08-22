@@ -339,7 +339,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 
 func filterRateLimits(input interface{}) []ratelimit.RateLimit {
 	ratelimits := []ratelimit.RateLimit{}
-	found := map[string]bool{}
+	found := sets.String{}
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
@@ -347,8 +347,8 @@ func filterRateLimits(input interface{}) []ratelimit.RateLimit {
 	}
 	for _, server := range servers {
 		for _, loc := range server.Locations {
-			if loc.RateLimit.ID != "" && !found[loc.RateLimit.ID] {
-				found[loc.RateLimit.ID] = true
+			if loc.RateLimit.ID != "" && !found.Has(loc.RateLimit.ID) {
+				found.Insert(loc.RateLimit.ID)
 				ratelimits = append(ratelimits, loc.RateLimit)
 			}
 		}

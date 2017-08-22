@@ -158,7 +158,7 @@ type Backend struct {
 	Secure bool `json:"secure"`
 	// SecureCACert has the filename and SHA1 of the certificate authorities used to validate
 	// a secured connection to the backend
-	SecureCACert resolver.AuthSSLCert `json:"secureCert"`
+	SecureCACert resolver.AuthSSLCert `json:"secureCACert"`
 	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
@@ -225,6 +225,9 @@ type Server struct {
 	Alias string `json:"alias,omitempty"`
 	// RedirectFromToWWW returns if a redirect to/from prefix www is required
 	RedirectFromToWWW bool `json:"redirectFromToWWW,omitempty"`
+	// CertificateAuth indicates the this server requires mutual authentication
+	// +optional
+	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth"`
 }
 
 // Location describes an URI inside a server.
@@ -236,7 +239,6 @@ type Server struct {
 // In some cases when more than one annotations is defined a particular order in the execution
 // is required.
 // The chain in the execution order of annotations should be:
-// - CertificateAuth
 // - Whitelist
 // - RateLimit
 // - BasicDigestAuth
@@ -293,10 +295,6 @@ type Location struct {
 	// to be used in connections against endpoints
 	// +optional
 	Proxy proxy.Configuration `json:"proxy,omitempty"`
-	// CertificateAuth indicates the access to this location requires
-	// external authentication
-	// +optional
-	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"use-port-in-redirects"`

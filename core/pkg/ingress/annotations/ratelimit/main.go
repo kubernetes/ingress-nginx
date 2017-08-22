@@ -91,7 +91,13 @@ func (rt1 *RateLimit) Equal(rt2 *RateLimit) bool {
 	if rt1.LimitRateAfter != rt2.LimitRateAfter {
 		return false
 	}
+	if rt1.ID != rt2.ID {
+		return false
+	}
 	if rt1.Name != rt2.Name {
+		return false
+	}
+	if len(rt1.Whitelist) != len(rt2.Whitelist) {
 		return false
 	}
 
