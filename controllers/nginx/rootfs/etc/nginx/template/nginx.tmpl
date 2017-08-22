@@ -289,13 +289,15 @@ http {
     {{ end }}
     {{ end }}
     {{ if ne $location.RateLimit.Name "" }}
-    geo ${{ buildWhitelistVariable $location.RateLimit.Name }}_whitelist {
+    # Ratelimit {{ $location.RateLimit.Name }}
+    geo $whitelist_{{ buildWhitelistVariable $location.RateLimit.Name }} {
         default 0;
         {{ range $ip := $location.RateLimit.Whitelist }}
         {{ $ip }} 1;{{ end }}
     }
 
-    map ${{ buildWhitelistVariable $location.RateLimit.Name }}_whitelist ${{ buildWhitelistVariable $location.RateLimit.Name }}_limit {
+    # Ratelimit {{ $location.RateLimit.Name }}
+    map $whitelist_{{ buildWhitelistVariable $location.RateLimit.Name }} ${{ buildWhitelistVariable $location.RateLimit.Name }}_limit {
         0 {{ $cfg.LimitConnZoneVariable }};
         1 "";
     }

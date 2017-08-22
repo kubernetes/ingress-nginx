@@ -342,8 +342,7 @@ var (
 
 func buildWhitelistVariable(s string) string {
 	if _, ok := whitelistVarMap[s]; !ok {
-		str := base64.URLEncoding.EncodeToString([]byte(s))
-		whitelistVarMap[s] = strings.Replace(str, "=", "", -1)
+		whitelistVarMap[s] = fmt.Sprintf("whitelist_%v", uuid.New())
 	}
 
 	return whitelistVarMap[s]
