@@ -134,6 +134,7 @@ http {
         ''               close;
     }
 
+    {{ if $cfg.UseProxyProtocol }}
     # trust http_x_forwarded_proto headers correctly indicate ssl offloading
     map $http_x_forwarded_proto $pass_access_scheme {
         default          $http_x_forwarded_proto;
@@ -145,16 +146,24 @@ http {
        ''                $server_port;
     }
 
-    {{ if $cfg.UseProxyProtocol }}
     map $http_x_forwarded_for $the_real_ip {
         default          $http_x_forwarded_for;
         ''               $proxy_protocol_addr;
     }
     {{ else }}
-    map $http_x_forwarded_for $the_real_ip {
-        default          $http_x_forwarded_for;
-        ''               $realip_remote_addr;
+
+    map $http_x_forwarded_proto $pass_access_scheme {
+        default          $scheme;
     }
+
+    map $http_x_forwarded_port $pass_server_port {
+       default           $server_port;
+    }
+
+    map $http_x_forwarded_for $the_real_ip {
+        default          $remote_addr;
+    }
+
     {{ end }}
 
     {{ if $all.IsSSLPassthroughEnabled }}
@@ -259,7 +268,7 @@ http {
     {{ end }}
 
     upstream {{ $upstream.Name }} {
-        # Load balance algorithm; empty for round robin, which is the default
+        {{/* Load balance algorithm; empty for round robin, which is the default */}}
         {{ if ne $cfg.LoadBalanceAlgorithm "round_robin" }}
         {{ $cfg.LoadBalanceAlgorithm }};
         {{ end }}
