@@ -245,7 +245,7 @@ spec:
     app: nginxtest
 ```
 
-Running kubectl create against this manifest will given you a service with multiple endpoints:
+Running kubectl create against this manifest will give you a service with multiple endpoints:
 ```shell
 $ kubectl get svc nginxtest -o yaml | grep -i nodeport:
     nodePort: 30404
@@ -300,7 +300,7 @@ As before, wait a while for the update to take effect, and try accessing `loadba
 
 #### Deletion
 
-Most production loadbalancers live as long as the nodes in the cluster and are torn down when the nodes are destroyed. That said, there are plenty of use cases for deleting an Ingress, deleting a loadbalancer controller, or just purging external loadbalancer resources alltogether. Deleting a loadbalancer controller pod will not affect the loadbalancers themselves, this way your backends won't suffer a loss of availability if the scheduler pre-empts your controller pod. Deleting a single loadbalancer is as easy as deleting an Ingress via kubectl:
+Most production loadbalancers live as long as the nodes in the cluster and are torn down when the nodes are destroyed. That said, there are plenty of use cases for deleting an Ingress, deleting a loadbalancer controller, or just purging external loadbalancer resources altogether. Deleting a loadbalancer controller pod will not affect the loadbalancers themselves, this way your backends won't suffer a loss of availability if the scheduler pre-empts your controller pod. Deleting a single loadbalancer is as easy as deleting an Ingress via kubectl:
 ```shell
 $ kubectl delete ing echomap
 $ kubectl logs --follow glbc-6m6b6 l7-lb-controller
@@ -313,7 +313,7 @@ I1007 00:26:02.043188       1 backends.go:134] Deleting backend k8-be-30301
 I1007 00:26:05.591140       1 backends.go:134] Deleting backend k8-be-30284
 I1007 00:26:09.159016       1 controller.go:232] Finished syncing default/echomap
 ```
-Note that it takes ~30 seconds to purge cloud resources, the API calls to create and delete are a one time cost. GCE BackendServices are ref-counted and deleted by the controller as you delete Kubernetes Ingress'. This is not sufficient for cleanup, because you might have deleted the Ingress while glbc was down, in which case it would leak cloud resources. You can delete the glbc and purge cloud resources in 2 more ways:
+Note that it takes ~30 seconds to purge cloud resources, the API calls to create and delete are a onetime cost. GCE BackendServices are ref-counted and deleted by the controller as you delete Kubernetes Ingress'. This is not sufficient for cleanup, because you might have deleted the Ingress while glbc was down, in which case it would leak cloud resources. You can delete the glbc and purge cloud resources in 2 more ways:
 
 __The dev/test way__: If you want to delete everything in the cloud when the loadbalancer controller pod dies, start it with the --delete-all-on-quit flag. When a pod is killed it's first sent a SIGTERM, followed by a grace period (set to 10minutes for loadbalancer controllers), followed by a SIGKILL. The controller pod uses this time to delete cloud resources. Be careful with --delete-all-on-quit, because if you're running a production glbc and the scheduler re-schedules your pod for some reason, it will result in a loss of availability. You can do this because your rc.yaml has:
 ```yaml
