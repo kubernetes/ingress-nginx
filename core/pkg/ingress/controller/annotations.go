@@ -39,6 +39,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
+	"k8s.io/ingress/core/pkg/ingress/annotations/clientbodybuffersize"
 )
 
 type extractorConfig interface {
@@ -73,6 +74,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"SSLPassthrough":       sslpassthrough.NewParser(),
 			"ConfigurationSnippet": snippet.NewParser(),
 			"Alias":                alias.NewParser(),
+			"ClientBodyBufferSize": clientbodybuffersize.NewParser(),
 		},
 	}
 }
@@ -106,12 +108,13 @@ func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interf
 }
 
 const (
-	secureUpstream  = "SecureUpstream"
-	healthCheck     = "HealthCheck"
-	sslPassthrough  = "SSLPassthrough"
-	sessionAffinity = "SessionAffinity"
-	serviceUpstream = "ServiceUpstream"
-	serverAlias     = "Alias"
+	secureUpstream       = "SecureUpstream"
+	healthCheck          = "HealthCheck"
+	sslPassthrough       = "SSLPassthrough"
+	sessionAffinity      = "SessionAffinity"
+	serviceUpstream      = "ServiceUpstream"
+	serverAlias          = "Alias"
+	clientBodyBufferSize = "ClientBodyBufferSize"
 )
 
 func (e *annotationExtractor) ServiceUpstream(ing *extensions.Ingress) bool {
@@ -140,6 +143,11 @@ func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
 
 func (e *annotationExtractor) Alias(ing *extensions.Ingress) string {
 	val, _ := e.annotations[serverAlias].Parse(ing)
+	return val.(string)
+}
+
+func (e *annotationExtractor) ClientBodyBufferSize(ing *extensions.Ingress) string {
+	val, _ := e.annotations[clientBodyBufferSize].Parse(ing)
 	return val.(string)
 }
 
