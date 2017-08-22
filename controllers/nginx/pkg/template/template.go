@@ -342,10 +342,8 @@ var (
 
 func buildWhitelistVariable(s string) string {
 	if _, ok := whitelistVarMap[s]; !ok {
-		str := base64.URLEncoding.EncodeToString([]byte(s))
-		whitelistVarMap[s] = strings.Replace(str, "=", "", -1)
+		whitelistVarMap[s] = buildRandomUUID()
 	}
-
 	return whitelistVarMap[s]
 }
 
@@ -362,11 +360,11 @@ func buildRateLimitZones(input interface{}) []string {
 
 	for _, server := range servers {
 		for _, loc := range server.Locations {
-
-			whitelistVar := buildWhitelistVariable(loc.RateLimit.Name)
+			lrn := fmt.Sprintf("%v_%v", server.Hostname, loc.RateLimit.Name)
+			whitelistVar := buildWhitelistVariable(lrn)
 
 			if loc.RateLimit.Connections.Limit > 0 {
-				zone := fmt.Sprintf("limit_conn_zone $%s_limit zone=%v:%vm;",
+				zone := fmt.Sprintf("limit_conn_zone $limit_%s zone=%v:%vm;",
 					whitelistVar,
 					loc.RateLimit.Connections.Name,
 					loc.RateLimit.Connections.SharedSize)
@@ -376,7 +374,7 @@ func buildRateLimitZones(input interface{}) []string {
 			}
 
 			if loc.RateLimit.RPM.Limit > 0 {
-				zone := fmt.Sprintf("limit_req_zone $%s_limit zone=%v:%vm rate=%vr/m;",
+				zone := fmt.Sprintf("limit_req_zone $limit_%s zone=%v:%vm rate=%vr/m;",
 					whitelistVar,
 					loc.RateLimit.RPM.Name,
 					loc.RateLimit.RPM.SharedSize,
@@ -387,7 +385,7 @@ func buildRateLimitZones(input interface{}) []string {
 			}
 
 			if loc.RateLimit.RPS.Limit > 0 {
-				zone := fmt.Sprintf("limit_req_zone $%s_limit zone=%v:%vm rate=%vr/s;",
+				zone := fmt.Sprintf("limit_req_zone $limit_%s zone=%v:%vm rate=%vr/s;",
 					whitelistVar,
 					loc.RateLimit.RPS.Name,
 					loc.RateLimit.RPS.SharedSize,
@@ -468,7 +466,7 @@ func buildDenyVariable(a interface{}) string {
 	l := a.(string)
 
 	if _, ok := denyPathSlugMap[l]; !ok {
-		denyPathSlugMap[l] = uuid.New()
+		denyPathSlugMap[l] = buildRandomUUID()
 	}
 
 	return fmt.Sprintf("$deny_%v", denyPathSlugMap[l])
@@ -540,4 +538,10 @@ func buildAuthSignURL(input interface{}) string {
 	}
 
 	return fmt.Sprintf("%v&rd=$request_uri", s)
+}
+
+// buildRandomUUID return a random string to be used in the template
+func buildRandomUUID() string {
+	s := uuid.New()
+	return strings.Replace(s, "-", "", -1)
 }
