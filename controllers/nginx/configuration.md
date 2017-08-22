@@ -225,6 +225,8 @@ The annotations `ingress.kubernetes.io/limit-connections`, `ingress.kubernetes.i
 
 `ingress.kubernetes.io/limit-rpm`: number of connections that may be accepted from a given IP each minute.
 
+You can specify the client IP source ranges to be excluded from rate-limiting through the `ingress.kubernetes.io/limit-whitelist` annotation. The value is a comma separated list of CIDRs.
+
 If you specify multiple annotations in a single Ingress rule, `limit-rpm`, and then `limit-rps` takes precedence.
 
 The annotation `ingress.kubernetes.io/limit-rate`, `ingress.kubernetes.io/limit-rate-after` define a limit the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.
@@ -239,7 +241,7 @@ To configure this setting globally for all Ingress rules, the `limit-rate-after`
 
 The annotation `ingress.kubernetes.io/ssl-passthrough` allows to configure TLS termination in the pod and not in NGINX.
 
-**Important:** 
+**Important:**
 - Using the annotation `ingress.kubernetes.io/ssl-passthrough` invalidates all the other available annotations. This is because SSL Passthrough works in L4 (TCP).
 - The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled)
 
