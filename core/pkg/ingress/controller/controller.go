@@ -652,6 +652,15 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 				continue
 			}
 
+			if server.CertificateAuth.CAFileName == "" {
+				ca := ic.annotations.CertificateAuth(ing)
+				if ca != nil {
+					server.CertificateAuth = *ca
+				}
+			} else {
+				glog.V(3).Infof("server %v already contains a muthual autentication configuration - ingress rule %v/%v", server.Hostname, ing.Namespace, ing.Name)
+			}
+
 			for _, path := range rule.HTTP.Paths {
 				upsName := fmt.Sprintf("%v-%v-%v",
 					ing.GetNamespace(),

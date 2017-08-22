@@ -36,8 +36,8 @@ const (
 // AuthSSLConfig contains the AuthSSLCert used for muthual autentication
 // and the configured ValidationDepth
 type AuthSSLConfig struct {
-	AuthSSLCert     resolver.AuthSSLCert `json:"authSSLCert"`
-	ValidationDepth int                  `json:"validationDepth"`
+	resolver.AuthSSLCert
+	ValidationDepth int `json:"validationDepth"`
 }
 
 // Equal tests for equality between two AuthSSLConfig types

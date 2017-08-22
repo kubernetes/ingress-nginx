@@ -23,6 +23,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
+	"k8s.io/ingress/core/pkg/ingress/annotations/clientbodybuffersize"
 	"k8s.io/ingress/core/pkg/ingress/annotations/cors"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
@@ -39,7 +40,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
-	"k8s.io/ingress/core/pkg/ingress/annotations/clientbodybuffersize"
 )
 
 type extractorConfig interface {
@@ -115,6 +115,7 @@ const (
 	serviceUpstream      = "ServiceUpstream"
 	serverAlias          = "Alias"
 	clientBodyBufferSize = "ClientBodyBufferSize"
+	certificateAuth      = "CertificateAuth"
 )
 
 func (e *annotationExtractor) ServiceUpstream(ing *extensions.Ingress) bool {
@@ -154,4 +155,17 @@ func (e *annotationExtractor) ClientBodyBufferSize(ing *extensions.Ingress) stri
 func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
 	val, _ := e.annotations[sessionAffinity].Parse(ing)
 	return val.(*sessionaffinity.AffinityConfig)
+}
+
+func (e *annotationExtractor) CertificateAuth(ing *extensions.Ingress) *authtls.AuthSSLConfig {
+	val, err := e.annotations[certificateAuth].Parse(ing)
+	if errors.IsMissingAnnotations(err) {
+		return nil
+	}
+
+	if err != nil {
+		glog.Errorf("error parsing certificate auth: %v", err)
+	}
+	secure := val.(*authtls.AuthSSLConfig)
+	return secure
 }
