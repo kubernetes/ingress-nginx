@@ -19,7 +19,7 @@ This is a list of beta limitations:
 
 Before you can receive traffic through the GCE L7 Loadbalancer Controller you need:
 * A Working Kubernetes cluster >= 1.1
-* At least 1 Kubernetes [NodePort Service](../../../../docs/user-guide/services.md#type-nodeport) (this is the endpoint for your Ingress)
+* At least 1 Kubernetes NodePort Service (this is the endpoint for your Ingress)
 * A single instance of the L7 Loadbalancer Controller pod, if you're running Kubernetes < 1.3 (the GCP ingress controller runs on the master in later versions)
 
 ## Quota
