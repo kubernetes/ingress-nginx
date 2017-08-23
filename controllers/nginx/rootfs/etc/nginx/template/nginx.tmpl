@@ -328,7 +328,6 @@ http {
     }
     {{ end }}
 
-    {{ $backlogSize := .BacklogSize }}
     {{ range $index, $server := $servers }}
     server {
         server_name {{ $server.Hostname }};
