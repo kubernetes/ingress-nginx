@@ -17,16 +17,10 @@ limitations under the License.
 package controller
 
 import (
-	"bytes"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/cloudprovider"
 	gce "k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 
 	"k8s.io/ingress/controllers/gce/backends"
@@ -59,9 +53,6 @@ const (
 
 	// Names longer than this are truncated, because of GCE restrictions.
 	nameLenLimit = 62
-
-	// Sleep interval to retry cloud client creation.
-	cloudClientRetryInterval = 10 * time.Second
 )
 
 // ClusterManager manages cluster resource pools.
@@ -211,80 +202,16 @@ func (c *ClusterManager) GC(lbNames []string, nodePorts []backends.ServicePort) 
 	return nil
 }
 
-func getGCEClient(config io.Reader) *gce.GCECloud {
-	getConfigReader := func() io.Reader { return nil }
-
-	if config != nil {
-		allConfig, err := ioutil.ReadAll(config)
-		if err != nil {
-			glog.Fatalf("Error while reading entire config: %v", err)
-		}
-		glog.V(2).Infof("Using cloudprovider config file:\n%v ", string(allConfig))
-
-		getConfigReader = func() io.Reader {
-			return bytes.NewReader(allConfig)
-		}
-	} else {
-		glog.V(2).Infoln("No cloudprovider config file provided. Continuing with default values.")
-	}
-
-	// Creating the cloud interface involves resolving the metadata server to get
-	// an oauth token. If this fails, the token provider assumes it's not on GCE.
-	// No errors are thrown. So we need to keep retrying till it works because
-	// we know we're on GCE.
-	for {
-		cloudInterface, err := cloudprovider.GetCloudProvider("gce", getConfigReader())
-		if err == nil {
-			cloud := cloudInterface.(*gce.GCECloud)
-
-			// If this controller is scheduled on a node without compute/rw
-			// it won't be allowed to list backends. We can assume that the
-			// user has no need for Ingress in this case. If they grant
-			// permissions to the node they will have to restart the controller
-			// manually to re-create the client.
-			if _, err = cloud.ListGlobalBackendServices(); err == nil || utils.IsHTTPErrorCode(err, http.StatusForbidden) {
-				return cloud
-			}
-			glog.Warningf("Failed to list backend services, retrying: %v", err)
-		} else {
-			glog.Warningf("Failed to retrieve cloud interface, retrying: %v", err)
-		}
-		time.Sleep(cloudClientRetryInterval)
-	}
-}
-
 // NewClusterManager creates a cluster manager for shared resources.
 // - namer: is the namer used to tag cluster wide shared resources.
 // - defaultBackendNodePort: is the node port of glbc's default backend. This is
 //	 the kubernetes Service that serves the 404 page if no urls match.
 // - defaultHealthCheckPath: is the default path used for L7 health checks, eg: "/healthz".
 func NewClusterManager(
-	configFilePath string,
+	cloud *gce.GCECloud,
 	namer *utils.Namer,
 	defaultBackendNodePort backends.ServicePort,
 	defaultHealthCheckPath string) (*ClusterManager, error) {
-
-	// TODO: Make this more resilient. Currently we create the cloud client
-	// and pass it through to all the pools. This makes unit testing easier.
-	// However if the cloud client suddenly fails, we should try to re-create it
-	// and continue.
-	var cloud *gce.GCECloud
-	if configFilePath != "" {
-		glog.Infof("Reading config from path %v", configFilePath)
-		config, err := os.Open(configFilePath)
-		if err != nil {
-			return nil, err
-		}
-		defer config.Close()
-		cloud = getGCEClient(config)
-		glog.Infof("Successfully loaded cloudprovider using config %q", configFilePath)
-	} else {
-		// While you might be tempted to refactor so we simply assing nil to the
-		// config and only invoke getGCEClient once, that will not do the right
-		// thing because a nil check against an interface isn't true in golang.
-		cloud = getGCEClient(nil)
-		glog.Infof("Created GCE client without a config file")
-	}
 
 	// Names are fundamental to the cluster, the uid allocator makes sure names don't collide.
 	cluster := ClusterManager{ClusterNamer: namer}
