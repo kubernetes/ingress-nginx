@@ -20,6 +20,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/imdario/mergo"
 
+	api "k8s.io/api/core/v1"
+
 	"k8s.io/ingress/core/pkg/ingress"
 )
 
@@ -36,6 +38,7 @@ func newUpstream(name string) *ingress.Backend {
 	return &ingress.Backend{
 		Name:      name,
 		Endpoints: []ingress.Endpoint{},
+		Service:   &api.Service{},
 		SessionAffinity: ingress.SessionAffinityConfig{
 			CookieSessionAffinity: ingress.CookieSessionAffinity{
 				Locations: make(map[string][]string),
