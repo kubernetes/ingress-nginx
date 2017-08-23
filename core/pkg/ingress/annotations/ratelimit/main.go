@@ -218,7 +218,7 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 		LimitRate:      lr,
 		LimitRateAfter: lra,
 		Name:           zoneName,
-		ID:             base64.Base64Encode(zoneName),
+		ID:             base64.Encode(zoneName),
 		Whitelist:      cidrs,
 	}, nil
 }

@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// Base64Encode
-func Base64Encode(s string) string {
+// Encode encodes a string to base64 removing the equals character
+func Encode(s string) string {
 	str := base64.URLEncoding.EncodeToString([]byte(s))
 	return strings.Replace(str, "=", "", -1)
 }
