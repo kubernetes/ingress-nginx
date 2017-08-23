@@ -160,7 +160,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 		harr := strings.Split(hstr, ",")
 		for _, header := range harr {
-			header := strings.TrimSpace(header)
+			header = strings.TrimSpace(header)
 			if len(header) > 0 {
 				if !validHeader(header) {
 					return nil, ing_errors.NewLocationDenied("invalid headers list")
