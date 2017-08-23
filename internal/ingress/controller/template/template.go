@@ -334,14 +334,14 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 			return fmt.Sprintf(`
 	    rewrite %s(.*) /$1 break;
 	    rewrite %s / break;
-	    proxy_pass %s://%s;
-	    %v`, path, location.Path, proto, upstreamName, abu)
+	    %s
+	    %v`, path, location.Path, defProxyPass, abu)
 		}
 
 		return fmt.Sprintf(`
 	    rewrite %s(.*) %s/$1 break;
-	    proxy_pass %s://%s;
-	    %v`, path, location.Rewrite.Target, proto, upstreamName, abu)
+	    %s
+	    %v`, path, location.Rewrite.Target, defProxyPass, abu)
 	}
 
 	// default proxy_pass
