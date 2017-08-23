@@ -92,6 +92,11 @@ type Configuration struct {
 	// By default this is disabled
 	AllowBackendServerHeader bool `json:"allow-backend-server-header"`
 
+	// AccessLogPath set the path of the access logs if enabled
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+	// By default log go to /var/log/nginx/access.log
+	AccessLogPath string `json:"access-log-path,omitempty"`
+
 	// EnableDynamicTLSRecords enables dynamic TLS record sizes
 	// https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency
 	// By default this is enabled
@@ -340,6 +345,7 @@ func NewDefault() Configuration {
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
+		AccessLogPath:              "/var/log/nginx/access.log",
 		ClientHeaderBufferSize:     "1k",
 		ClientHeaderTimeout:        60,
 		ClientBodyBufferSize:       "8k",

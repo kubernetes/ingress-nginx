@@ -118,7 +118,7 @@ http {
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
-    access_log /var/log/nginx/access.log upstreaminfo if=$loggable;
+    access_log {{ $cfg.AccessLogPath }} upstreaminfo if=$loggable;
     {{ end }}
     error_log  /var/log/nginx/error.log {{ $cfg.ErrorLogLevel }};
 
@@ -417,7 +417,7 @@ stream {
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
-    access_log /var/log/nginx/access.log log_stream;
+    access_log {{ $cfg.AccessLogPath }} log_stream;
     {{ end }}
 
     error_log  /var/log/nginx/error.log;
