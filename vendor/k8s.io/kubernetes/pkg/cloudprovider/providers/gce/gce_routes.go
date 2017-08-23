@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"net/http"
 	"path"
-	"strings"
-	"time"
 
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/cloudprovider"
@@ -31,10 +29,7 @@ import (
 )
 
 func newRoutesMetricContext(request string) *metricContext {
-	return &metricContext{
-		start:      time.Now(),
-		attributes: []string{"routes_" + request, unusedMetricLabel, unusedMetricLabel},
-	}
+	return newGenericMetricContext("routes", request, unusedMetricLabel, unusedMetricLabel, computeV1Version)
 }
 
 func (gce *GCECloud) ListRoutes(clusterName string) ([]*cloudprovider.Route, error) {
@@ -46,7 +41,12 @@ func (gce *GCECloud) ListRoutes(clusterName string) ([]*cloudprovider.Route, err
 		listCall := gce.service.Routes.List(gce.projectID)
 
 		prefix := truncateClusterName(clusterName)
-		listCall = listCall.Filter("name eq " + prefix + "-.*")
+		// Filter for routes starting with clustername AND belonging to the
+		// relevant gcp network AND having description = "k8s-node-route".
+		filter := "(name eq " + prefix + "-.*) "
+		filter = filter + "(network eq " + gce.networkURL + ") "
+		filter = filter + "(description eq " + k8sNodeRouteTag + ")"
+		listCall = listCall.Filter(filter)
 		if pageToken != "" {
 			listCall = listCall.PageToken(pageToken)
 		}
@@ -58,18 +58,6 @@ func (gce *GCECloud) ListRoutes(clusterName string) ([]*cloudprovider.Route, err
 		}
 		pageToken = res.NextPageToken
 		for _, r := range res.Items {
-			if r.Network != gce.networkURL {
-				continue
-			}
-			// Not managed if route description != "k8s-node-route"
-			if r.Description != k8sNodeRouteTag {
-				continue
-			}
-			// Not managed if route name doesn't start with <clusterName>
-			if !strings.HasPrefix(r.Name, prefix) {
-				continue
-			}
-
 			target := path.Base(r.NextHopInstance)
 			// TODO: Should we lastComponent(target) this?
 			targetNodeName := types.NodeName(target) // NodeName == Instance Name on GCE

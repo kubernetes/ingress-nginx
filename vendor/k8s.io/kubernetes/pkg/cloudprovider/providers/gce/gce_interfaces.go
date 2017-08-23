@@ -16,12 +16,20 @@ limitations under the License.
 
 package gce
 
-import compute "google.golang.org/api/compute/v1"
+import (
+	computealpha "google.golang.org/api/compute/v0.alpha"
+	compute "google.golang.org/api/compute/v1"
+)
 
 // CloudAddressService is an interface for managing addresses
 type CloudAddressService interface {
 	ReserveRegionAddress(*compute.Address, string) error
 	GetRegionAddress(string, string) (*compute.Address, error)
+	GetRegionAddressByIP(region, ipAddress string) (*compute.Address, error)
 	// TODO: Mock `DeleteRegionAddress(name, region string) endpoint
 	// TODO: Mock Global endpoints
+
+	// Alpha API.
+	GetAlphaRegionAddress(name, region string) (*computealpha.Address, error)
+	ReserveAlphaRegionAddress(addr *computealpha.Address, region string) error
 }

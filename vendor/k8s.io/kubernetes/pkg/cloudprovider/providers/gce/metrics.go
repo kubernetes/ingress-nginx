@@ -17,9 +17,17 @@ limitations under the License.
 package gce
 
 import (
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+)
+
+const (
+	// Version strings for recording metrics.
+	computeV1Version    = "v1"
+	computeAlphaVersion = "alpha"
+	computeBetaVersion  = "beta"
 )
 
 type apiCallMetrics struct {
@@ -28,15 +36,20 @@ type apiCallMetrics struct {
 }
 
 var (
-	apiMetrics = registerAPIMetrics(
+	metricLabels = []string{
 		"request", // API function that is begin invoked.
 		"region",  // region (optional).
 		"zone",    // zone (optional).
-	)
+		"version", // API version.
+	}
+
+	apiMetrics = registerAPIMetrics(metricLabels...)
 )
 
 type metricContext struct {
-	start      time.Time
+	start time.Time
+	// The cardinalities of attributes and metricLabels (defined above) must
+	// match, or prometheus will panic.
 	attributes []string
 }
 
@@ -52,6 +65,19 @@ func (mc *metricContext) Observe(err error) error {
 	}
 
 	return err
+}
+
+func newGenericMetricContext(prefix, request, region, zone, version string) *metricContext {
+	if len(strings.TrimSpace(zone)) == 0 {
+		zone = unusedMetricLabel
+	}
+	if len(strings.TrimSpace(region)) == 0 {
+		region = unusedMetricLabel
+	}
+	return &metricContext{
+		start:      time.Now(),
+		attributes: []string{prefix + "_" + request, region, zone, version},
+	}
 }
 
 // registerApiMetrics adds metrics definitions for a category of API calls.
