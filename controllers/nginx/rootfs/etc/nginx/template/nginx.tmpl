@@ -571,7 +571,7 @@ stream {
         proxy_ssl_server_name       on;
 
         client_max_body_size        "{{ $location.Proxy.BodySize }}";
-        {{ if $location.ClientBodyBufferSize }}
+        {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
         client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
         {{ end }}
 
@@ -640,7 +640,7 @@ stream {
         {{ end }}
 
         client_max_body_size                    "{{ $location.Proxy.BodySize }}";
-        {{ if $location.ClientBodyBufferSize }}
+        {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
         client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
         {{ end }}
 
