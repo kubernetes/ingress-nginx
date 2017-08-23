@@ -398,12 +398,12 @@ http {
         location / {
             {{ if .CustomErrors }}
             include             /etc/nginx/fastcgi_params;
-            fastcgi_param       HTTP_X_Code      503;
+            fastcgi_param       HTTP_X_Code      404;
             fastcgi_param       HTTP_X_Format    $http_accept;
             fastcgi_param       HTTP_X_Endpoints {{ .DefaultBackendEndpoints }};
             fastcgi_pass        unix:/var/run/go-fastcgi.sock;
             {{ else }}
-            return 503;
+            return 404;
             {{ end }}
         }
     }
