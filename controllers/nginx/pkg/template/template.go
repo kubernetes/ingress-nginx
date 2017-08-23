@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	ing_net "k8s.io/ingress/core/pkg/net"
 	"k8s.io/ingress/core/pkg/watch"
 )
@@ -132,8 +133,7 @@ var (
 		"buildAuthLocation":        buildAuthLocation,
 		"buildAuthResponseHeaders": buildAuthResponseHeaders,
 		"buildProxyPass":           buildProxyPass,
-		"buildWhitelistVariable":   buildWhitelistVariable,
-		"whitelistExists":          whitelistExists,
+		"filterRateLimits":         filterRateLimits,
 		"buildRateLimitZones":      buildRateLimitZones,
 		"buildRateLimit":           buildRateLimit,
 		"buildResolvers":           buildResolvers,
@@ -337,25 +337,29 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	return defProxyPass
 }
 
-var (
-	whitelistVarMap = map[string]string{}
-)
+func filterRateLimits(input interface{}) []ratelimit.RateLimit {
+	ratelimits := []ratelimit.RateLimit{}
+	found := map[string]bool{}
 
-func whitelistExists(s string) bool {
-	_, ok := whitelistVarMap[s]
-	return ok
-}
-
-func buildWhitelistVariable(s string) string {
-	if _, ok := whitelistVarMap[s]; !ok {
-		whitelistVarMap[s] = buildRandomUUID()
+	servers, ok := input.([]*ingress.Server)
+	if !ok {
+		return ratelimits
 	}
-	return whitelistVarMap[s]
+	for _, server := range servers {
+		for _, loc := range server.Locations {
+			if loc.RateLimit.ID != "" && !found[loc.RateLimit.ID] {
+				found[loc.RateLimit.ID] = true
+				ratelimits = append(ratelimits, loc.RateLimit)
+			}
+		}
+	}
+	return ratelimits
 }
 
 // buildRateLimitZones produces an array of limit_conn_zone in order to allow
-// rate limiting of request. Each Ingress rule could have up to two zones, one
-// for connection limit by IP address and other for limiting request per second
+// rate limiting of request. Each Ingress rule could have up to three zones, one
+// for connection limit by IP address, one for limiting requests per minute, and
+// one for limiting requests per second.
 func buildRateLimitZones(input interface{}) []string {
 	zones := sets.String{}
 
@@ -366,11 +370,9 @@ func buildRateLimitZones(input interface{}) []string {
 
 	for _, server := range servers {
 		for _, loc := range server.Locations {
-			whitelistVar := buildWhitelistVariable(loc.RateLimit.Name)
-
 			if loc.RateLimit.Connections.Limit > 0 {
 				zone := fmt.Sprintf("limit_conn_zone $limit_%s zone=%v:%vm;",
-					whitelistVar,
+					loc.RateLimit.ID,
 					loc.RateLimit.Connections.Name,
 					loc.RateLimit.Connections.SharedSize)
 				if !zones.Has(zone) {
@@ -380,7 +382,7 @@ func buildRateLimitZones(input interface{}) []string {
 
 			if loc.RateLimit.RPM.Limit > 0 {
 				zone := fmt.Sprintf("limit_req_zone $limit_%s zone=%v:%vm rate=%vr/m;",
-					whitelistVar,
+					loc.RateLimit.ID,
 					loc.RateLimit.RPM.Name,
 					loc.RateLimit.RPM.SharedSize,
 					loc.RateLimit.RPM.Limit)
@@ -391,7 +393,7 @@ func buildRateLimitZones(input interface{}) []string {
 
 			if loc.RateLimit.RPS.Limit > 0 {
 				zone := fmt.Sprintf("limit_req_zone $limit_%s zone=%v:%vm rate=%vr/s;",
-					whitelistVar,
+					loc.RateLimit.ID,
 					loc.RateLimit.RPS.Name,
 					loc.RateLimit.RPS.SharedSize,
 					loc.RateLimit.RPS.Limit)

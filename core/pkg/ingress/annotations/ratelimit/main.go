@@ -23,6 +23,7 @@ import (
 
 	extensions "k8s.io/api/extensions/v1beta1"
 
+	"k8s.io/ingress/core/pkg/base64"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/net"
@@ -61,6 +62,8 @@ type RateLimit struct {
 	LimitRateAfter int `json:"limit-rate-after"`
 
 	Name string `json:"name"`
+
+	ID string `json:"id"`
 
 	Whitelist []string `json:"whitelist"`
 }
@@ -209,6 +212,7 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 		LimitRate:      lr,
 		LimitRateAfter: lra,
 		Name:           zoneName,
+		ID:             base64.Base64Encode(zoneName),
 		Whitelist:      cidrs,
 	}, nil
 }
