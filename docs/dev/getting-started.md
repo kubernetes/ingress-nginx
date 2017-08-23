@@ -127,14 +127,15 @@ $ make push TAG=0.8.0 PREFIX=gcr.io/google_containers/glbc
 
 Please follow these guidelines to cut a release:
 
-* Update the [release](https://help.github.com/articles/creating-releases/getting_started.md)
+* Update the [release](https://help.github.com/articles/creating-releases/)
 page with a short description of the major changes that correspond to a given
 image tag.
 * Cut a release branch, if appropriate. Release branches follow the format of
 `controller-release-version`. Typically, pre-releases are cut from HEAD.
 All major feature work is done in HEAD. Specific bug fixes are
 cherry-picked into a release branch.
-* If you're not confident about the stability of the code, tag it as
-alpha or beta. Typically, a release branch should have stable code.
+* If you're not confident about the stability of the code,
+[tag](https://help.github.com/articles/working-with-tags/) it as alpha or beta.
+Typically, a release branch should have stable code.
 
 
