@@ -52,11 +52,9 @@ func (s *statsCollector) stop(sm statusModule) {
 	case defaultStatusModule:
 		s.basic.Stop()
 		prometheus.Unregister(s.basic)
-		break
 	case vtsStatusModule:
 		s.vts.Stop()
 		prometheus.Unregister(s.vts)
-		break
 	}
 }
 

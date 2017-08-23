@@ -1015,7 +1015,7 @@ func (ic *GenericController) createServers(data []interface{},
 		fakeCertificatePath := fmt.Sprintf("%v/%v.pem", ingress.DefaultSSLDirectory, fakeCertificate)
 
 		// Only generates a new certificate if it doesn't exists physically
-		_, err := os.Stat(fakeCertificatePath)
+		_, err = os.Stat(fakeCertificatePath)
 		if err != nil {
 			glog.V(3).Infof("No Default SSL Certificate found. Generating a new one")
 			defCert, defKey := ssl.GetFakeSSLCert()

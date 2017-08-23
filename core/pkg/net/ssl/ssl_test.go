@@ -28,11 +28,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress"
 )
 
-const (
-	rsaBits  = 2048
-	validFor = 365 * 24 * time.Hour
-)
-
 // generateRSACerts generates a self signed certificate using a self generated ca
 func generateRSACerts(host string) (*triple.KeyPair, *triple.KeyPair, error) {
 	ca, err := triple.NewCA("self-sign-ca")
