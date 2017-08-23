@@ -32,7 +32,7 @@ $ cd $GOPATH/src/ingress
 $ godep save ./...
 ```
 
-In general, you can follow [this guide](https://github.com/kubernetes/kubernetes/blob/release-1.5/docs/devel/godep.md#using-godep-to-manage-dependencies) to update dependencies.
+In general, you can follow [this guide](https://github.com/kubernetes/community/blob/master/contributors/devel/godep.md#using-godep-to-manage-dependencies) to update dependencies.
 To update a particular dependency, eg: Kubernetes:
 ```console
 $ cd $GOPATH/src/k8s.io/ingress
