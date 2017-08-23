@@ -361,18 +361,8 @@ http {
         # Use the port 18080 (random value just to avoid known ports) as default port for nginx.
         # Changing this value requires a change in:
         # https://github.com/kubernetes/ingress/blob/master/controllers/nginx/pkg/cmd/controller/nginx.go
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:18080 default_server reuseport backlog={{ $all.BacklogSize }};
-        {{ else }}
-        listen 18080 default_server reuseport backlog={{ $all.BacklogSize }};
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen {{ $address }}:18080 default_server reuseport backlog={{ $all.BacklogSize }};
-        {{ else }}
-        listen [::]:18080 default_server reuseport backlog={{ $all.BacklogSize }};
-        {{ end }}
-        {{ end }}
+        listen 127.0.0.1:18080 default_server reuseport backlog={{ $all.BacklogSize }};
+        {{ if $IsIPV6Enabled }}listen [::1]:18080 default_server reuseport backlog={{ .BacklogSize }};{{ end }}
         set $proxy_upstream_name "-";
 
         location {{ $healthzURI }} {
@@ -415,11 +405,7 @@ http {
 
     # default server for services without endpoints
     server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:8181;
-        {{ else }}
-        listen 8181;
-        {{ end }}
+        listen 127.0.0.1:8181;
         set $proxy_upstream_name "-";
 
         location / {
