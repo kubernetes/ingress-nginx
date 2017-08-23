@@ -488,7 +488,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 			} else {
 				n = fmt.Sprintf("www.%v", srv.Hostname)
 			}
-			glog.V(3).Infof("creating redirect from %v to", srv.Hostname, n)
+			glog.V(3).Infof("creating redirect from %v to %v", srv.Hostname, n)
 			if _, ok := redirectServers[n]; !ok {
 				found := false
 				for _, esrv := range ingressCfg.Servers {

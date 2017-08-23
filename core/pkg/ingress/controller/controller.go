@@ -652,6 +652,15 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 				continue
 			}
 
+			if server.CertificateAuth.CAFileName == "" {
+				ca := ic.annotations.CertificateAuth(ing)
+				if ca != nil {
+					server.CertificateAuth = *ca
+				}
+			} else {
+				glog.V(3).Infof("server %v already contains a muthual autentication configuration - ingress rule %v/%v", server.Hostname, ing.Namespace, ing.Name)
+			}
+
 			for _, path := range rule.HTTP.Paths {
 				upsName := fmt.Sprintf("%v-%v-%v",
 					ing.GetNamespace(),
@@ -880,7 +889,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 				if serviceUpstream {
 					endpoint, err := ic.getServiceClusterEndpoint(svcKey, &path.Backend)
 					if err != nil {
-						glog.Errorf("Failed to get service cluster endpoint for service %s: %v", svcKey, err)
+						glog.Errorf("failed to get service cluster endpoint for service %s: %v", svcKey, err)
 					} else {
 						upstreams[name].Endpoints = []ingress.Endpoint{endpoint}
 					}
