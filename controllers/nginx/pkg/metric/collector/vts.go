@@ -252,9 +252,9 @@ func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
 			reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, p.ingressClass, p.watchNamespace, serverZone, country)
 
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
-				prometheus.CounterValue, float64(zone.InBytes), p.ingressClass, p.watchNamespace, serverZone, country, "in")
+				prometheus.CounterValue, zone.InBytes, p.ingressClass, p.watchNamespace, serverZone, country, "in")
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
-				prometheus.CounterValue, float64(zone.OutBytes), p.ingressClass, p.watchNamespace, serverZone, country, "out")
+				prometheus.CounterValue, zone.OutBytes, p.ingressClass, p.watchNamespace, serverZone, country, "out")
 		}
 	}
 }
@@ -266,7 +266,7 @@ func reflectMetrics(value interface{}, desc *prometheus.Desc, ch chan<- promethe
 		tag := val.Type().Field(i).Tag
 		l := append(labels, tag.Get("json"))
 		ch <- prometheus.MustNewConstMetric(desc,
-			prometheus.CounterValue, float64(val.Field(i).Interface().(float64)),
+			prometheus.CounterValue, val.Field(i).Interface().(float64),
 			l...)
 	}
 }
