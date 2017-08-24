@@ -62,8 +62,10 @@ http {
     keepalive_requests {{ $cfg.KeepAliveRequests }};
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
+    client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
     large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
     client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }};
+    client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
 
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
     http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
