@@ -175,7 +175,9 @@ func TestTemplateWithData(t *testing.T) {
 	if err := json.Unmarshal(data, &dat); err != nil {
 		t.Errorf("unexpected error unmarshalling json: %v", err)
 	}
-
+	if dat.ListenPorts == nil {
+		dat.ListenPorts = &config.ListenPorts{}
+	}
 	tf, err := os.Open(path.Join(pwd, "../../rootfs/etc/nginx/template/nginx.tmpl"))
 	if err != nil {
 		t.Errorf("unexpected error reading json file: %v", err)

@@ -28,11 +28,6 @@ import (
 // DeniedKeyName name of the key that contains the reason to deny a location
 const DeniedKeyName = "Denied"
 
-// newDefaultServer return an BackendServer to be use as default server that returns 503.
-func newDefaultServer() ingress.Endpoint {
-	return ingress.Endpoint{Address: "127.0.0.1", Port: "8181", Target: &api.ObjectReference{}}
-}
-
 // newUpstream creates an upstream without servers.
 func newUpstream(name string) *ingress.Backend {
 	return &ingress.Backend{

@@ -90,11 +90,11 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 			`Force namespace isolation. This flag is required to avoid the reference of secrets or 
 		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
 
-		UpdateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the 
+		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the 
 		ingress controller should update the Ingress status IP/hostname when the controller 
 		is being stopped. Default is true`)
 
-		SortBackends = flags.Bool("sort-backends", false,
+		sortBackends = flags.Bool("sort-backends", false,
 			`Defines if backends and it's endpoints should be sorted`)
 	)
 
@@ -175,8 +175,8 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		PublishService:          *publishSvc,
 		Backend:                 backend,
 		ForceNamespaceIsolation: *forceIsolation,
-		UpdateStatusOnShutdown:  *UpdateStatusOnShutdown,
-		SortBackends:            *SortBackends,
+		UpdateStatusOnShutdown:  *updateStatusOnShutdown,
+		SortBackends:            *sortBackends,
 	}
 
 	ic := newIngressController(config)

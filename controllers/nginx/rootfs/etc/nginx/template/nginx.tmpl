@@ -160,9 +160,9 @@ http {
     {{ end }}
 
     {{ if $all.IsSSLPassthroughEnabled }}
-    # map port 442 to 443 for header X-Forwarded-Port
+    # map port {{ $all.ListenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
     map $pass_server_port $pass_port {
-        442              443;
+        {{ $all.ListenPorts.SSLProxy }}              443;
         default          $pass_server_port;
     }
     {{ else }}
@@ -319,11 +319,11 @@ http {
     {{/* Build server redirects (from/to www) */}}
     {{ range $hostname, $to := .RedirectServers }}
     server {
-        listen 80{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ if $all.IsSSLPassthroughEnabled }}442 proxy_protocol{{ else }}443{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
+        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
         {{ if $IsIPV6Enabled }}
-        listen  [::]:80{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ if $all.IsSSLPassthroughEnabled }}[::]:442 proxy_protocol{{ else }}[::]:443{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
+        listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
         {{ end }}
         server_name {{ $hostname }};
         return 301 $scheme://{{ $to }}$request_uri;
@@ -347,11 +347,11 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        # Use the port 18080 (random value just to avoid known ports) as default port for nginx.
+        # Use the port {{ $all.ListenPorts.Status }} (random value just to avoid known ports) as default port for nginx.
         # Changing this value requires a change in:
         # https://github.com/kubernetes/ingress/blob/master/controllers/nginx/pkg/cmd/controller/nginx.go
-        listen 18080 default_server reuseport backlog={{ .BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::]:18080 default_server reuseport backlog={{ .BacklogSize }};{{ end }}
+        listen {{ $all.ListenPorts.Status }} default_server reuseport backlog={{ .BacklogSize }};
+        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server reuseport backlog={{ .BacklogSize }};{{ end }}
         set $proxy_upstream_name "-";
 
         location {{ $healthzURI }} {
@@ -394,7 +394,7 @@ http {
 
     # default server for services without endpoints
     server {
-        listen 8181;
+        listen {{ $all.ListenPorts.Default }};
         set $proxy_upstream_name "-";
 
         location / {
@@ -518,14 +518,15 @@ stream {
 {{ define "SERVER" }}
         {{ $all := .First }}
         {{ $server := .Second }}
-        listen 80{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $all.BacklogSize }}{{end}};
-        {{ if $all.IsIPV6Enabled }}listen [::]:80{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $all.BacklogSize }}{{ end }};{{ end }}
+        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $all.BacklogSize }}{{end}};
+        {{ if $all.IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $all.BacklogSize }}{{ end }};{{ end }}
         set $proxy_upstream_name "-";
 
-        {{/* Listen on 442 because port 443 is used in the TLS sni server */}}
+        {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
         {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
-        {{ if not (empty $server.SSLCertificate) }}listen {{ if $all.IsSSLPassthroughEnabled }}442 proxy_protocol {{ else }}443{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ if $all.IsIPV6Enabled }}{{ if not (empty $server.SSLCertificate) }}listen {{ if $all.IsSSLPassthroughEnabled }}[::]:442 proxy_protocol{{ else }}[::]:443{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};{{ end }}        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
+        {{ if not (empty $server.SSLCertificate) }}listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
+        {{ if $all.IsIPV6Enabled }}{{ if not (empty $server.SSLCertificate) }}listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server reuseport backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};{{ end }}
+        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLPemChecksum }}
         ssl_certificate                         {{ $server.SSLCertificate }};
         ssl_certificate_key                     {{ $server.SSLCertificate }};
@@ -708,7 +709,7 @@ stream {
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}
-        # health checks in cloud providers require the use of port 80
+        # health checks in cloud providers require the use of port {{ $all.ListenPorts.HTTP }}
         location {{ $all.HealthzURI }} {
         access_log off;
         return 200;
