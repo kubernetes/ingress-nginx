@@ -232,3 +232,42 @@ func TestBuildDenyVariable(t *testing.T) {
 		t.Errorf("Expected '%v' but returned '%v'", a, b)
 	}
 }
+
+func TestBuildClientBodyBufferSize(t *testing.T) {
+	a := isValidClientBodyBufferSize("1000")
+	if a != true {
+		t.Errorf("Expected '%v' but returned '%v'", true, a)
+	}
+	b := isValidClientBodyBufferSize("1000k")
+	if b != true {
+		t.Errorf("Expected '%v' but returned '%v'", true, b)
+	}
+	c := isValidClientBodyBufferSize("1000m")
+	if c != true {
+		t.Errorf("Expected '%v' but returned '%v'", true, c)
+	}
+	d := isValidClientBodyBufferSize("1000km")
+	if d != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, d)
+	}
+	e := isValidClientBodyBufferSize("1000mk")
+	if e != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, e)
+	}
+	f := isValidClientBodyBufferSize("1000kk")
+	if f != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, f)
+	}
+	g := isValidClientBodyBufferSize("1000mm")
+	if g != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, g)
+	}
+	h := isValidClientBodyBufferSize(nil)
+	if h != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, h)
+	}
+	i := isValidClientBodyBufferSize("")
+	if i != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, i)
+	}
+}
