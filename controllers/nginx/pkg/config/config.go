@@ -102,9 +102,17 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
 	ClientHeaderBufferSize string `json:"client-header-buffer-size"`
 
+	// Defines a timeout for reading client request header, in seconds
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout
+	ClientHeaderTimeout int `json:"client-header-timeout,omitempty"`
+
 	// Sets buffer size for reading client request body
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
 	ClientBodyBufferSize string `json:"client-body-buffer-size,omitempty"`
+
+	// Defines a timeout for reading client request body, in seconds
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout
+	ClientBodyTimeout int `json:"client-body-timeout,omitempty"`
 
 	// DisableAccessLog disables the Access Log globally from NGINX ingress controller
 	//http://nginx.org/en/docs/http/ngx_http_log_module.html
@@ -333,7 +341,9 @@ func NewDefault() Configuration {
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
 		ClientHeaderBufferSize:     "1k",
+		ClientHeaderTimeout:        60,
 		ClientBodyBufferSize:       "8k",
+		ClientBodyTimeout:          60,
 		EnableDynamicTLSRecords:    true,
 		EnableUnderscoresInHeaders: false,
 		ErrorLogLevel:              errorLevel,
