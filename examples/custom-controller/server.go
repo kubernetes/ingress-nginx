@@ -110,3 +110,12 @@ func (n DummyController) DefaultIngressClass() string {
 func (n DummyController) UpdateIngressStatus(*extensions.Ingress) []api.LoadBalancerIngress {
 	return nil
 }
+
+// DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
+func (n DummyController) DefaultEndpoint() ingress.Endpoint {
+	return ingress.Endpoint{
+		Address: "127.0.0.1",
+		Port:    "8181",
+		Target:  &api.ObjectReference{},
+	}
+}

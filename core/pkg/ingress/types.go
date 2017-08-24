@@ -98,6 +98,10 @@ type Controller interface {
 	// This allows custom implementations
 	// If the function returns nil the standard functions will be executed.
 	UpdateIngressStatus(*extensions.Ingress) []api.LoadBalancerIngress
+	// DefaultEndpoint returns the Endpoint to use as default when the
+	// referenced service does not exists. This should return the content
+	// of to the default backend
+	DefaultEndpoint() Endpoint
 }
 
 // StoreLister returns the configured stores for ingresses, services,

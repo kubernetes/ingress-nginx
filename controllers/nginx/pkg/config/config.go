@@ -430,4 +430,16 @@ type TemplateConfig struct {
 	IsIPV6Enabled           bool
 	IsSSLPassthroughEnabled bool
 	RedirectServers         map[string]string
+	ListenPorts             *ListenPorts
+}
+
+// ListenPorts describe the ports required to run the
+// NGINX Ingress controller
+type ListenPorts struct {
+	HTTP     int
+	HTTPS    int
+	Status   int
+	Health   int
+	Default  int
+	SSLProxy int
 }
