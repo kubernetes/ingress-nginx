@@ -25,6 +25,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	text_template "text/template"
 
@@ -152,7 +153,8 @@ var (
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
-		"buildAuthSignURL": buildAuthSignURL,
+		"buildAuthSignURL":            buildAuthSignURL,
+		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
 	}
 )
 
@@ -551,4 +553,38 @@ func buildAuthSignURL(input interface{}) string {
 func buildRandomUUID() string {
 	s := uuid.New()
 	return strings.Replace(s, "-", "", -1)
+}
+
+func isValidClientBodyBufferSize(input interface{}) bool {
+	s, ok := input.(string)
+	if !ok {
+		glog.Errorf("expected an string type but %T was returned", input)
+		return false
+	}
+
+	if s == "" {
+		return false
+	}
+
+	_, err := strconv.Atoi(s)
+	if err != nil {
+		sLowercase := strings.ToLower(s)
+
+		kCheck := strings.TrimSuffix(sLowercase, "k")
+		_, err := strconv.Atoi(kCheck)
+		if err == nil {
+			return true
+		}
+
+		mCheck := strings.TrimSuffix(sLowercase, "m")
+		_, err = strconv.Atoi(mCheck)
+		if err == nil {
+			return true
+		}
+
+		glog.Errorf("client-body-buffer-size '%v' was provided in an incorrect format, hence it will not be set.", s)
+		return false
+	}
+
+	return true
 }
