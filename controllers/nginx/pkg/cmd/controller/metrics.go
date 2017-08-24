@@ -45,6 +45,8 @@ type statsCollector struct {
 
 	namespace  string
 	watchClass string
+
+	healthPort int
 }
 
 func (s *statsCollector) stop(sm statusModule) {
@@ -61,17 +63,17 @@ func (s *statsCollector) stop(sm statusModule) {
 func (s *statsCollector) start(sm statusModule) {
 	switch sm {
 	case defaultStatusModule:
-		s.basic = collector.NewNginxStatus(s.namespace, s.watchClass, ngxHealthPort, ngxStatusPath)
+		s.basic = collector.NewNginxStatus(s.namespace, s.watchClass, s.healthPort, ngxStatusPath)
 		prometheus.Register(s.basic)
 		break
 	case vtsStatusModule:
-		s.vts = collector.NewNGINXVTSCollector(s.namespace, s.watchClass, ngxHealthPort, ngxVtsPath)
+		s.vts = collector.NewNGINXVTSCollector(s.namespace, s.watchClass, s.healthPort, ngxVtsPath)
 		prometheus.Register(s.vts)
 		break
 	}
 }
 
-func newStatsCollector(ns, class, binary string) *statsCollector {
+func newStatsCollector(ns, class, binary string, hz int) *statsCollector {
 	glog.Infof("starting new nginx stats collector for Ingress controller running in namespace %v (class %v)", ns, class)
 	pc, err := collector.NewNamedProcess(true, collector.BinaryNameMatcher{
 		Name:   "nginx",
@@ -89,5 +91,6 @@ func newStatsCollector(ns, class, binary string) *statsCollector {
 		namespace:  ns,
 		watchClass: class,
 		process:    pc,
+		healthPort: hz,
 	}
 }

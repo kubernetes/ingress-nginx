@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/pflag"
 
 	proxyproto "github.com/armon/go-proxyproto"
+	api "k8s.io/api/core/v1"
 	api_v1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 
@@ -50,7 +51,6 @@ import (
 type statusModule string
 
 const (
-	ngxHealthPort = 18080
 	ngxHealthPath = "/healthz"
 
 	defaultStatusModule statusModule = "default"
@@ -87,6 +87,7 @@ func newNGINXController() ingress.Controller {
 		configmap:     &api_v1.ConfigMap{},
 		isIPV6Enabled: isIPv6Enabled(),
 		resolver:      h,
+		ports:         &config.ListenPorts{},
 	}
 
 	fcgiListener, err := net.Listen("unix", fastCGISocket)
@@ -161,6 +162,8 @@ type NGINXController struct {
 	isSSLPassthroughEnabled bool
 
 	proxy *proxy
+
+	ports *config.ListenPorts
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -280,14 +283,42 @@ func (n NGINXController) Info() *ingress.BackendInfo {
 	}
 }
 
+// DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
+func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
+	return ingress.Endpoint{
+		Address: "127.0.0.1",
+		Port:    fmt.Sprintf("%v", n.ports.Default),
+		Target:  &api.ObjectReference{},
+	}
+}
+
 // ConfigureFlags allow to configure more flags before the parsing of
 // command line arguments
 func (n *NGINXController) ConfigureFlags(flags *pflag.FlagSet) {
 	flags.BoolVar(&n.isSSLPassthroughEnabled, "enable-ssl-passthrough", false, `Enable SSL passthrough feature. Default is disabled`)
+	flags.IntVar(&n.ports.HTTP, "http-port", 80, `Indicates the port to use for HTTP traffic`)
+	flags.IntVar(&n.ports.HTTPS, "https-port", 443, `Indicates the port to use for HTTPS traffic`)
+	flags.IntVar(&n.ports.Status, "status-port", 18080, `Indicates the TCP port to use for exposing the nginx status page`)
+	flags.IntVar(&n.ports.SSLProxy, "ssl-passtrough-proxy-port", 442, `Default port to use internally for SSL when SSL Passthgough is enabled`)
+	flags.IntVar(&n.ports.Default, "default-server-port", 8181, `Default port to use for exposing the default server (catch all)`)
 }
 
 // OverrideFlags customize NGINX controller flags
 func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
+	// we check port collisions
+	if !isPortAvailable(n.ports.HTTP) {
+		glog.Fatalf("Port %v is already in use. Please check the flag --http-port", n.ports.HTTP)
+	}
+	if !isPortAvailable(n.ports.HTTPS) {
+		glog.Fatalf("Port %v is already in use. Please check the flag --https-port", n.ports.HTTPS)
+	}
+	if !isPortAvailable(n.ports.Status) {
+		glog.Fatalf("Port %v is already in use. Please check the flag --status-port", n.ports.Status)
+	}
+	if !isPortAvailable(n.ports.Default) {
+		glog.Fatalf("Port %v is already in use. Please check the flag --default-server-port", n.ports.Default)
+	}
+
 	ic, _ := flags.GetString("ingress-class")
 	wc, _ := flags.GetString("watch-namespace")
 
@@ -300,20 +331,24 @@ func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
 	}
 
 	flags.Set("ingress-class", ic)
-	n.stats = newStatsCollector(wc, ic, n.binary)
+	n.stats = newStatsCollector(wc, ic, n.binary, n.ports.Health)
 
 	if n.isSSLPassthroughEnabled {
+		if !isPortAvailable(n.ports.SSLProxy) {
+			glog.Fatalf("Port %v is already in use. Please check the flag --ssl-passtrough-proxy-port", n.ports.SSLProxy)
+		}
+
 		glog.Info("starting TLS proxy for SSL passthrough")
 		n.proxy = &proxy{
 			Default: &server{
 				Hostname:      "localhost",
 				IP:            "127.0.0.1",
-				Port:          442,
+				Port:          n.ports.SSLProxy,
 				ProxyProtocol: true,
 			},
 		}
 
-		listener, err := net.Listen("tcp", ":443")
+		listener, err := net.Listen("tcp", fmt.Sprintf(":%v", n.ports.HTTPS))
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
@@ -594,6 +629,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		IsIPV6Enabled:           n.isIPV6Enabled && !cfg.DisableIpv6,
 		RedirectServers:         redirectServers,
 		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
+		ListenPorts:             n.ports,
 	}
 
 	// We need to extract the endpoints to be used in the fastcgi error handler
@@ -651,7 +687,7 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n NGINXController) Check(_ *http.Request) error {
-	res, err := http.Get(fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxHealthPath))
+	res, err := http.Get(fmt.Sprintf("http://localhost:%v%v", n.ports.Status, ngxHealthPath))
 	if err != nil {
 		return err
 	}

@@ -569,13 +569,13 @@ func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 	svcObj, svcExists, err := ic.svcLister.Store.GetByKey(svcKey)
 	if err != nil {
 		glog.Warningf("unexpected error searching the default backend %v: %v", ic.cfg.DefaultService, err)
-		upstream.Endpoints = append(upstream.Endpoints, newDefaultServer())
+		upstream.Endpoints = append(upstream.Endpoints, ic.cfg.Backend.DefaultEndpoint())
 		return upstream
 	}
 
 	if !svcExists {
 		glog.Warningf("service %v does not exist", svcKey)
-		upstream.Endpoints = append(upstream.Endpoints, newDefaultServer())
+		upstream.Endpoints = append(upstream.Endpoints, ic.cfg.Backend.DefaultEndpoint())
 		return upstream
 	}
 
@@ -583,7 +583,7 @@ func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 	endps := ic.getEndpoints(svc, &svc.Spec.Ports[0], api.ProtocolTCP, &healthcheck.Upstream{})
 	if len(endps) == 0 {
 		glog.Warningf("service %v does not have any active endpoints", svcKey)
-		endps = []ingress.Endpoint{newDefaultServer()}
+		endps = []ingress.Endpoint{ic.cfg.Backend.DefaultEndpoint()}
 	}
 
 	upstream.Service = svc
@@ -760,7 +760,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	for _, value := range upstreams {
 		if len(value.Endpoints) == 0 {
 			glog.V(3).Infof("upstream %v does not have any active endpoints. Using default backend", value.Name)
-			value.Endpoints = append(value.Endpoints, newDefaultServer())
+			value.Endpoints = append(value.Endpoints, ic.cfg.Backend.DefaultEndpoint())
 		}
 		aUpstreams = append(aUpstreams, value)
 	}
