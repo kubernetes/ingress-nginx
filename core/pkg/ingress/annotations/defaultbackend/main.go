@@ -48,7 +48,7 @@ func (db backend) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	name := fmt.Sprintf("%v/%v", ing.Namespace, s)
-	svc, err := db.serviceResolver.GetService(s)
+	svc, err := db.serviceResolver.GetService(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unexpected error reading service %v", name)
 	}
