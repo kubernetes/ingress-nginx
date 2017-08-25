@@ -150,6 +150,7 @@ type Configuration struct {
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
+// +k8s:deepcopy-gen=true
 type Backend struct {
 	// Name represents an unique api.Service name formatted as <namespace>-<name>-<port>
 	Name    string             `json:"name"`
@@ -177,12 +178,14 @@ type Backend struct {
 // restarts. Exactly one of these values will be set on the upstream, since multiple
 // affinity values are incompatible. Once set, the backend makes no guarantees
 // about honoring updates.
+// +k8s:deepcopy-gen=true
 type SessionAffinityConfig struct {
 	AffinityType          string                `json:"name"`
 	CookieSessionAffinity CookieSessionAffinity `json:"cookieSessionAffinity"`
 }
 
 // CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
+// +k8s:deepcopy-gen=true
 type CookieSessionAffinity struct {
 	Name      string              `json:"name"`
 	Hash      string              `json:"hash"`
@@ -190,6 +193,7 @@ type CookieSessionAffinity struct {
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
+// +k8s:deepcopy-gen=true
 type Endpoint struct {
 	// Address IP address of the endpoint
 	Address string `json:"address"`
@@ -261,11 +265,14 @@ type Location struct {
 	// contains active endpoints or not. Returning true means the location
 	// uses the default backend.
 	IsDefBackend bool `json:"isDefBackend"`
+	// Ingress returns the ingress from which this location was generated
+	Ingress *extensions.Ingress `json:"ingress"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
-
-	Service *api.Service       `json:"service,omitempty"`
-	Port    intstr.IntOrString `json:"port"`
+	// Service describes the referenced services from the ingress
+	Service *api.Service `json:"service,omitempty"`
+	// Port describes to which port from the service
+	Port intstr.IntOrString `json:"port"`
 	// BasicDigestAuth returns authentication configuration for
 	// an Ingress rule.
 	// +optional
@@ -301,14 +308,17 @@ type Location struct {
 	Proxy proxy.Configuration `json:"proxy,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
-	UsePortInRedirects bool `json:"use-port-in-redirects"`
+	UsePortInRedirects bool `json:"usePortInRedirects"`
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
-	ConfigurationSnippet string `json:"configuration-snippet"`
+	ConfigurationSnippet string `json:"configurationSnippet"`
 	// ClientBodyBufferSize allows for the configuration of the client body
 	// buffer size for a specific location.
 	// +optional
-	ClientBodyBufferSize string `json:"client-body-buffer-size,omitempty"`
+	ClientBodyBufferSize string `json:"clientBodyBufferSize,omitempty"`
+	// DefaultBackend allows the use of a custom default backend for this location.
+	// +optional
+	DefaultBackend *api.Service `json:"defaultBackend,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

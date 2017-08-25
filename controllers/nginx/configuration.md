@@ -50,6 +50,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
+|[ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
 |[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|true or false|
@@ -158,6 +159,10 @@ Using this annotation you can add additional configuration to the NGINX location
 ingress.kubernetes.io/configuration-snippet: |
   more_set_headers "Request-Id: $request_id";
 ```
+### Default Backend
+
+The ingress controller requires a default backend. This service is handle the response when the service in the Ingress rule does not have endpoints.
+This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation `ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.
 
 ### Enable CORS
 
