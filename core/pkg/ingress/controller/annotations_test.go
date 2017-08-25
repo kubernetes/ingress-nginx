@@ -40,7 +40,8 @@ const (
 )
 
 type mockCfg struct {
-	MockSecrets map[string]*api.Secret
+	MockSecrets  map[string]*api.Secret
+	MockServices map[string]*api.Service
 }
 
 func (m mockCfg) GetDefaultBackend() defaults.Backend {
@@ -49,6 +50,10 @@ func (m mockCfg) GetDefaultBackend() defaults.Backend {
 
 func (m mockCfg) GetSecret(name string) (*api.Secret, error) {
 	return m.MockSecrets[name], nil
+}
+
+func (m mockCfg) GetService(name string) (*api.Service, error) {
+	return m.MockServices[name], nil
 }
 
 func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
