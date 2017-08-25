@@ -182,7 +182,7 @@ the whole body or only its part is written to a temporary file. By default, buff
 This is 8K on x86, other 32-bit platforms, and x86-64. It is usually 16K on other 64-bit platforms. This annotation is
 applied to each location provided in the ingress rule.
 
-*Note:* The annotation value must be given in a valid format otherwise the
+*Note:* The annotation value must be given in a valid format otherwise the 
 For example to set the client-body-buffer-size the following can be done:
 * `ingress.kubernetes.io/client-body-buffer-size: "1000"` # 1000 bytes
 * `ingress.kubernetes.io/client-body-buffer-size: 1k` # 1 kilobyte
@@ -488,7 +488,6 @@ The following table shows the options, the default value and a description.
 |keep-alive|"75"|
 |log-format-stream|[$time_local] $protocol $status $bytes_sent $bytes_received $session_time|
 |log-format-upstream|[$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status|
-|access-format-stream|[$time_local] $protocol $status $bytes_sent $bytes_received $session_time|
 |map-hash-bucket-size|"64"|
 |max-worker-connections|"16384"|
 |proxy-body-size|same as body-size|
