@@ -43,6 +43,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"enable-dynamic-tls-records": "false",
 		"gzip-types":                 "text/html",
 		"proxy-real-ip-cidr":         "1.1.1.1/8,2.2.2.2/24",
+		"bind-address":               "1.1.1.1,2.2.2.2,3.3.3,2001:db8:a0b:12f0::1,3731:54:65fe:2::a7,33:33:33::33::33",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -54,6 +55,8 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.UseProxyProtocol = true
 	def.GzipTypes = "text/html"
 	def.ProxyRealIPCIDR = []string{"1.1.1.1/8", "2.2.2.2/24"}
+	def.BindAddressIpv4 = []string{"1.1.1.1", "2.2.2.2"}
+	def.BindAddressIpv6 = []string{"[2001:db8:a0b:12f0::1]", "[3731:54:65fe:2::a7]"}
 
 	to := ReadConfig(conf)
 	if diff := pretty.Compare(to, def); diff != "" {

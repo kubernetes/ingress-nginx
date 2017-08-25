@@ -464,6 +464,8 @@ The default mime type list to compress is: `application/atom+xml application/jav
 
 **add-headers:** Sets custom headers from a configmap before sending traffic to the client. See `proxy-set-headers` [example](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-headers/nginx)
 
+**bind-address:** Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
+
 ### Default configuration options
 
 The following table shows the options, the default value and a description.
@@ -517,6 +519,7 @@ The following table shows the options, the default value and a description.
 |whitelist-source-range|permit all|
 |worker-processes|number of CPUs|
 |limit-conn-zone-variable|$binary_remote_addr|
+|bind-address||
 
 ### Websockets
 
