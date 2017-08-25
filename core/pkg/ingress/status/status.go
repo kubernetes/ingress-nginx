@@ -259,6 +259,9 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 				addrs = append(addrs, ip.IP)
 			}
 		}
+		for _, ip := range svc.Spec.ExternalIPs {
+			addrs = append(addrs, ip)
+		}
 
 		return addrs, nil
 	}

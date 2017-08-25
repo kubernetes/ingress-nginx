@@ -133,13 +133,16 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		}
 
 		if len(svc.Status.LoadBalancer.Ingress) == 0 {
-			// We could poll here, but we instead just exit and rely on k8s to restart us
-			glog.Fatalf("service %s does not (yet) have ingress points", *publishSvc)
+			if len(svc.Spec.ExternalIPs) > 0 {
+				glog.Infof("service %v validated as assigned with externalIP", *publishSvc)
+			} else {
+				// We could poll here, but we instead just exit and rely on k8s to restart us
+				glog.Fatalf("service %s does not (yet) have ingress points", *publishSvc)
+			}
+		} else {
+			glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 		}
-
-		glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 	}
-
 	if *watchNamespace != "" {
 
 		_, err = k8s.IsValidNamespace(kubeClient, *watchNamespace)
