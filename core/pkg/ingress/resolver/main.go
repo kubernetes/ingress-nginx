@@ -41,6 +41,12 @@ type AuthCertificate interface {
 	GetAuthCertificate(string) (*AuthSSLCert, error)
 }
 
+// Service has a method that searches for services contenating
+// the namespace and name using a the character /
+type Service interface {
+	GetService(string) (*api.Service, error)
+}
+
 // AuthSSLCert contains the necessary information to do certificate based
 // authentication of an ingress location
 type AuthSSLCert struct {
