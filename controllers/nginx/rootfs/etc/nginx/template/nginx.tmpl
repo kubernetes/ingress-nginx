@@ -118,9 +118,9 @@ http {
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
-    access_log /var/log/nginx/access.log upstreaminfo if=$loggable;
+    access_log {{ $cfg.AccessLogPath }} upstreaminfo if=$loggable;
     {{ end }}
-    error_log  /var/log/nginx/error.log {{ $cfg.ErrorLogLevel }};
+    error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
 
     {{ buildResolvers $cfg.Resolver }}
 
@@ -417,10 +417,10 @@ stream {
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
-    access_log /var/log/nginx/access.log log_stream;
+    access_log {{ $cfg.AccessLogPath }} log_stream;
     {{ end }}
 
-    error_log  /var/log/nginx/error.log;
+    error_log  {{ $cfg.ErrorLogPath }};
 
     # TCP services
     {{ range $i, $tcpServer := .TCPBackends }}
