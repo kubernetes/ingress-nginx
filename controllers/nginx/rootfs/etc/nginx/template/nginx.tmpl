@@ -415,7 +415,8 @@ http {
             fastcgi_param       HTTP_X_Endpoints {{ .DefaultBackendEndpoints }};
             fastcgi_pass        unix:/var/run/go-fastcgi.sock;
             {{ else }}
-            return 404;
+            set $proxy_upstream_name "upstream-default-backend";
+            proxy_pass               http://upstream-default-backend;
             {{ end }}
         }
     }

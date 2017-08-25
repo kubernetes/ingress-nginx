@@ -25,6 +25,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/authtls"
 	"k8s.io/ingress/core/pkg/ingress/annotations/clientbodybuffersize"
 	"k8s.io/ingress/core/pkg/ingress/annotations/cors"
+	"k8s.io/ingress/core/pkg/ingress/annotations/defaultbackend"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
@@ -46,6 +47,7 @@ type extractorConfig interface {
 	resolver.AuthCertificate
 	resolver.DefaultBackend
 	resolver.Secret
+	resolver.Service
 }
 
 type annotationExtractor struct {
@@ -75,6 +77,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"ConfigurationSnippet": snippet.NewParser(),
 			"Alias":                alias.NewParser(),
 			"ClientBodyBufferSize": clientbodybuffersize.NewParser(),
+			"DefaultBackend":       defaultbackend.NewParser(cfg),
 		},
 	}
 }
@@ -86,6 +89,10 @@ func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interf
 		glog.V(5).Infof("annotation %v in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), val)
 		if err != nil {
 			if errors.IsMissingAnnotations(err) {
+				continue
+			}
+
+			if !errors.IsLocationDenied(err) {
 				continue
 			}
 

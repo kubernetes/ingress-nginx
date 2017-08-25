@@ -31,6 +31,7 @@ import (
 
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -66,6 +67,8 @@ const (
 var (
 	// list of ports that cannot be used by TCP or UDP services
 	reservedPorts = []string{"80", "443", "8181", "18080"}
+
+	cloner = conversion.NewCloner()
 )
 
 // GenericController holds the boilerplate code required to build an Ingress controlller.
@@ -321,6 +324,8 @@ func newIngressController(config *Configuration) *GenericController {
 		ConfigMap: ic.mapLister,
 	})
 
+	cloner.RegisterDeepCopyFunc(ingress.GetGeneratedDeepCopyFuncs)
+
 	return &ic
 }
 
@@ -340,7 +345,7 @@ func (ic GenericController) GetDefaultBackend() defaults.Backend {
 }
 
 // GetRecorder returns the event recorder
-func (ic GenericController) GetRecoder() record.EventRecorder {
+func (ic GenericController) GetRecorder() record.EventRecorder {
 	return ic.recorder
 }
 
@@ -354,6 +359,18 @@ func (ic GenericController) GetSecret(name string) (*api.Secret, error) {
 		return nil, fmt.Errorf("secret %v was not found", name)
 	}
 	return s.(*api.Secret), nil
+}
+
+// GetService searches for a service in the local secrets Store
+func (ic GenericController) GetService(name string) (*api.Service, error) {
+	s, exists, err := ic.svcLister.Store.GetByKey(name)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("service %v was not found", name)
+	}
+	return s.(*api.Service), nil
 }
 
 func (ic *GenericController) getConfigMap(ns, name string) (*api.ConfigMap, error) {
@@ -688,6 +705,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						loc.Backend = ups.Name
 						loc.Port = ups.Port
 						loc.Service = ups.Service
+						loc.Ingress = ing
 						mergeLocationAnnotations(loc, anns)
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -704,6 +722,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 						IsDefBackend: false,
 						Service:      ups.Service,
 						Port:         ups.Port,
+						Ingress:      ing,
 					}
 					mergeLocationAnnotations(loc, anns)
 					if loc.Redirect.FromToWWW {
@@ -731,12 +750,38 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 		}
 	}
 
-	// Configure Backends[].SSLPassthrough
+	aUpstreams := make([]*ingress.Backend, 0, len(upstreams))
+
 	for _, upstream := range upstreams {
 		isHTTPSfrom := []*ingress.Server{}
 		for _, server := range servers {
 			for _, location := range server.Locations {
 				if upstream.Name == location.Backend {
+					if len(upstream.Endpoints) == 0 {
+						glog.V(3).Infof("upstream %v does not have any active endpoints. Using default backend", upstream.Name)
+						location.Backend = "upstream-default-backend"
+
+						// check if the location contains endpoints and a custom default backend
+						if location.DefaultBackend != nil {
+							sp := location.DefaultBackend.Spec.Ports[0]
+							endps := ic.getEndpoints(location.DefaultBackend, &sp, api.ProtocolTCP, &healthcheck.Upstream{})
+							if len(endps) > 0 {
+								glog.V(3).Infof("using custom default backend in server %v location %v (service %v/%v)",
+									server.Hostname, location.Path, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+								b, err := cloner.DeepCopy(upstream)
+								if err == nil {
+									name := fmt.Sprintf("custom-default-backend-%v", upstream.Name)
+									nb := b.(*ingress.Backend)
+									nb.Name = name
+									nb.Endpoints = endps
+									aUpstreams = append(aUpstreams, nb)
+									location.Backend = name
+								}
+							}
+						}
+					}
+
+					// Configure Backends[].SSLPassthrough
 					if server.SSLPassthrough {
 						if location.Path == rootLocation {
 							if location.Backend == defUpstreamName {
@@ -746,24 +791,24 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 
 							isHTTPSfrom = append(isHTTPSfrom, server)
 						}
-						continue
 					}
 				}
 			}
 		}
+
 		if len(isHTTPSfrom) > 0 {
 			upstream.SSLPassthrough = true
 		}
 	}
 
-	aUpstreams := make([]*ingress.Backend, 0, len(upstreams))
-	for _, value := range upstreams {
-		if len(value.Endpoints) == 0 {
-			glog.V(3).Infof("upstream %v does not have any active endpoints. Using default backend", value.Name)
-			value.Endpoints = append(value.Endpoints, ic.cfg.Backend.DefaultEndpoint())
+	// create the list of upstreams and skip those without endpoints
+	for _, upstream := range upstreams {
+		if len(upstream.Endpoints) == 0 {
+			continue
 		}
-		aUpstreams = append(aUpstreams, value)
+		aUpstreams = append(aUpstreams, upstream)
 	}
+
 	if ic.cfg.SortBackends {
 		sort.Sort(ingress.BackendByNameServers(aUpstreams))
 	}
