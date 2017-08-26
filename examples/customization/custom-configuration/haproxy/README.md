@@ -8,9 +8,6 @@ This document has the following prerequisites:
 
 Deploy only the tls-secret and the default backend from the [deployment instructions](../../../deployment/haproxy/)
 
-As mentioned in the deployment instructions, you MUST turn down any existing
-ingress controllers before running HAProxy Ingress.
-
 ## Customize the HAProxy configuration
 
 Using a [ConfigMap](https://kubernetes.io/docs/user-guide/configmap/) is possible to customize the HAProxy configuration.

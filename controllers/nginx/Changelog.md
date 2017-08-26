@@ -1,5 +1,157 @@
 Changelog
 
+Changelog
+
+### 0.9-beta.12
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.12`
+
+*Breaking changes:*
+
+- SSL passthrough is disabled by default. To enable the feature use `--enable-ssl-passthrough`
+
+*New Features:*
+
+- Support for arm64
+- New flags to customize listen ports
+- Per minute rate limiting
+- Rate limit whitelist
+- Configuration of nginx worker timeout (to avoid zombie nginx workers processes)
+- Redirects from non-www to www
+- Custom default backend (per Ingress)
+
+*Changes:*
+
+- [X] [#977](https://github.com/kubernetes/ingress/pull/977) Add sort-backends command line option
+- [X] [#981](https://github.com/kubernetes/ingress/pull/981) Add annotation to allow use of service ClusterIP for NGINX upstream.
+- [X] [#991](https://github.com/kubernetes/ingress/pull/991) Remove secret sync loop
+- [X] [#992](https://github.com/kubernetes/ingress/pull/992) Check errors generating pem files
+- [X] [#993](https://github.com/kubernetes/ingress/pull/993) Fix the sed command to work on macOS
+- [X] [#1013](https://github.com/kubernetes/ingress/pull/1013) The fields of vtsDate are unified in the form of plural
+- [X] [#1025](https://github.com/kubernetes/ingress/pull/1025) Fix file watch
+- [X] [#1027](https://github.com/kubernetes/ingress/pull/1027) Lint code
+- [X] [#1031](https://github.com/kubernetes/ingress/pull/1031) Change missing secret name log level to V(3)
+- [X] [#1032](https://github.com/kubernetes/ingress/pull/1032) Alternative syncSecret approach #1030
+- [X] [#1042](https://github.com/kubernetes/ingress/pull/1042) Add function to allow custom values in Ingress status
+- [X] [#1043](https://github.com/kubernetes/ingress/pull/1043) Return reference to object providing Endpoint
+- [X] [#1046](https://github.com/kubernetes/ingress/pull/1046) Add field FileSHA in BasicDigest struct
+- [X] [#1058](https://github.com/kubernetes/ingress/pull/1058) add per minute rate limiting
+- [X] [#1060](https://github.com/kubernetes/ingress/pull/1060) Update fsnotify dependency to fix arm64 issue
+- [X] [#1065](https://github.com/kubernetes/ingress/pull/1065) Add more descriptive steps in Dev Documentation
+- [X] [#1073](https://github.com/kubernetes/ingress/pull/1073) Release nginx-slim 0.22
+- [X] [#1074](https://github.com/kubernetes/ingress/pull/1074) Remove lua and use fastcgi to render errors
+- [X] [#1075](https://github.com/kubernetes/ingress/pull/1075) (feat/ #374) support proxy timeout
+- [X] [#1076](https://github.com/kubernetes/ingress/pull/1076) Add more ssl test cases
+- [X] [#1078](https://github.com/kubernetes/ingress/pull/1078) fix the same udp port and tcp port, update nginx.conf error
+- [X] [#1080](https://github.com/kubernetes/ingress/pull/1080) Disable platform s390x
+- [X] [#1081](https://github.com/kubernetes/ingress/pull/1081) Spit Static check and Coverage in diff Stages of Travis CI
+- [X] [#1082](https://github.com/kubernetes/ingress/pull/1082) Fix build tasks
+- [X] [#1087](https://github.com/kubernetes/ingress/pull/1087) Release nginx-slim 0.23
+- [X] [#1088](https://github.com/kubernetes/ingress/pull/1088) Configure nginx worker timeout
+- [X] [#1089](https://github.com/kubernetes/ingress/pull/1089) Update nginx to 1.13.4
+- [X] [#1098](https://github.com/kubernetes/ingress/pull/1098) Exposing the event recorder to allow other controllers to create events
+- [X] [#1102](https://github.com/kubernetes/ingress/pull/1102) Fix lose SSL Passthrough
+- [X] [#1104](https://github.com/kubernetes/ingress/pull/1104) Simplify verification of hostname in ssl certificates
+- [X] [#1109](https://github.com/kubernetes/ingress/pull/1109) Cleanup remote address in nginx template
+- [X] [#1110](https://github.com/kubernetes/ingress/pull/1110) Fix Endpoint comparison
+- [X] [#1118](https://github.com/kubernetes/ingress/pull/1118) feat(#733)Support nginx bandwidth control
+- [X] [#1124](https://github.com/kubernetes/ingress/pull/1124) check fields len in dns.go
+- [X] [#1130](https://github.com/kubernetes/ingress/pull/1130) Update nginx.go
+- [X] [#1134](https://github.com/kubernetes/ingress/pull/1134) replace deprecated interface with versioned ones
+- [X] [#1136](https://github.com/kubernetes/ingress/pull/1136) Fix status update - changed in #1074
+- [X] [#1138](https://github.com/kubernetes/ingress/pull/1138) update nginx.go: preformance improve
+- [X] [#1139](https://github.com/kubernetes/ingress/pull/1139) Fix Todo:convert sequence to table
+- [X] [#1162](https://github.com/kubernetes/ingress/pull/1162) Optimize CI build time
+- [X] [#1164](https://github.com/kubernetes/ingress/pull/1164) Use variable request_uri as redirect after auth
+- [X] [#1179](https://github.com/kubernetes/ingress/pull/1179) Fix sticky upstream not used when enable rewrite
+- [X] [#1184](https://github.com/kubernetes/ingress/pull/1184) Add support for temporal and permanent redirects
+- [X] [#1185](https://github.com/kubernetes/ingress/pull/1185) Add more info about Server-Alias usage
+- [X] [#1186](https://github.com/kubernetes/ingress/pull/1186) Add annotation for client-body-buffer-size per location
+- [X] [#1190](https://github.com/kubernetes/ingress/pull/1190) Add flag to disable SSL passthrough
+- [X] [#1193](https://github.com/kubernetes/ingress/pull/1193) fix broken link
+- [X] [#1198](https://github.com/kubernetes/ingress/pull/1198) Add option for specific scheme for base url
+- [X] [#1202](https://github.com/kubernetes/ingress/pull/1202) formatIP issue
+- [X] [#1203](https://github.com/kubernetes/ingress/pull/1203) NGINX not reloading correctly
+- [X] [#1204](https://github.com/kubernetes/ingress/pull/1204) Fix template error
+- [X] [#1205](https://github.com/kubernetes/ingress/pull/1205) Add initial sync of secrets
+- [X] [#1206](https://github.com/kubernetes/ingress/pull/1206) Update ssl-passthrough docs
+- [X] [#1207](https://github.com/kubernetes/ingress/pull/1207) delete broken link
+- [X] [#1208](https://github.com/kubernetes/ingress/pull/1208) fix some typo
+- [X] [#1210](https://github.com/kubernetes/ingress/pull/1210) add rate limit whitelist
+- [X] [#1215](https://github.com/kubernetes/ingress/pull/1215) Replace base64 encoding with random uuid
+- [X] [#1218](https://github.com/kubernetes/ingress/pull/1218) Trivial fixes in core/pkg/net
+- [X] [#1219](https://github.com/kubernetes/ingress/pull/1219) keep zones unique per ingress resource
+- [X] [#1221](https://github.com/kubernetes/ingress/pull/1221) Move certificate authentication from location to server
+- [X] [#1223](https://github.com/kubernetes/ingress/pull/1223) Add doc for non-www to www annotation
+- [X] [#1224](https://github.com/kubernetes/ingress/pull/1224) refactor rate limit whitelist
+- [X] [#1226](https://github.com/kubernetes/ingress/pull/1226) Remove useless variable in nginx.tmpl
+- [X] [#1227](https://github.com/kubernetes/ingress/pull/1227) Update annotations doc with base-url-scheme
+- [X] [#1233](https://github.com/kubernetes/ingress/pull/1233) Fix ClientBodyBufferSize annotation
+- [X] [#1234](https://github.com/kubernetes/ingress/pull/1234) Lint code
+- [X] [#1235](https://github.com/kubernetes/ingress/pull/1235) Fix Equal comparison
+- [X] [#1236](https://github.com/kubernetes/ingress/pull/1236) Add Validation for Client Body Buffer Size
+- [X] [#1238](https://github.com/kubernetes/ingress/pull/1238) Add support for 'client_body_timeout' and 'client_header_timeout'
+- [X] [#1239](https://github.com/kubernetes/ingress/pull/1239) Add flags to customize listen ports and detect port collisions
+- [X] [#1243](https://github.com/kubernetes/ingress/pull/1243) Add support for access-log-path and error-log-path
+- [X] [#1244](https://github.com/kubernetes/ingress/pull/1244) Add custom default backend annotation
+
+*Documentation:*
+
+- [X] [#976](https://github.com/kubernetes/ingress/pull/976) Update annotations doc
+- [X] [#979](https://github.com/kubernetes/ingress/pull/979) Missing auth example
+- [X] [#980](https://github.com/kubernetes/ingress/pull/980) Add nginx basic auth example
+- [X] [#1001](https://github.com/kubernetes/ingress/pull/1001) examples/nginx/rbac: Give access to own namespace
+- [X] [#1005](https://github.com/kubernetes/ingress/pull/1005) Update configuration.md
+- [X] [#1018](https://github.com/kubernetes/ingress/pull/1018) add docs for `proxy-set-headers` and `add-headers`
+- [X] [#1038](https://github.com/kubernetes/ingress/pull/1038) typo / spelling in README.md
+- [X] [#1039](https://github.com/kubernetes/ingress/pull/1039) typo in examples/tcp/nginx/README.md
+- [X] [#1049](https://github.com/kubernetes/ingress/pull/1049) Fix config name in the example.
+- [X] [#1054](https://github.com/kubernetes/ingress/pull/1054) Fix link to UDP example
+- [X] [#1084](https://github.com/kubernetes/ingress/pull/1084) (issue #310)Fix some broken link
+- [X] [#1103](https://github.com/kubernetes/ingress/pull/1103) Add GoDoc Widget
+- [X] [#1105](https://github.com/kubernetes/ingress/pull/1105) Make Readme file more readable
+- [X] [#1106](https://github.com/kubernetes/ingress/pull/1106) Update annotations.md
+- [X] [#1107](https://github.com/kubernetes/ingress/pull/1107) Fix Broken Link
+- [X] [#1119](https://github.com/kubernetes/ingress/pull/1119) fix typos in controllers/nginx/README.md
+- [X] [#1122](https://github.com/kubernetes/ingress/pull/1122) Fix broken link
+- [X] [#1131](https://github.com/kubernetes/ingress/pull/1131) Add short help doc in configuration for nginx limit rate
+- [X] [#1143](https://github.com/kubernetes/ingress/pull/1143) Minor Typo Fix
+- [X] [#1144](https://github.com/kubernetes/ingress/pull/1144) Minor Typo fix
+- [X] [#1145](https://github.com/kubernetes/ingress/pull/1145) Minor Typo fix
+- [X] [#1146](https://github.com/kubernetes/ingress/pull/1146) Fix Minor Typo in Readme
+- [X] [#1147](https://github.com/kubernetes/ingress/pull/1147) Minor Typo Fix
+- [X] [#1148](https://github.com/kubernetes/ingress/pull/1148) Minor Typo Fix in Getting-Started.md
+- [X] [#1149](https://github.com/kubernetes/ingress/pull/1149) Fix Minor Typo in TLS authentication
+- [X] [#1150](https://github.com/kubernetes/ingress/pull/1150) Fix Minor Typo in Customize the HAProxy configuration
+- [X] [#1151](https://github.com/kubernetes/ingress/pull/1151) Fix Minor Typo in customization custom-template
+- [X] [#1152](https://github.com/kubernetes/ingress/pull/1152) Fix minor typo in HAProxy Multi TLS certificate termination
+- [X] [#1153](https://github.com/kubernetes/ingress/pull/1153) Fix minor typo in Multi TLS certificate termination
+- [X] [#1154](https://github.com/kubernetes/ingress/pull/1154) Fix minor typo in Role Based Access Control
+- [X] [#1155](https://github.com/kubernetes/ingress/pull/1155) Fix minor typo in TCP loadbalancing
+- [X] [#1156](https://github.com/kubernetes/ingress/pull/1156) Fix minor typo in UDP loadbalancing
+- [X] [#1157](https://github.com/kubernetes/ingress/pull/1157) Fix minor typos in Prerequisites
+- [X] [#1158](https://github.com/kubernetes/ingress/pull/1158) Fix minor typo in Ingress examples
+- [X] [#1159](https://github.com/kubernetes/ingress/pull/1159) Fix minor typos in Ingress admin guide
+- [X] [#1160](https://github.com/kubernetes/ingress/pull/1160) Fix a broken href and typo in Ingress FAQ
+- [X] [#1165](https://github.com/kubernetes/ingress/pull/1165) Update CONTRIBUTING.md
+- [X] [#1168](https://github.com/kubernetes/ingress/pull/1168) finx link to running-locally.md
+- [X] [#1170](https://github.com/kubernetes/ingress/pull/1170) Update dead link in nginx/HTTPS section
+- [X] [#1172](https://github.com/kubernetes/ingress/pull/1172) Update README.md
+- [X] [#1173](https://github.com/kubernetes/ingress/pull/1173) Update admin.md
+- [X] [#1174](https://github.com/kubernetes/ingress/pull/1174) fix several titles
+- [X] [#1177](https://github.com/kubernetes/ingress/pull/1177) fix typos
+- [X] [#1188](https://github.com/kubernetes/ingress/pull/1188) Fix minor typo
+- [X] [#1189](https://github.com/kubernetes/ingress/pull/1189) Fix sign in URL redirect parameter
+- [X] [#1192](https://github.com/kubernetes/ingress/pull/1192) Update README.md
+- [X] [#1195](https://github.com/kubernetes/ingress/pull/1195) Update troubleshooting.md
+- [X] [#1196](https://github.com/kubernetes/ingress/pull/1196) Update README.md
+- [X] [#1209](https://github.com/kubernetes/ingress/pull/1209) Update README.md
+- [X] [#1085](https://github.com/kubernetes/ingress/pull/1085) Fix ConfigMap's namespace in custom configuration example for nginx
+- [X] [#1142](https://github.com/kubernetes/ingress/pull/1142) Fix typo in multiple docs
+- [X] [#1228](https://github.com/kubernetes/ingress/pull/1228) Update release doc in getting-started.md
+- [X] [#1230](https://github.com/kubernetes/ingress/pull/1230) Update godep guide link
+
+
 ### 0.9-beta.11
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.11`
