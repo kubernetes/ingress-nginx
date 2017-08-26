@@ -769,7 +769,9 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 								glog.V(3).Infof("using custom default backend in server %v location %v (service %v/%v)",
 									server.Hostname, location.Path, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
 								b, err := cloner.DeepCopy(upstream)
-								if err == nil {
+								if err != nil {
+									glog.Errorf("unexpected error copying Upstream: %v", err)
+								} else {
 									name := fmt.Sprintf("custom-default-backend-%v", upstream.Name)
 									nb := b.(*ingress.Backend)
 									nb.Name = name

@@ -105,6 +105,10 @@ http {
     # disable warnings
     uninitialized_variable_warn off;
 
+    # Additional available variables:
+    # $namespace
+    # $ingress_name
+    # $service_name
     log_format upstreaminfo {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ buildLogFormatUpstream $cfg }}';
 
     {{/* map urls that should not appear in access.log */}}
@@ -258,6 +262,7 @@ http {
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
     }
+
     {{ end }}
 
     upstream {{ $upstream.Name }} {
@@ -273,6 +278,7 @@ http {
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
     }
+
     {{ end }}
 
     {{/* build the maps that will be use to validate the Whitelist */}}
@@ -344,12 +350,32 @@ http {
     server {
         server_name {{ $server.Hostname }};
         {{ template "SERVER" serverConfig $all $server }}
+
+
+        fastcgi_param       HTTP_X_Code             503;
+        fastcgi_param       HTTP_X_Format           $http_accept;
+        fastcgi_param       HTTP_X_Original_URI     $request_uri;
+        fastcgi_param       HTTP_X_Namespace        $namespace;
+        fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
+        fastcgi_param       HTTP_X_Service_Name     $service_name;
+        fastcgi_param       HTTP_X_Endpoints        {{ $all.DefaultBackendEndpoints }};
+
         {{ template "CUSTOM_ERRORS" $all }}
     }
     {{ if $server.Alias }}
     server {
         server_name {{ $server.Alias }};
         {{ template "SERVER" serverConfig $all $server }}
+
+
+        fastcgi_param       HTTP_X_Code             503;
+        fastcgi_param       HTTP_X_Format           $http_accept;
+        fastcgi_param       HTTP_X_Original_URI     $request_uri;
+        fastcgi_param       HTTP_X_Namespace        $namespace;
+        fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
+        fastcgi_param       HTTP_X_Service_Name     $service_name;
+        fastcgi_param       HTTP_X_Endpoints        {{ $all.DefaultBackendEndpoints }};
+
         {{ template "CUSTOM_ERRORS" $all }}
     }
     {{ end }}
@@ -395,30 +421,34 @@ http {
             stub_status on;
         }
 
-        location / {
-            set $proxy_upstream_name "upstream-default-backend";
-            proxy_pass             http://upstream-default-backend;
-        }
-        {{ template "CUSTOM_ERRORS" $all }}
-    }
 
-    # default server for services without endpoints
-    server {
-        listen 127.0.0.1:{{ $all.ListenPorts.Default }};
-        set $proxy_upstream_name "-";
+        fastcgi_param       HTTP_X_Code             404;
+        fastcgi_param       HTTP_X_Format           $http_accept;
+        fastcgi_param       HTTP_X_Original_URI     $request_uri;
+        fastcgi_param       HTTP_X_Namespace        $namespace;
+        fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
+        fastcgi_param       HTTP_X_Service_Name     $service_name;
+        fastcgi_param       HTTP_X_Endpoints        {{ $all.DefaultBackendEndpoints }};
 
         location / {
             {{ if .CustomErrors }}
             include             /etc/nginx/fastcgi_params;
-            fastcgi_param       HTTP_X_Code      404;
-            fastcgi_param       HTTP_X_Format    $http_accept;
-            fastcgi_param       HTTP_X_Endpoints {{ .DefaultBackendEndpoints }};
             fastcgi_pass        unix:/var/run/go-fastcgi.sock;
             {{ else }}
             set $proxy_upstream_name "upstream-default-backend";
             proxy_pass               http://upstream-default-backend;
             {{ end }}
         }
+
+        fastcgi_param       HTTP_X_Code             404;
+        fastcgi_param       HTTP_X_Format           $http_accept;
+        fastcgi_param       HTTP_X_Original_URI     $request_uri;
+        fastcgi_param       HTTP_X_Namespace        $namespace;
+        fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
+        fastcgi_param       HTTP_X_Service_Name     $service_name;
+        fastcgi_param       HTTP_X_Endpoints        {{ $all.DefaultBackendEndpoints }};
+
+        {{ template "CUSTOM_ERRORS" $all }}
     }
 }
 
@@ -484,6 +514,7 @@ stream {
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
         proxy_pass              udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
     }
+
     {{ end }}
 }
 
@@ -494,9 +525,6 @@ stream {
         location @custom_{{ $errCode }} {
             internal;
             include             /etc/nginx/fastcgi_params;
-            fastcgi_param       HTTP_X_Code      {{ $errCode }};
-            fastcgi_param       HTTP_X_Format    $http_accept;
-            fastcgi_param       HTTP_X_Endpoints {{ $defaultBackendEndpoints }};
             fastcgi_pass        unix:/var/run/go-fastcgi.sock;
         }
         {{ end }}
@@ -633,10 +661,16 @@ stream {
         set $target {{ $location.ExternalAuth.URL }};
         proxy_pass $target;
         }
+
         {{ end }}
 
         location {{ $path }} {
         set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
+
+        {{ $ing := (getIngressInformation $location.Ingress $path) }}
+        set $namespace      "{{ $ing.Namespace }}";
+        set $ingress_name   "{{ $ing.Rule }}";
+        set $service_name   "{{ $ing.Service }}";
 
         {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
         # enforce ssl on server side
@@ -752,9 +786,18 @@ stream {
         {{/* Add any additional configuration defined */}}
         {{ $location.ConfigurationSnippet }}
 
+        {{/* if we are sending the request to a custom default backend, we add the required headers */}}
+        {{ if (hasPrefix $location.Backend "custom-default-backend-") }}
+        proxy_set_header       X-Code             503;
+        proxy_set_header       X-Format           $http_accept;
+        proxy_set_header       X-Namespace        $namespace;
+        proxy_set_header       X-Ingress-Name     $ingress_name;
+        proxy_set_header       X-Service-Name     $service_name;
+        {{ end }}
+
         {{ buildProxyPass $server.Hostname $all.Backends $location }}
         {{ else }}
-        #{{ $location.Denied }}
+        # Location denied. Reason: {{ $location.Denied }}
         return 503;
         {{ end }}
         }
