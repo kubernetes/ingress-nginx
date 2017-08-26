@@ -32,6 +32,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/pborman/uuid"
 
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
@@ -150,6 +151,7 @@ var (
 		"toLower":                  strings.ToLower,
 		"formatIP":                 formatIP,
 		"buildNextUpstream":        buildNextUpstream,
+		"getIngressInformation":    getIngressInformation,
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
@@ -587,4 +589,53 @@ func isValidClientBodyBufferSize(input interface{}) bool {
 	}
 
 	return true
+}
+
+type ingressInformation struct {
+	Namespace string
+	Rule      string
+	Service   string
+}
+
+func getIngressInformation(i, p interface{}) *ingressInformation {
+	ing, ok := i.(*extensions.Ingress)
+	if !ok {
+		glog.Errorf("expected an Ingress type but %T was returned", i)
+		return &ingressInformation{}
+	}
+
+	path, ok := p.(string)
+	if !ok {
+		glog.Errorf("expected a string type but %T was returned", p)
+		return &ingressInformation{}
+	}
+
+	if ing == nil {
+		glog.Errorf("expected an Ingress")
+		return &ingressInformation{}
+	}
+
+	info := &ingressInformation{
+		Namespace: ing.GetNamespace(),
+		Rule:      ing.GetName(),
+	}
+
+	if ing.Spec.Backend != nil {
+		info.Service = ing.Spec.Backend.ServiceName
+	}
+
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			continue
+		}
+
+		for _, rPath := range rule.HTTP.Paths {
+			if path == rPath.Path {
+				info.Service = rPath.Backend.ServiceName
+				return info
+			}
+		}
+	}
+
+	return info
 }
