@@ -164,6 +164,8 @@ type NGINXController struct {
 	proxy *proxy
 
 	ports *config.ListenPorts
+
+	backendDefaults defaults.Backend
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -223,12 +225,7 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 
 // BackendDefaults returns the nginx defaults
 func (n NGINXController) BackendDefaults() defaults.Backend {
-	if n.configmap == nil {
-		d := config.NewDefault()
-		return d.Backend
-	}
-
-	return ngx_template.ReadConfig(n.configmap.Data).Backend
+	return n.backendDefaults
 }
 
 // printDiff returns the difference between the running configuration
@@ -423,6 +420,7 @@ func (n *NGINXController) SetConfig(cmap *api_v1.ConfigMap) {
 
 	n.isProxyProtocolEnabled = false
 	if cmap == nil {
+		n.backendDefaults = config.NewDefault().Backend
 		return
 	}
 
@@ -434,6 +432,8 @@ func (n *NGINXController) SetConfig(cmap *api_v1.ConfigMap) {
 			return
 		}
 	}
+
+	n.backendDefaults = ngx_template.ReadConfig(n.configmap.Data).Backend
 }
 
 // SetListers sets the configured store listers in the generic ingress controller
