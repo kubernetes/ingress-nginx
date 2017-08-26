@@ -592,9 +592,10 @@ func isValidClientBodyBufferSize(input interface{}) bool {
 }
 
 type ingressInformation struct {
-	Namespace string
-	Rule      string
-	Service   string
+	Namespace   string
+	Rule        string
+	Service     string
+	Annotations map[string]string
 }
 
 func getIngressInformation(i, p interface{}) *ingressInformation {
@@ -616,8 +617,9 @@ func getIngressInformation(i, p interface{}) *ingressInformation {
 	}
 
 	info := &ingressInformation{
-		Namespace: ing.GetNamespace(),
-		Rule:      ing.GetName(),
+		Namespace:   ing.GetNamespace(),
+		Rule:        ing.GetName(),
+		Annotations: ing.Annotations,
 	}
 
 	if ing.Spec.Backend != nil {
