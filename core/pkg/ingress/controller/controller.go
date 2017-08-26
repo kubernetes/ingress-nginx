@@ -19,7 +19,6 @@ package controller
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -42,7 +41,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
-	"k8s.io/ingress/core/pkg/file"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/annotations/healthcheck"
@@ -62,11 +60,16 @@ const (
 	defUpstreamName = "upstream-default-backend"
 	defServerName   = "_"
 	rootLocation    = "/"
+
+	fakeCertificate = "default-fake-certificate"
 )
 
 var (
 	// list of ports that cannot be used by TCP or UDP services
 	reservedPorts = []string{"80", "443", "8181", "18080"}
+
+	fakeCertificatePath = ""
+	fakeCertificateSHA  = ""
 
 	cloner = conversion.NewCloner()
 )
@@ -1051,32 +1054,12 @@ func (ic *GenericController) createServers(data []interface{},
 		NextUpstream:   bdef.ProxyNextUpstream,
 	}
 
-	// This adds the Default Certificate to Default Backend (or generates a new self signed one)
-	var defaultPemFileName, defaultPemSHA string
+	defaultPemFileName := fakeCertificatePath
+	defaultPemSHA := fakeCertificateSHA
 
 	// Tries to fetch the default Certificate. If it does not exists, generate a new self signed one.
 	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
-	if err != nil {
-		// This means the Default Secret does not exists, so we will create a new one.
-		fakeCertificate := "default-fake-certificate"
-		fakeCertificatePath := fmt.Sprintf("%v/%v.pem", ingress.DefaultSSLDirectory, fakeCertificate)
-
-		// Only generates a new certificate if it doesn't exists physically
-		_, err = os.Stat(fakeCertificatePath)
-		if err != nil {
-			glog.V(3).Infof("No Default SSL Certificate found. Generating a new one")
-			defCert, defKey := ssl.GetFakeSSLCert()
-			defaultCertificate, err = ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
-			if err != nil {
-				glog.Fatalf("Error generating self signed certificate: %v", err)
-			}
-			defaultPemFileName = defaultCertificate.PemFileName
-			defaultPemSHA = defaultCertificate.PemSHA
-		} else {
-			defaultPemFileName = fakeCertificatePath
-			defaultPemSHA = file.SHA1(fakeCertificatePath)
-		}
-	} else {
+	if err == nil {
 		defaultPemFileName = defaultCertificate.PemFileName
 		defaultPemSHA = defaultCertificate.PemSHA
 	}
@@ -1362,6 +1345,8 @@ func (ic GenericController) Start() {
 		}
 	}
 
+	createDefaultSSLCertificate()
+
 	go ic.syncQueue.Run(time.Second, ic.stopCh)
 
 	if ic.syncStatus != nil {
@@ -1369,4 +1354,15 @@ func (ic GenericController) Start() {
 	}
 
 	<-ic.stopCh
+}
+
+func createDefaultSSLCertificate() {
+	defCert, defKey := ssl.GetFakeSSLCert()
+	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
+	if err != nil {
+		glog.Fatalf("Error generating self signed certificate: %v", err)
+	}
+
+	fakeCertificateSHA = c.PemSHA
+	fakeCertificatePath = c.PemFileName
 }
