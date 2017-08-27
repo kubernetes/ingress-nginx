@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -122,6 +123,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 	_, err = k8s.IsValidService(kubeClient, *defaultSvc)
 	if err != nil {
+		if strings.Contains(err.Error(), "cannot get services in the namespace") {
+			glog.Fatalf("✖ It seems the cluster it is running with Authorization enabled (like RBAC) and there is no permissions for the ingress controller. Please check the configuration")
+		}
 		glog.Fatalf("no service with name %v found: %v", *defaultSvc, err)
 	}
 	glog.Infof("validated %v as the default backend", *defaultSvc)
@@ -143,6 +147,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 			glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 		}
 	}
+
 	if *watchNamespace != "" {
 
 		_, err = k8s.IsValidNamespace(kubeClient, *watchNamespace)
@@ -270,13 +275,21 @@ func createApiserverClient(apiserverHost string, kubeConfig string) (*kubernetes
 	cfg.Burst = defaultBurst
 	cfg.ContentType = "application/vnd.kubernetes.protobuf"
 
-	glog.Infof("Creating API server client for %s", cfg.Host)
+	glog.Infof("Creating API client for %s", cfg.Host)
 
 	client, err := kubernetes.NewForConfig(cfg)
-
 	if err != nil {
 		return nil, err
 	}
+
+	v, err := client.Discovery().ServerVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	glog.Infof("Running in Kubernetes Cluster version v%v.%v (%v) - git (%v) commit %v - platform %v",
+		v.Major, v.Minor, v.GitVersion, v.GitTreeState, v.GitCommit, v.Platform)
+
 	return client, nil
 }
 
