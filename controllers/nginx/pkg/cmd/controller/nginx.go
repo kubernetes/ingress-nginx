@@ -71,7 +71,7 @@ var (
 // newNGINXController creates a new NGINX Ingress controller.
 // If the environment variable NGINX_BINARY exists it will be used
 // as source for nginx commands
-func newNGINXController() ingress.Controller {
+func newNGINXController() *NGINXController {
 	ngx := os.Getenv("NGINX_BINARY")
 	if ngx == "" {
 		ngx = binary
@@ -88,6 +88,7 @@ func newNGINXController() ingress.Controller {
 		isIPV6Enabled: isIPv6Enabled(),
 		resolver:      h,
 		ports:         &config.ListenPorts{},
+		done:          make(chan error),
 	}
 
 	fcgiListener, err := net.Listen("unix", fastCGISocket)
@@ -134,11 +135,13 @@ Error loading new template : %v
 
 	go n.Start()
 
-	return ingress.Controller(n)
+	return n
 }
 
 // NGINXController ...
 type NGINXController struct {
+	done chan error
+
 	t *ngx_template.Template
 
 	configmap *api_v1.ConfigMap
@@ -166,15 +169,16 @@ type NGINXController struct {
 	ports *config.ListenPorts
 
 	backendDefaults defaults.Backend
+
+	isShuttingDown bool
 }
 
 // Start start a new NGINX master process running in foreground.
 func (n *NGINXController) Start() {
 	glog.Info("starting NGINX process...")
 
-	done := make(chan error, 1)
 	cmd := exec.Command(n.binary, "-c", cfgPath)
-	n.start(cmd, done)
+	start(cmd, n.done)
 
 	// if the nginx master process dies the workers continue to process requests,
 	// passing checks but in case of updates in ingress no updates will be
@@ -182,7 +186,12 @@ func (n *NGINXController) Start() {
 	// issues because of this behavior.
 	// To avoid this issue we restart nginx in case of errors.
 	for {
-		err := <-done
+		err := <-n.done
+
+		if n.isShuttingDown {
+			break
+		}
+
 		if exitError, ok := err.(*exec.ExitError); ok {
 			waitStatus := exitError.Sys().(syscall.WaitStatus)
 			glog.Warningf(`
@@ -195,19 +204,25 @@ NGINX master process died (%v): %v
 		cmd = exec.Command(n.binary, "-c", cfgPath)
 		// we wait until the workers are killed
 		for {
-			conn, err := net.DialTimeout("tcp", "127.0.0.1:80", 1*time.Second)
-			if err != nil {
+			if !isNginxRunning(n.ports.Status) {
 				break
 			}
-			conn.Close()
 			time.Sleep(1 * time.Second)
 		}
 		// start a new nginx master process
-		n.start(cmd, done)
+		start(cmd, n.done)
 	}
 }
 
-func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
+func (n *NGINXController) Stop() error {
+	n.isShuttingDown = true
+	cmd := exec.Command(n.binary, "-c", cfgPath, "-s", "quit")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func start(cmd *exec.Cmd, done chan error) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
@@ -215,8 +230,6 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 		done <- err
 		return
 	}
-
-	n.cmdArgs = cmd.Args
 
 	go func() {
 		done <- cmd.Wait()
@@ -230,7 +243,7 @@ func (n NGINXController) BackendDefaults() defaults.Backend {
 
 // printDiff returns the difference between the running configuration
 // and the new one
-func (n NGINXController) printDiff(data []byte) {
+func printDiff(data []byte) {
 	if !glog.V(2) {
 		return
 	}
@@ -655,7 +668,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	n.printDiff(content)
+	printDiff(content)
 
 	err = ioutil.WriteFile(cfgPath, content, 0644)
 	if err != nil {
@@ -715,4 +728,13 @@ func nextPowerOf2(v int) int {
 func isIPv6Enabled() bool {
 	cmd := exec.Command("test", "-f", "/proc/net/if_inet6")
 	return cmd.Run() == nil
+}
+
+func isNginxRunning(port int) bool {
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%v", port), 1*time.Second)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }
