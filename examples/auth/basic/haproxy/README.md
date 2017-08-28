@@ -12,9 +12,6 @@ This document has the following prerequisites:
 end up with controller, a sample web app and an ingress resource to the `foo.bar`
 domain
 
-As mentioned in the deployment instructions, you MUST turn down any existing
-ingress controllers before running HAProxy Ingress.
-
 ## Using Basic Authentication
 
 HAProxy Ingress read user and password from `auth` file stored on secrets, one user
