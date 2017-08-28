@@ -23,17 +23,15 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"k8s.io/ingress/core/pkg/ingress/controller"
 )
 
 func main() {
 	// start a new nginx controller
 	ngx := newNGINXController()
-	// create a custom Ingress controller using NGINX as backend
-	ic := controller.NewIngressController(ngx)
-	go handleSigterm(ic)
+
+	go handleSigterm(ngx)
 	// start the controller
-	ic.Start()
+	ngx.Start()
 	// wait
 	glog.Infof("shutting down Ingress controller...")
 	for {
@@ -42,14 +40,14 @@ func main() {
 	}
 }
 
-func handleSigterm(ic *controller.GenericController) {
+func handleSigterm(ngx *NGINXController) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan
 	glog.Infof("Received SIGTERM, shutting down")
 
 	exitCode := 0
-	if err := ic.Stop(); err != nil {
+	if err := ngx.Stop(); err != nil {
 		glog.Infof("Error during shutdown %v", err)
 		exitCode = 1
 	}
