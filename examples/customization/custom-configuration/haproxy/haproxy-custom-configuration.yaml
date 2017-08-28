@@ -5,7 +5,6 @@ metadata:
     run: haproxy-ingress
   name: haproxy-ingress
 spec:
-  replicas: 1
   selector:
     matchLabels:
       run: haproxy-ingress
@@ -18,9 +17,9 @@ spec:
       - name: haproxy-ingress
         image: quay.io/jcmoraisjr/haproxy-ingress
         args:
-        - --default-backend-service=default/ingress-default-backend
-        - --default-ssl-certificate=default/tls-secret
-        - --configmap=default/haproxy-conf
+        - --default-backend-service=$(POD_NAMESPACE)/ingress-default-backend
+        - --default-ssl-certificate=$(POD_NAMESPACE)/tls-secret
+        - --configmap=$(POD_NAMESPACE)/haproxy-ingress
         ports:
         - name: http
           containerPort: 80
