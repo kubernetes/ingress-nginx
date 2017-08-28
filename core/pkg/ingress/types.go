@@ -77,6 +77,8 @@ type Controller interface {
 	// The backend returns an error if was not possible to update the configuration.
 	//
 	OnUpdate(Configuration) error
+	// OnStop callback invoked when the controller is being stopped
+	OnStop() error
 	// ConfigMap content of --configmap
 	SetConfig(*api.ConfigMap)
 	// SetListers allows the access of store listers present in the generic controller

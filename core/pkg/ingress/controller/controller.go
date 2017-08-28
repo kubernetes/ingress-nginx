@@ -1326,6 +1326,12 @@ func (ic GenericController) Stop() error {
 	ic.stopLock.Lock()
 	defer ic.stopLock.Unlock()
 
+	// Shutting down the underlying backend first
+	err := ic.cfg.Backend.OnStop()
+	if err != nil {
+		glog.Errorf("unexpected failure stopping the backend: \n%v", err)
+	}
+
 	// Only try draining the workqueue if we haven't already.
 	if !ic.syncQueue.IsShuttingDown() {
 		glog.Infof("shutting down controller queues")

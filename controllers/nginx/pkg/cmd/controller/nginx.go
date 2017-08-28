@@ -88,6 +88,7 @@ func newNGINXController() ingress.Controller {
 		isIPV6Enabled: isIPv6Enabled(),
 		resolver:      h,
 		ports:         &config.ListenPorts{},
+		stopCh:        make(chan struct{}),
 	}
 
 	fcgiListener, err := net.Listen("unix", fastCGISocket)
@@ -161,19 +162,31 @@ type NGINXController struct {
 
 	isSSLPassthroughEnabled bool
 
+	isStopping bool
+
 	proxy *proxy
 
 	ports *config.ListenPorts
 
 	backendDefaults defaults.Backend
+	stopCh          chan struct{}
 }
 
 // Start start a new NGINX master process running in foreground.
 func (n *NGINXController) Start() {
 	glog.Info("starting NGINX process...")
+	n.isStopping = false
 
 	done := make(chan error, 1)
 	cmd := exec.Command(n.binary, "-c", cfgPath)
+
+	// put nginx in another process group to prevent it
+	// to receive signals meant for the controller
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+		Pgid:    0,
+	}
+
 	n.start(cmd, done)
 
 	// if the nginx master process dies the workers continue to process requests,
@@ -202,8 +215,43 @@ NGINX master process died (%v): %v
 			conn.Close()
 			time.Sleep(1 * time.Second)
 		}
-		// start a new nginx master process
-		n.start(cmd, done)
+		// restart a new nginx master process if the controller
+		// is not being stopped
+		if n.isStopping {
+			n.stopCh <- struct{}{}
+		} else {
+			n.start(cmd, done)
+		}
+	}
+}
+
+// OnStop gracefully stops the NGINX master process.
+func (n *NGINXController) OnStop() error {
+	glog.Info("stopping NGINX process...")
+	n.isStopping = true
+
+	o, err := exec.Command(n.binary, "-s", "quit", "-c", cfgPath).CombinedOutput()
+	if err != nil {
+		glog.Errorf("%v\n%v", err, string(o))
+	}
+
+	// TODO: If we keep the modified Controller interface
+	// should this be moved as a generic timeout control for the backend to stop
+	// on time ?
+	timer := time.NewTimer(60 * time.Second)
+	defer timer.Stop()
+
+	for {
+		select {
+		case <-n.stopCh:
+			return nil
+		case <-timer.C:
+			glog.Error("Timeout while waiting for nginx to gracefully shutdown")
+			o, err := exec.Command(n.binary, "-s", "stop", "-c", cfgPath).CombinedOutput()
+			if err != nil {
+				return fmt.Errorf("%v\n%v", err, string(o))
+			}
+		}
 	}
 }
 
