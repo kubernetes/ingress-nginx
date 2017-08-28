@@ -4,10 +4,10 @@ This example aims to demonstrate the Deployment of multi haproxy ingress control
 
 ## Prerequisites
 
-This ingress controller doesn't yet have support for
-[ingress classes](/examples/PREREQUISITES.md#ingress-class). You MUST turn
-down any existing ingress controllers before running HAProxy Ingress controller or
-they will fight for Ingresses. This includes any cloudprovider controller.
+If you have another Ingress controller deployed, you will need to make sure your
+Ingress resources target exactly one Ingress controller by specifying the
+[ingress.class](/examples/PREREQUISITES.md#ingress-class) annotation as
+`haproxy`.
 
 This document has also the following prerequisites:
 

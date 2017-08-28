@@ -12,9 +12,6 @@ the `foo.bar` domain
 * Configure only the default [TLS termination](/examples/tls-termination/haproxy) -
 there is no need to create another secret
 
-As mentioned in the deployment instructions, you MUST turn down any existing
-ingress controllers before running HAProxy Ingress.
-
 ## Annotations
 
 The following annotations are implemented:
