@@ -17,9 +17,6 @@ following these steps you should have a secret named `caingress`, a certificate 
 * Use these same steps and create another CA and generate another certificate and private
 key `fake.crt` and `fake.key` just for testing
 
-As mentioned in the deployment instructions, you MUST turn down any existing
-ingress controllers before running HAProxy Ingress.
-
 Secret, certificates and keys can be created using these shortcuts:
 
 CA and it's secret:
