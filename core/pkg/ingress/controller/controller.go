@@ -187,7 +187,20 @@ func newIngressController(config *Configuration) *GenericController {
 			ic.syncQueue.Enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
-			delIng := obj.(*extensions.Ingress)
+			delIng, ok := obj.(*extensions.Ingress)
+			if !ok {
+				// If we reached here it means the ingress was deleted but its final state is unrecorded.
+				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+				if !ok {
+					glog.Errorf("couldn't get object from tombstone %#v", obj)
+					return
+				}
+				delIng, ok = tombstone.Obj.(*extensions.Ingress)
+				if !ok {
+					glog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
+					return
+				}
+			}
 			if !class.IsValid(delIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, class.IngressKey)
 				return
@@ -223,7 +236,20 @@ func newIngressController(config *Configuration) *GenericController {
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			sec := obj.(*api.Secret)
+			sec, ok := obj.(*api.Secret)
+			if !ok {
+				// If we reached here it means the secret was deleted but its final state is unrecorded.
+				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+				if !ok {
+					glog.Errorf("couldn't get object from tombstone %#v", obj)
+					return
+				}
+				sec, ok = tombstone.Obj.(*api.Secret)
+				if !ok {
+					glog.Errorf("Tombstone contained object that is not a Secret: %#v", obj)
+					return
+				}
+			}
 			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
 			ic.sslCertTracker.DeleteAll(key)
 		},
