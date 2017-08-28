@@ -9,9 +9,6 @@ This document has the following prerequisites:
 * Deploy [HAProxy Ingress controller](/examples/deployment/haproxy), you should end up with controller, a sample web app and default TLS secret
 * Create [*two* secrets](/examples/PREREQUISITES.md#tls-certificates) named `foobar-ssl` with subject `'/CN=foo.bar'` and `barfoo-ssl` with subject `'/CN=bar.foo'`
 
-As mentioned in the deployment instructions, you MUST turn down any existing
-ingress controllers before running HAProxy Ingress.
-
 ## Using a new TLS certificate
 
 Update ingress resource in order to add TLS termination to two hosts:
