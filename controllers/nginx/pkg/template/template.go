@@ -601,18 +601,17 @@ type ingressInformation struct {
 func getIngressInformation(i, p interface{}) *ingressInformation {
 	ing, ok := i.(*extensions.Ingress)
 	if !ok {
-		glog.Errorf("expected an Ingress type but %T was returned", i)
+		glog.V(3).Infof("expected an Ingress type but %T was returned", i)
 		return &ingressInformation{}
 	}
 
 	path, ok := p.(string)
 	if !ok {
-		glog.Errorf("expected a string type but %T was returned", p)
+		glog.V(3).Infof("expected a string type but %T was returned", p)
 		return &ingressInformation{}
 	}
 
 	if ing == nil {
-		glog.Errorf("expected an Ingress")
 		return &ingressInformation{}
 	}
 
