@@ -1169,7 +1169,12 @@ func (ic *GenericController) createServers(data []interface{},
 			servers[host].Alias = aliasAnnotation
 
 			// only add a certificate if the server does not have one previously configured
-			if len(ing.Spec.TLS) == 0 || servers[host].SSLCertificate != "" {
+			if servers[host].SSLCertificate != "" {
+				continue
+			}
+
+			if len(ing.Spec.TLS) == 0 {
+				glog.V(3).Infof("ingress %v/%v for host %v does not contains a TLS section", ing.Namespace, ing.Name, host)
 				continue
 			}
 
@@ -1183,9 +1188,9 @@ func (ic *GenericController) createServers(data []interface{},
 				}
 			}
 
-			// the current ing.Spec.Rules[].Host doesn't have an entry at
-			// ing.Spec.TLS[].Hosts[] skipping to the next Rule
 			if !found {
+				glog.Warningf("ingress %v/%v for host %v contains a TLS section but none of the host match",
+					ing.Namespace, ing.Name, host)
 				continue
 			}
 
@@ -1199,7 +1204,7 @@ func (ic *GenericController) createServers(data []interface{},
 			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 			bc, exists := ic.sslCertTracker.Get(key)
 			if !exists {
-				glog.Infof("ssl certificate \"%v\" does not exist in local store", key)
+				glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
 				continue
 			}
 

@@ -85,11 +85,12 @@ func newNGINXController() *NGINXController {
 	}
 
 	n := &NGINXController{
-		binary:        ngx,
-		configmap:     &api_v1.ConfigMap{},
-		isIPV6Enabled: isIPv6Enabled(),
-		resolver:      h,
-		ports:         &config.ListenPorts{},
+		binary:          ngx,
+		configmap:       &api_v1.ConfigMap{},
+		isIPV6Enabled:   isIPv6Enabled(),
+		resolver:        h,
+		ports:           &config.ListenPorts{},
+		backendDefaults: config.NewDefault().Backend,
 	}
 
 	fcgiListener, err := net.Listen("unix", fastCGISocket)
