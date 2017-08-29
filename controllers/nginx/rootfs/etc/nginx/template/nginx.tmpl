@@ -16,7 +16,7 @@ worker_rlimit_nofile {{ .MaxOpenFiles }};
 
 {{/* http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout */}}
 {{/* avoid waiting too long during a reload */}}
-worker_shutdown_timeout 10s;
+worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
 
 events {
     multi_accept        on;
