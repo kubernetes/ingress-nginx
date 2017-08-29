@@ -17,10 +17,9 @@ spec:
       containers:
       - name: haproxy-ingress
         image: quay.io/jcmoraisjr/haproxy-ingress
-        imagePullPolicy: IfNotPresent
         args:
-        - --default-backend-service=default/default-http-backend
-        - --default-ssl-certificate=default/tls-secret
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
+        - --default-ssl-certificate=$(POD_NAMESPACE)/tls-secret
         ports:
         - name: http
           containerPort: 80
