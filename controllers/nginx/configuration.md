@@ -187,7 +187,7 @@ the whole body or only its part is written to a temporary file. By default, buff
 This is 8K on x86, other 32-bit platforms, and x86-64. It is usually 16K on other 64-bit platforms. This annotation is
 applied to each location provided in the ingress rule.
 
-*Note:* The annotation value must be given in a valid format otherwise the 
+*Note:* The annotation value must be given in a valid format otherwise the
 For example to set the client-body-buffer-size the following can be done:
 * `ingress.kubernetes.io/client-body-buffer-size: "1000"` # 1000 bytes
 * `ingress.kubernetes.io/client-body-buffer-size: 1k` # 1 kilobyte
@@ -466,6 +466,8 @@ The default mime type list to compress is: `application/atom+xml application/jav
 **whitelist-source-range:** Sets the default whitelisted IPs for each `server` block. This can be overwritten by an annotation on an Ingress rule. See [ngx_http_access_module](http://nginx.org/en/docs/http/ngx_http_access_module.html).
 
 **worker-processes:** Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). The default of "auto" means number of available CPU cores.
+
+**worker-shutdown-timeout:** Sets a timeout for Nginx to [wait for worker to gracefully shutdown](http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout). The default is "10s".
 
 **limit-conn-zone-variable:** Sets parameters for a shared memory zone that will keep states for various keys of [limit_conn_zone](http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone). The default of "$binary_remote_addr" variable’s size is always 4 bytes for IPv4 addresses or 16 bytes for IPv6 addresses.
 
