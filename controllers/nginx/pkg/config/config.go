@@ -315,6 +315,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerProcesses string `json:"worker-processes,omitempty"`
 
+	// Defines a timeout for a graceful shutdown of worker processes
+	// http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
+	WorkerShutdownTimeout string `json:"worker-shutdown-timeout,omitempty"`
+
 	// Defines the load balancing algorithm to use. The deault is round-robin
 	LoadBalanceAlgorithm string `json:"load-balance,omitempty"`
 
@@ -397,6 +401,7 @@ func NewDefault() Configuration {
 		SSLSessionTimeout:          sslSessionTimeout,
 		UseGzip:                    true,
 		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
+		WorkerShutdownTimeout:      "10s",
 		LoadBalanceAlgorithm:       defaultLoadBalancerAlgorithm,
 		VtsStatusZoneSize:          "10m",
 		VariablesHashBucketSize:    64,
