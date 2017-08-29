@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+
 	"k8s.io/ingress/core/pkg/ingress/controller"
 )
 
@@ -31,29 +32,32 @@ func main() {
 	ngx := newNGINXController()
 	// create a custom Ingress controller using NGINX as backend
 	ic := controller.NewIngressController(ngx)
-	go handleSigterm(ic)
-	// start the controller
-	ic.Start()
-	// wait
-	glog.Infof("shutting down Ingress controller...")
-	for {
-		glog.Infof("Handled quit, awaiting pod deletion")
-		time.Sleep(30 * time.Second)
-	}
-}
 
-func handleSigterm(ic *controller.GenericController) {
+	// start the controller
+	go ic.Start()
+
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan
+
 	glog.Infof("Received SIGTERM, shutting down")
 
-	exitCode := 0
 	if err := ic.Stop(); err != nil {
-		glog.Infof("Error during shutdown %v", err)
-		exitCode = 1
+		glog.Errorf("unexpected error shutting down the ingress controller: %v", err)
 	}
 
-	glog.Infof("Exiting with %v", exitCode)
-	os.Exit(exitCode)
+	glog.Infof("stopping nginx gracefully...")
+	ngx.Stop()
+
+	timer := time.NewTicker(time.Second * 1)
+	for {
+		select {
+		case <-timer.C:
+			if !isNginxRunning(ngx.ports.Status) {
+				glog.Infof("nginx stopped...")
+				glog.Infof("Exiting with code 0")
+				os.Exit(0)
+			}
+		}
+	}
 }
