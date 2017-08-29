@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/mitchellh/go-ps"
 	"github.com/spf13/pflag"
 
 	proxyproto "github.com/armon/go-proxyproto"
@@ -43,6 +44,7 @@ import (
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
 	"k8s.io/ingress/controllers/nginx/pkg/version"
 	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/ingress/controller"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/net/dns"
 	"k8s.io/ingress/core/pkg/net/ssl"
@@ -71,7 +73,7 @@ var (
 // newNGINXController creates a new NGINX Ingress controller.
 // If the environment variable NGINX_BINARY exists it will be used
 // as source for nginx commands
-func newNGINXController() ingress.Controller {
+func newNGINXController() *NGINXController {
 	ngx := os.Getenv("NGINX_BINARY")
 	if ngx == "" {
 		ngx = binary
@@ -132,14 +134,13 @@ Error loading new template : %v
 
 	n.t = ngxTpl
 
-	go n.Start()
-
-	return ingress.Controller(n)
+	return n
 }
 
 // NGINXController ...
 type NGINXController struct {
-	t *ngx_template.Template
+	controller *controller.GenericController
+	t          *ngx_template.Template
 
 	configmap *api_v1.ConfigMap
 
@@ -161,6 +162,8 @@ type NGINXController struct {
 
 	isSSLPassthroughEnabled bool
 
+	isShuttingDown bool
+
 	proxy *proxy
 
 	ports *config.ListenPorts
@@ -170,10 +173,22 @@ type NGINXController struct {
 
 // Start start a new NGINX master process running in foreground.
 func (n *NGINXController) Start() {
-	glog.Info("starting NGINX process...")
+	n.isShuttingDown = false
+
+	n.controller = controller.NewIngressController(n)
+	go n.controller.Start()
 
 	done := make(chan error, 1)
 	cmd := exec.Command(n.binary, "-c", cfgPath)
+
+	// put nginx in another process group to prevent it
+	// to receive signals meant for the controller
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+		Pgid:    0,
+	}
+
+	glog.Info("starting NGINX process...")
 	n.start(cmd, done)
 
 	// if the nginx master process dies the workers continue to process requests,
@@ -183,6 +198,11 @@ func (n *NGINXController) Start() {
 	// To avoid this issue we restart nginx in case of errors.
 	for {
 		err := <-done
+
+		if n.isShuttingDown {
+			break
+		}
+
 		if exitError, ok := err.(*exec.ExitError); ok {
 			waitStatus := exitError.Sys().(syscall.WaitStatus)
 			glog.Warningf(`
@@ -202,9 +222,32 @@ NGINX master process died (%v): %v
 			conn.Close()
 			time.Sleep(1 * time.Second)
 		}
-		// start a new nginx master process
+		// restart a new nginx master process if the controller
+		// is not being stopped
 		n.start(cmd, done)
 	}
+}
+
+// Stop gracefully stops the NGINX master process.
+func (n *NGINXController) Stop() error {
+	n.isShuttingDown = true
+	n.controller.Stop()
+
+	// Send stop signal to Nginx
+	glog.Info("stopping NGINX process...")
+	cmd := exec.Command(n.binary, "-c", cfgPath, "-s", "quit")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	// Wait for the Nginx process disappear
+	waitForNginxShutdown()
+	glog.Info("NGINX process has stopped")
+
+	return nil
 }
 
 func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
@@ -715,4 +758,28 @@ func nextPowerOf2(v int) int {
 func isIPv6Enabled() bool {
 	cmd := exec.Command("test", "-f", "/proc/net/if_inet6")
 	return cmd.Run() == nil
+}
+
+// isNginxRunning returns true if a process with the name 'nginx' is found
+func isNginxProcessPresent() bool {
+	processes, _ := ps.Processes()
+	for _, p := range processes {
+		if p.Executable() == "nginx" {
+			return true
+		}
+	}
+	return false
+}
+
+func waitForNginxShutdown() {
+	timer := time.NewTicker(time.Second * 1)
+	defer timer.Stop()
+	for {
+		select {
+		case <-timer.C:
+			if !isNginxProcessPresent() {
+				return
+			}
+		}
+	}
 }
