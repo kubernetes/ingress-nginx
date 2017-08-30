@@ -301,7 +301,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 		return defProxyPass
 	}
 
-	if path != slash && !strings.HasSuffix(path, slash) {
+	if !strings.HasSuffix(path, slash) {
 		path = fmt.Sprintf("%s/", path)
 	}
 
