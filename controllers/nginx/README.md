@@ -95,14 +95,14 @@ $ ./rootfs/nginx-ingress-controller --running-in-cluster=false --default-backend
 
 First create a default backend:
 ```
-$ kubectl create -f examples/deployment/nginx/default-backend.yaml
+$ kubectl create -f examples/default-backend.yaml
 $ kubectl expose rc default-http-backend --port=80 --target-port=8080 --name=default-http-backend
 ```
 
 Loadbalancers are created via a ReplicationController or Daemonset:
 
 ```
-$ kubectl create -f examples/default/rc-default.yaml
+$ kubectl create -f examples/rc-default.yaml
 ```
 
 ## HTTP
