@@ -1,0 +1,26 @@
+# This is the Ingress resource that creates a HTTP Loadbalancer configured
+# according to the Ingress rules.
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: echomap
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - path: /foo
+        backend:
+          serviceName: echoheaders-x
+          servicePort: 80
+  - host: bar.baz.com
+    http:
+      paths:
+      - path: /bar
+        backend:
+          serviceName: echoheaders-y
+          servicePort: 80
+      - path: /foo
+        backend:
+          serviceName: echoheaders-x
+          servicePort: 80
