@@ -28,8 +28,8 @@ const ns = "nginx"
 type (
 	vtsCollector struct {
 		scrapeChan     chan scrapeRequest
-		ngxHealthPort  int
-		ngxVtsPath     string
+		port           int
+		path           string
 		data           *vtsData
 		watchNamespace string
 		ingressClass   string
@@ -57,12 +57,12 @@ type (
 )
 
 // NewNGINXVTSCollector returns a new prometheus collector for the VTS module
-func NewNGINXVTSCollector(watchNamespace, ingressClass string, ngxHealthPort int, ngxVtsPath string) Stopable {
+func NewNGINXVTSCollector(watchNamespace, ingressClass string, port int, path string) Stopable {
 
 	p := vtsCollector{
 		scrapeChan:     make(chan scrapeRequest),
-		ngxHealthPort:  ngxHealthPort,
-		ngxVtsPath:     ngxVtsPath,
+		port:           port,
+		path:           path,
 		watchNamespace: watchNamespace,
 		ingressClass:   ingressClass,
 	}
@@ -201,7 +201,7 @@ func (p vtsCollector) Stop() {
 
 // scrapeVts scrape nginx vts metrics
 func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
-	nginxMetrics, err := getNginxVtsMetrics(p.ngxHealthPort, p.ngxVtsPath)
+	nginxMetrics, err := getNginxVtsMetrics(p.port, p.path)
 	if err != nil {
 		glog.Warningf("unexpected error obtaining nginx status info: %v", err)
 		return
