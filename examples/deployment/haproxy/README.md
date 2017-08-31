@@ -70,6 +70,11 @@ configmap can be edited or replaced later in order to apply new
 configuration on a running ingress controller. All supported options
 are [here](https://github.com/jcmoraisjr/haproxy-ingress#configmap).
 
+## RBAC Authorization
+
+Check the [RBAC sample](/examples/rbac/haproxy) if deploying on a cluster with
+[RBAC authorization](https://kubernetes.io/docs/admin/authorization/rbac/).
+
 ## Controller
 
 Deploy HAProxy Ingress:
