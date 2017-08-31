@@ -387,7 +387,7 @@ http {
         # Changing this value requires a change in:
         # https://github.com/kubernetes/ingress/blob/master/controllers/nginx/pkg/cmd/controller/nginx.go
         listen 127.0.0.1:{{ $all.ListenPorts.Status }} default_server reuseport backlog={{ $all.BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::1]:{{ $all.ListenPorts.Status }} default_server reuseport backlog={{ $all.BacklogSize }};{{ end }}
+        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server reuseport backlog={{ $all.BacklogSize }};{{ end }}
         set $proxy_upstream_name "-";
 
         location {{ $healthzURI }} {
