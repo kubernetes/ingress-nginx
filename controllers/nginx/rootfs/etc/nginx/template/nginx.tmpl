@@ -387,7 +387,7 @@ http {
         # Changing this value requires a change in:
         # https://github.com/kubernetes/ingress/blob/master/controllers/nginx/pkg/cmd/controller/nginx.go
         listen 127.0.0.1:{{ $all.ListenPorts.Status }} default_server reuseport backlog={{ $all.BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::1]:{{ $all.ListenPorts.Status }} default_server reuseport backlog={{ $all.BacklogSize }};{{ end }}
+        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server reuseport backlog={{ $all.BacklogSize }};{{ end }}
         set $proxy_upstream_name "-";
 
         location {{ $healthzURI }} {
@@ -406,21 +406,6 @@ http {
             stub_status on;
             {{ end }}
         }
-
-        # this location is used to extract nginx metrics
-        # using prometheus.
-        # TODO: enable extraction for vts module.
-        location /internal_nginx_status {
-            set $proxy_upstream_name "internal";
-
-            allow 127.0.0.1;
-            {{ if not $cfg.DisableIpv6 }}allow ::1;{{ end }}
-            deny all;
-
-            access_log off;
-            stub_status on;
-        }
-
 
         fastcgi_param       HTTP_X_Code             404;
         fastcgi_param       HTTP_X_Format           $http_accept;
