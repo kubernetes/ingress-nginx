@@ -143,8 +143,8 @@ func (bit BoolToFloat64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func getNginxStatus(ngxHealthPort int, ngxStatusPath string) (*basicStatus, error) {
-	url := fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxStatusPath)
+func getNginxStatus(port int, path string) (*basicStatus, error) {
+	url := fmt.Sprintf("http://localhost:%v%v", port, path)
 	glog.V(3).Infof("start scrapping url: %v", url)
 
 	data, err := httpBody(url)
@@ -174,8 +174,8 @@ func httpBody(url string) ([]byte, error) {
 	return data, nil
 }
 
-func getNginxVtsMetrics(ngxHealthPort int, ngxVtsPath string) (*vts, error) {
-	url := fmt.Sprintf("http://localhost:%v%v", ngxHealthPort, ngxVtsPath)
+func getNginxVtsMetrics(port int, path string) (*vts, error) {
+	url := fmt.Sprintf("http://localhost:%v%v", port, path)
 	glog.V(3).Infof("start scrapping url: %v", url)
 
 	data, err := httpBody(url)

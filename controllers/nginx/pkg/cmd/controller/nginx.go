@@ -372,7 +372,11 @@ func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
 	}
 
 	flags.Set("ingress-class", ic)
-	n.stats = newStatsCollector(wc, ic, n.binary, n.ports.Health)
+
+	h, _ := flags.GetInt("healthz-port")
+	n.ports.Health = h
+
+	n.stats = newStatsCollector(wc, ic, n.binary, n.ports.Status)
 
 	if n.isSSLPassthroughEnabled {
 		if !isPortAvailable(n.ports.SSLProxy) {
