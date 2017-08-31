@@ -631,195 +631,195 @@ stream {
 
         {{ if not (empty $location.Rewrite.AppRoot)}}
         if ($uri = /) {
-        return 302 {{ $location.Rewrite.AppRoot }};
+            return 302 {{ $location.Rewrite.AppRoot }};
         }
         {{ end }}
 
         {{ if not (empty $authPath) }}
         location = {{ $authPath }} {
-        internal;
-        set $proxy_upstream_name "internal";
+            internal;
+            set $proxy_upstream_name "internal";
 
-        {{ if not $location.ExternalAuth.SendBody }}
-        proxy_pass_request_body     off;
-        proxy_set_header            Content-Length "";
-        {{ end }}
-        {{ if not (empty $location.ExternalAuth.Method) }}
-        proxy_method                {{ $location.ExternalAuth.Method }};
-        proxy_set_header            X-Original-URI $request_uri;
-        proxy_set_header            X-Scheme       $pass_access_scheme;
-        {{ end }}
-        proxy_pass_request_headers  on;
-        proxy_set_header            Host {{ $location.ExternalAuth.Host }};
-        proxy_ssl_server_name       on;
+            {{ if not $location.ExternalAuth.SendBody }}
+            proxy_pass_request_body     off;
+            proxy_set_header            Content-Length "";
+            {{ end }}
+            {{ if not (empty $location.ExternalAuth.Method) }}
+            proxy_method                {{ $location.ExternalAuth.Method }};
+            proxy_set_header            X-Original-URI $request_uri;
+            proxy_set_header            X-Scheme       $pass_access_scheme;
+            {{ end }}
+            proxy_pass_request_headers  on;
+            proxy_set_header            Host {{ $location.ExternalAuth.Host }};
+            proxy_ssl_server_name       on;
 
-        client_max_body_size        "{{ $location.Proxy.BodySize }}";
-        {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
-        client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
-        {{ end }}
+            client_max_body_size        "{{ $location.Proxy.BodySize }}";
+            {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
+            client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
+            {{ end }}
 
-        set $target {{ $location.ExternalAuth.URL }};
-        proxy_pass $target;
+            set $target {{ $location.ExternalAuth.URL }};
+            proxy_pass $target;
         }
 
         {{ end }}
 
         location {{ $path }} {
-        set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
+            set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
 
-        {{ $ing := (getIngressInformation $location.Ingress $path) }}
-        {{/* $ing.Metadata contains the Ingress metadata */}}
-        set $namespace      "{{ $ing.Namespace }}";
-        set $ingress_name   "{{ $ing.Rule }}";
-        set $service_name   "{{ $ing.Service }}";
+            {{ $ing := (getIngressInformation $location.Ingress $path) }}
+            {{/* $ing.Metadata contains the Ingress metadata */}}
+            set $namespace      "{{ $ing.Namespace }}";
+            set $ingress_name   "{{ $ing.Rule }}";
+            set $service_name   "{{ $ing.Service }}";
 
-        {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
-        # enforce ssl on server side
-        if ($pass_access_scheme = http) {
-        return 301 https://$best_http_host$request_uri;
-        }
-        {{ end }}
+            {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
+            # enforce ssl on server side
+            if ($pass_access_scheme = http) {
+                return 301 https://$best_http_host$request_uri;
+            }
+            {{ end }}
 
-        {{ if isLocationAllowed $location }}
-        {{ if gt (len $location.Whitelist.CIDR) 0 }}
-        if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
-        return 403;
-        }
-        {{ end }}
+            {{ if isLocationAllowed $location }}
+            {{ if gt (len $location.Whitelist.CIDR) 0 }}
+            if ({{ buildDenyVariable (print $server.Hostname "_"  $path) }}) {
+                return 403;
+            }
+            {{ end }}
 
-        port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
+            port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
-        {{ if not (empty $authPath) }}
-        # this location requires authentication
-        auth_request {{ $authPath }};
-        auth_request_set $auth_cookie $upstream_http_set_cookie;
-        add_header Set-Cookie $auth_cookie;
-        {{- range $idx, $line := buildAuthResponseHeaders $location }}
-        {{ $line }}
-        {{- end }}
-        {{ end }}
+            {{ if not (empty $authPath) }}
+            # this location requires authentication
+            auth_request {{ $authPath }};
+            auth_request_set $auth_cookie $upstream_http_set_cookie;
+            add_header Set-Cookie $auth_cookie;
+            {{- range $idx, $line := buildAuthResponseHeaders $location }}
+            {{ $line }}
+            {{- end }}
+            {{ end }}
 
-        {{ if not (empty $location.ExternalAuth.SigninURL) }}
-        error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
-        {{ end }}
+            {{ if not (empty $location.ExternalAuth.SigninURL) }}
+            error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
+            {{ end }}
 
-        {{/* if the location contains a rate limit annotation, create one */}}
-        {{ $limits := buildRateLimit $location }}
-        {{ range $limit := $limits }}
-        {{ $limit }}{{ end }}
+            {{/* if the location contains a rate limit annotation, create one */}}
+            {{ $limits := buildRateLimit $location }}
+            {{ range $limit := $limits }}
+            {{ $limit }}{{ end }}
 
-        {{ if $location.BasicDigestAuth.Secured }}
-        {{ if eq $location.BasicDigestAuth.Type "basic" }}
-        auth_basic "{{ $location.BasicDigestAuth.Realm }}";
-        auth_basic_user_file {{ $location.BasicDigestAuth.File }};
-        {{ else }}
-        auth_digest "{{ $location.BasicDigestAuth.Realm }}";
-        auth_digest_user_file {{ $location.BasicDigestAuth.File }};
-        {{ end }}
-        proxy_set_header Authorization "";
-        {{ end }}
+            {{ if $location.BasicDigestAuth.Secured }}
+            {{ if eq $location.BasicDigestAuth.Type "basic" }}
+            auth_basic "{{ $location.BasicDigestAuth.Realm }}";
+            auth_basic_user_file {{ $location.BasicDigestAuth.File }};
+            {{ else }}
+            auth_digest "{{ $location.BasicDigestAuth.Realm }}";
+            auth_digest_user_file {{ $location.BasicDigestAuth.File }};
+            {{ end }}
+            proxy_set_header Authorization "";
+            {{ end }}
 
-        {{ if $location.EnableCORS }}
-        {{ template "CORS" }}
-        {{ end }}
+            {{ if $location.EnableCORS }}
+            {{ template "CORS" }}
+            {{ end }}
 
-        {{ if not (empty $location.Redirect.URL) }}
-        if ($uri ~* {{ $path }}) {
-            return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
-        }
-        {{ end }}
+            {{ if not (empty $location.Redirect.URL) }}
+            if ($uri ~* {{ $path }}) {
+                return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
+            }
+            {{ end }}
 
-        client_max_body_size                    "{{ $location.Proxy.BodySize }}";
-        {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
-        client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
-        {{ end }}
+            client_max_body_size                    "{{ $location.Proxy.BodySize }}";
+            {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
+            client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
+            {{ end }}
 
-        proxy_set_header Host                   $best_http_host;
+            proxy_set_header Host                   $best_http_host;
 
-        # Pass the extracted client certificate to the backend
-        {{ if not (empty $server.CertificateAuth.CAFileName) }}
-        proxy_set_header ssl-client-cert        $ssl_client_cert;
-        {{ end }}
+            # Pass the extracted client certificate to the backend
+            {{ if not (empty $server.CertificateAuth.CAFileName) }}
+            proxy_set_header ssl-client-cert        $ssl_client_cert;
+            {{ end }}
 
-        # Allow websocket connections
-        proxy_set_header                        Upgrade           $http_upgrade;
-        proxy_set_header                        Connection        $connection_upgrade;
+            # Allow websocket connections
+            proxy_set_header                        Upgrade           $http_upgrade;
+            proxy_set_header                        Connection        $connection_upgrade;
 
-        proxy_set_header X-Real-IP              $the_real_ip;
-        proxy_set_header X-Forwarded-For        $the_real_ip;
-        proxy_set_header X-Forwarded-Host       $best_http_host;
-        proxy_set_header X-Forwarded-Port       $pass_port;
-        proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
-        proxy_set_header X-Original-URI         $request_uri;
-        proxy_set_header X-Scheme               $pass_access_scheme;
+            proxy_set_header X-Real-IP              $the_real_ip;
+            proxy_set_header X-Forwarded-For        $the_real_ip;
+            proxy_set_header X-Forwarded-Host       $best_http_host;
+            proxy_set_header X-Forwarded-Port       $pass_port;
+            proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            proxy_set_header X-Original-URI         $request_uri;
+            proxy_set_header X-Scheme               $pass_access_scheme;
 
-        # mitigate HTTPoxy Vulnerability
-        # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
-        proxy_set_header Proxy                  "";
+            # mitigate HTTPoxy Vulnerability
+            # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
+            proxy_set_header Proxy                  "";
 
-        # Custom headers to proxied server
-        {{ range $k, $v := $all.ProxySetHeaders }}
-        proxy_set_header {{ $k }}                    "{{ $v }}";
-        {{ end }}
+            # Custom headers to proxied server
+            {{ range $k, $v := $all.ProxySetHeaders }}
+            proxy_set_header {{ $k }}                    "{{ $v }}";
+            {{ end }}
 
-        proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
-        proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;
-        proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }}s;
+            proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
+            proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;
+            proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }}s;
 
-        proxy_redirect                          off;
-        proxy_buffering                         off;
-        proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
-        proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
+            proxy_redirect                          off;
+            proxy_buffering                         off;
+            proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
+            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
 
-        proxy_http_version                      1.1;
+            proxy_http_version                      1.1;
 
-        proxy_cookie_domain                     {{ $location.Proxy.CookieDomain }};
-        proxy_cookie_path                       {{ $location.Proxy.CookiePath }};
+            proxy_cookie_domain                     {{ $location.Proxy.CookieDomain }};
+            proxy_cookie_path                       {{ $location.Proxy.CookiePath }};
 
-        # In case of errors try the next upstream server before returning an error
-        proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream }}{{ if $all.Cfg.RetryNonIdempotent }} non_idempotent{{ end }};
+            # In case of errors try the next upstream server before returning an error
+            proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream }}{{ if $all.Cfg.RetryNonIdempotent }} non_idempotent{{ end }};
 
-        {{/* rewrite only works if the content is not compressed */}}
-        {{ if $location.Rewrite.AddBaseURL }}
-        proxy_set_header                        Accept-Encoding     "";
-        {{ end }}
+            {{/* rewrite only works if the content is not compressed */}}
+            {{ if $location.Rewrite.AddBaseURL }}
+            proxy_set_header                        Accept-Encoding     "";
+            {{ end }}
 
-        {{/* Add any additional configuration defined */}}
-        {{ $location.ConfigurationSnippet }}
+            {{/* Add any additional configuration defined */}}
+            {{ $location.ConfigurationSnippet }}
 
-        {{/* if we are sending the request to a custom default backend, we add the required headers */}}
-        {{ if (hasPrefix $location.Backend "custom-default-backend-") }}
-        proxy_set_header       X-Code             503;
-        proxy_set_header       X-Format           $http_accept;
-        proxy_set_header       X-Namespace        $namespace;
-        proxy_set_header       X-Ingress-Name     $ingress_name;
-        proxy_set_header       X-Service-Name     $service_name;
-        {{ end }}
+            {{/* if we are sending the request to a custom default backend, we add the required headers */}}
+            {{ if (hasPrefix $location.Backend "custom-default-backend-") }}
+            proxy_set_header       X-Code             503;
+            proxy_set_header       X-Format           $http_accept;
+            proxy_set_header       X-Namespace        $namespace;
+            proxy_set_header       X-Ingress-Name     $ingress_name;
+            proxy_set_header       X-Service-Name     $service_name;
+            {{ end }}
 
-        {{ buildProxyPass $server.Hostname $all.Backends $location }}
-        {{ else }}
-        # Location denied. Reason: {{ $location.Denied }}
-        return 503;
-        {{ end }}
+            {{ buildProxyPass $server.Hostname $all.Backends $location }}
+            {{ else }}
+            # Location denied. Reason: {{ $location.Denied }}
+            return 503;
+            {{ end }}
         }
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}
         # health checks in cloud providers require the use of port {{ $all.ListenPorts.HTTP }}
         location {{ $all.HealthzURI }} {
-        access_log off;
-        return 200;
+            access_log off;
+            return 200;
         }
 
         # this is required to avoid error if nginx is being monitored
         # with an external software (like sysdig)
         location /nginx_status {
-        allow 127.0.0.1;
-        {{ if $all.IsIPV6Enabled }}allow ::1;{{ end }}
-        deny all;
+            allow 127.0.0.1;
+            {{ if $all.IsIPV6Enabled }}allow ::1;{{ end }}
+            deny all;
 
-        access_log off;
-        stub_status on;
+            access_log off;
+            stub_status on;
         }
 
         {{ end }}

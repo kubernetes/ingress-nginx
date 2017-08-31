@@ -312,12 +312,12 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 			bPath := fmt.Sprintf("%s%s", path, "$baseuri")
 			if len(location.Rewrite.BaseURLScheme) > 0 {
 				abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="%v://$http_host%v">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="%v://$http_host%v">' r;
-	`, location.Rewrite.BaseURLScheme, bPath, location.Rewrite.BaseURLScheme, bPath)
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="%v://$http_host%v">' r;
+	    `, location.Rewrite.BaseURLScheme, bPath, location.Rewrite.BaseURLScheme, bPath)
 			} else {
 				abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host%v">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host%v">' r;
-	`, bPath, bPath)
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host%v">' r;
+	    `, bPath, bPath)
 			}
 		}
 
@@ -325,16 +325,16 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 			// special case redirect to /
 			// ie /something to /
 			return fmt.Sprintf(`
-	rewrite %s(.*) /$1 break;
-	rewrite %s / break;
-	proxy_pass %s://%s;
-	%v`, path, location.Path, proto, upstreamName, abu)
+	    rewrite %s(.*) /$1 break;
+	    rewrite %s / break;
+	    proxy_pass %s://%s;
+	    %v`, path, location.Path, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
-	rewrite %s(.*) %s/$1 break;
-	proxy_pass %s://%s;
-	%v`, path, location.Rewrite.Target, proto, upstreamName, abu)
+	    rewrite %s(.*) %s/$1 break;
+	    proxy_pass %s://%s;
+	    %v`, path, location.Rewrite.Target, proto, upstreamName, abu)
 	}
 
 	// default proxy_pass
