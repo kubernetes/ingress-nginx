@@ -475,7 +475,6 @@ type ListenPorts struct {
 	HTTP     int
 	HTTPS    int
 	Status   int
-	Health   int
 	Default  int
 	SSLProxy int
 }
