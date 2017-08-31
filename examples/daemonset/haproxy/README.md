@@ -41,6 +41,11 @@ NAME                                    READY     STATUS    RESTARTS   AGE
 default-http-backend-q5sb6              1/1       Running   0          30m
 ```
 
+## RBAC Authorization
+
+Check the [RBAC sample](/examples/rbac/haproxy) if deploying on a cluster with
+[RBAC authorization](https://kubernetes.io/docs/admin/authorization/rbac/).
+
 ## Ingress DaemonSet
 
 Deploy the daemonset as follows:
