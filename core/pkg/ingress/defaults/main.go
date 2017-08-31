@@ -53,6 +53,9 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
 	ProxyNextUpstream string `json:"proxy-next-upstream"`
 
+	// Parameters for proxy-pass directive (eg. Apache web server).
+	ProxyPassParams string `json:"proxy-pass-params"`
+
 	// Name server/s used to resolve names of upstream servers into IP addresses.
 	// The file /etc/resolv.conf is used as DNS resolution configuration.
 	Resolver []net.IP

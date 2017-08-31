@@ -32,6 +32,7 @@ const (
 	cookiePath   = "ingress.kubernetes.io/proxy-cookie-path"
 	cookieDomain = "ingress.kubernetes.io/proxy-cookie-domain"
 	nextUpstream = "ingress.kubernetes.io/proxy-next-upstream"
+	passParams   = "ingress.kubernetes.io/proxy-pass-params"
 )
 
 // Configuration returns the proxy timeout to use in the upstream server/s
@@ -44,6 +45,7 @@ type Configuration struct {
 	CookieDomain   string `json:"cookieDomain"`
 	CookiePath     string `json:"cookiePath"`
 	NextUpstream   string `json:"nextUpstream"`
+	PassParams     string `json:"passParams"`
 }
 
 // Equal tests for equality between two Configuration types
@@ -73,6 +75,12 @@ func (l1 *Configuration) Equal(l2 *Configuration) bool {
 		return false
 	}
 	if l1.CookiePath != l2.CookiePath {
+		return false
+	}
+	if l1.NextUpstream != l2.NextUpstream {
+		return false
+	}
+	if l1.PassParams != l2.PassParams {
 		return false
 	}
 
@@ -132,5 +140,10 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		nu = defBackend.ProxyNextUpstream
 	}
 
-	return &Configuration{bs, ct, st, rt, bufs, cd, cp, nu}, nil
+	pp, err := parser.GetStringAnnotation(passParams, ing)
+	if err != nil || pp == "" {
+		pp = defBackend.ProxyPassParams
+	}
+
+	return &Configuration{bs, ct, st, rt, bufs, cd, cp, nu, pp}, nil
 }
