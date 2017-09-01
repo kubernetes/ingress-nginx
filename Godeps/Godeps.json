@@ -1275,6 +1275,11 @@
 			"Rev": "c7ed6bc9c1c981e0f0bd09dc046c9b81ab855c24"
 		},
 		{
+			"ImportPath": "k8s.io/client-go/tools/cache/testing",
+			"Comment": "v2.0.0-alpha.0-488-gc7ed6bc9",
+			"Rev": "c7ed6bc9c1c981e0f0bd09dc046c9b81ab855c24"
+		},
+		{
 			"ImportPath": "k8s.io/client-go/tools/clientcmd",
 			"Comment": "v2.0.0-alpha.0-488-gc7ed6bc",
 			"Rev": "c7ed6bc9c1c981e0f0bd09dc046c9b81ab855c24"
