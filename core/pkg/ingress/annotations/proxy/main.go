@@ -24,28 +24,30 @@ import (
 )
 
 const (
-	bodySize     = "ingress.kubernetes.io/proxy-body-size"
-	connect      = "ingress.kubernetes.io/proxy-connect-timeout"
-	send         = "ingress.kubernetes.io/proxy-send-timeout"
-	read         = "ingress.kubernetes.io/proxy-read-timeout"
-	bufferSize   = "ingress.kubernetes.io/proxy-buffer-size"
-	cookiePath   = "ingress.kubernetes.io/proxy-cookie-path"
-	cookieDomain = "ingress.kubernetes.io/proxy-cookie-domain"
-	nextUpstream = "ingress.kubernetes.io/proxy-next-upstream"
-	passParams   = "ingress.kubernetes.io/proxy-pass-params"
+	bodySize         = "ingress.kubernetes.io/proxy-body-size"
+	connect          = "ingress.kubernetes.io/proxy-connect-timeout"
+	send             = "ingress.kubernetes.io/proxy-send-timeout"
+	read             = "ingress.kubernetes.io/proxy-read-timeout"
+	bufferSize       = "ingress.kubernetes.io/proxy-buffer-size"
+	cookiePath       = "ingress.kubernetes.io/proxy-cookie-path"
+	cookieDomain     = "ingress.kubernetes.io/proxy-cookie-domain"
+	nextUpstream     = "ingress.kubernetes.io/proxy-next-upstream"
+	passParams       = "ingress.kubernetes.io/proxy-pass-params"
+	requestBuffering = "ingress.kubernetes.io/proxy-request-buffering"
 )
 
 // Configuration returns the proxy timeout to use in the upstream server/s
 type Configuration struct {
-	BodySize       string `json:"bodySize"`
-	ConnectTimeout int    `json:"conectTimeout"`
-	SendTimeout    int    `json:"sendTimeout"`
-	ReadTimeout    int    `json:"readTimeout"`
-	BufferSize     string `json:"bufferSize"`
-	CookieDomain   string `json:"cookieDomain"`
-	CookiePath     string `json:"cookiePath"`
-	NextUpstream   string `json:"nextUpstream"`
-	PassParams     string `json:"passParams"`
+	BodySize         string `json:"bodySize"`
+	ConnectTimeout   int    `json:"connectTimeout"`
+	SendTimeout      int    `json:"sendTimeout"`
+	ReadTimeout      int    `json:"readTimeout"`
+	BufferSize       string `json:"bufferSize"`
+	CookieDomain     string `json:"cookieDomain"`
+	CookiePath       string `json:"cookiePath"`
+	NextUpstream     string `json:"nextUpstream"`
+	PassParams       string `json:"passParams"`
+	RequestBuffering string `json:"requestBuffering"`
 }
 
 // Equal tests for equality between two Configuration types
@@ -81,6 +83,10 @@ func (l1 *Configuration) Equal(l2 *Configuration) bool {
 		return false
 	}
 	if l1.PassParams != l2.PassParams {
+		return false
+	}
+
+	if l1.RequestBuffering != l2.RequestBuffering {
 		return false
 	}
 
@@ -145,5 +151,10 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		pp = defBackend.ProxyPassParams
 	}
 
-	return &Configuration{bs, ct, st, rt, bufs, cd, cp, nu, pp}, nil
+	rb, err := parser.GetStringAnnotation(requestBuffering, ing)
+	if err != nil || rb == "" {
+		rb = defBackend.ProxyRequestBuffering
+	}
+
+	return &Configuration{bs, ct, st, rt, bufs, cd, cp, nu, pp, rb}, nil
 }
