@@ -395,6 +395,8 @@ log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol
 
 **proxy-next-upstream:** Specifies in [which cases](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream) a request should be passed to the next server.
 
+**proxy-request-buffering:** Enables or disables [buffering of a client request body](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering).
+
 **retry-non-idempotent:** Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error in the upstream server.
 
 The previous behavior can be restored using the value "true".
@@ -510,6 +512,7 @@ The following table shows the options, the default value and a description.
 |max-worker-connections|"16384"|
 |proxy-body-size|same as body-size|
 |proxy-buffer-size|"4k"|
+|proxy-request-buffering|"on"|
 |proxy-connect-timeout|"5"|
 |proxy-cookie-domain|"off"|
 |proxy-cookie-path|"off"|
