@@ -86,7 +86,7 @@ as well as in [this](/examples/daemonset/nginx) example.
 First check the [catalog](#is-there-a-catalog-of-existing-ingress-controllers), to make sure you really need to write one.
 
 1. Write a [generic backend](/examples/custom-controller)
-2. Keep it in your own repo, make sure it passes the [conformance suite](https://github.com/kubernetes/kubernetes/blob/master/test/e2e/ingress_utils.go#L112)
+2. Keep it in your own repo, make sure it passes the [conformance suite](https://github.com/kubernetes/kubernetes/blob/master/test/e2e/framework/ingress_utils.go#L129)
 3. Submit an example(s) in the appropriate subdirectories [here](/examples/README.md)
 4. Add it to the catalog
 
