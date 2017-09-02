@@ -74,6 +74,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyBufferSize:     "10k",
 		ProxyBodySize:       "3k",
 		ProxyNextUpstream:   "error",
+		ProxyPassParams:     "nocanon keepalive=On",
 	}
 }
 
@@ -87,6 +88,7 @@ func TestProxy(t *testing.T) {
 	data[bufferSize] = "1k"
 	data[bodySize] = "2k"
 	data[nextUpstream] = "off"
+	data[passParams] = "smax=5 max=10"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -114,6 +116,9 @@ func TestProxy(t *testing.T) {
 	}
 	if p.NextUpstream != "off" {
 		t.Errorf("expected off as next-upstream but returned %v", p.NextUpstream)
+	}
+	if p.PassParams != "smax=5 max=10" {
+		t.Errorf("expected \"smax=5 max=10\" as pass-params but returned \"%v\"", p.PassParams)
 	}
 }
 
@@ -148,5 +153,8 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 	if p.NextUpstream != "error" {
 		t.Errorf("expected error as next-upstream but returned %v", p.NextUpstream)
+	}
+	if p.PassParams != "nocanon keepalive=On" {
+		t.Errorf("expected \"nocanon keepalive=On\" as pass-params but returned \"%v\"", p.PassParams)
 	}
 }
