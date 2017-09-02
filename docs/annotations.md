@@ -63,6 +63,7 @@ Key:
 | `session-cookie-name` | When `affinity` is set to `cookie`, the name of the cookie to use. | | nginx
 | `session-cookie-hash` | When `affinity` is set to `cookie`, the hash algorithm used: `md5`, `sha`, `index`. | | nginx
 | `proxy-body-size` | Maximum request body size. | | nginx, haproxy
+| `proxy-pass-params` | Parameters for proxy-pass directives. | |
 | `follow-redirects` | Follow HTTP redirects in the response and deliver the redirect target to the client. | | trafficserver
 | `kubernetes.io/ingress.global-static-ip-name` | Name of the static global IP address in GCP to use when provisioning the HTTPS load balancer. | empty string | gce
 
