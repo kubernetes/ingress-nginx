@@ -611,6 +611,9 @@ stream {
         ssl_client_certificate                  {{ $server.CertificateAuth.CAFileName }};
         ssl_verify_client                       on;
         ssl_verify_depth                        {{ $server.CertificateAuth.ValidationDepth }};
+        {{ if not (empty $server.CertificateAuth.ErrorPage)}}
+        error_page 495 496 = {{ $server.CertificateAuth.ErrorPage }};
+        {{ end }}
         {{ end }}
 
         {{ range $location := $server.Locations }}
