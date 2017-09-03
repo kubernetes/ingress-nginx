@@ -5,6 +5,7 @@ metadata:
     # Create this with kubectl create secret generic caingress --from-file=ca.crt --namespace=default
     ingress.kubernetes.io/auth-tls-secret: "default/caingress"
     ingress.kubernetes.io/auth-tls-verify-depth: "3"
+    auth-tls-error-page: "http://www.mysite.com/error-cert.html"
     kubernetes.io/ingress.class: "nginx"
   name: nginx-test
   namespace: default

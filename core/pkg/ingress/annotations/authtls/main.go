@@ -28,16 +28,18 @@ import (
 
 const (
 	// name of the secret
-	annotationAuthTLSSecret = "ingress.kubernetes.io/auth-tls-secret"
-	annotationAuthTLSDepth  = "ingress.kubernetes.io/auth-tls-verify-depth"
-	defaultAuthTLSDepth     = 1
+	annotationAuthTLSSecret    = "ingress.kubernetes.io/auth-tls-secret"
+	annotationAuthTLSDepth     = "ingress.kubernetes.io/auth-tls-verify-depth"
+	annotationAuthTLSErrorPage = "ingress.kubernetes.io/auth-tls-error-page"
+	defaultAuthTLSDepth        = 1
 )
 
 // AuthSSLConfig contains the AuthSSLCert used for muthual autentication
 // and the configured ValidationDepth
 type AuthSSLConfig struct {
 	resolver.AuthSSLCert
-	ValidationDepth int `json:"validationDepth"`
+	ValidationDepth int    `json:"validationDepth"`
+	ErrorPage       string `json:"errorPage"`
 }
 
 // Equal tests for equality between two AuthSSLConfig types
@@ -54,7 +56,9 @@ func (assl1 *AuthSSLConfig) Equal(assl2 *AuthSSLConfig) bool {
 	if assl1.ValidationDepth != assl2.ValidationDepth {
 		return false
 	}
-
+	if assl1.ErrorPage != assl2.ErrorPage {
+		return false
+	}
 	return true
 }
 
@@ -97,8 +101,14 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}
 	}
 
+	errorpage, err := parser.GetStringAnnotation(annotationAuthTLSErrorPage, ing)
+	if err != nil || errorpage == "" {
+		errorpage = ""
+	}
+
 	return &AuthSSLConfig{
 		AuthSSLCert:     *authCert,
 		ValidationDepth: tlsdepth,
+		ErrorPage:       errorpage,
 	}, nil
 }

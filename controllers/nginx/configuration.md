@@ -47,6 +47,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[ingress.kubernetes.io/auth-tls-secret](#certificate-authentication)|string|
 |[ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
+|[ingress.kubernetes.io/auth-tls-error-page](#certificate-authentication)|string|
 |[ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
@@ -148,6 +149,12 @@ ingress.kubernetes.io/auth-tls-verify-depth
 ```
 
 The validation depth between the provided client certificate and the Certification Authority chain.
+
+```
+ingress.kubernetes.io/auth-tls-error-page
+```
+
+The URL/Page that user should be redirected in case of a Certificate Authentication Error
 
 Please check the [tls-auth](/examples/auth/client-certs/nginx/README.md) example.
 
