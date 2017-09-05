@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: default-backend
+  namespace: default
+  labels:
+    name: default-backend
+    application: envoy-ingress-controller
+spec:
+  ports:
+  - port: 80
+    targetPort: 10252
+  selector:
+    # Point back the the envoy controller's
+    # healthz port
+    application: envoy-ingress-controller
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: envoy-ingress-controller
+  namespace: default
+  labels:
+    application: envoy-ingress-controller
+spec:
+  selector:
+    matchLabels:
+      application: envoy-ingress-controller
+  template:
+    metadata:
+      labels:
+        application: envoy-ingress-controller
+    spec:
+      imagePullSecrets:
+        - name: dockerhub
+      terminationGracePeriodSeconds: 360
+      hostNetwork: true
+      containers:
+      - name: server
+        image: <TODO>
+        imagePullPolicy: Always
+        ports:
+        - hostPort: 80
+          containerPort: 80
+        - hostPort: 443
+          containerPort: 443
+        - hostPort: 10252
+          containerPort: 10252
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        args:
+        - /envoy-controller
+        - --default-backend-service=$(POD_NAMESPACE)/default-backend
