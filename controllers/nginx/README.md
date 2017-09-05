@@ -114,11 +114,9 @@ First create a default backend and it's corresponding service:
 $ kubectl create -f examples/default-backend.yaml
 ```
 
+Follow the [example-deployment](../../examples/deployment/nginx/README.md) steps to deploy nginx-ingress-controller in Kubernetes cluster (you may prefer other type of workloads, like Daemonset, in production environment).
 Loadbalancers are created via a ReplicationController or Daemonset:
 
-```
-$ kubectl create -f examples/rc-default.yaml
-```
 
 ## HTTP
 
@@ -193,7 +191,7 @@ spec:
     serviceName: s1
     servicePort: 80
 ```
-Please follow [test.sh](https://github.com/bprashanth/Ingress/blob/master/examples/sni/nginx/test.sh) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
+Please follow [PREREQUISITES](../../examples/PREREQUISITES.md) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
 Check the [example](../../examples/tls-termination/nginx)
 
