@@ -114,11 +114,9 @@ First create a default backend and it's corresponding service:
 $ kubectl create -f examples/default-backend.yaml
 ```
 
+Follow the [example-deployment](../../examples/deployment/nginx/README.md) steps to deploy nginx-ingress-controller in Kubernetes cluster (you may prefer other type of workloads, like Daemonset, in production environment).
 Loadbalancers are created via a ReplicationController or Daemonset:
 
-```
-$ kubectl create -f examples/rc-default.yaml
-```
 
 ## HTTP
 
