@@ -5,4 +5,4 @@
 
 # first sed removes empty lines
 # second sed command replaces the empty lines
-sed -e 's/^  *$/\'$'\n/g' | sed -e '/^$/{N;/^\n$/d;}'
+sed -e 's/\r//g' | sed -e 's/^  *$/\'$'\n/g' | sed -e '/^$/{N;/^\n$/d;}'
