@@ -352,6 +352,10 @@ type Configuration struct {
 
 	// Sets the ipv6 addresses on which the server will accept requests.
 	BindAddressIpv6 []string `json:"bind-address-ipv6,omitempty"`
+
+	// Sets the header field for identifying the originating IP address of a client
+	// Default is X-Forwarded-For
+	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -370,6 +374,7 @@ func NewDefault() Configuration {
 		EnableDynamicTLSRecords:    true,
 		EnableUnderscoresInHeaders: false,
 		ErrorLogLevel:              errorLevel,
+		ForwardedForHeader:         "X-Forwarded-For",
 		HTTP2MaxFieldSize:          "4k",
 		HTTP2MaxHeaderSize:         "16k",
 		HSTS:                       true,
