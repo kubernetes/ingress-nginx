@@ -20,25 +20,55 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
+	"strings"
 	"testing"
 )
 
+type dummyHandler struct {
+}
+
+func (d *dummyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	code := req.Header.Get(CodeHeader)
+	format := req.Header.Get(FormatHeader)
+
+	if format == "" || format == "*/*" {
+		format = "text/html"
+	}
+
+	httpCode, err := strconv.Atoi(code)
+	if err != nil {
+		httpCode = 404
+	}
+
+	de := []byte(code)
+	w.Header().Set(ContentTypeHeader, format)
+	w.WriteHeader(httpCode)
+	w.Write(de)
+}
+
 func TestErrorHandler(t *testing.T) {
 	tt := []struct {
-		name   string
-		code   int
-		format string
+		name      string
+		code      int
+		format    string
+		endpoints string
 	}{
-		{name: "404 text/html", code: 404, format: "text/html"},
+		{name: "404 text/html", code: 404, format: "text/html", endpoints: "127.0.0.1:80"},
 		{name: "503 text/html", code: 503, format: "text/html"},
-		{name: "404 application/json", code: 404, format: "application/json"},
+		{name: "404 application/json", code: 404, format: "application/json", endpoints: "127.0.0.1:80"},
 	}
+
+	server := httptest.NewServer(&dummyHandler{})
+	defer server.Close()
+	hp := strings.Replace(server.URL, "http://", "", -1)
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest("GET", "localhost:8080/", nil)
+			req, err := http.NewRequest("GET", server.URL, nil)
 			req.Header.Add(CodeHeader, fmt.Sprintf("%v", tc.code))
 			req.Header.Add(FormatHeader, tc.format)
+			req.Header.Add(EndpointsHeader, hp)
 			if err != nil {
 				t.Fatalf("could not created request: %v", err)
 			}
@@ -64,6 +94,10 @@ func TestErrorHandler(t *testing.T) {
 
 			if len(b) == 0 {
 				t.Fatalf("unexpected empty body")
+			}
+
+			if string(b) != strconv.Itoa(tc.code) {
+				t.Fatalf("body: %v", string(b))
 			}
 		})
 	}

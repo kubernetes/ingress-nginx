@@ -25,6 +25,8 @@ import (
 	"net/http/fcgi"
 	"strconv"
 	"strings"
+
+	"github.com/golang/glog"
 )
 
 const (
@@ -71,8 +73,8 @@ func serveError(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(httpCode)
 
 	eh := req.Header.Get(EndpointsHeader)
-
 	if eh == "" {
+		glog.Error("no endpoints for default backend")
 		w.Write(de)
 		return
 	}
@@ -81,21 +83,25 @@ func serveError(w http.ResponseWriter, req *http.Request) {
 
 	// TODO: add retries in case of errors
 	ep := eps[rand.Intn(len(eps))]
-	req, err = http.NewRequest("GET", fmt.Sprintf("http://%v/", ep), nil)
+	r, err := http.NewRequest("GET", fmt.Sprintf("http://%v/", ep), nil)
+	r.Header = req.Header
 	if err != nil {
+		glog.Errorf("unexpected error: %v", err)
 		w.Write(de)
 		return
 	}
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := client.Do(r)
 	if err != nil {
+		glog.Errorf("unexpected error: %v", err)
 		w.Write(de)
 		return
 	}
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		glog.Errorf("unexpected error: %v", err)
 		w.Write(de)
 		return
 	}
