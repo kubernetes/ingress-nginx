@@ -36,6 +36,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 )
 
@@ -279,7 +280,13 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if err != nil {
 		return err
 	}
+	singleClusterIngresses, err := lbc.ingLister.ListGCEIngresses()
+	if err != nil {
+		return err
+	}
+
 	nodePorts := lbc.tr.toNodePorts(&ingresses)
+	singleClusterNodePorts := lbc.tr.toNodePorts(&singleClusterIngresses)
 	lbNames := lbc.ingLister.Store.ListKeys()
 	lbs, err := lbc.ListRuntimeInfo()
 	if err != nil {
@@ -313,16 +320,9 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
 
-	if ingExists {
-		ing := obj.(*extensions.Ingress)
-		if isGCEMultiClusterIngress(ing) {
-			return lbc.syncMultiClusterIngress(ing, nodeNames)
-		}
-	}
-
 	// Record any errors during sync and throw a single error at the end. This
 	// allows us to free up associated cloud resources ASAP.
-	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, nodePorts); err != nil {
+	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, singleClusterNodePorts, nodePorts); err != nil {
 		// TODO: Implement proper backoff for the queue.
 		eventMsg := "GCE"
 		if ingExists {
@@ -336,6 +336,29 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if !ingExists {
 		return syncError
 	}
+	ing := obj.(*extensions.Ingress)
+	if isGCEMultiClusterIngress(ing) {
+		// Add instance group names as annotation on the ingress.
+		if ing.Annotations == nil {
+			ing.Annotations = map[string]string{}
+		}
+		// Since we just created instance groups in Checkpoint, calling create
+		// instance groups again should just return names of the existing
+		// instance groups. It does not matter which nodePort we pass as argument.
+		igs, err := lbc.CloudClusterManager.CreateInstanceGroups([]backends.ServicePort{nodePorts[0]})
+		if err != nil {
+			return fmt.Errorf("error in creating instance groups: %v", err)
+		}
+		err = setInstanceGroupsAnnotation(ing.Annotations, igs)
+		if err != nil {
+			return err
+		}
+		if err := lbc.updateAnnotations(ing.Name, ing.Namespace, ing.Annotations); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	// Update the UrlMap of the single loadbalancer that came through the watch.
 	l7, err := lbc.CloudClusterManager.l7Pool.Get(key)
 	if err != nil {
@@ -343,50 +366,16 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		return syncError
 	}
 
-	ing := *obj.(*extensions.Ingress)
-	if urlMap, err := lbc.tr.toURLMap(&ing); err != nil {
+	if urlMap, err := lbc.tr.toURLMap(ing); err != nil {
 		syncError = fmt.Errorf("%v, convert to url map error %v", syncError, err)
 	} else if err := l7.UpdateUrlMap(urlMap); err != nil {
-		lbc.recorder.Eventf(&ing, apiv1.EventTypeWarning, "UrlMap", err.Error())
+		lbc.recorder.Eventf(ing, apiv1.EventTypeWarning, "UrlMap", err.Error())
 		syncError = fmt.Errorf("%v, update url map error: %v", syncError, err)
-	} else if err := lbc.updateIngressStatus(l7, ing); err != nil {
-		lbc.recorder.Eventf(&ing, apiv1.EventTypeWarning, "Status", err.Error())
+	} else if err := lbc.updateIngressStatus(l7, *ing); err != nil {
+		lbc.recorder.Eventf(ing, apiv1.EventTypeWarning, "Status", err.Error())
 		syncError = fmt.Errorf("%v, update ingress error: %v", syncError, err)
 	}
 	return syncError
-}
-
-func (lbc *LoadBalancerController) syncMultiClusterIngress(ing *extensions.Ingress, nodeNames []string) error {
-	// For multi cluster ingress, we only need to manage the instance groups and named ports on those instance groups.
-
-	// Ensure that all the required instance groups exist with the required node ports.
-	nodePorts := lbc.tr.ingressToNodePorts(ing)
-	// Add the default backend node port.
-	nodePorts = append(nodePorts, lbc.CloudClusterManager.defaultBackendNodePort)
-	igs, err := lbc.CloudClusterManager.CreateInstanceGroups(nodePorts)
-	if err != nil {
-		return err
-	}
-
-	// Ensure that instance groups have the right nodes.
-	// This is also done whenever a node is added or removed from the cluster.
-	// We need it here as well since instance group is not created until first ingress is observed.
-	if err := lbc.CloudClusterManager.SyncNodesInInstanceGroups(nodeNames); err != nil {
-		return err
-	}
-
-	// Add instance group names as annotation on the ingress.
-	if ing.Annotations == nil {
-		ing.Annotations = map[string]string{}
-	}
-	err = setInstanceGroupsAnnotation(ing.Annotations, igs)
-	if err != nil {
-		return err
-	}
-	if err := lbc.updateAnnotations(ing.Name, ing.Namespace, ing.Annotations); err != nil {
-		return err
-	}
-	return nil
 }
 
 // updateIngressStatus updates the IP and annotations of a loadbalancer.
@@ -469,11 +458,12 @@ func (lbc *LoadBalancerController) ListRuntimeInfo() (lbs []*loadbalancers.L7Run
 		}
 
 		lbs = append(lbs, &loadbalancers.L7RuntimeInfo{
-			Name:         k,
-			TLS:          tls,
-			TLSName:      annotations.useNamedTLS(),
-			AllowHTTP:    annotations.allowHTTP(),
-			StaticIPName: annotations.staticIPName(),
+			Name:           k,
+			TLS:            tls,
+			TLSName:        annotations.useNamedTLS(),
+			AllowHTTP:      annotations.allowHTTP(),
+			StaticIPName:   annotations.staticIPName(),
+			IsMultiCluster: isGCEMultiClusterIngress(&ing),
 		})
 	}
 	return lbs, nil

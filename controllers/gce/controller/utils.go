@@ -304,6 +304,17 @@ func ListAll(store cache.Store, selector labels.Selector, appendFn cache.AppendF
 func (s *StoreToIngressLister) List() (ing extensions.IngressList, err error) {
 	for _, m := range s.Store.List() {
 		newIng := m.(*extensions.Ingress)
+		if isGCEIngress(newIng) || isGCEMultiClusterIngress(newIng) {
+			ing.Items = append(ing.Items, *newIng)
+		}
+	}
+	return ing, nil
+}
+
+// ListGCEIngresses lists all GCE Ingress' in the store.
+func (s *StoreToIngressLister) ListGCEIngresses() (ing extensions.IngressList, err error) {
+	for _, m := range s.Store.List() {
+		newIng := m.(*extensions.Ingress)
 		if isGCEIngress(newIng) {
 			ing.Items = append(ing.Items, *newIng)
 		}
@@ -679,4 +690,17 @@ func setInstanceGroupsAnnotation(existing map[string]string, igs []*compute.Inst
 	}
 	existing[instanceGroupsAnnotationKey] = string(jsonValue)
 	return nil
+}
+
+// uniq returns an array of unique service ports from the given array.
+func uniq(nodePorts []backends.ServicePort) []backends.ServicePort {
+	portMap := map[int64]backends.ServicePort{}
+	for _, p := range nodePorts {
+		portMap[p.Port] = p
+	}
+	nodePorts = []backends.ServicePort{}
+	for _, sp := range portMap {
+		nodePorts = append(nodePorts, sp)
+	}
+	return nodePorts
 }

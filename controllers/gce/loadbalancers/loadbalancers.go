@@ -255,6 +255,8 @@ type L7RuntimeInfo struct {
 	// The name of a Global Static IP. If specified, the IP associated with
 	// this name is used in the Forwarding Rules for this loadbalancer.
 	StaticIPName string
+	// IsMultiCluster is true if the loadbalancer is spread across multiple clusters.
+	IsMultiCluster bool
 }
 
 // String returns the load balancer name
