@@ -50,7 +50,10 @@ http {
     {{ end }}
 
     sendfile            on;
+    
     aio                 threads;
+    aio_write           on;
+
     tcp_nopush          on;
     tcp_nodelay         on;
 
