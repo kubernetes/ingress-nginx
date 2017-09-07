@@ -300,8 +300,8 @@ func TestAddInstanceGroupsAnnotation(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}
-		if annotations[instanceGroupsKey] != c.ExpectedAnnotation {
-			t.Fatalf("Unexpected annotation value: %s, expected: %s", annotations[instanceGroupsKey], c.ExpectedAnnotation)
+		if annotations[instanceGroupsAnnotationKey] != c.ExpectedAnnotation {
+			t.Fatalf("Unexpected annotation value: %s, expected: %s", annotations[instanceGroupsAnnotationKey], c.ExpectedAnnotation)
 		}
 	}
 }
