@@ -465,23 +465,22 @@ Error: %v
 // SetConfig sets the configured configmap
 func (n *NGINXController) SetConfig(cmap *api_v1.ConfigMap) {
 	n.configmap = cmap
-
 	n.isProxyProtocolEnabled = false
-	if cmap == nil {
-		n.backendDefaults = config.NewDefault().Backend
-		return
+
+	m := map[string]string{}
+	if cmap != nil {
+		m = cmap.Data
 	}
 
-	val, ok := cmap.Data["use-proxy-protocol"]
+	val, ok := m["use-proxy-protocol"]
 	if ok {
 		b, err := strconv.ParseBool(val)
 		if err == nil {
 			n.isProxyProtocolEnabled = b
-			return
 		}
 	}
 
-	n.backendDefaults = ngx_template.ReadConfig(n.configmap.Data).Backend
+	n.backendDefaults = ngx_template.ReadConfig(m).Backend
 }
 
 // SetListers sets the configured store listers in the generic ingress controller
