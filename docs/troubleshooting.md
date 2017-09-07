@@ -193,6 +193,9 @@ spec:
       containers:
       - name: default-http-backend
         image: gcr.io/google_containers/defaultbackend:1.0
+        volumeMounts:
+        - mountPath: /etc/kubernetes
+          name: kubeconfig
         livenessProbe:
           httpGet:
             path: /healthz
