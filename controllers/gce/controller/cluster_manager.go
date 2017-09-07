@@ -109,30 +109,34 @@ func (c *ClusterManager) shutdown() error {
 }
 
 // Checkpoint performs a checkpoint with the cloud.
-// - lbNames are the names of L7 loadbalancers we wish to exist. If they already
+// - lbs are the single cluster L7 loadbalancers we wish to exist. If they already
 //   exist, they should not have any broken links between say, a UrlMap and
 //   TargetHttpProxy.
 // - nodeNames are the names of nodes we wish to add to all loadbalancer
 //   instance groups.
-// - nodePorts are the ports for which we require BackendServices. Each of
-//   these ports must also be opened on the corresponding Instance Group.
+// - backendServicePorts are the ports for which we require BackendServices.
+// - namedPorts are the ports which must be opened on instance groups.
 // If in performing the checkpoint the cluster manager runs out of quota, a
 // googleapi 403 is returned.
-func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, nodePorts []backends.ServicePort) error {
+func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, backendServicePorts []backends.ServicePort, namedPorts []backends.ServicePort) error {
+	if len(namedPorts) != 0 {
+		// Add the default backend node port to the list of named ports for instance groups.
+		namedPorts = append(namedPorts, c.defaultBackendNodePort)
+	}
 	// Multiple ingress paths can point to the same service (and hence nodePort)
 	// but each nodePort can only have one set of cloud resources behind it. So
 	// don't waste time double validating GCE BackendServices.
-	portMap := map[int64]backends.ServicePort{}
-	for _, p := range nodePorts {
-		portMap[p.Port] = p
-	}
-	nodePorts = []backends.ServicePort{}
-	for _, sp := range portMap {
-		nodePorts = append(nodePorts, sp)
-	}
-	if err := c.backendPool.Sync(nodePorts); err != nil {
+	namedPorts = uniq(namedPorts)
+	backendServicePorts = uniq(backendServicePorts)
+	// Create Instance Groups.
+	_, err := c.CreateInstanceGroups(namedPorts)
+	if err != nil {
 		return err
 	}
+	if err := c.backendPool.Sync(backendServicePorts); err != nil {
+		return err
+	}
+
 	if err := c.SyncNodesInInstanceGroups(nodeNames); err != nil {
 		return err
 	}
@@ -143,7 +147,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	// TODO: Manage default backend and its firewall rule in a centralized way.
 	// DefaultBackend is managed in l7 pool, which doesn't understand instances,
 	// which the firewall rule requires.
-	fwNodePorts := nodePorts
+	fwNodePorts := backendServicePorts
 	if len(lbs) != 0 {
 		// If there are no Ingresses, we shouldn't be allowing traffic to the
 		// default backend. Equally importantly if the cluster gets torn down
@@ -166,6 +170,11 @@ func (c *ClusterManager) CreateInstanceGroups(servicePorts []backends.ServicePor
 	var igs []*compute.InstanceGroup
 	var err error
 	for _, p := range servicePorts {
+		// CreateInstanceGroups always returns all the instance groups, so we can return
+		// the output of any call, no need to append the return from all calls.
+		// TODO: Ideally, we want to call CreateInstaceGroups only the first time and
+		// then call AddNamedPort multiple times. Need to update the interface to
+		// achieve this.
 		igs, _, err = instances.CreateInstanceGroups(c.instancePool, c.ClusterNamer, p.Port)
 		if err != nil {
 			return nil, err
