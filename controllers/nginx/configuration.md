@@ -337,7 +337,7 @@ Example usage: `custom-http-errors: 404,415`
 
 **error-log-level:** Configures the logging level of errors. Log levels above are listed in the order of increasing severity.
 http://nginx.org/en/docs/ngx_core_module.html#error_log
-s
+
 **gzip-types:** Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type.
 Responses with the "text/html" type are always compressed if `use-gzip` is enabled.
 
