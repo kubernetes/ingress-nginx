@@ -157,6 +157,7 @@ var (
 		},
 		"buildAuthSignURL":            buildAuthSignURL,
 		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
+		"buildForwardedFor":           buildForwardedFor,
 	}
 )
 
@@ -639,4 +640,15 @@ func getIngressInformation(i, p interface{}) *ingressInformation {
 	}
 
 	return info
+}
+
+func buildForwardedFor(input interface{}) string {
+	s, ok := input.(string)
+	if !ok {
+		glog.Errorf("expected an string type but %T was returned", input)
+	}
+
+	ffh := strings.Replace(s, "-", "_", -1)
+	ffh = strings.ToLower(ffh)
+	return fmt.Sprintf("$http_%v", ffh)
 }
