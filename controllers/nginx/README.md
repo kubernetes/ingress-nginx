@@ -102,9 +102,10 @@ Usage of :
 Before deploying the controller to production you might want to run it outside the cluster and observe it.
 
 ```console
-$ make build
+$ tmpdir=$(mktemp -d)
+$ TEMP_DIR=${tmpdir} make build
 $ mkdir /etc/nginx-ssl
-$ ./rootfs/nginx-ingress-controller --running-in-cluster=false --default-backend-service=kube-system/default-http-backend
+$ ${tmpdir}/rootfs/nginx-ingress-controller --running-in-cluster=false --default-backend-service=kube-system/default-http-backend
 ```
 
 ## Deployment
