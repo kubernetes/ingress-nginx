@@ -3,7 +3,7 @@ all: push
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.9.0-beta.12
+TAG?=0.9.0-beta.13
 REGISTRY?=gcr.io/google_containers
 GOOS?=linux
 DOCKER?=gcloud docker --
@@ -35,7 +35,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=gcr.io/google_containers/nginx-slim-$(ARCH):0.23
+BASEIMAGE?=gcr.io/google_containers/nginx-slim-$(ARCH):0.24
 
 ifeq ($(ARCH),arm)
     QEMUARCH=arm
