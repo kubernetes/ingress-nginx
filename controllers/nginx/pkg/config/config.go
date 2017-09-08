@@ -335,7 +335,7 @@ type Configuration struct {
 	// upstream servers that are preserved in the cache of each worker process. When this
 	// number is exceeded, the least recently used connections are closed.
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
-	// Default: 0 (disabled)
+	// Default: 32
 	UpstreamKeepaliveConnections int `json:"upstream-keepalive-connections,omitempty"`
 
 	// Sets the maximum size of the variables hash table.
@@ -429,7 +429,7 @@ func NewDefault() Configuration {
 			LimitRate:            0,
 			LimitRateAfter:       0,
 		},
-		UpstreamKeepaliveConnections: 0,
+		UpstreamKeepaliveConnections: 32,
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
 		BindAddressIpv4:              defBindAddress,
 		BindAddressIpv6:              defBindAddress,
