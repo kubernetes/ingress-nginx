@@ -352,14 +352,6 @@ http {
         {{ template "SERVER" serverConfig $all $server }}
 
 
-        fastcgi_param       HTTP_X_Code             503;
-        fastcgi_param       HTTP_X_Format           $http_accept;
-        fastcgi_param       HTTP_X_Original_URI     $request_uri;
-        fastcgi_param       HTTP_X_Namespace        $namespace;
-        fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
-        fastcgi_param       HTTP_X_Service_Name     $service_name;
-        fastcgi_param       HTTP_X_Endpoints        {{ $all.DefaultBackendEndpoints }};
-
         {{ template "CUSTOM_ERRORS" $all }}
     }
     {{ if $server.Alias }}
@@ -367,14 +359,6 @@ http {
         server_name {{ $server.Alias }};
         {{ template "SERVER" serverConfig $all $server }}
 
-
-        fastcgi_param       HTTP_X_Code             503;
-        fastcgi_param       HTTP_X_Format           $http_accept;
-        fastcgi_param       HTTP_X_Original_URI     $request_uri;
-        fastcgi_param       HTTP_X_Namespace        $namespace;
-        fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
-        fastcgi_param       HTTP_X_Service_Name     $service_name;
-        fastcgi_param       HTTP_X_Endpoints        {{ $all.DefaultBackendEndpoints }};
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
@@ -407,31 +391,16 @@ http {
             {{ end }}
         }
 
-        fastcgi_param       HTTP_X_Code             404;
-        fastcgi_param       HTTP_X_Format           $http_accept;
-        fastcgi_param       HTTP_X_Original_URI     $request_uri;
-        fastcgi_param       HTTP_X_Namespace        $namespace;
-        fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
-        fastcgi_param       HTTP_X_Service_Name     $service_name;
-        fastcgi_param       HTTP_X_Endpoints        {{ $all.DefaultBackendEndpoints }};
-
         location / {
             {{ if .CustomErrors }}
             include             /etc/nginx/fastcgi_params;
+            fastcgi_param       HTTP_X_Code 404;
             fastcgi_pass        unix:/var/run/go-fastcgi.sock;
             {{ else }}
             set $proxy_upstream_name "upstream-default-backend";
             proxy_pass               http://upstream-default-backend;
             {{ end }}
         }
-
-        fastcgi_param       HTTP_X_Code             404;
-        fastcgi_param       HTTP_X_Format           $http_accept;
-        fastcgi_param       HTTP_X_Original_URI     $request_uri;
-        fastcgi_param       HTTP_X_Namespace        $namespace;
-        fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
-        fastcgi_param       HTTP_X_Service_Name     $service_name;
-        fastcgi_param       HTTP_X_Endpoints        {{ $all.DefaultBackendEndpoints }};
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
@@ -510,6 +479,15 @@ stream {
         location @custom_{{ $errCode }} {
             internal;
             include             /etc/nginx/fastcgi_params;
+
+            fastcgi_param       HTTP_X_Code             {{ $errCode }};
+            fastcgi_param       HTTP_X_Format           $http_accept;
+            fastcgi_param       HTTP_X_Original_URI     $request_uri;
+            fastcgi_param       HTTP_X_Namespace        $namespace;
+            fastcgi_param       HTTP_X_Ingress_Name     $ingress_name;
+            fastcgi_param       HTTP_X_Service_Name     $service_name;
+            fastcgi_param       HTTP_X_Endpoints        "{{ $defaultBackendEndpoints }}";
+
             fastcgi_pass        unix:/var/run/go-fastcgi.sock;
         }
         {{ end }}
