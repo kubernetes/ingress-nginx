@@ -2,6 +2,45 @@ Changelog
 
 Changelog
 
+### 0.9-beta.13
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.13`
+
+*New Features:*
+
+- NGINX 1.3.5
+- New flag to disable node listing
+- Custom X-Forwarder-Header (CloudFlare uses `CF-Connecting-IP` as header)
+- Custom error page in Client Certificate Authentication
+
+
+*Changes:*
+
+- [X] [#1272](https://github.com/kubernetes/ingress/pull/1272) Delete useless statement
+- [X] [#1277](https://github.com/kubernetes/ingress/pull/1277) Add indent for nginx.conf
+- [X] [#1278](https://github.com/kubernetes/ingress/pull/1278) Add proxy-pass-params annotation and Backend field
+- [X] [#1282](https://github.com/kubernetes/ingress/pull/1282) Fix nginx stats
+- [X] [#1288](https://github.com/kubernetes/ingress/pull/1288) Allow PATCH in enable-cors
+- [X] [#1290](https://github.com/kubernetes/ingress/pull/1290) Add flag to disabling node listing
+- [X] [#1293](https://github.com/kubernetes/ingress/pull/1293) Adds support for error page in Client Certificate Authentication
+- [X] [#1308](https://github.com/kubernetes/ingress/pull/1308) A trivial typo in config
+- [X] [#1310](https://github.com/kubernetes/ingress/pull/1310) Refactoring nginx configuration configmap
+- [X] [#1311](https://github.com/kubernetes/ingress/pull/1311) Enable nginx async writes
+- [X] [#1312](https://github.com/kubernetes/ingress/pull/1312) Allow custom forwarded for header
+- [X] [#1313](https://github.com/kubernetes/ingress/pull/1313) Fix eol in nginx template
+- [X] [#1315](https://github.com/kubernetes/ingress/pull/1315) Fix nginx custom error pages
+
+
+*Documentation:*
+
+- [X] [#1270](https://github.com/kubernetes/ingress/pull/1270) add missing yamls in controllers/nginx
+- [X] [#1276](https://github.com/kubernetes/ingress/pull/1276) Link rbac sample from deployment docs
+- [X] [#1291](https://github.com/kubernetes/ingress/pull/1291) fix link to conformance suite
+- [X] [#1295](https://github.com/kubernetes/ingress/pull/1295) fix README of nginx-ingress-controller
+- [X] [#1299](https://github.com/kubernetes/ingress/pull/1299) fix two doc issues in nginx/README
+- [X] [#1306](https://github.com/kubernetes/ingress/pull/1306) Fix kubeconfig example for nginx deployment
+
+
 ### 0.9-beta.12
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.12`
