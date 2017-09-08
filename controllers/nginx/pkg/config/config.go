@@ -455,7 +455,6 @@ func (cfg Configuration) BuildLogFormatUpstream() string {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
-	DefaultBackendEndpoints string
 	ProxySetHeaders         map[string]string
 	AddHeaders              map[string]string
 	MaxOpenFiles            int
