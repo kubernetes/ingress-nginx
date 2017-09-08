@@ -50,7 +50,7 @@ http {
     {{ end }}
 
     sendfile            on;
-    
+
     aio                 threads;
     aio_write           on;
 
@@ -303,7 +303,7 @@ http {
 
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
-    geo $whitelist_{{ $rl.ID }} {
+    geo $the_real_ip $whitelist_{{ $rl.ID }} {
         default 0;
         {{ range $ip := $rl.Whitelist }}
         {{ $ip }} 1;{{ end }}
