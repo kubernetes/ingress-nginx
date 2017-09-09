@@ -161,7 +161,7 @@ var (
 	}
 )
 
-// fomatIP will wrap IPv6 addresses in [] and return IPv4 addresses
+// formatIP will wrap IPv6 addresses in [] and return IPv4 addresses
 // without modification. If the input cannot be parsed as an IP address
 // it is returned without modification.
 func formatIP(input string) string {
@@ -177,7 +177,7 @@ func formatIP(input string) string {
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
 func buildResolvers(a interface{}) string {
-	// NGINX need IPV6 addresses to be surrounded by brakets
+	// NGINX need IPV6 addresses to be surrounded by brackets
 	nss := a.([]net.IP)
 	if len(nss) == 0 {
 		return ""
@@ -221,6 +221,7 @@ func buildLocation(input interface{}) string {
 	return path
 }
 
+// TODO: Needs Unit Tests
 func buildAuthLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -342,6 +343,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	return defProxyPass
 }
 
+// TODO: Needs Unit Tests
 func filterRateLimits(input interface{}) []ratelimit.RateLimit {
 	ratelimits := []ratelimit.RateLimit{}
 	found := sets.String{}
@@ -361,6 +363,7 @@ func filterRateLimits(input interface{}) []ratelimit.RateLimit {
 	return ratelimits
 }
 
+// TODO: Needs Unit Tests
 // buildRateLimitZones produces an array of limit_conn_zone in order to allow
 // rate limiting of request. Each Ingress rule could have up to three zones, one
 // for connection limit by IP address, one for limiting requests per minute, and
@@ -484,6 +487,7 @@ func buildDenyVariable(a interface{}) string {
 	return fmt.Sprintf("$deny_%v", denyPathSlugMap[l])
 }
 
+// TODO: Needs Unit Tests
 func buildUpstreamName(host string, b interface{}, loc interface{}) string {
 	backends := b.([]*ingress.Backend)
 	location, ok := loc.(*ingress.Location)
@@ -507,6 +511,7 @@ func buildUpstreamName(host string, b interface{}, loc interface{}) string {
 	return upstreamName
 }
 
+// TODO: Needs Unit Tests
 func isSticky(host string, loc *ingress.Location, stickyLocations map[string][]string) bool {
 	if _, ok := stickyLocations[host]; ok {
 		for _, sl := range stickyLocations[host] {
