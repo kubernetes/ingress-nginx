@@ -40,7 +40,6 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
-	"k8s.io/ingress/controllers/nginx/pkg/fastcgi"
 	ngx_template "k8s.io/ingress/controllers/nginx/pkg/template"
 	"k8s.io/ingress/controllers/nginx/pkg/version"
 	"k8s.io/ingress/core/pkg/ingress"
@@ -59,8 +58,6 @@ const (
 	vtsStatusModule     statusModule = "vts"
 
 	defUpstreamName = "upstream-default-backend"
-
-	fastCGISocket = "/var/run/go-fastcgi.sock"
 )
 
 var (
@@ -92,23 +89,6 @@ func newNGINXController() *NGINXController {
 		ports:           &config.ListenPorts{},
 		backendDefaults: config.NewDefault().Backend,
 	}
-
-	fcgiListener, err := net.Listen("unix", fastCGISocket)
-	if err != nil {
-		glog.Fatalf("%v", err)
-	}
-
-	err = os.Chmod(fastCGISocket, 0777)
-	if err != nil {
-		glog.Fatalf("%v", err)
-	}
-
-	go func() {
-		err = fastcgi.ServeError(fcgiListener)
-		if err != nil {
-			glog.Fatalf("%v", err)
-		}
-	}()
 
 	var onChange func()
 	onChange = func() {
@@ -677,18 +657,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		RedirectServers:         redirectServers,
 		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
 		ListenPorts:             n.ports,
-	}
-
-	// We need to extract the endpoints to be used in the fastcgi error handler
-	for _, b := range ingressCfg.Backends {
-		if b.Name == defUpstreamName {
-			eps := []string{}
-			for _, e := range b.Endpoints {
-				eps = append(eps, fmt.Sprintf("%v:%v", e.Address, e.Port))
-			}
-			tc.DefaultBackendEndpoints = strings.Join(eps, ",")
-			break
-		}
 	}
 
 	content, err := n.t.Write(tc)
