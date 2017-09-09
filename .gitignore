@@ -25,3 +25,10 @@ Session.vim
 # coverage artifacts
 .coverprofile
 /gover.coverprofile
+
+# skip go tests
+*/**/*.test
+
+# skip e2e binaries
+minikube
+kubectl

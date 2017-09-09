@@ -2,15 +2,6 @@ all: fmt lint vet
 
 BUILDTAGS=
 
-# building inside travis generates a custom version of the
-# backends in order to run e2e tests agains the build.
-ifdef TRAVIS_BUILD_ID
-  RELEASE := ci-build-${TRAVIS_BUILD_ID}
-endif
-
-# 0.0 shouldn't clobber any release builds
-RELEASE?=0.0
-
 # by default build a linux version
 GOOS?=linux
 
@@ -23,7 +14,7 @@ endif
 # base package. It contains the common and backends code
 PKG := "k8s.io/ingress"
 
-GO_LIST_FILES=$(shell go list ${PKG}/... | grep -v vendor | grep -v -e "test/e2e")
+GO_LIST_FILES=$(shell go list ${PKG}/... | grep -v vendor | grep -v -e "e2e")
 
 .PHONY: fmt
 fmt:
@@ -38,8 +29,8 @@ test:
 	@go test -v -race -tags "$(BUILDTAGS) cgo" ${GO_LIST_FILES}
 
 .PHONY: test-e2e
-test-e2e: ginkgo
-	@go run hack/e2e.go -v --up --test --down
+test-e2e:
+	make -C controllers/nginx test-e2e
 
 .PHONY: cover
 cover:
@@ -70,7 +61,3 @@ docker-push:
 .PHONE: release
 release:
 	make -C controllers/nginx release
-
-.PHONY: ginkgo
-ginkgo:
-	go get github.com/onsi/ginkgo/ginkgo
