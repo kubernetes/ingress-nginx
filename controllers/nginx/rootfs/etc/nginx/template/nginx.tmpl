@@ -698,7 +698,13 @@ stream {
             client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
             {{ end }}
 
+            {{/* By default use vhost as Host to upstream, but allow overrides */}}
+            {{ if not (empty $location.UpstreamVhost) }}
+            proxy_set_header Host                   "{{ $location.UpstreamVhost }}";
+            {{ else }}
             proxy_set_header Host                   $best_http_host;
+            {{ end }}
+
 
             # Pass the extracted client certificate to the backend
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
