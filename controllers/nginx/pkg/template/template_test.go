@@ -29,6 +29,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
+	"net"
 )
 
 var (
@@ -271,5 +272,103 @@ func TestBuildClientBodyBufferSize(t *testing.T) {
 	i := isValidClientBodyBufferSize("")
 	if i != false {
 		t.Errorf("Expected '%v' but returned '%v'", false, i)
+	}
+}
+
+func TestIsLocationAllowed(t *testing.T) {
+	loc := ingress.Location{
+		Denied: nil,
+	}
+
+	isAllowed := isLocationAllowed(&loc)
+	if !isAllowed {
+		t.Errorf("Expected '%v' but returned '%v'", true, isAllowed)
+	}
+}
+
+func TestBuildForwardedFor(t *testing.T) {
+	inputStr := "X-Forwarded-For"
+	outputStr := buildForwardedFor(inputStr)
+
+	validStr := "$http_x_forwarded_for"
+
+	if outputStr != validStr {
+		t.Errorf("Expected '%v' but returned '%v'", validStr, outputStr)
+	}
+}
+
+func TestBuildResolvers(t *testing.T) {
+	ipOne := net.ParseIP("192.0.0.1")
+	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
+	ipList := []net.IP{ipOne, ipTwo}
+
+	validResolver := "resolver 192.0.0.1 [2001:db8:1234::] valid=30s;"
+	resolver := buildResolvers(ipList)
+
+	if resolver != validResolver {
+		t.Errorf("Expected '%v' but returned '%v'", validResolver, resolver)
+	}
+}
+
+func TestBuildAuthSignURL(t *testing.T) {
+	urlOne := "http://google.com"
+	validUrlOne := "http://google.com?rd=$request_uri"
+
+	urlTwo := "http://google.com?cat"
+	validUrlTwo := "http://google.com?cat&rd=$request_uri"
+
+	authSignURLOne := buildAuthSignURL(urlOne)
+	if authSignURLOne != validUrlOne {
+		t.Errorf("Expected '%v' but returned '%v'", validUrlOne, authSignURLOne)
+	}
+
+	authSignURLTwo := buildAuthSignURL(urlTwo)
+	if authSignURLTwo != validUrlTwo {
+		t.Errorf("Expected '%v' but returned '%v'", validUrlTwo, authSignURLTwo)
+	}
+}
+
+func TestBuildNextUpstream(t *testing.T) {
+	nextUpstream := "timeout http_500 http_502 non_idempotent"
+	validNextUpstream := "timeout http_500 http_502"
+
+	buildNextUpstream := buildNextUpstream(nextUpstream)
+
+	if buildNextUpstream != validNextUpstream {
+		t.Errorf("Expected '%v' but returned '%v'", validNextUpstream, buildNextUpstream)
+	}
+}
+
+func TestBuildRateLimit(t *testing.T) {
+	loc := ingress.Location{}
+
+	loc.RateLimit.Connections.Name = "con"
+	loc.RateLimit.Connections.Limit = 1
+
+	loc.RateLimit.RPS.Name = "rps"
+	loc.RateLimit.RPS.Limit = 1
+	loc.RateLimit.RPS.Burst = 1
+
+	loc.RateLimit.RPM.Name = "rpm"
+	loc.RateLimit.RPM.Limit = 2
+	loc.RateLimit.RPM.Burst = 2
+
+	loc.RateLimit.LimitRateAfter = 1
+	loc.RateLimit.LimitRate = 1
+
+	validLimits := []string{
+		"limit_conn con 1;",
+		"limit_req zone=rps burst=1 nodelay;",
+		"limit_req zone=rpm burst=2 nodelay;",
+		"limit_rate_after 1k;",
+		"limit_rate 1k;",
+	}
+
+	limits := buildRateLimit(loc)
+
+	for i, limit := range limits {
+		if limit != validLimits[i] {
+			t.Errorf("Expected '%v' but returned '%v'", validLimits, limits)
+		}
 	}
 }
