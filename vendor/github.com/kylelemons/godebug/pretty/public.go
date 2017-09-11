@@ -134,19 +134,20 @@ func (cfg *Config) Fprint(w io.Writer, vals ...interface{}) (n int64, err error)
 }
 
 // Compare returns a string containing a line-by-line unified diff of the
-// values in got and want, using the CompareConfig.
+// values in a and b, using the CompareConfig.
 //
-// Each line in the output is prefixed with '+', '-', or ' ' to indicate if it
-// should be added to, removed from, or is correct for the "got" value with
-// respect to the "want" value.
-func Compare(got, want interface{}) string {
-	return CompareConfig.Compare(got, want)
+// Each line in the output is prefixed with '+', '-', or ' ' to indicate which
+// side it's from. Lines from the a side are marked with '-', lines from the
+// b side are marked with '+' and lines that are the same on both sides are
+// marked with ' '.
+func Compare(a, b interface{}) string {
+	return CompareConfig.Compare(a, b)
 }
 
 // Compare returns a string containing a line-by-line unified diff of the
 // values in got and want according to the cfg.
-func (cfg *Config) Compare(got, want interface{}) string {
+func (cfg *Config) Compare(a, b interface{}) string {
 	diffCfg := *cfg
 	diffCfg.Diffable = true
-	return diff.Diff(cfg.Sprint(got), cfg.Sprint(want))
+	return diff.Diff(cfg.Sprint(a), cfg.Sprint(b))
 }

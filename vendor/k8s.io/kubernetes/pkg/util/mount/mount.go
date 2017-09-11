@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
-	"k8s.io/utils/exec"
+	"k8s.io/kubernetes/pkg/util/exec"
 )
 
 const (

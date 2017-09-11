@@ -12,6 +12,7 @@ reviewers:
 - vishh
 - mikedanese
 - liggitt
+- bprashanth
 - gmarek
 - erictune
 - davidopp
@@ -33,6 +34,7 @@ reviewers:
 - rootfs
 - jszczepkowski
 - markturansky
+- vmarmol
 - girishkalele
 - satnam6502
 - jdef

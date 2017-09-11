@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/watch"
-	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/kubernetes/pkg/api/v1"
+	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 
 	"hash/fnv"
 	"math/rand"
@@ -180,10 +180,7 @@ func (c *realRecyclerClient) Event(eventtype, message string) {
 }
 
 func (c *realRecyclerClient) WatchPod(name, namespace string, stopChannel chan struct{}) (<-chan watch.Event, error) {
-	podSelector, err := fields.ParseSelector("metadata.name=" + name)
-	if err != nil {
-		return nil, err
-	}
+	podSelector, _ := fields.ParseSelector("metadata.name=" + name)
 	options := metav1.ListOptions{
 		FieldSelector: podSelector.String(),
 		Watch:         true,

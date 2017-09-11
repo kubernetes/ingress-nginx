@@ -23,7 +23,6 @@ import (
 	compute "google.golang.org/api/compute/v1"
 
 	"k8s.io/kubernetes/pkg/cloudprovider"
-	"strings"
 )
 
 func newZonesMetricContext(request, region string) *metricContext {
@@ -53,5 +52,5 @@ func (gce *GCECloud) ListZonesInRegion(region string) ([]*compute.Zone, error) {
 }
 
 func (gce *GCECloud) getRegionLink(region string) string {
-	return gce.service.BasePath + strings.Join([]string{gce.projectID, "regions", region}, "/")
+	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%v/regions/%v", gce.projectID, region)
 }

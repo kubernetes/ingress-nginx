@@ -21,10 +21,8 @@ import (
 	"strings"
 )
 
-// IPNet maps string to net.IPNet.
 type IPNet map[string]*net.IPNet
 
-// ParseIPNets parses string slice to IPNet.
 func ParseIPNets(specs ...string) (IPNet, error) {
 	ipnetset := make(IPNet)
 	for _, spec := range specs {
@@ -98,9 +96,9 @@ func (s IPNet) StringSlice() []string {
 }
 
 // IsSuperset returns true if and only if s1 is a superset of s2.
-func (s IPNet) IsSuperset(s2 IPNet) bool {
+func (s1 IPNet) IsSuperset(s2 IPNet) bool {
 	for k := range s2 {
-		_, found := s[k]
+		_, found := s1[k]
 		if !found {
 			return false
 		}
@@ -111,8 +109,8 @@ func (s IPNet) IsSuperset(s2 IPNet) bool {
 // Equal returns true if and only if s1 is equal (as a set) to s2.
 // Two sets are equal if their membership is identical.
 // (In practice, this means same elements, order doesn't matter)
-func (s IPNet) Equal(s2 IPNet) bool {
-	return len(s) == len(s2) && s.IsSuperset(s2)
+func (s1 IPNet) Equal(s2 IPNet) bool {
+	return len(s1) == len(s2) && s1.IsSuperset(s2)
 }
 
 // Len returns the size of the set.

@@ -2,8 +2,9 @@ package proc
 
 import (
 	"fmt"
-	"github.com/prometheus/procfs"
 	"time"
+
+	"github.com/prometheus/procfs"
 )
 
 func newProcIdStatic(pid, ppid int, startTime uint64, name string, cmdline []string) ProcIdStatic {
@@ -35,6 +36,8 @@ type (
 		WriteBytes    uint64
 		ResidentBytes uint64
 		VirtualBytes  uint64
+		OpenFDs       uint64
+		MaxFDs        uint64
 	}
 
 	ProcIdStatic struct {
@@ -79,7 +82,7 @@ type (
 		stat     *procfs.ProcStat
 		cmdline  []string
 		io       *procfs.ProcIO
-		bootTime int64
+		bootTime uint64
 	}
 
 	procs interface {
@@ -89,7 +92,7 @@ type (
 
 	procfsprocs struct {
 		Procs    []procfs.Proc
-		bootTime int64
+		bootTime uint64
 	}
 
 	// ProcIter is an iterator over a sequence of procs.
@@ -230,7 +233,7 @@ func (p proc) GetStatic() (ProcStatic, error) {
 	if err != nil {
 		return ProcStatic{}, err
 	}
-	startTime := time.Unix(p.bootTime, 0)
+	startTime := time.Unix(int64(p.bootTime), 0)
 	startTime = startTime.Add(time.Second / userHZ * time.Duration(stat.Starttime))
 	return ProcStatic{
 		Name:      stat.Comm,
@@ -249,18 +252,28 @@ func (p proc) GetMetrics() (ProcMetrics, error) {
 	if err != nil {
 		return ProcMetrics{}, err
 	}
+	numfds, err := p.Proc.FileDescriptorsLen()
+	if err != nil {
+		return ProcMetrics{}, err
+	}
+	limits, err := p.NewLimits()
+	if err != nil {
+		return ProcMetrics{}, err
+	}
 	return ProcMetrics{
 		CpuTime:       stat.CPUTime(),
 		ReadBytes:     io.ReadBytes,
 		WriteBytes:    io.WriteBytes,
 		ResidentBytes: uint64(stat.ResidentMemory()),
 		VirtualBytes:  uint64(stat.VirtualMemory()),
+		OpenFDs:       uint64(numfds),
+		MaxFDs:        uint64(limits.OpenFiles),
 	}, nil
 }
 
 type FS struct {
 	procfs.FS
-	BootTime int64
+	BootTime uint64
 }
 
 // See https://github.com/prometheus/procfs/blob/master/proc_stat.go for details on userHZ.

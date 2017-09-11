@@ -29,14 +29,27 @@ func newForwardingRuleMetricContext(request, region string) *metricContext {
 	}
 }
 
-// CreateGlobalForwardingRule creates the passed GlobalForwardingRule
-func (gce *GCECloud) CreateGlobalForwardingRule(rule *compute.ForwardingRule) error {
+// CreateGlobalForwardingRule creates and returns a
+// GlobalForwardingRule that points to the given TargetHttp(s)Proxy.
+// targetProxyLink is the SelfLink of a TargetHttp(s)Proxy.
+func (gce *GCECloud) CreateGlobalForwardingRule(targetProxyLink, ip, name, portRange string) (*compute.ForwardingRule, error) {
 	mc := newForwardingRuleMetricContext("create", "")
+	rule := &compute.ForwardingRule{
+		Name:       name,
+		IPAddress:  ip,
+		Target:     targetProxyLink,
+		PortRange:  portRange,
+		IPProtocol: "TCP",
+	}
 	op, err := gce.service.GlobalForwardingRules.Insert(gce.projectID, rule).Do()
 	if err != nil {
-		return mc.Observe(err)
+		return nil, mc.Observe(err)
 	}
-	return gce.waitForGlobalOp(op, mc)
+	if err = gce.waitForGlobalOp(op, mc); err != nil {
+		return nil, err
+	}
+
+	return gce.GetGlobalForwardingRule(name)
 }
 
 // SetProxyForGlobalForwardingRule links the given TargetHttp(s)Proxy with the given GlobalForwardingRule.

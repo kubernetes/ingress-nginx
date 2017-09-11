@@ -18,6 +18,11 @@ type (
 		Virtual  uint64
 	}
 
+	Filedesc struct {
+		Open  uint64
+		Limit uint64
+	}
+
 	// Tracker tracks processes and records metrics.
 	Tracker struct {
 		// Tracked holds the processes are being monitored.  Processes
@@ -43,6 +48,13 @@ type (
 		// GroupName is an optional tag for this proc.
 		GroupName string
 	}
+
+	trackedStats struct {
+		aggregate, latest Counts
+		Memory
+		Filedesc
+		start time.Time
+	}
 )
 
 func (tp *TrackedProc) GetName() string {
@@ -53,8 +65,16 @@ func (tp *TrackedProc) GetCmdLine() []string {
 	return tp.info.Cmdline
 }
 
-func (tp *TrackedProc) GetStats() (aggregate, latest Counts, mem Memory, start time.Time) {
-	return tp.accum, tp.lastaccum, Memory{Resident: tp.info.ResidentBytes, Virtual: tp.info.VirtualBytes}, tp.info.StartTime
+func (tp *TrackedProc) GetStats() trackedStats {
+	mem := Memory{Resident: tp.info.ResidentBytes, Virtual: tp.info.VirtualBytes}
+	fd := Filedesc{Open: tp.info.OpenFDs, Limit: tp.info.MaxFDs}
+	return trackedStats{
+		aggregate: tp.accum,
+		latest:    tp.lastaccum,
+		Memory:    mem,
+		Filedesc:  fd,
+		start:     tp.info.StartTime,
+	}
 }
 
 func NewTracker() *Tracker {

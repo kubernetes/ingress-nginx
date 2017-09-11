@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -40,7 +41,7 @@ const (
 	DiskTypeStandard = "pd-standard"
 
 	diskTypeDefault     = DiskTypeStandard
-	diskTypeUriTemplate = "%s/zones/%s/diskTypes/%s"
+	diskTypeUriTemplate = "https://www.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes/%s"
 )
 
 // Disks is interface for manipulation with GCE PDs.
@@ -233,12 +234,7 @@ func (gce *GCECloud) CreateDisk(
 	default:
 		return fmt.Errorf("invalid GCE disk type %q", diskType)
 	}
-
-	projectsApiEndpoint := gceComputeAPIEndpoint + "projects/"
-	if gce.service != nil {
-		projectsApiEndpoint = gce.service.BasePath
-	}
-	diskTypeUri := projectsApiEndpoint + fmt.Sprintf(diskTypeUriTemplate, gce.projectID, zone, diskType)
+	diskTypeUri := fmt.Sprintf(diskTypeUriTemplate, gce.projectID, zone, diskType)
 
 	diskToCreate := &compute.Disk{
 		Name:        name,
@@ -428,8 +424,9 @@ func (gce *GCECloud) convertDiskToAttachedDisk(disk *GCEDisk, readWrite string) 
 		DeviceName: disk.Name,
 		Kind:       disk.Kind,
 		Mode:       readWrite,
-		Source: gce.service.BasePath + strings.Join([]string{
-			gce.projectID, "zones", disk.Zone, "disks", disk.Name}, "/"),
+		Source: "https://" + path.Join(
+			"www.googleapis.com/compute/v1/projects/",
+			gce.projectID, "zones", disk.Zone, "disks", disk.Name),
 		Type: "PERSISTENT",
 	}
 }

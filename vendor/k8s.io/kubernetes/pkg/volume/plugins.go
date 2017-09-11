@@ -23,23 +23,15 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation"
-	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/kubernetes/pkg/api/v1"
+	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	"k8s.io/kubernetes/pkg/cloudprovider"
 	"k8s.io/kubernetes/pkg/util/io"
 	"k8s.io/kubernetes/pkg/util/mount"
-)
-
-const (
-	// Common parameter which can be specified in StorageClass to specify the desired FSType
-	// Provisioners SHOULD implement support for this if they are block device based
-	// Must be a filesystem type supported by the host operating system.
-	// Ex. "ext4", "xfs", "ntfs". Default value depends on the provisioner
-	VolumeParameterFSType = "fstype"
 )
 
 // VolumeOptions contains option information about a volume.
@@ -370,7 +362,7 @@ func (pm *VolumePluginMgr) InitPlugins(plugins []VolumePlugin, host VolumeHost) 
 		}
 		err := plugin.Init(host)
 		if err != nil {
-			glog.Errorf("Failed to load volume plugin %s, error: %s", name, err.Error())
+			glog.Errorf("Failed to load volume plugin %s, error: %s", plugin, err.Error())
 			allErrs = append(allErrs, err)
 			continue
 		}

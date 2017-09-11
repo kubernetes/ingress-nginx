@@ -37,14 +37,22 @@ func (gce *GCECloud) GetTargetHttpProxy(name string) (*compute.TargetHttpProxy, 
 	return v, mc.Observe(err)
 }
 
-// CreateTargetHttpProxy creates a TargetHttpProxy
-func (gce *GCECloud) CreateTargetHttpProxy(proxy *compute.TargetHttpProxy) error {
+// CreateTargetHttpProxy creates and returns a TargetHttpProxy with the given UrlMap.
+func (gce *GCECloud) CreateTargetHttpProxy(urlMap *compute.UrlMap, name string) (*compute.TargetHttpProxy, error) {
+	proxy := &compute.TargetHttpProxy{
+		Name:   name,
+		UrlMap: urlMap.SelfLink,
+	}
+
 	mc := newTargetProxyMetricContext("create")
 	op, err := gce.service.TargetHttpProxies.Insert(gce.projectID, proxy).Do()
 	if err != nil {
-		return mc.Observe(err)
+		return nil, mc.Observe(err)
 	}
-	return gce.waitForGlobalOp(op, mc)
+	if err = gce.waitForGlobalOp(op, mc); err != nil {
+		return nil, err
+	}
+	return gce.GetTargetHttpProxy(name)
 }
 
 // SetUrlMapForTargetHttpProxy sets the given UrlMap for the given TargetHttpProxy.
@@ -88,14 +96,22 @@ func (gce *GCECloud) GetTargetHttpsProxy(name string) (*compute.TargetHttpsProxy
 	return v, mc.Observe(err)
 }
 
-// CreateTargetHttpsProxy creates a TargetHttpsProxy
-func (gce *GCECloud) CreateTargetHttpsProxy(proxy *compute.TargetHttpsProxy) error {
+// CreateTargetHttpsProxy creates and returns a TargetHttpsProxy with the given UrlMap and SslCertificate.
+func (gce *GCECloud) CreateTargetHttpsProxy(urlMap *compute.UrlMap, sslCert *compute.SslCertificate, name string) (*compute.TargetHttpsProxy, error) {
 	mc := newTargetProxyMetricContext("create")
+	proxy := &compute.TargetHttpsProxy{
+		Name:            name,
+		UrlMap:          urlMap.SelfLink,
+		SslCertificates: []string{sslCert.SelfLink},
+	}
 	op, err := gce.service.TargetHttpsProxies.Insert(gce.projectID, proxy).Do()
 	if err != nil {
-		return mc.Observe(err)
+		return nil, mc.Observe(err)
 	}
-	return gce.waitForGlobalOp(op, mc)
+	if err = gce.waitForGlobalOp(op, mc); err != nil {
+		return nil, err
+	}
+	return gce.GetTargetHttpsProxy(name)
 }
 
 // SetUrlMapForTargetHttpsProxy sets the given UrlMap for the given TargetHttpsProxy.

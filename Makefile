@@ -23,7 +23,7 @@ endif
 # base package. It contains the common and backends code
 PKG := "k8s.io/ingress"
 
-GO_LIST_FILES=$(shell go list ${PKG}/... | grep -v vendor | grep -v -e "test/e2e")
+GO_LIST_FILES=$(shell go list ${PKG}/... | grep -v vendor | grep -v e2e)
 
 .PHONY: fmt
 fmt:
