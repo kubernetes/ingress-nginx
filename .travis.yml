@@ -20,21 +20,18 @@ env:
     - RELEASE="ci-${TRAVIS_BUILD_ID}"
     - DOCKER=docker
 
-before_script:
-  - export PATH=$PATH:$PWD/controllers/nginx/e2e/e2e-internal
-
 jobs:
   include:
     - stage: Static Check
       script: 
         - go get github.com/golang/lint/golint
         - make fmt lint vet
-    - stage: Coverage
-      script: 
-        - go get github.com/mattn/goveralls
-        - go get github.com/modocache/gover
-        - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
-        - make cover
+#    - stage: Coverage
+#      script: 
+#        - go get github.com/mattn/goveralls
+#        - go get github.com/modocache/gover
+#        - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+#        - make cover
     - stage: e2e
       script: 
         - make test-e2e

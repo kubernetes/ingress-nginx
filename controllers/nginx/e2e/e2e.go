@@ -285,11 +285,5 @@ func finishRunning(stepName string, cmd *exec.Cmd) error {
 func kubectlCmd(arg ...string) *exec.Cmd {
 	args := []string{"--context", "ingress-e2e"}
 	args = append(args, arg...)
-
-	kb := os.Getenv("KUBECTL")
-	if kb == "" {
-		kb = "./e2e/e2e-internal/kubectl"
-	}
-
-	return exec.Command(kb, args...)
+	return exec.Command("kubectl", args...)
 }

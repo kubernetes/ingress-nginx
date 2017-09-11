@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -eof pipefail
-
 . ./e2e/e2e-internal/e2e-env.sh
 
 mkdir -p $HOME/.kube
@@ -16,10 +14,11 @@ fi
 # this for loop waits until kubectl can access the api server that minikube has created
 for i in {1..150} # timeout for 5 minutes
 do
-  $KUBECTL get po &> /dev/null
+  $($KUBECTL get pods &> /dev/null) || true
   if [ $? -ne 1 ]; then
     break
   fi
+  echo -n "."
   sleep 10
 done
 
