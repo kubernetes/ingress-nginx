@@ -287,7 +287,7 @@ In some scenarios is required to redirect from `www.domain.com` to `domain.com` 
 To enable this feature use the annotation `ingress.kubernetes.io/from-to-www-redirect: "true"`
 
 **Important:**
-If at some point a new Ingress is created with a host equals to one of the options (like `domain.com`) the annotation will be ommited.
+If at some point a new Ingress is created with a host equal to one of the options (like `domain.com`) the annotation will be omitted.
 
 
 ### Whitelist source range
