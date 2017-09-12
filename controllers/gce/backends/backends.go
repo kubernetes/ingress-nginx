@@ -211,15 +211,22 @@ func (b *Backends) create(namedPort *compute.NamedPort, hcLink string, sp Servic
 }
 
 // Add will get or create a Backend for the given port.
-func (b *Backends) Add(p ServicePort) error {
+// Uses the given instance groups if non-nil, else creates instance groups.
+func (b *Backends) Add(p ServicePort, igs []*compute.InstanceGroup) error {
 	// We must track the port even if creating the backend failed, because
 	// we might've created a health-check for it.
 	be := &compute.BackendService{}
 	defer func() { b.snapshotter.Add(portKey(p.Port), be) }()
 
-	igs, namedPort, err := instances.CreateInstanceGroups(b.nodePool, b.namer, p.Port)
-	if err != nil {
-		return err
+	var err error
+	// Ideally callers should pass the instance groups to prevent recomputing them here.
+	// Igs can be nil in scenarios where we do not have instance groups such as
+	// while syncing default backend service.
+	if igs == nil {
+		igs, _, err = instances.EnsureInstanceGroupsAndPorts(b.nodePool, b.namer, p.Port)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Ensure health check for backend service exists
@@ -232,6 +239,7 @@ func (b *Backends) Add(p ServicePort) error {
 	pName := b.namer.BeName(p.Port)
 	be, _ = b.Get(p.Port)
 	if be == nil {
+		namedPort := utils.GetNamedPort(p.Port)
 		glog.V(2).Infof("Creating backend service for port %v named port %v", p.Port, namedPort)
 		be, err = b.create(namedPort, hcLink, p, pName)
 		if err != nil {
@@ -381,12 +389,12 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 }
 
 // Sync syncs backend services corresponding to ports in the given list.
-func (b *Backends) Sync(svcNodePorts []ServicePort) error {
+func (b *Backends) Sync(svcNodePorts []ServicePort, igs []*compute.InstanceGroup) error {
 	glog.V(3).Infof("Sync: backends %v", svcNodePorts)
 
 	// create backends for new ports, perform an edge hop for existing ports
 	for _, port := range svcNodePorts {
-		if err := b.Add(port); err != nil {
+		if err := b.Add(port, igs); err != nil {
 			return err
 		}
 	}
