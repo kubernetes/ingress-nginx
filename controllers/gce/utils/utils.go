@@ -353,3 +353,9 @@ func CompareLinks(l1, l2 string) bool {
 // FakeIngressRuleValueMap is a convenience type used by multiple submodules
 // that share the same testing methods.
 type FakeIngressRuleValueMap map[string]string
+
+// GetNamedPort creates the NamedPort API object for the given port.
+func GetNamedPort(port int64) *compute.NamedPort {
+	// TODO: move port naming to namer
+	return &compute.NamedPort{Name: fmt.Sprintf("port%v", port), Port: port}
+}

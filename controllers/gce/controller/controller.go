@@ -24,6 +24,8 @@ import (
 
 	"github.com/golang/glog"
 
+	compute "google.golang.org/api/compute/v1"
+
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +38,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
-	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 )
 
@@ -319,10 +320,10 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		}
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
-
+	igs := []*compute.InstanceGroup{}
 	// Record any errors during sync and throw a single error at the end. This
 	// allows us to free up associated cloud resources ASAP.
-	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, gceNodePorts, allNodePorts); err != nil {
+	if igs, err = lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, gceNodePorts, allNodePorts); err != nil {
 		// TODO: Implement proper backoff for the queue.
 		eventMsg := "GCE"
 		if ingExists {
@@ -341,13 +342,6 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		// Add instance group names as annotation on the ingress.
 		if ing.Annotations == nil {
 			ing.Annotations = map[string]string{}
-		}
-		// Since we just created instance groups in Checkpoint, calling create
-		// instance groups again should just return names of the existing
-		// instance groups. It does not matter which nodePort we pass as argument.
-		igs, err := lbc.CloudClusterManager.CreateInstanceGroups([]backends.ServicePort{allNodePorts[0]})
-		if err != nil {
-			return fmt.Errorf("error in creating instance groups: %v", err)
 		}
 		err = setInstanceGroupsAnnotation(ing.Annotations, igs)
 		if err != nil {
