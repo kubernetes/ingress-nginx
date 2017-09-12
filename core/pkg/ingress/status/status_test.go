@@ -19,7 +19,6 @@ package status
 import (
 	"os"
 	"sort"
-	"sync"
 	"testing"
 	"time"
 
@@ -245,7 +244,6 @@ func buildStatusSync() statusSync {
 				"lable_sig": "foo_pod",
 			},
 		},
-		runLock:   &sync.Mutex{},
 		syncQueue: task.NewTaskQueue(fakeSynFn),
 		Config: Config{
 			Client:         buildSimpleClientSet(),
@@ -328,9 +326,7 @@ func TestStatusActions(t *testing.T) {
 }
 
 func TestCallback(t *testing.T) {
-	fk := buildStatusSync()
-	//  do nothing
-	fk.callback("foo_base_pod")
+	buildStatusSync()
 }
 
 func TestKeyfunc(t *testing.T) {
