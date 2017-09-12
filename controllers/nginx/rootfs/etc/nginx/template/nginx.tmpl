@@ -156,6 +156,7 @@ http {
 
     map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
         default          {{ buildForwardedFor $cfg.ForwardedForHeader }};
+        "~*(?<ip>[0-9\.]+).*"     $ip;
     {{ if $cfg.UseProxyProtocol }}
         ''               $proxy_protocol_addr;
     {{ else }}
