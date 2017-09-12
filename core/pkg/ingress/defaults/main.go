@@ -56,6 +56,10 @@ type Backend struct {
 	// Parameters for proxy-pass directive (eg. Apache web server).
 	ProxyPassParams string `json:"proxy-pass-params"`
 
+	// Enables or disables buffering of a client request body.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering
+	ProxyRequestBuffering string `json:"proxy-request-buffering"`
+
 	// Name server/s used to resolve names of upstream servers into IP addresses.
 	// The file /etc/resolv.conf is used as DNS resolution configuration.
 	Resolver []net.IP
