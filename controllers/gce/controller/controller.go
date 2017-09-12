@@ -36,7 +36,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
-	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 )
 
@@ -288,7 +287,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	allNodePorts := lbc.tr.toNodePorts(&allIngresses)
 	gceNodePorts := lbc.tr.toNodePorts(&gceIngresses)
 	lbNames := lbc.ingLister.Store.ListKeys()
-	lbs, err := lbc.ListGCERuntimeInfo()
+	lbs, err := lbc.toRuntimeInfo(gceIngresses)
 	if err != nil {
 		return err
 	}
@@ -319,10 +318,10 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		}
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
-
 	// Record any errors during sync and throw a single error at the end. This
 	// allows us to free up associated cloud resources ASAP.
-	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, gceNodePorts, allNodePorts); err != nil {
+	igs, err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, gceNodePorts, allNodePorts)
+	if err != nil {
 		// TODO: Implement proper backoff for the queue.
 		eventMsg := "GCE"
 		if ingExists {
@@ -336,18 +335,11 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if !ingExists {
 		return syncError
 	}
-	ing := obj.(*extensions.Ingress)
-	if isGCEMultiClusterIngress(ing) {
+	ing := *obj.(*extensions.Ingress)
+	if isGCEMultiClusterIngress(&ing) {
 		// Add instance group names as annotation on the ingress.
 		if ing.Annotations == nil {
 			ing.Annotations = map[string]string{}
-		}
-		// Since we just created instance groups in Checkpoint, calling create
-		// instance groups again should just return names of the existing
-		// instance groups. It does not matter which nodePort we pass as argument.
-		igs, err := lbc.CloudClusterManager.CreateInstanceGroups([]backends.ServicePort{allNodePorts[0]})
-		if err != nil {
-			return fmt.Errorf("error in creating instance groups: %v", err)
 		}
 		err = setInstanceGroupsAnnotation(ing.Annotations, igs)
 		if err != nil {
@@ -366,13 +358,13 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		return syncError
 	}
 
-	if urlMap, err := lbc.tr.toURLMap(ing); err != nil {
+	if urlMap, err := lbc.tr.toURLMap(&ing); err != nil {
 		syncError = fmt.Errorf("%v, convert to url map error %v", syncError, err)
 	} else if err := l7.UpdateUrlMap(urlMap); err != nil {
-		lbc.recorder.Eventf(ing, apiv1.EventTypeWarning, "UrlMap", err.Error())
+		lbc.recorder.Eventf(&ing, apiv1.EventTypeWarning, "UrlMap", err.Error())
 		syncError = fmt.Errorf("%v, update url map error: %v", syncError, err)
-	} else if err := lbc.updateIngressStatus(l7, *ing); err != nil {
-		lbc.recorder.Eventf(ing, apiv1.EventTypeWarning, "Status", err.Error())
+	} else if err := lbc.updateIngressStatus(l7, ing); err != nil {
+		lbc.recorder.Eventf(&ing, apiv1.EventTypeWarning, "Status", err.Error())
 		syncError = fmt.Errorf("%v, update ingress error: %v", syncError, err)
 	}
 	return syncError
@@ -432,13 +424,8 @@ func (lbc *LoadBalancerController) updateAnnotations(name, namespace string, ann
 	return nil
 }
 
-// ListGCERuntimeInfo lists L7RuntimeInfo as understood by the loadbalancer module.
-// It returns runtime info only for gce ingresses and not for multi cluster ingresses.
-func (lbc *LoadBalancerController) ListGCERuntimeInfo() (lbs []*loadbalancers.L7RuntimeInfo, err error) {
-	ingList, err := lbc.ingLister.ListGCEIngresses()
-	if err != nil {
-		return lbs, err
-	}
+// toRuntimeInfo returns L7RuntimeInfo for the given ingresses.
+func (lbc *LoadBalancerController) toRuntimeInfo(ingList extensions.IngressList) (lbs []*loadbalancers.L7RuntimeInfo, err error) {
 	for _, ing := range ingList.Items {
 		k, err := keyFunc(&ing)
 		if err != nil {

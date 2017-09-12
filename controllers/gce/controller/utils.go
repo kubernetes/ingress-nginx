@@ -521,13 +521,13 @@ func (t *GCETranslator) ingressToNodePorts(ing *extensions.Ingress) []backends.S
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
 			glog.Errorf("ignoring non http Ingress rule")
-			return knownPorts
+			continue
 		}
 		for _, path := range rule.HTTP.Paths {
 			port, err := t.getServiceNodePort(path.Backend, ing.Namespace)
 			if err != nil {
 				glog.Infof("%v", err)
-				return knownPorts
+				continue
 			}
 			knownPorts = append(knownPorts, port)
 		}
@@ -680,7 +680,7 @@ func setInstanceGroupsAnnotation(existing map[string]string, igs []*compute.Inst
 		Name string
 		Zone string
 	}
-	instanceGroups := []Value{}
+	var instanceGroups []Value
 	for _, ig := range igs {
 		instanceGroups = append(instanceGroups, Value{Name: ig.Name, Zone: ig.Zone})
 	}
@@ -698,7 +698,7 @@ func uniq(nodePorts []backends.ServicePort) []backends.ServicePort {
 	for _, p := range nodePorts {
 		portMap[p.Port] = p
 	}
-	nodePorts = []backends.ServicePort{}
+	nodePorts = make([]backends.ServicePort, 0, len(portMap))
 	for _, sp := range portMap {
 		nodePorts = append(nodePorts, sp)
 	}

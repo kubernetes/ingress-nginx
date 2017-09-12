@@ -116,9 +116,10 @@ func (c *ClusterManager) shutdown() error {
 //   instance groups.
 // - backendServicePorts are the ports for which we require BackendServices.
 // - namedPorts are the ports which must be opened on instance groups.
+// Returns the list of all instance groups corresponding to the given loadbalancers.
 // If in performing the checkpoint the cluster manager runs out of quota, a
 // googleapi 403 is returned.
-func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, backendServicePorts []backends.ServicePort, namedPorts []backends.ServicePort) error {
+func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, backendServicePorts []backends.ServicePort, namedPorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
 	if len(namedPorts) != 0 {
 		// Add the default backend node port to the list of named ports for instance groups.
 		namedPorts = append(namedPorts, c.defaultBackendNodePort)
@@ -129,19 +130,18 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	namedPorts = uniq(namedPorts)
 	backendServicePorts = uniq(backendServicePorts)
 	// Create Instance Groups.
-	_, err := c.CreateInstanceGroups(namedPorts)
+	igs, err := c.EnsureInstanceGroupsAndPorts(namedPorts)
 	if err != nil {
-		return err
+		return igs, err
 	}
-	if err := c.backendPool.Sync(backendServicePorts); err != nil {
-		return err
+	if err := c.backendPool.Sync(backendServicePorts, igs); err != nil {
+		return igs, err
 	}
-
-	if err := c.SyncNodesInInstanceGroups(nodeNames); err != nil {
-		return err
+	if err := c.instancePool.Sync(nodeNames); err != nil {
+		return igs, err
 	}
 	if err := c.l7Pool.Sync(lbs); err != nil {
-		return err
+		return igs, err
 	}
 
 	// TODO: Manage default backend and its firewall rule in a centralized way.
@@ -160,34 +160,27 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 		np = append(np, p.Port)
 	}
 	if err := c.firewallPool.Sync(np, nodeNames); err != nil {
-		return err
+		return igs, err
 	}
 
-	return nil
+	return igs, nil
 }
 
-func (c *ClusterManager) CreateInstanceGroups(servicePorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
+func (c *ClusterManager) EnsureInstanceGroupsAndPorts(servicePorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
 	var igs []*compute.InstanceGroup
 	var err error
 	for _, p := range servicePorts {
-		// CreateInstanceGroups always returns all the instance groups, so we can return
+		// EnsureInstanceGroupsAndPorts always returns all the instance groups, so we can return
 		// the output of any call, no need to append the return from all calls.
 		// TODO: Ideally, we want to call CreateInstaceGroups only the first time and
 		// then call AddNamedPort multiple times. Need to update the interface to
 		// achieve this.
-		igs, _, err = instances.CreateInstanceGroups(c.instancePool, c.ClusterNamer, p.Port)
+		igs, _, err = instances.EnsureInstanceGroupsAndPorts(c.instancePool, c.ClusterNamer, p.Port)
 		if err != nil {
 			return nil, err
 		}
 	}
 	return igs, nil
-}
-
-func (c *ClusterManager) SyncNodesInInstanceGroups(nodeNames []string) error {
-	if err := c.instancePool.Sync(nodeNames); err != nil {
-		return err
-	}
-	return nil
 }
 
 // GC garbage collects unused resources.
