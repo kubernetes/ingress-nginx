@@ -40,6 +40,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/snippet"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress/core/pkg/ingress/annotations/upstreamvhost"
+	"k8s.io/ingress/core/pkg/ingress/annotations/vtsfilterkey"
 	"k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
@@ -80,6 +81,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"ClientBodyBufferSize": clientbodybuffersize.NewParser(),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(),
+			"VtsFilterKey":         vtsfilterkey.NewParser(),
 		},
 	}
 }

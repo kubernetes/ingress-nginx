@@ -537,6 +537,7 @@ The following table shows the options, the default value and a description.
 |variables-hash-bucket-size|64|
 |variables-hash-max-size|2048|
 |vts-status-zone-size|10m|
+|vts-default-filter-key|$geoip_country_code country::*|
 |whitelist-source-range|permit all|
 |worker-processes|number of CPUs|
 |limit-conn-zone-variable|$binary_remote_addr|
