@@ -52,6 +52,11 @@ func (ic *GenericController) syncSecret(key string) {
 		}
 		glog.Infof("updating secret %v in the local store", key)
 		ic.sslCertTracker.Update(key, cert)
+		// we need to force the sync of the secret to disk
+		ic.syncSecret(key)
+		// this update must trigger an update
+		// (like an update event from a change in Ingress)
+		ic.syncIngress("secret-update")
 		return
 	}
 
