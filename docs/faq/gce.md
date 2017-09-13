@@ -282,7 +282,7 @@ We plan to fix this [soon](https://github.com/kubernetes/kubernetes/issues/16337
 ## How do I disable the GCE Ingress controller?
 
 3 options:
-1. Have it no-op based on the `ingress.class` annotation as shown [here](README.md#how-do-i-disable-the-ingress-controller)
+1. Have it no-op based on the `ingress.class` annotation as shown [here](README.md#how-do-i-disable-an-ingress-controller)
 2. SSH into the GCE master node and delete the GLBC manifest file found at `/etc/kubernetes/manifests/glbc.manifest`
 3. Create the GKE cluster without it:
 
