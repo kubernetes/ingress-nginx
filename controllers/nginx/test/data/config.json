@@ -110,7 +110,9 @@
 				"keyFilename": "",
 				"caFilename": "",
 				"pemSha": ""
-			}
+			},
+			"vtsDefaultFilterKey": "$uri $server_name"
+			
 		}, {
 			"path": "/",
 			"isDefBackend": true,

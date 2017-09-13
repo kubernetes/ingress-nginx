@@ -146,7 +146,20 @@ type Configuration struct {
 	// By default this is disabled
 	EnableVtsStatus bool `json:"enable-vts-status,omitempty"`
 
+	// Vts config on http level
+	// Description: Sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processe
+	// https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone
+	// Default value is 10m
 	VtsStatusZoneSize string `json:"vts-status-zone-size,omitempty"`
+
+	// Vts config on http level
+	// Description: Enables the keys by user defined variable. The key is a key string to calculate traffic.
+	// The name is a group string to calculate traffic. The key and name can contain variables such as $host,
+	// $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones
+	// if not specified second argument name. The example with geoip module is as follows:
+	// https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key
+	// Default value is $geoip_country_code country::*
+	VtsDefaultFilterKey string `json:"vts-default-filter-key,omitempty"`
 
 	// RetryNonIdempotent since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH)
 	// in case of an error. The previous behavior can be restored using the value true
@@ -414,21 +427,21 @@ func NewDefault() Configuration {
 		UseHTTP2:                   true,
 		ProxyStreamTimeout:         "600s",
 		Backend: defaults.Backend{
-			ProxyBodySize:        bodySize,
-			ProxyConnectTimeout:  5,
-			ProxyReadTimeout:     60,
-			ProxySendTimeout:     60,
-			ProxyBufferSize:      "4k",
-			ProxyCookieDomain:    "off",
-			ProxyCookiePath:      "off",
-			ProxyNextUpstream:    "error timeout invalid_header http_502 http_503 http_504",
+			ProxyBodySize:         bodySize,
+			ProxyConnectTimeout:   5,
+			ProxyReadTimeout:      60,
+			ProxySendTimeout:      60,
+			ProxyBufferSize:       "4k",
+			ProxyCookieDomain:     "off",
+			ProxyCookiePath:       "off",
+			ProxyNextUpstream:     "error timeout invalid_header http_502 http_503 http_504",
 			ProxyRequestBuffering: "on",
-			SSLRedirect:          true,
-			CustomHTTPErrors:     []int{},
-			WhitelistSourceRange: []string{},
-			SkipAccessLogURLs:    []string{},
-			LimitRate:            0,
-			LimitRateAfter:       0,
+			SSLRedirect:           true,
+			CustomHTTPErrors:      []int{},
+			WhitelistSourceRange:  []string{},
+			SkipAccessLogURLs:     []string{},
+			LimitRate:             0,
+			LimitRateAfter:        0,
 		},
 		UpstreamKeepaliveConnections: 32,
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
