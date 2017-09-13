@@ -12,14 +12,27 @@ controller.__
 
 As of Kubernetes 1.3, GLBC runs as a static pod on the master. If you want to
 totally disable it, you can ssh into the master node and delete the GLBC
-manifest file found at `/etc/kubernetes/manifests/glbc.manifest`. You can also
-disable it on GKE at cluster bring-up time through the `disable-addons` flag:
+manifest file found at `/etc/kubernetes/manifests/glbc.manifest`.
+
+### Disabling GCE ingress on cluster creation
+
+Disable it on GKE at cluster bring-up time through the `disable-addons` flag:
 
 ```console
 gcloud container clusters create mycluster --network "default" --num-nodes 1 \
---machine-type n1-standard-2 --zone $ZONE \
---disable-addons HttpLoadBalancing \
---disk-size 50 --scopes storage-full
+--machine-type n1-standard-2 \
+--zone $ZONE \
+--disk-size 50 \
+--scopes storage-full \
+--disable-addons HttpLoadBalancing
+```
+
+### Disabling GCE ingress by existing cluster
+
+Disable it on GKE for an existing cluster through the `update-addons` flag:
+
+```console
+gcloud container clusters update mycluster --update-addons HttpLoadBalancing=DISABLED 
 ```
 
 ## Deploying a new controller
