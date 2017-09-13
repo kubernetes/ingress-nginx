@@ -73,7 +73,7 @@ Setting the annotation to any value other than "gce" or the empty string, will
 force the GCE controller to ignore your Ingress. The same applies for the nginx
 controller.
 
-To completely stop the Ingress controller on GCE/GKE, please see [this](gce.md#host-do-i-disable-the-ingress-controller) faq.
+To completely stop the Ingress controller on GCE/GKE, please see [this](gce.md#how-do-i-disable-the-gce-ingress-controller) faq.
 
 ## How do I run multiple Ingress controllers in the same cluster?
 
