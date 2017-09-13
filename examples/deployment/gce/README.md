@@ -37,7 +37,7 @@ gcloud container clusters update mycluster --update-addons HttpLoadBalancing=DIS
 
 ## Deploying a new controller
 
-The following command deploys a GCE Ingress controller in your cluster
+The following command deploys a GCE Ingress controller in your cluster:
 
 ```console
 $ kubectl create -f gce-ingress-controller.yaml
@@ -49,7 +49,7 @@ NAME                     READY     STATUS    RESTARTS   AGE
 l7-lb-controller-1s22c   2/2       Running   0          27s
 ```
 
-now you can create an Ingress and observe the controller
+Now you can create an Ingress and observe the controller:
 
 ```console
 $ kubectl create -f gce-tls-ingress.yaml
