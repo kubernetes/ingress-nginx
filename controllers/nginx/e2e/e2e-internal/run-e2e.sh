@@ -23,7 +23,7 @@ report_error() {
 
 trap 'report_error $LINENO' ERR
 ${WAIT_FOR_DEPLOYMENT} nginx-ingress-controller
-notrap
+trap '' ERR
 
 echo "Running tests..."
 go test -v k8s.io/ingress/controllers/nginx/e2e/... -run ^TestIngressSuite$ --args --alsologtostderr --v=10
