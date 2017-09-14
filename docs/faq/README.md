@@ -52,7 +52,7 @@ for unsatisfied Ingress.
 ## How do I disable an Ingress controller?
 
 Either shutdown the controller satisfying the Ingress, or use the
-`Ingress-class` annotation, as follows:
+`ingress.class` annotation:
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -77,9 +77,8 @@ To completely stop the Ingress controller on GCE/GKE, please see [this](gce.md#h
 
 ## How do I run multiple Ingress controllers in the same cluster?
 
-Multiple Ingress controllers can co-exist and key off the `ingress-class`
-annotation, as shown in this [faq](#how-do-i-run-multiple-ingress-controllers-in-the-same-cluster),
-as well as in [this](/examples/daemonset/nginx) example.
+Multiple Ingress controllers can co-exist and key off the `ingress.class`
+annotation, as shown in this faq, as well as in [this](/examples/daemonset/nginx) example.
 
 ## How do I contribute a backend to the generic Ingress controller?
 
