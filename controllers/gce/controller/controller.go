@@ -149,7 +149,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, ctx *ControllerC
 	ctx.IngressInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
-			if !isGCEIngress(addIng) {
+			if !isGCEIngress(addIng) && !isGCEMultiClusterIngress(addIng) {
 				glog.Infof("Ignoring add for ingress %v based on annotation %v", addIng.Name, ingressClassKey)
 				return
 			}
@@ -158,7 +158,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, ctx *ControllerC
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng := obj.(*extensions.Ingress)
-			if !isGCEIngress(delIng) {
+			if !isGCEIngress(delIng) && !isGCEMultiClusterIngress(delIng) {
 				glog.Infof("Ignoring delete for ingress %v based on annotation %v", delIng.Name, ingressClassKey)
 				return
 			}
@@ -167,7 +167,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, ctx *ControllerC
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			curIng := cur.(*extensions.Ingress)
-			if !isGCEIngress(curIng) {
+			if !isGCEIngress(curIng) && !isGCEMultiClusterIngress(curIng) {
 				return
 			}
 			if !reflect.DeepEqual(old, cur) {
@@ -275,13 +275,19 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	}
 	glog.V(3).Infof("Syncing %v", key)
 
-	ingresses, err := lbc.ingLister.List()
+	allIngresses, err := lbc.ingLister.ListAll()
 	if err != nil {
 		return err
 	}
-	nodePorts := lbc.tr.toNodePorts(&ingresses)
+	gceIngresses, err := lbc.ingLister.ListGCEIngresses()
+	if err != nil {
+		return err
+	}
+
+	allNodePorts := lbc.tr.toNodePorts(&allIngresses)
+	gceNodePorts := lbc.tr.toNodePorts(&gceIngresses)
 	lbNames := lbc.ingLister.Store.ListKeys()
-	lbs, err := lbc.ListRuntimeInfo()
+	lbs, err := lbc.toRuntimeInfo(gceIngresses)
 	if err != nil {
 		return err
 	}
@@ -307,15 +313,15 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 
 	var syncError error
 	defer func() {
-		if deferErr := lbc.CloudClusterManager.GC(lbNames, nodePorts); deferErr != nil {
+		if deferErr := lbc.CloudClusterManager.GC(lbNames, allNodePorts); deferErr != nil {
 			err = fmt.Errorf("error during sync %v, error during GC %v", syncError, deferErr)
 		}
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
-
 	// Record any errors during sync and throw a single error at the end. This
 	// allows us to free up associated cloud resources ASAP.
-	if err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, nodePorts); err != nil {
+	igs, err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, gceNodePorts, allNodePorts)
+	if err != nil {
 		// TODO: Implement proper backoff for the queue.
 		eventMsg := "GCE"
 		if ingExists {
@@ -329,6 +335,22 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if !ingExists {
 		return syncError
 	}
+	ing := *obj.(*extensions.Ingress)
+	if isGCEMultiClusterIngress(&ing) {
+		// Add instance group names as annotation on the ingress.
+		if ing.Annotations == nil {
+			ing.Annotations = map[string]string{}
+		}
+		err = setInstanceGroupsAnnotation(ing.Annotations, igs)
+		if err != nil {
+			return err
+		}
+		if err := lbc.updateAnnotations(ing.Name, ing.Namespace, ing.Annotations); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	// Update the UrlMap of the single loadbalancer that came through the watch.
 	l7, err := lbc.CloudClusterManager.l7Pool.Get(key)
 	if err != nil {
@@ -336,7 +358,6 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		return syncError
 	}
 
-	ing := *obj.(*extensions.Ingress)
 	if urlMap, err := lbc.tr.toURLMap(&ing); err != nil {
 		syncError = fmt.Errorf("%v, convert to url map error %v", syncError, err)
 	} else if err := l7.UpdateUrlMap(urlMap); err != nil {
@@ -379,14 +400,23 @@ func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing
 			lbc.recorder.Eventf(currIng, apiv1.EventTypeNormal, "CREATE", "ip: %v", ip)
 		}
 	}
+	annotations := loadbalancers.GetLBAnnotations(l7, currIng.Annotations, lbc.CloudClusterManager.backendPool)
+	if err := lbc.updateAnnotations(ing.Name, ing.Namespace, annotations); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (lbc *LoadBalancerController) updateAnnotations(name, namespace string, annotations map[string]string) error {
 	// Update annotations through /update endpoint
-	currIng, err = ingClient.Get(ing.Name, metav1.GetOptions{})
+	ingClient := lbc.client.Extensions().Ingresses(namespace)
+	currIng, err := ingClient.Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-	currIng.Annotations = loadbalancers.GetLBAnnotations(l7, currIng.Annotations, lbc.CloudClusterManager.backendPool)
-	if !reflect.DeepEqual(ing.Annotations, currIng.Annotations) {
-		glog.V(3).Infof("Updating annotations of %v/%v", ing.Namespace, ing.Name)
+	if !reflect.DeepEqual(currIng.Annotations, annotations) {
+		glog.V(3).Infof("Updating annotations of %v/%v", namespace, name)
+		currIng.Annotations = annotations
 		if _, err := ingClient.Update(currIng); err != nil {
 			return err
 		}
@@ -394,12 +424,8 @@ func (lbc *LoadBalancerController) updateIngressStatus(l7 *loadbalancers.L7, ing
 	return nil
 }
 
-// ListRuntimeInfo lists L7RuntimeInfo as understood by the loadbalancer module.
-func (lbc *LoadBalancerController) ListRuntimeInfo() (lbs []*loadbalancers.L7RuntimeInfo, err error) {
-	ingList, err := lbc.ingLister.List()
-	if err != nil {
-		return lbs, err
-	}
+// toRuntimeInfo returns L7RuntimeInfo for the given ingresses.
+func (lbc *LoadBalancerController) toRuntimeInfo(ingList extensions.IngressList) (lbs []*loadbalancers.L7RuntimeInfo, err error) {
 	for _, ing := range ingList.Items {
 		k, err := keyFunc(&ing)
 		if err != nil {

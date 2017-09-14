@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	compute "google.golang.org/api/compute/v1"
+
 	api_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -262,4 +264,44 @@ func addNodes(lbc *LoadBalancerController, zoneToNode map[string][]string) {
 
 func getProbePath(p *api_v1.Probe) string {
 	return p.Handler.HTTPGet.Path
+}
+
+func TestAddInstanceGroupsAnnotation(t *testing.T) {
+	testCases := []struct {
+		Igs                []*compute.InstanceGroup
+		ExpectedAnnotation string
+	}{
+		{
+			// Single zone.
+			[]*compute.InstanceGroup{&compute.InstanceGroup{
+				Name: "ig-name",
+				Zone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-b",
+			}},
+			`[{"Name":"ig-name","Zone":"https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-b"}]`,
+		},
+		{
+			// Multiple zones.
+			[]*compute.InstanceGroup{
+				&compute.InstanceGroup{
+					Name: "ig-name-1",
+					Zone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-b",
+				},
+				&compute.InstanceGroup{
+					Name: "ig-name-2",
+					Zone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a",
+				},
+			},
+			`[{"Name":"ig-name-1","Zone":"https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-b"},{"Name":"ig-name-2","Zone":"https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a"}]`,
+		},
+	}
+	for _, c := range testCases {
+		annotations := map[string]string{}
+		err := setInstanceGroupsAnnotation(annotations, c.Igs)
+		if err != nil {
+			t.Fatalf("Unexpected error: %v", err)
+		}
+		if annotations[instanceGroupsAnnotationKey] != c.ExpectedAnnotation {
+			t.Fatalf("Unexpected annotation value: %s, expected: %s", annotations[instanceGroupsAnnotationKey], c.ExpectedAnnotation)
+		}
+	}
 }
