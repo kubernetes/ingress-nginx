@@ -23,7 +23,7 @@
 
 There are 3 ways to customize NGINX:
 
-1. **NOTE** Please make sure you add the `--configmap` command-line argument when starting the controller for ConfigMaps to work! See the documentation [here](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#command-line-arguments). For a complete list of all the parameters allowed inside the ConfigMap, see [ConfigMap](#allowed-parameters-in-configuration-configmap).
+1. [ConfigMaps](#allowed-parameters-in-configuration-configmap) **NOTE:** Please make sure you add the `--configmap` command-line argument when starting the controller for ConfigMaps to work! See the documentation [here](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#command-line-arguments). For a complete list of all the parameters allowed inside the ConfigMap, see [ConfigMap](#allowed-parameters-in-configuration-configmap).
 2. [annotations](#annotations): use this if you want a specific configuration for the site defined in the Ingress rule.
 3. custom template: when more specific settings are required, like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), custom [log_format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change an through the ConfigMap.
 
