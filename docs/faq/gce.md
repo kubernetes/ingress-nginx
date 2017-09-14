@@ -286,11 +286,12 @@ If you want to disable it, you have 3 options:
 
 ### Soft disable
 
-1. Have it no-op based on the `ingress.class` annotation as shown [here](README.md#how-do-i-disable-an-ingress-controller)
+1. Have it no-op for an Ingress resource based on the `ingress.class` annotation as shown [here](README.md#how-do-i-disable-an-ingress-controller).
+This can also be used to use one of the other Ingress controllers at the same time as the GCE controller.
 
 ### Hard disable
 
-2. SSH into the GCE master node and delete the GLBC manifest file found at `/etc/kubernetes/manifests/glbc.manifest`
+2. SSH into the GCE master node and delete the GLBC manifest file found at `/etc/kubernetes/manifests/glbc.manifest`.
 3. Disable the addon in GKE:
 
 #### Disabling GCE ingress on cluster creation
