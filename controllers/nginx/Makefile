@@ -54,7 +54,9 @@ endif
 #        QEMUARCH=s390x
 #endif
 
-TEMP_DIR := $(shell mktemp -d)
+ifndef TEMP_DIR
+  TEMP_DIR := $(shell mktemp -d)
+endif
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
 
