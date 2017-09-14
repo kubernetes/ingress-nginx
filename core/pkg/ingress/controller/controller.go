@@ -1078,14 +1078,15 @@ func (ic *GenericController) createServers(data []interface{},
 
 	bdef := ic.GetDefaultBackend()
 	ngxProxy := proxy.Configuration{
-		BodySize:       bdef.ProxyBodySize,
-		ConnectTimeout: bdef.ProxyConnectTimeout,
-		SendTimeout:    bdef.ProxySendTimeout,
-		ReadTimeout:    bdef.ProxyReadTimeout,
-		BufferSize:     bdef.ProxyBufferSize,
-		CookieDomain:   bdef.ProxyCookieDomain,
-		CookiePath:     bdef.ProxyCookiePath,
-		NextUpstream:   bdef.ProxyNextUpstream,
+		BodySize:         bdef.ProxyBodySize,
+		ConnectTimeout:   bdef.ProxyConnectTimeout,
+		SendTimeout:      bdef.ProxySendTimeout,
+		ReadTimeout:      bdef.ProxyReadTimeout,
+		BufferSize:       bdef.ProxyBufferSize,
+		CookieDomain:     bdef.ProxyCookieDomain,
+		CookiePath:       bdef.ProxyCookiePath,
+		NextUpstream:     bdef.ProxyNextUpstream,
+		RequestBuffering: bdef.ProxyRequestBuffering,
 	}
 
 	defaultPemFileName := fakeCertificatePath
