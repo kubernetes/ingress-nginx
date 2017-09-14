@@ -63,8 +63,7 @@ func (i *Instances) Init(zl zoneLister) {
 // all of which have the exact same named port.
 func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.InstanceGroup, *compute.NamedPort, error) {
 	igs := []*compute.InstanceGroup{}
-	// TODO: move port naming to namer
-	namedPort := &compute.NamedPort{Name: fmt.Sprintf("port%v", port), Port: port}
+	namedPort := utils.GetNamedPort(port)
 
 	zones, err := i.ListZones()
 	if err != nil {
