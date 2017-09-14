@@ -125,7 +125,7 @@ func (p nginxStatusCollector) Stop() {
 	close(p.scrapeChan)
 }
 
-// nginxStatusCollector scrap the nginx status
+// nginxStatusCollector scrape the nginx status
 func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
 	s, err := getNginxStatus(p.ngxHealthPort, p.ngxVtsPath)
 	if err != nil {
