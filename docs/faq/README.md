@@ -69,9 +69,9 @@ spec:
     servicePort: 80
 ```
 
-Setting the annotation to any value other than "gce" or the empty string "" will force the GCE controller to ignore your Ingress.
+The GCE controller will only act on Ingresses with the annotation value of "gce" or empty string "", the default value if the annotation is omitted.
 
-Setting the annotation to any value other than "nginx" will force the nginx controller to ignore your Ingress.
+The nginx controller will only act on Ingresses with the annotation value of "nginx".
 
 To completely stop the Ingress controller on GCE/GKE, please see [this](gce.md#how-do-i-disable-the-gce-ingress-controller) faq.
 
