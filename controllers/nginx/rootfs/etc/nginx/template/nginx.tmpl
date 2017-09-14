@@ -286,6 +286,10 @@ http {
 
         {{ if $cfg.EnableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
 
+        {{ if not (empty $server.ServerSnippet) }}
+        {{ $server.ServerSnippet }}
+        {{ end }}
+
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
         {{ $authPath := buildAuthLocation $location }}
