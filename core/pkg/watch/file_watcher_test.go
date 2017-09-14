@@ -26,7 +26,7 @@ import (
 func prepareTimeout() chan bool {
 	timeoutChan := make(chan bool, 1)
 	go func() {
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 		timeoutChan <- true
 	}()
 	return timeoutChan

@@ -17,11 +17,14 @@ limitations under the License.
 package ingress
 
 import (
+	"time"
+
 	"github.com/spf13/pflag"
 
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apiserver/pkg/server/healthz"
-	api "k8s.io/client-go/pkg/api/v1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
@@ -29,11 +32,11 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress/core/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
+	"k8s.io/ingress/core/pkg/ingress/annotations/redirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/ingress/store"
-	"time"
 )
 
 var (
@@ -73,8 +76,6 @@ type Controller interface {
 	// https://k8s.io/ingress/core/blob/master/pkg/ingress/types.go#L83
 	// The backend returns an error if was not possible to update the configuration.
 	//
-	// The returned configuration is then passed to test, and then to reload
-	// if there is no errors.
 	OnUpdate(Configuration) error
 	// ConfigMap content of --configmap
 	SetConfig(*api.ConfigMap)
@@ -93,6 +94,14 @@ type Controller interface {
 	OverrideFlags(*pflag.FlagSet)
 	// DefaultIngressClass just return the default ingress class
 	DefaultIngressClass() string
+	// UpdateIngressStatus custom callback used to update the status in an Ingress rule
+	// This allows custom implementations
+	// If the function returns nil the standard functions will be executed.
+	UpdateIngressStatus(*extensions.Ingress) []api.LoadBalancerIngress
+	// DefaultEndpoint returns the Endpoint to use as default when the
+	// referenced service does not exists. This should return the content
+	// of to the default backend
+	DefaultEndpoint() Endpoint
 }
 
 // StoreLister returns the configured stores for ingresses, services,
@@ -125,9 +134,9 @@ type BackendInfo struct {
 type Configuration struct {
 	// Backends are a list of backends used by all the Ingress rules in the
 	// ingress controller. This list includes the default backend
-	Backends []*Backend `json:"namespace"`
+	Backends []*Backend `json:"backends,omitEmpty"`
 	// Servers
-	Servers []*Server `json:"servers"`
+	Servers []*Server `json:"servers,omitEmpty"`
 	// TCPEndpoints contain endpoints for tcp streams handled by this backend
 	// +optional
 	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
@@ -141,10 +150,11 @@ type Configuration struct {
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
+// +k8s:deepcopy-gen=true
 type Backend struct {
 	// Name represents an unique api.Service name formatted as <namespace>-<name>-<port>
 	Name    string             `json:"name"`
-	Service *api.Service       `json:"service"`
+	Service *api.Service       `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
 	// This indicates if the communication protocol between the backend and the endpoint is HTTP or HTTPS
 	// Allowing the use of HTTPS
@@ -153,13 +163,13 @@ type Backend struct {
 	Secure bool `json:"secure"`
 	// SecureCACert has the filename and SHA1 of the certificate authorities used to validate
 	// a secured connection to the backend
-	SecureCACert resolver.AuthSSLCert `json:"secureCert"`
+	SecureCACert resolver.AuthSSLCert `json:"secureCACert"`
 	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
-	Endpoints []Endpoint `json:"endpoints"`
+	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// StickySessionAffinitySession contains the StickyConfig object with stickness configuration
-	SessionAffinity SessionAffinityConfig
+	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
 }
 
 // SessionAffinityConfig describes different affinity configurations for new sessions.
@@ -168,18 +178,22 @@ type Backend struct {
 // restarts. Exactly one of these values will be set on the upstream, since multiple
 // affinity values are incompatible. Once set, the backend makes no guarantees
 // about honoring updates.
+// +k8s:deepcopy-gen=true
 type SessionAffinityConfig struct {
-	AffinityType          string `json:"name"`
-	CookieSessionAffinity CookieSessionAffinity
+	AffinityType          string                `json:"name"`
+	CookieSessionAffinity CookieSessionAffinity `json:"cookieSessionAffinity"`
 }
 
 // CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
+// +k8s:deepcopy-gen=true
 type CookieSessionAffinity struct {
-	Name string `json:"name"`
-	Hash string `json:"hash"`
+	Name      string              `json:"name"`
+	Hash      string              `json:"hash"`
+	Locations map[string][]string `json:"locations,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
+// +k8s:deepcopy-gen=true
 type Endpoint struct {
 	// Address IP address of the endpoint
 	Address string `json:"address"`
@@ -193,6 +207,8 @@ type Endpoint struct {
 	// of unsuccessful attempts to communicate with the server should happen
 	// to consider the endpoint unavailable
 	FailTimeout int `json:"failTimeout"`
+	// Target returns a reference to the object providing the endpoint
+	Target *api.ObjectReference `json:"target,omipempty"`
 }
 
 // Server describes a website
@@ -216,6 +232,13 @@ type Server struct {
 	ServerSnippet string `json:"serverSnippet"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
+	// Alias return the alias of the server name
+	Alias string `json:"alias,omitempty"`
+	// RedirectFromToWWW returns if a redirect to/from prefix www is required
+	RedirectFromToWWW bool `json:"redirectFromToWWW,omitempty"`
+	// CertificateAuth indicates the this server requires mutual authentication
+	// +optional
+	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth"`
 }
 
 // Location describes an URI inside a server.
@@ -227,7 +250,6 @@ type Server struct {
 // In some cases when more than one annotations is defined a particular order in the execution
 // is required.
 // The chain in the execution order of annotations should be:
-// - CertificateAuth
 // - Whitelist
 // - RateLimit
 // - BasicDigestAuth
@@ -246,18 +268,25 @@ type Location struct {
 	// contains active endpoints or not. Returning true means the location
 	// uses the default backend.
 	IsDefBackend bool `json:"isDefBackend"`
+	// Ingress returns the ingress from which this location was generated
+	Ingress *extensions.Ingress `json:"ingress"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
-
-	Service *api.Service       `json:"service"`
-	Port    intstr.IntOrString `json:"port"`
+	// Service describes the referenced services from the ingress
+	Service *api.Service `json:"service,omitempty"`
+	// Port describes to which port from the service
+	Port intstr.IntOrString `json:"port"`
+	// Overwrite the Host header passed into the backend. Defaults to
+	// vhost of the incoming request.
+	// +optional
+	UpstreamVhost string `json:"upstream-vhost"`
 	// BasicDigestAuth returns authentication configuration for
 	// an Ingress rule.
 	// +optional
 	BasicDigestAuth auth.BasicDigest `json:"basicDigestAuth,omitempty"`
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
-	Denied error
+	Denied error `json:"denied,omitempty"`
 	// EnableCORS indicates if path must support CORS
 	// +optional
 	EnableCORS bool `json:"enableCors,omitempty"`
@@ -270,9 +299,12 @@ type Location struct {
 	// The Redirect annotation precedes RateLimit
 	// +optional
 	RateLimit ratelimit.RateLimit `json:"rateLimit,omitempty"`
-	// Redirect describes the redirection this location.
+	// Redirect describes a temporal o permanent redirection this location.
 	// +optional
-	Redirect rewrite.Redirect `json:"redirect,omitempty"`
+	Redirect redirect.Redirect `json:"redirect,omitempty"`
+	// Rewrite describes the redirection this location.
+	// +optional
+	Rewrite rewrite.Redirect `json:"rewrite,omitempty"`
 	// Whitelist indicates only connections from certain client
 	// addresses or networks are allowed.
 	// +optional
@@ -281,16 +313,19 @@ type Location struct {
 	// to be used in connections against endpoints
 	// +optional
 	Proxy proxy.Configuration `json:"proxy,omitempty"`
-	// CertificateAuth indicates the access to this location requires
-	// external authentication
-	// +optional
-	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
-	UsePortInRedirects bool `json:"use-port-in-redirects"`
+	UsePortInRedirects bool `json:"usePortInRedirects"`
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
-	ConfigurationSnippet string `json:"configuration-snippet"`
+	ConfigurationSnippet string `json:"configurationSnippet"`
+	// ClientBodyBufferSize allows for the configuration of the client body
+	// buffer size for a specific location.
+	// +optional
+	ClientBodyBufferSize string `json:"clientBodyBufferSize,omitempty"`
+	// DefaultBackend allows the use of a custom default backend for this location.
+	// +optional
+	DefaultBackend *api.Service `json:"defaultBackend,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
@@ -298,7 +333,7 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *api.Service       `json:"service"`
+	Service *api.Service       `json:"service,omitEmpty"`
 	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
@@ -313,7 +348,7 @@ type L4Service struct {
 	// Backend of the service
 	Backend L4Backend `json:"backend"`
 	// Endpoints active endpoints of the service
-	Endpoints []Endpoint `json:"endpoins"`
+	Endpoints []Endpoint `json:"endpoins,omitEmpty"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
@@ -322,4 +357,6 @@ type L4Backend struct {
 	Name      string             `json:"name"`
 	Namespace string             `json:"namespace"`
 	Protocol  api.Protocol       `json:"protocol"`
+	// +optional
+	UseProxyProtocol bool `json:"useProxyProtocol"`
 }

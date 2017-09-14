@@ -18,73 +18,81 @@ package template
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
 	"strings"
 	"testing"
 
-	"io/ioutil"
-
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
+	"net"
 )
 
 var (
 	// TODO: add tests for secure endpoints
 	tmplFuncTestcases = map[string]struct {
-		Path       string
-		Target     string
-		Location   string
-		ProxyPass  string
-		AddBaseURL bool
+		Path          string
+		Target        string
+		Location      string
+		ProxyPass     string
+		AddBaseURL    bool
+		BaseURLScheme string
 	}{
-		"invalid redirect / to /": {"/", "/", "/", "proxy_pass http://upstream-name;", false},
+		"invalid redirect / to /": {"/", "/", "/", "proxy_pass http://upstream-name;", false, ""},
 		"redirect / to /jenkins": {"/", "/jenkins", "~* /",
 			`
-	rewrite /(.*) /jenkins/$1 break;
-	proxy_pass http://upstream-name;
-	`, false},
+	    rewrite /(.*) /jenkins/$1 break;
+	    proxy_pass http://upstream-name;
+	    `, false, ""},
 		"redirect /something to /": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
-	rewrite /something/(.*) /$1 break;
-	rewrite /something / break;
-	proxy_pass http://upstream-name;
-	`, false},
+	    rewrite /something/(.*) /$1 break;
+	    rewrite /something / break;
+	    proxy_pass http://upstream-name;
+	    `, false, ""},
 		"redirect /end-with-slash/ to /not-root": {"/end-with-slash/", "/not-root", "~* ^/end-with-slash/(?<baseuri>.*)", `
-	rewrite /end-with-slash/(.*) /not-root/$1 break;
-	proxy_pass http://upstream-name;
-	`, false},
+	    rewrite /end-with-slash/(.*) /not-root/$1 break;
+	    proxy_pass http://upstream-name;
+	    `, false, ""},
 		"redirect /something-complex to /not-root": {"/something-complex", "/not-root", `~* ^/something-complex\/?(?<baseuri>.*)`, `
-	rewrite /something-complex/(.*) /not-root/$1 break;
-	proxy_pass http://upstream-name;
-	`, false},
+	    rewrite /something-complex/(.*) /not-root/$1 break;
+	    proxy_pass http://upstream-name;
+	    `, false, ""},
 		"redirect / to /jenkins and rewrite": {"/", "/jenkins", "~* /", `
-	rewrite /(.*) /jenkins/$1 break;
-	proxy_pass http://upstream-name;
-	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/$baseuri">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/$baseuri">' r;
-	`, true},
+	    rewrite /(.*) /jenkins/$1 break;
+	    proxy_pass http://upstream-name;
+	    subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/$baseuri">' r;
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/$baseuri">' r;
+	    `, true, ""},
 		"redirect /something to / and rewrite": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
-	rewrite /something/(.*) /$1 break;
-	rewrite /something / break;
-	proxy_pass http://upstream-name;
-	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something/$baseuri">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something/$baseuri">' r;
-	`, true},
+	    rewrite /something/(.*) /$1 break;
+	    rewrite /something / break;
+	    proxy_pass http://upstream-name;
+	    subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something/$baseuri">' r;
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something/$baseuri">' r;
+	    `, true, ""},
 		"redirect /end-with-slash/ to /not-root and rewrite": {"/end-with-slash/", "/not-root", `~* ^/end-with-slash/(?<baseuri>.*)`, `
-	rewrite /end-with-slash/(.*) /not-root/$1 break;
-	proxy_pass http://upstream-name;
-	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
-	`, true},
+	    rewrite /end-with-slash/(.*) /not-root/$1 break;
+	    proxy_pass http://upstream-name;
+	    subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
+	    `, true, ""},
 		"redirect /something-complex to /not-root and rewrite": {"/something-complex", "/not-root", `~* ^/something-complex\/?(?<baseuri>.*)`, `
-	rewrite /something-complex/(.*) /not-root/$1 break;
-	proxy_pass http://upstream-name;
-	subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
-	`, true},
+	    rewrite /something-complex/(.*) /not-root/$1 break;
+	    proxy_pass http://upstream-name;
+	    subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
+	    `, true, ""},
+		"redirect /something to / and rewrite with specific scheme": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
+	    rewrite /something/(.*) /$1 break;
+	    rewrite /something / break;
+	    proxy_pass http://upstream-name;
+	    subs_filter '<head(.*)>' '<head$1><base href="http://$http_host/something/$baseuri">' r;
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="http://$http_host/something/$baseuri">' r;
+	    `, true, "http"},
 	}
 )
 
@@ -110,8 +118,8 @@ func TestFormatIP(t *testing.T) {
 func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:     tc.Path,
-			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
+			Path:    tc.Path,
+			Rewrite: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
 
 		newLoc := buildLocation(loc)
@@ -124,12 +132,12 @@ func TestBuildLocation(t *testing.T) {
 func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:     tc.Path,
-			Redirect: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
-			Backend:  "upstream-name",
+			Path:    tc.Path,
+			Rewrite: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL, BaseURLScheme: tc.BaseURLScheme},
+			Backend: "upstream-name",
 		}
 
-		pp := buildProxyPass([]*ingress.Backend{}, loc)
+		pp := buildProxyPass("", []*ingress.Backend{}, loc)
 		if !strings.EqualFold(tc.ProxyPass, pp) {
 			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, tc.ProxyPass, pp)
 		}
@@ -168,7 +176,9 @@ func TestTemplateWithData(t *testing.T) {
 	if err := json.Unmarshal(data, &dat); err != nil {
 		t.Errorf("unexpected error unmarshalling json: %v", err)
 	}
-
+	if dat.ListenPorts == nil {
+		dat.ListenPorts = &config.ListenPorts{}
+	}
 	tf, err := os.Open(path.Join(pwd, "../../rootfs/etc/nginx/template/nginx.tmpl"))
 	if err != nil {
 		t.Errorf("unexpected error reading json file: %v", err)
@@ -223,5 +233,142 @@ func TestBuildDenyVariable(t *testing.T) {
 	b := buildDenyVariable("host1.example.com_/.well-known/acme-challenge")
 	if !reflect.DeepEqual(a, b) {
 		t.Errorf("Expected '%v' but returned '%v'", a, b)
+	}
+}
+
+func TestBuildClientBodyBufferSize(t *testing.T) {
+	a := isValidClientBodyBufferSize("1000")
+	if a != true {
+		t.Errorf("Expected '%v' but returned '%v'", true, a)
+	}
+	b := isValidClientBodyBufferSize("1000k")
+	if b != true {
+		t.Errorf("Expected '%v' but returned '%v'", true, b)
+	}
+	c := isValidClientBodyBufferSize("1000m")
+	if c != true {
+		t.Errorf("Expected '%v' but returned '%v'", true, c)
+	}
+	d := isValidClientBodyBufferSize("1000km")
+	if d != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, d)
+	}
+	e := isValidClientBodyBufferSize("1000mk")
+	if e != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, e)
+	}
+	f := isValidClientBodyBufferSize("1000kk")
+	if f != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, f)
+	}
+	g := isValidClientBodyBufferSize("1000mm")
+	if g != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, g)
+	}
+	h := isValidClientBodyBufferSize(nil)
+	if h != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, h)
+	}
+	i := isValidClientBodyBufferSize("")
+	if i != false {
+		t.Errorf("Expected '%v' but returned '%v'", false, i)
+	}
+}
+
+func TestIsLocationAllowed(t *testing.T) {
+	loc := ingress.Location{
+		Denied: nil,
+	}
+
+	isAllowed := isLocationAllowed(&loc)
+	if !isAllowed {
+		t.Errorf("Expected '%v' but returned '%v'", true, isAllowed)
+	}
+}
+
+func TestBuildForwardedFor(t *testing.T) {
+	inputStr := "X-Forwarded-For"
+	outputStr := buildForwardedFor(inputStr)
+
+	validStr := "$http_x_forwarded_for"
+
+	if outputStr != validStr {
+		t.Errorf("Expected '%v' but returned '%v'", validStr, outputStr)
+	}
+}
+
+func TestBuildResolvers(t *testing.T) {
+	ipOne := net.ParseIP("192.0.0.1")
+	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
+	ipList := []net.IP{ipOne, ipTwo}
+
+	validResolver := "resolver 192.0.0.1 [2001:db8:1234::] valid=30s;"
+	resolver := buildResolvers(ipList)
+
+	if resolver != validResolver {
+		t.Errorf("Expected '%v' but returned '%v'", validResolver, resolver)
+	}
+}
+
+func TestBuildAuthSignURL(t *testing.T) {
+	urlOne := "http://google.com"
+	validUrlOne := "http://google.com?rd=$request_uri"
+
+	urlTwo := "http://google.com?cat"
+	validUrlTwo := "http://google.com?cat&rd=$request_uri"
+
+	authSignURLOne := buildAuthSignURL(urlOne)
+	if authSignURLOne != validUrlOne {
+		t.Errorf("Expected '%v' but returned '%v'", validUrlOne, authSignURLOne)
+	}
+
+	authSignURLTwo := buildAuthSignURL(urlTwo)
+	if authSignURLTwo != validUrlTwo {
+		t.Errorf("Expected '%v' but returned '%v'", validUrlTwo, authSignURLTwo)
+	}
+}
+
+func TestBuildNextUpstream(t *testing.T) {
+	nextUpstream := "timeout http_500 http_502 non_idempotent"
+	validNextUpstream := "timeout http_500 http_502"
+
+	buildNextUpstream := buildNextUpstream(nextUpstream)
+
+	if buildNextUpstream != validNextUpstream {
+		t.Errorf("Expected '%v' but returned '%v'", validNextUpstream, buildNextUpstream)
+	}
+}
+
+func TestBuildRateLimit(t *testing.T) {
+	loc := ingress.Location{}
+
+	loc.RateLimit.Connections.Name = "con"
+	loc.RateLimit.Connections.Limit = 1
+
+	loc.RateLimit.RPS.Name = "rps"
+	loc.RateLimit.RPS.Limit = 1
+	loc.RateLimit.RPS.Burst = 1
+
+	loc.RateLimit.RPM.Name = "rpm"
+	loc.RateLimit.RPM.Limit = 2
+	loc.RateLimit.RPM.Burst = 2
+
+	loc.RateLimit.LimitRateAfter = 1
+	loc.RateLimit.LimitRate = 1
+
+	validLimits := []string{
+		"limit_conn con 1;",
+		"limit_req zone=rps burst=1 nodelay;",
+		"limit_req zone=rpm burst=2 nodelay;",
+		"limit_rate_after 1k;",
+		"limit_rate 1k;",
+	}
+
+	limits := buildRateLimit(loc)
+
+	for i, limit := range limits {
+		if limit != validLimits[i] {
+			t.Errorf("Expected '%v' but returned '%v'", validLimits, limits)
+		}
 	}
 }

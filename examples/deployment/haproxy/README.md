@@ -5,10 +5,10 @@ for instructions on how to create a new one.
 
 ## Prerequisites
 
-This ingress controller doesn't yet have support for
-[ingress classes](/examples/PREREQUISITES.md#ingress-class). You MUST turn
-down any existing ingress controllers before running HAProxy Ingress controller or
-they will fight for Ingresses. This includes any cloudprovider controller.
+If you have another Ingress controller deployed, you will need to make sure your
+Ingress resources target exactly one Ingress controller by specifying the
+[ingress.class](/examples/PREREQUISITES.md#ingress-class) annotation as
+`haproxy`.
 
 This document has also the following prerequisites:
 
@@ -69,6 +69,11 @@ timeouts, SSL/TLS settings, a syslog service endpoint and so on. The
 configmap can be edited or replaced later in order to apply new
 configuration on a running ingress controller. All supported options
 are [here](https://github.com/jcmoraisjr/haproxy-ingress#configmap).
+
+## RBAC Authorization
+
+Check the [RBAC sample](/examples/rbac/haproxy) if deploying on a cluster with
+[RBAC authorization](https://kubernetes.io/docs/admin/authorization/rbac/).
 
 ## Controller
 

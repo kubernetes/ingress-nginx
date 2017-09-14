@@ -18,7 +18,7 @@ package backends
 
 import (
 	compute "google.golang.org/api/compute/v1"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
+	api_v1 "k8s.io/api/core/v1"
 )
 
 // ProbeProvider retrieves a probe struct given a nodePort
@@ -30,10 +30,10 @@ type probeProvider interface {
 // as gce backendServices, and sync them through the BackendServices interface.
 type BackendPool interface {
 	Init(p probeProvider)
-	Add(port ServicePort) error
+	Add(port ServicePort, igs []*compute.InstanceGroup) error
 	Get(port int64) (*compute.BackendService, error)
 	Delete(port int64) error
-	Sync(ports []ServicePort) error
+	Sync(ports []ServicePort, igs []*compute.InstanceGroup) error
 	GC(ports []ServicePort) error
 	Shutdown() error
 	Status(name string) string
@@ -42,10 +42,10 @@ type BackendPool interface {
 
 // BackendServices is an interface for managing gce backend services.
 type BackendServices interface {
-	GetBackendService(name string) (*compute.BackendService, error)
-	UpdateBackendService(bg *compute.BackendService) error
-	CreateBackendService(bg *compute.BackendService) error
-	DeleteBackendService(name string) error
-	ListBackendServices() (*compute.BackendServiceList, error)
-	GetHealth(name, instanceGroupLink string) (*compute.BackendServiceGroupHealth, error)
+	GetGlobalBackendService(name string) (*compute.BackendService, error)
+	UpdateGlobalBackendService(bg *compute.BackendService) error
+	CreateGlobalBackendService(bg *compute.BackendService) error
+	DeleteGlobalBackendService(name string) error
+	ListGlobalBackendServices() (*compute.BackendServiceList, error)
+	GetGlobalBackendServiceHealth(name, instanceGroupLink string) (*compute.BackendServiceGroupHealth, error)
 }

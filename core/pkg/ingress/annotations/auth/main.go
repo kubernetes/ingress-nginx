@@ -24,9 +24,10 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
-	api "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
+	"k8s.io/ingress/core/pkg/file"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -51,6 +52,34 @@ type BasicDigest struct {
 	Realm   string `json:"realm"`
 	File    string `json:"file"`
 	Secured bool   `json:"secured"`
+	FileSHA string `json:"fileSha"`
+}
+
+// Equal tests for equality between two BasicDigest types
+func (bd1 *BasicDigest) Equal(bd2 *BasicDigest) bool {
+	if bd1 == bd2 {
+		return true
+	}
+	if bd1 == nil || bd2 == nil {
+		return false
+	}
+	if bd1.Type != bd2.Type {
+		return false
+	}
+	if bd1.Realm != bd2.Realm {
+		return false
+	}
+	if bd1.File != bd2.File {
+		return false
+	}
+	if bd1.Secured != bd2.Secured {
+		return false
+	}
+	if bd1.FileSHA != bd2.FileSHA {
+		return false
+	}
+
+	return true
 }
 
 type auth struct {
@@ -116,6 +145,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		Realm:   realm,
 		File:    passFile,
 		Secured: true,
+		FileSHA: file.SHA1(passFile),
 	}, nil
 }
 

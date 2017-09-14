@@ -17,37 +17,38 @@ limitations under the License.
 package controller
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/clock"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/apimachinery/pkg/util/wait"
-
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/clock"
+	ref "k8s.io/client-go/tools/reference"
 	"k8s.io/client-go/util/integer"
-
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/v1"
-	v1helper "k8s.io/kubernetes/pkg/api/v1/helper"
+	_ "k8s.io/kubernetes/pkg/api/install"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
-	"k8s.io/kubernetes/pkg/api/v1/ref"
 	"k8s.io/kubernetes/pkg/api/validation"
-	extensions "k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	clientretry "k8s.io/kubernetes/pkg/client/retry"
+	hashutil "k8s.io/kubernetes/pkg/util/hash"
+	taintutils "k8s.io/kubernetes/pkg/util/taints"
 
 	"github.com/golang/glog"
 )
@@ -400,6 +401,26 @@ func (r RealRSControl) PatchReplicaSet(namespace, name string, data []byte) erro
 	return err
 }
 
+// TODO: merge the controller revision interface in controller_history.go with this one
+// ControllerRevisionControlInterface is an interface that knows how to patch
+// ControllerRevisions, as well as increment or decrement them. It is used
+// by the daemonset controller to ease testing of actions that it takes.
+type ControllerRevisionControlInterface interface {
+	PatchControllerRevision(namespace, name string, data []byte) error
+}
+
+// RealControllerRevisionControl is the default implementation of ControllerRevisionControlInterface.
+type RealControllerRevisionControl struct {
+	KubeClient clientset.Interface
+}
+
+var _ ControllerRevisionControlInterface = &RealControllerRevisionControl{}
+
+func (r RealControllerRevisionControl) PatchControllerRevision(namespace, name string, data []byte) error {
+	_, err := r.KubeClient.AppsV1beta1().ControllerRevisions(namespace).Patch(name, types.StrategicMergePatchType, data)
+	return err
+}
+
 // PodControlInterface is an interface that knows how to add or delete pods
 // created as an interface to allow testing.
 type PodControlInterface interface {
@@ -443,7 +464,7 @@ func getPodsAnnotationSet(template *v1.PodTemplateSpec, object runtime.Object) (
 	for k, v := range template.Annotations {
 		desiredAnnotations[k] = v
 	}
-	createdByRef, err := ref.GetReference(api.Scheme, object)
+	createdByRef, err := ref.GetReference(scheme.Scheme, object)
 	if err != nil {
 		return desiredAnnotations, fmt.Errorf("unable to get controller reference: %v", err)
 	}
@@ -451,7 +472,7 @@ func getPodsAnnotationSet(template *v1.PodTemplateSpec, object runtime.Object) (
 	// TODO: this code was not safe previously - as soon as new code came along that switched to v2, old clients
 	//   would be broken upon reading it. This is explicitly hardcoded to v1 to guarantee predictable deployment.
 	//   We need to consistently handle this case of annotation versioning.
-	codec := api.Codecs.LegacyCodec(schema.GroupVersion{Group: v1.GroupName, Version: "v1"})
+	codec := scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion)
 
 	createdByRefJson, err := runtime.Encode(codec, &v1.SerializedReference{
 		Reference: *createdByRef,
@@ -538,7 +559,7 @@ func GetPodFromTemplate(template *v1.PodTemplateSpec, parentObject runtime.Objec
 	if controllerRef != nil {
 		pod.OwnerReferences = append(pod.OwnerReferences, *controllerRef)
 	}
-	clone, err := api.Scheme.DeepCopy(&template.Spec)
+	clone, err := scheme.Scheme.DeepCopy(&template.Spec)
 	if err != nil {
 		return nil, err
 	}
@@ -880,7 +901,7 @@ func AddOrUpdateTaintOnNode(c clientset.Interface, nodeName string, taint *v1.Ta
 		if err != nil {
 			return err
 		}
-		newNode, ok, err := v1helper.AddOrUpdateTaint(oldNode, taint)
+		newNode, ok, err := taintutils.AddOrUpdateTaint(oldNode, taint)
 		if err != nil {
 			return fmt.Errorf("Failed to update taint annotation!")
 		}
@@ -924,7 +945,7 @@ func RemoveTaintOffNode(c clientset.Interface, nodeName string, taint *v1.Taint,
 		if err != nil {
 			return err
 		}
-		newNode, ok, err := v1helper.RemoveTaint(oldNode, taint)
+		newNode, ok, err := taintutils.RemoveTaint(oldNode, taint)
 		if err != nil {
 			return fmt.Errorf("Failed to update taint annotation!")
 		}
@@ -943,7 +964,7 @@ func PatchNodeTaints(c clientset.Interface, nodeName string, oldNode *v1.Node, n
 	}
 
 	newTaints := newNode.Spec.Taints
-	objCopy, err := api.Scheme.DeepCopy(oldNode)
+	objCopy, err := scheme.Scheme.DeepCopy(oldNode)
 	if err != nil {
 		return fmt.Errorf("failed to copy node object %#v: %v", oldNode, err)
 	}
@@ -979,4 +1000,19 @@ func WaitForCacheSync(controllerName string, stopCh <-chan struct{}, cacheSyncs 
 
 	glog.Infof("Caches are synced for %s controller", controllerName)
 	return true
+}
+
+// ComputeHash returns a hash value calculated from pod template and a collisionCount to avoid hash collision
+func ComputeHash(template *v1.PodTemplateSpec, collisionCount *int64) uint32 {
+	podTemplateSpecHasher := fnv.New32a()
+	hashutil.DeepHashObject(podTemplateSpecHasher, *template)
+
+	// Add collisionCount in the hash if it exists.
+	if collisionCount != nil {
+		collisionCountBytes := make([]byte, 8)
+		binary.LittleEndian.PutUint64(collisionCountBytes, uint64(*collisionCount))
+		podTemplateSpecHasher.Write(collisionCountBytes)
+	}
+
+	return podTemplateSpecHasher.Sum32()
 }

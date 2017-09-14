@@ -21,9 +21,9 @@ import (
 	"os"
 	"strings"
 
+	api "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
-	api "k8s.io/client-go/pkg/api/v1"
 )
 
 // IsValidService checks if exists a service with the specified name
@@ -117,7 +117,7 @@ func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
 	podName := os.Getenv("POD_NAME")
 	podNs := os.Getenv("POD_NAMESPACE")
 
-	if podName == "" && podNs == "" {
+	if podName == "" || podNs == "" {
 		return nil, fmt.Errorf("unable to get POD information (missing POD_NAME or POD_NAMESPACE environment variable")
 	}
 

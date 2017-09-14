@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	ngxStatusPath = "/internal_nginx_status"
+	ngxStatusPath = "/nginx_status"
 	ngxVtsPath    = "/nginx_status/format/json"
 )
 
@@ -45,6 +45,8 @@ type statsCollector struct {
 
 	namespace  string
 	watchClass string
+
+	port int
 }
 
 func (s *statsCollector) stop(sm statusModule) {
@@ -52,29 +54,28 @@ func (s *statsCollector) stop(sm statusModule) {
 	case defaultStatusModule:
 		s.basic.Stop()
 		prometheus.Unregister(s.basic)
-		break
 	case vtsStatusModule:
 		s.vts.Stop()
 		prometheus.Unregister(s.vts)
-		break
 	}
 }
 
 func (s *statsCollector) start(sm statusModule) {
 	switch sm {
 	case defaultStatusModule:
-		s.basic = collector.NewNginxStatus(s.namespace, s.watchClass, ngxHealthPort, ngxStatusPath)
+		s.basic = collector.NewNginxStatus(s.namespace, s.watchClass, s.port, ngxStatusPath)
 		prometheus.Register(s.basic)
 		break
 	case vtsStatusModule:
-		s.vts = collector.NewNGINXVTSCollector(s.namespace, s.watchClass, ngxHealthPort, ngxVtsPath)
+		s.vts = collector.NewNGINXVTSCollector(s.namespace, s.watchClass, s.port, ngxVtsPath)
 		prometheus.Register(s.vts)
 		break
 	}
 }
 
-func newStatsCollector(ns, class, binary string) *statsCollector {
+func newStatsCollector(ns, class, binary string, port int) *statsCollector {
 	glog.Infof("starting new nginx stats collector for Ingress controller running in namespace %v (class %v)", ns, class)
+	glog.Infof("collector extracting information from port %v", port)
 	pc, err := collector.NewNamedProcess(true, collector.BinaryNameMatcher{
 		Name:   "nginx",
 		Binary: binary,
@@ -91,5 +92,6 @@ func newStatsCollector(ns, class, binary string) *statsCollector {
 		namespace:  ns,
 		watchClass: class,
 		process:    pc,
+		port:       port,
 	}
 }

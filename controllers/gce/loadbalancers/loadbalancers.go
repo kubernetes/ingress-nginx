@@ -163,13 +163,13 @@ func (l *L7s) Delete(name string) error {
 
 // Sync loadbalancers with the given runtime info from the controller.
 func (l *L7s) Sync(lbs []*L7RuntimeInfo) error {
-	glog.V(3).Infof("Creating loadbalancers %+v", lbs)
+	glog.V(3).Infof("Syncing loadbalancers %v", lbs)
 
 	if len(lbs) != 0 {
 		// Lazily create a default backend so we don't tax users who don't care
 		// about Ingress by consuming 1 of their 3 GCE BackendServices. This
 		// BackendService is GC'd when there are no more Ingresses.
-		if err := l.defaultBackendPool.Add(l.defaultBackendNodePort); err != nil {
+		if err := l.defaultBackendPool.Add(l.defaultBackendNodePort, nil); err != nil {
 			return err
 		}
 		defaultBackend, err := l.defaultBackendPool.Get(l.defaultBackendNodePort.Port)
@@ -257,6 +257,11 @@ type L7RuntimeInfo struct {
 	StaticIPName string
 }
 
+// String returns the load balancer name
+func (l *L7RuntimeInfo) String() string {
+	return l.Name
+}
+
 // L7 represents a single L7 loadbalancer.
 type L7 struct {
 	Name string
@@ -304,7 +309,14 @@ func (l *L7) checkUrlMap(backend *compute.BackendService) (err error) {
 	}
 
 	glog.Infof("Creating url map %v for backend %v", urlMapName, l.glbcDefaultBackend.Name)
-	urlMap, err = l.cloud.CreateUrlMap(l.glbcDefaultBackend, urlMapName)
+	newUrlMap := &compute.UrlMap{
+		Name:           urlMapName,
+		DefaultService: l.glbcDefaultBackend.SelfLink,
+	}
+	if err = l.cloud.CreateUrlMap(newUrlMap); err != nil {
+		return err
+	}
+	urlMap, err = l.cloud.GetUrlMap(urlMapName)
 	if err != nil {
 		return err
 	}
@@ -320,7 +332,14 @@ func (l *L7) checkProxy() (err error) {
 	proxy, _ := l.cloud.GetTargetHttpProxy(proxyName)
 	if proxy == nil {
 		glog.Infof("Creating new http proxy for urlmap %v", l.um.Name)
-		proxy, err = l.cloud.CreateTargetHttpProxy(l.um, proxyName)
+		newProxy := &compute.TargetHttpProxy{
+			Name:   proxyName,
+			UrlMap: l.um.SelfLink,
+		}
+		if err = l.cloud.CreateTargetHttpProxy(newProxy); err != nil {
+			return err
+		}
+		proxy, err = l.cloud.GetTargetHttpProxy(proxyName)
 		if err != nil {
 			return err
 		}
@@ -488,10 +507,20 @@ func (l *L7) checkHttpsProxy() (err error) {
 	proxy, _ := l.cloud.GetTargetHttpsProxy(proxyName)
 	if proxy == nil {
 		glog.Infof("Creating new https proxy for urlmap %v", l.um.Name)
-		proxy, err = l.cloud.CreateTargetHttpsProxy(l.um, l.sslCert, proxyName)
+		newProxy := &compute.TargetHttpsProxy{
+			Name:            proxyName,
+			UrlMap:          l.um.SelfLink,
+			SslCertificates: []string{l.sslCert.SelfLink},
+		}
+		if err = l.cloud.CreateTargetHttpsProxy(newProxy); err != nil {
+			return err
+		}
+
+		proxy, err = l.cloud.GetTargetHttpsProxy(proxyName)
 		if err != nil {
 			return err
 		}
+
 		l.tps = proxy
 		return nil
 	}
@@ -528,7 +557,17 @@ func (l *L7) checkForwardingRule(name, proxyLink, ip, portRange string) (fw *com
 	if fw == nil {
 		parts := strings.Split(proxyLink, "/")
 		glog.Infof("Creating forwarding rule for proxy %v and ip %v:%v", parts[len(parts)-1:], ip, portRange)
-		fw, err = l.cloud.CreateGlobalForwardingRule(proxyLink, ip, name, portRange)
+		rule := &compute.ForwardingRule{
+			Name:       name,
+			IPAddress:  ip,
+			Target:     proxyLink,
+			PortRange:  portRange,
+			IPProtocol: "TCP",
+		}
+		if err = l.cloud.CreateGlobalForwardingRule(rule); err != nil {
+			return nil, err
+		}
+		fw, err = l.cloud.GetGlobalForwardingRule(name)
 		if err != nil {
 			return nil, err
 		}
@@ -539,7 +578,7 @@ func (l *L7) checkForwardingRule(name, proxyLink, ip, portRange string) (fw *com
 	} else {
 		glog.Infof("Forwarding rule %v has the wrong proxy, setting %v overwriting %v",
 			fw.Name, fw.Target, proxyLink)
-		if err := l.cloud.SetProxyForGlobalForwardingRule(fw, proxyLink); err != nil {
+		if err := l.cloud.SetProxyForGlobalForwardingRule(fw.Name, proxyLink); err != nil {
 			return nil, err
 		}
 	}
@@ -571,7 +610,7 @@ func (l *L7) getEffectiveIP() (string, bool) {
 	if l.runtimeInfo.StaticIPName != "" {
 		// Existing static IPs allocated to forwarding rules will get orphaned
 		// till the Ingress is torn down.
-		if ip, err := l.cloud.GetGlobalStaticIP(l.runtimeInfo.StaticIPName); err != nil || ip == nil {
+		if ip, err := l.cloud.GetGlobalAddress(l.runtimeInfo.StaticIPName); err != nil || ip == nil {
 			glog.Warningf("The given static IP name %v doesn't translate to an existing global static IP, ignoring it and allocating a new IP: %v",
 				l.runtimeInfo.StaticIPName, err)
 		} else {
@@ -624,10 +663,10 @@ func (l *L7) checkStaticIP() (err error) {
 		return nil
 	}
 	staticIPName := l.namer.Truncate(fmt.Sprintf("%v-%v", forwardingRulePrefix, l.Name))
-	ip, _ := l.cloud.GetGlobalStaticIP(staticIPName)
+	ip, _ := l.cloud.GetGlobalAddress(staticIPName)
 	if ip == nil {
 		glog.Infof("Creating static ip %v", staticIPName)
-		ip, err = l.cloud.ReserveGlobalStaticIP(staticIPName, l.fw.IPAddress)
+		err = l.cloud.ReserveGlobalAddress(&compute.Address{Name: staticIPName, Address: l.fw.IPAddress})
 		if err != nil {
 			if utils.IsHTTPErrorCode(err, http.StatusConflict) ||
 				utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
@@ -635,6 +674,10 @@ func (l *L7) checkStaticIP() (err error) {
 					l.fw.IPAddress, staticIPName)
 				return nil
 			}
+			return err
+		}
+		ip, err = l.cloud.GetGlobalAddress(staticIPName)
+		if err != nil {
 			return err
 		}
 	}
@@ -757,7 +800,6 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 	if l.um == nil {
 		return fmt.Errorf("cannot add url without an urlmap")
 	}
-	glog.V(3).Infof("Updating urlmap for l7 %v", l.Name)
 
 	// All UrlMaps must have a default backend. If the Ingress has a default
 	// backend, it applies to all host rules as well as to the urlmap itself.
@@ -807,11 +849,17 @@ func (l *L7) UpdateUrlMap(ingressRules utils.GCEURLMap) error {
 		glog.Infof("UrlMap for l7 %v is unchanged", l.Name)
 		return nil
 	}
-	glog.Infof("Updating url map: %+v", ingressRules)
-	um, err := l.cloud.UpdateUrlMap(l.um)
+
+	glog.V(3).Infof("Updating URLMap: %q", l.Name)
+	if err := l.cloud.UpdateUrlMap(l.um); err != nil {
+		return err
+	}
+
+	um, err := l.cloud.GetUrlMap(l.um.Name)
 	if err != nil {
 		return err
 	}
+
 	l.um = um
 	return nil
 }
@@ -898,7 +946,7 @@ func (l *L7) Cleanup() error {
 	}
 	if l.ip != nil {
 		glog.V(2).Infof("Deleting static IP %v(%v)", l.ip.Name, l.ip.Address)
-		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalStaticIP(l.ip.Name)); err != nil {
+		if err := utils.IgnoreHTTPNotFound(l.cloud.DeleteGlobalAddress(l.ip.Name)); err != nil {
 			return err
 		}
 		l.ip = nil

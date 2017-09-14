@@ -23,7 +23,7 @@ import (
 
 	"github.com/golang/glog"
 
-	api "k8s.io/client-go/pkg/api/v1"
+	api "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress/core/pkg/ingress"
@@ -33,36 +33,35 @@ import (
 // syncSecret keeps in sync Secrets used by Ingress rules with the files on
 // disk to allow copy of the content of the secret to disk to be used
 // by external processes.
-func (ic *GenericController) syncSecret() {
-	glog.V(3).Infof("starting syncing of secrets")
+func (ic *GenericController) syncSecret(key string) {
+	glog.V(3).Infof("starting syncing of secret %v", key)
 
-	var cert *ingress.SSLCert
-	var err error
-
-	for _, k := range ic.secretTracker.List() {
-		key := k.(string)
-		cert, err = ic.getPemCertificate(key)
-		if err != nil {
-			glog.Warningf("error obtaining PEM from secret %v: %v", key, err)
-			continue
-		}
-
-		// create certificates and add or update the item in the store
-		cur, exists := ic.sslCertTracker.Get(key)
-		if exists {
-			s := cur.(*ingress.SSLCert)
-			if reflect.DeepEqual(s, cert) {
-				// no need to update
-				continue
-			}
-			glog.Infof("updating secret %v in the local store", key)
-			ic.sslCertTracker.Update(key, cert)
-			continue
-		}
-
-		glog.Infof("adding secret %v to the local store", key)
-		ic.sslCertTracker.Add(key, cert)
+	cert, err := ic.getPemCertificate(key)
+	if err != nil {
+		glog.Warningf("error obtaining PEM from secret %v: %v", key, err)
+		return
 	}
+
+	// create certificates and add or update the item in the store
+	cur, exists := ic.sslCertTracker.Get(key)
+	if exists {
+		s := cur.(*ingress.SSLCert)
+		if reflect.DeepEqual(s, cert) {
+			// no need to update
+			return
+		}
+		glog.Infof("updating secret %v in the local store", key)
+		ic.sslCertTracker.Update(key, cert)
+		// we need to force the sync of the secret to disk
+		ic.syncSecret(key)
+		// this update must trigger an update
+		// (like an update event from a change in Ingress)
+		ic.syncIngress("secret-update")
+		return
+	}
+
+	glog.Infof("adding secret %v to the local store", key)
+	ic.sslCertTracker.Add(key, cert)
 }
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
@@ -86,11 +85,17 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 
 	var s *ingress.SSLCert
 	if okcert && okkey {
-		glog.V(3).Infof("found certificate and private key, configuring %v as a TLS Secret", secretName)
 		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected error creating pem file %v", err)
+		}
+		glog.V(3).Infof("found certificate and private key, configuring %v as a TLS Secret (CN: %v)", secretName, s.CN)
 	} else if ca != nil {
 		glog.V(3).Infof("found only ca.crt, configuring %v as an Certificate Authentication secret", secretName)
 		s, err = ssl.AddCertAuth(nsSecName, ca)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected error creating pem file %v", err)
+		}
 	} else {
 		return nil, fmt.Errorf("no keypair or CA cert could be found in %v", secretName)
 	}
@@ -115,13 +120,6 @@ func newSSLCertTracker() *sslCertTracker {
 	}
 }
 
-// secretTracker holds a store of Secrets
-type secretTracker struct {
-	cache.ThreadSafeStore
-}
-
-func newSecretTracker() *secretTracker {
-	return &secretTracker{
-		cache.NewThreadSafeStore(cache.Indexers{}, cache.Indices{}),
-	}
+func (s *sslCertTracker) DeleteAll(key string) {
+	s.Delete(key)
 }

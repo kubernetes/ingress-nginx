@@ -63,29 +63,55 @@ func (i *Instances) Init(zl zoneLister) {
 // all of which have the exact same named port.
 func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.InstanceGroup, *compute.NamedPort, error) {
 	igs := []*compute.InstanceGroup{}
-	namedPort := &compute.NamedPort{}
+	namedPort := utils.GetNamedPort(port)
 
 	zones, err := i.ListZones()
 	if err != nil {
 		return igs, namedPort, err
 	}
 
+	defer i.snapshotter.Add(name, struct{}{})
 	for _, zone := range zones {
-		ig, _ := i.Get(name, zone)
-		var err error
+		ig, err := i.Get(name, zone)
+		if err != nil && !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+			glog.Errorf("Failed to get instance group %v/%v, err: %v", zone, name, err)
+			return nil, nil, err
+		}
+
 		if ig == nil {
 			glog.Infof("Creating instance group %v in zone %v", name, zone)
-			ig, err = i.cloud.CreateInstanceGroup(name, zone)
+			if err = i.cloud.CreateInstanceGroup(&compute.InstanceGroup{Name: name}, zone); err != nil {
+				// Error may come back with StatusConflict meaning the instance group was created by another controller
+				// possibly the Service Controller for internal load balancers.
+				if utils.IsHTTPErrorCode(err, http.StatusConflict) {
+					glog.Warningf("Failed to create instance group %v/%v due to conflict status, but continuing sync. err: %v", zone, name, err)
+				} else {
+					glog.Errorf("Failed to create instance group %v/%v, err: %v", zone, name, err)
+					return nil, nil, err
+				}
+			}
+			ig, err = i.cloud.GetInstanceGroup(name, zone)
 			if err != nil {
+				glog.Errorf("Failed to get instance group %v/%v after ensuring existence, err: %v", zone, name, err)
 				return nil, nil, err
 			}
 		} else {
-			glog.V(3).Infof("Instance group %v already exists in zone %v, adding port %d to it", name, zone, port)
+			glog.V(3).Infof("Instance group %v already exists in zone %v", name, zone)
 		}
-		defer i.snapshotter.Add(name, struct{}{})
-		namedPort, err = i.cloud.AddPortToInstanceGroup(ig, port)
-		if err != nil {
-			return nil, nil, err
+
+		found := false
+		for _, np := range ig.NamedPorts {
+			if np.Port == port {
+				glog.V(3).Infof("Instance group %v already has named port %+v", ig.Name, np)
+				found = true
+				break
+			}
+		}
+		if !found {
+			glog.V(3).Infof("Instance group %v/%v does not have port %+v, adding it now.", zone, name, namedPort)
+			if err := i.cloud.SetNamedPortsOfInstanceGroup(ig.Name, zone, append(ig.NamedPorts, namedPort)); err != nil {
+				return nil, nil, err
+			}
 		}
 		igs = append(igs, ig)
 	}
@@ -103,11 +129,15 @@ func (i *Instances) DeleteInstanceGroup(name string) error {
 	}
 	for _, zone := range zones {
 		if err := i.cloud.DeleteInstanceGroup(name, zone); err != nil {
-			if !utils.IsHTTPErrorCode(err, http.StatusNotFound) {
+			if utils.IsNotFoundError(err) {
+				glog.V(3).Infof("Instance group %v in zone %v did not exist", name, zone)
+			} else if utils.IsInUsedByError(err) {
+				glog.V(3).Infof("Could not delete instance group %v in zone %v because it's still in use. Ignoring: %v", name, zone, err)
+			} else {
 				errs = append(errs, err)
 			}
 		} else {
-			glog.Infof("Deleted instance group %v in zone %v", name, zone)
+			glog.V(3).Infof("Deleted instance group %v in zone %v", name, zone)
 		}
 	}
 	if len(errs) == 0 {
@@ -173,7 +203,7 @@ func (i *Instances) Add(groupName string, names []string) error {
 	errs := []error{}
 	for zone, nodeNames := range i.splitNodesByZone(names) {
 		glog.V(1).Infof("Adding nodes %v to %v in zone %v", nodeNames, groupName, zone)
-		if err := i.cloud.AddInstancesToInstanceGroup(groupName, zone, nodeNames); err != nil {
+		if err := i.cloud.AddInstancesToInstanceGroup(groupName, zone, i.cloud.ToInstanceReferences(zone, nodeNames)); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -187,8 +217,8 @@ func (i *Instances) Add(groupName string, names []string) error {
 func (i *Instances) Remove(groupName string, names []string) error {
 	errs := []error{}
 	for zone, nodeNames := range i.splitNodesByZone(names) {
-		glog.V(1).Infof("Adding nodes %v to %v in zone %v", nodeNames, groupName, zone)
-		if err := i.cloud.RemoveInstancesFromInstanceGroup(groupName, zone, nodeNames); err != nil {
+		glog.V(1).Infof("Removing nodes %v from %v in zone %v", nodeNames, groupName, zone)
+		if err := i.cloud.RemoveInstancesFromInstanceGroup(groupName, zone, i.cloud.ToInstanceReferences(zone, nodeNames)); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -238,7 +268,7 @@ func (i *Instances) Sync(nodes []string) (err error) {
 		}
 
 		if len(addNodes) != 0 {
-			glog.V(4).Infof("Adding nodes to IG: %v", removeNodes)
+			glog.V(4).Infof("Adding nodes to IG: %v", addNodes)
 			if err = i.Add(igName, addNodes); err != nil {
 				return err
 			}

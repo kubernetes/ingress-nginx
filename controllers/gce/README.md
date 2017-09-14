@@ -53,7 +53,7 @@ __Lines 8-9__: Each http rule contains the following information: A host (eg: fo
 
 __Lines 10-12__: A `backend` is a service:port combination. It selects a group of pods capable of servicing traffic sent to the path specified in the parent rule. The `port` is the desired `spec.ports[*].port` from the Service Spec -- Note, though, that the L7 actually directs traffic to the corresponding `NodePort`.
 
-__Global Prameters__: For the sake of simplicity the example Ingress has no global parameters. However, one can specify a default backend (see examples below) in the absence of which requests that don't match a path in the spec are sent to the default backend of glbc. Though glbc doesn't support HTTPS yet, security configs would also be global.
+__Global Parameters__: For the sake of simplicity the example Ingress has no global parameters. However, one can specify a default backend (see examples below) in the absence of which requests that don't match a path in the spec are sent to the default backend of glbc.
 
 
 ## Load Balancer Management
@@ -135,7 +135,7 @@ Go to your GCE console and confirm that the following resources have been create
 * BackendServices (one for each Kubernetes nodePort service)
 * An Instance Group (with ports corresponding to the BackendServices)
 
-The HTTPLoadBalancing panel will also show you if your backends have responded to the health checks, wait till they do. This can take a few minutes. If you see `Health status will display here once configuration is complete.` the L7 is still bootstrapping. Wait till you have `Healthy instances: X`. Even though the GCE L7 is driven by our controller, which notices the Kubernetes healtchecks of a pod, we still need to wait on the first GCE L7 health check to complete. Once your backends are up and healthy:
+The HTTPLoadBalancing panel will also show you if your backends have responded to the health checks, wait till they do. This can take a few minutes. If you see `Health status will display here once configuration is complete.` the L7 is still bootstrapping. Wait till you have `Healthy instances: X`. Even though the GCE L7 is driven by our controller, which notices the Kubernetes healthchecks of a pod, we still need to wait on the first GCE L7 health check to complete. Once your backends are up and healthy:
 
 ```shell
 $ curl --resolve foo.bar.com:80:107.178.245.239 http://foo.bar.com/foo
@@ -245,7 +245,7 @@ spec:
     app: nginxtest
 ```
 
-Running kubectl create against this manifest will given you a service with multiple endpoints:
+Running kubectl create against this manifest will give you a service with multiple endpoints:
 ```shell
 $ kubectl get svc nginxtest -o yaml | grep -i nodeport:
     nodePort: 30404
@@ -281,7 +281,7 @@ nginx-tester-pod-name
 ```
 
 Note what just happened, the endpoint exposes /hostname, and the loadbalancer forwarded the entire matching url to the endpoint. This means if you had '/foo' in the Ingress and tried accessing /hostname, your endpoint would've received /foo/hostname and not known how to route it. Now update the Ingress to access static content via the /fs endpoint:
-```
+```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -300,7 +300,7 @@ As before, wait a while for the update to take effect, and try accessing `loadba
 
 #### Deletion
 
-Most production loadbalancers live as long as the nodes in the cluster and are torn down when the nodes are destroyed. That said, there are plenty of use cases for deleting an Ingress, deleting a loadbalancer controller, or just purging external loadbalancer resources alltogether. Deleting a loadbalancer controller pod will not affect the loadbalancers themselves, this way your backends won't suffer a loss of availability if the scheduler pre-empts your controller pod. Deleting a single loadbalancer is as easy as deleting an Ingress via kubectl:
+Most production loadbalancers live as long as the nodes in the cluster and are torn down when the nodes are destroyed. That said, there are plenty of use cases for deleting an Ingress, deleting a loadbalancer controller, or just purging external loadbalancer resources altogether. Deleting a loadbalancer controller pod will not affect the loadbalancers themselves, this way your backends won't suffer a loss of availability if the scheduler pre-empts your controller pod. Deleting a single loadbalancer is as easy as deleting an Ingress via kubectl:
 ```shell
 $ kubectl delete ing echomap
 $ kubectl logs --follow glbc-6m6b6 l7-lb-controller
@@ -313,7 +313,7 @@ I1007 00:26:02.043188       1 backends.go:134] Deleting backend k8-be-30301
 I1007 00:26:05.591140       1 backends.go:134] Deleting backend k8-be-30284
 I1007 00:26:09.159016       1 controller.go:232] Finished syncing default/echomap
 ```
-Note that it takes ~30 seconds to purge cloud resources, the API calls to create and delete are a one time cost. GCE BackendServices are ref-counted and deleted by the controller as you delete Kubernetes Ingress'. This is not sufficient for cleanup, because you might have deleted the Ingress while glbc was down, in which case it would leak cloud resources. You can delete the glbc and purge cloud resources in 2 more ways:
+Note that it takes ~30 seconds to purge cloud resources, the API calls to create and delete are a onetime cost. GCE BackendServices are ref-counted and deleted by the controller as you delete Kubernetes Ingress'. This is not sufficient for cleanup, because you might have deleted the Ingress while glbc was down, in which case it would leak cloud resources. You can delete the glbc and purge cloud resources in 2 more ways:
 
 __The dev/test way__: If you want to delete everything in the cloud when the loadbalancer controller pod dies, start it with the --delete-all-on-quit flag. When a pod is killed it's first sent a SIGTERM, followed by a grace period (set to 10minutes for loadbalancer controllers), followed by a SIGKILL. The controller pod uses this time to delete cloud resources. Be careful with --delete-all-on-quit, because if you're running a production glbc and the scheduler re-schedules your pod for some reason, it will result in a loss of availability. You can do this because your rc.yaml has:
 ```yaml
@@ -327,7 +327,7 @@ So simply delete the replication controller:
 $ kubectl get rc glbc
 CONTROLLER   CONTAINER(S)           IMAGE(S)                                      SELECTOR                    REPLICAS   AGE
 glbc         default-http-backend   gcr.io/google_containers/defaultbackend:1.0   k8s-app=glbc,version=v0.5   1          2m
-             l7-lb-controller       gcr.io/google_containers/glbc:0.9.4
+             l7-lb-controller       gcr.io/google_containers/glbc:0.9.6
 
 $ kubectl delete rc glbc
 replicationcontroller "glbc" deleted
@@ -339,7 +339,7 @@ glbc-6m6b6              1/1       Terminating   0          13m
 
 __The prod way__: If you didn't start the controller with `--delete-all-on-quit`, you can execute a GET on the `/delete-all-and-quit` endpoint. This endpoint is deliberately not exported.
 
-```
+```shell
 $ kubectl exec -it glbc-6m6b6  -- wget -q -O- http://localhost:8081/delete-all-and-quit
 ..Hangs till quit is done..
 
@@ -399,7 +399,7 @@ spec:
 This creates 2 GCE forwarding rules that use a single static ip. Both `:80` and `:443` will direct traffic to your backend, which serves HTTP requests on the target port mentioned in the Service associated with the Ingress.
 
 ## Backend HTTPS
-For encrypted communication between the load balancer and your Kubernetes service, you need to decorate the the service's port as expecting HTTPS. There's an alpha [Service annotation](examples/backside_https/app.yaml) for specifying the expected protocol per service port. Upon seeing the protocol as HTTPS, the ingress controller will assemble a GCP L7 load balancer with an HTTPS backend-service with a HTTPS health check.
+For encrypted communication between the load balancer and your Kubernetes service, you need to decorate the service's port as expecting HTTPS. There's an alpha [Service annotation](examples/backside_https/app.yaml) for specifying the expected protocol per service port. Upon seeing the protocol as HTTPS, the ingress controller will assemble a GCP L7 load balancer with an HTTPS backend-service with a HTTPS health check.
 
 The annotation value is a stringified JSON map of port-name to "HTTPS" or "HTTP".  If you do not specify the port, "HTTP" is assumed.
 ```yaml
@@ -698,7 +698,7 @@ The controller manages cloud resources through a notion of pools. Each pool is t
 
 Periodically, each pool checks that it has a valid connection to the next hop in the above resource graph. So for example, the backend pool will check that each backend is connected to the instance group and that the node ports match, the instance group will check that all the Kubernetes nodes are a part of the instance group, and so on. Since Backends are a limited resource, they're shared (well, everything is limited by your quota, this applies doubly to backend services). This means you can setup N Ingress' exposing M services through different paths and the controller will only create M backends. When all the Ingress' are deleted, the backend pool GCs the backend.
 
-## Wishlist:
+## Wish list:
 
 * More E2e, integration tests
 * Better events

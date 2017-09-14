@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -14,9 +15,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 
+	api "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"k8s.io/client-go/kubernetes"
-	api "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmd_api "k8s.io/client-go/tools/clientcmd/api"
@@ -55,18 +56,18 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		tcpConfigMapName = flags.String("tcp-services-configmap", "",
 			`Name of the ConfigMap that contains the definition of the TCP services to expose.
 		The key in the map indicates the external port to be used. The value is the name of the
-		service with the format namespace/serviceName and the port of the service could be a 
+		service with the format namespace/serviceName and the port of the service could be a
 		number of the name of the port.
 		The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend`)
 
 		udpConfigMapName = flags.String("udp-services-configmap", "",
 			`Name of the ConfigMap that contains the definition of the UDP services to expose.
 		The key in the map indicates the external port to be used. The value is the name of the
-		service with the format namespace/serviceName and the port of the service could be a 
+		service with the format namespace/serviceName and the port of the service could be a
 		number of the name of the port.`)
 
-		resyncPeriod = flags.Duration("sync-period", 60*time.Second,
-			`Relist and confirm cloud resources this often.`)
+		resyncPeriod = flags.Duration("sync-period", 600*time.Second,
+			`Relist and confirm cloud resources this often. Default is 10 minutes`)
 
 		watchNamespace = flags.String("watch-namespace", api.NamespaceAll,
 			`Namespace to watch for Ingress. Default is to watch all namespaces`)
@@ -75,20 +76,30 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
 
-		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret 
+		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret
 		that contains a SSL certificate to be used as default for a HTTPS catch-all server`)
 
-		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines 
+		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines
 		the URL to be used as health check inside in the default server in NGINX.`)
 
-		updateStatus = flags.Bool("update-status", true, `Indicates if the 
+		updateStatus = flags.Bool("update-status", true, `Indicates if the
 		ingress controller should update the Ingress status IP/hostname. Default is true`)
 
 		electionID = flags.String("election-id", "ingress-controller-leader", `Election id to use for status update.`)
 
 		forceIsolation = flags.Bool("force-namespace-isolation", false,
-			`Force namespace isolation. This flag is required to avoid the reference of secrets or 
+			`Force namespace isolation. This flag is required to avoid the reference of secrets or
 		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
+
+		disableNodeList = flags.Bool("disable-node-list", false,
+			`Disable querying nodes. If --force-namespace-isolation is true, this should also be set.`)
+
+		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the
+		ingress controller should update the Ingress status IP/hostname when the controller
+		is being stopped. Default is true`)
+
+		sortBackends = flags.Bool("sort-backends", false,
+			`Defines if backends and it's endpoints should be sorted`)
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
@@ -115,6 +126,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 	_, err = k8s.IsValidService(kubeClient, *defaultSvc)
 	if err != nil {
+		if strings.Contains(err.Error(), "cannot get services in the namespace") {
+			glog.Fatalf("✖ It seems the cluster it is running with Authorization enabled (like RBAC) and there is no permissions for the ingress controller. Please check the configuration")
+		}
 		glog.Fatalf("no service with name %v found: %v", *defaultSvc, err)
 	}
 	glog.Infof("validated %v as the default backend", *defaultSvc)
@@ -126,11 +140,15 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		}
 
 		if len(svc.Status.LoadBalancer.Ingress) == 0 {
-			// We could poll here, but we instead just exit and rely on k8s to restart us
-			glog.Fatalf("service %s does not (yet) have ingress points", *publishSvc)
+			if len(svc.Spec.ExternalIPs) > 0 {
+				glog.Infof("service %v validated as assigned with externalIP", *publishSvc)
+			} else {
+				// We could poll here, but we instead just exit and rely on k8s to restart us
+				glog.Fatalf("service %s does not (yet) have ingress points", *publishSvc)
+			}
+		} else {
+			glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 		}
-
-		glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 	}
 
 	if *watchNamespace != "" {
@@ -140,6 +158,10 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		if err != nil {
 			glog.Fatalf("no watchNamespace with name %v found: %v", *watchNamespace, err)
 		}
+	}
+
+	if resyncPeriod.Seconds() < 10 {
+		glog.Fatalf("resync period (%vs) is too low", resyncPeriod.Seconds())
 	}
 
 	err = os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
@@ -164,6 +186,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		PublishService:          *publishSvc,
 		Backend:                 backend,
 		ForceNamespaceIsolation: *forceIsolation,
+		DisableNodeList:         *disableNodeList,
+		UpdateStatusOnShutdown:  *updateStatusOnShutdown,
+		SortBackends:            *sortBackends,
 	}
 
 	ic := newIngressController(config)
@@ -254,13 +279,21 @@ func createApiserverClient(apiserverHost string, kubeConfig string) (*kubernetes
 	cfg.Burst = defaultBurst
 	cfg.ContentType = "application/vnd.kubernetes.protobuf"
 
-	glog.Infof("Creating API server client for %s", cfg.Host)
+	glog.Infof("Creating API client for %s", cfg.Host)
 
 	client, err := kubernetes.NewForConfig(cfg)
-
 	if err != nil {
 		return nil, err
 	}
+
+	v, err := client.Discovery().ServerVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	glog.Infof("Running in Kubernetes Cluster version v%v.%v (%v) - git (%v) commit %v - platform %v",
+		v.Major, v.Minor, v.GitVersion, v.GitTreeState, v.GitCommit, v.Platform)
+
 	return client, nil
 }
 

@@ -22,19 +22,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"os/exec"
-	"regexp"
+	"strconv"
 	"strings"
 	text_template "text/template"
 
-	"k8s.io/apimachinery/pkg/util/sets"
-
 	"github.com/golang/glog"
-
 	"github.com/pborman/uuid"
+
+	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/ingress/annotations/ratelimit"
 	ing_net "k8s.io/ingress/core/pkg/net"
 	"k8s.io/ingress/core/pkg/watch"
 )
@@ -133,9 +135,11 @@ var (
 		"buildAuthLocation":        buildAuthLocation,
 		"buildAuthResponseHeaders": buildAuthResponseHeaders,
 		"buildProxyPass":           buildProxyPass,
+		"filterRateLimits":         filterRateLimits,
 		"buildRateLimitZones":      buildRateLimitZones,
 		"buildRateLimit":           buildRateLimit,
 		"buildResolvers":           buildResolvers,
+		"buildUpstreamName":        buildUpstreamName,
 		"isLocationAllowed":        isLocationAllowed,
 		"buildLogFormatUpstream":   buildLogFormatUpstream,
 		"buildDenyVariable":        buildDenyVariable,
@@ -146,10 +150,18 @@ var (
 		"toUpper":                  strings.ToUpper,
 		"toLower":                  strings.ToLower,
 		"formatIP":                 formatIP,
+		"buildNextUpstream":        buildNextUpstream,
+		"getIngressInformation":    getIngressInformation,
+		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
+			return struct{ First, Second interface{} }{all, server}
+		},
+		"buildAuthSignURL":            buildAuthSignURL,
+		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
+		"buildForwardedFor":           buildForwardedFor,
 	}
 )
 
-// fomatIP will wrap IPv6 addresses in [] and return IPv4 addresses
+// formatIP will wrap IPv6 addresses in [] and return IPv4 addresses
 // without modification. If the input cannot be parsed as an IP address
 // it is returned without modification.
 func formatIP(input string) string {
@@ -165,7 +177,7 @@ func formatIP(input string) string {
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
 func buildResolvers(a interface{}) string {
-	// NGINX need IPV6 addresses to be surrounded by brakets
+	// NGINX need IPV6 addresses to be surrounded by brackets
 	nss := a.([]net.IP)
 	if len(nss) == 0 {
 		return ""
@@ -193,7 +205,7 @@ func buildLocation(input interface{}) string {
 	}
 
 	path := location.Path
-	if len(location.Redirect.Target) > 0 && location.Redirect.Target != path {
+	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != path {
 		if path == slash {
 			return fmt.Sprintf("~* %s", path)
 		}
@@ -209,6 +221,7 @@ func buildLocation(input interface{}) string {
 	return path
 }
 
+// TODO: Needs Unit Tests
 func buildAuthLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -248,7 +261,7 @@ func buildAuthResponseHeaders(input interface{}) []string {
 func buildLogFormatUpstream(input interface{}) string {
 	cfg, ok := input.(config.Configuration)
 	if !ok {
-		glog.Errorf("error  an ingress.buildLogFormatUpstream type but %T was returned", input)
+		glog.Errorf("error an ingress.buildLogFormatUpstream type but %T was returned", input)
 	}
 
 	return cfg.BuildLogFormatUpstream()
@@ -258,7 +271,7 @@ func buildLogFormatUpstream(input interface{}) string {
 // (specified through the ingress.kubernetes.io/rewrite-to annotation)
 // If the annotation ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
-func buildProxyPass(b interface{}, loc interface{}) string {
+func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	backends := b.([]*ingress.Backend)
 	location, ok := loc.(*ingress.Location)
 	if !ok {
@@ -268,59 +281,93 @@ func buildProxyPass(b interface{}, loc interface{}) string {
 	path := location.Path
 	proto := "http"
 
+	upstreamName := location.Backend
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
 			if backend.Secure || backend.SSLPassthrough {
 				proto = "https"
 			}
+
+			if isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
+				upstreamName = fmt.Sprintf("sticky-%v", upstreamName)
+			}
+
 			break
 		}
 	}
 
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
-	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, location.Backend)
+	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, upstreamName)
 	// if the path in the ingress rule is equals to the target: no special rewrite
-	if path == location.Redirect.Target {
+	if path == location.Rewrite.Target {
 		return defProxyPass
 	}
 
-	if path != slash && !strings.HasSuffix(path, slash) {
+	if !strings.HasSuffix(path, slash) {
 		path = fmt.Sprintf("%s/", path)
 	}
 
-	if len(location.Redirect.Target) > 0 {
+	if len(location.Rewrite.Target) > 0 {
 		abu := ""
-		if location.Redirect.AddBaseURL {
+		if location.Rewrite.AddBaseURL {
 			// path has a slash suffix, so that it can be connected with baseuri directly
 			bPath := fmt.Sprintf("%s%s", path, "$baseuri")
-			abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host%v">' r;
-	subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host%v">' r;
-	`, bPath, bPath)
+			if len(location.Rewrite.BaseURLScheme) > 0 {
+				abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="%v://$http_host%v">' r;
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="%v://$http_host%v">' r;
+	    `, location.Rewrite.BaseURLScheme, bPath, location.Rewrite.BaseURLScheme, bPath)
+			} else {
+				abu = fmt.Sprintf(`subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host%v">' r;
+	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host%v">' r;
+	    `, bPath, bPath)
+			}
 		}
 
-		if location.Redirect.Target == slash {
+		if location.Rewrite.Target == slash {
 			// special case redirect to /
 			// ie /something to /
 			return fmt.Sprintf(`
-	rewrite %s(.*) /$1 break;
-	rewrite %s / break;
-	proxy_pass %s://%s;
-	%v`, path, location.Path, proto, location.Backend, abu)
+	    rewrite %s(.*) /$1 break;
+	    rewrite %s / break;
+	    proxy_pass %s://%s;
+	    %v`, path, location.Path, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
-	rewrite %s(.*) %s/$1 break;
-	proxy_pass %s://%s;
-	%v`, path, location.Redirect.Target, proto, location.Backend, abu)
+	    rewrite %s(.*) %s/$1 break;
+	    proxy_pass %s://%s;
+	    %v`, path, location.Rewrite.Target, proto, upstreamName, abu)
 	}
 
 	// default proxy_pass
 	return defProxyPass
 }
 
+// TODO: Needs Unit Tests
+func filterRateLimits(input interface{}) []ratelimit.RateLimit {
+	ratelimits := []ratelimit.RateLimit{}
+	found := sets.String{}
+
+	servers, ok := input.([]*ingress.Server)
+	if !ok {
+		return ratelimits
+	}
+	for _, server := range servers {
+		for _, loc := range server.Locations {
+			if loc.RateLimit.ID != "" && !found.Has(loc.RateLimit.ID) {
+				found.Insert(loc.RateLimit.ID)
+				ratelimits = append(ratelimits, loc.RateLimit)
+			}
+		}
+	}
+	return ratelimits
+}
+
+// TODO: Needs Unit Tests
 // buildRateLimitZones produces an array of limit_conn_zone in order to allow
-// rate limiting of request. Each Ingress rule could have up to two zones, one
-// for connection limit by IP address and other for limiting request per second
+// rate limiting of request. Each Ingress rule could have up to three zones, one
+// for connection limit by IP address, one for limiting requests per minute, and
+// one for limiting requests per second.
 func buildRateLimitZones(input interface{}) []string {
 	zones := sets.String{}
 
@@ -331,9 +378,9 @@ func buildRateLimitZones(input interface{}) []string {
 
 	for _, server := range servers {
 		for _, loc := range server.Locations {
-
 			if loc.RateLimit.Connections.Limit > 0 {
-				zone := fmt.Sprintf("limit_conn_zone $binary_remote_addr zone=%v:%vm;",
+				zone := fmt.Sprintf("limit_conn_zone $limit_%s zone=%v:%vm;",
+					loc.RateLimit.ID,
 					loc.RateLimit.Connections.Name,
 					loc.RateLimit.Connections.SharedSize)
 				if !zones.Has(zone) {
@@ -341,8 +388,20 @@ func buildRateLimitZones(input interface{}) []string {
 				}
 			}
 
+			if loc.RateLimit.RPM.Limit > 0 {
+				zone := fmt.Sprintf("limit_req_zone $limit_%s zone=%v:%vm rate=%vr/m;",
+					loc.RateLimit.ID,
+					loc.RateLimit.RPM.Name,
+					loc.RateLimit.RPM.SharedSize,
+					loc.RateLimit.RPM.Limit)
+				if !zones.Has(zone) {
+					zones.Insert(zone)
+				}
+			}
+
 			if loc.RateLimit.RPS.Limit > 0 {
-				zone := fmt.Sprintf("limit_req_zone $binary_remote_addr zone=%v:%vm rate=%vr/s;",
+				zone := fmt.Sprintf("limit_req_zone $limit_%s zone=%v:%vm rate=%vr/s;",
+					loc.RateLimit.ID,
 					loc.RateLimit.RPS.Name,
 					loc.RateLimit.RPS.SharedSize,
 					loc.RateLimit.RPS.Limit)
@@ -357,7 +416,7 @@ func buildRateLimitZones(input interface{}) []string {
 }
 
 // buildRateLimit produces an array of limit_req to be used inside the Path of
-// Ingress rules. The order: connections by IP first and RPS next.
+// Ingress rules. The order: connections by IP first, then RPS, and RPM last.
 func buildRateLimit(input interface{}) []string {
 	limits := []string{}
 
@@ -378,6 +437,24 @@ func buildRateLimit(input interface{}) []string {
 		limits = append(limits, limit)
 	}
 
+	if loc.RateLimit.RPM.Limit > 0 {
+		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
+			loc.RateLimit.RPM.Name, loc.RateLimit.RPM.Burst)
+		limits = append(limits, limit)
+	}
+
+	if loc.RateLimit.LimitRateAfter > 0 {
+		limit := fmt.Sprintf("limit_rate_after %vk;",
+			loc.RateLimit.LimitRateAfter)
+		limits = append(limits, limit)
+	}
+
+	if loc.RateLimit.LimitRate > 0 {
+		limit := fmt.Sprintf("limit_rate %vk;",
+			loc.RateLimit.LimitRate)
+		limits = append(limits, limit)
+	}
+
 	return limits
 }
 
@@ -392,7 +469,6 @@ func isLocationAllowed(input interface{}) bool {
 }
 
 var (
-	nonAlpha        = regexp.MustCompile("[^a-zA-Z0-9]+")
 	denyPathSlugMap = map[string]string{}
 )
 
@@ -405,8 +481,179 @@ func buildDenyVariable(a interface{}) string {
 	l := a.(string)
 
 	if _, ok := denyPathSlugMap[l]; !ok {
-		denyPathSlugMap[l] = uuid.New()
+		denyPathSlugMap[l] = buildRandomUUID()
 	}
 
 	return fmt.Sprintf("$deny_%v", denyPathSlugMap[l])
+}
+
+// TODO: Needs Unit Tests
+func buildUpstreamName(host string, b interface{}, loc interface{}) string {
+	backends := b.([]*ingress.Backend)
+	location, ok := loc.(*ingress.Location)
+	if !ok {
+		return ""
+	}
+
+	upstreamName := location.Backend
+
+	for _, backend := range backends {
+		if backend.Name == location.Backend {
+			if backend.SessionAffinity.AffinityType == "cookie" &&
+				isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
+				upstreamName = fmt.Sprintf("sticky-%v", upstreamName)
+			}
+
+			break
+		}
+	}
+
+	return upstreamName
+}
+
+// TODO: Needs Unit Tests
+func isSticky(host string, loc *ingress.Location, stickyLocations map[string][]string) bool {
+	if _, ok := stickyLocations[host]; ok {
+		for _, sl := range stickyLocations[host] {
+			if sl == loc.Path {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func buildNextUpstream(input interface{}) string {
+	nextUpstream, ok := input.(string)
+	if !ok {
+		glog.Errorf("expected an string type but %T was returned", input)
+	}
+
+	parts := strings.Split(nextUpstream, " ")
+
+	nextUpstreamCodes := make([]string, 0, len(parts))
+	for _, v := range parts {
+		if v != "" && v != "non_idempotent" {
+			nextUpstreamCodes = append(nextUpstreamCodes, v)
+		}
+	}
+
+	return strings.Join(nextUpstreamCodes, " ")
+}
+
+func buildAuthSignURL(input interface{}) string {
+	s, ok := input.(string)
+	if !ok {
+		glog.Errorf("expected an string type but %T was returned", input)
+	}
+
+	u, _ := url.Parse(s)
+	q := u.Query()
+	if len(q) == 0 {
+		return fmt.Sprintf("%v?rd=$request_uri", s)
+	}
+
+	return fmt.Sprintf("%v&rd=$request_uri", s)
+}
+
+// buildRandomUUID return a random string to be used in the template
+func buildRandomUUID() string {
+	s := uuid.New()
+	return strings.Replace(s, "-", "", -1)
+}
+
+func isValidClientBodyBufferSize(input interface{}) bool {
+	s, ok := input.(string)
+	if !ok {
+		glog.Errorf("expected an string type but %T was returned", input)
+		return false
+	}
+
+	if s == "" {
+		return false
+	}
+
+	_, err := strconv.Atoi(s)
+	if err != nil {
+		sLowercase := strings.ToLower(s)
+
+		kCheck := strings.TrimSuffix(sLowercase, "k")
+		_, err := strconv.Atoi(kCheck)
+		if err == nil {
+			return true
+		}
+
+		mCheck := strings.TrimSuffix(sLowercase, "m")
+		_, err = strconv.Atoi(mCheck)
+		if err == nil {
+			return true
+		}
+
+		glog.Errorf("client-body-buffer-size '%v' was provided in an incorrect format, hence it will not be set.", s)
+		return false
+	}
+
+	return true
+}
+
+type ingressInformation struct {
+	Namespace   string
+	Rule        string
+	Service     string
+	Annotations map[string]string
+}
+
+func getIngressInformation(i, p interface{}) *ingressInformation {
+	ing, ok := i.(*extensions.Ingress)
+	if !ok {
+		glog.V(3).Infof("expected an Ingress type but %T was returned", i)
+		return &ingressInformation{}
+	}
+
+	path, ok := p.(string)
+	if !ok {
+		glog.V(3).Infof("expected a string type but %T was returned", p)
+		return &ingressInformation{}
+	}
+
+	if ing == nil {
+		return &ingressInformation{}
+	}
+
+	info := &ingressInformation{
+		Namespace:   ing.GetNamespace(),
+		Rule:        ing.GetName(),
+		Annotations: ing.Annotations,
+	}
+
+	if ing.Spec.Backend != nil {
+		info.Service = ing.Spec.Backend.ServiceName
+	}
+
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			continue
+		}
+
+		for _, rPath := range rule.HTTP.Paths {
+			if path == rPath.Path {
+				info.Service = rPath.Backend.ServiceName
+				return info
+			}
+		}
+	}
+
+	return info
+}
+
+func buildForwardedFor(input interface{}) string {
+	s, ok := input.(string)
+	if !ok {
+		glog.Errorf("expected an string type but %T was returned", input)
+	}
+
+	ffh := strings.Replace(s, "-", "_", -1)
+	ffh = strings.ToLower(ffh)
+	return fmt.Sprintf("$http_%v", ffh)
 }

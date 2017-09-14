@@ -65,7 +65,7 @@ func NewFakeClusterManager(clusterName, firewallName string) *fakeClusterManager
 		testDefaultBeNodePort,
 		namer,
 	)
-	frPool := firewalls.NewFirewallPool(firewalls.NewFakeFirewallsProvider(namer), namer)
+	frPool := firewalls.NewFirewallPool(firewalls.NewFakeFirewallsProvider(), namer)
 	cm := &ClusterManager{
 		ClusterNamer: namer,
 		instancePool: nodePool,

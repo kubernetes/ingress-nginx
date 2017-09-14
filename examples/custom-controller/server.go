@@ -24,7 +24,8 @@ import (
 
 	"github.com/spf13/pflag"
 
-	api "k8s.io/client-go/pkg/api/v1"
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
 	"k8s.io/ingress/core/pkg/ingress"
@@ -104,4 +105,17 @@ func (n DummyController) SetListers(lister ingress.StoreLister) {
 
 func (n DummyController) DefaultIngressClass() string {
 	return "dummy"
+}
+
+func (n DummyController) UpdateIngressStatus(*extensions.Ingress) []api.LoadBalancerIngress {
+	return nil
+}
+
+// DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
+func (n DummyController) DefaultEndpoint() ingress.Endpoint {
+	return ingress.Endpoint{
+		Address: "127.0.0.1",
+		Port:    "8181",
+		Target:  &api.ObjectReference{},
+	}
 }

@@ -16,15 +16,9 @@ limitations under the License.
 
 package net
 
-import (
-	_net "net"
-	"strings"
-)
+import _net "net"
 
 // IsIPV6 checks if the input contains a valid IPV6 address
 func IsIPV6(ip _net.IP) bool {
-	if dp := strings.Index(ip.String(), ":"); dp != -1 {
-		return true
-	}
-	return false
+	return ip.To4() == nil
 }

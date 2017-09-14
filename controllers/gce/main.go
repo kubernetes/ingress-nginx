@@ -17,8 +17,11 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
 	go_flag "flag"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,14 +33,13 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	flag "github.com/spf13/pflag"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -47,6 +49,8 @@ import (
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 	"k8s.io/ingress/controllers/gce/storage"
 	"k8s.io/ingress/controllers/gce/utils"
+	"k8s.io/kubernetes/pkg/cloudprovider"
+	"k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 )
 
 // Entrypoint of GLBC. Example invocation:
@@ -69,10 +73,13 @@ const (
 	alphaNumericChar = "0"
 
 	// Current docker image version. Only used in debug logging.
-	imageVersion = "glbc:0.9.4"
+	imageVersion = "glbc:0.9.6"
 
 	// Key used to persist UIDs to configmaps.
 	uidConfigMapName = "ingress-uid"
+
+	// Sleep interval to retry cloud client creation.
+	cloudClientRetryInterval = 10 * time.Second
 )
 
 var (
@@ -122,7 +129,7 @@ var (
 		`Path used to health-check a backend service. All Services must serve
 		a 200 page on this path. Currently this is only configurable globally.`)
 
-	watchNamespace = flags.String("watch-namespace", api.NamespaceAll,
+	watchNamespace = flags.String("watch-namespace", v1.NamespaceAll,
 		`Namespace to watch for Ingress/Services/Endpoints.`)
 
 	verbose = flags.Bool("verbose", false,
@@ -242,13 +249,36 @@ func main() {
 		SvcPort:  intstr.FromInt(int(port)),
 	}
 
+	var cloud *gce.GCECloud
 	if *inCluster || *useRealCloud {
 		// Create cluster manager
 		namer, err := newNamer(kubeClient, *clusterName, controller.DefaultFirewallName)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
-		clusterManager, err = controller.NewClusterManager(*configFilePath, namer, defaultBackendNodePort, *healthCheckPath)
+
+		// TODO: Make this more resilient. Currently we create the cloud client
+		// and pass it through to all the pools. This makes unit testing easier.
+		// However if the cloud client suddenly fails, we should try to re-create it
+		// and continue.
+		if *configFilePath != "" {
+			glog.Infof("Reading config from path %v", configFilePath)
+			config, err := os.Open(*configFilePath)
+			if err != nil {
+				glog.Fatalf("%v", err)
+			}
+			defer config.Close()
+			cloud = getGCEClient(config)
+			glog.Infof("Successfully loaded cloudprovider using config %q", configFilePath)
+		} else {
+			// While you might be tempted to refactor so we simply assing nil to the
+			// config and only invoke getGCEClient once, that will not do the right
+			// thing because a nil check against an interface isn't true in golang.
+			cloud = getGCEClient(nil)
+			glog.Infof("Created GCE client without a config file")
+		}
+
+		clusterManager, err = controller.NewClusterManager(cloud, namer, defaultBackendNodePort, *healthCheckPath)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
@@ -257,11 +287,14 @@ func main() {
 		clusterManager = controller.NewFakeClusterManager(*clusterName, controller.DefaultFirewallName).ClusterManager
 	}
 
+	ctx := controller.NewControllerContext(kubeClient, *watchNamespace, *resyncPeriod)
+
 	// Start loadbalancer controller
-	lbc, err := controller.NewLoadBalancerController(kubeClient, clusterManager, *resyncPeriod, *watchNamespace)
+	lbc, err := controller.NewLoadBalancerController(kubeClient, ctx, clusterManager)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
+
 	if clusterManager.ClusterNamer.GetClusterName() != "" {
 		glog.V(3).Infof("Cluster name %+v", clusterManager.ClusterNamer.GetClusterName())
 	}
@@ -269,6 +302,7 @@ func main() {
 	go registerHandlers(lbc)
 	go handleSigterm(lbc, *deleteAllOnQuit)
 
+	ctx.Start()
 	lbc.Run()
 	for {
 		glog.Infof("Handled quit, awaiting pod deletion.")
@@ -287,7 +321,7 @@ func newNamer(kubeClient kubernetes.Interface, clusterName string, fwName string
 	}
 
 	namer := utils.NewNamer(name, fw_name)
-	uidVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	uidVault := storage.NewConfigMapVault(kubeClient, metav1.NamespaceSystem, uidConfigMapName)
 
 	// Start a goroutine to poll the cluster UID config map
 	// We don't watch because we know exactly which configmap we want and this
@@ -359,7 +393,7 @@ func useDefaultOrLookupVault(cfgVault *storage.ConfigMapVault, cm_key, default_n
 // Use getFlagOrLookupVault to obtain a stored or overridden value for the firewall name.
 // else, use the cluster UID as a backup (this retains backwards compatibility).
 func getFirewallName(kubeClient kubernetes.Interface, name, cluster_uid string) (string, error) {
-	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	cfgVault := storage.NewConfigMapVault(kubeClient, metav1.NamespaceSystem, uidConfigMapName)
 	if fw_name, err := useDefaultOrLookupVault(cfgVault, storage.ProviderDataKey, name); err != nil {
 		return "", err
 	} else if fw_name != "" {
@@ -377,7 +411,7 @@ func getFirewallName(kubeClient kubernetes.Interface, name, cluster_uid string) 
 //	- remember that "" is the cluster uid
 // else, allocate a new uid
 func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error) {
-	cfgVault := storage.NewConfigMapVault(kubeClient, api.NamespaceSystem, uidConfigMapName)
+	cfgVault := storage.NewConfigMapVault(kubeClient, metav1.NamespaceSystem, uidConfigMapName)
 	if name, err := useDefaultOrLookupVault(cfgVault, storage.UidDataKey, name); err != nil {
 		return "", err
 	} else if name != "" {
@@ -385,7 +419,7 @@ func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error)
 	}
 
 	// Check if the cluster has an Ingress with ip
-	ings, err := kubeClient.Extensions().Ingresses(api.NamespaceAll).List(meta_v1.ListOptions{
+	ings, err := kubeClient.Extensions().Ingresses(metav1.NamespaceAll).List(metav1.ListOptions{
 		LabelSelector: labels.Everything().String(),
 	})
 	if err != nil {
@@ -419,10 +453,10 @@ func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error)
 
 // getNodePort waits for the Service, and returns it's first node port.
 func getNodePort(client kubernetes.Interface, ns, name string) (port, nodePort int32, err error) {
-	var svc *api_v1.Service
+	var svc *v1.Service
 	glog.V(3).Infof("Waiting for %v/%v", ns, name)
 	wait.Poll(1*time.Second, 5*time.Minute, func() (bool, error) {
-		svc, err = client.Core().Services(ns).Get(name, meta_v1.GetOptions{})
+		svc, err = client.Core().Services(ns).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, nil
 		}
@@ -437,4 +471,46 @@ func getNodePort(client kubernetes.Interface, ns, name string) (port, nodePort i
 		return true, nil
 	})
 	return
+}
+
+func getGCEClient(config io.Reader) *gce.GCECloud {
+	getConfigReader := func() io.Reader { return nil }
+
+	if config != nil {
+		allConfig, err := ioutil.ReadAll(config)
+		if err != nil {
+			glog.Fatalf("Error while reading entire config: %v", err)
+		}
+		glog.V(2).Infof("Using cloudprovider config file:\n%v ", string(allConfig))
+
+		getConfigReader = func() io.Reader {
+			return bytes.NewReader(allConfig)
+		}
+	} else {
+		glog.V(2).Infoln("No cloudprovider config file provided. Continuing with default values.")
+	}
+
+	// Creating the cloud interface involves resolving the metadata server to get
+	// an oauth token. If this fails, the token provider assumes it's not on GCE.
+	// No errors are thrown. So we need to keep retrying till it works because
+	// we know we're on GCE.
+	for {
+		cloudInterface, err := cloudprovider.GetCloudProvider("gce", getConfigReader())
+		if err == nil {
+			cloud := cloudInterface.(*gce.GCECloud)
+
+			// If this controller is scheduled on a node without compute/rw
+			// it won't be allowed to list backends. We can assume that the
+			// user has no need for Ingress in this case. If they grant
+			// permissions to the node they will have to restart the controller
+			// manually to re-create the client.
+			if _, err = cloud.ListGlobalBackendServices(); err == nil || utils.IsHTTPErrorCode(err, http.StatusForbidden) {
+				return cloud
+			}
+			glog.Warningf("Failed to list backend services, retrying: %v", err)
+		} else {
+			glog.Warningf("Failed to retrieve cloud interface, retrying: %v", err)
+		}
+		time.Sleep(cloudClientRetryInterval)
+	}
 }

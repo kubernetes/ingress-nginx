@@ -17,7 +17,7 @@ limitations under the License.
 package rewrite
 
 import (
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -26,6 +26,7 @@ import (
 const (
 	rewriteTo        = "ingress.kubernetes.io/rewrite-target"
 	addBaseURL       = "ingress.kubernetes.io/add-base-url"
+	baseURLScheme    = "ingress.kubernetes.io/base-url-scheme"
 	sslRedirect      = "ingress.kubernetes.io/ssl-redirect"
 	forceSSLRedirect = "ingress.kubernetes.io/force-ssl-redirect"
 	appRoot          = "ingress.kubernetes.io/app-root"
@@ -38,12 +39,44 @@ type Redirect struct {
 	// AddBaseURL indicates if is required to add a base tag in the head
 	// of the responses from the upstream servers
 	AddBaseURL bool `json:"addBaseUrl"`
+	// BaseURLScheme override for the scheme passed to the base tag
+	BaseURLScheme string `json:"baseUrlScheme"`
 	// SSLRedirect indicates if the location section is accessible SSL only
 	SSLRedirect bool `json:"sslRedirect"`
 	// ForceSSLRedirect indicates if the location section is accessible SSL only
 	ForceSSLRedirect bool `json:"forceSSLRedirect"`
 	// AppRoot defines the Application Root that the Controller must redirect if it's not in '/' context
 	AppRoot string `json:"appRoot"`
+}
+
+// Equal tests for equality between two Redirect types
+func (r1 *Redirect) Equal(r2 *Redirect) bool {
+	if r1 == r2 {
+		return true
+	}
+	if r1 == nil || r2 == nil {
+		return false
+	}
+	if r1.Target != r2.Target {
+		return false
+	}
+	if r1.AddBaseURL != r2.AddBaseURL {
+		return false
+	}
+	if r1.BaseURLScheme != r2.BaseURLScheme {
+		return false
+	}
+	if r1.SSLRedirect != r2.SSLRedirect {
+		return false
+	}
+	if r1.ForceSSLRedirect != r2.ForceSSLRedirect {
+		return false
+	}
+	if r1.AppRoot != r2.AppRoot {
+		return false
+	}
+
+	return true
 }
 
 type rewrite struct {
@@ -68,10 +101,12 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 		fSslRe = a.backendResolver.GetDefaultBackend().ForceSSLRedirect
 	}
 	abu, _ := parser.GetBoolAnnotation(addBaseURL, ing)
+	bus, _ := parser.GetStringAnnotation(baseURLScheme, ing)
 	ar, _ := parser.GetStringAnnotation(appRoot, ing)
 	return &Redirect{
 		Target:           rt,
 		AddBaseURL:       abu,
+		BaseURLScheme:    bus,
 		SSLRedirect:      sslRe,
 		ForceSSLRedirect: fSslRe,
 		AppRoot:          ar,

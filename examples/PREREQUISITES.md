@@ -40,7 +40,7 @@ secret "tls-secret" created
 You can act as your very own CA, or use an existing one. As an exercise / learning, we're going to generate our
 own CA, and also generate a client certificate.
 
-These instructions are based in CoreOS OpenSSL [instructions](https://coreos.com/kubernetes/docs/latest/openssl.html)
+These instructions are based on CoreOS OpenSSL [instructions](https://coreos.com/kubernetes/docs/latest/openssl.html)
 
 ### Generating a CA
 
@@ -72,7 +72,7 @@ This will generate two files: A private key (ca.key) and a public key (ca.crt). 
 The ca.crt can be used later in the step of creation of CA authentication secret.
 
 ### Generating the client certificate
-The following steps generates a client certificate signed by the CA generated above. This client can be
+The following steps generate a client certificate signed by the CA generated above. This client can be
 used to authenticate in a tls-auth configured ingress.
 
 First, we need to generate an 'openssl.cnf' file that will be used while signing the keys:

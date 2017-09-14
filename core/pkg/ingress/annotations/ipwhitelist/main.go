@@ -22,8 +22,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/kubernetes/pkg/util/net/sets"
+	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/ingress/core/pkg/net"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
@@ -36,7 +36,36 @@ const (
 
 // SourceRange returns the CIDR
 type SourceRange struct {
-	CIDR []string `json:"cidr"`
+	CIDR []string `json:"cidr,omitEmpty"`
+}
+
+// Equal tests for equality between two SourceRange types
+func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
+	if sr1 == sr2 {
+		return true
+	}
+	if sr1 == nil || sr2 == nil {
+		return false
+	}
+
+	if len(sr1.CIDR) != len(sr2.CIDR) {
+		return false
+	}
+
+	for _, s1l := range sr1.CIDR {
+		found := false
+		for _, sl2 := range sr2.CIDR {
+			if s1l == sl2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	return true
 }
 
 type ipwhitelist struct {
@@ -63,8 +92,8 @@ func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	values := strings.Split(val, ",")
-	ipnets, err := sets.ParseIPNets(values...)
-	if err != nil {
+	ipnets, ips, err := net.ParseIPNets(values...)
+	if err != nil && len(ips) == 0 {
 		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "the annotation does not contain a valid IP address or network"),
 		}
@@ -72,6 +101,9 @@ func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	cidrs := []string{}
 	for k := range ipnets {
+		cidrs = append(cidrs, k)
+	}
+	for k := range ips {
 		cidrs = append(cidrs, k)
 	}
 

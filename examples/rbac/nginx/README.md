@@ -1,6 +1,6 @@
 # Role Based Access Control
 
-This example demontrates how to apply an nginx ingress controller with role based access control
+This example demonstrates how to apply an nginx ingress controller with role based access control
 
 ## Overview
 
@@ -62,7 +62,7 @@ have access to a `configmap` using the resourceName `ingress-controller-leader-n
 * `configmaps`: create
 
 This resourceName is the concatenation of the `election-id` and the
-`ingress-class` as defined by the ingress-controller, which default to:
+`ingress-class` as defined by the ingress-controller, which defaults to:
 
 * `election-id`: `ingress-controller-leader`
 * `ingress-class`: `nginx`

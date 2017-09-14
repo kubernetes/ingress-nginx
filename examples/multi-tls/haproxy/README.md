@@ -1,6 +1,6 @@
 # HAProxy Multi TLS certificate termination
 
-This examples uses 2 different certificates to terminate SSL for 2 hostnames.
+This example uses 2 different certificates to terminate SSL for 2 hostnames.
 
 ## Prerequisites
 
@@ -8,9 +8,6 @@ This document has the following prerequisites:
 
 * Deploy [HAProxy Ingress controller](/examples/deployment/haproxy), you should end up with controller, a sample web app and default TLS secret
 * Create [*two* secrets](/examples/PREREQUISITES.md#tls-certificates) named `foobar-ssl` with subject `'/CN=foo.bar'` and `barfoo-ssl` with subject `'/CN=bar.foo'`
-
-As mentioned in the deployment instructions, you MUST turn down any existing
-ingress controllers before running HAProxy Ingress.
 
 ## Using a new TLS certificate
 

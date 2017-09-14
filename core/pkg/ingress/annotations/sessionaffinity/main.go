@@ -21,7 +21,7 @@ import (
 
 	"github.com/golang/glog"
 
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 )
@@ -92,10 +92,7 @@ type affinity struct {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure the affinity directives
 func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
-
-	var cookieAffinityConfig *CookieConfig
-	cookieAffinityConfig = &CookieConfig{}
-
+	cookieAffinityConfig := &CookieConfig{}
 	// Check the type of affinity that will be used
 	at, err := parser.GetStringAnnotation(annotationAffinityType, ing)
 	if err != nil {

@@ -17,7 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
 	"syscall"
@@ -73,4 +75,13 @@ func diff(b1, b2 []byte) ([]byte, error) {
 
 	out, _ := exec.Command("diff", "-u", f1.Name(), f2.Name()).CombinedOutput()
 	return out, nil
+}
+
+func isPortAvailable(p int) bool {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%v", p))
+	if err != nil {
+		return false
+	}
+	ln.Close()
+	return true
 }

@@ -19,10 +19,10 @@ package controller
 import (
 	"testing"
 
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	api "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
@@ -37,11 +37,11 @@ const (
 	annotationAffinityType       = "ingress.kubernetes.io/affinity"
 	annotationAffinityCookieName = "ingress.kubernetes.io/session-cookie-name"
 	annotationAffinityCookieHash = "ingress.kubernetes.io/session-cookie-hash"
-	annotationAuthTlsSecret      = "ingress.kubernetes.io/auth-tls-secret"
 )
 
 type mockCfg struct {
-	MockSecrets map[string]*api.Secret
+	MockSecrets  map[string]*api.Secret
+	MockServices map[string]*api.Service
 }
 
 func (m mockCfg) GetDefaultBackend() defaults.Backend {
@@ -50,6 +50,10 @@ func (m mockCfg) GetDefaultBackend() defaults.Backend {
 
 func (m mockCfg) GetSecret(name string) (*api.Secret, error) {
 	return m.MockSecrets[name], nil
+}
+
+func (m mockCfg) GetService(name string) (*api.Service, error) {
+	return m.MockServices[name], nil
 }
 
 func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {

@@ -17,14 +17,11 @@ limitations under the License.
 package controller
 
 import (
-	"io"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/cloudprovider"
+	compute "google.golang.org/api/compute/v1"
 	gce "k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 
 	"k8s.io/ingress/controllers/gce/backends"
@@ -57,9 +54,6 @@ const (
 
 	// Names longer than this are truncated, because of GCE restrictions.
 	nameLenLimit = 62
-
-	// Sleep interval to retry cloud client creation.
-	cloudClientRetryInterval = 10 * time.Second
 )
 
 // ClusterManager manages cluster resource pools.
@@ -115,41 +109,45 @@ func (c *ClusterManager) shutdown() error {
 }
 
 // Checkpoint performs a checkpoint with the cloud.
-// - lbNames are the names of L7 loadbalancers we wish to exist. If they already
+// - lbs are the single cluster L7 loadbalancers we wish to exist. If they already
 //   exist, they should not have any broken links between say, a UrlMap and
 //   TargetHttpProxy.
 // - nodeNames are the names of nodes we wish to add to all loadbalancer
 //   instance groups.
-// - nodePorts are the ports for which we require BackendServices. Each of
-//   these ports must also be opened on the corresponding Instance Group.
+// - backendServicePorts are the ports for which we require BackendServices.
+// - namedPorts are the ports which must be opened on instance groups.
+// Returns the list of all instance groups corresponding to the given loadbalancers.
 // If in performing the checkpoint the cluster manager runs out of quota, a
 // googleapi 403 is returned.
-func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, nodePorts []backends.ServicePort) error {
+func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, backendServicePorts []backends.ServicePort, namedPorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
+	if len(namedPorts) != 0 {
+		// Add the default backend node port to the list of named ports for instance groups.
+		namedPorts = append(namedPorts, c.defaultBackendNodePort)
+	}
 	// Multiple ingress paths can point to the same service (and hence nodePort)
 	// but each nodePort can only have one set of cloud resources behind it. So
 	// don't waste time double validating GCE BackendServices.
-	portMap := map[int64]backends.ServicePort{}
-	for _, p := range nodePorts {
-		portMap[p.Port] = p
+	namedPorts = uniq(namedPorts)
+	backendServicePorts = uniq(backendServicePorts)
+	// Create Instance Groups.
+	igs, err := c.EnsureInstanceGroupsAndPorts(namedPorts)
+	if err != nil {
+		return igs, err
 	}
-	nodePorts = []backends.ServicePort{}
-	for _, sp := range portMap {
-		nodePorts = append(nodePorts, sp)
-	}
-	if err := c.backendPool.Sync(nodePorts); err != nil {
-		return err
+	if err := c.backendPool.Sync(backendServicePorts, igs); err != nil {
+		return igs, err
 	}
 	if err := c.instancePool.Sync(nodeNames); err != nil {
-		return err
+		return igs, err
 	}
 	if err := c.l7Pool.Sync(lbs); err != nil {
-		return err
+		return igs, err
 	}
 
 	// TODO: Manage default backend and its firewall rule in a centralized way.
 	// DefaultBackend is managed in l7 pool, which doesn't understand instances,
 	// which the firewall rule requires.
-	fwNodePorts := nodePorts
+	fwNodePorts := backendServicePorts
 	if len(lbs) != 0 {
 		// If there are no Ingresses, we shouldn't be allowing traffic to the
 		// default backend. Equally importantly if the cluster gets torn down
@@ -162,10 +160,27 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 		np = append(np, p.Port)
 	}
 	if err := c.firewallPool.Sync(np, nodeNames); err != nil {
-		return err
+		return igs, err
 	}
 
-	return nil
+	return igs, nil
+}
+
+func (c *ClusterManager) EnsureInstanceGroupsAndPorts(servicePorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
+	var igs []*compute.InstanceGroup
+	var err error
+	for _, p := range servicePorts {
+		// EnsureInstanceGroupsAndPorts always returns all the instance groups, so we can return
+		// the output of any call, no need to append the return from all calls.
+		// TODO: Ideally, we want to call CreateInstaceGroups only the first time and
+		// then call AddNamedPort multiple times. Need to update the interface to
+		// achieve this.
+		igs, _, err = instances.EnsureInstanceGroupsAndPorts(c.instancePool, c.ClusterNamer, p.Port)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return igs, nil
 }
 
 // GC garbage collects unused resources.
@@ -209,64 +224,16 @@ func (c *ClusterManager) GC(lbNames []string, nodePorts []backends.ServicePort) 
 	return nil
 }
 
-func getGCEClient(config io.Reader) *gce.GCECloud {
-	// Creating the cloud interface involves resolving the metadata server to get
-	// an oauth token. If this fails, the token provider assumes it's not on GCE.
-	// No errors are thrown. So we need to keep retrying till it works because
-	// we know we're on GCE.
-	for {
-		cloudInterface, err := cloudprovider.GetCloudProvider("gce", config)
-		if err == nil {
-			cloud := cloudInterface.(*gce.GCECloud)
-
-			// If this controller is scheduled on a node without compute/rw
-			// it won't be allowed to list backends. We can assume that the
-			// user has no need for Ingress in this case. If they grant
-			// permissions to the node they will have to restart the controller
-			// manually to re-create the client.
-			if _, err = cloud.ListBackendServices(); err == nil || utils.IsHTTPErrorCode(err, http.StatusForbidden) {
-				return cloud
-			}
-			glog.Warningf("Failed to list backend services, retrying: %v", err)
-		} else {
-			glog.Warningf("Failed to retrieve cloud interface, retrying: %v", err)
-		}
-		time.Sleep(cloudClientRetryInterval)
-	}
-}
-
 // NewClusterManager creates a cluster manager for shared resources.
 // - namer: is the namer used to tag cluster wide shared resources.
 // - defaultBackendNodePort: is the node port of glbc's default backend. This is
 //	 the kubernetes Service that serves the 404 page if no urls match.
 // - defaultHealthCheckPath: is the default path used for L7 health checks, eg: "/healthz".
 func NewClusterManager(
-	configFilePath string,
+	cloud *gce.GCECloud,
 	namer *utils.Namer,
 	defaultBackendNodePort backends.ServicePort,
 	defaultHealthCheckPath string) (*ClusterManager, error) {
-
-	// TODO: Make this more resilient. Currently we create the cloud client
-	// and pass it through to all the pools. This makes unit testing easier.
-	// However if the cloud client suddenly fails, we should try to re-create it
-	// and continue.
-	var cloud *gce.GCECloud
-	if configFilePath != "" {
-		glog.Infof("Reading config from path %v", configFilePath)
-		config, err := os.Open(configFilePath)
-		if err != nil {
-			return nil, err
-		}
-		defer config.Close()
-		cloud = getGCEClient(config)
-		glog.Infof("Successfully loaded cloudprovider using config %q", configFilePath)
-	} else {
-		// While you might be tempted to refactor so we simply assing nil to the
-		// config and only invoke getGCEClient once, that will not do the right
-		// thing because a nil check against an interface isn't true in golang.
-		cloud = getGCEClient(nil)
-		glog.Infof("Created GCE client without a config file")
-	}
 
 	// Names are fundamental to the cluster, the uid allocator makes sure names don't collide.
 	cluster := ClusterManager{ClusterNamer: namer}

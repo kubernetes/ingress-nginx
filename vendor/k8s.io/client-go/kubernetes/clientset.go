@@ -19,7 +19,9 @@ package kubernetes
 import (
 	glog "github.com/golang/glog"
 	discovery "k8s.io/client-go/discovery"
+	admissionregistrationv1alpha1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1alpha1"
 	appsv1beta1 "k8s.io/client-go/kubernetes/typed/apps/v1beta1"
+	appsv1beta2 "k8s.io/client-go/kubernetes/typed/apps/v1beta2"
 	authenticationv1 "k8s.io/client-go/kubernetes/typed/authentication/v1"
 	authenticationv1beta1 "k8s.io/client-go/kubernetes/typed/authentication/v1beta1"
 	authorizationv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
@@ -31,9 +33,11 @@ import (
 	certificatesv1beta1 "k8s.io/client-go/kubernetes/typed/certificates/v1beta1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	extensionsv1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	networkingv1 "k8s.io/client-go/kubernetes/typed/networking/v1"
 	policyv1beta1 "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
 	rbacv1alpha1 "k8s.io/client-go/kubernetes/typed/rbac/v1alpha1"
 	rbacv1beta1 "k8s.io/client-go/kubernetes/typed/rbac/v1beta1"
+	schedulingv1alpha1 "k8s.io/client-go/kubernetes/typed/scheduling/v1alpha1"
 	settingsv1alpha1 "k8s.io/client-go/kubernetes/typed/settings/v1alpha1"
 	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
 	storagev1beta1 "k8s.io/client-go/kubernetes/typed/storage/v1beta1"
@@ -43,12 +47,13 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	CoreV1() corev1.CoreV1Interface
+	AdmissionregistrationV1alpha1() admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Core() corev1.CoreV1Interface
+	Admissionregistration() admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
 	AppsV1beta1() appsv1beta1.AppsV1beta1Interface
+	AppsV1beta2() appsv1beta2.AppsV1beta2Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Apps() appsv1beta1.AppsV1beta1Interface
+	Apps() appsv1beta2.AppsV1beta2Interface
 	AuthenticationV1() authenticationv1.AuthenticationV1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Authentication() authenticationv1.AuthenticationV1Interface
@@ -68,9 +73,15 @@ type Interface interface {
 	CertificatesV1beta1() certificatesv1beta1.CertificatesV1beta1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Certificates() certificatesv1beta1.CertificatesV1beta1Interface
+	CoreV1() corev1.CoreV1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Core() corev1.CoreV1Interface
 	ExtensionsV1beta1() extensionsv1beta1.ExtensionsV1beta1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Extensions() extensionsv1beta1.ExtensionsV1beta1Interface
+	NetworkingV1() networkingv1.NetworkingV1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Networking() networkingv1.NetworkingV1Interface
 	PolicyV1beta1() policyv1beta1.PolicyV1beta1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Policy() policyv1beta1.PolicyV1beta1Interface
@@ -78,6 +89,9 @@ type Interface interface {
 	// Deprecated: please explicitly pick a version if possible.
 	Rbac() rbacv1beta1.RbacV1beta1Interface
 	RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface
+	SchedulingV1alpha1() schedulingv1alpha1.SchedulingV1alpha1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Scheduling() schedulingv1alpha1.SchedulingV1alpha1Interface
 	SettingsV1alpha1() settingsv1alpha1.SettingsV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Settings() settingsv1alpha1.SettingsV1alpha1Interface
@@ -91,8 +105,9 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	*corev1.CoreV1Client
+	*admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Client
 	*appsv1beta1.AppsV1beta1Client
+	*appsv1beta2.AppsV1beta2Client
 	*authenticationv1.AuthenticationV1Client
 	*authenticationv1beta1.AuthenticationV1beta1Client
 	*authorizationv1.AuthorizationV1Client
@@ -102,30 +117,33 @@ type Clientset struct {
 	*batchv1.BatchV1Client
 	*batchv2alpha1.BatchV2alpha1Client
 	*certificatesv1beta1.CertificatesV1beta1Client
+	*corev1.CoreV1Client
 	*extensionsv1beta1.ExtensionsV1beta1Client
+	*networkingv1.NetworkingV1Client
 	*policyv1beta1.PolicyV1beta1Client
 	*rbacv1beta1.RbacV1beta1Client
 	*rbacv1alpha1.RbacV1alpha1Client
+	*schedulingv1alpha1.SchedulingV1alpha1Client
 	*settingsv1alpha1.SettingsV1alpha1Client
 	*storagev1beta1.StorageV1beta1Client
 	*storagev1.StorageV1Client
 }
 
-// CoreV1 retrieves the CoreV1Client
-func (c *Clientset) CoreV1() corev1.CoreV1Interface {
+// AdmissionregistrationV1alpha1 retrieves the AdmissionregistrationV1alpha1Client
+func (c *Clientset) AdmissionregistrationV1alpha1() admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface {
 	if c == nil {
 		return nil
 	}
-	return c.CoreV1Client
+	return c.AdmissionregistrationV1alpha1Client
 }
 
-// Deprecated: Core retrieves the default version of CoreClient.
+// Deprecated: Admissionregistration retrieves the default version of AdmissionregistrationClient.
 // Please explicitly pick a version.
-func (c *Clientset) Core() corev1.CoreV1Interface {
+func (c *Clientset) Admissionregistration() admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface {
 	if c == nil {
 		return nil
 	}
-	return c.CoreV1Client
+	return c.AdmissionregistrationV1alpha1Client
 }
 
 // AppsV1beta1 retrieves the AppsV1beta1Client
@@ -136,13 +154,21 @@ func (c *Clientset) AppsV1beta1() appsv1beta1.AppsV1beta1Interface {
 	return c.AppsV1beta1Client
 }
 
-// Deprecated: Apps retrieves the default version of AppsClient.
-// Please explicitly pick a version.
-func (c *Clientset) Apps() appsv1beta1.AppsV1beta1Interface {
+// AppsV1beta2 retrieves the AppsV1beta2Client
+func (c *Clientset) AppsV1beta2() appsv1beta2.AppsV1beta2Interface {
 	if c == nil {
 		return nil
 	}
-	return c.AppsV1beta1Client
+	return c.AppsV1beta2Client
+}
+
+// Deprecated: Apps retrieves the default version of AppsClient.
+// Please explicitly pick a version.
+func (c *Clientset) Apps() appsv1beta2.AppsV1beta2Interface {
+	if c == nil {
+		return nil
+	}
+	return c.AppsV1beta2Client
 }
 
 // AuthenticationV1 retrieves the AuthenticationV1Client
@@ -262,6 +288,23 @@ func (c *Clientset) Certificates() certificatesv1beta1.CertificatesV1beta1Interf
 	return c.CertificatesV1beta1Client
 }
 
+// CoreV1 retrieves the CoreV1Client
+func (c *Clientset) CoreV1() corev1.CoreV1Interface {
+	if c == nil {
+		return nil
+	}
+	return c.CoreV1Client
+}
+
+// Deprecated: Core retrieves the default version of CoreClient.
+// Please explicitly pick a version.
+func (c *Clientset) Core() corev1.CoreV1Interface {
+	if c == nil {
+		return nil
+	}
+	return c.CoreV1Client
+}
+
 // ExtensionsV1beta1 retrieves the ExtensionsV1beta1Client
 func (c *Clientset) ExtensionsV1beta1() extensionsv1beta1.ExtensionsV1beta1Interface {
 	if c == nil {
@@ -277,6 +320,23 @@ func (c *Clientset) Extensions() extensionsv1beta1.ExtensionsV1beta1Interface {
 		return nil
 	}
 	return c.ExtensionsV1beta1Client
+}
+
+// NetworkingV1 retrieves the NetworkingV1Client
+func (c *Clientset) NetworkingV1() networkingv1.NetworkingV1Interface {
+	if c == nil {
+		return nil
+	}
+	return c.NetworkingV1Client
+}
+
+// Deprecated: Networking retrieves the default version of NetworkingClient.
+// Please explicitly pick a version.
+func (c *Clientset) Networking() networkingv1.NetworkingV1Interface {
+	if c == nil {
+		return nil
+	}
+	return c.NetworkingV1Client
 }
 
 // PolicyV1beta1 retrieves the PolicyV1beta1Client
@@ -319,6 +379,23 @@ func (c *Clientset) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
 		return nil
 	}
 	return c.RbacV1alpha1Client
+}
+
+// SchedulingV1alpha1 retrieves the SchedulingV1alpha1Client
+func (c *Clientset) SchedulingV1alpha1() schedulingv1alpha1.SchedulingV1alpha1Interface {
+	if c == nil {
+		return nil
+	}
+	return c.SchedulingV1alpha1Client
+}
+
+// Deprecated: Scheduling retrieves the default version of SchedulingClient.
+// Please explicitly pick a version.
+func (c *Clientset) Scheduling() schedulingv1alpha1.SchedulingV1alpha1Interface {
+	if c == nil {
+		return nil
+	}
+	return c.SchedulingV1alpha1Client
 }
 
 // SettingsV1alpha1 retrieves the SettingsV1alpha1Client
@@ -379,11 +456,15 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.CoreV1Client, err = corev1.NewForConfig(&configShallowCopy)
+	cs.AdmissionregistrationV1alpha1Client, err = admissionregistrationv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
 	cs.AppsV1beta1Client, err = appsv1beta1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.AppsV1beta2Client, err = appsv1beta2.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +504,15 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.CoreV1Client, err = corev1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.ExtensionsV1beta1Client, err = extensionsv1beta1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.NetworkingV1Client, err = networkingv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -436,6 +525,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 		return nil, err
 	}
 	cs.RbacV1alpha1Client, err = rbacv1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.SchedulingV1alpha1Client, err = schedulingv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -464,8 +557,9 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.CoreV1Client = corev1.NewForConfigOrDie(c)
+	cs.AdmissionregistrationV1alpha1Client = admissionregistrationv1alpha1.NewForConfigOrDie(c)
 	cs.AppsV1beta1Client = appsv1beta1.NewForConfigOrDie(c)
+	cs.AppsV1beta2Client = appsv1beta2.NewForConfigOrDie(c)
 	cs.AuthenticationV1Client = authenticationv1.NewForConfigOrDie(c)
 	cs.AuthenticationV1beta1Client = authenticationv1beta1.NewForConfigOrDie(c)
 	cs.AuthorizationV1Client = authorizationv1.NewForConfigOrDie(c)
@@ -475,10 +569,13 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 	cs.BatchV1Client = batchv1.NewForConfigOrDie(c)
 	cs.BatchV2alpha1Client = batchv2alpha1.NewForConfigOrDie(c)
 	cs.CertificatesV1beta1Client = certificatesv1beta1.NewForConfigOrDie(c)
+	cs.CoreV1Client = corev1.NewForConfigOrDie(c)
 	cs.ExtensionsV1beta1Client = extensionsv1beta1.NewForConfigOrDie(c)
+	cs.NetworkingV1Client = networkingv1.NewForConfigOrDie(c)
 	cs.PolicyV1beta1Client = policyv1beta1.NewForConfigOrDie(c)
 	cs.RbacV1beta1Client = rbacv1beta1.NewForConfigOrDie(c)
 	cs.RbacV1alpha1Client = rbacv1alpha1.NewForConfigOrDie(c)
+	cs.SchedulingV1alpha1Client = schedulingv1alpha1.NewForConfigOrDie(c)
 	cs.SettingsV1alpha1Client = settingsv1alpha1.NewForConfigOrDie(c)
 	cs.StorageV1beta1Client = storagev1beta1.NewForConfigOrDie(c)
 	cs.StorageV1Client = storagev1.NewForConfigOrDie(c)
@@ -490,8 +587,9 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.CoreV1Client = corev1.New(c)
+	cs.AdmissionregistrationV1alpha1Client = admissionregistrationv1alpha1.New(c)
 	cs.AppsV1beta1Client = appsv1beta1.New(c)
+	cs.AppsV1beta2Client = appsv1beta2.New(c)
 	cs.AuthenticationV1Client = authenticationv1.New(c)
 	cs.AuthenticationV1beta1Client = authenticationv1beta1.New(c)
 	cs.AuthorizationV1Client = authorizationv1.New(c)
@@ -501,10 +599,13 @@ func New(c rest.Interface) *Clientset {
 	cs.BatchV1Client = batchv1.New(c)
 	cs.BatchV2alpha1Client = batchv2alpha1.New(c)
 	cs.CertificatesV1beta1Client = certificatesv1beta1.New(c)
+	cs.CoreV1Client = corev1.New(c)
 	cs.ExtensionsV1beta1Client = extensionsv1beta1.New(c)
+	cs.NetworkingV1Client = networkingv1.New(c)
 	cs.PolicyV1beta1Client = policyv1beta1.New(c)
 	cs.RbacV1beta1Client = rbacv1beta1.New(c)
 	cs.RbacV1alpha1Client = rbacv1alpha1.New(c)
+	cs.SchedulingV1alpha1Client = schedulingv1alpha1.New(c)
 	cs.SettingsV1alpha1Client = settingsv1alpha1.New(c)
 	cs.StorageV1beta1Client = storagev1beta1.New(c)
 	cs.StorageV1Client = storagev1.New(c)

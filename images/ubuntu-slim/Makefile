@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TAG ?= 0.11
+TAG ?= 0.14
 REGISTRY = gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
 ALL_ARCH = amd64 arm arm64 ppc64le
 
-QEMUVERSION=v2.7.0
+QEMUVERSION=v2.9.1
 
 IMGNAME = ubuntu-slim
 IMAGE = $(REGISTRY)/$(IMGNAME)
@@ -44,10 +44,10 @@ ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
 endif
 
-#ifeq ($(ARCH),s390x)
-#	BASEIMAGE?=s390x/ubuntu:16.04
-#	QEMUARCH=s390x
-#endif
+ifeq ($(ARCH),s390x)
+	BASEIMAGE?=s390x/ubuntu:16.04
+	QEMUARCH=s390x
+endif
 
 
 TEMP_DIR := $(shell mktemp -d)

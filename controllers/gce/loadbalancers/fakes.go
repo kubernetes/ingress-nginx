@@ -114,28 +114,21 @@ func (f *FakeLoadBalancers) GetGlobalForwardingRule(name string) (*compute.Forwa
 }
 
 // CreateGlobalForwardingRule fakes forwarding rule creation.
-func (f *FakeLoadBalancers) CreateGlobalForwardingRule(proxyLink, ip, name, portRange string) (*compute.ForwardingRule, error) {
+func (f *FakeLoadBalancers) CreateGlobalForwardingRule(rule *compute.ForwardingRule) error {
 	f.calls = append(f.calls, "CreateGlobalForwardingRule")
-	if ip == "" {
-		ip = fmt.Sprintf(testIPManager.ip())
+	if rule.IPAddress == "" {
+		rule.IPAddress = fmt.Sprintf(testIPManager.ip())
 	}
-	rule := &compute.ForwardingRule{
-		Name:       name,
-		IPAddress:  ip,
-		Target:     proxyLink,
-		PortRange:  portRange,
-		IPProtocol: "TCP",
-		SelfLink:   name,
-	}
+	rule.SelfLink = rule.Name
 	f.Fw = append(f.Fw, rule)
-	return rule, nil
+	return nil
 }
 
 // SetProxyForGlobalForwardingRule fakes setting a global forwarding rule.
-func (f *FakeLoadBalancers) SetProxyForGlobalForwardingRule(fw *compute.ForwardingRule, proxyLink string) error {
+func (f *FakeLoadBalancers) SetProxyForGlobalForwardingRule(forwardingRuleName, proxyLink string) error {
 	f.calls = append(f.calls, "SetProxyForGlobalForwardingRule")
 	for i := range f.Fw {
-		if f.Fw[i].Name == fw.Name {
+		if f.Fw[i].Name == forwardingRuleName {
 			f.Fw[i].Target = proxyLink
 		}
 	}
@@ -181,27 +174,23 @@ func (f *FakeLoadBalancers) GetUrlMap(name string) (*compute.UrlMap, error) {
 }
 
 // CreateUrlMap fakes url-map creation.
-func (f *FakeLoadBalancers) CreateUrlMap(backend *compute.BackendService, name string) (*compute.UrlMap, error) {
+func (f *FakeLoadBalancers) CreateUrlMap(urlMap *compute.UrlMap) error {
 	f.calls = append(f.calls, "CreateUrlMap")
-	urlMap := &compute.UrlMap{
-		Name:           name,
-		DefaultService: backend.SelfLink,
-		SelfLink:       f.umName(),
-	}
+	urlMap.SelfLink = f.umName()
 	f.Um = append(f.Um, urlMap)
-	return urlMap, nil
+	return nil
 }
 
 // UpdateUrlMap fakes updating url-maps.
-func (f *FakeLoadBalancers) UpdateUrlMap(urlMap *compute.UrlMap) (*compute.UrlMap, error) {
+func (f *FakeLoadBalancers) UpdateUrlMap(urlMap *compute.UrlMap) error {
 	f.calls = append(f.calls, "UpdateUrlMap")
 	for i := range f.Um {
 		if f.Um[i].Name == urlMap.Name {
 			f.Um[i] = urlMap
-			return urlMap, nil
+			return nil
 		}
 	}
-	return nil, nil
+	return fmt.Errorf("url map %v not found", urlMap.Name)
 }
 
 // DeleteUrlMap fakes url-map deletion.
@@ -231,15 +220,11 @@ func (f *FakeLoadBalancers) GetTargetHttpProxy(name string) (*compute.TargetHttp
 }
 
 // CreateTargetHttpProxy fakes creating a target http proxy.
-func (f *FakeLoadBalancers) CreateTargetHttpProxy(urlMap *compute.UrlMap, name string) (*compute.TargetHttpProxy, error) {
+func (f *FakeLoadBalancers) CreateTargetHttpProxy(proxy *compute.TargetHttpProxy) error {
 	f.calls = append(f.calls, "CreateTargetHttpProxy")
-	proxy := &compute.TargetHttpProxy{
-		Name:     name,
-		UrlMap:   urlMap.SelfLink,
-		SelfLink: name,
-	}
+	proxy.SelfLink = proxy.Name
 	f.Tp = append(f.Tp, proxy)
-	return proxy, nil
+	return nil
 }
 
 // DeleteTargetHttpProxy fakes deleting a target http proxy.
@@ -280,16 +265,11 @@ func (f *FakeLoadBalancers) GetTargetHttpsProxy(name string) (*compute.TargetHtt
 }
 
 // CreateTargetHttpsProxy fakes creating a target http proxy.
-func (f *FakeLoadBalancers) CreateTargetHttpsProxy(urlMap *compute.UrlMap, cert *compute.SslCertificate, name string) (*compute.TargetHttpsProxy, error) {
+func (f *FakeLoadBalancers) CreateTargetHttpsProxy(proxy *compute.TargetHttpsProxy) error {
 	f.calls = append(f.calls, "CreateTargetHttpsProxy")
-	proxy := &compute.TargetHttpsProxy{
-		Name:            name,
-		UrlMap:          urlMap.SelfLink,
-		SslCertificates: []string{cert.SelfLink},
-		SelfLink:        name,
-	}
+	proxy.SelfLink = proxy.Name
 	f.Tps = append(f.Tps, proxy)
-	return proxy, nil
+	return nil
 }
 
 // DeleteTargetHttpsProxy fakes deleting a target http proxy.
@@ -397,20 +377,16 @@ func (f *FakeLoadBalancers) CheckURLMap(t *testing.T, l7 *L7, expectedMap map[st
 
 // Static IP fakes
 
-// ReserveGlobalStaticIP fakes out static IP reservation.
-func (f *FakeLoadBalancers) ReserveGlobalStaticIP(name, IPAddress string) (*compute.Address, error) {
-	f.calls = append(f.calls, "ReserveGlobalStaticIP")
-	ip := &compute.Address{
-		Name:    name,
-		Address: IPAddress,
-	}
-	f.IP = append(f.IP, ip)
-	return ip, nil
+// ReserveGlobalAddress fakes out static IP reservation.
+func (f *FakeLoadBalancers) ReserveGlobalAddress(addr *compute.Address) error {
+	f.calls = append(f.calls, "ReserveGlobalAddress")
+	f.IP = append(f.IP, addr)
+	return nil
 }
 
-// GetGlobalStaticIP fakes out static IP retrieval.
-func (f *FakeLoadBalancers) GetGlobalStaticIP(name string) (*compute.Address, error) {
-	f.calls = append(f.calls, "GetGlobalStaticIP")
+// GetGlobalAddress fakes out static IP retrieval.
+func (f *FakeLoadBalancers) GetGlobalAddress(name string) (*compute.Address, error) {
+	f.calls = append(f.calls, "GetGlobalAddress")
 	for i := range f.IP {
 		if f.IP[i].Name == name {
 			return f.IP[i], nil
@@ -419,9 +395,9 @@ func (f *FakeLoadBalancers) GetGlobalStaticIP(name string) (*compute.Address, er
 	return nil, fmt.Errorf("static IP %v not found", name)
 }
 
-// DeleteGlobalStaticIP fakes out static IP deletion.
-func (f *FakeLoadBalancers) DeleteGlobalStaticIP(name string) error {
-	f.calls = append(f.calls, "DeleteGlobalStaticIP")
+// DeleteGlobalAddress fakes out static IP deletion.
+func (f *FakeLoadBalancers) DeleteGlobalAddress(name string) error {
+	f.calls = append(f.calls, "DeleteGlobalAddress")
 	ip := []*compute.Address{}
 	for i := range f.IP {
 		if f.IP[i].Name != name {

@@ -17,6 +17,8 @@ limitations under the License.
 package template
 
 import (
+	"fmt"
+	"net"
 	"strconv"
 	"strings"
 
@@ -24,12 +26,15 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
+	ing_net "k8s.io/ingress/core/pkg/net"
 )
 
 const (
 	customHTTPErrors     = "custom-http-errors"
 	skipAccessLogUrls    = "skip-access-log-urls"
 	whitelistSourceRange = "whitelist-source-range"
+	proxyRealIPCIDR      = "proxy-real-ip-cidr"
+	bindAddress          = "bind-address"
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
@@ -45,6 +50,9 @@ func ReadConfig(src map[string]string) config.Configuration {
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
 	whitelist := make([]string, 0)
+	proxylist := make([]string, 0)
+	bindAddressIpv4List := make([]string, 0)
+	bindAddressIpv6List := make([]string, 0)
 
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
@@ -65,11 +73,35 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, whitelistSourceRange)
 		whitelist = append(whitelist, strings.Split(val, ",")...)
 	}
+	if val, ok := conf[proxyRealIPCIDR]; ok {
+		delete(conf, proxyRealIPCIDR)
+		proxylist = append(proxylist, strings.Split(val, ",")...)
+	} else {
+		proxylist = append(proxylist, "0.0.0.0/0")
+	}
+	if val, ok := conf[bindAddress]; ok {
+		delete(conf, bindAddress)
+		for _, i := range strings.Split(val, ",") {
+			ns := net.ParseIP(i)
+			if ns != nil {
+				if ing_net.IsIPV6(ns) {
+					bindAddressIpv6List = append(bindAddressIpv6List, fmt.Sprintf("[%v]", ns))
+				} else {
+					bindAddressIpv4List = append(bindAddressIpv4List, fmt.Sprintf("%v", ns))
+				}
+			} else {
+				glog.Warningf("%v is not a valid textual representation of an IP address", i)
+			}
+		}
+	}
 
 	to := config.NewDefault()
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
 	to.WhitelistSourceRange = whitelist
+	to.ProxyRealIPCIDR = proxylist
+	to.BindAddressIpv4 = bindAddressIpv4List
+	to.BindAddressIpv6 = bindAddressIpv6List
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,

@@ -19,10 +19,10 @@ package proxy
 import (
 	"testing"
 
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	api "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
@@ -73,6 +73,9 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyReadTimeout:    20,
 		ProxyBufferSize:     "10k",
 		ProxyBodySize:       "3k",
+		ProxyNextUpstream:   "error",
+		ProxyPassParams:     "nocanon keepalive=On",
+		ProxyRequestBuffering: "on",
 	}
 }
 
@@ -85,6 +88,9 @@ func TestProxy(t *testing.T) {
 	data[read] = "3"
 	data[bufferSize] = "1k"
 	data[bodySize] = "2k"
+	data[nextUpstream] = "off"
+	data[passParams] = "smax=5 max=10"
+	data[requestBuffering] = "off"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -109,6 +115,15 @@ func TestProxy(t *testing.T) {
 	}
 	if p.BodySize != "2k" {
 		t.Errorf("expected 2k as body-size but returned %v", p.BodySize)
+	}
+	if p.NextUpstream != "off" {
+		t.Errorf("expected off as next-upstream but returned %v", p.NextUpstream)
+	}
+	if p.PassParams != "smax=5 max=10" {
+		t.Errorf("expected \"smax=5 max=10\" as pass-params but returned \"%v\"", p.PassParams)
+	}
+	if p.RequestBuffering != "off" {
+		t.Errorf("expected off as request-buffering but returned %v", p.RequestBuffering)
 	}
 }
 
@@ -140,5 +155,14 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 	if p.BodySize != "3k" {
 		t.Errorf("expected 3k as body-size but returned %v", p.BodySize)
+	}
+	if p.NextUpstream != "error" {
+		t.Errorf("expected error as next-upstream but returned %v", p.NextUpstream)
+	}
+	if p.PassParams != "nocanon keepalive=On" {
+		t.Errorf("expected \"nocanon keepalive=On\" as pass-params but returned \"%v\"", p.PassParams)
+	}
+	if p.RequestBuffering != "on" {
+		t.Errorf("expected on as request-buffering but returned %v", p.RequestBuffering)
 	}
 }

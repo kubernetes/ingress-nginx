@@ -191,7 +191,6 @@ func (n *Namer) ParseName(name string) *NameComponents {
 // NameBelongsToCluster checks if a given name is tagged with this cluster's UID.
 func (n *Namer) NameBelongsToCluster(name string) bool {
 	if !strings.HasPrefix(name, "k8s-") {
-		glog.V(4).Infof("%v not part of cluster", name)
 		return false
 	}
 	parts := strings.Split(name, clusterNameDelimiter)
@@ -203,7 +202,6 @@ func (n *Namer) NameBelongsToCluster(name string) bool {
 		return false
 	}
 	if len(parts) > 2 {
-		glog.Warningf("Too many parts to name %v, ignoring", name)
 		return false
 	}
 	return parts[1] == clusterName
@@ -332,6 +330,20 @@ func IgnoreHTTPNotFound(err error) error {
 	return err
 }
 
+// IsInUsedByError returns true if the resource is being used by another GCP resource
+func IsInUsedByError(err error) bool {
+	apiErr, ok := err.(*googleapi.Error)
+	if !ok || apiErr.Code != http.StatusBadRequest {
+		return false
+	}
+	return strings.Contains(apiErr.Message, "being used by")
+}
+
+// IsNotFoundError returns true if the resource does not exist
+func IsNotFoundError(err error) bool {
+	return IsHTTPErrorCode(err, http.StatusNotFound)
+}
+
 // CompareLinks returns true if the 2 self links are equal.
 func CompareLinks(l1, l2 string) bool {
 	// TODO: These can be partial links
@@ -341,3 +353,9 @@ func CompareLinks(l1, l2 string) bool {
 // FakeIngressRuleValueMap is a convenience type used by multiple submodules
 // that share the same testing methods.
 type FakeIngressRuleValueMap map[string]string
+
+// GetNamedPort creates the NamedPort API object for the given port.
+func GetNamedPort(port int64) *compute.NamedPort {
+	// TODO: move port naming to namer
+	return &compute.NamedPort{Name: fmt.Sprintf("port%v", port), Port: port}
+}

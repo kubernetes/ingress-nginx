@@ -1,7 +1,7 @@
 # Ingress examples
 
 This directory contains a catalog of examples on how to run, configure and
-scale Ingress. Please review the [prerequisities](PREREQUISITES.md) before
+scale Ingress. Please review the [prerequisites](PREREQUISITES.md) before
 trying them.
 
 ## Basic cross platform
@@ -47,8 +47,8 @@ Multi-cluster | bridge Kubernetes clusters with Ingress | gce | Advanced
 Name | Description | Platform   | Complexity Level
 -----| ----------- | ---------- | ----------------
 Session stickyness | route requests consistently to the same endpoint | nginx | Advanced
-Least connections | route requests based on least connections | on-perm | Advanced
-Weights | route requrests to backends based on weights | nginx | Advanced
+Least connections | route requests based on least connections | on-prem | Advanced
+Weights | route requests to backends based on weights | nginx | Advanced
 
 ## Routing
 

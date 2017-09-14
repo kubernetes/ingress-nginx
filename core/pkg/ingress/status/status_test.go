@@ -19,16 +19,15 @@ package status
 import (
 	"os"
 	"sort"
-	"sync"
 	"testing"
 	"time"
 
+	api_v1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	cache_store "k8s.io/ingress/core/pkg/ingress/store"
@@ -245,12 +244,14 @@ func buildStatusSync() statusSync {
 				"lable_sig": "foo_pod",
 			},
 		},
-		runLock:   &sync.Mutex{},
 		syncQueue: task.NewTaskQueue(fakeSynFn),
 		Config: Config{
 			Client:         buildSimpleClientSet(),
 			PublishService: api_v1.NamespaceDefault + "/" + "foo",
 			IngressLister:  buildIngressListener(),
+			CustomIngressStatus: func(*extensions.Ingress) []api_v1.LoadBalancerIngress {
+				return nil
+			},
 		},
 	}
 }
@@ -260,11 +261,15 @@ func TestStatusActions(t *testing.T) {
 	os.Setenv("POD_NAME", "foo1")
 	os.Setenv("POD_NAMESPACE", api_v1.NamespaceDefault)
 	c := Config{
-		Client:              buildSimpleClientSet(),
-		PublishService:      "",
-		IngressLister:       buildIngressListener(),
-		DefaultIngressClass: "nginx",
-		IngressClass:        "",
+		Client:                 buildSimpleClientSet(),
+		PublishService:         "",
+		IngressLister:          buildIngressListener(),
+		DefaultIngressClass:    "nginx",
+		IngressClass:           "",
+		UpdateStatusOnShutdown: true,
+		CustomIngressStatus: func(*extensions.Ingress) []api_v1.LoadBalancerIngress {
+			return nil
+		},
 	}
 	// create object
 	fkSync := NewStatusSyncer(c)
@@ -321,9 +326,7 @@ func TestStatusActions(t *testing.T) {
 }
 
 func TestCallback(t *testing.T) {
-	fk := buildStatusSync()
-	//  do nothing
-	fk.callback("foo_base_pod")
+	buildStatusSync()
 }
 
 func TestKeyfunc(t *testing.T) {
@@ -342,7 +345,7 @@ func TestKeyfunc(t *testing.T) {
 func TestRunningAddresessWithPublishService(t *testing.T) {
 	fk := buildStatusSync()
 
-	r, _ := fk.runningAddresess()
+	r, _ := fk.runningAddresses()
 	if r == nil {
 		t.Fatalf("returned nil but expected valid []string")
 	}
@@ -356,7 +359,7 @@ func TestRunningAddresessWithPods(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishService = ""
 
-	r, _ := fk.runningAddresess()
+	r, _ := fk.runningAddresses()
 	if r == nil {
 		t.Fatalf("returned nil but expected valid []string")
 	}

@@ -19,12 +19,13 @@ limitations under the License.
 package mount
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/util/exec"
+	"k8s.io/utils/exec"
 )
 
 // NsenterMounter is part of experimental support for running the kubelet
@@ -162,6 +163,15 @@ func (*NsenterMounter) List() ([]MountPoint, error) {
 	return listProcMounts(hostProcMountsPath)
 }
 
+func (m *NsenterMounter) IsNotMountPoint(dir string) (bool, error) {
+	return IsNotMountPoint(m, dir)
+}
+
+func (*NsenterMounter) IsMountPointMatch(mp MountPoint, dir string) bool {
+	deletedDir := fmt.Sprintf("%s\\040(deleted)", dir)
+	return ((mp.Path == dir) || (mp.Path == deletedDir))
+}
+
 // IsLikelyNotMountPoint determines whether a path is a mountpoint by calling findmnt
 // in the host's root mount namespace.
 func (n *NsenterMounter) IsLikelyNotMountPoint(file string) (bool, error) {
@@ -191,8 +201,11 @@ func (n *NsenterMounter) IsLikelyNotMountPoint(file string) (bool, error) {
 		// It's safer to assume that it's not a mount point.
 		return true, nil
 	}
-	mountTarget := strings.Split(string(out), " ")[0]
-	mountTarget = strings.TrimSuffix(mountTarget, "\n")
+	mountTarget, err := parseFindMnt(string(out))
+	if err != nil {
+		return false, err
+	}
+
 	glog.V(5).Infof("IsLikelyNotMountPoint findmnt output for path %s: %v:", file, mountTarget)
 
 	if mountTarget == file {
@@ -201,6 +214,18 @@ func (n *NsenterMounter) IsLikelyNotMountPoint(file string) (bool, error) {
 	}
 	glog.V(5).Infof("IsLikelyNotMountPoint: %s is not a mount point", file)
 	return true, nil
+}
+
+// parse output of "findmnt -o target,fstype" and return just the target
+func parseFindMnt(out string) (string, error) {
+	// cut trailing newline
+	out = strings.TrimSuffix(out, "\n")
+	// cut everything after the last space - it's the filesystem type
+	i := strings.LastIndex(out, " ")
+	if i == -1 {
+		return "", fmt.Errorf("error parsing findmnt output, expected at least one space: %q", out)
+	}
+	return out[:i], nil
 }
 
 // DeviceOpened checks if block device in use by calling Open with O_EXCL flag.

@@ -23,15 +23,23 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/kubernetes/pkg/api/v1"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/pkg/cloudprovider"
 	"k8s.io/kubernetes/pkg/util/io"
 	"k8s.io/kubernetes/pkg/util/mount"
+)
+
+const (
+	// Common parameter which can be specified in StorageClass to specify the desired FSType
+	// Provisioners SHOULD implement support for this if they are block device based
+	// Must be a filesystem type supported by the host operating system.
+	// Ex. "ext4", "xfs", "ntfs". Default value depends on the provisioner
+	VolumeParameterFSType = "fstype"
 )
 
 // VolumeOptions contains option information about a volume.
@@ -232,12 +240,19 @@ type VolumeHost interface {
 
 	// Returns a function that returns a secret.
 	GetSecretFunc() func(namespace, name string) (*v1.Secret, error)
+
+	// Returns a function that returns a configmap.
+	GetConfigMapFunc() func(namespace, name string) (*v1.ConfigMap, error)
+
+	// Returns the labels on the node
+	GetNodeLabels() (map[string]string, error)
 }
 
 // VolumePluginMgr tracks registered plugins.
 type VolumePluginMgr struct {
 	mutex   sync.Mutex
 	plugins map[string]VolumePlugin
+	Host    VolumeHost
 }
 
 // Spec is an internal representation of a volume.  All API volume types translate to Spec.
@@ -336,6 +351,7 @@ func (pm *VolumePluginMgr) InitPlugins(plugins []VolumePlugin, host VolumeHost) 
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
 
+	pm.Host = host
 	if pm.plugins == nil {
 		pm.plugins = map[string]VolumePlugin{}
 	}
@@ -354,7 +370,7 @@ func (pm *VolumePluginMgr) InitPlugins(plugins []VolumePlugin, host VolumeHost) 
 		}
 		err := plugin.Init(host)
 		if err != nil {
-			glog.Errorf("Failed to load volume plugin %s, error: %s", plugin, err.Error())
+			glog.Errorf("Failed to load volume plugin %s, error: %s", name, err.Error())
 			allErrs = append(allErrs, err)
 			continue
 		}

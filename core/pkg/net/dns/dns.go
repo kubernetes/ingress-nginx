@@ -38,11 +38,11 @@ func GetSystemNameServers() ([]net.IP, error) {
 	lines := strings.Split(string(file), "\n")
 	for l := range lines {
 		trimmed := strings.TrimSpace(lines[l])
-		if strings.HasPrefix(trimmed, "#") {
+		if len(trimmed) == 0 || trimmed[0] == '#' || trimmed[0] == ';' {
 			continue
 		}
 		fields := strings.Fields(trimmed)
-		if len(fields) == 0 {
+		if len(fields) < 2 {
 			continue
 		}
 		if fields[0] == "nameserver" {

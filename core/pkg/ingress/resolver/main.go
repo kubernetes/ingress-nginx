@@ -17,7 +17,7 @@ limitations under the License.
 package resolver
 
 import (
-	api "k8s.io/client-go/pkg/api/v1"
+	api "k8s.io/api/core/v1"
 
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
@@ -41,6 +41,12 @@ type AuthCertificate interface {
 	GetAuthCertificate(string) (*AuthSSLCert, error)
 }
 
+// Service has a method that searches for services contenating
+// the namespace and name using a the character /
+type Service interface {
+	GetService(string) (*api.Service, error)
+}
+
 // AuthSSLCert contains the necessary information to do certificate based
 // authentication of an ingress location
 type AuthSSLCert struct {
@@ -50,4 +56,19 @@ type AuthSSLCert struct {
 	CAFileName string `json:"caFilename"`
 	// PemSHA contains the SHA1 hash of the 'tls.crt' value
 	PemSHA string `json:"pemSha"`
+}
+
+// Equal tests for equality between two AuthSSLCert types
+func (asslc1 *AuthSSLCert) Equal(assl2 *AuthSSLCert) bool {
+	if asslc1.Secret != assl2.Secret {
+		return false
+	}
+	if asslc1.CAFileName != assl2.CAFileName {
+		return false
+	}
+	if asslc1.PemSHA != assl2.PemSHA {
+		return false
+	}
+
+	return true
 }

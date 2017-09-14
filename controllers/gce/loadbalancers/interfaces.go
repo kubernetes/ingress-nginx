@@ -28,25 +28,25 @@ import (
 type LoadBalancers interface {
 	// Forwarding Rules
 	GetGlobalForwardingRule(name string) (*compute.ForwardingRule, error)
-	CreateGlobalForwardingRule(proxyLink, ip, name, portRange string) (*compute.ForwardingRule, error)
+	CreateGlobalForwardingRule(rule *compute.ForwardingRule) error
 	DeleteGlobalForwardingRule(name string) error
-	SetProxyForGlobalForwardingRule(fw *compute.ForwardingRule, proxy string) error
+	SetProxyForGlobalForwardingRule(fw, proxy string) error
 
 	// UrlMaps
 	GetUrlMap(name string) (*compute.UrlMap, error)
-	CreateUrlMap(backend *compute.BackendService, name string) (*compute.UrlMap, error)
-	UpdateUrlMap(urlMap *compute.UrlMap) (*compute.UrlMap, error)
+	CreateUrlMap(urlMap *compute.UrlMap) error
+	UpdateUrlMap(urlMap *compute.UrlMap) error
 	DeleteUrlMap(name string) error
 
 	// TargetProxies
 	GetTargetHttpProxy(name string) (*compute.TargetHttpProxy, error)
-	CreateTargetHttpProxy(urlMap *compute.UrlMap, name string) (*compute.TargetHttpProxy, error)
+	CreateTargetHttpProxy(proxy *compute.TargetHttpProxy) error
 	DeleteTargetHttpProxy(name string) error
 	SetUrlMapForTargetHttpProxy(proxy *compute.TargetHttpProxy, urlMap *compute.UrlMap) error
 
 	// TargetHttpsProxies
 	GetTargetHttpsProxy(name string) (*compute.TargetHttpsProxy, error)
-	CreateTargetHttpsProxy(urlMap *compute.UrlMap, SSLCerts *compute.SslCertificate, name string) (*compute.TargetHttpsProxy, error)
+	CreateTargetHttpsProxy(proxy *compute.TargetHttpsProxy) error
 	DeleteTargetHttpsProxy(name string) error
 	SetUrlMapForTargetHttpsProxy(proxy *compute.TargetHttpsProxy, urlMap *compute.UrlMap) error
 	SetSslCertificateForTargetHttpsProxy(proxy *compute.TargetHttpsProxy, SSLCerts *compute.SslCertificate) error
@@ -57,9 +57,10 @@ type LoadBalancers interface {
 	DeleteSslCertificate(name string) error
 
 	// Static IP
-	ReserveGlobalStaticIP(name, IPAddress string) (*compute.Address, error)
-	GetGlobalStaticIP(name string) (*compute.Address, error)
-	DeleteGlobalStaticIP(name string) error
+
+	ReserveGlobalAddress(addr *compute.Address) error
+	GetGlobalAddress(name string) (*compute.Address, error)
+	DeleteGlobalAddress(name string) error
 }
 
 // LoadBalancerPool is an interface to manage the cloud resources associated

@@ -19,11 +19,12 @@ package ratelimit
 import (
 	"testing"
 
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	api "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -61,9 +62,19 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
+type mockBackend struct {
+}
+
+func (m mockBackend) GetDefaultBackend() defaults.Backend {
+	return defaults.Backend{
+		LimitRateAfter: 0,
+		LimitRate:      0,
+	}
+}
+
 func TestWithoutAnnotations(t *testing.T) {
 	ing := buildIngress()
-	_, err := NewParser().Parse(ing)
+	_, err := NewParser(mockBackend{}).Parse(ing)
 	if err != nil {
 		t.Error("unexpected error with ingress without annotations")
 	}
@@ -75,9 +86,10 @@ func TestBadRateLimiting(t *testing.T) {
 	data := map[string]string{}
 	data[limitIP] = "0"
 	data[limitRPS] = "0"
+	data[limitRPM] = "0"
 	ing.SetAnnotations(data)
 
-	_, err := NewParser().Parse(ing)
+	_, err := NewParser(mockBackend{}).Parse(ing)
 	if err != nil {
 		t.Errorf("unexpected error with invalid limits (0)")
 	}
@@ -85,9 +97,13 @@ func TestBadRateLimiting(t *testing.T) {
 	data = map[string]string{}
 	data[limitIP] = "5"
 	data[limitRPS] = "100"
+	data[limitRPM] = "10"
+	data[limitRATEAFTER] = "100"
+	data[limitRATE] = "10"
+
 	ing.SetAnnotations(data)
 
-	i, err := NewParser().Parse(ing)
+	i, err := NewParser(mockBackend{}).Parse(ing)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -100,5 +116,14 @@ func TestBadRateLimiting(t *testing.T) {
 	}
 	if rateLimit.RPS.Limit != 100 {
 		t.Errorf("expected 100 in limit by rps but %v was returend", rateLimit.RPS)
+	}
+	if rateLimit.RPM.Limit != 10 {
+		t.Errorf("expected 10 in limit by rpm but %v was returend", rateLimit.RPM)
+	}
+	if rateLimit.LimitRateAfter != 100 {
+		t.Errorf("expected 100 in limit by limitrateafter but %v was returend", rateLimit.LimitRateAfter)
+	}
+	if rateLimit.LimitRate != 10 {
+		t.Errorf("expected 10 in limit by limitrate but %v was returend", rateLimit.LimitRate)
 	}
 }

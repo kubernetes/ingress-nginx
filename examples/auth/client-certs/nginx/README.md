@@ -5,7 +5,7 @@ This example demonstrates how to enable the TLS Authentication through the nginx
 ## Terminology
 
 * CA: Certificate authority signing the client cert, in this example we will play the role of a CA. 
-You can generate a CA cert as show in this doc.
+You can generate a CA cert as shown in this doc.
 
 * CA Certificate(s) - Certificate Authority public key. Client certs must chain back to this cert, 
 meaning the Issuer field of some certificate in the chain leading up to the client cert must contain 
@@ -32,7 +32,7 @@ Certificate Authentication is achieved through 2 annotations on the Ingress, as 
 | --- | --- | --- |
 |ingress.kubernetes.io/auth-tls-secret|Sets the secret that contains the authorized CA Chain|string|
 |ingress.kubernetes.io/auth-tls-verify-depth|The verification depth Certificate Authentication will make|number (default to 1)|
-
+|ingress.kubernetes.io/auth-tls-error-page|The page that user should be redirected in case of Auth error|string (default to empty|
 
 The following command instructs the controller to enable TLS authentication using the secret from the ``ingress.kubernetes.io/auth-tls-secret``
 annotation on the Ingress. Clients must present this cert to the loadbalancer, or they will receive a HTTP 400 response
@@ -61,6 +61,7 @@ Rules:
 Annotations:
   auth-tls-secret:	default/caingress
   auth-tls-verify-depth: 3
+  auth-tls-error-page: http://www.mysite.com/error-cert.html
 
 Events:
   FirstSeen	LastSeen	Count	From				SubObjectPath	Type		Reason	Message

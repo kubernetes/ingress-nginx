@@ -38,8 +38,10 @@
 		"sslSessionTimeout": "10m",
 		"useGzip": true,
 		"useHttp2": true,
+		"proxyStreamTimeout": "600s",
 		"vtsStatusZoneSize": "10m",
-		"workerProcesses": 1
+		"workerProcesses": 1,
+		"limitConnZoneVariable": "$the_real_ip"
 	},
 	"customErrors": true,
 	"defResolver": "",
@@ -94,7 +96,7 @@
 				"sslRedirect": true
 			},
 			"whitelist": {
-				"cidr": []
+				"cidr": ["1.1.1.1"]
 			},
 			"proxy": {
 				"conectTimeout": 5,
@@ -144,7 +146,7 @@
 				"sslRedirect": false
 			},
 			"whitelist": {
-				"cidr": null
+				"cidr": ["1.1.1.1"]
 			},
 			"proxy": {
 				"conectTimeout": 5,

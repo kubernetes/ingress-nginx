@@ -49,6 +49,17 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain
 	ProxyCookieDomain string `json:"proxy-cookie-domain"`
 
+	// Specifies in which cases a request should be passed to the next server.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
+	ProxyNextUpstream string `json:"proxy-next-upstream"`
+
+	// Parameters for proxy-pass directive (eg. Apache web server).
+	ProxyPassParams string `json:"proxy-pass-params"`
+
+	// Enables or disables buffering of a client request body.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering
+	ProxyRequestBuffering string `json:"proxy-request-buffering"`
+
 	// Name server/s used to resolve names of upstream servers into IP addresses.
 	// The file /etc/resolv.conf is used as DNS resolution configuration.
 	Resolver []net.IP
@@ -84,4 +95,15 @@ type Backend struct {
 	// WhitelistSourceRange allows limiting access to certain client addresses
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
 	WhitelistSourceRange []string `json:"whitelist-source-range,-"`
+
+	// Limits the rate of response transmission to a client.
+	// The rate is specified in bytes per second. The zero value disables rate limiting.
+	// The limit is set per a request, and so if a client simultaneously opens two connections,
+	// the overall rate will be twice as much as the specified limit.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate
+	LimitRate int `json:"limit-rate"`
+
+	// Sets the initial amount after which the further transmission of a response to a client will be rate limited.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after
+	LimitRateAfter int `json:"limit-rate-after"`
 }

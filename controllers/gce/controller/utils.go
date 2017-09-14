@@ -26,6 +26,9 @@ import (
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
+
+	api_v1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -34,8 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	listers "k8s.io/client-go/listers/core/v1"
-	api_v1 "k8s.io/client-go/pkg/api/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -75,12 +76,19 @@ const (
 	// ingressClassKey picks a specific "class" for the Ingress. The controller
 	// only processes Ingresses with this annotation either unset, or set
 	// to either gceIngessClass or the empty string.
-	ingressClassKey = "kubernetes.io/ingress.class"
-	gceIngressClass = "gce"
+	ingressClassKey      = "kubernetes.io/ingress.class"
+	gceIngressClass      = "gce"
+	gceMultiIngressClass = "gce-multi-cluster"
 
 	// Label key to denote which GCE zone a Kubernetes node is in.
 	zoneKey     = "failure-domain.beta.kubernetes.io/zone"
 	defaultZone = ""
+
+	// instanceGroupsAnnotationKey is the annotation key used by controller to
+	// specify the name and zone of instance groups created for the ingress.
+	// This is read only for users. Controller will overrite any user updates.
+	// This is only set for ingresses with ingressClass = "gce-multi-cluster"
+	instanceGroupsAnnotationKey = "ingress.gcp.kubernetes.io/instance-groups"
 )
 
 // ingAnnotations represents Ingress annotations.
@@ -154,6 +162,13 @@ func (svc svcAnnotations) ApplicationProtocols() (map[string]utils.AppProtocol, 
 func isGCEIngress(ing *extensions.Ingress) bool {
 	class := ingAnnotations(ing.ObjectMeta.Annotations).ingressClass()
 	return class == "" || class == gceIngressClass
+}
+
+// isGCEMultiClusterIngress returns true if the given Ingress has
+// ingress.class annotation set to "gce-multi-cluster".
+func isGCEMultiClusterIngress(ing *extensions.Ingress) bool {
+	class := ingAnnotations(ing.ObjectMeta.Annotations).ingressClass()
+	return class == gceMultiIngressClass
 }
 
 // errorNodePortNotFound is an implementation of error.
@@ -285,8 +300,19 @@ func ListAll(store cache.Store, selector labels.Selector, appendFn cache.AppendF
 	return nil
 }
 
-// List lists all Ingress' in the store.
-func (s *StoreToIngressLister) List() (ing extensions.IngressList, err error) {
+// List lists all Ingress' in the store (both single and multi cluster ingresses).
+func (s *StoreToIngressLister) ListAll() (ing extensions.IngressList, err error) {
+	for _, m := range s.Store.List() {
+		newIng := m.(*extensions.Ingress)
+		if isGCEIngress(newIng) || isGCEMultiClusterIngress(newIng) {
+			ing.Items = append(ing.Items, *newIng)
+		}
+	}
+	return ing, nil
+}
+
+// ListGCEIngresses lists all GCE Ingress' in the store.
+func (s *StoreToIngressLister) ListGCEIngresses() (ing extensions.IngressList, err error) {
 	for _, m := range s.Store.List() {
 		newIng := m.(*extensions.Ingress)
 		if isGCEIngress(newIng) {
@@ -471,32 +497,39 @@ PortLoop:
 	return p, nil
 }
 
-// toNodePorts converts a pathlist to a flat list of nodeports.
+// toNodePorts is a helper method over ingressToNodePorts to process a list of ingresses.
 func (t *GCETranslator) toNodePorts(ings *extensions.IngressList) []backends.ServicePort {
 	var knownPorts []backends.ServicePort
 	for _, ing := range ings.Items {
-		defaultBackend := ing.Spec.Backend
-		if defaultBackend != nil {
-			port, err := t.getServiceNodePort(*defaultBackend, ing.Namespace)
+		knownPorts = append(knownPorts, t.ingressToNodePorts(&ing)...)
+	}
+	return knownPorts
+}
+
+// ingressToNodePorts converts a pathlist to a flat list of nodeports for the given ingress.
+func (t *GCETranslator) ingressToNodePorts(ing *extensions.Ingress) []backends.ServicePort {
+	var knownPorts []backends.ServicePort
+	defaultBackend := ing.Spec.Backend
+	if defaultBackend != nil {
+		port, err := t.getServiceNodePort(*defaultBackend, ing.Namespace)
+		if err != nil {
+			glog.Infof("%v", err)
+		} else {
+			knownPorts = append(knownPorts, port)
+		}
+	}
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			glog.Errorf("ignoring non http Ingress rule")
+			continue
+		}
+		for _, path := range rule.HTTP.Paths {
+			port, err := t.getServiceNodePort(path.Backend, ing.Namespace)
 			if err != nil {
 				glog.Infof("%v", err)
-			} else {
-				knownPorts = append(knownPorts, port)
-			}
-		}
-		for _, rule := range ing.Spec.Rules {
-			if rule.HTTP == nil {
-				glog.Errorf("ignoring non http Ingress rule")
 				continue
 			}
-			for _, path := range rule.HTTP.Paths {
-				port, err := t.getServiceNodePort(path.Backend, ing.Namespace)
-				if err != nil {
-					glog.Infof("%v", err)
-					continue
-				}
-				knownPorts = append(knownPorts, port)
-			}
+			knownPorts = append(knownPorts, port)
 		}
 	}
 	return knownPorts
@@ -592,10 +625,11 @@ func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOr
 
 // isSimpleHTTPProbe returns true if the given Probe is:
 // - an HTTPGet probe, as opposed to a tcp or exec probe
-// - has no special host or headers fields
+// - has no special host or headers fields, except for possibly an HTTP Host header
 func isSimpleHTTPProbe(probe *api_v1.Probe) bool {
 	return (probe != nil && probe.Handler.HTTPGet != nil && probe.Handler.HTTPGet.Host == "" &&
-		len(probe.Handler.HTTPGet.HTTPHeaders) == 0)
+		(len(probe.Handler.HTTPGet.HTTPHeaders) == 0 ||
+			(len(probe.Handler.HTTPGet.HTTPHeaders) == 1 && probe.Handler.HTTPGet.HTTPHeaders[0].Name == "Host")))
 }
 
 // GetProbe returns a probe that's used for the given nodeport
@@ -638,4 +672,35 @@ func (o PodsByCreationTimestamp) Less(i, j int) bool {
 		return o[i].Name < o[j].Name
 	}
 	return o[i].CreationTimestamp.Before(o[j].CreationTimestamp)
+}
+
+// setInstanceGroupsAnnotation sets the instance-groups annotation with names of the given instance groups.
+func setInstanceGroupsAnnotation(existing map[string]string, igs []*compute.InstanceGroup) error {
+	type Value struct {
+		Name string
+		Zone string
+	}
+	var instanceGroups []Value
+	for _, ig := range igs {
+		instanceGroups = append(instanceGroups, Value{Name: ig.Name, Zone: ig.Zone})
+	}
+	jsonValue, err := json.Marshal(instanceGroups)
+	if err != nil {
+		return err
+	}
+	existing[instanceGroupsAnnotationKey] = string(jsonValue)
+	return nil
+}
+
+// uniq returns an array of unique service ports from the given array.
+func uniq(nodePorts []backends.ServicePort) []backends.ServicePort {
+	portMap := map[int64]backends.ServicePort{}
+	for _, p := range nodePorts {
+		portMap[p.Port] = p
+	}
+	nodePorts = make([]backends.ServicePort, 0, len(portMap))
+	for _, sp := range portMap {
+		nodePorts = append(nodePorts, sp)
+	}
+	return nodePorts
 }
