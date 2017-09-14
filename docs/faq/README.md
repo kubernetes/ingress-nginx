@@ -69,7 +69,7 @@ spec:
     servicePort: 80
 ```
 
-The GCE controller will only act on Ingresses with the annotation value of "gce" or empty string "", the default value if the annotation is omitted.
+The GCE controller will only act on Ingresses with the annotation value of "gce" or empty string "" (the default value if the annotation is omitted).
 
 The nginx controller will only act on Ingresses with the annotation value of "nginx".
 
