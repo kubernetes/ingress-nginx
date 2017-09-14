@@ -281,16 +281,37 @@ We plan to fix this [soon](https://github.com/kubernetes/kubernetes/issues/16337
 
 ## How do I disable the GCE Ingress controller?
 
-3 options:
+As of Kubernetes 1.3, GLBC runs as a static pod on the master.
+If you want to disable it, you have 3 options:
+
+### Soft disable
+
 1. Have it no-op based on the `ingress.class` annotation as shown [here](README.md#how-do-i-disable-an-ingress-controller)
+
+### Hard disable
+
 2. SSH into the GCE master node and delete the GLBC manifest file found at `/etc/kubernetes/manifests/glbc.manifest`
-3. Create the GKE cluster without it:
+3. Disable the addon in GKE:
+
+#### Disabling GCE ingress on cluster creation
+
+Disable the addon in GKE at cluster bring-up time through the `disable-addons` flag:
 
 ```console
-$ gcloud container clusters create mycluster --network "default" --num-nodes 1 \
---machine-type n1-standard-2 --zone $ZONE \
---disable-addons HttpLoadBalancing \
---disk-size 50 --scopes storage-full
+gcloud container clusters create mycluster --network "default" --num-nodes 1 \
+--machine-type n1-standard-2 \
+--zone $ZONE \
+--disk-size 50 \
+--scopes storage-full \
+--disable-addons HttpLoadBalancing
+```
+
+#### Disabling GCE ingress in an existing cluster
+
+Disable the addon in GKE for an existing cluster through the `update-addons` flag:
+
+```console
+gcloud container clusters update mycluster --update-addons HttpLoadBalancing=DISABLED
 ```
 
 ## What GCE resources are shared between Ingresses?
