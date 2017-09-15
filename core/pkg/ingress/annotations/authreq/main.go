@@ -174,7 +174,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	return &External{
 		URL:             str,
-		Host:            ur.Hostname(),
+		Host:            ur.Host,
 		SigninURL:       signin,
 		Method:          m,
 		SendBody:        sb,
