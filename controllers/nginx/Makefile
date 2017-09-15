@@ -26,7 +26,7 @@ ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
 
-ALL_ARCH = amd64 arm arm64 ppc64le
+ALL_ARCH ?= amd64 arm arm64 ppc64le
 
 QEMUVERSION=v2.9.1
 

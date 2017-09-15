@@ -140,6 +140,9 @@ type Configuration struct {
 	// TCPEndpoints contain endpoints for tcp streams handled by this backend
 	// +optional
 	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
+	// SNIEndpoints contain endpoints for SNI streams handled by this backend
+	// +optional
+	SNIEndpoints []L4Service `json:"sniEndpoints,omitempty"`
 	// UDPEndpoints contain endpoints for udp streams handled by this backend
 	// +optional
 	UDPEndpoints []L4Service `json:"udpEndpoints,omitempty"`
@@ -349,7 +352,7 @@ type L4Service struct {
 	// Backend of the service
 	Backend L4Backend `json:"backend"`
 	// Endpoints active endpoints of the service
-	Endpoints []Endpoint `json:"endpoins,omitEmpty"`
+	Endpoints []Endpoint `json:"endpoints,omitEmpty"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
@@ -360,4 +363,6 @@ type L4Backend struct {
 	Protocol  api.Protocol       `json:"protocol"`
 	// +optional
 	UseProxyProtocol bool `json:"useProxyProtocol"`
+	// +optional This is the name we'll route SNI requests on when proto is SNI
+	ServerName string `json:"servername"`
 }

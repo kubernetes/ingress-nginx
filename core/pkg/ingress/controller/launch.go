@@ -60,6 +60,15 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		number of the name of the port.
 		The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend`)
 
+		sniConfigMapName = flags.String("sni-services-configmap", "",
+			`Name of the ConfigMap that contains the definition of the SNI services to expose.
+		The key in the map indicates the SNI name to look for in a TLS client
+		hello and the external port to be used. The value is the name of the
+		service with the format namespace/serviceName and the port of the
+		service could be a number of the name of the port. The ports 80 and 443
+		are not allowed as external ports. This ports are reserved for the
+		backend`)
+
 		udpConfigMapName = flags.String("udp-services-configmap", "",
 			`Name of the ConfigMap that contains the definition of the UDP services to expose.
 		The key in the map indicates the external port to be used. The value is the name of the
@@ -180,6 +189,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		Namespace:               *watchNamespace,
 		ConfigMapName:           *configMap,
 		TCPConfigMapName:        *tcpConfigMapName,
+		SNIConfigMapName:        *sniConfigMapName,
 		UDPConfigMapName:        *udpConfigMapName,
 		DefaultSSLCertificate:   *defSSLCertificate,
 		DefaultHealthzURL:       *defHealthzURL,

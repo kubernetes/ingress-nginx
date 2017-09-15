@@ -847,6 +847,8 @@ type Protocol string
 const (
 	// ProtocolTCP is the TCP protocol.
 	ProtocolTCP Protocol = "TCP"
+	// ProtocolSNI is the TCP protocol where we will inspect the TLS client hello for name information.
+	ProtocolSNI Protocol = "SNI"
 	// ProtocolUDP is the UDP protocol.
 	ProtocolUDP Protocol = "UDP"
 )

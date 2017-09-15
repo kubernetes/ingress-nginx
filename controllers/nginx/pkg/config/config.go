@@ -478,6 +478,7 @@ type TemplateConfig struct {
 	PassthroughBackends     []*ingress.SSLPassthroughBackend
 	Servers                 []*ingress.Server
 	TCPBackends             []ingress.L4Service
+	SNIBackends             []ingress.L4Service
 	UDPBackends             []ingress.L4Service
 	HealthzURI              string
 	CustomErrors            bool

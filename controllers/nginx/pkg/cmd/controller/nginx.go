@@ -649,6 +649,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		PassthroughBackends:     ingressCfg.PassthroughBackends,
 		Servers:                 ingressCfg.Servers,
 		TCPBackends:             ingressCfg.TCPEndpoints,
+		SNIBackends:             ingressCfg.SNIEndpoints,
 		UDPBackends:             ingressCfg.UDPEndpoints,
 		HealthzURI:              ngxHealthPath,
 		CustomErrors:            len(cfg.CustomHTTPErrors) > 0,

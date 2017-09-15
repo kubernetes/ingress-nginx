@@ -136,6 +136,8 @@ type Configuration struct {
 	// optional
 	TCPConfigMapName string
 	// optional
+	SNIConfigMapName string
+	// optional
 	UDPConfigMapName      string
 	DefaultSSLCertificate string
 	DefaultHealthzURL     string
@@ -293,7 +295,7 @@ func newIngressController(config *Configuration) *GenericController {
 					ic.forceReload = true
 				}
 				// updates to configuration configmaps can trigger an update
-				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
+				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.SNIConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
 					ic.recorder.Eventf(upCmap, api.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
 					ic.syncQueue.Enqueue(cur)
 				}
@@ -465,6 +467,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		Backends:            upstreams,
 		Servers:             servers,
 		TCPEndpoints:        ic.getStreamServices(ic.cfg.TCPConfigMapName, api.ProtocolTCP),
+		SNIEndpoints:        ic.getStreamServices(ic.cfg.SNIConfigMapName, api.ProtocolSNI),
 		UDPEndpoints:        ic.getStreamServices(ic.cfg.UDPConfigMapName, api.ProtocolUDP),
 		PassthroughBackends: passUpstreams,
 	}
@@ -513,21 +516,44 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 	}
 
 	var svcs []ingress.L4Service
-	// k -> port to expose
-	// v -> <namespace>/<service name>:<port from service to be used>
+	// k -> port to expose for TCP and UDP, hostname for SNI
+	// v -> <namespace>/<service name>:<port from service to be used> for TCP and UDP
+	// v -> <namespace>/<service name>:<port from service to be used>!<service-upstream true/false> for SNI
 	for k, v := range configmap.Data {
-		externalPort, err := strconv.Atoi(k)
-		if err != nil {
-			glog.Warningf("%v is not valid as a TCP/UDP port", k)
-			continue
+		glog.V(3).Infof("Evaluating: %v => %v", k, v)
+		var externalPort int
+		var hostname string
+		if proto == api.ProtocolSNI {
+			hostname = k
+			externalPort = 8443
+		} else {
+			externalPort, err = strconv.Atoi(k)
+			if err != nil {
+				glog.Warningf("%v is not valid as a TCP/UDP port", k)
+				continue
+			}
 		}
 
-		// this ports used by the backend
+		// this port is used by the backend
 		if local_strings.StringInSlice(k, reservedPorts) {
 			glog.Warningf("port %v cannot be used for TCP or UDP services. It is reserved for the Ingress controller", k)
 			continue
 		}
 
+		serviceUpstream := false
+		if proto == api.ProtocolSNI {
+			glog.V(3).Infof("proto is sni, looking for serviceUpstream info")
+			tokens := strings.Split(v, "!")
+			if len(tokens) == 2 {
+				glog.V(3).Infof("Found the bang")
+				if tokens[1] == "true" {
+					glog.V(3).Infof("serviceUpstream is requested")
+					serviceUpstream = true
+				}
+				glog.V(3).Infof("setting v to %v", tokens[0])
+				v = tokens[0]
+			}
+		}
 		nsSvcPort := strings.Split(v, ":")
 		if len(nsSvcPort) < 2 {
 			glog.Warningf("invalid format (namespace/name:port:[PROXY]) '%v'", k)
@@ -538,8 +564,8 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 		svcPort := nsSvcPort[1]
 		useProxyProtocol := false
 
-		// Proxy protocol is possible if the service is TCP
-		if len(nsSvcPort) == 3 && proto == api.ProtocolTCP {
+		// Proxy protocol is possible if the service is TCP or SNI
+		if len(nsSvcPort) == 3 && (proto == api.ProtocolTCP || proto == api.ProtocolSNI) {
 			if strings.ToUpper(nsSvcPort[2]) == "PROXY" {
 				useProxyProtocol = true
 			}
@@ -565,25 +591,63 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 		svc := svcObj.(*api.Service)
 
 		var endps []ingress.Endpoint
-		targetPort, err := strconv.Atoi(svcPort)
-		if err != nil {
-			glog.V(3).Infof("searching service %v/%v endpoints using the name '%v'", svcNs, svcName, svcPort)
-			for _, sp := range svc.Spec.Ports {
-				if sp.Name == svcPort {
-					if sp.Protocol == proto {
-						endps = ic.getEndpoints(svc, &sp, proto, &healthcheck.Upstream{})
-						break
+		// Add the service cluster endpoint as the upstream instead of individual endpoints
+		// if the serviceUpstream annotation is enabled
+		if serviceUpstream {
+			svcKey := fmt.Sprintf("%v/%v", svcNs, svcName)
+			svcObj, svcExists, err := ic.svcLister.Store.GetByKey(svcKey)
+
+			if err != nil {
+				// XXX This is stupid. If the kube API server is down or
+				// something we'll start tearing apart our perfectly good
+				// configuration. The better option here is to noop.
+				glog.Warningf("Unable to query for info about service %v, skipping", svcKey)
+				continue
+			}
+
+			if !svcExists {
+				glog.Warningf("Service %v was not found, ignoring.", svcKey)
+				continue
+			}
+
+			svc := svcObj.(*api.Service)
+			if svc.Spec.ClusterIP == "" {
+				glog.Warningf("No ClusterIP found for service %s", svcKey)
+				continue
+			}
+			endps = []ingress.Endpoint{ingress.Endpoint{
+				Address: svc.Spec.ClusterIP,
+				Port:    svcPort,
+			}}
+		} else {
+			targetPort, err := strconv.Atoi(svcPort)
+			// We're going to go searching through service endpoints for the port
+			// and proto we're trying to forward to. SNI, however, is not a valid
+			// protocol for services. We continue our hack here by mapping SNI to
+			// TCP for these purposes.
+			searchProto := proto
+			if searchProto == api.ProtocolSNI {
+				searchProto = api.ProtocolTCP
+			}
+			if err != nil {
+				glog.V(3).Infof("searching service %v/%v endpoints using the name '%v' and proto '%v'", svcNs, svcName, svcPort, searchProto)
+				for _, sp := range svc.Spec.Ports {
+					if sp.Name == svcPort {
+						if sp.Protocol == searchProto {
+							endps = ic.getEndpoints(svc, &sp, searchProto, &healthcheck.Upstream{})
+							break
+						}
 					}
 				}
-			}
-		} else {
-			// we need to use the TargetPort (where the endpoints are running)
-			glog.V(3).Infof("searching service %v/%v endpoints using the target port '%v'", svcNs, svcName, targetPort)
-			for _, sp := range svc.Spec.Ports {
-				if sp.Port == int32(targetPort) {
-					if sp.Protocol == proto {
-						endps = ic.getEndpoints(svc, &sp, proto, &healthcheck.Upstream{})
-						break
+			} else {
+				// we need to use the TargetPort (where the endpoints are running)
+				glog.V(3).Infof("searching service %v/%v endpoints using the target port '%v' and proto '%v'", svcNs, svcName, targetPort, searchProto)
+				for _, sp := range svc.Spec.Ports {
+					if sp.Port == int32(targetPort) {
+						if sp.Protocol == searchProto {
+							endps = ic.getEndpoints(svc, &sp, searchProto, &healthcheck.Upstream{})
+							break
+						}
 					}
 				}
 			}
@@ -604,6 +668,7 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 				Port:             intstr.FromString(svcPort),
 				Protocol:         proto,
 				UseProxyProtocol: useProxyProtocol,
+				ServerName:       hostname,
 			},
 			Endpoints: endps,
 		})
