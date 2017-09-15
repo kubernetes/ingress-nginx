@@ -24,7 +24,7 @@ Before you can receive traffic through the GCE L7 Loadbalancer Controller you ne
 
 ## Quota
 
-GLBC is not aware of your GCE quota. As of this writing users get 3 [GCE Backend Services](https://cloud.google.com/compute/docs/load-balancing/http/backend-service) by default. If you plan on creating Ingresses for multiple Kubernetes Services, remember that each one requires a backend service, and request quota. Should you fail to do so the controller will poll periodically and grab the first free backend service slot it finds. You can view your quota:
+GLBC is not aware of your GCE quota. As of this writing users get 5 [GCE Backend Services](https://cloud.google.com/compute/docs/load-balancing/http/backend-service) by default. If you plan on creating Ingresses for multiple Kubernetes Services, remember that each one requires a backend service, and request quota. Should you fail to do so the controller will poll periodically and grab the first free backend service slot it finds. You can view your quota:
 
 ```console
 $ gcloud compute project-info describe --project myproject
