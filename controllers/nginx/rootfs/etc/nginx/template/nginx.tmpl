@@ -46,7 +46,7 @@ http {
 
     {{ if $cfg.EnableVtsStatus }}
     vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.VtsStatusZoneSize }};
-    vhost_traffic_status_filter_by_set_key $geoip_country_code country::*;
+    vhost_traffic_status_filter_by_set_key {{ $cfg.VtsDefaultFilterKey }};
     {{ end }}
 
     sendfile            on;
@@ -578,7 +578,6 @@ stream {
         more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }};{{ if $all.Cfg.HSTSPreload }} preload{{ end }}";
         {{ end }}
 
-        {{ if $all.Cfg.EnableVtsStatus }}vhost_traffic_status_filter_by_set_key $geoip_country_code country::$server_name;{{ end }}
 
         {{ if not (empty $server.CertificateAuth.CAFileName) }}
         # PEM sha: {{ $server.CertificateAuth.PemSHA }}
@@ -630,6 +629,9 @@ stream {
         {{ end }}
 
         location {{ $path }} {
+
+            {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
+
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
 
             {{ $ing := (getIngressInformation $location.Ingress $path) }}
