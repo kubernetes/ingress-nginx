@@ -589,6 +589,10 @@ stream {
         {{ end }}
         {{ end }}
 
+        {{ if not (empty $server.ServerSnippet) }}
+        {{ $server.ServerSnippet }}
+        {{ end }}
+
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
         {{ $authPath := buildAuthLocation $location }}

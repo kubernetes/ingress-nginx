@@ -1234,6 +1234,28 @@ func (ic *GenericController) createServers(data []interface{},
 		}
 	}
 
+	// configure server snippet
+	for _, ingIf := range data {
+		ing := ingIf.(*extensions.Ingress)
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			continue
+		}
+
+		for _, rule := range ing.Spec.Rules {
+			host := rule.Host
+			if host == "" {
+				host = defServerName
+			}
+
+			srvsnippet := ic.annotations.ServerSnippet(ing)
+			// only add a server snippet if the server does not have one previously configured
+
+			if servers[host].ServerSnippet == "" && srvsnippet != "" {
+				servers[host].ServerSnippet = srvsnippet
+			}
+		}
+	}
+
 	return servers
 }
 

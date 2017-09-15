@@ -227,6 +227,9 @@ type Server struct {
 	// used to  determine if the secret changed without the use of file
 	// system notifications
 	SSLPemChecksum string `json:"sslPemChecksum"`
+
+	// ServerSnippet returns the snippet of server
+	ServerSnippet string `json:"serverSnippet"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
 	// Alias return the alias of the server name
