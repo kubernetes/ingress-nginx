@@ -422,6 +422,7 @@ func NewDefault() Configuration {
 		WorkerShutdownTimeout:      "10s",
 		LoadBalanceAlgorithm:       defaultLoadBalancerAlgorithm,
 		VtsStatusZoneSize:          "10m",
+		VtsDefaultFilterKey:        "$geoip_country_code country::*",
 		VariablesHashBucketSize:    64,
 		VariablesHashMaxSize:       2048,
 		UseHTTP2:                   true,
