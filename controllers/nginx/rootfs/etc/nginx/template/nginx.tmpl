@@ -46,7 +46,7 @@ http {
 
     {{ if $cfg.EnableVtsStatus }}
     vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.VtsStatusZoneSize }};
-    vhost_traffic_status_filter_by_set_key {{ if not $cfg.VtsDefaultFilterKey }}$geoip_country_code country::*{{ else }} {{ $cfg.VtsDefaultFilterKey }}{{ end }};
+    vhost_traffic_status_filter_by_set_key {{ $cfg.VtsDefaultFilterKey }};
     {{ end }}
 
     sendfile            on;
