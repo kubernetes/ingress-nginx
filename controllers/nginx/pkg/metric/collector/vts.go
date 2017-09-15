@@ -96,17 +96,17 @@ func NewNGINXVTSCollector(watchNamespace, ingressClass string, port int, path st
 		filterZoneBytes: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "filterzone_bytes_total"),
 			"Nginx bytes count",
-			[]string{"ingress_class", "namespace", "server_zone", "country", "direction"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "key", "direction"}, nil),
 
 		filterZoneResponses: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "filterzone_responses_total"),
 			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-			[]string{"ingress_class", "namespace", "server_zone", "country", "status_code"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "key", "status_code"}, nil),
 
 		filterZoneCache: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "filterzone_cache_total"),
 			"Nginx cache count",
-			[]string{"ingress_class", "namespace", "server_zone", "country", "type"}, nil),
+			[]string{"ingress_class", "namespace", "server_zone", "key", "type"}, nil),
 
 		upstreamBackup: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "upstream_backup"),
@@ -246,15 +246,15 @@ func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
 			prometheus.CounterValue, zone.OutBytes, p.ingressClass, p.watchNamespace, name, "out")
 	}
 
-	for serverZone, countries := range nginxMetrics.FilterZones {
-		for country, zone := range countries {
-			reflectMetrics(&zone.Responses, p.data.filterZoneResponses, ch, p.ingressClass, p.watchNamespace, serverZone, country)
-			reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, p.ingressClass, p.watchNamespace, serverZone, country)
+	for serverZone, keys := range nginxMetrics.FilterZones {
+		for name, zone := range keys {
+			reflectMetrics(&zone.Responses, p.data.filterZoneResponses, ch, p.ingressClass, p.watchNamespace, serverZone, name)
+			reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, p.ingressClass, p.watchNamespace, serverZone, name)
 
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
-				prometheus.CounterValue, zone.InBytes, p.ingressClass, p.watchNamespace, serverZone, country, "in")
+				prometheus.CounterValue, zone.InBytes, p.ingressClass, p.watchNamespace, serverZone, name, "in")
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
-				prometheus.CounterValue, zone.OutBytes, p.ingressClass, p.watchNamespace, serverZone, country, "out")
+				prometheus.CounterValue, zone.OutBytes, p.ingressClass, p.watchNamespace, serverZone, name, "out")
 		}
 	}
 }
