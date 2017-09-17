@@ -35,7 +35,7 @@ import (
 	"github.com/spf13/pflag"
 
 	proxyproto "github.com/armon/go-proxyproto"
-	api_v1 "k8s.io/api/core/v1"
+	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"
@@ -82,7 +82,7 @@ func newNGINXController() *NGINXController {
 
 	n := &NGINXController{
 		binary:          ngx,
-		configmap:       &api_v1.ConfigMap{},
+		configmap:       &apiv1.ConfigMap{},
 		isIPV6Enabled:   isIPv6Enabled(),
 		resolver:        h,
 		ports:           &config.ListenPorts{},
@@ -122,7 +122,7 @@ type NGINXController struct {
 	controller *controller.GenericController
 	t          *ngx_template.Template
 
-	configmap *api_v1.ConfigMap
+	configmap *apiv1.ConfigMap
 
 	storeLister ingress.StoreLister
 
@@ -308,7 +308,7 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 	return ingress.Endpoint{
 		Address: "127.0.0.1",
 		Port:    fmt.Sprintf("%v", n.ports.Default),
-		Target:  &api_v1.ObjectReference{},
+		Target:  &apiv1.ObjectReference{},
 	}
 }
 
@@ -442,7 +442,7 @@ Error: %v
 }
 
 // SetConfig sets the configured configmap
-func (n *NGINXController) SetConfig(cmap *api_v1.ConfigMap) {
+func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
 	n.configmap = cmap
 	n.isProxyProtocolEnabled = false
 
@@ -468,7 +468,7 @@ func (n *NGINXController) SetListers(lister ingress.StoreLister) {
 }
 
 // UpdateIngressStatus custom Ingress status update
-func (n *NGINXController) UpdateIngressStatus(*extensions.Ingress) []api_v1.LoadBalancerIngress {
+func (n *NGINXController) UpdateIngressStatus(*extensions.Ingress) []apiv1.LoadBalancerIngress {
 	return nil
 }
 
@@ -597,7 +597,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 
 		if exists {
-			setHeaders = cmap.(*api_v1.ConfigMap).Data
+			setHeaders = cmap.(*apiv1.ConfigMap).Data
 		}
 	}
 
@@ -609,7 +609,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 
 		if exists {
-			addHeaders = cmap.(*api_v1.ConfigMap).Data
+			addHeaders = cmap.(*apiv1.ConfigMap).Data
 		}
 	}
 
@@ -622,7 +622,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 
 		if exists {
-			secret := s.(*api_v1.Secret)
+			secret := s.(*apiv1.Secret)
 			nsSecName := strings.Replace(secretName, "/", "-", -1)
 
 			dh, ok := secret.Data["dhparam.pem"]

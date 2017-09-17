@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/golang/glog"
+
 	"github.com/paultag/sniff/parser"
 )
 

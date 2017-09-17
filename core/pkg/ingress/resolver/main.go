@@ -17,7 +17,7 @@ limitations under the License.
 package resolver
 
 import (
-	api "k8s.io/api/core/v1"
+	apiv1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
@@ -31,7 +31,7 @@ type DefaultBackend interface {
 // Secret has a method that searches for secrets contenating
 // the namespace and name using a the character /
 type Secret interface {
-	GetSecret(string) (*api.Secret, error)
+	GetSecret(string) (*apiv1.Secret, error)
 }
 
 // AuthCertificate resolves a given secret name into an SSL certificate.
@@ -44,7 +44,7 @@ type AuthCertificate interface {
 // Service has a method that searches for services contenating
 // the namespace and name using a the character /
 type Service interface {
-	GetService(string) (*api.Service, error)
+	GetService(string) (*apiv1.Service, error)
 }
 
 // AuthSSLCert contains the necessary information to do certificate based

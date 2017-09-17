@@ -15,13 +15,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 
-	api "k8s.io/api/core/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	clientcmd_api "k8s.io/client-go/tools/clientcmd/api"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/k8s"
@@ -70,7 +70,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		resyncPeriod = flags.Duration("sync-period", 600*time.Second,
 			`Relist and confirm cloud resources this often. Default is 10 minutes`)
 
-		watchNamespace = flags.String("watch-namespace", api.NamespaceAll,
+		watchNamespace = flags.String("watch-namespace", apiv1.NamespaceAll,
 			`Namespace to watch for Ingress. Default is to watch all namespaces`)
 
 		healthzPort = flags.Int("healthz-port", 10254, "port for healthz endpoint.")
@@ -130,7 +130,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		glog.Fatalf("invalid format for service %v: %v", *defaultSvc, err)
 	}
 
-	_, err = kubeClient.Core().Services(ns).Get(name, meta_v1.GetOptions{})
+	_, err = kubeClient.Core().Services(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "cannot get services in the namespace") {
 			glog.Fatalf("✖ It seems the cluster it is running with Authorization enabled (like RBAC) and there is no permissions for the ingress controller. Please check the configuration")
@@ -145,7 +145,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 			glog.Fatalf("invalid service format: %v", err)
 		}
 
-		svc, err := kubeClient.CoreV1().Services(ns).Get(name, meta_v1.GetOptions{})
+		svc, err := kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
 		if err != nil {
 			glog.Fatalf("unexpected error getting information about service %v: %v", *publishSvc, err)
 		}
@@ -163,7 +163,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	}
 
 	if *watchNamespace != "" {
-		_, err = kubeClient.CoreV1().Namespaces().Get(*watchNamespace, meta_v1.GetOptions{})
+		_, err = kubeClient.CoreV1().Namespaces().Get(*watchNamespace, metav1.GetOptions{})
 		if err != nil {
 			glog.Fatalf("no watchNamespace with name %v found: %v", *watchNamespace, err)
 		}
@@ -266,7 +266,7 @@ func buildConfigFromFlags(masterURL, kubeconfigPath string) (*rest.Config, error
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
 		&clientcmd.ConfigOverrides{
-			ClusterInfo: clientcmd_api.Cluster{
+			ClusterInfo: clientcmdapi.Cluster{
 				Server: masterURL,
 			},
 		}).ClientConfig()
