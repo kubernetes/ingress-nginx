@@ -24,9 +24,9 @@ import (
 	"os/exec"
 	"syscall"
 
-	"k8s.io/kubernetes/pkg/util/sysctl"
-
 	"github.com/golang/glog"
+
+	"k8s.io/kubernetes/pkg/util/sysctl"
 )
 
 // sysctlSomaxconn returns the value of net.core.somaxconn, i.e.
