@@ -18,15 +18,15 @@ package controller
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"testing"
 
-	"fmt"
-
-	api_v1 "k8s.io/api/core/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	cache_client "k8s.io/client-go/tools/cache"
+
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/kubernetes/pkg/api"
@@ -70,9 +70,9 @@ func buildIngListenerForBackendSSL() store.IngressLister {
 	return ingLister
 }
 
-func buildSecretForBackendSSL() *api_v1.Secret {
-	return &api_v1.Secret{
-		ObjectMeta: meta_v1.ObjectMeta{
+func buildSecretForBackendSSL() *apiv1.Secret {
+	return &apiv1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo_secret",
 			Namespace: api.NamespaceDefault,
 		},

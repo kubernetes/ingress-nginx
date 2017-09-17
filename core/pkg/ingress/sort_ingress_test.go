@@ -19,7 +19,7 @@ package ingress
 import (
 	"testing"
 
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func buildBackendByNameServers() BackendByNameServers {
@@ -365,7 +365,7 @@ func TestLocationByPathLess(t *testing.T) {
 
 func TestGetObjectKindForSSLCert(t *testing.T) {
 	fk := &SSLCert{
-		ObjectMeta:  meta_v1.ObjectMeta{},
+		ObjectMeta:  metav1.ObjectMeta{},
 		CAFileName:  "ca_file",
 		PemFileName: "pemfile",
 		PemSHA:      "pem_sha",
