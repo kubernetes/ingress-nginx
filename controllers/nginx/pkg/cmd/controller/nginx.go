@@ -35,7 +35,6 @@ import (
 	"github.com/spf13/pflag"
 
 	proxyproto "github.com/armon/go-proxyproto"
-	api "k8s.io/api/core/v1"
 	api_v1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 
@@ -309,7 +308,7 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 	return ingress.Endpoint{
 		Address: "127.0.0.1",
 		Port:    fmt.Sprintf("%v", n.ports.Default),
-		Target:  &api.ObjectReference{},
+		Target:  &api_v1.ObjectReference{},
 	}
 }
 
@@ -657,6 +656,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		RedirectServers:         redirectServers,
 		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
 		ListenPorts:             n.ports,
+		PublishService:          n.controller.GetPublishService(),
 	}
 
 	content, err := n.t.Write(tc)
