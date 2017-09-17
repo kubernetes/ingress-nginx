@@ -19,9 +19,9 @@ package controller
 import (
 	"testing"
 
-	api "k8s.io/api/core/v1"
+	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress/core/pkg/ingress/defaults"
@@ -40,19 +40,19 @@ const (
 )
 
 type mockCfg struct {
-	MockSecrets  map[string]*api.Secret
-	MockServices map[string]*api.Service
+	MockSecrets  map[string]*apiv1.Secret
+	MockServices map[string]*apiv1.Service
 }
 
 func (m mockCfg) GetDefaultBackend() defaults.Backend {
 	return defaults.Backend{}
 }
 
-func (m mockCfg) GetSecret(name string) (*api.Secret, error) {
+func (m mockCfg) GetSecret(name string) (*apiv1.Secret, error) {
 	return m.MockSecrets[name], nil
 }
 
-func (m mockCfg) GetService(name string) (*api.Service, error) {
+func (m mockCfg) GetService(name string) (*apiv1.Service, error) {
 	return m.MockServices[name], nil
 }
 
@@ -88,9 +88,9 @@ func buildIngress() *extensions.Ingress {
 	}
 
 	return &extensions.Ingress{
-		ObjectMeta: meta_v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
-			Namespace: api.NamespaceDefault,
+			Namespace: apiv1.NamespaceDefault,
 		},
 		Spec: extensions.IngressSpec{
 			Backend: &extensions.IngressBackend{
@@ -142,9 +142,9 @@ func TestSecureUpstream(t *testing.T) {
 
 func TestSecureVerifyCACert(t *testing.T) {
 	ec := newAnnotationExtractor(mockCfg{
-		MockSecrets: map[string]*api.Secret{
+		MockSecrets: map[string]*apiv1.Secret{
 			"default/secure-verify-ca": {
-				ObjectMeta: meta_v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name: "secure-verify-ca",
 				},
 			},

@@ -20,8 +20,8 @@ import (
 	"os"
 	"testing"
 
-	api "k8s.io/api/core/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 )
 
@@ -66,14 +66,14 @@ func TestGetNodeIP(t *testing.T) {
 		{testclient.NewSimpleClientset(), "demo", ""},
 
 		// node not exist
-		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
-			ObjectMeta: meta_v1.ObjectMeta{
+		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "demo",
 			},
-			Status: api.NodeStatus{
-				Addresses: []api.NodeAddress{
+			Status: apiv1.NodeStatus{
+				Addresses: []apiv1.NodeAddress{
 					{
-						Type:    api.NodeInternalIP,
+						Type:    apiv1.NodeInternalIP,
 						Address: "10.0.0.1",
 					},
 				},
@@ -81,14 +81,14 @@ func TestGetNodeIP(t *testing.T) {
 		}}}), "notexistnode", ""},
 
 		// node  exist
-		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
-			ObjectMeta: meta_v1.ObjectMeta{
+		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "demo",
 			},
-			Status: api.NodeStatus{
-				Addresses: []api.NodeAddress{
+			Status: apiv1.NodeStatus{
+				Addresses: []apiv1.NodeAddress{
 					{
-						Type:    api.NodeInternalIP,
+						Type:    apiv1.NodeInternalIP,
 						Address: "10.0.0.1",
 					},
 				},
@@ -96,28 +96,28 @@ func TestGetNodeIP(t *testing.T) {
 		}}}), "demo", "10.0.0.1"},
 
 		// search the correct node
-		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{
+		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{
 			{
-				ObjectMeta: meta_v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name: "demo1",
 				},
-				Status: api.NodeStatus{
-					Addresses: []api.NodeAddress{
+				Status: apiv1.NodeStatus{
+					Addresses: []apiv1.NodeAddress{
 						{
-							Type:    api.NodeInternalIP,
+							Type:    apiv1.NodeInternalIP,
 							Address: "10.0.0.1",
 						},
 					},
 				},
 			},
 			{
-				ObjectMeta: meta_v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name: "demo2",
 				},
-				Status: api.NodeStatus{
-					Addresses: []api.NodeAddress{
+				Status: apiv1.NodeStatus{
+					Addresses: []apiv1.NodeAddress{
 						{
-							Type:    api.NodeInternalIP,
+							Type:    apiv1.NodeInternalIP,
 							Address: "10.0.0.2",
 						},
 					},
@@ -126,17 +126,17 @@ func TestGetNodeIP(t *testing.T) {
 		}}), "demo2", "10.0.0.2"},
 
 		// get NodeExternalIP
-		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
-			ObjectMeta: meta_v1.ObjectMeta{
+		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "demo",
 			},
-			Status: api.NodeStatus{
-				Addresses: []api.NodeAddress{
+			Status: apiv1.NodeStatus{
+				Addresses: []apiv1.NodeAddress{
 					{
-						Type:    api.NodeInternalIP,
+						Type:    apiv1.NodeInternalIP,
 						Address: "10.0.0.1",
 					}, {
-						Type:    api.NodeExternalIP,
+						Type:    apiv1.NodeExternalIP,
 						Address: "10.0.0.2",
 					},
 				},
@@ -144,17 +144,17 @@ func TestGetNodeIP(t *testing.T) {
 		}}}), "demo", "10.0.0.2"},
 
 		// get NodeInternalIP
-		{testclient.NewSimpleClientset(&api.NodeList{Items: []api.Node{{
-			ObjectMeta: meta_v1.ObjectMeta{
+		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "demo",
 			},
-			Status: api.NodeStatus{
-				Addresses: []api.NodeAddress{
+			Status: apiv1.NodeStatus{
+				Addresses: []apiv1.NodeAddress{
 					{
-						Type:    api.NodeExternalIP,
+						Type:    apiv1.NodeExternalIP,
 						Address: "",
 					}, {
-						Type:    api.NodeInternalIP,
+						Type:    apiv1.NodeInternalIP,
 						Address: "10.0.0.2",
 					},
 				},
@@ -181,7 +181,7 @@ func TestGetPodDetails(t *testing.T) {
 
 	// POD_NAME not exist
 	os.Setenv("POD_NAME", "")
-	os.Setenv("POD_NAMESPACE", api.NamespaceDefault)
+	os.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
 	_, err2 := GetPodDetails(testclient.NewSimpleClientset())
 	if err2 == nil {
 		t.Errorf("expected an error but returned nil")
@@ -197,7 +197,7 @@ func TestGetPodDetails(t *testing.T) {
 
 	// POD not exist
 	os.Setenv("POD_NAME", "testpod")
-	os.Setenv("POD_NAMESPACE", api.NamespaceDefault)
+	os.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
 	_, err4 := GetPodDetails(testclient.NewSimpleClientset())
 	if err4 == nil {
 		t.Errorf("expected an error but returned nil")
@@ -205,24 +205,24 @@ func TestGetPodDetails(t *testing.T) {
 
 	// success to get PodInfo
 	fkClient := testclient.NewSimpleClientset(
-		&api.PodList{Items: []api.Pod{{
-			ObjectMeta: meta_v1.ObjectMeta{
+		&apiv1.PodList{Items: []apiv1.Pod{{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testpod",
-				Namespace: api.NamespaceDefault,
+				Namespace: apiv1.NamespaceDefault,
 				Labels: map[string]string{
 					"first":  "first_label",
 					"second": "second_label",
 				},
 			},
 		}}},
-		&api.NodeList{Items: []api.Node{{
-			ObjectMeta: meta_v1.ObjectMeta{
+		&apiv1.NodeList{Items: []apiv1.Node{{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "demo",
 			},
-			Status: api.NodeStatus{
-				Addresses: []api.NodeAddress{
+			Status: apiv1.NodeStatus{
+				Addresses: []apiv1.NodeAddress{
 					{
-						Type:    api.NodeInternalIP,
+						Type:    apiv1.NodeInternalIP,
 						Address: "10.0.0.1",
 					},
 				},

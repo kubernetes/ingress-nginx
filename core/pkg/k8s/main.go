@@ -21,8 +21,8 @@ import (
 	"os"
 	"strings"
 
-	api "k8s.io/api/core/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 )
 
@@ -39,20 +39,20 @@ func ParseNameNS(input string) (string, string, error) {
 // GetNodeIP returns the IP address of a node in the cluster
 func GetNodeIP(kubeClient clientset.Interface, name string) string {
 	var externalIP string
-	node, err := kubeClient.Core().Nodes().Get(name, meta_v1.GetOptions{})
+	node, err := kubeClient.Core().Nodes().Get(name, metav1.GetOptions{})
 	if err != nil {
 		return externalIP
 	}
 
 	for _, address := range node.Status.Addresses {
-		if address.Type == api.NodeExternalIP {
+		if address.Type == apiv1.NodeExternalIP {
 			if address.Address != "" {
 				externalIP = address.Address
 				break
 			}
 		}
 
-		if externalIP == "" && address.Type == api.NodeInternalIP {
+		if externalIP == "" && address.Type == apiv1.NodeInternalIP {
 			externalIP = address.Address
 		}
 	}
@@ -79,7 +79,7 @@ func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
 		return nil, fmt.Errorf("unable to get POD information (missing POD_NAME or POD_NAMESPACE environment variable")
 	}
 
-	pod, _ := kubeClient.Core().Pods(podNs).Get(podName, meta_v1.GetOptions{})
+	pod, _ := kubeClient.Core().Pods(podNs).Get(podName, metav1.GetOptions{})
 	if pod == nil {
 		return nil, fmt.Errorf("unable to get POD information")
 	}
