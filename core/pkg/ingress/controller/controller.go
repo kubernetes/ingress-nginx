@@ -381,6 +381,16 @@ func (ic GenericController) GetDefaultBackend() defaults.Backend {
 	return ic.cfg.Backend.BackendDefaults()
 }
 
+// GetPublishService returns the configured service used to set ingress status
+func (ic GenericController) GetPublishService() *api.Service {
+	s, err := ic.GetService(ic.cfg.PublishService)
+	if err != nil {
+		return nil
+	}
+
+	return s
+}
+
 // GetRecorder returns the event recorder
 func (ic GenericController) GetRecorder() record.EventRecorder {
 	return ic.recorder

@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/pflag"
 
 	api "k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -124,7 +125,12 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		handleFatalInitError(err)
 	}
 
-	_, err = k8s.IsValidService(kubeClient, *defaultSvc)
+	ns, name, err := k8s.ParseNameNS(*defaultSvc)
+	if err != nil {
+		glog.Fatalf("invalid format for service %v: %v", *defaultSvc, err)
+	}
+
+	_, err = kubeClient.Core().Services(ns).Get(name, meta_v1.GetOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "cannot get services in the namespace") {
 			glog.Fatalf("✖ It seems the cluster it is running with Authorization enabled (like RBAC) and there is no permissions for the ingress controller. Please check the configuration")
@@ -134,9 +140,14 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	glog.Infof("validated %v as the default backend", *defaultSvc)
 
 	if *publishSvc != "" {
-		svc, err := k8s.IsValidService(kubeClient, *publishSvc)
+		ns, name, err := k8s.ParseNameNS(*publishSvc)
 		if err != nil {
-			glog.Fatalf("no service with name %v found: %v", *publishSvc, err)
+			glog.Fatalf("invalid service format: %v", err)
+		}
+
+		svc, err := kubeClient.CoreV1().Services(ns).Get(name, meta_v1.GetOptions{})
+		if err != nil {
+			glog.Fatalf("unexpected error getting information about service %v: %v", *publishSvc, err)
 		}
 
 		if len(svc.Status.LoadBalancer.Ingress) == 0 {
@@ -152,9 +163,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	}
 
 	if *watchNamespace != "" {
-
-		_, err = k8s.IsValidNamespace(kubeClient, *watchNamespace)
-
+		_, err = kubeClient.CoreV1().Namespaces().Get(*watchNamespace, meta_v1.GetOptions{})
 		if err != nil {
 			glog.Fatalf("no watchNamespace with name %v found: %v", *watchNamespace, err)
 		}
