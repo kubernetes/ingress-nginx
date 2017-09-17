@@ -10,6 +10,8 @@ DOCKER?=gcloud docker --
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
+SKIP_TESTS?=
+
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
@@ -120,11 +122,14 @@ lint:
 
 test: fmt lint vet
 	@echo "+ $@"
-	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor)
+	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor |grep -v e2e)
+
+test-e2e: sub-container-amd64
+	@TAG=${TAG} IMAGE=$(MULTI_ARCH_IMG) go run e2e/e2e.go --files=e2e/nginx-ingress-controller.yaml,e2e/default-backend.yaml --verbose --up --test --down
 
 cover:
 	@echo "+ $@"
-	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
+	@go list -f '{{if len .TestGoFiles}}"go test -skipTest "${SKIP_TESTS}"  -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
 	gover
 	goveralls -coverprofile=gover.coverprofile -service travis-ci -repotoken ${COVERALLS_TOKEN}
 

@@ -19,6 +19,7 @@ package controller
 import (
 	"github.com/golang/glog"
 	extensions "k8s.io/api/extensions/v1beta1"
+
 	"k8s.io/ingress/core/pkg/ingress/annotations/alias"
 	"k8s.io/ingress/core/pkg/ingress/annotations/auth"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"

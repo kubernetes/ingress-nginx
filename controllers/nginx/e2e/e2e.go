@@ -1,5 +1,5 @@
 /*
-Copyright 2014 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,14 +31,14 @@ import (
 )
 
 var (
-	build      = flag.Bool("build", true, "Build the backends images indicated by the env var BACKENDS required to run e2e tests.")
 	up         = flag.Bool("up", true, "Creates a kubernetes cluster using hyperkube (containerized kubelet).")
 	down       = flag.Bool("down", true, "destroys the created cluster.")
-	test       = flag.Bool("test", true, "Run Ginkgo tests.")
+	test       = flag.Bool("test", true, "Run tests.")
 	dump       = flag.String("dump", "", "If set, dump cluster logs to this location on test or cluster-up failure")
-	testArgs   = flag.String("test-args", "", "Space-separated list of arguments to pass to Ginkgo test runner.")
+	testArgs   = flag.String("test-args", "", "Space-separated list of arguments to pass to the test runner.")
 	deployment = flag.String("deployment", "bash", "up/down mechanism")
-	verbose    = flag.Bool("v", false, "If true, print all command output.")
+	verbose    = flag.Bool("verbose", false, "If true, print all command output.")
+	files      = flag.String("files", "", "Path to a file/S descriptor that will create an Ingress controller")
 )
 
 func appendError(errs []error, err error) []error {
@@ -57,7 +57,7 @@ func validWorkingDirectory() error {
 	if err != nil {
 		return fmt.Errorf("failed to convert %s to an absolute path: %v", cwd, err)
 	}
-	if !strings.Contains(filepath.Base(acwd), "ingress") {
+	if !strings.Contains(filepath.Base(acwd), "nginx") {
 		return fmt.Errorf("must run from git root directory: %v", acwd)
 	}
 	return nil
@@ -139,14 +139,12 @@ func main() {
 }
 
 func run(deploy deployer) error {
-	if *dump != "" {
-		defer writeXML(time.Now())
+	if *files == "" {
+		return fmt.Errorf("missing required flag --files")
 	}
 
-	if *build {
-		if err := xmlWrap("Build", Build); err != nil {
-			return fmt.Errorf("error building: %s", err)
-		}
+	if *dump != "" {
+		defer writeXML(time.Now())
 	}
 
 	if *up {
@@ -172,7 +170,7 @@ func run(deploy deployer) error {
 			return fmt.Errorf("starting e2e cluster: %s", err)
 		}
 		if *dump != "" {
-			cmd := exec.Command("./cluster/kubectl.sh", "--match-server-version=false", "get", "nodes", "-oyaml")
+			cmd := kubectlCmd("get", "nodes", "-oyaml")
 			b, err := cmd.CombinedOutput()
 			if *verbose {
 				log.Printf("kubectl get nodes:\n%s", string(b))
@@ -187,17 +185,22 @@ func run(deploy deployer) error {
 		}
 	}
 
+	log.Printf("deploying ingress controller")
+	if err := deploy.SetupController(*files); err != nil {
+		errs = appendError(errs, err)
+	}
+
 	if *test {
 		if err := xmlWrap("IsUp", deploy.IsUp); err != nil {
 			errs = appendError(errs, err)
 		} else {
-			errs = appendError(errs, Test())
+			errs = appendError(errs, runTests())
 		}
 	}
 
 	if len(errs) > 0 && *dump != "" {
 		errs = appendError(errs, xmlWrap("DumpClusterLogs", func() error {
-			return DumpClusterLogs(*dump)
+			return dumpClusterLogs(*dump)
 		}))
 	}
 
@@ -208,24 +211,14 @@ func run(deploy deployer) error {
 	if len(errs) != 0 {
 		return fmt.Errorf("encountered %d errors: %v", len(errs), errs)
 	}
-	return nil
-}
 
-func Build() error {
-	// The build-release script needs stdin to ask the user whether
-	// it's OK to download the docker image.
-	cmd := exec.Command("make", "docker-build")
-	cmd.Stdin = os.Stdin
-	if err := finishRunning("build-release", cmd); err != nil {
-		return fmt.Errorf("error building: %v", err)
-	}
 	return nil
 }
 
 type deployer interface {
 	Up() error
 	IsUp() error
-	SetupKubecfg() error
+	SetupController(p string) error
 	Down() error
 }
 
@@ -241,31 +234,36 @@ func getDeployer() (deployer, error) {
 type bash struct{}
 
 func (b bash) Up() error {
-	return finishRunning("up", exec.Command("./hack/e2e-internal/e2e-up.sh"))
+	return finishRunning("up", exec.Command("./e2e/e2e-internal/e2e-up.sh"))
 }
 
 func (b bash) IsUp() error {
-	return finishRunning("get status", exec.Command("./hack/e2e-internal/e2e-status.sh"))
+	return finishRunning("get status", exec.Command("./e2e/e2e-internal/e2e-status.sh"))
 }
 
-func (b bash) SetupKubecfg() error {
+func (b bash) SetupController(p string) error {
+	files := strings.Split(p, ",")
+	for _, f := range files {
+		err := finishRunning("setup controller", kubectlCmd("create", "-f", f))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (b bash) Down() error {
-	return finishRunning("teardown", exec.Command("./hack/e2e-internal/e2e-down.sh"))
+	return finishRunning("teardown", exec.Command("./e2e/e2e-internal/e2e-down.sh"))
 }
 
-func DumpClusterLogs(location string) error {
+func dumpClusterLogs(location string) error {
 	log.Printf("Dumping cluster logs to: %v", location)
-	return finishRunning("dump cluster logs", exec.Command("./hack/e2e-internal/log-dump.sh", location))
+	return finishRunning("dump cluster logs", exec.Command("./e2e/e2e-internal/log-dump.sh", location))
 }
 
-func Test() error {
-	if *testArgs == "" {
-		*testArgs = "--ginkgo.focus=\\[Feature:Ingress\\]"
-	}
-	return finishRunning("Ginkgo tests", exec.Command("./hack/e2e-internal/ginkgo-e2e.sh", strings.Fields(*testArgs)...))
+func runTests() error {
+	return finishRunning("Ingress tests", exec.Command("./e2e/e2e-internal/run-e2e.sh", strings.Fields(*testArgs)...))
 }
 
 func finishRunning(stepName string, cmd *exec.Cmd) error {
@@ -282,4 +280,10 @@ func finishRunning(stepName string, cmd *exec.Cmd) error {
 		return fmt.Errorf("error running %v: %v", stepName, err)
 	}
 	return nil
+}
+
+func kubectlCmd(arg ...string) *exec.Cmd {
+	args := []string{"--context", "ingress-e2e"}
+	args = append(args, arg...)
+	return exec.Command("kubectl", args...)
 }

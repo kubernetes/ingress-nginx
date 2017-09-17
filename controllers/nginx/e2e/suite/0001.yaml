@@ -1,0 +1,62 @@
+name: "001"
+description: "simple test"
+ingress:
+  apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    name: echomap
+  spec:
+    rules:
+    - host: foo.bar.com
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: echoheaders
+            servicePort: 80
+deployment:
+  apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: http-svc
+    labels:
+      k8s-app: http-svc
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          k8s-app: http-svc
+      spec:
+        containers:
+        - name: http-svc
+          image: gcr.io/google_containers/echoserver:1.8
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          ports:
+          - containerPort: 8080
+service:
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: http-svc
+    labels:
+      k8s-app: http-svc
+  spec:
+    ports:
+    - port: 80
+      targetPort: 8080
+    selector:
+      k8s-app: http-svc
+tests:
+  - name: "get /"
+    expect:
+      - statusCode: 200
+    request:
+      method: GET
+      url: /
