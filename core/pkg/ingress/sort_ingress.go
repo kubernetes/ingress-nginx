@@ -20,7 +20,7 @@ import (
 	"crypto/x509"
 	"time"
 
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -72,8 +72,8 @@ func (c LocationByPath) Less(i, j int) bool {
 
 // SSLCert describes a SSL certificate to be used in a server
 type SSLCert struct {
-	meta_v1.ObjectMeta `json:"metadata,omitempty"`
-	Certificate        *x509.Certificate `json:"certificate,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Certificate       *x509.Certificate `json:"certificate,omitempty"`
 	// CAFileName contains the path to the file with the root certificate
 	CAFileName string `json:"caFileName"`
 	// PemFileName contains the path to the file with the certificate and key concatenated

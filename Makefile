@@ -2,24 +2,6 @@ all: fmt lint vet
 
 BUILDTAGS=
 
-# building inside travis generates a custom version of the
-# backends in order to run e2e tests agains the build.
-ifdef TRAVIS_BUILD_ID
-  RELEASE := ci-build-${TRAVIS_BUILD_ID}
-endif
-
-# 0.0 shouldn't clobber any release builds
-RELEASE?=0.0
-
-# by default build a linux version
-GOOS?=linux
-
-REPO_INFO=$(shell git config --get remote.origin.url)
-
-ifndef COMMIT
-  COMMIT := git-$(shell git rev-parse --short HEAD)
-endif
-
 # base package. It contains the common and backends code
 PKG := "k8s.io/ingress"
 
