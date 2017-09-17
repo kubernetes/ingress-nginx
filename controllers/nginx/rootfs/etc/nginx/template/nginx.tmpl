@@ -87,6 +87,14 @@ http {
     underscores_in_headers          {{ if $cfg.EnableUnderscoresInHeaders }}on{{ else }}off{{ end }};
     ignore_invalid_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }};
 
+    {{ if (and $cfg.EnableOpentracing (ne $cfg.ZipkinCollectorHost "")) }}
+    opentracing on;
+
+    zipkin_collector_host           {{ $cfg.ZipkinCollectorHost }};
+    zipkin_collector_port           {{ $cfg.ZipkinCollectorPort }};
+    zipkin_service_name             {{ $cfg.ZipkinServiceName }};
+    {{ end }}
+
     include /etc/nginx/mime.types;
     default_type text/html;
     {{ if $cfg.UseGzip }}
