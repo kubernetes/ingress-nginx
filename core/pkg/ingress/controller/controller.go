@@ -1124,13 +1124,26 @@ func (ic *GenericController) createServers(data []interface{},
 
 		// check if ssl passthrough is configured
 		sslpt := ic.annotations.SSLPassthrough(ing)
+
+		// default upstream server
 		du := ic.getDefaultUpstream()
 		un := du.Name
+
 		if ing.Spec.Backend != nil {
 			// replace default backend
 			defUpstream := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
 				un = backendUpstream.Name
+
+				// Special case:
+				// ingress only with a backend and no rules
+				// this case defines a "catch all" server
+				defLoc := servers[defServerName].Locations[0]
+				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
+					defLoc.IsDefBackend = false
+					defLoc.Backend = backendUpstream.Name
+					defLoc.Service = backendUpstream.Service
+				}
 			}
 		}
 
