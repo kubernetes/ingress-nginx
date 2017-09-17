@@ -19,6 +19,7 @@ package template
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -35,6 +36,10 @@ const (
 	whitelistSourceRange = "whitelist-source-range"
 	proxyRealIPCIDR      = "proxy-real-ip-cidr"
 	bindAddress          = "bind-address"
+)
+
+var (
+	realClientRegex = regexp.MustCompile(`auto|http-proxy|tcp-proxy`)
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
@@ -117,6 +122,11 @@ func ReadConfig(src map[string]string) config.Configuration {
 	err = decoder.Decode(conf)
 	if err != nil {
 		glog.Warningf("unexpected error merging defaults: %v", err)
+	}
+
+	if !realClientRegex.MatchString(to.RealClientFrom) {
+		glog.Warningf("unexpected value for RealClientFromSetting (%v). Using default \"auto\"", to.RealClientFrom)
+		to.RealClientFrom = "auto"
 	}
 
 	return to
