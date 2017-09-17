@@ -23,7 +23,7 @@ import (
 
 	"github.com/golang/glog"
 
-	api "k8s.io/api/core/v1"
+	apiv1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
@@ -494,7 +494,7 @@ type TemplateConfig struct {
 	IsSSLPassthroughEnabled bool
 	RedirectServers         map[string]string
 	ListenPorts             *ListenPorts
-	PublishService          *api.Service
+	PublishService          *apiv1.Service
 }
 
 // ListenPorts describe the ports required to run the
