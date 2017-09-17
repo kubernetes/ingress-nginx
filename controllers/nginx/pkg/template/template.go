@@ -30,6 +30,7 @@ import (
 	text_template "text/template"
 
 	"github.com/golang/glog"
+
 	"github.com/pborman/uuid"
 
 	extensions "k8s.io/api/extensions/v1beta1"

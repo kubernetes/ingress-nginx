@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+
 	"github.com/mitchellh/mapstructure"
 
 	"k8s.io/ingress/controllers/nginx/pkg/config"

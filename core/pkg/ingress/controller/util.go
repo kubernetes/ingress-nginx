@@ -18,6 +18,7 @@ package controller
 
 import (
 	"github.com/golang/glog"
+
 	"github.com/imdario/mergo"
 
 	api "k8s.io/api/core/v1"

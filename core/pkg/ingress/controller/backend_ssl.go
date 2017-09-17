@@ -23,7 +23,7 @@ import (
 
 	"github.com/golang/glog"
 
-	api "k8s.io/api/core/v1"
+	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress/core/pkg/ingress"
@@ -75,9 +75,9 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 		return nil, fmt.Errorf("secret named %v does not exist", secretName)
 	}
 
-	secret := secretInterface.(*api.Secret)
-	cert, okcert := secret.Data[api.TLSCertKey]
-	key, okkey := secret.Data[api.TLSPrivateKeyKey]
+	secret := secretInterface.(*apiv1.Secret)
+	cert, okcert := secret.Data[apiv1.TLSCertKey]
+	key, okkey := secret.Data[apiv1.TLSPrivateKeyKey]
 
 	ca := secret.Data["ca.crt"]
 

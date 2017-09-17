@@ -19,6 +19,7 @@ package template
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net"
 	"os"
 	"path"
 	"reflect"
@@ -29,7 +30,6 @@ import (
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
-	"net"
 )
 
 var (

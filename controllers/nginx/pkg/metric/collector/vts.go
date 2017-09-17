@@ -20,6 +20,7 @@ import (
 	"reflect"
 
 	"github.com/golang/glog"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
