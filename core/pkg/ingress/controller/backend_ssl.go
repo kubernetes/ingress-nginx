@@ -85,6 +85,9 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 
 	var s *ingress.SSLCert
 	if okcert && okkey {
+		if cert == nil || key == nil {
+			return nil, fmt.Errorf("error retrieving cert or key from secret %v: %v", secretName, err)
+		}
 		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating pem file %v", err)
