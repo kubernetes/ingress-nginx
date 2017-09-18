@@ -49,11 +49,9 @@ const (
 
 // Template ...
 type Template struct {
-	tmpl      *text_template.Template
-	fw        watch.FileWatcher
-	s         int
-	tmplBuf   *bytes.Buffer
-	outCmdBuf *bytes.Buffer
+	tmpl *text_template.Template
+	fw   watch.FileWatcher
+	s    int
 }
 
 //NewTemplate returns a new Template instance or an
@@ -69,11 +67,9 @@ func NewTemplate(file string, onChange func()) (*Template, error) {
 	}
 
 	return &Template{
-		tmpl:      tmpl,
-		fw:        fw,
-		s:         defBufferSize,
-		tmplBuf:   bytes.NewBuffer(make([]byte, 0, defBufferSize)),
-		outCmdBuf: bytes.NewBuffer(make([]byte, 0, defBufferSize)),
+		tmpl: tmpl,
+		fw:   fw,
+		s:    defBufferSize,
 	}, nil
 }
 
@@ -85,15 +81,13 @@ func (t *Template) Close() {
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
 func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
-	defer t.tmplBuf.Reset()
-	defer t.outCmdBuf.Reset()
+	tmplBuf := bytes.NewBuffer(make([]byte, 0, t.s))
+	outCmdBuf := bytes.NewBuffer(make([]byte, 0, t.s))
 
 	defer func() {
-		if t.s < t.tmplBuf.Cap() {
-			glog.V(2).Infof("adjusting template buffer size from %v to %v", t.s, t.tmplBuf.Cap())
-			t.s = t.tmplBuf.Cap()
-			t.tmplBuf = bytes.NewBuffer(make([]byte, 0, t.tmplBuf.Cap()))
-			t.outCmdBuf = bytes.NewBuffer(make([]byte, 0, t.outCmdBuf.Cap()))
+		if t.s < tmplBuf.Cap() {
+			glog.V(2).Infof("adjusting template buffer size from %v to %v", t.s, tmplBuf.Cap())
+			t.s = tmplBuf.Cap()
 		}
 	}()
 
@@ -105,7 +99,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 		glog.Infof("NGINX configuration: %v", string(b))
 	}
 
-	err := t.tmpl.Execute(t.tmplBuf, conf)
+	err := t.tmpl.Execute(tmplBuf, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -113,14 +107,14 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	// squeezes multiple adjacent empty lines to be single
 	// spaced this is to avoid the use of regular expressions
 	cmd := exec.Command("/ingress-controller/clean-nginx-conf.sh")
-	cmd.Stdin = t.tmplBuf
-	cmd.Stdout = t.outCmdBuf
+	cmd.Stdin = tmplBuf
+	cmd.Stdout = outCmdBuf
 	if err := cmd.Run(); err != nil {
 		glog.Warningf("unexpected error cleaning template: %v", err)
-		return t.tmplBuf.Bytes(), nil
+		return tmplBuf.Bytes(), nil
 	}
 
-	return t.outCmdBuf.Bytes(), nil
+	return outCmdBuf.Bytes(), nil
 }
 
 var (

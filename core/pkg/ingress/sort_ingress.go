@@ -24,52 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// BackendByNameServers sorts upstreams by name
-type BackendByNameServers []*Backend
-
-func (c BackendByNameServers) Len() int      { return len(c) }
-func (c BackendByNameServers) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c BackendByNameServers) Less(i, j int) bool {
-
-	return c[i].Name < c[j].Name
-}
-
-// EndpointByAddrPort sorts endpoints by address and port
-type EndpointByAddrPort []Endpoint
-
-func (c EndpointByAddrPort) Len() int      { return len(c) }
-func (c EndpointByAddrPort) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c EndpointByAddrPort) Less(i, j int) bool {
-	iName := c[i].Address
-	jName := c[j].Address
-	if iName != jName {
-		return iName < jName
-	}
-
-	iU := c[i].Port
-	jU := c[j].Port
-	return iU < jU
-}
-
-// ServerByName sorts servers by name
-type ServerByName []*Server
-
-func (c ServerByName) Len() int      { return len(c) }
-func (c ServerByName) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c ServerByName) Less(i, j int) bool {
-	return c[i].Hostname < c[j].Hostname
-}
-
-// LocationByPath sorts location by path in descending order
-// Location / is the last one
-type LocationByPath []*Location
-
-func (c LocationByPath) Len() int      { return len(c) }
-func (c LocationByPath) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c LocationByPath) Less(i, j int) bool {
-	return c[i].Path > c[j].Path
-}
-
 // SSLCert describes a SSL certificate to be used in a server
 type SSLCert struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
