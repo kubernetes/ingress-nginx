@@ -45,7 +45,7 @@ import (
 )
 
 const (
-	updateInterval = 30 * time.Second
+	updateInterval = 60 * time.Second
 )
 
 // Sync ...
@@ -56,13 +56,15 @@ type Sync interface {
 
 // Config ...
 type Config struct {
-	Client         clientset.Interface
+	Client clientset.Interface
+
 	PublishService string
-	IngressLister  store.IngressLister
 
 	ElectionID string
 
 	UpdateStatusOnShutdown bool
+
+	IngressLister store.IngressLister
 
 	DefaultIngressClass string
 	IngressClass        string
@@ -293,7 +295,10 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 		}
 	}
 
-	sort.Sort(loadBalancerIngressByIP(lbi))
+	sort.Slice(lbi, func(a, b int) bool {
+		return lbi[a].IP < lbi[b].IP
+	})
+
 	return lbi
 }
 
@@ -328,7 +333,10 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 			}
 
 			curIPs := currIng.Status.LoadBalancer.Ingress
-			sort.Sort(loadBalancerIngressByIP(curIPs))
+			sort.Slice(curIPs, func(a, b int) bool {
+				return curIPs[a].IP < curIPs[b].IP
+			})
+
 			if ingressSliceEqual(addrs, curIPs) {
 				glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", currIng.Namespace, currIng.Name)
 				return
@@ -360,13 +368,4 @@ func ingressSliceEqual(lhs, rhs []apiv1.LoadBalancerIngress) bool {
 		}
 	}
 	return true
-}
-
-// loadBalancerIngressByIP sorts LoadBalancerIngress using the field IP
-type loadBalancerIngressByIP []apiv1.LoadBalancerIngress
-
-func (c loadBalancerIngressByIP) Len() int      { return len(c) }
-func (c loadBalancerIngressByIP) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c loadBalancerIngressByIP) Less(i, j int) bool {
-	return c[i].IP < c[j].IP
 }

@@ -348,6 +348,7 @@ http {
     {{ end }}
 
     {{ range $index, $server := $servers }}
+
     server {
         server_name {{ $server.Hostname }};
         {{ template "SERVER" serverConfig $all $server }}
@@ -355,6 +356,7 @@ http {
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
+    
     {{ if $server.Alias }}
     server {
         server_name {{ $server.Alias }};
