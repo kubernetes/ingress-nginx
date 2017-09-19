@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/golang/glog"
@@ -110,9 +111,9 @@ type GenericController struct {
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
-	forceReload bool
+	forceReload int32
 
-	initialSyncDone bool
+	initialSyncDone int32
 }
 
 // Configuration contains all the settings required by an Ingress controller
@@ -283,7 +284,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		PassthroughBackends: passUpstreams,
 	}
 
-	if !ic.forceReload && ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg) {
+	if !ic.isForceReload() && ic.runningConfig != nil && ic.runningConfig.Equal(&pcfg) {
 		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
 	}
@@ -302,7 +303,7 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 	setSSLExpireTime(servers)
 
 	ic.runningConfig = &pcfg
-	ic.forceReload = false
+	ic.setForceReload(false)
 
 	return nil
 }
@@ -1185,7 +1186,7 @@ func (ic GenericController) Stop() error {
 }
 
 // Start starts the Ingress controller.
-func (ic GenericController) Start() {
+func (ic *GenericController) Start() {
 	glog.Infof("starting Ingress controller")
 
 	go ic.ingController.Run(ic.stopCh)
@@ -1224,19 +1225,39 @@ func (ic GenericController) Start() {
 
 	createDefaultSSLCertificate()
 
+	ic.setInitialSyncDone()
+
 	go ic.syncQueue.Run(time.Second, ic.stopCh)
 
 	if ic.syncStatus != nil {
 		go ic.syncStatus.Run(ic.stopCh)
 	}
 
-	ic.initialSyncDone = true
-
 	time.Sleep(5 * time.Second)
 	// force initial sync
 	ic.syncQueue.Enqueue(&extensions.Ingress{})
 
 	<-ic.stopCh
+}
+
+func (ic *GenericController) isForceReload() bool {
+	return atomic.LoadInt32(&ic.forceReload) != 0
+}
+
+func (ic *GenericController) setForceReload(shouldReload bool) {
+	if shouldReload {
+		atomic.StoreInt32(&ic.forceReload, 1)
+	} else {
+		atomic.StoreInt32(&ic.forceReload, 0)
+	}
+}
+
+func (ic *GenericController) isInitialSyncDone() bool {
+	return atomic.LoadInt32(&ic.initialSyncDone) != 0
+}
+
+func (ic *GenericController) setInitialSyncDone() {
+	atomic.StoreInt32(&ic.initialSyncDone, 1)
 }
 
 func createDefaultSSLCertificate() {
