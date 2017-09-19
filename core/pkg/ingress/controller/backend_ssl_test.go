@@ -86,6 +86,13 @@ func buildSecrListerForBackendSSL() store.SecretLister {
 	return secrLister
 }
 
+func buildListers() *ingress.StoreLister {
+	sl := &ingress.StoreLister{}
+	sl.Ingress.Store = buildIngListenerForBackendSSL()
+	sl.Secret.Store = buildSecrListerForBackendSSL()
+	return sl
+}
+
 func buildControllerForBackendSSL() cache_client.Controller {
 	cfg := &cache_client.Config{
 		Queue: &MockQueue{Synced: true},
@@ -99,8 +106,7 @@ func buildGenericControllerForBackendSSL() *GenericController {
 		cfg: &Configuration{
 			Client: buildSimpleClientSetForBackendSSL(),
 		},
-		ingLister:  buildIngListenerForBackendSSL(),
-		secrLister: buildSecrListerForBackendSSL(),
+		listers: buildListers(),
 
 		ingController:  buildControllerForBackendSSL(),
 		endpController: buildControllerForBackendSSL(),
@@ -162,7 +168,7 @@ func TestSyncSecret(t *testing.T) {
 			secret.SetNamespace("default")
 			secret.SetName("foo_secret")
 			secret.Data = foo.Data
-			ic.secrLister.Add(secret)
+			ic.listers.Secret.Add(secret)
 
 			key := "default/foo_secret"
 			// for add
@@ -209,7 +215,7 @@ func TestGetPemCertificate(t *testing.T) {
 			ic := buildGenericControllerForBackendSSL()
 			secret := buildSecretForBackendSSL()
 			secret.Data = foo.Data
-			ic.secrLister.Add(secret)
+			ic.listers.Secret.Add(secret)
 			sslCert, err := ic.getPemCertificate(foo.secretName)
 
 			if foo.eErr {
