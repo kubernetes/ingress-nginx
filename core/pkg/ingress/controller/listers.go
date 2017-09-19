@@ -46,7 +46,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) {
 			}
 			ic.recorder.Eventf(addIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
 
-			if ic.initialSyncDone {
+			if ic.isInitialSyncDone() {
 				ic.syncQueue.Enqueue(obj)
 			}
 		},
@@ -142,7 +142,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) {
 			if mapKey == ic.cfg.ConfigMapName {
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
 				ic.cfg.Backend.SetConfig(upCmap)
-				ic.forceReload = true
+				ic.setForceReload(true)
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
@@ -152,7 +152,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) {
 				if mapKey == ic.cfg.ConfigMapName {
 					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
 					ic.cfg.Backend.SetConfig(upCmap)
-					ic.forceReload = true
+					ic.setForceReload(true)
 				}
 				// updates to configuration configmaps can trigger an update
 				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
