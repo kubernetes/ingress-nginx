@@ -127,7 +127,7 @@ const (
 	serverAlias          = "Alias"
 	clientBodyBufferSize = "ClientBodyBufferSize"
 	certificateAuth      = "CertificateAuth"
-  serverSnippet   = "ServerSnippet"
+	serverSnippet        = "ServerSnippet"
 )
 
 func (e *annotationExtractor) ServiceUpstream(ing *extensions.Ingress) bool {
@@ -170,10 +170,7 @@ func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessiona
 }
 
 func (e *annotationExtractor) ServerSnippet(ing *extensions.Ingress) string {
-	val, err := e.annotations[serverSnippet].Parse(ing)
-	if err != nil {
-		glog.Errorf("error parsing server snippet: %v", err)
-	}
+	val, _ := e.annotations[serverSnippet].Parse(ing)
 	return val.(string)
 }
 
