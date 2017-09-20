@@ -70,15 +70,9 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		return false
 	}
 
-	for _, c1s := range c1.Servers {
-		found := false
-		for _, c2s := range c2.Servers {
-			if c1s.Equal(c2s) {
-				found = true
-				break
-			}
-		}
-		if !found {
+	// Servers are sorted
+	for idx, c1s := range c1.Servers {
+		if !c1s.Equal(c2.Servers[idx]) {
 			return false
 		}
 	}
@@ -306,15 +300,9 @@ func (s1 *Server) Equal(s2 *Server) bool {
 		return false
 	}
 
-	for _, s1l := range s1.Locations {
-		found := false
-		for _, sl2 := range s2.Locations {
-			if s1l.Equal(sl2) {
-				found = true
-				break
-			}
-		}
-		if !found {
+	// Location are sorted
+	for idx, s1l := range s1.Locations {
+		if !s1l.Equal(s2.Locations[idx]) {
 			return false
 		}
 	}
