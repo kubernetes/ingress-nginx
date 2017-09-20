@@ -405,13 +405,11 @@ http {
 }
 
 stream {
-    log_format log_stream {{ $cfg.LogFormatStream }};
-
-    {{ if $cfg.DisableAccessLog }}
-    access_log off;
-    {{ else }}
-    access_log {{ $cfg.AccessLogPath }} log_stream;
-    {{ end }}
+    log_format proxy '$msec $remote_addr:$remote_port $ssl_preread_server_name '
+                     '$protocol st:$status bs:$bytes_sent br:$bytes_received '
+                     'sesstime:$session_time pod:"$upstream_addr" '
+                     'ubs:"$upstream_bytes_sent" ubr:"$upstream_bytes_received" uct:"$upstream_connect_time"';
+    access_log /var/log/nginx/access.log proxy if=$bytes_received;
 
     error_log  {{ $cfg.ErrorLogPath }};
 
@@ -440,6 +438,32 @@ stream {
     }
 
     {{ end }}
+
+    # SNI services
+    map $ssl_preread_server_name $name {
+    {{ range $i, $sniServer := .SNIBackends }}
+        {{ $sniServer.Backend.ServerName }} sni-{{ $sniServer.Port }}-{{ $sniServer.Backend.Namespace }}-{{ $sniServer.Backend.Name }}-{{ $sniServer.Backend.Port }};
+    {{ end }}
+    }
+
+    {{ range $i, $sniServer := .SNIBackends }}
+    upstream sni-{{ $sniServer.Port }}-{{ $sniServer.Backend.Namespace }}-{{ $sniServer.Backend.Name }}-{{ $sniServer.Backend.Port }} {
+    {{ range $j, $endpoint := $sniServer.Endpoints }}
+        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+    {{ end }}
+    }
+    {{ end }}
+
+    proxy_protocol on;
+    proxy_timeout 305;
+
+    server {
+        listen 8443 reuseport;
+        ssl_preread on;
+        proxy_pass $name;
+        proxy_timeout 305;
+    }
+
 
     # UDP services
     {{ range $i, $udpServer := .UDPBackends }}
