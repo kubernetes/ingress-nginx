@@ -411,7 +411,7 @@ func NewDefault() Configuration {
 		ShowServerTokens:           true,
 		SSLBufferSize:              sslBufferSize,
 		SSLCiphers:                 sslCiphers,
-		SSLECDHCurve:               "secp384r1",
+		SSLECDHCurve:               "auto",
 		SSLProtocols:               sslProtocols,
 		SSLSessionCache:            true,
 		SSLSessionCacheSize:        sslSessionCacheSize,
