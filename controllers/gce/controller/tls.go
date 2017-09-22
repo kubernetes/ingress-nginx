@@ -66,11 +66,11 @@ func (t *apiServerTLSLoader) load(ing *extensions.Ingress) (*loadbalancers.TLSCe
 	}
 	cert, ok := secret.Data[api_v1.TLSCertKey]
 	if !ok {
-		return nil, fmt.Errorf("secret %v has no private key", secretName)
+		return nil, fmt.Errorf("secret %v has no 'tls.crt'", secretName)
 	}
 	key, ok := secret.Data[api_v1.TLSPrivateKeyKey]
 	if !ok {
-		return nil, fmt.Errorf("secret %v has no cert", secretName)
+		return nil, fmt.Errorf("secret %v has no 'tls.key'", secretName)
 	}
 	certs := &loadbalancers.TLSCerts{Key: string(key), Cert: string(cert)}
 	if err := t.validate(certs); err != nil {
