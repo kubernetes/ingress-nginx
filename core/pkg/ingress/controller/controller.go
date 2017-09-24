@@ -19,6 +19,7 @@ package controller
 import (
 	"fmt"
 	"math/rand"
+	"net"
 	"reflect"
 	"sort"
 	"strconv"
@@ -1088,6 +1089,14 @@ func (ic *GenericController) getEndpoints(
 		// check for invalid port value
 		if targetPort <= 0 {
 			return upsServers
+		}
+
+		if net.ParseIP(s.Spec.ExternalName) == nil {
+			_, err := net.LookupHost(s.Spec.ExternalName)
+			if err != nil {
+				glog.Errorf("unexpected error resolving host %v: %v", s.Spec.ExternalName, err)
+				return upsServers
+			}
 		}
 
 		return append(upsServers, ingress.Endpoint{
