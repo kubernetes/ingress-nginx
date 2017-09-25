@@ -1,6 +1,6 @@
 # Haproxy Ingress DaemonSet
 
-In some cases, the Ingress controller will be required to be run at all the nodes in cluster. Using [DaemonSet](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/daemon.md) can achieve this requirement.
+In some cases, the Ingress controller will be required to be run at all the nodes in cluster. Using [DaemonSet](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/apps/daemon.md) can achieve this requirement.
 
 ## Prerequisites
 
