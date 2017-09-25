@@ -254,7 +254,26 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 		}
 	}
 
-	upstreams, servers := ic.getBackendServers()
+	// Sort ingress rules using the ResourceVersion field
+	ings := ic.listers.Ingress.List()
+	sort.SliceStable(ings, func(i, j int) bool {
+		ir := ings[i].(*ingress.SSLCert).ResourceVersion
+		jr := ings[j].(*ingress.SSLCert).ResourceVersion
+		return ir < jr
+	})
+
+	// filter ingress rules
+	var ingresses []*extensions.Ingress
+	for _, ingIf := range ings {
+		ing := ingIf.(*extensions.Ingress)
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			continue
+		}
+
+		ingresses = append(ingresses, ing)
+	}
+
+	upstreams, servers := ic.getBackendServers(ingresses)
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
 	for _, server := range servers {
@@ -463,27 +482,13 @@ func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 
 // getBackendServers returns a list of Upstream and Server to be used by the backend
 // An upstream can be used in multiple servers if the namespace, service name and port are the same
-func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress.Server) {
-	ings := ic.listers.Ingress.List()
-	sort.Slice(ings, func(i, j int) bool {
-		ir := ings[i].(*extensions.Ingress).ResourceVersion
-		jr := ings[j].(*extensions.Ingress).ResourceVersion
-		return ir < jr
-	})
-
+func (ic *GenericController) getBackendServers(ingresses []*extensions.Ingress) ([]*ingress.Backend, []*ingress.Server) {
 	du := ic.getDefaultUpstream()
-	upstreams := ic.createUpstreams(ings, du)
-	servers := ic.createServers(ings, upstreams, du)
+	upstreams := ic.createUpstreams(ingresses, du)
+	servers := ic.createServers(ingresses, upstreams, du)
 
-	for _, ingIf := range ings {
-		ing := ingIf.(*extensions.Ingress)
-
+	for _, ing := range ingresses {
 		affinity := ic.annotations.SessionAffinity(ing)
-
-		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-			continue
-		}
-
 		anns := ic.annotations.Extract(ing)
 
 		for _, rule := range ing.Spec.Rules {
@@ -648,20 +653,20 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	}
 
 	if ic.cfg.SortBackends {
-		sort.Slice(aUpstreams, func(a, b int) bool {
+		sort.SliceStable(aUpstreams, func(a, b int) bool {
 			return aUpstreams[a].Name < aUpstreams[b].Name
 		})
 	}
 
 	aServers := make([]*ingress.Server, 0, len(servers))
 	for _, value := range servers {
-		sort.Slice(value.Locations, func(i, j int) bool {
+		sort.SliceStable(value.Locations, func(i, j int) bool {
 			return value.Locations[i].Path > value.Locations[j].Path
 		})
 		aServers = append(aServers, value)
 	}
 
-	sort.Slice(aServers, func(i, j int) bool {
+	sort.SliceStable(aServers, func(i, j int) bool {
 		return aServers[i].Hostname < aServers[j].Hostname
 	})
 
@@ -693,17 +698,11 @@ func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.Aut
 
 // createUpstreams creates the NGINX upstreams for each service referenced in
 // Ingress rules. The servers inside the upstream are endpoints.
-func (ic *GenericController) createUpstreams(data []interface{}, du *ingress.Backend) map[string]*ingress.Backend {
+func (ic *GenericController) createUpstreams(data []*extensions.Ingress, du *ingress.Backend) map[string]*ingress.Backend {
 	upstreams := make(map[string]*ingress.Backend)
 	upstreams[defUpstreamName] = du
 
-	for _, ingIf := range data {
-		ing := ingIf.(*extensions.Ingress)
-
-		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-			continue
-		}
-
+	for _, ing := range data {
 		secUpstream := ic.annotations.SecureUpstream(ing)
 		hz := ic.annotations.HealthCheck(ing)
 		serviceUpstream := ic.annotations.ServiceUpstream(ing)
@@ -845,7 +844,7 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 			}
 
 			if ic.cfg.SortBackends {
-				sort.Slice(endps, func(i, j int) bool {
+				sort.SliceStable(endps, func(i, j int) bool {
 					iName := endps[i].Address
 					jName := endps[j].Address
 					if iName != jName {
@@ -875,7 +874,7 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 // FDQN referenced by ingress rules and the common name field in the referenced
 // SSL certificates. Each server is configured with location / using a default
 // backend specified by the user or the one inside the ingress spec.
-func (ic *GenericController) createServers(data []interface{},
+func (ic *GenericController) createServers(data []*extensions.Ingress,
 	upstreams map[string]*ingress.Backend,
 	du *ingress.Backend) map[string]*ingress.Server {
 
@@ -923,11 +922,7 @@ func (ic *GenericController) createServers(data []interface{},
 		}}
 
 	// initialize all the servers
-	for _, ingIf := range data {
-		ing := ingIf.(*extensions.Ingress)
-		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-			continue
-		}
+	for _, ing := range data {
 
 		// check if ssl passthrough is configured
 		sslpt := ic.annotations.SSLPassthrough(ing)
@@ -980,12 +975,7 @@ func (ic *GenericController) createServers(data []interface{},
 	}
 
 	// configure default location, alias, and SSL
-	for _, ingIf := range data {
-		ing := ingIf.(*extensions.Ingress)
-		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-			continue
-		}
-
+	for _, ing := range data {
 		// setup server-alias based on annotations
 		aliasAnnotation := ic.annotations.Alias(ing)
 
