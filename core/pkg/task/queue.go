@@ -31,8 +31,10 @@ var (
 	keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
 )
 
-// Queue manages a work queue through an independent worker that
-// invokes the given sync function for every work item inserted.
+// Queue manages a time work queue through an independent worker that invokes the
+// given sync function for every work item inserted.
+// The queue uses an internal timestamp that allows the removal of certain elements
+// which timestamp is older than the last successful get operation.
 type Queue struct {
 	// queue is the work queue the worker polls
 	queue workqueue.RateLimitingInterface
@@ -42,6 +44,13 @@ type Queue struct {
 	workerDone chan bool
 
 	fn func(obj interface{}) (interface{}, error)
+
+	lastSync int64
+}
+
+type element struct {
+	Key       interface{}
+	Timestamp int64
 }
 
 // Run ...
@@ -56,13 +65,17 @@ func (t *Queue) Enqueue(obj interface{}) {
 		return
 	}
 
+	ts := time.Now().UnixNano()
 	glog.V(3).Infof("queuing item %v", obj)
 	key, err := t.fn(obj)
 	if err != nil {
 		glog.Errorf("%v", err)
 		return
 	}
-	t.queue.Add(key)
+	t.queue.Add(element{
+		Key:       key,
+		Timestamp: ts,
+	})
 }
 
 func (t *Queue) defaultKeyFunc(obj interface{}) (interface{}, error) {
@@ -84,13 +97,26 @@ func (t *Queue) worker() {
 			}
 			return
 		}
+		ts := time.Now().UnixNano()
 
-		glog.V(3).Infof("syncing %v", key)
+		item := key.(element)
+		if t.lastSync > item.Timestamp {
+			glog.V(3).Infof("skipping %v sync (%v > %v)", item.Key, t.lastSync, item.Timestamp)
+			t.queue.Forget(key)
+			t.queue.Done(key)
+			continue
+		}
+
+		glog.V(3).Infof("syncing %v", item.Key)
 		if err := t.sync(key); err != nil {
-			glog.Warningf("requeuing %v, err %v", key, err)
-			t.queue.AddRateLimited(key)
+			glog.Warningf("requeuing %v, err %v", item.Key, err)
+			t.queue.AddRateLimited(element{
+				Key:       item.Key,
+				Timestamp: time.Now().UnixNano(),
+			})
 		} else {
 			t.queue.Forget(key)
+			t.lastSync = ts
 		}
 
 		t.queue.Done(key)
