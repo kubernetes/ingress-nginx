@@ -200,9 +200,15 @@ func buildLocation(input interface{}) string {
 	}
 
 	path := location.Path
-	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != path {
+
+	if len(location.Rewrite.Target) > 0 {
+		if location.Rewrite.Target == path {
+			// This is an invalid rewrite case
+			return path
+		}
+
 		if path == slash {
-			return fmt.Sprintf("~* %s", path)
+			return fmt.Sprintf("%s %s", location.Rewrite.LocationModifier, path)
 		}
 		// baseuri regex will parse basename from the given location
 		baseuri := `(?<baseuri>.*)`
@@ -210,7 +216,11 @@ func buildLocation(input interface{}) string {
 			// Not treat the slash after "location path" as a part of baseuri
 			baseuri = fmt.Sprintf(`\/?%s`, baseuri)
 		}
-		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
+		return fmt.Sprintf("%s ^%s%s", location.Rewrite.LocationModifier, path, baseuri)
+	}
+
+	if len(location.Rewrite.LocationModifier) > 0 {
+		return fmt.Sprintf("%s %s", location.Rewrite.LocationModifier, path)
 	}
 
 	return path

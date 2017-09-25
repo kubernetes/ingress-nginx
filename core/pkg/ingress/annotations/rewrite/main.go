@@ -19,23 +19,28 @@ package rewrite
 import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
+	"github.com/golang/glog"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 )
 
 const (
-	rewriteTo        = "ingress.kubernetes.io/rewrite-target"
-	addBaseURL       = "ingress.kubernetes.io/add-base-url"
-	baseURLScheme    = "ingress.kubernetes.io/base-url-scheme"
-	sslRedirect      = "ingress.kubernetes.io/ssl-redirect"
-	forceSSLRedirect = "ingress.kubernetes.io/force-ssl-redirect"
-	appRoot          = "ingress.kubernetes.io/app-root"
+	rewriteTo                      = "ingress.kubernetes.io/rewrite-target"
+	locationModifier               = "ingress.kubernetes.io/location-modifier"
+	defaultRewriteLocationModifier = "~*"
+	addBaseURL                     = "ingress.kubernetes.io/add-base-url"
+	baseURLScheme                  = "ingress.kubernetes.io/base-url-scheme"
+	sslRedirect                    = "ingress.kubernetes.io/ssl-redirect"
+	forceSSLRedirect               = "ingress.kubernetes.io/force-ssl-redirect"
+	appRoot                        = "ingress.kubernetes.io/app-root"
 )
 
 // Redirect describes the per location redirect config
 type Redirect struct {
 	// Target URI where the traffic must be redirected
 	Target string `json:"target"`
+	// Location modifier
+	LocationModifier string `json:"locationModifier"`
 	// AddBaseURL indicates if is required to add a base tag in the head
 	// of the responses from the upstream servers
 	AddBaseURL bool `json:"addBaseUrl"`
@@ -92,6 +97,11 @@ func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 	rt, _ := parser.GetStringAnnotation(rewriteTo, ing)
+	locMod, _ := parser.GetStringAnnotation(locationModifier, ing)
+
+	if rt != "" && locMod == "" {
+		locMod = defaultRewriteLocationModifier
+	}
 	sslRe, err := parser.GetBoolAnnotation(sslRedirect, ing)
 	if err != nil {
 		sslRe = a.backendResolver.GetDefaultBackend().SSLRedirect
@@ -103,12 +113,18 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 	abu, _ := parser.GetBoolAnnotation(addBaseURL, ing)
 	bus, _ := parser.GetStringAnnotation(baseURLScheme, ing)
 	ar, _ := parser.GetStringAnnotation(appRoot, ing)
-	return &Redirect{
+
+	redirect := &Redirect{
 		Target:           rt,
+		LocationModifier: locMod,
 		AddBaseURL:       abu,
 		BaseURLScheme:    bus,
 		SSLRedirect:      sslRe,
 		ForceSSLRedirect: fSslRe,
 		AppRoot:          ar,
-	}, nil
+	}
+
+	glog.V(5).Infof("created redirect %s", redirect)
+
+	return redirect, nil
 }
