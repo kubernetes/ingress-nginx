@@ -100,6 +100,31 @@ func TestRedirect(t *testing.T) {
 	if redirect.Target != defRoute {
 		t.Errorf("Expected %v as redirect but returned %s", defRoute, redirect.Target)
 	}
+
+	if redirect.LocationModifier != defaultRewriteLocationModifier {
+		t.Errorf("Expected %v as implicit location modifier but returned %s", defaultRewriteLocationModifier, redirect.LocationModifier)
+	}
+}
+
+func TestRegex(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	modifier := "~"
+	data[locationModifier] = modifier
+	ing.SetAnnotations(data)
+
+	i, err := NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("Unexpected error with ingress: %v", err)
+	}
+	redirect, ok := i.(*Redirect)
+	if !ok {
+		t.Errorf("expected a Redirect type")
+	}
+	if redirect.LocationModifier != modifier {
+		t.Errorf("Expected %v as location modifier but returned %s", modifier, redirect.LocationModifier)
+	}
 }
 
 func TestSSLRedirect(t *testing.T) {

@@ -32,61 +32,68 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 )
 
+const (
+	emptyTarget = ""
+)
+
 var (
 	// TODO: add tests for secure endpoints
 	tmplFuncTestcases = map[string]struct {
-		Path          string
-		Target        string
-		Location      string
-		ProxyPass     string
-		AddBaseURL    bool
-		BaseURLScheme string
+		Path             string
+		Target           string
+		LocationModifier string
+		Location         string
+		ProxyPass        string
+		AddBaseURL       bool
+		BaseURLScheme    string
 	}{
-		"invalid redirect / to /": {"/", "/", "/", "proxy_pass http://upstream-name;", false, ""},
-		"redirect / to /jenkins": {"/", "/jenkins", "~* /",
+		"case insensitive location modifier": {"/something", emptyTarget, "~*", "~* /something", "proxy_pass http://upstream-name;", false, ""},
+		"case sensitive location modifier":   {"/something", emptyTarget, "~", "~ /something", "proxy_pass http://upstream-name;", false, ""},
+		"invalid redirect / to /":            {"/", "/", "~*", "/", "proxy_pass http://upstream-name;", false, ""},
+		"redirect / to /jenkins": {"/", "/jenkins", "~*", "~* /",
 			`
 	    rewrite /(.*) /jenkins/$1 break;
 	    proxy_pass http://upstream-name;
 	    `, false, ""},
-		"redirect /something to /": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
+		"redirect /something to /": {"/something", "/", "~*", `~* ^/something\/?(?<baseuri>.*)`, `
 	    rewrite /something/(.*) /$1 break;
 	    rewrite /something / break;
 	    proxy_pass http://upstream-name;
 	    `, false, ""},
-		"redirect /end-with-slash/ to /not-root": {"/end-with-slash/", "/not-root", "~* ^/end-with-slash/(?<baseuri>.*)", `
+		"redirect /end-with-slash/ to /not-root": {"/end-with-slash/", "/not-root", "~*", "~* ^/end-with-slash/(?<baseuri>.*)", `
 	    rewrite /end-with-slash/(.*) /not-root/$1 break;
 	    proxy_pass http://upstream-name;
 	    `, false, ""},
-		"redirect /something-complex to /not-root": {"/something-complex", "/not-root", `~* ^/something-complex\/?(?<baseuri>.*)`, `
+		"redirect /something-complex to /not-root": {"/something-complex", "/not-root", "~*", `~* ^/something-complex\/?(?<baseuri>.*)`, `
 	    rewrite /something-complex/(.*) /not-root/$1 break;
 	    proxy_pass http://upstream-name;
 	    `, false, ""},
-		"redirect / to /jenkins and rewrite": {"/", "/jenkins", "~* /", `
+		"redirect / to /jenkins and rewrite": {"/", "/jenkins", "~*", "~* /", `
 	    rewrite /(.*) /jenkins/$1 break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/$baseuri">' r;
 	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/$baseuri">' r;
 	    `, true, ""},
-		"redirect /something to / and rewrite": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
+		"redirect /something to / and rewrite": {"/something", "/", "~*", `~* ^/something\/?(?<baseuri>.*)`, `
 	    rewrite /something/(.*) /$1 break;
 	    rewrite /something / break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something/$baseuri">' r;
 	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something/$baseuri">' r;
 	    `, true, ""},
-		"redirect /end-with-slash/ to /not-root and rewrite": {"/end-with-slash/", "/not-root", `~* ^/end-with-slash/(?<baseuri>.*)`, `
+		"redirect /end-with-slash/ to /not-root and rewrite": {"/end-with-slash/", "/not-root", "~*", `~* ^/end-with-slash/(?<baseuri>.*)`, `
 	    rewrite /end-with-slash/(.*) /not-root/$1 break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
 	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/end-with-slash/$baseuri">' r;
 	    `, true, ""},
-		"redirect /something-complex to /not-root and rewrite": {"/something-complex", "/not-root", `~* ^/something-complex\/?(?<baseuri>.*)`, `
+		"redirect /something-complex to /not-root and rewrite": {"/something-complex", "/not-root", "~*", `~* ^/something-complex\/?(?<baseuri>.*)`, `
 	    rewrite /something-complex/(.*) /not-root/$1 break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '<head(.*)>' '<head$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
 	    subs_filter '<HEAD(.*)>' '<HEAD$1><base href="$scheme://$http_host/something-complex/$baseuri">' r;
 	    `, true, ""},
-		"redirect /something to / and rewrite with specific scheme": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
+		"redirect /something to / and rewrite with specific scheme": {"/something", "/", "~*", `~* ^/something\/?(?<baseuri>.*)`, `
 	    rewrite /something/(.*) /$1 break;
 	    rewrite /something / break;
 	    proxy_pass http://upstream-name;
@@ -118,13 +125,17 @@ func TestFormatIP(t *testing.T) {
 func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:    tc.Path,
-			Rewrite: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
+			Path: tc.Path,
+			Rewrite: rewrite.Redirect{
+				Target:           tc.Target,
+				AddBaseURL:       tc.AddBaseURL,
+				LocationModifier: tc.LocationModifier,
+			},
 		}
 
 		newLoc := buildLocation(loc)
 		if tc.Location != newLoc {
-			t.Errorf("%s: expected '%v' but returned %v", k, tc.Location, newLoc)
+			t.Errorf("%s: expected '%v' but returned '%v'", k, tc.Location, newLoc)
 		}
 	}
 }
@@ -132,8 +143,12 @@ func TestBuildLocation(t *testing.T) {
 func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:    tc.Path,
-			Rewrite: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL, BaseURLScheme: tc.BaseURLScheme},
+			Path: tc.Path,
+			Rewrite: rewrite.Redirect{
+				Target:        tc.Target,
+				AddBaseURL:    tc.AddBaseURL,
+				BaseURLScheme: tc.BaseURLScheme,
+			},
 			Backend: "upstream-name",
 		}
 
