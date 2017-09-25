@@ -37,31 +37,47 @@ func (f *Framework) NewEchoDeployment() error {
 // NewEchoDeploymentWithReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
 // replicas is configurable
 func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
+	return f.NewEchoDeploymentWithReplicasAndServiceName(replicas, "http-svc")
+}
+
+// NewEchoDeploymentWithServiceName creates a new deployment of the echoserver image in a particular namespace. service name is configurable
+func (f *Framework) NewEchoDeploymentWithServiceName(serviceName string) error {
+	return f.NewEchoDeploymentWithReplicasAndServiceName(1, serviceName)
+}
+
+// NewEchoDeploymentWithReplicasAndServiceName creates a new deployment of the echoserver image in a particular namespace. Number of
+// replicas and service name is configurable
+func (f *Framework) NewEchoDeploymentWithReplicasAndServiceName(replicas int32, serviceName string) error {
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "http-svc",
+			Name:      serviceName,
 			Namespace: f.Namespace.Name,
 		},
 		Spec: extensions.DeploymentSpec{
 			Replicas: NewInt32(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "http-svc",
+					"app": serviceName,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "http-svc",
+						"app": serviceName,
 					},
 				},
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: NewInt64(0),
 					Containers: []corev1.Container{
 						{
-							Name:  "http-svc",
+							Name:  serviceName,
 							Image: "gcr.io/google_containers/echoserver:1.8",
-							Env:   []corev1.EnvVar{},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "HOSTNAME",
+									Value: serviceName,
+								},
+							},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "http",
@@ -93,7 +109,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "http-svc",
+			Name:      serviceName,
 			Namespace: f.Namespace.Name,
 		},
 		Spec: corev1.ServiceSpec{
@@ -106,7 +122,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 				},
 			},
 			Selector: map[string]string{
-				"app": "http-svc",
+				"app": serviceName,
 			},
 		},
 	}

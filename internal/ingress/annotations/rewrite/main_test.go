@@ -85,95 +85,130 @@ func TestWithoutAnnotations(t *testing.T) {
 	}
 }
 
-func TestRedirect(t *testing.T) {
+func buildRedirect(t *testing.T, data *map[string]string, mock *mockBackend) *Config {
 	ing := buildIngress()
+	ing.SetAnnotations(*data)
 
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
-	ing.SetAnnotations(data)
+	if mock == nil {
+		mock = &mockBackend{}
+	}
 
-	i, err := NewParser(mockBackend{}).Parse(ing)
+	i1, err := NewParser(mock).Parse(ing)
 	if err != nil {
 		t.Errorf("Unexpected error with ingress: %v", err)
 	}
-	redirect, ok := i.(*Config)
+	redirect, ok := i1.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
 	}
+	return redirect
+}
+
+func buildDifferentRedirect(t *testing.T, key string, val string) *Config {
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(key)] = val
+	return buildRedirect(t, &data, nil)
+}
+
+func TestEqual(t *testing.T) {
+	data := map[string]string{}
+
+	redirect := buildRedirect(t, &data, nil)
+
+	if !redirect.Equal(redirect) {
+		t.Errorf("Expect the both redirect types to be equal")
+	}
+
+	if redirect.Equal(nil) {
+		t.Errorf("Expect the both redirect types to be different")
+	}
+
+	if redirect.Equal(buildDifferentRedirect(t, "location-modifier", "=")) {
+		t.Errorf("Expect the both redirect types to be different")
+	}
+
+	if redirect.Equal(buildDifferentRedirect(t, "rewrite-target", "/")) {
+		t.Errorf("Expect the both redirect types to be different")
+	}
+
+	if redirect.Equal(buildDifferentRedirect(t, "ssl-redirect", "true")) {
+		t.Errorf("Expect the both redirect types to be different")
+	}
+
+	if redirect.Equal(buildDifferentRedirect(t, "force-ssl-redirect", "true")) {
+		t.Errorf("Expect the both redirect types to be different")
+	}
+
+	if redirect.Equal(buildDifferentRedirect(t, "add-base-url", "true")) {
+		t.Errorf("Expect the both redirect types to be different")
+	}
+
+	if redirect.Equal(buildDifferentRedirect(t, "base-url-scheme", "/scheme")) {
+		t.Errorf("Expect the both redirect types to be different")
+	}
+
+	if redirect.Equal(buildDifferentRedirect(t, "app-root", "/root")) {
+		t.Errorf("Expect the both redirect types to be different")
+	}
+}
+
+func TestRedirect(t *testing.T) {
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
+	redirect := buildRedirect(t, &data, nil)
+
 	if redirect.Target != defRoute {
 		t.Errorf("Expected %v as redirect but returned %s", defRoute, redirect.Target)
 	}
 }
 
-func TestSSLRedirect(t *testing.T) {
-	ing := buildIngress()
+func TestRegex(t *testing.T) {
+	data := map[string]string{}
+	modifier := "~"
+	data[parser.GetAnnotationWithPrefix("location-modifier")] = modifier
 
+	redirect := buildRedirect(t, &data, nil)
+	if redirect.LocationModifier != modifier {
+		t.Errorf("Expected %v as location modifier but returned %s", modifier, redirect.LocationModifier)
+	}
+}
+
+func TestSSLRedirect(t *testing.T) {
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
-	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
-	redirect, ok := i.(*Config)
-	if !ok {
-		t.Errorf("expected a Redirect type")
-	}
+	redirect := buildRedirect(t, &data, &mockBackend{redirect: true})
 	if !redirect.SSLRedirect {
 		t.Errorf("Expected true but returned false")
 	}
-
 	data[parser.GetAnnotationWithPrefix("ssl-redirect")] = "false"
-	ing.SetAnnotations(data)
 
-	i, _ = NewParser(mockBackend{redirect: false}).Parse(ing)
-	redirect, ok = i.(*Config)
-	if !ok {
-		t.Errorf("expected a Redirect type")
-	}
+	redirect = buildRedirect(t, &data, &mockBackend{redirect: false})
 	if redirect.SSLRedirect {
 		t.Errorf("Expected false but returned true")
 	}
 }
 
 func TestForceSSLRedirect(t *testing.T) {
-	ing := buildIngress()
-
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
-	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
-	redirect, ok := i.(*Config)
-	if !ok {
-		t.Errorf("expected a Redirect type")
-	}
+	redirect := buildRedirect(t, &data, nil)
 	if redirect.ForceSSLRedirect {
 		t.Errorf("Expected false but returned true")
 	}
-
 	data[parser.GetAnnotationWithPrefix("force-ssl-redirect")] = "true"
-	ing.SetAnnotations(data)
 
-	i, _ = NewParser(mockBackend{redirect: false}).Parse(ing)
-	redirect, ok = i.(*Config)
-	if !ok {
-		t.Errorf("expected a Redirect type")
-	}
+	redirect = buildRedirect(t, &data, nil)
 	if !redirect.ForceSSLRedirect {
 		t.Errorf("Expected true but returned false")
 	}
 }
 func TestAppRoot(t *testing.T) {
-	ing := buildIngress()
-
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix("app-root")] = "/app1"
-	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
-	redirect, ok := i.(*Config)
-	if !ok {
-		t.Errorf("expected a App Context")
-	}
+	redirect := buildRedirect(t, &data, nil)
 	if redirect.AppRoot != "/app1" {
 		t.Errorf("Unexpected value got in AppRoot")
 	}

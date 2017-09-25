@@ -44,9 +44,10 @@ import (
 )
 
 const (
-	slash         = "/"
-	nonIdempotent = "non_idempotent"
-	defBufferSize = 65535
+	slash                   = "/"
+	nonIdempotent           = "non_idempotent"
+	defBufferSize           = 65535
+	defaultLocationModifier = "~*"
 )
 
 // Template ...
@@ -215,9 +216,16 @@ func buildLocation(input interface{}) string {
 	}
 
 	path := location.Path
+	locationModifier := location.Rewrite.LocationModifier
+
 	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != path {
+
+		if len(locationModifier) <= 0 {
+			locationModifier = defaultLocationModifier
+		}
+
 		if path == slash {
-			return fmt.Sprintf("~* %s", path)
+			return fmt.Sprintf("%s %s", locationModifier, path)
 		}
 		// baseuri regex will parse basename from the given location
 		baseuri := `(?<baseuri>.*)`
@@ -225,9 +233,15 @@ func buildLocation(input interface{}) string {
 			// Not treat the slash after "location path" as a part of baseuri
 			baseuri = fmt.Sprintf(`\/?%s`, baseuri)
 		}
-		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
+		return fmt.Sprintf(`%s ^%s%s`, locationModifier, path, baseuri)
 	}
 
+	if len(locationModifier) > 0 {
+		if path == slash {
+			return fmt.Sprintf("%s %s", locationModifier, path)
+		}
+		return fmt.Sprintf("%s ^%s", locationModifier, path)
+	}
 	return path
 }
 
