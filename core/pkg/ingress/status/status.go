@@ -297,7 +297,7 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 		}
 	}
 
-	sort.Slice(lbi, func(a, b int) bool {
+	sort.SliceStable(lbi, func(a, b int) bool {
 		return lbi[a].IP < lbi[b].IP
 	})
 
@@ -342,10 +342,10 @@ func runUpdate(ing *extensions.Ingress, status []apiv1.LoadBalancerIngress,
 		if ca != nil {
 			addrs = ca
 		}
-		sort.Slice(addrs, lessLoadBalancerIngress(addrs))
+		sort.SliceStable(addrs, lessLoadBalancerIngress(addrs))
 
 		curIPs := ing.Status.LoadBalancer.Ingress
-		sort.Slice(curIPs, lessLoadBalancerIngress(curIPs))
+		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
 
 		if ingressSliceEqual(addrs, curIPs) {
 			glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", ing.Namespace, ing.Name)
