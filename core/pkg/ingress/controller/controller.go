@@ -113,8 +113,6 @@ type GenericController struct {
 	runningConfig *ingress.Configuration
 
 	forceReload int32
-
-	initialSyncDone int32
 }
 
 // Configuration contains all the settings required by an Ingress controller
@@ -1224,8 +1222,6 @@ func (ic *GenericController) Start() {
 
 	createDefaultSSLCertificate()
 
-	ic.setInitialSyncDone()
-
 	go ic.syncQueue.Run(time.Second, ic.stopCh)
 
 	if ic.syncStatus != nil {
@@ -1249,14 +1245,6 @@ func (ic *GenericController) setForceReload(shouldReload bool) {
 	} else {
 		atomic.StoreInt32(&ic.forceReload, 0)
 	}
-}
-
-func (ic *GenericController) isInitialSyncDone() bool {
-	return atomic.LoadInt32(&ic.initialSyncDone) != 0
-}
-
-func (ic *GenericController) setInitialSyncDone() {
-	atomic.StoreInt32(&ic.initialSyncDone, 1)
 }
 
 func createDefaultSSLCertificate() {

@@ -45,10 +45,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) {
 				return
 			}
 			ic.recorder.Eventf(addIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
-
-			if ic.isInitialSyncDone() {
-				ic.syncQueue.Enqueue(obj)
-			}
+			ic.syncQueue.Enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng, ok := obj.(*extensions.Ingress)
