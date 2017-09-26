@@ -124,7 +124,7 @@ type NGINXController struct {
 
 	configmap *apiv1.ConfigMap
 
-	storeLister ingress.StoreLister
+	storeLister *ingress.StoreLister
 
 	binary   string
 	resolver []net.IP
@@ -463,7 +463,7 @@ func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
 }
 
 // SetListers sets the configured store listers in the generic ingress controller
-func (n *NGINXController) SetListers(lister ingress.StoreLister) {
+func (n *NGINXController) SetListers(lister *ingress.StoreLister) {
 	n.storeLister = lister
 }
 

@@ -17,13 +17,13 @@ limitations under the License.
 package ratelimit
 
 import (
+	"encoding/base64"
 	"fmt"
 	"sort"
 	"strings"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 
-	"k8s.io/ingress/core/pkg/base64"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/net"
@@ -218,7 +218,7 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 		LimitRate:      lr,
 		LimitRateAfter: lra,
 		Name:           zoneName,
-		ID:             base64.Encode(zoneName),
+		ID:             encode(zoneName),
 		Whitelist:      cidrs,
 	}, nil
 }
@@ -247,4 +247,9 @@ func parseCIDRs(s string) ([]string, error) {
 	sort.Strings(cidrs)
 
 	return cidrs, nil
+}
+
+func encode(s string) string {
+	str := base64.URLEncoding.EncodeToString([]byte(s))
+	return strings.Replace(str, "=", "", -1)
 }

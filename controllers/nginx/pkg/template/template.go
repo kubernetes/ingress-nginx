@@ -50,11 +50,9 @@ const (
 
 // Template ...
 type Template struct {
-	tmpl      *text_template.Template
-	fw        watch.FileWatcher
-	s         int
-	tmplBuf   *bytes.Buffer
-	outCmdBuf *bytes.Buffer
+	tmpl *text_template.Template
+	fw   watch.FileWatcher
+	s    int
 }
 
 //NewTemplate returns a new Template instance or an
@@ -70,11 +68,9 @@ func NewTemplate(file string, onChange func()) (*Template, error) {
 	}
 
 	return &Template{
-		tmpl:      tmpl,
-		fw:        fw,
-		s:         defBufferSize,
-		tmplBuf:   bytes.NewBuffer(make([]byte, 0, defBufferSize)),
-		outCmdBuf: bytes.NewBuffer(make([]byte, 0, defBufferSize)),
+		tmpl: tmpl,
+		fw:   fw,
+		s:    defBufferSize,
 	}, nil
 }
 
@@ -86,15 +82,13 @@ func (t *Template) Close() {
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
 func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
-	defer t.tmplBuf.Reset()
-	defer t.outCmdBuf.Reset()
+	tmplBuf := bytes.NewBuffer(make([]byte, 0, t.s))
+	outCmdBuf := bytes.NewBuffer(make([]byte, 0, t.s))
 
 	defer func() {
-		if t.s < t.tmplBuf.Cap() {
-			glog.V(2).Infof("adjusting template buffer size from %v to %v", t.s, t.tmplBuf.Cap())
-			t.s = t.tmplBuf.Cap()
-			t.tmplBuf = bytes.NewBuffer(make([]byte, 0, t.tmplBuf.Cap()))
-			t.outCmdBuf = bytes.NewBuffer(make([]byte, 0, t.outCmdBuf.Cap()))
+		if t.s < tmplBuf.Cap() {
+			glog.V(2).Infof("adjusting template buffer size from %v to %v", t.s, tmplBuf.Cap())
+			t.s = tmplBuf.Cap()
 		}
 	}()
 
@@ -106,7 +100,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 		glog.Infof("NGINX configuration: %v", string(b))
 	}
 
-	err := t.tmpl.Execute(t.tmplBuf, conf)
+	err := t.tmpl.Execute(tmplBuf, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -114,14 +108,14 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	// squeezes multiple adjacent empty lines to be single
 	// spaced this is to avoid the use of regular expressions
 	cmd := exec.Command("/ingress-controller/clean-nginx-conf.sh")
-	cmd.Stdin = t.tmplBuf
-	cmd.Stdout = t.outCmdBuf
+	cmd.Stdin = tmplBuf
+	cmd.Stdout = outCmdBuf
 	if err := cmd.Run(); err != nil {
 		glog.Warningf("unexpected error cleaning template: %v", err)
-		return t.tmplBuf.Bytes(), nil
+		return tmplBuf.Bytes(), nil
 	}
 
-	return t.outCmdBuf.Bytes(), nil
+	return outCmdBuf.Bytes(), nil
 }
 
 var (
@@ -180,9 +174,14 @@ func formatIP(input string) string {
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
-func buildResolvers(a interface{}) string {
+func buildResolvers(input interface{}) string {
 	// NGINX need IPV6 addresses to be surrounded by brackets
-	nss := a.([]net.IP)
+	nss, ok := input.([]net.IP)
+	if !ok {
+		glog.Errorf("expected a '[]net.IP' type but %T was returned", input)
+		return ""
+	}
+
 	if len(nss) == 0 {
 		return ""
 	}
@@ -205,6 +204,7 @@ func buildResolvers(a interface{}) string {
 func buildLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
+		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return slash
 	}
 
@@ -229,6 +229,7 @@ func buildLocation(input interface{}) string {
 func buildAuthLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
+		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return ""
 	}
 
@@ -246,6 +247,7 @@ func buildAuthResponseHeaders(input interface{}) []string {
 	location, ok := input.(*ingress.Location)
 	res := []string{}
 	if !ok {
+		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return res
 	}
 
@@ -265,7 +267,8 @@ func buildAuthResponseHeaders(input interface{}) []string {
 func buildLogFormatUpstream(input interface{}) string {
 	cfg, ok := input.(config.Configuration)
 	if !ok {
-		glog.Errorf("error an ingress.buildLogFormatUpstream type but %T was returned", input)
+		glog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
+		return ""
 	}
 
 	return cfg.BuildLogFormatUpstream()
@@ -276,9 +279,15 @@ func buildLogFormatUpstream(input interface{}) string {
 // If the annotation ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
 func buildProxyPass(host string, b interface{}, loc interface{}) string {
-	backends := b.([]*ingress.Backend)
+	backends, ok := b.([]*ingress.Backend)
+	if !ok {
+		glog.Errorf("expected an '[]*ingress.Backend' type but %T was returned", b)
+		return ""
+	}
+
 	location, ok := loc.(*ingress.Location)
 	if !ok {
+		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
 		return ""
 	}
 
@@ -354,6 +363,7 @@ func filterRateLimits(input interface{}) []ratelimit.RateLimit {
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
+		glog.Errorf("expected a '[]ratelimit.RateLimit' type but %T was returned", input)
 		return ratelimits
 	}
 	for _, server := range servers {
@@ -377,6 +387,7 @@ func buildRateLimitZones(input interface{}) []string {
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
+		glog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
 		return zones.List()
 	}
 
@@ -426,6 +437,7 @@ func buildRateLimit(input interface{}) []string {
 
 	loc, ok := input.(*ingress.Location)
 	if !ok {
+		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return limits
 	}
 
@@ -465,7 +477,7 @@ func buildRateLimit(input interface{}) []string {
 func isLocationAllowed(input interface{}) bool {
 	loc, ok := input.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected an ingress.Location type but %T was returned", input)
+		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return false
 	}
 
@@ -482,7 +494,11 @@ var (
 // size of the string to be used as a variable in nginx to avoid
 // issue with the size of the variable bucket size directive
 func buildDenyVariable(a interface{}) string {
-	l := a.(string)
+	l, ok := a.(string)
+	if !ok {
+		glog.Errorf("expected a 'string' type but %T was returned", a)
+		return ""
+	}
 
 	if _, ok := denyPathSlugMap[l]; !ok {
 		denyPathSlugMap[l] = buildRandomUUID()
@@ -493,9 +509,16 @@ func buildDenyVariable(a interface{}) string {
 
 // TODO: Needs Unit Tests
 func buildUpstreamName(host string, b interface{}, loc interface{}) string {
-	backends := b.([]*ingress.Backend)
+
+	backends, ok := b.([]*ingress.Backend)
+	if !ok {
+		glog.Errorf("expected an '[]*ingress.Backend' type but %T was returned", b)
+		return ""
+	}
+
 	location, ok := loc.(*ingress.Location)
 	if !ok {
+		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
 		return ""
 	}
 
@@ -531,7 +554,8 @@ func isSticky(host string, loc *ingress.Location, stickyLocations map[string][]s
 func buildNextUpstream(input interface{}) string {
 	nextUpstream, ok := input.(string)
 	if !ok {
-		glog.Errorf("expected an string type but %T was returned", input)
+		glog.Errorf("expected a 'string' type but %T was returned", input)
+		return ""
 	}
 
 	parts := strings.Split(nextUpstream, " ")
@@ -549,7 +573,8 @@ func buildNextUpstream(input interface{}) string {
 func buildAuthSignURL(input interface{}) string {
 	s, ok := input.(string)
 	if !ok {
-		glog.Errorf("expected an string type but %T was returned", input)
+		glog.Errorf("expected an 'string' type but %T was returned", input)
+		return ""
 	}
 
 	u, _ := url.Parse(s)
@@ -570,7 +595,7 @@ func buildRandomUUID() string {
 func isValidClientBodyBufferSize(input interface{}) bool {
 	s, ok := input.(string)
 	if !ok {
-		glog.Errorf("expected an string type but %T was returned", input)
+		glog.Errorf("expected an 'string' type but %T was returned", input)
 		return false
 	}
 
@@ -611,13 +636,13 @@ type ingressInformation struct {
 func getIngressInformation(i, p interface{}) *ingressInformation {
 	ing, ok := i.(*extensions.Ingress)
 	if !ok {
-		glog.V(3).Infof("expected an Ingress type but %T was returned", i)
+		glog.Errorf("expected an '*extensions.Ingress' type but %T was returned", i)
 		return &ingressInformation{}
 	}
 
 	path, ok := p.(string)
 	if !ok {
-		glog.V(3).Infof("expected a string type but %T was returned", p)
+		glog.Errorf("expected a 'string' type but %T was returned", p)
 		return &ingressInformation{}
 	}
 
@@ -654,7 +679,8 @@ func getIngressInformation(i, p interface{}) *ingressInformation {
 func buildForwardedFor(input interface{}) string {
 	s, ok := input.(string)
 	if !ok {
-		glog.Errorf("expected an string type but %T was returned", input)
+		glog.Errorf("expected a 'string' type but %T was returned", input)
+		return ""
 	}
 
 	ffh := strings.Replace(s, "-", "_", -1)

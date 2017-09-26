@@ -21,11 +21,13 @@ import (
 	"net"
 	"os"
 	"sort"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/pkg/errors"
 
+	pool "gopkg.in/go-playground/pool.v3"
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,12 +42,12 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/store"
 	"k8s.io/ingress/core/pkg/k8s"
-	"k8s.io/ingress/core/pkg/strings"
+	ingress_strings "k8s.io/ingress/core/pkg/strings"
 	"k8s.io/ingress/core/pkg/task"
 )
 
 const (
-	updateInterval = 30 * time.Second
+	updateInterval = 60 * time.Second
 )
 
 // Sync ...
@@ -56,13 +58,15 @@ type Sync interface {
 
 // Config ...
 type Config struct {
-	Client         clientset.Interface
+	Client clientset.Interface
+
 	PublishService string
-	IngressLister  store.IngressLister
 
 	ElectionID string
 
 	UpdateStatusOnShutdown bool
+
+	IngressLister store.IngressLister
 
 	DefaultIngressClass string
 	IngressClass        string
@@ -264,7 +268,7 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 	addrs := []string{}
 	for _, pod := range pods.Items {
 		name := k8s.GetNodeIP(s.Client, pod.Spec.NodeName)
-		if !strings.StringInSlice(name, addrs) {
+		if !ingress_strings.StringInSlice(name, addrs) {
 			addrs = append(addrs, name)
 		}
 	}
@@ -293,7 +297,10 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 		}
 	}
 
-	sort.Sort(loadBalancerIngressByIP(lbi))
+	sort.SliceStable(lbi, func(a, b int) bool {
+		return lbi[a].IP < lbi[b].IP
+	})
+
 	return lbi
 }
 
@@ -302,48 +309,77 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 // of nil then it uses the returned value or the newIngressPoint values
 func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 	ings := s.IngressLister.List()
-	var wg sync.WaitGroup
-	wg.Add(len(ings))
+
+	p := pool.NewLimited(10)
+	defer p.Close()
+
+	batch := p.Batch()
+
 	for _, cur := range ings {
 		ing := cur.(*extensions.Ingress)
 
 		if !class.IsValid(ing, s.Config.IngressClass, s.Config.DefaultIngressClass) {
-			wg.Done()
 			continue
 		}
 
-		go func(wg *sync.WaitGroup, ing *extensions.Ingress) {
-			defer wg.Done()
-			ingClient := s.Client.Extensions().Ingresses(ing.Namespace)
-			currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
-			if err != nil {
-				glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
-				return
-			}
-
-			addrs := newIngressPoint
-			ca := s.CustomIngressStatus(currIng)
-			if ca != nil {
-				addrs = ca
-			}
-
-			curIPs := currIng.Status.LoadBalancer.Ingress
-			sort.Sort(loadBalancerIngressByIP(curIPs))
-			if ingressSliceEqual(addrs, curIPs) {
-				glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", currIng.Namespace, currIng.Name)
-				return
-			}
-
-			glog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, addrs)
-			currIng.Status.LoadBalancer.Ingress = addrs
-			_, err = ingClient.UpdateStatus(currIng)
-			if err != nil {
-				glog.Warningf("error updating ingress rule: %v", err)
-			}
-		}(&wg, ing)
+		batch.Queue(runUpdate(ing, newIngressPoint, s.Client, s.CustomIngressStatus))
 	}
 
-	wg.Wait()
+	batch.QueueComplete()
+	batch.WaitAll()
+}
+
+func runUpdate(ing *extensions.Ingress, status []apiv1.LoadBalancerIngress,
+	client clientset.Interface,
+	statusFunc func(*extensions.Ingress) []apiv1.LoadBalancerIngress) pool.WorkFunc {
+	return func(wu pool.WorkUnit) (interface{}, error) {
+		if wu.IsCancelled() {
+			return nil, nil
+		}
+
+		addrs := status
+		ca := statusFunc(ing)
+		if ca != nil {
+			addrs = ca
+		}
+		sort.SliceStable(addrs, lessLoadBalancerIngress(addrs))
+
+		curIPs := ing.Status.LoadBalancer.Ingress
+		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
+
+		if ingressSliceEqual(addrs, curIPs) {
+			glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", ing.Namespace, ing.Name)
+			return true, nil
+		}
+
+		ingClient := client.Extensions().Ingresses(ing.Namespace)
+
+		currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
+		}
+
+		glog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, addrs)
+		currIng.Status.LoadBalancer.Ingress = addrs
+		_, err = ingClient.UpdateStatus(currIng)
+		if err != nil {
+			glog.Warningf("error updating ingress rule: %v", err)
+		}
+
+		return true, nil
+	}
+}
+
+func lessLoadBalancerIngress(addrs []apiv1.LoadBalancerIngress) func(int, int) bool {
+	return func(a, b int) bool {
+		switch strings.Compare(addrs[a].Hostname, addrs[b].Hostname) {
+		case -1:
+			return true
+		case 1:
+			return false
+		}
+		return addrs[a].IP < addrs[b].IP
+	}
 }
 
 func ingressSliceEqual(lhs, rhs []apiv1.LoadBalancerIngress) bool {
@@ -360,13 +396,4 @@ func ingressSliceEqual(lhs, rhs []apiv1.LoadBalancerIngress) bool {
 		}
 	}
 	return true
-}
-
-// loadBalancerIngressByIP sorts LoadBalancerIngress using the field IP
-type loadBalancerIngressByIP []apiv1.LoadBalancerIngress
-
-func (c loadBalancerIngressByIP) Len() int      { return len(c) }
-func (c loadBalancerIngressByIP) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c loadBalancerIngressByIP) Less(i, j int) bool {
-	return c[i].IP < c[j].IP
 }

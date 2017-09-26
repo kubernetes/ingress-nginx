@@ -81,7 +81,7 @@ type Controller interface {
 	SetConfig(*apiv1.ConfigMap)
 	// SetListers allows the access of store listers present in the generic controller
 	// This avoid the use of the kubernetes client.
-	SetListers(StoreLister)
+	SetListers(*StoreLister)
 	// BackendDefaults returns the minimum settings required to configure the
 	// communication to endpoints
 	BackendDefaults() defaults.Backend
@@ -309,7 +309,7 @@ type Location struct {
 	// Proxy contains information about timeouts and buffer sizes
 	// to be used in connections against endpoints
 	// +optional
-	Proxy proxy.Configuration `json:"proxy,omitempty"`
+	Proxy *proxy.Configuration `json:"proxy,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"usePortInRedirects"`
