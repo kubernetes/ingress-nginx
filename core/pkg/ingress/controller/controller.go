@@ -255,8 +255,8 @@ func (ic *GenericController) syncIngress(key interface{}) error {
 	// Sort ingress rules using the ResourceVersion field
 	ings := ic.listers.Ingress.List()
 	sort.SliceStable(ings, func(i, j int) bool {
-		ir := ings[i].(*ingress.SSLCert).ResourceVersion
-		jr := ings[j].(*ingress.SSLCert).ResourceVersion
+		ir := ings[i].(*extensions.Ingress).ResourceVersion
+		jr := ings[j].(*extensions.Ingress).ResourceVersion
 		return ir < jr
 	})
 
