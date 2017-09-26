@@ -33,3 +33,5 @@ spec:
           ports:
           - name: http
             containerPort: 80
+          - name: https
+            containerPort: 443

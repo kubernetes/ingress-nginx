@@ -67,15 +67,11 @@ func (ic *GenericController) syncSecret(key string) {
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
 // It parses the secret and verifies if it's a keypair, or a 'ca.crt' secret only.
 func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
-	secretInterface, exists, err := ic.secrLister.Store.GetByKey(secretName)
+	secret, err := ic.listers.Secret.GetByName(secretName)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving secret %v: %v", secretName, err)
 	}
-	if !exists {
-		return nil, fmt.Errorf("secret named %v does not exist", secretName)
-	}
 
-	secret := secretInterface.(*apiv1.Secret)
 	cert, okcert := secret.Data[apiv1.TLSCertKey]
 	key, okkey := secret.Data[apiv1.TLSPrivateKeyKey]
 
@@ -85,6 +81,9 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 
 	var s *ingress.SSLCert
 	if okcert && okkey {
+		if cert == nil || key == nil {
+			return nil, fmt.Errorf("error retrieving cert or key from secret %v: %v", secretName, err)
+		}
 		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating pem file %v", err)

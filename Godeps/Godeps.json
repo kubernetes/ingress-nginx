@@ -418,6 +418,11 @@
 			"Comment": "v1.2.0",
 			"Rev": "27e4946190b4a327b539185f2b5b1f7c84730728"
 		},
+		{ 
+			"ImportPath": "gopkg.in/go-playground/pool.v3", 
+			"Comment": "v3.1.1", 
+			"Rev": "e73cd3a5ded835540c5cf4778488579c5b357d68"
+		},
 		{
 			"ImportPath": "gopkg.in/inf.v0",
 			"Comment": "v0.9.0",

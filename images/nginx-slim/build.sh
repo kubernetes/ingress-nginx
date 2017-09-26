@@ -25,8 +25,14 @@ export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.32
 export NGINX_DIGEST_AUTH=7955af9c77598c697ac292811914ce1e2b3b824c
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
+export NGINX_OPENTRACING=fcc2e822c6dfc7d1f432c16b07dee9437c24236a
+export OPENTRACING_CPP=42cbb358b68e53145c5b479efa09a25dbc81a95a
+export ZIPKIN_CPP=8eae512bd750b304764d96058c65229f9a7712a9
 
 export BUILD_PATH=/tmp/build
+
+export NGINX_OPENTRACING_VENDOR="ZIPKIN"
+
 
 ARCH=$(uname -p)
 
@@ -65,7 +71,11 @@ apt-get update && apt-get install --no-install-recommends -y \
   libaio1 \
   libaio-dev \
   openssl \
+  libperl-dev \
+  cmake \
+  libcurl4-openssl-dev \
   linux-headers-generic || exit 1
+
 
 # download, verify and extract the source files
 get_src 0e75b94429b3f745377aeba3aff97da77bf2b03fcb9ff15b3bad9b038db29f2e \
@@ -92,15 +102,45 @@ get_src 9b1d0075df787338bb607f14925886249bda60b6b3156713923d5d59e99a708b \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
+get_src d48c83e81aeeaebbf894adc5557cb8d027fb336d2afe95b68b2aa75920a3be74 \
+        "https://github.com/rnburn/nginx-opentracing/archive/$NGINX_OPENTRACING.tar.gz"
+
+get_src d1afc7c38bef055ac8a3759f117281b9d9287785e044a7d4e79134fa6ea99324 \
+        "https://github.com/opentracing/opentracing-cpp/archive/$OPENTRACING_CPP.tar.gz"
+
+get_src c9961b503da1119eaeb15393bac804a303d49d86f701dbfd31c425d2214354d5 \
+        "https://github.com/rnburn/zipkin-cpp-opentracing/archive/$ZIPKIN_CPP.tar.gz"
+
 
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
+
+# http2 header compression
+curl -sSL -o nginx_http2_hpack.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx_http2_hpack.patch
+
+# build opentracing lib
+cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP"
+mkdir .build
+cd .build
+cmake ..
+make
+make install
+
+# build zipkin lib
+cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP"
+mkdir .build
+cd .build
+cmake -DBUILD_SHARED_LIBS=1 ..
+make
+make install
+
 
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
 echo "Applying tls nginx patches..."
 patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
+patch -p1 < $BUILD_PATH/nginx_http2_hpack.patch
 
 WITH_FLAGS="--with-debug \
   --with-pcre-jit \
@@ -114,6 +154,7 @@ WITH_FLAGS="--with-debug \
   --with-http_gzip_static_module \
   --with-http_sub_module \
   --with-http_v2_module \
+  --with-http_v2_hpack_enc \
   --with-stream \
   --with-stream_ssl_module \
   --with-stream_ssl_preread_module \
@@ -123,7 +164,8 @@ if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
 fi
 
-CC_OPT='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4'
+CC_OPT='-g -O3 -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing'
+LD_OPT='-Wl,-Bsymbolic-functions -fPIE -pie -Wl,-z,relro -Wl,-z,now'
 
 if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=generic'
@@ -148,6 +190,7 @@ fi
   --without-http_uwsgi_module \
   --without-http_scgi_module \
   --with-cc-opt="${CC_OPT}" \
+  --with-ld-opt="${LD_OPT}" \
   --add-module="$BUILD_PATH/ngx_devel_kit-$NDK_VERSION" \
   --add-module="$BUILD_PATH/set-misc-nginx-module-$SETMISC_VERSION" \
   --add-module="$BUILD_PATH/nginx-module-vts-$VTS_VERSION" \
@@ -155,6 +198,7 @@ fi
   --add-module="$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION" \
   --add-module="$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH" \
   --add-module="$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS" \
+  --add-module="$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING" \
   && make || exit 1 \
   && make install || exit 1
 
