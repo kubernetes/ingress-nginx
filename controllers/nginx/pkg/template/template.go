@@ -706,5 +706,5 @@ func trustProxyProtocol(input interface{}) bool {
 	}
 
 	return conf.Cfg.RealClientFrom == "tcp-proxy" ||
-		(conf.Cfg.RealClientFrom == "auto" && !conf.Cfg.UseProxyProtocol)
+		(conf.Cfg.RealClientFrom == "auto" && conf.Cfg.UseProxyProtocol)
 }
