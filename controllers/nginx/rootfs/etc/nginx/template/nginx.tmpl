@@ -151,7 +151,7 @@ http {
         ''               close;
     }
 
-    {{ if (trustHTTPHeaders $cfg) }}
+    {{ if (trustHTTPHeaders $all) }}
     # Trust HTTP X-Forwarded-* Headers, but use direct values if they're missing.
     map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
         # Get IP address from X-Forwarded-For HTTP header
@@ -391,7 +391,7 @@ http {
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
-    
+
     {{ if $server.Alias }}
     server {
         server_name {{ $server.Alias }};
