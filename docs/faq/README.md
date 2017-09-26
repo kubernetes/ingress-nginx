@@ -71,7 +71,7 @@ spec:
 
 The GCE controller will only act on Ingresses with the annotation value of "gce" or empty string "" (the default value if the annotation is omitted).
 
-The nginx controller will only act on Ingresses with the annotation value of "nginx".
+The nginx controller will only act on Ingresses with the annotation value of "nginx" or empty string "" (the default value if the annotation is omitted).
 
 To completely stop the Ingress controller on GCE/GKE, please see [this](gce.md#how-do-i-disable-the-gce-ingress-controller) faq.
 
