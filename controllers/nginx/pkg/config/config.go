@@ -369,6 +369,21 @@ type Configuration struct {
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
+
+	// EnableOpentracing enables the nginx Opentracing extension
+	// https://github.com/rnburn/nginx-opentracing
+	// By default this is disabled
+	EnableOpentracing bool `json:"enable-opentracing"`
+
+	// ZipkinCollectorHost specifies the host to use when uploading traces
+	ZipkinCollectorHost string `json:"zipkin-collector-host"`
+
+	// ZipkinCollectorPort specifies the port to use when uploading traces
+	ZipkinCollectorPort int `json:"zipkin-collector-port"`
+
+	// ZipkinServiceName specifies the service name to use for any traces created
+	// Default: nginx
+	ZipkinServiceName string `json:"zipkin-service-name"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -448,6 +463,8 @@ func NewDefault() Configuration {
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
 		BindAddressIpv4:              defBindAddress,
 		BindAddressIpv6:              defBindAddress,
+		ZipkinCollectorPort:          9411,
+		ZipkinServiceName:            "nginx",
 	}
 
 	if glog.V(5) {
