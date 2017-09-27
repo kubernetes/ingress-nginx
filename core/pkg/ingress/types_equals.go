@@ -100,6 +100,23 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
+	if len(c1.SNIEndpoints) != len(c2.SNIEndpoints) {
+		return false
+	}
+
+	for _, sni1 := range c1.SNIEndpoints {
+		found := false
+		for _, sni2 := range c2.SNIEndpoints {
+			if (&sni1).Equal(&sni2) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
 	if len(c1.UDPEndpoints) != len(c2.UDPEndpoints) {
 		return false
 	}
