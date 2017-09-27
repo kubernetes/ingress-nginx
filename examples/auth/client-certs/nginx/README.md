@@ -16,13 +16,12 @@ the child, except for the root, which has Issuer == Subject.
 
 * Client Cert: Certificate used by the clients to authenticate themselves with the loadbalancer/backends.
 
-
 ## Prerequisites
 
 You need a valid CA File, composed of a group of valid enabled CAs. This MUST be in PEM Format.
-The instructions are described [here](../../../PREREQUISITES.md#ca-authentication)
+The instructions are described [here](../../../PREREQUISITES.md)
 
-Also your ingress must be configured as a HTTPs/TLS Ingress.
+Also your ingress must be configured as a HTTPS/TLS Ingress.
 
 ## Deployment
 
@@ -51,8 +50,7 @@ Name:			nginx-test
 Namespace:		default
 Address:		104.198.183.6
 Default backend:	default-http-backend:80 (10.180.0.4:8080,10.240.0.2:8080)
-TLS:
-  tls-secret terminates ingress.test.com
+TLS: tls-secret terminates ingress.test.com
 Rules:
   Host	Path	Backends
   ----	----	--------
@@ -79,13 +77,12 @@ Server: nginx/1.11.9
 $ curl -I -k --key ~/user.key --cert ~/user.cer https://ingress.test.com 
 HTTP/1.1 200 OK
 Server: nginx/1.11.9
-
 ```
 
 You must use the full DNS name while testing, as NGINX relies on the Server Name (SNI) to select the correct Ingress to be used.
-
 The curl version used here was ``curl 7.47.0``
 
 ## Which certificate was used for authentication?
 
-In your backend application you might want to know which certificate was used for authentication. For this purpose, we pass the full certificate in PEM format to the backend in the `ssl-client-cert` header.
+In your backend application you might want to know which certificate was used for authentication.
+For this purpose, we pass the full certificate in PEM format to the backend in the `ssl-client-cert` header.
