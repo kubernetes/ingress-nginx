@@ -132,7 +132,12 @@ The final step is to create a secret with the content of this file. This secret 
 the TLS Auth directive:
 
 ```console
-$ kubectl create secret generic caingress --namespace=default --from-file=ca.crt
+$ kubectl create secret generic caingress --namespace=default --from-file=ca.crt=<ca.crt>
+```
+
+Note: You can also generate the CA Authentication Secret along with the TLS Secret by using:
+```console
+$ kubectl create secret generic caingress --namespace=default --from-file=ca.crt=<ca.crt> --from-file=tls.crt=<tls.crt> --from-file=tls.key=<tls.key>
 ```
 
 ## Test HTTP Service

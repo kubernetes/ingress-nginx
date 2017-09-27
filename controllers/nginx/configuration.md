@@ -135,14 +135,14 @@ Please check the [auth](/examples/auth/basic/nginx/README.md) example.
 
 ### Certificate Authentication
 
-It's possible to enable Certificate based authentication using additional annotations in Ingress Rule.
+It's possible to enable Certificate-Based Authentication (Mutual Authentication) using additional annotations in Ingress Rule.
 
 The annotations are:
 ```
 ingress.kubernetes.io/auth-tls-secret: secretName
 ```
 
-The name of the secret that contains the full Certificate Authority chain that is enabled to authenticate against this ingress. It's composed of namespace/secretName
+The name of the secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this ingress. It's composed of namespace/secretName.
 
 ```
 ingress.kubernetes.io/auth-tls-verify-depth
