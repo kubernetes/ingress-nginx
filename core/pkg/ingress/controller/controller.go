@@ -509,9 +509,13 @@ func (ic *GenericController) getBackendServers(ingresses []*extensions.Ingress) 
 				ca := ic.annotations.CertificateAuth(ing)
 				if ca != nil {
 					server.CertificateAuth = *ca
+					// It is possible that no CAFileName is found in the secret
+					if server.CertificateAuth.CAFileName == "" {
+						glog.V(3).Infof("secret %v does not contain 'ca.crt', mutual authentication not enabled - ingress rule %v/%v.", server.CertificateAuth.Secret, ing.Namespace, ing.Name)
+					}
 				}
 			} else {
-				glog.V(3).Infof("server %v already contains a muthual autentication configuration - ingress rule %v/%v", server.Hostname, ing.Namespace, ing.Name)
+				glog.V(3).Infof("server %v already contains a mutual authentication configuration - ingress rule %v/%v", server.Hostname, ing.Namespace, ing.Name)
 			}
 
 			for _, path := range rule.HTTP.Paths {
@@ -671,7 +675,8 @@ func (ic *GenericController) getBackendServers(ingresses []*extensions.Ingress) 
 	return aUpstreams, aServers
 }
 
-// GetAuthCertificate ...
+
+// GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
 func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
 	if _, exists := ic.sslCertTracker.Get(secretName); !exists {
 		ic.syncSecret(secretName)
@@ -894,10 +899,12 @@ func (ic *GenericController) createServers(data []*extensions.Ingress,
 		RequestBuffering: bdef.ProxyRequestBuffering,
 	}
 
+	// generated on Start() with createDefaultSSLCertificate()
 	defaultPemFileName := fakeCertificatePath
 	defaultPemSHA := fakeCertificateSHA
 
-	// Tries to fetch the default Certificate. If it does not exists, generate a new self signed one.
+	// Tries to fetch the default Certificate from nginx configuration.
+	// If it does not exists, use the ones generated on Start()
 	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
 	if err == nil {
 		defaultPemFileName = defaultCertificate.PemFileName
