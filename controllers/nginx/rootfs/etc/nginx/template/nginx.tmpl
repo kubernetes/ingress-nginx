@@ -434,19 +434,22 @@ stream {
     }
     server {
         {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ else }}
-        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ end }}
         {{ if $IsIPV6Enabled }}
         {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ else }}
-        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ end }}
         {{ end }}
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
         proxy_pass              tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
+        {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
+        proxy_protocol          on;
+        {{ end }}
     }
 
     {{ end }}
