@@ -236,6 +236,10 @@ type Server struct {
 	// CertificateAuth indicates the this server requires mutual authentication
 	// +optional
 	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth"`
+
+	// ServerSnippet returns the snippet of server
+	// +optional
+	ServerSnippet string `json:"serverSnippet"`
 }
 
 // Location describes an URI inside a server.
