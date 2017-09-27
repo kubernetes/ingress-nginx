@@ -359,5 +359,11 @@ type L4Backend struct {
 	Namespace string             `json:"namespace"`
 	Protocol  apiv1.Protocol     `json:"protocol"`
 	// +optional
-	UseProxyProtocol bool `json:"useProxyProtocol"`
+	ProxyProtocol ProxyProtocol `json:"proxyProtocol"`
+}
+
+// ProxyProtocol describes the proxy protocol configuration
+type ProxyProtocol struct {
+	Decode bool `json:"decode"`
+	Encode bool `json:"encode"`
 }

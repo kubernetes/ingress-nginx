@@ -334,8 +334,8 @@ version to fully support Kube-Lego is nginx Ingress controller 0.8.
 
 ## Exposing TCP services
 
-Ingress does not support TCP services (yet). For this reason this Ingress controller uses the flag `--tcp-services-configmap` to point to an existing config map where the key is the external port to use and the value is `<namespace/service name>:<service port>:[PROXY]`
-It is possible to use a number or the name of the port. The last field is optional. Adding `PROXY` in the last field we can enable Proxy Protocol in a TCP service.
+Ingress does not support TCP services (yet). For this reason this Ingress controller uses the flag `--tcp-services-configmap` to point to an existing config map where the key is the external port to use and the value is `<namespace/service name>:<service port>:[PROXY]:[PROXY]`
+It is possible to use a number or the name of the port. The two last fields are optional. Adding `PROXY` in either or both of the two last fields we can use Proxy Protocol decoding (listen) and/or encoding (proxy_pass) in a TCP service (https://www.nginx.com/resources/admin-guide/proxy-protocol/).
 
 The next example shows how to expose the service `example-go` running in the namespace `default` in the port `8080` using the port `9000`
 ```
