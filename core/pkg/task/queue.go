@@ -48,7 +48,8 @@ type Queue struct {
 	lastSync int64
 }
 
-type element struct {
+// Element represents one item of the queue
+type Element struct {
 	Key       interface{}
 	Timestamp int64
 }
@@ -72,7 +73,7 @@ func (t *Queue) Enqueue(obj interface{}) {
 		glog.Errorf("%v", err)
 		return
 	}
-	t.queue.Add(element{
+	t.queue.Add(Element{
 		Key:       key,
 		Timestamp: ts,
 	})
@@ -99,7 +100,7 @@ func (t *Queue) worker() {
 		}
 		ts := time.Now().UnixNano()
 
-		item := key.(element)
+		item := key.(Element)
 		if t.lastSync > item.Timestamp {
 			glog.V(3).Infof("skipping %v sync (%v > %v)", item.Key, t.lastSync, item.Timestamp)
 			t.queue.Forget(key)
@@ -110,7 +111,7 @@ func (t *Queue) worker() {
 		glog.V(3).Infof("syncing %v", item.Key)
 		if err := t.sync(key); err != nil {
 			glog.Warningf("requeuing %v, err %v", item.Key, err)
-			t.queue.AddRateLimited(element{
+			t.queue.AddRateLimited(Element{
 				Key:       item.Key,
 				Timestamp: time.Now().UnixNano(),
 			})
