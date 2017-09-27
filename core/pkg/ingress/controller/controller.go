@@ -346,6 +346,7 @@ func (ic *GenericController) getStreamServices(configmapName string, proto apiv1
 	}
 
 	var svcs []ingress.L4Service
+	var svcProxyProtocol ingress.ProxyProtocol
 	// k -> port to expose
 	// v -> <namespace>/<service name>:<port from service to be used>
 	for k, v := range configmap.Data {
@@ -363,18 +364,22 @@ func (ic *GenericController) getStreamServices(configmapName string, proto apiv1
 
 		nsSvcPort := strings.Split(v, ":")
 		if len(nsSvcPort) < 2 {
-			glog.Warningf("invalid format (namespace/name:port:[PROXY]) '%v'", k)
+			glog.Warningf("invalid format (namespace/name:port:[PROXY]:[PROXY]) '%v'", k)
 			continue
 		}
 
 		nsName := nsSvcPort[0]
 		svcPort := nsSvcPort[1]
-		useProxyProtocol := false
+		svcProxyProtocol.Decode = false
+		svcProxyProtocol.Encode = false
 
 		// Proxy protocol is possible if the service is TCP
-		if len(nsSvcPort) == 3 && proto == apiv1.ProtocolTCP {
-			if strings.ToUpper(nsSvcPort[2]) == "PROXY" {
-				useProxyProtocol = true
+		if len(nsSvcPort) >= 3 && proto == apiv1.ProtocolTCP {
+			if len(nsSvcPort) >= 3 && strings.ToUpper(nsSvcPort[2]) == "PROXY" {
+				svcProxyProtocol.Decode = true
+			}
+			if len(nsSvcPort) == 4 && strings.ToUpper(nsSvcPort[3]) == "PROXY" {
+				svcProxyProtocol.Encode = true
 			}
 		}
 
@@ -432,11 +437,11 @@ func (ic *GenericController) getStreamServices(configmapName string, proto apiv1
 		svcs = append(svcs, ingress.L4Service{
 			Port: externalPort,
 			Backend: ingress.L4Backend{
-				Name:             svcName,
-				Namespace:        svcNs,
-				Port:             intstr.FromString(svcPort),
-				Protocol:         proto,
-				UseProxyProtocol: useProxyProtocol,
+				Name:          svcName,
+				Namespace:     svcNs,
+				Port:          intstr.FromString(svcPort),
+				Protocol:      proto,
+				ProxyProtocol: svcProxyProtocol,
 			},
 			Endpoints: endps,
 		})
