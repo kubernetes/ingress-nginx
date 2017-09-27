@@ -505,6 +505,12 @@ func (l4b1 *L4Backend) Equal(l4b2 *L4Backend) bool {
 	if l4b1.Protocol != l4b2.Protocol {
 		return false
 	}
+	if l4b1.ServerName != l4b2.ServerName {
+		return false
+	}
+	if l4b1.UseProxyProtocol != l4b2.UseProxyProtocol {
+		return false
+	}
 
 	return true
 }
