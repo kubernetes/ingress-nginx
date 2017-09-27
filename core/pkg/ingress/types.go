@@ -238,6 +238,7 @@ type Server struct {
 	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth"`
 
 	// ServerSnippet returns the snippet of server
+	// +optional
 	ServerSnippet string `json:"serverSnippet"`
 }
 

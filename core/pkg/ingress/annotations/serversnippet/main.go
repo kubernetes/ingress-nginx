@@ -29,7 +29,7 @@ const (
 type serverSnippet struct {
 }
 
-// NewParser creates a new CORS annotation parser
+// NewParser creates a new server snippet annotation parser
 func NewParser() parser.IngressAnnotation {
 	return serverSnippet{}
 }

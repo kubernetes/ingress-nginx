@@ -987,6 +987,7 @@ func (ic *GenericController) createServers(data []interface{},
 
 		// setup server-alias based on annotations
 		aliasAnnotation := ic.annotations.Alias(ing)
+		srvsnippet := ic.annotations.ServerSnippet(ing)
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -1000,6 +1001,17 @@ func (ic *GenericController) createServers(data []interface{},
 				if _, ok := aliases[aliasAnnotation]; !ok {
 					aliases[aliasAnnotation] = host
 				}
+			}
+
+			//notifying the user that it has already been configured.
+			if servers[host].ServerSnippet != "" && srvsnippet != "" {
+				glog.Warningf("ingress %v/%v for host %v contains a Server Snippet section that it has already been configured.",
+					ing.Namespace, ing.Name, host)
+			}
+
+			// only add a server snippet if the server does not have one previously configured
+			if servers[host].ServerSnippet == "" && srvsnippet != "" {
+				servers[host].ServerSnippet = srvsnippet
 			}
 
 			// only add a certificate if the server does not have one previously configured
@@ -1066,27 +1078,6 @@ func (ic *GenericController) createServers(data []interface{},
 		}
 	}
 
-	// configure server snippet
-	for _, ingIf := range data {
-		ing := ingIf.(*extensions.Ingress)
-		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-			continue
-		}
-
-		for _, rule := range ing.Spec.Rules {
-			host := rule.Host
-			if host == "" {
-				host = defServerName
-			}
-
-			srvsnippet := ic.annotations.ServerSnippet(ing)
-			// only add a server snippet if the server does not have one previously configured
-
-			if servers[host].ServerSnippet == "" && srvsnippet != "" {
-				servers[host].ServerSnippet = srvsnippet
-			}
-		}
-	}
 	return servers
 }
 
