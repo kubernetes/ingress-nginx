@@ -238,17 +238,19 @@ func (ic GenericController) GetService(name string) (*apiv1.Service, error) {
 // sync collects all the pieces required to assemble the configuration file and
 // then sends the content to the backend (OnUpdate) receiving the populated
 // template as response reloading the backend if is required.
-func (ic *GenericController) syncIngress(key interface{}) error {
+func (ic *GenericController) syncIngress(item interface{}) error {
 	ic.syncRateLimiter.Accept()
 
 	if ic.syncQueue.IsShuttingDown() {
 		return nil
 	}
 
-	if name, ok := key.(string); ok {
-		if obj, exists, _ := ic.listers.Ingress.GetByKey(name); exists {
-			ing := obj.(*extensions.Ingress)
-			ic.readSecrets(ing)
+	if element, ok := item.(task.Element); ok {
+		if name, ok := element.Key.(string); ok {
+			if obj, exists, _ := ic.listers.Ingress.GetByKey(name); exists {
+				ing := obj.(*extensions.Ingress)
+				ic.readSecrets(ing)
+			}
 		}
 	}
 
