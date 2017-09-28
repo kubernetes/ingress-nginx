@@ -687,7 +687,7 @@ stream {
             {{ end }}
 
             {{ if not (empty $location.ExternalAuth.SigninURL) }}
-            error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
+            error_page 401 = $location.ExternalAuth.SigninURL;
             {{ end }}
 
             {{/* if the location contains a rate limit annotation, create one */}}
@@ -745,6 +745,9 @@ stream {
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
             proxy_set_header X-Original-URI         $request_uri;
             proxy_set_header X-Scheme               $pass_access_scheme;
+
+            {{/* This header is used for external authentication */}}
+            proxy_set_header X-Auth-Request-Redirect $request_uri;
 
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
