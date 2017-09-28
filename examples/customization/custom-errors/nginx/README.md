@@ -1,4 +1,4 @@
-This example shows how is possible to use a custom backend to render custom error pages. The code of this example is located here [nginx-debug-server](https://github.com/aledbf/contrib/tree/nginx-debug-server)
+This example shows how is possible to use a custom backend to render custom error pages. The code of this example is located here [custom-error-pages](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-errors/nginx)
 
 
 The idea is to use the headers `X-Code` and `X-Format` that NGINX pass to the backend in case of an error to find out the best existent representation of the response to be returned. i.e. if the request contains an `Accept` header of type `json` the error should be in that format and not in `html` (the default in NGINX).
@@ -78,5 +78,3 @@ $ curl -v http://172.17.4.99/ -H 'Accept: application/json'
 
 * Connection #0 to host 172.17.4.99 left intact
 ```
-
-By default the Ingress controller provides support for `html`, `json` and `XML`.
