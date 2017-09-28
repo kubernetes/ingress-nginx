@@ -35,6 +35,7 @@ import (
 	"github.com/spf13/pflag"
 
 	proxyproto "github.com/armon/go-proxyproto"
+	"github.com/ncabatoff/process-exporter/proc"
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 
@@ -62,7 +63,7 @@ const (
 var (
 	tmplPath        = "/etc/nginx/template/nginx.tmpl"
 	cfgPath         = "/etc/nginx/nginx.conf"
-	binary          = "/usr/sbin/nginx"
+	nginxBinary     = "/usr/sbin/nginx"
 	defIngressClass = "nginx"
 )
 
@@ -72,7 +73,7 @@ var (
 func newNGINXController() *NGINXController {
 	ngx := os.Getenv("NGINX_BINARY")
 	if ngx == "" {
-		ngx = binary
+		ngx = nginxBinary
 	}
 
 	h, err := dns.GetSystemNameServers()
@@ -200,7 +201,26 @@ NGINX master process died (%v): %v
 				break
 			}
 			conn.Close()
-			time.Sleep(1 * time.Second)
+			// kill nginx worker processes
+			fs, err := proc.NewFS("/proc")
+			procs, _ := fs.FS.AllProcs()
+			for _, p := range procs {
+				pn, err := p.Comm()
+				if err != nil {
+					glog.Errorf("unexpected error obtaining process information: %v", err)
+					continue
+				}
+
+				if pn == "nginx" {
+					osp, err := os.FindProcess(p.PID)
+					if err != nil {
+						glog.Errorf("unexpected error obtaining process information: %v", err)
+						continue
+					}
+					osp.Signal(syscall.SIGQUIT)
+				}
+			}
+			time.Sleep(100 * time.Millisecond)
 		}
 		// restart a new nginx master process if the controller
 		// is not being stopped
@@ -709,6 +729,28 @@ func (n NGINXController) Check(_ *http.Request) error {
 	if res.StatusCode != 200 {
 		return fmt.Errorf("ingress controller is not healthy")
 	}
+
+	// check the nginx master process is running
+	fs, err := proc.NewFS("/proc")
+	if err != nil {
+		glog.Errorf("%v", err)
+		return err
+	}
+	f, err := ioutil.ReadFile("/run/nginx.pid")
+	if err != nil {
+		glog.Errorf("%v", err)
+		return err
+	}
+	pid, err := strconv.Atoi(strings.TrimRight(string(f), "\r\n"))
+	if err != nil {
+		return err
+	}
+	_, err = fs.NewProc(int(pid))
+	if err != nil {
+		glog.Errorf("%v", err)
+		return err
+	}
+
 	return nil
 }
 
