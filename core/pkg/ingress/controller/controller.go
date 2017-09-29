@@ -238,17 +238,19 @@ func (ic GenericController) GetService(name string) (*apiv1.Service, error) {
 // sync collects all the pieces required to assemble the configuration file and
 // then sends the content to the backend (OnUpdate) receiving the populated
 // template as response reloading the backend if is required.
-func (ic *GenericController) syncIngress(key interface{}) error {
+func (ic *GenericController) syncIngress(item interface{}) error {
 	ic.syncRateLimiter.Accept()
 
 	if ic.syncQueue.IsShuttingDown() {
 		return nil
 	}
 
-	if name, ok := key.(string); ok {
-		if obj, exists, _ := ic.listers.Ingress.GetByKey(name); exists {
-			ing := obj.(*extensions.Ingress)
-			ic.readSecrets(ing)
+	if element, ok := item.(task.Element); ok {
+		if name, ok := element.Key.(string); ok {
+			if obj, exists, _ := ic.listers.Ingress.GetByKey(name); exists {
+				ing := obj.(*extensions.Ingress)
+				ic.readSecrets(ing)
+			}
 		}
 	}
 
@@ -346,6 +348,7 @@ func (ic *GenericController) getStreamServices(configmapName string, proto apiv1
 	}
 
 	var svcs []ingress.L4Service
+	var svcProxyProtocol ingress.ProxyProtocol
 	// k -> port to expose
 	// v -> <namespace>/<service name>:<port from service to be used>
 	for k, v := range configmap.Data {
@@ -363,18 +366,22 @@ func (ic *GenericController) getStreamServices(configmapName string, proto apiv1
 
 		nsSvcPort := strings.Split(v, ":")
 		if len(nsSvcPort) < 2 {
-			glog.Warningf("invalid format (namespace/name:port:[PROXY]) '%v'", k)
+			glog.Warningf("invalid format (namespace/name:port:[PROXY]:[PROXY]) '%v'", k)
 			continue
 		}
 
 		nsName := nsSvcPort[0]
 		svcPort := nsSvcPort[1]
-		useProxyProtocol := false
+		svcProxyProtocol.Decode = false
+		svcProxyProtocol.Encode = false
 
 		// Proxy protocol is possible if the service is TCP
-		if len(nsSvcPort) == 3 && proto == apiv1.ProtocolTCP {
-			if strings.ToUpper(nsSvcPort[2]) == "PROXY" {
-				useProxyProtocol = true
+		if len(nsSvcPort) >= 3 && proto == apiv1.ProtocolTCP {
+			if len(nsSvcPort) >= 3 && strings.ToUpper(nsSvcPort[2]) == "PROXY" {
+				svcProxyProtocol.Decode = true
+			}
+			if len(nsSvcPort) == 4 && strings.ToUpper(nsSvcPort[3]) == "PROXY" {
+				svcProxyProtocol.Encode = true
 			}
 		}
 
@@ -432,11 +439,11 @@ func (ic *GenericController) getStreamServices(configmapName string, proto apiv1
 		svcs = append(svcs, ingress.L4Service{
 			Port: externalPort,
 			Backend: ingress.L4Backend{
-				Name:             svcName,
-				Namespace:        svcNs,
-				Port:             intstr.FromString(svcPort),
-				Protocol:         proto,
-				UseProxyProtocol: useProxyProtocol,
+				Name:          svcName,
+				Namespace:     svcNs,
+				Port:          intstr.FromString(svcPort),
+				Protocol:      proto,
+				ProxyProtocol: svcProxyProtocol,
 			},
 			Endpoints: endps,
 		})
@@ -509,9 +516,13 @@ func (ic *GenericController) getBackendServers(ingresses []*extensions.Ingress) 
 				ca := ic.annotations.CertificateAuth(ing)
 				if ca != nil {
 					server.CertificateAuth = *ca
+					// It is possible that no CAFileName is found in the secret
+					if server.CertificateAuth.CAFileName == "" {
+						glog.V(3).Infof("secret %v does not contain 'ca.crt', mutual authentication not enabled - ingress rule %v/%v.", server.CertificateAuth.Secret, ing.Namespace, ing.Name)
+					}
 				}
 			} else {
-				glog.V(3).Infof("server %v already contains a muthual autentication configuration - ingress rule %v/%v", server.Hostname, ing.Namespace, ing.Name)
+				glog.V(3).Infof("server %v already contains a mutual authentication configuration - ingress rule %v/%v", server.Hostname, ing.Namespace, ing.Name)
 			}
 
 			for _, path := range rule.HTTP.Paths {
@@ -671,7 +682,8 @@ func (ic *GenericController) getBackendServers(ingresses []*extensions.Ingress) 
 	return aUpstreams, aServers
 }
 
-// GetAuthCertificate ...
+
+// GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
 func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
 	if _, exists := ic.sslCertTracker.Get(secretName); !exists {
 		ic.syncSecret(secretName)
@@ -894,10 +906,12 @@ func (ic *GenericController) createServers(data []*extensions.Ingress,
 		RequestBuffering: bdef.ProxyRequestBuffering,
 	}
 
+	// generated on Start() with createDefaultSSLCertificate()
 	defaultPemFileName := fakeCertificatePath
 	defaultPemSHA := fakeCertificateSHA
 
-	// Tries to fetch the default Certificate. If it does not exists, generate a new self signed one.
+	// Tries to fetch the default Certificate from nginx configuration.
+	// If it does not exists, use the ones generated on Start()
 	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
 	if err == nil {
 		defaultPemFileName = defaultCertificate.PemFileName
@@ -976,6 +990,7 @@ func (ic *GenericController) createServers(data []*extensions.Ingress,
 	for _, ing := range data {
 		// setup server-alias based on annotations
 		aliasAnnotation := ic.annotations.Alias(ing)
+		srvsnippet := ic.annotations.ServerSnippet(ing)
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -989,6 +1004,17 @@ func (ic *GenericController) createServers(data []*extensions.Ingress,
 				if _, ok := aliases[aliasAnnotation]; !ok {
 					aliases[aliasAnnotation] = host
 				}
+			}
+
+			//notifying the user that it has already been configured.
+			if servers[host].ServerSnippet != "" && srvsnippet != "" {
+				glog.Warningf("ingress %v/%v for host %v contains a Server Snippet section that it has already been configured.",
+					ing.Namespace, ing.Name, host)
+			}
+
+			// only add a server snippet if the server does not have one previously configured
+			if servers[host].ServerSnippet == "" && srvsnippet != "" {
+				servers[host].ServerSnippet = srvsnippet
 			}
 
 			// only add a certificate if the server does not have one previously configured
@@ -1054,6 +1080,7 @@ func (ic *GenericController) createServers(data []*extensions.Ingress,
 			servers[host].Alias = ""
 		}
 	}
+
 	return servers
 }
 

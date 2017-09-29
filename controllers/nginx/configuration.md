@@ -135,14 +135,14 @@ Please check the [auth](/examples/auth/basic/nginx/README.md) example.
 
 ### Certificate Authentication
 
-It's possible to enable Certificate based authentication using additional annotations in Ingress Rule.
+It's possible to enable Certificate-Based Authentication (Mutual Authentication) using additional annotations in Ingress Rule.
 
 The annotations are:
 ```
 ingress.kubernetes.io/auth-tls-secret: secretName
 ```
 
-The name of the secret that contains the full Certificate Authority chain that is enabled to authenticate against this ingress. It's composed of namespace/secretName
+The name of the secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this ingress. It's composed of namespace/secretName.
 
 ```
 ingress.kubernetes.io/auth-tls-verify-depth
@@ -486,6 +486,17 @@ The default mime type list to compress is: `application/atom+xml application/jav
 **add-headers:** Sets custom headers from a configmap before sending traffic to the client. See `proxy-set-headers` [example](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-headers/nginx)
 
 **bind-address:** Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
+
+**enable-opentracing:** enables the nginx Opentracing extension https://github.com/rnburn/nginx-opentracing
+Default is "false"
+
+**zipkin-collector-host:** specifies the host to use when uploading traces. It must be a valid URL
+
+**zipkin-collector-port:** specifies the port to use when uploading traces
+Default: 9411
+
+**zipkin-service-name:** specifies the service name to use for any traces created
+Default: nginx
 
 ### Default configuration options
 
