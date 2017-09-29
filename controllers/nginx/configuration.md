@@ -487,6 +487,17 @@ The default mime type list to compress is: `application/atom+xml application/jav
 
 **bind-address:** Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
 
+**enable-opentracing:** enables the nginx Opentracing extension https://github.com/rnburn/nginx-opentracing
+Default is "false"
+
+**zipkin-collector-host:** specifies the host to use when uploading traces. It must be a valid URL
+
+**zipkin-collector-port:** specifies the port to use when uploading traces
+Default: 9411
+
+**zipkin-service-name:** specifies the service name to use for any traces created
+Default: nginx
+
 ### Default configuration options
 
 The following table shows the options, the default value and a description.
