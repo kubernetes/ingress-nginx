@@ -17,6 +17,7 @@ limitations under the License.
 package backends
 
 import (
+	computealpha "google.golang.org/api/compute/v0.alpha"
 	compute "google.golang.org/api/compute/v1"
 	api_v1 "k8s.io/api/core/v1"
 )
@@ -38,14 +39,20 @@ type BackendPool interface {
 	Shutdown() error
 	Status(name string) string
 	List() ([]interface{}, error)
+	Link(port ServicePort, zones []string) error
 }
 
 // BackendServices is an interface for managing gce backend services.
 type BackendServices interface {
 	GetGlobalBackendService(name string) (*compute.BackendService, error)
+	GetAlphaGlobalBackendService(name string) (*computealpha.BackendService, error)
 	UpdateGlobalBackendService(bg *compute.BackendService) error
+	UpdateAlphaGlobalBackendService(bg *computealpha.BackendService) error
 	CreateGlobalBackendService(bg *compute.BackendService) error
 	DeleteGlobalBackendService(name string) error
 	ListGlobalBackendServices() (*compute.BackendServiceList, error)
 	GetGlobalBackendServiceHealth(name, instanceGroupLink string) (*compute.BackendServiceGroupHealth, error)
+
+	// TODO: move this out of BackendService
+	GetNetworkEndpointGroup(name string, zone string) (*computealpha.NetworkEndpointGroup, error)
 }

@@ -19,6 +19,7 @@ package backends
 import (
 	"fmt"
 
+	computealpha "google.golang.org/api/compute/v0.alpha"
 	compute "google.golang.org/api/compute/v1"
 	api_v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -60,6 +61,10 @@ func (f *FakeBackendServices) GetGlobalBackendService(name string) (*compute.Bac
 		return svc, nil
 	}
 	return nil, fmt.Errorf("backend service %v not found", name)
+}
+
+func (f *FakeBackendServices) GetAlphaGlobalBackendService(name string) (*computealpha.BackendService, error) {
+	return nil, nil
 }
 
 // CreateGlobalBackendService fakes backend service creation.
@@ -106,6 +111,15 @@ func (f *FakeBackendServices) UpdateGlobalBackendService(be *compute.BackendServ
 	}
 	f.calls = append(f.calls, utils.Update)
 	return f.backendServices.Update(be)
+}
+
+// UpdateGlobalBackendService fakes updating a backend service.
+func (f *FakeBackendServices) UpdateAlphaGlobalBackendService(be *computealpha.BackendService) error {
+	return f.backendServices.Update(be)
+}
+
+func (f *FakeBackendServices) GetNetworkEndpointGroup(name string, zone string) (*computealpha.NetworkEndpointGroup, error) {
+	return nil, nil
 }
 
 // GetGlobalBackendServiceHealth fakes getting backend service health.

@@ -335,6 +335,22 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		return nil
 	}
 
+	if lbc.negEnabled {
+		svcPorts := lbc.Translator.toNodePorts(&extensions.IngressList{Items: []extensions.Ingress{ing}})
+		for _, svcPort := range svcPorts {
+			if svcPort.NEGEnabled {
+
+				zones, err := lbc.Translator.ListZones()
+				if err != nil {
+					return err
+				}
+				if err := lbc.CloudClusterManager.backendPool.Link(svcPort, zones); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	// Update the UrlMap of the single loadbalancer that came through the watch.
 	l7, err := lbc.CloudClusterManager.l7Pool.Get(key)
 	if err != nil {

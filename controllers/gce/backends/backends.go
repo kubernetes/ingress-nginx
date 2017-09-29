@@ -25,6 +25,7 @@ import (
 
 	"github.com/golang/glog"
 
+	computealpha "google.golang.org/api/compute/v0.alpha"
 	compute "google.golang.org/api/compute/v1"
 
 	v1 "k8s.io/api/core/v1"
@@ -211,6 +212,54 @@ func (b *Backends) create(namedPort *compute.NamedPort, hcLink string, sp Servic
 	return b.Get(namedPort.Port)
 }
 
+func (b *Backends) Link(port ServicePort, zones []string) error {
+	if !port.NEGEnabled {
+		return nil
+	}
+
+	negName := b.namer.NEGName(port.SvcName.Namespace, port.SvcName.Name, port.SvcTargetPort)
+
+	negs := []*computealpha.NetworkEndpointGroup{}
+	for _, zone := range zones {
+		neg, err := b.cloud.GetNetworkEndpointGroup(negName, zone)
+		if err != nil {
+			return err
+		}
+		negs = append(negs, neg)
+	}
+
+	backendService, err := b.cloud.GetAlphaGlobalBackendService(b.namer.BeName(port.Port))
+	if err != nil {
+		return err
+	}
+
+	targetBackends := getBackendsForNEGs(negs)
+
+	needToUpdate := false
+	for _, backend := range backendService.Backends {
+		found := false
+		for _, negBackend := range targetBackends {
+			// Warnning: Group link includes the api version.
+			// Backend service and NEG API need to have matching API version.
+			// Otherwise, it will always be different
+			if negBackend.Group == backend.Group {
+				found = true
+				break
+			}
+		}
+		if !found {
+			needToUpdate = true
+			break
+		}
+	}
+
+	if needToUpdate {
+		backendService.Backends = targetBackends
+		return b.cloud.UpdateAlphaGlobalBackendService(backendService)
+	}
+	return nil
+}
+
 // Add will get or create a Backend for the given port.
 // Uses the given instance groups if non-nil, else creates instance groups.
 func (b *Backends) Add(p ServicePort, igs []*compute.InstanceGroup) error {
@@ -334,6 +383,19 @@ func getBackendsForIGs(igs []*compute.InstanceGroup, bm BalancingMode) []*comput
 			// as valid fields.
 		}
 
+		backends = append(backends, b)
+	}
+	return backends
+}
+
+func getBackendsForNEGs(negs []*computealpha.NetworkEndpointGroup) []*computealpha.Backend {
+	var backends []*computealpha.Backend
+	for _, neg := range negs {
+		b := &computealpha.Backend{
+			Group:         neg.SelfLink,
+			BalancingMode: string(Rate),
+			MaxRate: maxRPS,
+		}
 		backends = append(backends, b)
 	}
 	return backends
