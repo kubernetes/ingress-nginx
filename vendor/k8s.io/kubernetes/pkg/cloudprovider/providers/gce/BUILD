@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])
-
 load(
     "@io_bazel_rules_go//go:def.bzl",
     "go_library",
@@ -13,8 +11,10 @@ go_library(
     srcs = [
         "doc.go",
         "gce.go",
+        "gce_address_manager.go",
         "gce_addresses.go",
         "gce_addresses_fakes.go",
+        "gce_alpha.go",
         "gce_annotations.go",
         "gce_backendservice.go",
         "gce_cert.go",
@@ -23,6 +23,7 @@ go_library(
         "gce_disks.go",
         "gce_firewall.go",
         "gce_forwardingrule.go",
+        "gce_forwardingrule_fakes.go",
         "gce_healthchecks.go",
         "gce_instancegroup.go",
         "gce_instances.go",
@@ -38,10 +39,10 @@ go_library(
         "gce_urlmap.go",
         "gce_util.go",
         "gce_zones.go",
+        "kms.go",
         "metrics.go",
         "token_source.go",
     ],
-    tags = ["automanaged"],
     deps = [
         "//pkg/api/v1/service:go_default_library",
         "//pkg/cloudprovider:go_default_library",
@@ -51,6 +52,7 @@ go_library(
         "//pkg/util/net/sets:go_default_library",
         "//pkg/util/version:go_default_library",
         "//pkg/volume:go_default_library",
+        "//pkg/volume/util:go_default_library",
         "//vendor/cloud.google.com/go/compute/metadata:go_default_library",
         "//vendor/github.com/golang/glog:go_default_library",
         "//vendor/github.com/prometheus/client_golang/prometheus:go_default_library",
@@ -72,8 +74,13 @@ go_library(
         "//vendor/k8s.io/apimachinery/pkg/util/sets:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/util/wait:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/watch:go_default_library",
+        "//vendor/k8s.io/apiserver/pkg/server/options/encryptionconfig:go_default_library",
+        "//vendor/k8s.io/apiserver/pkg/storage/value/encrypt/envelope:go_default_library",
         "//vendor/k8s.io/client-go/kubernetes:go_default_library",
+        "//vendor/k8s.io/client-go/kubernetes/scheme:go_default_library",
+        "//vendor/k8s.io/client-go/kubernetes/typed/core/v1:go_default_library",
         "//vendor/k8s.io/client-go/tools/cache:go_default_library",
+        "//vendor/k8s.io/client-go/tools/record:go_default_library",
         "//vendor/k8s.io/client-go/util/flowcontrol:go_default_library",
     ],
 )
@@ -81,19 +88,28 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = [
+        "gce_address_manager_test.go",
+        "gce_annotations_test.go",
         "gce_disks_test.go",
         "gce_healthchecks_test.go",
         "gce_loadbalancer_external_test.go",
         "gce_test.go",
+        "metrics_test.go",
     ],
     library = ":go_default_library",
-    tags = ["automanaged"],
     deps = [
         "//pkg/cloudprovider:go_default_library",
         "//pkg/kubelet/apis:go_default_library",
+        "//vendor/github.com/stretchr/testify/assert:go_default_library",
+        "//vendor/github.com/stretchr/testify/require:go_default_library",
+        "//vendor/golang.org/x/oauth2/google:go_default_library",
+        "//vendor/google.golang.org/api/compute/v0.alpha:go_default_library",
+        "//vendor/google.golang.org/api/compute/v0.beta:go_default_library",
         "//vendor/google.golang.org/api/compute/v1:go_default_library",
         "//vendor/google.golang.org/api/googleapi:go_default_library",
         "//vendor/k8s.io/api/core/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/util/sets:go_default_library",
     ],
 )
 
