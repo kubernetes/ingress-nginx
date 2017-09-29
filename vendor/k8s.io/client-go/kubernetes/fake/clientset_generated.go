@@ -38,10 +38,12 @@ import (
 	fakeauthorizationv1beta1 "k8s.io/client-go/kubernetes/typed/authorization/v1beta1/fake"
 	autoscalingv1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
 	fakeautoscalingv1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1/fake"
-	autoscalingv2alpha1 "k8s.io/client-go/kubernetes/typed/autoscaling/v2alpha1"
-	fakeautoscalingv2alpha1 "k8s.io/client-go/kubernetes/typed/autoscaling/v2alpha1/fake"
+	autoscalingv2beta1 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta1"
+	fakeautoscalingv2beta1 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta1/fake"
 	batchv1 "k8s.io/client-go/kubernetes/typed/batch/v1"
 	fakebatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1/fake"
+	batchv1beta1 "k8s.io/client-go/kubernetes/typed/batch/v1beta1"
+	fakebatchv1beta1 "k8s.io/client-go/kubernetes/typed/batch/v1beta1/fake"
 	batchv2alpha1 "k8s.io/client-go/kubernetes/typed/batch/v2alpha1"
 	fakebatchv2alpha1 "k8s.io/client-go/kubernetes/typed/batch/v2alpha1/fake"
 	certificatesv1beta1 "k8s.io/client-go/kubernetes/typed/certificates/v1beta1"
@@ -54,6 +56,8 @@ import (
 	fakenetworkingv1 "k8s.io/client-go/kubernetes/typed/networking/v1/fake"
 	policyv1beta1 "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
 	fakepolicyv1beta1 "k8s.io/client-go/kubernetes/typed/policy/v1beta1/fake"
+	rbacv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
+	fakerbacv1 "k8s.io/client-go/kubernetes/typed/rbac/v1/fake"
 	rbacv1alpha1 "k8s.io/client-go/kubernetes/typed/rbac/v1alpha1"
 	fakerbacv1alpha1 "k8s.io/client-go/kubernetes/typed/rbac/v1alpha1/fake"
 	rbacv1beta1 "k8s.io/client-go/kubernetes/typed/rbac/v1beta1"
@@ -83,10 +87,9 @@ func NewSimpleClientset(objects ...runtime.Object) *Clientset {
 
 	fakePtr := testing.Fake{}
 	fakePtr.AddReactor("*", "*", testing.ObjectReaction(o))
-
 	fakePtr.AddWatchReactor("*", testing.DefaultWatchReactor(watch.NewFake(), nil))
 
-	return &Clientset{fakePtr}
+	return &Clientset{fakePtr, &fakediscovery.FakeDiscovery{Fake: &fakePtr}}
 }
 
 // Clientset implements clientset.Interface. Meant to be embedded into a
@@ -94,10 +97,11 @@ func NewSimpleClientset(objects ...runtime.Object) *Clientset {
 // you want to test easier.
 type Clientset struct {
 	testing.Fake
+	discovery *fakediscovery.FakeDiscovery
 }
 
 func (c *Clientset) Discovery() discovery.DiscoveryInterface {
-	return &fakediscovery.FakeDiscovery{Fake: &c.Fake}
+	return c.discovery
 }
 
 var _ clientset.Interface = &Clientset{}
@@ -167,9 +171,9 @@ func (c *Clientset) Autoscaling() autoscalingv1.AutoscalingV1Interface {
 	return &fakeautoscalingv1.FakeAutoscalingV1{Fake: &c.Fake}
 }
 
-// AutoscalingV2alpha1 retrieves the AutoscalingV2alpha1Client
-func (c *Clientset) AutoscalingV2alpha1() autoscalingv2alpha1.AutoscalingV2alpha1Interface {
-	return &fakeautoscalingv2alpha1.FakeAutoscalingV2alpha1{Fake: &c.Fake}
+// AutoscalingV2beta1 retrieves the AutoscalingV2beta1Client
+func (c *Clientset) AutoscalingV2beta1() autoscalingv2beta1.AutoscalingV2beta1Interface {
+	return &fakeautoscalingv2beta1.FakeAutoscalingV2beta1{Fake: &c.Fake}
 }
 
 // BatchV1 retrieves the BatchV1Client
@@ -180,6 +184,11 @@ func (c *Clientset) BatchV1() batchv1.BatchV1Interface {
 // Batch retrieves the BatchV1Client
 func (c *Clientset) Batch() batchv1.BatchV1Interface {
 	return &fakebatchv1.FakeBatchV1{Fake: &c.Fake}
+}
+
+// BatchV1beta1 retrieves the BatchV1beta1Client
+func (c *Clientset) BatchV1beta1() batchv1beta1.BatchV1beta1Interface {
+	return &fakebatchv1beta1.FakeBatchV1beta1{Fake: &c.Fake}
 }
 
 // BatchV2alpha1 retrieves the BatchV2alpha1Client
@@ -237,13 +246,18 @@ func (c *Clientset) Policy() policyv1beta1.PolicyV1beta1Interface {
 	return &fakepolicyv1beta1.FakePolicyV1beta1{Fake: &c.Fake}
 }
 
-// RbacV1beta1 retrieves the RbacV1beta1Client
-func (c *Clientset) RbacV1beta1() rbacv1beta1.RbacV1beta1Interface {
-	return &fakerbacv1beta1.FakeRbacV1beta1{Fake: &c.Fake}
+// RbacV1 retrieves the RbacV1Client
+func (c *Clientset) RbacV1() rbacv1.RbacV1Interface {
+	return &fakerbacv1.FakeRbacV1{Fake: &c.Fake}
 }
 
-// Rbac retrieves the RbacV1beta1Client
-func (c *Clientset) Rbac() rbacv1beta1.RbacV1beta1Interface {
+// Rbac retrieves the RbacV1Client
+func (c *Clientset) Rbac() rbacv1.RbacV1Interface {
+	return &fakerbacv1.FakeRbacV1{Fake: &c.Fake}
+}
+
+// RbacV1beta1 retrieves the RbacV1beta1Client
+func (c *Clientset) RbacV1beta1() rbacv1beta1.RbacV1beta1Interface {
 	return &fakerbacv1beta1.FakeRbacV1beta1{Fake: &c.Fake}
 }
 
