@@ -155,7 +155,7 @@ http {
     # Trust HTTP X-Forwarded-* Headers, but use direct values if they're missing.
     map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
         # Get IP address from X-Forwarded-For HTTP header
-        default          {{ buildForwardedFor $cfg.ForwardedForHeader }};
+        default          $remote_addr;
         ''               $realip_remote_addr;
     }
 
