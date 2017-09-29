@@ -199,7 +199,7 @@ http {
         default          $scheme;
     }
     map $http_x_forwarded_port $pass_server_port {
-    default           $server_port;
+        default           $server_port;
     }
 
     {{ end }}
