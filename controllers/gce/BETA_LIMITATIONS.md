@@ -106,31 +106,7 @@ Ingress is not yet supported on single zone clusters of size > 1000 nodes ([issu
 
 ## Disabling GLBC
 
-Setting the annotation `kubernetes.io/ingress.class` to any value other than "gce" or the empty string, will force the GCE Ingress controller to ignore your Ingress. Do this if you wish to use one of the other Ingress controllers at the same time as the GCE controller, eg:
-
-```yaml
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: test
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-spec:
-  tls:
-  - secretName: tls-secret
-  backend:
-    serviceName: echoheaders-https
-    servicePort: 80
-```
-
-As of Kubernetes 1.3, GLBC runs as a static pod on the master. If you want to totally disable it, you can ssh into the master node and delete the GLBC manifest file found at `/etc/kubernetes/manifests/glbc.manifest`. You can also disable it on GKE at cluster bring-up time through the `disable-addons` flag, eg:
-
-```console
-gcloud container clusters create mycluster --network "default" --num-nodes 1 \
---machine-type n1-standard-2 --zone $ZONE \
---disable-addons HttpLoadBalancing \
---disk-size 50 --scopes storage-full
-```
+To completely stop the Ingress controller on GCE/GKE, please see [this] (/docs/faq/gce.md#how-do-i-disable-the-gce-ingress-controller) faq.
 
 ## Changing the cluster UID
 

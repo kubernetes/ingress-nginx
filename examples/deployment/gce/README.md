@@ -4,27 +4,17 @@ This example demonstrates the deployment of a GCE Ingress controller.
 
 Note: __all GCE/GKE clusters already have an Ingress controller running
 on the master. The only reason to deploy another GCE controller is if you want
-to debug or otherwise observe its operation (eg via kubectl logs). Before
-deploying another one in your cluster, make sure you disable the master
-controller.__
+to debug or otherwise observe its operation (eg via kubectl logs).__
+
+__Before deploying another one in your cluster, make sure you disable the master controller.__
 
 ## Disabling the master controller
 
-As of Kubernetes 1.3, GLBC runs as a static pod on the master. If you want to
-totally disable it, you can ssh into the master node and delete the GLBC
-manifest file found at `/etc/kubernetes/manifests/glbc.manifest`. You can also
-disable it on GKE at cluster bring-up time through the `disable-addons` flag:
-
-```console
-gcloud container clusters create mycluster --network "default" --num-nodes 1 \
---machine-type n1-standard-2 --zone $ZONE \
---disable-addons HttpLoadBalancing \
---disk-size 50 --scopes storage-full
-```
+See the hard disable options [here](/docs/faq/gce.md#how-do-i-disable-the-gce-ingress-controller).
 
 ## Deploying a new controller
 
-The following command deploys a GCE Ingress controller in your cluster
+The following command deploys a GCE Ingress controller in your cluster:
 
 ```console
 $ kubectl create -f gce-ingress-controller.yaml
@@ -36,7 +26,7 @@ NAME                     READY     STATUS    RESTARTS   AGE
 l7-lb-controller-1s22c   2/2       Running   0          27s
 ```
 
-now you can create an Ingress and observe the controller
+Now you can create an Ingress and observe the controller:
 
 ```console
 $ kubectl create -f gce-tls-ingress.yaml
