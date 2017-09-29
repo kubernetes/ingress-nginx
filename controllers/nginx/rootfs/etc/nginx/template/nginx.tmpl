@@ -180,12 +180,7 @@ http {
     map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
     {{ if (trustProxyProtocol $cfg) }}
         # Get IP address from Proxy Protocol
-    {{ if (ne (len $cfg.ProxyRealIPCIDR) 0) }}
-        # using trusted real IP CIDR
-        default          $realip_remote_addr;
-    {{ else }}
         default          $proxy_protocol_addr;
-    {{ end }}
     {{ else }}
         # Get IP from direct remote address
         default          $realip_remote_addr;
@@ -297,9 +292,11 @@ http {
 
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
+
     }
 
     {{ end }}
+
 
     upstream {{ $upstream.Name }} {
         # Load balance algorithm; empty for round robin, which is the default
