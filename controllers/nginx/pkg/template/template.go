@@ -673,17 +673,20 @@ func buildForwardedFor(input interface{}) string {
 func trustHTTPHeaders(input interface{}) bool {
 	conf, ok := input.(config.TemplateConfig)
 	if !ok {
+		glog.Errorf("%v", input)
 		return true
 	}
 
 	return conf.Cfg.RealClientFrom == "http-proxy" ||
-		(conf.Cfg.RealClientFrom == "auto" && !conf.Cfg.UseProxyProtocol &&
-			(conf.PublishService != nil && conf.PublishService.Spec.Type == apiv1.ServiceTypeLoadBalancer))
+		(conf.Cfg.RealClientFrom == "auto" && !conf.Cfg.UseProxyProtocol ||
+			(conf.Cfg.RealClientFrom == "auto" && conf.PublishService != nil &&
+				conf.PublishService.Spec.Type == apiv1.ServiceTypeLoadBalancer))
 }
 
 func trustProxyProtocol(input interface{}) bool {
 	conf, ok := input.(config.TemplateConfig)
 	if !ok {
+		glog.Errorf("%v", input)
 		return true
 	}
 
