@@ -58,6 +58,10 @@ The following annotations are supported:
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
+|[ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
+|[ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
+|[ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
+|[ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
 |[ingress.kubernetes.io/server-alias](#server-alias)|string|
@@ -305,13 +309,24 @@ Please check the [whitelist](/examples/affinity/cookie/nginx/README.md) example.
 The annotation `ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is `cookie`.
 
-#### Cookie affinity
+### Cookie affinity
 If you use the ``cookie`` type you can also specify the name of the cookie that will be used to route the requests with the annotation `ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'route'.
 
 In case of NGINX the annotation `ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
 The `index` option is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranteed to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!
 
 In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf)
+
+### Custom timeouts
+
+Using the configuration configmap it is possible to set the default global timeout for connections to the upstream servers.
+In some scenarios is required to have different values. To allow this we provide annotations that allows this customization:
+
+- ingress.kubernetes.io/proxy-connect-timeout
+- ingress.kubernetes.io/proxy-send-timeout
+- ingress.kubernetes.io/proxy-read-timeout
+- ingress.kubernetes.io/proxy-request-buffering
+
 
 ### **Allowed parameters in configuration ConfigMap**
 
