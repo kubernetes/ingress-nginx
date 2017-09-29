@@ -468,6 +468,14 @@ func (u *Unstructured) SetSelfLink(selfLink string) {
 	u.setNestedField(selfLink, "metadata", "selfLink")
 }
 
+func (u *Unstructured) GetContinue() string {
+	return getNestedString(u.Object, "metadata", "continue")
+}
+
+func (u *Unstructured) SetContinue(c string) {
+	u.setNestedField(c, "metadata", "continue")
+}
+
 func (u *Unstructured) GetCreationTimestamp() metav1.Time {
 	var timestamp metav1.Time
 	timestamp.UnmarshalQueryParameter(getNestedString(u.Object, "metadata", "creationTimestamp"))
@@ -596,6 +604,8 @@ type UnstructuredList struct {
 	Items []Unstructured `json:"items"`
 }
 
+var _ metav1.ListInterface = &UnstructuredList{}
+
 // MarshalJSON ensures that the unstructured list object produces proper
 // JSON when passed to Go's standard JSON library.
 func (u *UnstructuredList) MarshalJSON() ([]byte, error) {
@@ -650,6 +660,14 @@ func (u *UnstructuredList) SetSelfLink(selfLink string) {
 	u.setNestedField(selfLink, "metadata", "selfLink")
 }
 
+func (u *UnstructuredList) GetContinue() string {
+	return getNestedString(u.Object, "metadata", "continue")
+}
+
+func (u *UnstructuredList) SetContinue(c string) {
+	u.setNestedField(c, "metadata", "continue")
+}
+
 func (u *UnstructuredList) SetGroupVersionKind(gvk schema.GroupVersionKind) {
 	u.SetAPIVersion(gvk.GroupVersion().String())
 	u.SetKind(gvk.Kind)
@@ -700,9 +718,12 @@ func (unstructuredJSONScheme) Encode(obj runtime.Object, w io.Writer) error {
 		for _, i := range t.Items {
 			items = append(items, i.Object)
 		}
-		t.Object["items"] = items
-		defer func() { delete(t.Object, "items") }()
-		return json.NewEncoder(w).Encode(t.Object)
+		listObj := make(map[string]interface{}, len(t.Object)+1)
+		for k, v := range t.Object { // Make a shallow copy
+			listObj[k] = v
+		}
+		listObj["items"] = items
+		return json.NewEncoder(w).Encode(listObj)
 	case *runtime.Unknown:
 		// TODO: Unstructured needs to deal with ContentType.
 		_, err := w.Write(t.Raw)

@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,17 +19,17 @@ package v1beta2
 import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
-	// StatefulSetInitAnnotation if present, and set to false, indicates that a Pod's readiness should be ignored.
-	StatefulSetInitAnnotation      = "pod.alpha.kubernetes.io/initialized"
 	ControllerRevisionHashLabelKey = "controller-revision-hash"
 	StatefulSetRevisionLabel       = ControllerRevisionHashLabelKey
+	DeprecatedRollbackTo           = "deprecated.deployment.rollback.to"
+	DeprecatedTemplateGeneration   = "deprecated.daemonset.template.generation"
 )
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // ScaleSpec describes the attributes of a scale subresource
 type ScaleSpec struct {
 	// desired number of instances for the scaled object.
@@ -37,7 +37,6 @@ type ScaleSpec struct {
 	Replicas int32 `json:"replicas,omitempty" protobuf:"varint,1,opt,name=replicas"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // ScaleStatus represents the current status of a scale subresource.
 type ScaleStatus struct {
 	// actual number of observed instances of the scaled object.
@@ -61,7 +60,6 @@ type ScaleStatus struct {
 // +genclient:noVerbs
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // Scale represents a scaling request for a resource.
 type Scale struct {
 	metav1.TypeMeta `json:",inline"`
@@ -79,9 +77,10 @@ type Scale struct {
 }
 
 // +genclient
+// +genclient:method=GetScale,verb=get,subresource=scale,result=Scale
+// +genclient:method=UpdateScale,verb=update,subresource=scale,input=Scale,result=Scale
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // StatefulSet represents a set of pods with consistent identities.
 // Identities are defined as:
 //  - Network: A single stable DNS and hostname.
@@ -118,14 +117,16 @@ const (
 	ParallelPodManagement = "Parallel"
 )
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // StatefulSetUpdateStrategy indicates the strategy that the StatefulSet
 // controller will use to perform updates. It includes any additional parameters
 // necessary to perform the update for the indicated strategy.
 type StatefulSetUpdateStrategy struct {
 	// Type indicates the type of the StatefulSetUpdateStrategy.
+	// Default is RollingUpdate.
+	// +optional
 	Type StatefulSetUpdateStrategyType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type,casttype=StatefulSetStrategyType"`
 	// RollingUpdate is used to communicate parameters when Type is RollingUpdateStatefulSetStrategyType.
+	// +optional
 	RollingUpdate *RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty" protobuf:"bytes,2,opt,name=rollingUpdate"`
 }
 
@@ -148,15 +149,15 @@ const (
 	OnDeleteStatefulSetStrategyType = "OnDelete"
 )
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // RollingUpdateStatefulSetStrategy is used to communicate parameter for RollingUpdateStatefulSetStrategyType.
 type RollingUpdateStatefulSetStrategy struct {
 	// Partition indicates the ordinal at which the StatefulSet should be
 	// partitioned.
+	// Default value is 0.
+	// +optional
 	Partition *int32 `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // A StatefulSetSpec is the specification of a StatefulSet.
 type StatefulSetSpec struct {
 	// replicas is the desired number of replicas of the given Template.
@@ -219,13 +220,12 @@ type StatefulSetSpec struct {
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,8,opt,name=revisionHistoryLimit"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // StatefulSetStatus represents the current state of a StatefulSet.
 type StatefulSetStatus struct {
 	// observedGeneration is the most recent generation observed for this StatefulSet. It corresponds to the
 	// StatefulSet's generation, which is updated on mutation by the API Server.
 	// +optional
-	ObservedGeneration *int64 `json:"observedGeneration,omitempty" protobuf:"varint,1,opt,name=observedGeneration"`
+	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,1,opt,name=observedGeneration"`
 
 	// replicas is the number of Pods created by the StatefulSet controller.
 	Replicas int32 `json:"replicas" protobuf:"varint,2,opt,name=replicas"`
@@ -248,11 +248,16 @@ type StatefulSetStatus struct {
 	// updateRevision, if not empty, indicates the version of the StatefulSet used to generate Pods in the sequence
 	// [replicas-updatedReplicas,replicas)
 	UpdateRevision string `json:"updateRevision,omitempty" protobuf:"bytes,7,opt,name=updateRevision"`
+
+	// collisionCount is the count of hash collisions for the StatefulSet. The StatefulSet controller
+	// uses this field as a collision avoidance mechanism when it needs to create the name for the
+	// newest ControllerRevision.
+	// +optional
+	CollisionCount *int32 `json:"collisionCount,omitempty" protobuf:"varint,9,opt,name=collisionCount"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // StatefulSetList is a collection of StatefulSets.
 type StatefulSetList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -264,7 +269,6 @@ type StatefulSetList struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // Deployment enables declarative updates for Pods and ReplicaSets.
 type Deployment struct {
 	metav1.TypeMeta `json:",inline"`
@@ -281,7 +285,6 @@ type Deployment struct {
 	Status DeploymentStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DeploymentSpec is the specification of the desired behavior of the Deployment.
 type DeploymentSpec struct {
 	// Number of desired pods. This is a pointer to distinguish between explicit
@@ -309,7 +312,7 @@ type DeploymentSpec struct {
 
 	// The number of old ReplicaSets to retain to allow rollback.
 	// This is a pointer to distinguish between explicit zero and not specified.
-	// Defaults to 2.
+	// Defaults to 10.
 	// +optional
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,6,opt,name=revisionHistoryLimit"`
 
@@ -317,40 +320,12 @@ type DeploymentSpec struct {
 	// +optional
 	Paused bool `json:"paused,omitempty" protobuf:"varint,7,opt,name=paused"`
 
-	// The config this deployment is rolling back to. Will be cleared after rollback is done.
-	// +optional
-	RollbackTo *RollbackConfig `json:"rollbackTo,omitempty" protobuf:"bytes,8,opt,name=rollbackTo"`
-
 	// The maximum time in seconds for a deployment to make progress before it
 	// is considered to be failed. The deployment controller will continue to
 	// process failed deployments and a condition with a ProgressDeadlineExceeded
-	// reason will be surfaced in the deployment status. Once autoRollback is
-	// implemented, the deployment controller will automatically rollback failed
-	// deployments. Note that progress will not be estimated during the time a
-	// deployment is paused. Defaults to 600s.
+	// reason will be surfaced in the deployment status. Note that progress will
+	// not be estimated during the time a deployment is paused. Defaults to 600s.
 	ProgressDeadlineSeconds *int32 `json:"progressDeadlineSeconds,omitempty" protobuf:"varint,9,opt,name=progressDeadlineSeconds"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
-// DeploymentRollback stores the information required to rollback a deployment.
-type DeploymentRollback struct {
-	metav1.TypeMeta `json:",inline"`
-	// Required: This must match the Name of a deployment.
-	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
-	// The annotations to be updated to a deployment
-	// +optional
-	UpdatedAnnotations map[string]string `json:"updatedAnnotations,omitempty" protobuf:"bytes,2,rep,name=updatedAnnotations"`
-	// The config of this deployment rollback.
-	RollbackTo RollbackConfig `json:"rollbackTo" protobuf:"bytes,3,opt,name=rollbackTo"`
-}
-
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
-type RollbackConfig struct {
-	// The revision to rollback to. If set to 0, rollback to the last revision.
-	// +optional
-	Revision int64 `json:"revision,omitempty" protobuf:"varint,1,opt,name=revision"`
 }
 
 const (
@@ -360,7 +335,6 @@ const (
 	DefaultDeploymentUniqueLabelKey string = "pod-template-hash"
 )
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DeploymentStrategy describes how to replace existing pods with new ones.
 type DeploymentStrategy struct {
 	// Type of deployment. Can be "Recreate" or "RollingUpdate". Default is RollingUpdate.
@@ -386,7 +360,6 @@ const (
 	RollingUpdateDeploymentStrategyType DeploymentStrategyType = "RollingUpdate"
 )
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // Spec to control the desired behavior of rolling update.
 type RollingUpdateDeployment struct {
 	// The maximum number of pods that can be unavailable during the update.
@@ -417,7 +390,6 @@ type RollingUpdateDeployment struct {
 	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty" protobuf:"bytes,2,opt,name=maxSurge"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DeploymentStatus is the most recently observed status of the Deployment.
 type DeploymentStatus struct {
 	// The generation observed by the deployment controller.
@@ -440,7 +412,9 @@ type DeploymentStatus struct {
 	// +optional
 	AvailableReplicas int32 `json:"availableReplicas,omitempty" protobuf:"varint,4,opt,name=availableReplicas"`
 
-	// Total number of unavailable pods targeted by this deployment.
+	// Total number of unavailable pods targeted by this deployment. This is the total number of
+	// pods that are still required for the deployment to have 100% available capacity. They may
+	// either be pods that are running but not yet available or pods that still have not been created.
 	// +optional
 	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty" protobuf:"varint,5,opt,name=unavailableReplicas"`
 
@@ -453,7 +427,7 @@ type DeploymentStatus struct {
 	// field as a collision avoidance mechanism when it needs to create the name for the
 	// newest ReplicaSet.
 	// +optional
-	CollisionCount *int64 `json:"collisionCount,omitempty" protobuf:"varint,8,opt,name=collisionCount"`
+	CollisionCount *int32 `json:"collisionCount,omitempty" protobuf:"varint,8,opt,name=collisionCount"`
 }
 
 type DeploymentConditionType string
@@ -473,7 +447,6 @@ const (
 	DeploymentReplicaFailure DeploymentConditionType = "ReplicaFailure"
 )
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DeploymentCondition describes the state of a deployment at a certain point.
 type DeploymentCondition struct {
 	// Type of deployment condition.
@@ -492,7 +465,6 @@ type DeploymentCondition struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DeploymentList is a list of Deployments.
 type DeploymentList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -504,10 +476,9 @@ type DeploymentList struct {
 	Items []Deployment `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
+// DaemonSetUpdateStrategy is a struct used to control the update strategy for a DaemonSet.
 type DaemonSetUpdateStrategy struct {
-	// Type of daemon set update. Can be "RollingUpdate" or "OnDelete".
-	// Default is OnDelete.
+	// Type of daemon set update. Can be "RollingUpdate" or "OnDelete". Default is RollingUpdate.
 	// +optional
 	Type DaemonSetUpdateStrategyType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type"`
 
@@ -530,7 +501,6 @@ const (
 	OnDeleteDaemonSetStrategyType DaemonSetUpdateStrategyType = "OnDelete"
 )
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // Spec to control the desired behavior of daemon set rolling update.
 type RollingUpdateDaemonSet struct {
 	// The maximum number of DaemonSet pods that can be unavailable during the
@@ -551,7 +521,6 @@ type RollingUpdateDaemonSet struct {
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"bytes,1,opt,name=maxUnavailable"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DaemonSetSpec is the specification of a daemon set.
 type DaemonSetSpec struct {
 	// A label query over pods that are managed by the daemon set.
@@ -579,12 +548,6 @@ type DaemonSetSpec struct {
 	// +optional
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty" protobuf:"varint,4,opt,name=minReadySeconds"`
 
-	// DEPRECATED.
-	// A sequence number representing a specific generation of the template.
-	// Populated by the system. It can be set only during the creation.
-	// +optional
-	TemplateGeneration int64 `json:"templateGeneration,omitempty" protobuf:"varint,5,opt,name=templateGeneration"`
-
 	// The number of old history to retain to allow rollback.
 	// This is a pointer to distinguish between explicit zero and not specified.
 	// Defaults to 10.
@@ -592,7 +555,6 @@ type DaemonSetSpec struct {
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,6,opt,name=revisionHistoryLimit"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DaemonSetStatus represents the current status of a daemon set.
 type DaemonSetStatus struct {
 	// The number of nodes that are running at least 1
@@ -638,13 +600,12 @@ type DaemonSetStatus struct {
 	// uses this field as a collision avoidance mechanism when it needs to
 	// create the name for the newest ControllerRevision.
 	// +optional
-	CollisionCount *int64 `json:"collisionCount,omitempty" protobuf:"varint,9,opt,name=collisionCount"`
+	CollisionCount *int32 `json:"collisionCount,omitempty" protobuf:"varint,9,opt,name=collisionCount"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DaemonSet represents the configuration of a daemon set.
 type DaemonSet struct {
 	metav1.TypeMeta `json:",inline"`
@@ -682,7 +643,6 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // DaemonSetList is a collection of daemon sets.
 type DaemonSetList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -698,7 +658,6 @@ type DaemonSetList struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // ReplicaSet represents the configuration of a ReplicaSet.
 type ReplicaSet struct {
 	metav1.TypeMeta `json:",inline"`
@@ -725,7 +684,6 @@ type ReplicaSet struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // ReplicaSetList is a collection of ReplicaSets.
 type ReplicaSetList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -739,7 +697,6 @@ type ReplicaSetList struct {
 	Items []ReplicaSet `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // ReplicaSetSpec is the specification of a ReplicaSet.
 type ReplicaSetSpec struct {
 	// Replicas is the number of desired replicas.
@@ -769,7 +726,6 @@ type ReplicaSetSpec struct {
 	Template v1.PodTemplateSpec `json:"template,omitempty" protobuf:"bytes,3,opt,name=template"`
 }
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // ReplicaSetStatus represents the current status of a ReplicaSet.
 type ReplicaSetStatus struct {
 	// Replicas is the most recently oberved number of replicas.
@@ -809,7 +765,6 @@ const (
 	ReplicaSetReplicaFailure ReplicaSetConditionType = "ReplicaFailure"
 )
 
-// WIP: This is not ready to be used and we plan to make breaking changes to it.
 // ReplicaSetCondition describes the state of a replica set at a certain point.
 type ReplicaSetCondition struct {
 	// Type of replica set condition.
@@ -825,4 +780,44 @@ type ReplicaSetCondition struct {
 	// A human readable message indicating details about the transition.
 	// +optional
 	Message string `json:"message,omitempty" protobuf:"bytes,5,opt,name=message"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ControllerRevision implements an immutable snapshot of state data. Clients
+// are responsible for serializing and deserializing the objects that contain
+// their internal state.
+// Once a ControllerRevision has been successfully created, it can not be updated.
+// The API Server will fail validation of all requests that attempt to mutate
+// the Data field. ControllerRevisions may, however, be deleted. Note that, due to its use by both
+// the DaemonSet and StatefulSet controllers for update and rollback, this object is beta. However,
+// it may be subject to name and representation changes in future releases, and clients should not
+// depend on its stability. It is primarily for internal use by controllers.
+type ControllerRevision struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard object's metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	// Data is the serialized representation of the state.
+	Data runtime.RawExtension `json:"data,omitempty" protobuf:"bytes,2,opt,name=data"`
+
+	// Revision indicates the revision of the state represented by Data.
+	Revision int64 `json:"revision" protobuf:"varint,3,opt,name=revision"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ControllerRevisionList is a resource containing a list of ControllerRevision objects.
+type ControllerRevisionList struct {
+	metav1.TypeMeta `json:",inline"`
+
+	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+	// +optional
+	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	// Items is the list of ControllerRevisions
+	Items []ControllerRevision `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
