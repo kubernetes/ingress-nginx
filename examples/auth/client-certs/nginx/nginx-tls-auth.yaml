@@ -21,6 +21,5 @@ spec:
   tls:
   - hosts:
     - ingress.test.com
-    # Create this cert as described in 'multi-tls' example
-    secretName: cert
+    secretName: tls-secret
 

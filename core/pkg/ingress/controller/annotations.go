@@ -36,6 +36,7 @@ import (
 	"k8s.io/ingress/core/pkg/ingress/annotations/redirect"
 	"k8s.io/ingress/core/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress/core/pkg/ingress/annotations/secureupstream"
+	"k8s.io/ingress/core/pkg/ingress/annotations/serversnippet"
 	"k8s.io/ingress/core/pkg/ingress/annotations/serviceupstream"
 	"k8s.io/ingress/core/pkg/ingress/annotations/sessionaffinity"
 	"k8s.io/ingress/core/pkg/ingress/annotations/snippet"
@@ -83,6 +84,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(),
 			"VtsFilterKey":         vtsfilterkey.NewParser(),
+			"ServerSnippet":        serversnippet.NewParser(),
 		},
 	}
 }
@@ -128,6 +130,7 @@ const (
 	serverAlias          = "Alias"
 	clientBodyBufferSize = "ClientBodyBufferSize"
 	certificateAuth      = "CertificateAuth"
+	serverSnippet        = "ServerSnippet"
 )
 
 func (e *annotationExtractor) ServiceUpstream(ing *extensions.Ingress) bool {
@@ -180,4 +183,9 @@ func (e *annotationExtractor) CertificateAuth(ing *extensions.Ingress) *authtls.
 	}
 	secure := val.(*authtls.AuthSSLConfig)
 	return secure
+}
+
+func (e *annotationExtractor) ServerSnippet(ing *extensions.Ingress) string {
+	val, _ := e.annotations[serverSnippet].Parse(ing)
+	return val.(string)
 }

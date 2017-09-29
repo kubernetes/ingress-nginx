@@ -17,6 +17,7 @@ This is an nginx Ingress controller that uses [ConfigMap](https://kubernetes.io/
 * [TCP Services](#exposing-tcp-services)
 * [UDP Services](#exposing-udp-services)
 * [Proxy Protocol](#proxy-protocol)
+* [Opentracing](#opentracing)
 * [NGINX customization](configuration.md)
 * [Custom errors](#custom-errors)
 * [NGINX status page](#nginx-status-page)
@@ -334,8 +335,8 @@ version to fully support Kube-Lego is nginx Ingress controller 0.8.
 
 ## Exposing TCP services
 
-Ingress does not support TCP services (yet). For this reason this Ingress controller uses the flag `--tcp-services-configmap` to point to an existing config map where the key is the external port to use and the value is `<namespace/service name>:<service port>:[PROXY]`
-It is possible to use a number or the name of the port. The last field is optional. Adding `PROXY` in the last field we can enable Proxy Protocol in a TCP service.
+Ingress does not support TCP services (yet). For this reason this Ingress controller uses the flag `--tcp-services-configmap` to point to an existing config map where the key is the external port to use and the value is `<namespace/service name>:<service port>:[PROXY]:[PROXY]`
+It is possible to use a number or the name of the port. The two last fields are optional. Adding `PROXY` in either or both of the two last fields we can use Proxy Protocol decoding (listen) and/or encoding (proxy_pass) in a TCP service (https://www.nginx.com/resources/admin-guide/proxy-protocol/).
 
 The next example shows how to expose the service `example-go` running in the namespace `default` in the port `8080` using the port `9000`
 ```
@@ -378,14 +379,63 @@ Amongst others [ELBs in AWS](http://docs.aws.amazon.com/ElasticLoadBalancing/lat
 
 Please check the [proxy-protocol](examples/proxy-protocol/) example
 
+### Opentracing
+
+Using the third party module [rnburn/nginx-opentracing](https://github.com/rnburn/nginx-opentracing) the NGINX ingress controller can configure NGINX to enable [OpenTracing](http://opentracing.io) instrumentation.
+By default this feature is disabled.
+
+To enable the instrumentation we just need to enable the instrumentation in the configuration configmap and set the host where we should send the traces.
+
+In the [aledbf/zipkin-js-example](https://github.com/aledbf/zipkin-js-example) github repository is possible to see a dockerized version of zipkin-js-example with the required Kubernetes descriptors.
+To install the example and the zipkin collector we just need to run:
+
+```
+$ kubectl create -f https://raw.githubusercontent.com/aledbf/zipkin-js-example/kubernetes/kubernetes/zipkin.yaml
+$ kubectl create -f https://raw.githubusercontent.com/aledbf/zipkin-js-example/kubernetes/kubernetes/deployment.yaml
+```
+
+Also we need to configure the NGINX controller configmap with the required values:
+
+```
+apiVersion: v1
+data:
+  enable-opentracing: "true"
+  zipkin-collector-host: zipkin.default.svc.cluster.local
+kind: ConfigMap
+metadata:
+  labels:
+    k8s-app: nginx-ingress-controller
+  name: nginx-custom-configuration
+```
+
+Using curl we can generate some traces:
+```
+$ curl -v http://$(minikube ip)/api -H 'Host: zipkin-js-example'
+$ curl -v http://$(minikube ip)/api -H 'Host: zipkin-js-example'
+```
+
+In the zipkin inteface we can see the details:
+
+![zipkin screenshot](docs/images/zipkin-demo.png "zipkin collector screenshot")
 
 ### Custom errors
 
-In case of an error in a request the body of the response is obtained from the `default backend`. Each request to the default backend includes two headers: 
-- `X-Code` indicates the HTTP code
-- `X-Format` the value of the `Accept` header
+In case of an error in a request the body of the response is obtained from the `default backend`.
+Each request to the default backend includes two headers: 
 
-Using this two headers is possible to use a custom backend service like [this one](https://github.com/aledbf/contrib/tree/nginx-debug-server/Ingress/images/nginx-error-server) that inspect each request and returns a custom error page with the format expected by the client. Please check the example [custom-errors](examples/custom-errors/README.md)
+- `X-Code` indicates the HTTP code to be returned to the client.
+- `X-Format` the value of the `Accept` header.
+
+**Important:** the custom backend must return the correct HTTP status code to be returned. NGINX do not changes the reponse from the custom default backend.
+
+Using this two headers is possible to use a custom backend service like [this one](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-errors/nginx) that inspect each request and returns a custom error page with the format expected by the client. Please check the example [custom-errors](examples/customization/custom-errors/nginx/README.md)
+
+NGINX sends aditional headers that can be used to build custom response:
+
+- X-Original-URI
+- X-Namespace
+- X-Ingress-Name
+- X-Service-Name
 
 ### NGINX status page
 

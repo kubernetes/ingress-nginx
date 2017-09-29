@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/url"
 	"os"
 	"os/exec"
 	"strconv"
@@ -151,7 +150,6 @@ var (
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
-		"buildAuthSignURL":            buildAuthSignURL,
 		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
 		"buildForwardedFor":           buildForwardedFor,
 		"trustHTTPHeaders":            trustHTTPHeaders,
@@ -568,22 +566,6 @@ func buildNextUpstream(input interface{}) string {
 	}
 
 	return strings.Join(nextUpstreamCodes, " ")
-}
-
-func buildAuthSignURL(input interface{}) string {
-	s, ok := input.(string)
-	if !ok {
-		glog.Errorf("expected an 'string' type but %T was returned", input)
-		return ""
-	}
-
-	u, _ := url.Parse(s)
-	q := u.Query()
-	if len(q) == 0 {
-		return fmt.Sprintf("%v?rd=$request_uri", s)
-	}
-
-	return fmt.Sprintf("%v&rd=$request_uri", s)
 }
 
 // buildRandomUUID return a random string to be used in the template

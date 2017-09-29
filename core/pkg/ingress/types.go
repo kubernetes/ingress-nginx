@@ -236,6 +236,10 @@ type Server struct {
 	// CertificateAuth indicates the this server requires mutual authentication
 	// +optional
 	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth"`
+
+	// ServerSnippet returns the snippet of server
+	// +optional
+	ServerSnippet string `json:"serverSnippet"`
 }
 
 // Location describes an URI inside a server.
@@ -359,5 +363,11 @@ type L4Backend struct {
 	Namespace string             `json:"namespace"`
 	Protocol  apiv1.Protocol     `json:"protocol"`
 	// +optional
-	UseProxyProtocol bool `json:"useProxyProtocol"`
+	ProxyProtocol ProxyProtocol `json:"proxyProtocol"`
+}
+
+// ProxyProtocol describes the proxy protocol configuration
+type ProxyProtocol struct {
+	Decode bool `json:"decode"`
+	Encode bool `json:"encode"`
 }

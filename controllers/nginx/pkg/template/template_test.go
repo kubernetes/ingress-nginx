@@ -310,24 +310,6 @@ func TestBuildResolvers(t *testing.T) {
 	}
 }
 
-func TestBuildAuthSignURL(t *testing.T) {
-	urlOne := "http://google.com"
-	validUrlOne := "http://google.com?rd=$request_uri"
-
-	urlTwo := "http://google.com?cat"
-	validUrlTwo := "http://google.com?cat&rd=$request_uri"
-
-	authSignURLOne := buildAuthSignURL(urlOne)
-	if authSignURLOne != validUrlOne {
-		t.Errorf("Expected '%v' but returned '%v'", validUrlOne, authSignURLOne)
-	}
-
-	authSignURLTwo := buildAuthSignURL(urlTwo)
-	if authSignURLTwo != validUrlTwo {
-		t.Errorf("Expected '%v' but returned '%v'", validUrlTwo, authSignURLTwo)
-	}
-}
-
 func TestBuildNextUpstream(t *testing.T) {
 	nextUpstream := "timeout http_500 http_502 non_idempotent"
 	validNextUpstream := "timeout http_500 http_502"

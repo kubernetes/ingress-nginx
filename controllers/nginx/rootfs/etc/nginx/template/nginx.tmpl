@@ -461,19 +461,22 @@ stream {
     }
     server {
         {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ else }}
-        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ end }}
         {{ if $IsIPV6Enabled }}
         {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ else }}
-        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.UseProxyProtocol }} proxy_protocol{{ end }};
+        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ end }}
         {{ end }}
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
         proxy_pass              tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
+        {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
+        proxy_protocol          on;
+        {{ end }}
     }
 
     {{ end }}
@@ -514,6 +517,8 @@ stream {
         location @custom_{{ $errCode }} {
             internal;
 
+            proxy_intercept_errors off;
+
             proxy_set_header       X-Code             {{ $errCode }};
             proxy_set_header       X-Format           $http_accept;
             proxy_set_header       X-Original-URI     $request_uri;
@@ -521,6 +526,7 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
 
+            rewrite                (.*) / break;
             proxy_pass             http://upstream-default-backend;
         }
         {{ end }}
@@ -626,6 +632,10 @@ stream {
         {{ end }}
         {{ end }}
 
+        {{ if not (empty $server.ServerSnippet) }}
+        {{ $server.ServerSnippet }}
+        {{ end }}
+        
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
         {{ $authPath := buildAuthLocation $location }}
@@ -704,7 +714,7 @@ stream {
             {{ end }}
 
             {{ if not (empty $location.ExternalAuth.SigninURL) }}
-            error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
+            error_page 401 = $location.ExternalAuth.SigninURL;
             {{ end }}
 
             {{/* if the location contains a rate limit annotation, create one */}}
@@ -762,6 +772,9 @@ stream {
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
             proxy_set_header X-Original-URI         $request_uri;
             proxy_set_header X-Scheme               $pass_access_scheme;
+
+            {{/* This header is used for external authentication */}}
+            proxy_set_header X-Auth-Request-Redirect $request_uri;
 
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
