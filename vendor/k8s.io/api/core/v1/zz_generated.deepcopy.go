@@ -21,6 +21,7 @@ limitations under the License.
 package v1
 
 import (
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -28,13 +29,14 @@ import (
 	reflect "reflect"
 )
 
-// Deprecated: register deep-copy functions.
 func init() {
 	SchemeBuilder.Register(RegisterDeepCopies)
 }
 
-// Deprecated: RegisterDeepCopies adds deep-copy functions to the given scheme. Public
+// RegisterDeepCopies adds deep-copy functions to the given scheme. Public
 // to allow building arbitrary schemes.
+//
+// Deprecated: deepcopy registration will go away when static deepcopy is fully implemented.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
 		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
@@ -58,6 +60,10 @@ func RegisterDeepCopies(scheme *runtime.Scheme) error {
 			return nil
 		}, InType: reflect.TypeOf(&AzureDiskVolumeSource{})},
 		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
+			in.(*AzureFilePersistentVolumeSource).DeepCopyInto(out.(*AzureFilePersistentVolumeSource))
+			return nil
+		}, InType: reflect.TypeOf(&AzureFilePersistentVolumeSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
 			in.(*AzureFileVolumeSource).DeepCopyInto(out.(*AzureFileVolumeSource))
 			return nil
 		}, InType: reflect.TypeOf(&AzureFileVolumeSource{})},
@@ -70,6 +76,10 @@ func RegisterDeepCopies(scheme *runtime.Scheme) error {
 			return nil
 		}, InType: reflect.TypeOf(&Capabilities{})},
 		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
+			in.(*CephFSPersistentVolumeSource).DeepCopyInto(out.(*CephFSPersistentVolumeSource))
+			return nil
+		}, InType: reflect.TypeOf(&CephFSPersistentVolumeSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
 			in.(*CephFSVolumeSource).DeepCopyInto(out.(*CephFSVolumeSource))
 			return nil
 		}, InType: reflect.TypeOf(&CephFSVolumeSource{})},
@@ -77,6 +87,10 @@ func RegisterDeepCopies(scheme *runtime.Scheme) error {
 			in.(*CinderVolumeSource).DeepCopyInto(out.(*CinderVolumeSource))
 			return nil
 		}, InType: reflect.TypeOf(&CinderVolumeSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
+			in.(*ClientIPConfig).DeepCopyInto(out.(*ClientIPConfig))
+			return nil
+		}, InType: reflect.TypeOf(&ClientIPConfig{})},
 		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
 			in.(*ComponentCondition).DeepCopyInto(out.(*ComponentCondition))
 			return nil
@@ -350,6 +364,10 @@ func RegisterDeepCopies(scheme *runtime.Scheme) error {
 			return nil
 		}, InType: reflect.TypeOf(&NodeCondition{})},
 		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
+			in.(*NodeConfigSource).DeepCopyInto(out.(*NodeConfigSource))
+			return nil
+		}, InType: reflect.TypeOf(&NodeConfigSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
 			in.(*NodeDaemonEndpoints).DeepCopyInto(out.(*NodeDaemonEndpoints))
 			return nil
 		}, InType: reflect.TypeOf(&NodeDaemonEndpoints{})},
@@ -409,6 +427,10 @@ func RegisterDeepCopies(scheme *runtime.Scheme) error {
 			in.(*PersistentVolumeClaim).DeepCopyInto(out.(*PersistentVolumeClaim))
 			return nil
 		}, InType: reflect.TypeOf(&PersistentVolumeClaim{})},
+		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
+			in.(*PersistentVolumeClaimCondition).DeepCopyInto(out.(*PersistentVolumeClaimCondition))
+			return nil
+		}, InType: reflect.TypeOf(&PersistentVolumeClaimCondition{})},
 		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
 			in.(*PersistentVolumeClaimList).DeepCopyInto(out.(*PersistentVolumeClaimList))
 			return nil
@@ -630,6 +652,10 @@ func RegisterDeepCopies(scheme *runtime.Scheme) error {
 			return nil
 		}, InType: reflect.TypeOf(&SecretProjection{})},
 		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
+			in.(*SecretReference).DeepCopyInto(out.(*SecretReference))
+			return nil
+		}, InType: reflect.TypeOf(&SecretReference{})},
+		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
 			in.(*SecretVolumeSource).DeepCopyInto(out.(*SecretVolumeSource))
 			return nil
 		}, InType: reflect.TypeOf(&SecretVolumeSource{})},
@@ -673,6 +699,10 @@ func RegisterDeepCopies(scheme *runtime.Scheme) error {
 			in.(*ServiceStatus).DeepCopyInto(out.(*ServiceStatus))
 			return nil
 		}, InType: reflect.TypeOf(&ServiceStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
+			in.(*SessionAffinityConfig).DeepCopyInto(out.(*SessionAffinityConfig))
+			return nil
+		}, InType: reflect.TypeOf(&SessionAffinityConfig{})},
 		conversion.GeneratedDeepCopyFunc{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
 			in.(*StorageOSPersistentVolumeSource).DeepCopyInto(out.(*StorageOSPersistentVolumeSource))
 			return nil
@@ -730,13 +760,13 @@ func (in *AWSElasticBlockStoreVolumeSource) DeepCopyInto(out *AWSElasticBlockSto
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new AWSElasticBlockStoreVolumeSource.
-func (x *AWSElasticBlockStoreVolumeSource) DeepCopy() *AWSElasticBlockStoreVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new AWSElasticBlockStoreVolumeSource.
+func (in *AWSElasticBlockStoreVolumeSource) DeepCopy() *AWSElasticBlockStoreVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(AWSElasticBlockStoreVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -773,13 +803,13 @@ func (in *Affinity) DeepCopyInto(out *Affinity) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Affinity.
-func (x *Affinity) DeepCopy() *Affinity {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Affinity.
+func (in *Affinity) DeepCopy() *Affinity {
+	if in == nil {
 		return nil
 	}
 	out := new(Affinity)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -789,13 +819,13 @@ func (in *AttachedVolume) DeepCopyInto(out *AttachedVolume) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new AttachedVolume.
-func (x *AttachedVolume) DeepCopy() *AttachedVolume {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new AttachedVolume.
+func (in *AttachedVolume) DeepCopy() *AttachedVolume {
+	if in == nil {
 		return nil
 	}
 	out := new(AttachedVolume)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -812,13 +842,13 @@ func (in *AvoidPods) DeepCopyInto(out *AvoidPods) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new AvoidPods.
-func (x *AvoidPods) DeepCopy() *AvoidPods {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new AvoidPods.
+func (in *AvoidPods) DeepCopy() *AvoidPods {
+	if in == nil {
 		return nil
 	}
 	out := new(AvoidPods)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -864,13 +894,38 @@ func (in *AzureDiskVolumeSource) DeepCopyInto(out *AzureDiskVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new AzureDiskVolumeSource.
-func (x *AzureDiskVolumeSource) DeepCopy() *AzureDiskVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new AzureDiskVolumeSource.
+func (in *AzureDiskVolumeSource) DeepCopy() *AzureDiskVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(AzureDiskVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
+	return out
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *AzureFilePersistentVolumeSource) DeepCopyInto(out *AzureFilePersistentVolumeSource) {
+	*out = *in
+	if in.SecretNamespace != nil {
+		in, out := &in.SecretNamespace, &out.SecretNamespace
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
+	}
+	return
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new AzureFilePersistentVolumeSource.
+func (in *AzureFilePersistentVolumeSource) DeepCopy() *AzureFilePersistentVolumeSource {
+	if in == nil {
+		return nil
+	}
+	out := new(AzureFilePersistentVolumeSource)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -880,13 +935,13 @@ func (in *AzureFileVolumeSource) DeepCopyInto(out *AzureFileVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new AzureFileVolumeSource.
-func (x *AzureFileVolumeSource) DeepCopy() *AzureFileVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new AzureFileVolumeSource.
+func (in *AzureFileVolumeSource) DeepCopy() *AzureFileVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(AzureFileVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -899,19 +954,19 @@ func (in *Binding) DeepCopyInto(out *Binding) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Binding.
-func (x *Binding) DeepCopy() *Binding {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Binding.
+func (in *Binding) DeepCopy() *Binding {
+	if in == nil {
 		return nil
 	}
 	out := new(Binding)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *Binding) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *Binding) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -934,13 +989,43 @@ func (in *Capabilities) DeepCopyInto(out *Capabilities) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Capabilities.
-func (x *Capabilities) DeepCopy() *Capabilities {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Capabilities.
+func (in *Capabilities) DeepCopy() *Capabilities {
+	if in == nil {
 		return nil
 	}
 	out := new(Capabilities)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
+	return out
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *CephFSPersistentVolumeSource) DeepCopyInto(out *CephFSPersistentVolumeSource) {
+	*out = *in
+	if in.Monitors != nil {
+		in, out := &in.Monitors, &out.Monitors
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.SecretRef != nil {
+		in, out := &in.SecretRef, &out.SecretRef
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(SecretReference)
+			**out = **in
+		}
+	}
+	return
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CephFSPersistentVolumeSource.
+func (in *CephFSPersistentVolumeSource) DeepCopy() *CephFSPersistentVolumeSource {
+	if in == nil {
+		return nil
+	}
+	out := new(CephFSPersistentVolumeSource)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -964,13 +1049,13 @@ func (in *CephFSVolumeSource) DeepCopyInto(out *CephFSVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new CephFSVolumeSource.
-func (x *CephFSVolumeSource) DeepCopy() *CephFSVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CephFSVolumeSource.
+func (in *CephFSVolumeSource) DeepCopy() *CephFSVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(CephFSVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -980,13 +1065,38 @@ func (in *CinderVolumeSource) DeepCopyInto(out *CinderVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new CinderVolumeSource.
-func (x *CinderVolumeSource) DeepCopy() *CinderVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CinderVolumeSource.
+func (in *CinderVolumeSource) DeepCopy() *CinderVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(CinderVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
+	return out
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *ClientIPConfig) DeepCopyInto(out *ClientIPConfig) {
+	*out = *in
+	if in.TimeoutSeconds != nil {
+		in, out := &in.TimeoutSeconds, &out.TimeoutSeconds
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(int32)
+			**out = **in
+		}
+	}
+	return
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ClientIPConfig.
+func (in *ClientIPConfig) DeepCopy() *ClientIPConfig {
+	if in == nil {
+		return nil
+	}
+	out := new(ClientIPConfig)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -996,13 +1106,13 @@ func (in *ComponentCondition) DeepCopyInto(out *ComponentCondition) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ComponentCondition.
-func (x *ComponentCondition) DeepCopy() *ComponentCondition {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ComponentCondition.
+func (in *ComponentCondition) DeepCopy() *ComponentCondition {
+	if in == nil {
 		return nil
 	}
 	out := new(ComponentCondition)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1019,19 +1129,19 @@ func (in *ComponentStatus) DeepCopyInto(out *ComponentStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ComponentStatus.
-func (x *ComponentStatus) DeepCopy() *ComponentStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ComponentStatus.
+func (in *ComponentStatus) DeepCopy() *ComponentStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(ComponentStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ComponentStatus) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ComponentStatus) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -1053,19 +1163,19 @@ func (in *ComponentStatusList) DeepCopyInto(out *ComponentStatusList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ComponentStatusList.
-func (x *ComponentStatusList) DeepCopy() *ComponentStatusList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ComponentStatusList.
+func (in *ComponentStatusList) DeepCopy() *ComponentStatusList {
+	if in == nil {
 		return nil
 	}
 	out := new(ComponentStatusList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ComponentStatusList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ComponentStatusList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -1087,19 +1197,19 @@ func (in *ConfigMap) DeepCopyInto(out *ConfigMap) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMap.
-func (x *ConfigMap) DeepCopy() *ConfigMap {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMap.
+func (in *ConfigMap) DeepCopy() *ConfigMap {
+	if in == nil {
 		return nil
 	}
 	out := new(ConfigMap)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ConfigMap) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ConfigMap) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -1122,13 +1232,13 @@ func (in *ConfigMapEnvSource) DeepCopyInto(out *ConfigMapEnvSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapEnvSource.
-func (x *ConfigMapEnvSource) DeepCopy() *ConfigMapEnvSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapEnvSource.
+func (in *ConfigMapEnvSource) DeepCopy() *ConfigMapEnvSource {
+	if in == nil {
 		return nil
 	}
 	out := new(ConfigMapEnvSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1148,13 +1258,13 @@ func (in *ConfigMapKeySelector) DeepCopyInto(out *ConfigMapKeySelector) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapKeySelector.
-func (x *ConfigMapKeySelector) DeepCopy() *ConfigMapKeySelector {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapKeySelector.
+func (in *ConfigMapKeySelector) DeepCopy() *ConfigMapKeySelector {
+	if in == nil {
 		return nil
 	}
 	out := new(ConfigMapKeySelector)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1173,19 +1283,19 @@ func (in *ConfigMapList) DeepCopyInto(out *ConfigMapList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapList.
-func (x *ConfigMapList) DeepCopy() *ConfigMapList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapList.
+func (in *ConfigMapList) DeepCopy() *ConfigMapList {
+	if in == nil {
 		return nil
 	}
 	out := new(ConfigMapList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ConfigMapList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ConfigMapList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -1215,13 +1325,13 @@ func (in *ConfigMapProjection) DeepCopyInto(out *ConfigMapProjection) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapProjection.
-func (x *ConfigMapProjection) DeepCopy() *ConfigMapProjection {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapProjection.
+func (in *ConfigMapProjection) DeepCopy() *ConfigMapProjection {
+	if in == nil {
 		return nil
 	}
 	out := new(ConfigMapProjection)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1257,13 +1367,13 @@ func (in *ConfigMapVolumeSource) DeepCopyInto(out *ConfigMapVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapVolumeSource.
-func (x *ConfigMapVolumeSource) DeepCopy() *ConfigMapVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ConfigMapVolumeSource.
+func (in *ConfigMapVolumeSource) DeepCopy() *ConfigMapVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(ConfigMapVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1303,7 +1413,9 @@ func (in *Container) DeepCopyInto(out *Container) {
 	if in.VolumeMounts != nil {
 		in, out := &in.VolumeMounts, &out.VolumeMounts
 		*out = make([]VolumeMount, len(*in))
-		copy(*out, *in)
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	if in.LivenessProbe != nil {
 		in, out := &in.LivenessProbe, &out.LivenessProbe
@@ -1344,13 +1456,13 @@ func (in *Container) DeepCopyInto(out *Container) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Container.
-func (x *Container) DeepCopy() *Container {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Container.
+func (in *Container) DeepCopy() *Container {
+	if in == nil {
 		return nil
 	}
 	out := new(Container)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1365,13 +1477,13 @@ func (in *ContainerImage) DeepCopyInto(out *ContainerImage) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ContainerImage.
-func (x *ContainerImage) DeepCopy() *ContainerImage {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ContainerImage.
+func (in *ContainerImage) DeepCopy() *ContainerImage {
+	if in == nil {
 		return nil
 	}
 	out := new(ContainerImage)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1381,13 +1493,13 @@ func (in *ContainerPort) DeepCopyInto(out *ContainerPort) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ContainerPort.
-func (x *ContainerPort) DeepCopy() *ContainerPort {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ContainerPort.
+func (in *ContainerPort) DeepCopy() *ContainerPort {
+	if in == nil {
 		return nil
 	}
 	out := new(ContainerPort)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1424,13 +1536,13 @@ func (in *ContainerState) DeepCopyInto(out *ContainerState) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ContainerState.
-func (x *ContainerState) DeepCopy() *ContainerState {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ContainerState.
+func (in *ContainerState) DeepCopy() *ContainerState {
+	if in == nil {
 		return nil
 	}
 	out := new(ContainerState)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1441,13 +1553,13 @@ func (in *ContainerStateRunning) DeepCopyInto(out *ContainerStateRunning) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ContainerStateRunning.
-func (x *ContainerStateRunning) DeepCopy() *ContainerStateRunning {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ContainerStateRunning.
+func (in *ContainerStateRunning) DeepCopy() *ContainerStateRunning {
+	if in == nil {
 		return nil
 	}
 	out := new(ContainerStateRunning)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1459,13 +1571,13 @@ func (in *ContainerStateTerminated) DeepCopyInto(out *ContainerStateTerminated) 
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ContainerStateTerminated.
-func (x *ContainerStateTerminated) DeepCopy() *ContainerStateTerminated {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ContainerStateTerminated.
+func (in *ContainerStateTerminated) DeepCopy() *ContainerStateTerminated {
+	if in == nil {
 		return nil
 	}
 	out := new(ContainerStateTerminated)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1475,13 +1587,13 @@ func (in *ContainerStateWaiting) DeepCopyInto(out *ContainerStateWaiting) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ContainerStateWaiting.
-func (x *ContainerStateWaiting) DeepCopy() *ContainerStateWaiting {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ContainerStateWaiting.
+func (in *ContainerStateWaiting) DeepCopy() *ContainerStateWaiting {
+	if in == nil {
 		return nil
 	}
 	out := new(ContainerStateWaiting)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1493,13 +1605,13 @@ func (in *ContainerStatus) DeepCopyInto(out *ContainerStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ContainerStatus.
-func (x *ContainerStatus) DeepCopy() *ContainerStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ContainerStatus.
+func (in *ContainerStatus) DeepCopy() *ContainerStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(ContainerStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1509,13 +1621,13 @@ func (in *DaemonEndpoint) DeepCopyInto(out *DaemonEndpoint) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new DaemonEndpoint.
-func (x *DaemonEndpoint) DeepCopy() *DaemonEndpoint {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new DaemonEndpoint.
+func (in *DaemonEndpoint) DeepCopy() *DaemonEndpoint {
+	if in == nil {
 		return nil
 	}
 	out := new(DaemonEndpoint)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1562,19 +1674,19 @@ func (in *DeleteOptions) DeepCopyInto(out *DeleteOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new DeleteOptions.
-func (x *DeleteOptions) DeepCopy() *DeleteOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new DeleteOptions.
+func (in *DeleteOptions) DeepCopy() *DeleteOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(DeleteOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *DeleteOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *DeleteOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -1594,13 +1706,13 @@ func (in *DownwardAPIProjection) DeepCopyInto(out *DownwardAPIProjection) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new DownwardAPIProjection.
-func (x *DownwardAPIProjection) DeepCopy() *DownwardAPIProjection {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new DownwardAPIProjection.
+func (in *DownwardAPIProjection) DeepCopy() *DownwardAPIProjection {
+	if in == nil {
 		return nil
 	}
 	out := new(DownwardAPIProjection)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1637,13 +1749,13 @@ func (in *DownwardAPIVolumeFile) DeepCopyInto(out *DownwardAPIVolumeFile) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new DownwardAPIVolumeFile.
-func (x *DownwardAPIVolumeFile) DeepCopy() *DownwardAPIVolumeFile {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new DownwardAPIVolumeFile.
+func (in *DownwardAPIVolumeFile) DeepCopy() *DownwardAPIVolumeFile {
+	if in == nil {
 		return nil
 	}
 	out := new(DownwardAPIVolumeFile)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1669,30 +1781,38 @@ func (in *DownwardAPIVolumeSource) DeepCopyInto(out *DownwardAPIVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new DownwardAPIVolumeSource.
-func (x *DownwardAPIVolumeSource) DeepCopy() *DownwardAPIVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new DownwardAPIVolumeSource.
+func (in *DownwardAPIVolumeSource) DeepCopy() *DownwardAPIVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(DownwardAPIVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *EmptyDirVolumeSource) DeepCopyInto(out *EmptyDirVolumeSource) {
 	*out = *in
-	out.SizeLimit = in.SizeLimit.DeepCopy()
+	if in.SizeLimit != nil {
+		in, out := &in.SizeLimit, &out.SizeLimit
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(resource.Quantity)
+			**out = (*in).DeepCopy()
+		}
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EmptyDirVolumeSource.
-func (x *EmptyDirVolumeSource) DeepCopy() *EmptyDirVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EmptyDirVolumeSource.
+func (in *EmptyDirVolumeSource) DeepCopy() *EmptyDirVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(EmptyDirVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1720,13 +1840,13 @@ func (in *EndpointAddress) DeepCopyInto(out *EndpointAddress) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EndpointAddress.
-func (x *EndpointAddress) DeepCopy() *EndpointAddress {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EndpointAddress.
+func (in *EndpointAddress) DeepCopy() *EndpointAddress {
+	if in == nil {
 		return nil
 	}
 	out := new(EndpointAddress)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1736,13 +1856,13 @@ func (in *EndpointPort) DeepCopyInto(out *EndpointPort) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EndpointPort.
-func (x *EndpointPort) DeepCopy() *EndpointPort {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EndpointPort.
+func (in *EndpointPort) DeepCopy() *EndpointPort {
+	if in == nil {
 		return nil
 	}
 	out := new(EndpointPort)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1771,13 +1891,13 @@ func (in *EndpointSubset) DeepCopyInto(out *EndpointSubset) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EndpointSubset.
-func (x *EndpointSubset) DeepCopy() *EndpointSubset {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EndpointSubset.
+func (in *EndpointSubset) DeepCopy() *EndpointSubset {
+	if in == nil {
 		return nil
 	}
 	out := new(EndpointSubset)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1796,19 +1916,19 @@ func (in *Endpoints) DeepCopyInto(out *Endpoints) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Endpoints.
-func (x *Endpoints) DeepCopy() *Endpoints {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Endpoints.
+func (in *Endpoints) DeepCopy() *Endpoints {
+	if in == nil {
 		return nil
 	}
 	out := new(Endpoints)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *Endpoints) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *Endpoints) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -1830,19 +1950,19 @@ func (in *EndpointsList) DeepCopyInto(out *EndpointsList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EndpointsList.
-func (x *EndpointsList) DeepCopy() *EndpointsList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EndpointsList.
+func (in *EndpointsList) DeepCopy() *EndpointsList {
+	if in == nil {
 		return nil
 	}
 	out := new(EndpointsList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *EndpointsList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *EndpointsList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -1873,13 +1993,13 @@ func (in *EnvFromSource) DeepCopyInto(out *EnvFromSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EnvFromSource.
-func (x *EnvFromSource) DeepCopy() *EnvFromSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EnvFromSource.
+func (in *EnvFromSource) DeepCopy() *EnvFromSource {
+	if in == nil {
 		return nil
 	}
 	out := new(EnvFromSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1898,13 +2018,13 @@ func (in *EnvVar) DeepCopyInto(out *EnvVar) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EnvVar.
-func (x *EnvVar) DeepCopy() *EnvVar {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EnvVar.
+func (in *EnvVar) DeepCopy() *EnvVar {
+	if in == nil {
 		return nil
 	}
 	out := new(EnvVar)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1950,13 +2070,13 @@ func (in *EnvVarSource) DeepCopyInto(out *EnvVarSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EnvVarSource.
-func (x *EnvVarSource) DeepCopy() *EnvVarSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EnvVarSource.
+func (in *EnvVarSource) DeepCopy() *EnvVarSource {
+	if in == nil {
 		return nil
 	}
 	out := new(EnvVarSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -1972,19 +2092,19 @@ func (in *Event) DeepCopyInto(out *Event) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Event.
-func (x *Event) DeepCopy() *Event {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Event.
+func (in *Event) DeepCopy() *Event {
+	if in == nil {
 		return nil
 	}
 	out := new(Event)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *Event) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *Event) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2006,19 +2126,19 @@ func (in *EventList) DeepCopyInto(out *EventList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EventList.
-func (x *EventList) DeepCopy() *EventList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EventList.
+func (in *EventList) DeepCopy() *EventList {
+	if in == nil {
 		return nil
 	}
 	out := new(EventList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *EventList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *EventList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2031,13 +2151,13 @@ func (in *EventSource) DeepCopyInto(out *EventSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new EventSource.
-func (x *EventSource) DeepCopy() *EventSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new EventSource.
+func (in *EventSource) DeepCopy() *EventSource {
+	if in == nil {
 		return nil
 	}
 	out := new(EventSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2052,13 +2172,13 @@ func (in *ExecAction) DeepCopyInto(out *ExecAction) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ExecAction.
-func (x *ExecAction) DeepCopy() *ExecAction {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ExecAction.
+func (in *ExecAction) DeepCopy() *ExecAction {
+	if in == nil {
 		return nil
 	}
 	out := new(ExecAction)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2079,16 +2199,21 @@ func (in *FCVolumeSource) DeepCopyInto(out *FCVolumeSource) {
 			**out = **in
 		}
 	}
+	if in.WWIDs != nil {
+		in, out := &in.WWIDs, &out.WWIDs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new FCVolumeSource.
-func (x *FCVolumeSource) DeepCopy() *FCVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new FCVolumeSource.
+func (in *FCVolumeSource) DeepCopy() *FCVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(FCVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2114,13 +2239,13 @@ func (in *FlexVolumeSource) DeepCopyInto(out *FlexVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new FlexVolumeSource.
-func (x *FlexVolumeSource) DeepCopy() *FlexVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new FlexVolumeSource.
+func (in *FlexVolumeSource) DeepCopy() *FlexVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(FlexVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2130,13 +2255,13 @@ func (in *FlockerVolumeSource) DeepCopyInto(out *FlockerVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new FlockerVolumeSource.
-func (x *FlockerVolumeSource) DeepCopy() *FlockerVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new FlockerVolumeSource.
+func (in *FlockerVolumeSource) DeepCopy() *FlockerVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(FlockerVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2146,13 +2271,13 @@ func (in *GCEPersistentDiskVolumeSource) DeepCopyInto(out *GCEPersistentDiskVolu
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new GCEPersistentDiskVolumeSource.
-func (x *GCEPersistentDiskVolumeSource) DeepCopy() *GCEPersistentDiskVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new GCEPersistentDiskVolumeSource.
+func (in *GCEPersistentDiskVolumeSource) DeepCopy() *GCEPersistentDiskVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(GCEPersistentDiskVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2162,13 +2287,13 @@ func (in *GitRepoVolumeSource) DeepCopyInto(out *GitRepoVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new GitRepoVolumeSource.
-func (x *GitRepoVolumeSource) DeepCopy() *GitRepoVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new GitRepoVolumeSource.
+func (in *GitRepoVolumeSource) DeepCopy() *GitRepoVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(GitRepoVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2178,13 +2303,13 @@ func (in *GlusterfsVolumeSource) DeepCopyInto(out *GlusterfsVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new GlusterfsVolumeSource.
-func (x *GlusterfsVolumeSource) DeepCopy() *GlusterfsVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new GlusterfsVolumeSource.
+func (in *GlusterfsVolumeSource) DeepCopy() *GlusterfsVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(GlusterfsVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2200,13 +2325,13 @@ func (in *HTTPGetAction) DeepCopyInto(out *HTTPGetAction) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new HTTPGetAction.
-func (x *HTTPGetAction) DeepCopy() *HTTPGetAction {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new HTTPGetAction.
+func (in *HTTPGetAction) DeepCopy() *HTTPGetAction {
+	if in == nil {
 		return nil
 	}
 	out := new(HTTPGetAction)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2216,13 +2341,13 @@ func (in *HTTPHeader) DeepCopyInto(out *HTTPHeader) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new HTTPHeader.
-func (x *HTTPHeader) DeepCopy() *HTTPHeader {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new HTTPHeader.
+func (in *HTTPHeader) DeepCopy() *HTTPHeader {
+	if in == nil {
 		return nil
 	}
 	out := new(HTTPHeader)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2259,13 +2384,13 @@ func (in *Handler) DeepCopyInto(out *Handler) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Handler.
-func (x *Handler) DeepCopy() *Handler {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Handler.
+func (in *Handler) DeepCopy() *Handler {
+	if in == nil {
 		return nil
 	}
 	out := new(Handler)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2280,29 +2405,38 @@ func (in *HostAlias) DeepCopyInto(out *HostAlias) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new HostAlias.
-func (x *HostAlias) DeepCopy() *HostAlias {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new HostAlias.
+func (in *HostAlias) DeepCopy() *HostAlias {
+	if in == nil {
 		return nil
 	}
 	out := new(HostAlias)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *HostPathVolumeSource) DeepCopyInto(out *HostPathVolumeSource) {
 	*out = *in
+	if in.Type != nil {
+		in, out := &in.Type, &out.Type
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(HostPathType)
+			**out = **in
+		}
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new HostPathVolumeSource.
-func (x *HostPathVolumeSource) DeepCopy() *HostPathVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new HostPathVolumeSource.
+func (in *HostPathVolumeSource) DeepCopy() *HostPathVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(HostPathVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2323,16 +2457,25 @@ func (in *ISCSIVolumeSource) DeepCopyInto(out *ISCSIVolumeSource) {
 			**out = **in
 		}
 	}
+	if in.InitiatorName != nil {
+		in, out := &in.InitiatorName, &out.InitiatorName
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ISCSIVolumeSource.
-func (x *ISCSIVolumeSource) DeepCopy() *ISCSIVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ISCSIVolumeSource.
+func (in *ISCSIVolumeSource) DeepCopy() *ISCSIVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(ISCSIVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2351,13 +2494,13 @@ func (in *KeyToPath) DeepCopyInto(out *KeyToPath) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new KeyToPath.
-func (x *KeyToPath) DeepCopy() *KeyToPath {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new KeyToPath.
+func (in *KeyToPath) DeepCopy() *KeyToPath {
+	if in == nil {
 		return nil
 	}
 	out := new(KeyToPath)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2385,13 +2528,13 @@ func (in *Lifecycle) DeepCopyInto(out *Lifecycle) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Lifecycle.
-func (x *Lifecycle) DeepCopy() *Lifecycle {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Lifecycle.
+func (in *Lifecycle) DeepCopy() *Lifecycle {
+	if in == nil {
 		return nil
 	}
 	out := new(Lifecycle)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2404,19 +2547,19 @@ func (in *LimitRange) DeepCopyInto(out *LimitRange) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new LimitRange.
-func (x *LimitRange) DeepCopy() *LimitRange {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LimitRange.
+func (in *LimitRange) DeepCopy() *LimitRange {
+	if in == nil {
 		return nil
 	}
 	out := new(LimitRange)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *LimitRange) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *LimitRange) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2464,13 +2607,13 @@ func (in *LimitRangeItem) DeepCopyInto(out *LimitRangeItem) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new LimitRangeItem.
-func (x *LimitRangeItem) DeepCopy() *LimitRangeItem {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LimitRangeItem.
+func (in *LimitRangeItem) DeepCopy() *LimitRangeItem {
+	if in == nil {
 		return nil
 	}
 	out := new(LimitRangeItem)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2489,19 +2632,19 @@ func (in *LimitRangeList) DeepCopyInto(out *LimitRangeList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new LimitRangeList.
-func (x *LimitRangeList) DeepCopy() *LimitRangeList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LimitRangeList.
+func (in *LimitRangeList) DeepCopy() *LimitRangeList {
+	if in == nil {
 		return nil
 	}
 	out := new(LimitRangeList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *LimitRangeList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *LimitRangeList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2521,13 +2664,13 @@ func (in *LimitRangeSpec) DeepCopyInto(out *LimitRangeSpec) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new LimitRangeSpec.
-func (x *LimitRangeSpec) DeepCopy() *LimitRangeSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LimitRangeSpec.
+func (in *LimitRangeSpec) DeepCopy() *LimitRangeSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(LimitRangeSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2546,19 +2689,19 @@ func (in *List) DeepCopyInto(out *List) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new List.
-func (x *List) DeepCopy() *List {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new List.
+func (in *List) DeepCopy() *List {
+	if in == nil {
 		return nil
 	}
 	out := new(List)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *List) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *List) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2581,19 +2724,19 @@ func (in *ListOptions) DeepCopyInto(out *ListOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ListOptions.
-func (x *ListOptions) DeepCopy() *ListOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ListOptions.
+func (in *ListOptions) DeepCopy() *ListOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(ListOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ListOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ListOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2606,13 +2749,13 @@ func (in *LoadBalancerIngress) DeepCopyInto(out *LoadBalancerIngress) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new LoadBalancerIngress.
-func (x *LoadBalancerIngress) DeepCopy() *LoadBalancerIngress {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LoadBalancerIngress.
+func (in *LoadBalancerIngress) DeepCopy() *LoadBalancerIngress {
+	if in == nil {
 		return nil
 	}
 	out := new(LoadBalancerIngress)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2627,13 +2770,13 @@ func (in *LoadBalancerStatus) DeepCopyInto(out *LoadBalancerStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new LoadBalancerStatus.
-func (x *LoadBalancerStatus) DeepCopy() *LoadBalancerStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LoadBalancerStatus.
+func (in *LoadBalancerStatus) DeepCopy() *LoadBalancerStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(LoadBalancerStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2643,13 +2786,13 @@ func (in *LocalObjectReference) DeepCopyInto(out *LocalObjectReference) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new LocalObjectReference.
-func (x *LocalObjectReference) DeepCopy() *LocalObjectReference {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LocalObjectReference.
+func (in *LocalObjectReference) DeepCopy() *LocalObjectReference {
+	if in == nil {
 		return nil
 	}
 	out := new(LocalObjectReference)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2659,13 +2802,13 @@ func (in *LocalVolumeSource) DeepCopyInto(out *LocalVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new LocalVolumeSource.
-func (x *LocalVolumeSource) DeepCopy() *LocalVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LocalVolumeSource.
+func (in *LocalVolumeSource) DeepCopy() *LocalVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(LocalVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2675,13 +2818,13 @@ func (in *NFSVolumeSource) DeepCopyInto(out *NFSVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NFSVolumeSource.
-func (x *NFSVolumeSource) DeepCopy() *NFSVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NFSVolumeSource.
+func (in *NFSVolumeSource) DeepCopy() *NFSVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(NFSVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2695,19 +2838,19 @@ func (in *Namespace) DeepCopyInto(out *Namespace) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Namespace.
-func (x *Namespace) DeepCopy() *Namespace {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Namespace.
+func (in *Namespace) DeepCopy() *Namespace {
+	if in == nil {
 		return nil
 	}
 	out := new(Namespace)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *Namespace) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *Namespace) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2729,19 +2872,19 @@ func (in *NamespaceList) DeepCopyInto(out *NamespaceList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NamespaceList.
-func (x *NamespaceList) DeepCopy() *NamespaceList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NamespaceList.
+func (in *NamespaceList) DeepCopy() *NamespaceList {
+	if in == nil {
 		return nil
 	}
 	out := new(NamespaceList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *NamespaceList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *NamespaceList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2759,13 +2902,13 @@ func (in *NamespaceSpec) DeepCopyInto(out *NamespaceSpec) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NamespaceSpec.
-func (x *NamespaceSpec) DeepCopy() *NamespaceSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NamespaceSpec.
+func (in *NamespaceSpec) DeepCopy() *NamespaceSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(NamespaceSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2775,13 +2918,13 @@ func (in *NamespaceStatus) DeepCopyInto(out *NamespaceStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NamespaceStatus.
-func (x *NamespaceStatus) DeepCopy() *NamespaceStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NamespaceStatus.
+func (in *NamespaceStatus) DeepCopy() *NamespaceStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(NamespaceStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2795,19 +2938,19 @@ func (in *Node) DeepCopyInto(out *Node) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Node.
-func (x *Node) DeepCopy() *Node {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Node.
+func (in *Node) DeepCopy() *Node {
+	if in == nil {
 		return nil
 	}
 	out := new(Node)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *Node) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *Node) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2820,13 +2963,13 @@ func (in *NodeAddress) DeepCopyInto(out *NodeAddress) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeAddress.
-func (x *NodeAddress) DeepCopy() *NodeAddress {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeAddress.
+func (in *NodeAddress) DeepCopy() *NodeAddress {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeAddress)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2852,13 +2995,13 @@ func (in *NodeAffinity) DeepCopyInto(out *NodeAffinity) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeAffinity.
-func (x *NodeAffinity) DeepCopy() *NodeAffinity {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeAffinity.
+func (in *NodeAffinity) DeepCopy() *NodeAffinity {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeAffinity)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2870,14 +3013,49 @@ func (in *NodeCondition) DeepCopyInto(out *NodeCondition) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeCondition.
-func (x *NodeCondition) DeepCopy() *NodeCondition {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeCondition.
+func (in *NodeCondition) DeepCopy() *NodeCondition {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeCondition)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *NodeConfigSource) DeepCopyInto(out *NodeConfigSource) {
+	*out = *in
+	out.TypeMeta = in.TypeMeta
+	if in.ConfigMapRef != nil {
+		in, out := &in.ConfigMapRef, &out.ConfigMapRef
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(ObjectReference)
+			**out = **in
+		}
+	}
+	return
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeConfigSource.
+func (in *NodeConfigSource) DeepCopy() *NodeConfigSource {
+	if in == nil {
+		return nil
+	}
+	out := new(NodeConfigSource)
+	in.DeepCopyInto(out)
+	return out
+}
+
+// DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
+func (in *NodeConfigSource) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
+		return c
+	} else {
+		return nil
+	}
 }
 
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
@@ -2887,13 +3065,13 @@ func (in *NodeDaemonEndpoints) DeepCopyInto(out *NodeDaemonEndpoints) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeDaemonEndpoints.
-func (x *NodeDaemonEndpoints) DeepCopy() *NodeDaemonEndpoints {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeDaemonEndpoints.
+func (in *NodeDaemonEndpoints) DeepCopy() *NodeDaemonEndpoints {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeDaemonEndpoints)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2912,19 +3090,19 @@ func (in *NodeList) DeepCopyInto(out *NodeList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeList.
-func (x *NodeList) DeepCopy() *NodeList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeList.
+func (in *NodeList) DeepCopy() *NodeList {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *NodeList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *NodeList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2938,19 +3116,19 @@ func (in *NodeProxyOptions) DeepCopyInto(out *NodeProxyOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeProxyOptions.
-func (x *NodeProxyOptions) DeepCopy() *NodeProxyOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeProxyOptions.
+func (in *NodeProxyOptions) DeepCopy() *NodeProxyOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeProxyOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *NodeProxyOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *NodeProxyOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -2970,13 +3148,13 @@ func (in *NodeResources) DeepCopyInto(out *NodeResources) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeResources.
-func (x *NodeResources) DeepCopy() *NodeResources {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeResources.
+func (in *NodeResources) DeepCopy() *NodeResources {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeResources)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -2993,13 +3171,13 @@ func (in *NodeSelector) DeepCopyInto(out *NodeSelector) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeSelector.
-func (x *NodeSelector) DeepCopy() *NodeSelector {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeSelector.
+func (in *NodeSelector) DeepCopy() *NodeSelector {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeSelector)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3014,13 +3192,13 @@ func (in *NodeSelectorRequirement) DeepCopyInto(out *NodeSelectorRequirement) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeSelectorRequirement.
-func (x *NodeSelectorRequirement) DeepCopy() *NodeSelectorRequirement {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeSelectorRequirement.
+func (in *NodeSelectorRequirement) DeepCopy() *NodeSelectorRequirement {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeSelectorRequirement)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3037,13 +3215,13 @@ func (in *NodeSelectorTerm) DeepCopyInto(out *NodeSelectorTerm) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeSelectorTerm.
-func (x *NodeSelectorTerm) DeepCopy() *NodeSelectorTerm {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeSelectorTerm.
+func (in *NodeSelectorTerm) DeepCopy() *NodeSelectorTerm {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeSelectorTerm)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3057,16 +3235,25 @@ func (in *NodeSpec) DeepCopyInto(out *NodeSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.ConfigSource != nil {
+		in, out := &in.ConfigSource, &out.ConfigSource
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(NodeConfigSource)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeSpec.
-func (x *NodeSpec) DeepCopy() *NodeSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeSpec.
+func (in *NodeSpec) DeepCopy() *NodeSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3121,13 +3308,13 @@ func (in *NodeStatus) DeepCopyInto(out *NodeStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeStatus.
-func (x *NodeStatus) DeepCopy() *NodeStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeStatus.
+func (in *NodeStatus) DeepCopy() *NodeStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3137,13 +3324,13 @@ func (in *NodeSystemInfo) DeepCopyInto(out *NodeSystemInfo) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new NodeSystemInfo.
-func (x *NodeSystemInfo) DeepCopy() *NodeSystemInfo {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new NodeSystemInfo.
+func (in *NodeSystemInfo) DeepCopy() *NodeSystemInfo {
+	if in == nil {
 		return nil
 	}
 	out := new(NodeSystemInfo)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3153,13 +3340,13 @@ func (in *ObjectFieldSelector) DeepCopyInto(out *ObjectFieldSelector) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ObjectFieldSelector.
-func (x *ObjectFieldSelector) DeepCopy() *ObjectFieldSelector {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ObjectFieldSelector.
+func (in *ObjectFieldSelector) DeepCopy() *ObjectFieldSelector {
+	if in == nil {
 		return nil
 	}
 	out := new(ObjectFieldSelector)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3223,13 +3410,13 @@ func (in *ObjectMeta) DeepCopyInto(out *ObjectMeta) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ObjectMeta.
-func (x *ObjectMeta) DeepCopy() *ObjectMeta {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ObjectMeta.
+func (in *ObjectMeta) DeepCopy() *ObjectMeta {
+	if in == nil {
 		return nil
 	}
 	out := new(ObjectMeta)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3239,19 +3426,19 @@ func (in *ObjectReference) DeepCopyInto(out *ObjectReference) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ObjectReference.
-func (x *ObjectReference) DeepCopy() *ObjectReference {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ObjectReference.
+func (in *ObjectReference) DeepCopy() *ObjectReference {
+	if in == nil {
 		return nil
 	}
 	out := new(ObjectReference)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ObjectReference) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ObjectReference) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -3268,19 +3455,19 @@ func (in *PersistentVolume) DeepCopyInto(out *PersistentVolume) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolume.
-func (x *PersistentVolume) DeepCopy() *PersistentVolume {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolume.
+func (in *PersistentVolume) DeepCopy() *PersistentVolume {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolume)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PersistentVolume) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PersistentVolume) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -3297,23 +3484,41 @@ func (in *PersistentVolumeClaim) DeepCopyInto(out *PersistentVolumeClaim) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaim.
-func (x *PersistentVolumeClaim) DeepCopy() *PersistentVolumeClaim {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaim.
+func (in *PersistentVolumeClaim) DeepCopy() *PersistentVolumeClaim {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeClaim)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PersistentVolumeClaim) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PersistentVolumeClaim) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
 	}
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *PersistentVolumeClaimCondition) DeepCopyInto(out *PersistentVolumeClaimCondition) {
+	*out = *in
+	in.LastProbeTime.DeepCopyInto(&out.LastProbeTime)
+	in.LastTransitionTime.DeepCopyInto(&out.LastTransitionTime)
+	return
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimCondition.
+func (in *PersistentVolumeClaimCondition) DeepCopy() *PersistentVolumeClaimCondition {
+	if in == nil {
+		return nil
+	}
+	out := new(PersistentVolumeClaimCondition)
+	in.DeepCopyInto(out)
+	return out
 }
 
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
@@ -3331,19 +3536,19 @@ func (in *PersistentVolumeClaimList) DeepCopyInto(out *PersistentVolumeClaimList
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimList.
-func (x *PersistentVolumeClaimList) DeepCopy() *PersistentVolumeClaimList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimList.
+func (in *PersistentVolumeClaimList) DeepCopy() *PersistentVolumeClaimList {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeClaimList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PersistentVolumeClaimList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PersistentVolumeClaimList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -3380,13 +3585,13 @@ func (in *PersistentVolumeClaimSpec) DeepCopyInto(out *PersistentVolumeClaimSpec
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimSpec.
-func (x *PersistentVolumeClaimSpec) DeepCopy() *PersistentVolumeClaimSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimSpec.
+func (in *PersistentVolumeClaimSpec) DeepCopy() *PersistentVolumeClaimSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeClaimSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3405,16 +3610,23 @@ func (in *PersistentVolumeClaimStatus) DeepCopyInto(out *PersistentVolumeClaimSt
 			(*out)[key] = val.DeepCopy()
 		}
 	}
+	if in.Conditions != nil {
+		in, out := &in.Conditions, &out.Conditions
+		*out = make([]PersistentVolumeClaimCondition, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimStatus.
-func (x *PersistentVolumeClaimStatus) DeepCopy() *PersistentVolumeClaimStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimStatus.
+func (in *PersistentVolumeClaimStatus) DeepCopy() *PersistentVolumeClaimStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeClaimStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3424,13 +3636,13 @@ func (in *PersistentVolumeClaimVolumeSource) DeepCopyInto(out *PersistentVolumeC
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimVolumeSource.
-func (x *PersistentVolumeClaimVolumeSource) DeepCopy() *PersistentVolumeClaimVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeClaimVolumeSource.
+func (in *PersistentVolumeClaimVolumeSource) DeepCopy() *PersistentVolumeClaimVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeClaimVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3449,19 +3661,19 @@ func (in *PersistentVolumeList) DeepCopyInto(out *PersistentVolumeList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeList.
-func (x *PersistentVolumeList) DeepCopy() *PersistentVolumeList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeList.
+func (in *PersistentVolumeList) DeepCopy() *PersistentVolumeList {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PersistentVolumeList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PersistentVolumeList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -3495,7 +3707,7 @@ func (in *PersistentVolumeSource) DeepCopyInto(out *PersistentVolumeSource) {
 			*out = nil
 		} else {
 			*out = new(HostPathVolumeSource)
-			**out = **in
+			(*in).DeepCopyInto(*out)
 		}
 	}
 	if in.Glusterfs != nil {
@@ -3548,7 +3760,7 @@ func (in *PersistentVolumeSource) DeepCopyInto(out *PersistentVolumeSource) {
 		if *in == nil {
 			*out = nil
 		} else {
-			*out = new(CephFSVolumeSource)
+			*out = new(CephFSPersistentVolumeSource)
 			(*in).DeepCopyInto(*out)
 		}
 	}
@@ -3584,8 +3796,8 @@ func (in *PersistentVolumeSource) DeepCopyInto(out *PersistentVolumeSource) {
 		if *in == nil {
 			*out = nil
 		} else {
-			*out = new(AzureFileVolumeSource)
-			**out = **in
+			*out = new(AzureFilePersistentVolumeSource)
+			(*in).DeepCopyInto(*out)
 		}
 	}
 	if in.VsphereVolume != nil {
@@ -3663,13 +3875,13 @@ func (in *PersistentVolumeSource) DeepCopyInto(out *PersistentVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeSource.
-func (x *PersistentVolumeSource) DeepCopy() *PersistentVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeSource.
+func (in *PersistentVolumeSource) DeepCopy() *PersistentVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3698,16 +3910,21 @@ func (in *PersistentVolumeSpec) DeepCopyInto(out *PersistentVolumeSpec) {
 			**out = **in
 		}
 	}
+	if in.MountOptions != nil {
+		in, out := &in.MountOptions, &out.MountOptions
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeSpec.
-func (x *PersistentVolumeSpec) DeepCopy() *PersistentVolumeSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeSpec.
+func (in *PersistentVolumeSpec) DeepCopy() *PersistentVolumeSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3717,13 +3934,13 @@ func (in *PersistentVolumeStatus) DeepCopyInto(out *PersistentVolumeStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeStatus.
-func (x *PersistentVolumeStatus) DeepCopy() *PersistentVolumeStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PersistentVolumeStatus.
+func (in *PersistentVolumeStatus) DeepCopy() *PersistentVolumeStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(PersistentVolumeStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3733,13 +3950,13 @@ func (in *PhotonPersistentDiskVolumeSource) DeepCopyInto(out *PhotonPersistentDi
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PhotonPersistentDiskVolumeSource.
-func (x *PhotonPersistentDiskVolumeSource) DeepCopy() *PhotonPersistentDiskVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PhotonPersistentDiskVolumeSource.
+func (in *PhotonPersistentDiskVolumeSource) DeepCopy() *PhotonPersistentDiskVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(PhotonPersistentDiskVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3753,19 +3970,19 @@ func (in *Pod) DeepCopyInto(out *Pod) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Pod.
-func (x *Pod) DeepCopy() *Pod {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Pod.
+func (in *Pod) DeepCopy() *Pod {
+	if in == nil {
 		return nil
 	}
 	out := new(Pod)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *Pod) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *Pod) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -3792,13 +4009,13 @@ func (in *PodAffinity) DeepCopyInto(out *PodAffinity) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodAffinity.
-func (x *PodAffinity) DeepCopy() *PodAffinity {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodAffinity.
+func (in *PodAffinity) DeepCopy() *PodAffinity {
+	if in == nil {
 		return nil
 	}
 	out := new(PodAffinity)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3822,13 +4039,13 @@ func (in *PodAffinityTerm) DeepCopyInto(out *PodAffinityTerm) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodAffinityTerm.
-func (x *PodAffinityTerm) DeepCopy() *PodAffinityTerm {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodAffinityTerm.
+func (in *PodAffinityTerm) DeepCopy() *PodAffinityTerm {
+	if in == nil {
 		return nil
 	}
 	out := new(PodAffinityTerm)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3852,13 +4069,13 @@ func (in *PodAntiAffinity) DeepCopyInto(out *PodAntiAffinity) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodAntiAffinity.
-func (x *PodAntiAffinity) DeepCopy() *PodAntiAffinity {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodAntiAffinity.
+func (in *PodAntiAffinity) DeepCopy() *PodAntiAffinity {
+	if in == nil {
 		return nil
 	}
 	out := new(PodAntiAffinity)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3869,19 +4086,19 @@ func (in *PodAttachOptions) DeepCopyInto(out *PodAttachOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodAttachOptions.
-func (x *PodAttachOptions) DeepCopy() *PodAttachOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodAttachOptions.
+func (in *PodAttachOptions) DeepCopy() *PodAttachOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(PodAttachOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodAttachOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodAttachOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -3896,13 +4113,13 @@ func (in *PodCondition) DeepCopyInto(out *PodCondition) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodCondition.
-func (x *PodCondition) DeepCopy() *PodCondition {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodCondition.
+func (in *PodCondition) DeepCopy() *PodCondition {
+	if in == nil {
 		return nil
 	}
 	out := new(PodCondition)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -3918,19 +4135,19 @@ func (in *PodExecOptions) DeepCopyInto(out *PodExecOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodExecOptions.
-func (x *PodExecOptions) DeepCopy() *PodExecOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodExecOptions.
+func (in *PodExecOptions) DeepCopy() *PodExecOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(PodExecOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodExecOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodExecOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -3952,19 +4169,19 @@ func (in *PodList) DeepCopyInto(out *PodList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodList.
-func (x *PodList) DeepCopy() *PodList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodList.
+func (in *PodList) DeepCopy() *PodList {
+	if in == nil {
 		return nil
 	}
 	out := new(PodList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4014,19 +4231,19 @@ func (in *PodLogOptions) DeepCopyInto(out *PodLogOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodLogOptions.
-func (x *PodLogOptions) DeepCopy() *PodLogOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodLogOptions.
+func (in *PodLogOptions) DeepCopy() *PodLogOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(PodLogOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodLogOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodLogOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4045,19 +4262,19 @@ func (in *PodPortForwardOptions) DeepCopyInto(out *PodPortForwardOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodPortForwardOptions.
-func (x *PodPortForwardOptions) DeepCopy() *PodPortForwardOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodPortForwardOptions.
+func (in *PodPortForwardOptions) DeepCopy() *PodPortForwardOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(PodPortForwardOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodPortForwardOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodPortForwardOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4071,19 +4288,19 @@ func (in *PodProxyOptions) DeepCopyInto(out *PodProxyOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodProxyOptions.
-func (x *PodProxyOptions) DeepCopy() *PodProxyOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodProxyOptions.
+func (in *PodProxyOptions) DeepCopy() *PodProxyOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(PodProxyOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodProxyOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodProxyOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4137,13 +4354,13 @@ func (in *PodSecurityContext) DeepCopyInto(out *PodSecurityContext) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodSecurityContext.
-func (x *PodSecurityContext) DeepCopy() *PodSecurityContext {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodSecurityContext.
+func (in *PodSecurityContext) DeepCopy() *PodSecurityContext {
+	if in == nil {
 		return nil
 	}
 	out := new(PodSecurityContext)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4162,13 +4379,13 @@ func (in *PodSignature) DeepCopyInto(out *PodSignature) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodSignature.
-func (x *PodSignature) DeepCopy() *PodSignature {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodSignature.
+func (in *PodSignature) DeepCopy() *PodSignature {
+	if in == nil {
 		return nil
 	}
 	out := new(PodSignature)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4279,13 +4496,13 @@ func (in *PodSpec) DeepCopyInto(out *PodSpec) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodSpec.
-func (x *PodSpec) DeepCopy() *PodSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodSpec.
+func (in *PodSpec) DeepCopy() *PodSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(PodSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4325,13 +4542,13 @@ func (in *PodStatus) DeepCopyInto(out *PodStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodStatus.
-func (x *PodStatus) DeepCopy() *PodStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodStatus.
+func (in *PodStatus) DeepCopy() *PodStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(PodStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4344,19 +4561,19 @@ func (in *PodStatusResult) DeepCopyInto(out *PodStatusResult) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodStatusResult.
-func (x *PodStatusResult) DeepCopy() *PodStatusResult {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodStatusResult.
+func (in *PodStatusResult) DeepCopy() *PodStatusResult {
+	if in == nil {
 		return nil
 	}
 	out := new(PodStatusResult)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodStatusResult) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodStatusResult) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4372,19 +4589,19 @@ func (in *PodTemplate) DeepCopyInto(out *PodTemplate) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodTemplate.
-func (x *PodTemplate) DeepCopy() *PodTemplate {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodTemplate.
+func (in *PodTemplate) DeepCopy() *PodTemplate {
+	if in == nil {
 		return nil
 	}
 	out := new(PodTemplate)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodTemplate) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodTemplate) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4406,19 +4623,19 @@ func (in *PodTemplateList) DeepCopyInto(out *PodTemplateList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodTemplateList.
-func (x *PodTemplateList) DeepCopy() *PodTemplateList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodTemplateList.
+func (in *PodTemplateList) DeepCopy() *PodTemplateList {
+	if in == nil {
 		return nil
 	}
 	out := new(PodTemplateList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *PodTemplateList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *PodTemplateList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4433,13 +4650,13 @@ func (in *PodTemplateSpec) DeepCopyInto(out *PodTemplateSpec) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PodTemplateSpec.
-func (x *PodTemplateSpec) DeepCopy() *PodTemplateSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PodTemplateSpec.
+func (in *PodTemplateSpec) DeepCopy() *PodTemplateSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(PodTemplateSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4449,13 +4666,13 @@ func (in *PortworxVolumeSource) DeepCopyInto(out *PortworxVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PortworxVolumeSource.
-func (x *PortworxVolumeSource) DeepCopy() *PortworxVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PortworxVolumeSource.
+func (in *PortworxVolumeSource) DeepCopy() *PortworxVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(PortworxVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4474,13 +4691,13 @@ func (in *Preconditions) DeepCopyInto(out *Preconditions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Preconditions.
-func (x *Preconditions) DeepCopy() *Preconditions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Preconditions.
+func (in *Preconditions) DeepCopy() *Preconditions {
+	if in == nil {
 		return nil
 	}
 	out := new(Preconditions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4492,13 +4709,13 @@ func (in *PreferAvoidPodsEntry) DeepCopyInto(out *PreferAvoidPodsEntry) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PreferAvoidPodsEntry.
-func (x *PreferAvoidPodsEntry) DeepCopy() *PreferAvoidPodsEntry {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PreferAvoidPodsEntry.
+func (in *PreferAvoidPodsEntry) DeepCopy() *PreferAvoidPodsEntry {
+	if in == nil {
 		return nil
 	}
 	out := new(PreferAvoidPodsEntry)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4509,13 +4726,13 @@ func (in *PreferredSchedulingTerm) DeepCopyInto(out *PreferredSchedulingTerm) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new PreferredSchedulingTerm.
-func (x *PreferredSchedulingTerm) DeepCopy() *PreferredSchedulingTerm {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PreferredSchedulingTerm.
+func (in *PreferredSchedulingTerm) DeepCopy() *PreferredSchedulingTerm {
+	if in == nil {
 		return nil
 	}
 	out := new(PreferredSchedulingTerm)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4526,13 +4743,13 @@ func (in *Probe) DeepCopyInto(out *Probe) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Probe.
-func (x *Probe) DeepCopy() *Probe {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Probe.
+func (in *Probe) DeepCopy() *Probe {
+	if in == nil {
 		return nil
 	}
 	out := new(Probe)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4558,13 +4775,13 @@ func (in *ProjectedVolumeSource) DeepCopyInto(out *ProjectedVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ProjectedVolumeSource.
-func (x *ProjectedVolumeSource) DeepCopy() *ProjectedVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ProjectedVolumeSource.
+func (in *ProjectedVolumeSource) DeepCopy() *ProjectedVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(ProjectedVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4574,13 +4791,13 @@ func (in *QuobyteVolumeSource) DeepCopyInto(out *QuobyteVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new QuobyteVolumeSource.
-func (x *QuobyteVolumeSource) DeepCopy() *QuobyteVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new QuobyteVolumeSource.
+func (in *QuobyteVolumeSource) DeepCopy() *QuobyteVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(QuobyteVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4604,13 +4821,13 @@ func (in *RBDVolumeSource) DeepCopyInto(out *RBDVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new RBDVolumeSource.
-func (x *RBDVolumeSource) DeepCopy() *RBDVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new RBDVolumeSource.
+func (in *RBDVolumeSource) DeepCopy() *RBDVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(RBDVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4627,19 +4844,19 @@ func (in *RangeAllocation) DeepCopyInto(out *RangeAllocation) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new RangeAllocation.
-func (x *RangeAllocation) DeepCopy() *RangeAllocation {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new RangeAllocation.
+func (in *RangeAllocation) DeepCopy() *RangeAllocation {
+	if in == nil {
 		return nil
 	}
 	out := new(RangeAllocation)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *RangeAllocation) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *RangeAllocation) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4656,19 +4873,19 @@ func (in *ReplicationController) DeepCopyInto(out *ReplicationController) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationController.
-func (x *ReplicationController) DeepCopy() *ReplicationController {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationController.
+func (in *ReplicationController) DeepCopy() *ReplicationController {
+	if in == nil {
 		return nil
 	}
 	out := new(ReplicationController)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ReplicationController) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ReplicationController) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4682,13 +4899,13 @@ func (in *ReplicationControllerCondition) DeepCopyInto(out *ReplicationControlle
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationControllerCondition.
-func (x *ReplicationControllerCondition) DeepCopy() *ReplicationControllerCondition {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationControllerCondition.
+func (in *ReplicationControllerCondition) DeepCopy() *ReplicationControllerCondition {
+	if in == nil {
 		return nil
 	}
 	out := new(ReplicationControllerCondition)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4707,19 +4924,19 @@ func (in *ReplicationControllerList) DeepCopyInto(out *ReplicationControllerList
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationControllerList.
-func (x *ReplicationControllerList) DeepCopy() *ReplicationControllerList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationControllerList.
+func (in *ReplicationControllerList) DeepCopy() *ReplicationControllerList {
+	if in == nil {
 		return nil
 	}
 	out := new(ReplicationControllerList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ReplicationControllerList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ReplicationControllerList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4757,13 +4974,13 @@ func (in *ReplicationControllerSpec) DeepCopyInto(out *ReplicationControllerSpec
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationControllerSpec.
-func (x *ReplicationControllerSpec) DeepCopy() *ReplicationControllerSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationControllerSpec.
+func (in *ReplicationControllerSpec) DeepCopy() *ReplicationControllerSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(ReplicationControllerSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4780,13 +4997,13 @@ func (in *ReplicationControllerStatus) DeepCopyInto(out *ReplicationControllerSt
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationControllerStatus.
-func (x *ReplicationControllerStatus) DeepCopy() *ReplicationControllerStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ReplicationControllerStatus.
+func (in *ReplicationControllerStatus) DeepCopy() *ReplicationControllerStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(ReplicationControllerStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4797,13 +5014,13 @@ func (in *ResourceFieldSelector) DeepCopyInto(out *ResourceFieldSelector) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ResourceFieldSelector.
-func (x *ResourceFieldSelector) DeepCopy() *ResourceFieldSelector {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ResourceFieldSelector.
+func (in *ResourceFieldSelector) DeepCopy() *ResourceFieldSelector {
+	if in == nil {
 		return nil
 	}
 	out := new(ResourceFieldSelector)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4817,19 +5034,19 @@ func (in *ResourceQuota) DeepCopyInto(out *ResourceQuota) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ResourceQuota.
-func (x *ResourceQuota) DeepCopy() *ResourceQuota {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ResourceQuota.
+func (in *ResourceQuota) DeepCopy() *ResourceQuota {
+	if in == nil {
 		return nil
 	}
 	out := new(ResourceQuota)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ResourceQuota) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ResourceQuota) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4851,19 +5068,19 @@ func (in *ResourceQuotaList) DeepCopyInto(out *ResourceQuotaList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ResourceQuotaList.
-func (x *ResourceQuotaList) DeepCopy() *ResourceQuotaList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ResourceQuotaList.
+func (in *ResourceQuotaList) DeepCopy() *ResourceQuotaList {
+	if in == nil {
 		return nil
 	}
 	out := new(ResourceQuotaList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ResourceQuotaList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ResourceQuotaList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -4888,13 +5105,13 @@ func (in *ResourceQuotaSpec) DeepCopyInto(out *ResourceQuotaSpec) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ResourceQuotaSpec.
-func (x *ResourceQuotaSpec) DeepCopy() *ResourceQuotaSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ResourceQuotaSpec.
+func (in *ResourceQuotaSpec) DeepCopy() *ResourceQuotaSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(ResourceQuotaSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4918,13 +5135,13 @@ func (in *ResourceQuotaStatus) DeepCopyInto(out *ResourceQuotaStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ResourceQuotaStatus.
-func (x *ResourceQuotaStatus) DeepCopy() *ResourceQuotaStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ResourceQuotaStatus.
+func (in *ResourceQuotaStatus) DeepCopy() *ResourceQuotaStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(ResourceQuotaStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4948,13 +5165,13 @@ func (in *ResourceRequirements) DeepCopyInto(out *ResourceRequirements) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ResourceRequirements.
-func (x *ResourceRequirements) DeepCopy() *ResourceRequirements {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ResourceRequirements.
+func (in *ResourceRequirements) DeepCopy() *ResourceRequirements {
+	if in == nil {
 		return nil
 	}
 	out := new(ResourceRequirements)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4964,13 +5181,13 @@ func (in *SELinuxOptions) DeepCopyInto(out *SELinuxOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new SELinuxOptions.
-func (x *SELinuxOptions) DeepCopy() *SELinuxOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SELinuxOptions.
+func (in *SELinuxOptions) DeepCopy() *SELinuxOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(SELinuxOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -4989,13 +5206,13 @@ func (in *ScaleIOVolumeSource) DeepCopyInto(out *ScaleIOVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ScaleIOVolumeSource.
-func (x *ScaleIOVolumeSource) DeepCopy() *ScaleIOVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ScaleIOVolumeSource.
+func (in *ScaleIOVolumeSource) DeepCopy() *ScaleIOVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(ScaleIOVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5026,19 +5243,19 @@ func (in *Secret) DeepCopyInto(out *Secret) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Secret.
-func (x *Secret) DeepCopy() *Secret {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Secret.
+func (in *Secret) DeepCopy() *Secret {
+	if in == nil {
 		return nil
 	}
 	out := new(Secret)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *Secret) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *Secret) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -5061,13 +5278,13 @@ func (in *SecretEnvSource) DeepCopyInto(out *SecretEnvSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new SecretEnvSource.
-func (x *SecretEnvSource) DeepCopy() *SecretEnvSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SecretEnvSource.
+func (in *SecretEnvSource) DeepCopy() *SecretEnvSource {
+	if in == nil {
 		return nil
 	}
 	out := new(SecretEnvSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5087,13 +5304,13 @@ func (in *SecretKeySelector) DeepCopyInto(out *SecretKeySelector) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new SecretKeySelector.
-func (x *SecretKeySelector) DeepCopy() *SecretKeySelector {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SecretKeySelector.
+func (in *SecretKeySelector) DeepCopy() *SecretKeySelector {
+	if in == nil {
 		return nil
 	}
 	out := new(SecretKeySelector)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5112,19 +5329,19 @@ func (in *SecretList) DeepCopyInto(out *SecretList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new SecretList.
-func (x *SecretList) DeepCopy() *SecretList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SecretList.
+func (in *SecretList) DeepCopy() *SecretList {
+	if in == nil {
 		return nil
 	}
 	out := new(SecretList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *SecretList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *SecretList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -5154,13 +5371,29 @@ func (in *SecretProjection) DeepCopyInto(out *SecretProjection) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new SecretProjection.
-func (x *SecretProjection) DeepCopy() *SecretProjection {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SecretProjection.
+func (in *SecretProjection) DeepCopy() *SecretProjection {
+	if in == nil {
 		return nil
 	}
 	out := new(SecretProjection)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
+	return out
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *SecretReference) DeepCopyInto(out *SecretReference) {
+	*out = *in
+	return
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SecretReference.
+func (in *SecretReference) DeepCopy() *SecretReference {
+	if in == nil {
+		return nil
+	}
+	out := new(SecretReference)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5195,13 +5428,13 @@ func (in *SecretVolumeSource) DeepCopyInto(out *SecretVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new SecretVolumeSource.
-func (x *SecretVolumeSource) DeepCopy() *SecretVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SecretVolumeSource.
+func (in *SecretVolumeSource) DeepCopy() *SecretVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(SecretVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5262,16 +5495,25 @@ func (in *SecurityContext) DeepCopyInto(out *SecurityContext) {
 			**out = **in
 		}
 	}
+	if in.AllowPrivilegeEscalation != nil {
+		in, out := &in.AllowPrivilegeEscalation, &out.AllowPrivilegeEscalation
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(bool)
+			**out = **in
+		}
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new SecurityContext.
-func (x *SecurityContext) DeepCopy() *SecurityContext {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SecurityContext.
+func (in *SecurityContext) DeepCopy() *SecurityContext {
+	if in == nil {
 		return nil
 	}
 	out := new(SecurityContext)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5283,19 +5525,19 @@ func (in *SerializedReference) DeepCopyInto(out *SerializedReference) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new SerializedReference.
-func (x *SerializedReference) DeepCopy() *SerializedReference {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SerializedReference.
+func (in *SerializedReference) DeepCopy() *SerializedReference {
+	if in == nil {
 		return nil
 	}
 	out := new(SerializedReference)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *SerializedReference) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *SerializedReference) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -5312,19 +5554,19 @@ func (in *Service) DeepCopyInto(out *Service) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Service.
-func (x *Service) DeepCopy() *Service {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Service.
+func (in *Service) DeepCopy() *Service {
+	if in == nil {
 		return nil
 	}
 	out := new(Service)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *Service) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *Service) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -5358,19 +5600,19 @@ func (in *ServiceAccount) DeepCopyInto(out *ServiceAccount) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ServiceAccount.
-func (x *ServiceAccount) DeepCopy() *ServiceAccount {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ServiceAccount.
+func (in *ServiceAccount) DeepCopy() *ServiceAccount {
+	if in == nil {
 		return nil
 	}
 	out := new(ServiceAccount)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ServiceAccount) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ServiceAccount) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -5392,19 +5634,19 @@ func (in *ServiceAccountList) DeepCopyInto(out *ServiceAccountList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ServiceAccountList.
-func (x *ServiceAccountList) DeepCopy() *ServiceAccountList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ServiceAccountList.
+func (in *ServiceAccountList) DeepCopy() *ServiceAccountList {
+	if in == nil {
 		return nil
 	}
 	out := new(ServiceAccountList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ServiceAccountList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ServiceAccountList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -5426,19 +5668,19 @@ func (in *ServiceList) DeepCopyInto(out *ServiceList) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ServiceList.
-func (x *ServiceList) DeepCopy() *ServiceList {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ServiceList.
+func (in *ServiceList) DeepCopy() *ServiceList {
+	if in == nil {
 		return nil
 	}
 	out := new(ServiceList)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ServiceList) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ServiceList) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -5452,13 +5694,13 @@ func (in *ServicePort) DeepCopyInto(out *ServicePort) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ServicePort.
-func (x *ServicePort) DeepCopy() *ServicePort {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ServicePort.
+func (in *ServicePort) DeepCopy() *ServicePort {
+	if in == nil {
 		return nil
 	}
 	out := new(ServicePort)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5469,19 +5711,19 @@ func (in *ServiceProxyOptions) DeepCopyInto(out *ServiceProxyOptions) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ServiceProxyOptions.
-func (x *ServiceProxyOptions) DeepCopy() *ServiceProxyOptions {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ServiceProxyOptions.
+func (in *ServiceProxyOptions) DeepCopy() *ServiceProxyOptions {
+	if in == nil {
 		return nil
 	}
 	out := new(ServiceProxyOptions)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
-func (x *ServiceProxyOptions) DeepCopyObject() runtime.Object {
-	if c := x.DeepCopy(); c != nil {
+func (in *ServiceProxyOptions) DeepCopyObject() runtime.Object {
+	if c := in.DeepCopy(); c != nil {
 		return c
 	} else {
 		return nil
@@ -5513,16 +5755,25 @@ func (in *ServiceSpec) DeepCopyInto(out *ServiceSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.SessionAffinityConfig != nil {
+		in, out := &in.SessionAffinityConfig, &out.SessionAffinityConfig
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(SessionAffinityConfig)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ServiceSpec.
-func (x *ServiceSpec) DeepCopy() *ServiceSpec {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ServiceSpec.
+func (in *ServiceSpec) DeepCopy() *ServiceSpec {
+	if in == nil {
 		return nil
 	}
 	out := new(ServiceSpec)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5533,13 +5784,38 @@ func (in *ServiceStatus) DeepCopyInto(out *ServiceStatus) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new ServiceStatus.
-func (x *ServiceStatus) DeepCopy() *ServiceStatus {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ServiceStatus.
+func (in *ServiceStatus) DeepCopy() *ServiceStatus {
+	if in == nil {
 		return nil
 	}
 	out := new(ServiceStatus)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
+	return out
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *SessionAffinityConfig) DeepCopyInto(out *SessionAffinityConfig) {
+	*out = *in
+	if in.ClientIP != nil {
+		in, out := &in.ClientIP, &out.ClientIP
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(ClientIPConfig)
+			(*in).DeepCopyInto(*out)
+		}
+	}
+	return
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SessionAffinityConfig.
+func (in *SessionAffinityConfig) DeepCopy() *SessionAffinityConfig {
+	if in == nil {
+		return nil
+	}
+	out := new(SessionAffinityConfig)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5558,13 +5834,13 @@ func (in *StorageOSPersistentVolumeSource) DeepCopyInto(out *StorageOSPersistent
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new StorageOSPersistentVolumeSource.
-func (x *StorageOSPersistentVolumeSource) DeepCopy() *StorageOSPersistentVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new StorageOSPersistentVolumeSource.
+func (in *StorageOSPersistentVolumeSource) DeepCopy() *StorageOSPersistentVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(StorageOSPersistentVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5583,13 +5859,13 @@ func (in *StorageOSVolumeSource) DeepCopyInto(out *StorageOSVolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new StorageOSVolumeSource.
-func (x *StorageOSVolumeSource) DeepCopy() *StorageOSVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new StorageOSVolumeSource.
+func (in *StorageOSVolumeSource) DeepCopy() *StorageOSVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(StorageOSVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5599,13 +5875,13 @@ func (in *Sysctl) DeepCopyInto(out *Sysctl) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Sysctl.
-func (x *Sysctl) DeepCopy() *Sysctl {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Sysctl.
+func (in *Sysctl) DeepCopy() *Sysctl {
+	if in == nil {
 		return nil
 	}
 	out := new(Sysctl)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5616,13 +5892,13 @@ func (in *TCPSocketAction) DeepCopyInto(out *TCPSocketAction) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new TCPSocketAction.
-func (x *TCPSocketAction) DeepCopy() *TCPSocketAction {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new TCPSocketAction.
+func (in *TCPSocketAction) DeepCopy() *TCPSocketAction {
+	if in == nil {
 		return nil
 	}
 	out := new(TCPSocketAction)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5633,13 +5909,13 @@ func (in *Taint) DeepCopyInto(out *Taint) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Taint.
-func (x *Taint) DeepCopy() *Taint {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Taint.
+func (in *Taint) DeepCopy() *Taint {
+	if in == nil {
 		return nil
 	}
 	out := new(Taint)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5658,13 +5934,13 @@ func (in *Toleration) DeepCopyInto(out *Toleration) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Toleration.
-func (x *Toleration) DeepCopy() *Toleration {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Toleration.
+func (in *Toleration) DeepCopy() *Toleration {
+	if in == nil {
 		return nil
 	}
 	out := new(Toleration)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5675,29 +5951,38 @@ func (in *Volume) DeepCopyInto(out *Volume) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new Volume.
-func (x *Volume) DeepCopy() *Volume {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Volume.
+func (in *Volume) DeepCopy() *Volume {
+	if in == nil {
 		return nil
 	}
 	out := new(Volume)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *VolumeMount) DeepCopyInto(out *VolumeMount) {
 	*out = *in
+	if in.MountPropagation != nil {
+		in, out := &in.MountPropagation, &out.MountPropagation
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(MountPropagationMode)
+			**out = **in
+		}
+	}
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new VolumeMount.
-func (x *VolumeMount) DeepCopy() *VolumeMount {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new VolumeMount.
+func (in *VolumeMount) DeepCopy() *VolumeMount {
+	if in == nil {
 		return nil
 	}
 	out := new(VolumeMount)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5734,13 +6019,13 @@ func (in *VolumeProjection) DeepCopyInto(out *VolumeProjection) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new VolumeProjection.
-func (x *VolumeProjection) DeepCopy() *VolumeProjection {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new VolumeProjection.
+func (in *VolumeProjection) DeepCopy() *VolumeProjection {
+	if in == nil {
 		return nil
 	}
 	out := new(VolumeProjection)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -5753,7 +6038,7 @@ func (in *VolumeSource) DeepCopyInto(out *VolumeSource) {
 			*out = nil
 		} else {
 			*out = new(HostPathVolumeSource)
-			**out = **in
+			(*in).DeepCopyInto(*out)
 		}
 	}
 	if in.EmptyDir != nil {
@@ -5993,13 +6278,13 @@ func (in *VolumeSource) DeepCopyInto(out *VolumeSource) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new VolumeSource.
-func (x *VolumeSource) DeepCopy() *VolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new VolumeSource.
+func (in *VolumeSource) DeepCopy() *VolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(VolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -6009,13 +6294,13 @@ func (in *VsphereVirtualDiskVolumeSource) DeepCopyInto(out *VsphereVirtualDiskVo
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new VsphereVirtualDiskVolumeSource.
-func (x *VsphereVirtualDiskVolumeSource) DeepCopy() *VsphereVirtualDiskVolumeSource {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new VsphereVirtualDiskVolumeSource.
+func (in *VsphereVirtualDiskVolumeSource) DeepCopy() *VsphereVirtualDiskVolumeSource {
+	if in == nil {
 		return nil
 	}
 	out := new(VsphereVirtualDiskVolumeSource)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
 
@@ -6026,12 +6311,12 @@ func (in *WeightedPodAffinityTerm) DeepCopyInto(out *WeightedPodAffinityTerm) {
 	return
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, creating a new WeightedPodAffinityTerm.
-func (x *WeightedPodAffinityTerm) DeepCopy() *WeightedPodAffinityTerm {
-	if x == nil {
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new WeightedPodAffinityTerm.
+func (in *WeightedPodAffinityTerm) DeepCopy() *WeightedPodAffinityTerm {
+	if in == nil {
 		return nil
 	}
 	out := new(WeightedPodAffinityTerm)
-	x.DeepCopyInto(out)
+	in.DeepCopyInto(out)
 	return out
 }
