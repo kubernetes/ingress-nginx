@@ -23,6 +23,8 @@ import (
 
 	"github.com/golang/glog"
 
+	apiv1 "k8s.io/api/core/v1"
+
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/defaults"
 )
@@ -259,6 +261,11 @@ type Configuration struct {
 	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size
 	ProxyHeadersHashBucketSize int `json:"proxy-headers-hash-bucket-size,omitempty"`
 
+	// RealClientFrom defines the trusted source of the client source IP address
+	// The valid values are "auto", "http-proxy" and "tcp-proxy"
+	// Default: auto
+	RealClientFrom string `json:"real-client-from,omitempty"`
+
 	// Enables or disables emitting nginx version in error messages and in the “Server” response header field.
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens
 	// Default: true
@@ -463,6 +470,7 @@ func NewDefault() Configuration {
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
 		BindAddressIpv4:              defBindAddress,
 		BindAddressIpv6:              defBindAddress,
+		RealClientFrom:               "auto",
 		ZipkinCollectorPort:          9411,
 		ZipkinServiceName:            "nginx",
 	}
@@ -503,6 +511,7 @@ type TemplateConfig struct {
 	IsSSLPassthroughEnabled bool
 	RedirectServers         map[string]string
 	ListenPorts             *ListenPorts
+	PublishService          *apiv1.Service
 }
 
 // ListenPorts describe the ports required to run the

@@ -151,6 +151,14 @@ http {
         ''               close;
     }
 
+    {{ if (trustHTTPHeaders $all) }}
+    # Trust HTTP X-Forwarded-* Headers, but use direct values if they're missing.
+    map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
+        # Get IP address from X-Forwarded-For HTTP header
+        default          $realip_remote_addr;
+        ''               $remote_addr;
+    }
+
     # trust http_x_forwarded_proto headers correctly indicate ssl offloading
     map $http_x_forwarded_proto $pass_access_scheme {
         default          $http_x_forwarded_proto;
@@ -158,19 +166,38 @@ http {
     }
 
     map $http_x_forwarded_port $pass_server_port {
-       default           $http_x_forwarded_port;
-       ''                $server_port;
+        default           $http_x_forwarded_port;
+        ''                $server_port;
     }
 
-    map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
-        default          {{ buildForwardedFor $cfg.ForwardedForHeader }};
-        "~*(?<ip>[0-9\.]+).*"     $ip;
-    {{ if $cfg.UseProxyProtocol }}
-        ''               $proxy_protocol_addr;
+    map $http_x_forwarded_host $best_http_host {
+        default          $http_x_forwarded_host;
+        ''               $this_host;
+    }
+
     {{ else }}
-        ''               $realip_remote_addr;
+    # Do not trust HTTP X-Forwarded-* Headers
+    map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
+    {{ if (trustProxyProtocol $cfg) }}
+        # Get IP address from Proxy Protocol
+        default          $proxy_protocol_addr;
+    {{ else }}
+        # Get IP from direct remote address
+        default          $realip_remote_addr;
     {{ end }}
     }
+
+    map $http_x_forwarded_host $best_http_host {
+        default          $this_host;
+    }
+    map $http_x_forwarded_proto $pass_access_scheme {
+        default          $scheme;
+    }
+    map $http_x_forwarded_port $pass_server_port {
+        default           $server_port;
+    }
+
+    {{ end }}
 
     {{ if $all.IsSSLPassthroughEnabled }}
     # map port {{ $all.ListenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
@@ -204,11 +231,6 @@ http {
     map $http_host $this_host {
         default          $http_host;
         ''               $host;
-    }
-
-    map $http_x_forwarded_host $best_http_host {
-        default          $http_x_forwarded_host;
-        ''               $this_host;
     }
 
     server_name_in_redirect off;
@@ -270,9 +292,11 @@ http {
 
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
+
     }
 
     {{ end }}
+
 
     upstream {{ $upstream.Name }} {
         # Load balance algorithm; empty for round robin, which is the default
@@ -364,7 +388,7 @@ http {
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
-    
+
     {{ if $server.Alias }}
     server {
         server_name {{ $server.Alias }};

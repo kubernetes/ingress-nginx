@@ -676,6 +676,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		RedirectServers:         redirectServers,
 		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
 		ListenPorts:             n.ports,
+		PublishService:          n.controller.GetPublishService(),
 	}
 
 	content, err := n.t.Write(tc)
