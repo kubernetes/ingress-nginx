@@ -40,7 +40,7 @@ Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). Y
 
 
 ## Requirements
-- Default backend [404-server](https://github.com/kubernetes/contrib/tree/master/404-server)
+- Default backend [404-server](https://github.com/kubernetes/ingress/tree/master/images/404-server)
 
 
 ## Command line arguments
