@@ -92,6 +92,12 @@ type Backend struct {
 	// Default: 0, ie use platform liveness probe
 	UpstreamFailTimeout int `json:"upstream-fail-timeout"`
 
+	// Enable stickiness by client-server mapping based on a NGINX variable, text or a combination of both.
+	// A consistent hashing method will be used which ensures only a few keys would be remapped to different
+	// servers on upstream group changes
+	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash
+	UpstreamHashBy string `json:"upstream-hash-by"`
+
 	// WhitelistSourceRange allows limiting access to certain client addresses
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
 	WhitelistSourceRange []string `json:"whitelist-source-range,-"`

@@ -173,6 +173,9 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	if !(&b1.SessionAffinity).Equal(&b2.SessionAffinity) {
 		return false
 	}
+	if b1.UpstreamHashBy != b2.UpstreamHashBy {
+		return false
+	}
 
 	if len(b1.Endpoints) != len(b2.Endpoints) {
 		return false
