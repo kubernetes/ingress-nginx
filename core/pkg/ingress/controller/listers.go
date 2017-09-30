@@ -113,6 +113,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) {
 			}
 			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
 			ic.sslCertTracker.DeleteAll(key)
+			ic.syncQueue.Enqueue(key)
 		},
 	}
 
