@@ -32,6 +32,7 @@ import (
 
 	"github.com/pborman/uuid"
 
+	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/nginx/pkg/config"
@@ -151,6 +152,8 @@ var (
 		},
 		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
 		"buildForwardedFor":           buildForwardedFor,
+		"trustHTTPHeaders":            trustHTTPHeaders,
+		"trustProxyProtocol":          trustProxyProtocol,
 	}
 )
 
@@ -665,4 +668,28 @@ func buildForwardedFor(input interface{}) string {
 	ffh := strings.Replace(s, "-", "_", -1)
 	ffh = strings.ToLower(ffh)
 	return fmt.Sprintf("$http_%v", ffh)
+}
+
+func trustHTTPHeaders(input interface{}) bool {
+	conf, ok := input.(config.TemplateConfig)
+	if !ok {
+		glog.Errorf("%v", input)
+		return true
+	}
+
+	return conf.Cfg.RealClientFrom == "http-proxy" ||
+		(conf.Cfg.RealClientFrom == "auto" && !conf.Cfg.UseProxyProtocol ||
+			(conf.Cfg.RealClientFrom == "auto" && conf.PublishService != nil &&
+				conf.PublishService.Spec.Type == apiv1.ServiceTypeLoadBalancer))
+}
+
+func trustProxyProtocol(input interface{}) bool {
+	conf, ok := input.(config.TemplateConfig)
+	if !ok {
+		glog.Errorf("%v", input)
+		return true
+	}
+
+	return conf.Cfg.RealClientFrom == "tcp-proxy" ||
+		(conf.Cfg.RealClientFrom == "auto" && conf.Cfg.UseProxyProtocol)
 }
