@@ -11,6 +11,7 @@
 			"ssl-redirect": true,
 			"upstream-fail-timeout": 0,
 			"upstream-max-fails": 0,
+			"upstream-hash-by": "$request_uri",
 			"whitelist-source-range": null
 		},
 		"bodySize": "1m",
