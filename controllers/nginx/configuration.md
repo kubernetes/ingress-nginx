@@ -65,6 +65,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
 |[ingress.kubernetes.io/server-alias](#server-alias)|string|
+|[ingress.kubernetes.io/server-snippet](#server-snippet)|string|
 |[ingress.kubernetes.io/service-upstream](#service-upstream)|true or false|
 |[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
@@ -190,6 +191,29 @@ annotation will be ignored. If a server-alias is created and later a new server 
 the new server configuration will take place over the alias configuration.
 
 For more information please see http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name
+
+### Server snippet
+
+Using the annotation `ingress.kubernetes.io/server-snippet` it is possible to add custom configuration in the server configuration block.
+
+```
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+annotations:
+ingress.kubernetes.io/server-snippet: |
+set $agentflag 0;
+
+if ($http_user_agent ~* "(Mobile)" ){
+  set $agentflag 1;
+}
+
+if ( $agentflag = 1 ) {
+  return 301 https://m.example.com;
+}
+```
+
+**Important:** This annotation can be used only once per host
 
 ### Client Body Buffer Size
 
