@@ -36,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -682,7 +683,6 @@ func (ic *GenericController) getBackendServers(ingresses []*extensions.Ingress) 
 	return aUpstreams, aServers
 }
 
-
 // GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
 func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
 	if _, exists := ic.sslCertTracker.Get(secretName); !exists {
@@ -1220,6 +1220,8 @@ func (ic *GenericController) Start() {
 	go ic.secrController.Run(ic.stopCh)
 	go ic.mapController.Run(ic.stopCh)
 
+	go wait.Until(ic.checkMissingSecrets, 30*time.Second, ic.stopCh)
+
 	// Wait for all involved caches to be synced, before processing items from the queue is started
 	if !cache.WaitForCacheSync(ic.stopCh,
 		ic.ingController.HasSynced,
@@ -1233,19 +1235,7 @@ func (ic *GenericController) Start() {
 	}
 
 	// initial sync of secrets to avoid unnecessary reloads
-	for _, key := range ic.listers.Ingress.ListKeys() {
-		if obj, exists, _ := ic.listers.Ingress.GetByKey(key); exists {
-			ing := obj.(*extensions.Ingress)
-
-			if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-				a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
-				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
-				continue
-			}
-
-			ic.readSecrets(ing)
-		}
-	}
+	ic.checkMissingSecrets()
 
 	createDefaultSSLCertificate()
 
