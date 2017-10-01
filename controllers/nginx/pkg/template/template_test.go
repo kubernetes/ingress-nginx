@@ -322,7 +322,7 @@ func TestBuildNextUpstream(t *testing.T) {
 }
 
 func TestBuildRateLimit(t *testing.T) {
-	loc := ingress.Location{}
+	loc := &ingress.Location{}
 
 	loc.RateLimit.Connections.Name = "con"
 	loc.RateLimit.Connections.Limit = 1

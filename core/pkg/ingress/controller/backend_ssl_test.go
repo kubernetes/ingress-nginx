@@ -26,9 +26,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	cache_client "k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/flowcontrol"
 
 	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/store"
+	"k8s.io/ingress/core/pkg/task"
 	"k8s.io/kubernetes/pkg/api"
 )
 
@@ -102,21 +104,17 @@ func buildControllerForBackendSSL() cache_client.Controller {
 }
 
 func buildGenericControllerForBackendSSL() *GenericController {
-	return &GenericController{
+	gc := &GenericController{
+		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.3, 1),
 		cfg: &Configuration{
 			Client: buildSimpleClientSetForBackendSSL(),
 		},
-		listers: buildListers(),
-
-		ingController:  buildControllerForBackendSSL(),
-		endpController: buildControllerForBackendSSL(),
-		svcController:  buildControllerForBackendSSL(),
-		nodeController: buildControllerForBackendSSL(),
-		secrController: buildControllerForBackendSSL(),
-		mapController:  buildControllerForBackendSSL(),
-
+		listers:        buildListers(),
 		sslCertTracker: newSSLCertTracker(),
 	}
+
+	gc.syncQueue = task.NewTaskQueue(gc.syncIngress)
+	return gc
 }
 
 func buildCrtKeyAndCA() ([]byte, []byte, []byte, error) {

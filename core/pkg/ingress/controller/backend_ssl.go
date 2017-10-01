@@ -55,19 +55,17 @@ func (ic *GenericController) syncSecret(key string) {
 		}
 		glog.Infof("updating secret %v in the local store", key)
 		ic.sslCertTracker.Update(key, cert)
-		// we need to force the sync of the secret to disk
-		ic.syncSecret(key)
 		// this update must trigger an update
 		// (like an update event from a change in Ingress)
-		ic.syncIngress("update-secret")
+		ic.syncQueue.Enqueue(&extensions.Ingress{})
 		return
 	}
 
 	glog.Infof("adding secret %v to the local store", key)
 	ic.sslCertTracker.Add(key, cert)
-	// this new secret must trigger an update
+	// this update must trigger an update
 	// (like an update event from a change in Ingress)
-	ic.syncIngress("add-secret")
+	ic.syncQueue.Enqueue(&extensions.Ingress{})
 }
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
@@ -130,33 +128,31 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 // to a secret that is not present in the local secret store.
 // In this case we call syncSecret.
 func (ic *GenericController) checkMissingSecrets() {
-	for _, key := range ic.listers.Ingress.ListKeys() {
-		if obj, exists, _ := ic.listers.Ingress.GetByKey(key); exists {
-			ing := obj.(*extensions.Ingress)
+	for _, obj := range ic.listers.Ingress.List() {
+		ing := obj.(*extensions.Ingress)
 
-			if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			continue
+		}
+
+		for _, tls := range ing.Spec.TLS {
+			if tls.SecretName == "" {
 				continue
 			}
 
-			for _, tls := range ing.Spec.TLS {
-				if tls.SecretName == "" {
-					continue
-				}
-
-				key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
-				if _, ok := ic.sslCertTracker.Get(key); !ok {
-					ic.syncSecret(key)
-				}
-			}
-
-			key, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
-			if key == "" {
-				continue
-			}
-
+			key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
 			if _, ok := ic.sslCertTracker.Get(key); !ok {
 				ic.syncSecret(key)
 			}
+		}
+
+		key, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+		if key == "" {
+			continue
+		}
+
+		if _, ok := ic.sslCertTracker.Get(key); !ok {
+			ic.syncSecret(key)
 		}
 	}
 }
