@@ -537,6 +537,16 @@ Default: 9411
 **zipkin-service-name:** specifies the service name to use for any traces created
 Default: nginx
 
+**http-snippet:** adds custom configuration to the http section of the nginx configuration
+Default: ""
+
+**server-snippet:** adds custom configuration to all the servers in the nginx configuration
+Default: ""
+
+**location-snippet:** adds custom configuration to all the locations in the nginx configuration
+Default: ""
+
+
 ### Default configuration options
 
 The following table shows the options, the default value and a description.
