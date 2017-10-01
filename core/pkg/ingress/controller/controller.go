@@ -34,12 +34,11 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
 
@@ -79,14 +78,8 @@ var (
 type GenericController struct {
 	cfg *Configuration
 
-	ingController  cache.Controller
-	endpController cache.Controller
-	svcController  cache.Controller
-	nodeController cache.Controller
-	secrController cache.Controller
-	mapController  cache.Controller
-
-	listers *ingress.StoreLister
+	listers         *ingress.StoreLister
+	cacheController *cacheController
 
 	annotations annotationExtractor
 
@@ -165,12 +158,11 @@ func newIngressController(config *Configuration) *GenericController {
 			Component: "ingress-controller",
 		}),
 		sslCertTracker: newSSLCertTracker(),
-		listers:        &ingress.StoreLister{},
 	}
 
 	ic.syncQueue = task.NewTaskQueue(ic.syncIngress)
 
-	ic.createListers(config.DisableNodeList)
+	ic.listers, ic.cacheController = ic.createListers(config.DisableNodeList)
 
 	if config.UpdateStatus {
 		ic.syncStatus = status.NewStatusSyncer(status.Config{
@@ -682,25 +674,24 @@ func (ic *GenericController) getBackendServers(ingresses []*extensions.Ingress) 
 	return aUpstreams, aServers
 }
 
-
 // GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
-func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.AuthSSLCert, error) {
-	if _, exists := ic.sslCertTracker.Get(secretName); !exists {
-		ic.syncSecret(secretName)
+func (ic GenericController) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
+	if _, exists := ic.sslCertTracker.Get(name); !exists {
+		ic.syncSecret(name)
 	}
 
-	_, err := ic.listers.Secret.GetByName(secretName)
+	_, err := ic.listers.Secret.GetByName(name)
 	if err != nil {
 		return &resolver.AuthSSLCert{}, fmt.Errorf("unexpected error: %v", err)
 	}
 
-	bc, exists := ic.sslCertTracker.Get(secretName)
+	bc, exists := ic.sslCertTracker.Get(name)
 	if !exists {
-		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exist", secretName)
+		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exist", name)
 	}
 	cert := bc.(*ingress.SSLCert)
 	return &resolver.AuthSSLCert{
-		Secret:     secretName,
+		Secret:     name,
 		CAFileName: cert.CAFileName,
 		PemSHA:     cert.PemSHA,
 	}, nil
@@ -1213,41 +1204,24 @@ func (ic GenericController) Stop() error {
 func (ic *GenericController) Start() {
 	glog.Infof("starting Ingress controller")
 
-	go ic.ingController.Run(ic.stopCh)
-	go ic.endpController.Run(ic.stopCh)
-	go ic.svcController.Run(ic.stopCh)
-	go ic.nodeController.Run(ic.stopCh)
-	go ic.secrController.Run(ic.stopCh)
-	go ic.mapController.Run(ic.stopCh)
-
-	// Wait for all involved caches to be synced, before processing items from the queue is started
-	if !cache.WaitForCacheSync(ic.stopCh,
-		ic.ingController.HasSynced,
-		ic.svcController.HasSynced,
-		ic.endpController.HasSynced,
-		ic.secrController.HasSynced,
-		ic.mapController.HasSynced,
-		ic.nodeController.HasSynced,
-	) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
-	}
-
-	// initial sync of secrets to avoid unnecessary reloads
-	for _, key := range ic.listers.Ingress.ListKeys() {
-		if obj, exists, _ := ic.listers.Ingress.GetByKey(key); exists {
-			ing := obj.(*extensions.Ingress)
-
-			if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-				a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
-				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
-				continue
-			}
-
-			ic.readSecrets(ing)
-		}
-	}
+	ic.cacheController.Run(ic.stopCh)
 
 	createDefaultSSLCertificate()
+
+	time.Sleep(5 * time.Second)
+	// initial sync of secrets to avoid unnecessary reloads
+	glog.Info("running initial sync of secret")
+	for _, obj := range ic.listers.Ingress.List() {
+		ing := obj.(*extensions.Ingress)
+
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
+			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
+			continue
+		}
+
+		ic.readSecrets(ing)
+	}
 
 	go ic.syncQueue.Run(time.Second, ic.stopCh)
 
@@ -1255,7 +1229,8 @@ func (ic *GenericController) Start() {
 		go ic.syncStatus.Run(ic.stopCh)
 	}
 
-	time.Sleep(5 * time.Second)
+	go wait.Until(ic.checkMissingSecrets, 30*time.Second, ic.stopCh)
+
 	// force initial sync
 	ic.syncQueue.Enqueue(&extensions.Ingress{})
 

@@ -25,14 +25,46 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	fcache "k8s.io/client-go/tools/cache/testing"
 
+	"k8s.io/ingress/core/pkg/ingress"
 	"k8s.io/ingress/core/pkg/ingress/annotations/class"
 	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 )
 
-func (ic *GenericController) createListers(disableNodeLister bool) {
+type cacheController struct {
+	Ingress   cache.Controller
+	Endpoint  cache.Controller
+	Service   cache.Controller
+	Node      cache.Controller
+	Secret    cache.Controller
+	Configmap cache.Controller
+}
+
+func (c *cacheController) Run(stopCh chan struct{}) {
+	go c.Ingress.Run(stopCh)
+	go c.Endpoint.Run(stopCh)
+	go c.Service.Run(stopCh)
+	go c.Node.Run(stopCh)
+	go c.Secret.Run(stopCh)
+	go c.Configmap.Run(stopCh)
+
+	// Wait for all involved caches to be synced, before processing items from the queue is started
+	if !cache.WaitForCacheSync(stopCh,
+		c.Ingress.HasSynced,
+		c.Endpoint.HasSynced,
+		c.Service.HasSynced,
+		c.Node.HasSynced,
+		c.Secret.HasSynced,
+		c.Configmap.HasSynced,
+	) {
+		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+	}
+}
+
+func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.StoreLister, *cacheController) {
 	// from here to the end of the method all the code is just boilerplate
 	// required to watch Ingress, Secrets, ConfigMaps and Endoints.
 	// This is used to detect new content, updates or removals and act accordingly
@@ -113,6 +145,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) {
 			}
 			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
 			ic.sslCertTracker.DeleteAll(key)
+			ic.syncQueue.Enqueue(key)
 		},
 	}
 
@@ -165,23 +198,27 @@ func (ic *GenericController) createListers(disableNodeLister bool) {
 		watchNs = ic.cfg.Namespace
 	}
 
-	ic.listers.Ingress.Store, ic.ingController = cache.NewInformer(
+	lister := &ingress.StoreLister{}
+
+	controller := &cacheController{}
+
+	lister.Ingress.Store, controller.Ingress = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.ExtensionsV1beta1().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
 		&extensions.Ingress{}, ic.cfg.ResyncPeriod, ingEventHandler)
 
-	ic.listers.Endpoint.Store, ic.endpController = cache.NewInformer(
+	lister.Endpoint.Store, controller.Endpoint = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "endpoints", ic.cfg.Namespace, fields.Everything()),
 		&apiv1.Endpoints{}, ic.cfg.ResyncPeriod, eventHandler)
 
-	ic.listers.Secret.Store, ic.secrController = cache.NewInformer(
+	lister.Secret.Store, controller.Secret = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "secrets", watchNs, fields.Everything()),
 		&apiv1.Secret{}, ic.cfg.ResyncPeriod, secrEventHandler)
 
-	ic.listers.ConfigMap.Store, ic.mapController = cache.NewInformer(
+	lister.ConfigMap.Store, controller.Configmap = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "configmaps", watchNs, fields.Everything()),
 		&apiv1.ConfigMap{}, ic.cfg.ResyncPeriod, mapEventHandler)
 
-	ic.listers.Service.Store, ic.svcController = cache.NewInformer(
+	lister.Service.Store, controller.Service = cache.NewInformer(
 		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "services", ic.cfg.Namespace, fields.Everything()),
 		&apiv1.Service{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
@@ -191,7 +228,9 @@ func (ic *GenericController) createListers(disableNodeLister bool) {
 	} else {
 		nodeListerWatcher = cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "nodes", apiv1.NamespaceAll, fields.Everything())
 	}
-	ic.listers.Node.Store, ic.nodeController = cache.NewInformer(
+	lister.Node.Store, controller.Node = cache.NewInformer(
 		nodeListerWatcher,
 		&apiv1.Node{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
+
+	return lister, controller
 }
