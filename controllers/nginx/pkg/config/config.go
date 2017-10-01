@@ -391,6 +391,15 @@ type Configuration struct {
 	// ZipkinServiceName specifies the service name to use for any traces created
 	// Default: nginx
 	ZipkinServiceName string `json:"zipkin-service-name"`
+
+	// HTTPSnippet adds custom configuration to the http section of the nginx configuration
+	HTTPSnippet string `json:"http-snippet"`
+
+	// ServerSnippet adds custom configuration to all the servers in the nginx configuration
+	ServerSnippet string `json:"server-snippet"`
+
+	// LocationSnippet adds custom configuration to all the locations in the nginx configuration
+	LocationSnippet string `json:"location-snippet"`
 }
 
 // NewDefault returns the default nginx configuration
