@@ -281,6 +281,11 @@ http {
     proxy_pass_header Server;
     {{ end }}
 
+    {{ if not (empty $cfg.HTTPSnippet) }}
+    # Custom code snippet configured in the configuration configmap
+    {{ $cfg.HTTPSnippet }};
+    {{ end }}
+
     {{ range $name, $upstream := $backends }}
     {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
     upstream sticky-{{ $upstream.Name }} {
@@ -394,6 +399,10 @@ http {
         server_name {{ $server.Alias }};
         {{ template "SERVER" serverConfig $all $server }}
 
+        {{ if not (empty $cfg.ServerSnippet) }}
+        # Custom code snippet configured in the configuration configmap
+        {{ $cfg.ServerSnippet }};
+        {{ end }}
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
@@ -807,6 +816,11 @@ stream {
 
             {{/* Add any additional configuration defined */}}
             {{ $location.ConfigurationSnippet }}
+
+            {{ if not (empty $all.Cfg.LocationSnippet) }}
+            # Custom code snippet configured in the configuration configmap
+            {{ $all.Cfg.LocationSnippet }};
+            {{ end }}
 
             {{/* if we are sending the request to a custom default backend, we add the required headers */}}
             {{ if (hasPrefix $location.Backend "custom-default-backend-") }}
