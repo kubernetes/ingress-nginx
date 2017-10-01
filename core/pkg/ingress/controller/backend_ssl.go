@@ -24,9 +24,12 @@ import (
 	"github.com/golang/glog"
 
 	apiv1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress/core/pkg/ingress"
+	"k8s.io/ingress/core/pkg/ingress/annotations/class"
+	"k8s.io/ingress/core/pkg/ingress/annotations/parser"
 	"k8s.io/ingress/core/pkg/net/ssl"
 )
 
@@ -52,16 +55,17 @@ func (ic *GenericController) syncSecret(key string) {
 		}
 		glog.Infof("updating secret %v in the local store", key)
 		ic.sslCertTracker.Update(key, cert)
-		// we need to force the sync of the secret to disk
-		ic.syncSecret(key)
 		// this update must trigger an update
 		// (like an update event from a change in Ingress)
-		ic.syncIngress("secret-update")
+		ic.syncQueue.Enqueue(&extensions.Ingress{})
 		return
 	}
 
 	glog.Infof("adding secret %v to the local store", key)
 	ic.sslCertTracker.Add(key, cert)
+	// this update must trigger an update
+	// (like an update event from a change in Ingress)
+	ic.syncQueue.Enqueue(&extensions.Ingress{})
 }
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
@@ -118,6 +122,39 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 	s.Name = secret.Name
 	s.Namespace = secret.Namespace
 	return s, nil
+}
+
+// checkMissingSecrets verify if one or more ingress rules contains a reference
+// to a secret that is not present in the local secret store.
+// In this case we call syncSecret.
+func (ic *GenericController) checkMissingSecrets() {
+	for _, obj := range ic.listers.Ingress.List() {
+		ing := obj.(*extensions.Ingress)
+
+		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			continue
+		}
+
+		for _, tls := range ing.Spec.TLS {
+			if tls.SecretName == "" {
+				continue
+			}
+
+			key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+			if _, ok := ic.sslCertTracker.Get(key); !ok {
+				ic.syncSecret(key)
+			}
+		}
+
+		key, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+		if key == "" {
+			continue
+		}
+
+		if _, ok := ic.sslCertTracker.Get(key); !ok {
+			ic.syncSecret(key)
+		}
+	}
 }
 
 // sslCertTracker holds a store of referenced Secrets in Ingress rules
