@@ -17,7 +17,10 @@ limitations under the License.
 package controller
 
 import (
+	"fmt"
+
 	compute "google.golang.org/api/compute/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -65,7 +68,7 @@ func NewFakeClusterManager(clusterName, firewallName string) *fakeClusterManager
 		testDefaultBeNodePort,
 		namer,
 	)
-	frPool := firewalls.NewFirewallPool(firewalls.NewFakeFirewallsProvider(), namer)
+	frPool := firewalls.NewFirewallPool(firewalls.NewFakeFirewallsProvider(false, false), namer, fakeRaiseIngressEvent)
 	cm := &ClusterManager{
 		ClusterNamer: namer,
 		instancePool: nodePool,
@@ -74,4 +77,13 @@ func NewFakeClusterManager(clusterName, firewallName string) *fakeClusterManager
 		firewallPool: frPool,
 	}
 	return &fakeClusterManager{cm, fakeLbs, fakeBackends, fakeIGs}
+}
+
+func fakeRaiseIngressEvent(ing *extensions.Ingress, reason, msg string) {
+	ingName := "nil-ingress"
+	if ing != nil {
+		ingName = ing.Name
+	}
+
+	fmt.Printf("Ingress %q Event %q: %q\n", ingName, reason, msg)
 }

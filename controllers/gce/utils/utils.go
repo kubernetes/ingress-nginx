@@ -24,6 +24,13 @@ import (
 	"strings"
 	"sync"
 
+	apiv1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/client-go/kubernetes"
+	scheme "k8s.io/client-go/kubernetes/scheme"
+	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/record"
+
 	"github.com/golang/glog"
 	compute "google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
@@ -309,9 +316,14 @@ func (g GCEURLMap) PutDefaultBackend(d *compute.BackendService) {
 	}
 }
 
+// FakeGoogleAPIForbiddenErr creates a Forbidden error with type googleapi.Error
+func FakeGoogleAPIForbiddenErr() *googleapi.Error {
+	return &googleapi.Error{Code: http.StatusForbidden}
+}
+
 // FakeGoogleAPINotFoundErr creates a NotFound error with type googleapi.Error
 func FakeGoogleAPINotFoundErr() *googleapi.Error {
-	return &googleapi.Error{Code: 404}
+	return &googleapi.Error{Code: http.StatusNotFound}
 }
 
 // IsHTTPErrorCode checks if the given error matches the given HTTP Error code.
@@ -344,6 +356,11 @@ func IsNotFoundError(err error) bool {
 	return IsHTTPErrorCode(err, http.StatusNotFound)
 }
 
+// IsForbiddenError returns true if the operation was forbidden
+func IsForbiddenError(err error) bool {
+	return IsHTTPErrorCode(err, http.StatusForbidden)
+}
+
 // CompareLinks returns true if the 2 self links are equal.
 func CompareLinks(l1, l2 string) bool {
 	// TODO: These can be partial links
@@ -359,3 +376,16 @@ func GetNamedPort(port int64) *compute.NamedPort {
 	// TODO: move port naming to namer
 	return &compute.NamedPort{Name: fmt.Sprintf("port%v", port), Port: port}
 }
+
+// NewEventRecorder returns an event recorder given a kubernetes client
+func NewEventRecorder(kubeClient kubernetes.Interface) record.EventRecorder {
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(glog.Infof)
+	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{
+		Interface: kubeClient.Core().Events(""),
+	})
+	return eventBroadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{Component: "loadbalancer-controller"})
+
+}
+
+type IngressEventRecorder func(ing *extensions.Ingress, reason, msg string)

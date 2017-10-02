@@ -53,7 +53,8 @@ func defaultBackendName(clusterName string) string {
 // newLoadBalancerController create a loadbalancer controller.
 func newLoadBalancerController(t *testing.T, cm *fakeClusterManager) *LoadBalancerController {
 	kubeClient := fake.NewSimpleClientset()
-	ctx := NewControllerContext(kubeClient, api_v1.NamespaceAll, 1*time.Second)
+	eventRecorder := utils.NewEventRecorder(kubeClient)
+	ctx := NewControllerContext(kubeClient, api_v1.NamespaceAll, 1*time.Second, eventRecorder)
 	lb, err := NewLoadBalancerController(kubeClient, ctx, cm.ClusterManager)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -95,10 +96,12 @@ func toIngressRules(hostRules map[string]utils.FakeIngressRuleValueMap) []extens
 
 // newIngress returns a new Ingress with the given path map.
 func newIngress(hostRules map[string]utils.FakeIngressRuleValueMap) *extensions.Ingress {
+	id := uuid.NewUUID()
 	return &extensions.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Name:      fmt.Sprintf("%v", uuid.NewUUID()),
+			Name:      fmt.Sprintf("%v", id),
 			Namespace: api.NamespaceNone,
+			UID:       id,
 		},
 		Spec: extensions.IngressSpec{
 			Backend: &extensions.IngressBackend{
