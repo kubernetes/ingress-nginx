@@ -47,6 +47,7 @@ import (
 	"k8s.io/ingress/controllers/gce/backends"
 	"k8s.io/ingress/controllers/gce/controller"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
+	neg "k8s.io/ingress/controllers/gce/networkendpointgroup"
 	"k8s.io/ingress/controllers/gce/storage"
 	"k8s.io/ingress/controllers/gce/utils"
 	"k8s.io/kubernetes/pkg/cloudprovider"
@@ -250,9 +251,10 @@ func main() {
 	}
 
 	var cloud *gce.GCECloud
+	var namer *utils.Namer
 	if *inCluster || *useRealCloud {
 		// Create cluster manager
-		namer, err := newNamer(kubeClient, *clusterName, controller.DefaultFirewallName)
+		namer, err = newNamer(kubeClient, *clusterName, controller.DefaultFirewallName)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
@@ -287,10 +289,9 @@ func main() {
 		clusterManager = controller.NewFakeClusterManager(*clusterName, controller.DefaultFirewallName).ClusterManager
 	}
 
-	ctx := controller.NewControllerContext(kubeClient, *watchNamespace, *resyncPeriod)
-
+	ctx := utils.NewControllerContext(kubeClient, *watchNamespace, *resyncPeriod, cloud.AlphaFeatureGate.Enabled(gce.AlphaFeatureNetworkEndpointGroup))
 	// Start loadbalancer controller
-	lbc, err := controller.NewLoadBalancerController(kubeClient, ctx, clusterManager)
+	lbc, err := controller.NewLoadBalancerController(kubeClient, ctx, clusterManager, cloud.AlphaFeatureGate.Enabled(gce.AlphaFeatureNetworkEndpointGroup))
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
@@ -299,6 +300,13 @@ func main() {
 		glog.V(3).Infof("Cluster name %+v", clusterManager.ClusterNamer.GetClusterName())
 	}
 	clusterManager.Init(&controller.GCETranslator{LoadBalancerController: lbc})
+
+	// Start NEG controller
+	if cloud.AlphaFeatureGate.Enabled(gce.AlphaFeatureNetworkEndpointGroup) {
+		negController, _ := neg.NewController(kubeClient, cloud, ctx, lbc.Translator, namer, *resyncPeriod)
+		go negController.Run(ctx.StopCh)
+	}
+
 	go registerHandlers(lbc)
 	go handleSigterm(lbc, *deleteAllOnQuit)
 

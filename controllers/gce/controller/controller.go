@@ -27,8 +27,6 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	informerv1 "k8s.io/client-go/informers/core/v1"
-	informerv1beta1 "k8s.io/client-go/informers/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes"
 	scheme "k8s.io/client-go/kubernetes/scheme"
 	unversionedcore "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -37,6 +35,7 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"k8s.io/ingress/controllers/gce/loadbalancers"
+	"k8s.io/ingress/controllers/gce/utils"
 )
 
 var (
@@ -53,33 +52,6 @@ var (
 	// Frequency to poll on local stores to sync.
 	storeSyncPollPeriod = 5 * time.Second
 )
-
-// ControllerContext holds
-type ControllerContext struct {
-	IngressInformer cache.SharedIndexInformer
-	ServiceInformer cache.SharedIndexInformer
-	PodInformer     cache.SharedIndexInformer
-	NodeInformer    cache.SharedIndexInformer
-	// Stop is the stop channel shared among controllers
-	StopCh chan struct{}
-}
-
-func NewControllerContext(kubeClient kubernetes.Interface, namespace string, resyncPeriod time.Duration) *ControllerContext {
-	return &ControllerContext{
-		IngressInformer: informerv1beta1.NewIngressInformer(kubeClient, namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
-		ServiceInformer: informerv1.NewServiceInformer(kubeClient, namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
-		PodInformer:     informerv1.NewPodInformer(kubeClient, namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
-		NodeInformer:    informerv1.NewNodeInformer(kubeClient, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
-		StopCh:          make(chan struct{}),
-	}
-}
-
-func (ctx *ControllerContext) Start() {
-	go ctx.IngressInformer.Run(ctx.StopCh)
-	go ctx.ServiceInformer.Run(ctx.StopCh)
-	go ctx.PodInformer.Run(ctx.StopCh)
-	go ctx.NodeInformer.Run(ctx.StopCh)
-}
 
 // LoadBalancerController watches the kubernetes api and adds/removes services
 // from the loadbalancer, via loadBalancerConfig.
@@ -119,7 +91,7 @@ type LoadBalancerController struct {
 // - clusterManager: A ClusterManager capable of creating all cloud resources
 //	 required for L7 loadbalancing.
 // - resyncPeriod: Watchers relist from the Kubernetes API server this often.
-func NewLoadBalancerController(kubeClient kubernetes.Interface, ctx *ControllerContext, clusterManager *ClusterManager) (*LoadBalancerController, error) {
+func NewLoadBalancerController(kubeClient kubernetes.Interface, ctx *utils.ControllerContext, clusterManager *ClusterManager, negEnabled bool) (*LoadBalancerController, error) {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{
