@@ -1,6 +1,6 @@
 # Deploying HAProxy Ingress Controller
 
-If you don't have a Kubernetes cluster, please refer to [setup](/docs/dev/setup.md)
+If you don't have a Kubernetes cluster, please refer to [Setup cluster](/docs/dev/setup-cluster.md)
 for instructions on how to create a new one.
 
 ## Prerequisites
