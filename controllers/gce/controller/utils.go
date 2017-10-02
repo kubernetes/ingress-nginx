@@ -278,6 +278,11 @@ type StoreToPodLister struct {
 	cache.Indexer
 }
 
+// StoreToPodLister makes a Store that lists Endpoints.
+type StoreToEndpointLister struct {
+	cache.Indexer
+}
+
 // List returns a list of all pods based on selector
 func (s *StoreToPodLister) List(selector labels.Selector) (ret []*api_v1.Pod, err error) {
 	err = ListAll(s.Indexer, selector, func(m interface{}) {
@@ -356,6 +361,42 @@ IngressLoop:
 		err = fmt.Errorf("no ingress for service %v", svc.Name)
 	}
 	return
+}
+
+func (s *StoreToEndpointLister) ListEndpointTargetPorts(namespace, name, targetPort string) []int {
+	// if targetPort is integer, no need to translate to endpoint ports
+	i, _ := strconv.Atoi(targetPort)
+	if i != 0 {
+		return []int{i}
+	}
+
+	ep, exists, err := s.Indexer.Get(
+		&api_v1.Endpoints{
+			ObjectMeta: meta_v1.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+			},
+		},
+	)
+	ret := []int{}
+
+	if !exists {
+		glog.Errorf("Endpoint object %v/%v does not exists.", namespace, name)
+		return ret
+	}
+	if err != nil {
+		glog.Errorf("Failed to retrieve endpoint object %v/%v: %v", namespace, name, err)
+		return ret
+	}
+
+	for _, subset := range ep.(*api_v1.Endpoints).Subsets {
+		for _, port := range subset.Ports {
+			if port.Protocol == api_v1.ProtocolTCP && port.Name == targetPort {
+				ret = append(ret, int(port.Port))
+			}
+		}
+	}
+	return ret
 }
 
 // GCETranslator helps with kubernetes -> gce api conversion.
@@ -489,10 +530,12 @@ PortLoop:
 	}
 
 	p := backends.ServicePort{
-		Port:     int64(port.NodePort),
-		Protocol: proto,
-		SvcName:  types.NamespacedName{Namespace: namespace, Name: be.ServiceName},
-		SvcPort:  be.ServicePort,
+		Port:          int64(port.NodePort),
+		Protocol:      proto,
+		SvcName:       types.NamespacedName{Namespace: namespace, Name: be.ServiceName},
+		SvcPort:       be.ServicePort,
+		SvcTargetPort: port.TargetPort.String(),
+		NEGEnabled:    t.negEnabled && utils.NEGEnabled(svc.Annotations),
 	}
 	return p, nil
 }
@@ -621,6 +664,38 @@ func (t *GCETranslator) getHTTPProbe(svc api_v1.Service, targetPort intstr.IntOr
 		glog.V(4).Infof("%v: lacks a matching HTTP probe for use in health checks.", logStr)
 	}
 	return nil, nil
+}
+
+// gatherFirewallPorts returns all ports needed for open for ingress.
+// It gathers both node ports (for IG backends) and target ports (for NEG backends).
+func (t *GCETranslator) gatherFirewallPorts(svcPorts []backends.ServicePort, includeDefaultBackend bool) []int64 {
+	// TODO: Manage default backend and its firewall rule in a centralized way.
+	// DefaultBackend is managed in l7 pool, which doesn't understand instances,
+	// which the firewall rule requires.
+	if includeDefaultBackend {
+		svcPorts = append(svcPorts, t.CloudClusterManager.defaultBackendNodePort)
+	}
+	portMap := map[int64]bool{}
+	for _, p := range svcPorts {
+		if p.NEGEnabled {
+			// For NEG backend, need to open firewall to all endpoint target ports
+			// TODO(mixia): refactor firewall syncing into a separate go routine with different trigger.
+			// With NEG, endpoint changes may cause firewall ports to be different if user specifies inconsistent backends.
+			endpointPorts := t.endpointLister.ListEndpointTargetPorts(p.SvcName.Namespace, p.SvcName.Name, p.SvcTargetPort)
+			for _, ep := range endpointPorts {
+				portMap[int64(ep)] = true
+			}
+		} else {
+			// For IG backend, need to open service node port.
+			portMap[p.Port] = true
+		}
+	}
+
+	var np []int64
+	for p := range portMap {
+		np = append(np, p)
+	}
+	return np
 }
 
 // isSimpleHTTPProbe returns true if the given Probe is:

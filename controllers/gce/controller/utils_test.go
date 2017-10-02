@@ -25,6 +25,7 @@ import (
 
 	api_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/gce/backends"
@@ -273,7 +274,7 @@ func TestAddInstanceGroupsAnnotation(t *testing.T) {
 	}{
 		{
 			// Single zone.
-			[]*compute.InstanceGroup{&compute.InstanceGroup{
+			[]*compute.InstanceGroup{{
 				Name: "ig-name",
 				Zone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-b",
 			}},
@@ -282,11 +283,11 @@ func TestAddInstanceGroupsAnnotation(t *testing.T) {
 		{
 			// Multiple zones.
 			[]*compute.InstanceGroup{
-				&compute.InstanceGroup{
+				{
 					Name: "ig-name-1",
 					Zone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-b",
 				},
-				&compute.InstanceGroup{
+				{
 					Name: "ig-name-2",
 					Zone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a",
 				},
@@ -303,5 +304,103 @@ func TestAddInstanceGroupsAnnotation(t *testing.T) {
 		if annotations[instanceGroupsAnnotationKey] != c.ExpectedAnnotation {
 			t.Fatalf("Unexpected annotation value: %s, expected: %s", annotations[instanceGroupsAnnotationKey], c.ExpectedAnnotation)
 		}
+	}
+}
+
+func TestGatherFirewallPorts(t *testing.T) {
+	cm := NewFakeClusterManager(DefaultClusterUID, DefaultFirewallName)
+	lbc := newLoadBalancerController(t, cm)
+	lbc.CloudClusterManager.defaultBackendNodePort.Port = int64(30000)
+
+	ep1 := "ep1"
+	ep2 := "ep2"
+
+	svcPorts := []backends.ServicePort{
+		{Port: int64(30001)},
+		{Port: int64(30002)},
+		{
+			SvcName: types.NamespacedName{
+				"ns",
+				ep1,
+			},
+			Port:          int64(30003),
+			NEGEnabled:    true,
+			SvcTargetPort: "80",
+		},
+		{
+			SvcName: types.NamespacedName{
+				"ns",
+				ep2,
+			},
+			Port:          int64(30004),
+			NEGEnabled:    true,
+			SvcTargetPort: "named-port",
+		},
+	}
+
+	lbc.endpointLister.Indexer.Add(getDefaultEndpoint(ep1))
+	lbc.endpointLister.Indexer.Add(getDefaultEndpoint(ep2))
+
+
+	res := lbc.Translator.gatherFirewallPorts(svcPorts, true)
+	expect := map[int64]bool{
+		int64(30000): true,
+		int64(30001): true,
+		int64(30002): true,
+		int64(80):    true,
+		int64(8080):  true,
+		int64(8081):  true,
+	}
+	if len(res) != len(expect) {
+		t.Errorf("Expect firewall ports %v, but got %v", expect, res)
+	}
+
+	for _, p := range res {
+		if _, ok := expect[p]; !ok {
+			t.Errorf("Expect firewall port %v, but not found.", p)
+		}
+	}
+}
+
+func getDefaultEndpoint(name string) *api_v1.Endpoints {
+	return &api_v1.Endpoints{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Name:      name,
+			Namespace: "ns",
+		},
+		Subsets: []api_v1.EndpointSubset{
+			{
+				Ports: []api_v1.EndpointPort{
+					{
+						Name:     "",
+						Port:     int32(80),
+						Protocol: api_v1.ProtocolTCP,
+					},
+					{
+						Name:     "named-port",
+						Port:     int32(8080),
+						Protocol: api_v1.ProtocolTCP,
+					},
+				},
+			},
+			{
+				Ports: []api_v1.EndpointPort{
+					{
+						Name:     "named-port",
+						Port:     int32(80),
+						Protocol: api_v1.ProtocolTCP,
+					},
+				},
+			},
+			{
+				Ports: []api_v1.EndpointPort{
+					{
+						Name:     "named-port",
+						Port:     int32(8081),
+						Protocol: api_v1.ProtocolTCP,
+					},
+				},
+			},
+		},
 	}
 }

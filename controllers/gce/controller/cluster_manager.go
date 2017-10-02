@@ -119,7 +119,7 @@ func (c *ClusterManager) shutdown() error {
 // Returns the list of all instance groups corresponding to the given loadbalancers.
 // If in performing the checkpoint the cluster manager runs out of quota, a
 // googleapi 403 is returned.
-func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, backendServicePorts []backends.ServicePort, namedPorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
+func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, backendServicePorts []backends.ServicePort, namedPorts []backends.ServicePort, firewallPorts []int64) ([]*compute.InstanceGroup, error) {
 	if len(namedPorts) != 0 {
 		// Add the default backend node port to the list of named ports for instance groups.
 		namedPorts = append(namedPorts, c.defaultBackendNodePort)
@@ -144,22 +144,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 		return igs, err
 	}
 
-	// TODO: Manage default backend and its firewall rule in a centralized way.
-	// DefaultBackend is managed in l7 pool, which doesn't understand instances,
-	// which the firewall rule requires.
-	fwNodePorts := backendServicePorts
-	if len(lbs) != 0 {
-		// If there are no Ingresses, we shouldn't be allowing traffic to the
-		// default backend. Equally importantly if the cluster gets torn down
-		// we shouldn't leak the firewall rule.
-		fwNodePorts = append(fwNodePorts, c.defaultBackendNodePort)
-	}
-
-	var np []int64
-	for _, p := range fwNodePorts {
-		np = append(np, p.Port)
-	}
-	if err := c.firewallPool.Sync(np, nodeNames); err != nil {
+	if err := c.firewallPool.Sync(firewallPorts, nodeNames); err != nil {
 		return igs, err
 	}
 
