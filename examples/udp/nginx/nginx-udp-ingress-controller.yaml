@@ -47,6 +47,7 @@ spec:
           hostPort: 443
         - containerPort: 9001
           hostPort: 9001
+          protocol: UDP
         args:
         - /nginx-ingress-controller
         - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
