@@ -17,6 +17,7 @@ limitations under the License.
 package healthchecks
 
 import (
+	computealpha "google.golang.org/api/compute/v0.alpha"
 	compute "google.golang.org/api/compute/v1"
 
 	"k8s.io/ingress/controllers/gce/utils"
@@ -29,18 +30,21 @@ type HealthCheckProvider interface {
 	DeleteHttpHealthCheck(name string) error
 	GetHttpHealthCheck(name string) (*compute.HttpHealthCheck, error)
 
+	CreateAlphaHealthCheck(hc *computealpha.HealthCheck) error
 	CreateHealthCheck(hc *compute.HealthCheck) error
+	UpdateAlphaHealthCheck(hc *computealpha.HealthCheck) error
 	UpdateHealthCheck(hc *compute.HealthCheck) error
 	DeleteHealthCheck(name string) error
+	GetAlphaHealthCheck(name string) (*computealpha.HealthCheck, error)
 	GetHealthCheck(name string) (*compute.HealthCheck, error)
 }
 
 // HealthChecker is an interface to manage cloud HTTPHealthChecks.
 type HealthChecker interface {
-	New(port int64, protocol utils.AppProtocol) *HealthCheck
+	New(port int64, protocol utils.AppProtocol, enableNEG bool) *HealthCheck
 	Sync(hc *HealthCheck) (string, error)
 	Delete(port int64) error
-	Get(port int64) (*HealthCheck, error)
+	Get(port int64, alpha bool) (*HealthCheck, error)
 	GetLegacy(port int64) (*compute.HttpHealthCheck, error)
 	DeleteLegacy(port int64) error
 }

@@ -30,7 +30,7 @@ func TestHealthCheckAdd(t *testing.T) {
 	hcp := NewFakeHealthCheckProvider()
 	healthChecks := NewHealthChecker(hcp, "/", namer)
 
-	hc := healthChecks.New(80, utils.ProtocolHTTP)
+	hc := healthChecks.New(80, utils.ProtocolHTTP, false)
 	_, err := healthChecks.Sync(hc)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -41,7 +41,7 @@ func TestHealthCheckAdd(t *testing.T) {
 		t.Fatalf("expected the health check to exist, err: %v", err)
 	}
 
-	hc = healthChecks.New(443, utils.ProtocolHTTPS)
+	hc = healthChecks.New(443, utils.ProtocolHTTPS, false)
 	_, err = healthChecks.Sync(hc)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -66,7 +66,7 @@ func TestHealthCheckAddExisting(t *testing.T) {
 	hcp.CreateHealthCheck(httpHC.ToComputeHealthCheck())
 
 	// Should not fail adding the same type of health check
-	hc := healthChecks.New(3000, utils.ProtocolHTTP)
+	hc := healthChecks.New(3000, utils.ProtocolHTTP, false)
 	_, err := healthChecks.Sync(hc)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -84,7 +84,7 @@ func TestHealthCheckAddExisting(t *testing.T) {
 	httpsHC.RequestPath = "/my-probes-health"
 	hcp.CreateHealthCheck(httpsHC.ToComputeHealthCheck())
 
-	hc = healthChecks.New(4000, utils.ProtocolHTTPS)
+	hc = healthChecks.New(4000, utils.ProtocolHTTPS, false)
 	_, err = healthChecks.Sync(hc)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -142,7 +142,7 @@ func TestHealthCheckUpdate(t *testing.T) {
 	hcp.CreateHealthCheck(hc.ToComputeHealthCheck())
 
 	// Verify the health check exists
-	_, err := healthChecks.Get(3000)
+	_, err := healthChecks.Get(3000, false)
 	if err != nil {
 		t.Fatalf("expected the health check to exist, err: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestHealthCheckUpdate(t *testing.T) {
 	}
 
 	// Verify the health check exists
-	_, err = healthChecks.Get(3000)
+	_, err = healthChecks.Get(3000, false)
 	if err != nil {
 		t.Fatalf("expected the health check to exist, err: %v", err)
 	}

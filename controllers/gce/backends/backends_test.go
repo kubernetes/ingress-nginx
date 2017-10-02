@@ -107,7 +107,7 @@ func TestBackendPoolAdd(t *testing.T) {
 			}
 
 			// Check the created healthcheck is the correct protocol
-			hc, err := pool.healthChecker.Get(nodePort.Port)
+			hc, err := pool.healthChecker.Get(nodePort.Port, false)
 			if err != nil {
 				t.Fatalf("Unexpected err when querying fake healthchecker: %v", err)
 			}
@@ -146,7 +146,7 @@ func TestHealthCheckMigration(t *testing.T) {
 	pool.Add(p, nil)
 
 	// Assert the proper health check was created
-	hc, _ := pool.healthChecker.Get(p.Port)
+	hc, _ := pool.healthChecker.Get(p.Port, false)
 	if hc == nil || hc.Protocol() != p.Protocol {
 		t.Fatalf("Expected %s health check, received %v: ", p.Protocol, hc)
 	}
@@ -181,7 +181,7 @@ func TestBackendPoolUpdate(t *testing.T) {
 	}
 
 	// Assert the proper health check was created
-	hc, _ := pool.healthChecker.Get(p.Port)
+	hc, _ := pool.healthChecker.Get(p.Port, false)
 	if hc == nil || hc.Protocol() != p.Protocol {
 		t.Fatalf("Expected %s health check, received %v: ", p.Protocol, hc)
 	}
@@ -201,7 +201,7 @@ func TestBackendPoolUpdate(t *testing.T) {
 	}
 
 	// Assert the proper health check was created
-	hc, _ = pool.healthChecker.Get(p.Port)
+	hc, _ = pool.healthChecker.Get(p.Port, false)
 	if hc == nil || hc.Protocol() != p.Protocol {
 		t.Fatalf("Expected %s health check, received %v: ", p.Protocol, hc)
 	}

@@ -17,6 +17,7 @@ limitations under the License.
 package healthchecks
 
 import (
+	computealpha "google.golang.org/api/compute/v0.alpha"
 	compute "google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
 )
@@ -84,10 +85,27 @@ func (f *FakeHealthCheckProvider) CreateHealthCheck(hc *compute.HealthCheck) err
 	return nil
 }
 
+// CreateHealthCheck fakes out http health check creation.
+func (f *FakeHealthCheckProvider) CreateAlphaHealthCheck(hc *computealpha.HealthCheck) error {
+	v := *hc
+	v.SelfLink = "https://fake.google.com/compute/healthChecks/" + hc.Name
+	f.generic[hc.Name] = toV1HealthCheck(hc)
+	return nil
+}
+
 // GetHealthCheck fakes out getting a http health check from the cloud.
 func (f *FakeHealthCheckProvider) GetHealthCheck(name string) (*compute.HealthCheck, error) {
 	if hc, found := f.generic[name]; found {
 		return &hc, nil
+	}
+
+	return nil, fakeNotFoundErr()
+}
+
+// GetHealthCheck fakes out getting a http health check from the cloud.
+func (f *FakeHealthCheckProvider) GetAlphaHealthCheck(name string) (*computealpha.HealthCheck, error) {
+	if hc, found := f.generic[name]; found {
+		return toAlphaHealthCheck(&hc), nil
 	}
 
 	return nil, fakeNotFoundErr()
@@ -111,4 +129,69 @@ func (f *FakeHealthCheckProvider) UpdateHealthCheck(hc *compute.HealthCheck) err
 
 	f.generic[hc.Name] = *hc
 	return nil
+}
+
+func (f *FakeHealthCheckProvider) UpdateAlphaHealthCheck(hc *computealpha.HealthCheck) error {
+	if _, exists := f.generic[hc.Name]; !exists {
+		return fakeNotFoundErr()
+	}
+
+	f.generic[hc.Name] = toV1HealthCheck(hc)
+	return nil
+}
+
+func toV1HealthCheck(hc *computealpha.HealthCheck) compute.HealthCheck {
+	v1hc := compute.HealthCheck{
+		Name:               hc.Name,
+		Description:        hc.Description,
+		CheckIntervalSec:   hc.CheckIntervalSec,
+		HealthyThreshold:   hc.HealthyThreshold,
+		UnhealthyThreshold: hc.UnhealthyThreshold,
+		TimeoutSec:         hc.TimeoutSec,
+		Type:               hc.Type,
+		SelfLink:           hc.SelfLink,
+	}
+
+	if hc.HttpHealthCheck != nil {
+		v1hc.HttpHealthCheck = &compute.HTTPHealthCheck{
+			Port:        hc.HttpHealthCheck.Port,
+			RequestPath: hc.HttpHealthCheck.RequestPath,
+		}
+	}
+
+	if hc.HttpsHealthCheck != nil {
+		v1hc.HttpsHealthCheck = &compute.HTTPSHealthCheck{
+			Port:        hc.HttpsHealthCheck.Port,
+			RequestPath: hc.HttpsHealthCheck.RequestPath,
+		}
+	}
+	return v1hc
+}
+
+func toAlphaHealthCheck(hc *compute.HealthCheck) *computealpha.HealthCheck {
+	alphahc := computealpha.HealthCheck{
+		Name:               hc.Name,
+		Description:        hc.Description,
+		CheckIntervalSec:   hc.CheckIntervalSec,
+		HealthyThreshold:   hc.HealthyThreshold,
+		UnhealthyThreshold: hc.UnhealthyThreshold,
+		TimeoutSec:         hc.TimeoutSec,
+		Type:               hc.Type,
+		SelfLink:           hc.SelfLink,
+	}
+
+	if hc.HttpHealthCheck != nil {
+		alphahc.HttpHealthCheck = &computealpha.HTTPHealthCheck{
+			Port:        hc.HttpHealthCheck.Port,
+			RequestPath: hc.HttpHealthCheck.RequestPath,
+		}
+	}
+
+	if hc.HttpsHealthCheck != nil {
+		alphahc.HttpsHealthCheck = &computealpha.HTTPSHealthCheck{
+			Port:        hc.HttpsHealthCheck.Port,
+			RequestPath: hc.HttpsHealthCheck.RequestPath,
+		}
+	}
+	return &alphahc
 }

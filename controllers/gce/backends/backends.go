@@ -93,10 +93,12 @@ func portKey(port int64) string {
 
 // ServicePort for tupling port and protocol
 type ServicePort struct {
-	Port     int64
-	Protocol utils.AppProtocol
-	SvcName  types.NamespacedName
-	SvcPort  intstr.IntOrString
+	Port          int64
+	Protocol      utils.AppProtocol
+	SvcName       types.NamespacedName
+	SvcPort       intstr.IntOrString
+	SvcTargetPort string
+	NEGEnabled    bool
 }
 
 // Description returns a string describing the ServicePort.
@@ -171,8 +173,7 @@ func (b *Backends) Get(port int64) (*compute.BackendService, error) {
 }
 
 func (b *Backends) ensureHealthCheck(sp ServicePort) (string, error) {
-	hc := b.healthChecker.New(sp.Port, sp.Protocol)
-
+	hc := b.healthChecker.New(sp.Port, sp.Protocol, sp.NEGEnabled)
 	existingLegacyHC, err := b.healthChecker.GetLegacy(sp.Port)
 	if err != nil && !utils.IsNotFoundError(err) {
 		return "", err
@@ -274,6 +275,11 @@ func (b *Backends) Add(p ServicePort, igs []*compute.InstanceGroup) error {
 		return nil
 	}
 
+	// If NEG is enabled, do not link backend service to instance groups.
+	if p.NEGEnabled {
+		return nil
+	}
+
 	// Verify that backend service contains links to all backends/instance-groups
 	return b.edgeHop(be, igs)
 }
@@ -370,6 +376,7 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 		newBackends := getBackendsForIGs(addIGs, bm)
 		be.Backends = append(originalBackends, newBackends...)
 
+		// TODO (mixia): make sure backend-service can switch between NEG and IG
 		if err := b.cloud.UpdateGlobalBackendService(be); err != nil {
 			if utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
 				glog.V(2).Infof("Updating backend service backends with balancing mode %v failed, will try another mode. err:%v", bm, err)
