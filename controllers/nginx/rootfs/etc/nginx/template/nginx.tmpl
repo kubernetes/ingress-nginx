@@ -528,6 +528,7 @@ stream {
             proxy_set_header       X-Code             {{ $errCode }};
             proxy_set_header       X-Format           $http_accept;
             proxy_set_header       X-Original-URI     $request_uri;
+            proxy_set_header       X-Original-Host    $http_host;
             proxy_set_header       X-Namespace        $namespace;
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
