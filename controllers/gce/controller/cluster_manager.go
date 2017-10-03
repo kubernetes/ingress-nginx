@@ -134,7 +134,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	if err != nil {
 		return igs, err
 	}
-	if err := c.backendPool.Sync(backendServicePorts, igs); err != nil {
+	if err := c.backendPool.Ensure(backendServicePorts, igs); err != nil {
 		return igs, err
 	}
 	if err := c.instancePool.Sync(nodeNames); err != nil {
@@ -167,20 +167,12 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 }
 
 func (c *ClusterManager) EnsureInstanceGroupsAndPorts(servicePorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
-	var igs []*compute.InstanceGroup
-	var err error
+	ports := []int64{}
 	for _, p := range servicePorts {
-		// EnsureInstanceGroupsAndPorts always returns all the instance groups, so we can return
-		// the output of any call, no need to append the return from all calls.
-		// TODO: Ideally, we want to call CreateInstaceGroups only the first time and
-		// then call AddNamedPort multiple times. Need to update the interface to
-		// achieve this.
-		igs, _, err = instances.EnsureInstanceGroupsAndPorts(c.instancePool, c.ClusterNamer, p.Port)
-		if err != nil {
-			return nil, err
-		}
+		ports = append(ports, p.Port)
 	}
-	return igs, nil
+	igs, _, err := instances.EnsureInstanceGroupsAndPorts(c.instancePool, c.ClusterNamer, ports)
+	return igs, err
 }
 
 // GC garbage collects unused resources.

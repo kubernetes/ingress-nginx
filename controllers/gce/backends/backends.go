@@ -210,24 +210,43 @@ func (b *Backends) create(namedPort *compute.NamedPort, hcLink string, sp Servic
 	return b.Get(namedPort.Port)
 }
 
-// Add will get or create a Backend for the given port.
+// Ensure will update or create Backends for the given ports.
 // Uses the given instance groups if non-nil, else creates instance groups.
-func (b *Backends) Add(p ServicePort, igs []*compute.InstanceGroup) error {
-	// We must track the port even if creating the backend failed, because
-	// we might've created a health-check for it.
-	be := &compute.BackendService{}
-	defer func() { b.snapshotter.Add(portKey(p.Port), be) }()
-
-	var err error
+func (b *Backends) Ensure(svcPorts []ServicePort, igs []*compute.InstanceGroup) error {
+	glog.V(3).Infof("Sync: backends %v", svcPorts)
 	// Ideally callers should pass the instance groups to prevent recomputing them here.
 	// Igs can be nil in scenarios where we do not have instance groups such as
 	// while syncing default backend service.
 	if igs == nil {
-		igs, _, err = instances.EnsureInstanceGroupsAndPorts(b.nodePool, b.namer, p.Port)
+		ports := []int64{}
+		for _, p := range svcPorts {
+			ports = append(ports, p.Port)
+		}
+		var err error
+		igs, _, err = instances.EnsureInstanceGroupsAndPorts(b.nodePool, b.namer, ports)
 		if err != nil {
 			return err
 		}
 	}
+	// create backends for new ports, perform an edge hop for existing ports
+	for _, port := range svcPorts {
+		if err := b.ensureBackendService(port, igs); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ensureBackendService will update or create a Backend for the given port.
+// It assumes that the instance groups have been created and required named port has been added.
+// If not, then Ensure should be called instead.
+func (b *Backends) ensureBackendService(p ServicePort, igs []*compute.InstanceGroup) error {
+	// We must track the ports even if creating the backends failed, because
+	// we might've created health-check for them.
+	be := &compute.BackendService{}
+	defer func() { b.snapshotter.Add(portKey(p.Port), be) }()
+
+	var err error
 
 	// Ensure health check for backend service exists
 	hcLink, err := b.ensureHealthCheck(p)
@@ -386,19 +405,6 @@ func (b *Backends) edgeHop(be *compute.BackendService, igs []*compute.InstanceGr
 		return nil
 	}
 	return fmt.Errorf("received errors when updating backend service: %v", strings.Join(errs, "\n"))
-}
-
-// Sync syncs backend services corresponding to ports in the given list.
-func (b *Backends) Sync(svcNodePorts []ServicePort, igs []*compute.InstanceGroup) error {
-	glog.V(3).Infof("Sync: backends %v", svcNodePorts)
-
-	// create backends for new ports, perform an edge hop for existing ports
-	for _, port := range svcNodePorts {
-		if err := b.Add(port, igs); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // GC garbage collects services corresponding to ports in the given list.
