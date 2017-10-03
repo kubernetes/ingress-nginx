@@ -668,6 +668,7 @@ stream {
             {{ end }}
             proxy_pass_request_headers  on;
             proxy_set_header            Host {{ $location.ExternalAuth.Host }};
+            proxy_set_header            X-Original-URL $scheme://$http_host$request_uri;
             proxy_ssl_server_name       on;
 
             client_max_body_size        "{{ $location.Proxy.BodySize }}";
