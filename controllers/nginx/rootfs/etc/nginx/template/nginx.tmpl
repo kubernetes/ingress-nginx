@@ -178,7 +178,7 @@ http {
     {{ else }}
     # Do not trust HTTP X-Forwarded-* Headers
     map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
-    {{ if (trustProxyProtocol $cfg) }}
+    {{ if (trustProxyProtocol $all) }}
         # Get IP address from Proxy Protocol
         default          $proxy_protocol_addr;
     {{ else }}
