@@ -17,6 +17,7 @@ limitations under the License.
 package utils
 
 import (
+	"crypto/md5"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -90,6 +91,13 @@ const (
 	ProtocolHTTP AppProtocol = "HTTP"
 	// ProtocolHTTPS protocol for a service
 	ProtocolHTTPS AppProtocol = "HTTPS"
+
+	// MaxNsNamePortLength is the max length for namespace, name and port for neg name.
+	// 63 - 4 (k8s prefix) - 16 (cluster id) - 8 (suffix hash) - 4 (hyphen connector) = 31
+	MaxNsNamePortLength = 31
+
+	// NetworkEndpointGroupAlphaAnnotation is the annotation to enable GCE NEG feature for ingress backend services
+	NetworkEndpointGroupAlphaAnnotation = "alpha.cloud.google.com/load-balancer-neg"
 )
 
 // ControllerContext holds
@@ -307,6 +315,40 @@ func (n *Namer) LBName(key string) string {
 	return n.Truncate(fmt.Sprintf("%v%v%v", scrubbedName, clusterNameDelimiter, clusterName))
 }
 
+// NEGName returns the gce neg name based on the service namespace, name and target port.
+// NEG naming convention: k8s-{clusterid}-{namespace}-{name}-{target port}-{hash}
+// Output name is at most 63 characters. NEGName tries to keep as much information as possible.
+// WARNING: Do not modify this funciton
+func (n *Namer) NEGName(namespace, name, port string) string {
+	var trimedNamespace string
+	var trimedName string
+	var trimedPort string
+	totalLength := len(namespace) + len(name) + len(port)
+	exceeds := totalLength - MaxNsNamePortLength
+
+	if exceeds <= 0 {
+		trimedNamespace = namespace
+		trimedName = name
+		trimedPort = port
+	} else {
+		portSubtract := exceeds * len(port) / totalLength
+		trimedPort = port[:len(port)-portSubtract]
+		nameSubtract := exceeds * len(name) / totalLength
+		trimedName = name[:len(name)-nameSubtract]
+		trimedNamespace = namespace[:len(namespace)-(exceeds-portSubtract-nameSubtract)]
+	}
+	return fmt.Sprintf("%s-%s-%s-%s-%s", n.NEGPrefix(), trimedNamespace, trimedName, trimedPort, negSuffix(namespace, name, port))
+}
+
+func (n *Namer) NEGPrefix() string {
+	return fmt.Sprintf("k8s-%s", n.GetClusterName())
+}
+
+// negSuffix returns hash code with 8 characters
+func negSuffix(namespace, name, port string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(namespace+name+port)))[:8]
+}
+
 // GCEURLMap is a nested map of hostname->path regex->backend
 type GCEURLMap map[string]map[string]*compute.BackendService
 
@@ -398,4 +440,12 @@ type FakeIngressRuleValueMap map[string]string
 func GetNamedPort(port int64) *compute.NamedPort {
 	// TODO: move port naming to namer
 	return &compute.NamedPort{Name: fmt.Sprintf("port%v", port), Port: port}
+}
+
+func NEGEnabled(annotations map[string]string) bool {
+	v, ok := annotations[NetworkEndpointGroupAlphaAnnotation]
+	if ok && v == "true" {
+		return true
+	}
+	return false
 }
