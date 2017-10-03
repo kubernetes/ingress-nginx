@@ -169,7 +169,7 @@ func (l *L7s) Sync(lbs []*L7RuntimeInfo) error {
 		// Lazily create a default backend so we don't tax users who don't care
 		// about Ingress by consuming 1 of their 3 GCE BackendServices. This
 		// BackendService is GC'd when there are no more Ingresses.
-		if err := l.defaultBackendPool.Add(l.defaultBackendNodePort, nil); err != nil {
+		if err := l.defaultBackendPool.Add([]backends.ServicePort{l.defaultBackendNodePort}, nil); err != nil {
 			return err
 		}
 		defaultBackend, err := l.defaultBackendPool.Get(l.defaultBackendNodePort.Port)
