@@ -71,16 +71,11 @@ func TestInstancesAddedToZones(t *testing.T) {
 
 	// Create 2 igs, one per zone.
 	testIG := "test-ig"
-	testPort := int64(3001)
-	lbc.CloudClusterManager.instancePool.AddInstanceGroup(testIG, testPort)
+	lbc.CloudClusterManager.instancePool.AddInstanceGroup(testIG, []int64{int64(3001)})
 
 	// node pool syncs kube-nodes, this will add them to both igs.
 	lbc.CloudClusterManager.instancePool.Sync([]string{"n1", "n2", "n3"})
 	gotZonesToNode := cm.fakeIGs.GetInstancesByZone()
-
-	if cm.fakeIGs.Ports[0] != testPort {
-		t.Errorf("Expected the same node port on all igs, got ports %+v", cm.fakeIGs.Ports)
-	}
 
 	for z, nodeNames := range zoneToNode {
 		if ig, err := cm.fakeIGs.GetInstanceGroup(testIG, z); err != nil {

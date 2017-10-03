@@ -59,15 +59,18 @@ func (i *Instances) Init(zl zoneLister) {
 }
 
 // AddInstanceGroup creates or gets an instance group if it doesn't exist
-// and adds the given port to it. Returns a list of one instance group per zone,
-// all of which have the exact same named port.
-func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.InstanceGroup, *compute.NamedPort, error) {
+// and adds the given ports to it. Returns a list of one instance group per zone,
+// all of which have the exact same named ports.
+func (i *Instances) AddInstanceGroup(name string, ports []int64) ([]*compute.InstanceGroup, []*compute.NamedPort, error) {
 	igs := []*compute.InstanceGroup{}
-	namedPort := utils.GetNamedPort(port)
+	namedPorts := []*compute.NamedPort{}
+	for _, port := range ports {
+		namedPorts = append(namedPorts, utils.GetNamedPort(port))
+	}
 
 	zones, err := i.ListZones()
 	if err != nil {
-		return igs, namedPort, err
+		return igs, namedPorts, err
 	}
 
 	defer i.snapshotter.Add(name, struct{}{})
@@ -99,23 +102,27 @@ func (i *Instances) AddInstanceGroup(name string, port int64) ([]*compute.Instan
 			glog.V(3).Infof("Instance group %v already exists in zone %v", name, zone)
 		}
 
-		found := false
+		existingPorts := map[int64]bool{}
 		for _, np := range ig.NamedPorts {
-			if np.Port == port {
-				glog.V(3).Infof("Instance group %v already has named port %+v", ig.Name, np)
-				found = true
-				break
-			}
+			existingPorts[np.Port] = true
 		}
-		if !found {
-			glog.V(3).Infof("Instance group %v/%v does not have port %+v, adding it now.", zone, name, namedPort)
-			if err := i.cloud.SetNamedPortsOfInstanceGroup(ig.Name, zone, append(ig.NamedPorts, namedPort)); err != nil {
+		var newPorts []*compute.NamedPort
+		for _, np := range namedPorts {
+			if existingPorts[np.Port] {
+				glog.V(3).Infof("Instance group %v already has named port %+v", ig.Name, np)
+				continue
+			}
+			newPorts = append(newPorts, np)
+		}
+		if len(newPorts) > 0 {
+			glog.V(5).Infof("Instance group %v/%v does not have ports %+v, adding them now.", zone, name, namedPorts)
+			if err := i.cloud.SetNamedPortsOfInstanceGroup(ig.Name, zone, append(ig.NamedPorts, namedPorts...)); err != nil {
 				return nil, nil, err
 			}
 		}
 		igs = append(igs, ig)
 	}
-	return igs, namedPort, nil
+	return igs, namedPorts, nil
 }
 
 // DeleteInstanceGroup deletes the given IG by name, from all zones.

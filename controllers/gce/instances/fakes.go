@@ -60,7 +60,6 @@ func (z *FakeZoneLister) GetZoneForNode(name string) (string, error) {
 type FakeInstanceGroups struct {
 	instances        sets.String
 	instanceGroups   []*compute.InstanceGroup
-	Ports            []int64
 	getResult        *compute.InstanceGroup
 	listResult       *compute.InstanceGroupsListInstances
 	calls            []int
@@ -150,21 +149,18 @@ func (f *FakeInstanceGroups) RemoveInstancesFromInstanceGroup(name, zone string,
 }
 
 func (f *FakeInstanceGroups) SetNamedPortsOfInstanceGroup(igName, zone string, namedPorts []*compute.NamedPort) error {
-	found := false
-	for _, ig := range f.instanceGroups {
-		if ig.Name == igName && ig.Zone == zone {
-			found = true
+	var ig *compute.InstanceGroup
+	for _, igp := range f.instanceGroups {
+		if igp.Name == igName && igp.Zone == zone {
+			ig = igp
 			break
 		}
 	}
-	if !found {
+	if ig == nil {
 		return fmt.Errorf("Failed to find instance group %q in zone %q", igName, zone)
 	}
 
-	f.Ports = f.Ports[:0]
-	for _, port := range namedPorts {
-		f.Ports = append(f.Ports, port.Port)
-	}
+	ig.NamedPorts = namedPorts
 	return nil
 }
 

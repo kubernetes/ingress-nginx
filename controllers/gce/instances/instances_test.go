@@ -34,7 +34,7 @@ func TestNodePoolSync(t *testing.T) {
 	f := NewFakeInstanceGroups(sets.NewString(
 		[]string{"n1", "n2"}...))
 	pool := newNodePool(f, defaultZone)
-	pool.AddInstanceGroup("test", 80)
+	pool.AddInstanceGroup("test", []int64{80})
 
 	// KubeNodes: n1
 	// GCENodes: n1, n2
@@ -53,7 +53,7 @@ func TestNodePoolSync(t *testing.T) {
 
 	f = NewFakeInstanceGroups(sets.NewString([]string{"n1"}...))
 	pool = newNodePool(f, defaultZone)
-	pool.AddInstanceGroup("test", 80)
+	pool.AddInstanceGroup("test", []int64{80})
 
 	f.calls = []int{}
 	kubeNodes = sets.NewString([]string{"n1", "n2"}...)
@@ -69,7 +69,7 @@ func TestNodePoolSync(t *testing.T) {
 
 	f = NewFakeInstanceGroups(sets.NewString([]string{"n1", "n2"}...))
 	pool = newNodePool(f, defaultZone)
-	pool.AddInstanceGroup("test", 80)
+	pool.AddInstanceGroup("test", []int64{80})
 
 	f.calls = []int{}
 	kubeNodes = sets.NewString([]string{"n1", "n2"}...)
@@ -77,5 +77,51 @@ func TestNodePoolSync(t *testing.T) {
 	if len(f.calls) != 0 {
 		t.Fatalf(
 			"Did not expect any calls, got %+v", f.calls)
+	}
+}
+
+func TestSetNamedPorts(t *testing.T) {
+	f := NewFakeInstanceGroups(sets.NewString(
+		[]string{"ig"}...))
+	pool := newNodePool(f, defaultZone)
+
+	testCases := []struct {
+		newPorts      []int64
+		expectedPorts []int64
+	}{
+		{
+			// Verify adding a port works as expected.
+			[]int64{80},
+			[]int64{80},
+		},
+		{
+			// Verify adding multiple ports at once works as expected.
+			[]int64{81, 82},
+			[]int64{80, 81, 82},
+		},
+		{
+			// Adding existing ports should have no impact.
+			[]int64{80, 82},
+			[]int64{80, 81, 82},
+		},
+		// TODO: Add tests to remove named ports when we support that.
+	}
+	for _, test := range testCases {
+		igs, _, err := pool.AddInstanceGroup("ig", test.newPorts)
+		if err != nil {
+			t.Fatalf("unexpected error in adding ports %v to instance group: %s", test.newPorts, err)
+		}
+		if len(igs) != 1 {
+			t.Fatalf("expected a single instance group, got: %v", igs)
+		}
+		actualPorts := igs[0].NamedPorts
+		if len(actualPorts) != len(test.expectedPorts) {
+			t.Fatalf("unexpected named ports on instance group. expected: %v, got: %v", test.expectedPorts, actualPorts)
+		}
+		for i, p := range igs[0].NamedPorts {
+			if p.Port != test.expectedPorts[i] {
+				t.Fatalf("unexpected named ports on instance group. expected: %v, got: %v", test.expectedPorts, actualPorts)
+			}
+		}
 	}
 }
