@@ -1,6 +1,76 @@
-Changelog
+# Changelog
 
-Changelog
+### 0.9-beta.14
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.14`
+
+*New Features:*
+
+- Opentracing support for NGINX
+- Setting upstream vhost for nginx
+- Allow custom global configuration at multiple levels
+- Add support for proxy protocol decoding and encoding in TCP services
+
+*Changes:*
+
+- [X] [#719](https://github.com/kubernetes/ingress/pull/719) Setting upstream vhost for nginx.
+- [X] [#1321](https://github.com/kubernetes/ingress/pull/1321) Enable keepalive in upstreams
+- [X] [#1322](https://github.com/kubernetes/ingress/pull/1322) parse real ip
+- [X] [#1323](https://github.com/kubernetes/ingress/pull/1323) use $the_real_ip for rate limit whitelist
+- [X] [#1326](https://github.com/kubernetes/ingress/pull/1326) Pass headers from the custom error backend
+- [X] [#1328](https://github.com/kubernetes/ingress/pull/1328) update deprecated interface
+- [X] [#1329](https://github.com/kubernetes/ingress/pull/1329) add example for nginx-ingress
+- [X] [#1330](https://github.com/kubernetes/ingress/pull/1330) Increase coverage in template.go for nginx controller
+- [X] [#1335](https://github.com/kubernetes/ingress/pull/1335) Configurable proxy_request_buffering per location..
+- [X] [#1338](https://github.com/kubernetes/ingress/pull/1338) Fix multiple leader election
+- [X] [#1339](https://github.com/kubernetes/ingress/pull/1339) Enable status port listening in all interfaces
+- [X] [#1340](https://github.com/kubernetes/ingress/pull/1340) Update sha256sum of nginx substitutions
+- [X] [#1341](https://github.com/kubernetes/ingress/pull/1341) Fix typos
+- [X] [#1345](https://github.com/kubernetes/ingress/pull/1345) refactor controllers.go
+- [X] [#1349](https://github.com/kubernetes/ingress/pull/1349) Force reload if a secret is updated
+- [X] [#1363](https://github.com/kubernetes/ingress/pull/1363) Fix proxy request buffering default configuration
+- [X] [#1365](https://github.com/kubernetes/ingress/pull/1365) Fix equals comparsion returing False if both objects have nil Targets or Services.
+- [X] [#1367](https://github.com/kubernetes/ingress/pull/1367) Fix typos
+- [X] [#1379](https://github.com/kubernetes/ingress/pull/1379) Fix catch all  upstream server
+- [X] [#1380](https://github.com/kubernetes/ingress/pull/1380) Cleanup
+- [X] [#1381](https://github.com/kubernetes/ingress/pull/1381) Refactor X-Forwarded-* headers
+- [X] [#1382](https://github.com/kubernetes/ingress/pull/1382) Cleanup
+- [X] [#1387](https://github.com/kubernetes/ingress/pull/1387) Improve resource usage in nginx controller
+- [X] [#1392](https://github.com/kubernetes/ingress/pull/1392) Avoid issues with goroutines updating fields
+- [X] [#1393](https://github.com/kubernetes/ingress/pull/1393) Limit the number of goroutines used for the update of  ingress status
+- [X] [#1394](https://github.com/kubernetes/ingress/pull/1394) Improve equals
+- [X] [#1402](https://github.com/kubernetes/ingress/pull/1402) fix error when cert or key is nil
+- [X] [#1403](https://github.com/kubernetes/ingress/pull/1403) Added tls ports to rbac nginx ingress controller and service
+- [X] [#1404](https://github.com/kubernetes/ingress/pull/1404) Use nginx default value for SSLECDHCurve
+- [X] [#1411](https://github.com/kubernetes/ingress/pull/1411) Add more descriptive logging in certificate loading
+- [X] [#1412](https://github.com/kubernetes/ingress/pull/1412) Correct Error Handling to avoid panics and add more logging to template
+- [X] [#1413](https://github.com/kubernetes/ingress/pull/1413) Validate external names
+- [X] [#1418](https://github.com/kubernetes/ingress/pull/1418) Fix links after design proposals move
+- [X] [#1419](https://github.com/kubernetes/ingress/pull/1419) Remove duplicated ingress check code
+- [X] [#1420](https://github.com/kubernetes/ingress/pull/1420) Process queue items by time window
+- [X] [#1423](https://github.com/kubernetes/ingress/pull/1423) Fix cast error
+- [X] [#1424](https://github.com/kubernetes/ingress/pull/1424) Allow overriding the tag and registry
+- [X] [#1426](https://github.com/kubernetes/ingress/pull/1426) Enhance Certificate Logging and Clearup Mutual Auth Docs
+- [X] [#1430](https://github.com/kubernetes/ingress/pull/1430) Add support for proxy protocol decoding and encoding in TCP services
+- [X] [#1434](https://github.com/kubernetes/ingress/pull/1434) Fix exec of readSecrets
+- [X] [#1435](https://github.com/kubernetes/ingress/pull/1435) Add header to upstream server for external authentication
+- [X] [#1438](https://github.com/kubernetes/ingress/pull/1438) Do not intercept errors from the custom error service
+- [X] [#1439](https://github.com/kubernetes/ingress/pull/1439) Nginx master process killed thus no futher reloads
+- [X] [#1440](https://github.com/kubernetes/ingress/pull/1440) Kill worker processes to allow the restart of nginx
+- [X] [#1445](https://github.com/kubernetes/ingress/pull/1445) Updated godeps
+- [X] [#1450](https://github.com/kubernetes/ingress/pull/1450) Fix links
+- [X] [#1451](https://github.com/kubernetes/ingress/pull/1451) Add example of server-snippet
+- [X] [#1452](https://github.com/kubernetes/ingress/pull/1452) Fix sync of secrets  (kube lego)
+- [X] [#1454](https://github.com/kubernetes/ingress/pull/1454) Allow custom global configuration at multiple levels
+
+*Documentation:*
+
+- [X] [#1400](https://github.com/kubernetes/ingress/pull/1400) Fix ConfigMap link in doc
+- [X] [#1422](https://github.com/kubernetes/ingress/pull/1422) Add docs for opentracing
+- [X] [#1441](https://github.com/kubernetes/ingress/pull/1441) Improve custom error pages doc
+- [X] [#1442](https://github.com/kubernetes/ingress/pull/1442) Opentracing docs
+- [X] [#1446](https://github.com/kubernetes/ingress/pull/1446) Add custom timeout annotations doc
+
 
 ### 0.9-beta.13
 
@@ -12,7 +82,6 @@ Changelog
 - New flag to disable node listing
 - Custom X-Forwarder-Header (CloudFlare uses `CF-Connecting-IP` as header)
 - Custom error page in Client Certificate Authentication
-
 
 *Changes:*
 
