@@ -80,7 +80,7 @@ func TestBackendPoolAdd(t *testing.T) {
 			// Add a backend for a port, then re-add the same port and
 			// make sure it corrects a broken link from the backend to
 			// the instance group.
-			err := pool.Add(nodePort, nil)
+			err := pool.Add([]ServicePort{nodePort}, nil)
 			if err != nil {
 				t.Fatalf("Did not find expect error when adding a nodeport: %v, err: %v", nodePort, err)
 			}
@@ -143,7 +143,7 @@ func TestHealthCheckMigration(t *testing.T) {
 	hcp.CreateHttpHealthCheck(legacyHC)
 
 	// Add the service port to the backend pool
-	pool.Add(p, nil)
+	pool.Add([]ServicePort{p}, nil)
 
 	// Assert the proper health check was created
 	hc, _ := pool.healthChecker.Get(p.Port)
@@ -168,7 +168,7 @@ func TestBackendPoolUpdate(t *testing.T) {
 	namer := utils.Namer{}
 
 	p := ServicePort{Port: 3000, Protocol: utils.ProtocolHTTP}
-	pool.Add(p, nil)
+	pool.Add([]ServicePort{p}, nil)
 	beName := namer.BeName(p.Port)
 
 	be, err := f.GetGlobalBackendService(beName)
@@ -188,7 +188,7 @@ func TestBackendPoolUpdate(t *testing.T) {
 
 	// Update service port to encrypted
 	p.Protocol = utils.ProtocolHTTPS
-	pool.Sync([]ServicePort{p}, nil)
+	pool.Add([]ServicePort{p}, nil)
 
 	be, err = f.GetGlobalBackendService(beName)
 	if err != nil {
@@ -214,7 +214,7 @@ func TestBackendPoolChaosMonkey(t *testing.T) {
 	namer := utils.Namer{}
 
 	nodePort := ServicePort{Port: 8080, Protocol: utils.ProtocolHTTP}
-	pool.Add(nodePort, nil)
+	pool.Add([]ServicePort{nodePort}, nil)
 	beName := namer.BeName(nodePort.Port)
 
 	be, _ := f.GetGlobalBackendService(beName)
@@ -227,7 +227,7 @@ func TestBackendPoolChaosMonkey(t *testing.T) {
 	f.calls = []int{}
 	f.UpdateGlobalBackendService(be)
 
-	pool.Add(nodePort, nil)
+	pool.Add([]ServicePort{nodePort}, nil)
 	for _, call := range f.calls {
 		if call == utils.Create {
 			t.Fatalf("Unexpected create for existing backend service")
@@ -260,10 +260,10 @@ func TestBackendPoolSync(t *testing.T) {
 	f := NewFakeBackendServices(noOpErrFunc)
 	fakeIGs := instances.NewFakeInstanceGroups(sets.NewString())
 	pool, _ := newTestJig(f, fakeIGs, true)
-	pool.Add(ServicePort{Port: 81}, nil)
-	pool.Add(ServicePort{Port: 90}, nil)
-	if err := pool.Sync(svcNodePorts, nil); err != nil {
-		t.Errorf("Expected backend pool to sync, err: %v", err)
+	pool.Add([]ServicePort{ServicePort{Port: 81}}, nil)
+	pool.Add([]ServicePort{ServicePort{Port: 90}}, nil)
+	if err := pool.Add(svcNodePorts, nil); err != nil {
+		t.Errorf("Expected backend pool to add node ports, err: %v", err)
 	}
 	if err := pool.GC(svcNodePorts); err != nil {
 		t.Errorf("Expected backend pool to GC, err: %v", err)
@@ -361,7 +361,7 @@ func TestBackendPoolDeleteLegacyHealthChecks(t *testing.T) {
 	})
 
 	// Have pool sync the above backend service
-	bp.Add(ServicePort{Port: 80, Protocol: utils.ProtocolHTTPS}, nil)
+	bp.Add([]ServicePort{ServicePort{Port: 80, Protocol: utils.ProtocolHTTPS}}, nil)
 
 	// Verify the legacy health check has been deleted
 	_, err = hcp.GetHttpHealthCheck(beName)
@@ -388,7 +388,7 @@ func TestBackendPoolShutdown(t *testing.T) {
 	namer := utils.Namer{}
 
 	// Add a backend-service and verify that it doesn't exist after Shutdown()
-	pool.Add(ServicePort{Port: 80}, nil)
+	pool.Add([]ServicePort{ServicePort{Port: 80}}, nil)
 	pool.Shutdown()
 	if _, err := f.GetGlobalBackendService(namer.BeName(80)); err == nil {
 		t.Fatalf("%v", err)
@@ -402,7 +402,7 @@ func TestBackendInstanceGroupClobbering(t *testing.T) {
 	namer := utils.Namer{}
 
 	// This will add the instance group k8s-ig to the instance pool
-	pool.Add(ServicePort{Port: 80}, nil)
+	pool.Add([]ServicePort{ServicePort{Port: 80}}, nil)
 
 	be, err := f.GetGlobalBackendService(namer.BeName(80))
 	if err != nil {
@@ -420,7 +420,7 @@ func TestBackendInstanceGroupClobbering(t *testing.T) {
 	}
 
 	// Make sure repeated adds don't clobber the inserted instance group
-	pool.Add(ServicePort{Port: 80}, nil)
+	pool.Add([]ServicePort{ServicePort{Port: 80}}, nil)
 	be, err = f.GetGlobalBackendService(namer.BeName(80))
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -462,7 +462,7 @@ func TestBackendCreateBalancingMode(t *testing.T) {
 			return nil
 		}
 
-		pool.Add(nodePort, nil)
+		pool.Add([]ServicePort{nodePort}, nil)
 		be, err := f.GetGlobalBackendService(namer.BeName(nodePort.Port))
 		if err != nil {
 			t.Fatalf("%v", err)

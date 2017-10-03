@@ -34,7 +34,7 @@ func TestNodePoolSync(t *testing.T) {
 	f := NewFakeInstanceGroups(sets.NewString(
 		[]string{"n1", "n2"}...))
 	pool := newNodePool(f, defaultZone)
-	pool.AddInstanceGroup("test", 80)
+	pool.AddInstanceGroup("test", []int64{80})
 
 	// KubeNodes: n1
 	// GCENodes: n1, n2
@@ -53,7 +53,7 @@ func TestNodePoolSync(t *testing.T) {
 
 	f = NewFakeInstanceGroups(sets.NewString([]string{"n1"}...))
 	pool = newNodePool(f, defaultZone)
-	pool.AddInstanceGroup("test", 80)
+	pool.AddInstanceGroup("test", []int64{80})
 
 	f.calls = []int{}
 	kubeNodes = sets.NewString([]string{"n1", "n2"}...)
@@ -69,7 +69,7 @@ func TestNodePoolSync(t *testing.T) {
 
 	f = NewFakeInstanceGroups(sets.NewString([]string{"n1", "n2"}...))
 	pool = newNodePool(f, defaultZone)
-	pool.AddInstanceGroup("test", 80)
+	pool.AddInstanceGroup("test", []int64{80})
 
 	f.calls = []int{}
 	kubeNodes = sets.NewString([]string{"n1", "n2"}...)
