@@ -72,7 +72,7 @@ type LoadBalancerController struct {
 	recorder            record.EventRecorder
 	nodeQueue           *taskQueue
 	ingQueue            *taskQueue
-	tr                  *GCETranslator
+	Translator          *GCETranslator
 	stopCh              chan struct{}
 	// stopLock is used to enforce only a single call to Stop is active.
 	// Needed because we allow stopping through an http endpoint and
@@ -84,6 +84,8 @@ type LoadBalancerController struct {
 	// hasSynced returns true if all associated sub-controllers have synced.
 	// Abstracted into a func for testing.
 	hasSynced func() bool
+	// negEnabled indicates whether NEG feature is enabled.
+	negEnabled bool
 }
 
 // NewLoadBalancerController creates a controller for gce loadbalancers.
@@ -103,6 +105,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, ctx *utils.Contr
 		stopCh:              ctx.StopCh,
 		recorder: eventBroadcaster.NewRecorder(scheme.Scheme,
 			apiv1.EventSource{Component: "loadbalancer-controller"}),
+		negEnabled: negEnabled,
 	}
 	lbc.nodeQueue = NewTaskQueue(lbc.syncNodes)
 	lbc.ingQueue = NewTaskQueue(lbc.sync)
@@ -167,7 +170,7 @@ func NewLoadBalancerController(kubeClient kubernetes.Interface, ctx *utils.Contr
 		// Nodes are updated every 10s and we don't care, so no update handler.
 	})
 
-	lbc.tr = &GCETranslator{&lbc}
+	lbc.Translator = &GCETranslator{&lbc}
 	lbc.tlsLoader = &apiServerTLSLoader{client: lbc.client}
 	glog.V(3).Infof("Created new loadbalancer controller")
 
@@ -255,9 +258,8 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 	if err != nil {
 		return err
 	}
-
-	allNodePorts := lbc.tr.toNodePorts(&allIngresses)
-	gceNodePorts := lbc.tr.toNodePorts(&gceIngresses)
+	allNodePorts := lbc.Translator.toNodePorts(&allIngresses)
+	gceNodePorts := lbc.Translator.toNodePorts(&gceIngresses)
 	lbNames := lbc.ingLister.Store.ListKeys()
 	lbs, err := lbc.toRuntimeInfo(gceIngresses)
 	if err != nil {
@@ -330,7 +332,7 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		return syncError
 	}
 
-	if urlMap, err := lbc.tr.toURLMap(&ing); err != nil {
+	if urlMap, err := lbc.Translator.toURLMap(&ing); err != nil {
 		syncError = fmt.Errorf("%v, convert to url map error %v", syncError, err)
 	} else if err := l7.UpdateUrlMap(urlMap); err != nil {
 		lbc.recorder.Eventf(&ing, apiv1.EventTypeWarning, "UrlMap", err.Error())
