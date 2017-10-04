@@ -32,7 +32,6 @@ import (
 
 	"github.com/pborman/uuid"
 
-	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/nginx/pkg/config"
@@ -678,9 +677,7 @@ func trustHTTPHeaders(input interface{}) bool {
 	}
 
 	return conf.Cfg.RealClientFrom == "http-proxy" ||
-		(conf.Cfg.RealClientFrom == "auto" && !conf.Cfg.UseProxyProtocol ||
-			(conf.Cfg.RealClientFrom == "auto" && conf.PublishService != nil &&
-				conf.PublishService.Spec.Type == apiv1.ServiceTypeLoadBalancer))
+		(conf.Cfg.RealClientFrom == "auto" && !conf.Cfg.UseProxyProtocol)
 }
 
 func trustProxyProtocol(input interface{}) bool {
