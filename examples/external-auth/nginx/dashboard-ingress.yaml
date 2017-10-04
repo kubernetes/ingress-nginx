@@ -8,7 +8,7 @@ metadata:
   namespace: kube-system
 spec:
   rules:
-  - host: __INGRESS_HOST__
+  - host: dashboard.uswest2-01.rocket-science.io
     http:
       paths:
       - backend:
@@ -25,7 +25,7 @@ metadata:
   namespace: kube-system
 spec:
   rules:
-  - host: __INGRESS_HOST__
+  - host: dashboard.uswest2-01.rocket-science.io
     http:
       paths:
       - backend:
@@ -34,5 +34,5 @@ spec:
         path: /oauth2
   tls:
   - hosts:
-    - __INGRESS_HOST__
-    secretName: __INGRESS_SECRET__
+    - dashboard.uswest2-01.rocket-science.io
+    secretName: dashboard-rocket-science.io
