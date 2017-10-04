@@ -69,6 +69,10 @@
 			"Rev": "ff4f55a206334ef123e4f79bbf348980da81ca46"
 		},
 		{
+			"ImportPath": "github.com/fullsailor/pkcs7",
+			"Rev": "a009d8d7de53d9503c797cb8ec66fa3b21eed209"
+		},
+		{
 			"ImportPath": "github.com/ghodss/yaml",
 			"Rev": "73d445a93680fa1a78ae23a5839bad48f32ba1ee"
 		},
@@ -287,6 +291,11 @@
 			"ImportPath": "github.com/spf13/pflag",
 			"Rev": "9ff6c6923cfffbcd502984b8e0c80539a94968b7"
 		},
+		{
+			"ImportPath": "github.com/zakjan/cert-chain-resolver/certUtil",
+			"Comment": "1.0.1-2-g176864a",
+			"Rev": "176864ad3d2959f437789ea0a2cce95c92d0dc50"
+		}
 		{
 			"ImportPath": "golang.org/x/crypto/nacl/secretbox",
 			"Rev": "81e90905daefcd6fd217b62423c0908922eadb30"
