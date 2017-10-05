@@ -24,20 +24,28 @@ import (
 	ing_errors "k8s.io/ingress/core/pkg/ingress/errors"
 	"k8s.io/ingress/core/pkg/ingress/resolver"
 	"k8s.io/ingress/core/pkg/k8s"
+	"regexp"
 )
 
 const (
 	// name of the secret
 	annotationAuthTLSSecret    = "ingress.kubernetes.io/auth-tls-secret"
+	annotationAuthVerifyClient = "ingress.kubernetes.io/auth-tls-verify-client"
 	annotationAuthTLSDepth     = "ingress.kubernetes.io/auth-tls-verify-depth"
 	annotationAuthTLSErrorPage = "ingress.kubernetes.io/auth-tls-error-page"
 	defaultAuthTLSDepth        = 1
+	defaultAuthVerifyClient    = "on"
+)
+
+var (
+	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 )
 
 // AuthSSLConfig contains the AuthSSLCert used for muthual autentication
 // and the configured ValidationDepth
 type AuthSSLConfig struct {
 	resolver.AuthSSLCert
+	VerifyClient    string `json:"verify_client"`
 	ValidationDepth int    `json:"validationDepth"`
 	ErrorPage       string `json:"errorPage"`
 }
@@ -51,6 +59,9 @@ func (assl1 *AuthSSLConfig) Equal(assl2 *AuthSSLConfig) bool {
 		return false
 	}
 	if !(&assl1.AuthSSLCert).Equal(&assl2.AuthSSLCert) {
+		return false
+	}
+	if assl1.VerifyClient != assl2.VerifyClient {
 		return false
 	}
 	if assl1.ValidationDepth != assl2.ValidationDepth {
@@ -89,6 +100,11 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return &AuthSSLConfig{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
+	tlsVerifyClient, err := parser.GetStringAnnotation(annotationAuthVerifyClient, ing)
+	if err != nil || !authVerifyClientRegex.MatchString(tlsVerifyClient) {
+		tlsVerifyClient = defaultAuthVerifyClient
+	}
+
 	tlsdepth, err := parser.GetIntAnnotation(annotationAuthTLSDepth, ing)
 	if err != nil || tlsdepth == 0 {
 		tlsdepth = defaultAuthTLSDepth
@@ -108,6 +124,7 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	return &AuthSSLConfig{
 		AuthSSLCert:     *authCert,
+		VerifyClient:    tlsVerifyClient,
 		ValidationDepth: tlsdepth,
 		ErrorPage:       errorpage,
 	}, nil
