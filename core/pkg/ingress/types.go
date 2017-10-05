@@ -220,6 +220,9 @@ type Server struct {
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// SSLCertificate path to the SSL certificate on disk
 	SSLCertificate string `json:"sslCertificate"`
+	// SSLFullChainCertificate path to the SSL certificate on disk
+	// This certificate contains the full chain (ca + intermediates + cert)
+	SSLFullChainCertificate string `json:"sslFullChainCertificate"`
 	// SSLExpireTime has the expire date of this certificate
 	SSLExpireTime time.Time `json:"sslExpireTime"`
 	// SSLPemChecksum returns the checksum of the certificate file on disk.

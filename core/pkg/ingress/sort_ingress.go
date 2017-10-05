@@ -32,6 +32,9 @@ type SSLCert struct {
 	CAFileName string `json:"caFileName"`
 	// PemFileName contains the path to the file with the certificate and key concatenated
 	PemFileName string `json:"pemFileName"`
+	// FullChainPemFileName contains the path to the file with the certificate and key concatenated
+	// This certificate contains the full chain (ca + intermediates + cert)
+	FullChainPemFileName string `json:"fullChainPemFileName"`
 	// PemSHA contains the sha1 of the pem file.
 	// This is used to detect changes in the secret that contains the certificates
 	PemSHA string `json:"pemSha"`
