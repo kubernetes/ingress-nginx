@@ -354,3 +354,19 @@ func TestBuildRateLimit(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildAuthSignURL(t *testing.T) {
+	cases := map[string]struct {
+		Input, Output string
+	}{
+		"default url":       {"http://google.com", "http://google.com?rd=$request_uri"},
+		"with random field": {"http://google.com?cat=0", "http://google.com?cat=0&rd=$request_uri"},
+		"with rd field":     {"http://google.com?cat&rd=$request", "http://google.com?cat&rd=$request"},
+	}
+	for k, tc := range cases {
+		res := buildAuthSignURL(tc.Input)
+		if res != tc.Output {
+			t.Errorf("%s: called buildAuthSignURL('%s'); expected '%v' but returned '%v'", k, tc.Input, tc.Output, res)
+		}
+	}
+}
