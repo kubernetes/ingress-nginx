@@ -309,9 +309,14 @@ func (g GCEURLMap) PutDefaultBackend(d *compute.BackendService) {
 	}
 }
 
+// FakeGoogleAPIForbiddenErr creates a Forbidden error with type googleapi.Error
+func FakeGoogleAPIForbiddenErr() *googleapi.Error {
+	return &googleapi.Error{Code: http.StatusForbidden}
+}
+
 // FakeGoogleAPINotFoundErr creates a NotFound error with type googleapi.Error
 func FakeGoogleAPINotFoundErr() *googleapi.Error {
-	return &googleapi.Error{Code: 404}
+	return &googleapi.Error{Code: http.StatusNotFound}
 }
 
 // IsHTTPErrorCode checks if the given error matches the given HTTP Error code.
@@ -342,6 +347,11 @@ func IsInUsedByError(err error) bool {
 // IsNotFoundError returns true if the resource does not exist
 func IsNotFoundError(err error) bool {
 	return IsHTTPErrorCode(err, http.StatusNotFound)
+}
+
+// IsForbiddenError returns true if the operation was forbidden
+func IsForbiddenError(err error) bool {
+	return IsHTTPErrorCode(err, http.StatusForbidden)
 }
 
 // CompareLinks returns true if the 2 self links are equal.
