@@ -283,7 +283,7 @@ http {
 
     {{ if not (empty $cfg.HTTPSnippet) }}
     # Custom code snippet configured in the configuration configmap
-    {{ $cfg.HTTPSnippet }};
+    {{ $cfg.HTTPSnippet }}
     {{ end }}
 
     {{ range $name, $upstream := $backends }}
@@ -401,7 +401,7 @@ http {
 
         {{ if not (empty $cfg.ServerSnippet) }}
         # Custom code snippet configured in the configuration configmap
-        {{ $cfg.ServerSnippet }};
+        {{ $cfg.ServerSnippet }}
         {{ end }}
 
         {{ template "CUSTOM_ERRORS" $all }}
@@ -823,7 +823,7 @@ stream {
 
             {{ if not (empty $all.Cfg.LocationSnippet) }}
             # Custom code snippet configured in the configuration configmap
-            {{ $all.Cfg.LocationSnippet }};
+            {{ $all.Cfg.LocationSnippet }}
             {{ end }}
 
             {{/* if we are sending the request to a custom default backend, we add the required headers */}}
