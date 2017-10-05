@@ -17,12 +17,15 @@ limitations under the License.
 package firewalls
 
 import (
+	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 	netset "k8s.io/kubernetes/pkg/util/net/sets"
 
 	"k8s.io/ingress/controllers/gce/utils"
@@ -68,7 +71,7 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 
 	if rule == nil {
 		glog.Infof("Creating global l7 firewall rule %v", name)
-		return fr.cloud.CreateFirewall(firewall)
+		return fr.createFirewall(firewall)
 	}
 
 	requiredPorts := sets.NewString()
@@ -92,19 +95,14 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 		return nil
 	}
 	glog.V(3).Infof("Firewall %v already exists, updating nodeports %v", name, nodePorts)
-	return fr.cloud.UpdateFirewall(firewall)
+	return fr.updateFirewall(firewall)
 }
 
 // Shutdown shuts down this firewall rules manager.
 func (fr *FirewallRules) Shutdown() error {
 	name := fr.namer.FrName(fr.namer.FrSuffix())
 	glog.Infof("Deleting firewall %v", name)
-	err := fr.cloud.DeleteFirewall(name)
-	if err != nil && utils.IsHTTPErrorCode(err, 404) {
-		glog.Infof("Firewall with name %v didn't exist at Shutdown", name)
-		return nil
-	}
-	return err
+	return fr.deleteFirewall(name)
 }
 
 // GetFirewall just returns the firewall object corresponding to the given name.
@@ -119,6 +117,8 @@ func (fr *FirewallRules) createFirewallObject(firewallName, description string, 
 	for ix := range nodePorts {
 		ports[ix] = strconv.Itoa(int(nodePorts[ix]))
 	}
+	// Sorting the ports will prevent duplicate events being created despite having identical params.
+	sort.Strings(ports)
 
 	// If the node tags to be used for this cluster have been predefined in the
 	// provider config, just use them. Otherwise, invoke computeHostTags method to get the tags.
@@ -126,6 +126,7 @@ func (fr *FirewallRules) createFirewallObject(firewallName, description string, 
 	if err != nil {
 		return nil, err
 	}
+	sort.Strings(targetTags)
 
 	return &compute.Firewall{
 		Name:         firewallName,
@@ -140,4 +141,53 @@ func (fr *FirewallRules) createFirewallObject(firewallName, description string, 
 		},
 		TargetTags: targetTags,
 	}, nil
+}
+
+func (fr *FirewallRules) createFirewall(f *compute.Firewall) error {
+	err := fr.cloud.CreateFirewall(f)
+	if utils.IsForbiddenError(err) && fr.cloud.OnXPN() {
+		gcloudCmd := gce.FirewallToGCloudCreateCmd(f, fr.cloud.NetworkProjectID())
+		glog.V(3).Infof("Could not create L7 firewall on XPN cluster. Raising event for cmd: %q", gcloudCmd)
+		return newFirewallXPNError(err, gcloudCmd)
+	}
+	return err
+}
+
+func (fr *FirewallRules) updateFirewall(f *compute.Firewall) error {
+	err := fr.cloud.UpdateFirewall(f)
+	if utils.IsForbiddenError(err) && fr.cloud.OnXPN() {
+		gcloudCmd := gce.FirewallToGCloudUpdateCmd(f, fr.cloud.NetworkProjectID())
+		glog.V(3).Infof("Could not update L7 firewall on XPN cluster. Raising event for cmd: %q", gcloudCmd)
+		return newFirewallXPNError(err, gcloudCmd)
+	}
+	return err
+}
+
+func (fr *FirewallRules) deleteFirewall(name string) error {
+	err := fr.cloud.DeleteFirewall(name)
+	if utils.IsNotFoundError(err) {
+		glog.Infof("Firewall with name %v didn't exist when attempting delete.", name)
+		return nil
+	} else if utils.IsForbiddenError(err) && fr.cloud.OnXPN() {
+		gcloudCmd := gce.FirewallToGCloudDeleteCmd(name, fr.cloud.NetworkProjectID())
+		glog.V(3).Infof("Could not attempt delete of L7 firewall on XPN cluster. %q needs to be ran.", gcloudCmd)
+		return newFirewallXPNError(err, gcloudCmd)
+	}
+	return err
+}
+
+func newFirewallXPNError(internal error, cmd string) *FirewallSyncError {
+	return &FirewallSyncError{
+		Internal: internal,
+		Message:  fmt.Sprintf("Firewall change required by network admin: `%v`", cmd),
+	}
+}
+
+type FirewallSyncError struct {
+	Internal error
+	Message  string
+}
+
+func (f *FirewallSyncError) Error() string {
+	return f.Message
 }

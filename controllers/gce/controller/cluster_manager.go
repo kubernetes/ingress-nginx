@@ -102,6 +102,9 @@ func (c *ClusterManager) shutdown() error {
 		return err
 	}
 	if err := c.firewallPool.Shutdown(); err != nil {
+		if _, ok := err.(*firewalls.FirewallSyncError); ok {
+			return nil
+		}
 		return err
 	}
 	// The backend pool will also delete instance groups.
@@ -159,11 +162,9 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	for _, p := range fwNodePorts {
 		np = append(np, p.Port)
 	}
-	if err := c.firewallPool.Sync(np, nodeNames); err != nil {
-		return igs, err
-	}
 
-	return igs, nil
+	err = c.firewallPool.Sync(np, nodeNames)
+	return igs, err
 }
 
 func (c *ClusterManager) EnsureInstanceGroupsAndPorts(servicePorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {

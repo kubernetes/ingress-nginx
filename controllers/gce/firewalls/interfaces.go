@@ -36,5 +36,9 @@ type Firewall interface {
 	DeleteFirewall(name string) error
 	UpdateFirewall(f *compute.Firewall) error
 	GetNodeTags(nodeNames []string) ([]string, error)
+	NetworkProjectID() string
 	NetworkURL() string
+
+	// OnXPN returns true if the GCE NetworkProjectID != ProjectID.
+	OnXPN() bool
 }
