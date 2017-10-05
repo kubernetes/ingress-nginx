@@ -636,7 +636,7 @@ stream {
         {{ if not (empty $server.CertificateAuth.CAFileName) }}
         # PEM sha: {{ $server.CertificateAuth.PemSHA }}
         ssl_client_certificate                  {{ $server.CertificateAuth.CAFileName }};
-        ssl_verify_client                       on;
+        ssl_verify_client                       {{ $server.CertificateAuth.VerifyClient }};
         ssl_verify_depth                        {{ $server.CertificateAuth.ValidationDepth }};
         {{ if not (empty $server.CertificateAuth.ErrorPage)}}
         error_page 495 496 = {{ $server.CertificateAuth.ErrorPage }};
