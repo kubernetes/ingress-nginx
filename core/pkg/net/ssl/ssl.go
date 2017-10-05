@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/zakjan/cert-chain-resolver/certUtil"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -49,6 +50,7 @@ var (
 func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert, error) {
 	pemName := fmt.Sprintf("%v.pem", name)
 	pemFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, pemName)
+	fullChainPemFileName := fmt.Sprintf("%v/%v-full-chain.pem", ingress.DefaultSSLDirectory, name)
 
 	tempPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, pemName)
 
@@ -170,13 +172,23 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		}, nil
 	}
 
-	return &ingress.SSLCert{
+	s := &ingress.SSLCert{
 		Certificate: pemCert,
 		PemFileName: pemFileName,
 		PemSHA:      file.SHA1(pemFileName),
 		CN:          cn.List(),
 		ExpireTime:  pemCert.NotAfter,
-	}, nil
+	}
+
+	err = fullChainCert(pemFileName, fullChainPemFileName)
+	if err != nil {
+		glog.Errorf("unexpected error generating SSL certificate with full chain: %v", err)
+		return s, nil
+	}
+
+	s.FullChainPemFileName = fullChainPemFileName
+
+	return s, nil
 }
 
 func getExtension(c *x509.Certificate, id asn1.ObjectIdentifier) []pkix.Extension {
@@ -375,4 +387,34 @@ func GetFakeSSLCert() ([]byte, []byte) {
 	key := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv.(*rsa.PrivateKey))})
 
 	return cert, key
+}
+
+func fullChainCert(in, out string) error {
+	inputFile, err := os.Open(in)
+	if err != nil {
+		return err
+	}
+
+	data, err := ioutil.ReadAll(inputFile)
+	if err != nil {
+		return err
+	}
+
+	cert, err := certUtil.DecodeCertificate(data)
+	if err != nil {
+		return err
+	}
+
+	certs, err := certUtil.FetchCertificateChain(cert)
+	if err != nil {
+		return err
+	}
+
+	certs, err = certUtil.AddRootCA(certs)
+	if err != nil {
+		return err
+	}
+
+	data = certUtil.EncodeCertificates(certs)
+	return ioutil.WriteFile(out, data, 0644)
 }
