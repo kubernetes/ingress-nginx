@@ -33,7 +33,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	flag "github.com/spf13/pflag"
-	"k8s.io/api/core/v1"
+	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -129,7 +129,7 @@ var (
 		`Path used to health-check a backend service. All Services must serve
 		a 200 page on this path. Currently this is only configurable globally.`)
 
-	watchNamespace = flags.String("watch-namespace", v1.NamespaceAll,
+	watchNamespace = flags.String("watch-namespace", apiv1.NamespaceAll,
 		`Namespace to watch for Ingress/Services/Endpoints.`)
 
 	verbose = flags.Bool("verbose", false,
@@ -158,7 +158,6 @@ func registerHandlers(lbc *controller.LoadBalancerController) {
 		// TODO: Retry failures during shutdown.
 		lbc.Stop(true)
 	})
-
 	glog.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", *healthzPort), nil))
 }
 
@@ -249,6 +248,8 @@ func main() {
 		SvcPort:  intstr.FromInt(int(port)),
 	}
 
+	eventRecorder := utils.NewEventRecorder(kubeClient)
+
 	var cloud *gce.GCECloud
 	if *inCluster || *useRealCloud {
 		// Create cluster manager
@@ -278,7 +279,7 @@ func main() {
 			glog.Infof("Created GCE client without a config file")
 		}
 
-		clusterManager, err = controller.NewClusterManager(cloud, namer, defaultBackendNodePort, *healthCheckPath)
+		clusterManager, err = controller.NewClusterManager(cloud, namer, defaultBackendNodePort, *healthCheckPath, eventRecorder)
 		if err != nil {
 			glog.Fatalf("%v", err)
 		}
@@ -287,14 +288,13 @@ func main() {
 		clusterManager = controller.NewFakeClusterManager(*clusterName, controller.DefaultFirewallName).ClusterManager
 	}
 
-	ctx := controller.NewControllerContext(kubeClient, *watchNamespace, *resyncPeriod)
+	ctx := controller.NewControllerContext(kubeClient, *watchNamespace, *resyncPeriod, eventRecorder)
 
 	// Start loadbalancer controller
 	lbc, err := controller.NewLoadBalancerController(kubeClient, ctx, clusterManager)
 	if err != nil {
 		glog.Fatalf("%v", err)
 	}
-
 	if clusterManager.ClusterNamer.GetClusterName() != "" {
 		glog.V(3).Infof("Cluster name %+v", clusterManager.ClusterNamer.GetClusterName())
 	}
@@ -453,7 +453,7 @@ func getClusterUID(kubeClient kubernetes.Interface, name string) (string, error)
 
 // getNodePort waits for the Service, and returns it's first node port.
 func getNodePort(client kubernetes.Interface, ns, name string) (port, nodePort int32, err error) {
-	var svc *v1.Service
+	var svc *apiv1.Service
 	glog.V(3).Infof("Waiting for %v/%v", ns, name)
 	wait.Poll(1*time.Second, 5*time.Minute, func() (bool, error) {
 		svc, err = client.Core().Services(ns).Get(name, metav1.GetOptions{})

@@ -18,12 +18,13 @@ package firewalls
 
 import (
 	compute "google.golang.org/api/compute/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 )
 
 // SingleFirewallPool syncs the firewall rule for L7 traffic.
 type SingleFirewallPool interface {
 	// TODO: Take a list of node ports for the firewall.
-	Sync(nodePorts []int64, nodeNames []string) error
+	Sync(nodePorts []int64, nodeNames []string, ing *extensions.Ingress) error
 	Shutdown() error
 }
 
@@ -36,5 +37,7 @@ type Firewall interface {
 	DeleteFirewall(name string) error
 	UpdateFirewall(f *compute.Firewall) error
 	GetNodeTags(nodeNames []string) ([]string, error)
+	NetworkProjectID() string
 	NetworkURL() string
+	OnXPN() bool
 }

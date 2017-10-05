@@ -22,6 +22,9 @@ import (
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
+	apiv1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/client-go/tools/record"
 	gce "k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 
 	"k8s.io/ingress/controllers/gce/backends"
@@ -119,7 +122,7 @@ func (c *ClusterManager) shutdown() error {
 // Returns the list of all instance groups corresponding to the given loadbalancers.
 // If in performing the checkpoint the cluster manager runs out of quota, a
 // googleapi 403 is returned.
-func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, backendServicePorts []backends.ServicePort, namedPorts []backends.ServicePort) ([]*compute.InstanceGroup, error) {
+func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeNames []string, backendServicePorts []backends.ServicePort, namedPorts []backends.ServicePort, currentIngress *extensions.Ingress) ([]*compute.InstanceGroup, error) {
 	if len(namedPorts) != 0 {
 		// Add the default backend node port to the list of named ports for instance groups.
 		namedPorts = append(namedPorts, c.defaultBackendNodePort)
@@ -159,7 +162,7 @@ func (c *ClusterManager) Checkpoint(lbs []*loadbalancers.L7RuntimeInfo, nodeName
 	for _, p := range fwNodePorts {
 		np = append(np, p.Port)
 	}
-	if err := c.firewallPool.Sync(np, nodeNames); err != nil {
+	if err := c.firewallPool.Sync(np, nodeNames, currentIngress); err != nil {
 		return igs, err
 	}
 
@@ -233,7 +236,8 @@ func NewClusterManager(
 	cloud *gce.GCECloud,
 	namer *utils.Namer,
 	defaultBackendNodePort backends.ServicePort,
-	defaultHealthCheckPath string) (*ClusterManager, error) {
+	defaultHealthCheckPath string,
+	recorder record.EventRecorder) (*ClusterManager, error) {
 
 	// Names are fundamental to the cluster, the uid allocator makes sure names don't collide.
 	cluster := ClusterManager{ClusterNamer: namer}
@@ -255,6 +259,11 @@ func NewClusterManager(
 
 	// L7 pool creates targetHTTPProxy, ForwardingRules, UrlMaps, StaticIPs.
 	cluster.l7Pool = loadbalancers.NewLoadBalancerPool(cloud, defaultBackendPool, defaultBackendNodePort, cluster.ClusterNamer)
-	cluster.firewallPool = firewalls.NewFirewallPool(cloud, cluster.ClusterNamer)
+
+	eventRaiser := func(ing *extensions.Ingress, reason, msg string) {
+		recorder.Event(ing, apiv1.EventTypeNormal, reason, msg)
+	}
+
+	cluster.firewallPool = firewalls.NewFirewallPool(cloud, cluster.ClusterNamer, eventRaiser)
 	return &cluster, nil
 }

@@ -17,12 +17,15 @@ limitations under the License.
 package firewalls
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/golang/glog"
 
 	compute "google.golang.org/api/compute/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 	netset "k8s.io/kubernetes/pkg/util/net/sets"
 
 	"k8s.io/ingress/controllers/gce/utils"
@@ -36,21 +39,28 @@ type FirewallRules struct {
 	cloud     Firewall
 	namer     *utils.Namer
 	srcRanges []string
+	recorder  utils.IngressEventRecorder
 }
 
 // NewFirewallPool creates a new firewall rule manager.
 // cloud: the cloud object implementing Firewall.
 // namer: cluster namer.
-func NewFirewallPool(cloud Firewall, namer *utils.Namer) SingleFirewallPool {
+// recorder: the func for raising an event.
+func NewFirewallPool(cloud Firewall, namer *utils.Namer, recorder utils.IngressEventRecorder) SingleFirewallPool {
 	_, err := netset.ParseIPNets(l7SrcRanges...)
 	if err != nil {
 		glog.Fatalf("Could not parse L7 src ranges %v for firewall rule: %v", l7SrcRanges, err)
 	}
-	return &FirewallRules{cloud: cloud, namer: namer, srcRanges: l7SrcRanges}
+	return &FirewallRules{
+		cloud:     cloud,
+		namer:     namer,
+		srcRanges: l7SrcRanges,
+		recorder:  recorder,
+	}
 }
 
 // Sync sync firewall rules with the cloud.
-func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
+func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string, ing *extensions.Ingress) error {
 	if len(nodePorts) == 0 {
 		return fr.Shutdown()
 	}
@@ -68,7 +78,7 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 
 	if rule == nil {
 		glog.Infof("Creating global l7 firewall rule %v", name)
-		return fr.cloud.CreateFirewall(firewall)
+		return fr.createFirewall(firewall, ing)
 	}
 
 	requiredPorts := sets.NewString()
@@ -92,15 +102,48 @@ func (fr *FirewallRules) Sync(nodePorts []int64, nodeNames []string) error {
 		return nil
 	}
 	glog.V(3).Infof("Firewall %v already exists, updating nodeports %v", name, nodePorts)
-	return fr.cloud.UpdateFirewall(firewall)
+	return fr.updateFirewall(firewall, ing)
+}
+
+func (fr *FirewallRules) createFirewall(f *compute.Firewall, ing *extensions.Ingress) error {
+	err := fr.cloud.CreateFirewall(f)
+	if utils.IsForbiddenError(err) && fr.cloud.OnXPN() {
+		gcloudCmd := gce.FirewallToGCloudCreateCmd(f, fr.cloud.NetworkProjectID())
+		glog.V(3).Infof("Could not create L7 firewall on XPN cluster. Raising event for cmd: %q", gcloudCmd)
+		fr.raiseFirewallChangeNeededEvent(ing, gcloudCmd)
+		return nil
+	}
+	return err
+}
+
+func (fr *FirewallRules) updateFirewall(f *compute.Firewall, ing *extensions.Ingress) error {
+	err := fr.cloud.UpdateFirewall(f)
+	if utils.IsForbiddenError(err) && fr.cloud.OnXPN() {
+		gcloudCmd := gce.FirewallToGCloudUpdateCmd(f, fr.cloud.NetworkProjectID())
+		glog.V(3).Infof("Could not update L7 firewall on XPN cluster. Raising event for cmd: %q", gcloudCmd)
+		fr.raiseFirewallChangeNeededEvent(ing, gcloudCmd)
+		return nil
+	}
+	return err
+}
+
+func (fr *FirewallRules) deleteFirewall(name string) error {
+	err := fr.cloud.DeleteFirewall(name)
+	if utils.IsForbiddenError(err) && fr.cloud.OnXPN() {
+		gcloudCmd := gce.FirewallToGCloudDeleteCmd(name, fr.cloud.NetworkProjectID())
+		glog.V(3).Infof("Could not delete L7 firewall on XPN cluster. %q needs to be ran.", gcloudCmd)
+		// An event cannot be raised because there's no ingress for reference.
+		return nil
+	}
+	return err
 }
 
 // Shutdown shuts down this firewall rules manager.
 func (fr *FirewallRules) Shutdown() error {
 	name := fr.namer.FrName(fr.namer.FrSuffix())
 	glog.Infof("Deleting firewall %v", name)
-	err := fr.cloud.DeleteFirewall(name)
-	if err != nil && utils.IsHTTPErrorCode(err, 404) {
+	err := fr.deleteFirewall(name)
+	if utils.IsNotFoundError(err) {
 		glog.Infof("Firewall with name %v didn't exist at Shutdown", name)
 		return nil
 	}
@@ -140,4 +183,17 @@ func (fr *FirewallRules) createFirewallObject(firewallName, description string, 
 		},
 		TargetTags: targetTags,
 	}, nil
+}
+
+func (fr *FirewallRules) raiseFirewallChangeNeededEvent(ing *extensions.Ingress, cmd string) {
+	if fr.recorder == nil {
+		return
+	}
+
+	// Cannot attach an event to a nil object
+	if ing == nil {
+		return
+	}
+
+	fr.recorder(ing, "LoadBalancerManualChange", fmt.Sprintf("Firewall change required by network admin: `%v`", cmd))
 }

@@ -20,20 +20,22 @@ import (
 	"strconv"
 	"testing"
 
+	extensions "k8s.io/api/extensions/v1beta1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress/controllers/gce/utils"
 )
 
 func TestSyncFirewallPool(t *testing.T) {
 	namer := utils.NewNamer("ABC", "XYZ")
-	fwp := NewFakeFirewallsProvider()
-	fp := NewFirewallPool(fwp, namer)
+	fwp := NewFakeFirewallsProvider(false, false)
+	fp := NewFirewallPool(fwp, namer, nil)
 	ruleName := namer.FrName(namer.FrSuffix())
 
 	// Test creating a firewall rule via Sync
 	nodePorts := []int64{80, 443, 3000}
 	nodes := []string{"node-a", "node-b", "node-c"}
-	err := fp.Sync(nodePorts, nodes)
+	err := fp.Sync(nodePorts, nodes, nil)
 	if err != nil {
 		t.Errorf("unexpected err when syncing firewall, err: %v", err)
 	}
@@ -41,25 +43,25 @@ func TestSyncFirewallPool(t *testing.T) {
 
 	// Sync to fewer ports
 	nodePorts = []int64{80, 443}
-	err = fp.Sync(nodePorts, nodes)
+	err = fp.Sync(nodePorts, nodes, nil)
 	if err != nil {
 		t.Errorf("unexpected err when syncing firewall, err: %v", err)
 	}
 	verifyFirewallRule(fwp, ruleName, nodePorts, nodes, l7SrcRanges, t)
 
-	firewall, err := fp.(*FirewallRules).createFirewallObject(namer.FrName(namer.FrSuffix()), "", nodePorts, nodes)
+	firewall, err := fp.(*FirewallRules).createFirewallObject(ruleName, "", nodePorts, nodes)
 	if err != nil {
 		t.Errorf("unexpected err when creating firewall object, err: %v", err)
 	}
 
-	err = fwp.UpdateFirewall(firewall)
+	err = fwp.doUpdateFirewall(firewall)
 	if err != nil {
 		t.Errorf("failed to update firewall rule, err: %v", err)
 	}
 	verifyFirewallRule(fwp, ruleName, nodePorts, nodes, l7SrcRanges, t)
 
 	// Run Sync and expect l7 src ranges to be returned
-	err = fp.Sync(nodePorts, nodes)
+	err = fp.Sync(nodePorts, nodes, nil)
 	if err != nil {
 		t.Errorf("unexpected err when syncing firewall, err: %v", err)
 	}
@@ -68,7 +70,7 @@ func TestSyncFirewallPool(t *testing.T) {
 	// Add node and expect firewall to remain the same
 	// NOTE: See computeHostTag(..) in gce cloudprovider
 	nodes = []string{"node-a", "node-b", "node-c", "node-d"}
-	err = fp.Sync(nodePorts, nodes)
+	err = fp.Sync(nodePorts, nodes, nil)
 	if err != nil {
 		t.Errorf("unexpected err when syncing firewall, err: %v", err)
 	}
@@ -76,7 +78,7 @@ func TestSyncFirewallPool(t *testing.T) {
 
 	// Remove all ports and expect firewall rule to disappear
 	nodePorts = []int64{}
-	err = fp.Sync(nodePorts, nodes)
+	err = fp.Sync(nodePorts, nodes, nil)
 	if err != nil {
 		t.Errorf("unexpected err when syncing firewall, err: %v", err)
 	}
@@ -84,6 +86,87 @@ func TestSyncFirewallPool(t *testing.T) {
 	err = fp.Shutdown()
 	if err != nil {
 		t.Errorf("unexpected err when deleting firewall, err: %v", err)
+	}
+}
+
+// TestSyncOnXPNWithPermission tests that firwall sync continues to work when OnXPN=true
+func TestSyncOnXPNWithPermission(t *testing.T) {
+	namer := utils.NewNamer("ABC", "XYZ")
+	fwp := NewFakeFirewallsProvider(true, false)
+	fp := NewFirewallPool(fwp, namer, nil)
+	ruleName := namer.FrName(namer.FrSuffix())
+
+	// Test creating a firewall rule via Sync
+	nodePorts := []int64{80, 443, 3000}
+	nodes := []string{"node-a", "node-b", "node-c"}
+	err := fp.Sync(nodePorts, nodes, nil)
+	if err != nil {
+		t.Errorf("unexpected err when syncing firewall, err: %v", err)
+	}
+	verifyFirewallRule(fwp, ruleName, nodePorts, nodes, l7SrcRanges, t)
+}
+
+// TestSyncOnXPNReadOnly tests that controller behavior is accurate when the controller
+// does not have permission to create/update/delete firewall rules.
+// Sync should NOT return an error. An event should be raised.
+func TestSyncOnXPNReadOnly(t *testing.T) {
+	ing := &extensions.Ingress{ObjectMeta: meta_v1.ObjectMeta{Name: "xpn-ingress"}}
+	var events []string
+	eventer := func(ing *extensions.Ingress, reason, msg string) {
+		events = append(events, msg)
+	}
+
+	namer := utils.NewNamer("ABC", "XYZ")
+	fwp := NewFakeFirewallsProvider(true, true)
+	fp := NewFirewallPool(fwp, namer, eventer)
+	ruleName := namer.FrName(namer.FrSuffix())
+
+	// Test creating a firewall rule via Sync
+	nodePorts := []int64{80, 443, 3000}
+	nodes := []string{"node-a", "node-b", "node-c"}
+	err := fp.Sync(nodePorts, nodes, ing)
+	if err != nil {
+		t.Errorf("unexpected err when syncing firewall, err: %v", err)
+	}
+
+	// Expect an event saying a firewall needs to be created
+	if len(events) != 1 {
+		t.Errorf("expected %v events but received %v: %+v", 1, len(events), events)
+	}
+
+	// Clear events
+	events = events[:0]
+
+	// Manually create the firewall
+	firewall, err := fp.(*FirewallRules).createFirewallObject(ruleName, "", nodePorts, nodes)
+	if err != nil {
+		t.Errorf("unexpected err when creating firewall object, err: %v", err)
+	}
+	err = fwp.doCreateFirewall(firewall)
+	if err != nil {
+		t.Errorf("unexpected err when creating firewall, err: %v", err)
+	}
+
+	// Run sync again with same state - expect no event
+	err = fp.Sync(nodePorts, nodes, ing)
+	if err != nil {
+		t.Errorf("unexpected err when syncing firewall, err: %v", err)
+	}
+	if len(events) > 0 {
+		t.Errorf("received unexpected event(s): %+v", events)
+	}
+
+	// Modify nodePorts to cause an event
+	nodePorts = append(nodePorts, 3001)
+
+	// Run sync again with same state - expect no event
+	err = fp.Sync(nodePorts, nodes, ing)
+	if err != nil {
+		t.Errorf("unexpected err when syncing firewall, err: %v", err)
+	}
+	// Expect an event saying a firewall needs to be created
+	if len(events) != 1 {
+		t.Errorf("expected %v events but received %v: %+v", 1, len(events), events)
 	}
 }
 
