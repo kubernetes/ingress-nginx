@@ -1,0 +1,9 @@
+dependencies:
+  override:
+    - ./circle.sh dependencies
+
+test:
+  override:
+    - ./circle.sh build
+    - ./circle.sh test
+    - ./circle.sh release

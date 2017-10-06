@@ -11,7 +11,7 @@ notifications:
 go:
   - 1.9
 
-go_import_path: k8s.io/ingress
+go_import_path: k8s.io/ingress-nginx
 
 jobs:
   include:
