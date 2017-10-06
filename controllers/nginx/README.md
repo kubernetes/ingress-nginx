@@ -558,6 +558,15 @@ I0316 12:24:37.610073       1 command.go:69] change in configuration detected. R
 
 The NGINX ingress controller does not uses [Services](http://kubernetes.io/docs/user-guide/services) to route traffic to the pods. Instead it uses the Endpoints API in order to bypass [kube-proxy](http://kubernetes.io/docs/admin/kube-proxy/) to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.
 
+__Note!__ NGINX ingress controller needs up to 10 seconds to rediscover new pods during rolling update. So, if you are using multi-pod deployment with rolling update strategy, make sure that [old pods are not removed before traffic is redirected to new ones](https://github.com/kubernetes/ingress/issues/322#issuecomment-298016539).  
+This can be achieved with simple `preStop` command in container spec (ensure that pod still serves well during this 15 secs before shutting down):
+```yaml
+lifecycle:
+  preStop:
+    exec:
+      command: ["sleep, "15"]
+```
+
 
 ### NGINX notes
 
