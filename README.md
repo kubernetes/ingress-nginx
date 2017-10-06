@@ -1,4 +1,4 @@
-# Ingress
+# NGINX Ingress
 
 [![Build Status](https://travis-ci.org/kubernetes/ingress.svg?branch=master)](https://travis-ci.org/kubernetes/ingress)
 [![Coverage Status](https://coveralls.io/repos/github/kubernetes/ingress/badge.svg?branch=master)](https://coveralls.io/github/kubernetes/ingress)
@@ -9,6 +9,8 @@
 
 This repository contains controllers built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/).
 It is currently in a state of flux as project maintainers port code over from [its previous home](https://github.com/kubernetes/contrib/tree/master/ingress).
+
+The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](https://github.com/kubernetes/ingress-gce).
 
 ## Navigation
 
@@ -24,4 +26,3 @@ It is currently in a state of flux as project maintainers port code over from [i
 * Debug
     * Peruse the [FAQ section](docs/faq/README.md)
     * Ask on one of the [user-support channels](CONTRIBUTING.md#support-channels)
-
