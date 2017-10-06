@@ -514,7 +514,6 @@ Using [`hack/local-up-cluster.sh`](https://github.com/kubernetes/kubernetes/blob
 
 Use of `hostNetwork: true` in the ingress controller is required to falls back at localhost:8080 for the apiserver if every other client creation check fails (eg: service account not present, kubeconfig doesn't exist, no master env vars...)
 
-
 ### Debug & Troubleshooting
 
 Using the flag `--v=XX` it is possible to increase the level of logging.
@@ -539,36 +538,16 @@ I0316 12:24:37.610073       1 command.go:69] change in configuration detected. R
 - `--v=3` shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format
 - `--v=5` configures NGINX in [debug mode](http://nginx.org/en/docs/debugging_log.html)
 
-
-
-*These issues were encountered in past versions of Kubernetes:*
-
-[1.2.0-alpha7 deployment](https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker.md):
-
-* make setup-files.sh file in hypercube does not provide 10.0.0.1 IP to make-ca-certs, resulting in CA certs that are issued to the external cluster IP address rather then 10.0.0.1 -> this results in nginx-third-party-lb appearing to get stuck at "Utils.go:177 - Waiting for default/default-http-backend" in the docker logs.  Kubernetes will eventually kill the container before nginx-third-party-lb times out with a message indicating that the CA certificate issuer is invalid (wrong ip), to verify this add zeros to the end of initialDelaySeconds and timeoutSeconds and reload the RC, and docker will log this error before kubernetes kills the container.
-  * To fix the above, setup-files.sh must be patched before the cluster is inited (refer to https://github.com/kubernetes/kubernetes/pull/21504)
-
-
 ### Limitations
 
 - Ingress rules for TLS require the definition of the field `host`
 
-
 ### Why endpoints and not services
 
 The NGINX ingress controller does not uses [Services](http://kubernetes.io/docs/user-guide/services) to route traffic to the pods. Instead it uses the Endpoints API in order to bypass [kube-proxy](http://kubernetes.io/docs/admin/kube-proxy/) to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.
-
 
 ### NGINX notes
 
 Since `gcr.io/google_containers/nginx-slim:0.8` NGINX contains the next patches:
 - Dynamic TLS record size [nginx__dynamic_tls_records.patch](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/)
 NGINX provides the parameter `ssl_buffer_size` to adjust the size of the buffer. Default value in NGINX is 16KB. The ingress controller changes the default to 4KB. This improves the [TLS Time To First Byte (TTTFB)](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) but the size is fixed. This patches adapts the size of the buffer to the content is being served helping to improve the perceived latency.
-
-- Add SPDY support back to Nginx with HTTP/2 [nginx_1_9_15_http2_spdy.patch](https://github.com/cloudflare/sslconfig/pull/36)
-At the same NGINX introduced HTTP/2 support for SPDY was removed. This patch add support for SPDY without compromising HTTP/2 support using the Application-Layer Protocol Negotiation (ALPN) or Next Protocol Negotiation (NPN) Transport Layer Security (TLS) extension to negotiate what protocol the server and client support
-```
-openssl s_client -servername www.my-site.com -connect www.my-site.com:443 -nextprotoneg ''
-CONNECTED(00000003)
-Protocols advertised by server: h2, spdy/3.1, http/1.1
-```
