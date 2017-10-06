@@ -32,7 +32,7 @@ type NodePool interface {
 	Init(zl zoneLister)
 
 	// The following 2 methods operate on instance groups.
-	AddInstanceGroup(name string, port int64) ([]*compute.InstanceGroup, *compute.NamedPort, error)
+	AddInstanceGroup(name string, ports []int64) ([]*compute.InstanceGroup, []*compute.NamedPort, error)
 	DeleteInstanceGroup(name string) error
 
 	// TODO: Refactor for modularity

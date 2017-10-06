@@ -30,10 +30,9 @@ type probeProvider interface {
 // as gce backendServices, and sync them through the BackendServices interface.
 type BackendPool interface {
 	Init(p probeProvider)
-	Add(port ServicePort, igs []*compute.InstanceGroup) error
+	Ensure(ports []ServicePort, igs []*compute.InstanceGroup) error
 	Get(port int64) (*compute.BackendService, error)
 	Delete(port int64) error
-	Sync(ports []ServicePort, igs []*compute.InstanceGroup) error
 	GC(ports []ServicePort) error
 	Shutdown() error
 	Status(name string) string
