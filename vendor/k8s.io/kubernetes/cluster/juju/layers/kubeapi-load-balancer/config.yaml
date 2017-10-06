@@ -1,5 +1,0 @@
-options:
-  port:
-    type: int
-    default: 443
-    description: The port to run the loadbalancer

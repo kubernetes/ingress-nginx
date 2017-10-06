@@ -22,6 +22,8 @@ type (
 		Memresident     uint64
 		Memvirtual      uint64
 		OldestStartTime time.Time
+		OpenFDs         uint64
+		WorstFDratio    float64
 	}
 )
 
@@ -84,7 +86,7 @@ func (g *Grouper) Update(iter ProcIter) (int, error) {
 	// Step 1: track any new proc that should be tracked based on its name and cmdline.
 	untracked := make(map[ProcId]ProcIdInfo)
 	for _, idinfo := range newProcs {
-		wanted, gname := g.namer.MatchAndName(common.NameAndCmdline{idinfo.Name, idinfo.Cmdline})
+		wanted, gname := g.namer.MatchAndName(common.NameAndCmdline{Name: idinfo.Name, Cmdline: idinfo.Cmdline})
 		if !wanted {
 			untracked[idinfo.ProcId] = idinfo
 			continue
@@ -121,14 +123,19 @@ func (g *Grouper) groups() GroupCountMap {
 		}
 		cur := gcounts[tinfo.GroupName]
 		cur.Procs++
-		_, counts, mem, start := tinfo.GetStats()
-		cur.Memresident += mem.Resident
-		cur.Memvirtual += mem.Virtual
-		cur.Counts.Cpu += counts.Cpu
-		cur.Counts.ReadBytes += counts.ReadBytes
-		cur.Counts.WriteBytes += counts.WriteBytes
-		if cur.OldestStartTime == zeroTime || start.Before(cur.OldestStartTime) {
-			cur.OldestStartTime = start
+		tstats := tinfo.GetStats()
+		cur.Memresident += tstats.Memory.Resident
+		cur.Memvirtual += tstats.Memory.Virtual
+		cur.OpenFDs += tstats.Filedesc.Open
+		openratio := float64(tstats.Filedesc.Open) / float64(tstats.Filedesc.Limit)
+		if cur.WorstFDratio < openratio {
+			cur.WorstFDratio = openratio
+		}
+		cur.Counts.Cpu += tstats.latest.Cpu
+		cur.Counts.ReadBytes += tstats.latest.ReadBytes
+		cur.Counts.WriteBytes += tstats.latest.WriteBytes
+		if cur.OldestStartTime == zeroTime || tstats.start.Before(cur.OldestStartTime) {
+			cur.OldestStartTime = tstats.start
 		}
 		gcounts[tinfo.GroupName] = cur
 	}

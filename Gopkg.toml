@@ -20,6 +20,13 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+[[override]]
+  name = "github.com/docker/distribution"
+  revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
+
+[[constraint]]
+  name = "github.com/opencontainers/go-digest"
+  branch = "master"
 
 [[constraint]]
   branch = "master"
@@ -47,7 +54,8 @@
 
 [[constraint]]
   name = "github.com/ncabatoff/process-exporter"
-  version = "0.1.0"
+  source = "github.com/aledbf/process-exporter"
+  branch = "master"
 
 [[constraint]]
   branch = "master"

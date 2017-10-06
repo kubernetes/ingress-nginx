@@ -22,12 +22,14 @@ import (
 	"syscall"
 	"time"
 
+	"k8s.io/ingress-nginx/pkg/nginx/controller"
+
 	"github.com/golang/glog"
 )
 
 func main() {
 	// start a new nginx controller
-	ngx := newNGINXController()
+	ngx := controller.NewNGINXController()
 
 	go handleSigterm(ngx)
 	// start the controller
@@ -40,7 +42,7 @@ func main() {
 	}
 }
 
-func handleSigterm(ngx *NGINXController) {
+func handleSigterm(ngx *controller.NGINXController) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan
