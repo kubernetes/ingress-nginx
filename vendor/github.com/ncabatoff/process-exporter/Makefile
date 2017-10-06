@@ -12,7 +12,7 @@
 # limitations under the License.
 
 GO           := GO15VENDOREXPERIMENT=1 go
-FIRST_GOPATH := $(firstword $(subst :, ,$(GOPATH)))
+FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 PROMU        := $(FIRST_GOPATH)/bin/promu
 pkgs          = $(shell $(GO) list ./... | grep -v /vendor/)
 
@@ -26,7 +26,7 @@ ifdef DEBUG
 endif
 
 
-all: format build test
+all: format vet build test
 
 style:
 	@echo ">> checking code style"
@@ -64,7 +64,7 @@ docker:
 promu:
 	@echo ">> fetching promu"
 	@GOOS=$(shell uname -s | tr A-Z a-z) \
-	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
+	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(patsubst arm%,arm,$(shell uname -m)))) \
 	$(GO) get -u github.com/prometheus/promu
 
 
