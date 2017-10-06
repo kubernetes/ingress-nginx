@@ -20,7 +20,7 @@ ifndef COMMIT
   COMMIT := git-$(shell git rev-parse --short HEAD)
 endif
 
-PKG=k8s.io/ingress/controllers/nginx
+PKG=k8s.io/ingress-nginx
 
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
@@ -107,8 +107,8 @@ clean:
 
 build: clean
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
-		-ldflags "-s -w -X ${PKG}/pkg/version.RELEASE=${TAG} -X ${PKG}/pkg/version.COMMIT=${COMMIT} -X ${PKG}/pkg/version.REPO=${REPO_INFO}" \
-		-o ${TEMP_DIR}/rootfs/nginx-ingress-controller ${PKG}/pkg/cmd/controller
+		-ldflags "-s -w -X ${PKG}/version.RELEASE=${TAG} -X ${PKG}/version.COMMIT=${COMMIT} -X ${PKG}/version.REPO=${REPO_INFO}" \
+		-o ${TEMP_DIR}/rootfs/nginx-ingress-controller ${PKG}/cmd/nginx
 
 fmt:
 	@echo "+ $@"
@@ -134,3 +134,9 @@ vet:
 
 release: all-container all-push
 	echo "done"
+
+.PHONY: docker-build 
+docker-build: all-container
+
+.PHONY: docker-push 
+docker-push: all-push 

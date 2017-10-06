@@ -27,10 +27,10 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 
-	nginxconfig "k8s.io/ingress/controllers/nginx/pkg/config"
-	"k8s.io/ingress/core/pkg/ingress"
-	"k8s.io/ingress/core/pkg/ingress/controller"
-	"k8s.io/ingress/core/pkg/ingress/defaults"
+	nginxconfig "k8s.io/ingress-nginx/config"
+	"k8s.io/ingress-nginx/ingress"
+	"k8s.io/ingress-nginx/ingress/controller"
+	"k8s.io/ingress-nginx/ingress/defaults"
 )
 
 func main() {
