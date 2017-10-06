@@ -14,6 +14,7 @@ This is an nginx Ingress controller that uses [ConfigMap](https://kubernetes.io/
   * [HTTPS enforcement](#server-side-https-enforcement)
   * [HSTS](#http-strict-transport-security)
   * [Kube-Lego](#automated-certificate-management-with-kube-lego)
+* [Source IP address](#source-ip-address)
 * [TCP Services](#exposing-tcp-services)
 * [UDP Services](#exposing-udp-services)
 * [Proxy Protocol](#proxy-protocol)
@@ -332,6 +333,13 @@ version to fully support Kube-Lego is nginx Ingress controller 0.8.
 [full example]:https://github.com/jetstack/kube-lego/tree/master/examples
 [Kube-Lego]:https://github.com/jetstack/kube-lego
 [Let's Encrypt]:https://letsencrypt.org
+
+## Source IP address
+
+By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of the external load balancer. 
+If the ingress controller is running in AWS we need to use the VPC IPv4 CIDR. This allows NGINX to avoid the spoofing of the header.
+Another option is to enable proxy protocol using `use-proxy-protocol: "true"`.
+In this mode NGINX do not uses the content of the header to get the source IP address of the connection.
 
 ## Exposing TCP services
 

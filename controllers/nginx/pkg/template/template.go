@@ -152,8 +152,6 @@ var (
 		},
 		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
 		"buildForwardedFor":           buildForwardedFor,
-		"trustHTTPHeaders":            trustHTTPHeaders,
-		"trustProxyProtocol":          trustProxyProtocol,
 		"buildAuthSignURL":            buildAuthSignURL,
 	}
 )
@@ -671,28 +669,6 @@ func buildForwardedFor(input interface{}) string {
 	return fmt.Sprintf("$http_%v", ffh)
 }
 
-func trustHTTPHeaders(input interface{}) bool {
-	conf, ok := input.(config.TemplateConfig)
-	if !ok {
-		glog.Errorf("%v", input)
-		return true
-	}
-
-	return conf.Cfg.RealClientFrom == "http-proxy" ||
-		(conf.Cfg.RealClientFrom == "auto" && !conf.Cfg.UseProxyProtocol)
-}
-
-func trustProxyProtocol(input interface{}) bool {
-	conf, ok := input.(config.TemplateConfig)
-	if !ok {
-		glog.Errorf("%v", input)
-		return true
-	}
-
-	return conf.Cfg.RealClientFrom == "tcp-proxy" ||
-		(conf.Cfg.RealClientFrom == "auto" && conf.Cfg.UseProxyProtocol)
-}
-
 func buildAuthSignURL(input interface{}) string {
 	s, ok := input.(string)
 	if !ok {
@@ -703,12 +679,12 @@ func buildAuthSignURL(input interface{}) string {
 	u, _ := url.Parse(s)
 	q := u.Query()
 	if len(q) == 0 {
-		return fmt.Sprintf("%v?rd=$request_uri", s)
+		return fmt.Sprintf("%v?rd=$scheme://$http_host$request_uri", s)
 	}
 
 	if q.Get("rd") != "" {
 		return s
 	}
 
-	return fmt.Sprintf("%v&rd=$request_uri", s)
+	return fmt.Sprintf("%v&rd=$scheme://$http_host$request_uri", s)
 }
