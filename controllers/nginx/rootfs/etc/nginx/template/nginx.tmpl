@@ -251,7 +251,7 @@ http {
     {{ range $name, $upstream := $backends }}
     {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
     upstream sticky-{{ $upstream.Name }} {
-        sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}  httponly;
+        sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }} path=$base_path httponly;
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
@@ -661,6 +661,7 @@ stream {
             set $namespace      "{{ $ing.Namespace }}";
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
+            set $base_path      "{{ $location.Path }}";
 
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
             # enforce ssl on server side
