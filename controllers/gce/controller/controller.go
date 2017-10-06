@@ -36,6 +36,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"k8s.io/ingress/controllers/gce/firewalls"
 	"k8s.io/ingress/controllers/gce/loadbalancers"
 )
 
@@ -318,18 +319,28 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		}
 		glog.V(3).Infof("Finished syncing %v", key)
 	}()
+
+	// TODO: Implement proper backoff for the queue.
+	eventMsg := "GCE"
+
 	// Record any errors during sync and throw a single error at the end. This
 	// allows us to free up associated cloud resources ASAP.
 	igs, err := lbc.CloudClusterManager.Checkpoint(lbs, nodeNames, gceNodePorts, allNodePorts)
 	if err != nil {
-		// TODO: Implement proper backoff for the queue.
-		eventMsg := "GCE"
-		if ingExists {
-			lbc.recorder.Eventf(obj.(*extensions.Ingress), apiv1.EventTypeWarning, eventMsg, err.Error())
+		if fwErr, ok := err.(*firewalls.FirewallSyncError); ok {
+			if ingExists {
+				lbc.recorder.Eventf(obj.(*extensions.Ingress), apiv1.EventTypeNormal, eventMsg, fwErr.Message)
+			} else {
+				glog.Warningf("Received firewallSyncError but don't have an ingress for raising an event: %v", fwErr.Message)
+			}
 		} else {
-			err = fmt.Errorf("%v, error: %v", eventMsg, err)
+			if ingExists {
+				lbc.recorder.Eventf(obj.(*extensions.Ingress), apiv1.EventTypeWarning, eventMsg, err.Error())
+			} else {
+				err = fmt.Errorf("%v, error: %v", eventMsg, err)
+			}
+			syncError = err
 		}
-		syncError = err
 	}
 
 	if !ingExists {
@@ -341,11 +352,10 @@ func (lbc *LoadBalancerController) sync(key string) (err error) {
 		if ing.Annotations == nil {
 			ing.Annotations = map[string]string{}
 		}
-		err = setInstanceGroupsAnnotation(ing.Annotations, igs)
-		if err != nil {
+		if err = setInstanceGroupsAnnotation(ing.Annotations, igs); err != nil {
 			return err
 		}
-		if err := lbc.updateAnnotations(ing.Name, ing.Namespace, ing.Annotations); err != nil {
+		if err = lbc.updateAnnotations(ing.Name, ing.Namespace, ing.Annotations); err != nil {
 			return err
 		}
 		return nil
