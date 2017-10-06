@@ -24,6 +24,7 @@ type RouteBuilder struct {
 	httpMethod  string        // required
 	function    RouteFunction // required
 	filters     []FilterFunction
+	conditions []RouteSelectionConditionFunction
 
 	typeNameHandleFunc TypeNameHandleFunction // required
 
@@ -89,7 +90,7 @@ func (b *RouteBuilder) Doc(documentation string) *RouteBuilder {
 	return b
 }
 
-// A verbose explanation of the operation behavior. Optional.
+// Notes is a verbose explanation of the operation behavior. Optional.
 func (b *RouteBuilder) Notes(notes string) *RouteBuilder {
 	b.notes = notes
 	return b
@@ -212,6 +213,21 @@ func (b *RouteBuilder) Filter(filter FilterFunction) *RouteBuilder {
 	return b
 }
 
+// If sets a condition function that controls matching the Route based on custom logic.
+// The condition function is provided the HTTP request and should return true if the route
+// should be considered.
+//
+// Efficiency note: the condition function is called before checking the method, produces, and
+// consumes criteria, so that the correct HTTP status code can be returned.
+//
+// Lifecycle note: no filter functions have been called prior to calling the condition function,
+// so the condition function should not depend on any context that might be set up by container
+// or route filters.
+func (b *RouteBuilder) If(condition RouteSelectionConditionFunction) *RouteBuilder {
+	b.conditions = append(b.conditions, condition)
+	return b
+}
+
 // If no specific Route path then set to rootPath
 // If no specific Produces then set to rootProduces
 // If no specific Consumes then set to rootConsumes
@@ -254,6 +270,7 @@ func (b *RouteBuilder) Build() Route {
 		Consumes:       b.consumes,
 		Function:       b.function,
 		Filters:        b.filters,
+		If:             b.conditions,
 		relativePath:   b.currentPath,
 		pathExpr:       pathExpr,
 		Doc:            b.doc,
