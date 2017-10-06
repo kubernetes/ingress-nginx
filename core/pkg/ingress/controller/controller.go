@@ -885,7 +885,7 @@ func (ic *GenericController) createServers(data []*extensions.Ingress,
 	aliases := make(map[string]string, len(data))
 
 	bdef := ic.GetDefaultBackend()
-	ngxProxy := &proxy.Configuration{
+	ngxProxy := proxy.Configuration{
 		BodySize:         bdef.ProxyBodySize,
 		ConnectTimeout:   bdef.ProxyConnectTimeout,
 		SendTimeout:      bdef.ProxySendTimeout,

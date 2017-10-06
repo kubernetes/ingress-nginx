@@ -51,7 +51,7 @@ func TestMergeLocationAnnotations(t *testing.T) {
 		"Redirect":           redirect.Redirect{},
 		"Rewrite":            rewrite.Redirect{},
 		"Whitelist":          ipwhitelist.SourceRange{},
-		"Proxy":              &proxy.Configuration{},
+		"Proxy":              proxy.Configuration{},
 		"UsePortInRedirects": true,
 	}
 
