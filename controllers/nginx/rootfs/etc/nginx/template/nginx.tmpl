@@ -151,12 +151,13 @@ http {
         ''               close;
     }
 
-    {{ if (trustHTTPHeaders $all) }}
-    # Trust HTTP X-Forwarded-* Headers, but use direct values if they're missing.
     map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
-        # Get IP address from X-Forwarded-For HTTP header
-        default          $realip_remote_addr;
-        ''               $remote_addr;
+    {{ if $cfg.UseProxyProtocol }}
+        # Get IP address from Proxy Protocol
+        default          $proxy_protocol_addr;
+    {{ else }}
+        default          $remote_addr;
+    {{ end }}
     }
 
     # trust http_x_forwarded_proto headers correctly indicate ssl offloading
@@ -175,30 +176,6 @@ http {
         ''               $this_host;
     }
 
-    {{ else }}
-    # Do not trust HTTP X-Forwarded-* Headers
-    map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
-    {{ if (trustProxyProtocol $all) }}
-        # Get IP address from Proxy Protocol
-        default          $proxy_protocol_addr;
-    {{ else }}
-        # Get IP from direct remote address
-        default          $realip_remote_addr;
-    {{ end }}
-    }
-
-    map $http_x_forwarded_host $best_http_host {
-        default          $this_host;
-    }
-    map $http_x_forwarded_proto $pass_access_scheme {
-        default          $scheme;
-    }
-    map $http_x_forwarded_port $pass_server_port {
-        default           $server_port;
-    }
-
-    {{ end }}
-
     {{ if $all.IsSSLPassthroughEnabled }}
     # map port {{ $all.ListenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
     map $pass_server_port $pass_port {
@@ -211,21 +188,6 @@ http {
         default          $pass_server_port;
     }
     {{ end }}
-
-    # Map a response error watching the header Content-Type
-    map $http_accept $httpAccept {
-        default          html;
-        application/json json;
-        application/xml  xml;
-        text/plain       text;
-    }
-
-    map $httpAccept $httpReturnType {
-        default          text/html;
-        json             application/json;
-        xml              application/xml;
-        text             text/plain;
-    }
 
     # Obtain best http host
     map $http_host $this_host {
@@ -688,8 +650,8 @@ stream {
 
         {{ end }}
 
-        location {{ $path }} {
 
+        location {{ $path }} {
             {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
 
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
@@ -785,6 +747,9 @@ stream {
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
             proxy_set_header X-Original-URI         $request_uri;
             proxy_set_header X-Scheme               $pass_access_scheme;
+
+            # Pass the original X-Forwarded-For
+            proxy_set_header X-Original-Forwarded-For {{ buildForwardedFor $all.Cfg.ForwardedForHeader }};
 
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
