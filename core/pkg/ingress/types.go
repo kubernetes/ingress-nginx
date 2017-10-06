@@ -316,7 +316,7 @@ type Location struct {
 	// Proxy contains information about timeouts and buffer sizes
 	// to be used in connections against endpoints
 	// +optional
-	Proxy *proxy.Configuration `json:"proxy,omitempty"`
+	Proxy proxy.Configuration `json:"proxy,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"usePortInRedirects"`
