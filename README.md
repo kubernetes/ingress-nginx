@@ -1,14 +1,13 @@
 # NGINX Ingress
 
-[![Build Status](https://travis-ci.org/kubernetes/ingress.svg?branch=master)](https://travis-ci.org/kubernetes/ingress)
-[![Coverage Status](https://coveralls.io/repos/github/kubernetes/ingress/badge.svg?branch=master)](https://coveralls.io/github/kubernetes/ingress)
-[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress)](https://goreportcard.com/report/github.com/kubernetes/ingress)
-[![GoDoc](https://godoc.org/github.com/kubernetes/ingress?status.svg)](https://godoc.org/github.com/kubernetes/ingress)
+[![Build Status](https://travis-ci.org/kubernetes/ingress-nginx.svg?branch=master)](https://travis-ci.org/kubernetes/ingress-nginx) 
+[![Coverage Status](https://coveralls.io/repos/github/kubernetes/ingress-nginx/badge.svg?branch=master)](https://coveralls.io/github/kubernetes/ingress-nginx?branch=master) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx) 
+[![GoDoc](https://godoc.org/github.com/kubernetes/ingress-nginx?status.svg)](https://godoc.org/github.com/kubernetes/ingress-nginx) 
 
 ## Description
 
-This repository contains controllers built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/).
-It is currently in a state of flux as project maintainers port code over from [its previous home](https://github.com/kubernetes/contrib/tree/master/ingress).
+This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/).
 
 The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](https://github.com/kubernetes/ingress-gce).
 
