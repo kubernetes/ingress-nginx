@@ -1,8 +1,42 @@
-# Nginx Ingress Controller
+# NGINX Ingress Controller
 
+[![Build Status](https://travis-ci.org/kubernetes/ingress-nginx.svg?branch=master)](https://travis-ci.org/kubernetes/ingress-nginx) 
+[![Coverage Status](https://coveralls.io/repos/github/kubernetes/ingress-nginx/badge.svg?branch=master)](https://coveralls.io/github/kubernetes/ingress-nginx?branch=master) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx) 
+[![GoDoc](https://godoc.org/github.com/kubernetes/ingress-nginx?status.svg)](https://godoc.org/github.com/kubernetes/ingress-nginx) 
+
+## Description
+
+This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/).
+
+The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](https://github.com/kubernetes/ingress-gce).
+
+## Navigation
+
+* Learn more about using Ingress
+     * See our user documentation on [k8s.io](http://kubernetes.io/docs/user-guide/ingress/)
+     * Follow through to the respective platform specific [examples](examples/README.md)
+* Deploy existing Ingress controllers
+    * See our [admin documentation](docs/admin.md)
+* Contribute
+    * See the [contributor guidelines](CONTRIBUTING.md)
+* Debug
+    * Peruse the [FAQ section](docs/faq/README.md)
+    * Ask on one of the [user-support channels](CONTRIBUTING.md#support-channels)
+
+### What is an Ingress Controller?
+
+Configuring a webserver or loadbalancer is harder than it should be. Most webserver configuration files are very similar. There are some applications that have weird little quirks that tend to throw a wrench in things, but for the most part you can apply the same logic to them and achieve a desired result.
+
+The Ingress resource embodies this idea, and an Ingress controller is meant to handle all the quirks associated with a specific "class" of Ingress (be it a single instance of a loadbalancer, or a more complicated setup of frontends that provide GSLB, DDoS protection, etc).
+
+An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches the apiserver's `/ingresses` endpoint for updates to the [Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/). Its job is to satisfy requests for Ingresses.
+
+### Introduction
 This is an nginx Ingress controller that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the nginx configuration. See [Ingress controller documentation](../README.md) for details on how it works.
 
 ## Contents
+
 * [Conventions](#conventions)
 * [Requirements](#requirements)
 * [Command line arguments](#command-line-arguments)
@@ -38,13 +72,11 @@ Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). Y
  `openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}"`
  and create the secret via `kubectl create secret tls ${CERT_NAME} --key ${KEY_FILE} --cert ${CERT_FILE}`
 
-
-
 ## Requirements
 - Default backend [404-server](https://github.com/kubernetes/ingress/tree/master/images/404-server)
 
-
 ## Command line arguments
+
 ```
 Usage of :
       --alsologtostderr                  log to standard error as well as files
@@ -99,16 +131,6 @@ Usage of :
       --watch-namespace string           Namespace to watch for Ingress. Default is to watch all namespaces
 ```
 
-## Try running the Ingress controller
-
-Before deploying the controller to production you might want to run it outside the cluster and observe it.
-
-```console
-$ make build
-$ mkdir /etc/nginx-ssl
-$ ./rootfs/nginx-ingress-controller --running-in-cluster=false --default-backend-service=kube-system/default-http-backend
-```
-
 ## Deployment
 
 First create a default backend and it's corresponding service:
@@ -118,7 +140,6 @@ $ kubectl create -f examples/default-backend.yaml
 
 Follow the [example-deployment](../../examples/deployment/nginx/README.md) steps to deploy nginx-ingress-controller in Kubernetes cluster (you may prefer other type of workloads, like Daemonset, in production environment).
 Loadbalancers are created via a ReplicationController or Daemonset:
-
 
 ## HTTP
 

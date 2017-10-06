@@ -67,14 +67,14 @@ type mockBackend struct {
 
 func (m mockBackend) GetDefaultBackend() defaults.Backend {
 	return defaults.Backend{
-		UpstreamFailTimeout: 1,
-		ProxyConnectTimeout: 10,
-		ProxySendTimeout:    15,
-		ProxyReadTimeout:    20,
-		ProxyBufferSize:     "10k",
-		ProxyBodySize:       "3k",
-		ProxyNextUpstream:   "error",
-		ProxyPassParams:     "nocanon keepalive=On",
+		UpstreamFailTimeout:   1,
+		ProxyConnectTimeout:   10,
+		ProxySendTimeout:      15,
+		ProxyReadTimeout:      20,
+		ProxyBufferSize:       "10k",
+		ProxyBodySize:         "3k",
+		ProxyNextUpstream:     "error",
+		ProxyPassParams:       "nocanon keepalive=On",
 		ProxyRequestBuffering: "on",
 	}
 }
