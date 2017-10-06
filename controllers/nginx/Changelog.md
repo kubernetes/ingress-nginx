@@ -1,5 +1,32 @@
 # Changelog
 
+### 0.9-beta.15
+
+**Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.15`
+
+*New Features:*
+
+- Add OCSP support
+- Configurable ssl_verify_client
+
+*Changes:*
+
+- [X] [#1468](https://github.com/kubernetes/ingress/pull/1468) Add the original URL to the auth request
+- [X] [#1469](https://github.com/kubernetes/ingress/pull/1469) Typo: Add missing {{ }}
+- [X] [#1472](https://github.com/kubernetes/ingress/pull/1472) Fix X-Auth-Request-Redirect value to reflect the request uri
+- [X] [#1473](https://github.com/kubernetes/ingress/pull/1473) Fix proxy protocol check
+- [X] [#1475](https://github.com/kubernetes/ingress/pull/1475) Add OCSP support
+- [X] [#1477](https://github.com/kubernetes/ingress/pull/1477) Fix semicolons in global configuration
+- [X] [#1478](https://github.com/kubernetes/ingress/pull/1478) Pass redirect field in login page to get a proper redirect
+- [X] [#1480](https://github.com/kubernetes/ingress/pull/1480) configurable ssl_verify_client
+- [X] [#1485](https://github.com/kubernetes/ingress/pull/1485) Fix source IP address
+- [X] [#1486](https://github.com/kubernetes/ingress/pull/1486) Fix overwrite of custom configuration
+
+*Documentation:*
+
+- [X] [#1460](https://github.com/kubernetes/ingress/pull/1460) Expose UDP port in UDP ingress example
+- [X] [#1465](https://github.com/kubernetes/ingress/pull/1465) review prometheus docs
+
 ### 0.9-beta.14
 
 **Image:**  `gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.14`
