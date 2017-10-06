@@ -163,7 +163,7 @@ func TestBuildAuthResponseHeaders(t *testing.T) {
 
 func TestTemplateWithData(t *testing.T) {
 	pwd, _ := os.Getwd()
-	f, err := os.Open(path.Join(pwd, "../tests/data/config.json"))
+	f, err := os.Open(path.Join(pwd, "../../../tests/data/config.json"))
 	if err != nil {
 		t.Errorf("unexpected error reading json file: %v", err)
 	}
@@ -179,7 +179,7 @@ func TestTemplateWithData(t *testing.T) {
 	if dat.ListenPorts == nil {
 		dat.ListenPorts = &config.ListenPorts{}
 	}
-	tf, err := os.Open(path.Join(pwd, "../rootfs/etc/nginx/template/nginx.tmpl"))
+	tf, err := os.Open(path.Join(pwd, "../../../rootfs/etc/nginx/template/nginx.tmpl"))
 	if err != nil {
 		t.Errorf("unexpected error reading json file: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestTemplateWithData(t *testing.T) {
 
 func BenchmarkTemplateWithData(b *testing.B) {
 	pwd, _ := os.Getwd()
-	f, err := os.Open(path.Join(pwd, "../../test/data/config.json"))
+	f, err := os.Open(path.Join(pwd, "../../../test/data/config.json"))
 	if err != nil {
 		b.Errorf("unexpected error reading json file: %v", err)
 	}

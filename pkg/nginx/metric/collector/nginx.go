@@ -18,7 +18,7 @@ package collector
 
 import (
 	"github.com/golang/glog"
-	
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
