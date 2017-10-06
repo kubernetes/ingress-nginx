@@ -81,6 +81,7 @@ type filterZone struct {
 	InBytes        float64  `json:"inBytes"`
 	OutBytes       float64  `json:"outBytes"`
 	Cache          cache    `json:"cache"`
+	RequestMsec    float64  `json:"requestMsec"`
 	Responses      response `json:"responses"`
 }
 
