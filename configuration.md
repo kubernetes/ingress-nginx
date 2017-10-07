@@ -5,6 +5,7 @@
 * [Custom NGINX template](#custom-nginx-template)
 * [Annotations](#annotations)
 * [Custom NGINX upstream checks](#custom-nginx-upstream-checks)
+* [Custom NGINX upstream hashing](#custom-nginx-upstream-hashing)
 * [Authentication](#authentication)
 * [Rewrite](#rewrite)
 * [Rate limiting](#rate-limiting)
@@ -74,6 +75,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|true or false|
 |[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
+|[ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
 |[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 
 #### Custom NGINX template
@@ -114,6 +116,14 @@ In NGINX, backend server pools are called "[upstreams](http://nginx.org/en/docs/
 **Important:** All Ingress rules using the same service will use the same upstream. Only one of the Ingress rules should define annotations to configure the upstream servers.
 
 Please check the [custom upstream check](../../examples/customization/custom-upstream-check/README.md) example.
+
+### Custom NGINX upstream hashing
+
+NGINX supports load balancing by client-server mapping based on [consistent hashing](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash) for a given key. The key can contain text, variables or any combination thereof. This feature allows for request stickiness other than client IP or cookies. The [ketama](http://www.last.fm/user/RJ/journal/2007/04/10/392555/) consistent hashing method will be used which ensures only a few keys would be remapped to different servers on upstream group changes.
+
+To enable consistent hashing for a backend:
+
+`ingress.kubernetes.io/upstream-hash-by`: the nginx variable, text value or any combination thereof to use for consistent hashing. For example `ingress.kubernetes.io/upstream-hash-by: "$request_uri"` to consistently hash upstream requests by the current request URI.
 
 ### Authentication
 
