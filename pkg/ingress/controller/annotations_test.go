@@ -37,6 +37,7 @@ const (
 	annotationAffinityType       = "ingress.kubernetes.io/affinity"
 	annotationAffinityCookieName = "ingress.kubernetes.io/session-cookie-name"
 	annotationAffinityCookieHash = "ingress.kubernetes.io/session-cookie-hash"
+	annotationUpstreamHashBy     = "ingress.kubernetes.io/upstream-hash-by"
 )
 
 type mockCfg struct {
@@ -227,6 +228,30 @@ func TestSSLPassthrough(t *testing.T) {
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
 		r := ec.SSLPassthrough(ing)
+		if r != foo.er {
+			t.Errorf("Returned %v but expected %v", r, foo.er)
+		}
+	}
+}
+
+func TestUpstreamHashBy(t *testing.T) {
+	ec := newAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		er          string
+	}{
+		{map[string]string{annotationUpstreamHashBy: "$request_uri"}, "$request_uri"},
+		{map[string]string{annotationUpstreamHashBy: "false"}, "false"},
+		{map[string]string{annotationUpstreamHashBy + "_no": "true"}, ""},
+		{map[string]string{}, ""},
+		{nil, ""},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.UpstreamHashBy(ing)
 		if r != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
 		}

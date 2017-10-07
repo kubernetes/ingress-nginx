@@ -170,6 +170,8 @@ type Backend struct {
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// StickySessionAffinitySession contains the StickyConfig object with stickness configuration
 	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
+	// Consistent hashing by NGINX variable
+	UpstreamHashBy string `json:"upstream-hash-by,omitempty"`
 }
 
 // SessionAffinityConfig describes different affinity configurations for new sessions.

@@ -707,6 +707,7 @@ func (ic *GenericController) createUpstreams(data []*extensions.Ingress, du *ing
 		secUpstream := ic.annotations.SecureUpstream(ing)
 		hz := ic.annotations.HealthCheck(ing)
 		serviceUpstream := ic.annotations.ServiceUpstream(ing)
+		upstreamHashBy := ic.annotations.UpstreamHashBy(ing)
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -765,6 +766,10 @@ func (ic *GenericController) createUpstreams(data []*extensions.Ingress, du *ing
 
 				if upstreams[name].SecureCACert.Secret == "" {
 					upstreams[name].SecureCACert = secUpstream.CACert
+				}
+
+				if upstreams[name].UpstreamHashBy == "" {
+					upstreams[name].UpstreamHashBy = upstreamHashBy
 				}
 
 				svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), path.Backend.ServiceName)
