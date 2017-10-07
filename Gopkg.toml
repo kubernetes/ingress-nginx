@@ -1,0 +1,110 @@
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+[[override]]
+  name = "github.com/docker/distribution"
+  revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
+
+[[constraint]]
+  name = "github.com/opencontainers/go-digest"
+  branch = "master"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/armon/go-proxyproto"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/golang/glog"
+
+[[constraint]]
+  name = "github.com/imdario/mergo"
+  version = "0.2.2"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/kylelemons/godebug"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/go-ps"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/mapstructure"
+
+[[constraint]]
+  name = "github.com/ncabatoff/process-exporter"
+  source = "github.com/aledbf/process-exporter"
+  branch = "master"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/paultag/sniff"
+
+[[constraint]]
+  name = "github.com/pborman/uuid"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/prometheus/client_golang"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/spf13/pflag"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/zakjan/cert-chain-resolver"
+  version = "1.0.1"
+
+[[constraint]]
+  name = "gopkg.in/fsnotify.v1"
+  version = "1.4.2"
+
+[[constraint]]
+  name = "gopkg.in/go-playground/pool.v3"
+  version = "3.1.1"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/api"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/apimachinery"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/apiserver"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/client-go"
+
+[[constraint]]
+  name = "k8s.io/kubernetes"
+  version = "1.8.0"

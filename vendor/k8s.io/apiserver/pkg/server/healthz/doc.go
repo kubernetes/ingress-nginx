@@ -18,4 +18,4 @@ limitations under the License.
 // Usage:
 //   import "k8s.io/apiserver/pkg/server/healthz"
 //   healthz.DefaultHealthz()
-package healthz
+package healthz // import "k8s.io/apiserver/pkg/server/healthz"
