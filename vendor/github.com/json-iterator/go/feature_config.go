@@ -18,6 +18,7 @@ type Config struct {
 	SortMapKeys             bool
 	UseNumber               bool
 	TagKey                  string
+	ValidateJsonRawMessage  bool
 }
 
 type frozenConfig struct {
@@ -53,8 +54,9 @@ var ConfigDefault = Config{
 
 // ConfigCompatibleWithStandardLibrary tries to be 100% compatible with standard library behavior
 var ConfigCompatibleWithStandardLibrary = Config{
-	EscapeHTML:  true,
-	SortMapKeys: true,
+	EscapeHTML:             true,
+	SortMapKeys:            true,
+	ValidateJsonRawMessage: true,
 }.Froze()
 
 // ConfigFastest marshals float with only 6 digits precision
@@ -83,8 +85,29 @@ func (cfg Config) Froze() API {
 	if cfg.UseNumber {
 		frozenConfig.useNumber()
 	}
+	if cfg.ValidateJsonRawMessage {
+		frozenConfig.validateJsonRawMessage()
+	}
 	frozenConfig.configBeforeFrozen = cfg
 	return frozenConfig
+}
+
+func (cfg *frozenConfig) validateJsonRawMessage() {
+	encoder := &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
+		rawMessage := *(*json.RawMessage)(ptr)
+		iter := cfg.BorrowIterator([]byte(rawMessage))
+		iter.Read()
+		if iter.Error != nil {
+			stream.WriteRaw("null")
+		} else {
+			cfg.ReturnIterator(iter)
+			stream.WriteRaw(string(rawMessage))
+		}
+	}, func(ptr unsafe.Pointer) bool {
+		return false
+	}}
+	cfg.addEncoderToCache(reflect.TypeOf((*json.RawMessage)(nil)).Elem(), encoder)
+	cfg.addEncoderToCache(reflect.TypeOf((*RawMessage)(nil)).Elem(), encoder)
 }
 
 func (cfg *frozenConfig) useNumber() {

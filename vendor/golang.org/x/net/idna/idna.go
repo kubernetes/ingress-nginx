@@ -13,7 +13,7 @@
 // UTS #46 is defined in http://www.unicode.org/reports/tr46.
 // See http://unicode.org/cldr/utility/idna.jsp for a visualization of the
 // differences between these two standards.
-package idna
+package idna // import "golang.org/x/net/idna"
 
 import (
 	"fmt"
@@ -167,7 +167,7 @@ type options struct {
 	bidirule func(s string) bool
 }
 
-// A Profile defines the configuration of a IDNA mapper.
+// A Profile defines the configuration of an IDNA mapper.
 type Profile struct {
 	options
 }

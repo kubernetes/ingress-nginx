@@ -25,8 +25,8 @@ This library supports the parsing and verification as well as the generation and
 
 See [the project documentation](https://godoc.org/github.com/dgrijalva/jwt-go) for examples of usage:
 
-* [Simple example of parsing and validating a token](https://godoc.org/github.com/dgrijalva/jwt-go#example-Parse--Hmac)
-* [Simple example of building and signing a token](https://godoc.org/github.com/dgrijalva/jwt-go#example-New--Hmac)
+* [Simple example of parsing and validating a token](https://godoc.org/github.com/dgrijalva/jwt-go#example_Parse_hmac)
+* [Simple example of building and signing a token](https://godoc.org/github.com/dgrijalva/jwt-go#example_New_hmac)
 * [Directory of Examples](https://godoc.org/github.com/dgrijalva/jwt-go#pkg-examples)
 
 ## Extensions

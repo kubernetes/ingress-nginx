@@ -47,7 +47,7 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 			str = append(str, c)
 		}
 	}
-	iter.ReportError("ReadString", "unexpected end of input")
+	iter.ReportError("readStringSlowPath", "unexpected end of input")
 	return
 }
 
@@ -104,7 +104,7 @@ func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {
 	case 't':
 		str = append(str, '\t')
 	default:
-		iter.ReportError("ReadString",
+		iter.ReportError("readEscapedChar",
 			`invalid escape char after \`)
 		return nil
 	}
@@ -139,7 +139,7 @@ func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 		}
 		return copied
 	}
-	iter.ReportError("ReadString", `expects " or n`)
+	iter.ReportError("ReadStringAsSlice", `expects " or n`)
 	return
 }
 

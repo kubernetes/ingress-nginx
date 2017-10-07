@@ -1,0 +1,12 @@
+hash: a2c552569a10dc8f17247d97f4d7d6801e7298721d4476c9c8d1755ec488216e
+updated: 2016-06-02T09:18:54.603431478+02:00
+imports:
+- name: github.com/fullsailor/pkcs7
+  version: 2585af45975b11f1d7502bb6c01556c29efb54ce
+- name: github.com/stretchr/testify
+  version: f390dcf405f7b83c997eac1b06768bb9f44dec18
+  subpackages:
+  - assert
+- name: github.com/urfave/cli
+  version: 01a33823596e7cffafa9e037acdd2441dc0eb03f
+devImports: []
