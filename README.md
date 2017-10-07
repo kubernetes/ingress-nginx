@@ -28,11 +28,12 @@ The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](http
 
 Configuring a webserver or loadbalancer is harder than it should be. Most webserver configuration files are very similar. There are some applications that have weird little quirks that tend to throw a wrench in things, but for the most part you can apply the same logic to them and achieve a desired result.
 
-The Ingress resource embodies this idea, and an Ingress controller is meant to handle all the quirks associated with a specific "class" of Ingress (be it a single instance of a loadbalancer, or a more complicated setup of frontends that provide GSLB, DDoS protection, etc).
+The Ingress resource embodies this idea, and an Ingress controller is meant to handle all the quirks associated with a specific "class" of Ingress.
 
 An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches the apiserver's `/ingresses` endpoint for updates to the [Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/). Its job is to satisfy requests for Ingresses.
 
 ### Introduction
+
 This is an nginx Ingress controller that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the nginx configuration. See [Ingress controller documentation](../README.md) for details on how it works.
 
 ## Contents
@@ -73,11 +74,12 @@ Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). Y
  and create the secret via `kubectl create secret tls ${CERT_NAME} --key ${KEY_FILE} --cert ${CERT_FILE}`
 
 ## Requirements
+
 - Default backend [404-server](https://github.com/kubernetes/ingress/tree/master/images/404-server)
 
 ## Command line arguments
 
-```
+```console
 Usage of :
       --alsologtostderr                  log to standard error as well as files
       --apiserver-host string            The address of the Kubernetes Apiserver to connect to in the format of protocol://address:port, e.g., http://localhost:8080. If not specified, the assumption is that the binary runs inside a Kubernetes cluster and local discovery is attempted.
@@ -134,33 +136,37 @@ Usage of :
 ## Deployment
 
 First create a default backend and it's corresponding service:
-```
-$ kubectl create -f examples/default-backend.yaml
+```console
+kubectl create -f examples/default-backend.yaml
 ```
 
-Follow the [example-deployment](../../examples/deployment/nginx/README.md) steps to deploy nginx-ingress-controller in Kubernetes cluster (you may prefer other type of workloads, like Daemonset, in production environment).
+Follow the [example-deployment](examples/deployment/README.md) steps to deploy nginx-ingress-controller in Kubernetes cluster (you may prefer other type of workloads, like Daemonset, in production environment).
 Loadbalancers are created via a ReplicationController or Daemonset:
 
 ## HTTP
 
 First we need to deploy some application to publish. To keep this simple we will use the [echoheaders app](https://github.com/kubernetes/contrib/blob/master/ingress/echoheaders/echo-app.yaml) that just returns information about the http request as output
-```
+
+```console
 kubectl run echoheaders --image=gcr.io/google_containers/echoserver:1.8 --replicas=1 --port=8080
 ```
 
 Now we expose the same application in two different services (so we can create different Ingress rules)
-```
+
+```console
 kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
 kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-y
 ```
 
 Next we create a couple of Ingress rules
-```
+
+```console
 kubectl create -f examples/ingress.yaml
 ```
 
 we check that ingress rules are defined:
-```
+
+```console
 $ kubectl get ing
 NAME      RULE          BACKEND   ADDRESS
 echomap   -
@@ -172,14 +178,15 @@ echomap   -
 ```
 
 Before the deploy of the Ingress controller we need a default backend [404-server](https://github.com/kubernetes/contrib/tree/master/404-server)
-```
+
+```console
 kubectl create -f examples/default-backend.yaml
 kubectl expose rc default-http-backend --port=80 --target-port=8080 --name=default-http-backend
 ```
 
 Check NGINX it is running with the defined Ingress rules:
 
-```
+```console
 $ LBIP=$(kubectl get node `kubectl get po -l name=nginx-ingress-lb --template '{{range .items}}{{.spec.nodeName}}{{end}}'` --template '{{range $i, $n := .status.addresses}}{{if eq $n.type "ExternalIP"}}{{$n.address}}{{end}}{{end}}')
 $ curl $LBIP/foo -H 'Host: foo.bar.com'
 ```
@@ -188,7 +195,7 @@ $ curl $LBIP/foo -H 'Host: foo.bar.com'
 
 You can secure an Ingress by specifying a secret that contains a TLS private key and certificate. Currently the Ingress only supports a single TLS port, 443, and assumes TLS termination. This controller supports SNI. The TLS secret must contain keys named tls.crt and tls.key that contain the certificate and private key to use for TLS, eg:
 
-```
+```yaml
 apiVersion: v1
 data:
   tls.crt: base64 encoded cert
@@ -202,7 +209,7 @@ type: kubernetes.io/tls
 
 Referencing this secret in an Ingress will tell the Ingress controller to secure the channel from the client to the loadbalancer using TLS:
 
-```
+```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -214,18 +221,18 @@ spec:
     serviceName: s1
     servicePort: 80
 ```
-Please follow [PREREQUISITES](../../examples/PREREQUISITES.md) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
 
-Check the [example](../../examples/tls-termination/nginx)
+Please follow [PREREQUISITES](examples/PREREQUISITES.md) as a guide on how to generate secrets containing SSL certificates. The name of the secret can be different than the name of the certificate.
+
+Check the [example](examples/tls-termination/nginx)
 
 ### Default SSL Certificate
 
-NGINX provides the option [server name](http://nginx.org/en/docs/http/server_names.html) as a catch-all in case of requests that do not match one of the configured server names. This configuration works without issues for HTTP traffic. In case of HTTPS NGINX requires a certificate. For this reason the Ingress controller provides the flag `--default-ssl-certificate`. The secret behind this flag contains the default certificate to be used in the mentioned case.
-If this flag is not provided NGINX will use a self signed certificate.
+NGINX provides the option [server name _](http://nginx.org/en/docs/http/server_names.html) as a catch-all in case of requests that do not match one of the configured server names. This configuration works without issues for HTTP traffic. In case of HTTPS, NGINX requires a certificate. For this reason the Ingress controller provides the flag `--default-ssl-certificate`. The secret behind this flag contains the default certificate to be used in the mentioned case. If this flag is not provided NGINX will use a self signed certificate.
 
 Running without the flag `--default-ssl-certificate`:
 
-```
+```console
 $ curl -v https://10.2.78.7:443 -k
 * Rebuilt URL to: https://10.2.78.7:443/
 *   Trying 10.2.78.4...
@@ -274,7 +281,7 @@ $ curl -v https://10.2.78.7:443 -k
 
 Specifying `--default-ssl-certificate=default/foo-tls`:
 
-```
+```console
 core@localhost ~ $ curl -v https://10.2.78.7:443 -k
 * Rebuilt URL to: https://10.2.78.7:443/
 *   Trying 10.2.78.7...
@@ -321,13 +328,11 @@ core@localhost ~ $ curl -v https://10.2.78.7:443 -k
 * Connection #0 to host 10.2.78.7 left intact
 ```
 
-
 ### Server-side HTTPS enforcement
 
 By default the controller redirects (301) to HTTPS if TLS is enabled for that ingress . If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the NGINX config map.
 
 To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
-
 
 ### HTTP Strict Transport Security
 
@@ -337,14 +342,13 @@ By default the controller redirects (301) to HTTPS if there is a TLS Ingress rul
 
 To disable this behavior use `hsts=false` in the NGINX config map.
 
-
 ### Automated Certificate Management with Kube-Lego
 
 [Kube-Lego] automatically requests missing or expired certificates from
 [Let's Encrypt] by monitoring ingress resources and their referenced secrets. To
 enable this for an ingress resource you have to add an annotation:
 
-```
+```console
 kubectl annotate ing ingress-demo kubernetes.io/tls-acme="true"
 ```
 
@@ -368,7 +372,8 @@ Ingress does not support TCP services (yet). For this reason this Ingress contro
 It is possible to use a number or the name of the port. The two last fields are optional. Adding `PROXY` in either or both of the two last fields we can use Proxy Protocol decoding (listen) and/or encoding (proxy_pass) in a TCP service (https://www.nginx.com/resources/admin-guide/proxy-protocol/).
 
 The next example shows how to expose the service `example-go` running in the namespace `default` in the port `8080` using the port `9000`
-```
+
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -377,8 +382,7 @@ data:
   9000: "default/example-go:8080"
 ```
 
-
-Please check the [tcp services](../../examples/tcp/nginx/README.md) example
+Please check the [tcp services](examples/tcp/README.md) example
 
 ## Exposing UDP services
 
@@ -388,7 +392,8 @@ Ingress does not support UDP services (yet). For this reason this Ingress contro
 It is possible to use a number or the name of the port.
 
 The next example shows how to expose the service `kube-dns` running in the namespace `kube-system` in the port `53` using the port `53`
-```
+
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -398,7 +403,7 @@ data:
 ```
 
 
-Please check the [udp services](../../examples/udp/nginx/README.md) example
+Please check the [udp services](examples/udp/README.md) example
 
 ## Proxy Protocol
 
@@ -419,13 +424,13 @@ In the [aledbf/zipkin-js-example](https://github.com/aledbf/zipkin-js-example) g
 To install the example and the zipkin collector we just need to run:
 
 ```
-$ kubectl create -f https://raw.githubusercontent.com/aledbf/zipkin-js-example/kubernetes/kubernetes/zipkin.yaml
-$ kubectl create -f https://raw.githubusercontent.com/aledbf/zipkin-js-example/kubernetes/kubernetes/deployment.yaml
+kubectl create -f https://raw.githubusercontent.com/aledbf/zipkin-js-example/kubernetes/kubernetes/zipkin.yaml
+kubectl create -f https://raw.githubusercontent.com/aledbf/zipkin-js-example/kubernetes/kubernetes/deployment.yaml
 ```
 
 Also we need to configure the NGINX controller configmap with the required values:
 
-```
+```yaml
 apiVersion: v1
 data:
   enable-opentracing: "true"
@@ -438,7 +443,8 @@ metadata:
 ```
 
 Using curl we can generate some traces:
-```
+
+```console
 $ curl -v http://$(minikube ip)/api -H 'Host: zipkin-js-example'
 $ curl -v http://$(minikube ip)/api -H 'Host: zipkin-js-example'
 ```
@@ -457,7 +463,7 @@ Each request to the default backend includes two headers:
 
 **Important:** the custom backend must return the correct HTTP status code to be returned. NGINX do not changes the reponse from the custom default backend.
 
-Using this two headers is possible to use a custom backend service like [this one](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-errors/nginx) that inspect each request and returns a custom error page with the format expected by the client. Please check the example [custom-errors](examples/customization/custom-errors/nginx/README.md)
+Using this two headers is possible to use a custom backend service like [this one](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-errors/nginx) that inspect each request and returns a custom error page with the format expected by the client. Please check the example [custom-errors](examples/customization/custom-errors/README.md)
 
 NGINX sends aditional headers that can be used to build custom response:
 
@@ -541,7 +547,7 @@ Using the flag `--v=XX` it is possible to increase the level of logging.
 In particular:
 - `--v=2` shows details using `diff` about the changes in the configuration in nginx
 
-```
+```console
 I0316 12:24:37.581267       1 utils.go:148] NGINX configuration diff a//etc/nginx/nginx.conf b//etc/nginx/nginx.conf
 I0316 12:24:37.581356       1 utils.go:149] --- /tmp/922554809  2016-03-16 12:24:37.000000000 +0000
 +++ /tmp/079811012  2016-03-16 12:24:37.000000000 +0000
@@ -572,3 +578,4 @@ The NGINX ingress controller does not uses [Services](http://kubernetes.io/docs/
 Since `gcr.io/google_containers/nginx-slim:0.8` NGINX contains the next patches:
 - Dynamic TLS record size [nginx__dynamic_tls_records.patch](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/)
 NGINX provides the parameter `ssl_buffer_size` to adjust the size of the buffer. Default value in NGINX is 16KB. The ingress controller changes the default to 4KB. This improves the [TLS Time To First Byte (TTTFB)](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) but the size is fixed. This patches adapts the size of the buffer to the content is being served helping to improve the perceived latency.
+- [HTTP/2 header compression](https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx_http2_hpack.patch)
