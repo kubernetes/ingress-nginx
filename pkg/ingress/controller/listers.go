@@ -172,7 +172,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.Sto
 			if mapKey == ic.cfg.ConfigMapName {
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
 				ic.cfg.Backend.SetConfig(upCmap)
-				ic.setForceReload(true)
+				ic.SetForceReload(true)
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
@@ -182,7 +182,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.Sto
 				if mapKey == ic.cfg.ConfigMapName {
 					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
 					ic.cfg.Backend.SetConfig(upCmap)
-					ic.setForceReload(true)
+					ic.SetForceReload(true)
 				}
 				// updates to configuration configmaps can trigger an update
 				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
