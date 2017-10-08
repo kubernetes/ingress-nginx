@@ -109,6 +109,14 @@ type Configuration struct {
 	// By default this is enabled
 	EnableDynamicTLSRecords bool `json:"enable-dynamic-tls-records"`
 
+	// EnableModsecurity enables the modsecurity module for NGINX
+	// By default this is disabled
+	EnableModsecurity bool `json:"enable-modsecurity"`
+
+	// EnableModsecurity enables the OWASP ModSecurity Core Rule Set (CRS)
+	// By default this is disabled
+	EnableOWASPCoreRules bool `json:"enable-owasp-modsecurity-crs"`
+
 	// ClientHeaderBufferSize allows to configure a custom buffer
 	// size for reading client request header
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
