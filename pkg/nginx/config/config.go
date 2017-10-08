@@ -449,7 +449,7 @@ func NewDefault() Configuration {
 		LoadBalanceAlgorithm:       defaultLoadBalancerAlgorithm,
 		VtsStatusZoneSize:          "10m",
 		VtsDefaultFilterKey:        "$geoip_country_code country::*",
-		VariablesHashBucketSize:    64,
+		VariablesHashBucketSize:    128,
 		VariablesHashMaxSize:       2048,
 		UseHTTP2:                   true,
 		ProxyStreamTimeout:         "600s",
