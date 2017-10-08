@@ -66,6 +66,8 @@ type Config struct {
 
 	UpdateStatusOnShutdown bool
 
+	UseNodeInternalIP bool
+
 	IngressLister store.IngressLister
 
 	DefaultIngressClass string
@@ -267,7 +269,7 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 
 	addrs := []string{}
 	for _, pod := range pods.Items {
-		name := k8s.GetNodeIP(s.Client, pod.Spec.NodeName)
+		name := k8s.GetNodeIP(s.Client, pod.Spec.NodeName, s.UseNodeInternalIP)
 		if !sliceutils.StringInSlice(name, addrs) {
 			addrs = append(addrs, name)
 		}

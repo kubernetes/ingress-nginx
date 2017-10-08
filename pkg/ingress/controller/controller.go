@@ -135,9 +135,11 @@ type Configuration struct {
 	Backend ingress.Controller
 
 	UpdateStatus           bool
+	UseNodeInternalIP      bool
 	ElectionID             string
 	UpdateStatusOnShutdown bool
-	SortBackends           bool
+
+	SortBackends bool
 }
 
 // newIngressController creates an Ingress controller
@@ -174,6 +176,7 @@ func newIngressController(config *Configuration) *GenericController {
 			DefaultIngressClass:    config.DefaultIngressClass,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
 			CustomIngressStatus:    ic.cfg.Backend.UpdateIngressStatus,
+			UseNodeInternalIP:      ic.cfg.UseNodeInternalIP,
 		})
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
