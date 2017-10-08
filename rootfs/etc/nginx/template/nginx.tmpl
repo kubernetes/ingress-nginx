@@ -209,6 +209,10 @@ http {
     # allow configuring ssl session tickets
     ssl_session_tickets {{ if $cfg.SSLSessionTickets }}on{{ else }}off{{ end }};
 
+    {{ if not (empty $cfg.SSLSessionTicketKey ) }}
+    ssl_session_ticket_key /etc/nginx/tickets.key;
+    {{ end }}
+
     # slightly reduce the time-to-first-byte
     ssl_buffer_size {{ $cfg.SSLBufferSize }};
 
