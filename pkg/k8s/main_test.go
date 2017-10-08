@@ -61,9 +61,10 @@ func TestGetNodeIP(t *testing.T) {
 		cs *testclient.Clientset
 		n  string
 		ea string
+		i  bool
 	}{
 		// empty node list
-		{testclient.NewSimpleClientset(), "demo", ""},
+		{testclient.NewSimpleClientset(), "demo", "", true},
 
 		// node not exist
 		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
@@ -78,7 +79,7 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			},
-		}}}), "notexistnode", ""},
+		}}}), "notexistnode", "", true},
 
 		// node  exist
 		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
@@ -93,7 +94,7 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			},
-		}}}), "demo", "10.0.0.1"},
+		}}}), "demo", "10.0.0.1", true},
 
 		// search the correct node
 		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{
@@ -123,7 +124,7 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			},
-		}}), "demo2", "10.0.0.2"},
+		}}), "demo2", "10.0.0.2", true},
 
 		// get NodeExternalIP
 		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
@@ -141,7 +142,7 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			},
-		}}}), "demo", "10.0.0.2"},
+		}}}), "demo", "10.0.0.2", false},
 
 		// get NodeInternalIP
 		{testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
@@ -159,11 +160,11 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			},
-		}}}), "demo", "10.0.0.2"},
+		}}}), "demo", "10.0.0.2", true},
 	}
 
 	for _, fk := range fKNodes {
-		address := GetNodeIP(fk.cs, fk.n)
+		address := GetNodeIP(fk.cs, fk.n, fk.i)
 		if address != fk.ea {
 			t.Errorf("expected %s, but returned %s", fk.ea, address)
 		}

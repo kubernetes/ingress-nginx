@@ -101,6 +101,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		sortBackends = flags.Bool("sort-backends", false,
 			`Defines if backends and it's endpoints should be sorted`)
+
+		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", false,
+			`Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address`)
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
@@ -198,6 +201,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		DisableNodeList:         *disableNodeList,
 		UpdateStatusOnShutdown:  *updateStatusOnShutdown,
 		SortBackends:            *sortBackends,
+		UseNodeInternalIP:       *useNodeInternalIP,
 	}
 
 	ic := newIngressController(config)
