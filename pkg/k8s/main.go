@@ -37,26 +37,30 @@ func ParseNameNS(input string) (string, string, error) {
 }
 
 // GetNodeIP returns the IP address of a node in the cluster
-func GetNodeIP(kubeClient clientset.Interface, name string) string {
-	var externalIP string
+func GetNodeIP(kubeClient clientset.Interface, name string, useInternalIP bool) string {
 	node, err := kubeClient.Core().Nodes().Get(name, metav1.GetOptions{})
 	if err != nil {
-		return externalIP
+		return ""
 	}
 
 	for _, address := range node.Status.Addresses {
-		if address.Type == apiv1.NodeExternalIP {
-			if address.Address != "" {
-				externalIP = address.Address
-				break
+		if useInternalIP {
+			if address.Type == apiv1.NodeInternalIP {
+				if address.Address != "" {
+					return address.Address
+				}
 			}
+			continue
 		}
 
-		if externalIP == "" && address.Type == apiv1.NodeInternalIP {
-			externalIP = address.Address
+		if address.Type == apiv1.NodeExternalIP {
+			if address.Address != "" {
+				return address.Address
+			}
 		}
 	}
-	return externalIP
+
+	return ""
 }
 
 // PodInfo contains runtime information about the pod running the Ingres controller
@@ -87,7 +91,7 @@ func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
 	return &PodInfo{
 		Name:      podName,
 		Namespace: podNs,
-		NodeIP:    GetNodeIP(kubeClient, pod.Spec.NodeName),
+		NodeIP:    GetNodeIP(kubeClient, pod.Spec.NodeName, true),
 		Labels:    pod.GetLabels(),
 	}, nil
 }
