@@ -22,7 +22,11 @@ might close your issue.  If we're wrong, PLEASE feel free to reopen it and
 explain why.
 -->
 
+**NGINX Ingress controller version**:
+
+
 **Kubernetes version** (use `kubectl version`):
+
 
 **Environment**:
 
