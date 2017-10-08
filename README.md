@@ -1,28 +1,19 @@
+The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](https://github.com/kubernetes/ingress-gce).
+
+---
+
 # NGINX Ingress Controller
 
-[![Build Status](https://travis-ci.org/kubernetes/ingress-nginx.svg?branch=master)](https://travis-ci.org/kubernetes/ingress-nginx) 
-[![Coverage Status](https://coveralls.io/repos/github/kubernetes/ingress-nginx/badge.svg?branch=master)](https://coveralls.io/github/kubernetes/ingress-nginx?branch=master) 
-[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx) 
-[![GoDoc](https://godoc.org/github.com/kubernetes/ingress-nginx?status.svg)](https://godoc.org/github.com/kubernetes/ingress-nginx) 
+[![Build Status](https://travis-ci.org/kubernetes/ingress-nginx.svg?branch=master)](https://travis-ci.org/kubernetes/ingress-nginx)
+[![Coverage Status](https://coveralls.io/repos/github/kubernetes/ingress-nginx/badge.svg?branch=master)](https://coveralls.io/github/kubernetes/ingress-nginx?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx)
+[![GoDoc](https://godoc.org/github.com/kubernetes/ingress-nginx?status.svg)](https://godoc.org/github.com/kubernetes/ingress-nginx)
 
 ## Description
 
-This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/).
+This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the NGINX configuration.
 
-The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](https://github.com/kubernetes/ingress-gce).
-
-## Navigation
-
-* Learn more about using Ingress
-     * See our user documentation on [k8s.io](http://kubernetes.io/docs/user-guide/ingress/)
-     * Follow through to the respective platform specific [examples](examples/README.md)
-* Deploy existing Ingress controllers
-    * See our [admin documentation](docs/admin.md)
-* Contribute
-    * See the [contributor guidelines](CONTRIBUTING.md)
-* Debug
-    * Peruse the [FAQ section](docs/faq/README.md)
-    * Ask on one of the [user-support channels](CONTRIBUTING.md#support-channels)
+Learn more about using Ingress on [k8s.io](http://kubernetes.io/docs/user-guide/ingress/)
 
 ### What is an Ingress Controller?
 
@@ -32,16 +23,12 @@ The Ingress resource embodies this idea, and an Ingress controller is meant to h
 
 An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches the apiserver's `/ingresses` endpoint for updates to the [Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/). Its job is to satisfy requests for Ingresses.
 
-### Introduction
-
-This is an nginx Ingress controller that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the nginx configuration. See [Ingress controller documentation](../README.md) for details on how it works.
-
 ## Contents
 
 * [Conventions](#conventions)
 * [Requirements](#requirements)
+* [Contribute](#contribute)
 * [Command line arguments](#command-line-arguments)
-* [Dry running](#try-running-the-ingress-controller)
 * [Deployment](#deployment)
 * [HTTP](#http)
 * [HTTPS](#https)
@@ -69,13 +56,17 @@ This is an nginx Ingress controller that uses [ConfigMap](https://kubernetes.io/
 
 ## Conventions
 
-Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). You can generate such a certificate with: 
- `openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}"`
- and create the secret via `kubectl create secret tls ${CERT_NAME} --key ${KEY_FILE} --cert ${CERT_FILE}`
+Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). You can generate such a certificate with:
+`openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}"`
+and create the secret via `kubectl create secret tls ${CERT_NAME} --key ${KEY_FILE} --cert ${CERT_FILE}`
 
 ## Requirements
 
-- Default backend [404-server](https://github.com/kubernetes/ingress/tree/master/images/404-server)
+Default backend [404-server](https://github.com/kubernetes/ingress/tree/master/images/404-server)
+
+## Contribute
+
+See the [contributor guidelines](CONTRIBUTING.md)
 
 ## Command line arguments
 
@@ -136,6 +127,7 @@ Usage of :
 ## Deployment
 
 First create a default backend and it's corresponding service:
+
 ```console
 kubectl create -f examples/default-backend.yaml
 ```
@@ -338,15 +330,13 @@ To configure this feature for specific ingress resources, you can use the `ingre
 
 HTTP Strict Transport Security (HSTS) is an opt-in security enhancement specified through the use of a special response header. Once a supported browser receives this header that browser will prevent any communications from being sent over HTTP to the specified domain and will instead send all communications over HTTPS.
 
-By default the controller redirects (301) to HTTPS if there is a TLS Ingress rule. 
+By default the controller redirects (301) to HTTPS if there is a TLS Ingress rule.
 
 To disable this behavior use `hsts=false` in the NGINX config map.
 
 ### Automated Certificate Management with Kube-Lego
 
-[Kube-Lego] automatically requests missing or expired certificates from
-[Let's Encrypt] by monitoring ingress resources and their referenced secrets. To
-enable this for an ingress resource you have to add an annotation:
+[Kube-Lego] automatically requests missing or expired certificates from [Let's Encrypt] by monitoring ingress resources and their referenced secrets. To enable this for an ingress resource you have to add an annotation:
 
 ```console
 kubectl annotate ing ingress-demo kubernetes.io/tls-acme="true"
@@ -361,7 +351,7 @@ version to fully support Kube-Lego is nginx Ingress controller 0.8.
 
 ## Source IP address
 
-By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of the external load balancer. 
+By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of the external load balancer.
 If the ingress controller is running in AWS we need to use the VPC IPv4 CIDR. This allows NGINX to avoid the spoofing of the header.
 Another option is to enable proxy protocol using `use-proxy-protocol: "true"`.
 In this mode NGINX do not uses the content of the header to get the source IP address of the connection.
@@ -456,7 +446,7 @@ In the zipkin inteface we can see the details:
 ### Custom errors
 
 In case of an error in a request the body of the response is obtained from the `default backend`.
-Each request to the default backend includes two headers: 
+Each request to the default backend includes two headers:
 
 - `X-Code` indicates the HTTP code to be returned to the client.
 - `X-Format` the value of the `Accept` header.
@@ -485,17 +475,13 @@ To extract the information in JSON format the module provides a custom URL: `/ng
 
 ### Running multiple ingress controllers
 
-If you're running multiple ingress controllers, or running on a cloudprovider that natively handles 
-ingress, you need to specify the annotation `kubernetes.io/ingress.class: "nginx"` in all ingresses 
-that you would like this controller to claim. Not specifying the annotation will lead to multiple 
-ingress controllers claiming the same ingress. Specifying the wrong value will result in all ingress 
-controllers ignoring the ingress. Multiple ingress controllers running in the same cluster was not 
-supported in Kubernetes versions < 1.3.
+If you're running multiple ingress controllers, or running on a cloudprovider that natively handles ingress, you need to specify the annotation `kubernetes.io/ingress.class: "nginx"` in all ingresses that you would like this controller to claim.
+Not specifying the annotation will lead to multiple ingress controllers claiming the same ingress. Specifying the wrong value will result in all ingress controllers ignoring the ingress.
+Multiple ingress controllers running in the same cluster was not supported in Kubernetes versions < 1.3.
 
 ### Running on Cloudproviders
 
-If you're running this ingress controller on a cloudprovider, you should assume the provider also has a native 
-Ingress controller and specify the ingress.class annotation as indicated in this section.
+If you're running this ingress controller on a cloudprovider, you should assume the provider also has a native Ingress controller and specify the ingress.class annotation as indicated in this section.
 In addition to this, you will need to add a firewall rule for each port this controller is listening on, i.e :80 and :443.
 
 ### Disabling NGINX ingress controller
@@ -564,6 +550,9 @@ I0316 12:24:37.610073       1 command.go:69] change in configuration detected. R
 
 - `--v=3` shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format
 - `--v=5` configures NGINX in [debug mode](http://nginx.org/en/docs/debugging_log.html)
+
+Peruse the [FAQ section](docs/faq/README.md)
+Ask on one of the [user-support channels](CONTRIBUTING.md#support-channels)
 
 ### Limitations
 
