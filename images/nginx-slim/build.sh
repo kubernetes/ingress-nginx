@@ -15,7 +15,9 @@
 # limitations under the License.
 
 
-set -e
+set -o errexit
+set -o nounset
+set -o pipefail
 
 export NGINX_VERSION=1.13.5
 export NDK_VERSION=0.3.0
@@ -28,6 +30,7 @@ export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING=fcc2e822c6dfc7d1f432c16b07dee9437c24236a
 export OPENTRACING_CPP=42cbb358b68e53145c5b479efa09a25dbc81a95a
 export ZIPKIN_CPP=8eae512bd750b304764d96058c65229f9a7712a9
+export MODSECURITY=a2a5858d249222938c2f5e48087a922c63d7f9d8
 
 export BUILD_PATH=/tmp/build
 
@@ -73,9 +76,20 @@ apt-get update && apt-get install --no-install-recommends -y \
   openssl \
   libperl-dev \
   cmake \
+  util-linux \
+  wget \
   libcurl4-openssl-dev \
+  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
   linux-headers-generic || exit 1
 
+mkdir -p /etc/nginx
+
+# download GeoIP databases
+wget -O /etc/nginx/GeoIP.dat.gz https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz || { echo 'Could not download GeoLiteCountry, exiting.' ; exit 1; }
+wget -O /etc/nginx/GeoLiteCity.dat.gz https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz || { echo 'Could not download GeoLiteCity, exiting.' ; exit 1; }
+
+gunzip /etc/nginx/GeoIP.dat.gz
+gunzip /etc/nginx/GeoLiteCity.dat.gz
 
 # download, verify and extract the source files
 get_src 0e75b94429b3f745377aeba3aff97da77bf2b03fcb9ff15b3bad9b038db29f2e \
@@ -111,6 +125,8 @@ get_src d1afc7c38bef055ac8a3759f117281b9d9287785e044a7d4e79134fa6ea99324 \
 get_src c9961b503da1119eaeb15393bac804a303d49d86f701dbfd31c425d2214354d5 \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/$ZIPKIN_CPP.tar.gz"
 
+get_src 3abdecedb5bf544eeba8c1ce0bef2da6a9f064b216ebbe20b68894afec1d7d80 \
+        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY.tar.gz"
 
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
@@ -134,11 +150,28 @@ cmake -DBUILD_SHARED_LIBS=1 ..
 make
 make install
 
+cd "$BUILD_PATH"
+
+if [[ ${ARCH} == "x86_64" ]]; then
+  # build modsecurity library
+  git clone https://github.com/SpiderLabs/ModSecurity
+  cd ModSecurity/
+  git checkout -b v3/master origin/v3/master
+  sh build.sh
+  git submodule init
+  git submodule update
+  autoreconf -i
+  automake
+  autoconf
+  ./configure
+  make
+  make install
+fi
 
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
-echo "Applying tls nginx patches..."
+echo "Applying nginx patches..."
 patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
 patch -p1 < $BUILD_PATH/nginx_http2_hpack.patch
 
@@ -171,6 +204,19 @@ if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=generic'
 fi
 
+WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
+  --add-module=$BUILD_PATH/set-misc-nginx-module-$SETMISC_VERSION \
+  --add-module=$BUILD_PATH/nginx-module-vts-$VTS_VERSION \
+  --add-module=$BUILD_PATH/headers-more-nginx-module-$MORE_HEADERS_VERSION \
+  --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
+  --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
+  --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
+  --add-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING"
+
+if [[ ${ARCH} == "x86_64" ]]; then
+  WITH_MODULES+=" --add-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY"
+fi
+
 ./configure \
   --prefix=/usr/share/nginx \
   --conf-path=/etc/nginx/nginx.conf \
@@ -191,14 +237,7 @@ fi
   --without-http_scgi_module \
   --with-cc-opt="${CC_OPT}" \
   --with-ld-opt="${LD_OPT}" \
-  --add-module="$BUILD_PATH/ngx_devel_kit-$NDK_VERSION" \
-  --add-module="$BUILD_PATH/set-misc-nginx-module-$SETMISC_VERSION" \
-  --add-module="$BUILD_PATH/nginx-module-vts-$VTS_VERSION" \
-  --add-module="$BUILD_PATH/headers-more-nginx-module-$MORE_HEADERS_VERSION" \
-  --add-module="$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION" \
-  --add-module="$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH" \
-  --add-module="$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS" \
-  --add-module="$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING" \
+  ${WITH_MODULES} \
   && make || exit 1 \
   && make install || exit 1
 
@@ -215,6 +254,8 @@ apt-mark unmarkauto \
   libaio1 \
   xz-utils \
   geoip-bin \
+  libyajl2 liblmdb0 libxml2 libpcre++ \
+  gzip \
   openssl
 
 apt-get remove -y --purge \
@@ -228,6 +269,8 @@ apt-get remove -y --purge \
   libaio-dev \
   linux-libc-dev \
   perl-modules-5.22 \
+  cmake \
+  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev \
   linux-headers-generic
 
 apt-get autoremove -y
@@ -241,9 +284,56 @@ rm -Rf /usr/share/man /usr/share/doc
 rm -rf /tmp/* /var/tmp/*
 rm -rf /var/lib/apt/lists/*
 rm -rf /var/cache/apt/archives/*
+rm -rf /usr/local/modsecurity/bin
+rm -rf /usr/local/modsecurity/include
+rm -rf /usr/local/modsecurity/lib/libmodsecurity.a
 
-# Download of GeoIP databases
-curl -sSL -o /etc/nginx/GeoIP.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz \
-  && curl -sSL -o /etc/nginx/GeoLiteCity.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz \
-  && gunzip /etc/nginx/GeoIP.dat.gz \
-  && gunzip /etc/nginx/GeoLiteCity.dat.gz
+# Download owasp modsecurity crs
+cd /etc/nginx/
+curl -sSL -o master.tgz https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/v3.0.2/master.tar.gz
+tar zxpvf master.tgz
+mv owasp-modsecurity-crs-3.0.2/ owasp-modsecurity-crs
+rm master.tgz
+
+cd owasp-modsecurity-crs
+mv crs-setup.conf.example crs-setup.conf
+mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+mv rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+cd ..
+
+# Download modsecurity.conf
+mkdir modsecurity
+cd modsecurity
+curl -sSL -o modsecurity.conf https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended
+
+# OWASP CRS v3 rules
+echo "
+Include /etc/nginx/owasp-modsecurity-crs/crs-setup.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-901-INITIALIZATION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-903.9001-DRUPAL-EXCLUSION-RULES.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-903.9002-WORDPRESS-EXCLUSION-RULES.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-910-IP-REPUTATION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-911-METHOD-ENFORCEMENT.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-912-DOS-PROTECTION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-913-SCANNER-DETECTION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-921-PROTOCOL-ATTACK.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-930-APPLICATION-ATTACK-LFI.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-949-BLOCKING-EVALUATION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-950-DATA-LEAKAGES.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-951-DATA-LEAKAGES-SQL.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-952-DATA-LEAKAGES-JAVA.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-953-DATA-LEAKAGES-PHP.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-954-DATA-LEAKAGES-IIS.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-980-CORRELATION.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+" > /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
