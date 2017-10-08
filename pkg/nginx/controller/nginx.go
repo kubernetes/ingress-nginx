@@ -106,6 +106,7 @@ Error loading new template : %v
 		n.t.Close()
 		n.t = template
 		glog.Info("new NGINX template loaded")
+		n.controller.SetForceReload(true)
 	}
 
 	ngxTpl, err := ngx_template.NewTemplate(tmplPath, onChange)
