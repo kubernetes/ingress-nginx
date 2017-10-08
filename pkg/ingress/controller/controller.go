@@ -315,7 +315,7 @@ func (ic *GenericController) syncIngress(item interface{}) error {
 	setSSLExpireTime(servers)
 
 	ic.runningConfig = &pcfg
-	ic.setForceReload(false)
+	ic.SetForceReload(false)
 
 	return nil
 }
@@ -1242,9 +1242,10 @@ func (ic *GenericController) isForceReload() bool {
 	return atomic.LoadInt32(&ic.forceReload) != 0
 }
 
-func (ic *GenericController) setForceReload(shouldReload bool) {
+func (ic *GenericController) SetForceReload(shouldReload bool) {
 	if shouldReload {
 		atomic.StoreInt32(&ic.forceReload, 1)
+		ic.syncQueue.Enqueue(&extensions.Ingress{})
 	} else {
 		atomic.StoreInt32(&ic.forceReload, 0)
 	}
