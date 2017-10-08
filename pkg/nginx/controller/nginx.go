@@ -18,6 +18,7 @@ package controller
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -480,7 +481,17 @@ func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
 		}
 	}
 
-	n.backendDefaults = ngx_template.ReadConfig(m).Backend
+	c := ngx_template.ReadConfig(m)
+	if c.SSLSessionTicketKey != "" {
+		d, err := base64.StdEncoding.DecodeString(c.SSLSessionTicketKey)
+		if err != nil {
+			glog.Warningf("unexpected error decoding key ssl-session-ticket-key: %v", err)
+			c.SSLSessionTicketKey = ""
+		}
+		ioutil.WriteFile("/etc/nginx/tickets.key", d, 0644)
+	}
+
+	n.backendDefaults = c.Backend
 }
 
 // SetListers sets the configured store listers in the generic ingress controller
