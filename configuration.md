@@ -516,6 +516,11 @@ Default is "true".
 
 **ssl-session-tickets:** Enables or disables session resumption through [TLS session tickets](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets).
 
+**ssl-session-ticket-key:** sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
+http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
+By default, a randomly generated key is used.
+To create a ticket: `openssl rand 80 | base64 -w0`
+
 **ssl-session-timeout:** Sets the time during which a client may [reuse the session](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout) parameters stored in a cache.
 
 **upstream-max-fails:** Sets the number of unsuccessful attempts to communicate with the [server](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that should happen in the duration set by the `fail_timeout` parameter to consider the server unavailable.
