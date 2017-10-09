@@ -2,13 +2,8 @@ package defaults
 
 import "net"
 
-// Backend defines the mandatory configuration that an Ingress controller must provide
-// The reason of this requirements is the annotations are generic. If some implementation do not supports
-// one or more annotations it just can provides defaults
+// Backend defines the mandatory configuration for NGINX.
 type Backend struct {
-	// AppRoot contains the AppRoot for apps that doesn't exposes its content in the 'root' context
-	AppRoot string `json:"app-root"`
-
 	// enables which HTTP codes should be passed for processing with the error_page directive
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page
@@ -101,15 +96,4 @@ type Backend struct {
 	// WhitelistSourceRange allows limiting access to certain client addresses
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
 	WhitelistSourceRange []string `json:"whitelist-source-range,-"`
-
-	// Limits the rate of response transmission to a client.
-	// The rate is specified in bytes per second. The zero value disables rate limiting.
-	// The limit is set per a request, and so if a client simultaneously opens two connections,
-	// the overall rate will be twice as much as the specified limit.
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate
-	LimitRate int `json:"limit-rate"`
-
-	// Sets the initial amount after which the further transmission of a response to a client will be rate limited.
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after
-	LimitRateAfter int `json:"limit-rate-after"`
 }

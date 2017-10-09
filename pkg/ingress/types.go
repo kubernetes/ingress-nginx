@@ -26,14 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apiserver/pkg/server/healthz"
 
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/auth"
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/authtls"
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/ipwhitelist"
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/proxy"
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/ratelimit"
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/redirect"
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/pkg/ingress/defaults"
 	"k8s.io/ingress-nginx/pkg/ingress/resolver"
 	"k8s.io/ingress-nginx/pkg/ingress/store"
@@ -174,26 +167,6 @@ type Backend struct {
 	UpstreamHashBy string `json:"upstream-hash-by,omitempty"`
 }
 
-// SessionAffinityConfig describes different affinity configurations for new sessions.
-// Once a session is mapped to a backend based on some affinity setting, it
-// retains that mapping till the backend goes down, or the ingress controller
-// restarts. Exactly one of these values will be set on the upstream, since multiple
-// affinity values are incompatible. Once set, the backend makes no guarantees
-// about honoring updates.
-// +k8s:deepcopy-gen=true
-type SessionAffinityConfig struct {
-	AffinityType          string                `json:"name"`
-	CookieSessionAffinity CookieSessionAffinity `json:"cookieSessionAffinity"`
-}
-
-// CookieSessionAffinity defines the structure used in Affinity configured by Cookies.
-// +k8s:deepcopy-gen=true
-type CookieSessionAffinity struct {
-	Name      string              `json:"name"`
-	Hash      string              `json:"hash"`
-	Locations map[string][]string `json:"locations,omitempty"`
-}
-
 // Endpoint describes a kubernetes endpoint in a backend
 // +k8s:deepcopy-gen=true
 type Endpoint struct {
@@ -241,7 +214,6 @@ type Server struct {
 	// CertificateAuth indicates the this server requires mutual authentication
 	// +optional
 	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth"`
-
 	// ServerSnippet returns the snippet of server
 	// +optional
 	ServerSnippet string `json:"serverSnippet"`
@@ -282,57 +254,9 @@ type Location struct {
 	Service *apiv1.Service `json:"service,omitempty"`
 	// Port describes to which port from the service
 	Port intstr.IntOrString `json:"port"`
-	// Overwrite the Host header passed into the backend. Defaults to
-	// vhost of the incoming request.
-	// +optional
-	UpstreamVhost string `json:"upstream-vhost"`
-	// BasicDigestAuth returns authentication configuration for
-	// an Ingress rule.
-	// +optional
-	BasicDigestAuth auth.BasicDigest `json:"basicDigestAuth,omitempty"`
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
 	Denied error `json:"denied,omitempty"`
-	// EnableCORS indicates if path must support CORS
-	// +optional
-	EnableCORS bool `json:"enableCors,omitempty"`
-	// ExternalAuth indicates the access to this location requires
-	// authentication using an external provider
-	// +optional
-	ExternalAuth authreq.External `json:"externalAuth,omitempty"`
-	// RateLimit describes a limit in the number of connections per IP
-	// address or connections per second.
-	// The Redirect annotation precedes RateLimit
-	// +optional
-	RateLimit ratelimit.RateLimit `json:"rateLimit,omitempty"`
-	// Redirect describes a temporal o permanent redirection this location.
-	// +optional
-	Redirect redirect.Redirect `json:"redirect,omitempty"`
-	// Rewrite describes the redirection this location.
-	// +optional
-	Rewrite rewrite.Redirect `json:"rewrite,omitempty"`
-	// Whitelist indicates only connections from certain client
-	// addresses or networks are allowed.
-	// +optional
-	Whitelist ipwhitelist.SourceRange `json:"whitelist,omitempty"`
-	// Proxy contains information about timeouts and buffer sizes
-	// to be used in connections against endpoints
-	// +optional
-	Proxy proxy.Configuration `json:"proxy,omitempty"`
-	// UsePortInRedirects indicates if redirects must specify the port
-	// +optional
-	UsePortInRedirects bool `json:"usePortInRedirects"`
-	// VtsFilterKey contains the vts filter key on the location level
-	// https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key
-	// +optional
-	VtsFilterKey string `json:"vtsFilterKey,omitempty"`
-	// ConfigurationSnippet contains additional configuration for the backend
-	// to be considered in the configuration of the location
-	ConfigurationSnippet string `json:"configurationSnippet"`
-	// ClientBodyBufferSize allows for the configuration of the client body
-	// buffer size for a specific location.
-	// +optional
-	ClientBodyBufferSize string `json:"clientBodyBufferSize,omitempty"`
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
 	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty"`
