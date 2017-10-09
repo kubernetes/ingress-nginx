@@ -592,7 +592,7 @@ stream {
         ssl_certificate                         {{ $server.SSLCertificate }};
         ssl_certificate_key                     {{ $server.SSLCertificate }};
         {{ if not (empty $server.SSLFullChainCertificate)}}
-        ssl_trusted_certificate                 {{ $server.SSLFullChainCertificate }};        
+        ssl_trusted_certificate                 {{ $server.SSLFullChainCertificate }};
         ssl_stapling                            on;
         ssl_stapling_verify                     on;
         {{ end }}
@@ -616,7 +616,7 @@ stream {
         {{ if not (empty $server.ServerSnippet) }}
         {{ $server.ServerSnippet }}
         {{ end }}
-        
+
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
         {{ $authPath := buildAuthLocation $location }}
@@ -808,7 +808,13 @@ stream {
             proxy_set_header       X-Service-Name     $service_name;
             {{ end }}
 
+
+            {{ if not (empty $location.Backend) }}
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
+            {{ else }}
+            # No endpoints available for the request
+            return 503;
+            {{ end }}
             {{ else }}
             # Location denied. Reason: {{ $location.Denied }}
             return 503;
