@@ -17,7 +17,7 @@ The Nginx Ingress Controller uses nginx (surprisingly!) to loadbalance requests 
 ports 80 and 443 to Services in the cluster.
 
 ```console
-$ kubectl apply -f https://rawgit.com/kubernetes/ingress/master/examples/deployment/nginx/kubeadm/nginx-ingress-controller.yaml
+$ kubectl apply -f https://rawgit.com/kubernetes/ingress/master/examples/deployment/kubeadm/nginx-ingress-controller.yaml
 deployment "default-http-backend" created
 service "default-http-backend" created
 deployment "nginx-ingress-controller" created

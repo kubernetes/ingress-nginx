@@ -7,7 +7,7 @@ This example aims to demonstrate the Deployment of multi nginx ingress controlle
 The default backend is a service of handling all url paths and hosts the nginx controller doesn't understand. Deploy the default-http-backend as follow:
 
 ```console
-$ kubectl apply -f ../../deployment/nginx/default-backend.yaml 
+$ kubectl apply -f ../../deployment/default-backend.yaml
 deployment "default-http-backend" configured
 service "default-http-backend" configured
 
