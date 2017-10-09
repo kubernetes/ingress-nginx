@@ -210,12 +210,14 @@ http {
         ''               $host;
     }
 
+    {{ if $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
-    # replaces the remote_addr to soon
-    map $http_x_forwarded_for $the_real_x_forwarded_for {
+    # replaces the remote_addr too soon
+    map $http_x_forwarded_for $full_x_forwarded_for {
         default          "$http_x_forwarded_for, $realip_remote_addr";
         ''               "$realip_remote_addr";
     }
+    {{ end }}
 
     server_name_in_redirect off;
     port_in_redirect        off;
@@ -749,7 +751,11 @@ stream {
             proxy_set_header                        Connection        $connection_upgrade;
 
             proxy_set_header X-Real-IP              $the_real_ip;
-            proxy_set_header X-Forwarded-For        $the_real_x_forwarded_for;
+            {{ if $all.Cfg.ComputeFullForwardedFor }}
+            proxy_set_header X-Forwarded-For        $full_x_forwarded_for;
+            {{ else }}
+            proxy_set_header X-Forwarded-For        $the_real_ip;
+            {{ end }}
             proxy_set_header X-Forwarded-Host       $best_http_host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
