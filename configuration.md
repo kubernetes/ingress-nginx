@@ -568,6 +568,7 @@ Default: ""
 **location-snippet:** adds custom configuration to all the locations in the nginx configuration
 Default: ""
 
+**compute-full-forwarded-for:** Append the remote address to the X-Forwarded-For header instead of replacing it. When this option is enabled, the upstream application is responsible for extracting the client IP based on its own list of trusted proxies.
 
 ### Default configuration options
 
@@ -625,6 +626,7 @@ The following table shows the options, the default value and a description.
 |worker-processes|number of CPUs|
 |limit-conn-zone-variable|$binary_remote_addr|
 |bind-address||
+|compute-full-forwarded-for|"false"|
 
 ### Websockets
 
