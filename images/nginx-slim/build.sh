@@ -197,8 +197,8 @@ if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
 fi
 
-CC_OPT='-g -O3 -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing'
-LD_OPT='-Wl,-Bsymbolic-functions -fPIE -pie -Wl,-z,relro -Wl,-z,now'
+CC_OPT='-g -O3 -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC'
+LD_OPT='-Wl,-Bsymbolic-functions -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now'
 
 if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=generic'
@@ -214,7 +214,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING"
 
 if [[ ${ARCH} == "x86_64" ]]; then
-  WITH_MODULES+=" --add-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY"
+  WITH_MODULES+=" --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY"
 fi
 
 ./configure \
@@ -240,6 +240,11 @@ fi
   ${WITH_MODULES} \
   && make || exit 1 \
   && make install || exit 1
+
+if [[ ${ARCH} == "x86_64" ]]; then
+  mkdir -p /etc/nginx/modules/
+  cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/
+fi
 
 echo "Cleaning..."
 
