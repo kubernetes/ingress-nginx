@@ -384,6 +384,12 @@ Example usage: `custom-http-errors: 404,415`
 
 **error-log-path:** Error log path. Goes to '/var/log/nginx/error.log' by default. http://nginx.org/en/docs/ngx_core_module.html#error_log
 
+**enable-modsecurity:**  enables the modsecurity module for NGINX
+By default this is disabled
+
+**enable-owasp-modsecurity-crs:** enables the OWASP ModSecurity Core Rule Set (CRS)
+By default this is disabled
+
 **disable-ipv6:** Disable listening on IPV6. This is 'false' by default.
 
 **enable-dynamic-tls-records:** Enables dynamically sized TLS records to improve time-to-first-byte. Enabled by default. See [CloudFlare's blog](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency) for more information.
