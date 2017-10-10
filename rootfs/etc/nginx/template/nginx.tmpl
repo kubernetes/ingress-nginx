@@ -6,6 +6,11 @@
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
+
+{{ if $cfg.EnableModsecurity }}
+load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
+{{ end }}
+
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -655,10 +660,7 @@ stream {
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
         }
-
         {{ end }}
-
-
         location {{ $path }} {
             {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
 
@@ -675,6 +677,15 @@ stream {
             if ($pass_access_scheme = http) {
                 return 301 https://$best_http_host$request_uri;
             }
+            {{ end }}
+
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity on;
+
+            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+            {{ if $all.Cfg.EnableOWASPCoreRules }}
+            modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+            {{ end }}
             {{ end }}
 
             {{ if isLocationAllowed $location }}
@@ -821,6 +832,7 @@ stream {
             return 503;
             {{ end }}
         }
+        
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}
