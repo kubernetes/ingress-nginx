@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.13.5
+export NGINX_VERSION=1.13.6
 export NDK_VERSION=0.3.0
 export VTS_VERSION=0.1.15
 export SETMISC_VERSION=0.31
@@ -79,6 +79,7 @@ apt-get update && apt-get install --no-install-recommends -y \
   util-linux \
   wget \
   libcurl4-openssl-dev \
+  procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
   linux-headers-generic || exit 1
 
@@ -92,7 +93,7 @@ gunzip /etc/nginx/GeoIP.dat.gz
 gunzip /etc/nginx/GeoLiteCity.dat.gz
 
 # download, verify and extract the source files
-get_src 0e75b94429b3f745377aeba3aff97da77bf2b03fcb9ff15b3bad9b038db29f2e \
+get_src 8512fc6f986a20af293b61f33b0e72f64a72ea5b1acbcc790c4c4e2d6f63f8f8 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
@@ -131,14 +132,11 @@ get_src 3abdecedb5bf544eeba8c1ce0bef2da6a9f064b216ebbe20b68894afec1d7d80 \
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
 
-# http2 header compression
-curl -sSL -o nginx_http2_hpack.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx_http2_hpack.patch
-
 # build opentracing lib
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP"
 mkdir .build
 cd .build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 make install
 
@@ -146,7 +144,7 @@ make install
 cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP"
 mkdir .build
 cd .build
-cmake -DBUILD_SHARED_LIBS=1 ..
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 ..
 make
 make install
 
@@ -173,7 +171,6 @@ cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
 echo "Applying nginx patches..."
 patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
-patch -p1 < $BUILD_PATH/nginx_http2_hpack.patch
 
 WITH_FLAGS="--with-debug \
   --with-pcre-jit \
@@ -187,7 +184,6 @@ WITH_FLAGS="--with-debug \
   --with-http_gzip_static_module \
   --with-http_sub_module \
   --with-http_v2_module \
-  --with-http_v2_hpack_enc \
   --with-stream \
   --with-stream_ssl_module \
   --with-stream_ssl_preread_module \
@@ -275,6 +271,7 @@ apt-get remove -y --purge \
   linux-libc-dev \
   perl-modules-5.22 \
   cmake \
+  wget \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev \
   linux-headers-generic
 
