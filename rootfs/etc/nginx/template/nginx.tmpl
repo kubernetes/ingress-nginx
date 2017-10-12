@@ -365,6 +365,10 @@ http {
         server_name {{ $server.Hostname }} {{ $server.Alias }};
         {{ template "SERVER" serverConfig $all $server }}
 
+        {{ if not (empty $cfg.ServerSnippet) }}
+        # Custom code snippet configured in the configuration configmap
+        {{ $cfg.ServerSnippet }}
+        {{ end }}
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
@@ -818,7 +822,7 @@ stream {
             return 503;
             {{ end }}
         }
-        
+
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}
