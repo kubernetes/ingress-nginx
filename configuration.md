@@ -201,7 +201,7 @@ For more information please check https://enable-cors.org/server_nginx.html
 ### Server Alias
 
 To add Server Aliases to an Ingress rule add the annotation `ingress.kubernetes.io/server-alias: "<alias>"`.
-This will create a server with the same configuration, but a different server_name as the provided host.
+This will create a server with two server_names (hostname and alias)
 
 *Note:* A server-alias name cannot conflict with the hostname of an existing server. If it does the server-alias
 annotation will be ignored. If a server-alias is created and later a new server with the same hostname is created
