@@ -289,6 +289,11 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
 	SSLDHParam string `json:"ssl-dh-param,omitempty"`
 
+	// Enables or disables the stapling of OCSP responses to verify Certificates
+	// If enabled, Ingress must have internet access
+	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_stapling
+	SSLEnableOCSP bool `json:"ssl-enable-ocsp"`
+
 	// SSL enabled protocols to use
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
 	SSLProtocols string `json:"ssl-protocols,omitempty"`
@@ -452,6 +457,7 @@ func NewDefault() Configuration {
 		SSLBufferSize:              sslBufferSize,
 		SSLCiphers:                 sslCiphers,
 		SSLECDHCurve:               "auto",
+		SSLEnableOCSP:              true,
 		SSLProtocols:               sslProtocols,
 		SSLSessionCache:            true,
 		SSLSessionCacheSize:        sslSessionCacheSize,

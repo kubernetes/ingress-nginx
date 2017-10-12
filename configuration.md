@@ -502,6 +502,9 @@ https://www.openssl.org/docs/manmaster/apps/dhparam.html
 https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
 
+**ssl-enable-ocsp:** Enable the stapling of OCSP responses. Ingress must have internet access when this option is enabled
+http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_stapling
+
 **ssl-protocols:** Sets the [SSL protocols](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols) to use.
 The default is: `TLSv1.2`.
 
@@ -615,6 +618,7 @@ The following table shows the options, the default value and a description.
 |ssl-buffer-size|4k|
 |ssl-ciphers||
 |ssl-dh-param|value from openssl|
+|ssl-enable-ocsp|"true"
 |ssl-protocols|TLSv1 TLSv1.1 TLSv1.2|
 |ssl-session-cache|"true"|
 |ssl-session-cache-size|10m|
