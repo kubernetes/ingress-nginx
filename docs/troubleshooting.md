@@ -165,13 +165,12 @@ If it is not working, there are two possible reasons:
 1. The contents of the tokens are invalid. Find the secret name with `kubectl get secrets | grep service-account` and
 delete it with `kubectl delete secret <name>`. It will automatically be recreated.
 
-2. You have a non-standard Kubernetes installation and the file containing the token
-may not be present. The API server will mount a volume containing this file, but
-only if the API server is configured to use the ServiceAccount admission controller.
-If you experience this error, verify that your API server is using the ServiceAccount
-admission controller. If you are configuring the API server by hand, you can set
-this with the `--admission-control` parameter. Please note that you should use
-other admission controllers as well. Before configuring this option, you should
+2. You have a non-standard Kubernetes installation and the file containing the token may not be present.
+The API server will mount a volume containing this file, but only if the API server is configured to use
+the ServiceAccount admission controller.
+If you experience this error, verify that your API server is using the ServiceAccount admission controller.
+If you are configuring the API server by hand, you can set this with the `--admission-control` parameter.
+Please note that you should use other admission controllers as well. Before configuring this option, you should
 read about admission controllers.
 
 More information:
@@ -180,146 +179,5 @@ More information:
 * [Cluster Administrator Guide: Managing Service Accounts](http://kubernetes.io/docs/admin/service-accounts-admin/)
 
 ### Kubeconfig
-If you want to use a kubeconfig file for authentication, create a deployment file similar to the one below:
-
-*Note:* the important part is the flag `--kubeconfig=/etc/kubernetes/kubeconfig.yaml`.
-
-```yaml
-kind: Service
-apiVersion: v1
-metadata:
-  name: nginx-default-backend
-  labels:
-    k8s-addon: ingress-nginx.addons.k8s.io
-spec:
-  ports:
-  - port: 80
-    targetPort: http
-  selector:
-    app: nginx-default-backend
-
----
-
-kind: Deployment
-apiVersion: extensions/v1beta1
-metadata:
-  name: nginx-default-backend
-  labels:
-    k8s-addon: ingress-nginx.addons.k8s.io
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        k8s-addon: ingress-nginx.addons.k8s.io
-        app: nginx-default-backend
-    spec:
-      terminationGracePeriodSeconds: 60
-      containers:
-      - name: default-http-backend
-        image: gcr.io/google_containers/defaultbackend:1.0
-        volumeMounts:
-        - mountPath: /etc/kubernetes
-          name: kubeconfig
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
-        resources:
-          limits:
-            cpu: 10m
-            memory: 20Mi
-          requests:
-            cpu: 10m
-            memory: 20Mi
-        ports:
-        - name: http
-          containerPort: 8080
-          protocol: TCP
-
----
-
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: ingress-nginx
-  labels:
-    k8s-addon: ingress-nginx.addons.k8s.io
-
----
-
-kind: Service
-apiVersion: v1
-metadata:
-  name: ingress-nginx
-  labels:
-    k8s-addon: ingress-nginx.addons.k8s.io
-spec:
-  type: LoadBalancer
-  selector:
-    app: ingress-nginx
-  ports:
-  - name: http
-    port: 80
-    targetPort: http
-  - name: https
-    port: 443
-    targetPort: https
-
----
-
-kind: Deployment
-apiVersion: extensions/v1beta1
-metadata:
-  name: ingress-nginx
-  labels:
-    k8s-addon: ingress-nginx.addons.k8s.io
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: ingress-nginx
-        k8s-addon: ingress-nginx.addons.k8s.io
-    spec:
-      terminationGracePeriodSeconds: 60
-      containers:
-      - image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.15
-        name: ingress-nginx
-        imagePullPolicy: Always
-        ports:
-          - name: http
-            containerPort: 80
-            protocol: TCP
-          - name: https
-            containerPort: 443
-            protocol: TCP
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 10254
-            scheme: HTTP
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
-        env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-        args:
-        - /nginx-ingress-controller
-        - --default-backend-service=$(POD_NAMESPACE)/nginx-default-backend
-        - --configmap=$(POD_NAMESPACE)/ingress-nginx
-        - --kubeconfig=/etc/kubernetes/kubeconfig.yaml
-      volumes:
-      - name: "kubeconfig"
-        hostPath:
-          path: "/etc/kubernetes/"
-```
+If you want to use a kubeconfig file for authentication, follow the deploy procedure and 
+add the flag `--kubeconfig=/etc/kubernetes/kubeconfig.yaml` to the deployment

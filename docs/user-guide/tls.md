@@ -1,6 +1,6 @@
 # TLS
 
-- [Default SSL Certificate](docs/user-guide/default-ssl-certificate.md)
+- [Default SSL Certificate](#default-ssl-certificate)
 - [SSL Passthrough](#ssl-passthrough)
 - [HTTPS enforcement](#server-side-https-enforcement)
 - [HSTS](#http-strict-transport-security)
