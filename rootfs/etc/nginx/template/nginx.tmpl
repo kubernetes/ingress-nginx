@@ -388,7 +388,7 @@ http {
     server {
         # Use the port {{ $all.ListenPorts.Status }} (random value just to avoid known ports) as default port for nginx.
         # Changing this value requires a change in:
-        # https://github.com/kubernetes/ingress/blob/master/controllers/nginx/pkg/cmd/controller/nginx.go
+        # https://github.com/kubernetes/ingress-nginx/blob/master/controllers/nginx/pkg/cmd/controller/nginx.go
         listen {{ $all.ListenPorts.Status }} default_server reuseport backlog={{ $all.BacklogSize }};
         {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server reuseport backlog={{ $all.BacklogSize }};{{ end }}
         set $proxy_upstream_name "-";
