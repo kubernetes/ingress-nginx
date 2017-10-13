@@ -362,16 +362,7 @@ http {
     {{ range $index, $server := $servers }}
 
     server {
-        server_name {{ $server.Hostname }};
-        {{ template "SERVER" serverConfig $all $server }}
-
-
-        {{ template "CUSTOM_ERRORS" $all }}
-    }
-
-    {{ if $server.Alias }}
-    server {
-        server_name {{ $server.Alias }};
+        server_name {{ $server.Hostname }} {{ $server.Alias }};
         {{ template "SERVER" serverConfig $all $server }}
 
         {{ if not (empty $cfg.ServerSnippet) }}
@@ -381,7 +372,6 @@ http {
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
-    {{ end }}
     {{ end }}
 
     # default server, used for NGINX healthcheck and access to nginx stats
@@ -832,7 +822,7 @@ stream {
             return 503;
             {{ end }}
         }
-        
+
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}
