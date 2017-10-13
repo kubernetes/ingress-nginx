@@ -12,6 +12,7 @@ Key:
 * `nginx`: the `kubernetes/ingress` nginx controller
 * `gce`: the `kubernetes/ingress` GCE controller
 * `traefik`: Traefik's built-in Ingress controller
+* `voyager`: [Voyager by AppsCode](https://github.com/appscode/voyager) - Secure HAProxy based Ingress Controller for Kubernetes
 * `haproxy`: Joao Morais' [HAProxy Ingress controller](https://github.com/jcmoraisjr/haproxy-ingress)
 * `trafficserver`: Torchbox's [Apache Traffic Server controller plugin](https://github.com/torchbox/k8s-ts-ingress)
 
@@ -19,27 +20,27 @@ Key:
 
 | Name | Meaning | Default | Controller
 | --- | --- | --- | --- |
-| `ssl-passthrough` | Pass TLS connections directly to backend; do not offload. | `false` | nginx, haproxy
-| `ssl-redirect` | Redirect non-TLS requests to TLS when TLS is enabled. | `true` | nginx, haproxy, trafficserver
-| `force-ssl-redirect` | Redirect non-TLS requests to TLS even when TLS is not configured. | `false` | nginx, trafficserver
-| `secure-backends` | Use TLS to communicate with origin (pods). | `false` | nginx, haproxy, trafficserver
+| `ssl-passthrough` | Pass TLS connections directly to backend; do not offload. | `false` | nginx, voyager, haproxy
+| `ssl-redirect` | Redirect non-TLS requests to TLS when TLS is enabled. | `true` | nginx, voyager, haproxy, trafficserver
+| `force-ssl-redirect` | Redirect non-TLS requests to TLS even when TLS is not configured. | `false` | nginx, voyager, trafficserver
+| `secure-backends` | Use TLS to communicate with origin (pods). | `false` | nginx, voyager, haproxy, trafficserver
 | `kubernetes.io/ingress.allow-http` | Whether to accept non-TLS HTTP connections. | `true` | gce
 | `pre-shared-cert` | Name of the TLS certificate in GCP to use when provisioning the HTTPS load balancer. | empty string | gce
-| `hsts-max-age` | Set an HSTS header with this lifetime. | | trafficserver
-| `hsts-include-subdomains` | Add includeSubdomains to the HSTS header. | | trafficserver
+| `hsts-max-age` | Set an HSTS header with this lifetime. | | voyager, trafficserver
+| `hsts-include-subdomains` | Add includeSubdomains to the HSTS header. | | voyager, trafficserver
 
 ## Authentication related
 
 | Name | Meaning | Default | Controller
 | --- | --- | --- | --- |
-| `auth-type` | Authentication type: `basic`, `digest`, ... | | nginx, haproxy, trafficserver
-| `auth-secret` | Secret name for authentication. | | nginx, haproxy, trafficserver
-| `auth-realm` | Authentication realm. | | nginx, haproxy, trafficserver
-| `auth-tls-secret` | Name of secret for TLS client certification validation. | | nginx, haproxy
+| `auth-type` | Authentication type: `basic`, `digest`, ... | | nginx, voyager, haproxy, trafficserver
+| `auth-secret` | Secret name for authentication. | | nginx, voyager, haproxy, trafficserver
+| `auth-realm` | Authentication realm. | | nginx, voyager, haproxy, trafficserver
+| `auth-tls-secret` | Name of secret for TLS client certification validation. | | nginx, voyager, haproxy
 | `auth-tls-verify-depth` | Maximum chain length of TLS client certificate. | | nginx
-| `auth-tls-error-page` | The page that user should be redirected in case of Auth error | | string
+| `auth-tls-error-page` | The page that user should be redirected in case of Auth error | | nginx, voyager
 | `auth-satisfy` | Behaviour when more than one of `auth-type`, `auth-tls-secret` or `whitelist-source-range` are configured: `all` or `any`. | `all` | trafficserver | `trafficserver`
-| `whitelist-source-range` | Comma-separate list of IP addresses to enable access to. | | nginx, haproxy, trafficserver
+| `whitelist-source-range` | Comma-separate list of IP addresses to enable access to. | | nginx, voyager, haproxy, trafficserver
 
 ## URL related
 
@@ -56,14 +57,14 @@ Key:
 | Name | Meaning | Default | Controller
 | --- | --- | --- | --- |
 | `configuration-snippet` | Arbitrary text to put in the generated configuration file. | | nginx
-| `enable-cors` | Enable CORS headers in response. | | nginx
-| `limit-connections` | Limit concurrent connections per IP address[1]. | | nginx
-| `limit-rps` | Limit requests per second per IP address[1]. | | nginx
-| `limit-rpm` | Limit requests per minute per IP address. | | nginx
-| `affinity` | Specify a method to stick clients to origins across requests.  Found in `nginx`, where the only supported value is `cookie`. | | nginx
-| `session-cookie-name` | When `affinity` is set to `cookie`, the name of the cookie to use. | | nginx
+| `enable-cors` | Enable CORS headers in response. | | nginx, voyager
+| `limit-connections` | Limit concurrent connections per IP address[1]. | | nginx, voyager
+| `limit-rps` | Limit requests per second per IP address[1]. | | nginx, voyager
+| `limit-rpm` | Limit requests per minute per IP address. | | nginx, voyager
+| `affinity` | Specify a method to stick clients to origins across requests.  Found in `nginx`, where the only supported value is `cookie`. | | nginx, voyager
+| `session-cookie-name` | When `affinity` is set to `cookie`, the name of the cookie to use. | | nginx, voyager
 | `session-cookie-hash` | When `affinity` is set to `cookie`, the hash algorithm used: `md5`, `sha`, `index`. | | nginx
-| `proxy-body-size` | Maximum request body size. | | nginx, haproxy
+| `proxy-body-size` | Maximum request body size. | | nginx, voyager, haproxy
 | `proxy-pass-params` | Parameters for proxy-pass directives. | |
 | `follow-redirects` | Follow HTTP redirects in the response and deliver the redirect target to the client. | | trafficserver
 | `kubernetes.io/ingress.global-static-ip-name` | Name of the static global IP address in GCP to use when provisioning the HTTPS load balancer. | empty string | gce
