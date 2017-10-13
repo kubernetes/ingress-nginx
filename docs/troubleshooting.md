@@ -1,15 +1,42 @@
 <!--
 -----------------NOTICE------------------------
 This file is referenced in code as
-https://github.com/kubernetes/ingress/blob/master/docs/troubleshooting.md
+https://github.com/kubernetes/ingress-ingress/blob/master/docs/troubleshooting.md
 Do not move it without providing redirects.
 -----------------------------------------------
 -->
 
-# Troubleshooting
+# Debug & Troubleshooting
+
+## Debug
+
+Using the flag `--v=XX` it is possible to increase the level of logging.
+In particular:
+
+- `--v=2` shows details using `diff` about the changes in the configuration in nginx
+
+```console
+I0316 12:24:37.581267       1 utils.go:148] NGINX configuration diff a//etc/nginx/nginx.conf b//etc/nginx/nginx.conf
+I0316 12:24:37.581356       1 utils.go:149] --- /tmp/922554809  2016-03-16 12:24:37.000000000 +0000
++++ /tmp/079811012  2016-03-16 12:24:37.000000000 +0000
+@@ -235,7 +235,6 @@
+
+     upstream default-http-svcx {
+         least_conn;
+-        server 10.2.112.124:5000;
+         server 10.2.208.50:5000;
+
+     }
+I0316 12:24:37.610073       1 command.go:69] change in configuration detected. Reloading...
+```
+
+- `--v=3` shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format
+- `--v=5` configures NGINX in [debug mode](http://nginx.org/en/docs/debugging_log.html)
+
+## Troubleshooting
 
 
-## Authentication to the Kubernetes API Server
+### Authentication to the Kubernetes API Server
 
 
 A number of components are involved in the authentication process and the first step is to narrow
@@ -60,8 +87,7 @@ Kubernetes                                                  Workstation
 +---------------------------------------------------+     +------------------+
 ```
 
-
-## Service Account
+### Service Account
 If using a service account to connect to the API server, Dashboard expects the file
 `/var/run/secrets/kubernetes.io/serviceaccount/token` to be present. It provides a secret
 token that is required to authenticate with the API server.
@@ -153,13 +179,12 @@ More information:
 * [User Guide: Service Accounts](http://kubernetes.io/docs/user-guide/service-accounts/)
 * [Cluster Administrator Guide: Managing Service Accounts](http://kubernetes.io/docs/admin/service-accounts-admin/)
 
-## Kubeconfig
+### Kubeconfig
 If you want to use a kubeconfig file for authentication, create a deployment file similar to the one below:
 
 *Note:* the important part is the flag `--kubeconfig=/etc/kubernetes/kubeconfig.yaml`.
 
-
-```
+```yaml
 kind: Service
 apiVersion: v1
 metadata:
