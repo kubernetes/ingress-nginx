@@ -28,14 +28,12 @@ An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches th
 - [Requirements](#requirements)
 - [Deployment](deploy/README.md)
 - [Command line arguments](docs/user-guide/cli-arguments.md)
-- [Contribute](#contribute)
+- [Contribute](CONTRIBUTING.md)
 - [TLS](docs/user-guide/tls.md)
-- [Customizing NGINX](#customizing-nginx)
-- [Custom NGINX configuration](docs/user-guide/configmap.md)
 - [Annotation ingress.class](#annotation-ingress.class)
-- [Annotations](docs/user-guide/annotations.md)
-- [Allowed parameters in configuration ConfigMap](docs/user-guide/configmap.md)
-- [Retries in non-idempotent methods](#retries-in-non-idempotent-methods)
+- [Customizing NGINX](#customizing-nginx)
+  - [Custom NGINX configuration](docs/user-guide/configmap.md)
+  - [Annotations](docs/user-guide/annotations.md)
 - [Source IP address](#source-ip-address)
 - [Exposing TCP and UDP Services](docs/user-guide/exposing-tcp-udp-services.md)
 - [Proxy Protocol](#proxy-protocol)
@@ -45,6 +43,7 @@ An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches th
 - [NGINX status page](docs/user-guide/nginx-status-page.md)
 - [Running multiple ingress controllers](#running-multiple-ingress-controllers)
 - [Disabling NGINX ingress controller](#disabling-nginx-ingress-controller)
+- [Retries in non-idempotent methods](#retries-in-non-idempotent-methods)
 - [Log format](docs/user-guide/log-format.md)
 - [Websockets](#websockets)
 - [Optimizing TLS Time To First Byte (TTTFB)](#optimizing-tls-time-to-first-byte-tttfb)
@@ -64,18 +63,12 @@ and create the secret via `kubectl create secret tls ${CERT_NAME} --key ${KEY_FI
 The default backend is a service of handling all url paths and hosts the nginx controller doesn't understand, i.e., all the request that are not mapped with an Ingress
 Basically a default backend exposes two URLs:
 
-- /healthz that returns 200
-- / that returns 404
+- `/healthz` that returns 200
+- `/` that returns 404
 
 The location [404-server](https://github.com/kubernetes/ingress-nginx/tree/master/images/404-server) contains the image of the default backend and [custom-error-pages](https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages) an example that shows how it is possible to customize
 
-## Contribute
-
-See the [contributor guidelines](CONTRIBUTING.md)
-
 ## Annotation ingress.class
-
-## Ingress Class
 
 If you have multiple Ingress controllers in a single cluster, you can pick one by specifying the `ingress.class` 
 annotation, eg creating an Ingress with an annotation like
@@ -104,15 +97,18 @@ __Note__: Deploying multiple ingress controller and not specifying the annotatio
 
 There are three  ways to customize NGINX:
 
-1. [ConfigMap](docs/user-guide/configmap.md): uses a Configmap to set global configurations in NGINX.
-2. [annotations](docs/user-guide/annotations.md): use this if you want a specific configuration for a particular Ingress rule.
-3. custom template: when more specific settings are required, like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), custom [log_format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change the configuration through the ConfigMap.
+1. [ConfigMap](docs/user-guide/configmap.md): using a Configmap to set global configurations in NGINX.
+2. [Annotations](docs/user-guide/annotations.md): use this if you want a specific configuration for a particular Ingress rule.
+3. [Custom template](docs/user-guide/custom-template.md): when more specific settings are required, like [open_file_cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache), adjust [listen](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen) options as `rcvbuf` or when is not possible to change the configuration through the ConfigMap.
 
 ## Source IP address
 
-By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of the external load balancer.
-If the ingress controller is running in AWS we need to use the VPC IPv4 CIDR. This allows NGINX to avoid the spoofing of the header.
+By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of trusted external load balancer.
+
+If the ingress controller is running in AWS we need to use the VPC IPv4 CIDR.
+
 Another option is to enable proxy protocol using `use-proxy-protocol: "true"`.
+
 In this mode NGINX do not uses the content of the header to get the source IP address of the connection.
 
 ## Proxy Protocol
@@ -120,8 +116,6 @@ In this mode NGINX do not uses the content of the header to get the source IP ad
 If you are using a L4 proxy to forward the traffic to the NGINX pods and terminate HTTP/HTTPS there, you will lose the remote endpoint's IP addresses. To prevent this you could use the [Proxy Protocol](http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt) for forwarding traffic, this will send the connection details before forwarding the actual TCP connection itself.
 
 Amongst others [ELBs in AWS](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-proxy-protocol.html) and [HAProxy](http://www.haproxy.org/) support Proxy Protocol.
-
-Please check the [proxy-protocol](examples/proxy-protocol/) example
 
 ### Running multiple ingress controllers
 
@@ -134,11 +128,16 @@ Multiple ingress controllers running in the same cluster was not supported in Ku
 Support for websockets is provided by NGINX out of the box. No special configuration required.
 
 The only requirement to avoid the close of connections is the increase of the values of `proxy-read-timeout` and `proxy-send-timeout`.
-The default value of this settings is `60 seconds`. A more adequate value to support websockets is a value higher than one hour (`3600`).
+
+The default value of this settings is `60 seconds`.
+A more adequate value to support websockets is a value higher than one hour (`3600`).
 
 ### Optimizing TLS Time To First Byte (TTTFB)
 
-NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) to allow the optimization of the TLS record size. This improves the [Time To First Byte](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) (TTTFB). The default value in the Ingress controller is `4k` (NGINX default is `16k`).
+NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) to allow the optimization of the TLS record size.
+
+This improves the [Time To First Byte](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/) (TTTFB).
+The default value in the Ingress controller is `4k` (NGINX default is `16k`).
 
 ### Retries in non-idempotent methods
 
@@ -147,7 +146,9 @@ The previous behavior can be restored using `retry-non-idempotent=true` in the c
 
 ### Disabling NGINX ingress controller
 
-Setting the annotation `kubernetes.io/ingress.class` to any value other than "nginx" or the empty string, will force the NGINX Ingress controller to ignore your Ingress. Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
+Setting the annotation `kubernetes.io/ingress.class` to any value other than "nginx" or the empty string, will force the NGINX Ingress controller to ignore your Ingress.
+
+Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
 
 ### Limitations
 
