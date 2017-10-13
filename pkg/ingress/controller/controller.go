@@ -28,6 +28,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/aledbf/ingress-controller/pkg/ingress/annotations/proxy"
 	"github.com/golang/glog"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -41,13 +42,12 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
+	"k8s.io/contrib/ingress/controllers/nginx/nginx/healthcheck"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/class"
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/pkg/ingress/defaults"
 	"k8s.io/ingress-nginx/pkg/ingress/resolver"
 	"k8s.io/ingress-nginx/pkg/ingress/status"
