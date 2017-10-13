@@ -296,9 +296,8 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 
 *Note:* Adding an annotation to an Ingress rule overrides any global restriction.
 
-Please check the [whitelist](../examples/whitelist/README.md) example.
-
 ### Cookie affinity
+
 If you use the ``cookie`` type you can also specify the name of the cookie that will be used to route the requests with the annotation `ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'route'.
 
 In case of NGINX the annotation `ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.

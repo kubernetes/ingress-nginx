@@ -2,8 +2,6 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: ingress-nginx
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
 spec:
   tls:
   # This assumes tls-secret exists.

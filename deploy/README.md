@@ -95,13 +95,13 @@ This example creates an ELB with just two listeners, one in port 80 and another 
 If the ingress controller uses RBAC run:
 
 ```console
-kubectl apply -f provider/aws/patch-service-with-rbac.yaml
+kubectl apply -f provider/patch-service-with-rbac.yaml
 ```
 
 If not run:
 
 ```console
-kubectl apply -f provider/aws/patch-service-without-rbac.yaml
+kubectl apply -f provider/patch-service-without-rbac.yaml
 ```
 
 ### GCE - GKE
@@ -111,6 +111,20 @@ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/pr
     | kubectl apply -f -
 ```
 
+If the ingress controller uses RBAC run:
+
+```console
+kubectl apply -f provider/patch-service-with-rbac.yaml
+```
+
+If not run:
+
+```console
+kubectl apply -f provider/patch-service-without-rbac.yaml
+```
+
+**Important Note:** proxy protocol is not supported in GCE/GKE
+
 ### Azure
 
 ```console
@@ -118,19 +132,26 @@ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/pr
     | kubectl apply -f -
 ```
 
+If the ingress controller uses RBAC run:
+
+```console
+kubectl apply -f provider/patch-service-with-rbac.yaml
+```
+
+If not run:
+
+```console
+kubectl apply -f provider/patch-service-without-rbac.yaml
+```
+
+**Important Note:** proxy protocol is not supported in GCE/GKE
+
 ### Baremetal
 
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
 curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml \
-    | kubectl apply -f -
-```
-
-Using HostPort:
-
-```console
-curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-hostport.yaml \
     | kubectl apply -f -
 ```
 
