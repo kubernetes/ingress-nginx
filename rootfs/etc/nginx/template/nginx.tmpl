@@ -588,8 +588,10 @@ stream {
         ssl_certificate_key                     {{ $server.SSLCertificate }};
         {{ if not (empty $server.SSLFullChainCertificate)}}
         ssl_trusted_certificate                 {{ $server.SSLFullChainCertificate }};
+        {{ if $cfg.SSLEnableOCSP }}
         ssl_stapling                            on;
         ssl_stapling_verify                     on;
+        {{ end }}
         {{ end }}
         {{ end }}
 
