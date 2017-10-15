@@ -32,7 +32,6 @@ const (
 	authURL       = "ingress.kubernetes.io/auth-url"
 	authSigninURL = "ingress.kubernetes.io/auth-signin"
 	authMethod    = "ingress.kubernetes.io/auth-method"
-	authBody      = "ingress.kubernetes.io/auth-send-body"
 	authHeaders   = "ingress.kubernetes.io/auth-response-headers"
 )
 
@@ -43,7 +42,6 @@ type External struct {
 	Host            string   `json:"host"`
 	SigninURL       string   `json:"signinUrl"`
 	Method          string   `json:"method"`
-	SendBody        bool     `json:"sendBody"`
 	ResponseHeaders []string `json:"responseHeaders,omitEmpty"`
 }
 
@@ -65,9 +63,6 @@ func (e1 *External) Equal(e2 *External) bool {
 		return false
 	}
 	if e1.Method != e2.Method {
-		return false
-	}
-	if e1.SendBody != e2.SendBody {
 		return false
 	}
 	if e1.Method != e2.Method {
@@ -170,14 +165,11 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}
 	}
 
-	sb, _ := parser.GetBoolAnnotation(authBody, ing)
-
 	return &External{
 		URL:             str,
 		Host:            ur.Hostname(),
 		SigninURL:       signin,
 		Method:          m,
-		SendBody:        sb,
 		ResponseHeaders: h,
 	}, nil
 }

@@ -625,23 +625,24 @@ stream {
         {{ if not (empty $authPath) }}
         location = {{ $authPath }} {
             internal;
-            set $proxy_upstream_name "internal";
+            set $proxy_upstream_name "external-authentication";
 
-            {{ if not $location.ExternalAuth.SendBody }}
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
-            {{ end }}
+
             {{ if not (empty $location.ExternalAuth.Method) }}
             proxy_method                {{ $location.ExternalAuth.Method }};
             proxy_set_header            X-Original-URI          $request_uri;
             proxy_set_header            X-Scheme                $pass_access_scheme;
             {{ end }}
-            proxy_pass_request_headers  on;
+
             proxy_set_header            Host                    {{ $location.ExternalAuth.Host }};
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
-            proxy_ssl_server_name       on;
+            proxy_set_header            X-Sent-From             "nginx-ingress-controller";
 
+            proxy_ssl_server_name       on;
+            proxy_pass_request_headers  on;
             client_max_body_size        "{{ $location.Proxy.BodySize }}";
             {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
             client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
@@ -651,6 +652,7 @@ stream {
             proxy_pass $target;
         }
         {{ end }}
+
         location {{ $path }} {
             {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
 
