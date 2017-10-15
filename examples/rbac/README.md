@@ -89,12 +89,12 @@ change as well.
 `ClusterRoleBinding`, and `RoleBinding`.
 
 ```sh
-kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/nginx/nginx-ingress-controller-rbac.yml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/nginx-ingress-controller-rbac.yml
 ```
 
 2. Create default backend
 ```sh
-kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/nginx/default-backend.yml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/default-backend.yml
 ```
 
 3. Create the nginx-ingress-controller
@@ -102,7 +102,7 @@ kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/ex
 For this example to work, the Service must be in the nginx-ingress namespace:
 
 ```sh
-kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/nginx/nginx-ingress-controller.yml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/nginx-ingress-controller.yml
 ```
 
 The serviceAccountName associated with the containers in the deployment must
@@ -112,5 +112,5 @@ should be in the nginx-ingress namespace.
 
 4. Create ingress service
 ```sh
-kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/nginx/nginx-ingress-controller-service.yml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/nginx-ingress-controller-service.yml
 ```
