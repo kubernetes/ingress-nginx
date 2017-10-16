@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-custom-configuration
+  name: nginx-configuration
+  namespace: ingress-nginx
   labels:
-    k8s-app: nginx-ingress-controller
-  namespace: kube-system
+    app: ingress-nginx
 data:
   proxy-connect-timeout: "10"
   proxy-read-timeout: "120"

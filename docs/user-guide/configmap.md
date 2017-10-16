@@ -2,17 +2,7 @@
 
 ---
 
-#### proxy-body-size:
-
-Sets the maximum allowed size of the client request body. 
-See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
-
-#### custom-http-errors:
-
-Enables which HTTP codes should be passed for processing with the [error_page directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page).
-Setting at least one code also enables [proxy_intercept_errors](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) which are required to process error_page.
-
-Example usage: `custom-http-errors: 404,415`
+### Logs
 
 #### disable-access-log
 
@@ -20,11 +10,109 @@ Disables the Access Log from the entire Ingress Controller. This is 'false' by d
 
 #### access-log-path
 
-Access log path. Goes to '/var/log/nginx/access.log' by default. http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+Access log path. Goes to '/var/log/nginx/access.log' by default.
+
+_References:_
+
+- http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+
+#### error-log-level
+
+Configures the logging level of errors. Log levels above are listed in the order of increasing severity.
+
+_References:_
+
+- http://nginx.org/en/docs/ngx_core_module.html#error_log
 
 #### error-log-path
 
-Error log path. Goes to '/var/log/nginx/error.log' by default. http://nginx.org/en/docs/ngx_core_module.html#error_log
+Error log path. Goes to '/var/log/nginx/error.log' by default.
+
+_References:_
+
+- http://nginx.org/en/docs/ngx_core_module.html#error_log
+
+#### log-format-stream
+
+Sets the nginx [stream format](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format).
+
+#### log-format-upstream
+
+Sets the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).
+Example for json output:
+
+```console
+log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr",
+    "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$request_id", "remote_user":
+    "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":
+    $status, "vhost": "$host", "request_proto": "$server_protocol", "path": "$uri",
+    "request_query": "$args", "request_length": $request_length, "duration": $request_time,
+    "method": "$request_method", "http_referrer": "$http_referer", "http_user_agent":
+    "$http_user_agent" }'
+  ```
+
+Please check [log-format](log-format.md) for definition of each field.
+
+### Proxy configuration
+
+#### load-balance
+
+Sets the algorithm to use for load balancing.
+The value can either be:
+
+- round_robin: to use the default round robin loadbalancer
+- least_conn: to use the least connected method
+- ip_hash: to use a hash of the server for routing.
+
+The default is least_conn.
+
+_References:_
+
+- http://nginx.org/en/docs/http/load_balancing.html.
+
+#### proxy-body-size
+
+Sets the maximum allowed size of the client request body. 
+See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
+
+#### proxy-buffer-size
+
+Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.
+
+#### proxy-connect-timeout
+
+Sets the timeout for [establishing a connection with a proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
+
+#### proxy-cookie-domain
+
+Sets a text that [should be changed in the domain attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the “Set-Cookie” header fields of a proxied server response.
+
+#### proxy-cookie-path
+
+Sets a text that [should be changed in the path attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path) of the “Set-Cookie” header fields of a proxied server response.
+
+#### proxy-next-upstream
+
+Specifies in [which cases](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream) a request should be passed to the next server.
+
+#### proxy-read-timeout
+
+Sets the timeout in seconds for [reading a response from the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout). The timeout is set only between two successive read operations, not for the transmission of the whole response.
+
+#### proxy-send-timeout
+
+Sets the timeout in seconds for [transmitting a request to the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
+
+#### proxy-request-buffering
+
+Enables or disables [buffering of a client request body](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering).
+
+#### custom-http-errors
+
+Enables which HTTP codes should be passed for processing with the [error_page directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page).
+Setting at least one code also enables [proxy_intercept_errors](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) which are required to process error_page.
+
+Example usage: `custom-http-errors: 404,415`
 
 #### enable-modsecurity
 
@@ -36,7 +124,7 @@ By default this is disabled.
 Eenables the OWASP ModSecurity Core Rule Set (CRS)
 By default this is disabled.
 
-#### disable-ipv6:
+#### disable-ipv6
 
 Disable listening on IPV6.
 By default this is disabled.
@@ -56,14 +144,6 @@ By default this is disabled.
 
 Allows the replacement of the default status page with a third party module named [nginx-module-vts](https://github.com/vozlt/nginx-module-vts).
 By default this is disabled.
-
-#### error-log-level
-
-Configures the logging level of errors. Log levels above are listed in the order of increasing severity.
-
-_References:_
-
-- http://nginx.org/en/docs/ngx_core_module.html#error_log
 
 #### gzip-types
 
@@ -97,7 +177,7 @@ Enables or disables the preload attribute in the HSTS feature (when it is enable
 Set if header fields with invalid names should be ignored.
 By default this is enabled.
 
-#### keep-alive:
+#### keep-alive
 
 Sets the time during which a keep-alive client connection will stay open on the server side.
 The zero value disables keep-alive client connections.
@@ -106,77 +186,9 @@ _References:_
 
 - http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 
-#### load-balance
-
-Sets the algorithm to use for load balancing.
-The value can either be:
-
-- round_robin: to use the default round robin loadbalancer
-- least_conn: to use the least connected method
-- ip_hash: to use a hash of the server for routing.
-
-The default is least_conn.
-
-_References:_
-
-- http://nginx.org/en/docs/http/load_balancing.html.
-
-#### log-format-upstream
-
-Sets the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).
-Example for json output:
-
-```console
-log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr",
-    "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$request_id", "remote_user":
-    "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":
-    $status, "vhost": "$host", "request_proto": "$server_protocol", "path": "$uri",
-    "request_query": "$args", "request_length": $request_length, "duration": $request_time,
-    "method": "$request_method", "http_referrer": "$http_referer", "http_user_agent":
-    "$http_user_agent" }'
-  ```
-
-Please check [log-format](log-format.md) for definition of each field.
-
-#### log-format-stream
-
-Sets the nginx [stream format](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format).
-
 #### max-worker-connections
 
 Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections)
-
-#### proxy-buffer-size
-
-Sets the size of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.
-
-#### proxy-connect-timeout
-
-Sets the timeout for [establishing a connection with a proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
-
-#### proxy-cookie-domain
-
-Sets a text that [should be changed in the domain attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the “Set-Cookie” header fields of a proxied server response.
-
-#### proxy-cookie-path
-
-Sets a text that [should be changed in the path attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path) of the “Set-Cookie” header fields of a proxied server response.
-
-#### proxy-read-timeout
-
-Sets the timeout in seconds for [reading a response from the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout). The timeout is set only between two successive read operations, not for the transmission of the whole response.
-
-#### proxy-send-timeout
-
-Sets the timeout in seconds for [transmitting a request to the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
-
-#### proxy-next-upstream
-
-Specifies in [which cases](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream) a request should be passed to the next server.
-
-#### proxy-request-buffering
-
-Enables or disables [buffering of a client request body](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering).
 
 #### retry-non-idempotent
 
@@ -338,7 +350,7 @@ Sets parameters for a shared memory zone that will keep states for various keys 
 
 #### proxy-set-headers
 
-Sets custom headers from a configmap before sending traffic to backends. See [example](https://github.com/kubernetes/ingress-nginx/tree/master/deploy/examples/customization/custom-headers)
+Sets custom headers from a configmap before sending traffic to backends. See [example](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers)
 
 #### add-headers
 
@@ -348,6 +360,23 @@ Sets custom headers from a configmap before sending traffic to the client. See `
 
 Sets the addresses on which the server will accept requests instead of *.
 It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
+
+#### http-snippet
+
+Adds custom configuration to the http section of the nginx configuration
+Default: ""
+
+#### server-snippet
+
+Adds custom configuration to all the servers in the nginx configuration
+Default: ""
+
+#### location-snippet
+
+Adds custom configuration to all the locations in the nginx configuration
+Default: ""
+
+### Opentracing
 
 #### enable-opentracing
 
@@ -368,22 +397,6 @@ Default: 9411
 Specifies the service name to use for any traces created
 Default: nginx
 
-#### http-snippet
-
-Adds custom configuration to the http section of the nginx configuration
-Default: ""
-
-#### server-snippet
-
-Adds custom configuration to all the servers in the nginx configuration
-Default: ""
-
-#### location-snippet
-
-Adds custom configuration to all the locations in the nginx configuration
-Default: ""
-
-
 ### Default configuration options
 
 The following table shows the options, the default value and a description.
@@ -397,6 +410,7 @@ The following table shows the options, the default value and a description.
 |enable-underscores-in-headers|"false"|
 |enable-vts-status|"false"|
 |error-log-level|notice|
+|forwarded-for-header|X-Forwarded-For|
 |gzip-types|see use-gzip description above|
 |hsts|"true"|
 |hsts-include-subdomains|"true"|
@@ -417,12 +431,13 @@ The following table shows the options, the default value and a description.
 |proxy-read-timeout|"60"|
 |proxy-real-ip-cidr|0.0.0.0/0|
 |proxy-send-timeout|"60"|
+|proxy-stream-timeout|"600s"|
 |retry-non-idempotent|"false"|
 |server-name-hash-bucket-size|"64"|
 |server-name-hash-max-size|"512"|
 |server-tokens|"true"|
 |ssl-buffer-size|4k|
-|ssl-ciphers||
+|ssl-ciphers|ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256|
 |ssl-dh-param|value from openssl|
 |ssl-protocols|TLSv1.2|
 |ssl-session-cache|"true"|

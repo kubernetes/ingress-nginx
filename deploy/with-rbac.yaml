@@ -12,6 +12,9 @@ spec:
     metadata:
       labels:
         app: ingress-nginx
+      annotations:
+        prometheus.io/port: '10254'
+        prometheus.io/scrape: 'true'
     spec:
       serviceAccountName: nginx-ingress-serviceaccount
       containers:
