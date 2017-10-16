@@ -36,7 +36,7 @@ Ingress collaborators may add "LGTM" (Looks Good To Me) or an equivalent comment
 
 Whether you are a user or contributor, official support channels include:
 
-- GitHub issues: https://github.com/kubernetes/ingress/issues/new
+- GitHub issues: https://github.com/kubernetes/ingress-nginx/issues/new
 - Slack: kubernetes-users room in the [Kubernetes Slack](http://slack.kubernetes.io/)
 - Email: [kubernetes-users](https://groups.google.com/forum/#!forum/kubernetes-users) mailing list
 

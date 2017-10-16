@@ -319,5 +319,5 @@ func handleFatalInitError(err error) {
 		"This most likely means that the cluster is misconfigured (e.g., it has "+
 		"invalid apiserver certificates or service accounts configuration). Reason: %s\n"+
 		"Refer to the troubleshooting guide for more information: "+
-		"https://github.com/kubernetes/ingress/blob/master/docs/troubleshooting.md", err)
+		"https://github.com/kubernetes/ingress-nginx/blob/master/docs/troubleshooting.md", err)
 }
