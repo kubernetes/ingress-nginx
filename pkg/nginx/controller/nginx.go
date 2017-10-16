@@ -504,7 +504,7 @@ func (n *NGINXController) UpdateIngressStatus(*extensions.Ingress) []apiv1.LoadB
 	return nil
 }
 
-// OnUpdate is called by syncQueue in https://github.com/kubernetes/ingress/blob/master/core/pkg/ingress/controller/controller.go#L426
+// OnUpdate is called by syncQueue in https://github.com/kubernetes/ingress-nginx/blob/master/pkg/ingress/controller/controller.go#L426
 // periodically to keep the configuration in sync.
 //
 // convert configmap to custom configuration object (different in each implementation)
@@ -719,7 +719,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 // nginxHashBucketSize computes the correct nginx hash_bucket_size for a hash with the given longest key
 func nginxHashBucketSize(longestString int) int {
-	// See https://github.com/kubernetes/ingress/issues/623 for an explanation
+	// See https://github.com/kubernetes/ingress-nginxs/issues/623 for an explanation
 	wordSize := 8 // Assume 64 bit CPU
 	n := longestString + 2
 	aligned := (n + wordSize - 1) & ^(wordSize - 1)

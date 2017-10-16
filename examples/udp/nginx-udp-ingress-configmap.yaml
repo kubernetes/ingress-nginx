@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-udp-ingress-configmap
-  namespace: kube-system
-data:
-  9001: "kube-system/kube-dns:53"
