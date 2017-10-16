@@ -6,4 +6,4 @@ data:
 kind: ConfigMap
 metadata:
   name: custom-headers
-  namespace: kube-system
+  namespace: ingress-nginx
