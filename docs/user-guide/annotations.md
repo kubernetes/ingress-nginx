@@ -218,7 +218,7 @@ For more information please see http://nginx.org/en/docs/http/ngx_http_core_modu
 ### External Authentication
 
 To use an existing service that provides authentication the Ingress rule can be annotated with `ingress.kubernetes.io/auth-url` to indicate the URL where the HTTP request should be sent.
-Additionally it is possible to set `ingress.kubernetes.io/auth-method` to specify the HTTP method to use (GET or POST) and `ingress.kubernetes.io/auth-send-body` to true or false (default).
+Additionally it is possible to set `ingress.kubernetes.io/auth-method` to specify the HTTP method to use (GET or POST).
 
 ```yaml
 ingress.kubernetes.io/auth-url: "URL to the authentication service"
