@@ -4,7 +4,7 @@ Using a [ConfigMap](https://kubernetes.io/docs/user-guide/configmap/) is possibl
 For example, if we want to change the timeouts we need to create a ConfigMap:
 
 ```
-$ cat nginx-load-balancer-conf.yaml
+$ cat configmap.yaml
 apiVersion: v1
 data:
   proxy-connect-timeout: "10"
@@ -16,9 +16,8 @@ metadata:
 ```
 
 ```
-$ kubectl create -f nginx-load-balancer-conf.yaml
+curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/customization/cutom-configuration/configmap.yaml \
+    | kubectl apply -f -
 ```
-
-Please check the example `nginx-custom-configuration.yaml`
 
 If the Configmap it is updated, NGINX will be reloaded with the new configuration.
