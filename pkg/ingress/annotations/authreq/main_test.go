@@ -74,22 +74,20 @@ func TestAnnotations(t *testing.T) {
 		url       string
 		signinURL string
 		method    string
-		sendBody  bool
 		expErr    bool
 	}{
-		{"empty", "", "", "", false, true},
-		{"no scheme", "bar", "bar", "", false, true},
-		{"invalid host", "http://", "http://", "", false, true},
-		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", false, true},
-		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", false, false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", true, false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", true, false},
+		{"empty", "", "", "", true},
+		{"no scheme", "bar", "bar", "", true},
+		{"invalid host", "http://", "http://", "", true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", true},
+		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", false},
 	}
 
 	for _, test := range tests {
 		data[authURL] = test.url
 		data[authSigninURL] = test.signinURL
-		data[authBody] = fmt.Sprintf("%v", test.sendBody)
 		data[authMethod] = fmt.Sprintf("%v", test.method)
 
 		i, err := NewParser().Parse(ing)
@@ -111,9 +109,6 @@ func TestAnnotations(t *testing.T) {
 		}
 		if u.Method != test.method {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.method, u.Method)
-		}
-		if u.SendBody != test.sendBody {
-			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.sendBody, u.SendBody)
 		}
 	}
 }
