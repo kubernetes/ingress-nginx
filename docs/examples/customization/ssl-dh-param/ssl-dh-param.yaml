@@ -5,4 +5,4 @@ kind: Secret
 type: Opaque
 metadata:
   name: lb-dhparam
-  namespace: kube-system
+  namespace: ingress-nginx

@@ -4,36 +4,23 @@ This example aims to demonstrate the deployment of an nginx ingress controller a
 use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 "Perfect Forward Secrecy".
 
-## Default Backend
-
-The default backend is a Service capable of handling all url paths and hosts the
-nginx controller doesn't understand. This most basic implementation just returns
-a 404 page:
-
-```console
-$ kubectl apply -f default-backend.yaml
-deployment "default-http-backend" created
-service "default-http-backend" created
-
-$ kubectl -n kube-system get po
-NAME                                    READY     STATUS    RESTARTS   AGE
-default-http-backend-2657704409-qgwdd   1/1       Running   0          28s
-```
-
 ## Custom configuration
 
 ```console
-$ cat nginx-load-balancer-conf.yaml
+$ cat configmap.yaml
 apiVersion: v1
 data:
-  ssl-dh-param: "kube-system/lb-dhparam"
+  ssl-dh-param: "ingress-nginx/lb-dhparam"
 kind: ConfigMap
 metadata:
-  name: nginx-load-balancer-conf
+  name: nginx-configuration
+  namespace: ingress-nginx
+  labels:
+    app: ingress-nginx
 ```
 
 ```console
-$ kubectl create -f nginx-load-balancer-conf.yaml
+$ kubectl create -f configmap.yaml
 ```
 
 ## Custom DH parameters secret
@@ -48,29 +35,16 @@ $ cat ssl-dh-param.yaml
 apiVersion: v1
 data:
   dhparam.pem: "LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ..."
-kind: Secret
-type: Opaque
+kind: ConfigMap
 metadata:
-  name: lb-dhparam
-  namespace: kube-system
+  name: nginx-configuration
+  namespace: ingress-nginx
+  labels:
+    app: ingress-nginx
 ```
 
 ```console
 $ kubectl create -f ssl-dh-param.yaml
-```
-
-## Controller
-
-You can deploy the controller as follows:
-
-```console
-$ kubectl apply -f nginx-ingress-controller.yaml
-deployment "nginx-ingress-controller" created
-
-$ kubectl -n kube-system get po
-NAME                                       READY     STATUS    RESTARTS   AGE
-default-http-backend-2657704409-qgwdd      1/1       Running   0          2m
-nginx-ingress-controller-873061567-4n3k2   1/1       Running   0          42s
 ```
 
 ## Test

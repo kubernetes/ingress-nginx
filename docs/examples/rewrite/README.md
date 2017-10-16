@@ -24,8 +24,10 @@ Rewriting can be controlled using the following annotations:
 ## Validation
 
 ### Rewrite Target
+
 Create an Ingress rule with a rewrite annotation:
-```
+
+```console
 $ echo "
 apiVersion: extensions/v1beta1
 kind: Ingress
