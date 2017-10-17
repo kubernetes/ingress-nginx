@@ -163,7 +163,7 @@ func TestBuildAuthResponseHeaders(t *testing.T) {
 
 func TestTemplateWithData(t *testing.T) {
 	pwd, _ := os.Getwd()
-	f, err := os.Open(path.Join(pwd, "../../../tests/data/config.json"))
+	f, err := os.Open(path.Join(pwd, "../../../test/data/config.json"))
 	if err != nil {
 		t.Errorf("unexpected error reading json file: %v", err)
 	}

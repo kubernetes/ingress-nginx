@@ -778,7 +778,7 @@ type IngressBackend struct {
 
 // DEPRECATED - This group version of ReplicaSet is deprecated by apps/v1beta2/ReplicaSet. See the release notes for
 // more information.
-// ReplicaSet represents the configuration of a ReplicaSet.
+// ReplicaSet ensures that a specified number of pod replicas are running at any given time.
 type ReplicaSet struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -975,9 +975,9 @@ type PodSecurityPolicySpec struct {
 	// +optional
 	DefaultAllowPrivilegeEscalation *bool `json:"defaultAllowPrivilegeEscalation,omitempty" protobuf:"varint,15,opt,name=defaultAllowPrivilegeEscalation"`
 	// AllowPrivilegeEscalation determines if a pod can request to allow
-	// privilege escalation.
+	// privilege escalation. If unspecified, defaults to true.
 	// +optional
-	AllowPrivilegeEscalation bool `json:"allowPrivilegeEscalation,omitempty" protobuf:"varint,16,opt,name=allowPrivilegeEscalation"`
+	AllowPrivilegeEscalation *bool `json:"allowPrivilegeEscalation,omitempty" protobuf:"varint,16,opt,name=allowPrivilegeEscalation"`
 	// is a white list of allowed host paths. Empty indicates that all host paths may be used.
 	// +optional
 	AllowedHostPaths []AllowedHostPath `json:"allowedHostPaths,omitempty" protobuf:"bytes,17,rep,name=allowedHostPaths"`

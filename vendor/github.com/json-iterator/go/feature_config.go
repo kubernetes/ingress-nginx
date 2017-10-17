@@ -45,6 +45,7 @@ type API interface {
 	Get(data []byte, path ...interface{}) Any
 	NewEncoder(writer io.Writer) *Encoder
 	NewDecoder(reader io.Reader) *Decoder
+	Valid(data []byte) bool
 }
 
 // ConfigDefault the default API
@@ -332,4 +333,11 @@ func (cfg *frozenConfig) NewEncoder(writer io.Writer) *Encoder {
 func (cfg *frozenConfig) NewDecoder(reader io.Reader) *Decoder {
 	iter := Parse(cfg, reader, 512)
 	return &Decoder{iter}
+}
+
+func (cfg *frozenConfig) Valid(data []byte) bool {
+	iter := cfg.BorrowIterator(data)
+	defer cfg.ReturnIterator(iter)
+	iter.Skip()
+	return iter.Error == nil
 }

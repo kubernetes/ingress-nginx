@@ -30,7 +30,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/types"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
@@ -118,15 +117,9 @@ func (kl *Kubelet) tryRegisterWithAPIServer(node *v1.Node) bool {
 		return false
 	}
 
-	clonedNode, err := conversion.NewCloner().DeepCopy(existingNode)
-	if err != nil {
-		glog.Errorf("Unable to clone %q node object %#v: %v", kl.nodeName, existingNode, err)
-		return false
-	}
-
-	originalNode, ok := clonedNode.(*v1.Node)
-	if !ok || originalNode == nil {
-		glog.Errorf("Unable to cast %q node object %#v to v1.Node", kl.nodeName, clonedNode)
+	originalNode := existingNode.DeepCopy()
+	if originalNode == nil {
+		glog.Errorf("Nil %q node object", kl.nodeName)
 		return false
 	}
 
@@ -279,7 +272,7 @@ func (kl *Kubelet) initialNode() (*v1.Node, error) {
 		glog.Infof("Controller attach/detach is disabled for this node; Kubelet will attach and detach volumes")
 	}
 
-	if kl.kubeletConfiguration.KeepTerminatedPodVolumes {
+	if kl.keepTerminatedPodVolumes {
 		if node.Annotations == nil {
 			node.Annotations = make(map[string]string)
 		}
@@ -409,14 +402,9 @@ func (kl *Kubelet) tryUpdateNodeStatus(tryNumber int) error {
 		return fmt.Errorf("error getting node %q: %v", kl.nodeName, err)
 	}
 
-	clonedNode, err := conversion.NewCloner().DeepCopy(node)
-	if err != nil {
-		return fmt.Errorf("error clone node %q: %v", kl.nodeName, err)
-	}
-
-	originalNode, ok := clonedNode.(*v1.Node)
-	if !ok || originalNode == nil {
-		return fmt.Errorf("failed to cast %q node object %#v to v1.Node", kl.nodeName, clonedNode)
+	originalNode := node.DeepCopy()
+	if originalNode == nil {
+		return fmt.Errorf("nil %q node object", kl.nodeName)
 	}
 
 	kl.updatePodCIDR(node.Spec.PodCIDR)
@@ -452,6 +440,9 @@ func (kl *Kubelet) setNodeAddress(node *v1.Node) error {
 	}
 
 	if kl.externalCloudProvider {
+		if kl.nodeIP != nil {
+			node.ObjectMeta.Annotations[kubeletapis.AnnotationProvidedIPAddr] = kl.nodeIP.String()
+		}
 		// We rely on the external cloud provider to supply the addresses.
 		return nil
 	}
@@ -509,7 +500,6 @@ func (kl *Kubelet) setNodeAddress(node *v1.Node) error {
 		// 4) Try to get the IP from the network interface used as default gateway
 		if kl.nodeIP != nil {
 			ipAddr = kl.nodeIP
-			node.ObjectMeta.Annotations[kubeletapis.AnnotationProvidedIPAddr] = kl.nodeIP.String()
 		} else if addr := net.ParseIP(kl.hostname); addr != nil {
 			ipAddr = addr
 		} else {
@@ -604,15 +594,6 @@ func (kl *Kubelet) setNodeStatusMachineInfo(node *v1.Node) {
 				if v1helper.IsExtendedResourceName(k) {
 					glog.V(2).Infof("Update capacity for %s to %d", k, v.Value())
 					node.Status.Capacity[k] = v
-				}
-			}
-			// Remove stale extended resources.
-			for k := range node.Status.Capacity {
-				if v1helper.IsExtendedResourceName(k) {
-					if _, ok := currentCapacity[k]; !ok {
-						glog.V(2).Infof("delete capacity for %s", k)
-						delete(node.Status.Capacity, k)
-					}
 				}
 			}
 		}
