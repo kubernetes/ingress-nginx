@@ -1219,7 +1219,7 @@ func (ic *GenericController) Start() {
 
 	time.Sleep(5 * time.Second)
 	// initial sync of secrets to avoid unnecessary reloads
-	glog.Info("running initial sync of secret")
+	glog.Info("running initial sync of secrets")
 	for _, obj := range ic.listers.Ingress.List() {
 		ing := obj.(*extensions.Ingress)
 
