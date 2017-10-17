@@ -66,7 +66,7 @@ minikube addons enable ingress
 ### AWS
 
 In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
-This setup requires to choose in wich layer (L4 or L7) we want to configure the ELB:
+This setup requires to choose in which layer (L4 or L7) we want to configure the ELB:
 
 - [Layer 4](https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer): use TCP as the listener protocol for ports 80 and 443.
 - [Layer 7](https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer): use HTTP as the listener protocol for port 80 and terminate TLS in the ELB
