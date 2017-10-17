@@ -1,0 +1,23 @@
+language: go
+
+go:
+- 1.7.3
+- tip
+
+env:
+- GO15VENDOREXPERIMENT=1
+
+matrix:
+  allow_failures:
+  - go: tip
+
+before_install:
+- go get -u github.com/axw/gocov/gocov
+- go get -u github.com/mattn/goveralls
+- go get golang.org/x/tools/cmd/cover
+
+script:
+- make build
+- make test
+- make cover
+- goveralls -service=travis-ci -v -covermode=count -coverprofile=profile.out
