@@ -28,6 +28,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
 |[ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
 |[ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
+|[ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
 |[ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
@@ -313,6 +314,7 @@ In some scenarios is required to have different values. To allow this we provide
 - `ingress.kubernetes.io/proxy-connect-timeout`
 - `ingress.kubernetes.io/proxy-send-timeout`
 - `ingress.kubernetes.io/proxy-read-timeout`
+- `ingress.kubernetes.io/proxy-next-upstream`
 - `ingress.kubernetes.io/proxy-request-buffering`
 
 ### Custom max body size
