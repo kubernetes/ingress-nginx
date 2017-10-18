@@ -44,6 +44,7 @@ import (
 
 const (
 	slash         = "/"
+	nonIdempotent = "non_idempotent"
 	defBufferSize = 65535
 )
 
@@ -548,20 +549,30 @@ func isSticky(host string, loc *ingress.Location, stickyLocations map[string][]s
 	return false
 }
 
-func buildNextUpstream(input interface{}) string {
-	nextUpstream, ok := input.(string)
+func buildNextUpstream(i, r interface{}) string {
+	nextUpstream, ok := i.(string)
 	if !ok {
-		glog.Errorf("expected a 'string' type but %T was returned", input)
+		glog.Errorf("expected a 'string' type but %T was returned", i)
 		return ""
 	}
+
+	retryNonIdempotent := r.(bool)
 
 	parts := strings.Split(nextUpstream, " ")
 
 	nextUpstreamCodes := make([]string, 0, len(parts))
 	for _, v := range parts {
-		if v != "" && v != "non_idempotent" {
+		if v != "" && v != nonIdempotent {
 			nextUpstreamCodes = append(nextUpstreamCodes, v)
 		}
+
+		if v == nonIdempotent {
+			retryNonIdempotent = true
+		}
+	}
+
+	if retryNonIdempotent {
+		nextUpstreamCodes = append(nextUpstreamCodes, nonIdempotent)
 	}
 
 	return strings.Join(nextUpstreamCodes, " ")
