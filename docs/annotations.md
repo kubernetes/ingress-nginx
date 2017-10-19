@@ -52,12 +52,20 @@ Key:
 | `base-url-scheme` | Specify the scheme of the `<base>` tags. | | nginx
 | `preserve-host` | Whether to pass the client request host (`true`) or the origin hostname (`false`) in the HTTP Host field. | | trafficserver
 
+## CORS Related
+| Name | Meaning | Default | Controller
+| --- | --- | --- | --- |
+| `enable-cors` | Enable CORS headers in response. | false | nginx, voyager
+| `cors-allow-origin` | Specifies the Origin allowed in CORS (Access-Control-Allow-Origin) | * | nginx
+| `cors-allow-headers` | Specifies the Headers allowed in CORS (Access-Control-Allow-Headers) | DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization | nginx
+| `cors-allow-methods` | Specifies the Methods allowed in CORS (Access-Control-Allow-Methods) | GET, PUT, POST, DELETE, PATCH, OPTIONS | nginx
+| `cors-allow-credentials` | Specifies the Access-Control-Allow-Credentials | true | nginx
+
 ## Miscellaneous
 
 | Name | Meaning | Default | Controller
 | --- | --- | --- | --- |
 | `configuration-snippet` | Arbitrary text to put in the generated configuration file. | | nginx
-| `enable-cors` | Enable CORS headers in response. | | nginx, voyager
 | `limit-connections` | Limit concurrent connections per IP address[1]. | | nginx, voyager
 | `limit-rps` | Limit requests per second per IP address[1]. | | nginx, voyager
 | `limit-rpm` | Limit requests per minute per IP address. | | nginx, voyager

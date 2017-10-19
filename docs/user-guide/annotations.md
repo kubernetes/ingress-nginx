@@ -20,6 +20,10 @@ The following annotations are supported:
 |[ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
+|[ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
+|[ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|
+|[ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|
+|[ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|true or false|
 |[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|true or false|
 |[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
@@ -162,6 +166,26 @@ This is a global configuration for the ingress controller. In some cases could b
 ### Enable CORS
 
 To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule add the annotation `ingress.kubernetes.io/enable-cors: "true"`. This will add a section in the server location enabling this functionality.
+
+CORS can be controlled with the following annotations:
+
+* `ingress.kubernetes.io/cors-allow-methods` controls which methods are accepted. This is a multi-valued field, separated by ',' and accepts only letters (upper and lower case).
+
+Example: `ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"`
+
+* `ingress.kubernetes.io/cors-allow-headers` controls which headers are accepted. This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -.
+
+Example: `ingress.kubernetes.io/cors-allow-methods: "X-Forwarded-For, X-app123-XPTO"`
+
+* `ingress.kubernetes.io/cors-allow-origin` controls what's the accepted Origin for CORS and defaults to '*'. This is a single field value, with the following format: http(s)://origin-site.com or http(s)://origin-site.com:port
+
+Example: `ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"`
+
+* `ingress.kubernetes.io/cors-allow-credentials` controls if credentials can be passed during CORS operations.
+
+Example: `ingress.kubernetes.io/cors-allow-credentials: "true"`
+
+
 For more information please check https://enable-cors.org/server_nginx.html
 
 ### Server Alias

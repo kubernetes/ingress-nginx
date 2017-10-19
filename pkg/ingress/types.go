@@ -29,6 +29,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/authtls"
+	"k8s.io/ingress-nginx/pkg/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/ratelimit"
@@ -293,9 +294,9 @@ type Location struct {
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
 	Denied error `json:"denied,omitempty"`
-	// EnableCORS indicates if path must support CORS
+	// CorsConfig returns the Cors Configration for the ingress rule
 	// +optional
-	EnableCORS bool `json:"enableCors,omitempty"`
+	CorsConfig cors.CorsConfig `json:"corsConfig,omitempty"`
 	// ExternalAuth indicates the access to this location requires
 	// authentication using an external provider
 	// +optional
