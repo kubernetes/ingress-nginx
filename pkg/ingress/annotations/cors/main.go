@@ -23,10 +23,23 @@ import (
 )
 
 const (
-	annotation = "ingress.kubernetes.io/enable-cors"
+	annotationCorsEnabled          = "ingress.kubernetes.io/enable-cors"
+	annotationCorsAllowOrigin      = "ingress.kubernetes.io/cors-allow-origin"
+	annotationCorsAllowMethods     = "ingress.kubernetes.io/cors-allow-methods"
+	annotationCorsAllowHeaders     = "ingress.kubernetes.io/cors-allow-headers"
+	annotationCorsAllowCredentials = "ingress.kubernetes.io/cors-allow-credentials"
 )
 
 type cors struct {
+}
+
+// CorsConfig contains the Cors configuration to be used in the Ingress
+type CorsConfig struct {
+	CorsEnabled          bool   `json:"corsEnabled"`
+	CorsAllowOrigin      string `json:"corsAllowOrigin"`
+	CorsAllowMethods     string `json:"corsAllowMethods"`
+	CorsAllowHeaders     string `json:"corsAllowHeaders"`
+	CorsAllowCredentials bool   `json:"corsAllowCredentials"`
 }
 
 // NewParser creates a new CORS annotation parser
@@ -37,5 +50,37 @@ func NewParser() parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should allows CORS
 func (a cors) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation(annotation, ing)
+	corsenabled, err := parser.GetBoolAnnotation(annotationCorsEnabled, ing)
+	if err != nil {
+		corsenabled = false
+	}
+
+	corsalloworigin, err := parser.GetStringAnnotation(annotationCorsAllowOrigin, ing)
+	if err != nil || corsalloworigin == "" {
+		corsalloworigin = "*"
+	}
+
+	corsallowheaders, err := parser.GetStringAnnotation(annotationCorsAllowHeaders, ing)
+	if err != nil || corsallowheaders == "" {
+		corsallowheaders = "'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+	}
+
+	corsallowmethods, err := parser.GetStringAnnotation(annotationCorsAllowMethods, ing)
+	if err != nil || corsallowmethods == "" {
+		corsallowheaders = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+	}
+
+	corsallowcredentials, err := parser.GetBoolAnnotation(annotationCorsAllowCredentials, ing)
+	if err != nil {
+		corsallowcredentials = true
+	}
+
+	return &CorsConfig{
+		CorsEnabled:          corsenabled,
+		CorsAllowOrigin:      corsalloworigin,
+		CorsAllowHeaders:     corsallowheaders,
+		CorsAllowMethods:     corsallowmethods,
+		CorsAllowCredentials: corsallowcredentials,
+	}, nil
+
 }
