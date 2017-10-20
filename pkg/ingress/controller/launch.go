@@ -109,6 +109,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	flags.AddGoFlagSet(flag.CommandLine)
 	backend.ConfigureFlags(flags)
 	flags.Parse(os.Args)
+	// Workaround for this issue:
+	// https://github.com/kubernetes/kubernetes/issues/17162
+	flag.CommandLine.Parse([]string{})
 	backend.OverrideFlags(flags)
 
 	flag.Set("logtostderr", "true")

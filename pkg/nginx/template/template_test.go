@@ -311,13 +311,40 @@ func TestBuildResolvers(t *testing.T) {
 }
 
 func TestBuildNextUpstream(t *testing.T) {
-	nextUpstream := "timeout http_500 http_502 non_idempotent"
-	validNextUpstream := "timeout http_500 http_502"
+	cases := map[string]struct {
+		NextUpstream  string
+		NonIdempotent bool
+		Output        string
+	}{
+		"default": {
+			"timeout http_500 http_502",
+			false,
+			"timeout http_500 http_502",
+		},
+		"global": {
+			"timeout http_500 http_502",
+			true,
+			"timeout http_500 http_502 non_idempotent",
+		},
+		"local": {
+			"timeout http_500 http_502 non_idempotent",
+			false,
+			"timeout http_500 http_502 non_idempotent",
+		},
+	}
 
-	buildNextUpstream := buildNextUpstream(nextUpstream)
-
-	if buildNextUpstream != validNextUpstream {
-		t.Errorf("Expected '%v' but returned '%v'", validNextUpstream, buildNextUpstream)
+	for k, tc := range cases {
+		nextUpstream := buildNextUpstream(tc.NextUpstream, tc.NonIdempotent)
+		if nextUpstream != tc.Output {
+			t.Errorf(
+				"%s: called buildNextUpstream('%s', %v); expected '%v' but returned '%v'",
+				k,
+				tc.NextUpstream,
+				tc.NonIdempotent,
+				tc.Output,
+				nextUpstream,
+			)
+		}
 	}
 }
 
