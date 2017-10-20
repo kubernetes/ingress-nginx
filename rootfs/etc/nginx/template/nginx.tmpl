@@ -506,16 +506,16 @@ stream {
 {{/* CORS support from https://michielkalkman.com/snippets/nginx-cors-open-configuration.html */}}
 {{ define "CORS" }}
      if ($request_method = 'OPTIONS') {
-        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Origin' '{{ $location.CorsConfig.CorsAllowOrigin }}';
         #
         # Om nom nom cookies
         #
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, PUT, POST, DELETE, PATCH, OPTIONS';
+        add_header 'Access-Control-Allow-Credentials' '{{ $location.CorsConfig.CorsAllowCredentials }}';
+        add_header 'Access-Control-Allow-Methods' '{{ $location.CorsConfig.CorsAllowMethods }}';
         #
         # Custom headers and headers various browsers *should* be OK with but aren't
         #
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
+        add_header 'Access-Control-Allow-Headers' '{{ $location.CorsConfig.CorsAllowHeaders }}';
         #
         # Tell client that this pre-flight info is valid for 20 days
         #
@@ -542,10 +542,10 @@ stream {
      }
 
      if ($cors_method = 1) {
-        add_header 'Access-Control-Allow-Origin' '*' always;
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, PUT, POST, DELETE, PATCH, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
+        add_header 'Access-Control-Allow-Origin' '{{ $location.CorsConfig.CorsAllowOrigin }} ' always;
+        add_header 'Access-Control-Allow-Credentials' '{{ $location.CorsConfig.CorsAllowCredentials }}';
+        add_header 'Access-Control-Allow-Methods' '{{ $location.CorsConfig.CorsAllowMethods }}';
+        add_header 'Access-Control-Allow-Headers' '{{ $location.CorsConfig.CorsAllowHeaders }}';
      }
 {{ end }}
 
@@ -719,7 +719,7 @@ stream {
             proxy_set_header Authorization "";
             {{ end }}
 
-            {{ if $location.EnableCORS }}
+            {{ if $location.CorsConfig.CorsEnabled }}
             {{ template "CORS" }}
             {{ end }}
 

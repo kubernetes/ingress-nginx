@@ -29,15 +29,22 @@ import (
 )
 
 const (
-	annotationSecureUpstream     = "ingress.kubernetes.io/secure-backends"
-	annotationSecureVerifyCACert = "ingress.kubernetes.io/secure-verify-ca-secret"
-	annotationUpsMaxFails        = "ingress.kubernetes.io/upstream-max-fails"
-	annotationUpsFailTimeout     = "ingress.kubernetes.io/upstream-fail-timeout"
-	annotationPassthrough        = "ingress.kubernetes.io/ssl-passthrough"
-	annotationAffinityType       = "ingress.kubernetes.io/affinity"
-	annotationAffinityCookieName = "ingress.kubernetes.io/session-cookie-name"
-	annotationAffinityCookieHash = "ingress.kubernetes.io/session-cookie-hash"
-	annotationUpstreamHashBy     = "ingress.kubernetes.io/upstream-hash-by"
+	annotationSecureUpstream       = "ingress.kubernetes.io/secure-backends"
+	annotationSecureVerifyCACert   = "ingress.kubernetes.io/secure-verify-ca-secret"
+	annotationUpsMaxFails          = "ingress.kubernetes.io/upstream-max-fails"
+	annotationUpsFailTimeout       = "ingress.kubernetes.io/upstream-fail-timeout"
+	annotationPassthrough          = "ingress.kubernetes.io/ssl-passthrough"
+	annotationAffinityType         = "ingress.kubernetes.io/affinity"
+	annotationCorsEnabled          = "ingress.kubernetes.io/enable-cors"
+	annotationCorsAllowOrigin      = "ingress.kubernetes.io/cors-allow-origin"
+	annotationCorsAllowMethods     = "ingress.kubernetes.io/cors-allow-methods"
+	annotationCorsAllowHeaders     = "ingress.kubernetes.io/cors-allow-headers"
+	annotationCorsAllowCredentials = "ingress.kubernetes.io/cors-allow-credentials"
+	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+	annotationAffinityCookieName   = "ingress.kubernetes.io/session-cookie-name"
+	annotationAffinityCookieHash   = "ingress.kubernetes.io/session-cookie-hash"
+	annotationUpstreamHashBy       = "ingress.kubernetes.io/upstream-hash-by"
 )
 
 type mockCfg struct {
@@ -291,5 +298,56 @@ func TestAffinitySession(t *testing.T) {
 		if r.CookieConfig.Name != foo.name {
 			t.Errorf("Returned %v but expected %v for Name", r.CookieConfig.Name, foo.name)
 		}
+	}
+}
+
+func TestCors(t *testing.T) {
+	ec := newAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		corsenabled bool
+		methods     string
+		headers     string
+		origin      string
+		credentials bool
+	}{
+		{map[string]string{annotationCorsEnabled: "true"}, true, defaultCorsMethods, defaultCorsHeaders, "*", true},
+		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowMethods: "POST, GET, OPTIONS", annotationCorsAllowHeaders: "$nginx_version", annotationCorsAllowCredentials: "false"}, true, "POST, GET, OPTIONS", defaultCorsHeaders, "*", false},
+		{map[string]string{annotationCorsEnabled: "true", annotationCorsAllowCredentials: "false"}, true, defaultCorsMethods, defaultCorsHeaders, "*", false},
+		{map[string]string{}, false, defaultCorsMethods, defaultCorsHeaders, "*", true},
+		{nil, false, defaultCorsMethods, defaultCorsHeaders, "*", true},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.Cors(ing)
+		t.Logf("Testing pass %v %v %v %v %v", foo.corsenabled, foo.methods, foo.headers, foo.origin, foo.credentials)
+		if r == nil {
+			t.Errorf("Returned nil but expected a Cors.CorsConfig")
+			continue
+		}
+
+		if r.CorsEnabled != foo.corsenabled {
+			t.Errorf("Returned %v but expected %v for Cors Enabled", r.CorsEnabled, foo.corsenabled)
+		}
+
+		if r.CorsAllowHeaders != foo.headers {
+			t.Errorf("Returned %v but expected %v for Cors Headers", r.CorsAllowHeaders, foo.headers)
+		}
+
+		if r.CorsAllowMethods != foo.methods {
+			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowMethods, foo.methods)
+		}
+
+		if r.CorsAllowOrigin != foo.origin {
+			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowOrigin, foo.origin)
+		}
+
+		if r.CorsAllowCredentials != foo.credentials {
+			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowCredentials, foo.credentials)
+		}
+
 	}
 }

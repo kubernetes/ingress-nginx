@@ -17,6 +17,8 @@ limitations under the License.
 package cors
 
 import (
+	"regexp"
+
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/parser"
@@ -28,6 +30,22 @@ const (
 	annotationCorsAllowMethods     = "ingress.kubernetes.io/cors-allow-methods"
 	annotationCorsAllowHeaders     = "ingress.kubernetes.io/cors-allow-headers"
 	annotationCorsAllowCredentials = "ingress.kubernetes.io/cors-allow-credentials"
+	// Default values
+	defaultCorsMethods = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+	defaultCorsHeaders = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+)
+
+var (
+	// Regex are defined here to prevent information leak, if user tries to set anything not valid
+	// that could cause the Response to contain some internal value/variable (like returning $pid, $upstream_addr, etc)
+	// Origin must contain a http/s Origin (including or not the port) or the value '*'
+	corsOriginRegex = regexp.MustCompile(`^(https?://[A-Za-z0-9\-\.]*(:[0-9]+)?|\*)?$`)
+	// Method must contain valid methods list (PUT, GET, POST, BLA)
+	// May contain or not spaces between each verb
+	corsMethodsRegex = regexp.MustCompile(`^([A-Za-z]+,?\s?)+$`)
+	// Headers must contain valid values only (X-HEADER12, X-ABC)
+	// May contain or not spaces between each Header
+	corsHeadersRegex = regexp.MustCompile(`^([A-Za-z0-9\-\_]+,?\s?)+$`)
 )
 
 type cors struct {
@@ -56,18 +74,18 @@ func (a cors) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	corsalloworigin, err := parser.GetStringAnnotation(annotationCorsAllowOrigin, ing)
-	if err != nil || corsalloworigin == "" {
+	if err != nil || corsalloworigin == "" || !corsOriginRegex.MatchString(corsalloworigin) {
 		corsalloworigin = "*"
 	}
 
 	corsallowheaders, err := parser.GetStringAnnotation(annotationCorsAllowHeaders, ing)
-	if err != nil || corsallowheaders == "" {
-		corsallowheaders = "'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+	if err != nil || corsallowheaders == "" || !corsHeadersRegex.MatchString(corsallowheaders) {
+		corsallowheaders = defaultCorsHeaders
 	}
 
 	corsallowmethods, err := parser.GetStringAnnotation(annotationCorsAllowMethods, ing)
-	if err != nil || corsallowmethods == "" {
-		corsallowheaders = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+	if err != nil || corsallowmethods == "" || !corsMethodsRegex.MatchString(corsallowmethods) {
+		corsallowmethods = defaultCorsMethods
 	}
 
 	corsallowcredentials, err := parser.GetBoolAnnotation(annotationCorsAllowCredentials, ing)
