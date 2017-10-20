@@ -38,7 +38,7 @@
 
 [[constraint]]
   name = "github.com/imdario/mergo"
-  version = "0.2.2"
+  version = "0.2.4"
 
 [[constraint]]
   branch = "master"
@@ -91,20 +91,20 @@
 
 [[constraint]]
   branch = "master"
-  name = "k8s.io/api"
-
-[[constraint]]
-  branch = "master"
-  name = "k8s.io/apimachinery"
-
-[[constraint]]
-  branch = "master"
   name = "k8s.io/apiserver"
 
 [[constraint]]
-  branch = "master"
+  name = "k8s.io/api"
+  revision = "409c3b2393cd3359f275bd8b883b4d9c5aec41f6"
+
+[[constraint]]
+  name = "k8s.io/apimachinery"
+  revision = "e9a29eff7d472df0f7da9ead5ab59b74e74a07ec"
+
+[[constraint]]
   name = "k8s.io/client-go"
+  revision = "076e344c86e52f088b78615f815b245f6d613537"
 
 [[constraint]]
   name = "k8s.io/kubernetes"
-  version = "1.8.0"
+  revision = "88975e98d6f4a84929a243abeb772de16399a4e9"

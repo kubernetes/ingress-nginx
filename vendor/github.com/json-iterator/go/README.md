@@ -44,7 +44,9 @@ with
 
 ```go
 import "github.com/json-iterator/go"
-jsoniter.Marshal(&data)
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+json.Marshal(&data)
 ```
 
 Replace
@@ -58,7 +60,9 @@ with
 
 ```go
 import "github.com/json-iterator/go"
-jsoniter.Unmarshal(input, &data)
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+json.Unmarshal(input, &data)
 ```
 
 [More documentation](http://jsoniter.com/migrate-from-go-std.html)

@@ -28,7 +28,7 @@ func (iter *Iterator) ReadString() (ret string) {
 		iter.skipThreeBytes('u', 'l', 'l')
 		return ""
 	}
-	iter.ReportError("ReadString", `expects " or n`)
+	iter.ReportError("ReadString", `expects " or n, but found `+string([]byte{c}))
 	return
 }
 
@@ -139,7 +139,7 @@ func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 		}
 		return copied
 	}
-	iter.ReportError("ReadStringAsSlice", `expects " or n`)
+	iter.ReportError("ReadStringAsSlice", `expects " or n, but found `+string([]byte{c}))
 	return
 }
 
@@ -156,7 +156,7 @@ func (iter *Iterator) readU4() (ret rune) {
 		} else if c >= 'A' && c <= 'F' {
 			ret = ret*16 + rune(c-'A'+10)
 		} else {
-			iter.ReportError("readU4", "expects 0~9 or a~f")
+			iter.ReportError("readU4", "expects 0~9 or a~f, but found "+string([]byte{c}))
 			return
 		}
 	}

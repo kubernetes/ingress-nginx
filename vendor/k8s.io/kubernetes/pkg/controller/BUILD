@@ -12,6 +12,7 @@ go_test(
         "controller_ref_manager_test.go",
         "controller_utils_test.go",
     ],
+    importpath = "k8s.io/kubernetes/pkg/controller",
     library = ":go_default_library",
     deps = [
         "//pkg/api:go_default_library",
@@ -19,6 +20,7 @@ go_test(
         "//pkg/api/testapi:go_default_library",
         "//pkg/controller/testutil:go_default_library",
         "//pkg/securitycontext:go_default_library",
+        "//vendor/github.com/stretchr/testify/assert:go_default_library",
         "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/api/extensions/v1beta1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/equality:go_default_library",
@@ -48,6 +50,7 @@ go_library(
         "doc.go",
         "lookup_cache.go",
     ],
+    importpath = "k8s.io/kubernetes/pkg/controller",
     deps = [
         "//pkg/api:go_default_library",
         "//pkg/api/install:go_default_library",

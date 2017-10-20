@@ -2,11 +2,12 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 	"time"
 	"unsafe"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -82,7 +83,7 @@ func Test_customize_field_decoder(t *testing.T) {
 }
 
 type TestObject1 struct {
-	field1 string
+	Field1 string
 }
 
 type testExtension struct {
@@ -93,7 +94,7 @@ func (extension *testExtension) UpdateStructDescriptor(structDescriptor *StructD
 	if structDescriptor.Type.String() != "jsoniter.TestObject1" {
 		return
 	}
-	binding := structDescriptor.GetField("field1")
+	binding := structDescriptor.GetField("Field1")
 	binding.Encoder = &funcEncoder{fun: func(ptr unsafe.Pointer, stream *Stream) {
 		str := *((*string)(ptr))
 		val, _ := strconv.Atoi(str)
@@ -112,7 +113,7 @@ func Test_customize_field_by_extension(t *testing.T) {
 	obj := TestObject1{}
 	err := UnmarshalFromString(`{"field-1": 100}`, &obj)
 	should.Nil(err)
-	should.Equal("100", obj.field1)
+	should.Equal("100", obj.Field1)
 	str, err := MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`{"field-1":100}`, str)
