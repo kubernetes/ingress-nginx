@@ -51,3 +51,19 @@ func Test_writeString_should_grow_buffer(t *testing.T) {
 	should.Nil(stream.Error)
 	should.Equal(`"123"`, string(stream.Buffer()))
 }
+
+type NopWriter struct {
+	bufferSize int
+}
+
+func (w *NopWriter) Write(p []byte) (n int, err error) {
+	w.bufferSize = cap(p)
+	return len(p), nil
+}
+
+func Test_flush_buffer_should_stop_grow_buffer(t *testing.T) {
+	writer := new(NopWriter)
+	NewEncoder(writer).Encode(make([]int, 10000000))
+	should := require.New(t)
+	should.Equal(512, writer.bufferSize)
+}

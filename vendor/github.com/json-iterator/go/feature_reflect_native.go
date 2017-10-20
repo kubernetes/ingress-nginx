@@ -441,7 +441,15 @@ type jsonNumberCodec struct {
 }
 
 func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*json.Number)(ptr)) = json.Number([]byte(iter.readNumberAsString()))
+	switch iter.WhatIsNext() {
+	case StringValue:
+		*((*json.Number)(ptr)) = json.Number(iter.ReadString())
+	case NilValue:
+		iter.skipFourBytes('n', 'u', 'l', 'l')
+		*((*json.Number)(ptr)) = ""
+	default:
+		*((*json.Number)(ptr)) = json.Number([]byte(iter.readNumberAsString()))
+	}
 }
 
 func (codec *jsonNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
@@ -460,7 +468,15 @@ type jsoniterNumberCodec struct {
 }
 
 func (codec *jsoniterNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*Number)(ptr)) = Number([]byte(iter.readNumberAsString()))
+	switch iter.WhatIsNext() {
+	case StringValue:
+		*((*Number)(ptr)) = Number(iter.ReadString())
+	case NilValue:
+		iter.skipFourBytes('n', 'u', 'l', 'l')
+		*((*Number)(ptr)) = ""
+	default:
+		*((*Number)(ptr)) = Number([]byte(iter.readNumberAsString()))
+	}
 }
 
 func (codec *jsoniterNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
@@ -592,7 +608,7 @@ type stringModeNumberDecoder struct {
 func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	c := iter.nextToken()
 	if c != '"' {
-		iter.ReportError("stringModeNumberDecoder", `expect "`)
+		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
 		return
 	}
 	decoder.elemDecoder.Decode(ptr, iter)
@@ -601,7 +617,7 @@ func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 	}
 	c = iter.readByte()
 	if c != '"' {
-		iter.ReportError("stringModeNumberDecoder", `expect "`)
+		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
 		return
 	}
 }

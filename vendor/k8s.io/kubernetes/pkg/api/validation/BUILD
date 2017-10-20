@@ -11,12 +11,12 @@ go_library(
         "events.go",
         "validation.go",
     ],
+    importpath = "k8s.io/kubernetes/pkg/api/validation",
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/api:go_default_library",
         "//pkg/api/helper:go_default_library",
         "//pkg/api/service:go_default_library",
-        "//pkg/api/util:go_default_library",
         "//pkg/api/v1:go_default_library",
         "//pkg/api/v1/helper:go_default_library",
         "//pkg/capabilities:go_default_library",
@@ -47,6 +47,7 @@ go_test(
         "events_test.go",
         "validation_test.go",
     ],
+    importpath = "k8s.io/kubernetes/pkg/api/validation",
     library = ":go_default_library",
     deps = [
         "//pkg/api:go_default_library",
