@@ -38,7 +38,7 @@ An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches th
 - [Exposing TCP and UDP Services](docs/user-guide/exposing-tcp-udp-services.md)
 - [Proxy Protocol](#proxy-protocol)
 - [ModSecurity Web Application Firewall](docs/user-guide/modsecurity.md)
-- [Opentracing](docs/user-guide/opentracing.md)
+- [OpenTracing](docs/user-guide/opentracing.md)
 - [Custom errors](docs/user-guide/custom-errors.md)
 - [NGINX status page](docs/user-guide/nginx-status-page.md)
 - [Running multiple ingress controllers](#running-multiple-ingress-controllers)

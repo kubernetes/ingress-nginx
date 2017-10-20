@@ -11,6 +11,14 @@
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
+{{ if $cfg.EnableOpentracing }}
+load_module modules/ngx_http_opentracing_module.so;
+{{ end }}
+
+{{ if (and $cfg.EnableOpentracing (ne $cfg.ZipkinCollectorHost "")) }}
+load_module modules/ngx_http_zipkin_module.so;
+{{ end }}
+
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -92,9 +100,11 @@ http {
     underscores_in_headers          {{ if $cfg.EnableUnderscoresInHeaders }}on{{ else }}off{{ end }};
     ignore_invalid_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }};
 
-    {{ if (and $cfg.EnableOpentracing (ne $cfg.ZipkinCollectorHost "")) }}
+    {{ if $cfg.EnableOpentracing }}
     opentracing on;
+    {{ end }}
 
+    {{ if (and $cfg.EnableOpentracing (ne $cfg.ZipkinCollectorHost "")) }}
     zipkin_collector_host           {{ $cfg.ZipkinCollectorHost }};
     zipkin_collector_port           {{ $cfg.ZipkinCollectorPort }};
     zipkin_service_name             {{ $cfg.ZipkinServiceName }};
