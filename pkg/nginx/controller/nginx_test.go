@@ -57,3 +57,59 @@ func TestNginxHashBucketSize(t *testing.T) {
 		}
 	}
 }
+
+func TestNextPowerOf2(t *testing.T) {
+	// Powers of 2
+	actual := nextPowerOf2(2)
+	if actual != 2 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 2, actual)
+	}
+	actual = nextPowerOf2(4)
+	if actual != 4 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 4, actual)
+	}
+	actual = nextPowerOf2(32)
+	if actual != 32 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 32, actual)
+	}
+	actual = nextPowerOf2(256)
+	if actual != 256 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 256, actual)
+	}
+
+	// Not Powers of 2
+	actual = nextPowerOf2(7)
+	if actual != 8 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 8, actual)
+	}
+	actual = nextPowerOf2(9)
+	if actual != 16 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 16, actual)
+	}
+	actual = nextPowerOf2(15)
+	if actual != 16 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 16, actual)
+	}
+	actual = nextPowerOf2(17)
+	if actual != 32 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 32, actual)
+	}
+	actual = nextPowerOf2(250)
+	if actual != 256 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 256, actual)
+	}
+
+	// Other
+	actual = nextPowerOf2(0)
+	if actual != 0 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 0, actual)
+	}
+	actual = nextPowerOf2(-1)
+	if actual != 0 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 0, actual)
+	}
+	actual = nextPowerOf2(-2)
+	if actual != 0 {
+		t.Errorf("TestNextPowerOf2: expected %d but returned %d.", 0, actual)
+	}
+}
