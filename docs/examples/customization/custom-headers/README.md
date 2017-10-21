@@ -5,10 +5,10 @@ use a ConfigMap to configure a custom list of headers to be passed to the upstre
 server
 
 ```console
-curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/customization/custom-headers/configmap.yaml \
+curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-headers/configmap.yaml \
     | kubectl apply -f -
 
-curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/customization/custom-headers/custom-headers.yaml \
+curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-headers/custom-headers.yaml \
     | kubectl apply -f -
 
 ```

@@ -64,7 +64,7 @@ Build a raw server binary
 $ make build
 ```
 
-[TODO](https://github.com/kubernetes/ingress/issues/387): add more specific instructions needed for raw server binary.
+[TODO](https://github.com/kubernetes/ingress-nginx/issues/387): add more specific instructions needed for raw server binary.
 
 Build a local container image
 
