@@ -1,4 +1,4 @@
-This example shows how is possible to use a custom backend to render custom error pages. The code of this example is located here [custom-error-pages](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-errors/nginx)
+This example shows how is possible to use a custom backend to render custom error pages. The code of this example is located here [custom-error-pages](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-errors)
 
 
 The idea is to use the headers `X-Code` and `X-Format` that NGINX pass to the backend in case of an error to find out the best existent representation of the response to be returned. i.e. if the request contains an `Accept` header of type `json` the error should be in that format and not in `html` (the default in NGINX).
