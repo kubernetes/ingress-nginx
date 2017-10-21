@@ -162,3 +162,7 @@ docker-build: all-container
 
 .PHONY: docker-push
 docker-push: all-push
+
+.PHONY: check_dead_links
+check_dead_links:
+	docker run -t -v $$PWD:/tmp rubygem/awesome_bot --allow-dupe --allow-redirect $(shell find $$PWD -name "*.md" -mindepth 1 -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
