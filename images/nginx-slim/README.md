@@ -1,5 +1,5 @@
 
-nginx 1.13.x base image using [ubuntu-slim](https://github.com/kubernetes/ingress/tree/master/images/ubuntu-slim)
+nginx 1.13.x base image using [ubuntu-slim](https://github.com/kubernetes/ingress-nginx/tree/master/images/ubuntu-slim)
 
 nginx [engine x] is an HTTP and reverse proxy server, a mail proxy server, and a generic TCP proxy server.
 
