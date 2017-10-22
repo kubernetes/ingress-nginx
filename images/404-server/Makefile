@@ -15,7 +15,7 @@
 # Build the default backend binary or image for amd64, arm, arm64 and ppc64le
 #
 # Usage:
-# 	[PREFIX=gcr.io/google_containers/defaultbackend] [ARCH=amd64] [TAG=1.1] make (server|container|push)
+# 	[PREFIX=gcr.io/google_containers/defaultbackend] [ARCH=amd64] [TAG=1.4] make (server|container|push)
 
 
 all: push
