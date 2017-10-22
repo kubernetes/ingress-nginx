@@ -49,7 +49,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=gcr.io/google_containers/nginx-slim-$(ARCH):0.26
+BASEIMAGE?=gcr.io/google_containers/nginx-slim-$(ARCH):0.27
 
 ifeq ($(ARCH),arm)
     QEMUARCH=arm
