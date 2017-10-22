@@ -22,42 +22,75 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-const (
-	notCorsAnnotation = "ingress.kubernetes.io/enable-not-cors"
-)
-
-func TestParse(t *testing.T) {
-	ap := NewParser()
-	if ap == nil {
-		t.Fatalf("expected a parser.IngressAnnotation but returned nil")
+func buildIngress() *extensions.Ingress {
+	defaultBackend := extensions.IngressBackend{
+		ServiceName: "default-backend",
+		ServicePort: intstr.FromInt(80),
 	}
 
-	testCases := []struct {
-		annotations map[string]string
-		expected    bool
-	}{
-		{map[string]string{annotation: "true"}, true},
-		{map[string]string{annotation: "false"}, false},
-		{map[string]string{notCorsAnnotation: "true"}, false},
-		{map[string]string{}, false},
-		{nil, false},
-	}
-
-	ing := &extensions.Ingress{
+	return &extensions.Ingress{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: extensions.IngressSpec{},
+		Spec: extensions.IngressSpec{
+			Backend: &extensions.IngressBackend{
+				ServiceName: "default-backend",
+				ServicePort: intstr.FromInt(80),
+			},
+			Rules: []extensions.IngressRule{
+				{
+					Host: "foo.bar.com",
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
+								{
+									Path:    "/foo",
+									Backend: defaultBackend,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func TestIngressCorsConfig(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[annotationCorsEnabled] = "true"
+	data[annotationCorsAllowHeaders] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
+	data[annotationCorsAllowCredentials] = "false"
+	data[annotationCorsAllowMethods] = "PUT, GET,OPTIONS, PATCH, $nginx_version"
+	data[annotationCorsAllowOrigin] = "https://origin123.test.com:4443"
+	ing.SetAnnotations(data)
+
+	corst, _ := NewParser().Parse(ing)
+	nginxCors, ok := corst.(*CorsConfig)
+	if !ok {
+		t.Errorf("expected a Config type")
 	}
 
-	for _, testCase := range testCases {
-		ing.SetAnnotations(testCase.annotations)
-		result, _ := ap.Parse(ing)
-		if result != testCase.expected {
-			t.Errorf("expected %t but returned %t, annotations: %s", testCase.expected, result, testCase.annotations)
-		}
+	if nginxCors.CorsEnabled != true {
+		t.Errorf("expected cors enabled but returned %v", nginxCors.CorsEnabled)
 	}
+
+	if nginxCors.CorsAllowHeaders != "DNT,X-CustomHeader, Keep-Alive,User-Agent" {
+		t.Errorf("expected headers not found. Found %v", nginxCors.CorsAllowHeaders)
+	}
+
+	if nginxCors.CorsAllowMethods != "GET, PUT, POST, DELETE, PATCH, OPTIONS" {
+		t.Errorf("expected default methods, but got  %v", nginxCors.CorsAllowMethods)
+	}
+
+	if nginxCors.CorsAllowOrigin != "https://origin123.test.com:4443" {
+		t.Errorf("expected origin https://origin123.test.com:4443, but got  %v", nginxCors.CorsAllowOrigin)
+	}
+
 }
