@@ -720,8 +720,11 @@ stream {
 
             # Pass the extracted client certificate to the backend
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
-            proxy_set_header ssl-client-cert        $ssl_client_escaped_cert;
+            proxy_set_header ssl-client-cert        $ssl_client_raw_cert;
             proxy_set_header ssl-client-verify      $ssl_client_verify;
+            {{ else }}
+            proxy_set_header ssl-client-cert        "";
+            proxy_set_header ssl-client-verify      "";
             {{ end }}
 
             # Allow websocket connections
