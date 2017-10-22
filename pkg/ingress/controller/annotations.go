@@ -130,7 +130,7 @@ const (
 	sessionAffinity      = "SessionAffinity"
 	serviceUpstream      = "ServiceUpstream"
 	serverAlias          = "Alias"
-	enableCors           = "EnableCORS"
+	corsConfig           = "CorsConfig"
 	clientBodyBufferSize = "ClientBodyBufferSize"
 	certificateAuth      = "CertificateAuth"
 	serverSnippet        = "ServerSnippet"
@@ -177,7 +177,7 @@ func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessiona
 }
 
 func (e *annotationExtractor) Cors(ing *extensions.Ingress) *cors.CorsConfig {
-	val, _ := e.annotations[enableCors].Parse(ing)
+	val, _ := e.annotations[corsConfig].Parse(ing)
 	return val.(*cors.CorsConfig)
 }
 
