@@ -3,10 +3,10 @@ all: push
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.9.0-beta.15
-REGISTRY?=gcr.io/google_containers
+TAG?=katz-cors6
+REGISTRY?=rpkatz
 GOOS?=linux
-DOCKER?=gcloud docker --
+DOCKER?=docker 
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 

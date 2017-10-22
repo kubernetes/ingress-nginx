@@ -355,7 +355,7 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.Denied != l2.Denied {
 		return false
 	}
-	if l1.CorsConfig != l2.CorsConfig {
+	if !(&l1.CorsConfig).Equal(&l2.CorsConfig) {
 		return false
 	}
 	if !(&l1.ExternalAuth).Equal(&l2.ExternalAuth) {

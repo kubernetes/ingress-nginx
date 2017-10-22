@@ -65,6 +65,30 @@ func NewParser() parser.IngressAnnotation {
 	return cors{}
 }
 
+// Equal tests for equality between two External types
+func (c1 *CorsConfig) Equal(c2 *CorsConfig) bool {
+	if c1 == c2 {
+		return true
+	}
+	if c1 == nil || c2 == nil {
+		return false
+	}
+	if c1.CorsAllowCredentials != c2.CorsAllowCredentials {
+		return false
+	}
+	if c1.CorsAllowHeaders != c2.CorsAllowHeaders {
+		return false
+	}
+	if c1.CorsAllowOrigin != c2.CorsAllowOrigin {
+		return false
+	}
+	if c1.CorsEnabled != c2.CorsEnabled {
+		return false
+	}
+
+	return true
+}
+
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should allows CORS
 func (a cors) Parse(ing *extensions.Ingress) (interface{}, error) {
