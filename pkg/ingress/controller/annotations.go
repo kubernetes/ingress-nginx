@@ -67,7 +67,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
 			"ExternalAuth":         authreq.NewParser(),
 			"CertificateAuth":      authtls.NewParser(cfg),
-			"EnableCORS":           cors.NewParser(),
+			"CorsConfig":           cors.NewParser(),
 			"HealthCheck":          healthcheck.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),
@@ -130,6 +130,7 @@ const (
 	sessionAffinity      = "SessionAffinity"
 	serviceUpstream      = "ServiceUpstream"
 	serverAlias          = "Alias"
+	enableCors           = "EnableCORS"
 	clientBodyBufferSize = "ClientBodyBufferSize"
 	certificateAuth      = "CertificateAuth"
 	serverSnippet        = "ServerSnippet"
@@ -173,6 +174,11 @@ func (e *annotationExtractor) ClientBodyBufferSize(ing *extensions.Ingress) stri
 func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
 	val, _ := e.annotations[sessionAffinity].Parse(ing)
 	return val.(*sessionaffinity.AffinityConfig)
+}
+
+func (e *annotationExtractor) Cors(ing *extensions.Ingress) *cors.CorsConfig {
+	val, _ := e.annotations[enableCors].Parse(ing)
+	return val.(*cors.CorsConfig)
 }
 
 func (e *annotationExtractor) CertificateAuth(ing *extensions.Ingress) *authtls.AuthSSLConfig {
