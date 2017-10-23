@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -44,16 +45,52 @@ func main() {
 
 func handleSigterm(ngx *controller.NGINXController) {
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGTERM)
-	<-signalChan
-	glog.Infof("Received SIGTERM, shutting down")
+	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGUSR1, syscall.SIGUSR2)
 
-	exitCode := 0
-	if err := ngx.Stop(); err != nil {
-		glog.Infof("Error during shutdown %v", err)
-		exitCode = 1
+	running := false
+	srv := &http.Server{Addr: ":61234"}
+	for value := range signalChan {
+		glog.V(4).Infof("Received %s, shutting down\n", value.String())
+		switch value {
+		case syscall.SIGUSR1:
+			go func() {
+				if running {
+					glog.V(1).Info("SIGUSR1 hited, http://:61234 pprof service running")
+					return
+				}
+				glog.Info("SIGUSR1 hited, to start http//:61234 pprof service")
+				running = true
+				if err := srv.ListenAndServe(); err != nil {
+					glog.Errorf("start pprof service error: %v", err)
+				}
+				running = false
+			}()
+		case syscall.SIGUSR2:
+			glog.Info("SIGUSR2 hited, to stop http pprof service")
+			if running {
+				//go 1.8 support srv.Shutdown
+				err := srv.Shutdown(nil)
+				if err != nil {
+					glog.Errorf("pprof stop httpserver error: %s", err)
+				}
+			}
+		case syscall.SIGSTOP:
+			exitCode := 0
+			if running {
+				//go 1.8 support srv.Shutdown
+				err := srv.Shutdown(nil)
+				if err != nil {
+					glog.Errorf("pprof stop httpserver error: %s", err)
+				}
+			}
+
+			if err := ngx.Stop(); err != nil {
+				glog.Infof("Error during shutdown %v", err)
+				exitCode = 1
+			}
+
+			glog.Infof("Exiting with %v", exitCode)
+			os.Exit(exitCode)
+		}
 	}
-
-	glog.Infof("Exiting with %v", exitCode)
-	os.Exit(exitCode)
 }
