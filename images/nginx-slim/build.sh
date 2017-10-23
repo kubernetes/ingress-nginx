@@ -27,9 +27,9 @@ export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.32
 export NGINX_DIGEST_AUTH=7955af9c77598c697ac292811914ce1e2b3b824c
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING=fcc2e822c6dfc7d1f432c16b07dee9437c24236a
-export OPENTRACING_CPP=42cbb358b68e53145c5b479efa09a25dbc81a95a
-export ZIPKIN_CPP=8eae512bd750b304764d96058c65229f9a7712a9
+export NGINX_OPENTRACING=5fa9fd9643efed5f638d0e14c63b5da99a89c7fe
+export OPENTRACING_CPP=57a523922941be74569e7173c3f90e556177ec3c
+export ZIPKIN_CPP=ca9597495b35194e0a7d910f1e0e74844ee26730
 export MODSECURITY=a2a5858d249222938c2f5e48087a922c63d7f9d8
 
 export BUILD_PATH=/tmp/build
@@ -117,13 +117,13 @@ get_src 9b1d0075df787338bb607f14925886249bda60b6b3156713923d5d59e99a708b \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src d48c83e81aeeaebbf894adc5557cb8d027fb336d2afe95b68b2aa75920a3be74 \
-        "https://github.com/rnburn/nginx-opentracing/archive/$NGINX_OPENTRACING.tar.gz"
+get_src 7de6589e0c6e748ae1d1a2667c40224c5a5a14623b98b4103de9ae5313c4f8db \
+        "https://github.com/opentracing-contrib/nginx-opentracing/archive/$NGINX_OPENTRACING.tar.gz"
 
-get_src d1afc7c38bef055ac8a3759f117281b9d9287785e044a7d4e79134fa6ea99324 \
+get_src 367636ed8211fe5d8a9db56014471923165b907f9338e2b871ed4f3c443d7dfe \
         "https://github.com/opentracing/opentracing-cpp/archive/$OPENTRACING_CPP.tar.gz"
 
-get_src c9961b503da1119eaeb15393bac804a303d49d86f701dbfd31c425d2214354d5 \
+get_src cf4ebe742d7fbcc4c2f2510ab03d19f1a765ef764935ce0a53e71e9a0bd7244a \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/$ZIPKIN_CPP.tar.gz"
 
 get_src 3abdecedb5bf544eeba8c1ce0bef2da6a9f064b216ebbe20b68894afec1d7d80 \
@@ -207,7 +207,8 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
-  --add-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING"
+  --add-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING/opentracing \
+  --add-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING/zipkin"
 
 if [[ ${ARCH} == "x86_64" ]]; then
   WITH_MODULES+=" --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY"
