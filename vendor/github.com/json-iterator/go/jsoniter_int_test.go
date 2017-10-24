@@ -506,6 +506,30 @@ func Test_jsoniter_number(t *testing.T) {
 	should.Equal("1", str)
 }
 
+func Test_non_numeric_as_number(t *testing.T) {
+	should := require.New(t)
+	var v1 json.Number
+	err := Unmarshal([]byte(`"500"`), &v1)
+	should.Nil(err)
+	should.Equal("500", string(v1))
+	var v2 Number
+	err = Unmarshal([]byte(`"500"`), &v2)
+	should.Nil(err)
+	should.Equal("500", string(v2))
+}
+
+func Test_null_as_number(t *testing.T) {
+	should := require.New(t)
+	var v1 json.Number
+	err := json.Unmarshal([]byte(`null`), &v1)
+	should.Nil(err)
+	should.Equal("", string(v1))
+	var v2 Number
+	err = Unmarshal([]byte(`null`), &v2)
+	should.Nil(err)
+	should.Equal("", string(v2))
+}
+
 func Benchmark_jsoniter_encode_int(b *testing.B) {
 	stream := NewStream(ConfigDefault, ioutil.Discard, 64)
 	for n := 0; n < b.N; n++ {

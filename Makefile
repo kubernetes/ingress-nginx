@@ -1,3 +1,17 @@
+# Copyright 2017 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 all: push
 
 BUILDTAGS=
@@ -35,7 +49,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=gcr.io/google_containers/nginx-slim-$(ARCH):0.26
+BASEIMAGE?=gcr.io/google_containers/nginx-slim-$(ARCH):0.27
 
 ifeq ($(ARCH),arm)
     QEMUARCH=arm
@@ -116,15 +130,23 @@ fmt:
 
 lint:
 	@echo "+ $@"
-	@go list -f '{{if len .TestGoFiles}}"golint {{.Dir}}/..."{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
+	@go list -f '{{if len .TestGoFiles}}"golint {{.Dir}}/..."{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
 
 test: fmt lint vet
 	@echo "+ $@"
-	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor)
+	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
+
+e2e-image: sub-container-amd64
+	TAG=$(TAG) IMAGE=$(MULTI_ARCH_IMG) docker tag $(IMAGE):$(TAG) $(IMAGE):test
+	docker images
+
+e2e-test:
+	@go test -o e2e-tests -c ./test/e2e
+	@KUBECONFIG=${HOME}/.kube/config INGRESSNGINXCONFIG=${HOME}/.kube/config ./e2e-tests
 
 cover:
 	@echo "+ $@"
-	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
+	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
 	gover
 	goveralls -coverprofile=gover.coverprofile -service travis-ci -repotoken ${COVERALLS_TOKEN}
 
@@ -135,8 +157,12 @@ vet:
 release: all-container all-push
 	echo "done"
 
-.PHONY: docker-build 
+.PHONY: docker-build
 docker-build: all-container
 
-.PHONY: docker-push 
-docker-push: all-push 
+.PHONY: docker-push
+docker-push: all-push
+
+.PHONY: check_dead_links
+check_dead_links:
+	docker run -t -v $$PWD:/tmp rubygem/awesome_bot --allow-dupe --allow-redirect $(shell find $$PWD -name "*.md" -mindepth 1 -printf '%P\n' | grep -v vendor | grep -v Changelog.md)

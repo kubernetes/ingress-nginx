@@ -13,6 +13,12 @@ go:
 
 go_import_path: k8s.io/ingress-nginx
 
+env:
+  global:
+    - CHANGE_MINIKUBE_NONE_USER=true
+    - KUBERNETES_VERSION=v1.7.5
+    - DOCKER=docker
+
 jobs:
   include:
     - stage: Static Check
@@ -25,3 +31,9 @@ jobs:
         - go get github.com/modocache/gover
         - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
         - make cover
+    - stage: e2e
+      before_script:
+        - make e2e-image
+        - test/e2e/up.sh
+      script:
+        - make e2e-test

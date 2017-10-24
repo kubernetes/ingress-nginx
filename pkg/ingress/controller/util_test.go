@@ -23,6 +23,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/authreq"
+	"k8s.io/ingress-nginx/pkg/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/ratelimit"
@@ -45,7 +46,7 @@ func TestMergeLocationAnnotations(t *testing.T) {
 		"Backend":            "foo_backend",
 		"BasicDigestAuth":    auth.BasicDigest{},
 		DeniedKeyName:        &fakeError{},
-		"EnableCORS":         true,
+		"CorsConfig":         cors.CorsConfig{},
 		"ExternalAuth":       authreq.External{},
 		"RateLimit":          ratelimit.RateLimit{},
 		"Redirect":           redirect.Redirect{},

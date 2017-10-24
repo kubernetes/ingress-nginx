@@ -28,7 +28,9 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
+	_ "google.golang.org/grpc/grpclog/glogger"
 	"google.golang.org/grpc/naming"
+	"google.golang.org/grpc/test/leakcheck"
 )
 
 type testWatcher struct {
@@ -56,6 +58,7 @@ func (w *testWatcher) Next() (updates []*naming.Update, err error) {
 }
 
 func (w *testWatcher) Close() {
+	close(w.side)
 }
 
 // Inject naming resolution updates to the testWatcher.
@@ -89,7 +92,7 @@ func (r *testNameResolver) Resolve(target string) (naming.Watcher, error) {
 	return r.w, nil
 }
 
-func startServers(t *testing.T, numServers int, maxStreams uint32) ([]*server, *testNameResolver) {
+func startServers(t *testing.T, numServers int, maxStreams uint32) ([]*server, *testNameResolver, func()) {
 	var servers []*server
 	for i := 0; i < numServers; i++ {
 		s := newTestServer()
@@ -100,18 +103,25 @@ func startServers(t *testing.T, numServers int, maxStreams uint32) ([]*server, *
 	// Point to server[0]
 	addr := "localhost:" + servers[0].port
 	return servers, &testNameResolver{
-		addr: addr,
-	}
+			addr: addr,
+		}, func() {
+			for i := 0; i < numServers; i++ {
+				servers[i].stop()
+			}
+		}
 }
 
 func TestNameDiscovery(t *testing.T) {
+	defer leakcheck.Check(t)
 	// Start 2 servers on 2 ports.
 	numServers := 2
-	servers, r := startServers(t, numServers, math.MaxUint32)
+	servers, r, cleanup := startServers(t, numServers, math.MaxUint32)
+	defer cleanup()
 	cc, err := Dial("foo.bar.com", WithBalancer(RoundRobin(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	req := "port"
 	var reply string
 	if err := Invoke(context.Background(), "/foo/bar", &req, &reply, cc); err == nil || ErrorDesc(err) != servers[0].port {
@@ -135,18 +145,17 @@ func TestNameDiscovery(t *testing.T) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	cc.Close()
-	for i := 0; i < numServers; i++ {
-		servers[i].stop()
-	}
 }
 
 func TestEmptyAddrs(t *testing.T) {
-	servers, r := startServers(t, 1, math.MaxUint32)
+	defer leakcheck.Check(t)
+	servers, r, cleanup := startServers(t, 1, math.MaxUint32)
+	defer cleanup()
 	cc, err := Dial("foo.bar.com", WithBalancer(RoundRobin(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	var reply string
 	if err := Invoke(context.Background(), "/foo/bar", &expectedRequest, &reply, cc); err != nil || reply != expectedResponse {
 		t.Fatalf("grpc.Invoke(_, _, _, _, _) = %v, reply = %q, want %q, <nil>", err, reply, expectedResponse)
@@ -168,18 +177,19 @@ func TestEmptyAddrs(t *testing.T) {
 		}
 		cancel()
 	}
-	cc.Close()
-	servers[0].stop()
 }
 
 func TestRoundRobin(t *testing.T) {
+	defer leakcheck.Check(t)
 	// Start 3 servers on 3 ports.
 	numServers := 3
-	servers, r := startServers(t, numServers, math.MaxUint32)
+	servers, r, cleanup := startServers(t, numServers, math.MaxUint32)
+	defer cleanup()
 	cc, err := Dial("foo.bar.com", WithBalancer(RoundRobin(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	// Add servers[1] to the service discovery.
 	u := &naming.Update{
 		Op:   naming.Add,
@@ -214,18 +224,17 @@ func TestRoundRobin(t *testing.T) {
 			t.Fatalf("Index %d: Invoke(_, _, _, _, _) = %v, want %s", i, err, servers[i%numServers].port)
 		}
 	}
-	cc.Close()
-	for i := 0; i < numServers; i++ {
-		servers[i].stop()
-	}
 }
 
 func TestCloseWithPendingRPC(t *testing.T) {
-	servers, r := startServers(t, 1, math.MaxUint32)
+	defer leakcheck.Check(t)
+	servers, r, cleanup := startServers(t, 1, math.MaxUint32)
+	defer cleanup()
 	cc, err := Dial("foo.bar.com", WithBalancer(RoundRobin(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	var reply string
 	if err := Invoke(context.Background(), "/foo/bar", &expectedRequest, &reply, cc, FailFast(false)); err != nil {
 		t.Fatalf("grpc.Invoke(_, _, _, _, _) = %v, want %s", err, servers[0].port)
@@ -267,15 +276,17 @@ func TestCloseWithPendingRPC(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 	cc.Close()
 	wg.Wait()
-	servers[0].stop()
 }
 
 func TestGetOnWaitChannel(t *testing.T) {
-	servers, r := startServers(t, 1, math.MaxUint32)
+	defer leakcheck.Check(t)
+	servers, r, cleanup := startServers(t, 1, math.MaxUint32)
+	defer cleanup()
 	cc, err := Dial("foo.bar.com", WithBalancer(RoundRobin(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	// Remove all servers so that all upcoming RPCs will block on waitCh.
 	updates := []*naming.Update{{
 		Op:   naming.Delete,
@@ -309,18 +320,19 @@ func TestGetOnWaitChannel(t *testing.T) {
 	r.w.inject(updates)
 	// Wait until the above RPC succeeds.
 	wg.Wait()
-	cc.Close()
-	servers[0].stop()
 }
 
 func TestOneServerDown(t *testing.T) {
+	defer leakcheck.Check(t)
 	// Start 2 servers.
 	numServers := 2
-	servers, r := startServers(t, numServers, math.MaxUint32)
+	servers, r, cleanup := startServers(t, numServers, math.MaxUint32)
+	defer cleanup()
 	cc, err := Dial("foo.bar.com", WithBalancer(RoundRobin(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	// Add servers[1] to the service discovery.
 	var updates []*naming.Update
 	updates = append(updates, &naming.Update{
@@ -361,20 +373,19 @@ func TestOneServerDown(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	cc.Close()
-	for i := 0; i < numServers; i++ {
-		servers[i].stop()
-	}
 }
 
 func TestOneAddressRemoval(t *testing.T) {
+	defer leakcheck.Check(t)
 	// Start 2 servers.
 	numServers := 2
-	servers, r := startServers(t, numServers, math.MaxUint32)
+	servers, r, cleanup := startServers(t, numServers, math.MaxUint32)
+	defer cleanup()
 	cc, err := Dial("foo.bar.com", WithBalancer(RoundRobin(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	// Add servers[1] to the service discovery.
 	var updates []*naming.Update
 	updates = append(updates, &naming.Update{
@@ -423,10 +434,6 @@ func TestOneAddressRemoval(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	cc.Close()
-	for i := 0; i < numServers; i++ {
-		servers[i].stop()
-	}
 }
 
 func checkServerUp(t *testing.T, currentServer *server) {
@@ -436,6 +443,7 @@ func checkServerUp(t *testing.T, currentServer *server) {
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	var reply string
 	for {
 		if err := Invoke(context.Background(), "/foo/bar", &req, &reply, cc); err != nil && ErrorDesc(err) == port {
@@ -443,13 +451,13 @@ func checkServerUp(t *testing.T, currentServer *server) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	cc.Close()
 }
 
 func TestPickFirstEmptyAddrs(t *testing.T) {
-	servers, r := startServers(t, 1, math.MaxUint32)
-	defer servers[0].stop()
-	cc, err := Dial("foo.bar.com", WithBalancer(pickFirstBalancer(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
+	defer leakcheck.Check(t)
+	servers, r, cleanup := startServers(t, 1, math.MaxUint32)
+	defer cleanup()
+	cc, err := Dial("foo.bar.com", WithBalancer(pickFirstBalancerV1(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
@@ -478,12 +486,14 @@ func TestPickFirstEmptyAddrs(t *testing.T) {
 }
 
 func TestPickFirstCloseWithPendingRPC(t *testing.T) {
-	servers, r := startServers(t, 1, math.MaxUint32)
-	defer servers[0].stop()
-	cc, err := Dial("foo.bar.com", WithBalancer(pickFirstBalancer(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
+	defer leakcheck.Check(t)
+	servers, r, cleanup := startServers(t, 1, math.MaxUint32)
+	defer cleanup()
+	cc, err := Dial("foo.bar.com", WithBalancer(pickFirstBalancerV1(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
+	defer cc.Close()
 	var reply string
 	if err := Invoke(context.Background(), "/foo/bar", &expectedRequest, &reply, cc, FailFast(false)); err != nil {
 		t.Fatalf("grpc.Invoke(_, _, _, _, _) = %v, want %s", err, servers[0].port)
@@ -528,13 +538,12 @@ func TestPickFirstCloseWithPendingRPC(t *testing.T) {
 }
 
 func TestPickFirstOrderAllServerUp(t *testing.T) {
+	defer leakcheck.Check(t)
 	// Start 3 servers on 3 ports.
 	numServers := 3
-	servers, r := startServers(t, numServers, math.MaxUint32)
-	for i := 0; i < numServers; i++ {
-		defer servers[i].stop()
-	}
-	cc, err := Dial("foo.bar.com", WithBalancer(pickFirstBalancer(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
+	servers, r, cleanup := startServers(t, numServers, math.MaxUint32)
+	defer cleanup()
+	cc, err := Dial("foo.bar.com", WithBalancer(pickFirstBalancerV1(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
@@ -635,20 +644,19 @@ func TestPickFirstOrderAllServerUp(t *testing.T) {
 	}
 	for i := 0; i < 20; i++ {
 		if err := Invoke(context.Background(), "/foo/bar", &req, &reply, cc); err == nil || ErrorDesc(err) != servers[0].port {
-			t.Fatalf("Index %d: Invoke(_, _, _, _, _) = %v, want %s", 2, err, servers[2].port)
+			t.Fatalf("Index %d: Invoke(_, _, _, _, _) = %v, want %s", 0, err, servers[0].port)
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 }
 
 func TestPickFirstOrderOneServerDown(t *testing.T) {
+	defer leakcheck.Check(t)
 	// Start 3 servers on 3 ports.
 	numServers := 3
-	servers, r := startServers(t, numServers, math.MaxUint32)
-	for i := 0; i < numServers; i++ {
-		defer servers[i].stop()
-	}
-	cc, err := Dial("foo.bar.com", WithBalancer(pickFirstBalancer(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
+	servers, r, cleanup := startServers(t, numServers, math.MaxUint32)
+	defer cleanup()
+	cc, err := Dial("foo.bar.com", WithBalancer(pickFirstBalancerV1(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}
@@ -702,6 +710,7 @@ func TestPickFirstOrderOneServerDown(t *testing.T) {
 	p, _ := strconv.Atoi(servers[0].port)
 	servers[0] = newTestServer()
 	go servers[0].start(t, p, math.MaxUint32)
+	defer servers[0].stop()
 	servers[0].wait(t, 2*time.Second)
 	checkServerUp(t, servers[0])
 
@@ -733,13 +742,12 @@ func TestPickFirstOrderOneServerDown(t *testing.T) {
 }
 
 func TestPickFirstOneAddressRemoval(t *testing.T) {
+	defer leakcheck.Check(t)
 	// Start 2 servers.
 	numServers := 2
-	servers, r := startServers(t, numServers, math.MaxUint32)
-	for i := 0; i < numServers; i++ {
-		defer servers[i].stop()
-	}
-	cc, err := Dial("localhost:"+servers[0].port, WithBalancer(pickFirstBalancer(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
+	servers, r, cleanup := startServers(t, numServers, math.MaxUint32)
+	defer cleanup()
+	cc, err := Dial("localhost:"+servers[0].port, WithBalancer(pickFirstBalancerV1(r)), WithBlock(), WithInsecure(), WithCodec(testCodec{}))
 	if err != nil {
 		t.Fatalf("Failed to create ClientConn: %v", err)
 	}

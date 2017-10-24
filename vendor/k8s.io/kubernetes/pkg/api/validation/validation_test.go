@@ -3059,12 +3059,12 @@ func TestValidatePorts(t *testing.T) {
 		"invalid protocol case": {
 			[]api.ContainerPort{{ContainerPort: 80, Protocol: "tcp"}},
 			field.ErrorTypeNotSupported,
-			"protocol", "supported values: TCP, UDP",
+			"protocol", `supported values: "TCP", "UDP"`,
 		},
 		"invalid protocol": {
 			[]api.ContainerPort{{ContainerPort: 80, Protocol: "ICMP"}},
 			field.ErrorTypeNotSupported,
-			"protocol", "supported values: TCP, UDP",
+			"protocol", `supported values: "TCP", "UDP"`,
 		},
 		"protocol required": {
 			[]api.ContainerPort{{Name: "abc", ContainerPort: 80}},
@@ -3426,7 +3426,7 @@ func TestValidateEnv(t *testing.T) {
 					},
 				},
 			}},
-			expectedError: `[0].valueFrom.fieldRef.fieldPath: Unsupported value: "metadata.labels": supported values: metadata.name, metadata.namespace, metadata.uid, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP`,
+			expectedError: `[0].valueFrom.fieldRef.fieldPath: Unsupported value: "metadata.labels": supported values: "metadata.name", "metadata.namespace", "metadata.uid", "spec.nodeName", "spec.serviceAccountName", "status.hostIP", "status.podIP"`,
 		},
 		{
 			name: "invalid fieldPath annotations",
@@ -3439,7 +3439,7 @@ func TestValidateEnv(t *testing.T) {
 					},
 				},
 			}},
-			expectedError: `[0].valueFrom.fieldRef.fieldPath: Unsupported value: "metadata.annotations": supported values: metadata.name, metadata.namespace, metadata.uid, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP`,
+			expectedError: `[0].valueFrom.fieldRef.fieldPath: Unsupported value: "metadata.annotations": supported values: "metadata.name", "metadata.namespace", "metadata.uid", "spec.nodeName", "spec.serviceAccountName", "status.hostIP", "status.podIP"`,
 		},
 		{
 			name: "unsupported fieldPath",
@@ -3452,7 +3452,7 @@ func TestValidateEnv(t *testing.T) {
 					},
 				},
 			}},
-			expectedError: `valueFrom.fieldRef.fieldPath: Unsupported value: "status.phase": supported values: metadata.name, metadata.namespace, metadata.uid, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP`,
+			expectedError: `valueFrom.fieldRef.fieldPath: Unsupported value: "status.phase": supported values: "metadata.name", "metadata.namespace", "metadata.uid", "spec.nodeName", "spec.serviceAccountName", "status.hostIP", "status.podIP"`,
 		},
 	}
 	for _, tc := range errorCases {
@@ -5036,7 +5036,7 @@ func TestValidatePod(t *testing.T) {
 				Name:      "pod-forgiveness-invalid",
 				Namespace: "ns",
 			},
-			Spec: extendPodSpecwithTolerations(validPodSpec(nil), []api.Toleration{{Key: "node.alpha.kubernetes.io/notReady", Operator: "Exists", Effect: "NoExecute", TolerationSeconds: &[]int64{-2}[0]}}),
+			Spec: extendPodSpecwithTolerations(validPodSpec(nil), []api.Toleration{{Key: "node.kubernetes.io/not-ready", Operator: "Exists", Effect: "NoExecute", TolerationSeconds: &[]int64{-2}[0]}}),
 		},
 		{ // docker default seccomp profile
 			ObjectMeta: metav1.ObjectMeta{
@@ -5594,7 +5594,7 @@ func TestValidatePod(t *testing.T) {
 					Name:      "pod-forgiveness-invalid",
 					Namespace: "ns",
 				},
-				Spec: extendPodSpecwithTolerations(validPodSpec(nil), []api.Toleration{{Key: "node.alpha.kubernetes.io/notReady", Operator: "Exists", Effect: "NoSchedule", TolerationSeconds: &[]int64{20}[0]}}),
+				Spec: extendPodSpecwithTolerations(validPodSpec(nil), []api.Toleration{{Key: "node.kubernetes.io/not-ready", Operator: "Exists", Effect: "NoSchedule", TolerationSeconds: &[]int64{20}[0]}}),
 			},
 		},
 		"must be a valid pod seccomp profile": {

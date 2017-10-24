@@ -74,8 +74,8 @@ This setup requires to choose in which layer (L4 or L7) we want to configure the
 For L4:
 
 ```console
-kubectl apply -f provider/aws/service-l4.yaml
-kubectl apply -f provider/aws/patch-configmap-l4.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l4.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml
 ```
 
 For L7:
@@ -85,7 +85,7 @@ Then execute:
 
 ```console
 kubectl apply -f provider/aws/service-l7.yaml
-kubectl apply -f provider/aws/patch-configmap-l7.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l7.yaml
 ```
 
 This example creates an ELB with just two listeners, one in port 80 and another in port 443
@@ -95,13 +95,13 @@ This example creates an ELB with just two listeners, one in port 80 and another 
 If the ingress controller uses RBAC run:
 
 ```console
-kubectl apply -f provider/patch-service-with-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml
 ```
 
 If not run:
 
 ```console
-kubectl apply -f provider/patch-service-without-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml
 ```
 
 ### GCE - GKE
@@ -114,13 +114,13 @@ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/pr
 If the ingress controller uses RBAC run:
 
 ```console
-kubectl apply -f provider/patch-service-with-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml
 ```
 
 If not run:
 
 ```console
-kubectl apply -f provider/patch-service-without-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml
 ```
 
 **Important Note:** proxy protocol is not supported in GCE/GKE
@@ -135,13 +135,13 @@ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/pr
 If the ingress controller uses RBAC run:
 
 ```console
-kubectl apply -f provider/patch-service-with-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml
 ```
 
 If not run:
 
 ```console
-kubectl apply -f provider/patch-service-without-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml
 ```
 
 **Important Note:** proxy protocol is not supported in GCE/GKE

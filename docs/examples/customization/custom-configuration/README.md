@@ -16,7 +16,7 @@ metadata:
 ```
 
 ```
-curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/customization/cutom-configuration/configmap.yaml \
+curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-configuration/configmap.yaml \
     | kubectl apply -f -
 ```
 

@@ -515,48 +515,24 @@ stream {
 
 {{/* CORS support from https://michielkalkman.com/snippets/nginx-cors-open-configuration.html */}}
 {{ define "CORS" }}
+     {{ $cors := .CorsConfig }}
+     # Cors Preflight methods needs additional options and different Return Code
      if ($request_method = 'OPTIONS') {
-        add_header 'Access-Control-Allow-Origin' '*';
-        #
-        # Om nom nom cookies
-        #
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, PUT, POST, DELETE, PATCH, OPTIONS';
-        #
-        # Custom headers and headers various browsers *should* be OK with but aren't
-        #
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
-        #
-        # Tell client that this pre-flight info is valid for 20 days
-        #
+        add_header 'Access-Control-Allow-Origin' '{{ $cors.CorsAllowOrigin }}';
+        {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}'; {{ end }}
+        add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}';
+        add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}';
         add_header 'Access-Control-Max-Age' 1728000;
         add_header 'Content-Type' 'text/plain charset=UTF-8';
         add_header 'Content-Length' 0;
         return 204;
      }
-     set $cors_method 0;
-     if ($request_method = 'GET') {
-        set $cors_method 1;
-     }
-     if ($request_method = 'PUT') {
-        set $cors_method 1;
-     }
-     if ($request_method = 'POST') {
-        set $cors_method 1;
-     }
-     if ($request_method = 'DELETE') {
-        set $cors_method 1;
-     }
-     if ($request_method = 'PATCH') {
-        set $cors_method 1;
-     }
 
-     if ($cors_method = 1) {
-        add_header 'Access-Control-Allow-Origin' '*' always;
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, PUT, POST, DELETE, PATCH, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
-     }
+        add_header 'Access-Control-Allow-Origin' '{{ $cors.CorsAllowOrigin }}';
+        {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}'; {{ end }}
+        add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}';
+        add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}';
+
 {{ end }}
 
 {{/* definition of server-template to avoid repetitions with server-alias */}}
@@ -729,8 +705,8 @@ stream {
             proxy_set_header Authorization "";
             {{ end }}
 
-            {{ if $location.EnableCORS }}
-            {{ template "CORS" }}
+            {{ if $location.CorsConfig.CorsEnabled }}
+            {{ template "CORS" $location }}
             {{ end }}
 
             {{ if not (empty $location.Redirect.URL) }}
