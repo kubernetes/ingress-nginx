@@ -217,6 +217,7 @@ fi
 ./configure \
   --prefix=/usr/share/nginx \
   --conf-path=/etc/nginx/nginx.conf \
+  --modules-path=/etc/nginx/modules \
   --http-log-path=/var/log/nginx/access.log \
   --error-log-path=/var/log/nginx/error.log \
   --lock-path=/var/lock/nginx.lock \
@@ -237,11 +238,6 @@ fi
   ${WITH_MODULES} \
   && make || exit 1 \
   && make install || exit 1
-
-if [[ ${ARCH} == "x86_64" ]]; then
-  mkdir -p /etc/nginx/modules/
-  cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/
-fi
 
 echo "Cleaning..."
 
