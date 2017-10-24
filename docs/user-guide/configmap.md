@@ -380,7 +380,7 @@ Default: ""
 
 #### enable-opentracing
 
-Enables the nginx Opentracing extension https://github.com/rnburn/nginx-opentracing
+Enables the nginx Opentracing extension https://github.com/opentracing-contrib/nginx-opentracing
 By default this is disabled
 
 #### zipkin-collector-host
