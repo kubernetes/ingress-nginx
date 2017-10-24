@@ -14,7 +14,7 @@
 
 # 0.0.0 shouldn't clobber any released builds
 TAG ?= 0.27
-REGISTRY ?= quay.io/aledbf
+REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
 DOCKER ?= gcloud docker --
 
@@ -33,7 +33,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/aledbf/ubuntu-slim-$(ARCH):0.14
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/ubuntu-slim-$(ARCH):0.14
 
 ifeq ($(ARCH),arm)
         QEMUARCH=arm
