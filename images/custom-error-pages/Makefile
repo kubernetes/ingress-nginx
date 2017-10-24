@@ -4,7 +4,7 @@ BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
 TAG?=0.1
-REGISTRY?=aledbf
+REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
 DOCKER?=gcloud docker --
 SED_I?=sed -i
@@ -47,9 +47,6 @@ ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
 	GOARCH=ppc64le
 endif
-#ifeq ($(ARCH),s390x)
-#        QEMUARCH=s390x
-#endif
 
 TEMP_DIR := $(shell mktemp -d)
 

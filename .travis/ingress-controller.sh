@@ -20,10 +20,10 @@ source $DIR/common.sh
 
 IMAGE=$(make -s -C $DIR/../ image-info)
 
-if docker_tag_exists "aledbf/nginx-ingress-controller" $(echo $IMAGE | jq .tag); then
+if docker_tag_exists "kubernetes-ingress-controller/nginx-ingress-controller" $(echo $IMAGE | jq .tag); then
     echo "Image already published"
     exit 0
 fi
 
-echo "building aledbf/nginx-ingress-controller image..."
+echo "building kubernetes-ingress-controller/nginx-ingress-controller image..."
 make -C $DIR/../ release

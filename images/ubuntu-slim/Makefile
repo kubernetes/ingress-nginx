@@ -13,7 +13,7 @@
 # limitations under the License.
 
 TAG ?= 0.14
-REGISTRY = quay.io/aledbf
+REGISTRY = quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
 ALL_ARCH = amd64 arm arm64 ppc64le
 

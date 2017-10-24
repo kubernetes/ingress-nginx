@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
+export JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
 
 echo "downloading kubectl..."
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
@@ -50,12 +50,31 @@ kubectl set image \
     deployments \
     --namespace ingress-nginx \
 	--selector app=ingress-nginx \
-    nginx-ingress-controller=gcr.io/google_containers/nginx-ingress-controller:test
+    nginx-ingress-controller=quay.io/kubernetes-ingress-controller/nginx-ingress-controller:test
 
 sleep 5
 
 echo "waiting NGINX ingress pod..."
-until kubectl get pods -n ingress-nginx -l app=ingress-nginx -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; 
-do
-    sleep 1;
-done
+
+function waitForPod() {
+    until kubectl get pods -n ingress-nginx -l app=ingress-nginx -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True";
+    do
+        sleep 1;
+    done
+}
+
+export -f waitForPod
+
+timeout 10s bash -c waitForPod
+
+if kubectl get pods -n ingress-nginx -l app=ingress-nginx -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True";
+then
+    echo "Kubernetes deployments started"
+else
+    echo "Kubernetes deployments with issues:"
+    kubectl get pods -n ingress-nginx
+
+    echo "Reason:"
+    kubectl describe pods -n ingress-nginx
+    exit 1
+fi

@@ -18,7 +18,7 @@ BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
 TAG?=0.9.0-beta.15
-REGISTRY?=quay.io/aledbf
+REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
 DOCKER?=gcloud docker --
 SED_I?=sed -i

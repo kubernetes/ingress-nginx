@@ -20,7 +20,7 @@ source $DIR/common.sh
 
 IMAGE=$(make -s -C $DIR/../images/nginx-slim image-info)
 
-if docker_tag_exists "aledbf/nginx-slim" $(echo $IMAGE | jq .tag); then
+if docker_tag_exists "kubernetes-ingress-controller/nginx-slim" $(echo $IMAGE | jq .tag); then
     echo "Image already published"
     exit 0
 fi
