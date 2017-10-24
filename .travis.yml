@@ -1,7 +1,7 @@
 sudo: required
 
 services:
-  - docker
+- docker
 
 language: go
 
@@ -9,31 +9,38 @@ notifications:
   email: true
 
 go:
-  - 1.9
+- 1.9
 
 go_import_path: k8s.io/ingress-nginx
 
+# New secure variables can be added using travis encrypt -r kubernetes/ingress-nginx K=V
 env:
   global:
-    - CHANGE_MINIKUBE_NONE_USER=true
-    - KUBERNETES_VERSION=v1.7.5
-    - DOCKER=docker
+  - CHANGE_MINIKUBE_NONE_USER=true
+  - KUBERNETES_VERSION=v1.7.5
+  - DOCKER=docker
+  - secure: hCBTA21Q3XoAaVn+3qCkEcBxb5ob0DfDtF3XtgqkV6tHN76fPvuB0eko687nkumkIJsLmSBKjS1v2V/aW+syqj37OpaNrZ8NacpLi3Xso9DOQ/eI//NC2dkY0Yb002ca3A1FWG4urbKnqe1ecPNH981XIMjLr9iIRCtJlNtlUDnCuOLYnfbieXBYGN7EoknGuPFF48V2slxTfH6GkIWlKgtGsyuoKPahwOBuqeGEZ+auXBPvaFcW/vNqMh0kepPrOG7dPyRJvcDw2zvLX6NEYTtMJSRed8ZxVqpS+beg6xTTd84TRan8EWVnBsshfJCjKPAlfBCijDJDEBnqo2ZOwmt2i092kuLfvTrJm+leX6fcH67DczYV/UGzxTyZwyKLnlvi9ppxVpLnQujF/ZRhZ+Q9JvIGUu2/fa8+maa8UWyxZjFiiY0fnOzR5haJOvuD8LJZr4ceE+FacZDmMqk2tQdAo8V68ClyOPAkWx77XJ20exUDvfdu6kMaY+NHSmWl+jrTu/yOdmP3CveCFgdi/8v9YVeIBnMLC3EhX7qBFd0Xkqpmx6dq8fRuBALp7aUAkz/SzfZrhKFHEn9y3TLjHcNQLoVeEhpQhuiMNOJNbd8hS4Wl9cThr1VHLLwCwnoQeKzGYN1DcGmXApWwO8q1xdNeLNz7jFQq91WBdF/bncE=
+  - secure: hOdrI43DGag32BJ43nO+voUrqcNQ0HcLyGqYGPRHSmS+PRe2gEs//tBwJb35+Hub5QYbRBf/i9dEXltw7vuCfc2w2F42spYyp5cqXOGgWLgiEkNb5Ov/O07N1UhyCKA5FYIH4rci8CHr0mex2Z3xhP5M6w7uWfAE55Ia8DLpSBEEKao2UjQMEImCWyjyP8zlxFKCP68Ni1aqyORGExcubjhrUrilQv4nHyqGevmKmPh8BJ8bU9OxCk0FQ95b+31udDgK8Acr2BDihqp7VgSvaCQKR9pwHQQk09Bl7UqFx7/IANaUYzxAWlp6LNYowjfz7QzzKx4XYKKWX/AbrLz5j7wQkAxK2ol/pEFtcydJNrGLr4zmfHmU6m3971IUx1HyfoZ/Ezw88l/UmD4rVZ7r5j9WS7yVgYZOLiNAp8SiRzAS+RVIrDc7p6Cr4llVCw3iR3h7huQl7yp3QpOMFgvFDKVJukpVm8VbUZONA9gdo8Sq4RUnunIeGem8H71KU4b3bIhmVGqr1/TEQMKmnozsFWVgsXvykFz4gF1HfPQ3T5TdC5z6hYBkeHVcjLUCwejrYbr9RR7PvNPP+e+2rqkRYBg1eboyn6Gdz4kgFBxeJhJiiYLH/Mmr+8qIvrxI+6jJJrsAkddK3Ei+l6cc6xdyDSp5Wt6Q+i4llZojDVb0yFI=
+
+after_success:
+- ".travis/publish.sh"
 
 jobs:
   include:
-    - stage: Static Check
-      script: 
-        - go get github.com/golang/lint/golint
-        - make fmt lint vet
-    - stage: Coverage
-      script: 
-        - go get github.com/mattn/goveralls
-        - go get github.com/modocache/gover
-        - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
-        - make cover
-    - stage: e2e
-      before_script:
-        - make e2e-image
-        - test/e2e/up.sh
-      script:
-        - make e2e-test
+  - stage: Static Check
+    script:
+    - go get github.com/golang/lint/golint
+    - make fmt lint vet
+  - stage: Coverage
+    script:
+    - go get github.com/mattn/goveralls
+    - go get github.com/modocache/gover
+    - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover;
+      fi
+    - make cover
+  - stage: e2e
+    before_script:
+    - make e2e-image
+    - test/e2e/up.sh
+    script:
+    - make e2e-test

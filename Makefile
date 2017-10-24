@@ -18,7 +18,7 @@ BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
 TAG?=0.9.0-beta.15
-REGISTRY?=gcr.io/google_containers
+REGISTRY?=quay.io/aledbf
 GOOS?=linux
 DOCKER?=gcloud docker --
 SED_I?=sed -i
@@ -49,10 +49,10 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=gcr.io/google_containers/nginx-slim-$(ARCH):0.27
+BASEIMAGE?=quay.io/aledbf/nginx-slim-$(ARCH):0.27
 
 ifeq ($(ARCH),arm)
-    QEMUARCH=arm
+	QEMUARCH=arm
 	GOARCH=arm
 	DUMB_ARCH=armhf
 endif
@@ -64,13 +64,13 @@ ifeq ($(ARCH),ppc64le)
 	GOARCH=ppc64le
 	DUMB_ARCH=ppc64el
 endif
-#ifeq ($(ARCH),s390x)
-#        QEMUARCH=s390x
-#endif
 
 TEMP_DIR := $(shell mktemp -d)
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
+
+image-info:
+	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
 
 all: all-container
 
