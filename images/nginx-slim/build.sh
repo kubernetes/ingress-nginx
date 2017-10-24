@@ -27,9 +27,9 @@ export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.32
 export NGINX_DIGEST_AUTH=7955af9c77598c697ac292811914ce1e2b3b824c
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING=5fa9fd9643efed5f638d0e14c63b5da99a89c7fe
-export OPENTRACING_CPP=57a523922941be74569e7173c3f90e556177ec3c
-export ZIPKIN_CPP=ca9597495b35194e0a7d910f1e0e74844ee26730
+export NGINX_OPENTRACING_VERSION=0.1.0
+export OPENTRACING_CPP_VERSION=1.0.0
+export ZIPKIN_CPP_VERSION=0.1.0
 export MODSECURITY=a2a5858d249222938c2f5e48087a922c63d7f9d8
 
 export BUILD_PATH=/tmp/build
@@ -117,14 +117,14 @@ get_src 9b1d0075df787338bb607f14925886249bda60b6b3156713923d5d59e99a708b \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 7de6589e0c6e748ae1d1a2667c40224c5a5a14623b98b4103de9ae5313c4f8db \
-        "https://github.com/opentracing-contrib/nginx-opentracing/archive/$NGINX_OPENTRACING.tar.gz"
+get_src 624bdcade5da12cc5bae52f0190155a6ff519e86209c6b3c9f5ca3baa5096aec \
+        "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
-get_src 367636ed8211fe5d8a9db56014471923165b907f9338e2b871ed4f3c443d7dfe \
-        "https://github.com/opentracing/opentracing-cpp/archive/$OPENTRACING_CPP.tar.gz"
+get_src 9543f66790ba65810869a29b3aaef5286f1c446cb498a304d0d8b153c289cae8 \
+        "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
-get_src cf4ebe742d7fbcc4c2f2510ab03d19f1a765ef764935ce0a53e71e9a0bd7244a \
-        "https://github.com/rnburn/zipkin-cpp-opentracing/archive/$ZIPKIN_CPP.tar.gz"
+get_src 3d91e866819986f5dda00549694c4eaca16f1209d1f87aecc8aca3b42aa72e08 \
+        "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
 get_src 3abdecedb5bf544eeba8c1ce0bef2da6a9f064b216ebbe20b68894afec1d7d80 \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY.tar.gz"
@@ -133,18 +133,18 @@ get_src 3abdecedb5bf544eeba8c1ce0bef2da6a9f064b216ebbe20b68894afec1d7d80 \
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
 
 # build opentracing lib
-cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP"
+cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
 mkdir .build
 cd .build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
 make
 make install
 
 # build zipkin lib
-cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP"
+cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
 mkdir .build
 cd .build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 ..
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DBUILD_TESTING=OFF ..
 make
 make install
 
@@ -207,8 +207,8 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
-  --add-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING/opentracing \
-  --add-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING/zipkin"
+  --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing
+  --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin"
 
 if [[ ${ARCH} == "x86_64" ]]; then
   WITH_MODULES+=" --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY"
@@ -217,6 +217,7 @@ fi
 ./configure \
   --prefix=/usr/share/nginx \
   --conf-path=/etc/nginx/nginx.conf \
+  --modules-path=/etc/nginx/modules \
   --http-log-path=/var/log/nginx/access.log \
   --error-log-path=/var/log/nginx/error.log \
   --lock-path=/var/lock/nginx.lock \
@@ -237,11 +238,6 @@ fi
   ${WITH_MODULES} \
   && make || exit 1 \
   && make install || exit 1
-
-if [[ ${ARCH} == "x86_64" ]]; then
-  mkdir -p /etc/nginx/modules/
-  cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/
-fi
 
 echo "Cleaning..."
 
