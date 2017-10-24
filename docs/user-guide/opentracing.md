@@ -1,4 +1,4 @@
-# Opentracing
+# OpenTracing
 
 Using the third party module [rnburn/nginx-opentracing](https://github.com/rnburn/nginx-opentracing) the NGINX ingress controller can configure NGINX to enable [OpenTracing](http://opentracing.io) instrumentation.
 By default this feature is disabled.
