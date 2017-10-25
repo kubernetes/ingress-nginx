@@ -79,6 +79,9 @@ func (c1 *CorsConfig) Equal(c2 *CorsConfig) bool {
 	if c1.CorsAllowHeaders != c2.CorsAllowHeaders {
 		return false
 	}
+	if c1.CorsAllowMethods != c2.CorsAllowMethods {
+		return false
+	}
 	if c1.CorsAllowOrigin != c2.CorsAllowOrigin {
 		return false
 	}
