@@ -690,12 +690,12 @@ func buildAuthSignURL(input interface{}) string {
 	u, _ := url.Parse(s)
 	q := u.Query()
 	if len(q) == 0 {
-		return fmt.Sprintf("%v?rd=$scheme://$http_host$request_uri", s)
+		return fmt.Sprintf("%v?rd=$pass_access_scheme://$http_host$request_uri", s)
 	}
 
 	if q.Get("rd") != "" {
 		return s
 	}
 
-	return fmt.Sprintf("%v&rd=$scheme://$http_host$request_uri", s)
+	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$request_uri", s)
 }
