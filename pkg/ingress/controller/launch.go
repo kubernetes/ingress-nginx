@@ -104,6 +104,9 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 
 		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", false,
 			`Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address`)
+
+		showVersion = flags.Bool("version", false,
+			`Shows release information about the NGINX Ingress controller`)
 	)
 
 	flags.AddGoFlagSet(flag.CommandLine)
@@ -112,6 +115,12 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	// Workaround for this issue:
 	// https://github.com/kubernetes/kubernetes/issues/17162
 	flag.CommandLine.Parse([]string{})
+
+	if *showVersion {
+		fmt.Println(backend.Info().String())
+		os.Exit(0)
+	}
+
 	backend.OverrideFlags(flags)
 
 	flag.Set("logtostderr", "true")
