@@ -385,6 +385,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.ClientBodyBufferSize != l2.ClientBodyBufferSize {
 		return false
 	}
+	if l1.UpstreamVhost != l2.UpstreamVhost {
+		return false
+	}
 
 	return true
 }
