@@ -17,6 +17,7 @@ limitations under the License.
 package ingress
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -128,6 +129,15 @@ type BackendInfo struct {
 	Build string `json:"build"`
 	// Repository return information about the git repository
 	Repository string `json:"repository"`
+}
+
+func (bi BackendInfo) String() string {
+	return fmt.Sprintf(`
+Name:       %v
+Release:    %v
+Build:      %v
+Repository: %v
+`, bi.Name, bi.Release, bi.Build, bi.Repository)
 }
 
 // Configuration holds the definition of all the parts required to describe all
