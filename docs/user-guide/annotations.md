@@ -149,6 +149,17 @@ The URL/Page that user should be redirected in case of a Certificate Authenticat
 
 Please check the [tls-auth](../examples/auth/client-certs/README.md) example.
 
+**Important:**
+
+TLS with Client Authentication is NOT possible in Cloudflare as is not allowed it and might result in unexpected behavior.
+
+Cloudflare only allows Authenticated Origin Pulls and is required to use their own certificate:
+https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/
+
+Only Authenticated Origin Pulls are allowed and can be configured by following their tutorial:
+https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls
+
+
 ### Configuration snippet
 
 Using this annotation you can add additional configuration to the NGINX location. For example:
