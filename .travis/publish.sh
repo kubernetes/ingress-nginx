@@ -19,7 +19,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $DIR/common.sh
 
 echo "Login to quay.io..."
-echo $QUAY_PASSWORD | docker login --username=$QUAY_USERNAME --password-stdin quay.io >/dev/null 2>&1
+echo $QUAY_PASSWORD | docker login --username=$QUAY_USERNAME --password-stdin quay.io #>/dev/null 2>&1
 
 case "$COMPONENT" in
 "ingress-controller")
