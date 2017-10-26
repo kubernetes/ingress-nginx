@@ -34,6 +34,7 @@ body=$(cat <<EOF
   "request": {
     "branch": "master",
     "config": {
+			"merge_mode": "deep_merge",
       "env": {
         "COMPONENT": "$2"
       }
