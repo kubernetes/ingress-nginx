@@ -824,7 +824,24 @@ func (ic *GenericController) getServiceClusterEndpoint(svcKey string, backend *e
 	}
 
 	endpoint.Address = svc.Spec.ClusterIP
-	endpoint.Port = backend.ServicePort.String()
+
+	// If the service port in the ingress uses a name, lookup
+	// the actual port in the service spec
+	if backend.ServicePort.Type == intstr.String {
+		var port int32 = -1
+		for _, svcPort := range svc.Spec.Ports {
+			if svcPort.Name == backend.ServicePort.String() {
+				port = svcPort.Port
+				break
+			}
+		}
+		if port == -1 {
+			return endpoint, fmt.Errorf("no port mapped for service %s and port name %s", svc.Name, backend.ServicePort.String())
+		}
+		endpoint.Port = fmt.Sprintf("%d", port)
+	} else {
+		endpoint.Port = backend.ServicePort.String()
+	}
 
 	return endpoint, err
 }
