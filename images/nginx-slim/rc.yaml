@@ -29,6 +29,6 @@ spec:
     spec:
       containers:
       - name: nginxslim
-        image: gcr.io/google_containers/nginx-slim:0.27
+        image: quay.io/kubernetes-ingress-controller/nginx-slim:0.28
         ports:
         - containerPort: 80
