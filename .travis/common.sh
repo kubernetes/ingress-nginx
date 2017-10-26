@@ -15,13 +15,13 @@
 # limitations under the License.
 
 if ! [ -z $DEBUG ]; then
+  echo "TRAVIS_REPO_SLUG:           $TRAVIS_REPO_SLUG"
+  echo "TRAVIS_PULL_REQUEST:        $TRAVIS_PULL_REQUEST"
+  echo "TRAVIS_EVENT_TYPE:          $TRAVIS_EVENT_TYPE"
+  echo "TRAVIS_PULL_REQUEST_BRANCH: $TRAVIS_PULL_REQUEST_BRANCH"
+
   set -x
 fi
-
-echo "TRAVIS_REPO_SLUG:           $TRAVIS_REPO_SLUG"
-echo "TRAVIS_PULL_REQUEST:        $TRAVIS_PULL_REQUEST"
-echo "TRAVIS_EVENT_TYPE:          $TRAVIS_EVENT_TYPE"
-echo "TRAVIS_PULL_REQUEST_BRANCH: $TRAVIS_PULL_REQUEST_BRANCH"
 
 set -o errexit
 set -o nounset
@@ -66,7 +66,7 @@ then
   exit 0;
 fi
 
-if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "master" ];
+if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ];
 then
   echo "Only images build from master branch are allowed. $SKIP_MESSAGE";
   exit 0;
