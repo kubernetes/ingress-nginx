@@ -40,19 +40,6 @@ then
   exit 0;
 fi
 
-# variables QUAY_USERNAME and QUAY_PASSWORD are required to push docker images
-if [ "$QUAY_USERNAME" == "" ];
-then
-  echo "Environment variable QUAY_USERNAME is missing.";
-  exit 0;
-fi
-
-if [ "$QUAY_PASSWORD" == "" ];
-then
-  echo "Environment variable QUAY_PASSWORD is missing.";
-  exit 0;
-fi
-
 SKIP_MESSAGE="Publication of docker image to quay.io registry skipped."
 
 if [ "$TRAVIS_EVENT_TYPE" != "api" ];
@@ -70,6 +57,19 @@ fi
 if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ];
 then
   echo "Only images build from master branch are allowed. $SKIP_MESSAGE";
+  exit 0;
+fi
+
+# variables QUAY_USERNAME and QUAY_PASSWORD are required to push docker images
+if [ "$QUAY_USERNAME" == "" ];
+then
+  echo "Environment variable QUAY_USERNAME is missing.";
+  exit 0;
+fi
+
+if [ "$QUAY_PASSWORD" == "" ];
+then
+  echo "Environment variable QUAY_PASSWORD is missing.";
   exit 0;
 fi
 
