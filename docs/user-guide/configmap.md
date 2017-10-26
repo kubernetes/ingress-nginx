@@ -72,7 +72,7 @@ _References:_
 
 #### proxy-body-size
 
-Sets the maximum allowed size of the client request body. 
+Sets the maximum allowed size of the client request body.
 See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
 
 #### proxy-buffer-size
@@ -237,7 +237,7 @@ By default this is enabled.
 
 #### map-hash-bucket-size
 
-Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size). 
+Sets the bucket size for the [map variables hash tables](http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size).
 The details of setting up hash tables are provided in a separate [document](http://nginx.org/en/docs/hash.html).
 
 #### ssl-buffer-size
@@ -248,7 +248,7 @@ https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
 
 #### ssl-ciphers
 
-Sets the [ciphers](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers) list to enable. 
+Sets the [ciphers](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers) list to enable.
 The ciphers are specified in the format understood by the OpenSSL library.
 
 The default cipher list is:
@@ -336,7 +336,7 @@ See [ngx_http_access_module](http://nginx.org/en/docs/http/ngx_http_access_modul
 
 #### worker-processes
 
-Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes). 
+Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes).
 The default of "auto" means number of available CPU cores.
 
 #### worker-shutdown-timeout
@@ -375,6 +375,10 @@ Default: ""
 
 Adds custom configuration to all the locations in the nginx configuration
 Default: ""
+
+#### compute-full-forwarded-for
+
+Append the remote address to the X-Forwarded-For header instead of replacing it. When this option is enabled, the upstream application is responsible for extracting the client IP based on its own list of trusted proxies.
 
 ### Opentracing
 
