@@ -29,7 +29,7 @@ fi
 
 function publish() {
 
-body=$(cat <<'EOF'
+body=$(cat <<EOF
 {
   "request": {
     "branch": "master",
@@ -43,13 +43,13 @@ body=$(cat <<'EOF'
 EOF
 )
 
-echo curl -s -X POST \
-	-H "Content-Type: application/json" \
-	-H "Accept: application/json" \
-	-H "Travis-API-Version: 3" \
-	-H "Authorization: token $1" \
-	--data "'$body'" \
-	https://api.travis-ci.org/repo/kubernetes%2Fingress-nginx/requests
+	curl -s -X POST \
+		-H "Content-Type: application/json" \
+		-H "Accept: application/json" \
+		-H "Travis-API-Version: 3" \
+		-H "Authorization: token $1" \
+		--data "$body" \
+		https://api.travis-ci.org/repo/kubernetes%2Fingress-nginx/requests
 }
 
 case "$1" in
