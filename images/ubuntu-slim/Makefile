@@ -13,7 +13,7 @@
 # limitations under the License.
 
 TAG ?= 0.14
-REGISTRY = gcr.io/google_containers
+REGISTRY = quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
 ALL_ARCH = amd64 arm arm64 ppc64le
 
@@ -25,7 +25,7 @@ MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 BUILD_IMAGE ?= ubuntu-build
 TAR_FILE ?= rootfs.tar
-PUSH_TOOL ?= gcloud
+DOCKER ?= gcloud docker --
 
 # Set default base image dynamically for each arch
 ifeq ($(ARCH),amd64)
@@ -49,8 +49,10 @@ ifeq ($(ARCH),s390x)
 	QEMUARCH=s390x
 endif
 
-
 TEMP_DIR := $(shell mktemp -d)
+
+image-info:
+	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
 
 all: all-container
 
@@ -76,32 +78,35 @@ ifeq ($(ARCH),amd64)
 else
 	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
 	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
-	docker run --rm --privileged multiarch/qemu-user-static:register --reset
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)
 	cd $(TEMP_DIR) && sed -i "s/CROSS_BUILD_//g" Dockerfile.build
 endif
 
-	docker build --pull -t $(BUILD_IMAGE) -f $(TEMP_DIR)/Dockerfile.build $(TEMP_DIR)
-	docker create --name $(BUILD_IMAGE) $(BUILD_IMAGE)
-	docker export $(BUILD_IMAGE) > $(TAR_FILE)
+	$(DOCKER) build --pull -t $(BUILD_IMAGE) -f $(TEMP_DIR)/Dockerfile.build $(TEMP_DIR)
+	$(DOCKER) create --name $(BUILD_IMAGE) $(BUILD_IMAGE)
+	$(DOCKER) export $(BUILD_IMAGE) > $(TAR_FILE)
 	cp rootfs.tar $(TEMP_DIR)
-	docker build --pull -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)
+	$(DOCKER) build --pull -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)
 
 ifeq ($(ARCH), amd64)
 	# This is for to maintain the backward compatibility
-	docker tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
+	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
 push: .push-$(ARCH)
 .push-$(ARCH): .container-$(ARCH)
-	$(PUSH_TOOL) docker -- push $(MULTI_ARCH_IMG):$(TAG)
+	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
 
 ifeq ($(ARCH),amd64)
-	$(PUSH_TOOL) docker -- push $(IMAGE):$(TAG)
+	$(DOCKER) push $(IMAGE):$(TAG)
 endif
 
 clean:
-	docker rmi -f $(IMAGE):$(TAG) || true
-	docker rmi -f $(BUILD_IMAGE)   || true
-	docker rm  -f $(BUILD_IMAGE)   || true
+	$(DOCKER) rmi -f $(IMAGE):$(TAG) || true
+	$(DOCKER) rmi -f $(BUILD_IMAGE)   || true
+	$(DOCKER) rm  -f $(BUILD_IMAGE)   || true
 	rm -f $(TAR_FILE)
+
+release: all-container all-push
+	echo "done"
