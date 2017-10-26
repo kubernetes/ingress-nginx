@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.27
+TAG ?= 0.28
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
 DOCKER ?= gcloud docker --
@@ -47,10 +47,10 @@ endif
 
 TEMP_DIR := $(shell mktemp -d)
 
+all: all-container
+
 image-info:
 	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
-
-all: all-container
 
 sub-container-%:
 	$(MAKE) ARCH=$* container
