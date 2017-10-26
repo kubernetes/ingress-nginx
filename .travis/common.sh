@@ -18,6 +18,11 @@ if ! [ -z $DEBUG ]; then
   set -x
 fi
 
+echo "TRAVIS_REPO_SLUG:           $TRAVIS_REPO_SLUG"
+echo "TRAVIS_PULL_REQUEST:        $TRAVIS_PULL_REQUEST"
+echo "TRAVIS_EVENT_TYPE:          $TRAVIS_EVENT_TYPE"
+echo "TRAVIS_PULL_REQUEST_BRANCH: $TRAVIS_PULL_REQUEST_BRANCH"
+
 set -o errexit
 set -o nounset
 set -o pipefail
