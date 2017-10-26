@@ -27,15 +27,12 @@ export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.32
 export NGINX_DIGEST_AUTH=7955af9c77598c697ac292811914ce1e2b3b824c
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.1.0
+export NGINX_OPENTRACING_VERSION=0.1.1
 export OPENTRACING_CPP_VERSION=1.0.0
 export ZIPKIN_CPP_VERSION=0.1.0
 export MODSECURITY=a2a5858d249222938c2f5e48087a922c63d7f9d8
 
 export BUILD_PATH=/tmp/build
-
-export NGINX_OPENTRACING_VENDOR="ZIPKIN"
-
 
 ARCH=$(uname -p)
 
@@ -117,7 +114,7 @@ get_src 9b1d0075df787338bb607f14925886249bda60b6b3156713923d5d59e99a708b \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 624bdcade5da12cc5bae52f0190155a6ff519e86209c6b3c9f5ca3baa5096aec \
+get_src 8c55a7ec639b186689a0053eed5f1605f38c461f0d3ee6e728bb466a148a44d2 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src 9543f66790ba65810869a29b3aaef5286f1c446cb498a304d0d8b153c289cae8 \
@@ -207,7 +204,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
-  --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing
+  --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin"
 
 if [[ ${ARCH} == "x86_64" ]]; then
