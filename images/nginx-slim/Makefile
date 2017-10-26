@@ -14,8 +14,10 @@
 
 # 0.0.0 shouldn't clobber any released builds
 TAG ?= 0.27
-REGISTRY ?= gcr.io/google_containers
+REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
+DOCKER ?= gcloud docker --
+
 ALL_ARCH = amd64 arm arm64 ppc64le
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
@@ -31,7 +33,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=gcr.io/google_containers/ubuntu-slim-$(ARCH):0.14
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/ubuntu-slim-$(ARCH):0.14
 
 ifeq ($(ARCH),arm)
         QEMUARCH=arm
@@ -42,12 +44,11 @@ endif
 ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
 endif
-ifeq ($(ARCH),s390x)
-        QEMUARCH=s390x
-endif
-
 
 TEMP_DIR := $(shell mktemp -d)
+
+image-info:
+	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
 
 all: all-container
 
@@ -74,25 +75,28 @@ ifeq ($(ARCH),amd64)
 else
 	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
 	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
-	docker run --rm --privileged multiarch/qemu-user-static:register --reset
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)
 	cd $(TEMP_DIR) && $(SED_I) "s/CROSS_BUILD_//g" Dockerfile
 endif
 
-	docker build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)
+	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)
 
 ifeq ($(ARCH), amd64)
 	# This is for to maintain the backward compatibility
-	docker tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
+	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
 push: .push-$(ARCH)
 .push-$(ARCH): .container-$(ARCH)
-	gcloud docker -- push $(MULTI_ARCH_IMG):$(TAG)
+	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
 ifeq ($(ARCH), amd64)
-	gcloud docker -- push $(IMAGE):$(TAG)
+	$(DOCKER) push $(IMAGE):$(TAG)
 endif
 
 clean: $(addprefix sub-clean-,$(ALL_ARCH))
 sub-clean-%:
-	docker rmi -f $(IMAGE)-$*:$(TAG) || true
+	$(DOCKER) rmi -f $(IMAGE)-$*:$(TAG) || true
+
+release: all-container all-push
+	echo "done"
