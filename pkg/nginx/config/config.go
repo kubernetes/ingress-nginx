@@ -386,6 +386,10 @@ type Configuration struct {
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
 
+	// Append the remote address to the X-Forwarded-For header instead of replacing it
+	// Default: false
+	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
+
 	// EnableOpentracing enables the nginx Opentracing extension
 	// https://github.com/rnburn/nginx-opentracing
 	// By default this is disabled
@@ -428,6 +432,7 @@ func NewDefault() Configuration {
 		EnableUnderscoresInHeaders: false,
 		ErrorLogLevel:              errorLevel,
 		ForwardedForHeader:         "X-Forwarded-For",
+		ComputeFullForwardedFor:    false,
 		HTTP2MaxFieldSize:          "4k",
 		HTTP2MaxHeaderSize:         "16k",
 		HSTS:                       true,
