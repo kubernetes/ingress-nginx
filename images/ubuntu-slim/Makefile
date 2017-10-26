@@ -51,10 +51,10 @@ endif
 
 TEMP_DIR := $(shell mktemp -d)
 
+all: all-container
+
 image-info:
 	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
-
-all: all-container
 
 sub-container-%:
 	$(MAKE) ARCH=$* container
