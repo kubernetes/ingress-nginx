@@ -18,11 +18,14 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -57,10 +60,27 @@ func main() {
 		fmt.Fprint(w, "ok")
 	})
 	http.Handle("/metrics", promhttp.Handler())
-	// TODO: Use .Shutdown from Go 1.8
-	err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+
+	srv := &http.Server{
+		Addr: fmt.Sprintf(":%d", *port),
+	}
+
+	go func() {
+		err := srv.ListenAndServe()
+		if err != http.ErrServerClosed {
+			fmt.Fprintf(os.Stderr, "could not start http server: %s\n", err)
+			os.Exit(1)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM)
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	err := srv.Shutdown(ctx)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not start http server: %s\n", err)
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "could not graceful shutdown http server: %s\n", err)
 	}
 }
