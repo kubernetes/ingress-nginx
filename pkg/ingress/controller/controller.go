@@ -819,7 +819,7 @@ func (ic *GenericController) getServiceClusterEndpoint(svcKey string, backend *e
 	}
 
 	svc := svcObj.(*apiv1.Service)
-	if svc.Spec.ClusterIP == "" {
+	if svc.Spec.ClusterIP == "" || svc.Spec.ClusterIP == "None" {
 		return endpoint, fmt.Errorf("No ClusterIP found for service %s", svcKey)
 	}
 
