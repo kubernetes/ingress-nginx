@@ -885,6 +885,29 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 		}
 	}
 
+	// Ingress with an ExternalName service and no port defined in the service.
+	if len(svc.Spec.Ports) == 0 && svc.Spec.Type == apiv1.ServiceTypeExternalName {
+		externalPort, err := strconv.Atoi(backendPort)
+		if err != nil {
+			glog.Warningf("only numeric ports are allowed in ExternalName services: %v is not valid as a TCP/UDP port", backendPort)
+			return upstreams, nil
+		}
+
+		servicePort := apiv1.ServicePort{
+			Protocol:   "TCP",
+			Port:       int32(externalPort),
+			TargetPort: intstr.FromString(backendPort),
+		}
+		endps := ic.getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz)
+		if len(endps) == 0 {
+			glog.Warningf("service %v does not have any active endpoints", svcKey)
+			return upstreams, nil
+		}
+
+		upstreams = append(upstreams, endps...)
+		return upstreams, nil
+	}
+
 	if !ic.cfg.SortBackends {
 		rand.Seed(time.Now().UnixNano())
 		for i := range upstreams {
@@ -1122,9 +1145,12 @@ func (ic *GenericController) getEndpoints(
 
 	// ExternalName services
 	if s.Spec.Type == apiv1.ServiceTypeExternalName {
+		glog.V(3).Info("Ingress using a service %v of type=ExternalName : %v", s.Name)
+
 		targetPort := servicePort.TargetPort.IntValue()
 		// check for invalid port value
 		if targetPort <= 0 {
+			glog.Errorf("ExternalName service with an invalid port: %v", targetPort)
 			return upsServers
 		}
 
