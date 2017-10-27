@@ -998,10 +998,15 @@ func (ic *GenericController) createServers(data []*extensions.Ingress,
 			}
 
 			// setup server aliases
-			servers[host].Alias = aliasAnnotation
 			if aliasAnnotation != "" {
-				if _, ok := aliases[aliasAnnotation]; !ok {
-					aliases[aliasAnnotation] = host
+				if servers[host].Alias == "" {
+					servers[host].Alias = aliasAnnotation
+					if _, ok := aliases[aliasAnnotation]; !ok {
+						aliases[aliasAnnotation] = host
+					}
+				} else {
+					glog.Warningf("ingress %v/%v for host %v contains an Alias but one has already been configured.",
+						ing.Namespace, ing.Name, host)
 				}
 			}
 
