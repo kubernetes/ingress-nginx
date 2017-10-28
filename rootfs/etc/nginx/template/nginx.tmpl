@@ -214,8 +214,13 @@ http {
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
     map $http_x_forwarded_for $full_x_forwarded_for {
+        {{ if $all.Cfg.UseProxyProtocol }}
+        default          "$http_x_forwarded_for, $proxy_protocol_addr";
+        ''               "$proxy_protocol_addr";
+        {{ else }}
         default          "$http_x_forwarded_for, $realip_remote_addr";
         ''               "$realip_remote_addr";
+        {{ end}}
     }
     {{ end }}
 
