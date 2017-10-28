@@ -186,7 +186,7 @@ Example: `ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"`
 
 * `ingress.kubernetes.io/cors-allow-headers` controls which headers are accepted. This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -.
 
-Example: `ingress.kubernetes.io/cors-allow-methods: "X-Forwarded-For, X-app123-XPTO"`
+Example: `ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
 
 * `ingress.kubernetes.io/cors-allow-origin` controls what's the accepted Origin for CORS and defaults to '*'. This is a single field value, with the following format: http(s)://origin-site.com or http(s)://origin-site.com:port
 
