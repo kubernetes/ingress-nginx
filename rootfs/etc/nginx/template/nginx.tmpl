@@ -119,6 +119,7 @@ http {
     gzip_min_length 256;
     gzip_types {{ $cfg.GzipTypes }};
     gzip_proxied any;
+    gzip_vary on;
     {{ end }}
 
     # Custom headers for response
