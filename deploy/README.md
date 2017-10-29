@@ -90,7 +90,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 This example creates an ELB with just two listeners, one in port 80 and another in port 443
 
-![Listeners](../docs/images/listener.png)
+![Listeners](../docs/images/elb-l7-listener.png)
 
 If the ingress controller uses RBAC run:
 
