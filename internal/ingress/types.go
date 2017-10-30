@@ -251,6 +251,9 @@ type Location struct {
 	// original location.
 	// +optional
 	XForwardedPrefix bool `json:"xForwardedPrefix,omitempty"`
+	// EnableWebSocket indicates if websocket is enabled for the location
+	// +optional
+	EnableWebSocket bool `json:"webSocket,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

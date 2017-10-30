@@ -119,7 +119,7 @@ http {
 
     include /etc/nginx/mime.types;
     default_type text/html;
-    
+
     {{ if $cfg.EnableBrotli }}
     brotli on;
     brotli_comp_level {{ $cfg.BrotliLevel }};
@@ -181,7 +181,11 @@ http {
     # Retain the default nginx handling of requests without a "Connection" header
     map $http_upgrade $connection_upgrade {
         default          upgrade;
+        {{ if (and (not ($location.EnableWebSocket)) (gt $all.Cfg.UpstreamKeepaliveConnections 0)) }}
+        ''               keep-alive
+        {{ else }}
         ''               close;
+        {{ end }}
     }
 
     map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
@@ -292,7 +296,7 @@ http {
 
     {{ range $header := $cfg.HideHeaders }}proxy_hide_header {{ $header }};
     {{ end }}
-    
+
     {{ if not (empty $cfg.HTTPSnippet) }}
     # Custom code snippet configured in the configuration configmap
     {{ $cfg.HTTPSnippet }}
@@ -695,10 +699,10 @@ stream {
             {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
             # enforce ssl on server side
-            if ($redirect_to_https) {               
+            if ($redirect_to_https) {
                 {{ if $location.UsePortInRedirects }}
                 # using custom ports require a different rewrite directive
-                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }} 
+                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
                 error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$host{{ $redirect_port }}$request_uri;
 
                 return 497;

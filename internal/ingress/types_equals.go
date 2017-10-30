@@ -370,6 +370,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.XForwardedPrefix != l2.XForwardedPrefix {
 		return false
 	}
+	if l1.EnableWebSocket != l2.EnableWebSocket {
+		return false
+	}
 
 	return true
 }
