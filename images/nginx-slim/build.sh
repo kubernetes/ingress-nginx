@@ -147,6 +147,11 @@ make install
 
 cd "$BUILD_PATH"
 
+# Get Brotli source and deps
+git clone https://github.com/google/ngx_brotli.git
+cd ngx_brotli && git submodule update --init
+
+
 if [[ ${ARCH} == "x86_64" ]]; then
   # build modsecurity library
   git clone https://github.com/SpiderLabs/ModSecurity
@@ -204,6 +209,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
+  --add-module=$BUILD_PATH/ngx_brotli \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin"
 
