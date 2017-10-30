@@ -324,13 +324,10 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 			// path has a slash suffix, so that it can be connected with baseuri directly
 			bPath := fmt.Sprintf("%s%s", path, "$baseuri")
 			if len(location.Rewrite.BaseURLScheme) > 0 {
-				abu = fmt.Sprintf(`subs_filter '<head(.*?)>' '<head$1><base href="%v://$http_host%v">' r;
-	    subs_filter '<HEAD(.*?)>' '<HEAD$1><base href="%v://$http_host%v">' r;
-	    `, location.Rewrite.BaseURLScheme, bPath, location.Rewrite.BaseURLScheme, bPath)
+				abu = fmt.Sprintf(`subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="%v://$http_host%v">' ro;`,
+					location.Rewrite.BaseURLScheme, bPath)
 			} else {
-				abu = fmt.Sprintf(`subs_filter '<head(.*?)>' '<head$1><base href="$scheme://$http_host%v">' r;
-	    subs_filter '<HEAD(.*?)>' '<HEAD$1><base href="$scheme://$http_host%v">' r;
-	    `, bPath, bPath)
+				abu = fmt.Sprintf(`subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host%v">' ro;`, bPath)
 			}
 		}
 
