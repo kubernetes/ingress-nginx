@@ -747,9 +747,11 @@ stream {
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
             proxy_set_header ssl-client-cert        $ssl_client_raw_cert;
             proxy_set_header ssl-client-verify      $ssl_client_verify;
+            proxy_set_header ssl-client-dn          $ssl_client_s_dn;
             {{ else }}
             proxy_set_header ssl-client-cert        "";
             proxy_set_header ssl-client-verify      "";
+            proxy_set_header ssl-client-dn          "";
             {{ end }}
 
             # Allow websocket connections
