@@ -35,10 +35,10 @@ body=$(cat <<EOF
     "branch": "master",
 		"message": "Publishing image for component $2 to quay.io",
     "config": {
-			"merge_mode": "deep_merge",
-      "env": [
-        "COMPONENT=\"$2\""
-      ]
+      "merge_mode": "deep_merge",
+      "env": {
+        "COMPONENT": "$2"
+      }
     }
   }
 }
