@@ -112,6 +112,13 @@ http {
 
     include /etc/nginx/mime.types;
     default_type text/html;
+    
+    {{ if $cfg.UseBrotli }}
+    brotli on;
+    brotli_comp_level {{ $cfg.BrotliLevel }};
+    brotli_types {{ $cfg.BrotliTypes }};
+    {{ end }}
+
     {{ if $cfg.UseGzip }}
     gzip on;
     gzip_comp_level 5;
