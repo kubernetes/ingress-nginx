@@ -114,6 +114,18 @@ Setting at least one code also enables [proxy_intercept_errors](http://nginx.org
 
 Example usage: `custom-http-errors: 404,415`
 
+### Other Directives
+
+#### brotli-level
+Sets the Brotli Compression Level that will be used.
+*Defaults to* 4
+
+
+#### brotli-types
+Sets the MIME Types that will be compressed on-the-fly by brotli.
+*Defaults to* `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`
+
+
 #### enable-modsecurity
 
 Enables the modsecurity module for NGINX
@@ -313,6 +325,15 @@ Sets the number of unsuccessful attempts to communicate with the [server](http:/
 #### upstream-fail-timeout
 
 Sets the time during which the specified number of unsuccessful attempts to communicate with the [server](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) should happen to consider the server unavailable.
+
+#### use-brotli
+
+Enables or disables compression of HTTP responses using the ["brotli" module](https://github.com/google/ngx_brotli).
+
+The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
+
+This is *enabled* by default
+
 
 #### use-gzip
 
