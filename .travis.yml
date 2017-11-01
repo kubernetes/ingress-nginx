@@ -9,7 +9,7 @@ notifications:
   email: true
 
 go:
-  - 1.9
+  - 1.9.2
 
 go_import_path: k8s.io/ingress-nginx
 
@@ -23,9 +23,6 @@ env:
   - secure: rKDoy9IYYYy0fYBs4+9mwuBVq/TcxfFwMfE0ywYWhUUdgzrUYSJAwpoe/96EQ4YmESUefwC2nDNq4G3XzJKYOWf83PaIveb9Z//zmMrCQXjDuDBDLpwV3sXSh7evXiVDohJz4ogBCeMRUCMKYsyKBM9yWfa/iu+yI92dbphpK9peOKW6yBc0uspJlln4swN3GS2WT9LVuPY2Azv9U2UqrXufOPDKG/qEb/Vrn4yZ2lR/50r2k45e9nSvDoByvr10V8ubM5Zc0iP0vBuAUVRdByv6N53Q4gaBGapY6SxhIjIPC/h0rNnuT9EXp7MWaPT5FmBxLt9wnyleT9QhZJnFyaBYqFgcz/DKifYQkryY4M5dLMo/Rt3yATyAy8Y0df1TOoV2dKdqwOOwQ8bXB1wDfyrGxmQj9HY4Ffnphx3wPE1a+Sjuh+S5Epm7XJbPx5pZJqNO2hd4sTbk0Xp3gpPbihny2r/jtNwHl0wpFCfOM68RNrsVRlIwG3UhzbZvblbQ/M/mmWCdgzINjt07I2SGCJxfKG0e98Q49SKUoDoOgQTTRDqTC9IgOEDxyfAkT0Vr6BtlP88Nsgnf6kmboyigBrRAiaDQGTxn3SP6LnQI3CeopaRDYvFZe/rTwPXE9XlKoTn9FTWnAqF3MuWaLslDcDKYEh7OaYJjF01piu6g4Nc= 
 
 merge_mode: deep_merge
-
-after_success:
-  - .travis/publish.sh
 
 jobs:
   include:
@@ -46,3 +43,6 @@ jobs:
     - test/e2e/up.sh
     script:
     - make e2e-test
+  - stage: publish
+    script:
+    - .travis/publish.sh
