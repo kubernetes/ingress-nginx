@@ -20,10 +20,11 @@ source $DIR/common.sh
 
 IMAGE=$(make -s -C $DIR/../ image-info)
 
-if docker_tag_exists "kubernetes-ingress-controller/nginx-ingress-controller" $(echo $IMAGE | jq .tag); then
+if docker_tag_exists "kubernetes-ingress-controller/nginx-ingress-controller" $(echo $IMAGE | jq .tag) "$ARCH"; then
     echo "Image already published"
     exit 0
 fi
 
-echo "building kubernetes-ingress-controller/nginx-ingress-controller image..."
-make -C $DIR/../ release
+echo "building nginx-ingress-controller-$ARCH image..."
+make -C $DIR/../ sub-container-$ARCH
+make -C $DIR/../ sub-push-$ARCH
