@@ -16,14 +16,20 @@ FROM BASEIMAGE
 
 CROSS_BUILD_COPY qemu-QEMUARCH-static /usr/bin/
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
-  diffutils \
-  --no-install-recommends \
+# install dumb-init from zesty
+RUN if grep -q -i "ports.ubuntu.com" /etc/apt/sources.list; \
+  then \
+    echo "deb http://ports.ubuntu.com/ubuntu-ports zesty universe" >> /etc/apt/sources.list; \
+  else \
+    echo "deb http://archive.ubuntu.com/ubuntu zesty universe" >> /etc/apt/sources.list; \
+  fi \
+  && DEBIAN_FRONTEND=noninteractive apt-get update \
+  && apt-get install -y \
+    diffutils \
+    dumb-init \
+    --no-install-recommends \
+  && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-
-RUN curl -sSL -o /tmp/dumb-init.deb http://ftp.us.debian.org/debian/pool/main/d/dumb-init/dumb-init_1.2.0-1_DUMB_ARCH.deb && \
-  dpkg -i /tmp/dumb-init.deb && \
-  rm /tmp/dumb-init.deb
 
 ENTRYPOINT ["/usr/bin/dumb-init"]
 
