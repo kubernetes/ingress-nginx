@@ -47,6 +47,8 @@ const (
 
 	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
 
+	brotliTypes = "application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
+
 	logFormatUpstream = `%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status`
 
 	logFormatStream = `[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`
@@ -331,6 +333,16 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
 	UseGzip bool `json:"use-gzip,omitempty"`
 
+	// Enables or disables the use of the NGINX Brotli Module for compression
+	// https://github.com/google/ngx_brotli
+	UseBrotli bool `json:"use-brotli,omitempty"`
+
+	// Brotli Compression Level that will be used
+	BrotliLevel int `json:"brotli-level,omitempty"`
+
+	// MIME Types that will be compressed on-the-fly using Brotli module
+	BrotliTypes string `json:"brotli-types,omitempty"`
+
 	// Enables or disables the HTTP/2 support in secure connections
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html
 	// Default: true
@@ -424,6 +436,8 @@ func NewDefault() Configuration {
 		AllowBackendServerHeader:   false,
 		AccessLogPath:              "/var/log/nginx/access.log",
 		ErrorLogPath:               "/var/log/nginx/error.log",
+		BrotliLevel:                4,
+		BrotliTypes:                brotliTypes,
 		ClientHeaderBufferSize:     "1k",
 		ClientHeaderTimeout:        60,
 		ClientBodyBufferSize:       "8k",
@@ -462,6 +476,7 @@ func NewDefault() Configuration {
 		SSLSessionCacheSize:        sslSessionCacheSize,
 		SSLSessionTickets:          true,
 		SSLSessionTimeout:          sslSessionTimeout,
+		UseBrotli:                  true,
 		UseGzip:                    true,
 		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:      "10s",
