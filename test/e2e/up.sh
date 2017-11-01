@@ -76,5 +76,6 @@ else
 
     echo "Reason:"
     kubectl describe pods -n ingress-nginx
+    kubectl logs -n ingress-nginx -l app=ingress-nginx
     exit 1
 fi
