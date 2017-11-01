@@ -20,10 +20,11 @@ source $DIR/common.sh
 
 IMAGE=$(make -s -C $DIR/../images/ubuntu-slim image-info)
 
-if docker_tag_exists "kubernetes-ingress-controller/ubuntu-slim" $(echo $IMAGE | jq .tag); then
+if docker_tag_exists "kubernetes-ingress-controller/ubuntu-slim" $(echo $IMAGE | jq .tag) "$ARCH"; then
     echo "Image already published"
     exit 0
 fi
 
-echo "building ubuntu-slim image..."
-make -C $DIR/../images/ubuntu-slim release
+echo "building ubuntu-slim-$ARCH image..."
+make -C $DIR/../images/ubuntu-slim sub-container-$ARCH
+make -C $DIR/../images/ubuntu-slim sub-push-$ARCH

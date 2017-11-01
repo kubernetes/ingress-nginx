@@ -18,7 +18,13 @@ if ! [ -z $DEBUG ]; then
   set -x
 fi
 
+if [ -z $ARCH ]; then
+  echo "Environment variable ARCH is not defined. Aborting.";
+  exit 0;
+fi
+
 echo "COMPONENT:                  $COMPONENT"
+echo "PLATFORM:                   $ARCH"
 echo "TRAVIS_REPO_SLUG:           $TRAVIS_REPO_SLUG"
 echo "TRAVIS_PULL_REQUEST:        $TRAVIS_PULL_REQUEST"
 echo "TRAVIS_EVENT_TYPE:          $TRAVIS_EVENT_TYPE"
@@ -75,7 +81,7 @@ fi
 
 function docker_tag_exists() {
     TAG=${2//\"/}
-    IMAGES=$(curl -s -H "Authorization: Bearer ${QUAY_PASSWORD}" https://quay.io/api/v1/repository/$1/image/ | jq '.images | sort_by(.sort_index) | .[] .tags | select(.[] !=null) | .[0]' | sed s/\"//g)
+    IMAGES=$(curl -s -H "Authorization: Bearer ${QUAY_PASSWORD}" https://quay.io/api/v1/repository/$1-$3/image/ | jq '.images | sort_by(.sort_index) | .[] .tags | select(.[] !=null) | .[0]' | sed s/\"//g)
     if echo "$IMAGES" | grep -q "$TAG" ; then
         return 0
     fi
