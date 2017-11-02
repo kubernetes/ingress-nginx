@@ -61,13 +61,13 @@ and create the secret via `kubectl create secret tls ${CERT_NAME} --key ${KEY_FI
 
 ## Requirements
 
-The default backend is a service of handling all url paths and hosts the nginx controller doesn't understand, i.e., all the request that are not mapped with an Ingress
+The default backend is a service which handles all url paths and hosts the nginx controller doesn't understand (i.e., all the requests that are not mapped with an Ingress).
 Basically a default backend exposes two URLs:
 
 - `/healthz` that returns 200
 - `/` that returns 404
 
-The location [404-server](https://github.com/kubernetes/ingress-nginx/tree/master/images/404-server) contains the image of the default backend and [custom-error-pages](https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages) an example that shows how it is possible to customize
+The sub-directory [`/images/404-server`](https://github.com/kubernetes/ingress-nginx/tree/master/images/404-server) provides a service which satisfies the requirements for a default backend.  The sub-directory [`/images/custom-error-pages`](https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages) provides an additional service for the purpose of customizing the error pages served via the default backend.
 
 ## Annotation ingress.class
 
@@ -110,19 +110,35 @@ If the ingress controller is running in AWS we need to use the VPC IPv4 CIDR.
 
 Another option is to enable proxy protocol using `use-proxy-protocol: "true"`.
 
-In this mode NGINX do not uses the content of the header to get the source IP address of the connection.
+In this mode NGINX does not use the content of the header to get the source IP address of the connection.
 
 ## Proxy Protocol
 
-If you are using a L4 proxy to forward the traffic to the NGINX pods and terminate HTTP/HTTPS there, you will lose the remote endpoint's IP addresses. To prevent this you could use the [Proxy Protocol](http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt) for forwarding traffic, this will send the connection details before forwarding the actual TCP connection itself.
+If you are using a L4 proxy to forward the traffic to the NGINX pods and terminate HTTP/HTTPS there, you will lose the remote endpoint's IP address. To prevent this you could use the [Proxy Protocol](http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt) for forwarding traffic, this will send the connection details before forwarding the actual TCP connection itself.
 
 Amongst others [ELBs in AWS](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/enable-proxy-protocol.html) and [HAProxy](http://www.haproxy.org/) support Proxy Protocol.
 
 ### Running multiple ingress controllers
 
-If you're running multiple ingress controllers, or running on a cloudprovider that natively handles ingress, you need to specify the annotation `kubernetes.io/ingress.class: "nginx"` in all ingresses that you would like this controller to claim.
-Not specifying the annotation will lead to multiple ingress controllers claiming the same ingress. Specifying the wrong value will result in all ingress controllers ignoring the ingress.
-Multiple ingress controllers running in the same cluster was not supported in Kubernetes versions < 1.3.
+If you're running multiple ingress controllers, or running on a cloud provider that natively handles ingress, you need to specify the annotation `kubernetes.io/ingress.class: "nginx"` in all ingresses that you would like this controller to claim.  This mechanism also provides users the ability to run _multiple_ NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).  When utilizing this functionality the option `--ingress-class` should be changed to a value unique for the cluster within the definition of the replication controller. Here is a partial example:
+
+```
+spec:
+  template:
+     spec:
+       containers:
+         - name: nginx-ingress-internal-controller
+           args:
+             - /nginx-ingress-controller
+             - '--default-backend-service=ingress/nginx-ingress-default-backend'
+             - '--election-id=ingress-controller-leader-internal'
+             - '--ingress-class=nginx-internal'
+             - '--configmap=ingress/nginx-ingress-internal-controller'
+```
+
+Not specifying the annotation will lead to multiple ingress controllers claiming the same ingress. Specifying a value which does not match the class of any existing ingress controllers will result in all ingress controllers ignoring the ingress.
+
+The use of multiple ingress controllers in a single cluster is supported in Kubernetes versions >= 1.3.
 
 ### Websockets
 
@@ -131,6 +147,7 @@ Support for websockets is provided by NGINX out of the box. No special configura
 The only requirement to avoid the close of connections is the increase of the values of `proxy-read-timeout` and `proxy-send-timeout`.
 
 The default value of this settings is `60 seconds`.
+
 A more adequate value to support websockets is a value higher than one hour (`3600`).
 
 ### Optimizing TLS Time To First Byte (TTTFB)
@@ -147,7 +164,7 @@ The previous behavior can be restored using `retry-non-idempotent=true` in the c
 
 ### Disabling NGINX ingress controller
 
-Setting the annotation `kubernetes.io/ingress.class` to any value other than "nginx" or the empty string, will force the NGINX Ingress controller to ignore your Ingress.
+Setting the annotation `kubernetes.io/ingress.class` to any value other which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.  If you are only running a single NGINX ingress controller, this can be achieved by setting this to any value except "nginx" or an empty string.
 
 Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
 
@@ -157,4 +174,4 @@ Do this if you wish to use one of the other Ingress controllers at the same time
 
 ### Why endpoints and not services
 
-The NGINX ingress controller does not uses [Services](http://kubernetes.io/docs/user-guide/services) to route traffic to the pods. Instead it uses the Endpoints API in order to bypass [kube-proxy](http://kubernetes.io/docs/admin/kube-proxy/) to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.
+The NGINX ingress controller does not use [Services](http://kubernetes.io/docs/user-guide/services) to route traffic to the pods. Instead it uses the Endpoints API in order to bypass [kube-proxy](http://kubernetes.io/docs/admin/kube-proxy/) to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.
