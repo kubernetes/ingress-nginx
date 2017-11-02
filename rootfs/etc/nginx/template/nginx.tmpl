@@ -114,9 +114,9 @@ http {
     default_type text/html;
     
     {{ if $cfg.UseBrotli }}
-#    brotli on;
-#    brotli_comp_level {{ $cfg.BrotliLevel }};
-#    brotli_types {{ $cfg.BrotliTypes }};
+    brotli on;
+    brotli_comp_level {{ $cfg.BrotliLevel }};
+    brotli_types {{ $cfg.BrotliTypes }};
     {{ end }}
 
     {{ if $cfg.UseGzip }}
