@@ -734,7 +734,7 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n NGINXController) Check(_ *http.Request) error {
-	res, err := http.Get(fmt.Sprintf("http://localhost:%v%v", n.ports.Status, ngxHealthPath))
+	res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v%v", n.ports.Status, ngxHealthPath))
 	if err != nil {
 		return err
 	}

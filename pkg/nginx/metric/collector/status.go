@@ -144,7 +144,7 @@ func (bit BoolToFloat64) UnmarshalJSON(data []byte) error {
 }
 
 func getNginxStatus(port int, path string) (*basicStatus, error) {
-	url := fmt.Sprintf("http://localhost:%v%v", port, path)
+	url := fmt.Sprintf("http://0.0.0.0:%v%v", port, path)
 	glog.V(3).Infof("start scraping url: %v", url)
 
 	data, err := httpBody(url)
@@ -175,7 +175,7 @@ func httpBody(url string) ([]byte, error) {
 }
 
 func getNginxVtsMetrics(port int, path string) (*vts, error) {
-	url := fmt.Sprintf("http://localhost:%v%v", port, path)
+	url := fmt.Sprintf("http://0.0.0.0:%v%v", port, path)
 	glog.V(3).Infof("start scraping url: %v", url)
 
 	data, err := httpBody(url)
