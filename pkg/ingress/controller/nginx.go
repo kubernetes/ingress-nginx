@@ -643,7 +643,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 			// Do not use defer to remove the temporal file.
 			// This is helpful when there is an error in the
 			// temporal configuration (we can manually inspect the file).
-			// Only remove the file when no error occured.
+			// Only remove the file when no error occurred.
 			os.Remove(tmpfile.Name())
 		}
 	}

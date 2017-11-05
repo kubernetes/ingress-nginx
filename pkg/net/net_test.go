@@ -44,7 +44,7 @@ func TestIsIPV6(t *testing.T) {
 
 func TestIsPortAvailable(t *testing.T) {
 	if !IsPortAvailable(0) {
-		t.Fatal("expected port 0 to be avilable (random port) but returned false")
+		t.Fatal("expected port 0 to be available (random port) but returned false")
 	}
 
 	ln, err := net.Listen("tcp", ":0")

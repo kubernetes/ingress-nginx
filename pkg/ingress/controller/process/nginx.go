@@ -54,6 +54,11 @@ func WaitUntilPortIsAvailable(port int) {
 		conn.Close()
 		// kill nginx worker processes
 		fs, err := proc.NewFS("/proc")
+		if err != nil {
+			glog.Errorf("unexpected error reading /proc information: %v", err)
+			continue
+		}
+
 		procs, _ := fs.FS.AllProcs()
 		for _, p := range procs {
 			pn, err := p.Comm()
