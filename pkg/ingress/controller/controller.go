@@ -35,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/class"
@@ -56,9 +55,6 @@ const (
 )
 
 var (
-	// list of ports that cannot be used by TCP or UDP services
-	reservedPorts = []string{"80", "443", "8181", "18080"}
-
 	cloner *conversion.Cloner
 )
 
@@ -260,8 +256,16 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			continue
 		}
 
-		// this ports used by the backend
-		if sliceutils.StringInSlice(k, reservedPorts) {
+		rp := []int{
+			n.cfg.ListenPorts.HTTP,
+			n.cfg.ListenPorts.HTTPS,
+			n.cfg.ListenPorts.SSLProxy,
+			n.cfg.ListenPorts.Status,
+			n.cfg.ListenPorts.Health,
+			n.cfg.ListenPorts.Default,
+		}
+
+		if intInSlice(externalPort, rp) {
 			glog.Warningf("port %v cannot be used for TCP or UDP services. It is reserved for the Ingress controller", k)
 			continue
 		}

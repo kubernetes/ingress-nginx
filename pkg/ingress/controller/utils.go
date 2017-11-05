@@ -49,3 +49,12 @@ func sysctlFSFileMax() int {
 	}
 	return int(rLimit.Max)
 }
+
+func intInSlice(i int, list []int) bool {
+	for _, v := range list {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
