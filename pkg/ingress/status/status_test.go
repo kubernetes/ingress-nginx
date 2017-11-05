@@ -249,9 +249,6 @@ func buildStatusSync() statusSync {
 			Client:         buildSimpleClientSet(),
 			PublishService: apiv1.NamespaceDefault + "/" + "foo",
 			IngressLister:  buildIngressListener(),
-			CustomIngressStatus: func(*extensions.Ingress) []apiv1.LoadBalancerIngress {
-				return nil
-			},
 		},
 	}
 }
@@ -267,9 +264,6 @@ func TestStatusActions(t *testing.T) {
 		DefaultIngressClass:    "nginx",
 		IngressClass:           "",
 		UpdateStatusOnShutdown: true,
-		CustomIngressStatus: func(*extensions.Ingress) []apiv1.LoadBalancerIngress {
-			return nil
-		},
 	}
 	// create object
 	fkSync := NewStatusSyncer(c)

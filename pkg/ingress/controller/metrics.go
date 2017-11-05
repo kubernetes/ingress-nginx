@@ -34,7 +34,6 @@ func init() {
 	prometheus.MustRegister(reloadOperation)
 	prometheus.MustRegister(reloadOperationErrors)
 	prometheus.MustRegister(sslExpireTime)
-
 }
 
 var (
@@ -74,11 +73,9 @@ func incReloadErrorCount() {
 }
 
 func setSSLExpireTime(servers []*ingress.Server) {
-
 	for _, s := range servers {
 		if s.Hostname != defServerName {
 			sslExpireTime.WithLabelValues(s.Hostname).Set(float64(s.SSLExpireTime.Unix()))
 		}
 	}
-
 }

@@ -16,30 +16,6 @@ limitations under the License.
 
 package ingress
 
-// Equal tests for equality between two BackendInfo types
-func (bi1 *BackendInfo) Equal(bi2 *BackendInfo) bool {
-	if bi1 == bi2 {
-		return true
-	}
-	if bi1 == nil || bi2 == nil {
-		return false
-	}
-	if bi1.Name != bi2.Name {
-		return false
-	}
-	if bi1.Release != bi2.Release {
-		return false
-	}
-	if bi1.Build != bi2.Build {
-		return false
-	}
-	if bi1.Repository != bi2.Repository {
-		return false
-	}
-
-	return true
-}
-
 // Equal tests for equality between two Configuration types
 func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	if c1 == c2 {

@@ -29,7 +29,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/rewrite"
-	"k8s.io/ingress-nginx/pkg/nginx/config"
+	"k8s.io/ingress-nginx/pkg/ingress/controller/config"
 )
 
 var (
@@ -158,7 +158,7 @@ func TestBuildAuthResponseHeaders(t *testing.T) {
 
 func TestTemplateWithData(t *testing.T) {
 	pwd, _ := os.Getwd()
-	f, err := os.Open(path.Join(pwd, "../../../test/data/config.json"))
+	f, err := os.Open(path.Join(pwd, "../../../../test/data/config.json"))
 	if err != nil {
 		t.Errorf("unexpected error reading json file: %v", err)
 	}
@@ -174,7 +174,7 @@ func TestTemplateWithData(t *testing.T) {
 	if dat.ListenPorts == nil {
 		dat.ListenPorts = &config.ListenPorts{}
 	}
-	tf, err := os.Open(path.Join(pwd, "../../../rootfs/etc/nginx/template/nginx.tmpl"))
+	tf, err := os.Open(path.Join(pwd, "../../../../rootfs/etc/nginx/template/nginx.tmpl"))
 	if err != nil {
 		t.Errorf("unexpected error reading json file: %v", err)
 	}
@@ -193,7 +193,7 @@ func TestTemplateWithData(t *testing.T) {
 
 func BenchmarkTemplateWithData(b *testing.B) {
 	pwd, _ := os.Getwd()
-	f, err := os.Open(path.Join(pwd, "../../../test/data/config.json"))
+	f, err := os.Open(path.Join(pwd, "../../../../test/data/config.json"))
 	if err != nil {
 		b.Errorf("unexpected error reading json file: %v", err)
 	}
@@ -207,7 +207,7 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		b.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 
-	tf, err := os.Open(path.Join(pwd, "../../rootfs/etc/nginx/template/nginx.tmpl"))
+	tf, err := os.Open(path.Join(pwd, "../../../rootfs/etc/nginx/template/nginx.tmpl"))
 	if err != nil {
 		b.Errorf("unexpected error reading json file: %v", err)
 	}

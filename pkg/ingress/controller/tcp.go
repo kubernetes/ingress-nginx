@@ -10,19 +10,19 @@ import (
 	"github.com/paultag/sniff/parser"
 )
 
-type server struct {
+type TCPServer struct {
 	Hostname      string
 	IP            string
 	Port          int
 	ProxyProtocol bool
 }
 
-type proxy struct {
-	ServerList []*server
-	Default    *server
+type TCPProxy struct {
+	ServerList []*TCPServer
+	Default    *TCPServer
 }
 
-func (p *proxy) Get(host string) *server {
+func (p *TCPProxy) Get(host string) *TCPServer {
 	if p.ServerList == nil {
 		return p.Default
 	}
@@ -36,7 +36,7 @@ func (p *proxy) Get(host string) *server {
 	return p.Default
 }
 
-func (p *proxy) Handle(conn net.Conn) {
+func (p *TCPProxy) Handle(conn net.Conn) {
 	defer conn.Close()
 	data := make([]byte, 4096)
 

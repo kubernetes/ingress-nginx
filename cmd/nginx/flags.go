@@ -1,0 +1,191 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/golang/glog"
+	"github.com/spf13/pflag"
+
+	apiv1 "k8s.io/api/core/v1"
+
+	"k8s.io/ingress-nginx/pkg/ingress/controller"
+	ngx_config "k8s.io/ingress-nginx/pkg/ingress/controller/config"
+	ing_net "k8s.io/ingress-nginx/pkg/net"
+)
+
+const (
+	defIngressClass = "nginx"
+)
+
+func parseFlags() (bool, *controller.Configuration, error) {
+	var (
+		flags = pflag.NewFlagSet("", pflag.ExitOnError)
+
+		apiserverHost = flags.String("apiserver-host", "", "The address of the Kubernetes Apiserver "+
+			"to connect to in the format of protocol://address:port, e.g., "+
+			"http://localhost:8080. If not specified, the assumption is that the binary runs inside a "+
+			"Kubernetes cluster and local discovery is attempted.")
+		kubeConfigFile = flags.String("kubeconfig", "", "Path to kubeconfig file with authorization and master location information.")
+
+		defaultSvc = flags.String("default-backend-service", "",
+			`Service used to serve a 404 page for the default backend. Takes the form
+		namespace/name. The controller uses the first node port of this Service for
+		the default backend.`)
+
+		ingressClass = flags.String("ingress-class", "",
+			`Name of the ingress class to route through this controller.`)
+
+		configMap = flags.String("configmap", "",
+			`Name of the ConfigMap that contains the custom configuration to use`)
+
+		publishSvc = flags.String("publish-service", "",
+			`Service fronting the ingress controllers. Takes the form
+		 namespace/name. The controller will set the endpoint records on the
+		 ingress objects to reflect those on the service.`)
+
+		tcpConfigMapName = flags.String("tcp-services-configmap", "",
+			`Name of the ConfigMap that contains the definition of the TCP services to expose.
+		The key in the map indicates the external port to be used. The value is the name of the
+		service with the format namespace/serviceName and the port of the service could be a
+		number of the name of the port.
+		The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend`)
+
+		udpConfigMapName = flags.String("udp-services-configmap", "",
+			`Name of the ConfigMap that contains the definition of the UDP services to expose.
+		The key in the map indicates the external port to be used. The value is the name of the
+		service with the format namespace/serviceName and the port of the service could be a
+		number of the name of the port.`)
+
+		resyncPeriod = flags.Duration("sync-period", 600*time.Second,
+			`Relist and confirm cloud resources this often. Default is 10 minutes`)
+
+		watchNamespace = flags.String("watch-namespace", apiv1.NamespaceAll,
+			`Namespace to watch for Ingress. Default is to watch all namespaces`)
+
+		profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
+
+		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret
+		that contains a SSL certificate to be used as default for a HTTPS catch-all server`)
+
+		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines
+		the URL to be used as health check inside in the default server in NGINX.`)
+
+		updateStatus = flags.Bool("update-status", true, `Indicates if the
+		ingress controller should update the Ingress status IP/hostname. Default is true`)
+
+		electionID = flags.String("election-id", "ingress-controller-leader", `Election id to use for status update.`)
+
+		forceIsolation = flags.Bool("force-namespace-isolation", false,
+			`Force namespace isolation. This flag is required to avoid the reference of secrets or
+		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
+
+		disableNodeList = flags.Bool("disable-node-list", false,
+			`Disable querying nodes. If --force-namespace-isolation is true, this should also be set.`)
+
+		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the
+		ingress controller should update the Ingress status IP/hostname when the controller
+		is being stopped. Default is true`)
+
+		sortBackends = flags.Bool("sort-backends", false,
+			`Defines if backends and it's endpoints should be sorted`)
+
+		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", false,
+			`Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address`)
+
+		showVersion = flags.Bool("version", false,
+			`Shows release information about the NGINX Ingress controller`)
+
+		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false, `Enable SSL passthrough feature. Default is disabled`)
+
+		httpPort      = flags.Int("http-port", 80, `Indicates the port to use for HTTP traffic`)
+		httpsPort     = flags.Int("https-port", 443, `Indicates the port to use for HTTPS traffic`)
+		statusPort    = flags.Int("status-port", 18080, `Indicates the TCP port to use for exposing the nginx status page`)
+		sslProxyPort  = flags.Int("ssl-passtrough-proxy-port", 442, `Default port to use internally for SSL when SSL Passthgough is enabled`)
+		defServerPort = flags.Int("default-server-port", 8181, `Default port to use for exposing the default server (catch all)`)
+		healthzPort   = flags.Int("healthz-port", 10254, "port for healthz endpoint.")
+	)
+
+	flag.Set("logtostderr", "true")
+
+	flags.AddGoFlagSet(flag.CommandLine)
+	flags.Parse(os.Args)
+	flag.Set("logtostderr", "true")
+
+	// Workaround for this issue:
+	// https://github.com/kubernetes/kubernetes/issues/17162
+	flag.CommandLine.Parse([]string{})
+
+	if *showVersion {
+		return true, nil, nil
+	}
+
+	if *defaultSvc == "" {
+		return false, nil, fmt.Errorf("Please specify --default-backend-service")
+	}
+
+	if *ingressClass != "" {
+		glog.Infof("Watching for ingress class: %s", *ingressClass)
+
+		if *ingressClass != defIngressClass {
+			glog.Warningf("only Ingress with class \"%v\" will be processed by this ingress controller", *ingressClass)
+		}
+	}
+
+	// check port collisions
+	if !ing_net.IsPortAvailable(*httpPort) {
+		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --http-port", *httpPort)
+	}
+
+	if !ing_net.IsPortAvailable(*httpsPort) {
+		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --https-port", *httpsPort)
+	}
+
+	if !ing_net.IsPortAvailable(*statusPort) {
+		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --status-port", *statusPort)
+	}
+
+	if !ing_net.IsPortAvailable(*defServerPort) {
+		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --default-server-port", *defServerPort)
+	}
+
+	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
+		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --ssl-passtrough-proxy-port", *sslProxyPort)
+	}
+
+	config := &controller.Configuration{
+		APIServerHost:           *apiserverHost,
+		KubeConfigFile:          *kubeConfigFile,
+		UpdateStatus:            *updateStatus,
+		ElectionID:              *electionID,
+		EnableProfiling:         *profiling,
+		EnableSSLPassthrough:    *enableSSLPassthrough,
+		ResyncPeriod:            *resyncPeriod,
+		DefaultService:          *defaultSvc,
+		IngressClass:            *ingressClass,
+		Namespace:               *watchNamespace,
+		ConfigMapName:           *configMap,
+		TCPConfigMapName:        *tcpConfigMapName,
+		UDPConfigMapName:        *udpConfigMapName,
+		DefaultSSLCertificate:   *defSSLCertificate,
+		DefaultHealthzURL:       *defHealthzURL,
+		PublishService:          *publishSvc,
+		ForceNamespaceIsolation: *forceIsolation,
+		DisableNodeList:         *disableNodeList,
+		UpdateStatusOnShutdown:  *updateStatusOnShutdown,
+		SortBackends:            *sortBackends,
+		UseNodeInternalIP:       *useNodeInternalIP,
+		ListenPorts: &ngx_config.ListenPorts{
+			Default:  *defServerPort,
+			Health:   *healthzPort,
+			HTTP:     *httpPort,
+			HTTPS:    *httpsPort,
+			SSLProxy: *sslProxyPort,
+			Status:   *statusPort,
+		},
+	}
+
+	return false, config, nil
+}
