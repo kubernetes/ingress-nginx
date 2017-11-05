@@ -64,20 +64,21 @@ func (c *cacheController) Run(stopCh chan struct{}) {
 	}
 }
 
-func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.StoreLister, *cacheController) {
+func (n *NGINXController) createListers(disableNodeLister bool, stopCh chan struct{}) *ingress.StoreLister {
 	// from here to the end of the method all the code is just boilerplate
 	// required to watch Ingress, Secrets, ConfigMaps and Endoints.
 	// This is used to detect new content, updates or removals and act accordingly
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
-			if !class.IsValid(addIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			if !class.IsValid(addIng, n.cfg.IngressClass, defIngressClass) {
 				a, _ := parser.GetStringAnnotation(class.IngressKey, addIng)
 				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", addIng.Name, class.IngressKey, a)
 				return
 			}
-			ic.recorder.Eventf(addIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
-			ic.syncQueue.Enqueue(obj)
+
+			n.recorder.Eventf(addIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
+			n.syncQueue.Enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
 			delIng, ok := obj.(*extensions.Ingress)
@@ -94,29 +95,29 @@ func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.Sto
 					return
 				}
 			}
-			if !class.IsValid(delIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+			if !class.IsValid(delIng, n.cfg.IngressClass, defIngressClass) {
 				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, class.IngressKey)
 				return
 			}
-			ic.recorder.Eventf(delIng, apiv1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", delIng.Namespace, delIng.Name))
-			ic.syncQueue.Enqueue(obj)
+			n.recorder.Eventf(delIng, apiv1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", delIng.Namespace, delIng.Name))
+			n.syncQueue.Enqueue(obj)
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
-			validOld := class.IsValid(oldIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass)
-			validCur := class.IsValid(curIng, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass)
+			validOld := class.IsValid(oldIng, n.cfg.IngressClass, defIngressClass)
+			validCur := class.IsValid(curIng, n.cfg.IngressClass, defIngressClass)
 			if !validOld && validCur {
 				glog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
-				ic.recorder.Eventf(curIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+				n.recorder.Eventf(curIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validOld && !validCur {
 				glog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
-				ic.recorder.Eventf(curIng, apiv1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+				n.recorder.Eventf(curIng, apiv1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validCur && !reflect.DeepEqual(old, cur) {
-				ic.recorder.Eventf(curIng, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+				n.recorder.Eventf(curIng, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			}
 
-			ic.syncQueue.Enqueue(cur)
+			n.syncQueue.Enqueue(cur)
 		},
 	}
 
@@ -125,7 +126,7 @@ func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.Sto
 			if !reflect.DeepEqual(old, cur) {
 				sec := cur.(*apiv1.Secret)
 				key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
-				ic.syncSecret(key)
+				n.syncSecret(key)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -144,23 +145,23 @@ func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.Sto
 				}
 			}
 			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
-			ic.sslCertTracker.DeleteAll(key)
-			ic.syncQueue.Enqueue(key)
+			n.sslCertTracker.DeleteAll(key)
+			n.syncQueue.Enqueue(key)
 		},
 	}
 
 	eventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			ic.syncQueue.Enqueue(obj)
+			n.syncQueue.Enqueue(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
-			ic.syncQueue.Enqueue(obj)
+			n.syncQueue.Enqueue(obj)
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			oep := old.(*apiv1.Endpoints)
 			ocur := cur.(*apiv1.Endpoints)
 			if !reflect.DeepEqual(ocur.Subsets, oep.Subsets) {
-				ic.syncQueue.Enqueue(cur)
+				n.syncQueue.Enqueue(cur)
 			}
 		},
 	}
@@ -169,33 +170,33 @@ func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.Sto
 		AddFunc: func(obj interface{}) {
 			upCmap := obj.(*apiv1.ConfigMap)
 			mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
-			if mapKey == ic.cfg.ConfigMapName {
+			if mapKey == n.cfg.ConfigMapName {
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
-				ic.cfg.Backend.SetConfig(upCmap)
-				ic.SetForceReload(true)
+				n.SetConfig(upCmap)
+				n.SetForceReload(true)
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
 				upCmap := cur.(*apiv1.ConfigMap)
 				mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
-				if mapKey == ic.cfg.ConfigMapName {
+				if mapKey == n.cfg.ConfigMapName {
 					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
-					ic.cfg.Backend.SetConfig(upCmap)
-					ic.SetForceReload(true)
+					n.SetConfig(upCmap)
+					n.SetForceReload(true)
 				}
 				// updates to configuration configmaps can trigger an update
-				if mapKey == ic.cfg.ConfigMapName || mapKey == ic.cfg.TCPConfigMapName || mapKey == ic.cfg.UDPConfigMapName {
-					ic.recorder.Eventf(upCmap, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
-					ic.syncQueue.Enqueue(cur)
+				if mapKey == n.cfg.ConfigMapName || mapKey == n.cfg.TCPConfigMapName || mapKey == n.cfg.UDPConfigMapName {
+					n.recorder.Eventf(upCmap, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
+					n.syncQueue.Enqueue(cur)
 				}
 			}
 		},
 	}
 
 	watchNs := apiv1.NamespaceAll
-	if ic.cfg.ForceNamespaceIsolation && ic.cfg.Namespace != apiv1.NamespaceAll {
-		watchNs = ic.cfg.Namespace
+	if n.cfg.ForceNamespaceIsolation && n.cfg.Namespace != apiv1.NamespaceAll {
+		watchNs = n.cfg.Namespace
 	}
 
 	lister := &ingress.StoreLister{}
@@ -203,34 +204,36 @@ func (ic *GenericController) createListers(disableNodeLister bool) (*ingress.Sto
 	controller := &cacheController{}
 
 	lister.Ingress.Store, controller.Ingress = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.ExtensionsV1beta1().RESTClient(), "ingresses", ic.cfg.Namespace, fields.Everything()),
-		&extensions.Ingress{}, ic.cfg.ResyncPeriod, ingEventHandler)
+		cache.NewListWatchFromClient(n.cfg.Client.ExtensionsV1beta1().RESTClient(), "ingresses", n.cfg.Namespace, fields.Everything()),
+		&extensions.Ingress{}, n.cfg.ResyncPeriod, ingEventHandler)
 
 	lister.Endpoint.Store, controller.Endpoint = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "endpoints", ic.cfg.Namespace, fields.Everything()),
-		&apiv1.Endpoints{}, ic.cfg.ResyncPeriod, eventHandler)
+		cache.NewListWatchFromClient(n.cfg.Client.CoreV1().RESTClient(), "endpoints", n.cfg.Namespace, fields.Everything()),
+		&apiv1.Endpoints{}, n.cfg.ResyncPeriod, eventHandler)
 
 	lister.Secret.Store, controller.Secret = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "secrets", watchNs, fields.Everything()),
-		&apiv1.Secret{}, ic.cfg.ResyncPeriod, secrEventHandler)
+		cache.NewListWatchFromClient(n.cfg.Client.CoreV1().RESTClient(), "secrets", watchNs, fields.Everything()),
+		&apiv1.Secret{}, n.cfg.ResyncPeriod, secrEventHandler)
 
 	lister.ConfigMap.Store, controller.Configmap = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "configmaps", watchNs, fields.Everything()),
-		&apiv1.ConfigMap{}, ic.cfg.ResyncPeriod, mapEventHandler)
+		cache.NewListWatchFromClient(n.cfg.Client.CoreV1().RESTClient(), "configmaps", watchNs, fields.Everything()),
+		&apiv1.ConfigMap{}, n.cfg.ResyncPeriod, mapEventHandler)
 
 	lister.Service.Store, controller.Service = cache.NewInformer(
-		cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "services", ic.cfg.Namespace, fields.Everything()),
-		&apiv1.Service{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
+		cache.NewListWatchFromClient(n.cfg.Client.CoreV1().RESTClient(), "services", n.cfg.Namespace, fields.Everything()),
+		&apiv1.Service{}, n.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	var nodeListerWatcher cache.ListerWatcher
 	if disableNodeLister {
 		nodeListerWatcher = fcache.NewFakeControllerSource()
 	} else {
-		nodeListerWatcher = cache.NewListWatchFromClient(ic.cfg.Client.CoreV1().RESTClient(), "nodes", apiv1.NamespaceAll, fields.Everything())
+		nodeListerWatcher = cache.NewListWatchFromClient(n.cfg.Client.CoreV1().RESTClient(), "nodes", apiv1.NamespaceAll, fields.Everything())
 	}
 	lister.Node.Store, controller.Node = cache.NewInformer(
 		nodeListerWatcher,
-		&apiv1.Node{}, ic.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
+		&apiv1.Node{}, n.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
-	return lister, controller
+	controller.Run(n.stopCh)
+
+	return lister
 }

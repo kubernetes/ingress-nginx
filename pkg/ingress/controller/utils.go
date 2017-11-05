@@ -17,11 +17,6 @@ limitations under the License.
 package controller
 
 import (
-	"fmt"
-	"io/ioutil"
-	"net"
-	"os"
-	"os/exec"
 	"syscall"
 
 	"github.com/golang/glog"
@@ -55,33 +50,11 @@ func sysctlFSFileMax() int {
 	return int(rLimit.Max)
 }
 
-func diff(b1, b2 []byte) ([]byte, error) {
-	f1, err := ioutil.TempFile("", "a")
-	if err != nil {
-		return nil, err
+func intInSlice(i int, list []int) bool {
+	for _, v := range list {
+		if v == i {
+			return true
+		}
 	}
-	defer f1.Close()
-	defer os.Remove(f1.Name())
-
-	f2, err := ioutil.TempFile("", "b")
-	if err != nil {
-		return nil, err
-	}
-	defer f2.Close()
-	defer os.Remove(f2.Name())
-
-	f1.Write(b1)
-	f2.Write(b2)
-
-	out, _ := exec.Command("diff", "-u", f1.Name(), f2.Name()).CombinedOutput()
-	return out, nil
-}
-
-func isPortAvailable(p int) bool {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%v", p))
-	if err != nil {
-		return false
-	}
-	ln.Close()
-	return true
+	return false
 }

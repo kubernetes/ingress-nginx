@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,28 +14,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package file
 
-import "testing"
+import (
+	"io/ioutil"
+	"testing"
+)
 
-func TestDiff(t *testing.T) {
+func TestSHA1(t *testing.T) {
 	tests := []struct {
-		a     []byte
-		b     []byte
-		empty bool
+		content []byte
+		sha     string
 	}{
-		{[]byte(""), []byte(""), true},
-		{[]byte("a"), []byte("a"), true},
-		{[]byte("a"), []byte("b"), false},
+		{[]byte(""), "da39a3ee5e6b4b0d3255bfef95601890afd80709"},
+		{[]byte("hello world"), "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
 	}
 
 	for _, test := range tests {
-		b, err := diff(test.a, test.b)
+		f, err := ioutil.TempFile("", "sha-test")
 		if err != nil {
-			t.Fatalf("unexpected error returned: %v", err)
+			t.Fatal(err)
 		}
-		if len(b) == 0 && !test.empty {
-			t.Fatalf("expected empty but returned %s", b)
+		f.Write(test.content)
+		f.Sync()
+
+		sha := SHA1(f.Name())
+		f.Close()
+
+		if sha != test.sha {
+			t.Fatalf("expected %v but returned %s", test.sha, sha)
 		}
+	}
+
+	sha := SHA1("")
+	if sha != "" {
+		t.Fatalf("expected an empty sha but returned %s", sha)
 	}
 }

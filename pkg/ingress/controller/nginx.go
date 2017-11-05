@@ -23,31 +23,36 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/mitchellh/go-ps"
-	"github.com/spf13/pflag"
 
-	proxyproto "github.com/armon/go-proxyproto"
-	"github.com/ncabatoff/process-exporter/proc"
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes/scheme"
+	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/flowcontrol"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
-	"k8s.io/ingress-nginx/pkg/ingress/controller"
+	"k8s.io/ingress-nginx/pkg/ingress/annotations/class"
+	"k8s.io/ingress-nginx/pkg/ingress/annotations/parser"
+	ngx_config "k8s.io/ingress-nginx/pkg/ingress/controller/config"
+	"k8s.io/ingress-nginx/pkg/ingress/controller/process"
+	ngx_template "k8s.io/ingress-nginx/pkg/ingress/controller/template"
 	"k8s.io/ingress-nginx/pkg/ingress/defaults"
+	"k8s.io/ingress-nginx/pkg/ingress/status"
+	ing_net "k8s.io/ingress-nginx/pkg/net"
 	"k8s.io/ingress-nginx/pkg/net/dns"
 	"k8s.io/ingress-nginx/pkg/net/ssl"
-	"k8s.io/ingress-nginx/pkg/nginx/config"
-	ngx_template "k8s.io/ingress-nginx/pkg/nginx/template"
-	"k8s.io/ingress-nginx/version"
+	"k8s.io/ingress-nginx/pkg/task"
 )
 
 type statusModule string
@@ -57,8 +62,6 @@ const (
 
 	defaultStatusModule statusModule = "default"
 	vtsStatusModule     statusModule = "vts"
-
-	defUpstreamName = "upstream-default-backend"
 )
 
 var (
@@ -71,11 +74,17 @@ var (
 // NewNGINXController creates a new NGINX Ingress controller.
 // If the environment variable NGINX_BINARY exists it will be used
 // as source for nginx commands
-func NewNGINXController() *NGINXController {
+func NewNGINXController(config *Configuration) *NGINXController {
 	ngx := os.Getenv("NGINX_BINARY")
 	if ngx == "" {
 		ngx = nginxBinary
 	}
+
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(glog.Infof)
+	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
+		Interface: config.Client.CoreV1().Events(config.Namespace),
+	})
 
 	h, err := dns.GetSystemNameServers()
 	if err != nil {
@@ -83,13 +92,47 @@ func NewNGINXController() *NGINXController {
 	}
 
 	n := &NGINXController{
+		backendDefaults: ngx_config.NewDefault().Backend,
 		binary:          ngx,
-		configmap:       &apiv1.ConfigMap{},
-		isIPV6Enabled:   isIPv6Enabled(),
+
+		configmap: &apiv1.ConfigMap{},
+
+		isIPV6Enabled: ing_net.IsIPv6Enabled(),
+
 		resolver:        h,
-		ports:           &config.ListenPorts{},
-		backendDefaults: config.NewDefault().Backend,
+		cfg:             config,
+		sslCertTracker:  newSSLCertTracker(),
+		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.3, 1),
+
+		recorder: eventBroadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{
+			Component: "nginx-ingress-controller",
+		}),
+
+		stopCh:   make(chan struct{}),
+		stopLock: &sync.Mutex{},
 	}
+
+	n.stats = newStatsCollector(config.Namespace, config.IngressClass, n.binary, n.cfg.ListenPorts.Status)
+
+	n.syncQueue = task.NewTaskQueue(n.syncIngress)
+
+	n.listers = n.createListers(config.DisableNodeList, n.stopCh)
+
+	if config.UpdateStatus {
+		n.syncStatus = status.NewStatusSyncer(status.Config{
+			Client:                 config.Client,
+			PublishService:         n.cfg.PublishService,
+			IngressLister:          n.listers.Ingress,
+			ElectionID:             config.ElectionID,
+			IngressClass:           config.IngressClass,
+			DefaultIngressClass:    config.DefaultIngressClass,
+			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
+			UseNodeInternalIP:      n.cfg.UseNodeInternalIP,
+		})
+	} else {
+		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
+	}
+	n.annotations = newAnnotationExtractor(n)
 
 	var onChange func()
 	onChange = func() {
@@ -107,7 +150,7 @@ Error loading new template : %v
 		n.t.Close()
 		n.t = template
 		glog.Info("new NGINX template loaded")
-		n.controller.SetForceReload(true)
+		n.SetForceReload(true)
 	}
 
 	ngxTpl, err := ngx_template.NewTemplate(tmplPath, onChange)
@@ -122,8 +165,40 @@ Error loading new template : %v
 
 // NGINXController ...
 type NGINXController struct {
-	controller *controller.GenericController
-	t          *ngx_template.Template
+	cfg *Configuration
+
+	listers *ingress.StoreLister
+
+	annotations annotationExtractor
+
+	recorder record.EventRecorder
+
+	syncQueue *task.Queue
+
+	syncStatus status.Sync
+
+	// local store of SSL certificates
+	// (only certificates used in ingress)
+	sslCertTracker *sslCertTracker
+
+	syncRateLimiter flowcontrol.RateLimiter
+
+	// stopLock is used to enforce only a single call to Stop is active.
+	// Needed because we allow stopping through an http endpoint and
+	// allowing concurrent stoppers leads to stack traces.
+	stopLock *sync.Mutex
+
+	stopCh chan struct{}
+
+	// ngxErrCh channel used to detect errors with the nginx processes
+	ngxErrCh chan error
+
+	// runningConfig contains the running configuration in the Backend
+	runningConfig *ingress.Configuration
+
+	forceReload int32
+
+	t *ngx_template.Template
 
 	configmap *apiv1.ConfigMap
 
@@ -132,8 +207,6 @@ type NGINXController struct {
 	binary   string
 	resolver []net.IP
 
-	cmdArgs []string
-
 	stats        *statsCollector
 	statusModule statusModule
 
@@ -141,25 +214,42 @@ type NGINXController struct {
 	isIPV6Enabled bool
 
 	// returns true if proxy protocol es enabled
-	isProxyProtocolEnabled bool
+	IsProxyProtocolEnabled bool
 
 	isSSLPassthroughEnabled bool
 
 	isShuttingDown bool
 
-	proxy *proxy
-
-	ports *config.ListenPorts
+	Proxy *TCPProxy
 
 	backendDefaults defaults.Backend
 }
 
 // Start start a new NGINX master process running in foreground.
 func (n *NGINXController) Start() {
-	n.isShuttingDown = false
+	glog.Infof("starting Ingress controller")
 
-	n.controller = controller.NewIngressController(n)
-	go n.controller.Start()
+	// initial sync of secrets to avoid unnecessary reloads
+	glog.Info("running initial sync of secrets")
+	for _, obj := range n.listers.Ingress.List() {
+		ing := obj.(*extensions.Ingress)
+
+		if !class.IsValid(ing, n.cfg.IngressClass, n.cfg.DefaultIngressClass) {
+			a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
+			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
+			continue
+		}
+
+		n.readSecrets(ing)
+	}
+
+	go n.syncQueue.Run(time.Second, n.stopCh)
+
+	if n.syncStatus != nil {
+		go n.syncStatus.Run(n.stopCh)
+	}
+
+	go wait.Until(n.checkMissingSecrets, 30*time.Second, n.stopCh)
 
 	done := make(chan error, 1)
 	cmd := exec.Command(n.binary, "-c", cfgPath)
@@ -172,68 +262,55 @@ func (n *NGINXController) Start() {
 	}
 
 	glog.Info("starting NGINX process...")
-	n.start(cmd, done)
+	n.start(cmd)
 
-	// if the nginx master process dies the workers continue to process requests,
-	// passing checks but in case of updates in ingress no updates will be
-	// reflected in the nginx configuration which can lead to confusion and report
-	// issues because of this behavior.
-	// To avoid this issue we restart nginx in case of errors.
+	// force initial sync
+	n.syncQueue.Enqueue(&extensions.Ingress{})
+
 	for {
-		err := <-done
-
-		if n.isShuttingDown {
-			break
-		}
-
-		if exitError, ok := err.(*exec.ExitError); ok {
-			waitStatus := exitError.Sys().(syscall.WaitStatus)
-			glog.Warningf(`
--------------------------------------------------------------------------------
-NGINX master process died (%v): %v
--------------------------------------------------------------------------------
-`, waitStatus.ExitStatus(), err)
-		}
-		cmd.Process.Release()
-		cmd = exec.Command(n.binary, "-c", cfgPath)
-		// we wait until the workers are killed
-		for {
-			conn, err := net.DialTimeout("tcp", "127.0.0.1:80", 1*time.Second)
-			if err != nil {
+		select {
+		case err := <-done:
+			if n.isShuttingDown {
 				break
 			}
-			conn.Close()
-			// kill nginx worker processes
-			fs, err := proc.NewFS("/proc")
-			procs, _ := fs.FS.AllProcs()
-			for _, p := range procs {
-				pn, err := p.Comm()
-				if err != nil {
-					glog.Errorf("unexpected error obtaining process information: %v", err)
-					continue
-				}
 
-				if pn == "nginx" {
-					osp, err := os.FindProcess(p.PID)
-					if err != nil {
-						glog.Errorf("unexpected error obtaining process information: %v", err)
-						continue
-					}
-					osp.Signal(syscall.SIGQUIT)
-				}
+			// if the nginx master process dies the workers continue to process requests,
+			// passing checks but in case of updates in ingress no updates will be
+			// reflected in the nginx configuration which can lead to confusion and report
+			// issues because of this behavior.
+			// To avoid this issue we restart nginx in case of errors.
+			if process.IsRespawnIfRequired(err) {
+				process.WaitUntilPortIsAvailable(n.cfg.ListenPorts.HTTP)
+				// release command resources
+				cmd.Process.Release()
+				cmd = exec.Command(n.binary, "-c", cfgPath)
+				// start a new nginx master process if the controller is not being stopped
+				n.start(cmd)
 			}
-			time.Sleep(100 * time.Millisecond)
+		case <-n.stopCh:
+			break
 		}
-		// restart a new nginx master process if the controller
-		// is not being stopped
-		n.start(cmd, done)
 	}
 }
 
 // Stop gracefully stops the NGINX master process.
 func (n *NGINXController) Stop() error {
 	n.isShuttingDown = true
-	n.controller.Stop()
+
+	n.stopLock.Lock()
+	defer n.stopLock.Unlock()
+
+	// Only try draining the workqueue if we haven't already.
+	if n.syncQueue.IsShuttingDown() {
+		return fmt.Errorf("shutdown already in progress")
+	}
+
+	glog.Infof("shutting down controller queues")
+	close(n.stopCh)
+	go n.syncQueue.Shutdown()
+	if n.syncStatus != nil {
+		n.syncStatus.Shutdown()
+	}
 
 	// Send stop signal to Nginx
 	glog.Info("stopping NGINX process...")
@@ -246,190 +323,40 @@ func (n *NGINXController) Stop() error {
 	}
 
 	// Wait for the Nginx process disappear
-	waitForNginxShutdown()
-	glog.Info("NGINX process has stopped")
+	timer := time.NewTicker(time.Second * 1)
+	for t := range timer.C {
+		glog.V(3).Infof("tick at", t)
+		if !process.IsNginxRunning() {
+			glog.Info("NGINX process has stopped")
+			timer.Stop()
+			break
+		}
+	}
 
 	return nil
 }
 
-func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
+func (n *NGINXController) start(cmd *exec.Cmd) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
 		glog.Fatalf("nginx error: %v", err)
-		done <- err
+		n.ngxErrCh <- err
 		return
 	}
-
-	n.cmdArgs = cmd.Args
 
 	go func() {
-		done <- cmd.Wait()
+		n.ngxErrCh <- cmd.Wait()
 	}()
-}
-
-// BackendDefaults returns the nginx defaults
-func (n NGINXController) BackendDefaults() defaults.Backend {
-	return n.backendDefaults
-}
-
-// printDiff returns the difference between the running configuration
-// and the new one
-func (n NGINXController) printDiff(data []byte) {
-	if !glog.V(2) {
-		return
-	}
-
-	in, err := os.Open(cfgPath)
-	if err != nil {
-		return
-	}
-	src, err := ioutil.ReadAll(in)
-	in.Close()
-	if err != nil {
-		return
-	}
-
-	if !bytes.Equal(src, data) {
-		tmpfile, err := ioutil.TempFile("", "nginx-cfg-diff")
-		if err != nil {
-			glog.Errorf("error creating temporal file: %s", err)
-			return
-		}
-		defer tmpfile.Close()
-		err = ioutil.WriteFile(tmpfile.Name(), data, 0644)
-		if err != nil {
-			return
-		}
-
-		diffOutput, err := diff(src, data)
-		if err != nil {
-			glog.Errorf("error computing diff: %s", err)
-			return
-		}
-
-		glog.Infof("NGINX configuration diff\n")
-		glog.Infof("%v", string(diffOutput))
-
-		os.Remove(tmpfile.Name())
-	}
-}
-
-// Info return build information
-func (n NGINXController) Info() *ingress.BackendInfo {
-	return &ingress.BackendInfo{
-		Name:       "NGINX",
-		Release:    version.RELEASE,
-		Build:      version.COMMIT,
-		Repository: version.REPO,
-	}
 }
 
 // DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
 func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 	return ingress.Endpoint{
 		Address: "127.0.0.1",
-		Port:    fmt.Sprintf("%v", n.ports.Default),
+		Port:    fmt.Sprintf("%v", n.cfg.ListenPorts.Default),
 		Target:  &apiv1.ObjectReference{},
 	}
-}
-
-// ConfigureFlags allow to configure more flags before the parsing of
-// command line arguments
-func (n *NGINXController) ConfigureFlags(flags *pflag.FlagSet) {
-	flags.BoolVar(&n.isSSLPassthroughEnabled, "enable-ssl-passthrough", false, `Enable SSL passthrough feature. Default is disabled`)
-	flags.IntVar(&n.ports.HTTP, "http-port", 80, `Indicates the port to use for HTTP traffic`)
-	flags.IntVar(&n.ports.HTTPS, "https-port", 443, `Indicates the port to use for HTTPS traffic`)
-	flags.IntVar(&n.ports.Status, "status-port", 18080, `Indicates the TCP port to use for exposing the nginx status page`)
-	flags.IntVar(&n.ports.SSLProxy, "ssl-passtrough-proxy-port", 442, `Default port to use internally for SSL when SSL Passthgough is enabled`)
-	flags.IntVar(&n.ports.Default, "default-server-port", 8181, `Default port to use for exposing the default server (catch all)`)
-}
-
-// OverrideFlags customize NGINX controller flags
-func (n *NGINXController) OverrideFlags(flags *pflag.FlagSet) {
-	// we check port collisions
-	if !isPortAvailable(n.ports.HTTP) {
-		glog.Fatalf("Port %v is already in use. Please check the flag --http-port", n.ports.HTTP)
-	}
-	if !isPortAvailable(n.ports.HTTPS) {
-		glog.Fatalf("Port %v is already in use. Please check the flag --https-port", n.ports.HTTPS)
-	}
-	if !isPortAvailable(n.ports.Status) {
-		glog.Fatalf("Port %v is already in use. Please check the flag --status-port", n.ports.Status)
-	}
-	if !isPortAvailable(n.ports.Default) {
-		glog.Fatalf("Port %v is already in use. Please check the flag --default-server-port", n.ports.Default)
-	}
-
-	ic, _ := flags.GetString("ingress-class")
-	wc, _ := flags.GetString("watch-namespace")
-
-	if ic == "" {
-		ic = defIngressClass
-	}
-
-	if ic != defIngressClass {
-		glog.Warningf("only Ingress with class %v will be processed by this ingress controller", ic)
-	}
-
-	flags.Set("ingress-class", ic)
-
-	h, _ := flags.GetInt("healthz-port")
-	n.ports.Health = h
-
-	n.stats = newStatsCollector(wc, ic, n.binary, n.ports.Status)
-
-	if n.isSSLPassthroughEnabled {
-		if !isPortAvailable(n.ports.SSLProxy) {
-			glog.Fatalf("Port %v is already in use. Please check the flag --ssl-passtrough-proxy-port", n.ports.SSLProxy)
-		}
-
-		glog.Info("starting TLS proxy for SSL passthrough")
-		n.proxy = &proxy{
-			Default: &server{
-				Hostname:      "localhost",
-				IP:            "127.0.0.1",
-				Port:          n.ports.SSLProxy,
-				ProxyProtocol: true,
-			},
-		}
-
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%v", n.ports.HTTPS))
-		if err != nil {
-			glog.Fatalf("%v", err)
-		}
-
-		proxyList := &proxyproto.Listener{Listener: listener}
-
-		// start goroutine that accepts tcp connections in port 443
-		go func() {
-			for {
-				var conn net.Conn
-				var err error
-
-				if n.isProxyProtocolEnabled {
-					// we need to wrap the listener in order to decode
-					// proxy protocol before handling the connection
-					conn, err = proxyList.Accept()
-				} else {
-					conn, err = listener.Accept()
-				}
-
-				if err != nil {
-					glog.Warningf("unexpected error accepting tcp connection: %v", err)
-					continue
-				}
-
-				glog.V(3).Infof("remote address %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
-				go n.proxy.Handle(conn)
-			}
-		}()
-	}
-}
-
-// DefaultIngressClass just return the default ingress class
-func (n NGINXController) DefaultIngressClass() string {
-	return defIngressClass
 }
 
 // testTemplate checks if the NGINX configuration inside the byte array is valid
@@ -466,7 +393,7 @@ Error: %v
 // SetConfig sets the configured configmap
 func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
 	n.configmap = cmap
-	n.isProxyProtocolEnabled = false
+	n.IsProxyProtocolEnabled = false
 
 	m := map[string]string{}
 	if cmap != nil {
@@ -477,7 +404,7 @@ func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
 	if ok {
 		b, err := strconv.ParseBool(val)
 		if err == nil {
-			n.isProxyProtocolEnabled = b
+			n.IsProxyProtocolEnabled = b
 		}
 	}
 
@@ -494,16 +421,6 @@ func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
 	n.backendDefaults = c.Backend
 }
 
-// SetListers sets the configured store listers in the generic ingress controller
-func (n *NGINXController) SetListers(lister *ingress.StoreLister) {
-	n.storeLister = lister
-}
-
-// UpdateIngressStatus custom Ingress status update
-func (n *NGINXController) UpdateIngressStatus(*extensions.Ingress) []apiv1.LoadBalancerIngress {
-	return nil
-}
-
 // OnUpdate is called by syncQueue in https://github.com/kubernetes/ingress-nginx/blob/master/pkg/ingress/controller/controller.go#L426
 // periodically to keep the configuration in sync.
 //
@@ -516,7 +433,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := ngx_template.ReadConfig(n.configmap.Data)
 	cfg.Resolver = n.resolver
 
-	servers := []*server{}
+	servers := []*TCPServer{}
 	for _, pb := range ingressCfg.PassthroughBackends {
 		svc := pb.Service
 		if svc == nil {
@@ -541,7 +458,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 
 		//TODO: Allow PassthroughBackends to specify they support proxy-protocol
-		servers = append(servers, &server{
+		servers = append(servers, &TCPServer{
 			Hostname:      pb.Hostname,
 			IP:            svc.Spec.ClusterIP,
 			Port:          port,
@@ -550,7 +467,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	if n.isSSLPassthroughEnabled {
-		n.proxy.ServerList = servers
+		n.Proxy.ServerList = servers
 	}
 
 	// we need to check if the status module configuration changed
@@ -671,7 +588,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	cfg.SSLDHParam = sslDHParam
 
-	tc := config.TemplateConfig{
+	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:         setHeaders,
 		AddHeaders:              addHeaders,
 		MaxOpenFiles:            maxOpenFiles,
@@ -687,8 +604,8 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		IsIPV6Enabled:           n.isIPV6Enabled && !cfg.DisableIpv6,
 		RedirectServers:         redirectServers,
 		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
-		ListenPorts:             n.ports,
-		PublishService:          n.controller.GetPublishService(),
+		ListenPorts:             n.cfg.ListenPorts,
+		PublishService:          n.GetPublishService(),
 	}
 
 	content, err := n.t.Write(tc)
@@ -702,7 +619,34 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	n.printDiff(content)
+	if glog.V(2) {
+		src, _ := ioutil.ReadFile(cfgPath)
+		if !bytes.Equal(src, content) {
+			tmpfile, err := ioutil.TempFile("", "new-nginx-cfg")
+			if err != nil {
+				return err
+			}
+			defer tmpfile.Close()
+			err = ioutil.WriteFile(tmpfile.Name(), content, 0644)
+			if err != nil {
+				return err
+			}
+
+			diffOutput, err := exec.Command("diff", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
+			if err != nil {
+				return err
+			}
+
+			glog.Infof("NGINX configuration diff\n")
+			glog.Infof("%v\n", string(diffOutput))
+
+			// Do not use defer to remove the temporal file.
+			// This is helpful when there is an error in the
+			// temporal configuration (we can manually inspect the file).
+			// Only remove the file when no error occured.
+			os.Remove(tmpfile.Name())
+		}
+	}
 
 	err = ioutil.WriteFile(cfgPath, content, 0644)
 	if err != nil {
@@ -727,46 +671,6 @@ func nginxHashBucketSize(longestString int) int {
 	return nextPowerOf2(rawSize)
 }
 
-// Name returns the healthcheck name
-func (n NGINXController) Name() string {
-	return "Ingress Controller"
-}
-
-// Check returns if the nginx healthz endpoint is returning ok (status code 200)
-func (n NGINXController) Check(_ *http.Request) error {
-	res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v%v", n.ports.Status, ngxHealthPath))
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return fmt.Errorf("ingress controller is not healthy")
-	}
-
-	// check the nginx master process is running
-	fs, err := proc.NewFS("/proc")
-	if err != nil {
-		glog.Errorf("%v", err)
-		return err
-	}
-	f, err := ioutil.ReadFile("/run/nginx.pid")
-	if err != nil {
-		glog.Errorf("%v", err)
-		return err
-	}
-	pid, err := strconv.Atoi(strings.TrimRight(string(f), "\r\n"))
-	if err != nil {
-		return err
-	}
-	_, err = fs.NewProc(int(pid))
-	if err != nil {
-		glog.Errorf("%v", err)
-		return err
-	}
-
-	return nil
-}
-
 // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
 // https://play.golang.org/p/TVSyCcdxUh
 func nextPowerOf2(v int) int {
@@ -779,33 +683,4 @@ func nextPowerOf2(v int) int {
 	v++
 
 	return v
-}
-
-func isIPv6Enabled() bool {
-	cmd := exec.Command("test", "-f", "/proc/net/if_inet6")
-	return cmd.Run() == nil
-}
-
-// isNginxRunning returns true if a process with the name 'nginx' is found
-func isNginxProcessPresent() bool {
-	processes, _ := ps.Processes()
-	for _, p := range processes {
-		if p.Executable() == "nginx" {
-			return true
-		}
-	}
-	return false
-}
-
-func waitForNginxShutdown() {
-	timer := time.NewTicker(time.Second * 1)
-	defer timer.Stop()
-	for {
-		select {
-		case <-timer.C:
-			if !isNginxProcessPresent() {
-				return
-			}
-		}
-	}
 }

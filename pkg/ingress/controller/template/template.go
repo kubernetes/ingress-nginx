@@ -37,8 +37,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/ratelimit"
+	"k8s.io/ingress-nginx/pkg/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/pkg/net"
-	"k8s.io/ingress-nginx/pkg/nginx/config"
 	"k8s.io/ingress-nginx/pkg/watch"
 )
 

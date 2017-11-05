@@ -26,8 +26,8 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
+	"k8s.io/ingress-nginx/pkg/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/pkg/net"
-	"k8s.io/ingress-nginx/pkg/nginx/config"
 )
 
 const (
@@ -41,11 +41,9 @@ const (
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
 func ReadConfig(src map[string]string) config.Configuration {
 	conf := map[string]string{}
-	if src != nil {
-		// we need to copy the configmap data because the content is altered
-		for k, v := range src {
-			conf[k] = v
-		}
+	// we need to copy the configmap data because the content is altered
+	for k, v := range src {
+		conf[k] = v
 	}
 
 	errors := make([]int, 0)
