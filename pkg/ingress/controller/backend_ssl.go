@@ -36,7 +36,7 @@ import (
 // syncSecret keeps in sync Secrets used by Ingress rules with the files on
 // disk to allow copy of the content of the secret to disk to be used
 // by external processes.
-func (ic *GenericController) syncSecret(key string) {
+func (ic *NGINXController) syncSecret(key string) {
 	glog.V(3).Infof("starting syncing of secret %v", key)
 
 	cert, err := ic.getPemCertificate(key)
@@ -70,7 +70,7 @@ func (ic *GenericController) syncSecret(key string) {
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
 // It parses the secret and verifies if it's a keypair, or a 'ca.crt' secret only.
-func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
+func (ic *NGINXController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
 	secret, err := ic.listers.Secret.GetByName(secretName)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving secret %v: %v", secretName, err)
@@ -127,7 +127,7 @@ func (ic *GenericController) getPemCertificate(secretName string) (*ingress.SSLC
 // checkMissingSecrets verify if one or more ingress rules contains a reference
 // to a secret that is not present in the local secret store.
 // In this case we call syncSecret.
-func (ic *GenericController) checkMissingSecrets() {
+func (ic *NGINXController) checkMissingSecrets() {
 	for _, obj := range ic.listers.Ingress.List() {
 		ing := obj.(*extensions.Ingress)
 

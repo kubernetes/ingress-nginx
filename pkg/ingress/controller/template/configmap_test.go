@@ -21,7 +21,7 @@ import (
 
 	"github.com/kylelemons/godebug/pretty"
 
-	"k8s.io/ingress-nginx/pkg/nginx/config"
+	"k8s.io/ingress-nginx/pkg/ingress/controller/config"
 )
 
 func TestFilterErrors(t *testing.T) {

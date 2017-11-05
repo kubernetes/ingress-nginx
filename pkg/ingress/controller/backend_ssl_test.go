@@ -103,8 +103,8 @@ func buildControllerForBackendSSL() cache_client.Controller {
 	return cache_client.New(cfg)
 }
 
-func buildGenericControllerForBackendSSL() *GenericController {
-	gc := &GenericController{
+func buildGenericControllerForBackendSSL() *NGINXController {
+	gc := &NGINXController{
 		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.3, 1),
 		cfg: &Configuration{
 			Client: buildSimpleClientSetForBackendSSL(),

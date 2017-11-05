@@ -41,3 +41,20 @@ func TestIsIPV6(t *testing.T) {
 		}
 	}
 }
+
+func TestIsPortAvailable(t *testing.T) {
+	if !IsPortAvailable(0) {
+		t.Fatal("expected port 0 to be avilable (random port) but returned false")
+	}
+
+	ln, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer ln.Close()
+
+	p := ln.Addr().(*net.TCPAddr).Port
+	if IsPortAvailable(p) {
+		t.Fatalf("expected port %v to not be available", p)
+	}
+}

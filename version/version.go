@@ -16,6 +16,8 @@ limitations under the License.
 
 package version
 
+import "fmt"
+
 var (
 	// RELEASE returns the release version
 	RELEASE = "UNKNOWN"
@@ -24,3 +26,14 @@ var (
 	// COMMIT returns the short sha from git
 	COMMIT = "UNKNOWN"
 )
+
+// String returns information about the release.
+func String() string {
+	return fmt.Sprintf(`-------------------------------------------------------------------------------
+NGINX Ingress controller
+  Release:    %v
+  Build:      %v
+  Repository: %v
+-------------------------------------------------------------------------------
+`, RELEASE, COMMIT, REPO)
+}
