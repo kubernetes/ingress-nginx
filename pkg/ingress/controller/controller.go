@@ -77,7 +77,6 @@ type Configuration struct {
 	Namespace      string
 
 	ForceNamespaceIsolation bool
-	DisableNodeList         bool
 
 	// optional
 	TCPConfigMapName string
