@@ -49,7 +49,6 @@ var (
 type StoreLister struct {
 	Ingress   store.IngressLister
 	Service   store.ServiceLister
-	Node      store.NodeLister
 	Endpoint  store.EndpointLister
 	Secret    store.SecretLister
 	ConfigMap store.ConfigMapLister

@@ -116,7 +116,7 @@ func NewNGINXController(config *Configuration) *NGINXController {
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
-	n.listers = n.createListers(config.DisableNodeList, n.stopCh)
+	n.listers = n.createListers(n.stopCh)
 
 	if config.UpdateStatus {
 		n.syncStatus = status.NewStatusSyncer(status.Config{
