@@ -49,7 +49,7 @@ func NewParser() parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress
 // rule used to create a redirect in the paths defined in the rule.
-// If the Ingress containes both annotations the execution order is
+// If the Ingress contains both annotations the execution order is
 // temporal and then permanent
 func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 	r3w, _ := parser.GetBoolAnnotation(www, ing)
