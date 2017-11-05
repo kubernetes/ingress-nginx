@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
-	fcache "k8s.io/client-go/tools/cache/testing"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/class"
@@ -38,7 +37,6 @@ type cacheController struct {
 	Ingress   cache.Controller
 	Endpoint  cache.Controller
 	Service   cache.Controller
-	Node      cache.Controller
 	Secret    cache.Controller
 	Configmap cache.Controller
 }
@@ -47,7 +45,6 @@ func (c *cacheController) Run(stopCh chan struct{}) {
 	go c.Ingress.Run(stopCh)
 	go c.Endpoint.Run(stopCh)
 	go c.Service.Run(stopCh)
-	go c.Node.Run(stopCh)
 	go c.Secret.Run(stopCh)
 	go c.Configmap.Run(stopCh)
 
@@ -56,7 +53,6 @@ func (c *cacheController) Run(stopCh chan struct{}) {
 		c.Ingress.HasSynced,
 		c.Endpoint.HasSynced,
 		c.Service.HasSynced,
-		c.Node.HasSynced,
 		c.Secret.HasSynced,
 		c.Configmap.HasSynced,
 	) {
@@ -64,7 +60,7 @@ func (c *cacheController) Run(stopCh chan struct{}) {
 	}
 }
 
-func (n *NGINXController) createListers(disableNodeLister bool, stopCh chan struct{}) *ingress.StoreLister {
+func (n *NGINXController) createListers(stopCh chan struct{}) *ingress.StoreLister {
 	// from here to the end of the method all the code is just boilerplate
 	// required to watch Ingress, Secrets, ConfigMaps and Endoints.
 	// This is used to detect new content, updates or removals and act accordingly
@@ -222,16 +218,6 @@ func (n *NGINXController) createListers(disableNodeLister bool, stopCh chan stru
 	lister.Service.Store, controller.Service = cache.NewInformer(
 		cache.NewListWatchFromClient(n.cfg.Client.CoreV1().RESTClient(), "services", n.cfg.Namespace, fields.Everything()),
 		&apiv1.Service{}, n.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
-
-	var nodeListerWatcher cache.ListerWatcher
-	if disableNodeLister {
-		nodeListerWatcher = fcache.NewFakeControllerSource()
-	} else {
-		nodeListerWatcher = cache.NewListWatchFromClient(n.cfg.Client.CoreV1().RESTClient(), "nodes", apiv1.NamespaceAll, fields.Everything())
-	}
-	lister.Node.Store, controller.Node = cache.NewInformer(
-		nodeListerWatcher,
-		&apiv1.Node{}, n.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	controller.Run(n.stopCh)
 

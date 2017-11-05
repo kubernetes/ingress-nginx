@@ -99,7 +99,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
 
 		disableNodeList = flags.Bool("disable-node-list", false,
-			`Disable querying nodes. If --force-namespace-isolation is true, this should also be set.`)
+			`Disable querying nodes. If --force-namespace-isolation is true, this should also be set. (DEPRECATED)`)
 
 		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the
 		ingress controller should update the Ingress status IP/hostname when the controller
@@ -171,6 +171,11 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --ssl-passtrough-proxy-port", *sslProxyPort)
 	}
 
+	// TODO: remove disableNodeList flag
+	if *disableNodeList {
+		glog.Warningf("%s is DEPRECATED and will be removed in a future version.", disableNodeList)
+	}
+
 	config := &controller.Configuration{
 		APIServerHost:           *apiserverHost,
 		KubeConfigFile:          *kubeConfigFile,
@@ -189,7 +194,6 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		DefaultHealthzURL:       *defHealthzURL,
 		PublishService:          *publishSvc,
 		ForceNamespaceIsolation: *forceIsolation,
-		DisableNodeList:         *disableNodeList,
 		UpdateStatusOnShutdown:  *updateStatusOnShutdown,
 		SortBackends:            *sortBackends,
 		UseNodeInternalIP:       *useNodeInternalIP,
