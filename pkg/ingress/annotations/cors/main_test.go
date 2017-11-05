@@ -77,7 +77,7 @@ func TestIngressCorsConfig(t *testing.T) {
 		t.Errorf("expected a Config type")
 	}
 
-	if nginxCors.CorsEnabled != true {
+	if !nginxCors.CorsEnabled {
 		t.Errorf("expected cors enabled but returned %v", nginxCors.CorsEnabled)
 	}
 

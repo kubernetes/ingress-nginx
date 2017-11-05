@@ -72,9 +72,6 @@ type Config struct {
 
 	DefaultIngressClass string
 	IngressClass        string
-
-	// CustomIngressStatus allows to set custom values in Ingress status
-	CustomIngressStatus func(*extensions.Ingress) []apiv1.LoadBalancerIngress
 }
 
 // statusSync keeps the status IP in each Ingress rule updated executing a periodic check
@@ -252,9 +249,8 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 				addrs = append(addrs, ip.IP)
 			}
 		}
-		for _, ip := range svc.Spec.ExternalIPs {
-			addrs = append(addrs, ip)
-		}
+
+		addrs = append(addrs, svc.Spec.ExternalIPs...)
 
 		return addrs, nil
 	}
@@ -307,8 +303,6 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 }
 
 // updateStatus changes the status information of Ingress rules
-// If the backend function CustomIngressStatus returns a value different
-// of nil then it uses the returned value or the newIngressPoint values
 func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 	ings := s.IngressLister.List()
 
@@ -324,7 +318,7 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 			continue
 		}
 
-		batch.Queue(runUpdate(ing, newIngressPoint, s.Client, s.CustomIngressStatus))
+		batch.Queue(runUpdate(ing, newIngressPoint, s.Client))
 	}
 
 	batch.QueueComplete()
@@ -332,18 +326,13 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 }
 
 func runUpdate(ing *extensions.Ingress, status []apiv1.LoadBalancerIngress,
-	client clientset.Interface,
-	statusFunc func(*extensions.Ingress) []apiv1.LoadBalancerIngress) pool.WorkFunc {
+	client clientset.Interface) pool.WorkFunc {
 	return func(wu pool.WorkUnit) (interface{}, error) {
 		if wu.IsCancelled() {
 			return nil, nil
 		}
 
 		addrs := status
-		ca := statusFunc(ing)
-		if ca != nil {
-			addrs = ca
-		}
 		sort.SliceStable(addrs, lessLoadBalancerIngress(addrs))
 
 		curIPs := ing.Status.LoadBalancer.Ingress

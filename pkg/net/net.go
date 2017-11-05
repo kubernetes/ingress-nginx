@@ -16,9 +16,29 @@ limitations under the License.
 
 package net
 
-import _net "net"
+import (
+	"fmt"
+	_net "net"
+	"os/exec"
+)
 
 // IsIPV6 checks if the input contains a valid IPV6 address
 func IsIPV6(ip _net.IP) bool {
 	return ip.To4() == nil
+}
+
+// IsPortAvailable checks if a TCP port is available or not
+func IsPortAvailable(p int) bool {
+	ln, err := _net.Listen("tcp", fmt.Sprintf(":%v", p))
+	if err != nil {
+		return false
+	}
+	ln.Close()
+	return true
+}
+
+// IsIPv6Enabled checks if IPV6 is enabled or not
+func IsIPv6Enabled() bool {
+	cmd := exec.Command("test", "-f", "/proc/net/if_inet6")
+	return cmd.Run() == nil
 }

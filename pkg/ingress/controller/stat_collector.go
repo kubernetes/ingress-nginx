@@ -20,7 +20,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"k8s.io/ingress-nginx/pkg/nginx/metric/collector"
+	"k8s.io/ingress-nginx/pkg/ingress/controller/metric/collector"
 )
 
 const (

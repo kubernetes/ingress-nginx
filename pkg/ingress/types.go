@@ -17,15 +17,11 @@ limitations under the License.
 package ingress
 
 import (
-	"fmt"
 	"time"
-
-	"github.com/spf13/pflag"
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apiserver/pkg/server/healthz"
 
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/authreq"
@@ -36,7 +32,6 @@ import (
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/rewrite"
-	"k8s.io/ingress-nginx/pkg/ingress/defaults"
 	"k8s.io/ingress-nginx/pkg/ingress/resolver"
 	"k8s.io/ingress-nginx/pkg/ingress/store"
 )
@@ -49,63 +44,6 @@ var (
 	DefaultSSLDirectory = "/ingress-controller/ssl"
 )
 
-// Controller holds the methods to handle an Ingress backend
-// TODO (#18): Make sure this is sufficiently supportive of other backends.
-type Controller interface {
-	// HealthzChecker returns is a named healthz check that returns the ingress
-	// controller status
-	healthz.HealthzChecker
-
-	// OnUpdate callback invoked from the sync queue https://k8s.io/ingress/core/blob/master/pkg/ingress/controller/controller.go#L387
-	// when an update occurs. This is executed frequently because Ingress
-	// controllers watches changes in:
-	// - Ingresses: main work
-	// - Secrets: referenced from Ingress rules with TLS configured
-	// - ConfigMaps: where the controller reads custom configuration
-	// - Services: referenced from Ingress rules and required to obtain
-	//	 information about ports and annotations
-	// - Endpoints: referenced from Services and what the backend uses
-	//	 to route traffic
-	// Any update to services, endpoints, secrets (only those referenced from Ingress)
-	// and ingress trigger the execution.
-	// Notifications of type Add, Update and Delete:
-	// https://github.com/kubernetes/kubernetes/blob/master/pkg/client/cache/controller.go#L164
-	//
-	// Configuration returns the translation from Ingress rules containing
-	// information about all the upstreams (service endpoints ) "virtual"
-	// servers (FQDN) and all the locations inside each server. Each
-	// location contains information about all the annotations were configured
-	// https://k8s.io/ingress/core/blob/master/pkg/ingress/types.go#L83
-	// The backend returns an error if was not possible to update the configuration.
-	//
-	OnUpdate(Configuration) error
-	// ConfigMap content of --configmap
-	SetConfig(*apiv1.ConfigMap)
-	// SetListers allows the access of store listers present in the generic controller
-	// This avoid the use of the kubernetes client.
-	SetListers(*StoreLister)
-	// BackendDefaults returns the minimum settings required to configure the
-	// communication to endpoints
-	BackendDefaults() defaults.Backend
-	// Info returns information about the ingress controller
-	Info() *BackendInfo
-	// ConfigureFlags allow to configure more flags before the parsing of
-	// command line arguments
-	ConfigureFlags(*pflag.FlagSet)
-	// OverrideFlags allow the customization of the flags in the backend
-	OverrideFlags(*pflag.FlagSet)
-	// DefaultIngressClass just return the default ingress class
-	DefaultIngressClass() string
-	// UpdateIngressStatus custom callback used to update the status in an Ingress rule
-	// This allows custom implementations
-	// If the function returns nil the standard functions will be executed.
-	UpdateIngressStatus(*extensions.Ingress) []apiv1.LoadBalancerIngress
-	// DefaultEndpoint returns the Endpoint to use as default when the
-	// referenced service does not exists. This should return the content
-	// of to the default backend
-	DefaultEndpoint() Endpoint
-}
-
 // StoreLister returns the configured stores for ingresses, services,
 // endpoints, secrets and configmaps.
 type StoreLister struct {
@@ -115,29 +53,6 @@ type StoreLister struct {
 	Endpoint  store.EndpointLister
 	Secret    store.SecretLister
 	ConfigMap store.ConfigMapLister
-}
-
-// BackendInfo returns information about the backend.
-// This fields contains information that helps to track issues or to
-// map the running ingress controller to source code
-type BackendInfo struct {
-	// Name returns the name of the backend implementation
-	Name string `json:"name"`
-	// Release returns the running version (semver)
-	Release string `json:"release"`
-	// Build returns information about the git commit
-	Build string `json:"build"`
-	// Repository return information about the git repository
-	Repository string `json:"repository"`
-}
-
-func (bi BackendInfo) String() string {
-	return fmt.Sprintf(`
-Name:       %v
-Release:    %v
-Build:      %v
-Repository: %v
-`, bi.Name, bi.Release, bi.Build, bi.Repository)
 }
 
 // Configuration holds the definition of all the parts required to describe all
@@ -260,9 +175,6 @@ type Server struct {
 
 // Location describes an URI inside a server.
 // Also contains additional information about annotations in the Ingress.
-//
-// Important:
-// The implementation of annotations is optional
 //
 // In some cases when more than one annotations is defined a particular order in the execution
 // is required.
