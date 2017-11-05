@@ -34,6 +34,3 @@ ${CODEGEN_PKG}/generate-groups.sh "deepcopy" \
   k8s.io/ingress-nginx/pkg k8s.io/ingress-nginx/pkg \
   .:ingress \
   --output-base "$(dirname ${BASH_SOURCE})/../../.."
-
-# To use your own boilerplate text append:
-#   --go-header-file ${SCRIPT_ROOT}/hack/custom-boilerplate.go.txt

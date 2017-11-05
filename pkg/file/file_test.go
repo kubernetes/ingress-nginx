@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ func TestSHA1(t *testing.T) {
 	}
 
 	sha := SHA1("")
-	if sha != ""{
+	if sha != "" {
 		t.Fatalf("expected an empty sha but returned %s", sha)
 	}
 }
