@@ -28,7 +28,7 @@ type IngressLister struct {
 	cache.Store
 }
 
-// SecretsLister makes a Store that lists Secrets.
+// SecretLister makes a Store that lists Secrets.
 type SecretLister struct {
 	cache.Store
 }
@@ -79,24 +79,18 @@ func (sl *ServiceLister) GetByName(name string) (*apiv1.Service, error) {
 	return s.(*apiv1.Service), nil
 }
 
-// NodeLister makes a Store that lists Nodes.
-type NodeLister struct {
-	cache.Store
-}
-
 // EndpointLister makes a Store that lists Endpoints.
 type EndpointLister struct {
 	cache.Store
 }
 
 // GetServiceEndpoints returns the endpoints of a service, matched on service name.
-func (s *EndpointLister) GetServiceEndpoints(svc *apiv1.Service) (ep apiv1.Endpoints, err error) {
+func (s *EndpointLister) GetServiceEndpoints(svc *apiv1.Service) (*apiv1.Endpoints, error) {
 	for _, m := range s.Store.List() {
-		ep = *m.(*apiv1.Endpoints)
+		ep := m.(*apiv1.Endpoints)
 		if svc.Name == ep.Name && svc.Namespace == ep.Namespace {
 			return ep, nil
 		}
 	}
-	err = fmt.Errorf("could not find endpoints for service: %v", svc.Name)
-	return
+	return nil, fmt.Errorf("could not find endpoints for service: %v", svc.Name)
 }
