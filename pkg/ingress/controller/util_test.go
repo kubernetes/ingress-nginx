@@ -81,3 +81,37 @@ func TestMergeLocationAnnotations(t *testing.T) {
 		t.Errorf("%s should be removed after mergeLocationAnnotations", DeniedKeyName)
 	}
 }
+
+func TestIntInSlice(t *testing.T) {
+	fooTests := []struct {
+		i    int
+		list []int
+		er   bool
+	}{
+		{1, []int{1, 2}, true},
+		{3, []int{1, 2}, false},
+		{1, nil, false},
+		{0, nil, false},
+	}
+
+	for _, fooTest := range fooTests {
+		r := intInSlice(fooTest.i, fooTest.list)
+		if r != fooTest.er {
+			t.Errorf("returned %t but expected %t for s=%v & list=%v", r, fooTest.er, fooTest.i, fooTest.list)
+		}
+	}
+}
+
+func TestSysctlFSFileMax(t *testing.T) {
+	i := sysctlFSFileMax()
+	if i < 1 {
+		t.Errorf("returned %v but expected > 0", i)
+	}
+}
+
+func TestSysctlSomaxconn(t *testing.T) {
+	i := sysctlSomaxconn()
+	if i < 511 {
+		t.Errorf("returned %v but expected >= 511", i)
+	}
+}
