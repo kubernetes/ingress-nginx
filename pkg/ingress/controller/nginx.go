@@ -40,6 +40,7 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
+	"k8s.io/kubernetes/pkg/util/filesystem"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/class"
@@ -110,6 +111,8 @@ func NewNGINXController(config *Configuration) *NGINXController {
 
 		stopCh:   make(chan struct{}),
 		stopLock: &sync.Mutex{},
+
+		fileSystem: filesystem.DefaultFs{},
 	}
 
 	n.stats = newStatsCollector(config.Namespace, config.IngressClass, n.binary, n.cfg.ListenPorts.Status)
@@ -223,6 +226,8 @@ type NGINXController struct {
 	Proxy *TCPProxy
 
 	backendDefaults defaults.Backend
+
+	fileSystem filesystem.Filesystem
 }
 
 // Start start a new NGINX master process running in foreground.
@@ -324,7 +329,7 @@ func (n *NGINXController) Stop() error {
 
 	// Wait for the Nginx process disappear
 	timer := time.NewTicker(time.Second * 1)
-	for _ = range timer.C {
+	for range timer.C {
 		if !process.IsNginxRunning() {
 			glog.Info("NGINX process has stopped")
 			timer.Stop()

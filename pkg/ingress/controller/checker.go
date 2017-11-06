@@ -18,22 +18,21 @@ package controller
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/golang/glog"
 	"github.com/ncabatoff/process-exporter/proc"
+	"github.com/pkg/errors"
 )
 
 // Name returns the healthcheck name
 func (n NGINXController) Name() string {
-	return "Ingress Controller"
+	return "nginx-ingress-controller"
 }
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
-func (n NGINXController) Check(_ *http.Request) error {
+func (n *NGINXController) Check(_ *http.Request) error {
 	res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath))
 	if err != nil {
 		return err
@@ -46,23 +45,17 @@ func (n NGINXController) Check(_ *http.Request) error {
 	// check the nginx master process is running
 	fs, err := proc.NewFS("/proc")
 	if err != nil {
-		glog.Errorf("%v", err)
-		return err
+		return errors.Wrap(err, "unexpected error reading /proc directory")
 	}
-	f, err := ioutil.ReadFile("/run/nginx.pid")
+	f, err := n.fileSystem.ReadFile("/run/nginx.pid")
 	if err != nil {
-		glog.Errorf("%v", err)
-		return err
+		return errors.Wrap(err, "unexpected error reading /run/nginx.pid")
 	}
 	pid, err := strconv.Atoi(strings.TrimRight(string(f), "\r\n"))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unexpected error reading the PID from /run/nginx.pid")
 	}
 	_, err = fs.NewProc(pid)
-	if err != nil {
-		glog.Errorf("%v", err)
-		return err
-	}
 
-	return nil
+	return err
 }
