@@ -164,7 +164,7 @@ func TestGetNodeIP(t *testing.T) {
 	}
 
 	for _, fk := range fKNodes {
-		address := GetNodeIP(fk.cs, fk.n, fk.i)
+		address := GetNodeIPOrName(fk.cs, fk.n, fk.i)
 		if address != fk.ea {
 			t.Errorf("expected %s, but returned %s", fk.ea, address)
 		}

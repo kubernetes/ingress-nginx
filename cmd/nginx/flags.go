@@ -58,9 +58,8 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			`Name of the ConfigMap that contains the custom configuration to use`)
 
 		publishSvc = flags.String("publish-service", "",
-			`Service fronting the ingress controllers. Takes the form
-		 namespace/name. The controller will set the endpoint records on the
-		 ingress objects to reflect those on the service.`)
+			`Service fronting the ingress controllers. Takes the form namespace/name. 
+		The controller will set the endpoint records on the ingress objects to reflect those on the service.`)
 
 		tcpConfigMapName = flags.String("tcp-services-configmap", "",
 			`Name of the ConfigMap that contains the definition of the TCP services to expose.
