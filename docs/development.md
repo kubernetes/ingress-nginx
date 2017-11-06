@@ -123,4 +123,3 @@ cherry-picked into a release branch.
 * If you're not confident about the stability of the code,
 [tag](https://help.github.com/articles/working-with-tags/) it as alpha or beta.
 Typically, a release branch should have stable code.
-
