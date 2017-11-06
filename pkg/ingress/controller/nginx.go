@@ -121,13 +121,13 @@ func NewNGINXController(config *Configuration) *NGINXController {
 	if config.UpdateStatus {
 		n.syncStatus = status.NewStatusSyncer(status.Config{
 			Client:                 config.Client,
-			PublishService:         n.cfg.PublishService,
+			PublishService:         config.PublishService,
 			IngressLister:          n.listers.Ingress,
 			ElectionID:             config.ElectionID,
 			IngressClass:           config.IngressClass,
 			DefaultIngressClass:    config.DefaultIngressClass,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
-			UseNodeInternalIP:      n.cfg.UseNodeInternalIP,
+			UseNodeInternalIP:      config.UseNodeInternalIP,
 		})
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
@@ -324,8 +324,7 @@ func (n *NGINXController) Stop() error {
 
 	// Wait for the Nginx process disappear
 	timer := time.NewTicker(time.Second * 1)
-	for t := range timer.C {
-		glog.V(3).Infof("tick at", t)
+	for _ = range timer.C {
 		if !process.IsNginxRunning() {
 			glog.Info("NGINX process has stopped")
 			timer.Stop()
@@ -632,10 +631,8 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				return err
 			}
 
-			diffOutput, err := exec.Command("diff", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
-			if err != nil {
-				return err
-			}
+			// executing diff can return exit code != 0
+			diffOutput, _ := exec.Command("diff", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
 
 			glog.Infof("NGINX configuration diff\n")
 			glog.Infof("%v\n", string(diffOutput))

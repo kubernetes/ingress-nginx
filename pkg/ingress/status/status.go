@@ -234,6 +234,8 @@ func NewStatusSyncer(config Config) Sync {
 // runningAddresses returns a list of IP addresses and/or FQDN where the
 // ingress controller is currently running
 func (s *statusSync) runningAddresses() ([]string, error) {
+	addrs := []string{}
+
 	if s.PublishService != "" {
 		ns, name, _ := k8s.ParseNameNS(s.PublishService)
 		svc, err := s.Client.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
@@ -241,7 +243,6 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 			return nil, err
 		}
 
-		addrs := []string{}
 		for _, ip := range svc.Status.LoadBalancer.Ingress {
 			if ip.IP == "" {
 				addrs = append(addrs, ip.Hostname)
@@ -251,7 +252,6 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		}
 
 		addrs = append(addrs, svc.Spec.ExternalIPs...)
-
 		return addrs, nil
 	}
 
@@ -263,13 +263,13 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		return nil, err
 	}
 
-	addrs := []string{}
 	for _, pod := range pods.Items {
-		name := k8s.GetNodeIP(s.Client, pod.Spec.NodeName, s.UseNodeInternalIP)
+		name := k8s.GetNodeIPOrName(s.Client, pod.Spec.NodeName, s.UseNodeInternalIP)
 		if !sliceutils.StringInSlice(name, addrs) {
 			addrs = append(addrs, name)
 		}
 	}
+
 	return addrs, nil
 }
 
@@ -332,13 +332,12 @@ func runUpdate(ing *extensions.Ingress, status []apiv1.LoadBalancerIngress,
 			return nil, nil
 		}
 
-		addrs := status
-		sort.SliceStable(addrs, lessLoadBalancerIngress(addrs))
+		sort.SliceStable(status, lessLoadBalancerIngress(status))
 
 		curIPs := ing.Status.LoadBalancer.Ingress
 		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
 
-		if ingressSliceEqual(addrs, curIPs) {
+		if ingressSliceEqual(status, curIPs) {
 			glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", ing.Namespace, ing.Name)
 			return true, nil
 		}
@@ -350,8 +349,8 @@ func runUpdate(ing *extensions.Ingress, status []apiv1.LoadBalancerIngress,
 			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
 		}
 
-		glog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, addrs)
-		currIng.Status.LoadBalancer.Ingress = addrs
+		glog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, status)
+		currIng.Status.LoadBalancer.Ingress = status
 		_, err = ingClient.UpdateStatus(currIng)
 		if err != nil {
 			glog.Warningf("error updating ingress rule: %v", err)
