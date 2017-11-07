@@ -97,9 +97,9 @@ func TestProxy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error parsing a valid")
 	}
-	p, ok := i.(*Configuration)
+	p, ok := i.(*Config)
 	if !ok {
-		t.Fatalf("expected a Configuration type")
+		t.Fatalf("expected a Config type")
 	}
 	if p.ConnectTimeout != 1 {
 		t.Errorf("expected 1 as connect-timeout but returned %v", p.ConnectTimeout)
@@ -137,9 +137,9 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error parsing a valid")
 	}
-	p, ok := i.(*Configuration)
+	p, ok := i.(*Config)
 	if !ok {
-		t.Fatalf("expected a Configuration type")
+		t.Fatalf("expected a Config type")
 	}
 	if p.ConnectTimeout != 10 {
 		t.Errorf("expected 10 as connect-timeout but returned %v", p.ConnectTimeout)

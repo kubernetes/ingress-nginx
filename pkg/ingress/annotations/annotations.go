@@ -14,12 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package annotations
 
 import (
 	"github.com/golang/glog"
+	"github.com/imdario/mergo"
 
 	extensions "k8s.io/api/extensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/alias"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/authreq"
@@ -48,51 +51,89 @@ import (
 	"k8s.io/ingress-nginx/pkg/ingress/resolver"
 )
 
-type extractorConfig interface {
+// DeniedKeyName name of the key that contains the reason to deny a location
+const DeniedKeyName = "Denied"
+
+type config interface {
 	resolver.AuthCertificate
 	resolver.DefaultBackend
 	resolver.Secret
 	resolver.Service
 }
 
-type annotationExtractor struct {
+// Ingress defines the valid annotations present in one NGINX Ingress rule
+type Ingress struct {
+	metav1.ObjectMeta
+	Alias                string
+	BasicDigestAuth      auth.Config
+	CertificateAuth      authtls.Config
+	ClientBodyBufferSize string
+	ConfigurationSnippet string
+	CorsConfig           cors.Config
+	DefaultBackend       string
+	ExternalAuth         authreq.Config
+	HealthCheck          healthcheck.Config
+	Proxy                proxy.Config
+	RateLimit            ratelimit.Config
+	Redirect             redirect.Config
+	Rewrite              rewrite.Config
+	SecureUpstream       secureupstream.Config
+	ServerSnippet        string
+	ServiceUpstream      bool
+	SessionAffinity      sessionaffinity.Config
+	SSLPassthrough       bool
+	UsePortInRedirects   bool
+	UpstreamHashBy       string
+	UpstreamVhost        string
+	VtsFilterKey         string
+	Whitelist            ipwhitelist.SourceRange
+}
+
+// Extractor defines the annotation parsers to be used in the extraction of annotations
+type Extractor struct {
 	secretResolver resolver.Secret
 	annotations    map[string]parser.IngressAnnotation
 }
 
-func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
-	return annotationExtractor{
+// NewAnnotationExtractor creates a new annotations extractor
+func NewAnnotationExtractor(cfg config) Extractor {
+	return Extractor{
 		cfg,
 		map[string]parser.IngressAnnotation{
+			"Alias":                alias.NewParser(),
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
-			"ExternalAuth":         authreq.NewParser(),
 			"CertificateAuth":      authtls.NewParser(cfg),
+			"ClientBodyBufferSize": clientbodybuffersize.NewParser(),
+			"ConfigurationSnippet": snippet.NewParser(),
 			"CorsConfig":           cors.NewParser(),
+			"DefaultBackend":       defaultbackend.NewParser(cfg),
+			"ExternalAuth":         authreq.NewParser(),
 			"HealthCheck":          healthcheck.NewParser(cfg),
-			"Whitelist":            ipwhitelist.NewParser(cfg),
-			"UsePortInRedirects":   portinredirect.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(),
 			"Rewrite":              rewrite.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
+			"ServerSnippet":        serversnippet.NewParser(),
 			"ServiceUpstream":      serviceupstream.NewParser(),
 			"SessionAffinity":      sessionaffinity.NewParser(),
 			"SSLPassthrough":       sslpassthrough.NewParser(),
-			"ConfigurationSnippet": snippet.NewParser(),
-			"Alias":                alias.NewParser(),
-			"ClientBodyBufferSize": clientbodybuffersize.NewParser(),
-			"DefaultBackend":       defaultbackend.NewParser(cfg),
+			"UsePortInRedirects":   portinredirect.NewParser(cfg),
 			"UpstreamHashBy":       upstreamhashby.NewParser(),
 			"UpstreamVhost":        upstreamvhost.NewParser(),
 			"VtsFilterKey":         vtsfilterkey.NewParser(),
-			"ServerSnippet":        serversnippet.NewParser(),
+			"Whitelist":            ipwhitelist.NewParser(cfg),
 		},
 	}
 }
 
-func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interface{} {
-	anns := make(map[string]interface{})
+// Extract extracts the annotations from an Ingress
+func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
+	pia := &Ingress{
+		ObjectMeta: ing.ObjectMeta,
+	}
+
+	data := make(map[string]interface{})
 	for name, annotationParser := range e.annotations {
 		val, err := annotationParser.Parse(ing)
 		glog.V(5).Infof("annotation %v in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), val)
@@ -105,9 +146,9 @@ func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interf
 				continue
 			}
 
-			_, alreadyDenied := anns[DeniedKeyName]
+			_, alreadyDenied := data[DeniedKeyName]
 			if !alreadyDenied {
-				anns[DeniedKeyName] = err
+				data[DeniedKeyName] = err
 				glog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
 				continue
 			}
@@ -116,90 +157,14 @@ func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interf
 		}
 
 		if val != nil {
-			anns[name] = val
+			data[name] = val
 		}
 	}
 
-	return anns
-}
-
-const (
-	secureUpstream       = "SecureUpstream"
-	healthCheck          = "HealthCheck"
-	sslPassthrough       = "SSLPassthrough"
-	sessionAffinity      = "SessionAffinity"
-	serviceUpstream      = "ServiceUpstream"
-	serverAlias          = "Alias"
-	corsConfig           = "CorsConfig"
-	clientBodyBufferSize = "ClientBodyBufferSize"
-	certificateAuth      = "CertificateAuth"
-	serverSnippet        = "ServerSnippet"
-	upstreamHashBy       = "UpstreamHashBy"
-)
-
-func (e *annotationExtractor) ServiceUpstream(ing *extensions.Ingress) bool {
-	val, _ := e.annotations[serviceUpstream].Parse(ing)
-	return val.(bool)
-}
-
-func (e *annotationExtractor) SecureUpstream(ing *extensions.Ingress) *secureupstream.Secure {
-	val, err := e.annotations[secureUpstream].Parse(ing)
+	err := mergo.Map(pia, data)
 	if err != nil {
-		glog.Errorf("error parsing secure upstream: %v", err)
-	}
-	secure := val.(*secureupstream.Secure)
-	return secure
-}
-
-func (e *annotationExtractor) HealthCheck(ing *extensions.Ingress) *healthcheck.Upstream {
-	val, _ := e.annotations[healthCheck].Parse(ing)
-	return val.(*healthcheck.Upstream)
-}
-
-func (e *annotationExtractor) SSLPassthrough(ing *extensions.Ingress) bool {
-	val, _ := e.annotations[sslPassthrough].Parse(ing)
-	return val.(bool)
-}
-
-func (e *annotationExtractor) Alias(ing *extensions.Ingress) string {
-	val, _ := e.annotations[serverAlias].Parse(ing)
-	return val.(string)
-}
-
-func (e *annotationExtractor) ClientBodyBufferSize(ing *extensions.Ingress) string {
-	val, _ := e.annotations[clientBodyBufferSize].Parse(ing)
-	return val.(string)
-}
-
-func (e *annotationExtractor) SessionAffinity(ing *extensions.Ingress) *sessionaffinity.AffinityConfig {
-	val, _ := e.annotations[sessionAffinity].Parse(ing)
-	return val.(*sessionaffinity.AffinityConfig)
-}
-
-func (e *annotationExtractor) Cors(ing *extensions.Ingress) *cors.CorsConfig {
-	val, _ := e.annotations[corsConfig].Parse(ing)
-	return val.(*cors.CorsConfig)
-}
-
-func (e *annotationExtractor) CertificateAuth(ing *extensions.Ingress) *authtls.AuthSSLConfig {
-	val, err := e.annotations[certificateAuth].Parse(ing)
-	if errors.IsMissingAnnotations(err) {
-		return nil
+		glog.Errorf("unexpected error merging extracted annotations: %v", err)
 	}
 
-	if err != nil {
-		glog.Errorf("error parsing certificate auth: %v", err)
-	}
-	secure := val.(*authtls.AuthSSLConfig)
-	return secure
-}
-
-func (e *annotationExtractor) ServerSnippet(ing *extensions.Ingress) string {
-	val, _ := e.annotations[serverSnippet].Parse(ing)
-	return val.(string)
-}
-
-func (e *annotationExtractor) UpstreamHashBy(ing *extensions.Ingress) string {
-	val, _ := e.annotations[upstreamHashBy].Parse(ing)
-	return val.(string)
+	return pia
 }

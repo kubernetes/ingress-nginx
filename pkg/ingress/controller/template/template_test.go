@@ -114,7 +114,7 @@ func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:    tc.Path,
-			Rewrite: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
+			Rewrite: rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
 
 		newLoc := buildLocation(loc)
@@ -128,7 +128,7 @@ func TestBuildProxyPass(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:    tc.Path,
-			Rewrite: rewrite.Redirect{Target: tc.Target, AddBaseURL: tc.AddBaseURL, BaseURLScheme: tc.BaseURLScheme},
+			Rewrite: rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL, BaseURLScheme: tc.BaseURLScheme},
 			Backend: "upstream-name",
 		}
 
@@ -141,7 +141,7 @@ func TestBuildProxyPass(t *testing.T) {
 
 func TestBuildAuthResponseHeaders(t *testing.T) {
 	loc := &ingress.Location{
-		ExternalAuth: authreq.External{ResponseHeaders: []string{"h1", "H-With-Caps-And-Dashes"}},
+		ExternalAuth: authreq.Config{ResponseHeaders: []string{"h1", "H-With-Caps-And-Dashes"}},
 	}
 	headers := buildAuthResponseHeaders(loc)
 	expected := []string{

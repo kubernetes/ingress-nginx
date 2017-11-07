@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
+	cache_client "k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/class"
@@ -60,7 +61,7 @@ func (c *cacheController) Run(stopCh chan struct{}) {
 	}
 }
 
-func (n *NGINXController) createListers(stopCh chan struct{}) *ingress.StoreLister {
+func (n *NGINXController) createListers(stopCh chan struct{}) (*ingress.StoreLister, *cacheController) {
 	// from here to the end of the method all the code is just boilerplate
 	// required to watch Ingress, Secrets, ConfigMaps and Endoints.
 	// This is used to detect new content, updates or removals and act accordingly
@@ -73,6 +74,7 @@ func (n *NGINXController) createListers(stopCh chan struct{}) *ingress.StoreList
 				return
 			}
 
+			n.extractAnnotations(addIng)
 			n.recorder.Eventf(addIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
 			n.syncQueue.Enqueue(obj)
 		},
@@ -113,6 +115,7 @@ func (n *NGINXController) createListers(stopCh chan struct{}) *ingress.StoreList
 				n.recorder.Eventf(curIng, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			}
 
+			n.extractAnnotations(curIng)
 			n.syncQueue.Enqueue(cur)
 		},
 	}
@@ -141,7 +144,7 @@ func (n *NGINXController) createListers(stopCh chan struct{}) *ingress.StoreList
 				}
 			}
 			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
-			n.sslCertTracker.DeleteAll(key)
+			n.sslCertTracker.Delete(key)
 			n.syncQueue.Enqueue(key)
 		},
 	}
@@ -196,6 +199,7 @@ func (n *NGINXController) createListers(stopCh chan struct{}) *ingress.StoreList
 	}
 
 	lister := &ingress.StoreLister{}
+	lister.IngressAnnotation.Store = cache_client.NewStore(cache_client.DeletionHandlingMetaNamespaceKeyFunc)
 
 	controller := &cacheController{}
 
@@ -219,7 +223,5 @@ func (n *NGINXController) createListers(stopCh chan struct{}) *ingress.StoreList
 		cache.NewListWatchFromClient(n.cfg.Client.CoreV1().RESTClient(), "services", n.cfg.Namespace, fields.Everything()),
 		&apiv1.Service{}, n.cfg.ResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
-	controller.Run(n.stopCh)
-
-	return lister
+	return lister, controller
 }

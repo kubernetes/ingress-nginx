@@ -43,6 +43,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/filesystem"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
+	"k8s.io/ingress-nginx/pkg/ingress/annotations"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/class"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/parser"
 	ngx_config "k8s.io/ingress-nginx/pkg/ingress/controller/config"
@@ -50,6 +51,7 @@ import (
 	ngx_template "k8s.io/ingress-nginx/pkg/ingress/controller/template"
 	"k8s.io/ingress-nginx/pkg/ingress/defaults"
 	"k8s.io/ingress-nginx/pkg/ingress/status"
+	"k8s.io/ingress-nginx/pkg/ingress/store"
 	ing_net "k8s.io/ingress-nginx/pkg/net"
 	"k8s.io/ingress-nginx/pkg/net/dns"
 	"k8s.io/ingress-nginx/pkg/net/ssl"
@@ -102,7 +104,7 @@ func NewNGINXController(config *Configuration) *NGINXController {
 
 		resolver:        h,
 		cfg:             config,
-		sslCertTracker:  newSSLCertTracker(),
+		sslCertTracker:  store.NewSSLCertTracker(),
 		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.3, 1),
 
 		recorder: eventBroadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{
@@ -115,11 +117,13 @@ func NewNGINXController(config *Configuration) *NGINXController {
 		fileSystem: filesystem.DefaultFs{},
 	}
 
+	n.listers, n.controllers = n.createListers(n.stopCh)
+
 	n.stats = newStatsCollector(config.Namespace, config.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
-	n.listers = n.createListers(n.stopCh)
+	n.annotations = annotations.NewAnnotationExtractor(n)
 
 	if config.UpdateStatus {
 		n.syncStatus = status.NewStatusSyncer(status.Config{
@@ -135,7 +139,6 @@ func NewNGINXController(config *Configuration) *NGINXController {
 	} else {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
 	}
-	n.annotations = newAnnotationExtractor(n)
 
 	var onChange func()
 	onChange = func() {
@@ -170,9 +173,10 @@ Error loading new template : %v
 type NGINXController struct {
 	cfg *Configuration
 
-	listers *ingress.StoreLister
+	listers     *ingress.StoreLister
+	controllers *cacheController
 
-	annotations annotationExtractor
+	annotations annotations.Extractor
 
 	recorder record.EventRecorder
 
@@ -182,7 +186,7 @@ type NGINXController struct {
 
 	// local store of SSL certificates
 	// (only certificates used in ingress)
-	sslCertTracker *sslCertTracker
+	sslCertTracker *store.SSLCertTracker
 
 	syncRateLimiter flowcontrol.RateLimiter
 
@@ -233,6 +237,8 @@ type NGINXController struct {
 // Start start a new NGINX master process running in foreground.
 func (n *NGINXController) Start() {
 	glog.Infof("starting Ingress controller")
+
+	n.controllers.Run(n.stopCh)
 
 	// initial sync of secrets to avoid unnecessary reloads
 	glog.Info("running initial sync of secrets")
@@ -425,12 +431,12 @@ func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
 	n.backendDefaults = c.Backend
 }
 
-// OnUpdate is called by syncQueue in https://github.com/kubernetes/ingress-nginx/blob/master/pkg/ingress/controller/controller.go#L426
-// periodically to keep the configuration in sync.
+// OnUpdate is called periodically by syncQueue to keep the configuration in sync.
 //
-// convert configmap to custom configuration object (different in each implementation)
-// write the custom template (the complexity depends on the implementation)
-// write the configuration file
+// 1. converts configmap configuration to custom configuration object
+// 2. write the custom template (the complexity depends on the implementation)
+// 3. write the configuration file
+//
 // returning nill implies the backend will be reloaded.
 // if an error is returned means requeue the update
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {

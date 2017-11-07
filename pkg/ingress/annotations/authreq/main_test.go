@@ -97,7 +97,7 @@ func TestAnnotations(t *testing.T) {
 			}
 			continue
 		}
-		u, ok := i.(*External)
+		u, ok := i.(*Config)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)
 		}
@@ -149,7 +149,7 @@ func TestHeaderAnnotations(t *testing.T) {
 		}
 
 		t.Log(i)
-		u, ok := i.(*External)
+		u, ok := i.(*Config)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)
 			continue

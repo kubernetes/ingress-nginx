@@ -36,8 +36,8 @@ const (
 	requestBuffering = "ingress.kubernetes.io/proxy-request-buffering"
 )
 
-// Configuration returns the proxy timeout to use in the upstream server/s
-type Configuration struct {
+// Config returns the proxy timeout to use in the upstream server/s
+type Config struct {
 	BodySize         string `json:"bodySize"`
 	ConnectTimeout   int    `json:"connectTimeout"`
 	SendTimeout      int    `json:"sendTimeout"`
@@ -51,7 +51,7 @@ type Configuration struct {
 }
 
 // Equal tests for equality between two Configuration types
-func (l1 *Configuration) Equal(l2 *Configuration) bool {
+func (l1 *Config) Equal(l2 *Config) bool {
 	if l1 == l2 {
 		return true
 	}
@@ -156,5 +156,5 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		rb = defBackend.ProxyRequestBuffering
 	}
 
-	return &Configuration{bs, ct, st, rt, bufs, cd, cp, nu, pp, rb}, nil
+	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, pp, rb}, nil
 }

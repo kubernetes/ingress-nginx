@@ -77,7 +77,7 @@ func TestIngressHealthCheck(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	hzi, _ := NewParser(mockBackend{}).Parse(ing)
-	nginxHz, ok := hzi.(*Upstream)
+	nginxHz, ok := hzi.(*Config)
 	if !ok {
 		t.Errorf("expected a Upstream type")
 	}

@@ -93,7 +93,7 @@ func TestRedirect(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error with ingress: %v", err)
 	}
-	redirect, ok := i.(*Redirect)
+	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
 	}
@@ -110,7 +110,7 @@ func TestSSLRedirect(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	i, _ := NewParser(mockBackend{true}).Parse(ing)
-	redirect, ok := i.(*Redirect)
+	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
 	}
@@ -122,7 +122,7 @@ func TestSSLRedirect(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	i, _ = NewParser(mockBackend{false}).Parse(ing)
-	redirect, ok = i.(*Redirect)
+	redirect, ok = i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
 	}
@@ -139,7 +139,7 @@ func TestForceSSLRedirect(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	i, _ := NewParser(mockBackend{true}).Parse(ing)
-	redirect, ok := i.(*Redirect)
+	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
 	}
@@ -151,7 +151,7 @@ func TestForceSSLRedirect(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	i, _ = NewParser(mockBackend{false}).Parse(ing)
-	redirect, ok = i.(*Redirect)
+	redirect, ok = i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
 	}
@@ -167,12 +167,11 @@ func TestAppRoot(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	i, _ := NewParser(mockBackend{true}).Parse(ing)
-	redirect, ok := i.(*Redirect)
+	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a App Context")
 	}
 	if redirect.AppRoot != "/app1" {
 		t.Errorf("Unexpected value got in AppRoot")
 	}
-
 }

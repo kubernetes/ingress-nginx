@@ -28,9 +28,9 @@ const (
 	upsFailTimeout = "ingress.kubernetes.io/upstream-fail-timeout"
 )
 
-// Upstream returns the URL and method to use check the status of
+// Config returns the URL and method to use check the status of
 // the upstream server/s
-type Upstream struct {
+type Config struct {
 	MaxFails    int `json:"maxFails"`
 	FailTimeout int `json:"failTimeout"`
 }
@@ -49,7 +49,7 @@ func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
 func (a healthCheck) Parse(ing *extensions.Ingress) (interface{}, error) {
 	defBackend := a.backendResolver.GetDefaultBackend()
 	if ing.GetAnnotations() == nil {
-		return &Upstream{defBackend.UpstreamMaxFails, defBackend.UpstreamFailTimeout}, nil
+		return &Config{defBackend.UpstreamMaxFails, defBackend.UpstreamFailTimeout}, nil
 	}
 
 	mf, err := parser.GetIntAnnotation(upsMaxFails, ing)
@@ -62,5 +62,5 @@ func (a healthCheck) Parse(ing *extensions.Ingress) (interface{}, error) {
 		ft = defBackend.UpstreamFailTimeout
 	}
 
-	return &Upstream{mf, ft}, nil
+	return &Config{mf, ft}, nil
 }

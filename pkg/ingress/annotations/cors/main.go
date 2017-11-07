@@ -51,8 +51,8 @@ var (
 type cors struct {
 }
 
-// CorsConfig contains the Cors configuration to be used in the Ingress
-type CorsConfig struct {
+// Config contains the Cors configuration to be used in the Ingress
+type Config struct {
 	CorsEnabled          bool   `json:"corsEnabled"`
 	CorsAllowOrigin      string `json:"corsAllowOrigin"`
 	CorsAllowMethods     string `json:"corsAllowMethods"`
@@ -66,7 +66,7 @@ func NewParser() parser.IngressAnnotation {
 }
 
 // Equal tests for equality between two External types
-func (c1 *CorsConfig) Equal(c2 *CorsConfig) bool {
+func (c1 *Config) Equal(c2 *Config) bool {
 	if c1 == c2 {
 		return true
 	}
@@ -120,7 +120,7 @@ func (a cors) Parse(ing *extensions.Ingress) (interface{}, error) {
 		corsallowcredentials = true
 	}
 
-	return &CorsConfig{
+	return &Config{
 		CorsEnabled:          corsenabled,
 		CorsAllowOrigin:      corsalloworigin,
 		CorsAllowHeaders:     corsallowheaders,

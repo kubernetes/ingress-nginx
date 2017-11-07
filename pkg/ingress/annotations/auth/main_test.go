@@ -109,7 +109,7 @@ func TestIngressAuth(t *testing.T) {
 	if err != nil {
 		t.Errorf("Uxpected error with ingress: %v", err)
 	}
-	auth, ok := i.(*BasicDigest)
+	auth, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a BasicDigest type")
 	}

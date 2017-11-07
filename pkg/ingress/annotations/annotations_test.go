@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package annotations
 
 import (
 	"testing"
@@ -75,20 +75,6 @@ func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) 
 	return nil, nil
 }
 
-func TestAnnotationExtractor(t *testing.T) {
-	ec := newAnnotationExtractor(mockCfg{})
-	ing := buildIngress()
-
-	m := ec.Extract(ing)
-	// the map at least should contains HealthCheck and Proxy information (defaults)
-	if _, ok := m["HealthCheck"]; !ok {
-		t.Error("expected HealthCheck annotation")
-	}
-	if _, ok := m["Proxy"]; !ok {
-		t.Error("expected Proxy annotation")
-	}
-}
-
 func buildIngress() *extensions.Ingress {
 	defaultBackend := extensions.IngressBackend{
 		ServiceName: "default-backend",
@@ -125,7 +111,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 func TestSecureUpstream(t *testing.T) {
-	ec := newAnnotationExtractor(mockCfg{})
+	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -141,7 +127,7 @@ func TestSecureUpstream(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.SecureUpstream(ing)
+		r := ec.Extract(ing).SecureUpstream
 		if r.Secure != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
 		}
@@ -149,7 +135,7 @@ func TestSecureUpstream(t *testing.T) {
 }
 
 func TestSecureVerifyCACert(t *testing.T) {
-	ec := newAnnotationExtractor(mockCfg{
+	ec := NewAnnotationExtractor(mockCfg{
 		MockSecrets: map[string]*apiv1.Secret{
 			"default/secure-verify-ca": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -176,15 +162,16 @@ func TestSecureVerifyCACert(t *testing.T) {
 	for _, ann := range anns {
 		ing := buildIngress()
 		ing.SetAnnotations(ann.annotations)
-		res := ec.SecureUpstream(ing)
-		if (res.CACert.CAFileName != "") != ann.exists {
+		res := ec.Extract(ing).SecureUpstream
+
+		if (res != nil && res.CACert.CAFileName != "") != ann.exists {
 			t.Errorf("Expected exists was %v on iteration %v", ann.exists, ann.it)
 		}
 	}
 }
 
 func TestHealthCheck(t *testing.T) {
-	ec := newAnnotationExtractor(mockCfg{})
+	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -201,7 +188,7 @@ func TestHealthCheck(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.HealthCheck(ing)
+		r := ec.Extract(ing).HealthCheck
 		if r == nil {
 			t.Errorf("Returned nil but expected a healthcheck.Upstream")
 			continue
@@ -218,7 +205,7 @@ func TestHealthCheck(t *testing.T) {
 }
 
 func TestSSLPassthrough(t *testing.T) {
-	ec := newAnnotationExtractor(mockCfg{})
+	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -234,7 +221,7 @@ func TestSSLPassthrough(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.SSLPassthrough(ing)
+		r := ec.Extract(ing).SSLPassthrough
 		if r != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
 		}
@@ -242,7 +229,7 @@ func TestSSLPassthrough(t *testing.T) {
 }
 
 func TestUpstreamHashBy(t *testing.T) {
-	ec := newAnnotationExtractor(mockCfg{})
+	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -258,7 +245,7 @@ func TestUpstreamHashBy(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.UpstreamHashBy(ing)
+		r := ec.Extract(ing).UpstreamHashBy
 		if r != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
 		}
@@ -266,7 +253,7 @@ func TestUpstreamHashBy(t *testing.T) {
 }
 
 func TestAffinitySession(t *testing.T) {
-	ec := newAnnotationExtractor(mockCfg{})
+	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -284,25 +271,25 @@ func TestAffinitySession(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.SessionAffinity(ing)
+		r := ec.Extract(ing).SessionAffinity
 		t.Logf("Testing pass %v %v %v", foo.affinitytype, foo.hash, foo.name)
 		if r == nil {
 			t.Errorf("Returned nil but expected a SessionAffinity.AffinityConfig")
 			continue
 		}
 
-		if r.CookieConfig.Hash != foo.hash {
-			t.Errorf("Returned %v but expected %v for Hash", r.CookieConfig.Hash, foo.hash)
+		if r.Cookie.Hash != foo.hash {
+			t.Errorf("Returned %v but expected %v for Hash", r.Cookie.Hash, foo.hash)
 		}
 
-		if r.CookieConfig.Name != foo.name {
-			t.Errorf("Returned %v but expected %v for Name", r.CookieConfig.Name, foo.name)
+		if r.Cookie.Name != foo.name {
+			t.Errorf("Returned %v but expected %v for Name", r.Cookie.Name, foo.name)
 		}
 	}
 }
 
 func TestCors(t *testing.T) {
-	ec := newAnnotationExtractor(mockCfg{})
+	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -322,7 +309,7 @@ func TestCors(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Cors(ing)
+		r := ec.Extract(ing).CorsConfig
 		t.Logf("Testing pass %v %v %v %v %v", foo.corsenabled, foo.methods, foo.headers, foo.origin, foo.credentials)
 		if r == nil {
 			t.Errorf("Returned nil but expected a Cors.CorsConfig")
@@ -351,3 +338,48 @@ func TestCors(t *testing.T) {
 
 	}
 }
+
+/*
+func TestMergeLocationAnnotations(t *testing.T) {
+	// initial parameters
+	keys := []string{"BasicDigestAuth", "CorsConfig", "ExternalAuth", "RateLimit", "Redirect", "Rewrite", "Whitelist", "Proxy", "UsePortInRedirects"}
+
+	loc := ingress.Location{}
+	annotations := &Ingress{
+		BasicDigestAuth:    &auth.Config{},
+		CorsConfig:         &cors.Config{},
+		ExternalAuth:       &authreq.Config{},
+		RateLimit:          &ratelimit.Config{},
+		Redirect:           &redirect.Config{},
+		Rewrite:            &rewrite.Config{},
+		Whitelist:          &ipwhitelist.SourceRange{},
+		Proxy:              &proxy.Config{},
+		UsePortInRedirects: true,
+	}
+
+	// create test table
+	type fooMergeLocationAnnotationsStruct struct {
+		fName string
+		er    interface{}
+	}
+	fooTests := []fooMergeLocationAnnotationsStruct{}
+	for name, value := range keys {
+		fva := fooMergeLocationAnnotationsStruct{name, value}
+		fooTests = append(fooTests, fva)
+	}
+
+	// execute test
+	MergeWithLocation(&loc, annotations)
+
+	// check result
+	for _, foo := range fooTests {
+		fv := reflect.ValueOf(loc).FieldByName(foo.fName).Interface()
+		if !reflect.DeepEqual(fv, foo.er) {
+			t.Errorf("Returned %v but expected %v for the field %s", fv, foo.er, foo.fName)
+		}
+	}
+	if _, ok := annotations[DeniedKeyName]; ok {
+		t.Errorf("%s should be removed after mergeLocationAnnotations", DeniedKeyName)
+	}
+}
+*/

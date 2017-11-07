@@ -45,11 +45,11 @@ const (
 	defSharedSize = 5
 )
 
-// RateLimit returns rate limit configuration for an Ingress rule limiting the
+// Config returns rate limit configuration for an Ingress rule limiting the
 // number of connections per IP address and/or connections per second.
 // If you both annotations are specified in a single Ingress rule, RPS limits
 // takes precedence
-type RateLimit struct {
+type Config struct {
 	// Connections indicates a limit with the number of connections per IP address
 	Connections Zone `json:"connections"`
 	// RPS indicates a limit with the number of connections per second
@@ -69,7 +69,7 @@ type RateLimit struct {
 }
 
 // Equal tests for equality between two RateLimit types
-func (rt1 *RateLimit) Equal(rt2 *RateLimit) bool {
+func (rt1 *Config) Equal(rt2 *Config) bool {
 	if rt1 == rt2 {
 		return true
 	}
@@ -185,7 +185,7 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	if rpm == 0 && rps == 0 && conn == 0 {
-		return &RateLimit{
+		return &Config{
 			Connections:    Zone{},
 			RPS:            Zone{},
 			RPM:            Zone{},
@@ -196,7 +196,7 @@ func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	zoneName := fmt.Sprintf("%v_%v", ing.GetNamespace(), ing.GetName())
 
-	return &RateLimit{
+	return &Config{
 		Connections: Zone{
 			Name:       fmt.Sprintf("%v_conn", zoneName),
 			Limit:      conn,

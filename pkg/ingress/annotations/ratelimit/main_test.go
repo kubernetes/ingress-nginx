@@ -107,7 +107,7 @@ func TestBadRateLimiting(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
-	rateLimit, ok := i.(*RateLimit)
+	rateLimit, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a RateLimit type")
 	}

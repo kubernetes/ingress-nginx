@@ -20,11 +20,12 @@ import (
 	"github.com/pkg/errors"
 	extensions "k8s.io/api/extensions/v1beta1"
 
+	"regexp"
+
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/pkg/ingress/errors"
 	"k8s.io/ingress-nginx/pkg/ingress/resolver"
 	"k8s.io/ingress-nginx/pkg/k8s"
-	"regexp"
 )
 
 const (
@@ -41,17 +42,17 @@ var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 )
 
-// AuthSSLConfig contains the AuthSSLCert used for muthual autentication
+// Config contains the AuthSSLCert used for muthual autentication
 // and the configured ValidationDepth
-type AuthSSLConfig struct {
+type Config struct {
 	resolver.AuthSSLCert
 	VerifyClient    string `json:"verify_client"`
 	ValidationDepth int    `json:"validationDepth"`
 	ErrorPage       string `json:"errorPage"`
 }
 
-// Equal tests for equality between two AuthSSLConfig types
-func (assl1 *AuthSSLConfig) Equal(assl2 *AuthSSLConfig) bool {
+// Equal tests for equality between two Config types
+func (assl1 *Config) Equal(assl2 *Config) bool {
 	if assl1 == assl2 {
 		return true
 	}
@@ -88,16 +89,16 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	tlsauthsecret, err := parser.GetStringAnnotation(annotationAuthTLSSecret, ing)
 	if err != nil {
-		return &AuthSSLConfig{}, err
+		return &Config{}, err
 	}
 
 	if tlsauthsecret == "" {
-		return &AuthSSLConfig{}, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
+		return &Config{}, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
 	_, _, err = k8s.ParseNameNS(tlsauthsecret)
 	if err != nil {
-		return &AuthSSLConfig{}, ing_errors.NewLocationDenied(err.Error())
+		return &Config{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
 	tlsVerifyClient, err := parser.GetStringAnnotation(annotationAuthVerifyClient, ing)
@@ -112,7 +113,7 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	authCert, err := a.certResolver.GetAuthCertificate(tlsauthsecret)
 	if err != nil {
-		return &AuthSSLConfig{}, ing_errors.LocationDenied{
+		return &Config{}, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "error obtaining certificate"),
 		}
 	}
@@ -122,7 +123,7 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		errorpage = ""
 	}
 
-	return &AuthSSLConfig{
+	return &Config{
 		AuthSSLCert:     *authCert,
 		VerifyClient:    tlsVerifyClient,
 		ValidationDepth: tlsdepth,

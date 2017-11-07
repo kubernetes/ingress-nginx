@@ -32,8 +32,8 @@ const (
 	appRoot          = "ingress.kubernetes.io/app-root"
 )
 
-// Redirect describes the per location redirect config
-type Redirect struct {
+// Config describes the per location redirect config
+type Config struct {
 	// Target URI where the traffic must be redirected
 	Target string `json:"target"`
 	// AddBaseURL indicates if is required to add a base tag in the head
@@ -50,7 +50,7 @@ type Redirect struct {
 }
 
 // Equal tests for equality between two Redirect types
-func (r1 *Redirect) Equal(r2 *Redirect) bool {
+func (r1 *Config) Equal(r2 *Config) bool {
 	if r1 == r2 {
 		return true
 	}
@@ -103,7 +103,7 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 	abu, _ := parser.GetBoolAnnotation(addBaseURL, ing)
 	bus, _ := parser.GetStringAnnotation(baseURLScheme, ing)
 	ar, _ := parser.GetStringAnnotation(appRoot, ing)
-	return &Redirect{
+	return &Config{
 		Target:           rt,
 		AddBaseURL:       abu,
 		BaseURLScheme:    bus,

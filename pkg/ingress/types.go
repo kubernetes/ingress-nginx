@@ -47,11 +47,12 @@ var (
 // StoreLister returns the configured stores for ingresses, services,
 // endpoints, secrets and configmaps.
 type StoreLister struct {
-	Ingress   store.IngressLister
-	Service   store.ServiceLister
-	Endpoint  store.EndpointLister
-	Secret    store.SecretLister
-	ConfigMap store.ConfigMapLister
+	Ingress           store.IngressLister
+	Service           store.ServiceLister
+	Endpoint          store.EndpointLister
+	Secret            store.SecretLister
+	ConfigMap         store.ConfigMapLister
+	IngressAnnotation store.IngressAnnotationsLister
 }
 
 // Configuration holds the definition of all the parts required to describe all
@@ -165,7 +166,7 @@ type Server struct {
 	RedirectFromToWWW bool `json:"redirectFromToWWW,omitempty"`
 	// CertificateAuth indicates the this server requires mutual authentication
 	// +optional
-	CertificateAuth authtls.AuthSSLConfig `json:"certificateAuth"`
+	CertificateAuth authtls.Config `json:"certificateAuth"`
 
 	// ServerSnippet returns the snippet of server
 	// +optional
@@ -211,28 +212,28 @@ type Location struct {
 	// BasicDigestAuth returns authentication configuration for
 	// an Ingress rule.
 	// +optional
-	BasicDigestAuth auth.BasicDigest `json:"basicDigestAuth,omitempty"`
+	BasicDigestAuth auth.Config `json:"basicDigestAuth,omitempty"`
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
 	Denied error `json:"denied,omitempty"`
 	// CorsConfig returns the Cors Configration for the ingress rule
 	// +optional
-	CorsConfig cors.CorsConfig `json:"corsConfig,omitempty"`
+	CorsConfig cors.Config `json:"corsConfig,omitempty"`
 	// ExternalAuth indicates the access to this location requires
 	// authentication using an external provider
 	// +optional
-	ExternalAuth authreq.External `json:"externalAuth,omitempty"`
+	ExternalAuth authreq.Config `json:"externalAuth,omitempty"`
 	// RateLimit describes a limit in the number of connections per IP
 	// address or connections per second.
 	// The Redirect annotation precedes RateLimit
 	// +optional
-	RateLimit ratelimit.RateLimit `json:"rateLimit,omitempty"`
+	RateLimit ratelimit.Config `json:"rateLimit,omitempty"`
 	// Redirect describes a temporal o permanent redirection this location.
 	// +optional
-	Redirect redirect.Redirect `json:"redirect,omitempty"`
+	Redirect redirect.Config `json:"redirect,omitempty"`
 	// Rewrite describes the redirection this location.
 	// +optional
-	Rewrite rewrite.Redirect `json:"rewrite,omitempty"`
+	Rewrite rewrite.Config `json:"rewrite,omitempty"`
 	// Whitelist indicates only connections from certain client
 	// addresses or networks are allowed.
 	// +optional
@@ -240,7 +241,7 @@ type Location struct {
 	// Proxy contains information about timeouts and buffer sizes
 	// to be used in connections against endpoints
 	// +optional
-	Proxy proxy.Configuration `json:"proxy,omitempty"`
+	Proxy proxy.Config `json:"proxy,omitempty"`
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"usePortInRedirects"`
