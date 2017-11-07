@@ -39,10 +39,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
-	"k8s.io/ingress-nginx/pkg/ingress"
-	"k8s.io/ingress-nginx/pkg/ingress/controller"
-	"k8s.io/ingress-nginx/pkg/k8s"
-	"k8s.io/ingress-nginx/pkg/net/ssl"
+	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/controller"
+	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/version"
 )
 

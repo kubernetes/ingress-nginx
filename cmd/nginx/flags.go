@@ -27,9 +27,9 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 
-	"k8s.io/ingress-nginx/pkg/ingress/controller"
-	ngx_config "k8s.io/ingress-nginx/pkg/ingress/controller/config"
-	ing_net "k8s.io/ingress-nginx/pkg/net"
+	"k8s.io/ingress-nginx/internal/ingress/controller"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	ing_net "k8s.io/ingress-nginx/internal/net"
 )
 
 const (
