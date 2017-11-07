@@ -25,7 +25,6 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
 	"k8s.io/ingress-nginx/pkg/ingress/annotations/class"
@@ -155,19 +154,4 @@ func (ic *NGINXController) checkMissingSecrets() {
 			ic.syncSecret(key)
 		}
 	}
-}
-
-// sslCertTracker holds a store of referenced Secrets in Ingress rules
-type sslCertTracker struct {
-	cache.ThreadSafeStore
-}
-
-func newSSLCertTracker() *sslCertTracker {
-	return &sslCertTracker{
-		cache.NewThreadSafeStore(cache.Indexers{}, cache.Indices{}),
-	}
-}
-
-func (s *sslCertTracker) DeleteAll(key string) {
-	s.Delete(key)
 }

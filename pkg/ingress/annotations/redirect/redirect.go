@@ -33,8 +33,8 @@ const (
 	www       = "ingress.kubernetes.io/from-to-www-redirect"
 )
 
-// Redirect returns the redirect configuration for an Ingress rule
-type Redirect struct {
+// Config returns the redirect configuration for an Ingress rule
+type Config struct {
 	URL       string `json:"url"`
 	Code      int    `json:"code"`
 	FromToWWW bool   `json:"fromToWWW"`
@@ -64,7 +64,7 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 			return nil, err
 		}
 
-		return &Redirect{
+		return &Config{
 			URL:       tr,
 			Code:      http.StatusFound,
 			FromToWWW: r3w,
@@ -81,7 +81,7 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 			return nil, err
 		}
 
-		return &Redirect{
+		return &Config{
 			URL:       pr,
 			Code:      http.StatusMovedPermanently,
 			FromToWWW: r3w,
@@ -89,7 +89,7 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	if r3w {
-		return &Redirect{
+		return &Config{
 			FromToWWW: r3w,
 		}, nil
 	}
@@ -98,7 +98,7 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 }
 
 // Equal tests for equality between two Redirect types
-func (r1 *Redirect) Equal(r2 *Redirect) bool {
+func (r1 *Config) Equal(r2 *Config) bool {
 	if r1 == r2 {
 		return true
 	}

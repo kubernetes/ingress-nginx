@@ -46,8 +46,8 @@ var (
 	AuthDirectory = "/etc/ingress-controller/auth"
 )
 
-// BasicDigest returns authentication configuration for an Ingress rule
-type BasicDigest struct {
+// Config returns authentication configuration for an Ingress rule
+type Config struct {
 	Type    string `json:"type"`
 	Realm   string `json:"realm"`
 	File    string `json:"file"`
@@ -55,8 +55,8 @@ type BasicDigest struct {
 	FileSHA string `json:"fileSha"`
 }
 
-// Equal tests for equality between two BasicDigest types
-func (bd1 *BasicDigest) Equal(bd2 *BasicDigest) bool {
+// Equal tests for equality between two Config types
+func (bd1 *Config) Equal(bd2 *Config) bool {
 	if bd1 == bd2 {
 		return true
 	}
@@ -140,7 +140,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
-	return &BasicDigest{
+	return &Config{
 		Type:    at,
 		Realm:   realm,
 		File:    passFile,

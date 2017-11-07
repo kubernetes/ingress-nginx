@@ -31,8 +31,8 @@ const (
 	secureVerifyCASecret = "ingress.kubernetes.io/secure-verify-ca-secret"
 )
 
-// Secure describes SSL backend configuration
-type Secure struct {
+// Config describes SSL backend configuration
+type Config struct {
 	Secure bool                 `json:"secure"`
 	CACert resolver.AuthSSLCert `json:"caCert"`
 }
@@ -53,7 +53,7 @@ func NewParser(resolver resolver.AuthCertificate) parser.IngressAnnotation {
 func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
 	s, _ := parser.GetBoolAnnotation(secureUpstream, ing)
 	ca, _ := parser.GetStringAnnotation(secureVerifyCASecret, ing)
-	secure := &Secure{
+	secure := &Config{
 		Secure: s,
 		CACert: resolver.AuthSSLCert{},
 	}
@@ -71,7 +71,7 @@ func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
 	if caCert == nil {
 		return secure, nil
 	}
-	return &Secure{
+	return &Config{
 		Secure: s,
 		CACert: *caCert,
 	}, nil

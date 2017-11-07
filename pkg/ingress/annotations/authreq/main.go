@@ -36,7 +36,7 @@ const (
 )
 
 // External returns external authentication configuration for an Ingress rule
-type External struct {
+type Config struct {
 	URL string `json:"url"`
 	// Host contains the hostname defined in the URL
 	Host            string   `json:"host"`
@@ -45,8 +45,8 @@ type External struct {
 	ResponseHeaders []string `json:"responseHeaders,omitEmpty"`
 }
 
-// Equal tests for equality between two External types
-func (e1 *External) Equal(e2 *External) bool {
+// Equal tests for equality between two Config types
+func (e1 *Config) Equal(e2 *Config) bool {
 	if e1 == e2 {
 		return true
 	}
@@ -116,7 +116,7 @@ func NewParser() parser.IngressAnnotation {
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
-// rule used to use an external URL as source for authentication
+// rule used to use an Config URL as source for authentication
 func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	str, err := parser.GetStringAnnotation(authURL, ing)
 	if err != nil {
@@ -165,7 +165,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}
 	}
 
-	return &External{
+	return &Config{
 		URL:             str,
 		Host:            ur.Hostname(),
 		SigninURL:       signin,

@@ -354,8 +354,8 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 }
 
 // TODO: Needs Unit Tests
-func filterRateLimits(input interface{}) []ratelimit.RateLimit {
-	ratelimits := []ratelimit.RateLimit{}
+func filterRateLimits(input interface{}) []ratelimit.Config {
+	ratelimits := []ratelimit.Config{}
 	found := sets.String{}
 
 	servers, ok := input.([]*ingress.Server)

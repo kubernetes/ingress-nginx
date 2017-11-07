@@ -72,7 +72,7 @@ func TestIngressCorsConfig(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	corst, _ := NewParser().Parse(ing)
-	nginxCors, ok := corst.(*CorsConfig)
+	nginxCors, ok := corst.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
 	}

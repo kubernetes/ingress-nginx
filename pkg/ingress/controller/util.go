@@ -21,16 +21,11 @@ import (
 
 	"github.com/golang/glog"
 
-	"github.com/imdario/mergo"
-
 	api "k8s.io/api/core/v1"
 	"k8s.io/kubernetes/pkg/util/sysctl"
 
 	"k8s.io/ingress-nginx/pkg/ingress"
 )
-
-// DeniedKeyName name of the key that contains the reason to deny a location
-const DeniedKeyName = "Denied"
 
 // newUpstream creates an upstream without servers.
 func newUpstream(name string) *ingress.Backend {
@@ -43,17 +38,6 @@ func newUpstream(name string) *ingress.Backend {
 				Locations: make(map[string][]string),
 			},
 		},
-	}
-}
-
-func mergeLocationAnnotations(loc *ingress.Location, anns map[string]interface{}) {
-	if _, ok := anns[DeniedKeyName]; ok {
-		loc.Denied = anns[DeniedKeyName].(error)
-	}
-	delete(anns, DeniedKeyName)
-	err := mergo.Map(loc, anns)
-	if err != nil {
-		glog.Errorf("unexpected error merging extracted annotations in location type: %v", err)
 	}
 }
 

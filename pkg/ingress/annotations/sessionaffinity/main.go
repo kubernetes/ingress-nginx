@@ -42,24 +42,24 @@ var (
 	affinityCookieHashRegex = regexp.MustCompile(`^(index|md5|sha1)$`)
 )
 
-// AffinityConfig describes the per ingress session affinity config
-type AffinityConfig struct {
+// Config describes the per ingress session affinity config
+type Config struct {
 	// The type of affinity that will be used
-	AffinityType string `json:"type"`
-	CookieConfig
+	Type string `json:"type"`
+	Cookie
 }
 
-// CookieConfig describes the Config of cookie type affinity
-type CookieConfig struct {
+// Cookie describes the Config of cookie type affinity
+type Cookie struct {
 	// The name of the cookie that will be used in case of cookie affinity type.
 	Name string `json:"name"`
 	// The hash that will be used to encode the cookie in case of cookie affinity type
 	Hash string `json:"hash"`
 }
 
-// CookieAffinityParse gets the annotation values related to Cookie Affinity
+// cookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
-func CookieAffinityParse(ing *extensions.Ingress) *CookieConfig {
+func cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 
 	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing)
 
@@ -75,7 +75,7 @@ func CookieAffinityParse(ing *extensions.Ingress) *CookieConfig {
 		sh = defaultAffinityCookieHash
 	}
 
-	return &CookieConfig{
+	return &Cookie{
 		Name: sn,
 		Hash: sh,
 	}
@@ -92,7 +92,7 @@ type affinity struct {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure the affinity directives
 func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
-	cookieAffinityConfig := &CookieConfig{}
+	cookie := &Cookie{}
 	// Check the type of affinity that will be used
 	at, err := parser.GetStringAnnotation(annotationAffinityType, ing)
 	if err != nil {
@@ -101,15 +101,14 @@ func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	switch at {
 	case "cookie":
-		cookieAffinityConfig = CookieAffinityParse(ing)
-
+		cookie = cookieAffinityParse(ing)
 	default:
 		glog.V(3).Infof("No default affinity was found for Ingress %v", ing.Name)
 
 	}
-	return &AffinityConfig{
-		AffinityType: at,
-		CookieConfig: *cookieAffinityConfig,
-	}, nil
 
+	return &Config{
+		Type:   at,
+		Cookie: *cookie,
+	}, nil
 }

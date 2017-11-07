@@ -28,6 +28,11 @@ type IngressLister struct {
 	cache.Store
 }
 
+// IngressAnnotationsLister makes a Store that lists annotations in Ingress rules.
+type IngressAnnotationsLister struct {
+	cache.Store
+}
+
 // SecretLister makes a Store that lists Secrets.
 type SecretLister struct {
 	cache.Store
@@ -93,4 +98,16 @@ func (s *EndpointLister) GetServiceEndpoints(svc *apiv1.Service) (*apiv1.Endpoin
 		}
 	}
 	return nil, fmt.Errorf("could not find endpoints for service: %v", svc.Name)
+}
+
+// SSLCertTracker holds a store of referenced Secrets in Ingress rules
+type SSLCertTracker struct {
+	cache.ThreadSafeStore
+}
+
+// NewSSLCertTracker creates a new SSLCertTracker store
+func NewSSLCertTracker() *SSLCertTracker {
+	return &SSLCertTracker{
+		cache.NewThreadSafeStore(cache.Indexers{}, cache.Indices{}),
+	}
 }
