@@ -29,6 +29,7 @@ import (
 	"github.com/ncabatoff/process-exporter/proc"
 )
 
+// IsRespawnIfRequired checks if error type is exec.ExitError or not
 func IsRespawnIfRequired(err error) bool {
 	exitError, ok := err.(*exec.ExitError)
 	if !ok {
