@@ -25,17 +25,10 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	// external URL that provides the authentication
-	authURL       = "ingress.kubernetes.io/auth-url"
-	authSigninURL = "ingress.kubernetes.io/auth-signin"
-	authMethod    = "ingress.kubernetes.io/auth-method"
-	authHeaders   = "ingress.kubernetes.io/auth-response-headers"
-)
-
-// External returns external authentication configuration for an Ingress rule
+// Config returns external authentication configuration for an Ingress rule
 type Config struct {
 	URL string `json:"url"`
 	// Host contains the hostname defined in the URL
@@ -108,17 +101,18 @@ func validHeader(header string) bool {
 }
 
 type authReq struct {
+	r resolver.Resolver
 }
 
 // NewParser creates a new authentication request annotation parser
-func NewParser() parser.IngressAnnotation {
-	return authReq{}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return authReq{r}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an Config URL as source for authentication
 func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
-	str, err := parser.GetStringAnnotation(authURL, ing)
+	str, err := parser.GetStringAnnotation("auth-url", ing, a.r)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +121,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
 	}
 
-	signin, _ := parser.GetStringAnnotation(authSigninURL, ing)
+	signin, _ := parser.GetStringAnnotation("auth-signin", ing, a.r)
 
 	ur, err := url.Parse(str)
 	if err != nil {
@@ -144,13 +138,13 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("invalid url host")
 	}
 
-	m, _ := parser.GetStringAnnotation(authMethod, ing)
+	m, _ := parser.GetStringAnnotation("auth-method", ing, a.r)
 	if len(m) != 0 && !validMethod(m) {
 		return nil, ing_errors.NewLocationDenied("invalid HTTP method")
 	}
 
 	h := []string{}
-	hstr, _ := parser.GetStringAnnotation(authHeaders, ing)
+	hstr, _ := parser.GetStringAnnotation("auth-response-headers", ing, a.r)
 	if len(hstr) != 0 {
 
 		harr := strings.Split(hstr, ",")

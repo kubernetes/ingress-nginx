@@ -122,6 +122,8 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		sslProxyPort  = flags.Int("ssl-passtrough-proxy-port", 442, `Default port to use internally for SSL when SSL Passthgough is enabled`)
 		defServerPort = flags.Int("default-server-port", 8181, `Default port to use for exposing the default server (catch all)`)
 		healthzPort   = flags.Int("healthz-port", 10254, "port for healthz endpoint.")
+
+		annotationsPrefix = flags.String("annotations-prefix", "nginx.ingress.kubernetes.io", `Prefix of the ingress annotations.`)
 	)
 
 	flag.Set("logtostderr", "true")
@@ -177,6 +179,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	}
 
 	config := &controller.Configuration{
+		AnnotationsPrefix:       *annotationsPrefix,
 		APIServerHost:           *apiserverHost,
 		KubeConfigFile:          *kubeConfigFile,
 		UpdateStatus:            *updateStatus,

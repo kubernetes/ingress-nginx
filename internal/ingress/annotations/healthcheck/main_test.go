@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -63,6 +64,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 type mockBackend struct {
+	resolver.Mock
 }
 
 func (m mockBackend) GetDefaultBackend() defaults.Backend {
@@ -73,7 +75,7 @@ func TestIngressHealthCheck(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[upsMaxFails] = "2"
+	data["nginx/upstream-max-fails"] = "2"
 	ing.SetAnnotations(data)
 
 	hzi, _ := NewParser(mockBackend{}).Parse(ing)

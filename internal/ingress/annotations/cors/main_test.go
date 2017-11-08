@@ -23,6 +23,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -64,14 +65,14 @@ func TestIngressCorsConfig(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[annotationCorsEnabled] = "true"
-	data[annotationCorsAllowHeaders] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
-	data[annotationCorsAllowCredentials] = "false"
-	data[annotationCorsAllowMethods] = "PUT, GET,OPTIONS, PATCH, $nginx_version"
-	data[annotationCorsAllowOrigin] = "https://origin123.test.com:4443"
+	data["nginx/enable-cors"] = "true"
+	data["nginx/cors-allow-headers"] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
+	data["nginx/cors-allow-credentials"] = "false"
+	data["nginx/cors-allow-methods"] = "PUT, GET,OPTIONS, PATCH, $nginx_version"
+	data["nginx/cors-allow-origin"] = "https://origin123.test.com:4443"
 	ing.SetAnnotations(data)
 
-	corst, _ := NewParser().Parse(ing)
+	corst, _ := NewParser(&resolver.Mock{}).Parse(ing)
 	nginxCors, ok := corst.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")

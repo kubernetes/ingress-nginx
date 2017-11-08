@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -64,6 +65,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 type mockBackend struct {
+	resolver.Mock
 	usePortInRedirects bool
 }
 
@@ -90,11 +92,11 @@ func TestPortInRedirect(t *testing.T) {
 
 		data := map[string]string{}
 		if test.usePort != nil {
-			data[annotation] = fmt.Sprintf("%v", *test.usePort)
+			data["nginx/use-port-in-redirects"] = fmt.Sprintf("%v", *test.usePort)
 		}
 		ing.SetAnnotations(data)
 
-		i, err := NewParser(mockBackend{test.def}).Parse(ing)
+		i, err := NewParser(mockBackend{usePortInRedirects: test.def}).Parse(ing)
 		if err != nil {
 			t.Errorf("unexpected error parsing a valid")
 		}

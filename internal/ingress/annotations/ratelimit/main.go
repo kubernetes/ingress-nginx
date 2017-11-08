@@ -30,13 +30,6 @@ import (
 )
 
 const (
-	limitIP        = "ingress.kubernetes.io/limit-connections"
-	limitRPS       = "ingress.kubernetes.io/limit-rps"
-	limitRPM       = "ingress.kubernetes.io/limit-rpm"
-	limitRATE      = "ingress.kubernetes.io/limit-rate"
-	limitRATEAFTER = "ingress.kubernetes.io/limit-rate-after"
-	limitWhitelist = "ingress.kubernetes.io/limit-whitelist"
-
 	// allow 5 times the specified limit as burst
 	defBurst = 5
 
@@ -152,32 +145,32 @@ func (z1 *Zone) Equal(z2 *Zone) bool {
 }
 
 type ratelimit struct {
-	backendResolver resolver.DefaultBackend
+	r resolver.Resolver
 }
 
 // NewParser creates a new ratelimit annotation parser
-func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
-	return ratelimit{br}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return ratelimit{r}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
-	defBackend := a.backendResolver.GetDefaultBackend()
-	lr, err := parser.GetIntAnnotation(limitRATE, ing)
+	defBackend := a.r.GetDefaultBackend()
+	lr, err := parser.GetIntAnnotation("limit-rate", ing, a.r)
 	if err != nil {
 		lr = defBackend.LimitRate
 	}
-	lra, err := parser.GetIntAnnotation(limitRATEAFTER, ing)
+	lra, err := parser.GetIntAnnotation("limit-rate-after", ing, a.r)
 	if err != nil {
 		lra = defBackend.LimitRateAfter
 	}
 
-	rpm, _ := parser.GetIntAnnotation(limitRPM, ing)
-	rps, _ := parser.GetIntAnnotation(limitRPS, ing)
-	conn, _ := parser.GetIntAnnotation(limitIP, ing)
+	rpm, _ := parser.GetIntAnnotation("limit-rpm", ing, a.r)
+	rps, _ := parser.GetIntAnnotation("limit-rps", ing, a.r)
+	conn, _ := parser.GetIntAnnotation("limit-connections", ing, a.r)
 
-	val, _ := parser.GetStringAnnotation(limitWhitelist, ing)
+	val, _ := parser.GetStringAnnotation("limit-whitelist", ing, a.r)
 
 	cidrs, err := parseCIDRs(val)
 	if err != nil {

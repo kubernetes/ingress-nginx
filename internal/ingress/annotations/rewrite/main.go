@@ -23,15 +23,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	rewriteTo        = "ingress.kubernetes.io/rewrite-target"
-	addBaseURL       = "ingress.kubernetes.io/add-base-url"
-	baseURLScheme    = "ingress.kubernetes.io/base-url-scheme"
-	sslRedirect      = "ingress.kubernetes.io/ssl-redirect"
-	forceSSLRedirect = "ingress.kubernetes.io/force-ssl-redirect"
-	appRoot          = "ingress.kubernetes.io/app-root"
-)
-
 // Config describes the per location redirect config
 type Config struct {
 	// Target URI where the traffic must be redirected
@@ -80,29 +71,30 @@ func (r1 *Config) Equal(r2 *Config) bool {
 }
 
 type rewrite struct {
-	backendResolver resolver.DefaultBackend
+	r resolver.Resolver
 }
 
 // NewParser creates a new reqrite annotation parser
-func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
-	return rewrite{br}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return rewrite{r}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
-	rt, _ := parser.GetStringAnnotation(rewriteTo, ing)
-	sslRe, err := parser.GetBoolAnnotation(sslRedirect, ing)
+	rt, _ := parser.GetStringAnnotation("rewrite-target", ing, a.r)
+	sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing, a.r)
 	if err != nil {
-		sslRe = a.backendResolver.GetDefaultBackend().SSLRedirect
+		sslRe = a.r.GetDefaultBackend().SSLRedirect
 	}
-	fSslRe, err := parser.GetBoolAnnotation(forceSSLRedirect, ing)
+	fSslRe, err := parser.GetBoolAnnotation("force-ssl-redirect", ing, a.r)
 	if err != nil {
-		fSslRe = a.backendResolver.GetDefaultBackend().ForceSSLRedirect
+		fSslRe = a.r.GetDefaultBackend().ForceSSLRedirect
 	}
-	abu, _ := parser.GetBoolAnnotation(addBaseURL, ing)
-	bus, _ := parser.GetStringAnnotation(baseURLScheme, ing)
-	ar, _ := parser.GetStringAnnotation(appRoot, ing)
+	abu, _ := parser.GetBoolAnnotation("add-base-url", ing, a.r)
+	bus, _ := parser.GetStringAnnotation("base-url-scheme", ing, a.r)
+	ar, _ := parser.GetStringAnnotation("app-root", ing, a.r)
+
 	return &Config{
 		Target:           rt,
 		AddBaseURL:       abu,

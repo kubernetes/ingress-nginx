@@ -54,13 +54,6 @@ import (
 // DeniedKeyName name of the key that contains the reason to deny a location
 const DeniedKeyName = "Denied"
 
-type config interface {
-	resolver.AuthCertificate
-	resolver.DefaultBackend
-	resolver.Secret
-	resolver.Service
-}
-
 // Ingress defines the valid annotations present in one NGINX Ingress rule
 type Ingress struct {
 	metav1.ObjectMeta
@@ -91,37 +84,35 @@ type Ingress struct {
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
 type Extractor struct {
-	secretResolver resolver.Secret
-	annotations    map[string]parser.IngressAnnotation
+	annotations map[string]parser.IngressAnnotation
 }
 
 // NewAnnotationExtractor creates a new annotations extractor
-func NewAnnotationExtractor(cfg config) Extractor {
+func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 	return Extractor{
-		cfg,
 		map[string]parser.IngressAnnotation{
-			"Alias":                alias.NewParser(),
+			"Alias":                alias.NewParser(cfg),
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),
-			"ClientBodyBufferSize": clientbodybuffersize.NewParser(),
-			"ConfigurationSnippet": snippet.NewParser(),
-			"CorsConfig":           cors.NewParser(),
+			"ClientBodyBufferSize": clientbodybuffersize.NewParser(cfg),
+			"ConfigurationSnippet": snippet.NewParser(cfg),
+			"CorsConfig":           cors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
-			"ExternalAuth":         authreq.NewParser(),
+			"ExternalAuth":         authreq.NewParser(cfg),
 			"HealthCheck":          healthcheck.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
-			"Redirect":             redirect.NewParser(),
+			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
-			"ServerSnippet":        serversnippet.NewParser(),
-			"ServiceUpstream":      serviceupstream.NewParser(),
-			"SessionAffinity":      sessionaffinity.NewParser(),
-			"SSLPassthrough":       sslpassthrough.NewParser(),
+			"ServerSnippet":        serversnippet.NewParser(cfg),
+			"ServiceUpstream":      serviceupstream.NewParser(cfg),
+			"SessionAffinity":      sessionaffinity.NewParser(cfg),
+			"SSLPassthrough":       sslpassthrough.NewParser(cfg),
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),
-			"UpstreamHashBy":       upstreamhashby.NewParser(),
-			"UpstreamVhost":        upstreamvhost.NewParser(),
-			"VtsFilterKey":         vtsfilterkey.NewParser(),
+			"UpstreamHashBy":       upstreamhashby.NewParser(cfg),
+			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
+			"VtsFilterKey":         vtsfilterkey.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 		},
 	}

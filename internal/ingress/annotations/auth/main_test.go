@@ -29,6 +29,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -67,6 +68,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 type mockSecret struct {
+	resolver.Mock
 }
 
 func (m mockSecret) GetSecret(name string) (*api.Secret, error) {
@@ -87,7 +89,7 @@ func TestIngressWithoutAuth(t *testing.T) {
 	ing := buildIngress()
 	_, dir, _ := dummySecretContent(t)
 	defer os.RemoveAll(dir)
-	_, err := NewParser(dir, mockSecret{}).Parse(ing)
+	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
 	}
@@ -97,15 +99,15 @@ func TestIngressAuth(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[authType] = "basic"
-	data[authSecret] = "demo-secret"
-	data[authRealm] = "-realm-"
+	data["nginx/auth-type"] = "basic"
+	data["nginx/auth-secret"] = "demo-secret"
+	data["nginx/auth-realm"] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
 	defer os.RemoveAll(dir)
 
-	i, err := NewParser(dir, mockSecret{}).Parse(ing)
+	i, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err != nil {
 		t.Errorf("Uxpected error with ingress: %v", err)
 	}
@@ -128,9 +130,9 @@ func TestIngressAuthWithoutSecret(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[authType] = "basic"
-	data[authSecret] = "invalid-secret"
-	data[authRealm] = "-realm-"
+	data["nginx/auth-type"] = "basic"
+	data["nginx/auth-secret"] = "invalid-secret"
+	data["nginx/auth-realm"] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)

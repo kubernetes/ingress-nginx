@@ -24,17 +24,20 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 const (
-	annotationAffinityType = "ingress.kubernetes.io/affinity"
+	annotationAffinityType = "affinity"
 	// If a cookie with this name exists,
 	// its value is used as an index into the list of available backends.
-	annotationAffinityCookieName = "ingress.kubernetes.io/session-cookie-name"
-	defaultAffinityCookieName    = "INGRESSCOOKIE"
+	annotationAffinityCookieName = "session-cookie-name"
+
+	defaultAffinityCookieName = "INGRESSCOOKIE"
+
 	// This is the algorithm used by nginx to generate a value for the session cookie, if
 	// one isn't supplied and affinity is set to "cookie".
-	annotationAffinityCookieHash = "ingress.kubernetes.io/session-cookie-hash"
+	annotationAffinityCookieHash = "session-cookie-hash"
 	defaultAffinityCookieHash    = "md5"
 )
 
@@ -59,16 +62,15 @@ type Cookie struct {
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
-func cookieAffinityParse(ing *extensions.Ingress) *Cookie {
-
-	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing)
+func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
+	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing, a.r)
 
 	if err != nil || sn == "" {
 		glog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
 		sn = defaultAffinityCookieName
 	}
 
-	sh, err := parser.GetStringAnnotation(annotationAffinityCookieHash, ing)
+	sh, err := parser.GetStringAnnotation(annotationAffinityCookieHash, ing, a.r)
 
 	if err != nil || !affinityCookieHashRegex.MatchString(sh) {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Setting it to default %v", ing.Name, annotationAffinityCookieHash, defaultAffinityCookieHash)
@@ -82,11 +84,12 @@ func cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 }
 
 // NewParser creates a new Affinity annotation parser
-func NewParser() parser.IngressAnnotation {
-	return affinity{}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return affinity{r}
 }
 
 type affinity struct {
+	r resolver.Resolver
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
@@ -94,14 +97,14 @@ type affinity struct {
 func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
 	cookie := &Cookie{}
 	// Check the type of affinity that will be used
-	at, err := parser.GetStringAnnotation(annotationAffinityType, ing)
+	at, err := parser.GetStringAnnotation(annotationAffinityType, ing, a.r)
 	if err != nil {
 		at = ""
 	}
 
 	switch at {
 	case "cookie":
-		cookie = cookieAffinityParse(ing)
+		cookie = a.cookieAffinityParse(ing)
 	default:
 		glog.V(3).Infof("No default affinity was found for Ingress %v", ing.Name)
 

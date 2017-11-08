@@ -22,10 +22,13 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const annotation = "nginx/server-alias"
+
 func TestParse(t *testing.T) {
-	ap := NewParser()
+	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
 		t.Fatalf("expected a parser.IngressAnnotation but returned nil")
 	}

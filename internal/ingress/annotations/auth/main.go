@@ -33,12 +33,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	authType   = "ingress.kubernetes.io/auth-type"
-	authSecret = "ingress.kubernetes.io/auth-secret"
-	authRealm  = "ingress.kubernetes.io/auth-realm"
-)
-
 var (
 	authTypeRegex = regexp.MustCompile(`basic|digest`)
 	// AuthDirectory default directory used to store files
@@ -83,12 +77,12 @@ func (bd1 *Config) Equal(bd2 *Config) bool {
 }
 
 type auth struct {
-	secretResolver resolver.Secret
-	authDirectory  string
+	r             resolver.Resolver
+	authDirectory string
 }
 
 // NewParser creates a new authentication annotation parser
-func NewParser(authDirectory string, sr resolver.Secret) parser.IngressAnnotation {
+func NewParser(authDirectory string, r resolver.Resolver) parser.IngressAnnotation {
 	os.MkdirAll(authDirectory, 0755)
 
 	currPath := authDirectory
@@ -100,7 +94,7 @@ func NewParser(authDirectory string, sr resolver.Secret) parser.IngressAnnotatio
 		}
 	}
 
-	return auth{sr, authDirectory}
+	return auth{r, authDirectory}
 }
 
 // Parse parses the annotations contained in the ingress
@@ -108,7 +102,7 @@ func NewParser(authDirectory string, sr resolver.Secret) parser.IngressAnnotatio
 // and generated an htpasswd compatible file to be used as source
 // during the authentication process
 func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
-	at, err := parser.GetStringAnnotation(authType, ing)
+	at, err := parser.GetStringAnnotation("auth-type", ing, a.r)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +111,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("invalid authentication type")
 	}
 
-	s, err := parser.GetStringAnnotation(authSecret, ing)
+	s, err := parser.GetStringAnnotation("auth-secret", ing, a.r)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "error reading secret name from annotation"),
@@ -125,14 +119,14 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	name := fmt.Sprintf("%v/%v", ing.Namespace, s)
-	secret, err := a.secretResolver.GetSecret(name)
+	secret, err := a.r.GetSecret(name)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
 			Reason: errors.Wrapf(err, "unexpected error reading secret %v", name),
 		}
 	}
 
-	realm, _ := parser.GetStringAnnotation(authRealm, ing)
+	realm, _ := parser.GetStringAnnotation("auth-realm", ing, a.r)
 
 	passFile := fmt.Sprintf("%v/%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.GetName())
 	err = dumpSecret(passFile, secret)

@@ -20,23 +20,21 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-)
-
-const (
-	annotation = "ingress.kubernetes.io/vts-filter-key"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 type vtsFilterKey struct {
+	r resolver.Resolver
 }
 
 // NewParser creates a new vts filter key annotation parser
-func NewParser() parser.IngressAnnotation {
-	return vtsFilterKey{}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return vtsFilterKey{r}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to indicate if the location/s contains a fragment of
 // configuration to be included inside the paths of the rules
 func (a vtsFilterKey) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation(annotation, ing)
+	return parser.GetStringAnnotation("vts-filter-key", ing, a.r)
 }

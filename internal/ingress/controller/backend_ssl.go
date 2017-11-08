@@ -92,7 +92,7 @@ func (ic *NGINXController) getPemCertificate(secretName string) (*ingress.SSLCer
 		}
 
 		// If 'ca.crt' is also present, it will allow this secret to be used in the
-		// 'ingress.kubernetes.io/auth-tls-secret' annotation
+		// 'nginx.ingress.kubernetes.io/auth-tls-secret' annotation
 		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating pem file: %v", err)
@@ -145,7 +145,7 @@ func (ic *NGINXController) checkMissingSecrets() {
 			}
 		}
 
-		key, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+		key, _ := parser.GetStringAnnotation("auth-tls-secret", ing, ic)
 		if key == "" {
 			continue
 		}

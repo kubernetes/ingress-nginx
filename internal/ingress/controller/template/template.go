@@ -193,7 +193,7 @@ func buildResolvers(input interface{}) string {
 }
 
 // buildLocation produces the location string, if the ingress has redirects
-// (specified through the ingress.kubernetes.io/rewrite-to annotation)
+// (specified through the nginx.ingress.kubernetes.io/rewrite-to annotation)
 func buildLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -268,8 +268,8 @@ func buildLogFormatUpstream(input interface{}) string {
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
-// (specified through the ingress.kubernetes.io/rewrite-to annotation)
-// If the annotation ingress.kubernetes.io/add-base-url:"true" is specified it will
+// (specified through the nginx.ingress.kubernetes.io/rewrite-to annotation)
+// If the annotation nginx.ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
 func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	backends, ok := b.([]*ingress.Backend)

@@ -29,13 +29,8 @@ import (
 )
 
 const (
-	// name of the secret
-	annotationAuthTLSSecret    = "ingress.kubernetes.io/auth-tls-secret"
-	annotationAuthVerifyClient = "ingress.kubernetes.io/auth-tls-verify-client"
-	annotationAuthTLSDepth     = "ingress.kubernetes.io/auth-tls-verify-depth"
-	annotationAuthTLSErrorPage = "ingress.kubernetes.io/auth-tls-error-page"
-	defaultAuthTLSDepth        = 1
-	defaultAuthVerifyClient    = "on"
+	defaultAuthTLSDepth     = 1
+	defaultAuthVerifyClient = "on"
 )
 
 var (
@@ -75,19 +70,19 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 }
 
 // NewParser creates a new TLS authentication annotation parser
-func NewParser(resolver resolver.AuthCertificate) parser.IngressAnnotation {
+func NewParser(resolver resolver.Resolver) parser.IngressAnnotation {
 	return authTLS{resolver}
 }
 
 type authTLS struct {
-	certResolver resolver.AuthCertificate
+	r resolver.Resolver
 }
 
 // Parse parses the annotations contained in the ingress
 // rule used to use a Certificate as authentication method
 func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 
-	tlsauthsecret, err := parser.GetStringAnnotation(annotationAuthTLSSecret, ing)
+	tlsauthsecret, err := parser.GetStringAnnotation(a.r.GetAnnotationWithPrefix("auth-tls-secret"), ing, a.r)
 	if err != nil {
 		return &Config{}, err
 	}
@@ -101,24 +96,24 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return &Config{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
-	tlsVerifyClient, err := parser.GetStringAnnotation(annotationAuthVerifyClient, ing)
+	tlsVerifyClient, err := parser.GetStringAnnotation("auth-tls-verify-client", ing, a.r)
 	if err != nil || !authVerifyClientRegex.MatchString(tlsVerifyClient) {
 		tlsVerifyClient = defaultAuthVerifyClient
 	}
 
-	tlsdepth, err := parser.GetIntAnnotation(annotationAuthTLSDepth, ing)
+	tlsdepth, err := parser.GetIntAnnotation("auth-tls-verify-depth", ing, a.r)
 	if err != nil || tlsdepth == 0 {
 		tlsdepth = defaultAuthTLSDepth
 	}
 
-	authCert, err := a.certResolver.GetAuthCertificate(tlsauthsecret)
+	authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
 	if err != nil {
 		return &Config{}, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "error obtaining certificate"),
 		}
 	}
 
-	errorpage, err := parser.GetStringAnnotation(annotationAuthTLSErrorPage, ing)
+	errorpage, err := parser.GetStringAnnotation("auth-tls-error-page", ing, a.r)
 	if err != nil || errorpage == "" {
 		errorpage = ""
 	}

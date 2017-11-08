@@ -25,6 +25,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -63,6 +64,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 type mockBackend struct {
+	resolver.Mock
 }
 
 func (m mockBackend) GetDefaultBackend() defaults.Backend {
@@ -84,9 +86,9 @@ func TestBadRateLimiting(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[limitIP] = "0"
-	data[limitRPS] = "0"
-	data[limitRPM] = "0"
+	data["nginx/limit-connections"] = "0"
+	data["nginx/limit-rps"] = "0"
+	data["nginx/limit-rpm"] = "0"
 	ing.SetAnnotations(data)
 
 	_, err := NewParser(mockBackend{}).Parse(ing)
@@ -95,11 +97,11 @@ func TestBadRateLimiting(t *testing.T) {
 	}
 
 	data = map[string]string{}
-	data[limitIP] = "5"
-	data[limitRPS] = "100"
-	data[limitRPM] = "10"
-	data[limitRATEAFTER] = "100"
-	data[limitRATE] = "10"
+	data["nginx/limit-connections"] = "5"
+	data["nginx/limit-rps"] = "100"
+	data["nginx/limit-rpm"] = "10"
+	data["nginx/limit-rate-after"] = "100"
+	data["nginx/limit-rate"] = "10"
 
 	ing.SetAnnotations(data)
 

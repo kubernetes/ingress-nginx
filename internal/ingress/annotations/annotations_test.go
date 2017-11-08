@@ -29,25 +29,26 @@ import (
 )
 
 const (
-	annotationSecureUpstream       = "ingress.kubernetes.io/secure-backends"
-	annotationSecureVerifyCACert   = "ingress.kubernetes.io/secure-verify-ca-secret"
-	annotationUpsMaxFails          = "ingress.kubernetes.io/upstream-max-fails"
-	annotationUpsFailTimeout       = "ingress.kubernetes.io/upstream-fail-timeout"
-	annotationPassthrough          = "ingress.kubernetes.io/ssl-passthrough"
-	annotationAffinityType         = "ingress.kubernetes.io/affinity"
-	annotationCorsEnabled          = "ingress.kubernetes.io/enable-cors"
-	annotationCorsAllowOrigin      = "ingress.kubernetes.io/cors-allow-origin"
-	annotationCorsAllowMethods     = "ingress.kubernetes.io/cors-allow-methods"
-	annotationCorsAllowHeaders     = "ingress.kubernetes.io/cors-allow-headers"
-	annotationCorsAllowCredentials = "ingress.kubernetes.io/cors-allow-credentials"
+	annotationSecureUpstream       = "nginx/secure-backends"
+	annotationSecureVerifyCACert   = "nginx/secure-verify-ca-secret"
+	annotationUpsMaxFails          = "nginx/upstream-max-fails"
+	annotationUpsFailTimeout       = "nginx/upstream-fail-timeout"
+	annotationPassthrough          = "nginx/ssl-passthrough"
+	annotationAffinityType         = "nginx/affinity"
+	annotationCorsEnabled          = "nginx/enable-cors"
+	annotationCorsAllowOrigin      = "nginx/cors-allow-origin"
+	annotationCorsAllowMethods     = "nginx/cors-allow-methods"
+	annotationCorsAllowHeaders     = "nginx/cors-allow-headers"
+	annotationCorsAllowCredentials = "nginx/cors-allow-credentials"
 	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
-	annotationAffinityCookieName   = "ingress.kubernetes.io/session-cookie-name"
-	annotationAffinityCookieHash   = "ingress.kubernetes.io/session-cookie-hash"
-	annotationUpstreamHashBy       = "ingress.kubernetes.io/upstream-hash-by"
+	annotationAffinityCookieName   = "nginx/session-cookie-name"
+	annotationAffinityCookieHash   = "nginx/session-cookie-hash"
+	annotationUpstreamHashBy       = "nginx/upstream-hash-by"
 )
 
 type mockCfg struct {
+	resolver.Mock
 	MockSecrets  map[string]*apiv1.Secret
 	MockServices map[string]*apiv1.Service
 }
