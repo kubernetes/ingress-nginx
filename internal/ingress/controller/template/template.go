@@ -17,7 +17,6 @@ limitations under the License.
 package template
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -52,7 +51,7 @@ const (
 type Template struct {
 	tmpl *text_template.Template
 	fw   watch.FileWatcher
-	s    int
+	bp   *BufferPool
 }
 
 //NewTemplate returns a new Template instance or an
@@ -70,7 +69,7 @@ func NewTemplate(file string, onChange func()) (*Template, error) {
 	return &Template{
 		tmpl: tmpl,
 		fw:   fw,
-		s:    defBufferSize,
+		bp:   NewBufferPool(defBufferSize),
 	}, nil
 }
 
@@ -82,15 +81,11 @@ func (t *Template) Close() {
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
 func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
-	tmplBuf := bytes.NewBuffer(make([]byte, 0, t.s))
-	outCmdBuf := bytes.NewBuffer(make([]byte, 0, t.s))
+	tmplBuf := t.bp.Get()
+	defer t.bp.Put(tmplBuf)
 
-	defer func() {
-		if t.s < tmplBuf.Cap() {
-			glog.V(2).Infof("adjusting template buffer size from %v to %v", t.s, tmplBuf.Cap())
-			t.s = tmplBuf.Cap()
-		}
-	}()
+	outCmdBuf := t.bp.Get()
+	defer t.bp.Put(outCmdBuf)
 
 	if glog.V(3) {
 		b, err := json.Marshal(conf)
@@ -115,9 +110,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 		return tmplBuf.Bytes(), nil
 	}
 
-	a := make([]byte, outCmdBuf.Len())
-	copy(a, outCmdBuf.Bytes())
-	return a, nil
+	return outCmdBuf.Bytes(), nil
 }
 
 var (
