@@ -64,6 +64,7 @@ type Ingress struct {
 	ConfigurationSnippet string
 	CorsConfig           cors.Config
 	DefaultBackend       string
+	Denied               error
 	ExternalAuth         authreq.Config
 	HealthCheck          healthcheck.Config
 	Proxy                proxy.Config
