@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 const (
@@ -67,6 +68,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 type mockBackend struct {
+	resolver.Mock
 	redirect bool
 }
 
@@ -86,7 +88,7 @@ func TestRedirect(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[rewriteTo] = defRoute
+	data["nginx/rewrite-target"] = defRoute
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -106,10 +108,10 @@ func TestSSLRedirect(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[rewriteTo] = defRoute
+	data["nginx/rewrite-target"] = defRoute
 	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{true}).Parse(ing)
+	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
 	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
@@ -118,10 +120,10 @@ func TestSSLRedirect(t *testing.T) {
 		t.Errorf("Expected true but returned false")
 	}
 
-	data[sslRedirect] = "false"
+	data["nginx/ssl-redirect"] = "false"
 	ing.SetAnnotations(data)
 
-	i, _ = NewParser(mockBackend{false}).Parse(ing)
+	i, _ = NewParser(mockBackend{redirect: false}).Parse(ing)
 	redirect, ok = i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
@@ -135,10 +137,10 @@ func TestForceSSLRedirect(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[rewriteTo] = defRoute
+	data["nginx/rewrite-target"] = defRoute
 	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{true}).Parse(ing)
+	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
 	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
@@ -147,10 +149,10 @@ func TestForceSSLRedirect(t *testing.T) {
 		t.Errorf("Expected false but returned true")
 	}
 
-	data[forceSSLRedirect] = "true"
+	data["nginx/force-ssl-redirect"] = "true"
 	ing.SetAnnotations(data)
 
-	i, _ = NewParser(mockBackend{false}).Parse(ing)
+	i, _ = NewParser(mockBackend{redirect: false}).Parse(ing)
 	redirect, ok = i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
@@ -163,10 +165,10 @@ func TestAppRoot(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[appRoot] = "/app1"
+	data["nginx/app-root"] = "/app1"
 	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{true}).Parse(ing)
+	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
 	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a App Context")

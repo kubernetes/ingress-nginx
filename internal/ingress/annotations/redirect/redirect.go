@@ -25,12 +25,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
-)
-
-const (
-	permanent = "ingress.kubernetes.io/permanent-redirect"
-	temporal  = "ingress.kubernetes.io/temporal-redirect"
-	www       = "ingress.kubernetes.io/from-to-www-redirect"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 // Config returns the redirect configuration for an Ingress rule
@@ -40,11 +35,13 @@ type Config struct {
 	FromToWWW bool   `json:"fromToWWW"`
 }
 
-type redirect struct{}
+type redirect struct {
+	r resolver.Resolver
+}
 
 // NewParser creates a new redirect annotation parser
-func NewParser() parser.IngressAnnotation {
-	return redirect{}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return redirect{r}
 }
 
 // Parse parses the annotations contained in the ingress
@@ -52,9 +49,9 @@ func NewParser() parser.IngressAnnotation {
 // If the Ingress contains both annotations the execution order is
 // temporal and then permanent
 func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
-	r3w, _ := parser.GetBoolAnnotation(www, ing)
+	r3w, _ := parser.GetBoolAnnotation("from-to-www-redirect", ing, a.r)
 
-	tr, err := parser.GetStringAnnotation(temporal, ing)
+	tr, err := parser.GetStringAnnotation("temporal-redirect", ing, a.r)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}
@@ -71,7 +68,7 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}, nil
 	}
 
-	pr, err := parser.GetStringAnnotation(permanent, ing)
+	pr, err := parser.GetStringAnnotation("permanent-redirect", ing, a.r)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}

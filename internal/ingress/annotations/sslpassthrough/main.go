@@ -21,18 +21,16 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
-)
-
-const (
-	passthrough = "ingress.kubernetes.io/ssl-passthrough"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 type sslpt struct {
+	r resolver.Resolver
 }
 
 // NewParser creates a new SSL passthrough annotation parser
-func NewParser() parser.IngressAnnotation {
-	return sslpt{}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return sslpt{r}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
@@ -42,5 +40,5 @@ func (a sslpt) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return false, ing_errors.ErrMissingAnnotations
 	}
 
-	return parser.GetBoolAnnotation(passthrough, ing)
+	return parser.GetBoolAnnotation("ssl-passthrough", ing, a.r)
 }

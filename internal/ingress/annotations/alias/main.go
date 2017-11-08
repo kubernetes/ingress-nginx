@@ -20,22 +20,20 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-)
-
-const (
-	annotation = "ingress.kubernetes.io/server-alias"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 type alias struct {
+	r resolver.Resolver
 }
 
 // NewParser creates a new Alias annotation parser
-func NewParser() parser.IngressAnnotation {
-	return alias{}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return alias{r}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to add an alias to the provided hosts
 func (a alias) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation(annotation, ing)
+	return parser.GetStringAnnotation("server-alias", ing, a.r)
 }

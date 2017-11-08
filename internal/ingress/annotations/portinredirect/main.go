@@ -23,25 +23,21 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	annotation = "ingress.kubernetes.io/use-port-in-redirects"
-)
-
 type portInRedirect struct {
-	backendResolver resolver.DefaultBackend
+	r resolver.Resolver
 }
 
 // NewParser creates a new port in redirect annotation parser
-func NewParser(db resolver.DefaultBackend) parser.IngressAnnotation {
-	return portInRedirect{db}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return portInRedirect{r}
 }
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the redirects must
 func (a portInRedirect) Parse(ing *extensions.Ingress) (interface{}, error) {
-	up, err := parser.GetBoolAnnotation(annotation, ing)
+	up, err := parser.GetBoolAnnotation("use-port-in-redirects", ing, a.r)
 	if err != nil {
-		return a.backendResolver.GetDefaultBackend().UsePortInRedirects, nil
+		return a.r.GetDefaultBackend().UsePortInRedirects, nil
 	}
 
 	return up, nil

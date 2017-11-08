@@ -17,12 +17,14 @@ limitations under the License.
 package sessionaffinity
 
 import (
+	"fmt"
 	"testing"
 
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -64,12 +66,12 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[annotationAffinityType] = "cookie"
-	data[annotationAffinityCookieHash] = "sha123"
-	data[annotationAffinityCookieName] = "INGRESSCOOKIE"
+	data[fmt.Sprintf("nginx/%v", annotationAffinityType)] = "cookie"
+	data[fmt.Sprintf("nginx/%v", annotationAffinityCookieHash)] = "sha123"
+	data[fmt.Sprintf("nginx/%v", annotationAffinityCookieName)] = "INGRESSCOOKIE"
 	ing.SetAnnotations(data)
 
-	affin, _ := NewParser().Parse(ing)
+	affin, _ := NewParser(&resolver.Mock{}).Parse(ing)
 	nginxAffinity, ok := affin.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")

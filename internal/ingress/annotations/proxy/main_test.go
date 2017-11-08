@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -63,6 +64,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 type mockBackend struct {
+	resolver.Mock
 }
 
 func (m mockBackend) GetDefaultBackend() defaults.Backend {
@@ -83,14 +85,14 @@ func TestProxy(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[connect] = "1"
-	data[send] = "2"
-	data[read] = "3"
-	data[bufferSize] = "1k"
-	data[bodySize] = "2k"
-	data[nextUpstream] = "off"
-	data[passParams] = "smax=5 max=10"
-	data[requestBuffering] = "off"
+	data["nginx/proxy-connect-timeout"] = "1"
+	data["nginx/proxy-send-timeout"] = "2"
+	data["nginx/proxy-read-timeout"] = "3"
+	data["nginx/proxy-buffer-size"] = "1k"
+	data["nginx/proxy-body-size"] = "2k"
+	data["nginx/proxy-next-upstream"] = "off"
+	data["nginx/proxy-pass-params"] = "smax=5 max=10"
+	data["nginx/proxy-request-buffering"] = "off"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
