@@ -66,6 +66,8 @@ func init() {
 
 // Configuration contains all the settings required by an Ingress controller
 type Configuration struct {
+	AnnotationsPrefix string
+
 	APIServerHost  string
 	KubeConfigFile string
 	Client         clientset.Interface
@@ -131,6 +133,11 @@ func (n NGINXController) GetSecret(name string) (*apiv1.Secret, error) {
 // GetService searches for a service in the local secrets Store
 func (n NGINXController) GetService(name string) (*apiv1.Service, error) {
 	return n.listers.Service.GetByName(name)
+}
+
+// GetAnnotationWithPrefix returns the prefix of ingress annotations
+func (n NGINXController) GetAnnotationWithPrefix(suffix string) string {
+	return fmt.Sprintf("%v/%v", n.cfg.AnnotationsPrefix, suffix)
 }
 
 // sync collects all the pieces required to assemble the configuration file and
@@ -1156,7 +1163,7 @@ func (n *NGINXController) readSecrets(ing *extensions.Ingress) {
 		n.syncSecret(key)
 	}
 
-	key, _ := parser.GetStringAnnotation("ingress.kubernetes.io/auth-tls-secret", ing)
+	key, _ := parser.GetStringAnnotation("auth-tls-secret", ing, n)
 	if key == "" {
 		return
 	}

@@ -23,8 +23,8 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -62,14 +62,6 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
-type mockBackend struct {
-	defaults.Backend
-}
-
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return m.Backend
-}
-
 func TestParseAnnotations(t *testing.T) {
 	ing := buildIngress()
 	tests := map[string]struct {
@@ -102,9 +94,9 @@ func TestParseAnnotations(t *testing.T) {
 
 	for testName, test := range tests {
 		data := map[string]string{}
-		data[whitelist] = test.net
+		data["nginx/whitelist-source-range"] = test.net
 		ing.SetAnnotations(data)
-		p := NewParser(mockBackend{})
+		p := NewParser(&resolver.Mock{})
 		i, err := p.Parse(ing)
 		if err != nil && !test.expectErr {
 			t.Errorf("%v:unexpected error: %v", testName, err)
@@ -126,12 +118,24 @@ func TestParseAnnotations(t *testing.T) {
 	}
 }
 
+type mockBackend struct {
+	resolver.Mock
+}
+
+// GetDefaultBackend returns the backend that must be used as default
+func (m mockBackend) GetDefaultBackend() defaults.Backend {
+	return defaults.Backend{
+		WhitelistSourceRange: []string{"4.4.4.0/24", "1.2.3.4/32"},
+	}
+}
+
 // Test that when we have a whitelist set on the Backend that is used when we
 // don't have the annotation
 func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 	ing := buildIngress()
+
 	mockBackend := mockBackend{}
-	mockBackend.Backend.WhitelistSourceRange = []string{"4.4.4.0/24", "1.2.3.4/32"}
+
 	tests := map[string]struct {
 		net        string
 		expectCidr []string
@@ -162,7 +166,7 @@ func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 
 	for testName, test := range tests {
 		data := map[string]string{}
-		data[whitelist] = test.net
+		data["nginx/whitelist-source-range"] = test.net
 		ing.SetAnnotations(data)
 		p := NewParser(mockBackend)
 		i, err := p.Parse(ing)

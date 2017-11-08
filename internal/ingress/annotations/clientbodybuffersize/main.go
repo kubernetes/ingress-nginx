@@ -20,22 +20,20 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-)
-
-const (
-	annotation = "ingress.kubernetes.io/client-body-buffer-size"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 type clientBodyBufferSize struct {
+	r resolver.Resolver
 }
 
 // NewParser creates a new clientBodyBufferSize annotation parser
-func NewParser() parser.IngressAnnotation {
-	return clientBodyBufferSize{}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return clientBodyBufferSize{r}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to add an client-body-buffer-size to the provided locations
-func (a clientBodyBufferSize) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation(annotation, ing)
+func (cbbs clientBodyBufferSize) Parse(ing *extensions.Ingress) (interface{}, error) {
+	return parser.GetStringAnnotation("client-body-buffer-size", ing, cbbs.r)
 }

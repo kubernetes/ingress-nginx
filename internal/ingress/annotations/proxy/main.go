@@ -23,19 +23,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	bodySize         = "ingress.kubernetes.io/proxy-body-size"
-	connect          = "ingress.kubernetes.io/proxy-connect-timeout"
-	send             = "ingress.kubernetes.io/proxy-send-timeout"
-	read             = "ingress.kubernetes.io/proxy-read-timeout"
-	bufferSize       = "ingress.kubernetes.io/proxy-buffer-size"
-	cookiePath       = "ingress.kubernetes.io/proxy-cookie-path"
-	cookieDomain     = "ingress.kubernetes.io/proxy-cookie-domain"
-	nextUpstream     = "ingress.kubernetes.io/proxy-next-upstream"
-	passParams       = "ingress.kubernetes.io/proxy-pass-params"
-	requestBuffering = "ingress.kubernetes.io/proxy-request-buffering"
-)
-
 // Config returns the proxy timeout to use in the upstream server/s
 type Config struct {
 	BodySize         string `json:"bodySize"`
@@ -94,64 +81,64 @@ func (l1 *Config) Equal(l2 *Config) bool {
 }
 
 type proxy struct {
-	backendResolver resolver.DefaultBackend
+	r resolver.Resolver
 }
 
 // NewParser creates a new reverse proxy configuration annotation parser
-func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
-	return proxy{br}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return proxy{r}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
 func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
-	defBackend := a.backendResolver.GetDefaultBackend()
-	ct, err := parser.GetIntAnnotation(connect, ing)
+	defBackend := a.r.GetDefaultBackend()
+	ct, err := parser.GetIntAnnotation("proxy-connect-timeout", ing, a.r)
 	if err != nil {
 		ct = defBackend.ProxyConnectTimeout
 	}
 
-	st, err := parser.GetIntAnnotation(send, ing)
+	st, err := parser.GetIntAnnotation("proxy-send-timeout", ing, a.r)
 	if err != nil {
 		st = defBackend.ProxySendTimeout
 	}
 
-	rt, err := parser.GetIntAnnotation(read, ing)
+	rt, err := parser.GetIntAnnotation("proxy-read-timeout", ing, a.r)
 	if err != nil {
 		rt = defBackend.ProxyReadTimeout
 	}
 
-	bufs, err := parser.GetStringAnnotation(bufferSize, ing)
+	bufs, err := parser.GetStringAnnotation("proxy-buffer-size", ing, a.r)
 	if err != nil || bufs == "" {
 		bufs = defBackend.ProxyBufferSize
 	}
 
-	cp, err := parser.GetStringAnnotation(cookiePath, ing)
+	cp, err := parser.GetStringAnnotation("proxy-cookie-path", ing, a.r)
 	if err != nil || cp == "" {
 		cp = defBackend.ProxyCookiePath
 	}
 
-	cd, err := parser.GetStringAnnotation(cookieDomain, ing)
+	cd, err := parser.GetStringAnnotation("proxy-cookie-domain", ing, a.r)
 	if err != nil || cd == "" {
 		cd = defBackend.ProxyCookieDomain
 	}
 
-	bs, err := parser.GetStringAnnotation(bodySize, ing)
+	bs, err := parser.GetStringAnnotation("proxy-body-size", ing, a.r)
 	if err != nil || bs == "" {
 		bs = defBackend.ProxyBodySize
 	}
 
-	nu, err := parser.GetStringAnnotation(nextUpstream, ing)
+	nu, err := parser.GetStringAnnotation("proxy-next-upstream", ing, a.r)
 	if err != nil || nu == "" {
 		nu = defBackend.ProxyNextUpstream
 	}
 
-	pp, err := parser.GetStringAnnotation(passParams, ing)
+	pp, err := parser.GetStringAnnotation("proxy-pass-params", ing, a.r)
 	if err != nil || pp == "" {
 		pp = defBackend.ProxyPassParams
 	}
 
-	rb, err := parser.GetStringAnnotation(requestBuffering, ing)
+	rb, err := parser.GetStringAnnotation("proxy-request-buffering", ing, a.r)
 	if err != nil || rb == "" {
 		rb = defBackend.ProxyRequestBuffering
 	}

@@ -22,29 +22,24 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 )
 
-// DefaultBackend has a method that returns the backend
-// that must be used as default
-type DefaultBackend interface {
+// Resolver is an interface that knows how to extract information from a controller
+type Resolver interface {
+	// GetDefaultBackend returns the backend that must be used as default
 	GetDefaultBackend() defaults.Backend
-}
 
-// Secret has a method that searches for secrets contenating
-// the namespace and name using a the character /
-type Secret interface {
+	// GetSecret searches for secrets contenating the namespace and name using a the character /
 	GetSecret(string) (*apiv1.Secret, error)
-}
 
-// AuthCertificate resolves a given secret name into an SSL certificate.
-// The secret must contain 3 keys named:
-//   ca.crt: contains the certificate chain used for authentication
-type AuthCertificate interface {
+	// GetAuthCertificate resolves a given secret name into an SSL certificate.
+	// The secret must contain 3 keys named:
+	//   ca.crt: contains the certificate chain used for authentication
 	GetAuthCertificate(string) (*AuthSSLCert, error)
-}
 
-// Service has a method that searches for services contenating
-// the namespace and name using a the character /
-type Service interface {
+	// GetService searches for services contenating the namespace and name using a the character /
 	GetService(string) (*apiv1.Service, error)
+
+	// GetAnnotationWithPrefix returns the prefix of the Ingress annotations
+	GetAnnotationWithPrefix(suffix string) string
 }
 
 // AuthSSLCert contains the necessary information to do certificate based

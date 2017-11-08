@@ -19,9 +19,6 @@ package class
 import (
 	"github.com/golang/glog"
 	extensions "k8s.io/api/extensions/v1beta1"
-
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/errors"
 )
 
 const (
@@ -35,9 +32,9 @@ const (
 // the ingress.class annotation, or it's set to the configured in the
 // ingress controller.
 func IsValid(ing *extensions.Ingress, controller, defClass string) bool {
-	ingress, err := parser.GetStringAnnotation(IngressKey, ing)
-	if err != nil && !errors.IsMissingAnnotations(err) {
-		glog.Warningf("unexpected error reading ingress annotation: %v", err)
+	ingress, ok := ing.GetAnnotations()[IngressKey]
+	if !ok {
+		glog.V(3).Infof("annotation %v is not present in ingress %v/%v", IngressKey, ing.Namespace, ing.Name)
 	}
 
 	// we have 2 valid combinations

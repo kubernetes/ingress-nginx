@@ -64,6 +64,7 @@ func buildIngress() *extensions.Ingress {
 }
 
 type mockCfg struct {
+	resolver.Mock
 	certs map[string]resolver.AuthSSLCert
 }
 
@@ -77,8 +78,8 @@ func (cfg mockCfg) GetAuthCertificate(secret string) (*resolver.AuthSSLCert, err
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data[secureUpstream] = "true"
-	data[secureVerifyCASecret] = "secure-verify-ca"
+	data["nginx/secure-backends"] = "true"
+	data["nginx/secure-verify-ca-secret"] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 
 	_, err := NewParser(mockCfg{
@@ -94,8 +95,8 @@ func TestAnnotations(t *testing.T) {
 func TestSecretNotFound(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data[secureUpstream] = "true"
-	data[secureVerifyCASecret] = "secure-verify-ca"
+	data["nginx/secure-backends"] = "true"
+	data["nginx/secure-verify-ca-secret"] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 	_, err := NewParser(mockCfg{}).Parse(ing)
 	if err == nil {
@@ -106,8 +107,8 @@ func TestSecretNotFound(t *testing.T) {
 func TestSecretOnNonSecure(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data[secureUpstream] = "false"
-	data[secureVerifyCASecret] = "secure-verify-ca"
+	data["nginx/secure-backends"] = "false"
+	data["nginx/secure-verify-ca-secret"] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 	_, err := NewParser(mockCfg{
 		certs: map[string]resolver.AuthSSLCert{

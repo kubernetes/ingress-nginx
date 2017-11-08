@@ -24,6 +24,7 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -86,11 +87,11 @@ func TestAnnotations(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		data[authURL] = test.url
-		data[authSigninURL] = test.signinURL
-		data[authMethod] = fmt.Sprintf("%v", test.method)
+		data["nginx/auth-url"] = test.url
+		data["nginx/auth-signin"] = test.signinURL
+		data["nginx/auth-method"] = fmt.Sprintf("%v", test.method)
 
-		i, err := NewParser().Parse(ing)
+		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
 			if err == nil {
 				t.Errorf("%v: expected error but retuned nil", test.title)
@@ -136,11 +137,11 @@ func TestHeaderAnnotations(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		data[authURL] = test.url
-		data[authHeaders] = test.headers
-		data[authMethod] = "GET"
+		data["nginx/auth-url"] = test.url
+		data["nginx/auth-response-headers"] = test.headers
+		data["nginx/auth-method"] = "GET"
 
-		i, err := NewParser().Parse(ing)
+		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
 			if err == nil {
 				t.Errorf("%v: expected error but retuned nil", err.Error())

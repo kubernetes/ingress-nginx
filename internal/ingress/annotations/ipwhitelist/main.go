@@ -30,10 +30,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	whitelist = "ingress.kubernetes.io/whitelist-source-range"
-)
-
 // SourceRange returns the CIDR
 type SourceRange struct {
 	CIDR []string `json:"cidr,omitEmpty"`
@@ -69,12 +65,12 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 }
 
 type ipwhitelist struct {
-	backendResolver resolver.DefaultBackend
+	r resolver.Resolver
 }
 
 // NewParser creates a new whitelist annotation parser
-func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
-	return ipwhitelist{br}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return ipwhitelist{r}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
@@ -82,10 +78,10 @@ func NewParser(br resolver.DefaultBackend) parser.IngressAnnotation {
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`
 func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
-	defBackend := a.backendResolver.GetDefaultBackend()
+	defBackend := a.r.GetDefaultBackend()
 	sort.Strings(defBackend.WhitelistSourceRange)
 
-	val, err := parser.GetStringAnnotation(whitelist, ing)
+	val, err := parser.GetStringAnnotation("whitelist-source-range", ing, a.r)
 	// A missing annotation is not a problem, just use the default
 	if err == ing_errors.ErrMissingAnnotations {
 		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, nil

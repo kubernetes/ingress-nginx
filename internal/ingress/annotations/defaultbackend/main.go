@@ -26,29 +26,25 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	defaultBackend = "ingress.kubernetes.io/default-backend"
-)
-
 type backend struct {
-	serviceResolver resolver.Service
+	r resolver.Resolver
 }
 
 // NewParser creates a new default backend annotation parser
-func NewParser(sr resolver.Service) parser.IngressAnnotation {
-	return backend{sr}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return backend{r}
 }
 
 // Parse parses the annotations contained in the ingress to use
 // a custom default backend
 func (db backend) Parse(ing *extensions.Ingress) (interface{}, error) {
-	s, err := parser.GetStringAnnotation(defaultBackend, ing)
+	s, err := parser.GetStringAnnotation("default-backend", ing, db.r)
 	if err != nil {
 		return nil, err
 	}
 
 	name := fmt.Sprintf("%v/%v", ing.Namespace, s)
-	svc, err := db.serviceResolver.GetService(name)
+	svc, err := db.r.GetService(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unexpected error reading service %v", name)
 	}

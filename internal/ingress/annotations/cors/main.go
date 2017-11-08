@@ -22,14 +22,10 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 const (
-	annotationCorsEnabled          = "ingress.kubernetes.io/enable-cors"
-	annotationCorsAllowOrigin      = "ingress.kubernetes.io/cors-allow-origin"
-	annotationCorsAllowMethods     = "ingress.kubernetes.io/cors-allow-methods"
-	annotationCorsAllowHeaders     = "ingress.kubernetes.io/cors-allow-headers"
-	annotationCorsAllowCredentials = "ingress.kubernetes.io/cors-allow-credentials"
 	// Default values
 	defaultCorsMethods = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
@@ -49,6 +45,7 @@ var (
 )
 
 type cors struct {
+	r resolver.Resolver
 }
 
 // Config contains the Cors configuration to be used in the Ingress
@@ -61,8 +58,8 @@ type Config struct {
 }
 
 // NewParser creates a new CORS annotation parser
-func NewParser() parser.IngressAnnotation {
-	return cors{}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return cors{r}
 }
 
 // Equal tests for equality between two External types
@@ -94,28 +91,28 @@ func (c1 *Config) Equal(c2 *Config) bool {
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should allows CORS
-func (a cors) Parse(ing *extensions.Ingress) (interface{}, error) {
-	corsenabled, err := parser.GetBoolAnnotation(annotationCorsEnabled, ing)
+func (c cors) Parse(ing *extensions.Ingress) (interface{}, error) {
+	corsenabled, err := parser.GetBoolAnnotation("enable-cors", ing, c.r)
 	if err != nil {
 		corsenabled = false
 	}
 
-	corsalloworigin, err := parser.GetStringAnnotation(annotationCorsAllowOrigin, ing)
+	corsalloworigin, err := parser.GetStringAnnotation("cors-allow-origin", ing, c.r)
 	if err != nil || corsalloworigin == "" || !corsOriginRegex.MatchString(corsalloworigin) {
 		corsalloworigin = "*"
 	}
 
-	corsallowheaders, err := parser.GetStringAnnotation(annotationCorsAllowHeaders, ing)
+	corsallowheaders, err := parser.GetStringAnnotation("cors-allow-headers", ing, c.r)
 	if err != nil || corsallowheaders == "" || !corsHeadersRegex.MatchString(corsallowheaders) {
 		corsallowheaders = defaultCorsHeaders
 	}
 
-	corsallowmethods, err := parser.GetStringAnnotation(annotationCorsAllowMethods, ing)
+	corsallowmethods, err := parser.GetStringAnnotation("cors-allow-methods", ing, c.r)
 	if err != nil || corsallowmethods == "" || !corsMethodsRegex.MatchString(corsallowmethods) {
 		corsallowmethods = defaultCorsMethods
 	}
 
-	corsallowcredentials, err := parser.GetBoolAnnotation(annotationCorsAllowCredentials, ing)
+	corsallowcredentials, err := parser.GetBoolAnnotation("cors-allow-credentials", ing, c.r)
 	if err != nil {
 		corsallowcredentials = true
 	}

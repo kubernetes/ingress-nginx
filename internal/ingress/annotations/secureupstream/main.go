@@ -26,11 +26,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	secureUpstream       = "ingress.kubernetes.io/secure-backends"
-	secureVerifyCASecret = "ingress.kubernetes.io/secure-verify-ca-secret"
-)
-
 // Config describes SSL backend configuration
 type Config struct {
 	Secure bool                 `json:"secure"`
@@ -38,21 +33,19 @@ type Config struct {
 }
 
 type su struct {
-	certResolver resolver.AuthCertificate
+	r resolver.Resolver
 }
 
 // NewParser creates a new secure upstream annotation parser
-func NewParser(resolver resolver.AuthCertificate) parser.IngressAnnotation {
-	return su{
-		certResolver: resolver,
-	}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return su{r}
 }
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the upstream servers should use SSL
 func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
-	s, _ := parser.GetBoolAnnotation(secureUpstream, ing)
-	ca, _ := parser.GetStringAnnotation(secureVerifyCASecret, ing)
+	s, _ := parser.GetBoolAnnotation("secure-backends", ing, a.r)
+	ca, _ := parser.GetStringAnnotation("secure-verify-ca-secret", ing, a.r)
 	secure := &Config{
 		Secure: s,
 		CACert: resolver.AuthSSLCert{},
@@ -64,7 +57,7 @@ func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
 	if ca == "" {
 		return secure, nil
 	}
-	caCert, err := a.certResolver.GetAuthCertificate(fmt.Sprintf("%v/%v", ing.Namespace, ca))
+	caCert, err := a.r.GetAuthCertificate(fmt.Sprintf("%v/%v", ing.Namespace, ca))
 	if err != nil {
 		return secure, errors.Wrap(err, "error obtaining certificate")
 	}

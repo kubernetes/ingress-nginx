@@ -17,11 +17,13 @@ limitations under the License.
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -35,9 +37,11 @@ func buildIngress() *extensions.Ingress {
 }
 
 func TestGetBoolAnnotation(t *testing.T) {
+	r := &resolver.Mock{}
+
 	ing := buildIngress()
 
-	_, err := GetBoolAnnotation("", nil)
+	_, err := GetBoolAnnotation("", nil, r)
 	if err == nil {
 		t.Errorf("expected error but retuned nil")
 	}
@@ -49,8 +53,6 @@ func TestGetBoolAnnotation(t *testing.T) {
 		exp    bool
 		expErr bool
 	}{
-		{"empty - false", "", "false", false, true},
-		{"empty - true", "", "true", false, true},
 		{"valid - false", "bool", "false", false, false},
 		{"valid - true", "bool", "true", true, false},
 	}
@@ -59,9 +61,9 @@ func TestGetBoolAnnotation(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	for _, test := range tests {
-		data[test.field] = test.value
+		data[fmt.Sprintf("nginx/%v", test.field)] = test.value
 
-		u, err := GetBoolAnnotation(test.field, ing)
+		u, err := GetBoolAnnotation(test.field, ing, r)
 		if test.expErr {
 			if err == nil {
 				t.Errorf("%v: expected error but retuned nil", test.name)
@@ -77,9 +79,11 @@ func TestGetBoolAnnotation(t *testing.T) {
 }
 
 func TestGetStringAnnotation(t *testing.T) {
+	r := &resolver.Mock{}
+
 	ing := buildIngress()
 
-	_, err := GetStringAnnotation("", nil)
+	_, err := GetStringAnnotation("", nil, r)
 	if err == nil {
 		t.Errorf("expected error but retuned nil")
 	}
@@ -91,8 +95,6 @@ func TestGetStringAnnotation(t *testing.T) {
 		exp    string
 		expErr bool
 	}{
-		{"empty - A", "", "A", "", true},
-		{"empty - B", "", "B", "", true},
 		{"valid - A", "string", "A", "A", false},
 		{"valid - B", "string", "B", "B", false},
 	}
@@ -101,9 +103,9 @@ func TestGetStringAnnotation(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	for _, test := range tests {
-		data[test.field] = test.value
+		data[fmt.Sprintf("nginx/%v", test.field)] = test.value
 
-		s, err := GetStringAnnotation(test.field, ing)
+		s, err := GetStringAnnotation(test.field, ing, r)
 		if test.expErr {
 			if err == nil {
 				t.Errorf("%v: expected error but retuned nil", test.name)
@@ -119,9 +121,11 @@ func TestGetStringAnnotation(t *testing.T) {
 }
 
 func TestGetIntAnnotation(t *testing.T) {
+	r := &resolver.Mock{}
+
 	ing := buildIngress()
 
-	_, err := GetIntAnnotation("", nil)
+	_, err := GetIntAnnotation("", nil, r)
 	if err == nil {
 		t.Errorf("expected error but retuned nil")
 	}
@@ -133,8 +137,6 @@ func TestGetIntAnnotation(t *testing.T) {
 		exp    int
 		expErr bool
 	}{
-		{"empty - A", "", "1", 0, true},
-		{"empty - B", "", "2", 0, true},
 		{"valid - A", "string", "1", 1, false},
 		{"valid - B", "string", "2", 2, false},
 	}
@@ -143,9 +145,9 @@ func TestGetIntAnnotation(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	for _, test := range tests {
-		data[test.field] = test.value
+		data[fmt.Sprintf("nginx/%v", test.field)] = test.value
 
-		s, err := GetIntAnnotation(test.field, ing)
+		s, err := GetIntAnnotation(test.field, ing, r)
 		if test.expErr {
 			if err == nil {
 				t.Errorf("%v: expected error but retuned nil", test.name)

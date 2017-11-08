@@ -22,6 +22,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/errors"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 // IngressAnnotation has a method to parse annotations located in Ingress
@@ -75,28 +76,31 @@ func checkAnnotation(name string, ing *extensions.Ingress) error {
 }
 
 // GetBoolAnnotation extracts a boolean from an Ingress annotation
-func GetBoolAnnotation(name string, ing *extensions.Ingress) (bool, error) {
-	err := checkAnnotation(name, ing)
+func GetBoolAnnotation(name string, ing *extensions.Ingress, r resolver.Resolver) (bool, error) {
+	v := r.GetAnnotationWithPrefix(name)
+	err := checkAnnotation(v, ing)
 	if err != nil {
 		return false, err
 	}
-	return ingAnnotations(ing.GetAnnotations()).parseBool(name)
+	return ingAnnotations(ing.GetAnnotations()).parseBool(v)
 }
 
 // GetStringAnnotation extracts a string from an Ingress annotation
-func GetStringAnnotation(name string, ing *extensions.Ingress) (string, error) {
-	err := checkAnnotation(name, ing)
+func GetStringAnnotation(name string, ing *extensions.Ingress, r resolver.Resolver) (string, error) {
+	v := r.GetAnnotationWithPrefix(name)
+	err := checkAnnotation(v, ing)
 	if err != nil {
 		return "", err
 	}
-	return ingAnnotations(ing.GetAnnotations()).parseString(name)
+	return ingAnnotations(ing.GetAnnotations()).parseString(v)
 }
 
 // GetIntAnnotation extracts an int from an Ingress annotation
-func GetIntAnnotation(name string, ing *extensions.Ingress) (int, error) {
-	err := checkAnnotation(name, ing)
+func GetIntAnnotation(name string, ing *extensions.Ingress, r resolver.Resolver) (int, error) {
+	v := r.GetAnnotationWithPrefix(name)
+	err := checkAnnotation(v, ing)
 	if err != nil {
 		return 0, err
 	}
-	return ingAnnotations(ing.GetAnnotations()).parseInt(name)
+	return ingAnnotations(ing.GetAnnotations()).parseInt(v)
 }
