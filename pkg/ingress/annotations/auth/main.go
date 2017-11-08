@@ -152,7 +152,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 // dumpSecret dumps the content of a secret into a file
 // in the expected format for the specified authorization
 func dumpSecret(filename string, secret *api.Secret) error {
-	val, ok := secret.Data["auth"]
+	val, ok := secret.Data["kube-ingress-auth"]
 	if !ok {
 		return ing_errors.LocationDenied{
 			Reason: errors.Errorf("the secret %v does not contain a key with value auth", secret.Name),

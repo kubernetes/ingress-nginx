@@ -79,7 +79,7 @@ func (m mockSecret) GetSecret(name string) (*api.Secret, error) {
 			Namespace: api.NamespaceDefault,
 			Name:      "demo-secret",
 		},
-		Data: map[string][]byte{"auth": []byte("foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0")},
+		Data: map[string][]byte{"kube-ingress-auth": []byte("foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0")},
 	}, nil
 }
 

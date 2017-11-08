@@ -10,6 +10,11 @@ Re-type new password:
 Adding password for user foo
 ```
 
+To create your file without `htpasswd`
+```console
+$ printf "foo:$(openssl passwd -crypt <bar>)\n" >> auth
+```
+
 ```console
 $ kubectl create secret generic basic-auth --from-file=auth
 secret "basic-auth" created
@@ -19,7 +24,7 @@ secret "basic-auth" created
 $ kubectl get secret basic-auth -o yaml
 apiVersion: v1
 data:
-  auth: Zm9vOiRhcHIxJE9GRzNYeWJwJGNrTDBGSERBa29YWUlsSDkuY3lzVDAK
+  kube-ingress-auth: Zm9vOiRhcHIxJE9GRzNYeWJwJGNrTDBGSERBa29YWUlsSDkuY3lzVDAK
 kind: Secret
 metadata:
   name: basic-auth
