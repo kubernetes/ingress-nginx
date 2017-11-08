@@ -115,7 +115,9 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 		return tmplBuf.Bytes(), nil
 	}
 
-	return outCmdBuf.Bytes(), nil
+	a := make([]byte, outCmdBuf.Len())
+	copy(a, outCmdBuf.Bytes())
+	return a, nil
 }
 
 var (
