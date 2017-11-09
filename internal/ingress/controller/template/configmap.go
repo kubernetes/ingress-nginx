@@ -32,14 +32,15 @@ import (
 )
 
 const (
-	customHTTPErrors     = "custom-http-errors"
-	skipAccessLogUrls    = "skip-access-log-urls"
-	whitelistSourceRange = "whitelist-source-range"
-	proxyRealIPCIDR      = "proxy-real-ip-cidr"
-	bindAddress          = "bind-address"
-	httpRedirectCode     = "http-redirect-code"
-	proxyStreamResponses = "proxy-stream-responses"
-	hideHeaders          = "hide-headers"
+	customHTTPErrors          = "custom-http-errors"
+	skipAccessLogUrls         = "skip-access-log-urls"
+	skipAccessLogHTTPStatuses = "skip-access-log-http-statuses"
+	whitelistSourceRange      = "whitelist-source-range"
+	proxyRealIPCIDR           = "proxy-real-ip-cidr"
+	bindAddress               = "bind-address"
+	httpRedirectCode          = "http-redirect-code"
+	proxyStreamResponses      = "proxy-stream-responses"
+	hideHeaders               = "hide-headers"
 )
 
 var (
@@ -56,6 +57,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
+	skipHTTPStatuses := make([]string, 0)
 	whitelist := make([]string, 0)
 	proxylist := make([]string, 0)
 	hideHeaderslist := make([]string, 0)
@@ -82,6 +84,10 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[skipAccessLogUrls]; ok {
 		delete(conf, skipAccessLogUrls)
 		skipUrls = strings.Split(val, ",")
+	}
+	if val, ok := conf[skipAccessLogHTTPStatuses]; ok {
+		delete(conf, skipAccessLogHTTPStatuses)
+		skipHTTPStatuses = strings.Split(val, ",")
 	}
 	if val, ok := conf[whitelistSourceRange]; ok {
 		delete(conf, whitelistSourceRange)
@@ -137,6 +143,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to := config.NewDefault()
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
+	to.SkipAccessLogHTTPStatuses = skipHTTPStatuses
 	to.WhitelistSourceRange = whitelist
 	to.ProxyRealIPCIDR = proxylist
 	to.BindAddressIpv4 = bindAddressIpv4List
