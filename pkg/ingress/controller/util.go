@@ -51,7 +51,7 @@ func mergeLocationAnnotations(loc *ingress.Location, anns map[string]interface{}
 		loc.Denied = anns[DeniedKeyName].(error)
 	}
 	delete(anns, DeniedKeyName)
-	err := mergo.Map(loc, anns)
+	err := mergo.MapWithOverwrite(loc, anns)
 	if err != nil {
 		glog.Errorf("unexpected error merging extracted annotations in location type: %v", err)
 	}

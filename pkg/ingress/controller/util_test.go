@@ -82,6 +82,29 @@ func TestMergeLocationAnnotations(t *testing.T) {
 	}
 }
 
+func TestMergeLocationAnnotationsExisting(t *testing.T) {
+	loc := ingress.Location{
+		IsDefBackend: true,
+		Proxy: proxy.Configuration{ReadTimeout: 60},
+	}
+	annotations := map[string]interface{}{
+		"Proxy": proxy.Configuration{ReadTimeout: 999},
+	}
+
+	mergeLocationAnnotations(&loc, annotations)
+
+	// Existing value should be unmodified.
+	if got, want := loc.IsDefBackend, true; got != want {
+		t.Errorf("loc.IsDefBackend = %v, want %v", got, want)
+	}
+
+	// New value from annotation should be updated.
+	if got, want := loc.Proxy.ReadTimeout, annotations["Proxy"].(proxy.Configuration).ReadTimeout; got != want {
+		t.Errorf("loc.Proxy.ReadTimeout = %v, want %v", got, want)
+	}
+}
+
+
 func TestIntInSlice(t *testing.T) {
 	fooTests := []struct {
 		i    int
