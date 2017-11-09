@@ -17,7 +17,7 @@ all: push
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.9.0-beta.16
+TAG?=0.9.0-beta.17
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
 DOCKER?=gcloud docker --
