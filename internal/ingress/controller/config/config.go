@@ -962,6 +962,7 @@ func NewDefault() Configuration {
 			DenylistSourceRange:      []string{},
 			WhitelistSourceRange:     []string{},
 			SkipAccessLogURLs:        []string{},
+			SkipAccessLogHTTPStatuses:   []string{},
 			LimitRate:                0,
 			LimitRateAfter:           0,
 			ProxyBuffering:           "off",

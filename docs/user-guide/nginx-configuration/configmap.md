@@ -194,6 +194,7 @@ The following table shows a configuration option's name, type, and the default v
 |[denylist-source-range](#denylist-source-range)|[]string|[]string{}||
 |[whitelist-source-range](#whitelist-source-range)|[]string|[]string{}||
 |[skip-access-log-urls](#skip-access-log-urls)|[]string|[]string{}||
+|[skip-access-log-http-statuses](#skip-access-log-http-statuses)|[]string|[]string{}||
 |[limit-rate](#limit-rate)|int|0||
 |[limit-rate-after](#limit-rate-after)|int|0||
 |[lua-shared-dicts](#lua-shared-dicts)|string|""||
@@ -1171,6 +1172,10 @@ See [ngx_http_access_module](https://nginx.org/en/docs/http/ngx_http_access_modu
 ## skip-access-log-urls
 
 Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like `/health` or `health-check` that make "complex" reading the logs. _**default:**_ is empty
+
+## skip-access-log-http-statuses
+
+Sets a list of HTTP statuses that should not appear in the NGINX access log. This is useful for high volume ingress where turning access logging completely off is undesirable, but not logging things like 2xx and 3xx responses is desirable. _**default:**_ is empty
 
 ## limit-rate
 

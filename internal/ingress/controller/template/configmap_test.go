@@ -58,6 +58,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"proxy-read-timeout":            "1",
 		"proxy-send-timeout":            "2",
 		"skip-access-log-urls":          "/log,/demo,/test",
+		"skip-access-log-http-statuses": "^[23],204,302,^201",
 		"use-proxy-protocol":            "true",
 		"disable-access-log":            "true",
 		"access-log-params":             "buffer=4k gzip",
@@ -85,6 +86,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.AccessLogPath = "/var/log/test/access.log"
 	def.ErrorLogPath = "/var/log/test/error.log"
 	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
+	def.SkipAccessLogHTTPStatuses = []string{"^[23]", "204", "302", "^201"}
 	def.ProxyReadTimeout = 1
 	def.ProxySendTimeout = 2
 	def.UseProxyProtocol = true

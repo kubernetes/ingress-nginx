@@ -391,9 +391,20 @@ http {
 
     {{/* map urls that should not appear in access.log */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
-    map $request_uri $loggable {
+    map $request_uri $loggable_request_url {
         {{ range $reqUri := $cfg.SkipAccessLogURLs }}
         {{ $reqUri }} 0;{{ end }}
+    }
+
+    {{/* map HTTP statuses that should not appear in access.log */}}
+    {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
+    map $status $loggable_http_status {
+        {{ range $reqHTTPStatus := $cfg.SkipAccessLogHTTPStatuses }}
+        ~{{ $reqHTTPStatus }} 0;{{ end }}
+    }
+
+    map "${loggable_request_url}${loggable_http_status}" $loggable {
+        ~0  0;
         default 1;
     }
 
