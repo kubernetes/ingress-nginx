@@ -18,7 +18,6 @@ package defaultbackend
 
 import (
 	"crypto/tls"
-	"net/http"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -37,36 +36,29 @@ var _ = framework.IngressNginxDescribe("Default backend - SSL", func() {
 	})
 
 	It("should return a self generated SSL certificate", func() {
-		httpsURL, err := f.GetNginxURL(framework.HTTPS)
-		Expect(err).NotTo(HaveOccurred())
-
-		request := gorequest.New()
-
 		By("checking SSL Certificate using the NGINX IP address")
-		cm := request.Post(httpsURL)
-		// the default backend uses a self generated certificate
-		cm.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
+		resp, _, errs := gorequest.New().
+			Post(f.NginxHTTPSURL).
+			TLSClientConfig(&tls.Config{
+				// the default backend uses a self generated certificate
 				InsecureSkipVerify: true,
-			},
-		}
-		resp, _, errs := cm.End()
+			}).End()
+
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
+
 		for _, pc := range resp.TLS.PeerCertificates {
 			Expect(pc.Issuer.CommonName).Should(Equal("Kubernetes Ingress Controller Fake Certificate"))
 		}
 
 		By("checking SSL Certificate using the NGINX catch all server")
-		cm = request.Post(httpsURL)
-		// the default backend uses a self generated certificate
-		cm.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
+		resp, _, errs = gorequest.New().
+			Post(f.NginxHTTPSURL).
+			TLSClientConfig(&tls.Config{
+				// the default backend uses a self generated certificate
 				InsecureSkipVerify: true,
-			},
-		}
-		cm.Set("Host", "foo.bar.com")
-		resp, _, errs = cm.End()
+			}).
+			Set("Host", "foo.bar.com").End()
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
 		for _, pc := range resp.TLS.PeerCertificates {
