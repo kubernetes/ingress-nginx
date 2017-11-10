@@ -53,6 +53,12 @@ log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol
 
 Please check [log-format](log-format.md) for definition of each field.
 
+#### log-format-escape-json
+
+Sets if the escape parameter allows JSON (true) or default characters escaping in variables (false)
+
+Sets the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).
+
 ### Proxy configuration
 
 #### load-balance
