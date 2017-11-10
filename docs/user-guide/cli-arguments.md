@@ -9,8 +9,7 @@ Usage of :
     	namespace/name. The controller uses the first node port of this Service for
     	the default backend.
       --default-server-port int          Default port to use for exposing the default server (catch all) (default 8181)
-      --default-ssl-certificate string   Name of the secret
-		that contains a SSL certificate to be used as default for a HTTPS catch-all server
+      --default-ssl-certificate string   Name of the secret that contains a SSL certificate to be used as default for a HTTPS catch-all server. Takes the form <namespace>/<secret name>.
       --disable-node-list                Disable querying nodes. If --force-namespace-isolation is true, this should also be set.
       --election-id string               Election id to use for status update. (default "ingress-controller-leader")
       --enable-ssl-passthrough           Enable SSL passthrough feature. Default is disabled
