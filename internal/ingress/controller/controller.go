@@ -1016,8 +1016,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			}
 
 			if !found {
-				glog.Warningf("ingress %v/%v for host %v contains a TLS section but none of the host match",
-					ing.Namespace, ing.Name, host)
+				// does not contains a TLS section but none of the host match
 				continue
 			}
 
