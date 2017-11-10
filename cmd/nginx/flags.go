@@ -83,7 +83,8 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
 
 		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret
-		that contains a SSL certificate to be used as default for a HTTPS catch-all server`)
+		that contains a SSL certificate to be used as default for a HTTPS catch-all server.
+		Takes the form <namespace>/<secret name>.`)
 
 		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines
 		the URL to be used as health check inside in the default server in NGINX.`)
