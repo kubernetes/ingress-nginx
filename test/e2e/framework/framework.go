@@ -17,10 +17,11 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	"k8s.io/api/core/v1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	. "github.com/onsi/ginkgo"
@@ -29,6 +30,11 @@ import (
 
 const (
 	podName = "test-ingress-controller"
+)
+
+const (
+	MaxRetry = 200
+	NoRetry  = 1
 )
 
 type RequestScheme string
@@ -54,9 +60,12 @@ type Framework struct {
 	// we install a Cleanup action before each test and clear it after.  If we
 	// should abort, the AfterSuite hook should run all Cleanup actions.
 	cleanupHandle CleanupActionHandle
+
+	NginxHTTPURL  string
+	NginxHTTPSURL string
 }
 
-// NewFramework makes a new framework and sets up a BeforeEach/AfterEach for
+// NewDefaultFramework makes a new framework and sets up a BeforeEach/AfterEach for
 // you (you can write additional before/after each functions).
 func NewDefaultFramework(baseName string) *Framework {
 	f := &Framework{
@@ -83,6 +92,14 @@ func (f *Framework) BeforeEach() {
 	By("Building a namespace api object")
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
 	Expect(err).NotTo(HaveOccurred())
+
+	By("Building NGINX HTTP URL")
+	f.NginxHTTPURL, err = f.GetNginxURL(HTTP)
+	Expect(err).NotTo(HaveOccurred())
+
+	By("Building NGINX HTTPS URL")
+	f.NginxHTTPSURL, err = f.GetNginxURL(HTTPS)
+	Expect(err).NotTo(HaveOccurred())
 }
 
 // AfterEach deletes the namespace, after reading its events.
@@ -94,7 +111,7 @@ func (f *Framework) AfterEach() {
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting for test namespace to no longer exist")
-	err = WaitForKubeNamespaceNotExist(f.KubeClientSet, f.Namespace.Name)
+	err = WaitForNoPodsInNamespace(f.KubeClientSet, f.Namespace.Name)
 	Expect(err).NotTo(HaveOccurred())
 }
 
@@ -115,7 +132,7 @@ func (f *Framework) GetNginxIP() (string, error) {
 
 // GetNginxPort returns the number of TCP port where NGINX is running
 func (f *Framework) GetNginxPort(name string) (int, error) {
-	s, err := f.KubeClientSet.CoreV1().Services("ingress-nginx").Get("ingress-nginx", meta_v1.GetOptions{})
+	s, err := f.KubeClientSet.CoreV1().Services("ingress-nginx").Get("ingress-nginx", metav1.GetOptions{})
 	if err != nil {
 		return -1, err
 	}
@@ -142,4 +159,9 @@ func (f *Framework) GetNginxURL(scheme RequestScheme) (string, error) {
 	}
 
 	return fmt.Sprintf("%v://%v:%v", scheme, ip, port), nil
+}
+
+func (f *Framework) WaitForNginxServer(name string) error {
+	time.Sleep(5 * time.Second)
+	return nil
 }

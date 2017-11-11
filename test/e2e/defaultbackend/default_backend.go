@@ -39,14 +39,6 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 	})
 
 	It("should return 404 sending requests when only a default backend is running", func() {
-		httpURL, err := f.GetNginxURL(framework.HTTP)
-		Expect(err).NotTo(HaveOccurred())
-
-		httpsURL, err := f.GetNginxURL(framework.HTTPS)
-		Expect(err).NotTo(HaveOccurred())
-
-		request := gorequest.New()
-
 		testCases := []struct {
 			Name   string
 			Host   string
@@ -55,38 +47,39 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 			Path   string
 			Status int
 		}{
-			{"basic HTTP GET request without host to path / should return 404", "", framework.HTTP, "GET", "/", 404},
-			{"basic HTTP GET request without host to path /demo should return 404", "", framework.HTTP, "GET", "/demo", 404},
-			{"basic HTTPS GET request without host to path / should return 404", "", framework.HTTPS, "GET", "/", 404},
-			{"basic HTTPS GET request without host to path /demo should return 404", "", framework.HTTPS, "GET", "/demo", 404},
+			{"basic HTTP GET request without host to path / should return 404", "", framework.HTTP, "GET", "/", http.StatusNotFound},
+			{"basic HTTP GET request without host to path /demo should return 404", "", framework.HTTP, "GET", "/demo", http.StatusNotFound},
+			{"basic HTTPS GET request without host to path / should return 404", "", framework.HTTPS, "GET", "/", http.StatusNotFound},
+			{"basic HTTPS GET request without host to path /demo should return 404", "", framework.HTTPS, "GET", "/demo", http.StatusNotFound},
 
-			{"basic HTTP POST request without host to path / should return 404", "", framework.HTTP, "POST", "/", 404},
-			{"basic HTTP POST request without host to path /demo should return 404", "", framework.HTTP, "POST", "/demo", 404},
-			{"basic HTTPS POST request without host to path / should return 404", "", framework.HTTPS, "POST", "/", 404},
-			{"basic HTTPS POST request without host to path /demo should return 404", "", framework.HTTPS, "POST", "/demo", 404},
+			{"basic HTTP POST request without host to path / should return 404", "", framework.HTTP, "POST", "/", http.StatusNotFound},
+			{"basic HTTP POST request without host to path /demo should return 404", "", framework.HTTP, "POST", "/demo", http.StatusNotFound},
+			{"basic HTTPS POST request without host to path / should return 404", "", framework.HTTPS, "POST", "/", http.StatusNotFound},
+			{"basic HTTPS POST request without host to path /demo should return 404", "", framework.HTTPS, "POST", "/demo", http.StatusNotFound},
 
-			{"basic HTTP GET request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTP, "GET", "/", 404},
-			{"basic HTTP GET request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTP, "GET", "/demo", 404},
-			{"basic HTTPS GET request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTPS, "GET", "/", 404},
-			{"basic HTTPS GET request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTPS, "GET", "/demo", 404},
+			{"basic HTTP GET request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTP, "GET", "/", http.StatusNotFound},
+			{"basic HTTP GET request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTP, "GET", "/demo", http.StatusNotFound},
+			{"basic HTTPS GET request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTPS, "GET", "/", http.StatusNotFound},
+			{"basic HTTPS GET request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTPS, "GET", "/demo", http.StatusNotFound},
 
-			{"basic HTTP POST request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTP, "POST", "/", 404},
-			{"basic HTTP POST request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTP, "POST", "/demo", 404},
-			{"basic HTTPS POST request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTPS, "POST", "/", 404},
-			{"basic HTTPS POST request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTPS, "POST", "/demo", 404},
+			{"basic HTTP POST request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTP, "POST", "/", http.StatusNotFound},
+			{"basic HTTP POST request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTP, "POST", "/demo", http.StatusNotFound},
+			{"basic HTTPS POST request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTPS, "POST", "/", http.StatusNotFound},
+			{"basic HTTPS POST request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTPS, "POST", "/demo", http.StatusNotFound},
 		}
 
 		for _, test := range testCases {
 			By(test.Name)
-			var errs []error
+
+			request := gorequest.New()
 			var cm *gorequest.SuperAgent
 
 			switch test.Scheme {
 			case framework.HTTP:
-				cm = request.CustomMethod(test.Method, httpURL)
+				cm = request.CustomMethod(test.Method, f.NginxHTTPURL)
 				break
 			case framework.HTTPS:
-				cm = request.CustomMethod(test.Method, httpsURL)
+				cm = request.CustomMethod(test.Method, f.NginxHTTPSURL)
 				// the default backend uses a self generated certificate
 				cm.Transport = &http.Transport{
 					TLSClientConfig: &tls.Config{

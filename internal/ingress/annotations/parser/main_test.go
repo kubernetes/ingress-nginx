@@ -1,0 +1,163 @@
+/*
+Copyright 2016 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package parser
+
+import (
+	"fmt"
+	"testing"
+
+	api "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
+)
+
+func buildIngress() *extensions.Ingress {
+	return &extensions.Ingress{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: api.NamespaceDefault,
+		},
+		Spec: extensions.IngressSpec{},
+	}
+}
+
+func TestGetBoolAnnotation(t *testing.T) {
+	r := &resolver.Mock{}
+
+	ing := buildIngress()
+
+	_, err := GetBoolAnnotation("", nil, r)
+	if err == nil {
+		t.Errorf("expected error but retuned nil")
+	}
+
+	tests := []struct {
+		name   string
+		field  string
+		value  string
+		exp    bool
+		expErr bool
+	}{
+		{"valid - false", "bool", "false", false, false},
+		{"valid - true", "bool", "true", true, false},
+	}
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	for _, test := range tests {
+		data[fmt.Sprintf("nginx/%v", test.field)] = test.value
+
+		u, err := GetBoolAnnotation(test.field, ing, r)
+		if test.expErr {
+			if err == nil {
+				t.Errorf("%v: expected error but retuned nil", test.name)
+			}
+			continue
+		}
+		if u != test.exp {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.name, test.exp, u)
+		}
+
+		delete(data, test.field)
+	}
+}
+
+func TestGetStringAnnotation(t *testing.T) {
+	r := &resolver.Mock{}
+
+	ing := buildIngress()
+
+	_, err := GetStringAnnotation("", nil, r)
+	if err == nil {
+		t.Errorf("expected error but retuned nil")
+	}
+
+	tests := []struct {
+		name   string
+		field  string
+		value  string
+		exp    string
+		expErr bool
+	}{
+		{"valid - A", "string", "A", "A", false},
+		{"valid - B", "string", "B", "B", false},
+	}
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	for _, test := range tests {
+		data[fmt.Sprintf("nginx/%v", test.field)] = test.value
+
+		s, err := GetStringAnnotation(test.field, ing, r)
+		if test.expErr {
+			if err == nil {
+				t.Errorf("%v: expected error but retuned nil", test.name)
+			}
+			continue
+		}
+		if s != test.exp {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.name, test.exp, s)
+		}
+
+		delete(data, test.field)
+	}
+}
+
+func TestGetIntAnnotation(t *testing.T) {
+	r := &resolver.Mock{}
+
+	ing := buildIngress()
+
+	_, err := GetIntAnnotation("", nil, r)
+	if err == nil {
+		t.Errorf("expected error but retuned nil")
+	}
+
+	tests := []struct {
+		name   string
+		field  string
+		value  string
+		exp    int
+		expErr bool
+	}{
+		{"valid - A", "string", "1", 1, false},
+		{"valid - B", "string", "2", 2, false},
+	}
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	for _, test := range tests {
+		data[fmt.Sprintf("nginx/%v", test.field)] = test.value
+
+		s, err := GetIntAnnotation(test.field, ing, r)
+		if test.expErr {
+			if err == nil {
+				t.Errorf("%v: expected error but retuned nil", test.name)
+			}
+			continue
+		}
+		if s != test.exp {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.name, test.exp, s)
+		}
+
+		delete(data, test.field)
+	}
+}
