@@ -120,7 +120,11 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (*v1.Namespace
 }
 
 func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
-	return c.Core().Namespaces().Delete(namespace, nil)
+	deletePolicy := metav1.DeletePropagationForeground
+	return c.Core().Namespaces().Delete(namespace, &metav1.DeleteOptions{
+		GracePeriodSeconds: NewInt64(0),
+		PropagationPolicy:  &deletePolicy,
+	})
 }
 
 func ExpectNoError(err error, explain ...interface{}) {
@@ -131,7 +135,7 @@ func ExpectNoError(err error, explain ...interface{}) {
 }
 
 func WaitForKubeNamespaceNotExist(c kubernetes.Interface, namespace string) error {
-	return wait.PollImmediate(Poll, time.Minute*2, namespaceNotExist(c, namespace))
+	return wait.PollImmediate(Poll, time.Minute*1, namespaceNotExist(c, namespace))
 }
 
 func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionFunc {
@@ -147,7 +151,28 @@ func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionF
 	}
 }
 
-// Waits default amount of time (PodStartTimeout) for the specified pod to become running.
+func WaitForNoPodsInNamespace(c kubernetes.Interface, namespace string) error {
+	return wait.PollImmediate(Poll, time.Minute*2, noPodsInNamespace(c, namespace))
+}
+
+func noPodsInNamespace(c kubernetes.Interface, namespace string) wait.ConditionFunc {
+	return func() (bool, error) {
+		items, err := c.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+		if apierrors.IsNotFound(err) {
+			return true, nil
+		}
+		if err != nil {
+			return false, err
+		}
+
+		if len(items.Items) == 0 {
+			return true, nil
+		}
+		return false, nil
+	}
+}
+
+// WaitForPodRunningInNamespace waits default amount of time (PodStartTimeout) for the specified pod to become running.
 // Returns an error if timeout occurs first, or pod goes in to failed state.
 func WaitForPodRunningInNamespace(c kubernetes.Interface, pod *v1.Pod) error {
 	if pod.Status.Phase == v1.PodRunning {
@@ -174,4 +199,16 @@ func podRunning(c kubernetes.Interface, podName, namespace string) wait.Conditio
 		}
 		return false, nil
 	}
+}
+
+func NewInt32(val int32) *int32 {
+	p := new(int32)
+	*p = val
+	return p
+}
+
+func NewInt64(val int64) *int64 {
+	p := new(int64)
+	*p = val
+	return p
 }
