@@ -153,7 +153,7 @@ func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
 		}
 	}
 
-	err := mergo.Map(pia, data)
+	err := mergo.MapWithOverwrite(pia, data)
 	if err != nil {
 		glog.Errorf("unexpected error merging extracted annotations: %v", err)
 	}
