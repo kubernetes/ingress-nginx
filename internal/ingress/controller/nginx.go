@@ -25,6 +25,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -597,6 +598,15 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	cfg.SSLDHParam = sslDHParam
+
+	// disable features are not available in some platforms
+	switch runtime.GOARCH {
+	case "arm", "arm64", "ppc64le":
+		cfg.EnableModsecurity = false
+	case "s390x":
+		cfg.EnableModsecurity = false
+		cfg.EnableBrotli = false
+	}
 
 	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:         setHeaders,
