@@ -19,6 +19,7 @@ package annotations
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -75,7 +76,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
-		err = f.WaitForNginxServer(host)
+		err = f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "server_name foo") &&
+					!strings.Contains(server, "return 503")
+			})
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
@@ -98,19 +103,19 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	})
 
 	It("should return status code 200 for host 'foo' and 'bar'", func() {
-		host := "bar"
+		host := "foo"
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      host,
 				Namespace: f.Namespace.Name,
 				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/server-alias": host,
+					"nginx.ingress.kubernetes.io/server-alias": "bar",
 				},
 			},
 			Spec: v1beta1.IngressSpec{
 				Rules: []v1beta1.IngressRule{
 					{
-						Host: "foo",
+						Host: host,
 						IngressRuleValue: v1beta1.IngressRuleValue{
 							HTTP: &v1beta1.HTTPIngressRuleValue{
 								Paths: []v1beta1.HTTPIngressPath{
@@ -132,7 +137,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
-		err = f.WaitForNginxServer(host)
+		err = f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "server_name foo") &&
+					!strings.Contains(server, "return 503")
+			})
 		Expect(err).NotTo(HaveOccurred())
 
 		hosts := []string{"foo", "bar"}
