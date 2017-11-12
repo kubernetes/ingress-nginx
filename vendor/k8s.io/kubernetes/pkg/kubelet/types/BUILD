@@ -15,7 +15,6 @@ go_library(
         "pod_update.go",
         "types.go",
     ],
-    importpath = "k8s.io/kubernetes/pkg/kubelet/types",
     deps = [
         "//pkg/api:go_default_library",
         "//vendor/k8s.io/api/core/v1:go_default_library",
@@ -31,7 +30,6 @@ go_test(
         "pod_update_test.go",
         "types_test.go",
     ],
-    importpath = "k8s.io/kubernetes/pkg/kubelet/types",
     library = ":go_default_library",
     deps = [
         "//vendor/github.com/stretchr/testify/assert:go_default_library",

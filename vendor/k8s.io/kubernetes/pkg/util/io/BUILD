@@ -11,7 +11,6 @@ go_library(
         "consistentread.go",
         "writer.go",
     ],
-    importpath = "k8s.io/kubernetes/pkg/util/io",
     deps = ["//vendor/github.com/golang/glog:go_default_library"],
 )
 

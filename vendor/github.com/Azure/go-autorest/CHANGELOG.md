@@ -1,5 +1,38 @@
 # CHANGELOG
 
+## v9.4.0
+
+### New Features
+
+- Added WaitForCompletion() to Future as a default polling implementation.
+
+### Bug Fixes
+
+- Method Future.Done() shouldn't update polling status for unexpected HTTP status codes.
+
+## v9.3.1
+
+### Bug Fixes
+
+- DoRetryForStatusCodes will retry if sender.Do returns a non-nil error.
+
+## v9.3.0
+
+### New Features
+
+- Added PollingMethod() to Future so callers know what kind of polling mechanism is used.
+- Added azure.ChangeToGet() which transforms an http.Request into a GET (to be used with LROs).
+
+## v9.2.0
+
+### New Features
+
+- Added support for custom Azure Stack endpoints.
+- Added type azure.Future used to track the status of long-running operations.
+
+### Bug Fixes
+
+- Preserve the original error in DoRetryWithRegistration when registration fails.
 
 ## v9.1.1
 

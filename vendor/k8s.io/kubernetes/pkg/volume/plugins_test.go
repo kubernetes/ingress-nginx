@@ -24,8 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-const testPluginName = "kubernetes.io/testPlugin"
-
 func TestSpecSourceConverters(t *testing.T) {
 	v := &v1.Volume{
 		Name:         "foo",
@@ -64,7 +62,7 @@ func (plugin *testPlugins) Init(host VolumeHost) error {
 }
 
 func (plugin *testPlugins) GetPluginName() string {
-	return testPluginName
+	return "testPlugin"
 }
 
 func (plugin *testPlugins) GetVolumeName(spec *Spec) (string, error) {
@@ -108,11 +106,11 @@ func TestVolumePluginMgrFunc(t *testing.T) {
 	var prober DynamicPluginProber = nil // TODO (#51147) inject mock
 	vpm.InitPlugins(newTestPlugin(), prober, nil)
 
-	plug, err := vpm.FindPluginByName(testPluginName)
+	plug, err := vpm.FindPluginByName("testPlugin")
 	if err != nil {
 		t.Errorf("Can't find the plugin by name")
 	}
-	if plug.GetPluginName() != testPluginName {
+	if plug.GetPluginName() != "testPlugin" {
 		t.Errorf("Wrong name: %s", plug.GetPluginName())
 	}
 

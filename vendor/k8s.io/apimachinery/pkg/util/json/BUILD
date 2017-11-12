@@ -9,13 +9,11 @@ load(
 go_library(
     name = "go_default_library",
     srcs = ["json.go"],
-    importpath = "k8s.io/apimachinery/pkg/util/json",
 )
 
 go_test(
     name = "go_default_test",
     srcs = ["json_test.go"],
-    importpath = "k8s.io/apimachinery/pkg/util/json",
     library = ":go_default_library",
 )
 

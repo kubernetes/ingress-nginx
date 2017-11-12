@@ -13,7 +13,6 @@ go_test(
         "pem_test.go",
     ],
     data = glob(["testdata/**"]),
-    importpath = "k8s.io/client-go/util/cert",
     library = ":go_default_library",
 )
 
@@ -28,7 +27,6 @@ go_library(
     data = [
         "testdata/dontUseThisKey.pem",
     ],
-    importpath = "k8s.io/client-go/util/cert",
 )
 
 filegroup(

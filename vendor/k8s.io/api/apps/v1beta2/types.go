@@ -629,6 +629,12 @@ type DaemonSet struct {
 }
 
 const (
+	// DEPRECATED: DefaultDaemonSetUniqueLabelKey is used instead.
+	// DaemonSetTemplateGenerationKey is the key of the labels that is added
+	// to daemon set pods to distinguish between old and new pod templates
+	// during DaemonSet template update.
+	DaemonSetTemplateGenerationKey string = "pod-template-generation"
+
 	// DefaultDaemonSetUniqueLabelKey is the default label key that is added
 	// to existing DaemonSet pods to distinguish between old and new
 	// DaemonSet pods during DaemonSet template updates.
@@ -652,7 +658,7 @@ type DaemonSetList struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ReplicaSet ensures that a specified number of pod replicas are running at any given time.
+// ReplicaSet represents the configuration of a ReplicaSet.
 type ReplicaSet struct {
 	metav1.TypeMeta `json:",inline"`
 
