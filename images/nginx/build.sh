@@ -24,8 +24,8 @@ export NDK_VERSION=0.3.0
 export VTS_VERSION=0.1.15
 export SETMISC_VERSION=0.31
 export STICKY_SESSIONS_VERSION=08a395c66e42
-export MORE_HEADERS_VERSION=0.32
-export NGINX_DIGEST_AUTH=7955af9c77598c697ac292811914ce1e2b3b824c
+export MORE_HEADERS_VERSION=0.33
+export NGINX_DIGEST_AUTH=519dc2a4907bc6d9c48f95b3cf6a0151aaf44b40
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.1.1
 export OPENTRACING_CPP_VERSION=1.0.0
@@ -34,7 +34,7 @@ export MODSECURITY=a2a5858d249222938c2f5e48087a922c63d7f9d8
 
 export BUILD_PATH=/tmp/build
 
-ARCH=$(uname -p)
+ARCH=$(uname -m)
 
 get_src()
 {
@@ -48,15 +48,12 @@ get_src()
   rm -rf "$f"
 }
 
-mkdir "$BUILD_PATH"
-cd "$BUILD_PATH"
-
 if [[ ${ARCH} == "ppc64le" ]]; then
-  apt-get update && apt-get install --no-install-recommends -y software-properties-common
+  clean-install software-properties-common
 fi
 
 # install required packages to build
-apt-get update && apt-get install --no-install-recommends -y \
+clean-install \
   bash \
   build-essential \
   curl ca-certificates \
@@ -78,7 +75,7 @@ apt-get update && apt-get install --no-install-recommends -y \
   libcurl4-openssl-dev \
   procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
-  linux-headers-generic || exit 1
+  || exit 1
 
 mkdir -p /etc/nginx
 
@@ -88,6 +85,9 @@ wget -O /etc/nginx/GeoLiteCity.dat.gz https://geolite.maxmind.com/download/geoip
 
 gunzip /etc/nginx/GeoIP.dat.gz
 gunzip /etc/nginx/GeoLiteCity.dat.gz
+
+mkdir --verbose -p "$BUILD_PATH"
+cd "$BUILD_PATH"
 
 # download, verify and extract the source files
 get_src 8512fc6f986a20af293b61f33b0e72f64a72ea5b1acbcc790c4c4e2d6f63f8f8 \
@@ -102,13 +102,13 @@ get_src 97946a68937b50ab8637e1a90a13198fe376d801dc3e7447052e43c28e9ee7de \
 get_src 5112a054b1b1edb4c0042a9a840ef45f22abb3c05c68174e28ebf483164fb7e1 \
         "https://github.com/vozlt/nginx-module-vts/archive/v$VTS_VERSION.tar.gz"
 
-get_src c6d9dab8ea1fc997031007e2e8f47cced01417e203cd88d53a9fe9f6ae138720 \
+get_src a3dcbab117a9c103bc1ea5200fc00a7b7d2af97ff7fd525f16f8ac2632e30fbf \
         "https://github.com/openresty/headers-more-nginx-module/archive/v$MORE_HEADERS_VERSION.tar.gz"
 
 get_src 53e440737ed1aff1f09fae150219a45f16add0c8d6e84546cb7d80f73ebffd90 \
         "https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/get/$STICKY_SESSIONS_VERSION.tar.gz"
 
-get_src 9b1d0075df787338bb607f14925886249bda60b6b3156713923d5d59e99a708b \
+get_src 5ea7093cedea1a17b3c890015f83fc72346627400a9e6e3cec9c4b21297ecb61 \
         "https://github.com/atomx/nginx-http-auth-digest/archive/$NGINX_DIGEST_AUTH.tar.gz"
 
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
@@ -147,13 +147,15 @@ make install
 
 cd "$BUILD_PATH"
 
-# Get Brotli source and deps
-git clone https://github.com/google/ngx_brotli.git
-cd ngx_brotli && git submodule update --init
-
+if [[ ${ARCH} != "s390x" ]]; then
+ # Get Brotli source and deps
+ git clone --depth=1 https://github.com/google/ngx_brotli.git 
+ cd ngx_brotli && git submodule update --init
+fi
 
 if [[ ${ARCH} == "x86_64" ]]; then
   # build modsecurity library
+  cd "$BUILD_PATH"
   git clone https://github.com/SpiderLabs/ModSecurity
   cd ModSecurity/
   git checkout -b v3/master origin/v3/master
@@ -209,12 +211,15 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
-  --add-module=$BUILD_PATH/ngx_brotli \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin"
 
 if [[ ${ARCH} == "x86_64" ]]; then
   WITH_MODULES+=" --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY"
+fi
+
+if [[ ${ARCH} != "s390x" ]]; then
+  WITH_MODULES+=" --add-module=$BUILD_PATH/ngx_brotli"
 fi
 
 ./configure \
@@ -261,19 +266,17 @@ apt-mark unmarkauto \
 
 apt-get remove -y --purge \
   build-essential \
-  gcc-5 \
-  cpp-5 \
+  gcc-6 \
+  cpp-6 \
   libgeoip-dev \
   libpcre3-dev \
   libssl-dev \
   zlib1g-dev \
   libaio-dev \
   linux-libc-dev \
-  perl-modules-5.22 \
   cmake \
   wget \
-  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev \
-  linux-headers-generic
+  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y
 
