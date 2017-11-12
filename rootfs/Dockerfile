@@ -16,18 +16,18 @@ FROM BASEIMAGE
 
 CROSS_BUILD_COPY qemu-QEMUARCH-static /usr/bin/
 
-RUN if grep -q -i "ports.ubuntu.com" /etc/apt/sources.list; \		 +RUN clean-install \
+RUN if grep -q -i "ports.ubuntu.com" /etc/apt/sources.list; \
   then \
     echo "deb http://ports.ubuntu.com/ubuntu-ports zesty universe" >> /etc/apt/sources.list; \
-  else \		
-    echo "deb http://archive.ubuntu.com/ubuntu zesty universe" >> /etc/apt/sources.list; \		
-  fi \		
-  && DEBIAN_FRONTEND=noninteractive apt-get update \		
-  && apt-get install -y \		
-    diffutils \		
-    dumb-init \		
-    --no-install-recommends \		
-  && apt-get clean \		
+  else \
+    echo "deb http://archive.ubuntu.com/ubuntu zesty universe" >> /etc/apt/sources.list; \
+  fi \
+  && DEBIAN_FRONTEND=noninteractive apt-get update \
+  && apt-get install -y \
+    diffutils \
+    dumb-init \
+    --no-install-recommends \
+  && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["/usr/bin/dumb-init"]
