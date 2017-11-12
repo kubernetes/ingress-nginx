@@ -13,12 +13,12 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.28
+TAG ?= 0.29
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
 DOCKER ?= gcloud docker --
 
-ALL_ARCH = amd64 arm arm64 ppc64le
+ALL_ARCH = amd64 arm arm64 ppc64le s390x
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
@@ -28,21 +28,24 @@ endif
 
 QEMUVERSION=v2.9.1
 
-IMGNAME = nginx-slim
+IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/ubuntu-slim-$(ARCH):0.14
+BASEIMAGE?=gcr.io/google-containers/debian-base-$(ARCH):0.3
 
 ifeq ($(ARCH),arm)
-        QEMUARCH=arm
+	QEMUARCH=arm
 endif
 ifeq ($(ARCH),arm64)
-        QEMUARCH=aarch64
+	QEMUARCH=aarch64
 endif
 ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
+endif
+ifeq ($(ARCH),s390x)
+	QEMUARCH=s390x
 endif
 
 TEMP_DIR := $(shell mktemp -d)
@@ -61,7 +64,6 @@ sub-push-%:
 all-container: $(addprefix sub-container-,$(ALL_ARCH))
 
 all-push: $(addprefix sub-push-,$(ALL_ARCH))
-
 
 container: .container-$(ARCH)
 .container-$(ARCH):
