@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+.PHONY: all
 all: all-container
 
 BUILDTAGS=
@@ -49,7 +50,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-slim-$(ARCH):0.28
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.29
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
@@ -72,20 +73,28 @@ TEMP_DIR := $(shell mktemp -d)
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
 
+.PHONY: image-info
 image-info:
 	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
 
+.PHONY: sub-container-%
 sub-container-%:
 	$(MAKE) ARCH=$* build container
 
+.PHONY: sub-push-%
 sub-push-%:
 	$(MAKE) ARCH=$* push
 
+.PHONY: all-container
 all-container: $(addprefix sub-container-,$(ALL_ARCH))
 
+.PHONY: all-push
 all-push: $(addprefix sub-push-,$(ALL_ARCH))
 
+.PHONY: container
 container: .container-$(ARCH)
+
+.PHONY: .container-$(ARCH)
 .container-$(ARCH):
 	cp -RP ./* $(TEMP_DIR)
 	$(SED_I) 's|BASEIMAGE|$(BASEIMAGE)|g' $(DOCKERFILE)
@@ -110,51 +119,64 @@ ifeq ($(ARCH), amd64)
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
+.PHONY: push
 push: .push-$(ARCH)
+
+.PHONY: .push-$(ARCH)
 .push-$(ARCH):
 	$(DOCKER) push $(MULTI_ARCH_IMG):$(TAG)
 ifeq ($(ARCH), amd64)
 	$(DOCKER) push $(IMAGE):$(TAG)
 endif
 
+.PHONY: clean
 clean:
 	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
 
+.PHONY: build
 build: clean
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
 		-ldflags "-s -w -X ${PKG}/version.RELEASE=${TAG} -X ${PKG}/version.COMMIT=${COMMIT} -X ${PKG}/version.REPO=${REPO_INFO}" \
 		-o ${TEMP_DIR}/rootfs/nginx-ingress-controller ${PKG}/cmd/nginx
 
+.PHONY: fmt
 fmt:
 	@echo "+ $@"
 	@go list -f '{{if len .TestGoFiles}}"gofmt -s -l {{.Dir}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
 
+.PHONY: lint
 lint:
 	@echo "+ $@"
 	@go list -f '{{if len .TestGoFiles}}"golint {{.Dir}}/..."{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
 
+.PHONY: test
 test: fmt lint vet
 	@echo "+ $@"
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
+.PHONY: e2e-image
 e2e-image: sub-container-amd64
 	TAG=$(TAG) IMAGE=$(MULTI_ARCH_IMG) docker tag $(IMAGE):$(TAG) $(IMAGE):test
 	docker images
 
+.PHONY: e2e-test
 e2e-test:
 	@go test -o e2e-tests -c ./test/e2e
 	@KUBECONFIG=${HOME}/.kube/config INGRESSNGINXCONFIG=${HOME}/.kube/config ./e2e-tests
 
+.PHONY: cover
 cover:
 	@echo "+ $@"
 	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
 	gover
 	goveralls -coverprofile=gover.coverprofile -service travis-ci -repotoken $$COVERALLS_TOKEN
 
+.PHONY: vet
 vet:
 	@echo "+ $@"
 	@go vet $(shell go list ${PKG}/... | grep -v vendor)
 
+.PHONY: release
 release: all-container all-push
 	echo "done"
 
