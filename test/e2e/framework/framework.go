@@ -22,7 +22,9 @@ import (
 	"k8s.io/api/core/v1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -51,6 +53,7 @@ type Framework struct {
 
 	// A Kubernetes and Service Catalog client
 	KubeClientSet          kubernetes.Interface
+	KubeConfig             *restclient.Config
 	APIExtensionsClientSet apiextcs.Interface
 
 	// Namespace in which all test resources should reside
@@ -86,6 +89,7 @@ func (f *Framework) BeforeEach() {
 	kubeConfig, err := LoadConfig(TestContext.KubeConfig, TestContext.KubeContext)
 	Expect(err).NotTo(HaveOccurred())
 
+	f.KubeConfig = kubeConfig
 	f.KubeClientSet, err = kubernetes.NewForConfig(kubeConfig)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -161,7 +165,40 @@ func (f *Framework) GetNginxURL(scheme RequestScheme) (string, error) {
 	return fmt.Sprintf("%v://%v:%v", scheme, ip, port), nil
 }
 
-func (f *Framework) WaitForNginxServer(name string) error {
+// WaitForNginxServer waits until the nginx configuration contains a particular server section
+func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) error {
+	// initial wait to allow the update of the ingress controller
 	time.Sleep(5 * time.Second)
-	return nil
+	return wait.PollImmediate(Poll, time.Minute*2, f.matchNginxConditions(name, matcher))
+}
+
+func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
+	return func() (bool, error) {
+		l, err := f.KubeClientSet.CoreV1().Pods("ingress-nginx").List(metav1.ListOptions{
+			LabelSelector: "app=ingress-nginx",
+		})
+		if err != nil {
+			return false, err
+		}
+
+		if len(l.Items) == 0 {
+			return false, fmt.Errorf("no nginx ingress controller pod is running")
+		}
+
+		if len(l.Items) != 1 {
+			return false, fmt.Errorf("unexpected number of nginx ingress controller pod is running (%v)", len(l.Items))
+		}
+
+		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
+		o, err := f.ExecCommand(&l.Items[0], cmd)
+		if err != nil {
+			return false, err
+		}
+
+		if matcher(o) {
+			return true, nil
+		}
+
+		return false, nil
+	}
 }

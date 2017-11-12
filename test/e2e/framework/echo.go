@@ -33,9 +33,8 @@ import (
 func (f *Framework) NewEchoDeployment() error {
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:                       "http-svc",
-			Namespace:                  f.Namespace.Name,
-			DeletionGracePeriodSeconds: NewInt64(5),
+			Name:      "http-svc",
+			Namespace: f.Namespace.Name,
 		},
 		Spec: extensions.DeploymentSpec{
 			Replicas: NewInt32(1),
@@ -51,6 +50,7 @@ func (f *Framework) NewEchoDeployment() error {
 					},
 				},
 				Spec: corev1.PodSpec{
+					TerminationGracePeriodSeconds: NewInt64(1),
 					Containers: []corev1.Container{
 						{
 							Name:  "http-svc",
