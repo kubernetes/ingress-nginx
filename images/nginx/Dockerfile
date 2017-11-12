@@ -17,9 +17,11 @@ FROM BASEIMAGE
 
 CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
 
-COPY build.sh /tmp
+COPY build.sh /
 
-RUN /tmp/build.sh
+RUN clean-install bash
+
+RUN /build.sh
 
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector
 # This only works if nginx is started with CMD or ENTRYPOINT
