@@ -12,6 +12,7 @@ root: .root/src/$(PKG)
 
 clean:
 	rm -rf .root
+	rm -rf tests/*_easyjson.go
 
 build:
 	go build -i -o .root/bin/easyjson $(PKG)/easyjson

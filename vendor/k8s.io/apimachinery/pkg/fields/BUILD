@@ -12,7 +12,6 @@ go_test(
         "fields_test.go",
         "selector_test.go",
     ],
-    importpath = "k8s.io/apimachinery/pkg/fields",
     library = ":go_default_library",
 )
 
@@ -24,7 +23,6 @@ go_library(
         "requirements.go",
         "selector.go",
     ],
-    importpath = "k8s.io/apimachinery/pkg/fields",
     deps = ["//vendor/k8s.io/apimachinery/pkg/selection:go_default_library"],
 )
 

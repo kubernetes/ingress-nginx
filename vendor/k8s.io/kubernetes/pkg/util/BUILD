@@ -38,7 +38,6 @@ filegroup(
         "//pkg/util/net:all-srcs",
         "//pkg/util/netsh:all-srcs",
         "//pkg/util/node:all-srcs",
-        "//pkg/util/nsenter:all-srcs",
         "//pkg/util/oom:all-srcs",
         "//pkg/util/parsers:all-srcs",
         "//pkg/util/pointer:all-srcs",
