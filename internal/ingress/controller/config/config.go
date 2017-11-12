@@ -335,7 +335,7 @@ type Configuration struct {
 
 	// Enables or disables the use of the NGINX Brotli Module for compression
 	// https://github.com/google/ngx_brotli
-	UseBrotli bool `json:"use-brotli,omitempty"`
+	EnableBrotli bool `json:"enable-brotli,omitempty"`
 
 	// Brotli Compression Level that will be used
 	BrotliLevel int `json:"brotli-level,omitempty"`
@@ -476,7 +476,7 @@ func NewDefault() Configuration {
 		SSLSessionCacheSize:        sslSessionCacheSize,
 		SSLSessionTickets:          true,
 		SSLSessionTimeout:          sslSessionTimeout,
-		UseBrotli:                  true,
+		EnableBrotli:               true,
 		UseGzip:                    true,
 		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:      "10s",
