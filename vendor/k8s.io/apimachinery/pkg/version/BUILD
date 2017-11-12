@@ -11,7 +11,6 @@ go_library(
         "doc.go",
         "types.go",
     ],
-    importpath = "k8s.io/apimachinery/pkg/version",
 )
 
 filegroup(

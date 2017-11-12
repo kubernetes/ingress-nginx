@@ -11,7 +11,6 @@ go_library(
         "well_known_annotations.go",
         "well_known_labels.go",
     ],
-    importpath = "k8s.io/kubernetes/pkg/kubelet/apis",
 )
 
 filegroup(

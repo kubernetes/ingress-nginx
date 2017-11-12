@@ -9,7 +9,6 @@ load(
 go_test(
     name = "go_default_test",
     srcs = ["intstr_test.go"],
-    importpath = "k8s.io/apimachinery/pkg/util/intstr",
     library = ":go_default_library",
     deps = ["//vendor/github.com/ghodss/yaml:go_default_library"],
 )
@@ -20,7 +19,6 @@ go_library(
         "generated.pb.go",
         "intstr.go",
     ],
-    importpath = "k8s.io/apimachinery/pkg/util/intstr",
     deps = [
         "//vendor/github.com/go-openapi/spec:go_default_library",
         "//vendor/github.com/gogo/protobuf/proto:go_default_library",

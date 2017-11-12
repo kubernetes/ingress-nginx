@@ -8,7 +8,6 @@ load(
 go_library(
     name = "go_default_library",
     srcs = ["services.go"],
-    importpath = "k8s.io/kubernetes/pkg/kubelet/apis/cri",
     deps = ["//pkg/kubelet/apis/cri/v1alpha1/runtime:go_default_library"],
 )
 

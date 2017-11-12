@@ -759,7 +759,7 @@ type IngressBackend struct {
 // +genclient:method=UpdateScale,verb=update,subresource=scale,input=Scale,result=Scale
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ReplicaSet ensures that a specified number of pod replicas are running at any given time.
+// ReplicaSet represents the configuration of a replica set.
 type ReplicaSet struct {
 	metav1.TypeMeta
 	// +optional

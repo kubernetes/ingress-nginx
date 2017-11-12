@@ -1923,7 +1923,11 @@ func ValidateVolumeMounts(mounts []api.VolumeMount, volumes sets.String, contain
 			allErrs = append(allErrs, field.Invalid(idxPath.Child("mountPath"), mnt.MountPath, "must be unique"))
 		}
 		if !path.IsAbs(mnt.MountPath) {
-			allErrs = append(allErrs, field.Invalid(idxPath.Child("mountPath"), mnt.MountPath, "must be an absolute path"))
+			// also allow windows absolute path
+			p := mnt.MountPath
+			if len(p) < 2 || ((p[0] < 'A' || p[0] > 'Z') && (p[0] < 'a' || p[0] > 'z')) || p[1] != ':' {
+				allErrs = append(allErrs, field.Invalid(idxPath.Child("mountPath"), mnt.MountPath, "must be an absolute path"))
+			}
 		}
 		mountpoints.Insert(mnt.MountPath)
 		if len(mnt.SubPath) > 0 {
@@ -3146,22 +3150,6 @@ func ValidateService(service *api.Service) field.ErrorList {
 			allErrs = append(allErrs, field.Duplicate(portPath, key))
 		}
 		ports[key] = true
-	}
-
-	// Check for duplicate TargetPort
-	portsPath = specPath.Child("ports")
-	targetPorts := make(map[api.ServicePort]bool)
-	for i, port := range service.Spec.Ports {
-		if (port.TargetPort.Type == intstr.Int && port.TargetPort.IntVal == 0) || (port.TargetPort.Type == intstr.String && port.TargetPort.StrVal == "") {
-			continue
-		}
-		portPath := portsPath.Index(i)
-		key := api.ServicePort{Protocol: port.Protocol, TargetPort: port.TargetPort}
-		_, found := targetPorts[key]
-		if found {
-			allErrs = append(allErrs, field.Duplicate(portPath.Child("targetPort"), port.TargetPort))
-		}
-		targetPorts[key] = true
 	}
 
 	// Validate SourceRange field and annotation

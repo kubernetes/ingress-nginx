@@ -136,7 +136,7 @@ func validateProfile(profile string, loadedProfiles map[string]bool) error {
 }
 
 func ValidateProfileFormat(profile string) error {
-	if profile == "" || profile == ProfileRuntimeDefault || profile == ProfileNameUnconfined {
+	if profile == "" || profile == ProfileRuntimeDefault {
 		return nil
 	}
 	if !strings.HasPrefix(profile, ProfileNamePrefix) {
