@@ -4,14 +4,14 @@
 [[projects]]
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
-  revision = "eaddaf6dd7ee35fd3c2420c8d27478db176b0485"
-  version = "v0.15.0"
+  revision = "2d3a6656c17a60b0815b7e06ab0be04eacb6e613"
+  version = "v0.16.0"
 
 [[projects]]
   name = "github.com/Azure/go-autorest"
   packages = ["autorest","autorest/adal","autorest/azure","autorest/date"]
-  revision = "7aa5b8a6f18b5c15910c767ab005fc4585221177"
-  version = "v9.1.1"
+  revision = "ab5671379918d9af294b6f0e3d8aaa98c829416d"
+  version = "v9.4.0"
 
 [[projects]]
   name = "github.com/PuerkitoBio/purell"
@@ -67,6 +67,12 @@
   version = "v2.4.0"
 
 [[projects]]
+  name = "github.com/emicklei/go-restful-swagger12"
+  packages = ["."]
+  revision = "dcef7f55730566d41eae5db10e7d6981829720f6"
+  version = "1.0.1"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "629574ca2a5df945712d3079857300b5e4da0236"
@@ -100,13 +106,13 @@
   branch = "master"
   name = "github.com/go-openapi/spec"
   packages = ["."]
-  revision = "84b5bee7bcb76f3d17bcbaf421bac44bd5709ca6"
+  revision = "a4fa9574c7aa73b2fc54e251eb9524d0482bb592"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/swag"
   packages = ["."]
-  revision = "f3f9494671f93fcff853e3c6e9e948b3eb71e590"
+  revision = "cf0bdb963811675a4d7e74901cefc7411a1df939"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -124,13 +130,13 @@
   branch = "master"
   name = "github.com/golang/groupcache"
   packages = ["lru"]
-  revision = "b710c8433bd175204919eb38776e944233235d03"
+  revision = "84a468cf14b4376def5d68c722b139b881c450a4"
 
 [[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/timestamp"]
-  revision = "130e6b02ab059e7b717a096f397c5b60111cae74"
+  revision = "1643683e1b54a9e88ad26d98f81400c8c9d9f4f9"
 
 [[projects]]
   branch = "master"
@@ -154,13 +160,13 @@
   branch = "master"
   name = "github.com/gophercloud/gophercloud"
   packages = [".","openstack","openstack/identity/v2/tenants","openstack/identity/v2/tokens","openstack/identity/v3/tokens","openstack/utils","pagination"]
-  revision = "443743e88335413103dcf1997e46d401b264fbcd"
+  revision = "0b6b13c4dd9e07a89f83cbe4617c13ad646d6362"
 
 [[projects]]
   branch = "master"
   name = "github.com/gregjones/httpcache"
   packages = [".","diskcache"]
-  revision = "c1f8028e62adb3d518b823a2f8e6a95c38bdd3aa"
+  revision = "22a0b1feae53974ed4cfe27bcce70dba061cc5fd"
 
 [[projects]]
   branch = "master"
@@ -190,7 +196,7 @@
   branch = "master"
   name = "github.com/juju/ratelimit"
   packages = ["."]
-  revision = "5b9ff866471762aa2ab2dced63c9fb6f53921342"
+  revision = "59fac5042749a5afb9af70e813da1dd5474f0167"
 
 [[projects]]
   name = "github.com/kr/pty"
@@ -208,7 +214,7 @@
   branch = "master"
   name = "github.com/mailru/easyjson"
   packages = ["buffer","jlexer","jwriter"]
-  revision = "efb36c3268025336c3cdd805e3be5f88d1f62b73"
+  revision = "5f62e4f3afa2f576dc86531b7df4d966b19ef8f8"
 
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
@@ -311,7 +317,7 @@
   branch = "master"
   name = "github.com/prometheus/common"
   packages = ["expfmt","internal/bitbucket.org/ww/goautoneg","model"]
-  revision = "1bab55dd05dbff384524a6a1c99006d9eb5f139b"
+  revision = "e3fb1a1acd7605367a2b378bc2e2f893c05174b7"
 
 [[projects]]
   branch = "master"
@@ -320,10 +326,10 @@
   revision = "a6e9df898b1336106c743392c48ee0b71f5c4efa"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/afero"
   packages = [".","mem"]
-  revision = "5660eeed305fe5f69c8fc6cf899132a459a97064"
+  revision = "8d919cbe7e2627e417f3e45c3c0e489a5b7e2536"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -341,31 +347,31 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "541b9d50ad47e36efd8fb423e938e59ff1691f68"
+  revision = "6a293f2d4b14b8e6d3f0539e383f6d0d30fce3fd"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","html","html/atom","html/charset","http2","http2/hpack","idna","internal/timeseries","lex/httplex","publicsuffix","trace"]
-  revision = "cd69bc3fc700721b709c3a59e16e24c67b58f6ff"
+  revision = "a337091b0525af65de94df2eb7e98bd9962dcbe2"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","google","internal","jws","jwt"]
-  revision = "bb50c06baba3d0c76f9d125c0719093e315b5b44"
+  revision = "9ff8ebcc8e241d46f52ecc5bff0e5a2f2dbef402"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "8dbc5d05d6edcc104950cc299a1ce6641235bc86"
+  revision = "1e2299c37cc91a509f1b12369872d27be0ce98a6"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["collate","collate/build","encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","internal/utf8internal","language","runes","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable","width"]
-  revision = "c01e4764d870b77f8abe5096ee19ad20d80e8075"
+  revision = "88f656faf3f37f690df1a32515b479415e1a6769"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -377,13 +383,13 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "f676e0f3ac6395ff1a529ae59a6670878a8371a6"
+  revision = "11c7f9e547da6db876260ce49ea7536985904c9b"
 
 [[projects]]
   name = "google.golang.org/grpc"
   packages = [".","balancer","codes","connectivity","credentials","grpclb/grpc_lb_v1/messages","grpclog","internal","keepalive","metadata","naming","peer","resolver","stats","status","tap","transport"]
-  revision = "f7bf885db0b7479a537ec317c6e48ce53145f3db"
-  version = "v1.7.0"
+  revision = "5ffe3083946d5603a0578721101dc8165b1d5b5f"
+  version = "v1.7.2"
 
 [[projects]]
   name = "gopkg.in/fsnotify.v1"
@@ -410,52 +416,56 @@
   revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
 
 [[projects]]
+  branch = "release-1.8"
   name = "k8s.io/api"
-  packages = ["admissionregistration/v1alpha1","apps/v1","apps/v1beta1","apps/v1beta2","authentication/v1","authentication/v1beta1","authorization/v1","authorization/v1beta1","autoscaling/v1","autoscaling/v2beta1","batch/v1","batch/v1beta1","batch/v2alpha1","certificates/v1beta1","core/v1","extensions/v1beta1","networking/v1","policy/v1beta1","rbac/v1","rbac/v1alpha1","rbac/v1beta1","scheduling/v1alpha1","settings/v1alpha1","storage/v1","storage/v1beta1"]
-  revision = "409c3b2393cd3359f275bd8b883b4d9c5aec41f6"
+  packages = ["admissionregistration/v1alpha1","apps/v1beta1","apps/v1beta2","authentication/v1","authentication/v1beta1","authorization/v1","authorization/v1beta1","autoscaling/v1","autoscaling/v2beta1","batch/v1","batch/v1beta1","batch/v2alpha1","certificates/v1beta1","core/v1","extensions/v1beta1","networking/v1","policy/v1beta1","rbac/v1","rbac/v1alpha1","rbac/v1beta1","scheduling/v1alpha1","settings/v1alpha1","storage/v1","storage/v1beta1"]
+  revision = "4df58c811fe2e65feb879227b2b245e4dc26e7ad"
 
 [[projects]]
   branch = "master"
   name = "k8s.io/apiextensions-apiserver"
   packages = ["pkg/apis/apiextensions","pkg/apis/apiextensions/v1beta1","pkg/client/clientset/clientset","pkg/client/clientset/clientset/scheme","pkg/client/clientset/clientset/typed/apiextensions/v1beta1","pkg/features"]
-  revision = "83f1a7e2b8384c17fb102b6616e08825ad12992d"
+  revision = "51a1910459f074162eb4e25233e461fe91e99405"
 
 [[projects]]
+  branch = "release-1.8"
   name = "k8s.io/apimachinery"
-  packages = ["pkg/api/equality","pkg/api/errors","pkg/api/meta","pkg/api/resource","pkg/api/validation","pkg/apimachinery","pkg/apimachinery/announced","pkg/apimachinery/registered","pkg/apis/meta/internalversion","pkg/apis/meta/v1","pkg/apis/meta/v1/unstructured","pkg/apis/meta/v1/validation","pkg/apis/meta/v1alpha1","pkg/conversion","pkg/conversion/queryparams","pkg/conversion/unstructured","pkg/fields","pkg/labels","pkg/runtime","pkg/runtime/schema","pkg/runtime/serializer","pkg/runtime/serializer/json","pkg/runtime/serializer/protobuf","pkg/runtime/serializer/recognizer","pkg/runtime/serializer/streaming","pkg/runtime/serializer/versioning","pkg/selection","pkg/types","pkg/util/cache","pkg/util/clock","pkg/util/diff","pkg/util/errors","pkg/util/framer","pkg/util/httpstream","pkg/util/httpstream/spdy","pkg/util/intstr","pkg/util/json","pkg/util/mergepatch","pkg/util/net","pkg/util/remotecommand","pkg/util/runtime","pkg/util/sets","pkg/util/strategicpatch","pkg/util/uuid","pkg/util/validation","pkg/util/validation/field","pkg/util/wait","pkg/util/yaml","pkg/version","pkg/watch","third_party/forked/golang/json","third_party/forked/golang/netutil","third_party/forked/golang/reflect"]
-  revision = "e9a29eff7d472df0f7da9ead5ab59b74e74a07ec"
+  packages = ["pkg/api/equality","pkg/api/errors","pkg/api/meta","pkg/api/resource","pkg/api/validation","pkg/apimachinery","pkg/apimachinery/announced","pkg/apimachinery/registered","pkg/apis/meta/internalversion","pkg/apis/meta/v1","pkg/apis/meta/v1/unstructured","pkg/apis/meta/v1/validation","pkg/apis/meta/v1alpha1","pkg/conversion","pkg/conversion/queryparams","pkg/conversion/unstructured","pkg/fields","pkg/labels","pkg/runtime","pkg/runtime/schema","pkg/runtime/serializer","pkg/runtime/serializer/json","pkg/runtime/serializer/protobuf","pkg/runtime/serializer/recognizer","pkg/runtime/serializer/streaming","pkg/runtime/serializer/versioning","pkg/selection","pkg/types","pkg/util/cache","pkg/util/clock","pkg/util/diff","pkg/util/errors","pkg/util/framer","pkg/util/httpstream","pkg/util/httpstream/spdy","pkg/util/intstr","pkg/util/json","pkg/util/mergepatch","pkg/util/net","pkg/util/rand","pkg/util/remotecommand","pkg/util/runtime","pkg/util/sets","pkg/util/strategicpatch","pkg/util/uuid","pkg/util/validation","pkg/util/validation/field","pkg/util/wait","pkg/util/yaml","pkg/version","pkg/watch","third_party/forked/golang/json","third_party/forked/golang/netutil","third_party/forked/golang/reflect"]
+  revision = "019ae5ada31de202164b118aee88ee2d14075c31"
 
 [[projects]]
   branch = "master"
   name = "k8s.io/apiserver"
   packages = ["pkg/authentication/authenticator","pkg/authentication/serviceaccount","pkg/authentication/user","pkg/features","pkg/server/healthz","pkg/util/feature","pkg/util/logs"]
-  revision = "d299c880c4e33854f8c45bdd7ab599fb54cbe575"
+  revision = "7001bc4df8883d4a0ec84cd4b2117655a0009b6c"
 
 [[projects]]
   name = "k8s.io/client-go"
-  packages = ["discovery","discovery/fake","kubernetes","kubernetes/fake","kubernetes/scheme","kubernetes/typed/admissionregistration/v1alpha1","kubernetes/typed/admissionregistration/v1alpha1/fake","kubernetes/typed/apps/v1","kubernetes/typed/apps/v1/fake","kubernetes/typed/apps/v1beta1","kubernetes/typed/apps/v1beta1/fake","kubernetes/typed/apps/v1beta2","kubernetes/typed/apps/v1beta2/fake","kubernetes/typed/authentication/v1","kubernetes/typed/authentication/v1/fake","kubernetes/typed/authentication/v1beta1","kubernetes/typed/authentication/v1beta1/fake","kubernetes/typed/authorization/v1","kubernetes/typed/authorization/v1/fake","kubernetes/typed/authorization/v1beta1","kubernetes/typed/authorization/v1beta1/fake","kubernetes/typed/autoscaling/v1","kubernetes/typed/autoscaling/v1/fake","kubernetes/typed/autoscaling/v2beta1","kubernetes/typed/autoscaling/v2beta1/fake","kubernetes/typed/batch/v1","kubernetes/typed/batch/v1/fake","kubernetes/typed/batch/v1beta1","kubernetes/typed/batch/v1beta1/fake","kubernetes/typed/batch/v2alpha1","kubernetes/typed/batch/v2alpha1/fake","kubernetes/typed/certificates/v1beta1","kubernetes/typed/certificates/v1beta1/fake","kubernetes/typed/core/v1","kubernetes/typed/core/v1/fake","kubernetes/typed/extensions/v1beta1","kubernetes/typed/extensions/v1beta1/fake","kubernetes/typed/networking/v1","kubernetes/typed/networking/v1/fake","kubernetes/typed/policy/v1beta1","kubernetes/typed/policy/v1beta1/fake","kubernetes/typed/rbac/v1","kubernetes/typed/rbac/v1/fake","kubernetes/typed/rbac/v1alpha1","kubernetes/typed/rbac/v1alpha1/fake","kubernetes/typed/rbac/v1beta1","kubernetes/typed/rbac/v1beta1/fake","kubernetes/typed/scheduling/v1alpha1","kubernetes/typed/scheduling/v1alpha1/fake","kubernetes/typed/settings/v1alpha1","kubernetes/typed/settings/v1alpha1/fake","kubernetes/typed/storage/v1","kubernetes/typed/storage/v1/fake","kubernetes/typed/storage/v1beta1","kubernetes/typed/storage/v1beta1/fake","pkg/version","plugin/pkg/client/auth","plugin/pkg/client/auth/azure","plugin/pkg/client/auth/gcp","plugin/pkg/client/auth/oidc","plugin/pkg/client/auth/openstack","rest","rest/watch","testing","third_party/forked/golang/template","tools/auth","tools/cache","tools/clientcmd","tools/clientcmd/api","tools/clientcmd/api/latest","tools/clientcmd/api/v1","tools/leaderelection","tools/leaderelection/resourcelock","tools/metrics","tools/pager","tools/record","tools/reference","tools/remotecommand","transport","transport/spdy","util/buffer","util/cert","util/cert/triple","util/exec","util/flowcontrol","util/homedir","util/integer","util/jsonpath","util/retry","util/workqueue"]
-  revision = "076e344c86e52f088b78615f815b245f6d613537"
+  packages = ["discovery","discovery/fake","kubernetes","kubernetes/fake","kubernetes/scheme","kubernetes/typed/admissionregistration/v1alpha1","kubernetes/typed/admissionregistration/v1alpha1/fake","kubernetes/typed/apps/v1beta1","kubernetes/typed/apps/v1beta1/fake","kubernetes/typed/apps/v1beta2","kubernetes/typed/apps/v1beta2/fake","kubernetes/typed/authentication/v1","kubernetes/typed/authentication/v1/fake","kubernetes/typed/authentication/v1beta1","kubernetes/typed/authentication/v1beta1/fake","kubernetes/typed/authorization/v1","kubernetes/typed/authorization/v1/fake","kubernetes/typed/authorization/v1beta1","kubernetes/typed/authorization/v1beta1/fake","kubernetes/typed/autoscaling/v1","kubernetes/typed/autoscaling/v1/fake","kubernetes/typed/autoscaling/v2beta1","kubernetes/typed/autoscaling/v2beta1/fake","kubernetes/typed/batch/v1","kubernetes/typed/batch/v1/fake","kubernetes/typed/batch/v1beta1","kubernetes/typed/batch/v1beta1/fake","kubernetes/typed/batch/v2alpha1","kubernetes/typed/batch/v2alpha1/fake","kubernetes/typed/certificates/v1beta1","kubernetes/typed/certificates/v1beta1/fake","kubernetes/typed/core/v1","kubernetes/typed/core/v1/fake","kubernetes/typed/extensions/v1beta1","kubernetes/typed/extensions/v1beta1/fake","kubernetes/typed/networking/v1","kubernetes/typed/networking/v1/fake","kubernetes/typed/policy/v1beta1","kubernetes/typed/policy/v1beta1/fake","kubernetes/typed/rbac/v1","kubernetes/typed/rbac/v1/fake","kubernetes/typed/rbac/v1alpha1","kubernetes/typed/rbac/v1alpha1/fake","kubernetes/typed/rbac/v1beta1","kubernetes/typed/rbac/v1beta1/fake","kubernetes/typed/scheduling/v1alpha1","kubernetes/typed/scheduling/v1alpha1/fake","kubernetes/typed/settings/v1alpha1","kubernetes/typed/settings/v1alpha1/fake","kubernetes/typed/storage/v1","kubernetes/typed/storage/v1/fake","kubernetes/typed/storage/v1beta1","kubernetes/typed/storage/v1beta1/fake","pkg/version","plugin/pkg/client/auth","plugin/pkg/client/auth/azure","plugin/pkg/client/auth/gcp","plugin/pkg/client/auth/oidc","plugin/pkg/client/auth/openstack","rest","rest/watch","testing","third_party/forked/golang/template","tools/auth","tools/cache","tools/clientcmd","tools/clientcmd/api","tools/clientcmd/api/latest","tools/clientcmd/api/v1","tools/leaderelection","tools/leaderelection/resourcelock","tools/metrics","tools/pager","tools/record","tools/reference","tools/remotecommand","transport","transport/spdy","util/cert","util/cert/triple","util/exec","util/flowcontrol","util/homedir","util/integer","util/jsonpath","util/retry","util/workqueue"]
+  revision = "2ae454230481a7cb5544325e12ad7658ecccd19b"
+  version = "v5.0.1"
 
 [[projects]]
   branch = "master"
   name = "k8s.io/kube-openapi"
   packages = ["pkg/common"]
-  revision = "89ae48fe8691077463af5b7fb3b6f194632c5946"
+  revision = "39a7bf85c140f972372c2a0d1ee40adbf0c8bfe1"
 
 [[projects]]
   name = "k8s.io/kubernetes"
-  packages = ["pkg/api","pkg/api/helper","pkg/api/install","pkg/api/service","pkg/api/v1","pkg/api/v1/helper","pkg/api/v1/pod","pkg/api/validation","pkg/apis/extensions","pkg/apis/networking","pkg/capabilities","pkg/cloudprovider","pkg/controller","pkg/features","pkg/kubelet/apis","pkg/kubelet/apis/cri/v1alpha1/runtime","pkg/kubelet/container","pkg/kubelet/types","pkg/kubelet/util/format","pkg/kubelet/util/ioutils","pkg/kubelet/util/sliceutils","pkg/security/apparmor","pkg/serviceaccount","pkg/util/file","pkg/util/filesystem","pkg/util/hash","pkg/util/io","pkg/util/mount","pkg/util/net/sets","pkg/util/nsenter","pkg/util/parsers","pkg/util/pointer","pkg/util/sysctl","pkg/util/taints","pkg/volume","pkg/volume/util","third_party/forked/golang/expansion"]
-  revision = "88975e98d6f4a84929a243abeb772de16399a4e9"
+  packages = ["pkg/api","pkg/api/helper","pkg/api/install","pkg/api/service","pkg/api/util","pkg/api/v1","pkg/api/v1/helper","pkg/api/v1/pod","pkg/api/validation","pkg/apis/extensions","pkg/apis/networking","pkg/capabilities","pkg/cloudprovider","pkg/controller","pkg/features","pkg/kubelet/apis","pkg/kubelet/apis/cri/v1alpha1/runtime","pkg/kubelet/container","pkg/kubelet/types","pkg/kubelet/util/format","pkg/kubelet/util/ioutils","pkg/kubelet/util/sliceutils","pkg/security/apparmor","pkg/serviceaccount","pkg/util/file","pkg/util/filesystem","pkg/util/hash","pkg/util/io","pkg/util/mount","pkg/util/net/sets","pkg/util/parsers","pkg/util/pointer","pkg/util/sysctl","pkg/util/taints","pkg/volume","pkg/volume/util","third_party/forked/golang/expansion"]
+  revision = "f0efb3cb883751c5ffdbe6d515f3cb4fbe7b7acd"
+  version = "v1.8.3"
 
 [[projects]]
   branch = "master"
   name = "k8s.io/utils"
   packages = ["exec"]
-  revision = "4fe312863be2155a7b68acd2aff1c9221b24e68c"
+  revision = "bf963466fd3fea33c428098b12a89d8ecd012f25"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6afb98c9a0bdde143167e3ad0ac1735954c2aa4ca5c60402198afbf57a0f953f"
+  inputs-digest = "cb7f34d9108be87b2601c0d4acbd6faa41bdf211a082760fa1b4d4300bf3e959"
   solver-name = "gps-cdcl"
   solver-version = 1

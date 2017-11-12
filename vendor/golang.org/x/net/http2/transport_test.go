@@ -2290,6 +2290,60 @@ func TestTransportReadHeadResponse(t *testing.T) {
 	ct.run()
 }
 
+func TestTransportReadHeadResponseWithBody(t *testing.T) {
+	response := "redirecting to /elsewhere"
+	ct := newClientTester(t)
+	clientDone := make(chan struct{})
+	ct.client = func() error {
+		defer close(clientDone)
+		req, _ := http.NewRequest("HEAD", "https://dummy.tld/", nil)
+		res, err := ct.tr.RoundTrip(req)
+		if err != nil {
+			return err
+		}
+		if res.ContentLength != int64(len(response)) {
+			return fmt.Errorf("Content-Length = %d; want %d", res.ContentLength, len(response))
+		}
+		slurp, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("ReadAll: %v", err)
+		}
+		if len(slurp) > 0 {
+			return fmt.Errorf("Unexpected non-empty ReadAll body: %q", slurp)
+		}
+		return nil
+	}
+	ct.server = func() error {
+		ct.greet()
+		for {
+			f, err := ct.fr.ReadFrame()
+			if err != nil {
+				t.Logf("ReadFrame: %v", err)
+				return nil
+			}
+			hf, ok := f.(*HeadersFrame)
+			if !ok {
+				continue
+			}
+			var buf bytes.Buffer
+			enc := hpack.NewEncoder(&buf)
+			enc.WriteField(hpack.HeaderField{Name: ":status", Value: "200"})
+			enc.WriteField(hpack.HeaderField{Name: "content-length", Value: strconv.Itoa(len(response))})
+			ct.fr.WriteHeaders(HeadersFrameParam{
+				StreamID:      hf.StreamID,
+				EndHeaders:    true,
+				EndStream:     false,
+				BlockFragment: buf.Bytes(),
+			})
+			ct.fr.WriteData(hf.StreamID, true, []byte(response))
+
+			<-clientDone
+			return nil
+		}
+	}
+	ct.run()
+}
+
 type neverEnding byte
 
 func (b neverEnding) Read(p []byte) (int, error) {
@@ -3041,6 +3095,34 @@ func TestTransportCancelDataResponseRace(t *testing.T) {
 	if string(slurp) != msg {
 		t.Errorf("Got = %q; want %q", slurp, msg)
 	}
+}
+
+// Issue 21316: It should be safe to reuse an http.Request after the
+// request has completed.
+func TestTransportNoRaceOnRequestObjectAfterRequestComplete(t *testing.T) {
+	st := newServerTester(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		io.WriteString(w, "body")
+	}, optOnlyServer)
+	defer st.Close()
+
+	tr := &Transport{TLSClientConfig: tlsConfigInsecure}
+	defer tr.CloseIdleConnections()
+
+	req, _ := http.NewRequest("GET", st.ts.URL, nil)
+	resp, err := tr.RoundTrip(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
+		t.Fatalf("error reading response body: %v", err)
+	}
+	if err := resp.Body.Close(); err != nil {
+		t.Fatalf("error closing response body: %v", err)
+	}
+
+	// This access of req.Header should not race with code in the transport.
+	req.Header = http.Header{}
 }
 
 func TestTransportRetryAfterGOAWAY(t *testing.T) {

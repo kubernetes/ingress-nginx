@@ -43,6 +43,6 @@ func RunE2ETests(t *testing.T) {
 		config.GinkgoConfig.SkipString = `\[Flaky\]|\[Feature:.+\]`
 	}
 
-	glog.Infof("Starting e2e run %q on Ginkgo node %d", framework.RunId, config.GinkgoConfig.ParallelNode)
+	glog.Infof("Starting e2e run %q on Ginkgo node %d", framework.RunID, config.GinkgoConfig.ParallelNode)
 	ginkgo.RunSpecs(t, "nginx-ingress-controller e2e suite")
 }

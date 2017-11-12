@@ -92,8 +92,8 @@ func LoadConfig(config, context string) (*rest.Config, error) {
 	return clientcmd.NewDefaultClientConfig(*c, &clientcmd.ConfigOverrides{}).ClientConfig()
 }
 
-// RunId unique identifier of the e2e run
-var RunId = uuid.NewUUID()
+// RunID unique identifier of the e2e run
+var RunID = uuid.NewUUID()
 
 func CreateKubeNamespace(baseName string, c kubernetes.Interface) (*v1.Namespace, error) {
 	ns := &v1.Namespace{
@@ -119,12 +119,9 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (*v1.Namespace
 	return got, nil
 }
 
+// DeleteKubeNamespace deletes a namespace and all the objects inside
 func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
-	deletePolicy := metav1.DeletePropagationForeground
-	return c.Core().Namespaces().Delete(namespace, &metav1.DeleteOptions{
-		GracePeriodSeconds: NewInt64(0),
-		PropagationPolicy:  &deletePolicy,
-	})
+	return c.Core().Namespaces().Delete(namespace, metav1.NewDeleteOptions(0))
 }
 
 func ExpectNoError(err error, explain ...interface{}) {
@@ -135,7 +132,7 @@ func ExpectNoError(err error, explain ...interface{}) {
 }
 
 func WaitForKubeNamespaceNotExist(c kubernetes.Interface, namespace string) error {
-	return wait.PollImmediate(Poll, time.Minute*1, namespaceNotExist(c, namespace))
+	return wait.PollImmediate(Poll, time.Minute*2, namespaceNotExist(c, namespace))
 }
 
 func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionFunc {
@@ -151,6 +148,7 @@ func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionF
 	}
 }
 
+// WaitForNoPodsInNamespace waits until there are no pods running in a namespace
 func WaitForNoPodsInNamespace(c kubernetes.Interface, namespace string) error {
 	return wait.PollImmediate(Poll, time.Minute*2, noPodsInNamespace(c, namespace))
 }

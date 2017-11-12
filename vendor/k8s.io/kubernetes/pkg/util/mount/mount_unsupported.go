@@ -18,10 +18,6 @@ limitations under the License.
 
 package mount
 
-import (
-	"errors"
-)
-
 type Mounter struct {
 	mounterPath string
 }
@@ -41,6 +37,12 @@ func (mounter *Mounter) Mount(source string, target string, fstype string, optio
 
 func (mounter *Mounter) Unmount(target string) error {
 	return nil
+}
+
+// GetMountRefs finds all other references to the device referenced
+// by mountPath; returns a list of paths.
+func GetMountRefs(mounter Interface, mountPath string) ([]string, error) {
+	return []string{}, nil
 }
 
 func (mounter *Mounter) List() ([]MountPoint, error) {
@@ -63,6 +65,10 @@ func (mounter *Mounter) GetDeviceNameFromMount(mountPath, pluginDir string) (str
 	return "", nil
 }
 
+func getDeviceNameFromMount(mounter Interface, mountPath, pluginDir string) (string, error) {
+	return "", nil
+}
+
 func (mounter *Mounter) DeviceOpened(pathname string) (bool, error) {
 	return false, nil
 }
@@ -81,20 +87,4 @@ func (mounter *SafeFormatAndMount) formatAndMount(source string, target string, 
 
 func (mounter *SafeFormatAndMount) diskLooksUnformatted(disk string) (bool, error) {
 	return true, nil
-}
-
-func (mounter *Mounter) GetFileType(pathname string) (FileType, error) {
-	return FileType("fake"), errors.New("not implemented")
-}
-
-func (mounter *Mounter) MakeDir(pathname string) error {
-	return nil
-}
-
-func (mounter *Mounter) MakeFile(pathname string) error {
-	return nil
-}
-
-func (mounter *Mounter) ExistsPath(pathname string) bool {
-	return true
 }

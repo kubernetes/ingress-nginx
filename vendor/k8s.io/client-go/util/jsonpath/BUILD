@@ -12,7 +12,6 @@ go_test(
         "jsonpath_test.go",
         "parser_test.go",
     ],
-    importpath = "k8s.io/client-go/util/jsonpath",
     library = ":go_default_library",
 )
 
@@ -24,7 +23,6 @@ go_library(
         "node.go",
         "parser.go",
     ],
-    importpath = "k8s.io/client-go/util/jsonpath",
     deps = ["//vendor/k8s.io/client-go/third_party/forked/golang/template:go_default_library"],
 )
 

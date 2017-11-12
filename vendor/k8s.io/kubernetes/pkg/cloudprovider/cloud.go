@@ -176,7 +176,6 @@ type Routes interface {
 var (
 	InstanceNotFound = errors.New("instance not found")
 	DiskNotFound     = errors.New("disk is not found")
-	NotImplemented   = errors.New("unimplemented")
 )
 
 // Zone represents the location of a particular machine.

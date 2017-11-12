@@ -220,12 +220,15 @@ func ConfigureServer(s *http.Server, conf *Server) error {
 	} else if s.TLSConfig.CipherSuites != nil {
 		// If they already provided a CipherSuite list, return
 		// an error if it has a bad order or is missing
-		// ECDHE_RSA_WITH_AES_128_GCM_SHA256.
-		const requiredCipher = tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+		// ECDHE_RSA_WITH_AES_128_GCM_SHA256 or ECDHE_ECDSA_WITH_AES_128_GCM_SHA256.
 		haveRequired := false
 		sawBad := false
 		for i, cs := range s.TLSConfig.CipherSuites {
-			if cs == requiredCipher {
+			switch cs {
+			case tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				// Alternative MTI cipher to not discourage ECDSA-only servers.
+				// See http://golang.org/cl/30721 for further information.
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
 				haveRequired = true
 			}
 			if isBadCipher(cs) {
@@ -235,7 +238,7 @@ func ConfigureServer(s *http.Server, conf *Server) error {
 			}
 		}
 		if !haveRequired {
-			return fmt.Errorf("http2: TLSConfig.CipherSuites is missing HTTP/2-required TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256")
+			return fmt.Errorf("http2: TLSConfig.CipherSuites is missing an HTTP/2-required AES_128_GCM_SHA256 cipher.")
 		}
 	}
 

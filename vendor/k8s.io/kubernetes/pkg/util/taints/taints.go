@@ -35,7 +35,7 @@ const (
 	UNTAINTED = "untainted"
 )
 
-// parseTaint parses a taint from a string. Taint must be of the format '<key>=<value>:<effect>'.
+// parseTaint parses a taint from a string. Taint must be off the format '<key>=<value>:<effect>'.
 func parseTaint(st string) (v1.Taint, error) {
 	var taint v1.Taint
 	parts := strings.Split(st, "=")
@@ -76,10 +76,6 @@ type taintsVar struct {
 }
 
 func (t taintsVar) Set(s string) error {
-	if len(s) == 0 {
-		*t.ptr = nil
-		return nil
-	}
 	sts := strings.Split(s, ",")
 	var taints []api.Taint
 	for _, st := range sts {
@@ -95,7 +91,7 @@ func (t taintsVar) Set(s string) error {
 
 func (t taintsVar) String() string {
 	if len(*t.ptr) == 0 {
-		return ""
+		return "<nil>"
 	}
 	var taints []string
 	for _, taint := range *t.ptr {
@@ -242,7 +238,11 @@ func DeleteTaint(taints []v1.Taint, taintToDelete *v1.Taint) ([]v1.Taint, bool) 
 // RemoveTaint tries to remove a taint from annotations list. Returns a new copy of updated Node and true if something was updated
 // false otherwise.
 func RemoveTaint(node *v1.Node, taint *v1.Taint) (*v1.Node, bool, error) {
-	newNode := node.DeepCopy()
+	objCopy, err := api.Scheme.DeepCopy(node)
+	if err != nil {
+		return nil, false, err
+	}
+	newNode := objCopy.(*v1.Node)
 	nodeTaints := newNode.Spec.Taints
 	if len(nodeTaints) == 0 {
 		return newNode, false, nil
@@ -260,7 +260,11 @@ func RemoveTaint(node *v1.Node, taint *v1.Taint) (*v1.Node, bool, error) {
 // AddOrUpdateTaint tries to add a taint to annotations list. Returns a new copy of updated Node and true if something was updated
 // false otherwise.
 func AddOrUpdateTaint(node *v1.Node, taint *v1.Taint) (*v1.Node, bool, error) {
-	newNode := node.DeepCopy()
+	objCopy, err := api.Scheme.DeepCopy(node)
+	if err != nil {
+		return nil, false, err
+	}
+	newNode := objCopy.(*v1.Node)
 	nodeTaints := newNode.Spec.Taints
 
 	var newTaints []v1.Taint

@@ -9,7 +9,6 @@ load(
 go_test(
     name = "go_default_test",
     srcs = ["wait_test.go"],
-    importpath = "k8s.io/apimachinery/pkg/util/wait",
     library = ":go_default_library",
     deps = ["//vendor/k8s.io/apimachinery/pkg/util/runtime:go_default_library"],
 )
@@ -20,7 +19,6 @@ go_library(
         "doc.go",
         "wait.go",
     ],
-    importpath = "k8s.io/apimachinery/pkg/util/wait",
     deps = ["//vendor/k8s.io/apimachinery/pkg/util/runtime:go_default_library"],
 )
 

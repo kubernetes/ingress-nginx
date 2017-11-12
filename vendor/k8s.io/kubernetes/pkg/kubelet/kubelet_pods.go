@@ -127,8 +127,8 @@ func makeMounts(pod *v1.Pod, podDir string, container *v1.Container, hostName, h
 		mountEtcHostsFile = mountEtcHostsFile && (mount.MountPath != etcHostsPath)
 		vol, ok := podVolumes[mount.Name]
 		if !ok || vol.Mounter == nil {
-			glog.Errorf("Mount cannot be satisfied for container %q, because the volume is missing or the volume mounter is nil: %+v", container.Name, mount)
-			return nil, fmt.Errorf("cannot find volume %q to mount into container %q", mount.Name, container.Name)
+			glog.Warningf("Mount cannot be satisfied for container %q, because the volume is missing or the volume mounter is nil: %q", container.Name, mount)
+			continue
 		}
 
 		relabelVolume := false
@@ -864,7 +864,7 @@ func (kl *Kubelet) PodResourcesAreReclaimed(pod *v1.Pod, status v1.PodStatus) bo
 		glog.V(3).Infof("Pod %q is terminated, but some containers have not been cleaned up: %+v", format.Pod(pod), runtimeStatus.ContainerStatuses)
 		return false
 	}
-	if kl.podVolumesExist(pod.UID) && !kl.keepTerminatedPodVolumes {
+	if kl.podVolumesExist(pod.UID) && !kl.kubeletConfiguration.KeepTerminatedPodVolumes {
 		// We shouldnt delete pods whose volumes have not been cleaned up if we are not keeping terminated pod volumes
 		glog.V(3).Infof("Pod %q is terminated, but some volumes have not been cleaned up", format.Pod(pod))
 		return false
@@ -1348,16 +1348,21 @@ func (kl *Kubelet) convertStatusToAPIStatus(pod *v1.Pod, podStatus *kubecontaine
 	// set status for Pods created on versions of kube older than 1.6
 	apiPodStatus.QOSClass = v1qos.GetPodQOS(pod)
 
+	oldPodStatus, found := kl.statusManager.GetPodStatus(pod.UID)
+	if !found {
+		oldPodStatus = pod.Status
+	}
+
 	apiPodStatus.ContainerStatuses = kl.convertToAPIContainerStatuses(
 		pod, podStatus,
-		pod.Status.ContainerStatuses,
+		oldPodStatus.ContainerStatuses,
 		pod.Spec.Containers,
 		len(pod.Spec.InitContainers) > 0,
 		false,
 	)
 	apiPodStatus.InitContainerStatuses = kl.convertToAPIContainerStatuses(
 		pod, podStatus,
-		pod.Status.InitContainerStatuses,
+		oldPodStatus.InitContainerStatuses,
 		pod.Spec.InitContainers,
 		len(pod.Spec.InitContainers) > 0,
 		true,
@@ -1424,7 +1429,7 @@ func (kl *Kubelet) convertToAPIContainerStatuses(pod *v1.Pod, podStatus *kubecon
 		}
 		oldStatus, found := oldStatuses[container.Name]
 		if found {
-			if isInitContainer && oldStatus.State.Terminated != nil {
+			if oldStatus.State.Terminated != nil {
 				// Do not update status on terminated init containers as
 				// they be removed at any time.
 				status = &oldStatus
@@ -1704,7 +1709,7 @@ func (kl *Kubelet) cleanupOrphanedPodCgroups(cgroupPods map[types.UID]cm.CgroupN
 		// parent croup.  If the volumes still exist, reduce the cpu shares for any
 		// process in the cgroup to the minimum value while we wait.  if the kubelet
 		// is configured to keep terminated volumes, we will delete the cgroup and not block.
-		if podVolumesExist := kl.podVolumesExist(uid); podVolumesExist && !kl.keepTerminatedPodVolumes {
+		if podVolumesExist := kl.podVolumesExist(uid); podVolumesExist && !kl.kubeletConfiguration.KeepTerminatedPodVolumes {
 			glog.V(3).Infof("Orphaned pod %q found, but volumes not yet removed.  Reducing cpu to minimum", uid)
 			if err := pcm.ReduceCPULimits(val); err != nil {
 				glog.Warningf("Failed to reduce cpu time for pod %q pending volume cleanup due to %v", uid, err)

@@ -63,7 +63,6 @@ func TestValidateProfile(t *testing.T) {
 	}{
 		{"", true},
 		{ProfileRuntimeDefault, true},
-		{ProfileNameUnconfined, true},
 		{"baz", false}, // Missing local prefix.
 		{ProfileNamePrefix + "/usr/sbin/ntpd", true},
 		{ProfileNamePrefix + "foo-bar", true},

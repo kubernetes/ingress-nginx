@@ -393,6 +393,7 @@ http {
 
     {{ range $index, $server := $servers }}
 
+    ## start server {{ $server.Hostname }}
     server {
         server_name {{ $server.Hostname }} {{ $server.Alias }};
         {{ template "SERVER" serverConfig $all $server }}
@@ -404,6 +405,8 @@ http {
 
         {{ template "CUSTOM_ERRORS" $all }}
     }
+    ## end server {{ $server.Hostname }}
+
     {{ end }}
 
     # default server, used for NGINX healthcheck and access to nginx stats

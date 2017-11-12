@@ -9,7 +9,6 @@ load(
 go_library(
     name = "go_default_library",
     srcs = ["install.go"],
-    importpath = "k8s.io/kubernetes/pkg/api/install",
     deps = [
         "//pkg/api:go_default_library",
         "//pkg/api/v1:go_default_library",
@@ -23,7 +22,6 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = ["install_test.go"],
-    importpath = "k8s.io/kubernetes/pkg/api/install",
     library = ":go_default_library",
     deps = [
         "//pkg/api:go_default_library",

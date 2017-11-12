@@ -59,6 +59,7 @@ type ObjectTracker interface {
 // ObjectScheme abstracts the implementation of common operations on objects.
 type ObjectScheme interface {
 	runtime.ObjectCreater
+	runtime.ObjectCopier
 	runtime.ObjectTyper
 }
 
@@ -182,7 +183,10 @@ func (t *tracker) List(gvr schema.GroupVersionResource, gvk schema.GroupVersionK
 	if err := meta.SetList(list, matchingObjs); err != nil {
 		return nil, err
 	}
-	return list.DeepCopyObject(), nil
+	if list, err = t.scheme.Copy(list); err != nil {
+		return nil, err
+	}
+	return list, nil
 }
 
 func (t *tracker) Get(gvr schema.GroupVersionResource, ns, name string) (runtime.Object, error) {
@@ -210,7 +214,11 @@ func (t *tracker) Get(gvr schema.GroupVersionResource, ns, name string) (runtime
 	// Only one object should match in the tracker if it works
 	// correctly, as Add/Update methods enforce kind/namespace/name
 	// uniqueness.
-	obj := matchingObjs[0].DeepCopyObject()
+	obj, err := t.scheme.Copy(matchingObjs[0])
+	if err != nil {
+		return nil, err
+	}
+
 	if status, ok := obj.(*metav1.Status); ok {
 		if status.Status != metav1.StatusSuccess {
 			return nil, &errors.StatusError{ErrStatus: *status}
@@ -272,7 +280,10 @@ func (t *tracker) add(gvr schema.GroupVersionResource, obj runtime.Object, ns st
 	// To avoid the object from being accidentally modified by caller
 	// after it's been added to the tracker, we always store the deep
 	// copy.
-	obj = obj.DeepCopyObject()
+	obj, err := t.scheme.Copy(obj)
+	if err != nil {
+		return err
+	}
 
 	newMeta, err := meta.Accessor(obj)
 	if err != nil {

@@ -9,7 +9,6 @@ load(
 go_test(
     name = "go_default_test",
     srcs = ["streaming_test.go"],
-    importpath = "k8s.io/apimachinery/pkg/runtime/serializer/streaming",
     library = ":go_default_library",
     deps = [
         "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
@@ -21,7 +20,6 @@ go_test(
 go_library(
     name = "go_default_library",
     srcs = ["streaming.go"],
-    importpath = "k8s.io/apimachinery/pkg/runtime/serializer/streaming",
     deps = [
         "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime/schema:go_default_library",
