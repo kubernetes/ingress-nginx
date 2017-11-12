@@ -540,20 +540,20 @@ stream {
      {{ $cors := .CorsConfig }}
      # Cors Preflight methods needs additional options and different Return Code
      if ($request_method = 'OPTIONS') {
-        add_header 'Access-Control-Allow-Origin' '{{ $cors.CorsAllowOrigin }}';
-        {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}'; {{ end }}
-        add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}';
-        add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}';
+        add_header 'Access-Control-Allow-Origin' '{{ $cors.CorsAllowOrigin }}' always;
+        {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}' always; {{ end }}
+        add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}' always;
+        add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}' always;
         add_header 'Access-Control-Max-Age' 1728000;
         add_header 'Content-Type' 'text/plain charset=UTF-8';
         add_header 'Content-Length' 0;
         return 204;
      }
 
-        add_header 'Access-Control-Allow-Origin' '{{ $cors.CorsAllowOrigin }}';
-        {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}'; {{ end }}
-        add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}';
-        add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}';
+        add_header 'Access-Control-Allow-Origin' '{{ $cors.CorsAllowOrigin }}' always;
+        {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}' always; {{ end }}
+        add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}' always;
+        add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}' always;
 
 {{ end }}
 
