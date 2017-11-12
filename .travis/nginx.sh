@@ -18,13 +18,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source $DIR/common.sh
 
-IMAGE=$(make -s -C $DIR/../images/nginx-slim image-info)
+IMAGE=$(make -s -C $DIR/../images/nginx image-info)
 
-if docker_tag_exists "kubernetes-ingress-controller/nginx-slim" $(echo $IMAGE | jq .tag) "$ARCH"; then
+if docker_tag_exists "kubernetes-ingress-controller/nginx" $(echo $IMAGE | jq .tag) "$ARCH"; then
     echo "Image already published"
     exit 0
 fi
 
-echo "building nginx-slim-$ARCH image..."
-make -C $DIR/../images/nginx-slim sub-container-$ARCH
-make -C $DIR/../images/nginx-slim sub-push-$ARCH
+echo "building nginx-$ARCH image..."
+make -C $DIR/../images/nginx sub-container-$ARCH
+make -C $DIR/../images/nginx sub-push-$ARCH

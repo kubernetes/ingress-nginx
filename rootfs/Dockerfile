@@ -17,19 +17,9 @@ FROM BASEIMAGE
 CROSS_BUILD_COPY qemu-QEMUARCH-static /usr/bin/
 
 # install dumb-init from zesty
-RUN if grep -q -i "ports.ubuntu.com" /etc/apt/sources.list; \
-  then \
-    echo "deb http://ports.ubuntu.com/ubuntu-ports zesty universe" >> /etc/apt/sources.list; \
-  else \
-    echo "deb http://archive.ubuntu.com/ubuntu zesty universe" >> /etc/apt/sources.list; \
-  fi \
-  && DEBIAN_FRONTEND=noninteractive apt-get update \
-  && apt-get install -y \
-    diffutils \
-    dumb-init \
-    --no-install-recommends \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+RUN clean-install \
+  diffutils \
+  dumb-init
 
 ENTRYPOINT ["/usr/bin/dumb-init"]
 

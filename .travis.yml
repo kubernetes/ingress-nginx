@@ -63,3 +63,7 @@ jobs:
     if: type = api AND branch = master AND repo = kubernetes/ingress-nginx
     script:
     - ARCH=ppc64le .travis/publish.sh
+  - stage: publish s390x
+    if: type = api AND branch = master AND repo = kubernetes/ingress-nginx
+    script:
+    - ARCH=s390x .travis/publish.sh
