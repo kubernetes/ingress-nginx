@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-all: push
+all: all-container
 
 BUILDTAGS=
 
@@ -40,7 +40,7 @@ ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
 
-ALL_ARCH = amd64 arm arm64 ppc64le
+ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
 QEMUVERSION=v2.9.1
 
@@ -49,7 +49,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-slim-$(ARCH):0.28
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.29
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
@@ -57,12 +57,15 @@ ifeq ($(ARCH),arm)
 	DUMB_ARCH=armhf
 endif
 ifeq ($(ARCH),arm64)
-        QEMUARCH=aarch64
+    QEMUARCH=aarch64
 endif
 ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
 	GOARCH=ppc64le
 	DUMB_ARCH=ppc64el
+endif
+ifeq ($(ARCH),s390x)
+    QEMUARCH=s390x
 endif
 
 TEMP_DIR := $(shell mktemp -d)
@@ -71,8 +74,6 @@ DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
 
 image-info:
 	echo -n '{"image":"$(IMAGE)","tag":"$(TAG)"}'
-
-all: all-container
 
 sub-container-%:
 	$(MAKE) ARCH=$* build container

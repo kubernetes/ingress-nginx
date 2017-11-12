@@ -25,11 +25,8 @@ case "$COMPONENT" in
 "ingress-controller")
     $DIR/ingress-controller.sh
     ;;
-"ubuntu-slim")
-    $DIR/ubuntu-slim.sh
-    ;;
-"nginx-slim")
-    $DIR/nginx-slim.sh
+"nginx")
+    $DIR/nginx.sh
     ;;
 *)
     echo "Invalid option in environment variable COMPONENT"
