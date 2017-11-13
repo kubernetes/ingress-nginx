@@ -68,7 +68,7 @@ func main() {
 		glog.Fatalf("invalid format for service %v: %v", conf.DefaultService, err)
 	}
 
-	_, err = kubeClient.Core().Services(ns).Get(name, metav1.GetOptions{})
+	_, err = kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "cannot get services in the namespace") {
 			glog.Fatalf("✖ It seems the cluster it is running with Authorization enabled (like RBAC) and there is no permissions for the ingress controller. Please check the configuration")
