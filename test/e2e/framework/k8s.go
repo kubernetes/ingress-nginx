@@ -73,7 +73,7 @@ func (f *Framework) EnsureDeployment(deployment *extensions.Deployment) (*extens
 
 func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, timeout, func() (bool, error) {
-		pl, err := f.KubeClientSet.Core().Pods(f.Namespace.Name).List(opts)
+		pl, err := f.KubeClientSet.CoreV1().Pods(f.Namespace.Name).List(opts)
 		if err != nil {
 			return false, err
 		}
