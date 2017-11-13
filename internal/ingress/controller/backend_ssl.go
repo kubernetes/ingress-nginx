@@ -18,10 +18,11 @@ package controller
 
 import (
 	"fmt"
-	"reflect"
+	"io/ioutil"
 	"strings"
 
 	"github.com/golang/glog"
+	"github.com/imdario/mergo"
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -48,7 +49,7 @@ func (ic *NGINXController) syncSecret(key string) {
 	cur, exists := ic.sslCertTracker.Get(key)
 	if exists {
 		s := cur.(*ingress.SSLCert)
-		if reflect.DeepEqual(s, cert) {
+		if s.Equal(cert) {
 			// no need to update
 			return
 		}
@@ -121,6 +122,47 @@ func (ic *NGINXController) getPemCertificate(secretName string) (*ingress.SSLCer
 	s.Name = secret.Name
 	s.Namespace = secret.Namespace
 	return s, nil
+}
+
+func (ic *NGINXController) checkSSLChainIssues() {
+	for _, secretName := range ic.sslCertTracker.ListKeys() {
+		s, _ := ic.sslCertTracker.Get(secretName)
+		secret := s.(*ingress.SSLCert)
+
+		if secret.FullChainPemFileName != "" {
+			// chain already checked
+			continue
+		}
+
+		data, err := ssl.FullChainCert(secret.PemFileName)
+		if err != nil {
+			glog.Errorf("unexpected error generating SSL certificate with full intermediate chain CA certs: %v", err)
+			continue
+		}
+
+		fullChainPemFileName := fmt.Sprintf("%v/%v-%v-full-chain.pem", ingress.DefaultSSLDirectory, secret.Namespace, secret.Name)
+		err = ioutil.WriteFile(fullChainPemFileName, data, 0655)
+		if err != nil {
+			glog.Errorf("unexpected error creating SSL certificate: %v", err)
+			continue
+		}
+
+		dst := &ingress.SSLCert{}
+
+		err = mergo.MergeWithOverwrite(dst, secret)
+		if err != nil {
+			glog.Errorf("unexpected error creating SSL certificate: %v", err)
+			continue
+		}
+
+		dst.FullChainPemFileName = fullChainPemFileName
+
+		glog.Infof("updating local copy of ssl certificate %v with missing intermediate CA certs", secretName)
+		ic.sslCertTracker.Update(secretName, dst)
+		// this update must trigger an update
+		// (like an update event from a change in Ingress)
+		ic.syncQueue.Enqueue(&extensions.Ingress{})
+	}
 }
 
 // checkMissingSecrets verify if one or more ingress rules contains a reference

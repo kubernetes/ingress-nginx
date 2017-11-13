@@ -124,6 +124,11 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		healthzPort   = flags.Int("healthz-port", 10254, "port for healthz endpoint.")
 
 		annotationsPrefix = flags.String("annotations-prefix", "nginx.ingress.kubernetes.io", `Prefix of the ingress annotations.`)
+
+		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", true,
+			`Defines if the nginx ingress controller should check the secrets for missing intermediate CA certificates.
+		If the certificate contain issues chain issues is not possible to enable OCSP.
+		Default is true.`)
 	)
 
 	flag.Set("logtostderr", "true")
@@ -178,28 +183,33 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		glog.Warningf("%s is DEPRECATED and will be removed in a future version.", disableNodeList)
 	}
 
+	if !*enableSSLChainCompletion {
+		glog.Warningf("Check of SSL certificate chain is disabled (--enable-ssl-chain-completion=false)")
+	}
+
 	config := &controller.Configuration{
-		AnnotationsPrefix:       *annotationsPrefix,
-		APIServerHost:           *apiserverHost,
-		KubeConfigFile:          *kubeConfigFile,
-		UpdateStatus:            *updateStatus,
-		ElectionID:              *electionID,
-		EnableProfiling:         *profiling,
-		EnableSSLPassthrough:    *enableSSLPassthrough,
-		ResyncPeriod:            *resyncPeriod,
-		DefaultService:          *defaultSvc,
-		IngressClass:            *ingressClass,
-		Namespace:               *watchNamespace,
-		ConfigMapName:           *configMap,
-		TCPConfigMapName:        *tcpConfigMapName,
-		UDPConfigMapName:        *udpConfigMapName,
-		DefaultSSLCertificate:   *defSSLCertificate,
-		DefaultHealthzURL:       *defHealthzURL,
-		PublishService:          *publishSvc,
-		ForceNamespaceIsolation: *forceIsolation,
-		UpdateStatusOnShutdown:  *updateStatusOnShutdown,
-		SortBackends:            *sortBackends,
-		UseNodeInternalIP:       *useNodeInternalIP,
+		AnnotationsPrefix:        *annotationsPrefix,
+		APIServerHost:            *apiserverHost,
+		KubeConfigFile:           *kubeConfigFile,
+		UpdateStatus:             *updateStatus,
+		ElectionID:               *electionID,
+		EnableProfiling:          *profiling,
+		EnableSSLPassthrough:     *enableSSLPassthrough,
+		EnableSSLChainCompletion: *enableSSLChainCompletion,
+		ResyncPeriod:             *resyncPeriod,
+		DefaultService:           *defaultSvc,
+		IngressClass:             *ingressClass,
+		Namespace:                *watchNamespace,
+		ConfigMapName:            *configMap,
+		TCPConfigMapName:         *tcpConfigMapName,
+		UDPConfigMapName:         *udpConfigMapName,
+		DefaultSSLCertificate:    *defSSLCertificate,
+		DefaultHealthzURL:        *defHealthzURL,
+		PublishService:           *publishSvc,
+		ForceNamespaceIsolation:  *forceIsolation,
+		UpdateStatusOnShutdown:   *updateStatusOnShutdown,
+		SortBackends:             *sortBackends,
+		UseNodeInternalIP:        *useNodeInternalIP,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,

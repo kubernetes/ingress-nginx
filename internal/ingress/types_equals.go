@@ -271,6 +271,9 @@ func (s1 *Server) Equal(s2 *Server) bool {
 	if !(&s1.CertificateAuth).Equal(&s2.CertificateAuth) {
 		return false
 	}
+	if s1.SSLFullChainCertificate != s2.SSLFullChainCertificate {
+		return false
+	}
 	if s1.RedirectFromToWWW != s2.RedirectFromToWWW {
 		return false
 	}
@@ -457,6 +460,40 @@ func (l4b1 *L4Backend) Equal(l4b2 *L4Backend) bool {
 	}
 	if l4b1.Protocol != l4b2.Protocol {
 		return false
+	}
+
+	return true
+}
+
+// Equal tests for equality between two L4Backend types
+func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
+	if s1 == s2 {
+		return true
+	}
+	if s1 == nil || s2 == nil {
+		return false
+	}
+	if s1.PemFileName != s2.PemFileName {
+		return false
+	}
+	if s1.PemSHA != s2.PemSHA {
+		return false
+	}
+	if !s1.ExpireTime.Equal(s2.ExpireTime) {
+		return false
+	}
+
+	for _, cn1 := range s1.CN {
+		found := false
+		for _, cn2 := range s2.CN {
+			if cn1 == cn2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
 	return true
