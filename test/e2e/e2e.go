@@ -26,9 +26,11 @@ import (
 	"k8s.io/apiserver/pkg/util/logs"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"k8s.io/ingress-nginx/test/e2e/framework"
+
 	_ "k8s.io/ingress-nginx/test/e2e/annotations"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
-	"k8s.io/ingress-nginx/test/e2e/framework"
+	_ "k8s.io/ingress-nginx/test/e2e/settings"
 )
 
 // RunE2ETests checks configuration parameters (specified through flags) and then runs
