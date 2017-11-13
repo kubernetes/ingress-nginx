@@ -112,6 +112,13 @@ This setup requires to choose in which layer (L4 or L7) we want to configure the
 - [Layer 4](https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer): use TCP as the listener protocol for ports 80 and 443.
 - [Layer 7](https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer): use HTTP as the listener protocol for port 80 and terminate TLS in the ELB
 
+Patch the nginx ingress controller deployment to add the flag `--publish-service`
+
+```console
+kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
+  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/patch-deployment.yaml)"
+```
+
 For L4:
 
 ```console
@@ -147,6 +154,13 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 ### GCE - GKE
 
+Patch the nginx ingress controller deployment to add the flag `--publish-service`
+
+```console
+kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
+  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/patch-deployment.yaml)"
+```
+
 ```console
 curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/gce-gke/service.yaml \
     | kubectl apply -f -
@@ -167,6 +181,13 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 **Important Note:** proxy protocol is not supported in GCE/GKE
 
 ### Azure
+
+Patch the nginx ingress controller deployment to add the flag `--publish-service`
+
+```console
+kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
+  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/patch-deployment.yaml)"
+```
 
 ```console
 curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/azure/service.yaml \
