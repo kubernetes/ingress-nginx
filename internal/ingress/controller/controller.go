@@ -874,15 +874,16 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	bdef := n.GetDefaultBackend()
 	ngxProxy := proxy.Config{
-		BodySize:         bdef.ProxyBodySize,
-		ConnectTimeout:   bdef.ProxyConnectTimeout,
-		SendTimeout:      bdef.ProxySendTimeout,
-		ReadTimeout:      bdef.ProxyReadTimeout,
-		BufferSize:       bdef.ProxyBufferSize,
-		CookieDomain:     bdef.ProxyCookieDomain,
-		CookiePath:       bdef.ProxyCookiePath,
-		NextUpstream:     bdef.ProxyNextUpstream,
-		RequestBuffering: bdef.ProxyRequestBuffering,
+		BodySize:          bdef.ProxyBodySize,
+		ConnectTimeout:    bdef.ProxyConnectTimeout,
+		SendTimeout:       bdef.ProxySendTimeout,
+		ReadTimeout:       bdef.ProxyReadTimeout,
+		BufferSize:        bdef.ProxyBufferSize,
+		CookieDomain:      bdef.ProxyCookieDomain,
+		CookiePath:        bdef.ProxyCookiePath,
+		NextUpstream:      bdef.ProxyNextUpstream,
+		RequestBuffering:  bdef.ProxyRequestBuffering,
+		ProxyRedirectFrom: bdef.ProxyRedirectFrom,
 	}
 
 	// generated on Start() with createDefaultSSLCertificate()
