@@ -105,7 +105,7 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (*v1.Namespace
 	var got *v1.Namespace
 	err := wait.PollImmediate(Poll, defaultTimeout, func() (bool, error) {
 		var err error
-		got, err = c.Core().Namespaces().Create(ns)
+		got, err = c.CoreV1().Namespaces().Create(ns)
 		if err != nil {
 			Logf("Unexpected error while creating namespace: %v", err)
 			return false, nil
@@ -121,7 +121,7 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (*v1.Namespace
 
 // DeleteKubeNamespace deletes a namespace and all the objects inside
 func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
-	return c.Core().Namespaces().Delete(namespace, metav1.NewDeleteOptions(0))
+	return c.CoreV1().Namespaces().Delete(namespace, metav1.NewDeleteOptions(0))
 }
 
 func ExpectNoError(err error, explain ...interface{}) {
