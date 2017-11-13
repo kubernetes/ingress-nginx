@@ -50,8 +50,6 @@ var (
 func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert, error) {
 	pemName := fmt.Sprintf("%v.pem", name)
 	pemFileName := fmt.Sprintf("%v/%v", ingress.DefaultSSLDirectory, pemName)
-	fullChainPemFileName := fmt.Sprintf("%v/%v-full-chain.pem", ingress.DefaultSSLDirectory, name)
-
 	tempPemFile, err := ioutil.TempFile(ingress.DefaultSSLDirectory, pemName)
 
 	if err != nil {
@@ -179,14 +177,6 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte) (*ingress.SSLCert,
 		CN:          cn.List(),
 		ExpireTime:  pemCert.NotAfter,
 	}
-
-	err = fullChainCert(pemFileName, fullChainPemFileName)
-	if err != nil {
-		glog.Errorf("unexpected error generating SSL certificate with full chain: %v", err)
-		return s, nil
-	}
-
-	s.FullChainPemFileName = fullChainPemFileName
 
 	return s, nil
 }
@@ -389,32 +379,44 @@ func GetFakeSSLCert() ([]byte, []byte) {
 	return cert, key
 }
 
-func fullChainCert(in, out string) error {
+// FullChainCert checks if a certificate file contains issues in the intermediate CA chain
+// Returns a new certificate with the intermediate certificates.
+// If the certificate does not contains issues with the chain it return an empty byte array
+func FullChainCert(in string) ([]byte, error) {
 	inputFile, err := os.Open(in)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	data, err := ioutil.ReadAll(inputFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cert, err := certUtil.DecodeCertificate(data)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	certPool := x509.NewCertPool()
+	certPool.AddCert(cert)
+
+	_, err = cert.Verify(x509.VerifyOptions{
+		Intermediates: certPool,
+	})
+	if err == nil {
+		return nil, nil
 	}
 
 	certs, err := certUtil.FetchCertificateChain(cert)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	certs, err = certUtil.AddRootCA(certs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	data = certUtil.EncodeCertificates(certs)
-	return ioutil.WriteFile(out, data, 0644)
+	return certUtil.EncodeCertificates(certs), nil
 }

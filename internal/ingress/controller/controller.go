@@ -106,6 +106,8 @@ type Configuration struct {
 
 	EnableProfiling bool
 
+	EnableSSLChainCompletion bool
+
 	FakeCertificatePath string
 	FakeCertificateSHA  string
 }
