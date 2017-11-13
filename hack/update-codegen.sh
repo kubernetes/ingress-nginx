@@ -31,6 +31,6 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-ge
 #  --output-base "$(dirname ${BASH_SOURCE})/../../.."
 
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy" \
-  k8s.io/ingress-nginx/pkg k8s.io/ingress-nginx/pkg \
+  k8s.io/ingress-nginx/internal k8s.io/ingress-nginx/internal \
   .:ingress \
   --output-base "$(dirname ${BASH_SOURCE})/../../.."

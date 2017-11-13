@@ -257,6 +257,10 @@ func (n *NGINXController) Start() {
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 
+	if n.cfg.EnableSSLChainCompletion {
+		go wait.Until(n.checkSSLChainIssues, 60*time.Second, n.stopCh)
+	}
+
 	if n.syncStatus != nil {
 		go n.syncStatus.Run(n.stopCh)
 	}
