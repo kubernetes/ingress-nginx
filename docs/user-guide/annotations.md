@@ -34,6 +34,8 @@ The following annotations are supported:
 |[ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
 |[ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
 |[ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
+|[ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
+|[ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
 |[ingress.kubernetes.io/server-alias](#server-alias)|string|
@@ -351,6 +353,13 @@ In some scenarios is required to have different values. To allow this we provide
 - `ingress.kubernetes.io/proxy-read-timeout`
 - `ingress.kubernetes.io/proxy-next-upstream`
 - `ingress.kubernetes.io/proxy-request-buffering`
+
+### Proxy redirect
+
+With the annotations `ingress.kubernetes.io/proxy-redirect-from` and `ingress.kubernetes.io/proxy-redirect-to` it is possible to set the text that should be changed in the `Location` and `Refresh` header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)
+Setting "off" or "default" in the annotation `ingress.kubernetes.io/proxy-redirect-to` disables `ingress.kubernetes.io/proxy-redirect-to`
+Both annotations will be used in any other case
+By default the value is "off".
 
 ### Custom max body size
 

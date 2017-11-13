@@ -25,16 +25,18 @@ import (
 
 // Config returns the proxy timeout to use in the upstream server/s
 type Config struct {
-	BodySize         string `json:"bodySize"`
-	ConnectTimeout   int    `json:"connectTimeout"`
-	SendTimeout      int    `json:"sendTimeout"`
-	ReadTimeout      int    `json:"readTimeout"`
-	BufferSize       string `json:"bufferSize"`
-	CookieDomain     string `json:"cookieDomain"`
-	CookiePath       string `json:"cookiePath"`
-	NextUpstream     string `json:"nextUpstream"`
-	PassParams       string `json:"passParams"`
-	RequestBuffering string `json:"requestBuffering"`
+	BodySize          string `json:"bodySize"`
+	ConnectTimeout    int    `json:"connectTimeout"`
+	SendTimeout       int    `json:"sendTimeout"`
+	ReadTimeout       int    `json:"readTimeout"`
+	BufferSize        string `json:"bufferSize"`
+	CookieDomain      string `json:"cookieDomain"`
+	CookiePath        string `json:"cookiePath"`
+	NextUpstream      string `json:"nextUpstream"`
+	PassParams        string `json:"passParams"`
+	ProxyRedirectFrom string `json:"proxyRedirectFrom"`
+	ProxyRedirectTo   string `json:"proxyRedirectTo"`
+	RequestBuffering  string `json:"requestBuffering"`
 }
 
 // Equal tests for equality between two Configuration types
@@ -72,8 +74,13 @@ func (l1 *Config) Equal(l2 *Config) bool {
 	if l1.PassParams != l2.PassParams {
 		return false
 	}
-
 	if l1.RequestBuffering != l2.RequestBuffering {
+		return false
+	}
+	if l1.ProxyRedirectFrom != l2.ProxyRedirectFrom {
+		return false
+	}
+	if l1.ProxyRedirectTo != l2.ProxyRedirectTo {
 		return false
 	}
 
@@ -143,5 +150,15 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		rb = defBackend.ProxyRequestBuffering
 	}
 
-	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, pp, rb}, nil
+	prf, err := parser.GetStringAnnotation("proxy-redirect-from", ing, a.r)
+	if err != nil || rb == "" {
+		prf = defBackend.ProxyRedirectFrom
+	}
+
+	prt, err := parser.GetStringAnnotation("proxy-redirect-to", ing, a.r)
+	if err != nil || rb == "" {
+		prt = defBackend.ProxyRedirectTo
+	}
+
+	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, pp, prf, prt, rb}, nil
 }

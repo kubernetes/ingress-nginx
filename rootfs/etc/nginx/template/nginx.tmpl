@@ -797,7 +797,11 @@ stream {
             proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;
             proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }}s;
 
-            proxy_redirect                          off;
+            {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
+            proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
+            {{ else }}
+            proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }} {{ $location.Proxy.ProxyRedirectTo }};
+            {{ end }}
             proxy_buffering                         off;
             proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
             proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
