@@ -6,7 +6,10 @@ metadata:
   labels:
     app: ingress-nginx
   annotations:
+    # Enable PROXY protocol
     service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+    # Increase the ELB idle timeout to avoid issues with WebSockets or Server-Sent Events.
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: '3600'
 spec:
   type: LoadBalancer
   selector:
