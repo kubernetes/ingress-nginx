@@ -28,9 +28,10 @@ import (
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 
-	_ "k8s.io/ingress-nginx/test/e2e/annotations"
-	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
-	_ "k8s.io/ingress-nginx/test/e2e/settings"
+	//	_ "k8s.io/ingress-nginx/test/e2e/annotations"
+	//	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
+	//	_ "k8s.io/ingress-nginx/test/e2e/settings"
+	_ "k8s.io/ingress-nginx/test/e2e/ssl"
 )
 
 // RunE2ETests checks configuration parameters (specified through flags) and then runs
