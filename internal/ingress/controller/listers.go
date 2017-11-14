@@ -123,7 +123,10 @@ func (n *NGINXController) createListers(stopCh chan struct{}) (*ingress.StoreLis
 			if !reflect.DeepEqual(old, cur) {
 				sec := cur.(*apiv1.Secret)
 				key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
-				n.syncSecret(key)
+				_, exists := n.sslCertTracker.Get(key)
+				if exists {
+					n.syncSecret(key)
+				}
 			}
 		},
 		DeleteFunc: func(obj interface{}) {

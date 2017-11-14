@@ -172,6 +172,26 @@ func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) boo
 	return wait.PollImmediate(Poll, time.Minute*2, f.matchNginxConditions(name, matcher))
 }
 
+// NginxLogs returns the logs of the nginx ingress controller pod running
+func (f *Framework) NginxLogs() (string, error) {
+	l, err := f.KubeClientSet.CoreV1().Pods("ingress-nginx").List(metav1.ListOptions{
+		LabelSelector: "app=ingress-nginx",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if len(l.Items) == 0 {
+		return "", fmt.Errorf("no nginx ingress controller pod is running")
+	}
+
+	if len(l.Items) != 1 {
+		return "", fmt.Errorf("unexpected number of nginx ingress controller pod is running (%v)", len(l.Items))
+	}
+
+	return f.Logs(&l.Items[0])
+}
+
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
 		l, err := f.KubeClientSet.CoreV1().Pods("ingress-nginx").List(metav1.ListOptions{
