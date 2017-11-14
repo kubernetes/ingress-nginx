@@ -497,6 +497,7 @@ func NewDefault() Configuration {
 			ProxyCookiePath:       "off",
 			ProxyNextUpstream:     "error timeout invalid_header http_502 http_503 http_504",
 			ProxyRequestBuffering: "on",
+			ProxyRedirectFrom:     "off",
 			SSLRedirect:           true,
 			CustomHTTPErrors:      []int{},
 			WhitelistSourceRange:  []string{},
