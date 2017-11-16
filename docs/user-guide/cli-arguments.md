@@ -29,6 +29,9 @@ Usage of :
       --publish-service string           Service fronting the ingress controllers. Takes the form
  		namespace/name. The controller will set the endpoint records on the
  		ingress objects to reflect those on the service.
+      --report-node-internal-ip-address bool Falg to report node internal IP address in ingress status (default false). If your
+                node only has internal ip, this should set to true, or thre controller will report empty ips to ingress.
+		use like --report-node-internal-ip-address=true. more detail at https://github.com/kubernetes/ingress-nginx/pull/1503
       --sort-backends                    Defines if backends and it's endpoints should be sorted
       --ssl-passtrough-proxy-port int    Default port to use internally for SSL when SSL Passthgough is enabled (default 442)
       --status-port int                  Indicates the TCP port to use for exposing the nginx status page (default 18080)
