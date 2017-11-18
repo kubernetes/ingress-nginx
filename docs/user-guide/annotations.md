@@ -14,6 +14,7 @@ The following annotations are supported:
 |[ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
 |[ingress.kubernetes.io/auth-tls-verify-client](#certificate-authentication)|string|
 |[ingress.kubernetes.io/auth-tls-error-page](#certificate-authentication)|string|
+|[ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#certificate-authentication)|string|
 |[ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
@@ -148,6 +149,13 @@ ingress.kubernetes.io/auth-tls-error-page
 ```
 
 The URL/Page that user should be redirected in case of a Certificate Authentication Error
+
+```
+ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream
+```
+
+Indicates if the received certificates should be passed or not to the upstream server.
+By default this is disabled.
 
 Please check the [tls-auth](../examples/auth/client-certs/README.md) example.
 

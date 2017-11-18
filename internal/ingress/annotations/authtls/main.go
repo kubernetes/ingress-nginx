@@ -41,9 +41,10 @@ var (
 // and the configured ValidationDepth
 type Config struct {
 	resolver.AuthSSLCert
-	VerifyClient    string `json:"verify_client"`
-	ValidationDepth int    `json:"validationDepth"`
-	ErrorPage       string `json:"errorPage"`
+	VerifyClient       string `json:"verify_client"`
+	ValidationDepth    int    `json:"validationDepth"`
+	ErrorPage          string `json:"errorPage"`
+	PassCertToUpstream bool   `json:"passCertToUpstream"`
 }
 
 // Equal tests for equality between two Config types
@@ -66,6 +67,10 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 	if assl1.ErrorPage != assl2.ErrorPage {
 		return false
 	}
+	if assl1.PassCertToUpstream != assl2.PassCertToUpstream {
+		return false
+	}
+
 	return true
 }
 
@@ -118,10 +123,16 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		errorpage = ""
 	}
 
+	passCert, err := parser.GetBoolAnnotation("auth-tls-pass-certificate-to-upstream", ing, a.r)
+	if err != nil {
+		passCert = false
+	}
+
 	return &Config{
-		AuthSSLCert:     *authCert,
-		VerifyClient:    tlsVerifyClient,
-		ValidationDepth: tlsdepth,
-		ErrorPage:       errorpage,
+		AuthSSLCert:        *authCert,
+		VerifyClient:       tlsVerifyClient,
+		ValidationDepth:    tlsdepth,
+		ErrorPage:          errorpage,
+		PassCertToUpstream: passCert,
 	}, nil
 }
