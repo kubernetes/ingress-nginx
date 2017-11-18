@@ -65,7 +65,7 @@ func main() {
 
 	ns, name, err := k8s.ParseNameNS(conf.DefaultService)
 	if err != nil {
-		glog.Fatalf("invalid format for service %v: %v", conf.DefaultService, err)
+		glog.Fatal(err)
 	}
 
 	_, err = kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
@@ -80,7 +80,7 @@ func main() {
 	if conf.PublishService != "" {
 		ns, name, err := k8s.ParseNameNS(conf.PublishService)
 		if err != nil {
-			glog.Fatalf("invalid service format: %v", err)
+			glog.Fatal(err)
 		}
 
 		svc, err := kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
@@ -103,7 +103,7 @@ func main() {
 	if conf.Namespace != "" {
 		_, err = kubeClient.CoreV1().Namespaces().Get(conf.Namespace, metav1.GetOptions{})
 		if err != nil {
-			glog.Fatalf("no watchNamespace with name %v found: %v", conf.Namespace, err)
+			glog.Fatalf("no namespace with name %v found: %v", conf.Namespace, err)
 		}
 	}
 
@@ -116,10 +116,16 @@ func main() {
 	if err != nil {
 		glog.Errorf("Failed to mkdir SSL directory: %v", err)
 	}
+
 	// create the default SSL certificate (dummy)
-	sha, pem := createDefaultSSLCertificate()
-	conf.FakeCertificatePath = pem
-	conf.FakeCertificateSHA = sha
+	defCert, defKey := ssl.GetFakeSSLCert()
+	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
+	if err != nil {
+		glog.Fatalf("Error generating self signed certificate: %v", err)
+	}
+
+	conf.FakeCertificatePath = c.PemFileName
+	conf.FakeCertificateSHA = c.PemSHA
 
 	conf.Client = kubeClient
 	conf.DefaultIngressClass = defIngressClass
@@ -312,14 +318,4 @@ func registerHandlers(enableProfiling bool, port int, ic *controller.NGINXContro
 		Handler: mux,
 	}
 	glog.Fatal(server.ListenAndServe())
-}
-
-func createDefaultSSLCertificate() (string, string) {
-	defCert, defKey := ssl.GetFakeSSLCert()
-	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
-	if err != nil {
-		glog.Fatalf("Error generating self signed certificate: %v", err)
-	}
-
-	return c.PemSHA, c.PemFileName
 }
