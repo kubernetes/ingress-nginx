@@ -127,6 +127,7 @@ func main() {
 	ngx := controller.NewNGINXController(conf)
 
 	if conf.EnableSSLPassthrough {
+		glog.Info("setting up TLS proxy for SSL passthrough")
 		setupSSLProxy(conf.ListenPorts.HTTPS, conf.ListenPorts.SSLProxy, ngx)
 	}
 

@@ -261,8 +261,6 @@ func TestStatusActions(t *testing.T) {
 		Client:                 buildSimpleClientSet(),
 		PublishService:         "",
 		IngressLister:          buildIngressListener(),
-		DefaultIngressClass:    "nginx",
-		IngressClass:           "",
 		UpdateStatusOnShutdown: true,
 	}
 	// create object

@@ -40,6 +40,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
+	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/store"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -69,9 +70,6 @@ type Config struct {
 	UseNodeInternalIP bool
 
 	IngressLister store.IngressLister
-
-	DefaultIngressClass string
-	IngressClass        string
 }
 
 // statusSync keeps the status IP in each Ingress rule updated executing a periodic check
@@ -180,9 +178,9 @@ func NewStatusSyncer(config Config) Sync {
 
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
-	electionID := fmt.Sprintf("%v-%v", config.ElectionID, config.DefaultIngressClass)
-	if config.IngressClass != "" {
-		electionID = fmt.Sprintf("%v-%v", config.ElectionID, config.IngressClass)
+	electionID := fmt.Sprintf("%v-%v", config.ElectionID, ingress.DefaultIngressClass)
+	if ingress.IngressClass != "" {
+		electionID = fmt.Sprintf("%v-%v", config.ElectionID, ingress.IngressClass)
 	}
 
 	callbacks := leaderelection.LeaderCallbacks{
@@ -314,7 +312,7 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 	for _, cur := range ings {
 		ing := cur.(*extensions.Ingress)
 
-		if !class.IsValid(ing, s.Config.IngressClass, s.Config.DefaultIngressClass) {
+		if !class.IsValid(ing, ingress.IngressClass, ingress.DefaultIngressClass) {
 			continue
 		}
 

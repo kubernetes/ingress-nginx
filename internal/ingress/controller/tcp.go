@@ -40,6 +40,7 @@ type TCPProxy struct {
 
 func (p *TCPProxy) Get(host string) *TCPServer {
 	if p.ServerList == nil {
+		glog.Warning("there is no servers configured with SSL passthrough. Returning default backend")
 		return p.Default
 	}
 
@@ -94,6 +95,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 		glog.V(4).Infof("Writing proxy protocol header - %s", proxyProtocolHeader)
 		_, err = fmt.Fprintf(clientConn, proxyProtocolHeader)
 	}
+
 	if err != nil {
 		glog.Errorf("unexpected error writing proxy-protocol header: %s", err)
 		clientConn.Close()

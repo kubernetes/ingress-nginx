@@ -29,6 +29,10 @@ import (
 	"github.com/ncabatoff/process-exporter/proc"
 )
 
+const (
+	processName = "nginx"
+)
+
 // IsRespawnIfRequired checks if error type is exec.ExitError or not
 func IsRespawnIfRequired(err error) bool {
 	exitError, ok := err.(*exec.ExitError)
@@ -68,7 +72,7 @@ func WaitUntilPortIsAvailable(port int) {
 				continue
 			}
 
-			if pn == "nginx" {
+			if pn == processName {
 				osp, err := os.FindProcess(p.PID)
 				if err != nil {
 					glog.Errorf("unexpected error obtaining process information: %v", err)
@@ -85,7 +89,7 @@ func WaitUntilPortIsAvailable(port int) {
 func IsNginxRunning() bool {
 	processes, _ := ps.Processes()
 	for _, p := range processes {
-		if p.Executable() == "nginx" {
+		if p.Executable() == processName {
 			return true
 		}
 	}
