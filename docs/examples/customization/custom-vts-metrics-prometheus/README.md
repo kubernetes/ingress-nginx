@@ -72,7 +72,7 @@ nginx_bytes_total{direction="out",ingress_class="nginx",namespace="",server_zone
 
 ### Customize metrics
 
-The default [vts vhost key](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key) is `$geoip_country_code country::*` that expose metrics groupped by server and country code. The example below show how to have metrics grouped by server and server path.
+The default [vts vhost key](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key) is `$geoip_country_code country::*` that expose metrics grouped by server and country code. The example below show how to have metrics grouped by server and server path.
 
 ![vts dashboard](imgs/vts-dashboard-filter-key-path.png)
 

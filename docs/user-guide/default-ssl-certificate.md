@@ -1,6 +1,6 @@
 # Default SSL Certificate
 
-NGINX provides the option to configure a server as a cath-all with [server name _](http://nginx.org/en/docs/http/server_names.html) for requests that do not match any of the configured server names. This configuration works without issues for HTTP traffic.
+NGINX provides the option to configure a server as a catch-all with [server name _](http://nginx.org/en/docs/http/server_names.html) for requests that do not match any of the configured server names. This configuration works without issues for HTTP traffic.
 In case of HTTPS, NGINX requires a certificate.
 For this reason the Ingress controller provides the flag `--default-ssl-certificate`. The secret behind this flag contains the default certificate to be used in the mentioned scenario. If this flag is not provided NGINX will use a self signed certificate.
 
