@@ -39,7 +39,7 @@ Deploy [kube lego](https://github.com/jetstack/kube-lego) use [Let's Encrypt](ht
 
 ### Testing
 
-To test the regstry is working correctly we download a known image from [docker hub](https://hub.docker.com), create a tag pointing to the new registry and upload the image:
+To test the registry is working correctly we download a known image from [docker hub](https://hub.docker.com), create a tag pointing to the new registry and upload the image:
 
 ```console
 docker pull ubuntu:16.04
