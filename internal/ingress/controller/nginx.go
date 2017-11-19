@@ -46,7 +46,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
@@ -113,27 +112,37 @@ func NewNGINXController(config *Configuration) *NGINXController {
 		}),
 
 		stopCh:   make(chan struct{}),
+		updateCh: make(chan store.Event),
+
 		stopLock: &sync.Mutex{},
 
 		fileSystem: filesystem.DefaultFs{},
 	}
 
-	n.listers, n.controllers = n.createListers(n.stopCh)
-
-	n.stats = newStatsCollector(config.Namespace, config.IngressClass, n.binary, n.cfg.ListenPorts.Status)
+	n.stats = newStatsCollector(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
 	n.annotations = annotations.NewAnnotationExtractor(n)
 
+	n.storeLister = store.New(
+		n.cfg.Namespace,
+		n.cfg.ConfigMapName,
+		n.cfg.TCPConfigMapName,
+		n.cfg.UDPConfigMapName,
+		n.cfg.ResyncPeriod,
+		n.recorder,
+		n.cfg.Client,
+		n.annotations,
+		n.updateCh,
+	)
+
 	if config.UpdateStatus {
 		n.syncStatus = status.NewStatusSyncer(status.Config{
-			Client:                 config.Client,
-			PublishService:         config.PublishService,
-			IngressLister:          n.listers.Ingress,
+			Client:         config.Client,
+			PublishService: config.PublishService,
+			//			IngressLister:          n.listers.Ingress,
 			ElectionID:             config.ElectionID,
-			IngressClass:           config.IngressClass,
-			DefaultIngressClass:    config.DefaultIngressClass,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
 			UseNodeInternalIP:      config.UseNodeInternalIP,
 		})
@@ -174,9 +183,6 @@ Error loading new template : %v
 type NGINXController struct {
 	cfg *Configuration
 
-	listers     *ingress.StoreLister
-	controllers *cacheController
-
 	annotations annotations.Extractor
 
 	recorder record.EventRecorder
@@ -196,7 +202,8 @@ type NGINXController struct {
 	// allowing concurrent stoppers leads to stack traces.
 	stopLock *sync.Mutex
 
-	stopCh chan struct{}
+	stopCh   chan struct{}
+	updateCh chan store.Event
 
 	// ngxErrCh channel used to detect errors with the nginx processes
 	ngxErrCh chan error
@@ -210,7 +217,7 @@ type NGINXController struct {
 
 	configmap *apiv1.ConfigMap
 
-	storeLister *ingress.StoreLister
+	storeLister store.Storer
 
 	binary   string
 	resolver []net.IP
@@ -239,19 +246,11 @@ type NGINXController struct {
 func (n *NGINXController) Start() {
 	glog.Infof("starting Ingress controller")
 
-	n.controllers.Run(n.stopCh)
+	n.storeLister.Run(n.stopCh)
 
 	// initial sync of secrets to avoid unnecessary reloads
 	glog.Info("running initial sync of secrets")
-	for _, obj := range n.listers.Ingress.List() {
-		ing := obj.(*extensions.Ingress)
-
-		if !class.IsValid(ing, n.cfg.IngressClass, n.cfg.DefaultIngressClass) {
-			a, _ := parser.GetStringAnnotation(class.IngressKey, ing, n)
-			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
-			continue
-		}
-
+	for _, ing := range n.storeLister.ListIngresses() {
 		n.readSecrets(ing)
 	}
 
@@ -555,38 +554,33 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	setHeaders := map[string]string{}
 	if cfg.ProxySetHeaders != "" {
-		cmap, exists, err := n.storeLister.ConfigMap.GetByKey(cfg.ProxySetHeaders)
-		if err != nil {
-			glog.Warningf("unexpected error reading configmap %v: %v", cfg.ProxySetHeaders, err)
-		}
-
-		if exists {
-			setHeaders = cmap.(*apiv1.ConfigMap).Data
+		cmap, err := n.storeLister.GetConfigMap(cfg.ProxySetHeaders)
+		if err == nil {
+			setHeaders = cmap.Data
+		} else {
+			glog.Warningf("unexpected error reading configmap %v: %v", cfg.AddHeaders, err)
 		}
 	}
 
 	addHeaders := map[string]string{}
 	if cfg.AddHeaders != "" {
-		cmap, exists, err := n.storeLister.ConfigMap.GetByKey(cfg.AddHeaders)
-		if err != nil {
+		cmap, err := n.storeLister.GetConfigMap(cfg.AddHeaders)
+		if err == nil {
+			addHeaders = cmap.Data
+		} else {
 			glog.Warningf("unexpected error reading configmap %v: %v", cfg.AddHeaders, err)
-		}
-
-		if exists {
-			addHeaders = cmap.(*apiv1.ConfigMap).Data
 		}
 	}
 
 	sslDHParam := ""
 	if cfg.SSLDHParam != "" {
 		secretName := cfg.SSLDHParam
-		s, exists, err := n.storeLister.Secret.GetByKey(secretName)
+		secret, err := n.storeLister.GetSecret(secretName)
 		if err != nil {
 			glog.Warningf("unexpected error reading secret %v: %v", secretName, err)
 		}
 
-		if exists {
-			secret := s.(*apiv1.Secret)
+		if secret != nil {
 			nsSecName := strings.Replace(secretName, "/", "-", -1)
 
 			dh, ok := secret.Data["dhparam.pem"]

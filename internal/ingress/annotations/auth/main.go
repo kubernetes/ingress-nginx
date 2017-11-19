@@ -102,7 +102,7 @@ func NewParser(authDirectory string, r resolver.Resolver) parser.IngressAnnotati
 // and generated an htpasswd compatible file to be used as source
 // during the authentication process
 func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
-	at, err := parser.GetStringAnnotation("auth-type", ing, a.r)
+	at, err := parser.GetStringAnnotation("auth-type", ing)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("invalid authentication type")
 	}
 
-	s, err := parser.GetStringAnnotation("auth-secret", ing, a.r)
+	s, err := parser.GetStringAnnotation("auth-secret", ing)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "error reading secret name from annotation"),
@@ -126,7 +126,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}
 	}
 
-	realm, _ := parser.GetStringAnnotation("auth-realm", ing, a.r)
+	realm, _ := parser.GetStringAnnotation("auth-realm", ing)
 
 	passFile := fmt.Sprintf("%v/%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.GetName())
 	err = dumpSecret(passFile, secret)

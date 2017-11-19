@@ -22,7 +22,6 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 const (
@@ -44,9 +43,7 @@ var (
 	corsHeadersRegex = regexp.MustCompile(`^([A-Za-z0-9\-\_]+,?\s?)+$`)
 )
 
-type cors struct {
-	r resolver.Resolver
-}
+type cors struct{}
 
 // Config contains the Cors configuration to be used in the Ingress
 type Config struct {
@@ -58,8 +55,8 @@ type Config struct {
 }
 
 // NewParser creates a new CORS annotation parser
-func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return cors{r}
+func NewParser() parser.IngressAnnotation {
+	return cors{}
 }
 
 // Equal tests for equality between two External types
@@ -92,27 +89,27 @@ func (c1 *Config) Equal(c2 *Config) bool {
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should allows CORS
 func (c cors) Parse(ing *extensions.Ingress) (interface{}, error) {
-	corsenabled, err := parser.GetBoolAnnotation("enable-cors", ing, c.r)
+	corsenabled, err := parser.GetBoolAnnotation("enable-cors", ing)
 	if err != nil {
 		corsenabled = false
 	}
 
-	corsalloworigin, err := parser.GetStringAnnotation("cors-allow-origin", ing, c.r)
+	corsalloworigin, err := parser.GetStringAnnotation("cors-allow-origin", ing)
 	if err != nil || corsalloworigin == "" || !corsOriginRegex.MatchString(corsalloworigin) {
 		corsalloworigin = "*"
 	}
 
-	corsallowheaders, err := parser.GetStringAnnotation("cors-allow-headers", ing, c.r)
+	corsallowheaders, err := parser.GetStringAnnotation("cors-allow-headers", ing)
 	if err != nil || corsallowheaders == "" || !corsHeadersRegex.MatchString(corsallowheaders) {
 		corsallowheaders = defaultCorsHeaders
 	}
 
-	corsallowmethods, err := parser.GetStringAnnotation("cors-allow-methods", ing, c.r)
+	corsallowmethods, err := parser.GetStringAnnotation("cors-allow-methods", ing)
 	if err != nil || corsallowmethods == "" || !corsMethodsRegex.MatchString(corsallowmethods) {
 		corsallowmethods = defaultCorsMethods
 	}
 
-	corsallowcredentials, err := parser.GetBoolAnnotation("cors-allow-credentials", ing, c.r)
+	corsallowcredentials, err := parser.GetBoolAnnotation("cors-allow-credentials", ing)
 	if err != nil {
 		corsallowcredentials = true
 	}

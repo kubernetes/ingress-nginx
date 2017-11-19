@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2015 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package serviceupstream
+package store
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
-
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/client-go/tools/cache"
 )
 
-type serviceUpstream struct{}
-
-// NewParser creates a new serviceUpstream annotation parser
-func NewParser() parser.IngressAnnotation {
-	return serviceUpstream{}
-}
-
-func (s serviceUpstream) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation("service-upstream", ing)
+// IngressAnnotationsLister makes a Store that lists annotations in Ingress rules.
+type IngressAnnotationsLister struct {
+	cache.Store
 }
