@@ -22,13 +22,13 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 )
 
 func TestParse(t *testing.T) {
-	annotation := "nginx/upstream-hash-by"
+	annotation := parser.GetAnnotationWithPrefix("upstream-hash-by")
 
-	ap := NewParser(&resolver.Mock{})
+	ap := NewParser()
 	if ap == nil {
 		t.Fatalf("expected a parser.IngressAnnotation but returned nil")
 	}

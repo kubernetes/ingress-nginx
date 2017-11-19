@@ -82,18 +82,18 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
-	rt, _ := parser.GetStringAnnotation("rewrite-target", ing, a.r)
-	sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing, a.r)
+	rt, _ := parser.GetStringAnnotation("rewrite-target", ing)
+	sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing)
 	if err != nil {
 		sslRe = a.r.GetDefaultBackend().SSLRedirect
 	}
-	fSslRe, err := parser.GetBoolAnnotation("force-ssl-redirect", ing, a.r)
+	fSslRe, err := parser.GetBoolAnnotation("force-ssl-redirect", ing)
 	if err != nil {
 		fSslRe = a.r.GetDefaultBackend().ForceSSLRedirect
 	}
-	abu, _ := parser.GetBoolAnnotation("add-base-url", ing, a.r)
-	bus, _ := parser.GetStringAnnotation("base-url-scheme", ing, a.r)
-	ar, _ := parser.GetStringAnnotation("app-root", ing, a.r)
+	abu, _ := parser.GetBoolAnnotation("add-base-url", ing)
+	bus, _ := parser.GetStringAnnotation("base-url-scheme", ing)
+	ar, _ := parser.GetStringAnnotation("app-root", ing)
 
 	return &Config{
 		Target:           rt,

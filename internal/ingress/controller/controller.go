@@ -38,7 +38,6 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -66,8 +65,6 @@ func init() {
 
 // Configuration contains all the settings required by an Ingress controller
 type Configuration struct {
-	AnnotationsPrefix string
-
 	APIServerHost  string
 	KubeConfigFile string
 	Client         clientset.Interface
@@ -76,7 +73,6 @@ type Configuration struct {
 
 	ConfigMapName  string
 	DefaultService string
-	IngressClass   string
 	Namespace      string
 
 	ForceNamespaceIsolation bool
@@ -87,7 +83,6 @@ type Configuration struct {
 	UDPConfigMapName string
 
 	DefaultHealthzURL     string
-	DefaultIngressClass   string
 	DefaultSSLCertificate string
 
 	// optional
@@ -119,7 +114,7 @@ func (n NGINXController) GetDefaultBackend() defaults.Backend {
 
 // GetPublishService returns the configured service used to set ingress status
 func (n NGINXController) GetPublishService() *apiv1.Service {
-	s, err := n.listers.Service.GetByName(n.cfg.PublishService)
+	s, err := n.storeLister.GetService(n.cfg.PublishService)
 	if err != nil {
 		return nil
 	}
@@ -129,17 +124,12 @@ func (n NGINXController) GetPublishService() *apiv1.Service {
 
 // GetSecret searches for a secret in the local secrets Store
 func (n NGINXController) GetSecret(name string) (*apiv1.Secret, error) {
-	return n.listers.Secret.GetByName(name)
+	return n.storeLister.GetSecret(name)
 }
 
 // GetService searches for a service in the local secrets Store
 func (n NGINXController) GetService(name string) (*apiv1.Service, error) {
-	return n.listers.Service.GetByName(name)
-}
-
-// GetAnnotationWithPrefix returns the prefix of ingress annotations
-func (n NGINXController) GetAnnotationWithPrefix(suffix string) string {
-	return fmt.Sprintf("%v/%v", n.cfg.AnnotationsPrefix, suffix)
+	return n.storeLister.GetService(name)
 }
 
 // sync collects all the pieces required to assemble the configuration file and
@@ -154,31 +144,19 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 
 	if element, ok := item.(task.Element); ok {
 		if name, ok := element.Key.(string); ok {
-			if obj, exists, _ := n.listers.Ingress.GetByKey(name); exists {
-				ing := obj.(*extensions.Ingress)
+			if ing, err := n.storeLister.GetIngress(name); err == nil {
 				n.readSecrets(ing)
 			}
 		}
 	}
 
 	// Sort ingress rules using the ResourceVersion field
-	ings := n.listers.Ingress.List()
-	sort.SliceStable(ings, func(i, j int) bool {
-		ir := ings[i].(*extensions.Ingress).ResourceVersion
-		jr := ings[j].(*extensions.Ingress).ResourceVersion
+	ingresses := n.storeLister.ListIngresses()
+	sort.SliceStable(ingresses, func(i, j int) bool {
+		ir := ingresses[i].ResourceVersion
+		jr := ingresses[j].ResourceVersion
 		return ir < jr
 	})
-
-	// filter ingress rules
-	var ingresses []*extensions.Ingress
-	for _, ingIf := range ings {
-		ing := ingIf.(*extensions.Ingress)
-		if !class.IsValid(ing, n.cfg.IngressClass, n.cfg.DefaultIngressClass) {
-			continue
-		}
-
-		ingresses = append(ingresses, ing)
-	}
 
 	upstreams, servers := n.getBackendServers(ingresses)
 	var passUpstreams []*ingress.SSLPassthroughBackend
@@ -248,7 +226,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		return []ingress.L4Service{}
 	}
 
-	configmap, err := n.listers.ConfigMap.GetByName(configmapName)
+	configmap, err := n.storeLister.GetConfigMap(configmapName)
 	if err != nil {
 		glog.Errorf("unexpected error reading configmap %v: %v", configmapName, err)
 		return []ingress.L4Service{}
@@ -306,18 +284,11 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			continue
 		}
 
-		svcObj, svcExists, err := n.listers.Service.GetByKey(nsName)
+		svc, err := n.storeLister.GetService(nsName)
 		if err != nil {
 			glog.Warningf("error getting service %v: %v", nsName, err)
 			continue
 		}
-
-		if !svcExists {
-			glog.Warningf("service %v was not found", nsName)
-			continue
-		}
-
-		svc := svcObj.(*apiv1.Service)
 
 		var endps []ingress.Endpoint
 		targetPort, err := strconv.Atoi(svcPort)
@@ -375,20 +346,13 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 		Name: defUpstreamName,
 	}
 	svcKey := n.cfg.DefaultService
-	svcObj, svcExists, err := n.listers.Service.GetByKey(svcKey)
+	svc, err := n.storeLister.GetService(svcKey)
 	if err != nil {
 		glog.Warningf("unexpected error searching the default backend %v: %v", n.cfg.DefaultService, err)
 		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
 		return upstream
 	}
 
-	if !svcExists {
-		glog.Warningf("service %v does not exist", svcKey)
-		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
-		return upstream
-	}
-
-	svc := svcObj.(*apiv1.Service)
 	endps := n.getEndpoints(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, &healthcheck.Config{})
 	if len(endps) == 0 {
 		glog.Warningf("service %v does not have any active endpoints", svcKey)
@@ -626,16 +590,16 @@ func (n NGINXController) GetAuthCertificate(name string) (*resolver.AuthSSLCert,
 		n.syncSecret(name)
 	}
 
-	_, err := n.listers.Secret.GetByName(name)
+	_, err := n.storeLister.GetSecret(name)
 	if err != nil {
 		return &resolver.AuthSSLCert{}, fmt.Errorf("unexpected error: %v", err)
 	}
 
-	bc, exists := n.sslCertTracker.Get(name)
-	if !exists {
+	cert, err := n.storeLister.GetLocalSecret(name)
+	if err != nil {
 		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exist", name)
 	}
-	cert := bc.(*ingress.SSLCert)
+
 	return &resolver.AuthSSLCert{
 		Secret:     name,
 		CAFileName: cert.CAFileName,
@@ -737,13 +701,13 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 					upstreams[name].Endpoints = endp
 				}
 
-				s, err := n.listers.Service.GetByName(svcKey)
+				svc, err := n.storeLister.GetService(svcKey)
 				if err != nil {
 					glog.Warningf("error obtaining service: %v", err)
 					continue
 				}
 
-				upstreams[name].Service = s
+				upstreams[name].Service = svc
 			}
 		}
 	}
@@ -752,13 +716,11 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 }
 
 func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *extensions.IngressBackend) (endpoint ingress.Endpoint, err error) {
-	svcObj, svcExists, err := n.listers.Service.GetByKey(svcKey)
-
-	if !svcExists {
-		return endpoint, fmt.Errorf("service %v does not exist", svcKey)
+	svc, err := n.storeLister.GetService(svcKey)
+	if err != nil {
+		return endpoint, err
 	}
 
-	svc := svcObj.(*apiv1.Service)
 	if svc.Spec.ClusterIP == "" || svc.Spec.ClusterIP == "None" {
 		return endpoint, fmt.Errorf("No ClusterIP found for service %s", svcKey)
 	}
@@ -790,7 +752,7 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *exte
 // to a service.
 func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
 	hz *healthcheck.Config) ([]ingress.Endpoint, error) {
-	svc, err := n.listers.Service.GetByName(svcKey)
+	svc, err := n.storeLister.GetService(svcKey)
 
 	var upstreams []ingress.Endpoint
 	if err != nil {
@@ -1107,7 +1069,7 @@ func (n *NGINXController) getEndpoints(
 	}
 
 	glog.V(3).Infof("getting endpoints for service %v/%v and port %v", s.Namespace, s.Name, servicePort.String())
-	ep, err := n.listers.Endpoint.GetServiceEndpoints(s)
+	ep, err := n.storeLister.GetServiceEndpoints(s)
 	if err != nil {
 		glog.Warningf("unexpected error obtaining service endpoints: %v", err)
 		return upsServers
@@ -1167,7 +1129,7 @@ func (n *NGINXController) readSecrets(ing *extensions.Ingress) {
 		n.syncSecret(key)
 	}
 
-	key, _ := parser.GetStringAnnotation("auth-tls-secret", ing, n)
+	key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
 	if key == "" {
 		return
 	}
@@ -1191,20 +1153,17 @@ func (n *NGINXController) SetForceReload(shouldReload bool) {
 func (n *NGINXController) extractAnnotations(ing *extensions.Ingress) {
 	anns := n.annotations.Extract(ing)
 	glog.V(3).Infof("updating annotations information for ingres %v/%v", anns.Namespace, anns.Name)
-	n.listers.IngressAnnotation.Update(anns)
+	//	n.storeLister.UpdateIngressAnnotations(ing, anns)
 }
 
 // getByIngress returns the parsed annotations from an Ingress
 func (n *NGINXController) getIngressAnnotations(ing *extensions.Ingress) *annotations.Ingress {
 	key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Name)
-	item, exists, err := n.listers.IngressAnnotation.GetByKey(key)
+	item, err := n.storeLister.GetIngressAnnotations(ing)
 	if err != nil {
 		glog.Errorf("unexpected error getting ingress annotation %v: %v", key, err)
 		return &annotations.Ingress{}
 	}
-	if !exists {
-		glog.Errorf("ingress annotation %v was not found", key)
-		return &annotations.Ingress{}
-	}
-	return item.(*annotations.Ingress)
+
+	return item
 }

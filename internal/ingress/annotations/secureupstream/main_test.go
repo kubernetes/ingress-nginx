@@ -25,6 +25,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -78,8 +79,8 @@ func (cfg mockCfg) GetAuthCertificate(secret string) (*resolver.AuthSSLCert, err
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data["nginx/secure-backends"] = "true"
-	data["nginx/secure-verify-ca-secret"] = "secure-verify-ca"
+	data[parser.GetAnnotationWithPrefix("secure-backends")] = "true"
+	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 
 	_, err := NewParser(mockCfg{
@@ -95,8 +96,8 @@ func TestAnnotations(t *testing.T) {
 func TestSecretNotFound(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data["nginx/secure-backends"] = "true"
-	data["nginx/secure-verify-ca-secret"] = "secure-verify-ca"
+	data[parser.GetAnnotationWithPrefix("secure-backends")] = "true"
+	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 	_, err := NewParser(mockCfg{}).Parse(ing)
 	if err == nil {
@@ -107,8 +108,8 @@ func TestSecretNotFound(t *testing.T) {
 func TestSecretOnNonSecure(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
-	data["nginx/secure-backends"] = "false"
-	data["nginx/secure-verify-ca-secret"] = "secure-verify-ca"
+	data[parser.GetAnnotationWithPrefix("secure-backends")] = "false"
+	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 	_, err := NewParser(mockCfg{
 		certs: map[string]resolver.AuthSSLCert{

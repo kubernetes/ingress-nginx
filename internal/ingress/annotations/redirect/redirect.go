@@ -49,9 +49,9 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // If the Ingress contains both annotations the execution order is
 // temporal and then permanent
 func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
-	r3w, _ := parser.GetBoolAnnotation("from-to-www-redirect", ing, a.r)
+	r3w, _ := parser.GetBoolAnnotation("from-to-www-redirect", ing)
 
-	tr, err := parser.GetStringAnnotation("temporal-redirect", ing, a.r)
+	tr, err := parser.GetStringAnnotation("temporal-redirect", ing)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}, nil
 	}
 
-	pr, err := parser.GetStringAnnotation("permanent-redirect", ing, a.r)
+	pr, err := parser.GetStringAnnotation("permanent-redirect", ing)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}

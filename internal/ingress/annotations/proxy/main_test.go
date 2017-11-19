@@ -24,6 +24,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -85,14 +86,14 @@ func TestProxy(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/proxy-connect-timeout"] = "1"
-	data["nginx/proxy-send-timeout"] = "2"
-	data["nginx/proxy-read-timeout"] = "3"
-	data["nginx/proxy-buffer-size"] = "1k"
-	data["nginx/proxy-body-size"] = "2k"
-	data["nginx/proxy-next-upstream"] = "off"
-	data["nginx/proxy-pass-params"] = "smax=5 max=10"
-	data["nginx/proxy-request-buffering"] = "off"
+	data[parser.GetAnnotationWithPrefix("proxy-connect-timeout")] = "1"
+	data[parser.GetAnnotationWithPrefix("proxy-send-timeout")] = "2"
+	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "3"
+	data[parser.GetAnnotationWithPrefix("proxy-buffer-size")] = "1k"
+	data[parser.GetAnnotationWithPrefix("proxy-body-size")] = "2k"
+	data[parser.GetAnnotationWithPrefix("proxy-next-upstream")] = "off"
+	data[parser.GetAnnotationWithPrefix("proxy-pass-params")] = "smax=5 max=10"
+	data[parser.GetAnnotationWithPrefix("proxy-request-buffering")] = "off"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)

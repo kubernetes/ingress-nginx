@@ -35,7 +35,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the redirects must
 func (a portInRedirect) Parse(ing *extensions.Ingress) (interface{}, error) {
-	up, err := parser.GetBoolAnnotation("use-port-in-redirects", ing, a.r)
+	up, err := parser.GetBoolAnnotation("use-port-in-redirects", ing)
 	if err != nil {
 		return a.r.GetDefaultBackend().UsePortInRedirects, nil
 	}

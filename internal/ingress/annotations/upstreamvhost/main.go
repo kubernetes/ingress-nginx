@@ -20,21 +20,18 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-type upstreamVhost struct {
-	r resolver.Resolver
-}
+type upstreamVhost struct{}
 
 // NewParser creates a new upstream VHost annotation parser
-func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return upstreamVhost{r}
+func NewParser() parser.IngressAnnotation {
+	return upstreamVhost{}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to indicate if the location/s contains a fragment of
 // configuration to be included inside the paths of the rules
 func (a upstreamVhost) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation("upstream-vhost", ing, a.r)
+	return parser.GetStringAnnotation("upstream-vhost", ing)
 }

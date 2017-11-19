@@ -44,8 +44,8 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the upstream servers should use SSL
 func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
-	s, _ := parser.GetBoolAnnotation("secure-backends", ing, a.r)
-	ca, _ := parser.GetStringAnnotation("secure-verify-ca-secret", ing, a.r)
+	s, _ := parser.GetBoolAnnotation("secure-backends", ing)
+	ca, _ := parser.GetStringAnnotation("secure-verify-ca-secret", ing)
 	secure := &Config{
 		Secure: s,
 		CACert: resolver.AuthSSLCert{},

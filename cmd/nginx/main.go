@@ -122,7 +122,6 @@ func main() {
 	conf.FakeCertificateSHA = sha
 
 	conf.Client = kubeClient
-	conf.DefaultIngressClass = defIngressClass
 
 	ngx := controller.NewNGINXController(conf)
 

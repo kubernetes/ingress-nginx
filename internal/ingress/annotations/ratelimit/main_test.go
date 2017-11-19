@@ -24,6 +24,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -86,9 +87,9 @@ func TestBadRateLimiting(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/limit-connections"] = "0"
-	data["nginx/limit-rps"] = "0"
-	data["nginx/limit-rpm"] = "0"
+	data[parser.GetAnnotationWithPrefix("limit-connections")] = "0"
+	data[parser.GetAnnotationWithPrefix("limit-rps")] = "0"
+	data[parser.GetAnnotationWithPrefix("limit-rpm")] = "0"
 	ing.SetAnnotations(data)
 
 	_, err := NewParser(mockBackend{}).Parse(ing)
@@ -97,11 +98,11 @@ func TestBadRateLimiting(t *testing.T) {
 	}
 
 	data = map[string]string{}
-	data["nginx/limit-connections"] = "5"
-	data["nginx/limit-rps"] = "100"
-	data["nginx/limit-rpm"] = "10"
-	data["nginx/limit-rate-after"] = "100"
-	data["nginx/limit-rate"] = "10"
+	data[parser.GetAnnotationWithPrefix("limit-connections")] = "5"
+	data[parser.GetAnnotationWithPrefix("limit-rps")] = "100"
+	data[parser.GetAnnotationWithPrefix("limit-rpm")] = "10"
+	data[parser.GetAnnotationWithPrefix("limit-rate-after")] = "100"
+	data[parser.GetAnnotationWithPrefix("limit-rate")] = "10"
 
 	ing.SetAnnotations(data)
 
