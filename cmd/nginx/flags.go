@@ -27,13 +27,10 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 
+	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
-)
-
-const (
-	defIngressClass = "nginx"
 )
 
 func parseFlags() (bool, *controller.Configuration, error) {
@@ -157,6 +154,8 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		}
 	}
 
+	ingress.IngressClass = *ingressClass
+
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {
 		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --http-port", *httpPort)
@@ -198,7 +197,6 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		EnableSSLChainCompletion: *enableSSLChainCompletion,
 		ResyncPeriod:             *resyncPeriod,
 		DefaultService:           *defaultSvc,
-		IngressClass:             *ingressClass,
 		Namespace:                *watchNamespace,
 		ConfigMapName:            *configMap,
 		TCPConfigMapName:         *tcpConfigMapName,

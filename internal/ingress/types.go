@@ -33,7 +33,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/internal/ingress/store"
 )
 
 var (
@@ -42,17 +41,26 @@ var (
 	// The name of each file is <namespace>-<secret name>.pem. The content is the concatenated
 	// certificate and key.
 	DefaultSSLDirectory = "/ingress-controller/ssl"
+
+	// DefaultIngressClass defines the default ingress class of the ingress controller
+	DefaultIngressClass = "nginx"
+
+	// IngressClass contains the configured ingress class.
+	// By default is empty
+	IngressClass = ""
 )
 
-// StoreLister returns the configured stores for ingresses, services,
-// endpoints, secrets and configmaps.
-type StoreLister struct {
-	Ingress           store.IngressLister
-	Service           store.ServiceLister
-	Endpoint          store.EndpointLister
-	Secret            store.SecretLister
-	ConfigMap         store.ConfigMapLister
-	IngressAnnotation store.IngressAnnotationsLister
+type EventType string
+
+const (
+	CreateEvent EventType = "CREATE"
+	UpdateEvent EventType = "UPDATE"
+	DeleteEvent EventType = "DELETE"
+)
+
+type Event struct {
+	Type EventType
+	Obj  interface{}
 }
 
 // Configuration holds the definition of all the parts required to describe all

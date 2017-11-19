@@ -69,10 +69,9 @@ const (
 )
 
 var (
-	tmplPath        = "/etc/nginx/template/nginx.tmpl"
-	cfgPath         = "/etc/nginx/nginx.conf"
-	nginxBinary     = "/usr/sbin/nginx"
-	defIngressClass = "nginx"
+	tmplPath    = "/etc/nginx/template/nginx.tmpl"
+	cfgPath     = "/etc/nginx/nginx.conf"
+	nginxBinary = "/usr/sbin/nginx"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
@@ -103,9 +102,9 @@ func NewNGINXController(config *Configuration) *NGINXController {
 
 		isIPV6Enabled: ing_net.IsIPv6Enabled(),
 
-		resolver:        h,
-		cfg:             config,
-		sslCertTracker:  store.NewSSLCertTracker(),
+		resolver: h,
+		cfg:      config,
+
 		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.3, 1),
 
 		recorder: eventBroadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{
@@ -113,18 +112,25 @@ func NewNGINXController(config *Configuration) *NGINXController {
 		}),
 
 		stopCh:   make(chan struct{}),
+		updateCh: make(chan interface{}),
+
 		stopLock: &sync.Mutex{},
 
 		fileSystem: filesystem.DefaultFs{},
 	}
 
-	n.listers, n.controllers = n.createListers(n.stopCh)
+	watchNs := apiv1.NamespaceAll
+	if n.cfg.ForceNamespaceIsolation && n.cfg.Namespace != apiv1.NamespaceAll {
+		watchNs = n.cfg.Namespace
+	}
+
+	ae := annotations.NewAnnotationExtractor(n)
+
+	n.store = store.New(watchNs, n.cfg.ResyncPeriod, n.recorder, n.cfg.Client, ae, n.updateCh)
 
 	n.stats = newStatsCollector(config.Namespace, config.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
-
-	n.annotations = annotations.NewAnnotationExtractor(n)
 
 	if config.UpdateStatus {
 		n.syncStatus = status.NewStatusSyncer(status.Config{
@@ -174,20 +180,11 @@ Error loading new template : %v
 type NGINXController struct {
 	cfg *Configuration
 
-	listers     *ingress.StoreLister
-	controllers *cacheController
-
-	annotations annotations.Extractor
-
 	recorder record.EventRecorder
 
 	syncQueue *task.Queue
 
 	syncStatus status.Sync
-
-	// local store of SSL certificates
-	// (only certificates used in ingress)
-	sslCertTracker *store.SSLCertTracker
 
 	syncRateLimiter flowcontrol.RateLimiter
 
@@ -201,7 +198,7 @@ type NGINXController struct {
 	// ngxErrCh channel used to detect errors with the nginx processes
 	ngxErrCh chan error
 
-	// runningConfig contains the running configuration in the Backend
+	// runningConfig contains the running configuration
 	runningConfig *ingress.Configuration
 
 	forceReload int32
@@ -210,7 +207,7 @@ type NGINXController struct {
 
 	configmap *apiv1.ConfigMap
 
-	storeLister *ingress.StoreLister
+	store store.Storer
 
 	binary   string
 	resolver []net.IP
@@ -223,8 +220,6 @@ type NGINXController struct {
 
 	// returns true if proxy protocol es enabled
 	IsProxyProtocolEnabled bool
-
-	isSSLPassthroughEnabled bool
 
 	isShuttingDown bool
 
@@ -239,7 +234,7 @@ type NGINXController struct {
 func (n *NGINXController) Start() {
 	glog.Infof("starting Ingress controller")
 
-	n.controllers.Run(n.stopCh)
+	n.store.Start()
 
 	// initial sync of secrets to avoid unnecessary reloads
 	glog.Info("running initial sync of secrets")
@@ -264,8 +259,6 @@ func (n *NGINXController) Start() {
 	if n.syncStatus != nil {
 		go n.syncStatus.Run(n.stopCh)
 	}
-
-	go wait.Until(n.checkMissingSecrets, 30*time.Second, n.stopCh)
 
 	done := make(chan error, 1)
 	cmd := exec.Command(n.binary, "-c", cfgPath)
@@ -472,16 +465,40 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 			}
 		}
 
+		svcIP := svc.Spec.ClusterIP
+
+		// in case of headless services we can use just the first address
+		isHeadlessService := svc.Spec.ClusterIP == "None"
+		if isHeadlessService {
+			ep, err := n.listers.Endpoint.GetServiceEndpoints(svc)
+			if err != nil {
+				glog.Warningf("unexpected error obtaining service endpoints: %v", err)
+				continue
+			}
+
+			if len(ep.Subsets) == 0 {
+				glog.Warningf("invalid service headless definition (no subsets)")
+				continue
+			}
+
+			if len(ep.Subsets[0].Addresses) == 0 {
+				glog.Warningf("invalid service headless definition (no addresses)")
+				continue
+			}
+
+			svcIP = ep.Subsets[0].Addresses[0].IP
+		}
+
 		//TODO: Allow PassthroughBackends to specify they support proxy-protocol
 		servers = append(servers, &TCPServer{
 			Hostname:      pb.Hostname,
-			IP:            svc.Spec.ClusterIP,
+			IP:            svcIP,
 			Port:          port,
 			ProxyProtocol: false,
 		})
 	}
 
-	if n.isSSLPassthroughEnabled {
+	if n.cfg.EnableSSLPassthrough {
 		n.Proxy.ServerList = servers
 	}
 
@@ -627,7 +644,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		Cfg:                     cfg,
 		IsIPV6Enabled:           n.isIPV6Enabled && !cfg.DisableIpv6,
 		RedirectServers:         redirectServers,
-		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
+		IsSSLPassthroughEnabled: n.cfg.EnableSSLPassthrough,
 		ListenPorts:             n.cfg.ListenPorts,
 		PublishService:          n.GetPublishService(),
 	}
