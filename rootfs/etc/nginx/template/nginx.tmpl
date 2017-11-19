@@ -756,7 +756,11 @@ stream {
 
             # Pass the extracted client certificate to the backend
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
+            {{ if $server.CertificateAuth.PassCertToUpstream }}
             proxy_set_header ssl-client-cert        $ssl_client_raw_cert;
+            {{ else }}
+            proxy_set_header ssl-client-cert        "";
+            {{ end }}
             proxy_set_header ssl-client-verify      $ssl_client_verify;
             proxy_set_header ssl-client-dn          $ssl_client_s_dn;
             {{ else }}
