@@ -55,7 +55,7 @@ Last-Modified: Tue, 24 Jan 2017 14:02:19 GMT
 ETag: "58875e6b-264"
 Accept-Ranges: bytes
 ```
-In the example above, you can see a line containing the 'Set-Cookie: route' setting the right defined stickness cookie.
+In the example above, you can see a line containing the 'Set-Cookie: route' setting the right defined stickyness cookie.
 This cookie is created by NGINX containing the hash of the used upstream in that request. 
 If the user changes this cookie, NGINX creates a new one and redirect the user to another upstream.
 
