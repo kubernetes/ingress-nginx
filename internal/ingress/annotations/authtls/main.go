@@ -87,7 +87,7 @@ type authTLS struct {
 // rule used to use a Certificate as authentication method
 func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 
-	tlsauthsecret, err := parser.GetStringAnnotation(a.r.GetAnnotationWithPrefix("auth-tls-secret"), ing, a.r)
+	tlsauthsecret, err := parser.GetStringAnnotation("auth-tls-secret", ing)
 	if err != nil {
 		return &Config{}, err
 	}
@@ -101,12 +101,12 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return &Config{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
-	tlsVerifyClient, err := parser.GetStringAnnotation("auth-tls-verify-client", ing, a.r)
+	tlsVerifyClient, err := parser.GetStringAnnotation("auth-tls-verify-client", ing)
 	if err != nil || !authVerifyClientRegex.MatchString(tlsVerifyClient) {
 		tlsVerifyClient = defaultAuthVerifyClient
 	}
 
-	tlsdepth, err := parser.GetIntAnnotation("auth-tls-verify-depth", ing, a.r)
+	tlsdepth, err := parser.GetIntAnnotation("auth-tls-verify-depth", ing)
 	if err != nil || tlsdepth == 0 {
 		tlsdepth = defaultAuthTLSDepth
 	}
@@ -118,12 +118,12 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}
 	}
 
-	errorpage, err := parser.GetStringAnnotation("auth-tls-error-page", ing, a.r)
+	errorpage, err := parser.GetStringAnnotation("auth-tls-error-page", ing)
 	if err != nil || errorpage == "" {
 		errorpage = ""
 	}
 
-	passCert, err := parser.GetBoolAnnotation("auth-tls-pass-certificate-to-upstream", ing, a.r)
+	passCert, err := parser.GetBoolAnnotation("auth-tls-pass-certificate-to-upstream", ing)
 	if err != nil {
 		passCert = false
 	}

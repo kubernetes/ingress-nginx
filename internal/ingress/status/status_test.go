@@ -25,11 +25,9 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -213,26 +211,25 @@ func buildExtensionsIngresses() []extensions.Ingress {
 	}
 }
 
-func buildIngressListener() store.IngressLister {
-	s := cache.NewStore(cache.MetaNamespaceKeyFunc)
-	s.Add(&extensions.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo_ingress_non_01",
-			Namespace: apiv1.NamespaceDefault,
-		}})
-	s.Add(&extensions.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo_ingress_1",
-			Namespace: apiv1.NamespaceDefault,
-		},
-		Status: extensions.IngressStatus{
-			LoadBalancer: apiv1.LoadBalancerStatus{
-				Ingress: buildLoadBalancerIngressByIP(),
+func buildIngressListener() []*extensions.Ingress {
+	return []*extensions.Ingress{
+		&extensions.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo_ingress_non_01",
+				Namespace: apiv1.NamespaceDefault,
+			}},
+		&extensions.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo_ingress_1",
+				Namespace: apiv1.NamespaceDefault,
+			},
+			Status: extensions.IngressStatus{
+				LoadBalancer: apiv1.LoadBalancerStatus{
+					Ingress: buildLoadBalancerIngressByIP(),
+				},
 			},
 		},
-	})
-
-	return store.IngressLister{Store: s}
+	}
 }
 
 func buildStatusSync() statusSync {
@@ -248,7 +245,7 @@ func buildStatusSync() statusSync {
 		Config: Config{
 			Client:         buildSimpleClientSet(),
 			PublishService: apiv1.NamespaceDefault + "/" + "foo",
-			IngressLister:  buildIngressListener(),
+			IngressLister:  buildIngressListener,
 		},
 	}
 }
@@ -260,9 +257,7 @@ func TestStatusActions(t *testing.T) {
 	c := Config{
 		Client:                 buildSimpleClientSet(),
 		PublishService:         "",
-		IngressLister:          buildIngressListener(),
-		DefaultIngressClass:    "nginx",
-		IngressClass:           "",
+		IngressLister:          buildIngressListener,
 		UpdateStatusOnShutdown: true,
 	}
 	// create object
@@ -285,7 +280,7 @@ func TestStatusActions(t *testing.T) {
 	newIPs := []apiv1.LoadBalancerIngress{{
 		IP: "11.0.0.2",
 	}}
-	fooIngress1, err1 := fk.Client.ExtensionsV1beta1().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
+	fooIngress1, err1 := fk.Client.Extensions().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
 	if err1 != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -298,7 +293,7 @@ func TestStatusActions(t *testing.T) {
 	fk.Shutdown()
 	// ingress should be empty
 	newIPs2 := []apiv1.LoadBalancerIngress{}
-	fooIngress2, err2 := fk.Client.ExtensionsV1beta1().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
+	fooIngress2, err2 := fk.Client.Extensions().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
 	if err2 != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -307,7 +302,7 @@ func TestStatusActions(t *testing.T) {
 		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, newIPs2)
 	}
 
-	oic, err := fk.Client.ExtensionsV1beta1().Ingresses(api.NamespaceDefault).Get("foo_ingress_different_class", metav1.GetOptions{})
+	oic, err := fk.Client.Extensions().Ingresses(api.NamespaceDefault).Get("foo_ingress_different_class", metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -367,8 +362,6 @@ func TestRunningAddresessWithPods(t *testing.T) {
 	}
 }
 
-/*
-TODO: this test requires a refactoring
 func TestUpdateStatus(t *testing.T) {
 	fk := buildStatusSync()
 	newIPs := buildLoadBalancerIngressByIP()
@@ -392,7 +385,7 @@ func TestUpdateStatus(t *testing.T) {
 		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, []apiv1.LoadBalancerIngress{})
 	}
 }
-*/
+
 func TestSliceToStatus(t *testing.T) {
 	fkEndpoints := []string{
 		"10.0.0.1",

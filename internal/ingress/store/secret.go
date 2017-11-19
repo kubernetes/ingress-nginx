@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2015 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package serviceupstream
+package store
 
 import (
-	extensions "k8s.io/api/extensions/v1beta1"
+	"fmt"
 
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/tools/cache"
 )
 
-type serviceUpstream struct{}
-
-// NewParser creates a new serviceUpstream annotation parser
-func NewParser() parser.IngressAnnotation {
-	return serviceUpstream{}
+// SecretLister makes a Store that lists Secrets.
+type SecretLister struct {
+	cache.Store
 }
 
-func (s serviceUpstream) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation("service-upstream", ing)
+// ByKey searches for a secret in the local secrets Store
+func (sl *SecretLister) ByKey(key string) (*apiv1.Secret, error) {
+	s, exists, err := sl.GetByKey(key)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("secret %v was not found", key)
+	}
+	return s.(*apiv1.Secret), nil
 }

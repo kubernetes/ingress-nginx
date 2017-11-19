@@ -34,6 +34,9 @@ jobs:
     - go get github.com/golang/lint/golint
     - make fmt lint vet
   - stage: Coverage
+    before_script:
+    # start minikube 
+    - test/e2e/up.sh
     script:
     - go get github.com/mattn/goveralls
     - go get github.com/modocache/gover
@@ -44,6 +47,7 @@ jobs:
     before_script:
     - make e2e-image
     - test/e2e/up.sh
+    - test/e2e/wait-for-nginx.sh
     script:
     - make e2e-test
   # split builds to avoid job timeouts

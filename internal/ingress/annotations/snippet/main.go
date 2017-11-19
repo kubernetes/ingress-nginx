@@ -20,21 +20,18 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-type snippet struct {
-	r resolver.Resolver
-}
+type snippet struct{}
 
-// NewParser creates a new CORS annotation parser
-func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return snippet{r}
+// NewParser creates a new snippet annotation parser
+func NewParser() parser.IngressAnnotation {
+	return snippet{}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to indicate if the location/s contains a fragment of
 // configuration to be included inside the paths of the rules
 func (a snippet) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation("configuration-snippet", ing, a.r)
+	return parser.GetStringAnnotation("configuration-snippet", ing)
 }

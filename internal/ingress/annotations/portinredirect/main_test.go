@@ -25,6 +25,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -92,7 +93,7 @@ func TestPortInRedirect(t *testing.T) {
 
 		data := map[string]string{}
 		if test.usePort != nil {
-			data["nginx/use-port-in-redirects"] = fmt.Sprintf("%v", *test.usePort)
+			data[parser.GetAnnotationWithPrefix("use-port-in-redirects")] = fmt.Sprintf("%v", *test.usePort)
 		}
 		ing.SetAnnotations(data)
 

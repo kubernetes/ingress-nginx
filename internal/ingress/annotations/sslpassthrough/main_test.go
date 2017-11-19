@@ -22,7 +22,7 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -45,16 +45,16 @@ func buildIngress() *extensions.Ingress {
 func TestParseAnnotations(t *testing.T) {
 	ing := buildIngress()
 
-	_, err := NewParser(&resolver.Mock{}).Parse(ing)
+	_, err := NewParser().Parse(ing)
 	if err == nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 
 	data := map[string]string{}
-	data["nginx/ssl-passthrough"] = "true"
+	data[parser.GetAnnotationWithPrefix("ssl-passthrough")] = "true"
 	ing.SetAnnotations(data)
 	// test ingress using the annotation without a TLS section
-	_, err = NewParser(&resolver.Mock{}).Parse(ing)
+	_, err = NewParser().Parse(ing)
 	if err != nil {
 		t.Errorf("unexpected error parsing ingress with sslpassthrough")
 	}
@@ -65,7 +65,7 @@ func TestParseAnnotations(t *testing.T) {
 			Hosts: []string{"foo.bar.com"},
 		},
 	}
-	i, err := NewParser(&resolver.Mock{}).Parse(ing)
+	i, err := NewParser().Parse(ing)
 	if err != nil {
 		t.Errorf("expected error parsing ingress with sslpassthrough")
 	}

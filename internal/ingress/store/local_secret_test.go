@@ -14,21 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package serviceupstream
+package store
 
-import (
-	extensions "k8s.io/api/extensions/v1beta1"
+import "testing"
 
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-)
+func TestSSLCertTracker(t *testing.T) {
+	tracker := NewSSLCertTracker()
 
-type serviceUpstream struct{}
+	items := len(tracker.List())
+	if items != 0 {
+		t.Errorf("expected 0 items in the store but %v returned", items)
+	}
 
-// NewParser creates a new serviceUpstream annotation parser
-func NewParser() parser.IngressAnnotation {
-	return serviceUpstream{}
-}
+	tracker.Add("key", "value")
+	items = len(tracker.List())
+	if items != 1 {
+		t.Errorf("expected 1 item in the store but %v returned", items)
+	}
 
-func (s serviceUpstream) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation("service-upstream", ing)
+	item, exists := tracker.Get("key")
+	if !exists || item == nil {
+		t.Errorf("expected an item from the store but none returned")
+	}
 }

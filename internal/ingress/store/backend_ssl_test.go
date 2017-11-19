@@ -14,24 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package store
 
 import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"testing"
 
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	cache_client "k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/flowcontrol"
+	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/store"
-	"k8s.io/ingress-nginx/internal/task"
-	"k8s.io/kubernetes/pkg/api"
 )
 
 const (
@@ -66,8 +62,8 @@ func buildSimpleClientSetForBackendSSL() *testclient.Clientset {
 	return testclient.NewSimpleClientset()
 }
 
-func buildIngListenerForBackendSSL() store.IngressLister {
-	ingLister := store.IngressLister{}
+func buildIngListenerForBackendSSL() IngressLister {
+	ingLister := IngressLister{}
 	ingLister.Store = cache_client.NewStore(cache_client.DeletionHandlingMetaNamespaceKeyFunc)
 	return ingLister
 }
@@ -81,20 +77,21 @@ func buildSecretForBackendSSL() *apiv1.Secret {
 	}
 }
 
-func buildSecrListerForBackendSSL() store.SecretLister {
-	secrLister := store.SecretLister{}
+func buildSecrListerForBackendSSL() SecretLister {
+	secrLister := SecretLister{}
 	secrLister.Store = cache_client.NewStore(cache_client.DeletionHandlingMetaNamespaceKeyFunc)
 
 	return secrLister
 }
 
+/*
 func buildListers() *ingress.StoreLister {
 	sl := &ingress.StoreLister{}
 	sl.Ingress.Store = buildIngListenerForBackendSSL()
 	sl.Secret.Store = buildSecrListerForBackendSSL()
 	return sl
 }
-
+*/
 func buildControllerForBackendSSL() cache_client.Controller {
 	cfg := &cache_client.Config{
 		Queue: &MockQueue{Synced: true},
@@ -103,6 +100,7 @@ func buildControllerForBackendSSL() cache_client.Controller {
 	return cache_client.New(cfg)
 }
 
+/*
 func buildGenericControllerForBackendSSL() *NGINXController {
 	gc := &NGINXController{
 		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.3, 1),
@@ -110,13 +108,13 @@ func buildGenericControllerForBackendSSL() *NGINXController {
 			Client: buildSimpleClientSetForBackendSSL(),
 		},
 		listers:        buildListers(),
-		sslCertTracker: store.NewSSLCertTracker(),
+		sslCertTracker: NewSSLCertTracker(),
 	}
 
 	gc.syncQueue = task.NewTaskQueue(gc.syncIngress)
 	return gc
 }
-
+*/
 func buildCrtKeyAndCA() ([]byte, []byte, []byte, error) {
 	// prepare
 	td, err := ioutil.TempDir("", "ssl")
@@ -140,6 +138,7 @@ func buildCrtKeyAndCA() ([]byte, []byte, []byte, error) {
 	return dCrt, dKey, dCa, nil
 }
 
+/*
 func TestSyncSecret(t *testing.T) {
 	// prepare for test
 	dCrt, dKey, dCa, err := buildCrtKeyAndCA()
@@ -232,3 +231,4 @@ func TestGetPemCertificate(t *testing.T) {
 		})
 	}
 }
+*/

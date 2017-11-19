@@ -25,9 +25,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/pkg/errors"
 
-	pool "gopkg.in/go-playground/pool.v3"
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +39,6 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -68,10 +65,7 @@ type Config struct {
 
 	UseNodeInternalIP bool
 
-	IngressLister store.IngressLister
-
-	DefaultIngressClass string
-	IngressClass        string
+	IngressLister func() []*extensions.Ingress
 }
 
 // statusSync keeps the status IP in each Ingress rule updated executing a periodic check
@@ -178,11 +172,15 @@ func NewStatusSyncer(config Config) Sync {
 	}
 	st.syncQueue = task.NewCustomTaskQueue(st.sync, st.keyfunc)
 
+	if config.ElectionID == "" {
+		config.ElectionID = "ingress-controller-leader"
+	}
+
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
-	electionID := fmt.Sprintf("%v-%v", config.ElectionID, config.DefaultIngressClass)
-	if config.IngressClass != "" {
-		electionID = fmt.Sprintf("%v-%v", config.ElectionID, config.IngressClass)
+	electionID := fmt.Sprintf("%v-%v", config.ElectionID, class.DefaultClass)
+	if class.IngressClass != "" {
+		electionID = fmt.Sprintf("%v-%v", config.ElectionID, class.IngressClass)
 	}
 
 	callbacks := leaderelection.LeaderCallbacks{
@@ -304,59 +302,44 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 
 // updateStatus changes the status information of Ingress rules
 func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
-	ings := s.IngressLister.List()
+	// max number of goroutines to be used in the update process
+	max := 10
+	running := make(chan struct{}, max)
 
-	p := pool.NewLimited(10)
-	defer p.Close()
+	for _, ing := range s.IngressLister() {
+		running <- struct{}{} // waits for a free slot
+		go func(ing *extensions.Ingress,
+			status []apiv1.LoadBalancerIngress,
+			client clientset.Interface) {
+			defer func() {
+				<-running // releases slot
+			}()
 
-	batch := p.Batch()
+			sort.SliceStable(status, lessLoadBalancerIngress(status))
+			curIPs := ing.Status.LoadBalancer.Ingress
+			sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
 
-	for _, cur := range ings {
-		ing := cur.(*extensions.Ingress)
+			if ingressSliceEqual(status, curIPs) {
+				glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", ing.Namespace, ing.Name)
+				return
+			}
 
-		if !class.IsValid(ing, s.Config.IngressClass, s.Config.DefaultIngressClass) {
-			continue
-		}
+			// we cannot assume/trust the local informer is up to date
+			// request a fresh copy where we are doing the update
+			ingClient := client.Extensions().Ingresses(ing.Namespace)
+			currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
+			if err != nil {
+				glog.Errorf("unexpected error searching Ingress %v/%v: %v", ing.Namespace, ing.Name, err)
+				return
+			}
 
-		batch.Queue(runUpdate(ing, newIngressPoint, s.Client))
-	}
-
-	batch.QueueComplete()
-	batch.WaitAll()
-}
-
-func runUpdate(ing *extensions.Ingress, status []apiv1.LoadBalancerIngress,
-	client clientset.Interface) pool.WorkFunc {
-	return func(wu pool.WorkUnit) (interface{}, error) {
-		if wu.IsCancelled() {
-			return nil, nil
-		}
-
-		sort.SliceStable(status, lessLoadBalancerIngress(status))
-
-		curIPs := ing.Status.LoadBalancer.Ingress
-		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
-
-		if ingressSliceEqual(status, curIPs) {
-			glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", ing.Namespace, ing.Name)
-			return true, nil
-		}
-
-		ingClient := client.ExtensionsV1beta1().Ingresses(ing.Namespace)
-
-		currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
-		}
-
-		glog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, status)
-		currIng.Status.LoadBalancer.Ingress = status
-		_, err = ingClient.UpdateStatus(currIng)
-		if err != nil {
-			glog.Warningf("error updating ingress rule: %v", err)
-		}
-
-		return true, nil
+			glog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, status)
+			currIng.Status.LoadBalancer.Ingress = status
+			_, err = ingClient.UpdateStatus(currIng)
+			if err != nil {
+				glog.Warningf("error updating ingress rule: %v", err)
+			}
+		}(ing, newIngressPoint, s.Client)
 	}
 }
 
