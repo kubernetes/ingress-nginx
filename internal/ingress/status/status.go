@@ -342,7 +342,7 @@ func runUpdate(ing *extensions.Ingress, status []apiv1.LoadBalancerIngress,
 			return true, nil
 		}
 
-		ingClient := client.Extensions().Ingresses(ing.Namespace)
+		ingClient := client.ExtensionsV1beta1().Ingresses(ing.Namespace)
 
 		currIng, err := ingClient.Get(ing.Name, metav1.GetOptions{})
 		if err != nil {

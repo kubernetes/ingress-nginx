@@ -65,7 +65,7 @@ func main() {
 
 	ns, name, err := k8s.ParseNameNS(conf.DefaultService)
 	if err != nil {
-		glog.Fatalf("invalid format for service %v: %v", conf.DefaultService, err)
+		glog.Fatal(err)
 	}
 
 	_, err = kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
@@ -80,7 +80,7 @@ func main() {
 	if conf.PublishService != "" {
 		ns, name, err := k8s.ParseNameNS(conf.PublishService)
 		if err != nil {
-			glog.Fatalf("invalid service format: %v", err)
+			glog.Fatal(err)
 		}
 
 		svc, err := kubeClient.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
@@ -103,7 +103,7 @@ func main() {
 	if conf.Namespace != "" {
 		_, err = kubeClient.CoreV1().Namespaces().Get(conf.Namespace, metav1.GetOptions{})
 		if err != nil {
-			glog.Fatalf("no watchNamespace with name %v found: %v", conf.Namespace, err)
+			glog.Fatalf("no namespace with name %v found: %v", conf.Namespace, err)
 		}
 	}
 
@@ -116,10 +116,16 @@ func main() {
 	if err != nil {
 		glog.Errorf("Failed to mkdir SSL directory: %v", err)
 	}
+
 	// create the default SSL certificate (dummy)
-	sha, pem := createDefaultSSLCertificate()
-	conf.FakeCertificatePath = pem
-	conf.FakeCertificateSHA = sha
+	defCert, defKey := ssl.GetFakeSSLCert()
+	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
+	if err != nil {
+		glog.Fatalf("Error generating self signed certificate: %v", err)
+	}
+
+	conf.FakeCertificatePath = c.PemFileName
+	conf.FakeCertificateSHA = c.PemSHA
 
 	conf.Client = kubeClient
 
@@ -301,24 +307,22 @@ func registerHandlers(enableProfiling bool, port int, ic *controller.NGINXContro
 
 	if enableProfiling {
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
+		mux.HandleFunc("/debug/pprof/heap", pprof.Index)
+		mux.HandleFunc("/debug/pprof/mutex", pprof.Index)
+		mux.HandleFunc("/debug/pprof/goroutine", pprof.Index)
+		mux.HandleFunc("/debug/pprof/threadcreate", pprof.Index)
+		mux.HandleFunc("/debug/pprof/block", pprof.Index)
+		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	}
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%v", port),
-		Handler: mux,
+		Addr:         fmt.Sprintf(":%v", port),
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
 	glog.Fatal(server.ListenAndServe())
-}
-
-func createDefaultSSLCertificate() (string, string) {
-	defCert, defKey := ssl.GetFakeSSLCert()
-	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
-	if err != nil {
-		glog.Fatalf("Error generating self signed certificate: %v", err)
-	}
-
-	return c.PemSHA, c.PemFileName
 }
