@@ -231,7 +231,7 @@ helm install stable/nginx-ingress --name my-nginx
 To check if the ingress controller pods have started, run the following command:
 
 ```console
-kubectl get pods --all-namespaces -l app=ingress-nginx --watch
+kubectl --namespace default get services -o wide -w my-nginx-nginx-ingress-controller
 ```
 
 Once the operator pods are running, you can cancel the above command by typing `Ctrl+C`.
