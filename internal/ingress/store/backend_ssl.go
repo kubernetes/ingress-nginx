@@ -18,7 +18,6 @@ package store
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"github.com/golang/glog"
@@ -27,6 +26,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -57,7 +57,7 @@ func (s k8sStore) syncSecret(key string) {
 		s.sslStore.Update(key, cert)
 		// this update must trigger an update
 		// (like an update event from a change in Ingress)
-		//ic.syncQueue.Enqueue(&extensions.Ingress{})
+		s.sendDummyEvent()
 		return
 	}
 
@@ -65,7 +65,7 @@ func (s k8sStore) syncSecret(key string) {
 	s.sslStore.Add(key, cert)
 	// this update must trigger an update
 	// (like an update event from a change in Ingress)
-	//ic.syncQueue.Enqueue(&extensions.Ingress{})
+	s.sendDummyEvent()
 }
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
@@ -94,7 +94,7 @@ func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error)
 
 		// If 'ca.crt' is also present, it will allow this secret to be used in the
 		// 'nginx.ingress.kubernetes.io/auth-tls-secret' annotation
-		sslCert, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
+		sslCert, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca, s.filesystem)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating pem file: %v", err)
 		}
@@ -104,7 +104,7 @@ func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error)
 			glog.V(3).Infof("found 'ca.crt', secret %v can also be used for Certificate Authentication", secretName)
 		}
 	} else if ca != nil {
-		sslCert, err = ssl.AddCertAuth(nsSecName, ca)
+		sslCert, err = ssl.AddCertAuth(nsSecName, ca, s.filesystem)
 
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating pem file: %v", err)
@@ -137,14 +137,21 @@ func (s k8sStore) checkSSLChainIssues() {
 			continue
 		}
 
-		data, err := ssl.FullChainCert(secret.PemFileName)
+		data, err := ssl.FullChainCert(secret.PemFileName, s.filesystem)
 		if err != nil {
 			glog.Errorf("unexpected error generating SSL certificate with full intermediate chain CA certs: %v", err)
 			continue
 		}
 
-		fullChainPemFileName := fmt.Sprintf("%v/%v-%v-full-chain.pem", ingress.DefaultSSLDirectory, secret.Namespace, secret.Name)
-		err = ioutil.WriteFile(fullChainPemFileName, data, 0655)
+		fullChainPemFileName := fmt.Sprintf("%v/%v-%v-full-chain.pem", file.DefaultSSLDirectory, secret.Namespace, secret.Name)
+
+		file, err := s.filesystem.Create(fullChainPemFileName)
+		if err != nil {
+			glog.Errorf("unexpected error creating SSL certificate file %v: %v", fullChainPemFileName, err)
+			continue
+		}
+
+		_, err = file.Write(data)
 		if err != nil {
 			glog.Errorf("unexpected error creating SSL certificate: %v", err)
 			continue
@@ -164,7 +171,7 @@ func (s k8sStore) checkSSLChainIssues() {
 		s.sslStore.Update(secretName, dst)
 		// this update must trigger an update
 		// (like an update event from a change in Ingress)
-		//ic.syncQueue.Enqueue(&extensions.Ingress{})
+		s.sendDummyEvent()
 	}
 }
 

@@ -39,6 +39,7 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/kubernetes/pkg/util/filesystem"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -50,6 +51,7 @@ import (
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/task"
+	"k8s.io/ingress-nginx/internal/watch"
 )
 
 type statusModule string
@@ -70,7 +72,7 @@ var (
 // NewNGINXController creates a new NGINX Ingress controller.
 // If the environment variable NGINX_BINARY exists it will be used
 // as source for nginx commands
-func NewNGINXController(config *Configuration) *NGINXController {
+func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXController {
 	ngx := os.Getenv("NGINX_BINARY")
 	if ngx == "" {
 		ngx = nginxBinary
@@ -98,7 +100,7 @@ func NewNGINXController(config *Configuration) *NGINXController {
 
 		stopLock: &sync.Mutex{},
 
-		fileSystem: filesystem.DefaultFs{},
+		fileSystem: fs,
 	}
 
 	n.stats = newStatsCollector(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
@@ -128,6 +130,7 @@ func NewNGINXController(config *Configuration) *NGINXController {
 		n.cfg.UDPConfigMapName,
 		n.cfg.ResyncPeriod,
 		n.cfg.Client,
+		n.fileSystem,
 		n.updateCh,
 	)
 
@@ -144,9 +147,8 @@ func NewNGINXController(config *Configuration) *NGINXController {
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
 	}
 
-	var onChange func()
-	onChange = func() {
-		template, err := ngx_template.NewTemplate(tmplPath, onChange)
+	onChange := func() {
+		template, err := ngx_template.NewTemplate(tmplPath, n.fileSystem)
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
 			glog.Errorf(`
@@ -163,7 +165,17 @@ Error loading new template : %v
 		n.SetForceReload(true)
 	}
 
-	ngxTpl, err := ngx_template.NewTemplate(tmplPath, onChange)
+	// TODO: refactor
+	if _, ok := fs.(filesystem.DefaultFs); !ok {
+		watch.NewDummyFileWatcher(tmplPath, onChange)
+	} else {
+		_, err = watch.NewFileWatcher(tmplPath, onChange)
+		if err != nil {
+			glog.Fatalf("unexpected error watching template %v: %v", tmplPath, err)
+		}
+	}
+
+	ngxTpl, err := ngx_template.NewTemplate(tmplPath, n.fileSystem)
 	if err != nil {
 		glog.Fatalf("invalid NGINX template: %v", err)
 	}
@@ -563,7 +575,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 			dh, ok := secret.Data["dhparam.pem"]
 			if ok {
-				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
+				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh, n.fileSystem)
 				if err != nil {
 					glog.Warningf("unexpected error adding or updating dhparam %v file: %v", nsSecName, err)
 				} else {
@@ -584,6 +596,8 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		cfg.EnableBrotli = false
 	}
 
+	svc, _ := n.storeLister.GetService(n.cfg.PublishService)
+
 	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:         setHeaders,
 		AddHeaders:              addHeaders,
@@ -601,7 +615,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		RedirectServers:         redirectServers,
 		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
 		ListenPorts:             n.cfg.ListenPorts,
-		PublishService:          n.GetPublishService(),
+		PublishService:          svc,
 	}
 
 	content, err := n.t.Write(tc)

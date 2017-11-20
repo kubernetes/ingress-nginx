@@ -24,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -113,7 +114,8 @@ func buildIngress() *extensions.Ingress {
 }
 
 func TestSecureUpstream(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -137,6 +139,7 @@ func TestSecureUpstream(t *testing.T) {
 }
 
 func TestSecureVerifyCACert(t *testing.T) {
+	fs := newFS(t)
 	ec := NewAnnotationExtractor(mockCfg{
 		MockSecrets: map[string]*apiv1.Secret{
 			"default/secure-verify-ca": {
@@ -145,7 +148,7 @@ func TestSecureVerifyCACert(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, fs)
 
 	anns := []struct {
 		it          int
@@ -172,7 +175,8 @@ func TestSecureVerifyCACert(t *testing.T) {
 }
 
 func TestHealthCheck(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -202,7 +206,8 @@ func TestHealthCheck(t *testing.T) {
 }
 
 func TestSSLPassthrough(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -226,7 +231,8 @@ func TestSSLPassthrough(t *testing.T) {
 }
 
 func TestUpstreamHashBy(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -250,7 +256,8 @@ func TestUpstreamHashBy(t *testing.T) {
 }
 
 func TestAffinitySession(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -282,7 +289,8 @@ func TestAffinitySession(t *testing.T) {
 }
 
 func TestCors(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -372,3 +380,11 @@ func TestMergeLocationAnnotations(t *testing.T) {
 	}
 }
 */
+
+func newFS(t *testing.T) file.Filesystem {
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("unexpected error creating filesystem: %v", err)
+	}
+	return fs
+}

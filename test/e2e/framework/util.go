@@ -199,6 +199,69 @@ func podRunning(c kubernetes.Interface, podName, namespace string) wait.Conditio
 	}
 }
 
+func WaitForSecretInNamespace(c kubernetes.Interface, namespace, name string) error {
+	return wait.PollImmediate(1*time.Second, time.Minute*2, secretInNamespace(c, namespace, name))
+}
+
+func secretInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
+	return func() (bool, error) {
+		s, err := c.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return false, err
+		}
+		if err != nil {
+			return false, err
+		}
+
+		if s != nil {
+			return true, nil
+		}
+		return false, nil
+	}
+}
+
+func WaitForNoIngressInNamespace(c kubernetes.Interface, namespace, name string) error {
+	return wait.PollImmediate(1*time.Second, time.Minute*2, noIngressInNamespace(c, namespace, name))
+}
+
+func noIngressInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
+	return func() (bool, error) {
+		ing, err := c.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return true, nil
+		}
+		if err != nil {
+			return false, err
+		}
+
+		if ing == nil {
+			return true, nil
+		}
+		return false, nil
+	}
+}
+
+func WaitForIngressInNamespace(c kubernetes.Interface, namespace, name string) error {
+	return wait.PollImmediate(1*time.Second, time.Minute*2, ingressInNamespace(c, namespace, name))
+}
+
+func ingressInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
+	return func() (bool, error) {
+		ing, err := c.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return false, err
+		}
+		if err != nil {
+			return false, err
+		}
+
+		if ing != nil {
+			return true, nil
+		}
+		return false, nil
+	}
+}
+
 func NewInt32(val int32) *int32 {
 	p := new(int32)
 	*p = val

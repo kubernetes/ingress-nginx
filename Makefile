@@ -133,8 +133,12 @@ endif
 clean:
 	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
 
+.PHONE: gobindata
+gobindata:
+		go-bindata -o internal/file/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
+
 .PHONY: build
-build: clean
+build: clean gobindata
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
 		-ldflags "-s -w -X ${PKG}/version.RELEASE=${TAG} -X ${PKG}/version.COMMIT=${COMMIT} -X ${PKG}/version.REPO=${REPO_INFO}" \
 		-o ${TEMP_DIR}/rootfs/nginx-ingress-controller ${PKG}/cmd/nginx
@@ -150,7 +154,7 @@ lint:
 	@go list -f '{{if len .TestGoFiles}}"golint {{.Dir}}/..."{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
 
 .PHONY: test
-test: fmt lint vet
+test: fmt lint vet gobindata
 	@echo "+ $@"
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
@@ -165,7 +169,7 @@ e2e-test:
 	@KUBECONFIG=${HOME}/.kube/config INGRESSNGINXCONFIG=${HOME}/.kube/config ./e2e-tests
 
 .PHONY: cover
-cover:
+cover: gobindata
 	@echo "+ $@"
 	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
 	gover

@@ -35,14 +35,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-var (
-	// DefaultSSLDirectory defines the location where the SSL certificates will be generated
-	// This directory contains all the SSL certificates that are specified in Ingress rules.
-	// The name of each file is <namespace>-<secret name>.pem. The content is the concatenated
-	// certificate and key.
-	DefaultSSLDirectory = "/ingress-controller/ssl"
-)
-
 // Configuration holds the definition of all the parts required to describe all
 // ingresses reachable by the ingress controller (using a filter by namespace)
 type Configuration struct {

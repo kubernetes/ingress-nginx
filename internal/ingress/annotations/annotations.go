@@ -23,6 +23,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/alias"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -89,11 +90,11 @@ type Extractor struct {
 }
 
 // NewAnnotationExtractor creates a new annotations extractor
-func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
+func NewAnnotationExtractor(cfg resolver.Resolver, fs file.Filesystem) Extractor {
 	return Extractor{
 		map[string]parser.IngressAnnotation{
 			"Alias":                alias.NewParser(cfg),
-			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
+			"BasicDigestAuth":      auth.NewParser(file.AuthDirectory, fs, cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),
 			"ClientBodyBufferSize": clientbodybuffersize.NewParser(),
 			"ConfigurationSnippet": snippet.NewParser(),

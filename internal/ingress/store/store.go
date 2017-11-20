@@ -25,6 +25,7 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -35,6 +36,7 @@ import (
 	cache_client "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
@@ -162,6 +164,10 @@ type k8sStore struct {
 	sslStore *SSLCertTracker
 
 	annotations annotations.Extractor
+
+	filesystem file.Filesystem
+
+	updateCh chan Event
 }
 
 // New creates a new object store to be used in the ingress controller
@@ -169,6 +175,7 @@ func New(checkOCSP bool,
 	namespace, configmap, tcp, udp string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
+	fs file.Filesystem,
 	updateCh chan Event) Storer {
 
 	store := &k8sStore{
@@ -176,6 +183,8 @@ func New(checkOCSP bool,
 		cache:              &Controller{},
 		listers:            &Lister{},
 		sslStore:           NewSSLCertTracker(),
+		filesystem:         fs,
+		updateCh:           updateCh,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -188,7 +197,7 @@ func New(checkOCSP bool,
 	})
 
 	// k8sStore fulfils resolver.Resolver interface
-	store.annotations = annotations.NewAnnotationExtractor(store)
+	store.annotations = annotations.NewAnnotationExtractor(store, fs)
 
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -494,9 +503,22 @@ func (s k8sStore) Run(stopCh chan struct{}) {
 	}
 
 	// start goroutine to check for missing local secrets
-	go wait.Until(s.checkMissingSecrets, 30*time.Second, stopCh)
+	go wait.Until(s.checkMissingSecrets, 10*time.Second, stopCh)
 
 	if s.isOCSPCheckEnabled {
 		go wait.Until(s.checkSSLChainIssues, 60*time.Second, stopCh)
+	}
+}
+
+// sendDummyEvent sends a dummy event to trigger an update
+func (s *k8sStore) sendDummyEvent() {
+	s.updateCh <- Event{
+		Type: UpdateEvent,
+		Obj: &extensions.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dummy",
+				Namespace: "dummy",
+			},
+		},
 	}
 }

@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 )
 
@@ -70,7 +71,12 @@ func TestHandleSigterm(t *testing.T) {
 	}
 	conf.Client = cli
 
-	ngx := controller.NewNGINXController(conf)
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	ngx := controller.NewNGINXController(conf, fs)
 
 	go handleSigterm(ngx, func(code int) {
 		if code != 1 {

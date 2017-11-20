@@ -18,16 +18,12 @@ package store
 
 import (
 	"encoding/base64"
-	"fmt"
-	"io/ioutil"
 
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	cache_client "k8s.io/client-go/tools/cache"
 	"k8s.io/kubernetes/pkg/api"
-
-	"k8s.io/ingress-nginx/internal/ingress"
 )
 
 const (
@@ -115,14 +111,8 @@ func buildGenericControllerForBackendSSL() *NGINXController {
 	return gc
 }
 */
-func buildCrtKeyAndCA() ([]byte, []byte, []byte, error) {
-	// prepare
-	td, err := ioutil.TempDir("", "ssl")
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("error occurs while creating temp directory: %v", err)
-	}
-	ingress.DefaultSSLDirectory = td
 
+func buildCrtKeyAndCA() ([]byte, []byte, []byte, error) {
 	dCrt, err := base64.StdEncoding.DecodeString(tlsCrt)
 	if err != nil {
 		return nil, nil, nil, err

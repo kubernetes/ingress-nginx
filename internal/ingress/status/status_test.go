@@ -214,12 +214,12 @@ func buildExtensionsIngresses() []extensions.Ingress {
 
 func buildIngressListener() []*extensions.Ingress {
 	return []*extensions.Ingress{
-		&extensions.Ingress{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "foo_ingress_non_01",
 				Namespace: apiv1.NamespaceDefault,
 			}},
-		&extensions.Ingress{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "foo_ingress_1",
 				Namespace: apiv1.NamespaceDefault,
