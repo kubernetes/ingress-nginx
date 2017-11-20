@@ -32,6 +32,7 @@ import (
 	"k8s.io/ingress-nginx/internal/task"
 )
 
+// buildLoadBalancerIngressByIP builds the final status of LoadBalancerIngress
 func buildLoadBalancerIngressByIP() []apiv1.LoadBalancerIngress {
 	return []apiv1.LoadBalancerIngress{
 		{
@@ -269,10 +270,13 @@ func TestStatusActions(t *testing.T) {
 	fk := fkSync.(statusSync)
 
 	ns := make(chan struct{})
+
 	// start it and wait for the election and syn actions
 	go fk.Run(ns)
+
 	//  wait for the election
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1 * time.Second)
+
 	// execute sync
 	fk.sync("just-test")
 	// PublishService is empty, so the running address is: ["11.0.0.2"]
@@ -280,29 +284,45 @@ func TestStatusActions(t *testing.T) {
 	newIPs := []apiv1.LoadBalancerIngress{{
 		IP: "11.0.0.2",
 	}}
-	fooIngress1, err1 := fk.Client.Extensions().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
+
+	// wait for update
+	time.Sleep(1 * time.Second)
+
+	ing, err1 := fk.Client.
+		ExtensionsV1beta1().
+		Ingresses(apiv1.NamespaceDefault).
+		Get("foo_ingress_1", metav1.GetOptions{})
 	if err1 != nil {
 		t.Fatalf("unexpected error")
 	}
-	fooIngress1CurIPs := fooIngress1.Status.LoadBalancer.Ingress
-	if !ingressSliceEqual(fooIngress1CurIPs, newIPs) {
-		t.Fatalf("returned %v but expected %v", fooIngress1CurIPs, newIPs)
+	ingIPs := ing.Status.LoadBalancer.Ingress
+	if !ingressSliceEqual(ingIPs, newIPs) {
+		t.Fatalf("returned %v but expected %v", ingIPs, newIPs)
 	}
 
 	// execute shutdown
 	fk.Shutdown()
+
+	time.Sleep(5 * time.Second)
+
 	// ingress should be empty
 	newIPs2 := []apiv1.LoadBalancerIngress{}
-	fooIngress2, err2 := fk.Client.Extensions().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
-	if err2 != nil {
+	ing, err := fk.Client.
+		ExtensionsV1beta1().
+		Ingresses(apiv1.NamespaceDefault).
+		Get("foo_ingress_1", metav1.GetOptions{})
+	if err != nil {
 		t.Fatalf("unexpected error")
 	}
-	fooIngress2CurIPs := fooIngress2.Status.LoadBalancer.Ingress
-	if !ingressSliceEqual(fooIngress2CurIPs, newIPs2) {
-		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, newIPs2)
+	ingIPs = ing.Status.LoadBalancer.Ingress
+	if !ingressSliceEqual(ingIPs, newIPs2) {
+		t.Fatalf("returned %v but expected %v", ingIPs, newIPs2)
 	}
 
-	oic, err := fk.Client.Extensions().Ingresses(api.NamespaceDefault).Get("foo_ingress_different_class", metav1.GetOptions{})
+	oic, err := fk.Client.
+		ExtensionsV1beta1().
+		Ingresses(api.NamespaceDefault).
+		Get("foo_ingress_different_class", metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -312,10 +332,6 @@ func TestStatusActions(t *testing.T) {
 
 	// end test
 	ns <- struct{}{}
-}
-
-func TestCallback(t *testing.T) {
-	buildStatusSync()
 }
 
 func TestKeyfunc(t *testing.T) {
@@ -364,25 +380,37 @@ func TestRunningAddresessWithPods(t *testing.T) {
 
 func TestUpdateStatus(t *testing.T) {
 	fk := buildStatusSync()
+
 	newIPs := buildLoadBalancerIngressByIP()
 	fk.updateStatus(newIPs)
 
-	fooIngress1, err1 := fk.Client.Extensions().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_1", metav1.GetOptions{})
-	if err1 != nil {
-		t.Fatalf("unexpected error")
-	}
-	fooIngress1CurIPs := fooIngress1.Status.LoadBalancer.Ingress
-	if !ingressSliceEqual(fooIngress1CurIPs, newIPs) {
-		t.Fatalf("returned %v but expected %v", fooIngress1CurIPs, newIPs)
+	// wait end of updates
+	time.Sleep(5 * time.Second)
+
+	ing, err := fk.Client.
+		ExtensionsV1beta1().
+		Ingresses(apiv1.NamespaceDefault).
+		Get("foo_ingress_1", metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
 	}
 
-	fooIngress2, err2 := fk.Client.Extensions().Ingresses(apiv1.NamespaceDefault).Get("foo_ingress_2", metav1.GetOptions{})
-	if err2 != nil {
-		t.Fatalf("unexpected error")
+	ingIPs := ing.Status.LoadBalancer.Ingress
+	if !ingressSliceEqual(ingIPs, newIPs) {
+		t.Fatalf("returned %v but expected %v", ingIPs, newIPs)
 	}
-	fooIngress2CurIPs := fooIngress2.Status.LoadBalancer.Ingress
-	if !ingressSliceEqual(fooIngress2CurIPs, []apiv1.LoadBalancerIngress{}) {
-		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, []apiv1.LoadBalancerIngress{})
+
+	ing, err = fk.Client.
+		ExtensionsV1beta1().
+		Ingresses(apiv1.NamespaceDefault).
+		Get("foo_ingress_2", metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+
+	ingIPs = ing.Status.LoadBalancer.Ingress
+	if !ingressSliceEqual(ingIPs, []apiv1.LoadBalancerIngress{}) {
+		t.Fatalf("returned %v but expected %v", ingIPs, []apiv1.LoadBalancerIngress{})
 	}
 }
 

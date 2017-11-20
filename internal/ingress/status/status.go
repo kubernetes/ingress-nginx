@@ -307,19 +307,22 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 	running := make(chan struct{}, max)
 
 	for _, ing := range s.IngressLister() {
-		running <- struct{}{} // waits for a free slot
+		running <- struct{}{}
 		go func(ing *extensions.Ingress,
 			status []apiv1.LoadBalancerIngress,
 			client clientset.Interface) {
 			defer func() {
-				<-running // releases slot
+				<-running
 			}()
 
-			sort.SliceStable(status, lessLoadBalancerIngress(status))
+			var ns []apiv1.LoadBalancerIngress
+			copy(ns, status)
+
+			sort.SliceStable(ns, lessLoadBalancerIngress(status))
 			curIPs := ing.Status.LoadBalancer.Ingress
 			sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
 
-			if ingressSliceEqual(status, curIPs) {
+			if ingressSliceEqual(ns, curIPs) {
 				glog.V(3).Infof("skipping update of Ingress %v/%v (no change)", ing.Namespace, ing.Name)
 				return
 			}
