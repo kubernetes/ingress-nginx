@@ -135,7 +135,9 @@ func main() {
 		setupSSLProxy(conf.ListenPorts.HTTPS, conf.ListenPorts.SSLProxy, ngx)
 	}
 
-	go handleSigterm(ngx)
+	go handleSigterm(ngx, func(code int) {
+		os.Exit(code)
+	})
 
 	mux := http.NewServeMux()
 	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux)
@@ -143,7 +145,9 @@ func main() {
 	ngx.Start()
 }
 
-func handleSigterm(ngx *controller.NGINXController) {
+type exiter func(code int)
+
+func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan
@@ -159,7 +163,7 @@ func handleSigterm(ngx *controller.NGINXController) {
 	time.Sleep(10 * time.Second)
 
 	glog.Infof("Exiting with %v", exitCode)
-	os.Exit(exitCode)
+	exit(exitCode)
 }
 
 func setupSSLProxy(sslPort, proxyPort int, n *controller.NGINXController) {
