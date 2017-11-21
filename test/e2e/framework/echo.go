@@ -29,15 +29,21 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// NewEchoDeployment creates a new deployment of the echoserver image in a particular namespace
+// NewEchoDeployment creates a new single replica deployment of the echoserver image in a particular namespace
 func (f *Framework) NewEchoDeployment() error {
+	return f.NewEchoDeploymentWithReplicas(1)
+}
+
+// NewEchoDeploymentWithReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
+// replicas is configurable
+func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "http-svc",
 			Namespace: f.Namespace.Name,
 		},
 		Spec: extensions.DeploymentSpec{
-			Replicas: NewInt32(1),
+			Replicas: NewInt32(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": "http-svc",
