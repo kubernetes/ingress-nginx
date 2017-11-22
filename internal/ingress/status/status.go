@@ -314,7 +314,7 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 	for _, cur := range ings {
 		ing := cur.(*extensions.Ingress)
 
-		if !class.IsValid(ing, s.Config.IngressClass, s.Config.DefaultIngressClass) {
+		if !class.IsValid(ing) {
 			continue
 		}
 

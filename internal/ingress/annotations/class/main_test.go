@@ -25,6 +25,14 @@ import (
 )
 
 func TestIsValidClass(t *testing.T) {
+	dc := DefaultClass
+	ic := IngressClass
+	// restore original values after the tests
+	defer func() {
+		DefaultClass = dc
+		IngressClass = ic
+	}()
+
 	tests := []struct {
 		ingress    string
 		controller string
@@ -51,7 +59,11 @@ func TestIsValidClass(t *testing.T) {
 	ing.SetAnnotations(data)
 	for _, test := range tests {
 		ing.Annotations[IngressKey] = test.ingress
-		b := IsValid(ing, test.controller, test.defClass)
+
+		IngressClass = test.controller
+		DefaultClass = test.defClass
+
+		b := IsValid(ing)
 		if b != test.isValid {
 			t.Errorf("test %v - expected %v but %v was returned", test, test.isValid, b)
 		}
