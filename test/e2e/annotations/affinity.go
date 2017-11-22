@@ -55,13 +55,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 		Expect(ing).NotTo(BeNil())
 
 		stickyUpstreamName := "sticky-"+f.Namespace.Name+"-http-svc-80"
-		upstreamPrefix := fmt.Sprintf(`
-    upstream %v {
-        sticky hash=md5 name=SERVERID  httponly;`, stickyUpstreamName)
 		err = f.WaitForNginxServer(host,
 			func(cfg string) bool {
 				return strings.Contains(cfg, "proxy_pass http://"+stickyUpstreamName+";") &&
-					strings.Contains(cfg, upstreamPrefix)
+					strings.Contains(cfg, "sticky hash=md5 name=SERVERID  httponly;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
