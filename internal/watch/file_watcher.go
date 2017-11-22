@@ -24,8 +24,12 @@ import (
 	"gopkg.in/fsnotify.v1"
 )
 
-// FileWatcher defines a watch over a file
-type FileWatcher struct {
+type FileWatcher interface {
+	Close() error
+}
+
+// OSFileWatcher defines a watch over a file
+type OSFileWatcher struct {
 	file    string
 	watcher *fsnotify.Watcher
 	// onEvent callback to be invoked after the file being watched changes
@@ -34,7 +38,7 @@ type FileWatcher struct {
 
 // NewFileWatcher creates a new FileWatcher
 func NewFileWatcher(file string, onEvent func()) (FileWatcher, error) {
-	fw := FileWatcher{
+	fw := OSFileWatcher{
 		file:    file,
 		onEvent: onEvent,
 	}
@@ -43,12 +47,12 @@ func NewFileWatcher(file string, onEvent func()) (FileWatcher, error) {
 }
 
 // Close ends the watch
-func (f *FileWatcher) Close() error {
+func (f OSFileWatcher) Close() error {
 	return f.watcher.Close()
 }
 
 // watch creates a fsnotify watcher for a file and create of write events
-func (f *FileWatcher) watch() error {
+func (f *OSFileWatcher) watch() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err

@@ -172,7 +172,7 @@ func (ic *NGINXController) checkMissingSecrets() {
 	for _, obj := range ic.listers.Ingress.List() {
 		ing := obj.(*extensions.Ingress)
 
-		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
+		if !class.IsValid(ing) {
 			continue
 		}
 

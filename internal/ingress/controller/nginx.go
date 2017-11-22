@@ -43,6 +43,7 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/kubernetes/pkg/util/filesystem"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
@@ -57,6 +58,7 @@ import (
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/task"
+	"k8s.io/ingress-nginx/internal/watch"
 )
 
 type statusModule string
@@ -69,16 +71,15 @@ const (
 )
 
 var (
-	tmplPath        = "/etc/nginx/template/nginx.tmpl"
-	cfgPath         = "/etc/nginx/nginx.conf"
-	nginxBinary     = "/usr/sbin/nginx"
-	defIngressClass = "nginx"
+	tmplPath    = "/etc/nginx/template/nginx.tmpl"
+	cfgPath     = "/etc/nginx/nginx.conf"
+	nginxBinary = "/usr/sbin/nginx"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
 // If the environment variable NGINX_BINARY exists it will be used
 // as source for nginx commands
-func NewNGINXController(config *Configuration) *NGINXController {
+func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXController {
 	ngx := os.Getenv("NGINX_BINARY")
 	if ngx == "" {
 		ngx = nginxBinary
@@ -115,12 +116,12 @@ func NewNGINXController(config *Configuration) *NGINXController {
 		stopCh:   make(chan struct{}),
 		stopLock: &sync.Mutex{},
 
-		fileSystem: filesystem.DefaultFs{},
+		fileSystem: fs,
 	}
 
 	n.listers, n.controllers = n.createListers(n.stopCh)
 
-	n.stats = newStatsCollector(config.Namespace, config.IngressClass, n.binary, n.cfg.ListenPorts.Status)
+	n.stats = newStatsCollector(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -132,8 +133,8 @@ func NewNGINXController(config *Configuration) *NGINXController {
 			PublishService:         config.PublishService,
 			IngressLister:          n.listers.Ingress,
 			ElectionID:             config.ElectionID,
-			IngressClass:           config.IngressClass,
-			DefaultIngressClass:    config.DefaultIngressClass,
+			IngressClass:           class.IngressClass,
+			DefaultIngressClass:    class.DefaultClass,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
 			UseNodeInternalIP:      config.UseNodeInternalIP,
 		})
@@ -143,7 +144,7 @@ func NewNGINXController(config *Configuration) *NGINXController {
 
 	var onChange func()
 	onChange = func() {
-		template, err := ngx_template.NewTemplate(tmplPath, onChange)
+		template, err := ngx_template.NewTemplate(tmplPath, fs)
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
 			glog.Errorf(`
@@ -154,18 +155,27 @@ Error loading new template : %v
 			return
 		}
 
-		n.t.Close()
 		n.t = template
 		glog.Info("new NGINX template loaded")
 		n.SetForceReload(true)
 	}
 
-	ngxTpl, err := ngx_template.NewTemplate(tmplPath, onChange)
+	ngxTpl, err := ngx_template.NewTemplate(tmplPath, fs)
 	if err != nil {
 		glog.Fatalf("invalid NGINX template: %v", err)
 	}
 
 	n.t = ngxTpl
+
+	// TODO: refactor
+	if _, ok := fs.(filesystem.DefaultFs); !ok {
+		watch.NewDummyFileWatcher(tmplPath, onChange)
+	} else {
+		_, err = watch.NewFileWatcher(tmplPath, onChange)
+		if err != nil {
+			glog.Fatalf("unexpected error watching template %v: %v", tmplPath, err)
+		}
+	}
 
 	return n
 }
@@ -246,7 +256,7 @@ func (n *NGINXController) Start() {
 	for _, obj := range n.listers.Ingress.List() {
 		ing := obj.(*extensions.Ingress)
 
-		if !class.IsValid(ing, n.cfg.IngressClass, n.cfg.DefaultIngressClass) {
+		if !class.IsValid(ing) {
 			a, _ := parser.GetStringAnnotation(class.IngressKey, ing, n)
 			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
 			continue

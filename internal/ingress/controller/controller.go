@@ -76,8 +76,8 @@ type Configuration struct {
 
 	ConfigMapName  string
 	DefaultService string
-	IngressClass   string
-	Namespace      string
+
+	Namespace string
 
 	ForceNamespaceIsolation bool
 
@@ -87,7 +87,6 @@ type Configuration struct {
 	UDPConfigMapName string
 
 	DefaultHealthzURL     string
-	DefaultIngressClass   string
 	DefaultSSLCertificate string
 
 	// optional
@@ -173,7 +172,7 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 	var ingresses []*extensions.Ingress
 	for _, ingIf := range ings {
 		ing := ingIf.(*extensions.Ingress)
-		if !class.IsValid(ing, n.cfg.IngressClass, n.cfg.DefaultIngressClass) {
+		if !class.IsValid(ing) {
 			continue
 		}
 

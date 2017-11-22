@@ -65,7 +65,7 @@ func (n *NGINXController) createListers(stopCh chan struct{}) (*ingress.StoreLis
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
-			if !class.IsValid(addIng, n.cfg.IngressClass, defIngressClass) {
+			if !class.IsValid(addIng) {
 				a, _ := parser.GetStringAnnotation(class.IngressKey, addIng, n)
 				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", addIng.Name, class.IngressKey, a)
 				return
@@ -90,7 +90,7 @@ func (n *NGINXController) createListers(stopCh chan struct{}) (*ingress.StoreLis
 					return
 				}
 			}
-			if !class.IsValid(delIng, n.cfg.IngressClass, defIngressClass) {
+			if !class.IsValid(delIng) {
 				glog.Infof("ignoring delete for ingress %v based on annotation %v", delIng.Name, class.IngressKey)
 				return
 			}
@@ -101,8 +101,8 @@ func (n *NGINXController) createListers(stopCh chan struct{}) (*ingress.StoreLis
 		UpdateFunc: func(old, cur interface{}) {
 			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
-			validOld := class.IsValid(oldIng, n.cfg.IngressClass, defIngressClass)
-			validCur := class.IsValid(curIng, n.cfg.IngressClass, defIngressClass)
+			validOld := class.IsValid(oldIng)
+			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
 				glog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				n.recorder.Eventf(curIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
