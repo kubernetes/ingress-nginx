@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"net/http"
 	"os/exec"
-	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -54,8 +53,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name auth") &&
-					!strings.Contains(server, "return 503")
+				return Expect(server).Should(ContainSubstring("server_name auth")) &&
+					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -83,8 +82,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name auth") &&
-					strings.Contains(server, "return 503")
+				return Expect(server).Should(ContainSubstring("server_name auth")) &&
+					Expect(server).Should(ContainSubstring("return 503"))
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -117,8 +116,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name auth") &&
-					!strings.Contains(server, "return 503")
+				return Expect(server).Should(ContainSubstring("server_name auth")) &&
+					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -151,8 +150,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name auth") &&
-					!strings.Contains(server, "return 503")
+				return Expect(server).Should(ContainSubstring("server_name auth")) &&
+					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -186,8 +185,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name auth") &&
-					!strings.Contains(server, "return 503")
+				return Expect(server).Should(ContainSubstring("server_name auth")) &&
+					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -232,8 +231,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name auth") &&
-					!strings.Contains(server, "return 503")
+				return Expect(server).Should(ContainSubstring("server_name auth")) &&
+					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
 		Expect(err).NotTo(HaveOccurred())
 

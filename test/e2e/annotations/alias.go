@@ -19,7 +19,6 @@ package annotations
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -78,8 +77,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name foo") &&
-					!strings.Contains(server, "return 503")
+				return Expect(server).Should(ContainSubstring("server_name foo")) &&
+					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -139,8 +138,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name foo") &&
-					!strings.Contains(server, "return 503")
+				return Expect(server).Should(ContainSubstring("server_name foo")) &&
+					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
 		Expect(err).NotTo(HaveOccurred())
 
