@@ -69,10 +69,9 @@ const (
 )
 
 var (
-	tmplPath        = "/etc/nginx/template/nginx.tmpl"
-	cfgPath         = "/etc/nginx/nginx.conf"
-	nginxBinary     = "/usr/sbin/nginx"
-	defIngressClass = "nginx"
+	tmplPath    = "/etc/nginx/template/nginx.tmpl"
+	cfgPath     = "/etc/nginx/nginx.conf"
+	nginxBinary = "/usr/sbin/nginx"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
@@ -246,7 +245,7 @@ func (n *NGINXController) Start() {
 	for _, obj := range n.listers.Ingress.List() {
 		ing := obj.(*extensions.Ingress)
 
-		if !class.IsValid(ing, n.cfg.IngressClass, n.cfg.DefaultIngressClass) {
+		if !class.IsValid(ing) {
 			a, _ := parser.GetStringAnnotation(class.IngressKey, ing, n)
 			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
 			continue

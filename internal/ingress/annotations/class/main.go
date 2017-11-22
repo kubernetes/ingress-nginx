@@ -28,10 +28,20 @@ const (
 	IngressKey = "kubernetes.io/ingress.class"
 )
 
+var (
+	// DefaultClass defines the default class used in the nginx ingres controller
+	DefaultClass = "nginx"
+
+	// IngressClass sets the runtime ingress class to use
+	// An empty string means accept all ingresses without
+	// annotation and the ones configured with class nginx
+	IngressClass = ""
+)
+
 // IsValid returns true if the given Ingress either doesn't specify
 // the ingress.class annotation, or it's set to the configured in the
 // ingress controller.
-func IsValid(ing *extensions.Ingress, controller, defClass string) bool {
+func IsValid(ing *extensions.Ingress) bool {
 	ingress, ok := ing.GetAnnotations()[IngressKey]
 	if !ok {
 		glog.V(3).Infof("annotation %v is not present in ingress %v/%v", IngressKey, ing.Namespace, ing.Name)
@@ -44,9 +54,9 @@ func IsValid(ing *extensions.Ingress, controller, defClass string) bool {
 	// and 2 invalid combinations
 	// 3 - ingress with default class | fixed annotation on ingress
 	// 4 - ingress with specific class | different annotation on ingress
-	if ingress == "" && controller == defClass {
+	if ingress == "" && IngressClass == DefaultClass {
 		return true
 	}
 
-	return ingress == controller
+	return ingress == IngressClass
 }
