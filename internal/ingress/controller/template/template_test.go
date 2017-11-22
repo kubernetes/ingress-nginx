@@ -26,6 +26,7 @@ import (
 	"strings"
 	"testing"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
@@ -174,13 +175,13 @@ func TestTemplateWithData(t *testing.T) {
 	if dat.ListenPorts == nil {
 		dat.ListenPorts = &config.ListenPorts{}
 	}
-	tf, err := os.Open(path.Join(pwd, "../../../../rootfs/etc/nginx/template/nginx.tmpl"))
-	if err != nil {
-		t.Errorf("unexpected error reading json file: %v", err)
-	}
-	defer tf.Close()
 
-	ngxTpl, err := NewTemplate(tf.Name(), func() {})
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	ngxTpl, err := NewTemplate("/etc/nginx/template/nginx.tmpl", fs)
 	if err != nil {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
@@ -207,13 +208,12 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		b.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 
-	tf, err := os.Open(path.Join(pwd, "../../../rootfs/etc/nginx/template/nginx.tmpl"))
+	fs, err := file.NewFakeFS()
 	if err != nil {
-		b.Errorf("unexpected error reading json file: %v", err)
+		b.Fatalf("unexpected error: %v", err)
 	}
-	defer tf.Close()
 
-	ngxTpl, err := NewTemplate(tf.Name(), func() {})
+	ngxTpl, err := NewTemplate("/etc/nginx/template/nginx.tmpl", fs)
 	if err != nil {
 		b.Errorf("invalid NGINX template: %v", err)
 	}
