@@ -76,8 +76,8 @@ type Configuration struct {
 
 	ConfigMapName  string
 	DefaultService string
-	IngressClass   string
-	Namespace      string
+
+	Namespace string
 
 	ForceNamespaceIsolation bool
 
@@ -87,7 +87,6 @@ type Configuration struct {
 	UDPConfigMapName string
 
 	DefaultHealthzURL     string
-	DefaultIngressClass   string
 	DefaultSSLCertificate string
 
 	// optional

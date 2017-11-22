@@ -29,16 +29,17 @@ import (
 	text_template "text/template"
 
 	"github.com/golang/glog"
+	"github.com/pkg/errors"
 
 	"github.com/pborman/uuid"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
-	"k8s.io/ingress-nginx/internal/watch"
 )
 
 const (
@@ -50,32 +51,27 @@ const (
 // Template ...
 type Template struct {
 	tmpl *text_template.Template
-	fw   watch.FileWatcher
-	bp   *BufferPool
+	//fw   watch.FileWatcher
+	bp *BufferPool
 }
 
 //NewTemplate returns a new Template instance or an
 //error if the specified template file contains errors
-func NewTemplate(file string, onChange func()) (*Template, error) {
-	tmpl, err := text_template.New("nginx.tmpl").Funcs(funcMap).ParseFiles(file)
+func NewTemplate(file string, fs file.Filesystem) (*Template, error) {
+	data, err := fs.ReadFile(file)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "unexpected error reading template %v", file)
 	}
-	fw, err := watch.NewFileWatcher(file, onChange)
+
+	tmpl, err := text_template.New("nginx.tmpl").Funcs(funcMap).Parse(string(data))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Template{
 		tmpl: tmpl,
-		fw:   fw,
 		bp:   NewBufferPool(defBufferSize),
 	}, nil
-}
-
-// Close removes the file watcher
-func (t *Template) Close() {
-	t.fw.Close()
 }
 
 // Write populates a buffer using a template with NGINX configuration
