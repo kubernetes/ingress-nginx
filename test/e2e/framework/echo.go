@@ -84,7 +84,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 		return fmt.Errorf("unexpected error creating deployement for echoserver")
 	}
 
-	err = f.WaitForPodsReady(10*time.Second, 1, metav1.ListOptions{
+	err = f.WaitForPodsReady(10*time.Second, int(replicas), metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {
