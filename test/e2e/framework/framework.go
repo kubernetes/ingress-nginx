@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 
+	"github.com/golang/glog"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -215,7 +216,16 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			return false, err
 		}
 
-		if matcher(o) {
+		var match bool
+		errs := InterceptGomegaFailures(func() {
+			if matcher(o) {
+				match = true
+			}
+		})
+
+		glog.V(2).Infof("Errors waiting for conditions: %v", errs)
+
+		if match {
 			return true, nil
 		}
 
