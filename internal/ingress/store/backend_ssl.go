@@ -14,11 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package store
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"github.com/golang/glog"
@@ -27,51 +26,52 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 )
 
 // syncSecret keeps in sync Secrets used by Ingress rules with the files on
 // disk to allow copy of the content of the secret to disk to be used
 // by external processes.
-func (ic *NGINXController) syncSecret(key string) {
+func (s k8sStore) syncSecret(key string) {
 	glog.V(3).Infof("starting syncing of secret %v", key)
 
-	cert, err := ic.getPemCertificate(key)
+	// TODO: getPemCertificate should not write to disk to avoid unnecessary overhead
+	cert, err := s.getPemCertificate(key)
 	if err != nil {
 		glog.Warningf("error obtaining PEM from secret %v: %v", key, err)
 		return
 	}
 
 	// create certificates and add or update the item in the store
-	cur, exists := ic.sslCertTracker.Get(key)
-	if exists {
-		s := cur.(*ingress.SSLCert)
-		if s.Equal(cert) {
+	cur, err := s.GetLocalSecret(key)
+	if err == nil {
+		if cur.Equal(cert) {
 			// no need to update
 			return
 		}
 		glog.Infof("updating secret %v in the local store", key)
-		ic.sslCertTracker.Update(key, cert)
+		s.sslStore.Update(key, cert)
 		// this update must trigger an update
 		// (like an update event from a change in Ingress)
-		ic.syncQueue.Enqueue(&extensions.Ingress{})
+		s.sendDummyEvent()
 		return
 	}
 
 	glog.Infof("adding secret %v to the local store", key)
-	ic.sslCertTracker.Add(key, cert)
+	s.sslStore.Add(key, cert)
 	// this update must trigger an update
 	// (like an update event from a change in Ingress)
-	ic.syncQueue.Enqueue(&extensions.Ingress{})
+	s.sendDummyEvent()
 }
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
 // It parses the secret and verifies if it's a keypair, or a 'ca.crt' secret only.
-func (ic *NGINXController) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
-	secret, err := ic.listers.Secret.GetByName(secretName)
+func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
+	secret, err := s.listers.Secret.ByKey(secretName)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving secret %v: %v", secretName, err)
 	}
@@ -83,7 +83,7 @@ func (ic *NGINXController) getPemCertificate(secretName string) (*ingress.SSLCer
 	// namespace/secretName -> namespace-secretName
 	nsSecName := strings.Replace(secretName, "/", "-", -1)
 
-	var s *ingress.SSLCert
+	var sslCert *ingress.SSLCert
 	if okcert && okkey {
 		if cert == nil {
 			return nil, fmt.Errorf("secret %v has no 'tls.crt'", secretName)
@@ -94,18 +94,17 @@ func (ic *NGINXController) getPemCertificate(secretName string) (*ingress.SSLCer
 
 		// If 'ca.crt' is also present, it will allow this secret to be used in the
 		// 'nginx.ingress.kubernetes.io/auth-tls-secret' annotation
-		s, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca)
+		sslCert, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca, s.filesystem)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating pem file: %v", err)
 		}
 
-		glog.V(3).Infof("found 'tls.crt' and 'tls.key', configuring %v as a TLS Secret (CN: %v)", secretName, s.CN)
+		glog.V(3).Infof("found 'tls.crt' and 'tls.key', configuring %v as a TLS Secret (CN: %v)", secretName, sslCert.CN)
 		if ca != nil {
 			glog.V(3).Infof("found 'ca.crt', secret %v can also be used for Certificate Authentication", secretName)
 		}
-
 	} else if ca != nil {
-		s, err = ssl.AddCertAuth(nsSecName, ca)
+		sslCert, err = ssl.AddCertAuth(nsSecName, ca, s.filesystem)
 
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating pem file: %v", err)
@@ -119,29 +118,40 @@ func (ic *NGINXController) getPemCertificate(secretName string) (*ingress.SSLCer
 		return nil, fmt.Errorf("no keypair or CA cert could be found in %v", secretName)
 	}
 
-	s.Name = secret.Name
-	s.Namespace = secret.Namespace
-	return s, nil
+	sslCert.Name = secret.Name
+	sslCert.Namespace = secret.Namespace
+
+	return sslCert, nil
 }
 
-func (ic *NGINXController) checkSSLChainIssues() {
-	for _, secretName := range ic.sslCertTracker.ListKeys() {
-		s, _ := ic.sslCertTracker.Get(secretName)
-		secret := s.(*ingress.SSLCert)
+func (s k8sStore) checkSSLChainIssues() {
+	for _, item := range s.ListLocalSecrets() {
+		secretName := k8s.MetaNamespaceKey(item)
+		secret, err := s.GetLocalSecret(secretName)
+		if err != nil {
+			continue
+		}
 
 		if secret.FullChainPemFileName != "" {
 			// chain already checked
 			continue
 		}
 
-		data, err := ssl.FullChainCert(secret.PemFileName)
+		data, err := ssl.FullChainCert(secret.PemFileName, s.filesystem)
 		if err != nil {
 			glog.Errorf("unexpected error generating SSL certificate with full intermediate chain CA certs: %v", err)
 			continue
 		}
 
-		fullChainPemFileName := fmt.Sprintf("%v/%v-%v-full-chain.pem", ingress.DefaultSSLDirectory, secret.Namespace, secret.Name)
-		err = ioutil.WriteFile(fullChainPemFileName, data, 0655)
+		fullChainPemFileName := fmt.Sprintf("%v/%v-%v-full-chain.pem", file.DefaultSSLDirectory, secret.Namespace, secret.Name)
+
+		file, err := s.filesystem.Create(fullChainPemFileName)
+		if err != nil {
+			glog.Errorf("unexpected error creating SSL certificate file %v: %v", fullChainPemFileName, err)
+			continue
+		}
+
+		_, err = file.Write(data)
 		if err != nil {
 			glog.Errorf("unexpected error creating SSL certificate: %v", err)
 			continue
@@ -158,42 +168,53 @@ func (ic *NGINXController) checkSSLChainIssues() {
 		dst.FullChainPemFileName = fullChainPemFileName
 
 		glog.Infof("updating local copy of ssl certificate %v with missing intermediate CA certs", secretName)
-		ic.sslCertTracker.Update(secretName, dst)
+		s.sslStore.Update(secretName, dst)
 		// this update must trigger an update
 		// (like an update event from a change in Ingress)
-		ic.syncQueue.Enqueue(&extensions.Ingress{})
+		s.sendDummyEvent()
 	}
 }
 
-// checkMissingSecrets verify if one or more ingress rules contains a reference
-// to a secret that is not present in the local secret store.
-// In this case we call syncSecret.
-func (ic *NGINXController) checkMissingSecrets() {
-	for _, obj := range ic.listers.Ingress.List() {
-		ing := obj.(*extensions.Ingress)
-
-		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
-			continue
-		}
-
+// checkMissingSecrets verifies if one or more ingress rules contains
+// a reference to a secret that is not present in the local secret store.
+func (s k8sStore) checkMissingSecrets() {
+	for _, ing := range s.ListIngresses() {
 		for _, tls := range ing.Spec.TLS {
 			if tls.SecretName == "" {
 				continue
 			}
 
 			key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
-			if _, ok := ic.sslCertTracker.Get(key); !ok {
-				ic.syncSecret(key)
+			if _, ok := s.sslStore.Get(key); !ok {
+				s.syncSecret(key)
 			}
 		}
 
-		key, _ := parser.GetStringAnnotation("auth-tls-secret", ing, ic)
+		key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
 		if key == "" {
+			return
+		}
+
+		if _, ok := s.sslStore.Get(key); !ok {
+			s.syncSecret(key)
+		}
+	}
+}
+
+// readSecrets extracts information about secrets from an Ingress rule
+func (s k8sStore) readSecrets(ing *extensions.Ingress) {
+	for _, tls := range ing.Spec.TLS {
+		if tls.SecretName == "" {
 			continue
 		}
 
-		if _, ok := ic.sslCertTracker.Get(key); !ok {
-			ic.syncSecret(key)
-		}
+		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+		s.syncSecret(key)
 	}
+
+	key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
+	if key == "" {
+		return
+	}
+	s.syncSecret(key)
 }

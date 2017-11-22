@@ -398,12 +398,6 @@
   version = "v1.4.2"
 
 [[projects]]
-  name = "gopkg.in/go-playground/pool.v3"
-  packages = ["."]
-  revision = "e73cd3a5ded835540c5cf4778488579c5b357d68"
-  version = "v3.1.1"
-
-[[projects]]
   name = "gopkg.in/inf.v0"
   packages = ["."]
   revision = "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"
@@ -466,6 +460,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cb7f34d9108be87b2601c0d4acbd6faa41bdf211a082760fa1b4d4300bf3e959"
+  inputs-digest = "a9b639a7cd7adfd469612e825628014f2deacaa54a35e65255db098794a0992c"
   solver-name = "gps-cdcl"
   solver-version = 1

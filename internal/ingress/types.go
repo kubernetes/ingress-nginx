@@ -33,27 +33,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"k8s.io/ingress-nginx/internal/ingress/store"
 )
-
-var (
-	// DefaultSSLDirectory defines the location where the SSL certificates will be generated
-	// This directory contains all the SSL certificates that are specified in Ingress rules.
-	// The name of each file is <namespace>-<secret name>.pem. The content is the concatenated
-	// certificate and key.
-	DefaultSSLDirectory = "/ingress-controller/ssl"
-)
-
-// StoreLister returns the configured stores for ingresses, services,
-// endpoints, secrets and configmaps.
-type StoreLister struct {
-	Ingress           store.IngressLister
-	Service           store.ServiceLister
-	Endpoint          store.EndpointLister
-	Secret            store.SecretLister
-	ConfigMap         store.ConfigMapLister
-	IngressAnnotation store.IngressAnnotationsLister
-}
 
 // Configuration holds the definition of all the parts required to describe all
 // ingresses reachable by the ingress controller (using a filter by namespace)

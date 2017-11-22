@@ -45,8 +45,8 @@ NGINX master process died (%v): %v
 	return true
 }
 
+// WaitUntilPortIsAvailable waits until no workers is listening in a port
 func WaitUntilPortIsAvailable(port int) {
-	// we wait until the workers are killed
 	for {
 		conn, err := net.DialTimeout("tcp", fmt.Sprintf("0.0.0.0:%v", port), 1*time.Second)
 		if err != nil {

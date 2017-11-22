@@ -27,13 +27,11 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
-)
-
-const (
-	defIngressClass = "nginx"
 )
 
 func parseFlags() (bool, *controller.Configuration, error) {
@@ -152,10 +150,14 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	if *ingressClass != "" {
 		glog.Infof("Watching for ingress class: %s", *ingressClass)
 
-		if *ingressClass != defIngressClass {
+		if *ingressClass != class.DefaultClass {
 			glog.Warningf("only Ingress with class \"%v\" will be processed by this ingress controller", *ingressClass)
 		}
+
+		class.IngressClass = *ingressClass
 	}
+
+	parser.AnnotationsPrefix = *annotationsPrefix
 
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {
@@ -188,7 +190,6 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	}
 
 	config := &controller.Configuration{
-		AnnotationsPrefix:        *annotationsPrefix,
 		APIServerHost:            *apiserverHost,
 		KubeConfigFile:           *kubeConfigFile,
 		UpdateStatus:             *updateStatus,
@@ -198,7 +199,6 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		EnableSSLChainCompletion: *enableSSLChainCompletion,
 		ResyncPeriod:             *resyncPeriod,
 		DefaultService:           *defaultSvc,
-		IngressClass:             *ingressClass,
 		Namespace:                *watchNamespace,
 		ConfigMapName:            *configMap,
 		TCPConfigMapName:         *tcpConfigMapName,

@@ -39,7 +39,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
@@ -54,6 +54,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	if err != nil {
+		glog.Fatal(err)
+	}
+
+	fs, err := file.NewLocalFS()
 	if err != nil {
 		glog.Fatal(err)
 	}
@@ -111,15 +116,9 @@ func main() {
 		glog.Fatalf("resync period (%vs) is too low", conf.ResyncPeriod.Seconds())
 	}
 
-	// create directory that will contains the SSL Certificates
-	err = os.MkdirAll(ingress.DefaultSSLDirectory, 0655)
-	if err != nil {
-		glog.Errorf("Failed to mkdir SSL directory: %v", err)
-	}
-
 	// create the default SSL certificate (dummy)
 	defCert, defKey := ssl.GetFakeSSLCert()
-	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
+	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{}, fs)
 	if err != nil {
 		glog.Fatalf("Error generating self signed certificate: %v", err)
 	}
@@ -128,15 +127,16 @@ func main() {
 	conf.FakeCertificateSHA = c.PemSHA
 
 	conf.Client = kubeClient
-	conf.DefaultIngressClass = defIngressClass
 
-	ngx := controller.NewNGINXController(conf)
+	ngx := controller.NewNGINXController(conf, fs)
 
 	if conf.EnableSSLPassthrough {
 		setupSSLProxy(conf.ListenPorts.HTTPS, conf.ListenPorts.SSLProxy, ngx)
 	}
 
-	go handleSigterm(ngx)
+	go handleSigterm(ngx, func(code int) {
+		os.Exit(code)
+	})
 
 	mux := http.NewServeMux()
 	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux)
@@ -144,7 +144,9 @@ func main() {
 	ngx.Start()
 }
 
-func handleSigterm(ngx *controller.NGINXController) {
+type exiter func(code int)
+
+func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan
@@ -160,7 +162,7 @@ func handleSigterm(ngx *controller.NGINXController) {
 	time.Sleep(10 * time.Second)
 
 	glog.Infof("Exiting with %v", exitCode)
-	os.Exit(exitCode)
+	exit(exitCode)
 }
 
 func setupSSLProxy(sslPort, proxyPort int, n *controller.NGINXController) {

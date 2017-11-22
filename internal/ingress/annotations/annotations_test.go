@@ -24,27 +24,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const (
-	annotationSecureUpstream       = "nginx/secure-backends"
-	annotationSecureVerifyCACert   = "nginx/secure-verify-ca-secret"
-	annotationUpsMaxFails          = "nginx/upstream-max-fails"
-	annotationUpsFailTimeout       = "nginx/upstream-fail-timeout"
-	annotationPassthrough          = "nginx/ssl-passthrough"
-	annotationAffinityType         = "nginx/affinity"
-	annotationCorsEnabled          = "nginx/enable-cors"
-	annotationCorsAllowOrigin      = "nginx/cors-allow-origin"
-	annotationCorsAllowMethods     = "nginx/cors-allow-methods"
-	annotationCorsAllowHeaders     = "nginx/cors-allow-headers"
-	annotationCorsAllowCredentials = "nginx/cors-allow-credentials"
+var (
+	annotationSecureUpstream       = parser.GetAnnotationWithPrefix("secure-backends")
+	annotationSecureVerifyCACert   = parser.GetAnnotationWithPrefix("secure-verify-ca-secret")
+	annotationUpsMaxFails          = parser.GetAnnotationWithPrefix("upstream-max-fails")
+	annotationUpsFailTimeout       = parser.GetAnnotationWithPrefix("upstream-fail-timeout")
+	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
+	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
+	annotationCorsEnabled          = parser.GetAnnotationWithPrefix("enable-cors")
+	annotationCorsAllowOrigin      = parser.GetAnnotationWithPrefix("cors-allow-origin")
+	annotationCorsAllowMethods     = parser.GetAnnotationWithPrefix("cors-allow-methods")
+	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
+	annotationCorsAllowCredentials = parser.GetAnnotationWithPrefix("cors-allow-credentials")
 	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
-	annotationAffinityCookieName   = "nginx/session-cookie-name"
-	annotationAffinityCookieHash   = "nginx/session-cookie-hash"
-	annotationUpstreamHashBy       = "nginx/upstream-hash-by"
+	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
+	annotationAffinityCookieHash   = parser.GetAnnotationWithPrefix("session-cookie-hash")
+	annotationUpstreamHashBy       = parser.GetAnnotationWithPrefix("upstream-hash-by")
 )
 
 type mockCfg struct {
@@ -112,7 +114,8 @@ func buildIngress() *extensions.Ingress {
 }
 
 func TestSecureUpstream(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -136,6 +139,7 @@ func TestSecureUpstream(t *testing.T) {
 }
 
 func TestSecureVerifyCACert(t *testing.T) {
+	fs := newFS(t)
 	ec := NewAnnotationExtractor(mockCfg{
 		MockSecrets: map[string]*apiv1.Secret{
 			"default/secure-verify-ca": {
@@ -144,7 +148,7 @@ func TestSecureVerifyCACert(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, fs)
 
 	anns := []struct {
 		it          int
@@ -171,7 +175,8 @@ func TestSecureVerifyCACert(t *testing.T) {
 }
 
 func TestHealthCheck(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -201,7 +206,8 @@ func TestHealthCheck(t *testing.T) {
 }
 
 func TestSSLPassthrough(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -225,7 +231,8 @@ func TestSSLPassthrough(t *testing.T) {
 }
 
 func TestUpstreamHashBy(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -249,7 +256,8 @@ func TestUpstreamHashBy(t *testing.T) {
 }
 
 func TestAffinitySession(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -281,7 +289,8 @@ func TestAffinitySession(t *testing.T) {
 }
 
 func TestCors(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
+	fs := newFS(t)
+	ec := NewAnnotationExtractor(mockCfg{}, fs)
 	ing := buildIngress()
 
 	fooAnns := []struct {
@@ -371,3 +380,11 @@ func TestMergeLocationAnnotations(t *testing.T) {
 	}
 }
 */
+
+func newFS(t *testing.T) file.Filesystem {
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("unexpected error creating filesystem: %v", err)
+	}
+	return fs
+}

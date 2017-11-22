@@ -47,12 +47,12 @@ func (hc healthCheck) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return &Config{defBackend.UpstreamMaxFails, defBackend.UpstreamFailTimeout}, nil
 	}
 
-	mf, err := parser.GetIntAnnotation("upstream-max-fails", ing, hc.r)
+	mf, err := parser.GetIntAnnotation("upstream-max-fails", ing)
 	if err != nil {
 		mf = defBackend.UpstreamMaxFails
 	}
 
-	ft, err := parser.GetIntAnnotation("upstream-fail-timeout", ing, hc.r)
+	ft, err := parser.GetIntAnnotation("upstream-fail-timeout", ing)
 	if err != nil {
 		ft = defBackend.UpstreamFailTimeout
 	}

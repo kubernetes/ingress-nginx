@@ -25,8 +25,8 @@ import (
 	"testing"
 
 	"k8s.io/apiserver/pkg/server/healthz"
-	"k8s.io/kubernetes/pkg/util/filesystem"
 
+	"k8s.io/ingress-nginx/internal/file"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 )
 
@@ -41,8 +41,10 @@ func TestNginxCheck(t *testing.T) {
 	// port to be used in the check
 	p := server.Listener.Addr().(*net.TCPAddr).Port
 
-	// mock filesystem
-	fs := filesystem.NewFakeFs()
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	n := &NGINXController{
 		cfg: &Configuration{
@@ -59,13 +61,6 @@ func TestNginxCheck(t *testing.T) {
 		}
 	})
 
-	// create required files
-	fs.MkdirAll("/run", 0655)
-	pidFile, err := fs.Create("/run/nginx.pid")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
 	t.Run("no process", func(t *testing.T) {
 		if err := callHealthz(true, mux); err == nil {
 			t.Errorf("expected an error but none returned")
@@ -81,18 +76,9 @@ func TestNginxCheck(t *testing.T) {
 		cmd.Wait()
 	}()
 
-	pidFile.Write([]byte(fmt.Sprintf("%v", pid)))
-	pidFile.Close()
-
 	healthz.InstallHandler(mux, n)
 
-	t.Run("valid request", func(t *testing.T) {
-		if err := callHealthz(false, mux); err != nil {
-			t.Error(err)
-		}
-	})
-
-	pidFile, err = fs.Create("/run/nginx.pid")
+	pidFile, err := fs.Create("/run/nginx.pid")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -20,18 +20,15 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-type serviceUpstream struct {
-	r resolver.Resolver
-}
+type serviceUpstream struct{}
 
 // NewParser creates a new serviceUpstream annotation parser
-func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return serviceUpstream{r}
+func NewParser() parser.IngressAnnotation {
+	return serviceUpstream{}
 }
 
 func (s serviceUpstream) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation("service-upstream", ing, s.r)
+	return parser.GetBoolAnnotation("service-upstream", ing)
 }

@@ -18,9 +18,6 @@ package auth
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -35,9 +32,6 @@ import (
 
 var (
 	authTypeRegex = regexp.MustCompile(`basic|digest`)
-	// AuthDirectory default directory used to store files
-	// to authenticate request
-	AuthDirectory = "/etc/ingress-controller/auth"
 )
 
 // Config returns authentication configuration for an Ingress rule
@@ -78,23 +72,13 @@ func (bd1 *Config) Equal(bd2 *Config) bool {
 
 type auth struct {
 	r             resolver.Resolver
+	fs            file.Filesystem
 	authDirectory string
 }
 
 // NewParser creates a new authentication annotation parser
-func NewParser(authDirectory string, r resolver.Resolver) parser.IngressAnnotation {
-	os.MkdirAll(authDirectory, 0755)
-
-	currPath := authDirectory
-	for currPath != "/" {
-		currPath = path.Dir(currPath)
-		err := os.Chmod(currPath, 0755)
-		if err != nil {
-			break
-		}
-	}
-
-	return auth{r, authDirectory}
+func NewParser(authDirectory string, fs file.Filesystem, r resolver.Resolver) parser.IngressAnnotation {
+	return auth{r, fs, authDirectory}
 }
 
 // Parse parses the annotations contained in the ingress
@@ -102,7 +86,7 @@ func NewParser(authDirectory string, r resolver.Resolver) parser.IngressAnnotati
 // and generated an htpasswd compatible file to be used as source
 // during the authentication process
 func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
-	at, err := parser.GetStringAnnotation("auth-type", ing, a.r)
+	at, err := parser.GetStringAnnotation("auth-type", ing)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +95,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("invalid authentication type")
 	}
 
-	s, err := parser.GetStringAnnotation("auth-secret", ing, a.r)
+	s, err := parser.GetStringAnnotation("auth-secret", ing)
 	if err != nil {
 		return nil, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "error reading secret name from annotation"),
@@ -126,10 +110,10 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		}
 	}
 
-	realm, _ := parser.GetStringAnnotation("auth-realm", ing, a.r)
+	realm, _ := parser.GetStringAnnotation("auth-realm", ing)
 
 	passFile := fmt.Sprintf("%v/%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.GetName())
-	err = dumpSecret(passFile, secret)
+	err = dumpSecret(passFile, secret, a.fs)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +129,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 // dumpSecret dumps the content of a secret into a file
 // in the expected format for the specified authorization
-func dumpSecret(filename string, secret *api.Secret) error {
+func dumpSecret(filename string, secret *api.Secret, fs file.Filesystem) error {
 	val, ok := secret.Data["auth"]
 	if !ok {
 		return ing_errors.LocationDenied{
@@ -153,11 +137,24 @@ func dumpSecret(filename string, secret *api.Secret) error {
 		}
 	}
 
-	// TODO: check permissions required
-	err := ioutil.WriteFile(filename, val, 0777)
+	f, err := fs.Create(filename)
 	if err != nil {
 		return ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "unexpected error creating password file"),
+		}
+	}
+
+	_, err = f.Write(val)
+	if err != nil {
+		return ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "unexpected error writing password file"),
+		}
+	}
+
+	err = f.Close()
+	if err != nil {
+		return ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "unexpected error closing password file"),
 		}
 	}
 

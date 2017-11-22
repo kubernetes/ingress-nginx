@@ -23,6 +23,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/alias"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -89,31 +90,31 @@ type Extractor struct {
 }
 
 // NewAnnotationExtractor creates a new annotations extractor
-func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
+func NewAnnotationExtractor(cfg resolver.Resolver, fs file.Filesystem) Extractor {
 	return Extractor{
 		map[string]parser.IngressAnnotation{
 			"Alias":                alias.NewParser(cfg),
-			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
+			"BasicDigestAuth":      auth.NewParser(file.AuthDirectory, fs, cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),
-			"ClientBodyBufferSize": clientbodybuffersize.NewParser(cfg),
-			"ConfigurationSnippet": snippet.NewParser(cfg),
-			"CorsConfig":           cors.NewParser(cfg),
+			"ClientBodyBufferSize": clientbodybuffersize.NewParser(),
+			"ConfigurationSnippet": snippet.NewParser(),
+			"CorsConfig":           cors.NewParser(),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
-			"ExternalAuth":         authreq.NewParser(cfg),
+			"ExternalAuth":         authreq.NewParser(),
 			"HealthCheck":          healthcheck.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
-			"ServerSnippet":        serversnippet.NewParser(cfg),
-			"ServiceUpstream":      serviceupstream.NewParser(cfg),
+			"ServerSnippet":        serversnippet.NewParser(),
+			"ServiceUpstream":      serviceupstream.NewParser(),
 			"SessionAffinity":      sessionaffinity.NewParser(cfg),
-			"SSLPassthrough":       sslpassthrough.NewParser(cfg),
+			"SSLPassthrough":       sslpassthrough.NewParser(),
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),
-			"UpstreamHashBy":       upstreamhashby.NewParser(cfg),
-			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
-			"VtsFilterKey":         vtsfilterkey.NewParser(cfg),
+			"UpstreamHashBy":       upstreamhashby.NewParser(),
+			"UpstreamVhost":        upstreamvhost.NewParser(),
+			"VtsFilterKey":         vtsfilterkey.NewParser(),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 		},
 	}

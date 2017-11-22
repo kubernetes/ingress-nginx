@@ -23,7 +23,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -65,10 +65,10 @@ func TestIngressAnnotationServiceUpstreamEnabled(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/service-upstream"] = "true"
+	data[parser.GetAnnotationWithPrefix("service-upstream")] = "true"
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, _ := NewParser().Parse(ing)
 	enabled, ok := val.(bool)
 	if !ok {
 		t.Errorf("expected a bool type")
@@ -84,10 +84,10 @@ func TestIngressAnnotationServiceUpstreamSetFalse(t *testing.T) {
 
 	// Test with explicitly set to false
 	data := map[string]string{}
-	data["nginx/service-upstream"] = "false"
+	data[parser.GetAnnotationWithPrefix("service-upstream")] = "false"
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, _ := NewParser().Parse(ing)
 	enabled, ok := val.(bool)
 	if !ok {
 		t.Errorf("expected a bool type")
@@ -101,7 +101,7 @@ func TestIngressAnnotationServiceUpstreamSetFalse(t *testing.T) {
 	data = map[string]string{}
 	ing.SetAnnotations(data)
 
-	val, _ = NewParser(&resolver.Mock{}).Parse(ing)
+	val, _ = NewParser().Parse(ing)
 	enabled, ok = val.(bool)
 	if !ok {
 		t.Errorf("expected a bool type")

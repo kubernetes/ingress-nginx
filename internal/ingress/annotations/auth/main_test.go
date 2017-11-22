@@ -29,6 +29,8 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -86,10 +88,11 @@ func (m mockSecret) GetSecret(name string) (*api.Secret, error) {
 }
 
 func TestIngressWithoutAuth(t *testing.T) {
+	fs := newFS(t)
 	ing := buildIngress()
 	_, dir, _ := dummySecretContent(t)
 	defer os.RemoveAll(dir)
-	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	_, err := NewParser(dir, fs, &mockSecret{}).Parse(ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
 	}
@@ -99,15 +102,17 @@ func TestIngressAuth(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/auth-type"] = "basic"
-	data["nginx/auth-secret"] = "demo-secret"
-	data["nginx/auth-realm"] = "-realm-"
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	data[parser.GetAnnotationWithPrefix("auth-secret")] = "demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
 	defer os.RemoveAll(dir)
 
-	i, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	fs := newFS(t)
+
+	i, err := NewParser(dir, fs, &mockSecret{}).Parse(ing)
 	if err != nil {
 		t.Errorf("Uxpected error with ingress: %v", err)
 	}
@@ -130,15 +135,17 @@ func TestIngressAuthWithoutSecret(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/auth-type"] = "basic"
-	data["nginx/auth-secret"] = "invalid-secret"
-	data["nginx/auth-realm"] = "-realm-"
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	data[parser.GetAnnotationWithPrefix("auth-secret")] = "invalid-secret"
+	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
 	defer os.RemoveAll(dir)
 
-	_, err := NewParser(dir, mockSecret{}).Parse(ing)
+	fs := newFS(t)
+
+	_, err := NewParser(dir, fs, mockSecret{}).Parse(ing)
 	if err == nil {
 		t.Errorf("expected an error with invalid secret name")
 	}
@@ -166,14 +173,24 @@ func TestDumpSecret(t *testing.T) {
 	sd := s.Data
 	s.Data = nil
 
-	err := dumpSecret(tmpfile, s)
+	fs := newFS(t)
+
+	err := dumpSecret(tmpfile, s, fs)
 	if err == nil {
 		t.Errorf("Expected error with secret without auth")
 	}
 
 	s.Data = sd
-	err = dumpSecret(tmpfile, s)
+	err = dumpSecret(tmpfile, s, fs)
 	if err != nil {
 		t.Errorf("Unexpected error creating htpasswd file %v: %v", tmpfile, err)
 	}
+}
+
+func newFS(t *testing.T) file.Filesystem {
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("unexpected error creating filesystem: %v", err)
+	}
+	return fs
 }

@@ -34,16 +34,21 @@ jobs:
     - go get github.com/golang/lint/golint
     - make fmt lint vet
   - stage: Coverage
+    before_script:
+    # start minikube 
+    - test/e2e/up.sh
     script:
     - go get github.com/mattn/goveralls
     - go get github.com/modocache/gover
-    - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover;
-      fi
+    - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover;fi
+    - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
     - make cover
   - stage: e2e
     before_script:
+    - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
     - make e2e-image
     - test/e2e/up.sh
+    - test/e2e/wait-for-nginx.sh
     script:
     - make e2e-test
   # split builds to avoid job timeouts
