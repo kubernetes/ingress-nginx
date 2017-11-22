@@ -36,7 +36,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 	f := framework.NewDefaultFramework("affinity")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(1)
+		err := f.NewEchoDeploymentWithReplicas(2)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -46,16 +46,42 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 	It("should set sticky cookie SERVERID", func() {
 		host := "sticky.foo.com"
 
-		bi := buildIngress(host, f.Namespace.Name)
-		bi.Annotations["ingress.kubernetes.io/affinity"] = "cookie"
-		bi.Annotations["ingress.kubernetes.io/session-cookie-name"] = "SERVERID"
-
-		ing, err := f.EnsureIngress(bi)
+		ing, err := f.EnsureIngress(&v1beta1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      host,
+				Namespace: f.Namespace.Name,
+				Annotations: map[string]string{
+					"ingress.kubernetes.io/affinity": "cookie",
+					"ingress.kubernetes.io/session-cookie-name": "SERVERID",
+				},
+			},
+			Spec: v1beta1.IngressSpec{
+				Rules: []v1beta1.IngressRule{
+					{
+						Host: host,
+						IngressRuleValue: v1beta1.IngressRuleValue{
+							HTTP: &v1beta1.HTTPIngressRuleValue{
+								Paths: []v1beta1.HTTPIngressPath{
+									{
+										Path: "/",
+										Backend: v1beta1.IngressBackend{
+											ServiceName: "http-svc",
+											ServicePort: intstr.FromInt(80),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
+				framework.Logf("Server block '%s': '%v'", host, server)
 				return strings.Contains(server, "proxy_pass http://sticky-"+f.Namespace.Name+"-http-svc-80;")
 			})
 		Expect(err).NotTo(HaveOccurred())
