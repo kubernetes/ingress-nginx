@@ -14,6 +14,7 @@
 - [Using Helm](#using-helm)
 - [Verify installation](#verify-installation)
 - [Detect installed version](#detect-installed-version)
+- [Deploying the config-map](#deploying-the-config-map)
 
 ## Generic Deployment 
 
@@ -235,7 +236,6 @@ kubectl get pods --all-namespaces -l app=ingress-nginx --watch
 ```
 
 Once the operator pods are running, you can cancel the above command by typing `Ctrl+C`.
-
 Now, you are ready to create your first ingress.
 
 ## Detect installed version
@@ -247,3 +247,21 @@ POD_NAMESPACE=ingress-nginx
 POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app=ingress-nginx -o jsonpath={.items[0].metadata.name})
 kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
 ```
+
+## Deploying the config-map
+
+A config map can be used to configure system components for the nginx-controller. In order to begin using a config-map
+make sure it has been created and is being used in the deployment.
+
+It is created as seen in the [Mandatory Commands](#mandatory-commands) section above.
+```console
+curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/configmap.yaml \
+    | kubectl apply -f -
+```
+
+and is setup to be used in the deployment [without-rbac](without-rbac.yaml) or [with-rbac](with-rbac.yaml) with the following line:
+```yaml
+- --configmap=$(POD_NAMESPACE)/nginx-configuration
+```
+
+For information on using the config-map, see its [user-guide](../docs/user-guide/configmap.md).
