@@ -17,8 +17,6 @@ limitations under the License.
 package resolver
 
 import (
-	"fmt"
-
 	apiv1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
@@ -48,9 +46,4 @@ func (m Mock) GetAuthCertificate(string) (*AuthSSLCert, error) {
 // GetService searches for services contenating the namespace and name using a the character /
 func (m Mock) GetService(string) (*apiv1.Service, error) {
 	return nil, nil
-}
-
-// GetAnnotationWithPrefix returns the prefix of the Ingress annotations
-func (m Mock) GetAnnotationWithPrefix(name string) string {
-	return fmt.Sprintf("nginx/%v", name)
 }
