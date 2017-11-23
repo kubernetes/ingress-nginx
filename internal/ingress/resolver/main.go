@@ -37,9 +37,6 @@ type Resolver interface {
 
 	// GetService searches for services contenating the namespace and name using a the character /
 	GetService(string) (*apiv1.Service, error)
-
-	// GetAnnotationWithPrefix returns the prefix of the Ingress annotations
-	GetAnnotationWithPrefix(suffix string) string
 }
 
 // AuthSSLCert contains the necessary information to do certificate based
