@@ -2,6 +2,11 @@
 
 ---
 
+The configuration options are listed below. To specify which ConfigMap to use, pass the `configmap` parameter to `nginx-ingress-controller`. For example,
+```
+/nginx-ingress-controller --default-backend-service=$(POD_NAMESPACE)/default-http-backend --configmap=$(POD_NAMESPACE)/${CONFIGMAP_NAME}
+``` 
+
 ### Logs
 
 #### disable-access-log
