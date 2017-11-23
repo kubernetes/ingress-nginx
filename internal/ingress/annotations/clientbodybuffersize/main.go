@@ -35,5 +35,5 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress rule
 // used to add an client-body-buffer-size to the provided locations
 func (cbbs clientBodyBufferSize) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation("client-body-buffer-size", ing, cbbs.r)
+	return parser.GetStringAnnotation("client-body-buffer-size", ing)
 }

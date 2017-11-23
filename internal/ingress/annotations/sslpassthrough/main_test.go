@@ -22,6 +22,7 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -51,7 +52,7 @@ func TestParseAnnotations(t *testing.T) {
 	}
 
 	data := map[string]string{}
-	data["nginx/ssl-passthrough"] = "true"
+	data[parser.GetAnnotationWithPrefix("ssl-passthrough")] = "true"
 	ing.SetAnnotations(data)
 	// test ingress using the annotation without a TLS section
 	_, err = NewParser(&resolver.Mock{}).Parse(ing)

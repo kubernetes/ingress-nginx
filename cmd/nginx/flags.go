@@ -28,6 +28,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
@@ -156,6 +157,8 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		class.IngressClass = *ingressClass
 	}
 
+	parser.AnnotationsPrefix = *annotationsPrefix
+
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {
 		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --http-port", *httpPort)
@@ -187,7 +190,6 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	}
 
 	config := &controller.Configuration{
-		AnnotationsPrefix:        *annotationsPrefix,
 		APIServerHost:            *apiserverHost,
 		KubeConfigFile:           *kubeConfigFile,
 		UpdateStatus:             *updateStatus,

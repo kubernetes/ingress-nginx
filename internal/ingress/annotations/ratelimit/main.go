@@ -157,20 +157,20 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to rewrite the defined paths
 func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
-	lr, err := parser.GetIntAnnotation("limit-rate", ing, a.r)
+	lr, err := parser.GetIntAnnotation("limit-rate", ing)
 	if err != nil {
 		lr = defBackend.LimitRate
 	}
-	lra, err := parser.GetIntAnnotation("limit-rate-after", ing, a.r)
+	lra, err := parser.GetIntAnnotation("limit-rate-after", ing)
 	if err != nil {
 		lra = defBackend.LimitRateAfter
 	}
 
-	rpm, _ := parser.GetIntAnnotation("limit-rpm", ing, a.r)
-	rps, _ := parser.GetIntAnnotation("limit-rps", ing, a.r)
-	conn, _ := parser.GetIntAnnotation("limit-connections", ing, a.r)
+	rpm, _ := parser.GetIntAnnotation("limit-rpm", ing)
+	rps, _ := parser.GetIntAnnotation("limit-rps", ing)
+	conn, _ := parser.GetIntAnnotation("limit-connections", ing)
 
-	val, _ := parser.GetStringAnnotation("limit-whitelist", ing, a.r)
+	val, _ := parser.GetStringAnnotation("limit-whitelist", ing)
 
 	cidrs, err := parseCIDRs(val)
 	if err != nil {
