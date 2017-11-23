@@ -171,7 +171,7 @@ http {
     # Retain the default nginx handling of requests without a "Connection" header
     map $http_upgrade $connection_upgrade {
         default          upgrade;
-        ''               close;
+        ''               {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}keep-alive{{ else }}close{{ end }};
     }
 
     map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
