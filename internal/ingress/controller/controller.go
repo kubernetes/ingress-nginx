@@ -1159,7 +1159,7 @@ func (n *NGINXController) readSecrets(ing *extensions.Ingress) {
 		n.syncSecret(key)
 	}
 
-	key, _ := parser.GetStringAnnotation("auth-tls-secret", ing, n)
+	key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
 	if key == "" {
 		return
 	}

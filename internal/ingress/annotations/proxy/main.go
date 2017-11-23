@@ -100,62 +100,62 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to configure upstream check parameters
 func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
-	ct, err := parser.GetIntAnnotation("proxy-connect-timeout", ing, a.r)
+	ct, err := parser.GetIntAnnotation("proxy-connect-timeout", ing)
 	if err != nil {
 		ct = defBackend.ProxyConnectTimeout
 	}
 
-	st, err := parser.GetIntAnnotation("proxy-send-timeout", ing, a.r)
+	st, err := parser.GetIntAnnotation("proxy-send-timeout", ing)
 	if err != nil {
 		st = defBackend.ProxySendTimeout
 	}
 
-	rt, err := parser.GetIntAnnotation("proxy-read-timeout", ing, a.r)
+	rt, err := parser.GetIntAnnotation("proxy-read-timeout", ing)
 	if err != nil {
 		rt = defBackend.ProxyReadTimeout
 	}
 
-	bufs, err := parser.GetStringAnnotation("proxy-buffer-size", ing, a.r)
+	bufs, err := parser.GetStringAnnotation("proxy-buffer-size", ing)
 	if err != nil || bufs == "" {
 		bufs = defBackend.ProxyBufferSize
 	}
 
-	cp, err := parser.GetStringAnnotation("proxy-cookie-path", ing, a.r)
+	cp, err := parser.GetStringAnnotation("proxy-cookie-path", ing)
 	if err != nil || cp == "" {
 		cp = defBackend.ProxyCookiePath
 	}
 
-	cd, err := parser.GetStringAnnotation("proxy-cookie-domain", ing, a.r)
+	cd, err := parser.GetStringAnnotation("proxy-cookie-domain", ing)
 	if err != nil || cd == "" {
 		cd = defBackend.ProxyCookieDomain
 	}
 
-	bs, err := parser.GetStringAnnotation("proxy-body-size", ing, a.r)
+	bs, err := parser.GetStringAnnotation("proxy-body-size", ing)
 	if err != nil || bs == "" {
 		bs = defBackend.ProxyBodySize
 	}
 
-	nu, err := parser.GetStringAnnotation("proxy-next-upstream", ing, a.r)
+	nu, err := parser.GetStringAnnotation("proxy-next-upstream", ing)
 	if err != nil || nu == "" {
 		nu = defBackend.ProxyNextUpstream
 	}
 
-	pp, err := parser.GetStringAnnotation("proxy-pass-params", ing, a.r)
+	pp, err := parser.GetStringAnnotation("proxy-pass-params", ing)
 	if err != nil || pp == "" {
 		pp = defBackend.ProxyPassParams
 	}
 
-	rb, err := parser.GetStringAnnotation("proxy-request-buffering", ing, a.r)
+	rb, err := parser.GetStringAnnotation("proxy-request-buffering", ing)
 	if err != nil || rb == "" {
 		rb = defBackend.ProxyRequestBuffering
 	}
 
-	prf, err := parser.GetStringAnnotation("proxy-redirect-from", ing, a.r)
+	prf, err := parser.GetStringAnnotation("proxy-redirect-from", ing)
 	if err != nil || rb == "" {
 		prf = defBackend.ProxyRedirectFrom
 	}
 
-	prt, err := parser.GetStringAnnotation("proxy-redirect-to", ing, a.r)
+	prt, err := parser.GetStringAnnotation("proxy-redirect-to", ing)
 	if err != nil || rb == "" {
 		prt = defBackend.ProxyRedirectTo
 	}

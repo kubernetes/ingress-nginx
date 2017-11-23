@@ -77,7 +77,6 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 			switch test.Scheme {
 			case framework.HTTP:
 				cm = request.CustomMethod(test.Method, f.NginxHTTPURL)
-				break
 			case framework.HTTPS:
 				cm = request.CustomMethod(test.Method, f.NginxHTTPSURL)
 				// the default backend uses a self generated certificate
@@ -86,7 +85,6 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 						InsecureSkipVerify: true,
 					},
 				}
-				break
 			default:
 				Fail("Unexpected request scheme")
 			}

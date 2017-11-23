@@ -66,7 +66,7 @@ func (n *NGINXController) createListers(stopCh chan struct{}) (*ingress.StoreLis
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
 			if !class.IsValid(addIng) {
-				a, _ := parser.GetStringAnnotation(class.IngressKey, addIng, n)
+				a, _ := parser.GetStringAnnotation(class.IngressKey, addIng)
 				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", addIng.Name, class.IngressKey, a)
 				return
 			}

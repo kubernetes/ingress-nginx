@@ -40,5 +40,5 @@ func (a sslpt) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return false, ing_errors.ErrMissingAnnotations
 	}
 
-	return parser.GetBoolAnnotation("ssl-passthrough", ing, a.r)
+	return parser.GetBoolAnnotation("ssl-passthrough", ing)
 }

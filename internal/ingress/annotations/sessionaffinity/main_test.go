@@ -17,13 +17,13 @@ limitations under the License.
 package sessionaffinity
 
 import (
-	"fmt"
 	"testing"
 
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -66,9 +66,9 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[fmt.Sprintf("nginx/%v", annotationAffinityType)] = "cookie"
-	data[fmt.Sprintf("nginx/%v", annotationAffinityCookieHash)] = "sha123"
-	data[fmt.Sprintf("nginx/%v", annotationAffinityCookieName)] = "INGRESSCOOKIE"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityType)] = "cookie"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieHash)] = "sha123"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieName)] = "INGRESSCOOKIE"
 	ing.SetAnnotations(data)
 
 	affin, _ := NewParser(&resolver.Mock{}).Parse(ing)
