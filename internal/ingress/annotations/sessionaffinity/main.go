@@ -63,14 +63,14 @@ type Cookie struct {
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
 func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
-	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing, a.r)
+	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing)
 
 	if err != nil || sn == "" {
 		glog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
 		sn = defaultAffinityCookieName
 	}
 
-	sh, err := parser.GetStringAnnotation(annotationAffinityCookieHash, ing, a.r)
+	sh, err := parser.GetStringAnnotation(annotationAffinityCookieHash, ing)
 
 	if err != nil || !affinityCookieHashRegex.MatchString(sh) {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Setting it to default %v", ing.Name, annotationAffinityCookieHash, defaultAffinityCookieHash)
@@ -97,7 +97,7 @@ type affinity struct {
 func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
 	cookie := &Cookie{}
 	// Check the type of affinity that will be used
-	at, err := parser.GetStringAnnotation(annotationAffinityType, ing, a.r)
+	at, err := parser.GetStringAnnotation(annotationAffinityType, ing)
 	if err != nil {
 		at = ""
 	}

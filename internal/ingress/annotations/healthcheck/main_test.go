@@ -24,6 +24,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -75,7 +76,7 @@ func TestIngressHealthCheck(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/upstream-max-fails"] = "2"
+	data[parser.GetAnnotationWithPrefix("upstream-max-fails")] = "2"
 	ing.SetAnnotations(data)
 
 	hzi, _ := NewParser(mockBackend{}).Parse(ing)

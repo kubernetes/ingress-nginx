@@ -187,7 +187,7 @@ func (ic *NGINXController) checkMissingSecrets() {
 			}
 		}
 
-		key, _ := parser.GetStringAnnotation("auth-tls-secret", ing, ic)
+		key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
 		if key == "" {
 			continue
 		}

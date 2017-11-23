@@ -22,10 +22,11 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const annotation = "nginx/server-alias"
+var annotation = parser.GetAnnotationWithPrefix("server-alias")
 
 func TestParse(t *testing.T) {
 	ap := NewParser(&resolver.Mock{})

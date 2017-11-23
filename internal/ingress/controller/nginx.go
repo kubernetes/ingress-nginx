@@ -257,7 +257,7 @@ func (n *NGINXController) Start() {
 		ing := obj.(*extensions.Ingress)
 
 		if !class.IsValid(ing) {
-			a, _ := parser.GetStringAnnotation(class.IngressKey, ing, n)
+			a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
 			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
 			continue
 		}
