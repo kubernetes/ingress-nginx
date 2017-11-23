@@ -38,7 +38,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress to use
 // a custom default backend
 func (db backend) Parse(ing *extensions.Ingress) (interface{}, error) {
-	s, err := parser.GetStringAnnotation("default-backend", ing, db.r)
+	s, err := parser.GetStringAnnotation("default-backend", ing)
 	if err != nil {
 		return nil, err
 	}

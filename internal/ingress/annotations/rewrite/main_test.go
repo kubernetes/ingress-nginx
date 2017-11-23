@@ -24,6 +24,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -88,7 +89,7 @@ func TestRedirect(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/rewrite-target"] = defRoute
+	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -108,7 +109,7 @@ func TestSSLRedirect(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/rewrite-target"] = defRoute
+	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
 	ing.SetAnnotations(data)
 
 	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
@@ -120,7 +121,7 @@ func TestSSLRedirect(t *testing.T) {
 		t.Errorf("Expected true but returned false")
 	}
 
-	data["nginx/ssl-redirect"] = "false"
+	data[parser.GetAnnotationWithPrefix("ssl-redirect")] = "false"
 	ing.SetAnnotations(data)
 
 	i, _ = NewParser(mockBackend{redirect: false}).Parse(ing)
@@ -137,7 +138,7 @@ func TestForceSSLRedirect(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/rewrite-target"] = defRoute
+	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
 	ing.SetAnnotations(data)
 
 	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
@@ -149,7 +150,7 @@ func TestForceSSLRedirect(t *testing.T) {
 		t.Errorf("Expected false but returned true")
 	}
 
-	data["nginx/force-ssl-redirect"] = "true"
+	data[parser.GetAnnotationWithPrefix("force-ssl-redirect")] = "true"
 	ing.SetAnnotations(data)
 
 	i, _ = NewParser(mockBackend{redirect: false}).Parse(ing)
@@ -165,7 +166,7 @@ func TestAppRoot(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/app-root"] = "/app1"
+	data[parser.GetAnnotationWithPrefix("app-root")] = "/app1"
 	ing.SetAnnotations(data)
 
 	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)

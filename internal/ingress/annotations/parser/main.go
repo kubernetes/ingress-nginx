@@ -17,12 +17,17 @@ limitations under the License.
 package parser
 
 import (
+	"fmt"
 	"strconv"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/errors"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
+)
+
+var (
+	// AnnotationsPrefix defines the common prefix used in the nginx ingress controller
+	AnnotationsPrefix = "nginx.ingress.kubernetes.io"
 )
 
 // IngressAnnotation has a method to parse annotations located in Ingress
@@ -76,8 +81,8 @@ func checkAnnotation(name string, ing *extensions.Ingress) error {
 }
 
 // GetBoolAnnotation extracts a boolean from an Ingress annotation
-func GetBoolAnnotation(name string, ing *extensions.Ingress, r resolver.Resolver) (bool, error) {
-	v := r.GetAnnotationWithPrefix(name)
+func GetBoolAnnotation(name string, ing *extensions.Ingress) (bool, error) {
+	v := GetAnnotationWithPrefix(name)
 	err := checkAnnotation(v, ing)
 	if err != nil {
 		return false, err
@@ -86,8 +91,8 @@ func GetBoolAnnotation(name string, ing *extensions.Ingress, r resolver.Resolver
 }
 
 // GetStringAnnotation extracts a string from an Ingress annotation
-func GetStringAnnotation(name string, ing *extensions.Ingress, r resolver.Resolver) (string, error) {
-	v := r.GetAnnotationWithPrefix(name)
+func GetStringAnnotation(name string, ing *extensions.Ingress) (string, error) {
+	v := GetAnnotationWithPrefix(name)
 	err := checkAnnotation(v, ing)
 	if err != nil {
 		return "", err
@@ -96,11 +101,16 @@ func GetStringAnnotation(name string, ing *extensions.Ingress, r resolver.Resolv
 }
 
 // GetIntAnnotation extracts an int from an Ingress annotation
-func GetIntAnnotation(name string, ing *extensions.Ingress, r resolver.Resolver) (int, error) {
-	v := r.GetAnnotationWithPrefix(name)
+func GetIntAnnotation(name string, ing *extensions.Ingress) (int, error) {
+	v := GetAnnotationWithPrefix(name)
 	err := checkAnnotation(v, ing)
 	if err != nil {
 		return 0, err
 	}
 	return ingAnnotations(ing.GetAnnotations()).parseInt(v)
+}
+
+// GetAnnotationWithPrefix returns the prefix of ingress annotations
+func GetAnnotationWithPrefix(suffix string) string {
+	return fmt.Sprintf("%v/%v", AnnotationsPrefix, suffix)
 }

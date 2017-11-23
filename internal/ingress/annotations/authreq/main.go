@@ -112,7 +112,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an Config URL as source for authentication
 func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
-	str, err := parser.GetStringAnnotation("auth-url", ing, a.r)
+	str, err := parser.GetStringAnnotation("auth-url", ing)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
 	}
 
-	signin, _ := parser.GetStringAnnotation("auth-signin", ing, a.r)
+	signin, _ := parser.GetStringAnnotation("auth-signin", ing)
 
 	ur, err := url.Parse(str)
 	if err != nil {
@@ -138,13 +138,13 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("invalid url host")
 	}
 
-	m, _ := parser.GetStringAnnotation("auth-method", ing, a.r)
+	m, _ := parser.GetStringAnnotation("auth-method", ing)
 	if len(m) != 0 && !validMethod(m) {
 		return nil, ing_errors.NewLocationDenied("invalid HTTP method")
 	}
 
 	h := []string{}
-	hstr, _ := parser.GetStringAnnotation("auth-response-headers", ing, a.r)
+	hstr, _ := parser.GetStringAnnotation("auth-response-headers", ing)
 	if len(hstr) != 0 {
 
 		harr := strings.Split(hstr, ",")

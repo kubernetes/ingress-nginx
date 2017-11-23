@@ -23,6 +23,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -94,7 +95,7 @@ func TestParseAnnotations(t *testing.T) {
 
 	for testName, test := range tests {
 		data := map[string]string{}
-		data["nginx/whitelist-source-range"] = test.net
+		data[parser.GetAnnotationWithPrefix("whitelist-source-range")] = test.net
 		ing.SetAnnotations(data)
 		p := NewParser(&resolver.Mock{})
 		i, err := p.Parse(ing)
@@ -166,7 +167,7 @@ func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 
 	for testName, test := range tests {
 		data := map[string]string{}
-		data["nginx/whitelist-source-range"] = test.net
+		data[parser.GetAnnotationWithPrefix("whitelist-source-range")] = test.net
 		ing.SetAnnotations(data)
 		p := NewParser(mockBackend)
 		i, err := p.Parse(ing)

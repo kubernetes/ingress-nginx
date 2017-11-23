@@ -24,6 +24,7 @@ import (
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -87,9 +88,9 @@ func TestAnnotations(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		data["nginx/auth-url"] = test.url
-		data["nginx/auth-signin"] = test.signinURL
-		data["nginx/auth-method"] = fmt.Sprintf("%v", test.method)
+		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
+		data[parser.GetAnnotationWithPrefix("auth-signin")] = test.signinURL
+		data[parser.GetAnnotationWithPrefix("auth-method")] = fmt.Sprintf("%v", test.method)
 
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
@@ -137,9 +138,9 @@ func TestHeaderAnnotations(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		data["nginx/auth-url"] = test.url
-		data["nginx/auth-response-headers"] = test.headers
-		data["nginx/auth-method"] = "GET"
+		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
+		data[parser.GetAnnotationWithPrefix("auth-response-headers")] = test.headers
+		data[parser.GetAnnotationWithPrefix("auth-method")] = "GET"
 
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {

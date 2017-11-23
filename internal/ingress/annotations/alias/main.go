@@ -35,5 +35,5 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress rule
 // used to add an alias to the provided hosts
 func (a alias) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation("server-alias", ing, a.r)
+	return parser.GetStringAnnotation("server-alias", ing)
 }

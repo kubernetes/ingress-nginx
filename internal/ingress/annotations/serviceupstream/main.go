@@ -33,5 +33,5 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 }
 
 func (s serviceUpstream) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation("service-upstream", ing, s.r)
+	return parser.GetBoolAnnotation("service-upstream", ing)
 }

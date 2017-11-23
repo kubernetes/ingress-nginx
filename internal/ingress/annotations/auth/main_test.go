@@ -29,6 +29,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -99,9 +100,9 @@ func TestIngressAuth(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/auth-type"] = "basic"
-	data["nginx/auth-secret"] = "demo-secret"
-	data["nginx/auth-realm"] = "-realm-"
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	data[parser.GetAnnotationWithPrefix("auth-secret")] = "demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
@@ -130,9 +131,9 @@ func TestIngressAuthWithoutSecret(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data["nginx/auth-type"] = "basic"
-	data["nginx/auth-secret"] = "invalid-secret"
-	data["nginx/auth-realm"] = "-realm-"
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	data[parser.GetAnnotationWithPrefix("auth-secret")] = "invalid-secret"
+	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
