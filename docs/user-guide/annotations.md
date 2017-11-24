@@ -4,69 +4,69 @@ The following annotations are supported:
 
 |Name                       | type |
 |---------------------------|------|
-|[ingress.kubernetes.io/add-base-url](#rewrite)|true or false|
-|[ingress.kubernetes.io/app-root](#rewrite)|string|
-|[ingress.kubernetes.io/affinity](#session-affinity)|cookie|
-|[ingress.kubernetes.io/auth-realm](#authentication)|string|
-|[ingress.kubernetes.io/auth-secret](#authentication)|string|
-|[ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
-|[ingress.kubernetes.io/auth-tls-secret](#certificate-authentication)|string|
-|[ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
-|[ingress.kubernetes.io/auth-tls-verify-client](#certificate-authentication)|string|
-|[ingress.kubernetes.io/auth-tls-error-page](#certificate-authentication)|string|
-|[ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#certificate-authentication)|string|
-|[ingress.kubernetes.io/auth-url](#external-authentication)|string|
-|[ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
-|[ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
-|[ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
-|[ingress.kubernetes.io/default-backend](#default-backend)|string|
-|[ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
-|[ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
-|[ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|
-|[ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|
-|[ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|true or false|
-|[ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
-|[ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|true or false|
-|[ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
-|[ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
-|[ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
-|[ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
-|[ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
-|[ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
-|[ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
-|[ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
-|[ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
-|[ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
-|[ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
-|[ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
-|[ingress.kubernetes.io/server-alias](#server-alias)|string|
-|[ingress.kubernetes.io/server-snippet](#server-snippet)|string|
-|[ingress.kubernetes.io/service-upstream](#service-upstream)|true or false|
-|[ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
-|[ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
-|[ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
-|[ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|true or false|
-|[ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
-|[ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
-|[ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
-|[ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
+|[nginx.ingress.kubernetes.io/add-base-url](#rewrite)|true or false|
+|[nginx.ingress.kubernetes.io/app-root](#rewrite)|string|
+|[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|
+|[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
+|[nginx.ingress.kubernetes.io/auth-tls-secret](#certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
+|[nginx.ingress.kubernetes.io/auth-tls-verify-client](#certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-error-page](#certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
+|[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
+|[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
+|[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
+|[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
+|[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
+|[nginx.ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|
+|[nginx.ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|
+|[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|true or false|
+|[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
+|[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|true or false|
+|[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
+|[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
+|[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
+|[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
+|[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
+|[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
+|[nginx.ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
+|[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
+|[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
+|[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
+|[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
+|[nginx.ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
+|[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
+|[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
+|[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|true or false|
+|[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
+|[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|true or false|
+|[nginx.ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
+|[nginx.ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
+|[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
+|[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 
 ### Rewrite
 
 In some scenarios the exposed URL in the backend service differs from the specified path in the Ingress rule. Without a rewrite any request will return 404.
-Set the annotation `ingress.kubernetes.io/rewrite-target` to the path expected by the service.
+Set the annotation `nginx.ingress.kubernetes.io/rewrite-target` to the path expected by the service.
 
-If the application contains relative links it is possible to add an additional annotation `ingress.kubernetes.io/add-base-url` that will prepend a [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) in the header of the returned HTML from the backend.
+If the application contains relative links it is possible to add an additional annotation `nginx.ingress.kubernetes.io/add-base-url` that will prepend a [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) in the header of the returned HTML from the backend.
 
-If the scheme of [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) need to be specific, set the annotation `ingress.kubernetes.io/base-url-scheme` to the scheme such as `http` and `https`.
+If the scheme of [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) need to be specific, set the annotation `nginx.ingress.kubernetes.io/base-url-scheme` to the scheme such as `http` and `https`.
 
-If the Application Root is exposed in a different path and needs to be redirected, set the annotation `ingress.kubernetes.io/app-root` to redirect requests for `/`.
+If the Application Root is exposed in a different path and needs to be redirected, set the annotation `nginx.ingress.kubernetes.io/app-root` to redirect requests for `/`.
 
 Please check the [rewrite](../examples/rewrite/README.md) example.
 
 ### Session Affinity
 
-The annotation `ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
+The annotation `nginx.ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is `cookie`.
 
 Please check the [affinity](../examples/affinity/README.md) example.
@@ -77,20 +77,20 @@ Is possible to add authentication adding additional annotations in the Ingress r
 
 The annotations are:
 ```
-ingress.kubernetes.io/auth-type: [basic|digest]
+nginx.ingress.kubernetes.io/auth-type: [basic|digest]
 ```
 
 Indicates the [HTTP Authentication Type: Basic or Digest Access Authentication](https://tools.ietf.org/html/rfc2617).
 
 ```
-ingress.kubernetes.io/auth-secret: secretName
+nginx.ingress.kubernetes.io/auth-secret: secretName
 ```
 
 The name of the secret that contains the usernames and passwords with access to the `path`s defined in the Ingress Rule.
 The secret must be created in the same namespace as the Ingress rule.
 
 ```
-ingress.kubernetes.io/auth-realm: "realm string"
+nginx.ingress.kubernetes.io/auth-realm: "realm string"
 ```
 
 Please check the [auth](../examples/auth/basic/README.md) example.
@@ -103,9 +103,9 @@ NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/doc
 
 To use custom values in an Ingress rule define these annotations:
 
-`ingress.kubernetes.io/upstream-max-fails`: number of unsuccessful attempts to communicate with the server that should occur in the duration set by the `upstream-fail-timeout` parameter to consider the server unavailable.
+`nginx.ingress.kubernetes.io/upstream-max-fails`: number of unsuccessful attempts to communicate with the server that should occur in the duration set by the `upstream-fail-timeout` parameter to consider the server unavailable.
 
-`ingress.kubernetes.io/upstream-fail-timeout`: time in seconds during which the specified number of unsuccessful attempts to communicate with the server should occur to consider the server unavailable. This is also the period of time the server will be considered unavailable.
+`nginx.ingress.kubernetes.io/upstream-fail-timeout`: time in seconds during which the specified number of unsuccessful attempts to communicate with the server should occur to consider the server unavailable. This is also the period of time the server will be considered unavailable.
 
 In NGINX, backend server pools are called "[upstreams](http://nginx.org/en/docs/http/ngx_http_upstream_module.html)". Each upstream contains the endpoints for a service. An upstream is created for each service that has Ingress rules defined.
 
@@ -119,7 +119,7 @@ NGINX supports load balancing by client-server mapping based on [consistent hash
 
 To enable consistent hashing for a backend:
 
-`ingress.kubernetes.io/upstream-hash-by`: the nginx variable, text value or any combination thereof to use for consistent hashing. For example `ingress.kubernetes.io/upstream-hash-by: "$request_uri"` to consistently hash upstream requests by the current request URI.
+`nginx.ingress.kubernetes.io/upstream-hash-by`: the nginx variable, text value or any combination thereof to use for consistent hashing. For example `nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"` to consistently hash upstream requests by the current request URI.
 
 ### Certificate Authentication
 
@@ -127,31 +127,31 @@ It's possible to enable Certificate-Based Authentication (Mutual Authentication)
 
 The annotations are:
 ```
-ingress.kubernetes.io/auth-tls-secret: secretName
+nginx.ingress.kubernetes.io/auth-tls-secret: secretName
 ```
 
 The name of the secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this ingress. It's composed of namespace/secretName.
 
 ```
-ingress.kubernetes.io/auth-tls-verify-depth
+nginx.ingress.kubernetes.io/auth-tls-verify-depth
 ```
 
 The validation depth between the provided client certificate and the Certification Authority chain.
 
 ```
-ingress.kubernetes.io/auth-tls-verify-client
+nginx.ingress.kubernetes.io/auth-tls-verify-client
 ```
 
 Enables verification of client certificates.
 
 ```
-ingress.kubernetes.io/auth-tls-error-page
+nginx.ingress.kubernetes.io/auth-tls-error-page
 ```
 
 The URL/Page that user should be redirected in case of a Certificate Authentication Error
 
 ```
-ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream
+nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream
 ```
 
 Indicates if the received certificates should be passed or not to the upstream server.
@@ -175,43 +175,43 @@ https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-u
 Using this annotation you can add additional configuration to the NGINX location. For example:
 
 ```yaml
-ingress.kubernetes.io/configuration-snippet: |
+nginx.ingress.kubernetes.io/configuration-snippet: |
   more_set_headers "Request-Id: $request_id";
 ```
 
 ### Default Backend
 
 The ingress controller requires a default backend. This service is handle the response when the service in the Ingress rule does not have endpoints.
-This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation `ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.
+This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.
 
 ### Enable CORS
 
-To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule add the annotation `ingress.kubernetes.io/enable-cors: "true"`. This will add a section in the server location enabling this functionality.
+To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule add the annotation `nginx.ingress.kubernetes.io/enable-cors: "true"`. This will add a section in the server location enabling this functionality.
 
 CORS can be controlled with the following annotations:
 
-* `ingress.kubernetes.io/cors-allow-methods` controls which methods are accepted. This is a multi-valued field, separated by ',' and accepts only letters (upper and lower case).
+* `nginx.ingress.kubernetes.io/cors-allow-methods` controls which methods are accepted. This is a multi-valued field, separated by ',' and accepts only letters (upper and lower case).
 
-Example: `ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"`
+Example: `nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"`
 
-* `ingress.kubernetes.io/cors-allow-headers` controls which headers are accepted. This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -.
+* `nginx.ingress.kubernetes.io/cors-allow-headers` controls which headers are accepted. This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -.
 
-Example: `ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
+Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
 
-* `ingress.kubernetes.io/cors-allow-origin` controls what's the accepted Origin for CORS and defaults to '*'. This is a single field value, with the following format: http(s)://origin-site.com or http(s)://origin-site.com:port
+* `nginx.ingress.kubernetes.io/cors-allow-origin` controls what's the accepted Origin for CORS and defaults to '*'. This is a single field value, with the following format: http(s)://origin-site.com or http(s)://origin-site.com:port
 
-Example: `ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"`
+Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"`
 
-* `ingress.kubernetes.io/cors-allow-credentials` controls if credentials can be passed during CORS operations.
+* `nginx.ingress.kubernetes.io/cors-allow-credentials` controls if credentials can be passed during CORS operations.
 
-Example: `ingress.kubernetes.io/cors-allow-credentials: "true"`
+Example: `nginx.ingress.kubernetes.io/cors-allow-credentials: "true"`
 
 
 For more information please check https://enable-cors.org/server_nginx.html
 
 ### Server Alias
 
-To add Server Aliases to an Ingress rule add the annotation `ingress.kubernetes.io/server-alias: "<alias>"`.
+To add Server Aliases to an Ingress rule add the annotation `nginx.ingress.kubernetes.io/server-alias: "<alias>"`.
 This will create a server with the same configuration, but a different server_name as the provided host.
 
 *Note:* A server-alias name cannot conflict with the hostname of an existing server. If it does the server-alias
@@ -222,14 +222,14 @@ For more information please see http://nginx.org/en/docs/http/ngx_http_core_modu
 
 ### Server snippet
 
-Using the annotation `ingress.kubernetes.io/server-snippet` it is possible to add custom configuration in the server configuration block.
+Using the annotation `nginx.ingress.kubernetes.io/server-snippet` it is possible to add custom configuration in the server configuration block.
 
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   annotations:
-    ingress.kubernetes.io/server-snippet: |
+    nginx.ingress.kubernetes.io/server-snippet: |
 set $agentflag 0;
 
 if ($http_user_agent ~* "(Mobile)" ){
@@ -253,59 +253,59 @@ applied to each location provided in the ingress rule.
 *Note:* The annotation value must be given in a valid format otherwise the
 For example to set the client-body-buffer-size the following can be done:
 
-* `ingress.kubernetes.io/client-body-buffer-size: "1000"` # 1000 bytes
-* `ingress.kubernetes.io/client-body-buffer-size: 1k` # 1 kilobyte
-* `ingress.kubernetes.io/client-body-buffer-size: 1K` # 1 kilobyte
-* `ingress.kubernetes.io/client-body-buffer-size: 1m` # 1 megabyte
-* `ingress.kubernetes.io/client-body-buffer-size: 1M` # 1 megabyte
+* `nginx.ingress.kubernetes.io/client-body-buffer-size: "1000"` # 1000 bytes
+* `nginx.ingress.kubernetes.io/client-body-buffer-size: 1k` # 1 kilobyte
+* `nginx.ingress.kubernetes.io/client-body-buffer-size: 1K` # 1 kilobyte
+* `nginx.ingress.kubernetes.io/client-body-buffer-size: 1m` # 1 megabyte
+* `nginx.ingress.kubernetes.io/client-body-buffer-size: 1M` # 1 megabyte
 
 For more information please see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
 
 ### External Authentication
 
-To use an existing service that provides authentication the Ingress rule can be annotated with `ingress.kubernetes.io/auth-url` to indicate the URL where the HTTP request should be sent.
-Additionally it is possible to set `ingress.kubernetes.io/auth-method` to specify the HTTP method to use (GET or POST).
+To use an existing service that provides authentication the Ingress rule can be annotated with `nginx.ingress.kubernetes.io/auth-url` to indicate the URL where the HTTP request should be sent.
+Additionally it is possible to set `nginx.ingress.kubernetes.io/auth-method` to specify the HTTP method to use (GET or POST).
 
 ```yaml
-ingress.kubernetes.io/auth-url: "URL to the authentication service"
+nginx.ingress.kubernetes.io/auth-url: "URL to the authentication service"
 ```
 
 Please check the [external-auth](../examples/auth/external-auth/README.md) example.
 
 ### Rate limiting
 
-The annotations `ingress.kubernetes.io/limit-connections`, `ingress.kubernetes.io/limit-rps`, and `ingress.kubernetes.io/limit-rpm` define a limit on the connections that can be opened by a single client IP address. This can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
+The annotations `nginx.ingress.kubernetes.io/limit-connections`, `nginx.ingress.kubernetes.io/limit-rps`, and `nginx.ingress.kubernetes.io/limit-rpm` define a limit on the connections that can be opened by a single client IP address. This can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
 
-`ingress.kubernetes.io/limit-connections`: number of concurrent connections allowed from a single IP address.
+`nginx.ingress.kubernetes.io/limit-connections`: number of concurrent connections allowed from a single IP address.
 
-`ingress.kubernetes.io/limit-rps`: number of connections that may be accepted from a given IP each second.
+`nginx.ingress.kubernetes.io/limit-rps`: number of connections that may be accepted from a given IP each second.
 
-`ingress.kubernetes.io/limit-rpm`: number of connections that may be accepted from a given IP each minute.
+`nginx.ingress.kubernetes.io/limit-rpm`: number of connections that may be accepted from a given IP each minute.
 
-You can specify the client IP source ranges to be excluded from rate-limiting through the `ingress.kubernetes.io/limit-whitelist` annotation. The value is a comma separated list of CIDRs.
+You can specify the client IP source ranges to be excluded from rate-limiting through the `nginx.ingress.kubernetes.io/limit-whitelist` annotation. The value is a comma separated list of CIDRs.
 
 If you specify multiple annotations in a single Ingress rule, `limit-rpm`, and then `limit-rps` takes precedence.
 
-The annotation `ingress.kubernetes.io/limit-rate`, `ingress.kubernetes.io/limit-rate-after` define a limit the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.
+The annotation `nginx.ingress.kubernetes.io/limit-rate`, `nginx.ingress.kubernetes.io/limit-rate-after` define a limit the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.
 
-`ingress.kubernetes.io/limit-rate-after`: sets the initial amount after which the further transmission of a response to a client will be rate limited.
+`nginx.ingress.kubernetes.io/limit-rate-after`: sets the initial amount after which the further transmission of a response to a client will be rate limited.
 
-`ingress.kubernetes.io/limit-rate`: rate of request that accepted from a client each second.
+`nginx.ingress.kubernetes.io/limit-rate`: rate of request that accepted from a client each second.
 
 To configure this setting globally for all Ingress rules, the `limit-rate-after` and `limit-rate` value may be set in the NGINX ConfigMap. if you set the value in ingress annotation will cover global setting.
 
 ### SSL Passthrough
 
-The annotation `ingress.kubernetes.io/ssl-passthrough` allows to configure TLS termination in the pod and not in NGINX.
+The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure TLS termination in the pod and not in NGINX.
 
 **Important:**
 
-- Using the annotation `ingress.kubernetes.io/ssl-passthrough` invalidates all the other available annotations. This is because SSL Passthrough works in L4 (TCP).
+- Using the annotation `nginx.ingress.kubernetes.io/ssl-passthrough` invalidates all the other available annotations. This is because SSL Passthrough works in L4 (TCP).
 - The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled)
 
 ### Secure backends
 
-By default NGINX uses `http` to reach the services. Adding the annotation `ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to `https`.
+By default NGINX uses `http` to reach the services. Adding the annotation `nginx.ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to `https`.
 
 ### Service Upstream
 
@@ -322,21 +322,21 @@ If the `service-upstream` annotation is specified the following things should be
 
 By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behavior globally, you can use `ssl-redirect: "false"` in the NGINX config map.
 
-To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
+To configure this feature for specific ingress resources, you can use the `nginx.ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
-When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
+When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
 
 ### Redirect from to www
 
 In some scenarios is required to redirect from `www.domain.com` to `domain.com` or viceversa.
-To enable this feature use the annotation `ingress.kubernetes.io/from-to-www-redirect: "true"`
+To enable this feature use the annotation `nginx.ingress.kubernetes.io/from-to-www-redirect: "true"`
 
 **Important:**
 If at some point a new Ingress is created with a host equal to one of the options (like `domain.com`) the annotation will be omitted.
 
 ### Whitelist source range
 
-You can specify the allowed client IP source ranges through the `ingress.kubernetes.io/whitelist-source-range` annotation. The value is a comma separated list of [CIDRs](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing), e.g.  `10.0.0.0/24,172.10.0.1`.
+You can specify the allowed client IP source ranges through the `nginx.ingress.kubernetes.io/whitelist-source-range` annotation. The value is a comma separated list of [CIDRs](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing), e.g.  `10.0.0.0/24,172.10.0.1`.
 
 To configure this setting globally for all Ingress rules, the `whitelist-source-range` value may be set in the NGINX ConfigMap.
 
@@ -344,9 +344,9 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 
 ### Cookie affinity
 
-If you use the ``cookie`` type you can also specify the name of the cookie that will be used to route the requests with the annotation `ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'route'.
+If you use the ``cookie`` type you can also specify the name of the cookie that will be used to route the requests with the annotation `nginx.ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'route'.
 
-In case of NGINX the annotation `ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
+In case of NGINX the annotation `nginx.ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to 'hash' the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
 The `index` option is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranteed to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!
 
 In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf)
@@ -356,16 +356,16 @@ In NGINX this feature is implemented by the third party module [nginx-sticky-mod
 Using the configuration configmap it is possible to set the default global timeout for connections to the upstream servers.
 In some scenarios is required to have different values. To allow this we provide annotations that allows this customization:
 
-- `ingress.kubernetes.io/proxy-connect-timeout`
-- `ingress.kubernetes.io/proxy-send-timeout`
-- `ingress.kubernetes.io/proxy-read-timeout`
-- `ingress.kubernetes.io/proxy-next-upstream`
-- `ingress.kubernetes.io/proxy-request-buffering`
+- `nginx.ingress.kubernetes.io/proxy-connect-timeout`
+- `nginx.ingress.kubernetes.io/proxy-send-timeout`
+- `nginx.ingress.kubernetes.io/proxy-read-timeout`
+- `nginx.ingress.kubernetes.io/proxy-next-upstream`
+- `nginx.ingress.kubernetes.io/proxy-request-buffering`
 
 ### Proxy redirect
 
-With the annotations `ingress.kubernetes.io/proxy-redirect-from` and `ingress.kubernetes.io/proxy-redirect-to` it is possible to set the text that should be changed in the `Location` and `Refresh` header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)
-Setting "off" or "default" in the annotation `ingress.kubernetes.io/proxy-redirect-to` disables `ingress.kubernetes.io/proxy-redirect-to`
+With the annotations `nginx.ingress.kubernetes.io/proxy-redirect-from` and `nginx.ingress.kubernetes.io/proxy-redirect-to` it is possible to set the text that should be changed in the `Location` and `Refresh` header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)
+Setting "off" or "default" in the annotation `nginx.ingress.kubernetes.io/proxy-redirect-to` disables `nginx.ingress.kubernetes.io/proxy-redirect-to`
 Both annotations will be used in any other case
 By default the value is "off".
 
@@ -377,5 +377,5 @@ To configure this setting globally for all Ingress rules, the `proxy-body-size` 
 To use custom values in an Ingress rule define these annotation:
 
 ```yaml
-ingress.kubernetes.io/proxy-body-size: 8m
+nginx.ingress.kubernetes.io/proxy-body-size: 8m
 ```

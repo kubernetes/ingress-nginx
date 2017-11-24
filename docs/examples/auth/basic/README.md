@@ -35,11 +35,11 @@ metadata:
   name: ingress-with-auth
   annotations:
     # type of authentication
-    ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-type: basic
     # name of the secret that contains the user/password definitions
-    ingress.kubernetes.io/auth-secret: basic-auth
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
     # message to display with an appropiate context why the authentication is required
-    ingress.kubernetes.io/auth-realm: "Authentication Required - foo"
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - foo"
 spec:
   rules:
   - host: foo.bar.com

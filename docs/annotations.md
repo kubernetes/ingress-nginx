@@ -3,7 +3,7 @@
 This file defines a list of annotations which are supported by various Ingress controllers (both those based on the common ingress code, and alternative implementations).
 The intention is to ensure the maximum amount of compatibility between different implementations.
 
-All annotations are assumed to be prefixed with `ingress.kubernetes.io/` except where otherwise specified.
+All annotations are assumed to be prefixed with `nginx.ingress.kubernetes.io/` except where otherwise specified.
 There is no attempt to record implementation-specific annotations using other prefixes.
 (Traefik in particular defines several of its own annotations which are not described here, and does not seem to support any of the standard annotations.)
 

@@ -9,7 +9,7 @@ kind: Ingress
 metadata:
   name: http-svc
   annotations:
-    ingress.kubernetes.io/upstream-fail-timeout: "30"
+    nginx.ingress.kubernetes.io/upstream-fail-timeout: "30"
 spec:
   rules:
   - host: foo.bar.com
