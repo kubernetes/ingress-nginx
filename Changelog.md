@@ -6,8 +6,8 @@
 
 *Breaking changes:*
 
-- The NGINX ingress annotations contains a new prefix `nginx.ingress.kubernetes.io`. This change is behind a flag to avoid breaking running deployments.
-  To avoid breaking a running NGINX ingress controller add the flag `--annotations-prefix=ingress.kubernetes.io` to the nginx ingress controller deployment
+- The NGINX ingress annotations contains a new prefix: **nginx.ingress.kubernetes.io**. This change is behind a flag to avoid breaking running deployments.
+  To avoid breaking a running NGINX ingress controller add the flag **--annotations-prefix=ingress.kubernetes.io** to the nginx ingress controller deployment.
 
 *New Features:*
 
