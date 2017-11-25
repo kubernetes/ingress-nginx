@@ -108,6 +108,11 @@ nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
 ### AWS
 
 In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
+Since Kubernetes v1.9.0 it is possible to use a classic load balancer (ELB) or 
+Please check the [elastic load balancing AWS details page](https://aws.amazon.com/es/elasticloadbalancing/details/)
+
+#### Elastic Load Balancer - ELB
+
 This setup requires to choose in which layer (L4 or L7) we want to configure the ELB:
 
 - [Layer 4](https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer): use TCP as the listener protocol for ports 80 and 443.
@@ -140,6 +145,29 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 This example creates an ELB with just two listeners, one in port 80 and another in port 443
 
 ![Listeners](../docs/images/elb-l7-listener.png)
+
+If the ingress controller uses RBAC run:
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml
+```
+
+If not run:
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml
+```
+
+#### Network Load Balancer (NLB)
+
+This type of load balancer is supported since v1.9.0 as an ALPHA feature.
+
+```console
+kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
+  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/patch-deployment.yaml)"
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml
+```
 
 If the ingress controller uses RBAC run:
 
