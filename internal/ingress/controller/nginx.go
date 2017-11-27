@@ -117,6 +117,9 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		stopLock: &sync.Mutex{},
 
 		fileSystem: fs,
+
+		// create an empty configuration.
+		runningConfig: &ingress.Configuration{},
 	}
 
 	n.listers, n.controllers = n.createListers(n.stopCh)
@@ -220,8 +223,6 @@ type NGINXController struct {
 
 	configmap *apiv1.ConfigMap
 
-	storeLister *ingress.StoreLister
-
 	binary   string
 	resolver []net.IP
 
@@ -265,8 +266,6 @@ func (n *NGINXController) Start() {
 		n.readSecrets(ing)
 	}
 
-	go n.syncQueue.Run(time.Second, n.stopCh)
-
 	if n.cfg.EnableSSLChainCompletion {
 		go wait.Until(n.checkSSLChainIssues, 60*time.Second, n.stopCh)
 	}
@@ -290,6 +289,7 @@ func (n *NGINXController) Start() {
 	glog.Info("starting NGINX process...")
 	n.start(cmd)
 
+	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
 	n.syncQueue.Enqueue(&extensions.Ingress{})
 
@@ -565,7 +565,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	setHeaders := map[string]string{}
 	if cfg.ProxySetHeaders != "" {
-		cmap, exists, err := n.storeLister.ConfigMap.GetByKey(cfg.ProxySetHeaders)
+		cmap, exists, err := n.listers.ConfigMap.GetByKey(cfg.ProxySetHeaders)
 		if err != nil {
 			glog.Warningf("unexpected error reading configmap %v: %v", cfg.ProxySetHeaders, err)
 		}
@@ -577,7 +577,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	addHeaders := map[string]string{}
 	if cfg.AddHeaders != "" {
-		cmap, exists, err := n.storeLister.ConfigMap.GetByKey(cfg.AddHeaders)
+		cmap, exists, err := n.listers.ConfigMap.GetByKey(cfg.AddHeaders)
 		if err != nil {
 			glog.Warningf("unexpected error reading configmap %v: %v", cfg.AddHeaders, err)
 		}
@@ -590,7 +590,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	sslDHParam := ""
 	if cfg.SSLDHParam != "" {
 		secretName := cfg.SSLDHParam
-		s, exists, err := n.storeLister.Secret.GetByKey(secretName)
+		s, exists, err := n.listers.Secret.GetByKey(secretName)
 		if err != nil {
 			glog.Warningf("unexpected error reading secret %v: %v", secretName, err)
 		}
