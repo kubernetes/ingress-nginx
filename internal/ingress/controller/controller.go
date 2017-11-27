@@ -203,7 +203,7 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 		PassthroughBackends: passUpstreams,
 	}
 
-	if !n.isForceReload() && n.runningConfig != nil && n.runningConfig.Equal(&pcfg) {
+	if !n.isForceReload() && n.runningConfig.Equal(&pcfg) {
 		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
 	}
