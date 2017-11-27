@@ -120,7 +120,7 @@ By default this feature is disabled
 
 By default the controller redirects (301) to HTTPS if TLS is enabled for that ingress . If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the configuration ConfigMap.
 
-To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
+To configure this feature for specific ingress resources, you can use the `nginx.ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
 ## HTTP Strict Transport Security
 
@@ -134,9 +134,9 @@ To disable this behavior use `hsts: "false"` in the configuration ConfigMap.
 
 By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behavior globally, you can use `ssl-redirect: "false"` in the NGINX config map.
 
-To configure this feature for specific ingress resources, you can use the `ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
+To configure this feature for specific ingress resources, you can use the `nginx.ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
 
-When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
+When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to `HTTPS` even when there is not TLS cert available. This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
 
 ## Automated Certificate Management with Kube-Lego
 

@@ -3,9 +3,9 @@ kind: Ingress
 metadata:
   name: nginx-test
   annotations:
-    ingress.kubernetes.io/affinity: "cookie"
-    ingress.kubernetes.io/session-cookie-name: "route"
-    ingress.kubernetes.io/session-cookie-hash: "sha1"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
 
 spec:
   rules:

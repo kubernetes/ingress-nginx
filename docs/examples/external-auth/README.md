@@ -23,8 +23,8 @@ Sample:
 metadata:
   name: application
   annotations:
-    "ingress.kubernetes.io/auth-url": "https://$host/oauth2/auth"
-    "ingress.kubernetes.io/auth-signin": "https://$host/oauth2/sign_in"
+    "nginx.ingress.kubernetes.io/auth-url": "https://$host/oauth2/auth"
+    "nginx.ingress.kubernetes.io/auth-signin": "https://$host/oauth2/sign_in"
 ...
 ```
 

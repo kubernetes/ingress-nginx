@@ -94,7 +94,7 @@ The default [vts vhost key](https://github.com/vozlt/nginx-module-vts#vhost_traf
   kind: Ingress
   metadata:
     annotations:
-      ingress.kubernetes.io/vts-filter-key: $uri $server_name
+      nginx.ingress.kubernetes.io/vts-filter-key: $uri $server_name
     name: ingress
 ```
 
