@@ -69,7 +69,7 @@ Please check the [rewrite](../examples/rewrite/README.md) example.
 The annotation `ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is `cookie`.
 
-Please check the [affinity](../examples/affinity/README.md) example.
+Please check the [affinity](../examples/affinity/cookie/README.md) example.
 
 ### Authentication
 
