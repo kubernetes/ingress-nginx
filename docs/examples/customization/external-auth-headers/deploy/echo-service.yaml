@@ -45,8 +45,8 @@ kind: Ingress
 metadata:
   name: public-demo-echo-service
   annotations:
-    ingress.kubernetes.io/auth-url: http://demo-auth-service.default.svc.cluster.local?code=200
-    ingress.kubernetes.io/auth-response-headers: UserID, UserRole
+    nginx.ingress.kubernetes.io/auth-url: http://demo-auth-service.default.svc.cluster.local?code=200
+    nginx.ingress.kubernetes.io/auth-response-headers: UserID, UserRole
   namespace: default
 spec:
   rules:
@@ -63,8 +63,8 @@ kind: Ingress
 metadata:
   name: secure-demo-echo-service
   annotations:
-    ingress.kubernetes.io/auth-url: http://demo-auth-service.default.svc.cluster.local
-    ingress.kubernetes.io/auth-response-headers: UserID, UserRole
+    nginx.ingress.kubernetes.io/auth-url: http://demo-auth-service.default.svc.cluster.local
+    nginx.ingress.kubernetes.io/auth-response-headers: UserID, UserRole
   namespace: default
 spec:
   rules:

@@ -16,7 +16,7 @@ spec:
       serviceAccountName: nginx-ingress-serviceaccount   
       containers:
         - name: nginx-ingress-controller
-          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0-beta.17
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0-beta.18
           args:
             - /nginx-ingress-controller
             - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
@@ -24,6 +24,7 @@ spec:
             - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
             - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
+            - --annotations-prefix=nginx.ingress.kubernetes.io
           env:
             - name: POD_NAME
               valueFrom:

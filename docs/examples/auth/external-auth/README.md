@@ -15,7 +15,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   annotations:
-    ingress.kubernetes.io/auth-url: https://httpbin.org/basic-auth/user/passwd
+    nginx.ingress.kubernetes.io/auth-url: https://httpbin.org/basic-auth/user/passwd
   creationTimestamp: 2016-10-03T13:50:35Z
   generation: 1
   name: external-auth

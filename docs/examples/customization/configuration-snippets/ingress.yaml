@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: nginx-configuration-snippet
   annotations:
-    ingress.kubernetes.io/configuration-snippet: |
+    nginx.ingress.kubernetes.io/configuration-snippet: |
       more_set_headers "Request-Id: $request_id";
 
 spec:
