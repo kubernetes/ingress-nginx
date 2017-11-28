@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.9-beta.19
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0-beta.19`
+
+*Changes:*
+
+- Fix regression with ingress.class annotation introduced in 0.9-beta.18
+
 ### 0.9-beta.18
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0-beta.18`
