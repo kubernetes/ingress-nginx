@@ -47,7 +47,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
@@ -258,7 +257,7 @@ func (n *NGINXController) Start() {
 		ing := obj.(*extensions.Ingress)
 
 		if !class.IsValid(ing) {
-			a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
+			a := ing.GetAnnotations()[class.IngressKey]
 			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
 			continue
 		}

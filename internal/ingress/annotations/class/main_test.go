@@ -44,7 +44,6 @@ func TestIsValidClass(t *testing.T) {
 		{"nginx", "nginx", "nginx", true},
 		{"custom", "custom", "nginx", true},
 		{"", "killer", "nginx", false},
-		{"", "", "nginx", true},
 		{"custom", "nginx", "nginx", false},
 	}
 
