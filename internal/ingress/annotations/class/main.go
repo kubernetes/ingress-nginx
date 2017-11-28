@@ -35,7 +35,7 @@ var (
 	// IngressClass sets the runtime ingress class to use
 	// An empty string means accept all ingresses without
 	// annotation and the ones configured with class nginx
-	IngressClass = ""
+	IngressClass = "nginx"
 )
 
 // IsValid returns true if the given Ingress either doesn't specify
