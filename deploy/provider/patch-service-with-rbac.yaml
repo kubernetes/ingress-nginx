@@ -16,7 +16,7 @@ spec:
       serviceAccountName: nginx-ingress-serviceaccount   
       containers:
         - name: nginx-ingress-controller
-          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0-beta.18
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0-beta.19
           args:
             - /nginx-ingress-controller
             - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
