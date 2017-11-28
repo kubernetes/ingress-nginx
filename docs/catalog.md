@@ -10,3 +10,4 @@ This is a non-comprehensive list of existing ingress controllers.
 * [kube-ingress-aws-controller](https://github.com/zalando-incubator/kube-ingress-aws-controller)
 * [Voyager: HAProxy Ingress Controller](https://github.com/appscode/voyager)
 * [External Nginx Ingress Controller](https://github.com/unibet/ext_nginx)
+* [Heptio Contour controller](https://github.com/heptio/contour)
