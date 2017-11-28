@@ -31,7 +31,6 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 )
 
 type cacheController struct {
@@ -66,7 +65,7 @@ func (n *NGINXController) createListers(stopCh chan struct{}) (*ingress.StoreLis
 		AddFunc: func(obj interface{}) {
 			addIng := obj.(*extensions.Ingress)
 			if !class.IsValid(addIng) {
-				a, _ := parser.GetStringAnnotation(class.IngressKey, addIng)
+				a := addIng.GetAnnotations()[class.IngressKey]
 				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", addIng.Name, class.IngressKey, a)
 				return
 			}
@@ -103,11 +102,13 @@ func (n *NGINXController) createListers(stopCh chan struct{}) (*ingress.StoreLis
 			curIng := cur.(*extensions.Ingress)
 			validOld := class.IsValid(oldIng)
 			validCur := class.IsValid(curIng)
+
+			c := curIng.GetAnnotations()[class.IngressKey]
 			if !validOld && validCur {
-				glog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				glog.Infof("creating ingress %v/%v based on annotation %v with value '%v'", curIng.Namespace, curIng.Name, class.IngressKey, c)
 				n.recorder.Eventf(curIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validOld && !validCur {
-				glog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				glog.Infof("removing ingress %v/%v based on annotation %v with value '%v'", curIng.Namespace, curIng.Name, class.IngressKey, c)
 				n.recorder.Eventf(curIng, apiv1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validCur && !reflect.DeepEqual(old, cur) {
 				n.recorder.Eventf(curIng, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
