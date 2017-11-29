@@ -653,6 +653,16 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 
 			glog.V(3).Infof("creating upstream %v", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
+			if !upstreams[defBackend].Secure {
+				upstreams[defBackend].Secure = anns.SecureUpstream.Secure
+			}
+			if upstreams[defBackend].SecureCACert.Secret == "" {
+				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
+			}
+			if upstreams[defBackend].UpstreamHashBy == "" {
+				upstreams[defBackend].UpstreamHashBy = anns.UpstreamHashBy
+			}
+
 			svcKey := fmt.Sprintf("%v/%v", ing.GetNamespace(), ing.Spec.Backend.ServiceName)
 
 			// Add the service cluster endpoint as the upstream instead of individual endpoints
@@ -926,6 +936,23 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.IsDefBackend = false
 					defLoc.Backend = backendUpstream.Name
 					defLoc.Service = backendUpstream.Service
+					defLoc.Ingress = ing
+
+					// we need to use the ingress annotations
+					defLoc.BasicDigestAuth = anns.BasicDigestAuth
+					defLoc.ClientBodyBufferSize = anns.ClientBodyBufferSize
+					defLoc.ConfigurationSnippet = anns.ConfigurationSnippet
+					defLoc.CorsConfig = anns.CorsConfig
+					defLoc.ExternalAuth = anns.ExternalAuth
+					defLoc.Proxy = anns.Proxy
+					defLoc.RateLimit = anns.RateLimit
+					// TODO: Redirect and rewrite can affect the catch all behavior. Don't use this annotations for now
+					// defLoc.Redirect = anns.Redirect
+					// defLoc.Rewrite = anns.Rewrite
+					defLoc.UpstreamVhost = anns.UpstreamVhost
+					defLoc.VtsFilterKey = anns.VtsFilterKey
+					defLoc.Whitelist = anns.Whitelist
+					defLoc.Denied = anns.Denied
 				}
 			}
 		}
