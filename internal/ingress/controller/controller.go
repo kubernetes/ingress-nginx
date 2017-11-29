@@ -1032,8 +1032,15 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			cert := bc.(*ingress.SSLCert)
 			err = cert.Certificate.VerifyHostname(host)
 			if err != nil {
-				glog.Warningf("ssl certificate %v does not contain a Common Name or Subject Alternative Name for host %v", key, host)
-				continue
+				glog.Warningf("unexpected error validating SSL certificate %v for host %v. Reason: %v", key, host, err)
+				glog.Warningf("Validating certificate against DNS names. This will be deprecated in a future version.")
+				// check the common name field
+				// https://github.com/golang/go/issues/22922
+				err := verifyHostname(host, cert.Certificate)
+				if err != nil {
+					glog.Warningf("ssl certificate %v does not contain a Common Name or Subject Alternative Name for host %v. Reason: %v", key, host, err)
+					continue
+				}
 			}
 
 			servers[host].SSLCertificate = cert.PemFileName
