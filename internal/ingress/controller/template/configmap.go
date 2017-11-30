@@ -37,6 +37,7 @@ const (
 	proxyRealIPCIDR      = "proxy-real-ip-cidr"
 	bindAddress          = "bind-address"
 	httpRedirectCode     = "http-redirect-code"
+	proxyStreamResponses = "proxy-stream-responses"
 )
 
 var (
@@ -114,6 +115,17 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 	}
 
+	streamResponses := 1
+	if val, ok := conf[proxyStreamResponses]; ok {
+		delete(conf, proxyStreamResponses)
+		j, err := strconv.Atoi(val)
+		if err != nil {
+			glog.Warningf("%v is not a valid number: %v", val, err)
+		} else {
+			streamResponses = j
+		}
+	}
+
 	to := config.NewDefault()
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
@@ -122,6 +134,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.BindAddressIpv4 = bindAddressIpv4List
 	to.BindAddressIpv6 = bindAddressIpv6List
 	to.HTTPRedirectCode = redirectCode
+	to.ProxyStreamResponses = streamResponses
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,

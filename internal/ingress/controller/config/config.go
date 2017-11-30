@@ -388,6 +388,12 @@ type Configuration struct {
 	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
 	ProxyStreamTimeout string `json:"proxy-stream-timeout,omitempty"`
 
+	// Sets the number of datagrams expected from the proxied server in response
+	// to the client request if the UDP protocol is used.
+	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses
+	// Default: 1
+	ProxyStreamResponses int `json:"proxy-stream-responses,omitempty"`
+
 	// Sets the ipv4 addresses on which the server will accept requests.
 	BindAddressIpv4 []string `json:"bind-address-ipv4,omitempty"`
 
@@ -473,6 +479,7 @@ func NewDefault() Configuration {
 		ServerNameHashMaxSize:      1024,
 		ProxyHeadersHashMaxSize:    512,
 		ProxyHeadersHashBucketSize: 64,
+		ProxyStreamResponses:       1,
 		ShowServerTokens:           true,
 		SSLBufferSize:              sslBufferSize,
 		SSLCiphers:                 sslCiphers,
