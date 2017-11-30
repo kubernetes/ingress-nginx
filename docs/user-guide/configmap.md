@@ -85,6 +85,7 @@ The following table shows a configuration option's name, type, and the default v
 |[upstream-keepalive-connections](#upstream-keepalive-connections)|int|32|
 |[limit-conn-zone-variable](#limit-conn-zone-variable)|string|"$binary_remote_addr"|
 |[proxy-stream-timeout](#proxy-stream-timeout)|string|"600s"|
+|[proxy-stream-responses](#proxy-stream-responses)|int|1|
 |[bind-address-ipv4](#bind-address-ipv4)|[]string|""|
 |[bind-address-ipv6](#bind-address-ipv6)|[]string|""|
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
@@ -506,6 +507,13 @@ Sets the timeout between two successive read or write operations on client or pr
 
 _References:_
 - http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
+
+## proxy-stream-responses
+
+Sets the number of datagrams expected from the proxied server in response to the client request if the UDP protocol is used.
+
+_References:_
+- http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses
 
 ## bind-address-ipv4
 
