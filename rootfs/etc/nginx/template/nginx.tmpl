@@ -387,7 +387,13 @@ http {
         {{ end }}
         {{ end }}
         server_name {{ $hostname }};
+
+        {{ if ne $all.ListenPorts.HTTPS 443 }}
+        {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
+        return 301 $scheme://{{ $to }}{{ $redirect_port }}$request_uri;
+        {{ else }}
         return 301 $scheme://{{ $to }}$request_uri;
+        {{ end }}
     }
     {{ end }}
 
@@ -679,7 +685,12 @@ stream {
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
             # enforce ssl on server side
             if ($pass_access_scheme = http) {
+                {{ if ne $all.ListenPorts.HTTPS 443 }}
+                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
+                return 301 https://$best_http_host{{ $redirect_port }}$request_uri;
+                {{ else }}
                 return 301 https://$best_http_host$request_uri;
+                {{ end }}
             }
             {{ end }}
 
