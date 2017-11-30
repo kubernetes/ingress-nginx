@@ -112,6 +112,7 @@ The following table shows a configuration option's name, type, and the default v
 |[skip-access-log-urls](#skip-access-log-urls)|[]string|[]string{}|
 |[limit-rate](#limit-rate)|int|0|
 |[limit-rate-after](#limit-rate-after)|int|0|
+|[http-redirect-code](#http-redirect-code)|int|308|
 
 ## add-headers
 
@@ -635,3 +636,13 @@ Sets the initial amount after which the further transmission of a response to a 
 
 _References:_
 - http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after
+
+## http-redirect-code
+
+Sets the HTTP status code to be used in redirects.
+Supported codes are [301](https://developer.mozilla.org/es/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/es/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/es/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/es/docs/Web/HTTP/Status/308)
+Default code is 308.
+
+Why the default code is 308?
+
+[RFC 7238](https://tools.ietf.org/html/rfc7238) was created to define the 308 (Permanent Redirect) status code that is similar to 301 (Moved Permanently) but it keeps the payload in the redirect. This is important if the we send a redirect in methods like POST.
