@@ -514,7 +514,7 @@ stream {
         listen                  [::]:{{ $udpServer.Port }} udp;
         {{ end }}
         {{ end }}
-        proxy_responses         1;
+        proxy_responses         {{ $cfg.ProxyStreamResponses }};
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
         proxy_pass              udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
     }
