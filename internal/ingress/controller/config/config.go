@@ -425,6 +425,11 @@ type Configuration struct {
 
 	// LocationSnippet adds custom configuration to all the locations in the nginx configuration
 	LocationSnippet string `json:"location-snippet"`
+
+	// HTTPRedirectCode sets the HTTP status code to be used in redirects.
+	// Supported codes are 301,302,307 and 308
+	// Default: 308
+	HTTPRedirectCode int `json:"http-redirect-code"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -449,6 +454,7 @@ func NewDefault() Configuration {
 		ComputeFullForwardedFor:    false,
 		HTTP2MaxFieldSize:          "4k",
 		HTTP2MaxHeaderSize:         "16k",
+		HTTPRedirectCode:           308,
 		HSTS:                       true,
 		HSTSIncludeSubdomains:      true,
 		HSTSMaxAge:                 hstsMaxAge,

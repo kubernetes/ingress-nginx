@@ -36,6 +36,11 @@ const (
 	whitelistSourceRange = "whitelist-source-range"
 	proxyRealIPCIDR      = "proxy-real-ip-cidr"
 	bindAddress          = "bind-address"
+	httpRedirectCode     = "http-redirect-code"
+)
+
+var (
+	validRedirectCodes = []int{301, 302, 307, 308}
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
@@ -52,6 +57,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	proxylist := make([]string, 0)
 	bindAddressIpv4List := make([]string, 0)
 	bindAddressIpv6List := make([]string, 0)
+	redirectCode := 308
 
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
@@ -94,6 +100,20 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 	}
 
+	if val, ok := conf[httpRedirectCode]; ok {
+		delete(conf, httpRedirectCode)
+		j, err := strconv.Atoi(val)
+		if err != nil {
+			glog.Warningf("%v is not a valid HTTP code: %v", val, err)
+		} else {
+			if intInSlice(j, validRedirectCodes) {
+				redirectCode = j
+			} else {
+				glog.Warningf("The code %v is not a valid as HTTP redirect code. Using the default.", val)
+			}
+		}
+	}
+
 	to := config.NewDefault()
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
@@ -101,6 +121,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.ProxyRealIPCIDR = proxylist
 	to.BindAddressIpv4 = bindAddressIpv4List
 	to.BindAddressIpv6 = bindAddressIpv6List
+	to.HTTPRedirectCode = redirectCode
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,
@@ -132,4 +153,13 @@ func filterErrors(codes []int) []int {
 	}
 
 	return fa
+}
+
+func intInSlice(i int, list []int) bool {
+	for _, v := range list {
+		if v == i {
+			return true
+		}
+	}
+	return false
 }
