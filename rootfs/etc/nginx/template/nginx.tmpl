@@ -390,9 +390,9 @@ http {
 
         {{ if ne $all.ListenPorts.HTTPS 443 }}
         {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-        return 301 $scheme://{{ $to }}{{ $redirect_port }}$request_uri;
+        return 308 $scheme://{{ $to }}{{ $redirect_port }}$request_uri;
         {{ else }}
-        return 301 $scheme://{{ $to }}$request_uri;
+        return 308 $scheme://{{ $to }}$request_uri;
         {{ end }}
     }
     {{ end }}
@@ -687,9 +687,9 @@ stream {
             if ($pass_access_scheme = http) {
                 {{ if ne $all.ListenPorts.HTTPS 443 }}
                 {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-                return 301 https://$best_http_host{{ $redirect_port }}$request_uri;
+                return 308 https://$best_http_host{{ $redirect_port }}$request_uri;
                 {{ else }}
-                return 301 https://$best_http_host$request_uri;
+                return 308 https://$best_http_host$request_uri;
                 {{ end }}
             }
             {{ end }}
