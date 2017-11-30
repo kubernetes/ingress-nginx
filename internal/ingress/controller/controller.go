@@ -1182,7 +1182,7 @@ func (n *NGINXController) SetForceReload(shouldReload bool) {
 
 func (n *NGINXController) extractAnnotations(ing *extensions.Ingress) {
 	anns := n.annotations.Extract(ing)
-	glog.V(3).Infof("updating annotations information for ingres %v/%v", anns.Namespace, anns.Name)
+	glog.V(3).Infof("updating annotations information for ingress %v/%v", anns.Namespace, anns.Name)
 	n.listers.IngressAnnotation.Update(anns)
 }
 
