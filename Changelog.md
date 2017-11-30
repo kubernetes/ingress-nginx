@@ -1,5 +1,18 @@
 # Changelog
 
+### 0.9.0
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0`
+
+*Changes:*
+
+- [X] [#1731](https://github.com/kubernetes/ingress-nginx/pull/1731) Allow configuration of proxy_responses value for tcp/udp configmaps
+- [X] [#1766](https://github.com/kubernetes/ingress-nginx/pull/1766) Fix ingress typo
+- [X] [#1768](https://github.com/kubernetes/ingress-nginx/pull/1768) Custom default backend must use annotations if present
+- [X] [#1769](https://github.com/kubernetes/ingress-nginx/pull/1769) Use custom https port in redirects
+- [X] [#1771](https://github.com/kubernetes/ingress-nginx/pull/1771) Add additional check for old SSL certificates
+- [X] [#1776](https://github.com/kubernetes/ingress-nginx/pull/1776) Add option to configure the redirect code
+
 ### 0.9-beta.19
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0-beta.19`
