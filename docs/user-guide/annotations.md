@@ -14,7 +14,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-client](#certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#certificate-authentication)|true or false|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
