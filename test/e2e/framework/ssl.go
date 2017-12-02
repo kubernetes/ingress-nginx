@@ -27,7 +27,7 @@ const (
 // CreateIngressTLSSecret creates a secret containing TLS certificates for the given Ingress.
 // If a secret with the same name already pathExists in the namespace of the
 // Ingress, it's updated.
-func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secreName, namespace string) (host string, rootCA, privKey []byte, err error) {
+func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretName, namespace string) (host string, rootCA, privKey []byte, err error) {
 	var k, c bytes.Buffer
 	host = strings.Join(hosts, ",")
 	if err = generateRSACerts(host, true, &k, &c); err != nil {
@@ -37,7 +37,7 @@ func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secreNa
 	key := k.Bytes()
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: secreName,
+			Name: secretName,
 		},
 		Data: map[string][]byte{
 			v1.TLSCertKey:       cert,
@@ -45,7 +45,7 @@ func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secreNa
 		},
 	}
 	var s *v1.Secret
-	if s, err = client.CoreV1().Secrets(namespace).Get(secreName, metav1.GetOptions{}); err == nil {
+	if s, err = client.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{}); err == nil {
 		s.Data = secret.Data
 		_, err = client.CoreV1().Secrets(namespace).Update(s)
 	} else {
