@@ -27,10 +27,13 @@ import (
 )
 
 const (
+	// FormatHeader name of the header used to extract the format
 	FormatHeader = "X-Format"
 
+	// CodeHeader name of the header used as source of the HTTP statu code to return
 	CodeHeader = "X-Code"
 
+	// ContentType name of the header that defines the format of the reply
 	ContentType = "Content-Type"
 )
 

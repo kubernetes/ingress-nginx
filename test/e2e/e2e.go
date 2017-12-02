@@ -24,10 +24,12 @@ import (
 	"github.com/onsi/ginkgo/config"
 	"github.com/onsi/gomega"
 	"k8s.io/apiserver/pkg/util/logs"
+	// required
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 
+	// tests to run
 	_ "k8s.io/ingress-nginx/test/e2e/annotations"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
 	_ "k8s.io/ingress-nginx/test/e2e/settings"

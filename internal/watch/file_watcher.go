@@ -24,6 +24,7 @@ import (
 	"gopkg.in/fsnotify.v1"
 )
 
+// FileWatcher is an interface we use to watch changes in files
 type FileWatcher interface {
 	Close() error
 }
