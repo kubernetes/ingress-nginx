@@ -51,7 +51,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 				Name:      host,
 				Namespace: f.Namespace.Name,
 				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/affinity": "cookie",
+					"nginx.ingress.kubernetes.io/affinity":            "cookie",
 					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
 				},
 			},
@@ -103,9 +103,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 				Name:      host,
 				Namespace: f.Namespace.Name,
 				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/affinity": "cookie",
+					"nginx.ingress.kubernetes.io/affinity":            "cookie",
 					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-					"nginx.ingress.kubernetes.io/rewrite-target": "/something",
+					"nginx.ingress.kubernetes.io/rewrite-target":      "/something",
 				},
 			},
 			Spec: v1beta1.IngressSpec{
