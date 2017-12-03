@@ -51,6 +51,8 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 
+**Note:** all the values must be a string. In case of booleans or number it must be quoted.
+
 ### Rewrite
 
 In some scenarios the exposed URL in the backend service differs from the specified path in the Ingress rule. Without a rewrite any request will return 404.
