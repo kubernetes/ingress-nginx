@@ -659,6 +659,7 @@ stream {
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
 
+            proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
             client_max_body_size        "{{ $location.Proxy.BodySize }}";
