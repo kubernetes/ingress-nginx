@@ -19,6 +19,7 @@ package watch
 // DummyFileWatcher noop implementation of a file watcher
 type DummyFileWatcher struct{}
 
+// NewDummyFileWatcher creates a FileWatcher using the DummyFileWatcher
 func NewDummyFileWatcher(file string, onEvent func()) FileWatcher {
 	return DummyFileWatcher{}
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/paultag/sniff/parser"
 )
 
+// TCPServer describes a server that works in passthrough mode
 type TCPServer struct {
 	Hostname      string
 	IP            string
@@ -33,11 +34,13 @@ type TCPServer struct {
 	ProxyProtocol bool
 }
 
+// TCPProxy describes the passthrough servers and a default as catch all
 type TCPProxy struct {
 	ServerList []*TCPServer
 	Default    *TCPServer
 }
 
+// Get returns the TCPServer to use
 func (p *TCPProxy) Get(host string) *TCPServer {
 	if p.ServerList == nil {
 		return p.Default
@@ -52,6 +55,8 @@ func (p *TCPProxy) Get(host string) *TCPServer {
 	return p.Default
 }
 
+// Handle reads enough information from the connection to extract the hostname
+// and open a connection to the passthrough server.
 func (p *TCPProxy) Handle(conn net.Conn) {
 	defer conn.Close()
 	data := make([]byte, 4096)

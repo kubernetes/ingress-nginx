@@ -84,10 +84,13 @@ func IsInvalidContent(e error) bool {
 	return ok
 }
 
+// New returns a new error
 func New(m string) error {
 	return errors.New(m)
 }
 
+// Errorf formats according to a format specifier and returns the string
+// as a value that satisfies error.
 func Errorf(format string, args ...interface{}) error {
 	return errors.Errorf(format, args)
 }

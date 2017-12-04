@@ -143,18 +143,12 @@ build: clean
 		-ldflags "-s -w -X ${PKG}/version.RELEASE=${TAG} -X ${PKG}/version.COMMIT=${COMMIT} -X ${PKG}/version.REPO=${REPO_INFO}" \
 		-o ${TEMP_DIR}/rootfs/nginx-ingress-controller ${PKG}/cmd/nginx
 
-.PHONY: fmt
-fmt:
-	@echo "+ $@"
-	@go list -f '{{if len .TestGoFiles}}"gofmt -s -l {{.Dir}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor) | xargs -L 1 sh -c
-
-.PHONY: lint
-lint:
-	@echo "+ $@"
-	@go list -f '{{if len .TestGoFiles}}"golint {{.Dir}}/..."{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
+.PHONY: verify-all
+verify-all:
+	@./hack/verify-all.sh
 
 .PHONY: test
-test: fmt lint vet
+test:
 	@echo "+ $@"
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
