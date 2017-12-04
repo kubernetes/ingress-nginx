@@ -32,7 +32,7 @@ jobs:
   - stage: Static Check
     script:
     - go get github.com/golang/lint/golint
-    - make fmt lint vet
+    - make verify-all
   - stage: Coverage
     before_script:
     # start minikube 
