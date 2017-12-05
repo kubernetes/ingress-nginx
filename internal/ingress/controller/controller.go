@@ -107,6 +107,8 @@ type Configuration struct {
 
 	FakeCertificatePath string
 	FakeCertificateSHA  string
+
+	SyncRateLimit float32
 }
 
 // GetDefaultBackend returns the default backend

@@ -56,7 +56,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			`Name of the ConfigMap that contains the custom configuration to use`)
 
 		publishSvc = flags.String("publish-service", "",
-			`Service fronting the ingress controllers. Takes the form namespace/name. 
+			`Service fronting the ingress controllers. Takes the form namespace/name.
 		The controller will set the endpoint records on the ingress objects to reflect those on the service.`)
 
 		tcpConfigMapName = flags.String("tcp-services-configmap", "",
@@ -127,6 +127,9 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			`Defines if the nginx ingress controller should check the secrets for missing intermediate CA certificates.
 		If the certificate contain issues chain issues is not possible to enable OCSP.
 		Default is true.`)
+
+		syncRateLimit = flags.Float32("sync-rate-limit", 0.3,
+			`Define the sync frequency upper limit`)
 	)
 
 	flag.Set("logtostderr", "true")
@@ -210,6 +213,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		UpdateStatusOnShutdown:   *updateStatusOnShutdown,
 		SortBackends:             *sortBackends,
 		UseNodeInternalIP:        *useNodeInternalIP,
+		SyncRateLimit:            *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
