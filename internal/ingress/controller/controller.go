@@ -473,6 +473,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.VtsFilterKey = anns.VtsFilterKey
 						loc.Whitelist = anns.Whitelist
 						loc.Denied = anns.Denied
+						loc.XForwardedPrefix = anns.XForwardedPrefix
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -503,6 +504,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						VtsFilterKey:         anns.VtsFilterKey,
 						Whitelist:            anns.Whitelist,
 						Denied:               anns.Denied,
+						XForwardedPrefix:     anns.XForwardedPrefix,
 					}
 
 					if loc.Redirect.FromToWWW {
