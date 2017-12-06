@@ -36,64 +36,70 @@ import (
 var (
 	// TODO: add tests for secure endpoints
 	tmplFuncTestcases = map[string]struct {
-		Path          string
-		Target        string
-		Location      string
-		ProxyPass     string
-		AddBaseURL    bool
-		BaseURLScheme string
-		Sticky        bool
+		Path             string
+		Target           string
+		Location         string
+		ProxyPass        string
+		AddBaseURL       bool
+		BaseURLScheme    string
+		Sticky           bool
+		XForwardedPrefix bool
 	}{
-		"invalid redirect / to /": {"/", "/", "/", "proxy_pass http://upstream-name;", false, "", false},
+		"invalid redirect / to /": {"/", "/", "/", "proxy_pass http://upstream-name;", false, "", false, false},
 		"redirect / to /jenkins": {"/", "/jenkins", "~* /",
 			`
 	    rewrite /(.*) /jenkins/$1 break;
 	    proxy_pass http://upstream-name;
-	    `, false, "", false},
+	    `, false, "", false, false},
 		"redirect /something to /": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
 	    rewrite /something/(.*) /$1 break;
 	    rewrite /something / break;
 	    proxy_pass http://upstream-name;
-	    `, false, "", false},
+	    `, false, "", false, false},
 		"redirect /end-with-slash/ to /not-root": {"/end-with-slash/", "/not-root", "~* ^/end-with-slash/(?<baseuri>.*)", `
 	    rewrite /end-with-slash/(.*) /not-root/$1 break;
 	    proxy_pass http://upstream-name;
-	    `, false, "", false},
+	    `, false, "", false, false},
 		"redirect /something-complex to /not-root": {"/something-complex", "/not-root", `~* ^/something-complex\/?(?<baseuri>.*)`, `
 	    rewrite /something-complex/(.*) /not-root/$1 break;
 	    proxy_pass http://upstream-name;
-	    `, false, "", false},
+	    `, false, "", false, false},
 		"redirect / to /jenkins and rewrite": {"/", "/jenkins", "~* /", `
 	    rewrite /(.*) /jenkins/$1 break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/$baseuri">' ro;
-	    `, true, "", false},
+	    `, true, "", false, false},
 		"redirect /something to / and rewrite": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
 	    rewrite /something/(.*) /$1 break;
 	    rewrite /something / break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/something/$baseuri">' ro;
-	    `, true, "", false},
+	    `, true, "", false, false},
 		"redirect /end-with-slash/ to /not-root and rewrite": {"/end-with-slash/", "/not-root", `~* ^/end-with-slash/(?<baseuri>.*)`, `
 	    rewrite /end-with-slash/(.*) /not-root/$1 break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/end-with-slash/$baseuri">' ro;
-	    `, true, "", false},
+	    `, true, "", false, false},
 		"redirect /something-complex to /not-root and rewrite": {"/something-complex", "/not-root", `~* ^/something-complex\/?(?<baseuri>.*)`, `
 	    rewrite /something-complex/(.*) /not-root/$1 break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/something-complex/$baseuri">' ro;
-	    `, true, "", false},
+	    `, true, "", false, false},
 		"redirect /something to / and rewrite with specific scheme": {"/something", "/", `~* ^/something\/?(?<baseuri>.*)`, `
 	    rewrite /something/(.*) /$1 break;
 	    rewrite /something / break;
 	    proxy_pass http://upstream-name;
 	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="http://$http_host/something/$baseuri">' ro;
-	    `, true, "http", false},
+	    `, true, "http", false, false},
 		"redirect / to /something with sticky enabled": {"/", "/something", `~* /`, `
 	    rewrite /(.*) /something/$1 break;
 	    proxy_pass http://sticky-upstream-name;
-	    `, false, "http", true},
+	    `, false, "http", true, false},
+		"add the X-Forwarded-Prefix header": {"/there", "/something", `~* ^/there\/?(?<baseuri>.*)`, `
+	    rewrite /there/(.*) /something/$1 break;
+	    proxy_set_header X-Forwarded-Prefix "/there/";
+	    proxy_pass http://sticky-upstream-name;
+	    `, false, "http", true, true},
 	}
 )
 
@@ -136,9 +142,10 @@ func TestBuildProxyPass(t *testing.T) {
 
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
-			Path:    tc.Path,
-			Rewrite: rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL, BaseURLScheme: tc.BaseURLScheme},
-			Backend: defaultBackend,
+			Path:             tc.Path,
+			Rewrite:          rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL, BaseURLScheme: tc.BaseURLScheme},
+			Backend:          defaultBackend,
+			XForwardedPrefix: tc.XForwardedPrefix,
 		}
 
 		backends := []*ingress.Backend{}
