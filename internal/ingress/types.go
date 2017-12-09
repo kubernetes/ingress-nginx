@@ -259,6 +259,10 @@ type Location struct {
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
 	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty"`
+	// XForwardedPrefix allows to add a header X-Forwarded-Prefix to the request with the
+	// original location.
+	// +optional
+	XForwardedPrefix bool `json:"xForwardedPrefix,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

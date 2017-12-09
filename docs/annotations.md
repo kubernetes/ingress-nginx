@@ -51,6 +51,7 @@ Key:
 | `add-base-url` | Add `<base>` tag to HTML. | | nginx
 | `base-url-scheme` | Specify the scheme of the `<base>` tags. | | nginx
 | `preserve-host` | Whether to pass the client request host (`true`) or the origin hostname (`false`) in the HTTP Host field. | | trafficserver
+| `x-forwarded-prefix` | Add the non-standard `X-Forwarded-Prefix` header to the request with the value of the matched location. | | nginx
 
 ## CORS Related
 | Name | Meaning | Default | Controller
