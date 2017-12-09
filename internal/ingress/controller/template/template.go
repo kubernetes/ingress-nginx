@@ -324,20 +324,25 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 			}
 		}
 
+		xForwardedPrefix := ""
+		if location.XForwardedPrefix {
+			xForwardedPrefix = fmt.Sprintf(`proxy_set_header X-Forwarded-Prefix "%s";
+	    `, path)
+		}
 		if location.Rewrite.Target == slash {
 			// special case redirect to /
 			// ie /something to /
 			return fmt.Sprintf(`
 	    rewrite %s(.*) /$1 break;
 	    rewrite %s / break;
-	    proxy_pass %s://%s;
-	    %v`, path, location.Path, proto, upstreamName, abu)
+	    %vproxy_pass %s://%s;
+	    %v`, path, location.Path, xForwardedPrefix, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
 	    rewrite %s(.*) %s/$1 break;
-	    proxy_pass %s://%s;
-	    %v`, path, location.Rewrite.Target, proto, upstreamName, abu)
+	    %vproxy_pass %s://%s;
+	    %v`, path, location.Rewrite.Target, xForwardedPrefix, proto, upstreamName, abu)
 	}
 
 	// default proxy_pass
