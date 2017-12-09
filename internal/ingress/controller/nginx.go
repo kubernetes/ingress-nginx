@@ -106,7 +106,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		resolver:        h,
 		cfg:             config,
 		sslCertTracker:  store.NewSSLCertTracker(),
-		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(0.3, 1),
+		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(config.SyncRateLimit, 1),
 
 		recorder: eventBroadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{
 			Component: "nginx-ingress-controller",
