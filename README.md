@@ -150,6 +150,8 @@ The default value of this settings is `60 seconds`.
 
 A more adequate value to support websockets is a value higher than one hour (`3600`).
 
+**Important:** If the NGINX ingress controller is exposed with a service `type=LoadBalancer` make sure the protocol between the loadbalancer and NGINX is TCP.
+
 ### Optimizing TLS Time To First Byte (TTTFB)
 
 NGINX provides the configuration option [ssl_buffer_size](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) to allow the optimization of the TLS record size.
