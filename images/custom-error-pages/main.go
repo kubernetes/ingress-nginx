@@ -24,6 +24,9 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -42,12 +45,22 @@ func main() {
 	if os.Getenv("PATH") != "" {
 		path = os.Getenv("PATH")
 	}
+
 	http.HandleFunc("/", errorHandler(path))
+
+	http.Handle("/metrics", promhttp.Handler())
+
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "ok")
+	})
+
 	http.ListenAndServe(fmt.Sprintf(":8080"), nil)
 }
 
 func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
 		ext := "html"
 
 		format := r.Header.Get(FormatHeader)
@@ -95,5 +108,13 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		defer f.Close()
 		log.Printf("serving custom error response for code %v and format %v from file %v\n", code, format, file)
 		io.Copy(w, f)
+
+		duration := time.Now().Sub(start).Seconds()
+
+		proto := strconv.Itoa(r.ProtoMajor)
+		proto = proto + "." + strconv.Itoa(r.ProtoMinor)
+
+		requestCount.WithLabelValues(proto).Inc()
+		requestDuration.WithLabelValues(proto).Observe(duration)
 	}
 }
