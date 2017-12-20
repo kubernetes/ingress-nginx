@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -52,7 +53,6 @@ func main() {
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "ok")
 	})
 
 	http.ListenAndServe(fmt.Sprintf(":8080"), nil)
@@ -88,6 +88,9 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		}
 		w.WriteHeader(code)
 
+		if !strings.HasPrefix(ext, ".") {
+			ext = "." + ext
+		}
 		file := fmt.Sprintf("%v/%v%v", path, code, ext)
 		f, err := os.Open(file)
 		if err != nil {
@@ -112,7 +115,7 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		duration := time.Now().Sub(start).Seconds()
 
 		proto := strconv.Itoa(r.ProtoMajor)
-		proto = proto + "." + strconv.Itoa(r.ProtoMinor)
+		proto = fmt.Sprintf("%s.%s", proto, strconv.Itoa(r.ProtoMinor))
 
 		requestCount.WithLabelValues(proto).Inc()
 		requestDuration.WithLabelValues(proto).Observe(duration)
