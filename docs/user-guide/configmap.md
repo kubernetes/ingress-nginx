@@ -128,11 +128,15 @@ _References:_
 
 ## access-log-path
 
-Access log path. Goes to '/var/log/nginx/access.log' by default.
+Access log path. Goes to `/var/log/nginx/access.log` by default.
+
+**Note:** the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
 
 ## error-log-path
 
-Error log path. Goes to '/var/log/nginx/error.log' by default.
+Error log path. Goes to `/var/log/nginx/error.log` by default.
+
+**Note:** the file `/var/log/nginx/error.log` is a symlink to `/dev/stderr`
 
 _References:_
 - http://nginx.org/en/docs/ngx_core_module.html#error_log
