@@ -189,6 +189,12 @@ http {
         ''               $scheme;
     }
 
+    # validate $pass_access_scheme and $scheme are http to force a redirect
+    map "$scheme:$pass_access_scheme" $redirect_to_https {
+        default          0;
+        "http:http"      1;
+    }
+
     map $http_x_forwarded_port $pass_server_port {
         default           $http_x_forwarded_port;
         ''                $server_port;
@@ -685,7 +691,7 @@ stream {
 
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
             # enforce ssl on server side
-            if ($pass_access_scheme = http) {
+            if ($redirect_to_https) {
                 {{ if ne $all.ListenPorts.HTTPS 443 }}
                 {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
                 return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host{{ $redirect_port }}$request_uri;
