@@ -246,10 +246,10 @@ http {
     # replaces the remote_addr too soon
     map {{ buildForwardedFor $all.Cfg.ForwardedForHeader }} $full_x_forwarded_for {
         {{ if $all.Cfg.UseProxyProtocol }}
-        default          "$http_x_forwarded_for, $proxy_protocol_addr";
+        default          "{{ buildForwardedFor $all.Cfg.ForwardedForHeader }}, $proxy_protocol_addr";
         ''               "$proxy_protocol_addr";
         {{ else }}
-        default          "$http_x_forwarded_for, $realip_remote_addr";
+        default          "{{ buildForwardedFor $all.Cfg.ForwardedForHeader }}, $realip_remote_addr";
         ''               "$realip_remote_addr";
         {{ end }}
     }
