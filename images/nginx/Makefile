@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.30
+TAG ?= 0.31
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
 DOCKER ?= gcloud docker --
@@ -26,7 +26,7 @@ ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
 
-QEMUVERSION=v2.9.1
+QEMUVERSION=v2.9.1-1
 
 IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)

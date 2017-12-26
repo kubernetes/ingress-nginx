@@ -19,18 +19,20 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.13.7
+export NGINX_VERSION=1.13.8
 export NDK_VERSION=0.3.0
 export VTS_VERSION=0.1.15
 export SETMISC_VERSION=0.31
 export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.33
-export NGINX_DIGEST_AUTH=519dc2a4907bc6d9c48f95b3cf6a0151aaf44b40
+export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.1.1
-export OPENTRACING_CPP_VERSION=1.0.0
-export ZIPKIN_CPP_VERSION=0.1.0
-export MODSECURITY=a2a5858d249222938c2f5e48087a922c63d7f9d8
+export NGINX_OPENTRACING_VERSION=0.2.0
+export OPENTRACING_CPP_VERSION=1.2.0
+export ZIPKIN_CPP_VERSION=0.2.0
+export JAEGER_VERSION=0.1.0
+export MODSECURITY_VERSION=1.0.0
+export LUA_VERSION=0.10.12rc1
 
 export BUILD_PATH=/tmp/build
 
@@ -52,6 +54,8 @@ if [[ ${ARCH} == "ppc64le" ]]; then
   clean-install software-properties-common
 fi
 
+apt-get update && apt-get dist-upgrade -y
+
 # install required packages to build
 clean-install \
   bash \
@@ -62,22 +66,34 @@ clean-install \
   patch \
   libpcre3 \
   libpcre3-dev \
-  libssl-dev \
+  libssl1.0-dev \
   zlib1g \
   zlib1g-dev \
   libaio1 \
   libaio-dev \
+  libssl1.0.2 \
   openssl \
   libperl-dev \
   cmake \
   util-linux \
+  lua5.1 liblua5.1-0 liblua5.1-dev \
+  lmdb-utils \
+  libjemalloc1 libjemalloc-dev \
   wget \
   libcurl4-openssl-dev \
   procps \
-  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
+  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
   || exit 1
 
+ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
+
 mkdir -p /etc/nginx
+
+if [[ ${ARCH} == "s390x" ]]; then
+  # avoid error:
+  # git: ../nptl/pthread_mutex_lock.c:81: __pthread_mutex_lock: Assertion `mutex->__data.__owner == 0' failed.
+  git config --global pack.threads "1"
+fi
 
 # download GeoIP databases
 wget -O /etc/nginx/GeoIP.dat.gz https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz || { echo 'Could not download GeoLiteCountry, exiting.' ; exit 1; }
@@ -90,7 +106,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src beb732bc7da80948c43fd0bf94940a21a21b1c1ddfba0bd99a4b88e026220f5c \
+get_src 8410b6c31ff59a763abf7e5a5316e7629f5a5033c95a3a0ebde727f9ec8464c5 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
@@ -108,26 +124,34 @@ get_src a3dcbab117a9c103bc1ea5200fc00a7b7d2af97ff7fd525f16f8ac2632e30fbf \
 get_src 53e440737ed1aff1f09fae150219a45f16add0c8d6e84546cb7d80f73ebffd90 \
         "https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/get/$STICKY_SESSIONS_VERSION.tar.gz"
 
-get_src 5ea7093cedea1a17b3c890015f83fc72346627400a9e6e3cec9c4b21297ecb61 \
+get_src ede0ad490cb9dd69da348bdea2a60a4c45284c9777b2f13fa48394b6b8e7671c \
         "https://github.com/atomx/nginx-http-auth-digest/archive/$NGINX_DIGEST_AUTH.tar.gz"
 
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 8c55a7ec639b186689a0053eed5f1605f38c461f0d3ee6e728bb466a148a44d2 \
+get_src 97e4ca6eb2c03440b535221c690ab98cd9709d91e00291704ad63c893279477f \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
-get_src 9543f66790ba65810869a29b3aaef5286f1c446cb498a304d0d8b153c289cae8 \
+get_src c77041cb2f147ac81b2b0702abfced5565a9cebc318d045c060a4c3e074009ee \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
-get_src 3d91e866819986f5dda00549694c4eaca16f1209d1f87aecc8aca3b42aa72e08 \
+get_src 611eb6a1ff1c326c472421ae2486ba34a94ddc78d90047df3f097bcdad3298e3 \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src 3abdecedb5bf544eeba8c1ce0bef2da6a9f064b216ebbe20b68894afec1d7d80 \
-        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY.tar.gz"
+get_src 8deee6d6f7128f58bd6ba2893bd69c1fdbc8a3ad2797ba45ef94b977255d181c \
+        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
+
+get_src 61503e30d5605fdb93b9644c833d6911f284149302851a8da1b19017e3d41459 \
+        "https://github.com/openresty/lua-nginx-module/archive/v$LUA_VERSION.tar.gz"
+
+get_src 678ec4b6c2b6bba7e8000f42feb71d2bf044a44cf3909b3cbbccb708827ca7a6 \
+        "https://github.com/jaegertracing/cpp-client/archive/v$JAEGER_VERSION.tar.gz"
 
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
+
+export MAKEFLAGS=-j$(($(grep -c ^processor /proc/cpuinfo) - 0))
 
 # build opentracing lib
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
@@ -138,6 +162,17 @@ make
 make install
 
 # build zipkin lib
+cd "$BUILD_PATH/cpp-client-$JAEGER_VERSION"
+sed -i 's/-Werror//' CMakeLists.txt
+mkdir .build
+cd .build
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DBUILD_TESTING=OFF -DJAEGERTRACING_WITH_YAML_CPP=OFF ..
+make
+make install
+
+export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir)
+
+# build zipkin lib
 cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
 mkdir .build
 cd .build
@@ -145,30 +180,23 @@ cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DBUILD_TESTING=OFF ..
 make
 make install
 
+# Get Brotli source and deps
 cd "$BUILD_PATH"
+git clone --depth=1 https://github.com/eustas/ngx_brotli.git
+cd ngx_brotli 
+git submodule init
+git submodule update
 
-if [[ ${ARCH} != "s390x" ]]; then
- # Get Brotli source and deps
- git clone --depth=1 https://github.com/google/ngx_brotli.git 
- cd ngx_brotli && git submodule update --init
-fi
-
-if [[ ${ARCH} == "x86_64" ]]; then
-  # build modsecurity library
-  cd "$BUILD_PATH"
-  git clone https://github.com/SpiderLabs/ModSecurity
-  cd ModSecurity/
-  git checkout -b v3/master origin/v3/master
-  sh build.sh
-  git submodule init
-  git submodule update
-  autoreconf -i
-  automake
-  autoconf
-  ./configure
-  make
-  make install
-fi
+# build modsecurity library
+cd "$BUILD_PATH"
+git clone --depth 1 -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
+cd ModSecurity/
+git submodule init
+git submodule update
+sh build.sh
+./configure --disable-doxygen-doc --disable-examples --disable-dependency-tracking
+make
+make install
 
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
@@ -197,9 +225,9 @@ if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
 fi
 
-CC_OPT='-g -O3 -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC'
-LD_OPT='-Wl,-Bsymbolic-functions -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now'
-
+CC_OPT="-g -O3 -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
+LD_OPT="-ljemalloc -Wl,-Bsymbolic-functions -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
+   
 if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=generic'
 fi
@@ -211,16 +239,12 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
+  --add-module=$BUILD_PATH/lua-nginx-module-$LUA_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
-  --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin"
-
-if [[ ${ARCH} == "x86_64" ]]; then
-  WITH_MODULES+=" --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY"
-fi
-
-if [[ ${ARCH} != "s390x" ]]; then
-  WITH_MODULES+=" --add-module=$BUILD_PATH/ngx_brotli"
-fi
+  --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/jaeger \
+  --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin \
+  --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
+  --add-module=$BUILD_PATH/ngx_brotli"
 
 ./configure \
   --prefix=/usr/share/nginx \
@@ -292,6 +316,11 @@ rm -rf /var/cache/apt/archives/*
 rm -rf /usr/local/modsecurity/bin
 rm -rf /usr/local/modsecurity/include
 rm -rf /usr/local/modsecurity/lib/libmodsecurity.a
+
+cp $HUNTER_INSTALL_DIR/lib/libthrift* /usr/local/lib
+rm /usr/local/lib/libthrift*.a
+
+rm -rf $HOME/.hunter
 
 # Download owasp modsecurity crs
 cd /etc/nginx/
