@@ -117,7 +117,7 @@ The following table shows a configuration option's name, type, and the default v
 
 ## add-headers
 
-Sets custom headers from a configmap before sending traffic to the client. See [proxy-set-headers](#proxy-set-headers). [example](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers)
+Sets custom headers from named configmap before sending traffic to the client. See [proxy-set-headers](#proxy-set-headers). [example](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers)
 
 ## allow-backend-server-header
 
@@ -326,7 +326,7 @@ If use-proxy-protocol is enabled, proxy-real-ip-cidr defines the default the IP/
 
 ## proxy-set-headers
 
-Sets custom headers from a configmap before sending traffic to backends. See [example](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers)
+Sets custom headers from named configmap before sending traffic to backends. The value format is namespace/name.  See [example](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers)
 
 ## server-name-hash-max-size
 
