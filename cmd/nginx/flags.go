@@ -19,7 +19,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/golang/glog"
@@ -135,8 +134,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	flag.Set("logtostderr", "true")
 
 	flags.AddGoFlagSet(flag.CommandLine)
-	flags.Parse(os.Args)
-	flag.Set("logtostderr", "true")
+	pflag.Parse()
 
 	// Workaround for this issue:
 	// https://github.com/kubernetes/kubernetes/issues/17162
