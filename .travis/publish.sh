@@ -16,6 +16,11 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+if [ $# -eq "1" ]
+then
+    export ARCH=$1
+fi
+
 source $DIR/common.sh
 
 echo "Login to quay.io..."
