@@ -314,13 +314,11 @@ http {
 
 
     upstream {{ $upstream.Name }} {
-        # Load balance algorithm; empty for round robin, which is the default
-        {{ if ne $cfg.LoadBalanceAlgorithm "round_robin" }}
-        {{ $cfg.LoadBalanceAlgorithm }};
-        {{ end }}
-
         {{ if $upstream.UpstreamHashBy }}
         hash {{ $upstream.UpstreamHashBy }} consistent;
+        {{ else }}
+        # Load balance algorithm; empty for round robin, which is the default
+        {{ if ne $cfg.LoadBalanceAlgorithm "round_robin" }}{{ $cfg.LoadBalanceAlgorithm }};{{ end }}
         {{ end }}
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
