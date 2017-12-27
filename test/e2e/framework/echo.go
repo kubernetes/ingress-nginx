@@ -56,7 +56,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 					},
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: NewInt64(1),
+					TerminationGracePeriodSeconds: NewInt64(0),
 					Containers: []corev1.Container{
 						{
 							Name:  "http-svc",
