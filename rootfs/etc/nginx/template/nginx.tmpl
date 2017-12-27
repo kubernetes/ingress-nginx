@@ -193,6 +193,7 @@ http {
     map "$scheme:$pass_access_scheme" $redirect_to_https {
         default          0;
         "http:http"      1;
+        "http:https"     1;
     }
 
     map $http_x_forwarded_port $pass_server_port {
