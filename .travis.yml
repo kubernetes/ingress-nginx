@@ -55,20 +55,20 @@ jobs:
   - stage: publish amd64
     if: type = api AND branch = master AND repo = kubernetes/ingress-nginx
     script:
-    - ARCH=amd64 .travis/publish.sh
+    - travis_wait 240 ARCH=amd64 .travis/publish.sh
   - stage: publish arm
     if: type = api AND branch = master AND repo = kubernetes/ingress-nginx
     script:
-    - ARCH=arm .travis/publish.sh
+    - travis_wait 240 ARCH=arm .travis/publish.sh
   - stage: publish arm64
     if: type = api AND branch = master AND repo = kubernetes/ingress-nginx
     script:
-    - ARCH=arm64 .travis/publish.sh
+    - travis_wait 240 ARCH=arm64 .travis/publish.sh
   - stage: publish ppc64le
     if: type = api AND branch = master AND repo = kubernetes/ingress-nginx
     script:
-    - ARCH=ppc64le .travis/publish.sh
+    - travis_wait 240 ARCH=ppc64le .travis/publish.sh
   - stage: publish s390x
     if: type = api AND branch = master AND repo = kubernetes/ingress-nginx
     script:
-    - ARCH=s390x .travis/publish.sh
+    - travis_wait 240 ARCH=s390x .travis/publish.sh
