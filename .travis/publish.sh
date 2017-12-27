@@ -21,6 +21,11 @@ source $DIR/common.sh
 echo "Login to quay.io..."
 docker login --username=$QUAY_USERNAME --password=$QUAY_PASSWORD quay.io >/dev/null 2>&1
 
+if [ $# -eq "1" ]
+then
+    export ARCH=$1
+fi
+
 case "$COMPONENT" in
 "ingress-controller")
     $DIR/ingress-controller.sh
