@@ -16,15 +16,15 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-source $DIR/common.sh
-
-echo "Login to quay.io..."
-docker login --username=$QUAY_USERNAME --password=$QUAY_PASSWORD quay.io >/dev/null 2>&1
-
 if [ $# -eq "1" ]
 then
     export ARCH=$1
 fi
+
+source $DIR/common.sh
+
+echo "Login to quay.io..."
+docker login --username=$QUAY_USERNAME --password=$QUAY_PASSWORD quay.io >/dev/null 2>&1
 
 case "$COMPONENT" in
 "ingress-controller")
