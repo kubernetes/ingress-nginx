@@ -26,7 +26,8 @@ curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/miniku
     sudo mv minikube /usr/local/bin/
 
 echo "starting minikube..."
-sudo minikube start --vm-driver=none --kubernetes-version=$KUBERNETES_VERSION
+# Using sync-frequency=5s helps to speed up the tests (during the cleanup of resources inside a namespace)
+sudo minikube start --vm-driver=none --kubernetes-version=$KUBERNETES_VERSION --extra-config=kubelet.sync-frequency=5s
 
 minikube update-context
 
