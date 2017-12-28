@@ -6,6 +6,8 @@
 - [HSTS](#http-strict-transport-security)
 - [Server-side HTTPS enforcement through redirect](#server-side-https-enforcement-through-redirect) 
 - [Kube-Lego](#automated-certificate-management-with-kube-lego)
+- [Default TLS Version and Ciphers](#default-tls-version-and-ciphers)
+- [Legacy TLS](#legacy-tls)
 
 ## Default SSL Certificate
 
@@ -130,7 +132,7 @@ By default the controller redirects (301) to HTTPS if there is a TLS Ingress rul
 
 To disable this behavior use `hsts: "false"` in the configuration ConfigMap.
 
-### Server-side HTTPS enforcement through redirect
+## Server-side HTTPS enforcement through redirect
 
 By default the controller redirects (301) to `HTTPS` if TLS is enabled for that ingress. If you want to disable that behavior globally, you can use `ssl-redirect: "false"` in the NGINX config map.
 
@@ -152,3 +154,22 @@ version to fully support Kube-Lego is nginx Ingress controller 0.8.
 [full example]:https://github.com/jetstack/kube-lego/tree/master/examples
 [Kube-Lego]:https://github.com/jetstack/kube-lego
 [Let's Encrypt]:https://letsencrypt.org
+
+## Default TLS Version and Ciphers
+
+To provide the most secure baseline configuration possible, nginx-ingress defaults to using TLS 1.2 and a [secure set of TLS ciphers](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md#ssl-ciphers)
+
+## Legacy TLS 
+The default configuration, though secure, does not support some older browsers and operating systems. For instance, 20% of Android phones in use today are not compatible with nginx-ingress's default configuration. To change this default behavior, use a [ConfigMap](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md#ssl-ciphers).
+
+A sample ConfigMap to allow these older clients connect could look something like the following:
+
+```
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-config
+data:
+  ssl-ciphers: "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
+  ssl-protocols: "TLSv1 TLSv1.1 TLSv1.2"
+```
