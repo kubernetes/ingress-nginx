@@ -117,7 +117,7 @@ Patch the nginx ingress controller deployment to add the flag `--publish-service
 
 ```console
 kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
-  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/patch-deployment.yaml)"
+  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)"
 ```
 
 For L4:
@@ -159,7 +159,7 @@ Patch the nginx ingress controller deployment to add the flag `--publish-service
 
 ```console
 kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
-  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/patch-deployment.yaml)"
+  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)"
 ```
 
 ```console
@@ -187,7 +187,7 @@ Patch the nginx ingress controller deployment to add the flag `--publish-service
 
 ```console
 kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
-  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/patch-deployment.yaml)"
+  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)"
 ```
 
 ```console
