@@ -273,9 +273,8 @@ func TestStatusActions(t *testing.T) {
 
 	fk := fkSync.(statusSync)
 
-	ns := make(chan struct{})
 	// start it and wait for the election and syn actions
-	go fk.Run(ns)
+	go fk.Run()
 	//  wait for the election
 	time.Sleep(100 * time.Millisecond)
 	// execute sync
@@ -293,6 +292,8 @@ func TestStatusActions(t *testing.T) {
 	if !ingressSliceEqual(fooIngress1CurIPs, newIPs) {
 		t.Fatalf("returned %v but expected %v", fooIngress1CurIPs, newIPs)
 	}
+
+	time.Sleep(1 * time.Second)
 
 	// execute shutdown
 	fk.Shutdown()
@@ -314,9 +315,6 @@ func TestStatusActions(t *testing.T) {
 	if oic.Status.LoadBalancer.Ingress[0].IP != "0.0.0.0" && oic.Status.LoadBalancer.Ingress[0].Hostname != "foo.bar.com" {
 		t.Fatalf("invalid ingress status for rule with different class")
 	}
-
-	// end test
-	ns <- struct{}{}
 }
 
 func TestCallback(t *testing.T) {
@@ -325,6 +323,7 @@ func TestCallback(t *testing.T) {
 
 func TestKeyfunc(t *testing.T) {
 	fk := buildStatusSync()
+
 	i := "foo_base_pod"
 	r, err := fk.keyfunc(i)
 

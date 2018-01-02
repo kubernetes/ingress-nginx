@@ -52,7 +52,7 @@ const (
 
 // Sync ...
 type Sync interface {
-	Run(stopCh <-chan struct{})
+	Run()
 	Shutdown()
 }
 
@@ -91,16 +91,8 @@ type statusSync struct {
 }
 
 // Run starts the loop to keep the status in sync
-func (s statusSync) Run(stopCh <-chan struct{}) {
-	go s.elector.Run()
-	go wait.Forever(s.update, updateInterval)
-	go s.syncQueue.Run(time.Second, stopCh)
-	<-stopCh
-}
-
-func (s *statusSync) update() {
-	// send a dummy object to the queue to force a sync
-	s.syncQueue.Enqueue("sync status")
+func (s statusSync) Run() {
+	s.elector.Run()
 }
 
 // Shutdown stop the sync. In case the instance is the leader it will remove the current IP
@@ -146,11 +138,6 @@ func (s *statusSync) sync(key interface{}) error {
 		return nil
 	}
 
-	if !s.elector.IsLeader() {
-		glog.V(2).Infof("skipping Ingress status update (I am not the current leader)")
-		return nil
-	}
-
 	addrs, err := s.runningAddresses()
 	if err != nil {
 		return err
@@ -188,6 +175,12 @@ func NewStatusSyncer(config Config) Sync {
 	callbacks := leaderelection.LeaderCallbacks{
 		OnStartedLeading: func(stop <-chan struct{}) {
 			glog.V(2).Infof("I am the new status update leader")
+			go st.syncQueue.Run(time.Second, stop)
+			wait.PollUntil(updateInterval, func() (bool, error) {
+				// send a dummy object to the queue to force a sync
+				st.syncQueue.Enqueue("sync status")
+				return false, nil
+			}, stop)
 		},
 		OnStoppedLeading: func() {
 			glog.V(2).Infof("I am not status update leader anymore")
