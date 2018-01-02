@@ -476,6 +476,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.Whitelist = anns.Whitelist
 						loc.Denied = anns.Denied
 						loc.XForwardedPrefix = anns.XForwardedPrefix
+						loc.UsePortInRedirects = anns.UsePortInRedirects
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -507,6 +508,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						Whitelist:            anns.Whitelist,
 						Denied:               anns.Denied,
 						XForwardedPrefix:     anns.XForwardedPrefix,
+						UsePortInRedirects:   anns.UsePortInRedirects,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -1219,9 +1221,12 @@ func (n *NGINXController) SetForceReload(shouldReload bool) {
 }
 
 func (n *NGINXController) extractAnnotations(ing *extensions.Ingress) {
+	glog.V(3).Infof("updating annotations information for ingress %v/%v", ing.Namespace, ing.Name)
 	anns := n.annotations.Extract(ing)
-	glog.V(3).Infof("updating annotations information for ingress %v/%v", anns.Namespace, anns.Name)
-	n.listers.IngressAnnotation.Update(anns)
+	err := n.listers.IngressAnnotation.Update(anns)
+	if err != nil {
+		glog.Errorf("unexpected error updating annotations information for ingress %v/%v: %v", anns.Namespace, anns.Name, err)
+	}
 }
 
 // getByIngress returns the parsed annotations from an Ingress
