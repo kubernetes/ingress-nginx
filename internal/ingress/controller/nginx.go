@@ -113,6 +113,8 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		}),
 
 		stopCh:   make(chan struct{}),
+		updateCh: make(chan struct{}),
+
 		stopLock: &sync.Mutex{},
 
 		fileSystem: fs,
@@ -121,7 +123,15 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		runningConfig: &ingress.Configuration{},
 	}
 
-	n.listers, n.controllers = n.createListers(n.stopCh)
+	n.store = store.New(true,
+		config.Namespace,
+		config.ConfigMapName,
+		config.TCPConfigMapName,
+		config.UDPConfigMapName,
+		config.ResyncPeriod,
+		config.Client,
+		fs,
+		updateCh)
 
 	n.stats = newStatsCollector(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
@@ -186,9 +196,6 @@ Error loading new template : %v
 type NGINXController struct {
 	cfg *Configuration
 
-	listers     *ingress.StoreLister
-	controllers *cacheController
-
 	annotations annotations.Extractor
 
 	recorder record.EventRecorder
@@ -208,7 +215,8 @@ type NGINXController struct {
 	// allowing concurrent stoppers leads to stack traces.
 	stopLock *sync.Mutex
 
-	stopCh chan struct{}
+	stopCh   chan struct{}
+	updateCh chan struct{}
 
 	// ngxErrCh channel used to detect errors with the nginx processes
 	ngxErrCh chan error
@@ -241,6 +249,8 @@ type NGINXController struct {
 	Proxy *TCPProxy
 
 	backendDefaults defaults.Backend
+
+	store store.Storer
 
 	fileSystem filesystem.Filesystem
 }
