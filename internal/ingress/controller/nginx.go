@@ -268,7 +268,7 @@ func (n *NGINXController) Start() {
 	}
 
 	if n.syncStatus != nil {
-		go n.syncStatus.Run(n.stopCh)
+		go n.syncStatus.Run()
 	}
 
 	go wait.Until(n.checkMissingSecrets, 30*time.Second, n.stopCh)
