@@ -214,7 +214,7 @@ http {
     }
     {{ else }}
     map $pass_server_port $pass_port {
-        443              443;
+        {{ $all.ListenPorts.HTTPS }}              443;
         default          $pass_server_port;
     }
     {{ end }}
@@ -678,6 +678,8 @@ stream {
         {{ end }}
 
         location {{ $path }} {
+            port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
+
             {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
 
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
@@ -688,11 +690,12 @@ stream {
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
 
+            {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
             # enforce ssl on server side
             if ($redirect_to_https) {
-                {{ if ne $all.ListenPorts.HTTPS 443 }}
-                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
+                {{ if $location.UsePortInRedirects }}
+                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }} 
                 return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host{{ $redirect_port }}$request_uri;
                 {{ else }}
                 return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host$request_uri;
@@ -715,8 +718,6 @@ stream {
                 return 403;
             }
             {{ end }}
-
-            port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             {{ if not (empty $authPath) }}
             # this location requires authentication
