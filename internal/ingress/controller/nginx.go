@@ -234,8 +234,6 @@ type NGINXController struct {
 	// returns true if proxy protocol es enabled
 	IsProxyProtocolEnabled bool
 
-	isSSLPassthroughEnabled bool
-
 	isShuttingDown bool
 
 	Proxy *TCPProxy
@@ -490,7 +488,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		})
 	}
 
-	if n.isSSLPassthroughEnabled {
+	if n.cfg.EnableSSLPassthrough {
 		n.Proxy.ServerList = servers
 	}
 
@@ -636,7 +634,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		Cfg:                     cfg,
 		IsIPV6Enabled:           n.isIPV6Enabled && !cfg.DisableIpv6,
 		RedirectServers:         redirectServers,
-		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
+		IsSSLPassthroughEnabled: n.cfg.EnableSSLPassthrough,
 		ListenPorts:             n.cfg.ListenPorts,
 		PublishService:          n.GetPublishService(),
 	}
