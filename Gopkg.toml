@@ -62,10 +62,6 @@
   name = "github.com/paultag/sniff"
 
 [[constraint]]
-  name = "github.com/pborman/uuid"
-  version = "1.1.0"
-
-[[constraint]]
   name = "github.com/pkg/errors"
   version = "0.8.0"
 
@@ -95,16 +91,16 @@
 
 [[constraint]]
   name = "k8s.io/api"
-  branch = "release-1.8"
+  branch = "release-1.9"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  branch = "release-1.8"
+  branch = "release-1.9"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "v5.0.1"
+  version = "v6.0.0"
 
 [[constraint]]
   name = "k8s.io/kubernetes"
-  version = "v1.8.3"
+  version = "v1.9.0"
