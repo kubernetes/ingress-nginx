@@ -58,9 +58,7 @@ func TestListVolumesForPod(t *testing.T) {
 	})
 
 	stopCh := runVolumeManager(kubelet)
-	defer func() {
-		close(stopCh)
-	}()
+	defer close(stopCh)
 
 	kubelet.podManager.SetPods([]*v1.Pod{pod})
 	err := kubelet.volumeManager.WaitForAttachAndMount(pod)
@@ -142,9 +140,7 @@ func TestPodVolumesExist(t *testing.T) {
 	}
 
 	stopCh := runVolumeManager(kubelet)
-	defer func() {
-		close(stopCh)
-	}()
+	defer close(stopCh)
 
 	kubelet.podManager.SetPods(pods)
 	for _, pod := range pods {
@@ -177,9 +173,7 @@ func TestVolumeAttachAndMountControllerDisabled(t *testing.T) {
 	})
 
 	stopCh := runVolumeManager(kubelet)
-	defer func() {
-		close(stopCh)
-	}()
+	defer close(stopCh)
 
 	kubelet.podManager.SetPods([]*v1.Pod{pod})
 	err := kubelet.volumeManager.WaitForAttachAndMount(pod)
@@ -223,9 +217,7 @@ func TestVolumeUnmountAndDetachControllerDisabled(t *testing.T) {
 	})
 
 	stopCh := runVolumeManager(kubelet)
-	defer func() {
-		close(stopCh)
-	}()
+	defer close(stopCh)
 
 	// Add pod
 	kubelet.podManager.SetPods([]*v1.Pod{pod})
@@ -312,9 +304,7 @@ func TestVolumeAttachAndMountControllerEnabled(t *testing.T) {
 	})
 
 	stopCh := runVolumeManager(kubelet)
-	defer func() {
-		close(stopCh)
-	}()
+	defer close(stopCh)
 
 	kubelet.podManager.SetPods([]*v1.Pod{pod})
 
@@ -381,9 +371,7 @@ func TestVolumeUnmountAndDetachControllerEnabled(t *testing.T) {
 	})
 
 	stopCh := runVolumeManager(kubelet)
-	defer func() {
-		close(stopCh)
-	}()
+	defer close(stopCh)
 
 	// Add pod
 	kubelet.podManager.SetPods([]*v1.Pod{pod})
@@ -458,5 +446,25 @@ func (f *stubVolume) SetUp(fsGroup *int64) error {
 }
 
 func (f *stubVolume) SetUpAt(dir string, fsGroup *int64) error {
+	return nil
+}
+
+type stubBlockVolume struct {
+	dirPath string
+	volName string
+}
+
+func (f *stubBlockVolume) GetGlobalMapPath(spec *volume.Spec) (string, error) {
+	return "", nil
+}
+
+func (f *stubBlockVolume) GetPodDeviceMapPath() (string, string) {
+	return f.dirPath, f.volName
+}
+
+func (f *stubBlockVolume) SetUpDevice() (string, error) {
+	return "", nil
+}
+func (f *stubBlockVolume) TearDownDevice(mapPath string, devicePath string) error {
 	return nil
 }

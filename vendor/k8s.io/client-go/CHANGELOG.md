@@ -2,18 +2,81 @@ TODO: This document was manually maintained so might be incomplete. The
 automation effort is tracked in
 https://github.com/kubernetes/client-go/issues/234.
 
-# HEAD (changes that will go into v5)
+# v5.0.1
 
-** Breaking changes**
+Bug fix: picked up a security fix [kubernetes/kubernetes#53443](https://github.com/kubernetes/kubernetes/pull/53443) for `PodSecurityPolicy`.
 
-pkg/api and pkg/apis are moved to
-[k8s.io/api](https://github.com/kubernetes/api). Other kubernetes repositories
-also import types from there, so they are composable with client-go.
+# v5.0.0
 
-Helper functions in pkg/api and pkg/apis are also removed. They are planned to
-be exported in other repos. The issue is tracked
-[here](https://github.com/kubernetes/kubernetes/issues/48209#issuecomment-314537745).
-During the transition, you'll have to copy the helper functions to your projects. 
+**New features:**
+
+* Added paging support
+
+   * [https://github.com/kubernetes/kubernetes/pull/51876](https://github.com/kubernetes/kubernetes/pull/51876)
+
+* Added support for client-side spam filtering of events
+
+   * [https://github.com/kubernetes/kubernetes/pull/47367](https://github.com/kubernetes/kubernetes/pull/47367)
+
+* Added support for http etag and caching
+
+   * [https://github.com/kubernetes/kubernetes/pull/50404](https://github.com/kubernetes/kubernetes/pull/50404)
+
+* Added priority queue support to informer cache
+
+   * [https://github.com/kubernetes/kubernetes/pull/49752](https://github.com/kubernetes/kubernetes/pull/49752)
+
+* Added openstack auth provider
+
+   * [https://github.com/kubernetes/kubernetes/pull/39587](https://github.com/kubernetes/kubernetes/pull/39587)
+
+* Added metrics for checking reflector health
+
+   * [https://github.com/kubernetes/kubernetes/pull/48224](https://github.com/kubernetes/kubernetes/pull/48224)
+
+* Client-go now includes the leaderelection package
+
+   * [https://github.com/kubernetes/kubernetes/pull/39173](https://github.com/kubernetes/kubernetes/pull/39173)
+
+**API changes:**
+
+* Promoted Autoscaling v2alpha1 to v2beta1
+
+   * [https://github.com/kubernetes/kubernetes/pull/50708](https://github.com/kubernetes/kubernetes/pull/50708)
+
+* Promoted CronJobs to batch/v1beta1
+
+   * [https://github.com/kubernetes/kubernetes/pull/41901](https://github.com/kubernetes/kubernetes/pull/41901)
+
+* Promoted rbac.authorization.k8s.io/v1beta1 to rbac.authorization.k8s.io/v1
+
+   * [https://github.com/kubernetes/kubernetes/pull/49642](https://github.com/kubernetes/kubernetes/pull/49642)
+
+* Added a new API version apps/v1beta2
+
+   * [https://github.com/kubernetes/kubernetes/pull/48746](https://github.com/kubernetes/kubernetes/pull/48746)
+
+* Added a new API version scheduling/v1alpha1
+
+   * [https://github.com/kubernetes/kubernetes/pull/48377](https://github.com/kubernetes/kubernetes/pull/48377)
+
+**Breaking changes:**
+
+* Moved pkg/api and pkg/apis to [k8s.io/api](https://github.com/kubernetes/api). Other kubernetes repositories also import types from there, so they are composable with client-go.
+
+* Removed helper functions in pkg/api and pkg/apis. They are planned to be exported in other repos. The issue is tracked [here](https://github.com/kubernetes/kubernetes/issues/48209#issuecomment-314537745). During the transition, you'll have to copy the helper functions to your projects.
+
+* The discovery client now fetches the protobuf encoded OpenAPI schema and returns `openapi_v2.Document`
+
+   * [https://github.com/kubernetes/kubernetes/pull/46803](https://github.com/kubernetes/kubernetes/pull/46803)
+
+* Enforced explicit references to API group client interfaces in clientsets to avoid ambiguity.
+
+   * [https://github.com/kubernetes/kubernetes/pull/49370](https://github.com/kubernetes/kubernetes/pull/49370)
+
+* The generic RESTClient type (`k8s.io/client-go/rest`) no longer exposes `LabelSelectorParam` or `FieldSelectorParam` methods - use `VersionedParams` with `metav1.ListOptions` instead. The `UintParam` method has been removed. The `timeout` parameter will no longer cause an error when using `Param()`.
+
+   * [https://github.com/kubernetes/kubernetes/pull/48991](https://github.com/kubernetes/kubernetes/pull/48991)
 
 # v4.0.0
 
