@@ -17,6 +17,7 @@ limitations under the License.
 package template
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -30,8 +31,6 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
-
-	"github.com/pborman/uuid"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -494,7 +493,12 @@ func buildDenyVariable(a interface{}) string {
 	}
 
 	if _, ok := denyPathSlugMap[l]; !ok {
-		denyPathSlugMap[l] = buildRandomUUID()
+		s, err := randomString()
+		if err != nil {
+			return ""
+		}
+
+		denyPathSlugMap[l] = s
 	}
 
 	return fmt.Sprintf("$deny_%v", denyPathSlugMap[l])
@@ -571,12 +575,6 @@ func buildNextUpstream(i, r interface{}) string {
 	}
 
 	return strings.Join(nextUpstreamCodes, " ")
-}
-
-// buildRandomUUID return a random string to be used in the template
-func buildRandomUUID() string {
-	s := uuid.New()
-	return strings.Replace(s, "-", "", -1)
 }
 
 func isValidClientBodyBufferSize(input interface{}) bool {
@@ -693,4 +691,14 @@ func buildAuthSignURL(input interface{}) string {
 	}
 
 	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$request_uri", s)
+}
+
+func randomString() (string, error) {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }

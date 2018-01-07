@@ -26,7 +26,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/store"
@@ -82,7 +81,7 @@ func buildSimpleClientSet() *testclient.Clientset {
 			{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo3",
-					Namespace: api.NamespaceSystem,
+					Namespace: metav1.NamespaceSystem,
 					Labels: map[string]string{
 						"lable_sig": "foo_pod",
 					},
@@ -183,7 +182,7 @@ func buildExtensionsIngresses() []extensions.Ingress {
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "foo_ingress_different_class",
-				Namespace: api.NamespaceDefault,
+				Namespace: metav1.NamespaceDefault,
 				Annotations: map[string]string{
 					class.IngressKey: "no-nginx",
 				},
@@ -308,7 +307,7 @@ func TestStatusActions(t *testing.T) {
 		t.Fatalf("returned %v but expected %v", fooIngress2CurIPs, newIPs2)
 	}
 
-	oic, err := fk.Client.ExtensionsV1beta1().Ingresses(api.NamespaceDefault).Get("foo_ingress_different_class", metav1.GetOptions{})
+	oic, err := fk.Client.ExtensionsV1beta1().Ingresses(metav1.NamespaceDefault).Get("foo_ingress_different_class", metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("unexpected error")
 	}

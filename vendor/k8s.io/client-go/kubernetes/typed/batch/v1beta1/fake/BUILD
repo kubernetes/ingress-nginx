@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])
-
 load(
     "@io_bazel_rules_go//go:def.bzl",
     "go_library",
@@ -14,7 +12,7 @@ go_library(
         "fake_batch_client.go",
         "fake_cronjob.go",
     ],
-    tags = ["automanaged"],
+    importpath = "k8s.io/client-go/kubernetes/typed/batch/v1beta1/fake",
     deps = [
         "//vendor/k8s.io/api/batch/v1beta1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
