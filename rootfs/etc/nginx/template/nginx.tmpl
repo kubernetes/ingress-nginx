@@ -558,7 +558,7 @@ stream {
         {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}' always; {{ end }}
         add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}' always;
         add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}' always;
-        add_header 'Access-Control-Max-Age' 1728000;
+        add_header 'Access-Control-Max-Age' {{ $cors.CorsMaxAge }};
         add_header 'Content-Type' 'text/plain charset=UTF-8';
         add_header 'Content-Length' 0;
         return 204;
