@@ -29,6 +29,7 @@ const (
 	// Default values
 	defaultCorsMethods = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+	defaultCorsMaxAge  = 1728000
 )
 
 var (
@@ -55,6 +56,7 @@ type Config struct {
 	CorsAllowMethods     string `json:"corsAllowMethods"`
 	CorsAllowHeaders     string `json:"corsAllowHeaders"`
 	CorsAllowCredentials bool   `json:"corsAllowCredentials"`
+	CorsMaxAge           int    `json:"corsMaxAge"`
 }
 
 // NewParser creates a new CORS annotation parser
@@ -68,6 +70,9 @@ func (c1 *Config) Equal(c2 *Config) bool {
 		return true
 	}
 	if c1 == nil || c2 == nil {
+		return false
+	}
+	if c1.CorsMaxAge != c2.CorsMaxAge {
 		return false
 	}
 	if c1.CorsAllowCredentials != c2.CorsAllowCredentials {
@@ -117,12 +122,18 @@ func (c cors) Parse(ing *extensions.Ingress) (interface{}, error) {
 		corsallowcredentials = true
 	}
 
+	corsmaxage, err := parser.GetIntAnnotation("cors-max-age", ing)
+	if err != nil {
+		corsmaxage = defaultCorsMaxAge
+	}
+
 	return &Config{
 		CorsEnabled:          corsenabled,
 		CorsAllowOrigin:      corsalloworigin,
 		CorsAllowHeaders:     corsallowheaders,
 		CorsAllowMethods:     corsallowmethods,
 		CorsAllowCredentials: corsallowcredentials,
+		CorsMaxAge:           corsmaxage,
 	}, nil
 
 }
