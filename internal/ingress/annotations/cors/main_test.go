@@ -71,6 +71,7 @@ func TestIngressCorsConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("cors-allow-credentials")] = "false"
 	data[parser.GetAnnotationWithPrefix("cors-allow-methods")] = "PUT, GET,OPTIONS, PATCH, $nginx_version"
 	data[parser.GetAnnotationWithPrefix("cors-allow-origin")] = "https://origin123.test.com:4443"
+	data[parser.GetAnnotationWithPrefix("cors-max-age")] = "600"
 	ing.SetAnnotations(data)
 
 	corst, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -95,4 +96,7 @@ func TestIngressCorsConfig(t *testing.T) {
 		t.Errorf("expected origin https://origin123.test.com:4443, but got  %v", nginxCors.CorsAllowOrigin)
 	}
 
+	if nginxCors.CorsMaxAge != 600 {
+		t.Errorf("expected max age 600, but got  %v", nginxCors.CorsMaxAge)
+	}
 }
