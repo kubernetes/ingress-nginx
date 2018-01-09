@@ -61,6 +61,7 @@ Key:
 | `cors-allow-headers` | Specifies the Headers allowed in CORS (Access-Control-Allow-Headers) | DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization | nginx
 | `cors-allow-methods` | Specifies the Methods allowed in CORS (Access-Control-Allow-Methods) | GET, PUT, POST, DELETE, PATCH, OPTIONS | nginx
 | `cors-allow-credentials` | Specifies the Access-Control-Allow-Credentials | true | nginx
+| `cors-max-age` | Specifies the Access-Control-Max-Age | 1728000 | nginx
 
 ## Miscellaneous
 

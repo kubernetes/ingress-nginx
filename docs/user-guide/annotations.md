@@ -25,6 +25,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|true or false|
+|[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|true or false|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
@@ -207,6 +208,10 @@ Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.co
 * `nginx.ingress.kubernetes.io/cors-allow-credentials` controls if credentials can be passed during CORS operations.
 
 Example: `nginx.ingress.kubernetes.io/cors-allow-credentials: "true"`
+
+* `nginx.ingress.kubernetes.io/cors-max-age` controls how long preflight requests can be cached.
+
+Example: `nginx.ingress.kubernetes.io/cors-max-age: 600`
 
 
 For more information please check https://enable-cors.org/server_nginx.html
