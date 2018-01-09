@@ -96,7 +96,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			`Force namespace isolation. This flag is required to avoid the reference of secrets or
 		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
 
-		disableNodeList = flags.Bool("disable-node-list", false,
+		_ = flags.Bool("disable-node-list", false,
 			`Disable querying nodes. If --force-namespace-isolation is true, this should also be set. (DEPRECATED)`)
 
 		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the
@@ -132,15 +132,20 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			`Define the sync frequency upper limit`)
 	)
 
+	flags.MarkDeprecated("disable-node-list", "This flag is currently no-op and will be deleted.")
+
 	flag.Set("logtostderr", "true")
 
 	flags.AddGoFlagSet(flag.CommandLine)
 	flags.Parse(os.Args)
-	flag.Set("logtostderr", "true")
 
 	// Workaround for this issue:
 	// https://github.com/kubernetes/kubernetes/issues/17162
 	flag.CommandLine.Parse([]string{})
+
+	pflag.VisitAll(func(flag *pflag.Flag) {
+		glog.V(2).Infof("FLAG: --%s=%q", flag.Name, flag.Value)
+	})
 
 	if *showVersion {
 		return true, nil, nil
@@ -181,11 +186,6 @@ func parseFlags() (bool, *controller.Configuration, error) {
 
 	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
 		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --ssl-passtrough-proxy-port", *sslProxyPort)
-	}
-
-	// TODO: remove disableNodeList flag
-	if *disableNodeList {
-		glog.Warningf("%s is DEPRECATED and will be removed in a future version.", disableNodeList)
 	}
 
 	if !*enableSSLChainCompletion {
