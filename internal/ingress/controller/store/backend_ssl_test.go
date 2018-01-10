@@ -14,20 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package store
 
 import (
 	"encoding/base64"
-	"fmt"
-	"io/ioutil"
 
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	cache_client "k8s.io/client-go/tools/cache"
-
-	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/store"
 )
 
 const (
@@ -62,8 +57,8 @@ func buildSimpleClientSetForBackendSSL() *testclient.Clientset {
 	return testclient.NewSimpleClientset()
 }
 
-func buildIngListenerForBackendSSL() store.IngressLister {
-	ingLister := store.IngressLister{}
+func buildIngListenerForBackendSSL() IngressLister {
+	ingLister := IngressLister{}
 	ingLister.Store = cache_client.NewStore(cache_client.DeletionHandlingMetaNamespaceKeyFunc)
 	return ingLister
 }
@@ -77,8 +72,8 @@ func buildSecretForBackendSSL() *apiv1.Secret {
 	}
 }
 
-func buildSecrListerForBackendSSL() store.SecretLister {
-	secrLister := store.SecretLister{}
+func buildSecrListerForBackendSSL() SecretLister {
+	secrLister := SecretLister{}
 	secrLister.Store = cache_client.NewStore(cache_client.DeletionHandlingMetaNamespaceKeyFunc)
 
 	return secrLister
@@ -107,7 +102,8 @@ func buildGenericControllerForBackendSSL() *NGINXController {
 		cfg: &Configuration{
 			Client: buildSimpleClientSetForBackendSSL(),
 		},
-		listers: buildListers(),
+		listers:        buildListers(),
+		sslCertTracker: NewSSLCertTracker(),
 	}
 
 	gc.syncQueue = task.NewTaskQueue(gc.syncIngress)
@@ -116,13 +112,6 @@ func buildGenericControllerForBackendSSL() *NGINXController {
 */
 
 func buildCrtKeyAndCA() ([]byte, []byte, []byte, error) {
-	// prepare
-	td, err := ioutil.TempDir("", "ssl")
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("error occurs while creating temp directory: %v", err)
-	}
-	ingress.DefaultSSLDirectory = td
-
 	dCrt, err := base64.StdEncoding.DecodeString(tlsCrt)
 	if err != nil {
 		return nil, nil, nil, err
@@ -152,8 +141,8 @@ func TestSyncSecret(t *testing.T) {
 		Data          map[string][]byte
 		expectSuccess bool
 	}{
-		{"getPemCertificate_error", "default/foo_secret", map[string][]byte{apiv1.TLSPrivateKeyKey: dKey}, false},
-		{"normal_test", "default/foo_secret", map[string][]byte{apiv1.TLSCertKey: dCrt, apiv1.TLSPrivateKeyKey: dKey, tlscaName: dCa}, true},
+		{"getPemCertificate_error", "default/foo_secret", map[string][]byte{api.TLSPrivateKeyKey: dKey}, false},
+		{"normal_test", "default/foo_secret", map[string][]byte{api.TLSCertKey: dCrt, api.TLSPrivateKeyKey: dKey, tlscaName: dCa}, true},
 	}
 
 	for _, foo := range foos {
@@ -165,7 +154,7 @@ func TestSyncSecret(t *testing.T) {
 			secret.SetNamespace("default")
 			secret.SetName("foo_secret")
 			secret.Data = foo.Data
-			ic.store..Secret.Add(secret)
+			ic.listers.Secret.Add(secret)
 
 			key := "default/foo_secret"
 			// for add
@@ -199,12 +188,12 @@ func TestGetPemCertificate(t *testing.T) {
 	}{
 		{"sceret_not_exist", "default/foo_secret_not_exist", nil, true},
 		{"data_not_complete_all_not_exist", "default/foo_secret", map[string][]byte{}, true},
-		{"data_not_complete_TLSCertKey_not_exist", "default/foo_secret", map[string][]byte{apiv1.TLSPrivateKeyKey: dKey, tlscaName: dCa}, false},
-		{"data_not_complete_TLSCertKeyAndCA_not_exist", "default/foo_secret", map[string][]byte{apiv1.TLSPrivateKeyKey: dKey}, true},
-		{"data_not_complete_TLSPrivateKeyKey_not_exist", "default/foo_secret", map[string][]byte{apiv1.TLSCertKey: dCrt, tlscaName: dCa}, false},
-		{"data_not_complete_TLSPrivateKeyKeyAndCA_not_exist", "default/foo_secret", map[string][]byte{apiv1.TLSCertKey: dCrt}, true},
-		{"data_not_complete_CA_not_exist", "default/foo_secret", map[string][]byte{apiv1.TLSCertKey: dCrt, apiv1.TLSPrivateKeyKey: dKey}, false},
-		{"normal_test", "default/foo_secret", map[string][]byte{apiv1.TLSCertKey: dCrt, apiv1.TLSPrivateKeyKey: dKey, tlscaName: dCa}, false},
+		{"data_not_complete_TLSCertKey_not_exist", "default/foo_secret", map[string][]byte{api.TLSPrivateKeyKey: dKey, tlscaName: dCa}, false},
+		{"data_not_complete_TLSCertKeyAndCA_not_exist", "default/foo_secret", map[string][]byte{api.TLSPrivateKeyKey: dKey}, true},
+		{"data_not_complete_TLSPrivateKeyKey_not_exist", "default/foo_secret", map[string][]byte{api.TLSCertKey: dCrt, tlscaName: dCa}, false},
+		{"data_not_complete_TLSPrivateKeyKeyAndCA_not_exist", "default/foo_secret", map[string][]byte{api.TLSCertKey: dCrt}, true},
+		{"data_not_complete_CA_not_exist", "default/foo_secret", map[string][]byte{api.TLSCertKey: dCrt, api.TLSPrivateKeyKey: dKey}, false},
+		{"normal_test", "default/foo_secret", map[string][]byte{api.TLSCertKey: dCrt, api.TLSPrivateKeyKey: dKey, tlscaName: dCa}, false},
 	}
 
 	for _, foo := range foos {

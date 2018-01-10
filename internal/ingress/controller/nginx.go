@@ -25,7 +25,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -49,10 +48,10 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
+	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/status"
-	"k8s.io/ingress-nginx/internal/ingress/store"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/net/ssl"
@@ -113,6 +112,8 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		}),
 
 		stopCh:   make(chan struct{}),
+		updateCh: make(chan store.Event),
+
 		stopLock: &sync.Mutex{},
 
 		fileSystem: fs,
@@ -121,7 +122,15 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		runningConfig: &ingress.Configuration{},
 	}
 
-	n.listers, n.controllers = n.createListers(n.stopCh)
+	n.store = store.New(true,
+		config.Namespace,
+		config.ConfigMapName,
+		config.TCPConfigMapName,
+		config.UDPConfigMapName,
+		config.ResyncPeriod,
+		config.Client,
+		fs,
+		n.updateCh)
 
 	n.stats = newStatsCollector(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
@@ -133,7 +142,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		n.syncStatus = status.NewStatusSyncer(status.Config{
 			Client:                 config.Client,
 			PublishService:         config.PublishService,
-			IngressLister:          n.listers.Ingress,
+			IngressLister:          n.store,
 			ElectionID:             config.ElectionID,
 			IngressClass:           class.IngressClass,
 			DefaultIngressClass:    class.DefaultClass,
@@ -186,9 +195,6 @@ Error loading new template : %v
 type NGINXController struct {
 	cfg *Configuration
 
-	listers     *ingress.StoreLister
-	controllers *cacheController
-
 	annotations annotations.Extractor
 
 	recorder record.EventRecorder
@@ -208,7 +214,8 @@ type NGINXController struct {
 	// allowing concurrent stoppers leads to stack traces.
 	stopLock *sync.Mutex
 
-	stopCh chan struct{}
+	stopCh   chan struct{}
+	updateCh chan store.Event
 
 	// ngxErrCh channel used to detect errors with the nginx processes
 	ngxErrCh chan error
@@ -240,6 +247,8 @@ type NGINXController struct {
 
 	backendDefaults defaults.Backend
 
+	store store.Storer
+
 	fileSystem filesystem.Filesystem
 }
 
@@ -247,13 +256,11 @@ type NGINXController struct {
 func (n *NGINXController) Start() {
 	glog.Infof("starting Ingress controller")
 
-	n.controllers.Run(n.stopCh)
+	n.store.Run(n.stopCh)
 
 	// initial sync of secrets to avoid unnecessary reloads
 	glog.Info("running initial sync of secrets")
-	for _, obj := range n.listers.Ingress.List() {
-		ing := obj.(*extensions.Ingress)
-
+	for _, ing := range n.store.ListIngresses() {
 		if !class.IsValid(ing) {
 			a := ing.GetAnnotations()[class.IngressKey]
 			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
@@ -285,6 +292,21 @@ func (n *NGINXController) Start() {
 
 	glog.Info("starting NGINX process...")
 	n.start(cmd)
+
+	go func() {
+		for {
+			select {
+			case evt := <-n.updateCh:
+				if n.isShuttingDown {
+					break
+				}
+				glog.Infof("Event %v received - object %v", evt.Type, evt.Obj)
+				n.syncQueue.Enqueue(evt.Obj)
+			case <-n.stopCh:
+				break
+			}
+		}
+	}()
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
@@ -562,62 +584,47 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	setHeaders := map[string]string{}
 	if cfg.ProxySetHeaders != "" {
-		cmap, exists, err := n.listers.ConfigMap.GetByKey(cfg.ProxySetHeaders)
+		cmap, err := n.store.GetConfigMap(cfg.ProxySetHeaders)
 		if err != nil {
 			glog.Warningf("unexpected error reading configmap %v: %v", cfg.ProxySetHeaders, err)
 		}
 
-		if exists {
-			setHeaders = cmap.(*apiv1.ConfigMap).Data
-		}
+		setHeaders = cmap.Data
 	}
 
 	addHeaders := map[string]string{}
 	if cfg.AddHeaders != "" {
-		cmap, exists, err := n.listers.ConfigMap.GetByKey(cfg.AddHeaders)
+		cmap, err := n.store.GetConfigMap(cfg.AddHeaders)
 		if err != nil {
 			glog.Warningf("unexpected error reading configmap %v: %v", cfg.AddHeaders, err)
 		}
 
-		if exists {
-			addHeaders = cmap.(*apiv1.ConfigMap).Data
-		}
+		addHeaders = cmap.Data
 	}
 
 	sslDHParam := ""
 	if cfg.SSLDHParam != "" {
 		secretName := cfg.SSLDHParam
-		s, exists, err := n.listers.Secret.GetByKey(secretName)
+
+		secret, err := n.store.GetSecret(secretName)
 		if err != nil {
 			glog.Warningf("unexpected error reading secret %v: %v", secretName, err)
 		}
 
-		if exists {
-			secret := s.(*apiv1.Secret)
-			nsSecName := strings.Replace(secretName, "/", "-", -1)
+		nsSecName := strings.Replace(secretName, "/", "-", -1)
 
-			dh, ok := secret.Data["dhparam.pem"]
-			if ok {
-				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
-				if err != nil {
-					glog.Warningf("unexpected error adding or updating dhparam %v file: %v", nsSecName, err)
-				} else {
-					sslDHParam = pemFileName
-				}
+		dh, ok := secret.Data["dhparam.pem"]
+		if ok {
+			pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh, n.fileSystem)
+			if err != nil {
+				glog.Warningf("unexpected error adding or updating dhparam %v file: %v", nsSecName, err)
+			} else {
+				sslDHParam = pemFileName
 			}
 		}
 	}
 
 	cfg.SSLDHParam = sslDHParam
-
-	// disable features are not available in some platforms
-	switch runtime.GOARCH {
-	case "arm", "arm64", "ppc64le":
-		cfg.EnableModsecurity = false
-	case "s390x":
-		cfg.EnableModsecurity = false
-		cfg.EnableBrotli = false
-	}
 
 	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:         setHeaders,
