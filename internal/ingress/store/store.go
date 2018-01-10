@@ -69,6 +69,9 @@ type Storer interface {
 	// GetIngressAnnotations returns the annotations associated to an Ingress
 	GetIngressAnnotations(ing *extensions.Ingress) (*annotations.Ingress, error)
 
+	// UpdateIngressAnnotations updates the annotations associated to an Ingress
+	UpdateIngressAnnotations(ing *annotations.Ingress) error
+
 	// GetLocalSecret returns the local copy of a Secret
 	GetLocalSecret(name string) (*ingress.SSLCert, error)
 
@@ -448,6 +451,12 @@ func (s k8sStore) GetIngressAnnotations(ing *extensions.Ingress) (*annotations.I
 		return nil, fmt.Errorf("ingress annotation %v was not found", key)
 	}
 	return item.(*annotations.Ingress), nil
+}
+
+// UpdateIngressAnnotations updates the annotations associated to an Ingress
+func (s k8sStore) UpdateIngressAnnotations(ing *annotations.Ingress) error {
+	key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Name)
+	return s.listers.IngressAnnotation.Update(key)
 }
 
 // GetLocalSecret returns the local copy of a Secret

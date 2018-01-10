@@ -31,7 +31,6 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	clientset "k8s.io/client-go/kubernetes"
@@ -53,15 +52,6 @@ const (
 	defServerName   = "_"
 	rootLocation    = "/"
 )
-
-var (
-	cloner *conversion.Cloner
-)
-
-func init() {
-	cloner := conversion.NewCloner()
-	cloner.RegisterDeepCopyFunc(ingress.GetGeneratedDeepCopyFuncs)
-}
 
 // Configuration contains all the settings required by an Ingress controller
 type Configuration struct {
@@ -446,6 +436,8 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.VtsFilterKey = anns.VtsFilterKey
 						loc.Whitelist = anns.Whitelist
 						loc.Denied = anns.Denied
+						loc.XForwardedPrefix = anns.XForwardedPrefix
+						loc.UsePortInRedirects = anns.UsePortInRedirects
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -476,6 +468,8 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						VtsFilterKey:         anns.VtsFilterKey,
 						Whitelist:            anns.Whitelist,
 						Denied:               anns.Denied,
+						XForwardedPrefix:     anns.XForwardedPrefix,
+						UsePortInRedirects:   anns.UsePortInRedirects,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -521,17 +515,12 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 							if len(endps) > 0 {
 								glog.V(3).Infof("using custom default backend in server %v location %v (service %v/%v)",
 									server.Hostname, location.Path, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
-								b, err := cloner.DeepCopy(upstream)
-								if err != nil {
-									glog.Errorf("unexpected error copying Upstream: %v", err)
-								} else {
-									name := fmt.Sprintf("custom-default-backend-%v", upstream.Name)
-									nb := b.(*ingress.Backend)
-									nb.Name = name
-									nb.Endpoints = endps
-									aUpstreams = append(aUpstreams, nb)
-									location.Backend = name
-								}
+								nb := upstream.DeepCopy()
+								name := fmt.Sprintf("custom-default-backend-%v", upstream.Name)
+								nb.Name = name
+								nb.Endpoints = endps
+								aUpstreams = append(aUpstreams, nb)
+								location.Backend = name
 							}
 						}
 					}
@@ -1186,19 +1175,22 @@ func (n *NGINXController) SetForceReload(shouldReload bool) {
 }
 
 func (n *NGINXController) extractAnnotations(ing *extensions.Ingress) {
+	glog.V(3).Infof("updating annotations information for ingress %v/%v", ing.Namespace, ing.Name)
 	anns := n.annotations.Extract(ing)
-	glog.V(3).Infof("updating annotations information for ingress %v/%v", anns.Namespace, anns.Name)
-	n.store.UpdateIngressAnnotation(anns)
+	err := n.store.UpdateIngressAnnotation(anns)
+	if err != nil {
+		glog.Errorf("unexpected error updating annotations information for ingress %v/%v: %v", anns.Namespace, anns.Name, err)
+	}
 }
 
 // getByIngress returns the parsed annotations from an Ingress
 func (n *NGINXController) getIngressAnnotations(ing *extensions.Ingress) *annotations.Ingress {
 	key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Name)
-	item, err := n.listers.IngressAnnotation.GetByKey(key)
+	item, err := n.store.GetIngressAnnotations(ing)
 	if err != nil {
 		glog.Errorf("unexpected error getting ingress annotation %v: %v", key, err)
 		return &annotations.Ingress{}
 	}
 
-	return item.(*annotations.Ingress)
+	return item
 }
