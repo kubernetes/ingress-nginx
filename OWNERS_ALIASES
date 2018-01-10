@@ -1,0 +1,15 @@
+# See the OWNERS docs: https://git.k8s.io/community/docs/devel/owners.md
+
+aliases:
+  sig-network-leads:
+    - caseydavenport
+    - dcbw
+    - thockin
+  ingress-nginx-admins:
+    - bowei
+    - bprashanth
+  ingress-nginx-maintainers:
+    - justinsb
+    - aledbf
+    - nicksardo
+    - bprashanth

@@ -1,6 +1,6 @@
+# See the OWNERS docs: https://git.k8s.io/community/docs/devel/owners.md
+
 approvers:
-- aledbf
-- justinsb
-- bprashanth
-- thockin
-- nicksardo
+  - sig-network-leads
+  - ingress-nginx-admins
+  - ingress-nginx-maintainers
