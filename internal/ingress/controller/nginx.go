@@ -18,7 +18,6 @@ package controller
 
 import (
 	"bytes"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -35,7 +34,6 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -50,7 +48,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
@@ -95,16 +92,12 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 	}
 
 	n := &NGINXController{
-		backendDefaults: ngx_config.NewDefault().Backend,
-		binary:          ngx,
-
-		configmap: &apiv1.ConfigMap{},
+		binary: ngx,
 
 		isIPV6Enabled: ing_net.IsIPv6Enabled(),
 
 		resolver:        h,
 		cfg:             config,
-		sslCertTracker:  store.NewSSLCertTracker(),
 		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(config.SyncRateLimit, 1),
 
 		recorder: eventBroadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{
@@ -112,7 +105,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		}),
 
 		stopCh:   make(chan struct{}),
-		updateCh: make(chan store.Event),
+		updateCh: make(chan store.Event, 1024),
 
 		stopLock: &sync.Mutex{},
 
@@ -136,7 +129,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
-	n.annotations = annotations.NewAnnotationExtractor(n)
+	n.annotations = annotations.NewAnnotationExtractor(n.store)
 
 	if config.UpdateStatus {
 		n.syncStatus = status.NewStatusSyncer(status.Config{
@@ -203,10 +196,6 @@ type NGINXController struct {
 
 	syncStatus status.Sync
 
-	// local store of SSL certificates
-	// (only certificates used in ingress)
-	sslCertTracker *store.SSLCertTracker
-
 	syncRateLimiter flowcontrol.RateLimiter
 
 	// stopLock is used to enforce only a single call to Stop is active.
@@ -227,8 +216,6 @@ type NGINXController struct {
 
 	t *ngx_template.Template
 
-	configmap *apiv1.ConfigMap
-
 	binary   string
 	resolver []net.IP
 
@@ -238,14 +225,7 @@ type NGINXController struct {
 	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
 
-	// returns true if proxy protocol es enabled
-	IsProxyProtocolEnabled bool
-
 	isShuttingDown bool
-
-	Proxy *TCPProxy
-
-	backendDefaults defaults.Backend
 
 	store store.Storer
 
@@ -258,27 +238,9 @@ func (n *NGINXController) Start() {
 
 	n.store.Run(n.stopCh)
 
-	// initial sync of secrets to avoid unnecessary reloads
-	glog.Info("running initial sync of secrets")
-	for _, ing := range n.store.ListIngresses() {
-		if !class.IsValid(ing) {
-			a := ing.GetAnnotations()[class.IngressKey]
-			glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
-			continue
-		}
-
-		n.readSecrets(ing)
-	}
-
-	if n.cfg.EnableSSLChainCompletion {
-		go wait.Until(n.checkSSLChainIssues, 60*time.Second, n.stopCh)
-	}
-
 	if n.syncStatus != nil {
 		go n.syncStatus.Run()
 	}
-
-	go wait.Until(n.checkMissingSecrets, 30*time.Second, n.stopCh)
 
 	done := make(chan error, 1)
 	cmd := exec.Command(n.binary, "-c", cfgPath)
@@ -292,21 +254,6 @@ func (n *NGINXController) Start() {
 
 	glog.Info("starting NGINX process...")
 	n.start(cmd)
-
-	go func() {
-		for {
-			select {
-			case evt := <-n.updateCh:
-				if n.isShuttingDown {
-					break
-				}
-				glog.Infof("Event %v received - object %v", evt.Type, evt.Obj)
-				n.syncQueue.Enqueue(evt.Obj)
-			case <-n.stopCh:
-				break
-			}
-		}
-	}()
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
@@ -332,6 +279,12 @@ func (n *NGINXController) Start() {
 				// start a new nginx master process if the controller is not being stopped
 				n.start(cmd)
 			}
+		case evt := <-n.updateCh:
+			if n.isShuttingDown {
+				break
+			}
+			glog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
+			n.syncQueue.Enqueue(evt.Obj)
 		case <-n.stopCh:
 			break
 		}
@@ -434,37 +387,6 @@ Error: %v
 	return nil
 }
 
-// SetConfig sets the configured configmap
-func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
-	n.configmap = cmap
-	n.IsProxyProtocolEnabled = false
-
-	m := map[string]string{}
-	if cmap != nil {
-		m = cmap.Data
-	}
-
-	val, ok := m["use-proxy-protocol"]
-	if ok {
-		b, err := strconv.ParseBool(val)
-		if err == nil {
-			n.IsProxyProtocolEnabled = b
-		}
-	}
-
-	c := ngx_template.ReadConfig(m)
-	if c.SSLSessionTicketKey != "" {
-		d, err := base64.StdEncoding.DecodeString(c.SSLSessionTicketKey)
-		if err != nil {
-			glog.Warningf("unexpected error decoding key ssl-session-ticket-key: %v", err)
-			c.SSLSessionTicketKey = ""
-		}
-		ioutil.WriteFile("/etc/nginx/tickets.key", d, 0644)
-	}
-
-	n.backendDefaults = c.Backend
-}
-
 // OnUpdate is called periodically by syncQueue to keep the configuration in sync.
 //
 // 1. converts configmap configuration to custom configuration object
@@ -474,45 +396,43 @@ func (n *NGINXController) SetConfig(cmap *apiv1.ConfigMap) {
 // returning nill implies the backend will be reloaded.
 // if an error is returned means requeue the update
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
-	cfg := ngx_template.ReadConfig(n.configmap.Data)
+	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
 
-	servers := []*TCPServer{}
-	for _, pb := range ingressCfg.PassthroughBackends {
-		svc := pb.Service
-		if svc == nil {
-			glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
-			continue
-		}
-		port, err := strconv.Atoi(pb.Port.String())
-		if err != nil {
-			for _, sp := range svc.Spec.Ports {
-				if sp.Name == pb.Port.String() {
-					port = int(sp.Port)
-					break
+	/*
+		servers := []*TCPServer{}
+		for _, pb := range ingressCfg.PassthroughBackends {
+			svc := pb.Service
+			if svc == nil {
+				glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
+				continue
+			}
+			port, err := strconv.Atoi(pb.Port.String())
+			if err != nil {
+				for _, sp := range svc.Spec.Ports {
+					if sp.Name == pb.Port.String() {
+						port = int(sp.Port)
+						break
+					}
+				}
+			} else {
+				for _, sp := range svc.Spec.Ports {
+					if sp.Port == int32(port) {
+						port = int(sp.Port)
+						break
+					}
 				}
 			}
-		} else {
-			for _, sp := range svc.Spec.Ports {
-				if sp.Port == int32(port) {
-					port = int(sp.Port)
-					break
-				}
-			}
+
+			//TODO: Allow PassthroughBackends to specify they support proxy-protocol
+			servers = append(servers, &TCPServer{
+				Hostname:      pb.Hostname,
+				IP:            svc.Spec.ClusterIP,
+				Port:          port,
+				ProxyProtocol: false,
+			})
 		}
-
-		//TODO: Allow PassthroughBackends to specify they support proxy-protocol
-		servers = append(servers, &TCPServer{
-			Hostname:      pb.Hostname,
-			IP:            svc.Spec.ClusterIP,
-			Port:          port,
-			ProxyProtocol: false,
-		})
-	}
-
-	if n.cfg.EnableSSLPassthrough {
-		n.Proxy.ServerList = servers
-	}
+	*/
 
 	// we need to check if the status module configuration changed
 	if cfg.EnableVtsStatus {

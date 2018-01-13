@@ -17,7 +17,9 @@ limitations under the License.
 package store
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"reflect"
 	"time"
 
@@ -41,6 +43,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -49,6 +53,9 @@ import (
 // Storer is the interface that wraps the required methods to gather information
 // about ingresses, services, secrets and ingress annotations.
 type Storer interface {
+	// GetBackendConfiguration returns the nginx configuration stored in a configmap
+	GetBackendConfiguration() ngx_config.Configuration
+
 	// GetConfigMap returns a ConfigmMap using the namespace and name as key
 	GetConfigMap(key string) (*apiv1.ConfigMap, error)
 
@@ -69,9 +76,6 @@ type Storer interface {
 	// GetIngressAnnotations returns the annotations associated to an Ingress
 	GetIngressAnnotations(ing *extensions.Ingress) (*annotations.Ingress, error)
 
-	// UpdateIngressAnnotation updates the annotations associated to an Ingress
-	UpdateIngressAnnotation(ing *annotations.Ingress) error
-
 	// GetLocalSecret returns the local copy of a Secret
 	GetLocalSecret(name string) (*ingress.SSLCert, error)
 
@@ -86,11 +90,11 @@ type Storer interface {
 	// GetDefaultBackend returns the default backend configuration
 	GetDefaultBackend() defaults.Backend
 
-	// SetDefaultBackend sets the default backend configuration
-	SetDefaultBackend(defaults.Backend)
-
 	// Run initiates the synchronization of the controllers
 	Run(stopCh chan struct{})
+
+	// ReadSecrets extracts information about secrets from an Ingress rule
+	ReadSecrets(*extensions.Ingress)
 }
 
 // EventType type of event associated with an informer
@@ -162,7 +166,7 @@ func (c *Controller) Run(stopCh chan struct{}) {
 type k8sStore struct {
 	isOCSPCheckEnabled bool
 
-	backendDefaults defaults.Backend
+	backendConfig ngx_config.Configuration
 
 	cache *Controller
 	// listers
@@ -195,6 +199,7 @@ func New(checkOCSP bool,
 		sslStore:           NewSSLCertTracker(),
 		filesystem:         fs,
 		updateCh:           updateCh,
+		backendConfig:      ngx_config.NewDefault(),
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -337,10 +342,11 @@ func New(checkOCSP bool,
 
 	mapEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			upCmap := obj.(*apiv1.ConfigMap)
-			mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+			m := obj.(*apiv1.ConfigMap)
+			mapKey := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
 			if mapKey == configmap {
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
+				store.setConfig(m)
 				updateCh <- Event{
 					Type: CreateEvent,
 					Obj:  obj,
@@ -349,10 +355,11 @@ func New(checkOCSP bool,
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				upCmap := cur.(*apiv1.ConfigMap)
-				mapKey := fmt.Sprintf("%s/%s", upCmap.Namespace, upCmap.Name)
+				m := cur.(*apiv1.ConfigMap)
+				mapKey := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
 				if mapKey == configmap {
 					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
+					store.setConfig(m)
 					updateCh <- Event{
 						Type: UpdateEvent,
 						Obj:  cur,
@@ -360,7 +367,7 @@ func New(checkOCSP bool,
 				}
 				// updates to configuration configmaps can trigger an update
 				if mapKey == configmap || mapKey == tcp || mapKey == udp {
-					recorder.Eventf(upCmap, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
+					recorder.Eventf(m, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
 					updateCh <- Event{
 						Type: UpdateEvent,
 						Obj:  cur,
@@ -452,18 +459,12 @@ func (s k8sStore) GetIngressAnnotations(ing *extensions.Ingress) (*annotations.I
 	key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Name)
 	item, exists, err := s.listers.IngressAnnotation.GetByKey(key)
 	if err != nil {
-		return nil, fmt.Errorf("unexpected error getting ingress annotation %v: %v", key, err)
+		return &annotations.Ingress{}, fmt.Errorf("unexpected error getting ingress annotation %v: %v", key, err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("ingress annotation %v was not found", key)
+		return &annotations.Ingress{}, fmt.Errorf("ingress annotations %v was not found", key)
 	}
 	return item.(*annotations.Ingress), nil
-}
-
-// UpdateIngressAnnotation updates the annotations associated to an Ingress
-func (s k8sStore) UpdateIngressAnnotation(ing *annotations.Ingress) error {
-	key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Name)
-	return s.listers.IngressAnnotation.Update(key)
 }
 
 // GetLocalSecret returns the local copy of a Secret
@@ -499,11 +500,25 @@ func (s k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error)
 
 // GetDefaultBackend returns the default backend
 func (s k8sStore) GetDefaultBackend() defaults.Backend {
-	return s.backendDefaults
+	return s.backendConfig.Backend
 }
 
-func (s *k8sStore) SetDefaultBackend(bd defaults.Backend) {
-	s.backendDefaults = bd
+func (s k8sStore) GetBackendConfiguration() ngx_config.Configuration {
+	return s.backendConfig
+}
+
+func (s *k8sStore) setConfig(cmap *apiv1.ConfigMap) {
+	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
+
+	// TODO: this should not be done here
+	if s.backendConfig.SSLSessionTicketKey != "" {
+		d, err := base64.StdEncoding.DecodeString(s.backendConfig.SSLSessionTicketKey)
+		if err != nil {
+			glog.Warningf("unexpected error decoding key ssl-session-ticket-key: %v", err)
+			s.backendConfig.SSLSessionTicketKey = ""
+		}
+		ioutil.WriteFile("/etc/nginx/tickets.key", d, 0644)
+	}
 }
 
 // Run initiates the synchronization of the controllers
@@ -515,7 +530,7 @@ func (s k8sStore) Run(stopCh chan struct{}) {
 	// initial sync of secrets to avoid unnecessary reloads
 	glog.Info("running initial sync of secrets")
 	for _, ing := range s.ListIngresses() {
-		s.readSecrets(ing)
+		s.ReadSecrets(ing)
 	}
 
 	// start goroutine to check for missing local secrets

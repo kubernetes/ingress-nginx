@@ -201,8 +201,8 @@ func (s k8sStore) checkMissingSecrets() {
 	}
 }
 
-// readSecrets extracts information about secrets from an Ingress rule
-func (s k8sStore) readSecrets(ing *extensions.Ingress) {
+// ReadSecrets extracts information about secrets from an Ingress rule
+func (s k8sStore) ReadSecrets(ing *extensions.Ingress) {
 	for _, tls := range ing.Spec.TLS {
 		if tls.SecretName == "" {
 			continue

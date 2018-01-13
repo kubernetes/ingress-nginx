@@ -36,13 +36,9 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -100,11 +96,6 @@ type Configuration struct {
 	SyncRateLimit float32
 }
 
-// GetDefaultBackend returns the default backend
-func (n NGINXController) GetDefaultBackend() defaults.Backend {
-	return n.backendDefaults
-}
-
 // GetPublishService returns the configured service used to set ingress status
 func (n NGINXController) GetPublishService() *apiv1.Service {
 	s, err := n.store.GetService(n.cfg.PublishService)
@@ -113,16 +104,6 @@ func (n NGINXController) GetPublishService() *apiv1.Service {
 	}
 
 	return s
-}
-
-// GetSecret searches for a secret in the local secrets Store
-func (n NGINXController) GetSecret(name string) (*apiv1.Secret, error) {
-	return n.store.GetSecret(name)
-}
-
-// GetService searches for a service in the local secrets Store
-func (n NGINXController) GetService(name string) (*apiv1.Service, error) {
-	return n.store.GetService(name)
 }
 
 // sync collects all the pieces required to assemble the configuration file and
@@ -138,7 +119,7 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 	if element, ok := item.(task.Element); ok {
 		if name, ok := element.Key.(string); ok {
 			if ing, err := n.store.GetIngress(name); err == nil {
-				n.readSecrets(ing)
+				n.store.ReadSecrets(ing)
 			}
 		}
 	}
@@ -368,7 +349,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 		anns, err := n.store.GetIngressAnnotations(ing)
 		if err != nil {
 			glog.Errorf("unexpected error reading ingress annotations: %v", err)
-			anns = &annotations.Ingress{}
 		}
 
 		for _, rule := range ing.Spec.Rules {
@@ -580,29 +560,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 	return aUpstreams, aServers
 }
 
-// GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
-func (n NGINXController) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
-	if _, exists := n.sslCertTracker.Get(name); !exists {
-		n.syncSecret(name)
-	}
-
-	_, err := n.store.GetSecret(name)
-	if err != nil {
-		return &resolver.AuthSSLCert{}, fmt.Errorf("unexpected error: %v", err)
-	}
-
-	bc, exists := n.sslCertTracker.Get(name)
-	if !exists {
-		return &resolver.AuthSSLCert{}, fmt.Errorf("secret %v does not exist", name)
-	}
-	cert := bc.(*ingress.SSLCert)
-	return &resolver.AuthSSLCert{
-		Secret:     name,
-		CAFileName: cert.CAFileName,
-		PemSHA:     cert.PemSHA,
-	}, nil
-}
-
 // createUpstreams creates the NGINX upstreams for each service referenced in
 // Ingress rules. The servers inside the upstream are endpoints.
 func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingress.Backend) map[string]*ingress.Backend {
@@ -610,7 +567,10 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 	upstreams[defUpstreamName] = du
 
 	for _, ing := range data {
-		anns := n.getIngressAnnotations(ing)
+		anns, err := n.store.GetIngressAnnotations(ing)
+		if err != nil {
+			glog.Errorf("unexpected error reading ingress annotations: %v", err)
+		}
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -840,7 +800,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	// remove the alias to avoid conflicts.
 	aliases := make(map[string]string, len(data))
 
-	bdef := n.GetDefaultBackend()
+	bdef := n.store.GetDefaultBackend()
 	ngxProxy := proxy.Config{
 		BodySize:          bdef.ProxyBodySize,
 		ConnectTimeout:    bdef.ProxyConnectTimeout,
@@ -860,7 +820,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	// Tries to fetch the default Certificate from nginx configuration.
 	// If it does not exists, use the ones generated on Start()
-	defaultCertificate, err := n.getPemCertificate(n.cfg.DefaultSSLCertificate)
+	defaultCertificate, err := n.store.GetLocalSecret(n.cfg.DefaultSSLCertificate)
 	if err == nil {
 		defaultPemFileName = defaultCertificate.PemFileName
 		defaultPemSHA = defaultCertificate.PemSHA
@@ -883,7 +843,10 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	// initialize all the servers
 	for _, ing := range data {
-		anns := n.getIngressAnnotations(ing)
+		anns, err := n.store.GetIngressAnnotations(ing)
+		if err != nil {
+			glog.Errorf("unexpected error reading ingress annotations: %v", err)
+		}
 
 		// default upstream server
 		un := du.Name
@@ -951,7 +914,10 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	// configure default location, alias, and SSL
 	for _, ing := range data {
-		anns := n.getIngressAnnotations(ing)
+		anns, err := n.store.GetIngressAnnotations(ing)
+		if err != nil {
+			glog.Errorf("unexpected error reading ingress annotations: %v", err)
+		}
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -1016,13 +982,12 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			}
 
 			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
-			bc, exists := n.sslCertTracker.Get(key)
-			if !exists {
+			cert, err := n.store.GetLocalSecret(key)
+			if err != nil {
 				glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
 				continue
 			}
 
-			cert := bc.(*ingress.SSLCert)
 			err = cert.Certificate.VerifyHostname(host)
 			if err != nil {
 				glog.Warningf("unexpected error validating SSL certificate %v for host %v. Reason: %v", key, host, err)
@@ -1148,24 +1113,6 @@ func (n *NGINXController) getEndpoints(
 	return upsServers
 }
 
-// readSecrets extracts information about secrets from an Ingress rule
-func (n *NGINXController) readSecrets(ing *extensions.Ingress) {
-	for _, tls := range ing.Spec.TLS {
-		if tls.SecretName == "" {
-			continue
-		}
-
-		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
-		n.syncSecret(key)
-	}
-
-	key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
-	if key == "" {
-		return
-	}
-	n.syncSecret(key)
-}
-
 func (n *NGINXController) isForceReload() bool {
 	return atomic.LoadInt32(&n.forceReload) != 0
 }
@@ -1178,25 +1125,4 @@ func (n *NGINXController) SetForceReload(shouldReload bool) {
 	} else {
 		atomic.StoreInt32(&n.forceReload, 0)
 	}
-}
-
-func (n *NGINXController) extractAnnotations(ing *extensions.Ingress) {
-	glog.V(3).Infof("updating annotations information for ingress %v/%v", ing.Namespace, ing.Name)
-	anns := n.annotations.Extract(ing)
-	err := n.store.UpdateIngressAnnotation(anns)
-	if err != nil {
-		glog.Errorf("unexpected error updating annotations information for ingress %v/%v: %v", anns.Namespace, anns.Name, err)
-	}
-}
-
-// getByIngress returns the parsed annotations from an Ingress
-func (n *NGINXController) getIngressAnnotations(ing *extensions.Ingress) *annotations.Ingress {
-	key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Name)
-	item, err := n.store.GetIngressAnnotations(ing)
-	if err != nil {
-		glog.Errorf("unexpected error getting ingress annotation %v: %v", key, err)
-		return &annotations.Ingress{}
-	}
-
-	return item
 }

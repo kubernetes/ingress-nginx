@@ -189,7 +189,7 @@ func setupSSLProxy(sslPort, proxyPort int, n *controller.NGINXController) {
 			var conn net.Conn
 			var err error
 
-			if n.IsProxyProtocolEnabled {
+			if n.IsProxyProtocolEnabled() {
 				// we need to wrap the listener in order to decode
 				// proxy protocol before handling the connection
 				conn, err = proxyList.Accept()
