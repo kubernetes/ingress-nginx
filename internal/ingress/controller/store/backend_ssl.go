@@ -37,6 +37,9 @@ import (
 // disk to allow copy of the content of the secret to disk to be used
 // by external processes.
 func (s k8sStore) syncSecret(key string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	glog.V(3).Infof("starting syncing of secret %v", key)
 
 	// TODO: getPemCertificate should not write to disk to avoid unnecessary overhead

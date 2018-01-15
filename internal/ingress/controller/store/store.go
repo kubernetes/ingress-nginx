@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/golang/glog"
@@ -182,6 +183,8 @@ type k8sStore struct {
 	filesystem file.Filesystem
 
 	updateCh chan Event
+
+	mu *sync.Mutex
 }
 
 // New creates a new object store to be used in the ingress controller
@@ -200,6 +203,7 @@ func New(checkOCSP bool,
 		filesystem:         fs,
 		updateCh:           updateCh,
 		backendConfig:      ngx_config.NewDefault(),
+		mu:                 &sync.Mutex{},
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
