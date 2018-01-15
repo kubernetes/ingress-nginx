@@ -56,10 +56,7 @@ func TestStore(t *testing.T) {
 		defer deleteNamespace(ns, clientSet, t)
 
 		stopCh := make(chan struct{})
-		defer close(stopCh)
-
-		updateCh := make(chan Event)
-		defer close(updateCh)
+		updateCh := make(chan Event, 1024)
 
 		go func(ch chan Event) {
 			for {
@@ -112,6 +109,9 @@ func TestStore(t *testing.T) {
 		if svc != nil {
 			t.Errorf("expected an Ingres but none returned")
 		}
+
+		close(updateCh)
+		close(stopCh)
 	})
 
 	t.Run("should return ingress one event for add, update and delete", func(t *testing.T) {
@@ -119,10 +119,7 @@ func TestStore(t *testing.T) {
 		defer deleteNamespace(ns, clientSet, t)
 
 		stopCh := make(chan struct{})
-		defer close(stopCh)
-
-		updateCh := make(chan Event)
-		defer close(updateCh)
+		updateCh := make(chan Event, 1024)
 
 		var add uint64
 		var upd uint64
@@ -144,13 +141,10 @@ func TestStore(t *testing.T) {
 				switch e.Type {
 				case CreateEvent:
 					atomic.AddUint64(&add, 1)
-					break
 				case UpdateEvent:
 					atomic.AddUint64(&upd, 1)
-					break
 				case DeleteEvent:
 					atomic.AddUint64(&del, 1)
-					break
 				}
 			}
 		}(updateCh)
@@ -257,6 +251,9 @@ func TestStore(t *testing.T) {
 		if atomic.LoadUint64(&del) != 1 {
 			t.Errorf("expected 1 event of type Delete but %v ocurred", del)
 		}
+
+		close(updateCh)
+		close(stopCh)
 	})
 
 	t.Run("should not receive events from new secret no referenced from ingress", func(t *testing.T) {
@@ -264,10 +261,7 @@ func TestStore(t *testing.T) {
 		defer deleteNamespace(ns, clientSet, t)
 
 		stopCh := make(chan struct{})
-		defer close(stopCh)
-
-		updateCh := make(chan Event)
-		defer close(updateCh)
+		updateCh := make(chan Event, 1024)
 
 		var add uint64
 		var upd uint64
@@ -286,13 +280,10 @@ func TestStore(t *testing.T) {
 				switch e.Type {
 				case CreateEvent:
 					atomic.AddUint64(&add, 1)
-					break
 				case UpdateEvent:
 					atomic.AddUint64(&upd, 1)
-					break
 				case DeleteEvent:
 					atomic.AddUint64(&del, 1)
-					break
 				}
 			}
 		}(updateCh)
@@ -333,6 +324,8 @@ func TestStore(t *testing.T) {
 			t.Errorf("unexpected error deleting secret: %v", err)
 		}
 
+		time.Sleep(1 * time.Second)
+
 		if atomic.LoadUint64(&add) != 0 {
 			t.Errorf("expected 0 events of type Create but %v ocurred", add)
 		}
@@ -342,6 +335,9 @@ func TestStore(t *testing.T) {
 		if atomic.LoadUint64(&del) != 1 {
 			t.Errorf("expected 1 events of type Delete but %v ocurred", del)
 		}
+
+		close(updateCh)
+		close(stopCh)
 	})
 
 	t.Run("should create an ingress with a secret it doesn't exists", func(t *testing.T) {
@@ -349,16 +345,13 @@ func TestStore(t *testing.T) {
 		defer deleteNamespace(ns, clientSet, t)
 
 		stopCh := make(chan struct{})
-		defer close(stopCh)
-
-		updateCh := make(chan Event)
-		defer close(updateCh)
+		updateCh := make(chan Event, 1024)
 
 		var add uint64
 		var upd uint64
 		var del uint64
 
-		go func(ch chan Event) {
+		go func(ch <-chan Event) {
 			for {
 				e, ok := <-ch
 				if !ok {
@@ -371,13 +364,10 @@ func TestStore(t *testing.T) {
 				switch e.Type {
 				case CreateEvent:
 					atomic.AddUint64(&add, 1)
-					break
 				case UpdateEvent:
 					atomic.AddUint64(&upd, 1)
-					break
 				case DeleteEvent:
 					atomic.AddUint64(&del, 1)
-					break
 				}
 			}
 		}(updateCh)
@@ -398,7 +388,6 @@ func TestStore(t *testing.T) {
 		name := "ingress-with-secret"
 		secretHosts := []string{name}
 
-		//		err:= createIngress(client, name, ns.Name)
 		_, err := ensureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
@@ -484,6 +473,9 @@ func TestStore(t *testing.T) {
 				t.Errorf("SHA of secret on disk differs from local secret store (%v != %v)", pemSHA, sslCert.PemSHA)
 			}
 		})
+
+		close(updateCh)
+		close(stopCh)
 	})
 
 	// test add ingress with secret it doesn't exists and then add secret
