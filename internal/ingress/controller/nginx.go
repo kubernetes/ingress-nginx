@@ -32,6 +32,7 @@ import (
 
 	"github.com/golang/glog"
 
+	proxyproto "github.com/armon/go-proxyproto"
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -227,6 +228,8 @@ type NGINXController struct {
 
 	isShuttingDown bool
 
+	Proxy *TCPProxy
+
 	store store.Storer
 
 	fileSystem filesystem.Filesystem
@@ -250,6 +253,10 @@ func (n *NGINXController) Start() {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 		Pgid:    0,
+	}
+
+	if n.cfg.EnableSSLPassthrough {
+		n.setupSSLProxy()
 	}
 
 	glog.Info("starting NGINX process...")
@@ -399,40 +406,38 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
 
-	/*
-		servers := []*TCPServer{}
-		for _, pb := range ingressCfg.PassthroughBackends {
-			svc := pb.Service
-			if svc == nil {
-				glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
-				continue
-			}
-			port, err := strconv.Atoi(pb.Port.String())
-			if err != nil {
-				for _, sp := range svc.Spec.Ports {
-					if sp.Name == pb.Port.String() {
-						port = int(sp.Port)
-						break
-					}
-				}
-			} else {
-				for _, sp := range svc.Spec.Ports {
-					if sp.Port == int32(port) {
-						port = int(sp.Port)
-						break
-					}
-				}
-			}
-
-			//TODO: Allow PassthroughBackends to specify they support proxy-protocol
-			servers = append(servers, &TCPServer{
-				Hostname:      pb.Hostname,
-				IP:            svc.Spec.ClusterIP,
-				Port:          port,
-				ProxyProtocol: false,
-			})
+	servers := []*TCPServer{}
+	for _, pb := range ingressCfg.PassthroughBackends {
+		svc := pb.Service
+		if svc == nil {
+			glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
+			continue
 		}
-	*/
+		port, err := strconv.Atoi(pb.Port.String())
+		if err != nil {
+			for _, sp := range svc.Spec.Ports {
+				if sp.Name == pb.Port.String() {
+					port = int(sp.Port)
+					break
+				}
+			}
+		} else {
+			for _, sp := range svc.Spec.Ports {
+				if sp.Port == int32(port) {
+					port = int(sp.Port)
+					break
+				}
+			}
+		}
+
+		//TODO: Allow PassthroughBackends to specify they support proxy-protocol
+		servers = append(servers, &TCPServer{
+			Hostname:      pb.Hostname,
+			IP:            svc.Spec.ClusterIP,
+			Port:          port,
+			ProxyProtocol: false,
+		})
+	}
 
 	// we need to check if the status module configuration changed
 	if cfg.EnableVtsStatus {
@@ -639,4 +644,50 @@ func nextPowerOf2(v int) int {
 	v++
 
 	return v
+}
+
+func (n *NGINXController) setupSSLProxy() {
+	sslPort := n.cfg.ListenPorts.HTTPS
+	proxyPort := n.cfg.ListenPorts.SSLProxy
+
+	glog.Info("starting TLS proxy for SSL passthrough")
+	n.Proxy = &TCPProxy{
+		Default: &TCPServer{
+			Hostname:      "localhost",
+			IP:            "127.0.0.1",
+			Port:          proxyPort,
+			ProxyProtocol: true,
+		},
+	}
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", sslPort))
+	if err != nil {
+		glog.Fatalf("%v", err)
+	}
+
+	proxyList := &proxyproto.Listener{Listener: listener}
+
+	// start goroutine that accepts tcp connections in port 443
+	go func() {
+		for {
+			var conn net.Conn
+			var err error
+
+			if n.store.GetBackendConfiguration().UseProxyProtocol {
+				// we need to wrap the listener in order to decode
+				// proxy protocol before handling the connection
+				conn, err = proxyList.Accept()
+			} else {
+				conn, err = listener.Accept()
+			}
+
+			if err != nil {
+				glog.Warningf("unexpected error accepting tcp connection: %v", err)
+				continue
+			}
+
+			glog.V(3).Infof("remote address %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
+			go n.Proxy.Handle(conn)
+		}
+	}()
 }

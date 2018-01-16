@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -47,6 +48,8 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	fmt.Println(version.String())
 
 	showVersion, conf, err := parseFlags()
@@ -118,7 +121,7 @@ func main() {
 
 	// create the default SSL certificate (dummy)
 	defCert, defKey := ssl.GetFakeSSLCert()
-	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{}, fs)
+	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{})
 	if err != nil {
 		glog.Fatalf("Error generating self signed certificate: %v", err)
 	}
@@ -189,7 +192,7 @@ func setupSSLProxy(sslPort, proxyPort int, n *controller.NGINXController) {
 			var conn net.Conn
 			var err error
 
-			if n.IsProxyProtocolEnabled() {
+			if n.IsProxyProtocolEnabled {
 				// we need to wrap the listener in order to decode
 				// proxy protocol before handling the connection
 				conn, err = proxyList.Accept()
