@@ -19,7 +19,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -28,7 +27,6 @@ import (
 	"syscall"
 	"time"
 
-	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -130,10 +128,6 @@ func main() {
 
 	ngx := controller.NewNGINXController(conf, fs)
 
-	if conf.EnableSSLPassthrough {
-		setupSSLProxy(conf.ListenPorts.HTTPS, conf.ListenPorts.SSLProxy, ngx)
-	}
-
 	go handleSigterm(ngx, func(code int) {
 		os.Exit(code)
 	})
@@ -163,49 +157,6 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 
 	glog.Infof("Exiting with %v", exitCode)
 	exit(exitCode)
-}
-
-func setupSSLProxy(sslPort, proxyPort int, n *controller.NGINXController) {
-	glog.Info("starting TLS proxy for SSL passthrough")
-	n.Proxy = &controller.TCPProxy{
-		Default: &controller.TCPServer{
-			Hostname:      "localhost",
-			IP:            "127.0.0.1",
-			Port:          proxyPort,
-			ProxyProtocol: true,
-		},
-	}
-
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", sslPort))
-	if err != nil {
-		glog.Fatalf("%v", err)
-	}
-
-	proxyList := &proxyproto.Listener{Listener: listener}
-
-	// start goroutine that accepts tcp connections in port 443
-	go func() {
-		for {
-			var conn net.Conn
-			var err error
-
-			if n.IsProxyProtocolEnabled() {
-				// we need to wrap the listener in order to decode
-				// proxy protocol before handling the connection
-				conn, err = proxyList.Accept()
-			} else {
-				conn, err = listener.Accept()
-			}
-
-			if err != nil {
-				glog.Warningf("unexpected error accepting tcp connection: %v", err)
-				continue
-			}
-
-			glog.V(3).Infof("remote address %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
-			go n.Proxy.Handle(conn)
-		}
-	}()
 }
 
 // createApiserverClient creates new Kubernetes Apiserver client. When kubeconfig or apiserverHost param is empty
