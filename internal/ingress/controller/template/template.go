@@ -17,10 +17,10 @@ limitations under the License.
 package template
 
 import (
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/url"
 	"os"
@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 	text_template "text/template"
+	"time"
 
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
@@ -493,12 +494,7 @@ func buildDenyVariable(a interface{}) string {
 	}
 
 	if _, ok := denyPathSlugMap[l]; !ok {
-		s, err := randomString()
-		if err != nil {
-			return ""
-		}
-
-		denyPathSlugMap[l] = s
+		denyPathSlugMap[l] = randomString()
 	}
 
 	return fmt.Sprintf("$deny_%v", denyPathSlugMap[l])
@@ -693,12 +689,17 @@ func buildAuthSignURL(input interface{}) string {
 	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$request_uri", s)
 }
 
-func randomString() (string, error) {
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", err
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func randomString() string {
+	b := make([]rune, 32)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
 	}
 
-	return string(b), nil
+	return string(b)
 }

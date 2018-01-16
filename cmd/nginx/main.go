@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -47,6 +48,8 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	fmt.Println(version.String())
 
 	showVersion, conf, err := parseFlags()
