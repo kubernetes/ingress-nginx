@@ -10,7 +10,7 @@ The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](http
 
 ## Description
 
-This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/#understanding-configmaps) to store the NGINX configuration.
+This repository contains the NGINX controller built around the [Kubernetes Ingress resource](http://kubernetes.io/docs/user-guide/ingress/) that uses [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#understanding-configmaps-and-pods) to store the NGINX configuration.
 
 Learn more about using Ingress on [k8s.io](http://kubernetes.io/docs/user-guide/ingress/)
 
