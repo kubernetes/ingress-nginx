@@ -19,6 +19,10 @@ load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 load_module /etc/nginx/modules/ngx_http_zipkin_module.so;
 {{ end }}
 
+{{ if (and $cfg.EnableOpentracing (ne $cfg.JaegerCollectorHost "")) }}
+load_module /etc/nginx/modules/ngx_http_jaeger_module.so;
+{{ end }}
+
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
@@ -105,9 +109,14 @@ http {
     {{ end }}
 
     {{ if (and $cfg.EnableOpentracing (ne $cfg.ZipkinCollectorHost "")) }}
-    zipkin_collector_host           {{ $cfg.ZipkinCollectorHost }};
-    zipkin_collector_port           {{ $cfg.ZipkinCollectorPort }};
-    zipkin_service_name             {{ $cfg.ZipkinServiceName }};
+    zipkin_collector_host                   {{ $cfg.ZipkinCollectorHost }};
+    zipkin_collector_port                   {{ $cfg.ZipkinCollectorPort }};
+    zipkin_service_name                     {{ $cfg.ZipkinServiceName }};
+    {{ else if (and $cfg.EnableOpentracing (ne $cfg.JaegerCollectorHost "")) }}
+    jaeger_reporter_local_agent_host_port   {{ $cfg.JaegerCollectorHost }}:{{ $cfg.JaegerCollectorPort }};
+    jaeger_service_name                     {{ $cfg.JaegerServiceName }};
+    jaeger_sampler_type                     {{ $cfg.JaegerSamplerType }};
+    jaeger_sampler_param                    {{ $cfg.JaegerSamplerParam }};
     {{ end }}
 
     include /etc/nginx/mime.types;
