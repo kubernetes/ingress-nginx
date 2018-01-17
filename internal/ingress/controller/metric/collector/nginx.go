@@ -56,19 +56,19 @@ func NewNginxStatus(watchNamespace, ingressClass string, ngxHealthPort int, ngxV
 
 	p.data = &nginxStatusData{
 		active: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "active_connections_total"),
+			prometheus.BuildFQName(ns, "", "connections_total"),
 			"total number of active connections",
-			[]string{"ingress_class", "namespace"}, nil),
+			[]string{"ingress_class", "namespace", "state"}, nil),
 
 		accepted: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "accepted_connections_total"),
+			prometheus.BuildFQName(ns, "", "connections_total"),
 			"total number of accepted client connections",
-			[]string{"ingress_class", "namespace"}, nil),
+			[]string{"ingress_class", "namespace", "state"}, nil),
 
 		handled: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "handled_connections_total"),
+			prometheus.BuildFQName(ns, "", "connections_total"),
 			"total number of handled connections",
-			[]string{"ingress_class", "namespace"}, nil),
+			[]string{"ingress_class", "namespace", "state"}, nil),
 
 		requests: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "requests_total"),
@@ -76,19 +76,19 @@ func NewNginxStatus(watchNamespace, ingressClass string, ngxHealthPort int, ngxV
 			[]string{"ingress_class", "namespace"}, nil),
 
 		reading: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "current_reading_connections"),
+			prometheus.BuildFQName(ns, "", "connections"),
 			"current number of connections where nginx is reading the request header",
-			[]string{"ingress_class", "namespace"}, nil),
+			[]string{"ingress_class", "namespace", "state"}, nil),
 
 		writing: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "current_writing_connections"),
+			prometheus.BuildFQName(ns, "", "connections"),
 			"current number of connections where nginx is writing the response back to the client",
-			[]string{"ingress_class", "namespace"}, nil),
+			[]string{"ingress_class", "namespace", "state"}, nil),
 
 		waiting: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "current_waiting_connections"),
+			prometheus.BuildFQName(ns, "", "connections"),
 			"current number of idle client connections waiting for a request",
-			[]string{"ingress_class", "namespace"}, nil),
+			[]string{"ingress_class", "namespace", "state"}, nil),
 	}
 
 	go p.start()
@@ -135,17 +135,17 @@ func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
 	}
 
 	ch <- prometheus.MustNewConstMetric(p.data.active,
-		prometheus.GaugeValue, float64(s.Active), p.ingressClass, p.watchNamespace)
+		prometheus.GaugeValue, float64(s.Active), p.ingressClass, p.watchNamespace, "active")
 	ch <- prometheus.MustNewConstMetric(p.data.accepted,
-		prometheus.GaugeValue, float64(s.Accepted), p.ingressClass, p.watchNamespace)
+		prometheus.GaugeValue, float64(s.Accepted), p.ingressClass, p.watchNamespace, "accepted")
 	ch <- prometheus.MustNewConstMetric(p.data.handled,
-		prometheus.GaugeValue, float64(s.Handled), p.ingressClass, p.watchNamespace)
+		prometheus.GaugeValue, float64(s.Handled), p.ingressClass, p.watchNamespace, "handled")
 	ch <- prometheus.MustNewConstMetric(p.data.requests,
 		prometheus.GaugeValue, float64(s.Requests), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.reading,
-		prometheus.GaugeValue, float64(s.Reading), p.ingressClass, p.watchNamespace)
+		prometheus.GaugeValue, float64(s.Reading), p.ingressClass, p.watchNamespace, "reading")
 	ch <- prometheus.MustNewConstMetric(p.data.writing,
-		prometheus.GaugeValue, float64(s.Writing), p.ingressClass, p.watchNamespace)
+		prometheus.GaugeValue, float64(s.Writing), p.ingressClass, p.watchNamespace, "writing")
 	ch <- prometheus.MustNewConstMetric(p.data.waiting,
-		prometheus.GaugeValue, float64(s.Waiting), p.ingressClass, p.watchNamespace)
+		prometheus.GaugeValue, float64(s.Waiting), p.ingressClass, p.watchNamespace, "waiting")
 }
