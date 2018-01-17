@@ -115,7 +115,7 @@ func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(p.data.requestsTotal,
 		prometheus.CounterValue, float64(s.Requests), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.connections,
-		prometheus.GaugeValue, float64(s.Reading), pconnections.ingressClass, p.watchNamespace, "reading")
+		prometheus.GaugeValue, float64(s.Reading), p.ingressClass, p.watchNamespace, "reading")
 	ch <- prometheus.MustNewConstMetric(p.data.connections,
 		prometheus.GaugeValue, float64(s.Writing), p.ingressClass, p.watchNamespace, "writing")
 	ch <- prometheus.MustNewConstMetric(p.data.connections,
