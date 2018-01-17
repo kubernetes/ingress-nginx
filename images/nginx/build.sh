@@ -218,7 +218,8 @@ WITH_FLAGS="--with-debug \
   --with-stream \
   --with-stream_ssl_module \
   --with-stream_ssl_preread_module \
-  --with-threads"
+  --with-threads \
+  --with-http_secure_link_module"
 
 if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
