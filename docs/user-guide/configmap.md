@@ -94,6 +94,11 @@ The following table shows a configuration option's name, type, and the default v
 |[zipkin&#8209;collector&#8209;host](#zipkin-collector-host)|string|""|
 |[zipkin&#8209;collector&#8209;port](#zipkin-collector-port)|int|9411|
 |[zipkin&#8209;service&#8209;name](#zipkin-service-name)|string|"nginx"|
+|[jaeger&#8209;collector&#8209;host](#jaeger-collector-host)|string|""|
+|[jaeger&#8209;collector&#8209;port](#jaeger-collector-port)|int|6831|
+|[jaeger&#8209;service&#8209;name](#jaeger-service-name)|string|"nginx"|
+|[jaeger&#8209;sampler&#8209;type](#jaeger-sampler-type)|string|"const"|
+|[jaeger&#8209;sampler&#8209;param](#jaeger-sampler-param)|string|"1"|
 |[http&#8209;snippet](#http-snippet)|string|""|
 |[server&#8209;snippet](#server-snippet)|string|""|
 |[location&#8209;snippet](#location-snippet)|string|""|
@@ -553,6 +558,27 @@ Specifies the port to use when uploading traces. Default: 9411
 ## zipkin-service-name
 
 Specifies the service name to use for any traces created. Default: nginx
+
+## jaeger-collector-host
+
+Specifies the host to use when uploading traces. It must be a valid URL.
+
+## jaeger-collector-port
+
+Specifies the port to use when uploading traces. Default: 6831
+
+## jaeger-service-name
+
+Specifies the service name to use for any traces created. Default: nginx
+
+## jaeger-sampler-type
+
+Specifies the sampler to be used when sampling traces. The available samplers are: const, probabilistic, ratelimiting, remote. Default const.
+
+## jaeger-sampler-param
+
+Specifies the argument to be passed to the sampler constructor. Must be a number.
+For const this should be 0 to never sample and 1 to always sample. Default: 1
 
 ## http-snippet
 
