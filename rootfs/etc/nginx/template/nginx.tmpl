@@ -693,10 +693,13 @@ stream {
             {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
             # enforce ssl on server side
-            if ($redirect_to_https) {
+            if ($redirect_to_https) {               
                 {{ if $location.UsePortInRedirects }}
+                # using custom ports require a different rewrite directive
                 {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }} 
-                return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host{{ $redirect_port }}$request_uri;
+                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host{{ $redirect_port }}$request_uri;
+
+                return 497;
                 {{ else }}
                 return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host$request_uri;
                 {{ end }}
