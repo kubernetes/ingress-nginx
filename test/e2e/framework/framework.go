@@ -173,6 +173,13 @@ func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) boo
 	return wait.PollImmediate(Poll, time.Minute*2, f.matchNginxConditions(name, matcher))
 }
 
+// WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
+func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) error {
+	// initial wait to allow the update of the ingress controller
+	time.Sleep(5 * time.Second)
+	return wait.PollImmediate(Poll, time.Minute*2, f.matchNginxConditions("", matcher))
+}
+
 // NginxLogs returns the logs of the nginx ingress controller pod running
 func (f *Framework) NginxLogs() (string, error) {
 	l, err := f.KubeClientSet.CoreV1().Pods("ingress-nginx").List(metav1.ListOptions{
@@ -210,7 +217,13 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			return false, fmt.Errorf("unexpected number of nginx ingress controller pod is running (%v)", len(l.Items))
 		}
 
-		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
+		var cmd string
+		if name == "" {
+			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf")
+		} else {
+			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
+		}
+
 		o, err := f.ExecCommand(&l.Items[0], cmd)
 		if err != nil {
 			return false, err
