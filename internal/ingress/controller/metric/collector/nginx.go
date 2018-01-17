@@ -35,7 +35,7 @@ type (
 	nginxStatusData struct {
 		connections_total	*prometheus.Desc
 		requests_total		*prometheus.Desc
-		connections 			*prometheus.Desc
+		connections       *prometheus.Desc
 	}
 )
 
