@@ -19,14 +19,13 @@ package ssl
 import (
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"testing"
 	"time"
 
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/client-go/util/cert/triple"
 
-	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/file"
 )
 
 // generateRSACerts generates a self signed certificate using a self generated ca
@@ -57,11 +56,7 @@ func generateRSACerts(host string) (*triple.KeyPair, *triple.KeyPair, error) {
 }
 
 func TestAddOrUpdateCertAndKey(t *testing.T) {
-	td, err := ioutil.TempDir("", "ssl")
-	if err != nil {
-		t.Fatalf("Unexpected error creating temporal directory: %v", err)
-	}
-	ingress.DefaultSSLDirectory = td
+	fs := newFS(t)
 
 	cert, _, err := generateRSACerts("echoheaders")
 	if err != nil {
@@ -73,7 +68,7 @@ func TestAddOrUpdateCertAndKey(t *testing.T) {
 	c := certutil.EncodeCertPEM(cert.Cert)
 	k := certutil.EncodePrivateKeyPEM(cert.Key)
 
-	ngxCert, err := AddOrUpdateCertAndKey(name, c, k, []byte{})
+	ngxCert, err := AddOrUpdateCertAndKey(name, c, k, []byte{}, fs)
 	if err != nil {
 		t.Fatalf("unexpected error checking SSL certificate: %v", err)
 	}
@@ -92,11 +87,7 @@ func TestAddOrUpdateCertAndKey(t *testing.T) {
 }
 
 func TestCACert(t *testing.T) {
-	td, err := ioutil.TempDir("", "ssl")
-	if err != nil {
-		t.Fatalf("Unexpected error creating temporal directory: %v", err)
-	}
-	ingress.DefaultSSLDirectory = td
+	fs := newFS(t)
 
 	cert, CA, err := generateRSACerts("echoheaders")
 	if err != nil {
@@ -109,7 +100,7 @@ func TestCACert(t *testing.T) {
 	k := certutil.EncodePrivateKeyPEM(cert.Key)
 	ca := certutil.EncodeCertPEM(CA.Cert)
 
-	ngxCert, err := AddOrUpdateCertAndKey(name, c, k, ca)
+	ngxCert, err := AddOrUpdateCertAndKey(name, c, k, ca, fs)
 	if err != nil {
 		t.Fatalf("unexpected error checking SSL certificate: %v", err)
 	}
@@ -129,11 +120,10 @@ func TestGetFakeSSLCert(t *testing.T) {
 }
 
 func TestAddCertAuth(t *testing.T) {
-	td, err := ioutil.TempDir("", "ssl")
+	fs, err := file.NewFakeFS()
 	if err != nil {
-		t.Fatalf("Unexpected error creating temporal directory: %v", err)
+		t.Fatalf("unexpected error creating filesystem: %v", err)
 	}
-	ingress.DefaultSSLDirectory = td
 
 	cn := "demo-ca"
 	_, ca, err := generateRSACerts(cn)
@@ -141,11 +131,19 @@ func TestAddCertAuth(t *testing.T) {
 		t.Fatalf("unexpected error creating SSL certificate: %v", err)
 	}
 	c := certutil.EncodeCertPEM(ca.Cert)
-	ic, err := AddCertAuth(cn, c)
+	ic, err := AddCertAuth(cn, c, fs)
 	if err != nil {
 		t.Fatalf("unexpected error creating SSL certificate: %v", err)
 	}
 	if ic.CAFileName == "" {
 		t.Fatalf("expected a valid CA file name")
 	}
+}
+
+func newFS(t *testing.T) file.Filesystem {
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("unexpected error creating filesystem: %v", err)
+	}
+	return fs
 }

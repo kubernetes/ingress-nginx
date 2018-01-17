@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
+	"k8s.io/ingress-nginx/internal/file"
 )
 
 const (
@@ -97,9 +98,10 @@ var RunID = uuid.NewUUID()
 
 // CreateKubeNamespace creates a new namespace in the cluster
 func CreateKubeNamespace(baseName string, c kubernetes.Interface) (*v1.Namespace, error) {
+	ts := time.Now().UnixNano()
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("e2e-tests-%v-", baseName),
+			GenerateName: fmt.Sprintf("e2e-tests-%v-%v-", baseName, ts),
 		},
 	}
 	// Be robust about making the namespace creation call.
@@ -204,6 +206,30 @@ func secretInNamespace(c kubernetes.Interface, namespace, name string) wait.Cond
 			return true, nil
 		}
 		return false, nil
+	}
+}
+
+// WaitForFileInFS waits a default amount of time for the specified file is present in the filesystem
+func WaitForFileInFS(file string, fs file.Filesystem) error {
+	return wait.PollImmediate(1*time.Second, time.Minute*2, fileInFS(file, fs))
+}
+
+func fileInFS(file string, fs file.Filesystem) wait.ConditionFunc {
+	return func() (bool, error) {
+		stat, err := fs.Stat(file)
+		if err != nil {
+			return false, err
+		}
+
+		if stat == nil {
+			return false, fmt.Errorf("file %v does not exists", file)
+		}
+
+		if stat.Size() > 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("the file %v exists but it is empty", file)
 	}
 }
 
