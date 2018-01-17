@@ -56,37 +56,37 @@ func NewNginxStatus(watchNamespace, ingressClass string, ngxHealthPort int, ngxV
 
 	p.data = &nginxStatusData{
 		active: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "active_connections"),
+			prometheus.BuildFQName(ns, "", "active_connections_total"),
 			"total number of active connections",
 			[]string{"ingress_class", "namespace"}, nil),
 
 		accepted: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "accepted_connections"),
+			prometheus.BuildFQName(ns, "", "accepted_connections_total"),
 			"total number of accepted client connections",
 			[]string{"ingress_class", "namespace"}, nil),
 
 		handled: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "handled_connections"),
+			prometheus.BuildFQName(ns, "", "handled_connections_total"),
 			"total number of handled connections",
 			[]string{"ingress_class", "namespace"}, nil),
 
 		requests: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "total_requests"),
+			prometheus.BuildFQName(ns, "", "requests_total"),
 			"total number of client requests",
 			[]string{"ingress_class", "namespace"}, nil),
 
 		reading: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "current_reading_connections"),
+			prometheus.BuildFQName(ns, "", "current_reading_connections_total"),
 			"current number of connections where nginx is reading the request header",
 			[]string{"ingress_class", "namespace"}, nil),
 
 		writing: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "current_writing_connections"),
+			prometheus.BuildFQName(ns, "", "current_writing_connections_total"),
 			"current number of connections where nginx is writing the response back to the client",
 			[]string{"ingress_class", "namespace"}, nil),
 
 		waiting: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "current_waiting_connections"),
+			prometheus.BuildFQName(ns, "", "current_waiting_connections_total"),
 			"current number of idle client connections waiting for a request",
 			[]string{"ingress_class", "namespace"}, nil),
 	}
