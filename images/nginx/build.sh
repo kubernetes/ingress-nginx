@@ -27,12 +27,12 @@ export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.2.0
+export NGINX_OPENTRACING_VERSION=0.2.1
 export OPENTRACING_CPP_VERSION=1.2.0
 export ZIPKIN_CPP_VERSION=0.2.0
 export JAEGER_VERSION=0.1.0
 export MODSECURITY_VERSION=1.0.0
-export LUA_VERSION=0.10.12rc1
+export LUA_VERSION=0.10.12rc2
 
 export BUILD_PATH=/tmp/build
 
@@ -66,12 +66,11 @@ clean-install \
   patch \
   libpcre3 \
   libpcre3-dev \
-  libssl1.0-dev \
+  libssl-dev \
   zlib1g \
   zlib1g-dev \
   libaio1 \
   libaio-dev \
-  libssl1.0.2 \
   openssl \
   libperl-dev \
   cmake \
@@ -130,7 +129,7 @@ get_src ede0ad490cb9dd69da348bdea2a60a4c45284c9777b2f13fa48394b6b8e7671c \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 97e4ca6eb2c03440b535221c690ab98cd9709d91e00291704ad63c893279477f \
+get_src ce66acf943a604ef9a0bb477c7efca1fe583076991647aa646aa3d8804328364 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src c77041cb2f147ac81b2b0702abfced5565a9cebc318d045c060a4c3e074009ee \
@@ -142,7 +141,7 @@ get_src 611eb6a1ff1c326c472421ae2486ba34a94ddc78d90047df3f097bcdad3298e3 \
 get_src 8deee6d6f7128f58bd6ba2893bd69c1fdbc8a3ad2797ba45ef94b977255d181c \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
 
-get_src 61503e30d5605fdb93b9644c833d6911f284149302851a8da1b19017e3d41459 \
+get_src 18edf2d18fa331265c36516a4a19ba75d26f46eafcc5e0c2d9aa6c237e8bc110 \
         "https://github.com/openresty/lua-nginx-module/archive/v$LUA_VERSION.tar.gz"
 
 get_src 678ec4b6c2b6bba7e8000f42feb71d2bf044a44cf3909b3cbbccb708827ca7a6 \
