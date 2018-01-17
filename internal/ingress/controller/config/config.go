@@ -423,6 +423,25 @@ type Configuration struct {
 	// Default: nginx
 	ZipkinServiceName string `json:"zipkin-service-name"`
 
+	// JaegerCollectorHost specifies the host to use when uploading traces
+	JaegerCollectorHost string `json:"jaeger-collector-host"`
+
+	// JaegerCollectorPort specifies the port to use when uploading traces
+	JaegerCollectorPort int `json:"jaeger-collector-port"`
+
+	// JaegerServiceName specifies the service name to use for any traces created
+	// Default: nginx
+	JaegerServiceName string `json:"jaeger-service-name"`
+
+	// JaegerSamplerType specifies the sampler to be used when sampling traces.
+	// The available samplers are: const, probabilistic, ratelimiting, remote
+	// Default: const
+	JaegerSamplerType string `json:"jaeger-sampler-type"`
+
+	// JaegerSamplerParam specifies the argument to be passed to the sampler constructor
+	// Default: 1
+	JaegerSamplerParam string `json:"jaeger-sampler-param"`
+
 	// HTTPSnippet adds custom configuration to the http section of the nginx configuration
 	HTTPSnippet string `json:"http-snippet"`
 
@@ -524,6 +543,10 @@ func NewDefault() Configuration {
 		BindAddressIpv6:              defBindAddress,
 		ZipkinCollectorPort:          9411,
 		ZipkinServiceName:            "nginx",
+		JaegerCollectorPort:          6831,
+		JaegerServiceName:            "nginx",
+		JaegerSamplerType:            "const",
+		JaegerSamplerParam:           "1",
 	}
 
 	if glog.V(5) {
