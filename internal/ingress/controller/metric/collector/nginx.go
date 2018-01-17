@@ -33,9 +33,9 @@ type (
 	}
 
 	nginxStatusData struct {
-		connections_total *prometheus.Desc
-		requests          *prometheus.Desc
-		connections       *prometheus.Desc
+		connectionsTotal *prometheus.Desc
+		requestsTotal    *prometheus.Desc
+		connections      *prometheus.Desc
 	}
 )
 
@@ -51,12 +51,12 @@ func NewNginxStatus(watchNamespace, ingressClass string, ngxHealthPort int, ngxV
 	}
 
 	p.data = &nginxStatusData{
-		connections_total: prometheus.NewDesc(
+		connectionsTotal: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "connections_total"),
 			"total number of connections with state {active, accepted, handled}",
 			[]string{"ingress_class", "namespace", "state"}, nil),
 
-		requests_total: prometheus.NewDesc(
+		requestsTotal: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "requests_total"),
 			"total number of client requests",
 			[]string{"ingress_class", "namespace"}, nil),
@@ -74,8 +74,8 @@ func NewNginxStatus(watchNamespace, ingressClass string, ngxHealthPort int, ngxV
 
 // Describe implements prometheus.Collector.
 func (p nginxStatusCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- p.data.connections_total
-	ch <- p.data.requests_total
+	ch <- p.data.connectionsTotal
+	ch <- p.data.requestsTotal
 	ch <- p.data.connections
 }
 
@@ -106,13 +106,13 @@ func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	ch <- prometheus.MustNewConstMetric(p.data.connections_total,
+	ch <- prometheus.MustNewConstMetric(p.data.connectionsTotal,
 		prometheus.CounterValue, float64(s.Active), p.ingressClass, p.watchNamespace, "active")
-	ch <- prometheus.MustNewConstMetric(p.data.connections_total,
+	ch <- prometheus.MustNewConstMetric(p.data.connectionsTotal,
 		prometheus.CounterValue, float64(s.Accepted), p.ingressClass, p.watchNamespace, "accepted")
-	ch <- prometheus.MustNewConstMetric(p.data.connections_total,
+	ch <- prometheus.MustNewConstMetric(p.data.connectionsTotal,
 		prometheus.CounterValue, float64(s.Handled), p.ingressClass, p.watchNamespace, "handled")
-	ch <- prometheus.MustNewConstMetric(p.data.requests_total,
+	ch <- prometheus.MustNewConstMetric(p.data.requestsTotal,
 		prometheus.CounterValue, float64(s.Requests), p.ingressClass, p.watchNamespace)
 	ch <- prometheus.MustNewConstMetric(p.data.connections,
 		prometheus.GaugeValue, float64(s.Reading), pconnections.ingressClass, p.watchNamespace, "reading")
