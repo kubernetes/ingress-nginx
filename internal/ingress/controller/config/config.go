@@ -455,6 +455,13 @@ type Configuration struct {
 	// Supported codes are 301,302,307 and 308
 	// Default: 308
 	HTTPRedirectCode int `json:"http-redirect-code"`
+
+	// ReusePort instructs NGINX to create an individual listening socket for
+	// each worker process (using the SO_REUSEPORT socket option), allowing a
+	// kernel to distribute incoming connections between worker processes
+	// Default: false
+	// Reason for the default: https://trac.nginx.org/nginx/ticket/1300
+	ReusePort bool `json:"reuse-port"`
 }
 
 // NewDefault returns the default nginx configuration
