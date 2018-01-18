@@ -38,6 +38,7 @@ const (
 	bindAddress          = "bind-address"
 	httpRedirectCode     = "http-redirect-code"
 	proxyStreamResponses = "proxy-stream-responses"
+	hideHeaders          = "hide-headers"
 )
 
 var (
@@ -56,6 +57,8 @@ func ReadConfig(src map[string]string) config.Configuration {
 	skipUrls := make([]string, 0)
 	whitelist := make([]string, 0)
 	proxylist := make([]string, 0)
+	hideHeaderslist := make([]string, 0)
+
 	bindAddressIpv4List := make([]string, 0)
 	bindAddressIpv6List := make([]string, 0)
 	redirectCode := 308
@@ -70,6 +73,10 @@ func ReadConfig(src map[string]string) config.Configuration {
 				errors = append(errors, j)
 			}
 		}
+	}
+	if val, ok := conf[hideHeaders]; ok {
+		delete(conf, hideHeaders)
+		hideHeaderslist = strings.Split(val, ",")
 	}
 	if val, ok := conf[skipAccessLogUrls]; ok {
 		delete(conf, skipAccessLogUrls)
@@ -133,6 +140,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.ProxyRealIPCIDR = proxylist
 	to.BindAddressIpv4 = bindAddressIpv4List
 	to.BindAddressIpv6 = bindAddressIpv6List
+	to.HideHeaders = hideHeaderslist
 	to.HTTPRedirectCode = redirectCode
 	to.ProxyStreamResponses = streamResponses
 

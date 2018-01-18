@@ -462,6 +462,11 @@ type Configuration struct {
 	// Default: false
 	// Reason for the default: https://trac.nginx.org/nginx/ticket/1300
 	ReusePort bool `json:"reuse-port"`
+
+	// HideHeaders sets additional header that will not be passed from the upstream
+	// server to the client response
+	// Default: empty
+	HideHeaders []string `json:"hide-headers"`
 }
 
 // NewDefault returns the default nginx configuration

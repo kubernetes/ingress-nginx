@@ -21,6 +21,7 @@ The following table shows a configuration option's name, type, and the default v
 |:---|:---|:------|
 |[add&#8209;headers](#add-headers)|string|""|
 |[allow&#8209;backend&#8209;server&#8209;header](#allow-backend-server-header)|bool|false|
+|[hide&#8209;headers&#8209](#hide-headers)|string array|empty|
 |[access&#8209;log&#8209;path](#access-log-path)|string|"/var/log/nginx/access.log"|
 |[error&#8209;log&#8209;path](#error-log-path)|string|"/var/log/nginx/error.log"|
 |[enable&#8209;dynamic&#8209;tls&#8209;records](#enable-dynamic-tls-records)|bool|true|
@@ -126,7 +127,12 @@ Sets custom headers from named configmap before sending traffic to the client. S
 
 ## allow-backend-server-header
 
-AllowBackendServerHeader enables the return of the header Server from the backend instead of the generic nginx string. By default this is disabled.
+Enables the return of the header Server from the backend instead of the generic nginx string. By default this is disabled.
+
+## hide-headers
+
+Sets additional header that will not be passed from the upstream server to the client response.
+Default: empty
 
 _References:_
 - http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header

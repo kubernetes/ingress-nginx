@@ -290,6 +290,9 @@ http {
     proxy_pass_header Server;
     {{ end }}
 
+    {{ range $header := $cfg.HideHeaders }}proxy_hide_header {{ $header }};
+    {{ end }}
+    
     {{ if not (empty $cfg.HTTPSnippet) }}
     # Custom code snippet configured in the configuration configmap
     {{ $cfg.HTTPSnippet }}
