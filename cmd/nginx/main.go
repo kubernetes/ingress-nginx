@@ -276,10 +276,12 @@ func registerHandlers(enableProfiling bool, port int, ic *controller.NGINXContro
 	}
 
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%v", port),
-		Handler:      mux,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		Addr:              fmt.Sprintf(":%v", port),
+		Handler:           mux,
+		ReadTimeout:       10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      300 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 	glog.Fatal(server.ListenAndServe())
 }
