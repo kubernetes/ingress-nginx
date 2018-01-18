@@ -286,7 +286,7 @@ type Configuration struct {
 	SSLECDHCurve string `json:"ssl-ecdh-curve,omitempty"`
 
 	// The secret that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
-	// https://www.openssl.org/docs/manmaster/apps/dhparam.html
+	// https://wiki.openssl.org/index.php/Manual:Dhparam(1)
 	// https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
 	SSLDHParam string `json:"ssl-dh-param,omitempty"`
