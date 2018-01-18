@@ -5,8 +5,8 @@ This example demonstrates how to use the Rewrite annotations
 ## Prerequisites
 
 You will need to make sure you Ingress targets exactly one Ingress
-controller by specifying the [ingress.class annotation](/examples/PREREQUISITES.md#ingress-class),
-and that you have an ingress controller [running](/examples/deployment) in your cluster.
+controller by specifying the [ingress.class annotation](/README.md#annotation-ingressclass),
+and that you have an ingress controller [running](/deploy/README.md) in your cluster.
 
 ## Deployment
 
