@@ -21,9 +21,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/golang/glog"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 )
 
 // ParseNameNS parses a string searching a namespace and name
@@ -95,4 +97,14 @@ func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
 		NodeIP:    GetNodeIPOrName(kubeClient, pod.Spec.NodeName, true),
 		Labels:    pod.GetLabels(),
 	}, nil
+}
+
+// MetaNamespaceKey knows how to make keys for API objects which implement meta.Interface.
+func MetaNamespaceKey(obj interface{}) string {
+	key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
+	if err != nil {
+		glog.Warning(err)
+	}
+
+	return key
 }
