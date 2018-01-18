@@ -400,6 +400,9 @@ type Configuration struct {
 	// Sets the ipv6 addresses on which the server will accept requests.
 	BindAddressIpv6 []string `json:"bind-address-ipv6,omitempty"`
 
+	// Sets whether to use incoming X-Forwarded headers.
+	UseForwardedHeaders bool `json:"use-forwarded-headers"`
+
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
@@ -482,6 +485,7 @@ func NewDefault() Configuration {
 		EnableDynamicTLSRecords:    true,
 		EnableUnderscoresInHeaders: false,
 		ErrorLogLevel:              errorLevel,
+		UseForwardedHeaders:        true,
 		ForwardedForHeader:         "X-Forwarded-For",
 		ComputeFullForwardedFor:    false,
 		HTTP2MaxFieldSize:          "4k",

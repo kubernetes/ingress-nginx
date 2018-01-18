@@ -42,7 +42,9 @@ events {
 }
 
 http {
-    {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
+    {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
+    {{/* we use the value of the real IP for the geo_ip module */}}
+    {{ if or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol }}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
     {{ else }}
@@ -52,6 +54,7 @@ http {
     real_ip_recursive   on;
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
     set_real_ip_from    {{ $trusted_ip }};
+    {{ end }}
     {{ end }}
 
     {{/* databases used to determine the country depending on the client IP address */}}
@@ -121,7 +124,7 @@ http {
 
     include /etc/nginx/mime.types;
     default_type text/html;
-    
+
     {{ if $cfg.EnableBrotli }}
     brotli on;
     brotli_comp_level {{ $cfg.BrotliLevel }};
@@ -186,7 +189,7 @@ http {
         ''               close;
     }
 
-    map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
+    map 'dummy' $the_real_ip {
     {{ if $cfg.UseProxyProtocol }}
         # Get IP address from Proxy Protocol
         default          $proxy_protocol_addr;
@@ -195,17 +198,11 @@ http {
     {{ end }}
     }
 
+    {{ if $cfg.UseForwardedHeaders }}
     # trust http_x_forwarded_proto headers correctly indicate ssl offloading
     map $http_x_forwarded_proto $pass_access_scheme {
         default          $http_x_forwarded_proto;
         ''               $scheme;
-    }
-
-    # validate $pass_access_scheme and $scheme are http to force a redirect
-    map "$scheme:$pass_access_scheme" $redirect_to_https {
-        default          0;
-        "http:http"      1;
-        "http:https"     1;
     }
 
     map $http_x_forwarded_port $pass_server_port {
@@ -216,6 +213,26 @@ http {
     map $http_x_forwarded_host $best_http_host {
         default          $http_x_forwarded_host;
         ''               $this_host;
+    }
+    {{ else }}
+    map 'dummy' $pass_access_scheme {
+        default          $scheme;
+    }
+
+    map 'dummy' $pass_server_port {
+        default          $server_port;
+    }
+
+    map 'dummy' $best_http_host {
+        default          $this_host;
+    }
+    {{ end }}
+
+    # validate $pass_access_scheme and $scheme are http to force a redirect
+    map "$scheme:$pass_access_scheme" $redirect_to_https {
+        default          0;
+        "http:http"      1;
+        "http:https"     1;
     }
 
     {{ if $all.IsSSLPassthroughEnabled }}
@@ -237,17 +254,21 @@ http {
         ''               $host;
     }
 
-    {{ if $cfg.ComputeFullForwardedFor }}
+    {{ if and $cfg.UseForwardedHeaders $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
-    map $http_x_forwarded_for $full_x_forwarded_for {
+    map {{ buildForwardedFor $all.Cfg.ForwardedForHeader }} $full_x_forwarded_for {
         {{ if $all.Cfg.UseProxyProtocol }}
-        default          "$http_x_forwarded_for, $proxy_protocol_addr";
+        default          "{{ buildForwardedFor $all.Cfg.ForwardedForHeader }}, $proxy_protocol_addr";
         ''               "$proxy_protocol_addr";
         {{ else }}
-        default          "$http_x_forwarded_for, $realip_remote_addr";
+        default          "{{ buildForwardedFor $all.Cfg.ForwardedForHeader }}, $realip_remote_addr";
         ''               "$realip_remote_addr";
-        {{ end}}
+        {{ end }}
+    }
+    {{ else }}
+    map 'dummy' $full_x_forwarded_for {
+        default          $remote_addr;
     }
     {{ end }}
 
@@ -807,11 +828,7 @@ stream {
             proxy_set_header                        Connection        $connection_upgrade;
 
             proxy_set_header X-Real-IP              $the_real_ip;
-            {{ if $all.Cfg.ComputeFullForwardedFor }}
             proxy_set_header X-Forwarded-For        $full_x_forwarded_for;
-            {{ else }}
-            proxy_set_header X-Forwarded-For        $the_real_ip;
-            {{ end }}
             proxy_set_header X-Forwarded-Host       $best_http_host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
