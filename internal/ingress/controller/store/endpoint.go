@@ -30,11 +30,13 @@ type EndpointLister struct {
 
 // GetServiceEndpoints returns the endpoints of a service, matched on service name.
 func (s *EndpointLister) GetServiceEndpoints(svc *apiv1.Service) (*apiv1.Endpoints, error) {
-	for _, m := range s.Store.List() {
-		ep := m.(*apiv1.Endpoints)
-		if svc.Name == ep.Name && svc.Namespace == ep.Namespace {
-			return ep, nil
-		}
+	key := fmt.Sprintf("%v/%v", svc.Namespace, svc.Name)
+	eps, exists, err := s.GetByKey(key)
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("could not find endpoints for service: %v", svc.Name)
+	if !exists {
+		return nil, fmt.Errorf("could not find endpoints for service %v", key)
+	}
+	return eps.(*apiv1.Endpoints), nil
 }
