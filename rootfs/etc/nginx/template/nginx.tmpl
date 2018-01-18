@@ -66,8 +66,6 @@ http {
     vhost_traffic_status_filter_by_set_key {{ $cfg.VtsDefaultFilterKey }};
     {{ end }}
 
-    sendfile            on;
-
     aio                 threads;
     aio_write           on;
 
