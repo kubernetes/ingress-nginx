@@ -291,6 +291,10 @@ func (n *NGINXController) Start() {
 				break
 			}
 			glog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
+			if evt.Type == store.ConfigurationEvent {
+				n.SetForceReload(true)
+			}
+
 			n.syncQueue.Enqueue(evt.Obj)
 		case <-n.stopCh:
 			break

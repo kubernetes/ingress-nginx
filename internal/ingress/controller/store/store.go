@@ -108,6 +108,8 @@ const (
 	UpdateEvent EventType = "UPDATE"
 	// DeleteEvent event associated when an object is removed from an informer
 	DeleteEvent EventType = "DELETE"
+	// ConfigurationEvent event associated when a configuration object is created or updated
+	ConfigurationEvent EventType = "CONFIGURATION"
 )
 
 // Event holds the context of an event
@@ -365,7 +367,7 @@ func New(checkOCSP bool,
 					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
 					store.setConfig(m)
 					updateCh <- Event{
-						Type: UpdateEvent,
+						Type: ConfigurationEvent,
 						Obj:  cur,
 					}
 				}
@@ -373,7 +375,7 @@ func New(checkOCSP bool,
 				if mapKey == configmap || mapKey == tcp || mapKey == udp {
 					recorder.Eventf(m, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
 					updateCh <- Event{
-						Type: UpdateEvent,
+						Type: ConfigurationEvent,
 						Obj:  cur,
 					}
 				}
