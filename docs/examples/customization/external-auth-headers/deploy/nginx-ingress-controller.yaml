@@ -4,7 +4,7 @@ metadata:
   name: nginx-ingress-controller
   labels:
     k8s-app: nginx-ingress-controller
-  namespace: kube-system
+  namespace: default
 spec:
   replicas: 1
   template:
