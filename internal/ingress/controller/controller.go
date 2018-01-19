@@ -210,6 +210,17 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 	var svcProxyProtocol ingress.ProxyProtocol
 	// k -> port to expose
 	// v -> <namespace>/<service name>:<port from service to be used>
+
+	rp := []int{
+		n.cfg.ListenPorts.HTTP,
+		n.cfg.ListenPorts.HTTPS,
+		n.cfg.ListenPorts.SSLProxy,
+		n.cfg.ListenPorts.Status,
+		n.cfg.ListenPorts.Health,
+		n.cfg.ListenPorts.Default,
+	}
+	reserverdPorts := sets.NewInt(rp...)
+
 	for k, v := range configmap.Data {
 		externalPort, err := strconv.Atoi(k)
 		if err != nil {
@@ -217,16 +228,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			continue
 		}
 
-		rp := []int{
-			n.cfg.ListenPorts.HTTP,
-			n.cfg.ListenPorts.HTTPS,
-			n.cfg.ListenPorts.SSLProxy,
-			n.cfg.ListenPorts.Status,
-			n.cfg.ListenPorts.Health,
-			n.cfg.ListenPorts.Default,
-		}
-
-		if intInSlice(externalPort, rp) {
+		if reserverdPorts.Has(externalPort) {
 			glog.Warningf("port %v cannot be used for TCP or UDP services. It is reserved for the Ingress controller", k)
 			continue
 		}

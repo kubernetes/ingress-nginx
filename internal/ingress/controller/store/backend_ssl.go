@@ -25,6 +25,7 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -220,4 +221,18 @@ func (s k8sStore) ReadSecrets(ing *extensions.Ingress) {
 		return
 	}
 	s.syncSecret(key)
+}
+
+// sendDummyEvent sends a dummy event to trigger an update
+// This is used in when a secret change
+func (s *k8sStore) sendDummyEvent() {
+	s.updateCh <- Event{
+		Type: UpdateEvent,
+		Obj: &extensions.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dummy",
+				Namespace: "dummy",
+			},
+		},
+	}
 }
