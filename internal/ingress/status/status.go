@@ -40,8 +40,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
-	"k8s.io/ingress-nginx/internal/ingress/store"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -56,6 +54,11 @@ type Sync interface {
 	Shutdown()
 }
 
+type ingressLister interface {
+	// ListIngresses returns the list of Ingresses
+	ListIngresses() []*extensions.Ingress
+}
+
 // Config ...
 type Config struct {
 	Client clientset.Interface
@@ -68,7 +71,7 @@ type Config struct {
 
 	UseNodeInternalIP bool
 
-	IngressLister store.IngressLister
+	IngressLister ingressLister
 
 	DefaultIngressClass string
 	IngressClass        string
@@ -297,20 +300,14 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 
 // updateStatus changes the status information of Ingress rules
 func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
-	ings := s.IngressLister.List()
+	ings := s.IngressLister.ListIngresses()
 
 	p := pool.NewLimited(10)
 	defer p.Close()
 
 	batch := p.Batch()
 
-	for _, cur := range ings {
-		ing := cur.(*extensions.Ingress)
-
-		if !class.IsValid(ing) {
-			continue
-		}
-
+	for _, ing := range ings {
 		batch.Queue(runUpdate(ing, newIngressPoint, s.Client))
 	}
 
