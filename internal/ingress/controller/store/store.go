@@ -28,7 +28,6 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -169,10 +168,15 @@ func (c *Controller) Run(stopCh chan struct{}) {
 type k8sStore struct {
 	isOCSPCheckEnabled bool
 
+	// backendConfig contains the running configuration from the configmap
+	// this is required because this rarely changes but is a very expensive
+	// operation to execute in each OnUpdate invocation
 	backendConfig ngx_config.Configuration
 
+	// cache contains the cache Controllers
 	cache *Controller
-	// listers
+
+	// listers contains the cache.Store used in the ingress controller
 	listers *Lister
 
 	// sslStore local store of SSL certificates (certificates used in ingress)
@@ -184,8 +188,10 @@ type k8sStore struct {
 
 	filesystem file.Filesystem
 
+	// updateCh
 	updateCh chan Event
 
+	// mu mutex used to avoid simultaneous incovations to syncSecret
 	mu *sync.Mutex
 }
 
@@ -544,18 +550,5 @@ func (s k8sStore) Run(stopCh chan struct{}) {
 
 	if s.isOCSPCheckEnabled {
 		go wait.Until(s.checkSSLChainIssues, 60*time.Second, stopCh)
-	}
-}
-
-// sendDummyEvent sends a dummy event to trigger an update
-func (s *k8sStore) sendDummyEvent() {
-	s.updateCh <- Event{
-		Type: UpdateEvent,
-		Obj: &extensions.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "dummy",
-				Namespace: "dummy",
-			},
-		},
 	}
 }

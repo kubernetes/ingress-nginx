@@ -26,26 +26,6 @@ func (fe *fakeError) Error() string {
 	return "fakeError"
 }
 
-func TestIntInSlice(t *testing.T) {
-	fooTests := []struct {
-		i    int
-		list []int
-		er   bool
-	}{
-		{1, []int{1, 2}, true},
-		{3, []int{1, 2}, false},
-		{1, nil, false},
-		{0, nil, false},
-	}
-
-	for _, fooTest := range fooTests {
-		r := intInSlice(fooTest.i, fooTest.list)
-		if r != fooTest.er {
-			t.Errorf("returned %t but expected %t for s=%v & list=%v", r, fooTest.er, fooTest.i, fooTest.list)
-		}
-	}
-}
-
 func TestSysctlFSFileMax(t *testing.T) {
 	i := sysctlFSFileMax()
 	if i < 1 {
