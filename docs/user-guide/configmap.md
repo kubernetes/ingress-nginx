@@ -21,7 +21,7 @@ The following table shows a configuration option's name, type, and the default v
 |:---|:---|:------|
 |[add&#8209;headers](#add-headers)|string|""|
 |[allow&#8209;backend&#8209;server&#8209;header](#allow-backend-server-header)|bool|false|
-|[hide&#8209;headers&#8209](#hide-headers)|string array|empty|
+|[hide&#8209;headers](#hide-headers)|string array|empty|
 |[access&#8209;log&#8209;path](#access-log-path)|string|"/var/log/nginx/access.log"|
 |[error&#8209;log&#8209;path](#error-log-path)|string|"/var/log/nginx/error.log"|
 |[enable&#8209;dynamic&#8209;tls&#8209;records](#enable-dynamic-tls-records)|bool|true|
