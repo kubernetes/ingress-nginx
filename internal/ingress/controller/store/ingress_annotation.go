@@ -14,28 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package store
 
 import (
-	"testing"
+	"k8s.io/client-go/tools/cache"
 )
 
-type fakeError struct{}
-
-func (fe *fakeError) Error() string {
-	return "fakeError"
-}
-
-func TestSysctlFSFileMax(t *testing.T) {
-	i := sysctlFSFileMax()
-	if i < 1 {
-		t.Errorf("returned %v but expected > 0", i)
-	}
-}
-
-func TestSysctlSomaxconn(t *testing.T) {
-	i := sysctlSomaxconn()
-	if i < 511 {
-		t.Errorf("returned %v but expected >= 511", i)
-	}
+// IngressAnnotationsLister makes a Store that lists annotations in Ingress rules.
+type IngressAnnotationsLister struct {
+	cache.Store
 }

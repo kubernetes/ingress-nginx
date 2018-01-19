@@ -26,6 +26,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 )
@@ -42,7 +43,7 @@ const (
 )
 
 var (
-	validRedirectCodes = []int{301, 302, 307, 308}
+	validRedirectCodes = sets.NewInt([]int{301, 302, 307, 308}...)
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
@@ -114,7 +115,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 		if err != nil {
 			glog.Warningf("%v is not a valid HTTP code: %v", val, err)
 		} else {
-			if intInSlice(j, validRedirectCodes) {
+			if validRedirectCodes.Has(j) {
 				redirectCode = j
 			} else {
 				glog.Warningf("The code %v is not a valid as HTTP redirect code. Using the default.", val)
@@ -174,13 +175,4 @@ func filterErrors(codes []int) []int {
 	}
 
 	return fa
-}
-
-func intInSlice(i int, list []int) bool {
-	for _, v := range list {
-		if v == i {
-			return true
-		}
-	}
-	return false
 }

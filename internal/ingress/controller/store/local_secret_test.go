@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,28 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package store
 
-import (
-	"testing"
-)
+import "testing"
 
-type fakeError struct{}
+func TestSSLCertTracker(t *testing.T) {
+	tracker := NewSSLCertTracker()
 
-func (fe *fakeError) Error() string {
-	return "fakeError"
-}
-
-func TestSysctlFSFileMax(t *testing.T) {
-	i := sysctlFSFileMax()
-	if i < 1 {
-		t.Errorf("returned %v but expected > 0", i)
+	items := len(tracker.List())
+	if items != 0 {
+		t.Errorf("expected 0 items in the store but %v returned", items)
 	}
-}
 
-func TestSysctlSomaxconn(t *testing.T) {
-	i := sysctlSomaxconn()
-	if i < 511 {
-		t.Errorf("returned %v but expected >= 511", i)
+	tracker.Add("key", "value")
+	items = len(tracker.List())
+	if items != 1 {
+		t.Errorf("expected 1 item in the store but %v returned", items)
+	}
+
+	item, exists := tracker.Get("key")
+	if !exists || item == nil {
+		t.Errorf("expected an item from the store but none returned")
 	}
 }
