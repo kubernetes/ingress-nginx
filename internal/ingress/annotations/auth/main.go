@@ -47,6 +47,7 @@ type Config struct {
 	File    string `json:"file"`
 	Secured bool   `json:"secured"`
 	FileSHA string `json:"fileSha"`
+	Secret  string `json:"secret"`
 }
 
 // Equal tests for equality between two Config types
@@ -72,7 +73,9 @@ func (bd1 *Config) Equal(bd2 *Config) bool {
 	if bd1.FileSHA != bd2.FileSHA {
 		return false
 	}
-
+	if bd1.Secret != bd2.Secret {
+		return false
+	}
 	return true
 }
 
@@ -140,6 +143,7 @@ func (a auth) Parse(ing *extensions.Ingress) (interface{}, error) {
 		File:    passFile,
 		Secured: true,
 		FileSHA: file.SHA1(passFile),
+		Secret:  name,
 	}, nil
 }
 
