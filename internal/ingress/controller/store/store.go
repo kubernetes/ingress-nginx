@@ -30,6 +30,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -186,6 +187,10 @@ type k8sStore struct {
 
 	annotations annotations.Extractor
 
+	// secretIngressMap contains information about which ingress references a
+	// secret in the annotations.
+	secretIngressMap map[string]sets.String
+
 	filesystem file.Filesystem
 
 	// updateCh
@@ -212,6 +217,7 @@ func New(checkOCSP bool,
 		updateCh:           updateCh,
 		backendConfig:      ngx_config.NewDefault(),
 		mu:                 &sync.Mutex{},
+		secretIngressMap:   make(map[string]sets.String),
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -295,10 +301,28 @@ func New(checkOCSP bool,
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
 				sec := cur.(*apiv1.Secret)
-				_, exists := store.sslStore.Get(k8s.MetaNamespaceKey(sec))
-				if exists {
+				key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
+
+				_, err := store.GetLocalSecret(k8s.MetaNamespaceKey(sec))
+				if err != nil {
+					glog.Errorf("%v", err)
+					store.syncSecret(key)
 					updateCh <- Event{
 						Type: UpdateEvent,
+						Obj:  cur,
+					}
+				}
+
+				// parse the ingress annotations (again)
+				if set, ok := store.secretIngressMap[key]; ok {
+					glog.Infof("secret %v changed and it is used in ingress annotations. Parsing...", key)
+					for _, name := range set.List() {
+						ing, _ := store.GetIngress(name)
+						store.extractAnnotations(ing)
+					}
+
+					updateCh <- Event{
+						Type: ConfigurationEvent,
 						Obj:  cur,
 					}
 				}
@@ -323,6 +347,21 @@ func New(checkOCSP bool,
 			updateCh <- Event{
 				Type: DeleteEvent,
 				Obj:  obj,
+			}
+
+			// parse the ingress annotations (again)c
+			key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
+			if set, ok := store.secretIngressMap[key]; ok {
+				glog.Infof("secret %v was removed and it is used in ingress annotations. Parsing...", key)
+				for _, name := range set.List() {
+					ing, _ := store.GetIngress(name)
+					store.extractAnnotations(ing)
+				}
+
+				updateCh <- Event{
+					Type: ConfigurationEvent,
+					Obj:  sec,
+				}
 			}
 		},
 	}
@@ -414,9 +453,36 @@ func New(checkOCSP bool,
 	return store
 }
 
-func (s k8sStore) extractAnnotations(ing *extensions.Ingress) {
+// extractAnnotations parses ingress annotations converting the value of the
+// annotation to a go struct and also information about the referenced secrets
+func (s *k8sStore) extractAnnotations(ing *extensions.Ingress) {
+	key := fmt.Sprintf("%v/%v", ing.Namespace, ing.Name)
+	glog.V(3).Infof("updating annotations information for ingres %v", key)
+
 	anns := s.annotations.Extract(ing)
-	glog.V(3).Infof("updating annotations information for ingres %v/%v", anns.Namespace, anns.Name)
+
+	secName := anns.BasicDigestAuth.Secret
+	if secName != "" {
+		if _, ok := s.secretIngressMap[secName]; !ok {
+			s.secretIngressMap[secName] = sets.NewString()
+		}
+		v := s.secretIngressMap[secName]
+		if !v.Has(key) {
+			v.Insert(key)
+		}
+	}
+
+	secName = anns.CertificateAuth.Secret
+	if secName != "" {
+		if _, ok := s.secretIngressMap[secName]; !ok {
+			s.secretIngressMap[secName] = sets.NewString()
+		}
+		v := s.secretIngressMap[secName]
+		if !v.Has(key) {
+			v.Insert(key)
+		}
+	}
+
 	err := s.listers.IngressAnnotation.Update(anns)
 	if err != nil {
 		glog.Error(err)
