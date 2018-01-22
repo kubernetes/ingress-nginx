@@ -1,5 +1,79 @@
 # Changelog
 
+### 0.10.0
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.0`
+
+*Breaking changes:*
+
+Changed the names of default Nginx ingress prometheus metrics.
+If you are scraping default Nginx ingress metrics with prometheus the metrics changes are as follows:
+
+```
+nginx_active_connections_total          -> nginx_connections_total{state="active"}
+nginx_accepted_connections_total        -> nginx_connections_total{state="accepted"}
+nginx_handled_connections_total         -> nginx_connections_total{state="handled"}
+nginx_current_reading_connections_total -> nginx_connections{state="reading"}
+nginx_current_writing_connections_total -> nginx_connections{state="writing"}
+current_waiting_connections_total       -> nginx_connections{state="waiting"}
+```
+
+*New Features:*
+
+- NGINX 1.13.8
+- Support to hide headers from upstream servers
+- Support for Jaeger
+- CORS max age annotation
+
+*Changes:*
+
+- [X] [#1782](https://github.com/kubernetes/ingress-nginx/pull/1782) auth-tls-pass-certificate-to-upstream should be bool
+- [X] [#1787](https://github.com/kubernetes/ingress-nginx/pull/1787) force external_auth requests to http/1.1
+- [X] [#1800](https://github.com/kubernetes/ingress-nginx/pull/1800) Add control of the configuration refresh interval
+- [X] [#1805](https://github.com/kubernetes/ingress-nginx/pull/1805) Add X-Forwarded-Prefix on rewrites
+- [X] [#1844](https://github.com/kubernetes/ingress-nginx/pull/1844) Validate x-forwarded-proto and connection scheme before redirect to https
+- [X] [#1852](https://github.com/kubernetes/ingress-nginx/pull/1852) Update nginx to v1.13.8 and update modules
+- [X] [#1854](https://github.com/kubernetes/ingress-nginx/pull/1854) Fix redirect to ssl
+- [X] [#1858](https://github.com/kubernetes/ingress-nginx/pull/1858) When upstream-hash-by annotation is used do not configure a lb algorithm
+- [X] [#1861](https://github.com/kubernetes/ingress-nginx/pull/1861) Improve speed of tests execution
+- [X] [#1869](https://github.com/kubernetes/ingress-nginx/pull/1869) "proxy_redirect default" should be placed after the "proxy_pass"
+- [X] [#1870](https://github.com/kubernetes/ingress-nginx/pull/1870) Fix SSL Passthrough template issue and custom ports in redirect to HTTPS
+- [X] [#1871](https://github.com/kubernetes/ingress-nginx/pull/1871) Update nginx image to 0.31
+- [X] [#1872](https://github.com/kubernetes/ingress-nginx/pull/1872) Fix data race updating ingress status
+- [X] [#1880](https://github.com/kubernetes/ingress-nginx/pull/1880) Update go dependencies and cleanup deprecated packages
+- [X] [#1888](https://github.com/kubernetes/ingress-nginx/pull/1888) Add CORS max age annotation
+- [X] [#1891](https://github.com/kubernetes/ingress-nginx/pull/1891) Refactor initial synchronization of ingress objects
+- [X] [#1903](https://github.com/kubernetes/ingress-nginx/pull/1903) If server_tokens is disabled remove the Server header
+- [X] [#1906](https://github.com/kubernetes/ingress-nginx/pull/1906) Random string function should only contains letters
+- [X] [#1907](https://github.com/kubernetes/ingress-nginx/pull/1907) Fix custom port in redirects
+- [X] [#1909](https://github.com/kubernetes/ingress-nginx/pull/1909) Release nginx 0.32
+- [X] [#1910](https://github.com/kubernetes/ingress-nginx/pull/1910) updating prometheus metrics names according to naming best practices
+- [X] [#1912](https://github.com/kubernetes/ingress-nginx/pull/1912) removing _total prefix from nginx guage metrics
+- [X] [#1914](https://github.com/kubernetes/ingress-nginx/pull/1914) Add --with-http_secure_link_module for the Nginx build configuration
+- [X] [#1916](https://github.com/kubernetes/ingress-nginx/pull/1916) Add support for jaeger backend
+- [X] [#1918](https://github.com/kubernetes/ingress-nginx/pull/1918) Update nginx image to 0.32
+- [X] [#1919](https://github.com/kubernetes/ingress-nginx/pull/1919) Add option for reuseport in nginx listen section
+- [X] [#1926](https://github.com/kubernetes/ingress-nginx/pull/1926) Do not use port from host header
+- [X] [#1927](https://github.com/kubernetes/ingress-nginx/pull/1927) Remove sendfile configuration
+- [X] [#1928](https://github.com/kubernetes/ingress-nginx/pull/1928) Add support to hide headers from upstream servers
+- [X] [#1929](https://github.com/kubernetes/ingress-nginx/pull/1929) Refactoring of kubernetes informers and local caches
+- [X] [#1933](https://github.com/kubernetes/ingress-nginx/pull/1933) Remove deploy of ingress controller from the example
+
+*Documentation:*
+
+- [X] [#1786](https://github.com/kubernetes/ingress-nginx/pull/1786) fix: some typo.
+- [X] [#1792](https://github.com/kubernetes/ingress-nginx/pull/1792) Add note about annotation values
+- [X] [#1814](https://github.com/kubernetes/ingress-nginx/pull/1814) Fix link to custom configuration
+- [X] [#1826](https://github.com/kubernetes/ingress-nginx/pull/1826) Add note about websocket and load balancers
+- [X] [#1840](https://github.com/kubernetes/ingress-nginx/pull/1840) Add note about default log files
+- [X] [#1853](https://github.com/kubernetes/ingress-nginx/pull/1853) Clarify docs for add-headers and proxy-set-headers
+- [X] [#1864](https://github.com/kubernetes/ingress-nginx/pull/1864) configmap.md: Convert hyphens in name column to non-breaking-hyphens
+- [X] [#1865](https://github.com/kubernetes/ingress-nginx/pull/1865) Add docs for legacy TLS version and ciphers
+- [X] [#1867](https://github.com/kubernetes/ingress-nginx/pull/1867) Fix publish-service patch and update README
+- [X] [#1913](https://github.com/kubernetes/ingress-nginx/pull/1913) Missing r
+- [X] [#1925](https://github.com/kubernetes/ingress-nginx/pull/1925) Fix doc links
+
+
 ### 0.9.0
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0`
