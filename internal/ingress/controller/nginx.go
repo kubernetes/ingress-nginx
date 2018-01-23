@@ -114,6 +114,8 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 
 		// create an empty configuration.
 		runningConfig: &ingress.Configuration{},
+
+		Proxy: &TCPProxy{},
 	}
 
 	n.store = store.New(true,
@@ -410,37 +412,41 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
 
-	servers := []*TCPServer{}
-	for _, pb := range ingressCfg.PassthroughBackends {
-		svc := pb.Service
-		if svc == nil {
-			glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
-			continue
-		}
-		port, err := strconv.Atoi(pb.Port.String())
-		if err != nil {
-			for _, sp := range svc.Spec.Ports {
-				if sp.Name == pb.Port.String() {
-					port = int(sp.Port)
-					break
+	if n.cfg.EnableSSLPassthrough {
+		servers := []*TCPServer{}
+		for _, pb := range ingressCfg.PassthroughBackends {
+			svc := pb.Service
+			if svc == nil {
+				glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
+				continue
+			}
+			port, err := strconv.Atoi(pb.Port.String())
+			if err != nil {
+				for _, sp := range svc.Spec.Ports {
+					if sp.Name == pb.Port.String() {
+						port = int(sp.Port)
+						break
+					}
+				}
+			} else {
+				for _, sp := range svc.Spec.Ports {
+					if sp.Port == int32(port) {
+						port = int(sp.Port)
+						break
+					}
 				}
 			}
-		} else {
-			for _, sp := range svc.Spec.Ports {
-				if sp.Port == int32(port) {
-					port = int(sp.Port)
-					break
-				}
-			}
+
+			//TODO: Allow PassthroughBackends to specify they support proxy-protocol
+			servers = append(servers, &TCPServer{
+				Hostname:      pb.Hostname,
+				IP:            svc.Spec.ClusterIP,
+				Port:          port,
+				ProxyProtocol: false,
+			})
 		}
 
-		//TODO: Allow PassthroughBackends to specify they support proxy-protocol
-		servers = append(servers, &TCPServer{
-			Hostname:      pb.Hostname,
-			IP:            svc.Spec.ClusterIP,
-			Port:          port,
-			ProxyProtocol: false,
-		})
+		n.Proxy.ServerList = servers
 	}
 
 	// we need to check if the status module configuration changed

@@ -31,12 +31,7 @@ func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
 		execErr bytes.Buffer
 	)
 
-	args := fmt.Sprintf("kubectl exec --namespace %v %v -- %v", pod.Namespace, pod.Name, command)
-	if len(pod.Spec.Containers) != 1 {
-		args = fmt.Sprintf("kubectl exec --namespace %v %v --container nginx-ingress-controller -- %v", pod.Namespace, pod.Name, command)
-	}
-
-	log("DEBUG", "Executing command \"%v\"", args)
+	args := fmt.Sprintf("kubectl exec --namespace %v %v --container nginx-ingress-controller -- %v", pod.Namespace, pod.Name, command)
 	cmd := exec.Command("/bin/bash", "-c", args)
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
