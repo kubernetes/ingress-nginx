@@ -27,12 +27,14 @@ import (
 	restclient "k8s.io/client-go/rest"
 
 	"github.com/golang/glog"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 const (
-	podName = "test-ingress-controller"
+	podName           = "test-ingress-controller"
+	controllerPodName = "nginx-ingress-controller"
 )
 
 const (
@@ -225,12 +227,15 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		}
 
 		var pod *v1.Pod
+	Loop:
 		for _, p := range l.Items {
-			if strings.HasPrefix(p.GetName(), "nginx-ingress-controller") &&
-				len(p.Status.ContainerStatuses) > 0 &&
-				p.Status.ContainerStatuses[0].State.Running != nil {
-				pod = &p
-				break
+			if strings.HasPrefix(p.GetName(), "nginx-ingress-controller") {
+				for _, cs := range p.Status.ContainerStatuses {
+					if cs.State.Running != nil && cs.Name == "nginx-ingress-controller" {
+						pod = &p
+						break Loop
+					}
+				}
 			}
 		}
 

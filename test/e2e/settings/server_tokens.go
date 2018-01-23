@@ -30,6 +30,7 @@ import (
 
 var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 	f := framework.NewDefaultFramework("server-tokens")
+	serverTokens := "server-tokens"
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
@@ -37,12 +38,11 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 	})
 
 	AfterEach(func() {
+		updateConfigmap(serverTokens, "false", f.KubeClientSet)
 	})
 
 	It("should not exists Server header in the response", func() {
-		serverTokens := "server-tokens"
 		updateConfigmap(serverTokens, "false", f.KubeClientSet)
-		defer updateConfigmap(serverTokens, "false", f.KubeClientSet)
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -84,9 +84,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 	})
 
 	It("should exists Server header in the response when is enabled", func() {
-		serverTokens := "server-tokens"
 		updateConfigmap(serverTokens, "true", f.KubeClientSet)
-		defer updateConfigmap(serverTokens, "false", f.KubeClientSet)
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
