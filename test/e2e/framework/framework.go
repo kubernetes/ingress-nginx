@@ -193,11 +193,15 @@ func (f *Framework) NginxLogs() (string, error) {
 		return "", fmt.Errorf("no nginx ingress controller pod is running")
 	}
 
-	if len(l.Items) != 1 {
-		return "", fmt.Errorf("unexpected number of nginx ingress controller pod is running (%v)", len(l.Items))
+	for _, pod := range l.Items {
+		if strings.HasPrefix(pod.GetName(), "nginx-ingress-controller") &&
+			len(pod.Status.ContainerStatuses) > 0 &&
+			pod.Status.ContainerStatuses[0].State.Running != nil {
+			return f.Logs(&pod)
+		}
 	}
 
-	return f.Logs(&l.Items[0])
+	return "", fmt.Errorf("no nginx ingress controller pod is running")
 }
 
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
@@ -213,10 +217,6 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			return false, fmt.Errorf("no nginx ingress controller pod is running")
 		}
 
-		if len(l.Items) != 1 {
-			return false, fmt.Errorf("unexpected number of nginx ingress controller pod is running (%v)", len(l.Items))
-		}
-
 		var cmd string
 		if name == "" {
 			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf")
@@ -224,7 +224,21 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
 		}
 
-		o, err := f.ExecCommand(&l.Items[0], cmd)
+		var pod *v1.Pod
+		for _, p := range l.Items {
+			if strings.HasPrefix(p.GetName(), "nginx-ingress-controller") &&
+				len(p.Status.ContainerStatuses) > 0 &&
+				p.Status.ContainerStatuses[0].State.Running != nil {
+				pod = &p
+				break
+			}
+		}
+
+		if pod == nil {
+			return false, fmt.Errorf("no nginx ingress controller pod is running")
+		}
+
+		o, err := f.ExecCommand(pod, cmd)
 		if err != nil {
 			return false, err
 		}
