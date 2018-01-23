@@ -45,7 +45,7 @@ function waitForPod() {
 
 export -f waitForPod
 
-timeout 10s bash -c waitForPod
+timeout 30s bash -c waitForPod
 
 if kubectl get pods -n ingress-nginx -l app=ingress-nginx -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True";
 then
