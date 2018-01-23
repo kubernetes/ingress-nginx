@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -35,20 +36,21 @@ import (
 var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 	f := framework.NewDefaultFramework("proxy-protocol")
 
+	setting := "use-proxy-protocol"
+
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
+		updateConfigmap(setting, "false", f.KubeClientSet)
 	})
 
 	It("should respect port passed by the PROXY Protocol", func() {
 		host := "proxy-protocol"
 
-		setting := "use-proxy-protocol"
 		updateConfigmap(setting, "true", f.KubeClientSet)
-		defer updateConfigmap(setting, "false", f.KubeClientSet)
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -120,11 +122,8 @@ func updateConfigmap(k, v string, c kubernetes.Interface) {
 		config.Data = map[string]string{}
 	}
 
-	if config.Data[k] == v {
-		return
-	}
-
 	config.Data[k] = v
 	_, err = c.CoreV1().ConfigMaps("ingress-nginx").Update(config)
 	Expect(err).NotTo(HaveOccurred())
+	time.Sleep(1 * time.Second)
 }
