@@ -13,7 +13,7 @@ notifications:
     on_success: never
 
 go:
-  - 1.9.2
+  - 1.9.3
 
 go_import_path: k8s.io/ingress-nginx
 
