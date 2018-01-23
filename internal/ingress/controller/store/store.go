@@ -355,7 +355,9 @@ func New(checkOCSP bool,
 				glog.Infof("secret %v was removed and it is used in ingress annotations. Parsing...", key)
 				for _, name := range set.List() {
 					ing, _ := store.GetIngress(name)
-					store.extractAnnotations(ing)
+					if ing != nil {
+						store.extractAnnotations(ing)
+					}
 				}
 
 				updateCh <- Event{
@@ -399,7 +401,7 @@ func New(checkOCSP bool,
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
 				store.setConfig(m)
 				updateCh <- Event{
-					Type: CreateEvent,
+					Type: ConfigurationEvent,
 					Obj:  obj,
 				}
 			}
@@ -409,7 +411,7 @@ func New(checkOCSP bool,
 				m := cur.(*apiv1.ConfigMap)
 				mapKey := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
 				if mapKey == configmap {
-					glog.V(2).Infof("updating configmap backend (%v)", mapKey)
+					recorder.Eventf(m, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
 					store.setConfig(m)
 					updateCh <- Event{
 						Type: ConfigurationEvent,
@@ -417,7 +419,7 @@ func New(checkOCSP bool,
 					}
 				}
 				// updates to configuration configmaps can trigger an update
-				if mapKey == configmap || mapKey == tcp || mapKey == udp {
+				if mapKey == tcp || mapKey == udp {
 					recorder.Eventf(m, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
 					updateCh <- Event{
 						Type: ConfigurationEvent,
