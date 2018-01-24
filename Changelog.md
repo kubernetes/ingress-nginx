@@ -1,5 +1,19 @@
 # Changelog
 
+### 0.10.1
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.1`
+
+*Changes:*
+
+- [X] [#1945](https://github.com/kubernetes/ingress-nginx/pull/1945) When a secret is updated read ingress annotations (again)
+- [X] [#1948](https://github.com/kubernetes/ingress-nginx/pull/1948) Update go to 1.9.3
+- [X] [#1953](https://github.com/kubernetes/ingress-nginx/pull/1953) Added annotation for upstream-vhost
+- [X] [#1960](https://github.com/kubernetes/ingress-nginx/pull/1960) Adjust sysctl values to improve nginx performance
+- [X] [#1963](https://github.com/kubernetes/ingress-nginx/pull/1963) Fix tests
+- [X] [#1969](https://github.com/kubernetes/ingress-nginx/pull/1969) Rollback #1854
+- [X] [#1970](https://github.com/kubernetes/ingress-nginx/pull/1970) By default brotli is disabled
+
 ### 0.10.0
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.0`
