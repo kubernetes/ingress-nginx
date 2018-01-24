@@ -203,7 +203,7 @@ http {
     map "$scheme:$pass_access_scheme" $redirect_to_https {
         default          0;
         "http:http"      1;
-        "http:https"     1;
+        "https:http"     1;
     }
 
     map $http_x_forwarded_port $pass_server_port {
@@ -241,6 +241,8 @@ http {
     server_name_in_redirect off;
     port_in_redirect        off;
 
+    rewrite_log             on;
+    
     ssl_protocols {{ $cfg.SSLProtocols }};
 
     # turn on session caching to drastically improve performance
