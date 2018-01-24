@@ -520,7 +520,7 @@ func NewDefault() Configuration {
 		SSLSessionCacheSize:        sslSessionCacheSize,
 		SSLSessionTickets:          true,
 		SSLSessionTimeout:          sslSessionTimeout,
-		EnableBrotli:               true,
+		EnableBrotli:               false,
 		UseGzip:                    true,
 		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:      "10s",
