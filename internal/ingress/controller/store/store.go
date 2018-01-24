@@ -303,19 +303,18 @@ func New(checkOCSP bool,
 				sec := cur.(*apiv1.Secret)
 				key := fmt.Sprintf("%v/%v", sec.Namespace, sec.Name)
 
-				_, err := store.GetLocalSecret(k8s.MetaNamespaceKey(sec))
-				if err != nil {
-					glog.Errorf("%v", err)
-					store.syncSecret(key)
-					updateCh <- Event{
-						Type: UpdateEvent,
-						Obj:  cur,
-					}
-				}
-
 				// parse the ingress annotations (again)
 				if set, ok := store.secretIngressMap[key]; ok {
 					glog.Infof("secret %v changed and it is used in ingress annotations. Parsing...", key)
+					_, err := store.GetLocalSecret(k8s.MetaNamespaceKey(sec))
+					if err == nil {
+						store.syncSecret(key)
+						updateCh <- Event{
+							Type: UpdateEvent,
+							Obj:  cur,
+						}
+					}
+
 					for _, name := range set.List() {
 						ing, _ := store.GetIngress(name)
 						store.extractAnnotations(ing)
