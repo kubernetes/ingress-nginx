@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.10.2
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.2`
+
+*Changes:*
+
+- [X] [#1978](https://github.com/kubernetes/ingress-nginx/pull/1978) Fix chain completion and default certificate flag issues
+
 ### 0.10.1
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.1`

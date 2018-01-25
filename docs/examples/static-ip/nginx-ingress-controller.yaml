@@ -18,7 +18,7 @@ spec:
       # hostNetwork: true
       terminationGracePeriodSeconds: 60
       containers:
-      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.1
+      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.2
         name: nginx-ingress-controller
         readinessProbe:
           httpGet:
