@@ -118,11 +118,13 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		Proxy: &TCPProxy{},
 	}
 
-	n.store = store.New(true,
+	n.store = store.New(
+		config.EnableSSLChainCompletion,
 		config.Namespace,
 		config.ConfigMapName,
 		config.TCPConfigMapName,
 		config.UDPConfigMapName,
+		config.DefaultSSLCertificate,
 		config.ResyncPeriod,
 		config.Client,
 		fs,
