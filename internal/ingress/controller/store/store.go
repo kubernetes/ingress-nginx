@@ -198,26 +198,29 @@ type k8sStore struct {
 
 	// mu mutex used to avoid simultaneous incovations to syncSecret
 	mu *sync.Mutex
+
+	defaultSSLCertificate string
 }
 
 // New creates a new object store to be used in the ingress controller
 func New(checkOCSP bool,
-	namespace, configmap, tcp, udp string,
+	namespace, configmap, tcp, udp, defaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	fs file.Filesystem,
 	updateCh chan Event) Storer {
 
 	store := &k8sStore{
-		isOCSPCheckEnabled: checkOCSP,
-		cache:              &Controller{},
-		listers:            &Lister{},
-		sslStore:           NewSSLCertTracker(),
-		filesystem:         fs,
-		updateCh:           updateCh,
-		backendConfig:      ngx_config.NewDefault(),
-		mu:                 &sync.Mutex{},
-		secretIngressMap:   make(map[string]sets.String),
+		isOCSPCheckEnabled:    checkOCSP,
+		cache:                 &Controller{},
+		listers:               &Lister{},
+		sslStore:              NewSSLCertTracker(),
+		filesystem:            fs,
+		updateCh:              updateCh,
+		backendConfig:         ngx_config.NewDefault(),
+		mu:                    &sync.Mutex{},
+		secretIngressMap:      make(map[string]sets.String),
+		defaultSSLCertificate: defaultSSLCertificate,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -610,6 +613,10 @@ func (s k8sStore) Run(stopCh chan struct{}) {
 	glog.Info("running initial sync of secrets")
 	for _, ing := range s.ListIngresses() {
 		s.ReadSecrets(ing)
+	}
+
+	if s.defaultSSLCertificate != "" {
+		s.syncSecret(s.defaultSSLCertificate)
 	}
 
 	// start goroutine to check for missing local secrets
