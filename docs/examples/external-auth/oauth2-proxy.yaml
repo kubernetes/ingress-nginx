@@ -46,6 +46,7 @@ metadata:
   labels:
     k8s-app: oauth2-proxy
   name: oauth2-proxy
+  namespace: kube-system
 spec:
   ports:
   - name: http
