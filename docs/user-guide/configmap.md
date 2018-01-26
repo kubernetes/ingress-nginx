@@ -13,6 +13,12 @@ data:
   ssl-protocols: SSLv2
 ```
 
+**IMPORTANT:**
+
+The key and values in a ConfigMap can only be strings.
+This means that we want a value with boolean values we need to quote the values, like "true" or "false".
+Same for numbers, like "100".
+
 ## Configuration options
 
 The following table shows a configuration option's name, type, and the default value:
@@ -20,36 +26,36 @@ The following table shows a configuration option's name, type, and the default v
 |name|type|default|
 |:---|:---|:------|
 |[add&#8209;headers](#add-headers)|string|""|
-|[allow&#8209;backend&#8209;server&#8209;header](#allow-backend-server-header)|bool|false|
+|[allow&#8209;backend&#8209;server&#8209;header](#allow-backend-server-header)|bool|"false"|
 |[hide&#8209;headers](#hide-headers)|string array|empty|
 |[access&#8209;log&#8209;path](#access-log-path)|string|"/var/log/nginx/access.log"|
 |[error&#8209;log&#8209;path](#error-log-path)|string|"/var/log/nginx/error.log"|
-|[enable&#8209;dynamic&#8209;tls&#8209;records](#enable-dynamic-tls-records)|bool|true|
-|[enable&#8209;modsecurity](#enable-modsecurity)|bool|false|
-|[enable&#8209;owasp&#8209;modsecurity&#8209;crs](#enable-owasp-modsecurity-crs)|bool|false|
+|[enable&#8209;dynamic&#8209;tls&#8209;records](#enable-dynamic-tls-records)|bool|"true"|
+|[enable&#8209;modsecurity](#enable-modsecurity)|bool|"false"|
+|[enable&#8209;owasp&#8209;modsecurity&#8209;crs](#enable-owasp-modsecurity-crs)|bool|"false"|
 |[client&#8209;header&#8209;buffer&#8209;size](#client-header-buffer-size)|string|"1k"|
 |[client&#8209;header&#8209;timeout](#client-header-timeout)|int|60|
 |[client&#8209;body&#8209;buffer&#8209;size](#client-body-buffer-size)|string|"8k"|
 |[client&#8209;body&#8209;timeout](#client-body-timeout)|int|60|
-|[disable&#8209;access&#8209;log](#disable-access-log)|bool|false|
-|[disable&#8209;ipv6](#disable-ipv6)|bool|false|
-|[enable&#8209;underscores&#8209;in&#8209;headers](#enable-underscores-in-headers)|bool|false|
-|[ignore&#8209;invalid&#8209;headers](#ignore-invalid-headers)|bool|true|
-|[enable&#8209;vts&#8209;status](#enable-vts-status)|bool|false|
+|[disable&#8209;access&#8209;log](#disable-access-log)|bool|"false"|
+|[disable&#8209;ipv6](#disable-ipv6)|bool|"false"|
+|[enable&#8209;underscores&#8209;in&#8209;headers](#enable-underscores-in-headers)|bool|"false"|
+|[ignore&#8209;invalid&#8209;headers](#ignore-invalid-headers)|bool|"true"|
+|[enable&#8209;vts&#8209;status](#enable-vts-status)|bool|"false"|
 |[vts&#8209;status&#8209;zone&#8209;size](#vts-status-zone-size)|string|"10m"|
 |[vts&#8209;default&#8209;filter&#8209;key](#vts-default-filter-key)|string|"$geoip_country_code country::*"|
-|[retry&#8209;non&#8209;idempotent](#retry-non-idempotent)|bool|false|
+|[retry&#8209;non&#8209;idempotent](#retry-non-idempotent)|bool|"false"|
 |[error&#8209;log&#8209;level](#error-log-level)|string|"notice"|
 |[http2&#8209;max&#8209;field&#8209;size](#http2-max-field-size)|string|"4k"|
 |[http2&#8209;max&#8209;header&#8209;size](#http2-max-header-size)|string|"16k"|
-|[hsts](#hsts)|bool|true|
-|[hsts&#8209;include&#8209;subdomains](#hsts-include-subdomains)|bool|true|
+|[hsts](#hsts)|bool|"true"|
+|[hsts&#8209;include&#8209;subdomains](#hsts-include-subdomains)|bool|"true"|
 |[hsts&#8209;max&#8209;age](#hsts-max-age)|string|"15724800"|
-|[hsts&#8209;preload](#hsts-preload)|bool|false|
+|[hsts&#8209;preload](#hsts-preload)|bool|"false"|
 |[keep&#8209;alive](#keep-alive)|int|75|
 |[keep&#8209;alive&#8209;requests](#keep-alive-requests)|int|100|
 |[large&#8209;client&#8209;header&#8209;buffers](#large-client-header-buffers)|string|"4 8k"|
-|[log&#8209;format&#8209;escape&#8209;json](#log-format-escape-json)|bool|false|
+|[log&#8209;format&#8209;escape&#8209;json](#log-format-escape-json)|bool|"false"|
 |[log&#8209;format&#8209;upstream](#log-format-upstream)|string|`%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status`|
 |[log&#8209;format&#8209;stream](#log-format-stream)|string|`[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
 |[max&#8209;worker&#8209;connections](#max-worker-connections)|int|16384|
@@ -60,23 +66,23 @@ The following table shows a configuration option's name, type, and the default v
 |[server&#8209;name&#8209;hash&#8209;bucket&#8209;size](#server-name-hash-bucket-size)|int|`<size of the processor’s cache line>`
 |[proxy&#8209;headers&#8209;hash&#8209;max&#8209;size](#proxy-headers-hash-max-size)|int|512|
 |[proxy&#8209;headers&#8209;hash&#8209;bucket&#8209;size](#proxy-headers-hash-bucket-size)|int|64|
-|[server&#8209;tokens](#server-tokens)|bool|true|
+|[server&#8209;tokens](#server-tokens)|bool|"true"|
 |[ssl&#8209;ciphers](#ssl-ciphers)|string|"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"|
 |[ssl&#8209;ecdh&#8209;curve](#ssl-ecdh-curve)|string|"auto"|
 |[ssl&#8209;dh&#8209;param](#ssl-dh-param)|string|""|
 |[ssl&#8209;protocols](#ssl-protocols)|string|"TLSv1.2"|
-|[ssl&#8209;session&#8209;cache](#ssl-session-cache)|bool|true|
+|[ssl&#8209;session&#8209;cache](#ssl-session-cache)|bool|"true"|
 |[ssl&#8209;session&#8209;cache&#8209;size](#ssl-session-cache-size)|string|"10m"|
-|[ssl&#8209;session&#8209;tickets](#ssl-session-tickets)|bool|true|
+|[ssl&#8209;session&#8209;tickets](#ssl-session-tickets)|bool|"true"|
 |[ssl&#8209;session&#8209;ticket&#8209;key](#ssl-session-ticket-key)|string|`<Randomly Generated>`
 |[ssl&#8209;session&#8209;timeout](#ssl-session-timeout)|string|"10m"|
 |[ssl&#8209;buffer&#8209;size](#ssl-buffer-size)|string|"4k"|
-|[use&#8209;proxy&#8209;protocol](#use-proxy-protocol)|bool|false|
-|[use&#8209;gzip](#use-gzip)|bool|true|
-|[enable&#8209;brotli](#enable-brotli)|bool|true|
+|[use&#8209;proxy&#8209;protocol](#use-proxy-protocol)|bool|"false"|
+|[use&#8209;gzip](#use-gzip)|bool|"true"|
+|[enable&#8209;brotli](#enable-brotli)|bool|"true"|
 |[brotli&#8209;level](#brotli-level)|int|4|
 |[brotli&#8209;types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
-|[use&#8209;http2](#use-http2)|bool|true|
+|[use&#8209;http2](#use-http2)|bool|"true"|
 |[gzip&#8209;types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[worker&#8209;processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker&#8209;shutdown&#8209;timeout](#worker-shutdown-timeout)|string|"10s"|
@@ -90,8 +96,8 @@ The following table shows a configuration option's name, type, and the default v
 |[bind&#8209;address&#8209;ipv4](#bind-address-ipv4)|[]string|""|
 |[bind&#8209;address&#8209;ipv6](#bind-address-ipv6)|[]string|""|
 |[forwarded&#8209;for&#8209;header](#forwarded-for-header)|string|"X-Forwarded-For"|
-|[compute&#8209;full&#8209;forwarded&#8209;for](#compute-full-forwarded-for)|bool|false|
-|[enable&#8209;opentracing](#enable-opentracing)|bool|false|
+|[compute&#8209;full&#8209;forwarded&#8209;for](#compute-full-forwarded-for)|bool|"false"|
+|[enable&#8209;opentracing](#enable-opentracing)|bool|"false"|
 |[zipkin&#8209;collector&#8209;host](#zipkin-collector-host)|string|""|
 |[zipkin&#8209;collector&#8209;port](#zipkin-collector-port)|int|9411|
 |[zipkin&#8209;service&#8209;name](#zipkin-service-name)|string|"nginx"|
@@ -114,7 +120,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy&#8209;next&#8209;upstream](#proxy-next-upstream)|string|"error timeout invalid_header http_502 http_503 http_504"|
 |[proxy&#8209;redirect&#8209;from](#proxy-redirect-from)|string|"off"|
 |[proxy&#8209;request&#8209;buffering](#proxy-request-buffering)|string|"on"|
-|[ssl&#8209;redirect](#ssl-redirect)|bool|true|
+|[ssl&#8209;redirect](#ssl-redirect)|bool|"true"|
 |[whitelist&#8209;source&#8209;range](#whitelist-source-range)|[]string|[]string{}|
 |[skip&#8209;access&#8209;log&#8209;urls](#skip-access-log-urls)|[]string|[]string{}|
 |[limit&#8209;rate](#limit-rate)|int|0|
@@ -194,7 +200,7 @@ _References:_
 
 ## disable-access-log
 
-Disables the Access Log from the entire Ingress Controller. This is 'false' by default.
+Disables the Access Log from the entire Ingress Controller. This is '"false"' by default.
 
 _References:_
 - http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
@@ -300,7 +306,7 @@ _References:_
 
 ## log-format-escape-json
 
-Sets if the escape parameter allows JSON (true) or default characters escaping in variables (false) Sets the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).
+Sets if the escape parameter allows JSON ("true") or default characters escaping in variables ("false") Sets the nginx [log format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format).
 
 ## log-format-upstream
 

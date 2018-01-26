@@ -1,10 +1,16 @@
+**IMPORTANT:**
+
+The key and values in annotations can only be strings.
+This means that we want a value with boolean values we need to quote the values, like "true" or "false".
+Same for numbers, like "100".
+
 # Annotations
 
 The following annotations are supported:
 
 |Name                       | type |
 |---------------------------|------|
-|[nginx.ingress.kubernetes.io/add-base-url](#rewrite)|true or false|
+|[nginx.ingress.kubernetes.io/add-base-url](#rewrite)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/app-root](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
@@ -14,20 +20,20 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-client](#certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#certificate-authentication)|true or false|
+|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
-|[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|true or false|
+|[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|
-|[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|true or false|
+|[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
-|[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
-|[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|true or false|
+|[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
@@ -39,14 +45,14 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
-|[nginx.ingress.kubernetes.io/secure-backends](#secure-backends)|true or false|
+|[nginx.ingress.kubernetes.io/secure-backends](#secure-backends)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
-|[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|true or false|
+|[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|true or false|
-|[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|true or false|
+|[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[nginx.ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
