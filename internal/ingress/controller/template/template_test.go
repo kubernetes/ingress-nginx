@@ -28,6 +28,7 @@ import (
 
 	"encoding/base64"
 	"fmt"
+
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -352,7 +353,14 @@ func TestBuildResolvers(t *testing.T) {
 	ipList := []net.IP{ipOne, ipTwo}
 
 	validResolver := "resolver 192.0.0.1 [2001:db8:1234::] valid=30s;"
-	resolver := buildResolvers(ipList)
+	resolver := buildResolvers(ipList, false)
+
+	if resolver != validResolver {
+		t.Errorf("Expected '%v' but returned '%v'", validResolver, resolver)
+	}
+
+	validResolver = "resolver 192.0.0.1 valid=30s ipv6=off;"
+	resolver = buildResolvers(ipList, true)
 
 	if resolver != validResolver {
 		t.Errorf("Expected '%v' but returned '%v'", validResolver, resolver)

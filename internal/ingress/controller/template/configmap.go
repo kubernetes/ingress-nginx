@@ -144,6 +144,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.HideHeaders = hideHeaderslist
 	to.HTTPRedirectCode = redirectCode
 	to.ProxyStreamResponses = streamResponses
+	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,

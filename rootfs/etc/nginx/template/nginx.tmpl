@@ -172,7 +172,7 @@ http {
     {{ end }}
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
 
-    {{ buildResolvers $cfg.Resolver }}
+    {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
     {{/* Whenever nginx proxies a request without a "Connection" header, the "Connection" header is set to "close" */}}
     {{/* when making the target request.  This means that you cannot simply use */}}

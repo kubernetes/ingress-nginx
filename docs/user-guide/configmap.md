@@ -37,11 +37,12 @@ The following table shows a configuration option's name, type, and the default v
 |[client&#8209;header&#8209;timeout](#client-header-timeout)|int|60|
 |[client&#8209;body&#8209;buffer&#8209;size](#client-body-buffer-size)|string|"8k"|
 |[client&#8209;body&#8209;timeout](#client-body-timeout)|int|60|
-|[disable&#8209;access&#8209;log](#disable-access-log)|bool|"false"|
-|[disable&#8209;ipv6](#disable-ipv6)|bool|"false"|
-|[enable&#8209;underscores&#8209;in&#8209;headers](#enable-underscores-in-headers)|bool|"false"|
-|[ignore&#8209;invalid&#8209;headers](#ignore-invalid-headers)|bool|"true"|
-|[enable&#8209;vts&#8209;status](#enable-vts-status)|bool|"false"|
+|[disable&#8209;access&#8209;log](#disable-access-log)|bool|false|
+|[disable&#8209;ipv6](#disable-ipv6)|bool|false|
+|[disable&#8209;ipv6&#8209;dns](#disable-ipv6-dns)|bool|false|
+|[enable&#8209;underscores&#8209;in&#8209;headers](#enable-underscores-in-headers)|bool|false|
+|[ignore&#8209;invalid&#8209;headers](#ignore-invalid-headers)|bool|true|
+|[enable&#8209;vts&#8209;status](#enable-vts-status)|bool|false|
 |[vts&#8209;status&#8209;zone&#8209;size](#vts-status-zone-size)|string|"10m"|
 |[vts&#8209;default&#8209;filter&#8209;key](#vts-default-filter-key)|string|"$geoip_country_code country::*"|
 |[retry&#8209;non&#8209;idempotent](#retry-non-idempotent)|bool|"false"|
@@ -210,6 +211,10 @@ _References:_
 ## disable-ipv6
 
 Disable listening on IPV6. By default this is disabled.
+
+## disable-ipv6-dns
+
+Disable IPV6 for nginx DNS reslover. By default this is disabled.
 
 ## enable-underscores-in-headers
 

@@ -140,6 +140,9 @@ type Configuration struct {
 	//http://nginx.org/en/docs/http/ngx_http_log_module.html
 	DisableAccessLog bool `json:"disable-access-log,omitempty"`
 
+	// DisableIpv6DNS disables IPv6 for nginx resolver
+	DisableIpv6DNS bool `json:"disable-ipv6-dns"`
+
 	// DisableIpv6 disable listening on ipv6 address
 	DisableIpv6 bool `json:"disable-ipv6,omitempty"`
 
