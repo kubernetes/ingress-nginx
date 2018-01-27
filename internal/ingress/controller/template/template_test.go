@@ -26,6 +26,8 @@ import (
 	"strings"
 	"testing"
 
+	"encoding/base64"
+	"fmt"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -169,6 +171,26 @@ func TestBuildProxyPass(t *testing.T) {
 		if !strings.EqualFold(tc.ProxyPass, pp) {
 			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, tc.ProxyPass, pp)
 		}
+	}
+}
+
+func TestBuildAuthLocation(t *testing.T) {
+	authURL := "foo.com/auth"
+
+	loc := &ingress.Location{
+		ExternalAuth: authreq.Config{
+			URL: authURL,
+		},
+		Path: "/cat",
+	}
+
+	str := buildAuthLocation(loc)
+
+	encodedAuthURL := strings.Replace(base64.URLEncoding.EncodeToString([]byte(loc.Path)), "=", "", -1)
+	expected := fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
+
+	if str != expected {
+		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, str)
 	}
 }
 

@@ -72,25 +72,28 @@ func TestAnnotations(t *testing.T) {
 	ing.SetAnnotations(data)
 
 	tests := []struct {
-		title     string
-		url       string
-		signinURL string
-		method    string
-		expErr    bool
+		title           string
+		url             string
+		signinURL       string
+		method          string
+		requestRedirect string
+		expErr          bool
 	}{
-		{"empty", "", "", "", true},
-		{"no scheme", "bar", "bar", "", true},
-		{"invalid host", "http://", "http://", "", true},
-		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", true},
-		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", false},
+		{"empty", "", "", "", "", true},
+		{"no scheme", "bar", "bar", "", "", true},
+		{"invalid host", "http://", "http://", "", "", true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", true},
+		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "", false},
+		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "http://foo.com/redirect-me", false},
 	}
 
 	for _, test := range tests {
 		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
 		data[parser.GetAnnotationWithPrefix("auth-signin")] = test.signinURL
 		data[parser.GetAnnotationWithPrefix("auth-method")] = fmt.Sprintf("%v", test.method)
+		data[parser.GetAnnotationWithPrefix("auth-request-redirect")] = test.requestRedirect
 
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
@@ -111,6 +114,9 @@ func TestAnnotations(t *testing.T) {
 		}
 		if u.Method != test.method {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.method, u.Method)
+		}
+		if u.RequestRedirect != test.requestRedirect {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.requestRedirect, u.RequestRedirect)
 		}
 	}
 }
