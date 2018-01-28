@@ -188,7 +188,7 @@ git submodule update
 
 # build modsecurity library
 cd "$BUILD_PATH"
-git clone --depth 1 -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
+git clone --depth 1 -b v3/dev/performance --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
 git submodule init
 git submodule update
@@ -338,7 +338,7 @@ cd ..
 # Download modsecurity.conf
 mkdir modsecurity
 cd modsecurity
-curl -sSL -o modsecurity.conf https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended
+curl -sSL -o modsecurity.conf https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/dev/performance/modsecurity.conf-recommended
 
 # OWASP CRS v3 rules
 echo "
