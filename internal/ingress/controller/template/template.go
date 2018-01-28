@@ -214,7 +214,6 @@ func buildLocation(input interface{}) string {
 	return path
 }
 
-// TODO: Needs Unit Tests
 func buildAuthLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -227,7 +226,7 @@ func buildAuthLocation(input interface{}) string {
 	}
 
 	str := base64.URLEncoding.EncodeToString([]byte(location.Path))
-	// avoid locations containing the = char
+	// removes "=" after encoding
 	str = strings.Replace(str, "=", "", -1)
 	return fmt.Sprintf("/_external-auth-%v", str)
 }
