@@ -316,7 +316,6 @@ http {
 
     {{ end }}
 
-
     upstream {{ $upstream.Name }} {
         {{ if $upstream.UpstreamHashBy }}
         hash {{ $upstream.UpstreamHashBy }} consistent;
@@ -623,7 +622,6 @@ stream {
         more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }};{{ if $all.Cfg.HSTSPreload }} preload{{ end }}";
         {{ end }}
 
-
         {{ if not (empty $server.CertificateAuth.CAFileName) }}
         # PEM sha: {{ $server.CertificateAuth.PemSHA }}
         ssl_client_certificate                  {{ $server.CertificateAuth.CAFileName }};
@@ -648,7 +646,7 @@ stream {
         }
         {{ end }}
 
-        {{ if not (empty $authPath) }}
+        {{ if $authPath }}
         location = {{ $authPath }} {
             internal;
             set $proxy_upstream_name "external-authentication";
@@ -656,7 +654,7 @@ stream {
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
 
-            {{ if not (empty $location.ExternalAuth.Method) }}
+            {{ if $location.ExternalAuth.Method }}
             proxy_method                {{ $location.ExternalAuth.Method }};
             proxy_set_header            X-Original-URI          $request_uri;
             proxy_set_header            X-Scheme                $pass_access_scheme;
@@ -665,8 +663,13 @@ stream {
             proxy_set_header            Host                    {{ $location.ExternalAuth.Host }};
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Original-Method       $request_method;
-            proxy_set_header            X-Auth-Request-Redirect $request_uri;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
+
+            {{ if $location.ExternalAuth.RequestRedirect }}
+            proxy_set_header            X-Auth-Request-Redirect {{ $location.ExternalAuth.RequestRedirect }};
+            {{ else }}
+            proxy_set_header            X-Auth-Request-Redirect $request_uri;
+            {{ end }}
 
             proxy_http_version          1.1;
             proxy_ssl_server_name       on;
@@ -726,7 +729,7 @@ stream {
             }
             {{ end }}
 
-            {{ if not (empty $authPath) }}
+            {{ if $authPath }}
             # this location requires authentication
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
@@ -736,7 +739,7 @@ stream {
             {{- end }}
             {{ end }}
 
-            {{ if not (empty $location.ExternalAuth.SigninURL) }}
+            {{ if $location.ExternalAuth.SigninURL }}
             error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
             {{ end }}
 
@@ -777,7 +780,6 @@ stream {
             {{ else }}
             proxy_set_header Host                   $host;
             {{ end }}
-
 
             # Pass the extracted client certificate to the backend
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
@@ -860,7 +862,6 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             {{ end }}
-
 
             {{ if not (empty $location.Backend) }}
             {{ buildProxyPass $server.Hostname $all.Backends $location }}

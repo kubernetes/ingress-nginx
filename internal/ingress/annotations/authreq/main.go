@@ -36,6 +36,7 @@ type Config struct {
 	SigninURL       string   `json:"signinUrl"`
 	Method          string   `json:"method"`
 	ResponseHeaders []string `json:"responseHeaders,omitEmpty"`
+	RequestRedirect string   `json:"requestRedirect"`
 }
 
 // Equal tests for equality between two Config types
@@ -58,10 +59,6 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	if e1.Method != e2.Method {
 		return false
 	}
-	if e1.Method != e2.Method {
-		return false
-	}
-
 	for _, ep1 := range e1.ResponseHeaders {
 		found := false
 		for _, ep2 := range e2.ResponseHeaders {
@@ -73,6 +70,9 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		if !found {
 			return false
 		}
+	}
+	if e1.RequestRedirect != e2.RequestRedirect {
+		return false
 	}
 
 	return true
@@ -112,41 +112,40 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an Config URL as source for authentication
 func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
-	str, err := parser.GetStringAnnotation("auth-url", ing)
+	// Required Parameters
+	urlString, err := parser.GetStringAnnotation("auth-url", ing)
 	if err != nil {
 		return nil, err
 	}
-
-	if str == "" {
+	if urlString == "" {
 		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
 	}
 
-	signin, _ := parser.GetStringAnnotation("auth-signin", ing)
-
-	ur, err := url.Parse(str)
+	authUrl, err := url.Parse(urlString)
 	if err != nil {
 		return nil, err
 	}
-	if ur.Scheme == "" {
+	if authUrl.Scheme == "" {
 		return nil, ing_errors.NewLocationDenied("url scheme is empty")
 	}
-	if ur.Host == "" {
+	if authUrl.Host == "" {
 		return nil, ing_errors.NewLocationDenied("url host is empty")
 	}
-
-	if strings.Contains(ur.Host, "..") {
+	if strings.Contains(authUrl.Host, "..") {
 		return nil, ing_errors.NewLocationDenied("invalid url host")
 	}
 
-	m, _ := parser.GetStringAnnotation("auth-method", ing)
-	if len(m) != 0 && !validMethod(m) {
+	authMethod, _ := parser.GetStringAnnotation("auth-method", ing)
+	if len(authMethod) != 0 && !validMethod(authMethod) {
 		return nil, ing_errors.NewLocationDenied("invalid HTTP method")
 	}
 
-	h := []string{}
+	// Optional Parameters
+	signIn, _ := parser.GetStringAnnotation("auth-signin", ing)
+
+	responseHeaders := []string{}
 	hstr, _ := parser.GetStringAnnotation("auth-response-headers", ing)
 	if len(hstr) != 0 {
-
 		harr := strings.Split(hstr, ",")
 		for _, header := range harr {
 			header = strings.TrimSpace(header)
@@ -154,16 +153,19 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 				if !validHeader(header) {
 					return nil, ing_errors.NewLocationDenied("invalid headers list")
 				}
-				h = append(h, header)
+				responseHeaders = append(responseHeaders, header)
 			}
 		}
 	}
 
+	requestRedirect, _ := parser.GetStringAnnotation("auth-request-redirect", ing)
+
 	return &Config{
-		URL:             str,
-		Host:            ur.Hostname(),
-		SigninURL:       signin,
-		Method:          m,
-		ResponseHeaders: h,
+		URL:             urlString,
+		Host:            authUrl.Hostname(),
+		SigninURL:       signIn,
+		Method:          authMethod,
+		ResponseHeaders: responseHeaders,
+		RequestRedirect: requestRedirect,
 	}, nil
 }

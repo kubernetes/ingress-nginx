@@ -282,11 +282,20 @@ For more information please see http://nginx.org/en/docs/http/ngx_http_core_modu
 ### External Authentication
 
 To use an existing service that provides authentication the Ingress rule can be annotated with `nginx.ingress.kubernetes.io/auth-url` to indicate the URL where the HTTP request should be sent.
-Additionally it is possible to set `nginx.ingress.kubernetes.io/auth-method` to specify the HTTP method to use (GET or POST).
 
 ```yaml
 nginx.ingress.kubernetes.io/auth-url: "URL to the authentication service"
 ```
+
+Additionally it is possible to set:
+
+`nginx.ingress.kubernetes.io/auth-method`: `<Method>` to specify the HTTP method to use.
+
+`nginx.ingress.kubernetes.io/auth-signin`: `<SignIn_URL>` to specify the location of the error page.
+
+`nginx.ingress.kubernetes.io/auth-response-headers`: `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authorization request completes.
+
+`nginx.ingress.kuberentes.io/auth-request-redirect`: `<Request_Redirect_URL>`  to specify the X-Auth-Request-Redirect header value.
 
 Please check the [external-auth](../examples/auth/external-auth/README.md) example.
 
