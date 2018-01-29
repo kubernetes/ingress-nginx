@@ -138,4 +138,8 @@ type Backend struct {
 	// Sets the initial amount after which the further transmission of a response to a client will be rate limited.
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after
 	LimitRateAfter int `json:"limit-rate-after"`
+
+	// Enables or disables buffering of responses from the proxied server.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering
+	ProxyBuffering string `json:"proxy-buffering"`
 }

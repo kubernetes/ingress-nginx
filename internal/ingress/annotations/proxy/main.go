@@ -37,6 +37,7 @@ type Config struct {
 	ProxyRedirectFrom string `json:"proxyRedirectFrom"`
 	ProxyRedirectTo   string `json:"proxyRedirectTo"`
 	RequestBuffering  string `json:"requestBuffering"`
+	ProxyBuffering    string `json:"proxyBuffering"`
 }
 
 // Equal tests for equality between two Configuration types
@@ -83,6 +84,9 @@ func (l1 *Config) Equal(l2 *Config) bool {
 	if l1.ProxyRedirectTo != l2.ProxyRedirectTo {
 		return false
 	}
+	if l1.ProxyBuffering != l2.ProxyBuffering {
+		return false
+	}
 
 	return true
 }
@@ -99,6 +103,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
 func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
+
 	defBackend := a.r.GetDefaultBackend()
 	ct, err := parser.GetIntAnnotation("proxy-connect-timeout", ing)
 	if err != nil {
@@ -160,5 +165,10 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		prt = defBackend.ProxyRedirectTo
 	}
 
-	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, pp, prf, prt, rb}, nil
+	pb, err := parser.GetStringAnnotation("proxy-buffering", ing)
+	if err != nil || pb == "" {
+		pb = defBackend.ProxyBuffering
+	}
+
+	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, pp, prf, prt, rb, pb}, nil
 }
