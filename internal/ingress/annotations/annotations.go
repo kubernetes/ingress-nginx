@@ -47,6 +47,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamhashby"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamvhost"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/vtsfilterkey"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/websocket"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/xforwardedprefix"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -83,6 +84,7 @@ type Ingress struct {
 	VtsFilterKey         string
 	Whitelist            ipwhitelist.SourceRange
 	XForwardedPrefix     bool
+	EnableWebSocket      bool
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -118,6 +120,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"VtsFilterKey":         vtsfilterkey.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
+			"EnableWebSocket":      websocket.NewParser(cfg),
 		},
 	}
 }

@@ -46,6 +46,7 @@ var (
 	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
 	annotationAffinityCookieHash   = parser.GetAnnotationWithPrefix("session-cookie-hash")
 	annotationUpstreamHashBy       = parser.GetAnnotationWithPrefix("upstream-hash-by")
+	annotationEnableWebSocket      = parser.GetAnnotationWithPrefix("enable-websocket")
 )
 
 type mockCfg struct {
@@ -325,6 +326,27 @@ func TestCors(t *testing.T) {
 			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowCredentials, foo.credentials)
 		}
 
+	}
+}
+
+func TestEnableWebSocket(t *testing.T) {
+	ec := NewAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		er          bool
+	}{
+		{map[string]string{annotationEnableWebSocket: "true"}, true},
+		{map[string]string{annotationEnableWebSocket: "false"}, false},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.Extract(ing).EnableWebSocket
+		if r != foo.er {
+			t.Errorf("Returned %v but expected %v", r, foo.er)
+		}
 	}
 }
 

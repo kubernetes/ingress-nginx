@@ -426,6 +426,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.Denied = anns.Denied
 						loc.XForwardedPrefix = anns.XForwardedPrefix
 						loc.UsePortInRedirects = anns.UsePortInRedirects
+						loc.EnableWebSocket = anns.EnableWebSocket
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -458,6 +459,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						Denied:               anns.Denied,
 						XForwardedPrefix:     anns.XForwardedPrefix,
 						UsePortInRedirects:   anns.UsePortInRedirects,
+						EnableWebSocket:      anns.EnableWebSocket,
 					}
 
 					if loc.Redirect.FromToWWW {
