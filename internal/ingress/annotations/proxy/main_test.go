@@ -79,6 +79,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyNextUpstream:     "error",
 		ProxyPassParams:       "nocanon keepalive=On",
 		ProxyRequestBuffering: "on",
+		ProxyBuffering:        "off",
 	}
 }
 
@@ -94,6 +95,7 @@ func TestProxy(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream")] = "off"
 	data[parser.GetAnnotationWithPrefix("proxy-pass-params")] = "smax=5 max=10"
 	data[parser.GetAnnotationWithPrefix("proxy-request-buffering")] = "off"
+	data[parser.GetAnnotationWithPrefix("proxy-buffering")] = "on"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(mockBackend{}).Parse(ing)
@@ -127,6 +129,9 @@ func TestProxy(t *testing.T) {
 	}
 	if p.RequestBuffering != "off" {
 		t.Errorf("expected off as request-buffering but returned %v", p.RequestBuffering)
+	}
+	if p.ProxyBuffering != "on" {
+		t.Errorf("expected on as proxy-buffering but returned %v", p.ProxyBuffering)
 	}
 }
 

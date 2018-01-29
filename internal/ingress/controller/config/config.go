@@ -548,6 +548,7 @@ func NewDefault() Configuration {
 			SkipAccessLogURLs:     []string{},
 			LimitRate:             0,
 			LimitRateAfter:        0,
+			ProxyBuffering:        "off",
 		},
 		UpstreamKeepaliveConnections: 32,
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
