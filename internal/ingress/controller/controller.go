@@ -814,6 +814,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 		NextUpstream:      bdef.ProxyNextUpstream,
 		RequestBuffering:  bdef.ProxyRequestBuffering,
 		ProxyRedirectFrom: bdef.ProxyRedirectFrom,
+		ProxyBuffering:    bdef.ProxyBuffering,
 	}
 
 	// generated on Start() with createDefaultSSLCertificate()

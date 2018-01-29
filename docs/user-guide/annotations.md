@@ -58,6 +58,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
+|[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
 
 **Note:** all the values must be a string. In case of booleans or number it must be quoted.
 
@@ -405,4 +406,16 @@ To use custom values in an Ingress rule define these annotation:
 
 ```yaml
 nginx.ingress.kubernetes.io/proxy-body-size: 8m
+```
+
+### Proxy buffering
+
+Enable or disable proxy buffering [`proxy_buffering`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering).
+By default proxy buffering is disabled in the nginx config.
+
+To configure this setting globally for all Ingress rules, the `proxy-buffering` value may be set in the NGINX ConfigMap.
+To use custom values in an Ingress rule define these annotation:
+
+```yaml
+nginx.ingress.kubernetes.io/proxy-buffering: "on"
 ```
