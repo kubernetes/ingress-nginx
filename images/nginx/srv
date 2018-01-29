@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: 2018-01-26T16:58:16Z
+  labels:
+    app: helm-infra-nginx-ingress
+    chart: helm-infra-nginx-ingress-0.1.54
+    heritage: Tiller
+    release: helm-cmp-delivery-platform
+  name: ingress-nginx-external
+  namespace: ingress-nginx
+  resourceVersion: "1296893"
+spec:
+  ports:
+  - name: http-web
+    nodePort: 31505
+    port: 80
+    protocol: TCP
+    targetPort: http-web
+  - name: https-web
+    nodePort: 31089
+    port: 443
+    protocol: TCP
+    targetPort: https-web
+  selector:
+    app: ingress-nginx-external
+  sessionAffinity: None
+  type: LoadBalancer
+
