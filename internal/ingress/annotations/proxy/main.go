@@ -151,7 +151,7 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	prf, err := parser.GetStringAnnotation("proxy-redirect-from", ing)
-	if err != nil || rb == "" {
+	if err != nil || prf == "" {
 		prf = defBackend.ProxyRedirectFrom
 	}
 
