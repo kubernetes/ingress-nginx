@@ -33,20 +33,21 @@ func TestFilterErrors(t *testing.T) {
 
 func TestMergeConfigMapToStruct(t *testing.T) {
 	conf := map[string]string{
-		"custom-http-errors":         "300,400,demo",
-		"proxy-read-timeout":         "1",
-		"proxy-send-timeout":         "2",
-		"skip-access-log-urls":       "/log,/demo,/test",
-		"use-proxy-protocol":         "true",
-		"disable-access-log":         "true",
-		"access-log-path":            "/var/log/test/access.log",
-		"error-log-path":             "/var/log/test/error.log",
-		"use-gzip":                   "true",
-		"enable-dynamic-tls-records": "false",
-		"gzip-types":                 "text/html",
-		"proxy-real-ip-cidr":         "1.1.1.1/8,2.2.2.2/24",
-		"bind-address":               "1.1.1.1,2.2.2.2,3.3.3,2001:db8:a0b:12f0::1,3731:54:65fe:2::a7,33:33:33::33::33",
-		"worker-shutdown-timeout":    "99s",
+		"custom-http-errors":            "300,400,demo",
+		"proxy-read-timeout":            "1",
+		"proxy-send-timeout":            "2",
+		"skip-access-log-urls":          "/log,/demo,/test",
+		"skip-access-log-http-statuses": "^[23],204,302,^201",
+		"use-proxy-protocol":            "true",
+		"disable-access-log":            "true",
+		"access-log-path":               "/var/log/test/access.log",
+		"error-log-path":                "/var/log/test/error.log",
+		"use-gzip":                      "true",
+		"enable-dynamic-tls-records":    "false",
+		"gzip-types":                    "text/html",
+		"proxy-real-ip-cidr":            "1.1.1.1/8,2.2.2.2/24",
+		"bind-address":                  "1.1.1.1,2.2.2.2,3.3.3,2001:db8:a0b:12f0::1,3731:54:65fe:2::a7,33:33:33::33::33",
+		"worker-shutdown-timeout":       "99s",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -54,6 +55,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.AccessLogPath = "/var/log/test/access.log"
 	def.ErrorLogPath = "/var/log/test/error.log"
 	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
+	def.SkipAccessLogHTTPStatuses = []string{"^[23]", "204", "302", "^201"}
 	def.ProxyReadTimeout = 1
 	def.ProxySendTimeout = 2
 	def.EnableDynamicTLSRecords = false
