@@ -126,6 +126,7 @@ The following table shows a configuration option's name, type, and the default v
 |[limit&#8209;rate](#limit-rate)|int|0|
 |[limit&#8209;rate&#8209;after](#limit-rate-after)|int|0|
 |[http&#8209;redirect&#8209;code](#http-redirect-code)|int|308|
+|[proxy&#8209;buffering](#proxy-buffering)|string|"off"|
 
 ## add-headers
 
@@ -698,3 +699,7 @@ Default code is 308.
 Why the default code is 308?
 
 [RFC 7238](https://tools.ietf.org/html/rfc7238) was created to define the 308 (Permanent Redirect) status code that is similar to 301 (Moved Permanently) but it keeps the payload in the redirect. This is important if the we send a redirect in methods like POST.
+
+## proxy-buffering
+
+Enables or disables [buffering of responses from the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering).
