@@ -188,8 +188,9 @@ git submodule update
 
 # build modsecurity library
 cd "$BUILD_PATH"
-git clone --depth 1 -b v3/dev/performance --single-branch https://github.com/SpiderLabs/ModSecurity
+git clone -b v3/dev/performance --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
+git checkout 62022b49a22389cdecd35110e503285494fdf938 
 git submodule init
 git submodule update
 sh build.sh
@@ -324,12 +325,10 @@ rm -rf $HOME/.hunter
 
 # Download owasp modsecurity crs
 cd /etc/nginx/
-curl -sSL -o master.tgz https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/v3.0.2/master.tar.gz
-tar zxpvf master.tgz
-mv owasp-modsecurity-crs-3.0.2/ owasp-modsecurity-crs
-rm master.tgz
-
+git clone -b v3.1/dev --single-branch git@github.com:SpiderLabs/owasp-modsecurity-crs.git
 cd owasp-modsecurity-crs
+git checkout ce36edef52c17ad4d607d435477511d1b6dbe162
+
 mv crs-setup.conf.example crs-setup.conf
 mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
 mv rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
