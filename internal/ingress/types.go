@@ -26,6 +26,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -240,6 +241,10 @@ type Location struct {
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
 	ConfigurationSnippet string `json:"configurationSnippet"`
+	// Connection contains connection header to orverride the default Connection header
+	// to the request.
+	// +optional
+	Connection connection.Config `json:"connection"`
 	// ClientBodyBufferSize allows for the configuration of the client body
 	// buffer size for a specific location.
 	// +optional
