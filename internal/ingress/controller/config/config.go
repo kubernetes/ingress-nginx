@@ -471,7 +471,7 @@ type Configuration struct {
 	// LargeClientHeaderBuffers Sets the status code to return in response to rejected requests.
 	// http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status
 	// Default: 503
-	LimitReqStatus string `json:"limit-req-status"`
+	LimitReqStatusCode int `json:"limit-req-status-code"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -565,7 +565,7 @@ func NewDefault() Configuration {
 		JaegerServiceName:            "nginx",
 		JaegerSamplerType:            "const",
 		JaegerSamplerParam:           "1",
-		LimitReqStatus:               "503",
+		LimitReqStatusCode:           503,
 	}
 
 	if glog.V(5) {

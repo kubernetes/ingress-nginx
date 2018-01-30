@@ -102,7 +102,7 @@ http {
     underscores_in_headers          {{ if $cfg.EnableUnderscoresInHeaders }}on{{ else }}off{{ end }};
     ignore_invalid_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }};
 
-    limit_req_status                {{ $cfg.LimitReqStatus }};
+    limit_req_status                {{ $cfg.LimitReqStatusCode }};
 
     {{ if $cfg.EnableOpentracing }}
     opentracing on;
