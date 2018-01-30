@@ -468,7 +468,7 @@ type Configuration struct {
 	// Default: empty
 	HideHeaders []string `json:"hide-headers"`
 
-	// LargeClientHeaderBuffers Sets the status code to return in response to rejected requests.
+	// LimitReqStatusCode Sets the status code to return in response to rejected requests.
 	// http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status
 	// Default: 503
 	LimitReqStatusCode int `json:"limit-req-status-code"`
