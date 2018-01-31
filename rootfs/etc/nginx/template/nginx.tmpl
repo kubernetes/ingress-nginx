@@ -634,6 +634,10 @@ stream {
         {{ end }}
         {{ end }}
 
+        {{ if not (empty $server.SSLCiphers) }}
+        ssl_ciphers                             {{ $server.SSLCiphers }};
+        {{ end }}
+
         {{ if not (empty $server.ServerSnippet) }}
         {{ $server.ServerSnippet }}
         {{ end }}
