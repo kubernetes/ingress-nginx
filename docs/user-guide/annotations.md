@@ -59,6 +59,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
+|[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 
 **Note:** all the values must be a string. In case of booleans or number it must be quoted.
 
@@ -418,4 +419,14 @@ To use custom values in an Ingress rule define these annotation:
 
 ```yaml
 nginx.ingress.kubernetes.io/proxy-buffering: "on"
+```
+
+### SSL ciphers
+
+Specifies the [enabled ciphers](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers).
+
+Using this annotation will set the `ssl_ciphers` directive at the server level. This configuration is active for all the paths in the host.
+
+```yaml
+nginx.ingress.kubernetes.io/ssl-ciphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
 ```

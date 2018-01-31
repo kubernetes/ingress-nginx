@@ -19,6 +19,7 @@ package annotations
 import (
 	"github.com/golang/glog"
 	"github.com/imdario/mergo"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,6 +86,7 @@ type Ingress struct {
 	VtsFilterKey         string
 	Whitelist            ipwhitelist.SourceRange
 	XForwardedPrefix     bool
+	SSLCiphers           string
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -121,6 +123,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"VtsFilterKey":         vtsfilterkey.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
+			"SSLCiphers":           sslcipher.NewParser(cfg),
 		},
 	}
 }
