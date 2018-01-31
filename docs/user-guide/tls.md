@@ -118,12 +118,6 @@ core@localhost ~ $ curl -v https://10.2.78.7:443 -k
 The flag `--enable-ssl-passthrough` enables SSL passthrough feature.
 By default this feature is disabled
 
-## Server-side HTTPS enforcement
-
-By default the controller redirects (301) to HTTPS if TLS is enabled for that ingress . If you want to disable that behaviour globally, you can use `ssl-redirect: "false"` in the configuration ConfigMap.
-
-To configure this feature for specific ingress resources, you can use the `nginx.ingress.kubernetes.io/ssl-redirect: "false"` annotation in the particular resource.
-
 ## HTTP Strict Transport Security
 
 HTTP Strict Transport Security (HSTS) is an opt-in security enhancement specified through the use of a special response header. Once a supported browser receives this header that browser will prevent any communications from being sent over HTTP to the specified domain and will instead send all communications over HTTPS.
