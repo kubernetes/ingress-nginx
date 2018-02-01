@@ -4,7 +4,7 @@ This example demonstrates how to achieve session affinity using cookies
 
 ## Deployment
 
-Session stickyness is achieved through 3 annotations on the Ingress, as shown in the [example](sticky-ingress.yaml).
+Session stickyness is achieved through 3 annotations on the Ingress, as shown in the [example](ingress.yaml).
 
 |Name|Description|Values|
 | --- | --- | --- |
