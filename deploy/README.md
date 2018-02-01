@@ -8,7 +8,7 @@
 - [Custom Provider](#custom-provider)
   - [minikube](#minikube)
   - [AWS](#aws)
-  - [GCE - GKE](#gce-gke)
+  - [GCE - GKE](#gce---gke)
   - [Azure](#azure)
   - [Baremetal](#baremetal)
 - [Using Helm](#using-helm)
