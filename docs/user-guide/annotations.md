@@ -36,6 +36,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
+|[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
@@ -323,6 +324,9 @@ The annotation `nginx.ingress.kubernetes.io/limit-rate`, `nginx.ingress.kubernet
 `nginx.ingress.kubernetes.io/limit-rate`: rate of request that accepted from a client each second.
 
 To configure this setting globally for all Ingress rules, the `limit-rate-after` and `limit-rate` value may be set in the NGINX ConfigMap. if you set the value in ingress annotation will cover global setting.
+
+### Permanent Redirect
+This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example `nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com` would redirect everything to Google.
 
 ### SSL Passthrough
 
