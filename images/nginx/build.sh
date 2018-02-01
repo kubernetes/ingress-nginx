@@ -181,8 +181,8 @@ make install
 
 # Get Brotli source and deps
 cd "$BUILD_PATH"
-git clone --depth=1 https://github.com/eustas/ngx_brotli.git
-cd ngx_brotli 
+git clone --depth=1 https://github.com/google/ngx_brotli.git
+cd ngx_brotli
 git submodule init
 git submodule update
 
