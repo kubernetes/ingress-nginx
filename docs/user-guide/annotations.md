@@ -60,6 +60,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
+|[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 
 **Note:** all the values must be a string. In case of booleans or number it must be quoted.
 
@@ -429,4 +430,11 @@ Using this annotation will set the `ssl_ciphers` directive at the server level. 
 
 ```yaml
 nginx.ingress.kubernetes.io/ssl-ciphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
+```
+
+### Connection proxy header
+Using this annotation will override the default connection header set by nginx. To use custom values in an Ingress rule, define the annotation:
+
+```yaml
+nginx.ingress.kubernetes.io/connection-proxy-header: "keep-alive"
 ```
