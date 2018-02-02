@@ -671,12 +671,6 @@ stream {
             proxy_set_header            X-Original-Method       $request_method;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
 
-            {{ if $location.ExternalAuth.RequestRedirect }}
-            proxy_set_header            X-Auth-Request-Redirect {{ $location.ExternalAuth.RequestRedirect }};
-            {{ else }}
-            proxy_set_header            X-Auth-Request-Redirect $request_uri;
-            {{ end }}
-
             proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
@@ -743,6 +737,13 @@ stream {
             {{- range $idx, $line := buildAuthResponseHeaders $location }}
             {{ $line }}
             {{- end }}
+            {{ end }}
+
+            {{/* This header is used for external authentication */}}
+            {{ if $location.ExternalAuth.RequestRedirect }}
+            proxy_set_header            X-Auth-Request-Redirect {{ $location.ExternalAuth.RequestRedirect }};
+            {{ else }}
+            proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
 
             {{ if $location.ExternalAuth.SigninURL }}
