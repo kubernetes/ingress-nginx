@@ -163,11 +163,16 @@ func formatIP(input string) string {
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
-func buildResolvers(input interface{}) string {
+func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 	// NGINX need IPV6 addresses to be surrounded by brackets
-	nss, ok := input.([]net.IP)
+	nss, ok := res.([]net.IP)
 	if !ok {
-		glog.Errorf("expected a '[]net.IP' type but %T was returned", input)
+		glog.Errorf("expected a '[]net.IP' type but %T was returned", res)
+		return ""
+	}
+	no6, ok := disableIpv6.(bool)
+	if !ok {
+		glog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
 		return ""
 	}
 
@@ -178,14 +183,21 @@ func buildResolvers(input interface{}) string {
 	r := []string{"resolver"}
 	for _, ns := range nss {
 		if ing_net.IsIPV6(ns) {
+			if no6 {
+				continue
+			}
 			r = append(r, fmt.Sprintf("[%v]", ns))
 		} else {
 			r = append(r, fmt.Sprintf("%v", ns))
 		}
 	}
-	r = append(r, "valid=30s;")
+	r = append(r, "valid=30s")
 
-	return strings.Join(r, " ")
+	if no6 {
+		r = append(r, "ipv6=off")
+	}
+
+	return strings.Join(r, " ") + ";"
 }
 
 // buildLocation produces the location string, if the ingress has redirects
