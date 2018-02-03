@@ -513,7 +513,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		wp = 1
 	}
 	maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
-	glog.V(3).Infof("maximum number of open file descriptors : %v", sysctlFSFileMax())
+	glog.V(3).Infof("maximum number of open file descriptors : %v", maxOpenFiles)
 	if maxOpenFiles < 1024 {
 		// this means the value of RLIMIT_NOFILE is too low.
 		maxOpenFiles = 1024
