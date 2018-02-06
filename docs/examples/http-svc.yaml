@@ -4,6 +4,9 @@ metadata:
   name: http-svc
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: http-svc
   template:
     metadata:
       labels:
