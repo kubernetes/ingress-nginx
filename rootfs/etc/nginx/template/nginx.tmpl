@@ -226,6 +226,17 @@ http {
     }
     {{ end }}
 
+    # Obtain best http host
+    map $http_host $this_host {
+        default          $http_host;
+        ''               $host;
+    }
+
+    map $http_x_forwarded_host $best_http_host {
+        default          $http_x_forwarded_host;
+        ''               $this_host;
+    }
+
     {{ if $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
@@ -714,7 +725,7 @@ stream {
 
                 return 497;
                 {{ else }}
-                return {{ $all.Cfg.HTTPRedirectCode }} https://$host$request_uri;
+                return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host$request_uri;
                 {{ end }}
             }
             {{ end }}
@@ -784,7 +795,7 @@ stream {
             {{ if not (empty $location.UpstreamVhost) }}
             proxy_set_header Host                   "{{ $location.UpstreamVhost }}";
             {{ else }}
-            proxy_set_header Host                   $host;
+            proxy_set_header Host                   $best_http_host;
             {{ end }}
 
             # Pass the extracted client certificate to the backend
@@ -816,7 +827,7 @@ stream {
             {{ else }}
             proxy_set_header X-Forwarded-For        $the_real_ip;
             {{ end }}
-            proxy_set_header X-Forwarded-Host       $host;
+            proxy_set_header X-Forwarded-Host       $best_http_host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
             proxy_set_header X-Original-URI         $request_uri;
