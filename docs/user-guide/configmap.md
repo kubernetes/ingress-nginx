@@ -214,7 +214,7 @@ Disable listening on IPV6. By default this is disabled.
 
 ## disable-ipv6-dns
 
-Disable IPV6 for nginx DNS reslover. By default this is disabled.
+Disable IPV6 for nginx DNS resolver. By default this is disabled.
 
 ## enable-underscores-in-headers
 
