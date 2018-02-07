@@ -299,7 +299,7 @@ Additionally it is possible to set:
 
 `nginx.ingress.kubernetes.io/auth-response-headers`: `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authorization request completes.
 
-`nginx.ingress.kuberentes.io/auth-request-redirect`: `<Request_Redirect_URL>`  to specify the X-Auth-Request-Redirect header value.
+`nginx.ingress.kubernetes.io/auth-request-redirect`: `<Request_Redirect_URL>`  to specify the X-Auth-Request-Redirect header value.
 
 Please check the [external-auth](../examples/auth/external-auth/README.md) example.
 
