@@ -22,6 +22,9 @@ metadata:
     app: echoheaders
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: echoheaders
   template:
     metadata:
       labels:
