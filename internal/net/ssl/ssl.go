@@ -262,7 +262,7 @@ func AddCertAuth(name string, ca []byte, fs file.Filesystem) (*ingress.SSLCert, 
 	}
 	// If the first certificate does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
 	if pemCABlock.Type != "CERTIFICATE" {
-		return nil, fmt.Errorf("CA file %v contains invalid data, and must be created only with PEM formated certificates", name)
+		return nil, fmt.Errorf("CA file %v contains invalid data, and must be created only with PEM formatted certificates", name)
 	}
 
 	_, err := x509.ParseCertificate(pemCABlock.Bytes)
