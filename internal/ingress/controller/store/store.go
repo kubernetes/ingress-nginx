@@ -128,7 +128,7 @@ type Lister struct {
 	IngressAnnotation IngressAnnotationsLister
 }
 
-// Controller defines the required controllers that interact agains the api server
+// Controller defines the required controllers that interact against the api server
 type Controller struct {
 	Ingress   cache.Controller
 	Endpoint  cache.Controller

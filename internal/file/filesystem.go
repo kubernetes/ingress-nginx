@@ -42,7 +42,7 @@ func NewLocalFS() (Filesystem, error) {
 	return fs, nil
 }
 
-// NewFakeFS creates an in-memory filesytem with all the required
+// NewFakeFS creates an in-memory filesystem with all the required
 // paths used by the ingress controller.
 // This allows running test without polluting the local machine.
 func NewFakeFS() (Filesystem, error) {
