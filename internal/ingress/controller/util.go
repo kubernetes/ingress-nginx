@@ -17,8 +17,6 @@ limitations under the License.
 package controller
 
 import (
-	"syscall"
-
 	"github.com/golang/glog"
 
 	api "k8s.io/api/core/v1"
@@ -57,12 +55,12 @@ func sysctlSomaxconn() int {
 // sysctlFSFileMax returns the value of fs.file-max, i.e.
 // maximum number of open file descriptors
 func sysctlFSFileMax() int {
-	var rLimit syscall.Rlimit
-	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	fileMax, err := sysctl.New().GetSysctl("fs/file-max")
 	if err != nil {
-		glog.Errorf("unexpected error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
+		glog.Errorf("unexpected error reading system maximum number of open file descriptors (fs.file-max): %v", err)
 		// returning 0 means don't render the value
 		return 0
 	}
-	return int(rLimit.Max)
+	glog.V(3).Infof("system fs.file-max=%v", fileMax)
+	return fileMax
 }
