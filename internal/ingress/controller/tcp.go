@@ -43,15 +43,18 @@ type TCPProxy struct {
 // Get returns the TCPServer to use
 func (p *TCPProxy) Get(host string) *TCPServer {
 	if p.ServerList == nil {
+		glog.V(4).Infof("using default proxy")
 		return p.Default
 	}
 
 	for _, s := range p.ServerList {
 		if s.Hostname == host {
+			glog.V(4).Infof("using non-default proxy")
 			return s
 		}
 	}
 
+	glog.V(4).Infof("using default proxy")
 	return p.Default
 }
 
