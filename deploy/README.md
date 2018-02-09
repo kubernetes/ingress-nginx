@@ -227,6 +227,12 @@ To install the chart with the release name `my-nginx`:
 helm install stable/nginx-ingress --name my-nginx
 ```
 
+If the kubernetes cluster has RBAC enabled, then run:
+
+```console
+helm install stable/nginx-ingress --name my-nginx --set rbac.create=true
+```
+
 ## Verify installation
 
 To check if the ingress controller pods have started, run the following command:
