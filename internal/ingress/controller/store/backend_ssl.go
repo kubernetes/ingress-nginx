@@ -196,7 +196,7 @@ func (s k8sStore) checkMissingSecrets() {
 
 		key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
 		if key == "" {
-			return
+			continue
 		}
 
 		if _, ok := s.sslStore.Get(key); !ok {
