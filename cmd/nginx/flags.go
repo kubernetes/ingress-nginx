@@ -106,7 +106,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		sortBackends = flags.Bool("sort-backends", false,
 			`Defines if backends and it's endpoints should be sorted`)
 
-		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", false,
+		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", true,
 			`Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address`)
 
 		showVersion = flags.Bool("version", false,
