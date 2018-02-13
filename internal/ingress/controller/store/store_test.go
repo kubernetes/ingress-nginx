@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -56,11 +57,11 @@ func TestStore(t *testing.T) {
 		defer deleteNamespace(ns, clientSet, t)
 
 		stopCh := make(chan struct{})
-		updateCh := make(chan Event, 1024)
+		updateCh := channels.NewRingChannel(1024)
 
-		go func(ch chan Event) {
+		go func(ch *channels.RingChannel) {
 			for {
-				<-ch
+				<-ch.Out()
 			}
 		}(updateCh)
 
@@ -111,7 +112,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected an Ingres but none returned")
 		}
 
-		close(updateCh)
+		updateCh.Close()
 		close(stopCh)
 	})
 
@@ -120,19 +121,20 @@ func TestStore(t *testing.T) {
 		defer deleteNamespace(ns, clientSet, t)
 
 		stopCh := make(chan struct{})
-		updateCh := make(chan Event, 1024)
+		updateCh := channels.NewRingChannel(1024)
 
 		var add uint64
 		var upd uint64
 		var del uint64
 
-		go func(ch chan Event) {
+		go func(ch *channels.RingChannel) {
 			for {
-				e, ok := <-ch
+				evt, ok := <-ch.Out()
 				if !ok {
 					return
 				}
 
+				e := evt.(Event)
 				if e.Obj == nil {
 					continue
 				}
@@ -254,7 +256,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected 1 event of type Delete but %v occurred", del)
 		}
 
-		close(updateCh)
+		updateCh.Close()
 		close(stopCh)
 	})
 
@@ -263,19 +265,20 @@ func TestStore(t *testing.T) {
 		defer deleteNamespace(ns, clientSet, t)
 
 		stopCh := make(chan struct{})
-		updateCh := make(chan Event, 1024)
+		updateCh := channels.NewRingChannel(1024)
 
 		var add uint64
 		var upd uint64
 		var del uint64
 
-		go func(ch chan Event) {
+		go func(ch *channels.RingChannel) {
 			for {
-				e, ok := <-ch
+				evt, ok := <-ch.Out()
 				if !ok {
 					return
 				}
 
+				e := evt.(Event)
 				if e.Obj == nil {
 					continue
 				}
@@ -339,7 +342,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected 1 events of type Delete but %v occurred", del)
 		}
 
-		close(updateCh)
+		updateCh.Close()
 		close(stopCh)
 	})
 
@@ -348,19 +351,20 @@ func TestStore(t *testing.T) {
 		defer deleteNamespace(ns, clientSet, t)
 
 		stopCh := make(chan struct{})
-		updateCh := make(chan Event, 1024)
+		updateCh := channels.NewRingChannel(1024)
 
 		var add uint64
 		var upd uint64
 		var del uint64
 
-		go func(ch <-chan Event) {
+		go func(ch *channels.RingChannel) {
 			for {
-				e, ok := <-ch
+				evt, ok := <-ch.Out()
 				if !ok {
 					return
 				}
 
+				e := evt.(Event)
 				if e.Obj == nil {
 					continue
 				}
@@ -478,7 +482,7 @@ func TestStore(t *testing.T) {
 			}
 		})
 
-		close(updateCh)
+		updateCh.Close()
 		close(stopCh)
 	})
 
