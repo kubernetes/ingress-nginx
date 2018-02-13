@@ -33,6 +33,7 @@ import (
 	"github.com/golang/glog"
 
 	proxyproto "github.com/armon/go-proxyproto"
+	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -106,7 +107,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		}),
 
 		stopCh:   make(chan struct{}),
-		updateCh: make(chan store.Event, 1024),
+		updateCh: channels.NewRingChannel(4096),
 
 		stopLock: &sync.Mutex{},
 
@@ -209,7 +210,7 @@ type NGINXController struct {
 	stopLock *sync.Mutex
 
 	stopCh   chan struct{}
-	updateCh chan store.Event
+	updateCh *channels.RingChannel
 
 	// ngxErrCh channel used to detect errors with the nginx processes
 	ngxErrCh chan error
@@ -290,16 +291,20 @@ func (n *NGINXController) Start() {
 				// start a new nginx master process if the controller is not being stopped
 				n.start(cmd)
 			}
-		case evt := <-n.updateCh:
+		case event := <-n.updateCh.Out():
 			if n.isShuttingDown {
 				break
 			}
-			glog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
-			if evt.Type == store.ConfigurationEvent {
-				n.SetForceReload(true)
-			}
+			if evt, ok := event.(store.Event); ok {
+				glog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
+				if evt.Type == store.ConfigurationEvent {
+					n.SetForceReload(true)
+				}
 
-			n.syncQueue.Enqueue(evt.Obj)
+				n.syncQueue.Enqueue(evt.Obj)
+			} else {
+				glog.Warningf("unexpected event type received %T", event)
+			}
 		case <-n.stopCh:
 			break
 		}
