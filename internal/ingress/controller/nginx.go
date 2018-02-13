@@ -106,7 +106,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		}),
 
 		stopCh:   make(chan struct{}),
-		updateCh: make(chan store.Event, 1024),
+		updateCh: make(chan store.Event, 99999),
 
 		stopLock: &sync.Mutex{},
 
