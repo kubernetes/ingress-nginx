@@ -17,6 +17,7 @@ limitations under the License.
 package template
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -145,6 +146,8 @@ var (
 		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
 		"buildForwardedFor":           buildForwardedFor,
 		"buildAuthSignURL":            buildAuthSignURL,
+		"buildOpentracingLoad":        buildOpentracingLoad,
+		"buildOpentracing":            buildOpentracing,
 	}
 )
 
@@ -713,4 +716,53 @@ func randomString() string {
 	}
 
 	return string(b)
+}
+
+func buildOpentracingLoad(input interface{}) string {
+	cfg, ok := input.(config.Configuration)
+	if !ok {
+		glog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
+		return ""
+	}
+
+	if !cfg.EnableOpentracing {
+		return ""
+	}
+
+	buf := bytes.NewBufferString("load_module/etc/nginx/modules/ngx_http_opentracing_module.so;")
+
+	if cfg.ZipkinCollectorHost != "" {
+		buf.WriteString("load_module/etc/nginx/modules/ngx_http_zipkin_module.so;")
+	} else if cfg.JaegerCollectorHost != "" {
+		buf.WriteString("load_module/etc/nginx/modules/ngx_http_jaeger_module.so;")
+	}
+
+	return buf.String()
+}
+
+func buildOpentracing(input interface{}) string {
+	cfg, ok := input.(config.Configuration)
+	if !ok {
+		glog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
+		return ""
+	}
+
+	if !cfg.EnableOpentracing {
+		return ""
+	}
+
+	buf := bytes.NewBufferString("")
+
+	if cfg.ZipkinCollectorHost != "" {
+		buf.WriteString(fmt.Sprintf("zipkin_collector_host                   %v;", cfg.ZipkinCollectorHost))
+		buf.WriteString(fmt.Sprintf("zipkin_collector_port                   %v;", cfg.ZipkinCollectorPort))
+		buf.WriteString(fmt.Sprintf("zipkin_service_name                     %v;", cfg.ZipkinServiceName))
+	} else if cfg.JaegerCollectorHost != "" {
+		buf.WriteString(fmt.Sprintf("jaeger_reporter_local_agent_host_port   %v:%v;", cfg.JaegerCollectorHost, cfg.JaegerCollectorPort))
+		buf.WriteString(fmt.Sprintf("jaeger_service_name                     %v;", cfg.JaegerServiceName))
+		buf.WriteString(fmt.Sprintf("jaeger_sampler_type                     %v;", cfg.JaegerSamplerType))
+		buf.WriteString(fmt.Sprintf("jaeger_sampler_param                    %v;", cfg.JaegerSamplerParam))
+	}
+
+	return buf.String()
 }
