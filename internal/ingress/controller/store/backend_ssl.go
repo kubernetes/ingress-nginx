@@ -226,7 +226,7 @@ func (s k8sStore) ReadSecrets(ing *extensions.Ingress) {
 // sendDummyEvent sends a dummy event to trigger an update
 // This is used in when a secret change
 func (s *k8sStore) sendDummyEvent() {
-	s.updateCh <- Event{
+	s.updateCh.In() <- Event{
 		Type: UpdateEvent,
 		Obj: &extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
