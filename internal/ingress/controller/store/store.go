@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/eapache/channels"
 	"github.com/golang/glog"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -194,7 +195,7 @@ type k8sStore struct {
 	filesystem file.Filesystem
 
 	// updateCh
-	updateCh chan Event
+	updateCh *channels.RingChannel
 
 	// mu mutex used to avoid simultaneous incovations to syncSecret
 	mu *sync.Mutex
@@ -208,7 +209,7 @@ func New(checkOCSP bool,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	fs file.Filesystem,
-	updateCh chan Event) Storer {
+	updateCh *channels.RingChannel) Storer {
 
 	store := &k8sStore{
 		isOCSPCheckEnabled:    checkOCSP,
@@ -246,7 +247,7 @@ func New(checkOCSP bool,
 
 			store.extractAnnotations(addIng)
 			recorder.Eventf(addIng, apiv1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
-			updateCh <- Event{
+			updateCh.In() <- Event{
 				Type: CreateEvent,
 				Obj:  obj,
 			}
@@ -272,7 +273,7 @@ func New(checkOCSP bool,
 			}
 			recorder.Eventf(delIng, apiv1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", delIng.Namespace, delIng.Name))
 			store.listers.IngressAnnotation.Delete(delIng)
-			updateCh <- Event{
+			updateCh.In() <- Event{
 				Type: DeleteEvent,
 				Obj:  obj,
 			}
@@ -293,7 +294,7 @@ func New(checkOCSP bool,
 			}
 
 			store.extractAnnotations(curIng)
-			updateCh <- Event{
+			updateCh.In() <- Event{
 				Type: UpdateEvent,
 				Obj:  cur,
 			}
@@ -312,7 +313,7 @@ func New(checkOCSP bool,
 					_, err := store.GetLocalSecret(k8s.MetaNamespaceKey(sec))
 					if err == nil {
 						store.syncSecret(key)
-						updateCh <- Event{
+						updateCh.In() <- Event{
 							Type: UpdateEvent,
 							Obj:  cur,
 						}
@@ -323,7 +324,7 @@ func New(checkOCSP bool,
 						store.extractAnnotations(ing)
 					}
 
-					updateCh <- Event{
+					updateCh.In() <- Event{
 						Type: ConfigurationEvent,
 						Obj:  cur,
 					}
@@ -346,7 +347,7 @@ func New(checkOCSP bool,
 				}
 			}
 			store.sslStore.Delete(k8s.MetaNamespaceKey(sec))
-			updateCh <- Event{
+			updateCh.In() <- Event{
 				Type: DeleteEvent,
 				Obj:  obj,
 			}
@@ -362,7 +363,7 @@ func New(checkOCSP bool,
 					}
 				}
 
-				updateCh <- Event{
+				updateCh.In() <- Event{
 					Type: ConfigurationEvent,
 					Obj:  sec,
 				}
@@ -372,13 +373,13 @@ func New(checkOCSP bool,
 
 	eventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			updateCh <- Event{
+			updateCh.In() <- Event{
 				Type: CreateEvent,
 				Obj:  obj,
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			updateCh <- Event{
+			updateCh.In() <- Event{
 				Type: DeleteEvent,
 				Obj:  obj,
 			}
@@ -387,7 +388,7 @@ func New(checkOCSP bool,
 			oep := old.(*apiv1.Endpoints)
 			ocur := cur.(*apiv1.Endpoints)
 			if !reflect.DeepEqual(ocur.Subsets, oep.Subsets) {
-				updateCh <- Event{
+				updateCh.In() <- Event{
 					Type: UpdateEvent,
 					Obj:  cur,
 				}
@@ -402,7 +403,7 @@ func New(checkOCSP bool,
 			if mapKey == configmap {
 				glog.V(2).Infof("adding configmap %v to backend", mapKey)
 				store.setConfig(m)
-				updateCh <- Event{
+				updateCh.In() <- Event{
 					Type: ConfigurationEvent,
 					Obj:  obj,
 				}
@@ -415,7 +416,7 @@ func New(checkOCSP bool,
 				if mapKey == configmap {
 					recorder.Eventf(m, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
 					store.setConfig(m)
-					updateCh <- Event{
+					updateCh.In() <- Event{
 						Type: ConfigurationEvent,
 						Obj:  cur,
 					}
@@ -423,7 +424,7 @@ func New(checkOCSP bool,
 				// updates to configuration configmaps can trigger an update
 				if mapKey == tcp || mapKey == udp {
 					recorder.Eventf(m, apiv1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", mapKey))
-					updateCh <- Event{
+					updateCh.In() <- Event{
 						Type: ConfigurationEvent,
 						Obj:  cur,
 					}
