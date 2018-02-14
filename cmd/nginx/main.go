@@ -32,6 +32,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	discovery "k8s.io/apimachinery/pkg/version"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -185,9 +187,41 @@ func createApiserverClient(apiserverHost string, kubeConfig string) (*kubernetes
 		return nil, err
 	}
 
-	v, err := client.Discovery().ServerVersion()
+	var v *discovery.Info
+
+	// In some environments is possible the client cannot connect the API server in the first request
+	// https://github.com/kubernetes/ingress-nginx/issues/1968
+	defaultRetry := wait.Backoff{
+		Steps:    10,
+		Duration: 1 * time.Second,
+		Factor:   1.5,
+		Jitter:   0.1,
+	}
+
+	var lastErr error
+	retries := 0
+	glog.V(2).Info("trying to discover Kubernetes version")
+	err = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
+		v, err = client.Discovery().ServerVersion()
+
+		if err == nil {
+			return true, nil
+		}
+
+		lastErr = err
+		glog.V(2).Infof("unexpected error discovering Kubernetes version (attempt %v): %v", err, retries)
+		retries++
+		return false, nil
+	})
+
+	// err is not null only if there was a timeout in the exponential backoff (ErrWaitTimeout)
 	if err != nil {
-		return nil, err
+		return nil, lastErr
+	}
+
+	// this should not happen, warn the user
+	if retries > 0 {
+		glog.Warningf("it was required to retry %v times before reaching the API server", retries)
 	}
 
 	glog.Infof("Running in Kubernetes Cluster version v%v.%v (%v) - git (%v) commit %v - platform %v",
