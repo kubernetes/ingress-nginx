@@ -24,6 +24,10 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -42,12 +46,21 @@ func main() {
 	if os.Getenv("PATH") != "" {
 		path = os.Getenv("PATH")
 	}
+
 	http.HandleFunc("/", errorHandler(path))
+
+	http.Handle("/metrics", promhttp.Handler())
+
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	http.ListenAndServe(fmt.Sprintf(":8080"), nil)
 }
 
 func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
 		ext := "html"
 
 		format := r.Header.Get(FormatHeader)
@@ -60,6 +73,8 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		cext, err := mime.ExtensionsByType(mediaType)
 		if err != nil {
 			log.Printf("unexpected error reading media type extension: %v. Using %v\n", err, ext)
+		} else if len(cext) == 0 {
+			log.Printf("couldn't get media type extension. Using %v\n", ext)
 		} else {
 			ext = cext[0]
 		}
@@ -73,6 +88,9 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		}
 		w.WriteHeader(code)
 
+		if !strings.HasPrefix(ext, ".") {
+			ext = "." + ext
+		}
 		file := fmt.Sprintf("%v/%v%v", path, code, ext)
 		f, err := os.Open(file)
 		if err != nil {
@@ -93,5 +111,13 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		defer f.Close()
 		log.Printf("serving custom error response for code %v and format %v from file %v\n", code, format, file)
 		io.Copy(w, f)
+
+		duration := time.Now().Sub(start).Seconds()
+
+		proto := strconv.Itoa(r.ProtoMajor)
+		proto = fmt.Sprintf("%s.%s", proto, strconv.Itoa(r.ProtoMinor))
+
+		requestCount.WithLabelValues(proto).Inc()
+		requestDuration.WithLabelValues(proto).Observe(duration)
 	}
 }
