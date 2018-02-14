@@ -11,6 +11,10 @@ spec:
     targetPort: 8080
     protocol: TCP
     name: http
+  - port: 443
+    targetPort: 8443
+    protocol: TCP
+    name: https
   selector:
     app: echoheaders
 ---
@@ -29,9 +33,10 @@ spec:
     spec:
       containers:
       - name: echoheaders
-        image: gcr.io/google_containers/echoserver:1.7
+        image: gcr.io/google_containers/echoserver:1.9
         ports:
         - containerPort: 8080
+        - containerPort: 8443
         env:
           - name: NODE_NAME
             valueFrom:
