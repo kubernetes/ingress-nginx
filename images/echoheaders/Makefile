@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TAG = 1.8
-REGISTRY = gcr.io/google_containers
+TAG ?= 1.9
+REGISTRY ?= gcr.io/google_containers
 ARCH ?= $(shell go env GOARCH)
 ALL_ARCH = amd64 arm ppc64le
 
