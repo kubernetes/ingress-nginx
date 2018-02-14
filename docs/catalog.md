@@ -11,3 +11,4 @@ This is a non-comprehensive list of existing ingress controllers.
 * [Voyager: HAProxy Ingress Controller](https://github.com/appscode/voyager)
 * [External Nginx Ingress Controller](https://github.com/unibet/ext_nginx)
 * [Heptio Contour controller](https://github.com/heptio/contour)
+* [LemonLDAP::NG kubernetes controller](https://github.com/lemonldap-ng-controller/lemonldap-ng-controller) adds WebSSO, Access Management and Identity Federation to NGINX Ingress Controller
