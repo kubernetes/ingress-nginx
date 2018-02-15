@@ -98,9 +98,11 @@ fi
 # download GeoIP databases
 wget -O /etc/nginx/GeoIP.dat.gz https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz || { echo 'Could not download GeoLiteCountry, exiting.' ; exit 1; }
 wget -O /etc/nginx/GeoLiteCity.dat.gz https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz || { echo 'Could not download GeoLiteCity, exiting.' ; exit 1; }
+wget -O /etc/nginx/GeoIPASNum.dat.gz http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz || { echo 'Could not download GeoLiteOrg, exiting.' ; exit 1; }
 
 gunzip /etc/nginx/GeoIP.dat.gz
 gunzip /etc/nginx/GeoLiteCity.dat.gz
+gunzip /etc/nginx/GeoIPASNum.dat.gz
 
 mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
