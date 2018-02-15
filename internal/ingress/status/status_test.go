@@ -66,6 +66,21 @@ func buildSimpleClientSet() *testclient.Clientset {
 				Spec: apiv1.PodSpec{
 					NodeName: "foo_node_2",
 				},
+				Status: apiv1.PodStatus{
+					Phase: apiv1.PodRunning,
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "foo1-unknown",
+					Namespace: apiv1.NamespaceDefault,
+				},
+				Spec: apiv1.PodSpec{
+					NodeName: "foo_node_1",
+				},
+				Status: apiv1.PodStatus{
+					Phase: apiv1.PodUnknown,
+				},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{
@@ -86,6 +101,9 @@ func buildSimpleClientSet() *testclient.Clientset {
 				},
 				Spec: apiv1.PodSpec{
 					NodeName: "foo_node_2",
+				},
+				Status: apiv1.PodStatus{
+					Phase: apiv1.PodRunning,
 				},
 			},
 		}},

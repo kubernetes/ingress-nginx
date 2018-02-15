@@ -260,6 +260,11 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 	}
 
 	for _, pod := range pods.Items {
+		// only Running pods are valid
+		if pod.Status.Phase != apiv1.PodRunning {
+			continue
+		}
+
 		name := k8s.GetNodeIPOrName(s.Client, pod.Spec.NodeName, s.UseNodeInternalIP)
 		if !sliceutils.StringInSlice(name, addrs) {
 			addrs = append(addrs, name)
