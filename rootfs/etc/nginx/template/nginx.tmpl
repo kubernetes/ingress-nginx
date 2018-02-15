@@ -49,6 +49,7 @@ http {
     {{/* this is require to calculate traffic for individual country using GeoIP in the status page */}}
     geoip_country       /etc/nginx/GeoIP.dat;
     geoip_city          /etc/nginx/GeoLiteCity.dat;
+    geoip_org           /etc/nginx/GeoIPASNum.dat;
     geoip_proxy_recursive on;
 
     {{ if $cfg.EnableVtsStatus }}
