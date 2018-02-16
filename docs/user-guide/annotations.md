@@ -139,9 +139,9 @@ To enable consistent hashing for a backend:
 
 This configuration setting allows you to control the value for host in the following statement: `proxy_set_header Host $host`, which forms part of the location block.  This is useful if you need to call the upstream server by something other than `$host`.
 
-### Certificate Authentication
+### Client Certificate Authentication
 
-It's possible to enable Certificate-Based Authentication (Mutual Authentication) using additional annotations in Ingress Rule.
+It is possible to enable Client Certificate Authentication using additional annotations in Ingress Rule.
 
 The annotations are:
 ```
@@ -175,7 +175,7 @@ nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream
 Indicates if the received certificates should be passed or not to the upstream server.
 By default this is disabled.
 
-Please check the [tls-auth](../examples/auth/client-certs/README.md) example.
+Please check the [client-certs](../examples/auth/client-certs/README.md) example.
 
 **Important:**
 
