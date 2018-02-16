@@ -95,14 +95,16 @@ if [[ ${ARCH} == "s390x" ]]; then
   git config --global pack.threads "1"
 fi
 
-# download GeoIP databases
-wget -O /etc/nginx/GeoIP.dat.gz https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz || { echo 'Could not download GeoLiteCountry, exiting.' ; exit 1; }
-wget -O /etc/nginx/GeoLiteCity.dat.gz https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz || { echo 'Could not download GeoLiteCity, exiting.' ; exit 1; }
-wget -O /etc/nginx/GeoIPASNum.dat.gz http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz || { echo 'Could not download GeoLiteOrg, exiting.' ; exit 1; }
-
-gunzip /etc/nginx/GeoIP.dat.gz
-gunzip /etc/nginx/GeoLiteCity.dat.gz
-gunzip /etc/nginx/GeoIPASNum.dat.gz
+# Get the GeoIP data
+GEOIP_FOLDER=/etc/nginx/geoip
+mkdir -p $GEOIP_FOLDER
+function geoip_get {
+  wget -O $GEOIP_FOLDER/$1 $2 || { echo 'Could not download $1, exiting.' ; exit 1; }
+  gunzip $GEOIP_FOLDER/$1
+}
+geoip_get "GeoIP.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
+geoip_get "GeoLiteCity.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
+geoip_get "GeoIPASNum.dat.gz" "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz"
 
 mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
