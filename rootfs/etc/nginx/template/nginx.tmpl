@@ -166,7 +166,7 @@ http {
 
     map $pass_server_port $real_ip_header {
         {{ $all.ListenPorts.SSLProxy }} proxy_protocol;
-        default                         X-Forwarded-For;
+        default                         {{ $cfg.ForwardedForHeader }};
     }
 
     map $real_ip_header $the_real_ip {
