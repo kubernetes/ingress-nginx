@@ -69,7 +69,7 @@ const (
 
 var (
 	tmplPath    = "/etc/nginx/template/nginx.tmpl"
-	geoipPath	= "/etc/nginx/geoip"
+	geoipPath   = "/etc/nginx/geoip"
 	cfgPath     = "/etc/nginx/nginx.conf"
 	nginxBinary = "/usr/sbin/nginx"
 )
@@ -183,7 +183,6 @@ Error loading new template : %v
 	}
 
 	n.t = ngxTpl
-
 
 	// TODO: refactor
 	if _, ok := fs.(filesystem.DefaultFs); !ok {
