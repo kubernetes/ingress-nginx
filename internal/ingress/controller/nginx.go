@@ -69,6 +69,7 @@ const (
 
 var (
 	tmplPath    = "/etc/nginx/template/nginx.tmpl"
+	geoipPath	= "/etc/nginx/geoip"
 	cfgPath     = "/etc/nginx/nginx.conf"
 	nginxBinary = "/usr/sbin/nginx"
 )
@@ -152,8 +153,14 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
 	}
 
-	var onChange func()
-	onChange = func() {
+	var reloadNginx func()
+	reloadNginx = func() {
+		glog.Info("Triggering NGINX reload")
+		n.SetForceReload(true)
+	}
+
+	var onTemplateChange func()
+	onTemplateChange = func() {
 		template, err := ngx_template.NewTemplate(tmplPath, fs)
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
@@ -167,7 +174,7 @@ Error loading new template : %v
 
 		n.t = template
 		glog.Info("new NGINX template loaded")
-		n.SetForceReload(true)
+		reloadNginx()
 	}
 
 	ngxTpl, err := ngx_template.NewTemplate(tmplPath, fs)
@@ -177,14 +184,36 @@ Error loading new template : %v
 
 	n.t = ngxTpl
 
+
 	// TODO: refactor
 	if _, ok := fs.(filesystem.DefaultFs); !ok {
-		watch.NewDummyFileWatcher(tmplPath, onChange)
+		watch.NewDummyFileWatcher(tmplPath, onTemplateChange)
 	} else {
-		_, err = watch.NewFileWatcher(tmplPath, onChange)
-		if err != nil {
-			glog.Fatalf("unexpected error watching template %v: %v", tmplPath, err)
+
+		var watchPath string
+		var watchAction func()
+		var addWatcher func()
+		addWatcher = func() {
+			_, err = watch.NewFileWatcher(watchPath, watchAction)
+			if err != nil {
+				glog.Fatalf("unexpected error watching %v: %v", watchPath, err)
+			}
 		}
+
+		// Add the template path to the watcher
+		watchPath = tmplPath
+		watchAction = onTemplateChange
+		addWatcher()
+
+		// Add the GeoIP data to the watcher
+		geoData := [3]string{"/etc/nginx/geoip/GeoIP.dat", "/etc/nginx/geoip/GeoIPASNum.dat", "/etc/nginx/geoip/GeoLiteCity.dat"}
+		for index, element := range geoData {
+			fmt.Println(index, ":", element)
+			watchPath = element
+			watchAction = reloadNginx
+			addWatcher()
+		}
+
 	}
 
 	return n
