@@ -21,6 +21,7 @@ Name | Description | Complexity Level
 Name | Description | Complexity Level
 -----| ----------- | ----------------
 [Basic auth](auth/basic/README.md) | password protect your website | nginx | Intermediate
+[Client certificate authentication](auth/client-certs/README.md) | secure your website with client certificate authentication | nginx | Intermediate
 [External auth plugin](external-auth/README.md) | defer to an external auth service | Intermediate
 
 ## Customization
