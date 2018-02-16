@@ -99,7 +99,7 @@ fi
 GEOIP_FOLDER=/etc/nginx/geoip
 mkdir -p $GEOIP_FOLDER
 function geoip_get {
-  wget -O $GEOIP_FOLDER/$1 $2 || { echo 'Could not download $1, exiting.' ; exit 1; }
+  wget -O $GEOIP_FOLDER/$1 $2 || { echo "Could not download $1, exiting." ; exit 1; }
   gunzip $GEOIP_FOLDER/$1
 }
 geoip_get "GeoIP.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
