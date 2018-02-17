@@ -56,6 +56,7 @@ import (
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
+	"path/filepath"
 )
 
 type statusModule string
@@ -69,6 +70,7 @@ const (
 
 var (
 	tmplPath    = "/etc/nginx/template/nginx.tmpl"
+	geoipPath   = "/etc/nginx/geoip"
 	cfgPath     = "/etc/nginx/nginx.conf"
 	nginxBinary = "/usr/sbin/nginx"
 )
@@ -152,8 +154,8 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
 	}
 
-	var onChange func()
-	onChange = func() {
+	var onTemplateChange func()
+	onTemplateChange = func() {
 		template, err := ngx_template.NewTemplate(tmplPath, fs)
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
@@ -179,12 +181,38 @@ Error loading new template : %v
 
 	// TODO: refactor
 	if _, ok := fs.(filesystem.DefaultFs); !ok {
-		watch.NewDummyFileWatcher(tmplPath, onChange)
+		watch.NewDummyFileWatcher(tmplPath, onTemplateChange)
 	} else {
-		_, err = watch.NewFileWatcher(tmplPath, onChange)
+
+		_, err = watch.NewFileWatcher(tmplPath, onTemplateChange)
 		if err != nil {
-			glog.Fatalf("unexpected error watching template %v: %v", tmplPath, err)
+			glog.Fatalf("unexpected error creating file watcher: %v", err)
 		}
+
+		filesToWatch := []string{}
+		err := filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			filesToWatch = append(filesToWatch, path)
+			return nil
+		})
+
+		if err != nil {
+			glog.Fatalf("unexpected error creating file watcher: %v", err)
+		}
+
+		for _, f := range filesToWatch {
+			_, err = watch.NewFileWatcher(f, func() {
+				glog.Info("file %v changed. Reloading NGINX", f)
+				n.SetForceReload(true)
+			})
+			if err != nil {
+				glog.Fatalf("unexpected error creating file watcher: %v", err)
+			}
+		}
+
 	}
 
 	return n
