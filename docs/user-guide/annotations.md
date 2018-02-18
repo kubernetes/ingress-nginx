@@ -62,6 +62,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
+|[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
 
 **Note:** all the values must be a string. In case of booleans or number it must be quoted.
 
@@ -441,4 +442,12 @@ Using this annotation will override the default connection header set by nginx. 
 
 ```yaml
 nginx.ingress.kubernetes.io/connection-proxy-header: "keep-alive"
+```
+
+### Enable Access Log
+
+In some scenarios could be required to disable NGINX access logs. To enable this feature use the annotation:
+
+```yaml
+nginx.ingress.kubernetes.io/enable-access-log: "false"
 ```

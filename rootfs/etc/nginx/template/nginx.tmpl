@@ -684,6 +684,11 @@ stream {
         {{ end }}
 
         location {{ $path }} {
+
+            {{ if not $location.Logs.Access }}
+            access_log off;
+            {{ end }}
+
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}

@@ -34,6 +34,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/portinredirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -87,6 +88,7 @@ type Ingress struct {
 	Whitelist            ipwhitelist.SourceRange
 	XForwardedPrefix     bool
 	SSLCiphers           string
+	Logs                 log.Config
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -124,6 +126,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),
+			"Logs":                 log.NewParser(cfg),
 		},
 	}
 }
