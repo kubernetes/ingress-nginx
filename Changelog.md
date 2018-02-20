@@ -1,5 +1,64 @@
 # Changelog
 
+### 0.11.0
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.11.0`
+
+*New Features:*
+
+- NGINX 1.13.9
+
+*Changes:*
+
+- [X] [#1992](https://github.com/kubernetes/ingress-nginx/pull/1992) Added configmap option to disable IPv6 in nginx DNS resolver
+- [X] [#1993](https://github.com/kubernetes/ingress-nginx/pull/1993) Enable Customization of Auth Request Redirect
+- [X] [#1996](https://github.com/kubernetes/ingress-nginx/pull/1996) Use v3/dev/performance of ModSecurity because of performance
+- [X] [#1997](https://github.com/kubernetes/ingress-nginx/pull/1997) fix var checked
+- [X] [#1998](https://github.com/kubernetes/ingress-nginx/pull/1998) Add support to enable/disable proxy buffering
+- [X] [#1999](https://github.com/kubernetes/ingress-nginx/pull/1999) Add connection-proxy-header annotation
+- [X] [#2001](https://github.com/kubernetes/ingress-nginx/pull/2001) Add limit-request-status-code option
+- [X] [#2005](https://github.com/kubernetes/ingress-nginx/pull/2005) fix typo error for server name _
+- [X] [#2006](https://github.com/kubernetes/ingress-nginx/pull/2006) Add support for enabling ssl_ciphers per host
+- [X] [#2019](https://github.com/kubernetes/ingress-nginx/pull/2019) Update nginx image
+- [X] [#2021](https://github.com/kubernetes/ingress-nginx/pull/2021) Add nginx_cookie_flag_module
+- [X] [#2026](https://github.com/kubernetes/ingress-nginx/pull/2026) update KUBERNETES from v1.8.0 to 1.9.0
+- [X] [#2027](https://github.com/kubernetes/ingress-nginx/pull/2027) Show pod information in http-svc example
+- [X] [#2030](https://github.com/kubernetes/ingress-nginx/pull/2030) do not ignore $http_host and $http_x_forwarded_host
+- [X] [#2031](https://github.com/kubernetes/ingress-nginx/pull/2031) The maximum number of open file descriptors should be maxOpenFiles.
+- [X] [#2036](https://github.com/kubernetes/ingress-nginx/pull/2036) add matchLabels in Deployment yaml, that both API extensions/v1beta1 …
+- [X] [#2050](https://github.com/kubernetes/ingress-nginx/pull/2050) Get file max from fs/file-max.
+- [X] [#2063](https://github.com/kubernetes/ingress-nginx/pull/2063) Run one test at a time
+- [X] [#2065](https://github.com/kubernetes/ingress-nginx/pull/2065) Always return an IP address
+- [X] [#2069](https://github.com/kubernetes/ingress-nginx/pull/2069) Do not cancel the synchronization of secrets
+- [X] [#2071](https://github.com/kubernetes/ingress-nginx/pull/2071) Update Go to 1.9.4
+- [X] [#2082](https://github.com/kubernetes/ingress-nginx/pull/2082) Use a ring channel to avoid blocking write of events
+- [X] [#2089](https://github.com/kubernetes/ingress-nginx/pull/2089) Retry initial connection to the Kubernetes cluster
+- [X] [#2093](https://github.com/kubernetes/ingress-nginx/pull/2093) Only pods in running phase are vallid for status
+- [X] [#2099](https://github.com/kubernetes/ingress-nginx/pull/2099) Added GeoIP Organisational data
+- [X] [#2107](https://github.com/kubernetes/ingress-nginx/pull/2107) Enabled the dynamic reload of GeoIP data
+- [X] [#2119](https://github.com/kubernetes/ingress-nginx/pull/2119) Remove deprecated flag disable-node-list
+- [X] [#2120](https://github.com/kubernetes/ingress-nginx/pull/2120) Migrate to codecov.io
+
+*Documentation:*
+
+- [X] [#1987](https://github.com/kubernetes/ingress-nginx/pull/1987) add kube-system namespace for oauth2-proxy example
+- [X] [#1991](https://github.com/kubernetes/ingress-nginx/pull/1991) Add comment about bolean and number values
+- [X] [#2009](https://github.com/kubernetes/ingress-nginx/pull/2009) docs/user-guide/tls: remove duplicated section
+- [X] [#2011](https://github.com/kubernetes/ingress-nginx/pull/2011) broken link for sticky-ingress.yaml
+- [X] [#2014](https://github.com/kubernetes/ingress-nginx/pull/2014) Add document for connection-proxy-header annotation
+- [X] [#2016](https://github.com/kubernetes/ingress-nginx/pull/2016) Minor link fix in deployment docs
+- [X] [#2018](https://github.com/kubernetes/ingress-nginx/pull/2018) Added documentation for Permanent Redirect
+- [X] [#2035](https://github.com/kubernetes/ingress-nginx/pull/2035) fix broken links in static-ip readme
+- [X] [#2038](https://github.com/kubernetes/ingress-nginx/pull/2038) fix typo: appropiate -> [appropriate]
+- [X] [#2039](https://github.com/kubernetes/ingress-nginx/pull/2039) fix typo stickyness to stickiness
+- [X] [#2040](https://github.com/kubernetes/ingress-nginx/pull/2040) fix wrong annotation
+- [X] [#2041](https://github.com/kubernetes/ingress-nginx/pull/2041) fix spell error reslover -> resolver
+- [X] [#2046](https://github.com/kubernetes/ingress-nginx/pull/2046) Fix typos
+- [X] [#2054](https://github.com/kubernetes/ingress-nginx/pull/2054) Adding documentation for helm with RBAC enabled
+- [X] [#2075](https://github.com/kubernetes/ingress-nginx/pull/2075) Fix opentracing configuration when multiple options are configured
+- [X] [#2076](https://github.com/kubernetes/ingress-nginx/pull/2076) Fix spelling errors
+- [X] [#2077](https://github.com/kubernetes/ingress-nginx/pull/2077) Remove initContainer from default deployment
+
 ### 0.10.2
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.2`
