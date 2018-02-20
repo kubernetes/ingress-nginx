@@ -96,9 +96,6 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			`Force namespace isolation. This flag is required to avoid the reference of secrets or
 		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
 
-		_ = flags.Bool("disable-node-list", false,
-			`Disable querying nodes. If --force-namespace-isolation is true, this should also be set. (DEPRECATED)`)
-
 		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the
 		ingress controller should update the Ingress status IP/hostname when the controller
 		is being stopped. Default is true`)
@@ -131,8 +128,6 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		syncRateLimit = flags.Float32("sync-rate-limit", 0.3,
 			`Define the sync frequency upper limit`)
 	)
-
-	flags.MarkDeprecated("disable-node-list", "This flag is currently no-op and will be deleted.")
 
 	flag.Set("logtostderr", "true")
 
