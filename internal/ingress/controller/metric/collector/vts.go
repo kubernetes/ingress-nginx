@@ -37,23 +37,24 @@ type (
 	}
 
 	vtsData struct {
-		bytes                *prometheus.Desc
-		cache                *prometheus.Desc
-		connections          *prometheus.Desc
-		responses            *prometheus.Desc
-		requests             *prometheus.Desc
-		filterZoneBytes      *prometheus.Desc
-		filterZoneResponses  *prometheus.Desc
-		filterZoneCache      *prometheus.Desc
-		upstreamBackup       *prometheus.Desc
-		upstreamBytes        *prometheus.Desc
-		upstreamDown         *prometheus.Desc
-		upstreamFailTimeout  *prometheus.Desc
-		upstreamMaxFails     *prometheus.Desc
-		upstreamResponses    *prometheus.Desc
-		upstreamRequests     *prometheus.Desc
-		upstreamResponseMsec *prometheus.Desc
-		upstreamWeight       *prometheus.Desc
+		bytes                 *prometheus.Desc
+		cache                 *prometheus.Desc
+		connections           *prometheus.Desc
+		responses             *prometheus.Desc
+		requests              *prometheus.Desc
+		filterZoneBytes       *prometheus.Desc
+		filterZoneResponses   *prometheus.Desc
+		filterZoneCache       *prometheus.Desc
+		filterZoneRequestMsec *prometheus.Desc
+		upstreamBackup        *prometheus.Desc
+		upstreamBytes         *prometheus.Desc
+		upstreamDown          *prometheus.Desc
+		upstreamFailTimeout   *prometheus.Desc
+		upstreamMaxFails      *prometheus.Desc
+		upstreamResponses     *prometheus.Desc
+		upstreamRequests      *prometheus.Desc
+		upstreamResponseMsec  *prometheus.Desc
+		upstreamWeight        *prometheus.Desc
 	}
 )
 
@@ -108,6 +109,11 @@ func NewNGINXVTSCollector(watchNamespace, ingressClass string, port int, path st
 			prometheus.BuildFQName(ns, "", "filterzone_cache_total"),
 			"Nginx cache count",
 			[]string{"ingress_class", "namespace", "server_zone", "key", "type"}, nil),
+
+		filterZoneRequestMsec: prometheus.NewDesc(
+			prometheus.BuildFQName(ns, "", "filterzone_request_msecs_avg"),
+			"The average of only filter zone request processing times in milliseconds.",
+			[]string{"ingress_class", "namespace", "server_zone", "key"}, nil),
 
 		upstreamBackup: prometheus.NewDesc(
 			prometheus.BuildFQName(ns, "", "upstream_backup"),
@@ -179,6 +185,7 @@ func (p vtsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- p.data.filterZoneBytes
 	ch <- p.data.filterZoneCache
 	ch <- p.data.filterZoneResponses
+	ch <- p.data.filterZoneRequestMsec
 }
 
 // Collect implements prometheus.Collector.
@@ -252,6 +259,8 @@ func (p vtsCollector) scrapeVts(ch chan<- prometheus.Metric) {
 			reflectMetrics(&zone.Responses, p.data.filterZoneResponses, ch, p.ingressClass, p.watchNamespace, serverZone, name)
 			reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, p.ingressClass, p.watchNamespace, serverZone, name)
 
+			ch <- prometheus.MustNewConstMetric(p.data.filterZoneRequestMsec,
+				prometheus.CounterValue, zone.RequestMsec, p.ingressClass, p.watchNamespace, serverZone, name)
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
 				prometheus.CounterValue, zone.InBytes, p.ingressClass, p.watchNamespace, serverZone, name, "in")
 			ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
