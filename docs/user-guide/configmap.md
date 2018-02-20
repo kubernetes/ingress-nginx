@@ -19,6 +19,8 @@ The key and values in a ConfigMap can only be strings.
 This means that we want a value with boolean values we need to quote the values, like "true" or "false".
 Same for numbers, like "100".
 
+"Slice" types (defined below as `[]string` or `[]int` can be provided as a comma-delimited string.
+
 ## Configuration options
 
 The following table shows a configuration option's name, type, and the default value:
