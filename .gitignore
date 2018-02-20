@@ -30,3 +30,5 @@ Session.vim
 /gover.coverprofile
 
 e2e-tests
+
+coverage.txt

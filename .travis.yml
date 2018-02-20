@@ -13,7 +13,7 @@ notifications:
     on_success: never
 
 go:
-  - 1.9.4
+  - "1.10"
 
 go_import_path: k8s.io/ingress-nginx
 
@@ -39,9 +39,6 @@ jobs:
     # start minikube 
     - test/e2e/up.sh
     script:
-    - go get github.com/mattn/goveralls
-    - go get github.com/modocache/gover
-    - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover;fi
     - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
     - make cover
   - stage: e2e
