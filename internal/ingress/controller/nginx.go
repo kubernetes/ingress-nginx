@@ -42,6 +42,8 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/kubernetes/pkg/util/filesystem"
 
+	"path/filepath"
+
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
@@ -56,7 +58,6 @@ import (
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
-	"path/filepath"
 )
 
 type statusModule string
@@ -191,6 +192,10 @@ Error loading new template : %v
 
 		filesToWatch := []string{}
 		err := filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
 			if info.IsDir() {
 				return nil
 			}

@@ -5,7 +5,7 @@ The GCE ingress controller was moved to [github.com/kubernetes/ingress-gce](http
 # NGINX Ingress Controller
 
 [![Build Status](https://travis-ci.org/kubernetes/ingress-nginx.svg?branch=master)](https://travis-ci.org/kubernetes/ingress-nginx)
-[![Coverage Status](https://coveralls.io/repos/github/kubernetes/ingress-nginx/badge.svg?branch=master)](https://coveralls.io/github/kubernetes/ingress-nginx?branch=master)
+[![Coverage Status](https://codecov.io/gh/kubernetes/ingress-nginx/branch/master/graph/badge.svg)](https://codecov.io/gh/kubernetes/ingress-nginx)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx)
 
 ## Description

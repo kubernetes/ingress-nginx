@@ -149,7 +149,6 @@ verify-all:
 
 .PHONY: test
 test:
-	@echo "+ $@"
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
 .PHONY: e2e-image
@@ -164,14 +163,21 @@ e2e-test:
 
 .PHONY: cover
 cover:
-	@echo "+ $@"
-	@go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e') | xargs -L 1 sh -c
-	gover
-	goveralls -coverprofile=gover.coverprofile -service travis-ci
+	@rm -rf coverage.txt
+	@for d in `go list ./... | grep -v vendor | grep -v '/test/e2e'`; do \
+		t=$$(date +%s); \
+		go test -coverprofile=cover.out -covermode=atomic $$d || exit 1; \
+		echo "Coverage test $$d took $$(($$(date +%s)-t)) seconds"; \
+		if [ -f cover.out ]; then \
+			cat cover.out >> coverage.txt; \
+			rm cover.out; \
+		fi; \
+	done
+	@echo "Uploading coverage results..."
+	@curl -s https://codecov.io/bash | bash
 
 .PHONY: vet
 vet:
-	@echo "+ $@"
 	@go vet $(shell go list ${PKG}/... | grep -v vendor)
 
 .PHONY: release
