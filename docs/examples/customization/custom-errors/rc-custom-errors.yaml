@@ -16,7 +16,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 60
       containers:
-      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.10.2
+      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.11.0
         name: nginx-ingress-lb
         imagePullPolicy: Always
         readinessProbe:
