@@ -83,6 +83,7 @@ clean-install \
   libcurl4-openssl-dev \
   procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
+  lua-cjson \
   || exit 1
 
 ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
@@ -155,10 +156,23 @@ get_src 678ec4b6c2b6bba7e8000f42feb71d2bf044a44cf3909b3cbbccb708827ca7a6 \
 get_src 9915ad1cf0734cc5b357b0d9ea92fec94764b4bf22f4dce185cbd65feda30ec1 \
         "https://github.com/AirisX/nginx_cookie_flag_module/archive/v$COOKIE_FLAG_VERSION.tar.gz"
 
+get_src d4a9ed0d2405f41eb0178462b398afde8599c5115dcc1ff8f60e2f34a41a4c21 \
+        "https://github.com/openresty/lua-resty-lrucache/archive/v0.07.tar.gz"
+
+get_src 92fd006d5ca3b3266847d33410eb280122a7f6c06334715f87acce064188a02e \
+        "https://github.com/openresty/lua-resty-core/archive/v0.1.14rc1.tar.gz"
+
+
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
 
 export MAKEFLAGS=-j$(($(grep -c ^processor /proc/cpuinfo) - 0))
+
+cd "$BUILD_PATH/lua-resty-core-0.1.14rc1"
+make install
+
+cd "$BUILD_PATH/lua-resty-lrucache-0.07"
+make install
 
 # build opentracing lib
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
