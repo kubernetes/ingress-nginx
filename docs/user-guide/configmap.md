@@ -130,7 +130,7 @@ The following table shows a configuration option's name, type, and the default v
 |[limit-rate-after](#limit-rate-after)|int|0|
 |[http-redirect-code](#http-redirect-code)|int|308|
 |[proxy-buffering](#proxy-buffering)|string|"off"|
-|[limit-request-status-code](#limit-request-status-code)|int|503|
+|[limit-req-status-code](#limit-req-status-code)|int|503|
 
 ## add-headers
 
@@ -712,6 +712,6 @@ Why the default code is 308?
 
 Enables or disables [buffering of responses from the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering).
 
-## limit-request-status-code
+## limit-req-status-code
 
 Sets the [status code to return in response to rejected requests](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status).Default: 503
