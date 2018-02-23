@@ -61,6 +61,6 @@ func sysctlFSFileMax() int {
 		// returning 0 means don't render the value
 		return 0
 	}
-	glog.V(3).Infof("system fs.file-max=%v", fileMax)
+	glog.V(2).Infof("system fs.file-max=%v", fileMax)
 	return fileMax
 }
