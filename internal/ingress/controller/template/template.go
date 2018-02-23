@@ -729,12 +729,12 @@ func buildOpentracingLoad(input interface{}) string {
 		return ""
 	}
 
-	buf := bytes.NewBufferString("load_module/etc/nginx/modules/ngx_http_opentracing_module.so;")
+	buf := bytes.NewBufferString("load_module /etc/nginx/modules/ngx_http_opentracing_module.so;")
 
 	if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString("load_module/etc/nginx/modules/ngx_http_zipkin_module.so;")
+		buf.WriteString("load_module /etc/nginx/modules/ngx_http_zipkin_module.so;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("load_module/etc/nginx/modules/ngx_http_jaeger_module.so;")
+		buf.WriteString("load_module /etc/nginx/modules/ngx_http_jaeger_module.so;")
 	}
 
 	return buf.String()
