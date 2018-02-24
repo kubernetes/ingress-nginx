@@ -552,20 +552,20 @@ stream {
      {{ $cors := .CorsConfig }}
      # Cors Preflight methods needs additional options and different Return Code
      if ($request_method = 'OPTIONS') {
-        add_header 'Access-Control-Allow-Origin' '{{ $cors.CorsAllowOrigin }}' always;
-        {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}' always; {{ end }}
-        add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}' always;
-        add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}' always;
-        add_header 'Access-Control-Max-Age' {{ $cors.CorsMaxAge }};
-        add_header 'Content-Type' 'text/plain charset=UTF-8';
-        add_header 'Content-Length' 0;
+        more_set_headers 'Access-Control-Allow-Origin: {{ $cors.CorsAllowOrigin }}';
+        {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
+        more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
+        more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
+        more_set_headers 'Access-Control-Max-Age: {{ $cors.CorsMaxAge }}';
+        more_set_headers 'Content-Type: text/plain charset=UTF-8';
+        more_set_headers 'Content-Length: 0';
         return 204;
      }
 
-        add_header 'Access-Control-Allow-Origin' '{{ $cors.CorsAllowOrigin }}' always;
-        {{ if $cors.CorsAllowCredentials }} add_header 'Access-Control-Allow-Credentials' '{{ $cors.CorsAllowCredentials }}' always; {{ end }}
-        add_header 'Access-Control-Allow-Methods' '{{ $cors.CorsAllowMethods }}' always;
-        add_header 'Access-Control-Allow-Headers' '{{ $cors.CorsAllowHeaders }}' always;
+        more_set_headers 'Access-Control-Allow-Origin: {{ $cors.CorsAllowOrigin }}';
+        {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
+        more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
+        more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
 
 {{ end }}
 
