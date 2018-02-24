@@ -43,7 +43,7 @@ These permissions are granted specific to the nginx-ingress namespace.  These
 permissions are granted to the Role named `nginx-ingress-role`
 
 * `configmaps`, `pods`, `secrets`: get
-* `endpoints`: create, get, update
+* `endpoints`: get
 
 Furthermore to support leader-election, the nginx-ingress-controller needs to
 have access to a `configmap` using the resourceName `ingress-controller-leader-nginx`
