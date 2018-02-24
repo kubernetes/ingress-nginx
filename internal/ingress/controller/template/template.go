@@ -729,13 +729,16 @@ func buildOpentracingLoad(input interface{}) string {
 		return ""
 	}
 
-	buf := bytes.NewBufferString("load_module/etc/nginx/modules/ngx_http_opentracing_module.so;")
+	buf := bytes.NewBufferString("load_module /etc/nginx/modules/ngx_http_opentracing_module.so;")
+	buf.WriteString("\r\n")
 
 	if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString("load_module/etc/nginx/modules/ngx_http_zipkin_module.so;")
+		buf.WriteString("load_module /etc/nginx/modules/ngx_http_zipkin_module.so;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("load_module/etc/nginx/modules/ngx_http_jaeger_module.so;")
+		buf.WriteString("load_module /etc/nginx/modules/ngx_http_jaeger_module.so;")
 	}
+
+	buf.WriteString("\r\n")
 
 	return buf.String()
 }
@@ -755,14 +758,20 @@ func buildOpentracing(input interface{}) string {
 
 	if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString(fmt.Sprintf("zipkin_collector_host                   %v;", cfg.ZipkinCollectorHost))
+		buf.WriteString("\r\n")
 		buf.WriteString(fmt.Sprintf("zipkin_collector_port                   %v;", cfg.ZipkinCollectorPort))
+		buf.WriteString("\r\n")
 		buf.WriteString(fmt.Sprintf("zipkin_service_name                     %v;", cfg.ZipkinServiceName))
 	} else if cfg.JaegerCollectorHost != "" {
 		buf.WriteString(fmt.Sprintf("jaeger_reporter_local_agent_host_port   %v:%v;", cfg.JaegerCollectorHost, cfg.JaegerCollectorPort))
+		buf.WriteString("\r\n")
 		buf.WriteString(fmt.Sprintf("jaeger_service_name                     %v;", cfg.JaegerServiceName))
+		buf.WriteString("\r\n")
 		buf.WriteString(fmt.Sprintf("jaeger_sampler_type                     %v;", cfg.JaegerSamplerType))
+		buf.WriteString("\r\n")
 		buf.WriteString(fmt.Sprintf("jaeger_sampler_param                    %v;", cfg.JaegerSamplerParam))
 	}
 
+	buf.WriteString("\r\n")
 	return buf.String()
 }
