@@ -622,6 +622,11 @@ stream {
         {{ end }}
         {{ end }}
 
+        {{ if not (empty $server.AuthTLSError) }}
+        # {{ $server.AuthTLSError }}
+        return 403;
+        {{ else }}
+
         {{ if not (empty $server.CertificateAuth.CAFileName) }}
         # PEM sha: {{ $server.CertificateAuth.PemSHA }}
         ssl_client_certificate                  {{ $server.CertificateAuth.CAFileName }};
@@ -898,7 +903,7 @@ stream {
             return 503;
             {{ end }}
         }
-
+        {{ end }}
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}
