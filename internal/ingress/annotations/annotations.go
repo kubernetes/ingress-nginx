@@ -150,6 +150,14 @@ func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
 				continue
 			}
 
+			if name == "CertificateAuth" && data[name] == nil {
+				data[name] = authtls.Config{
+					AuthTLSError: err.Error(),
+				}
+				// avoid mapping the result from the annotation
+				val = nil
+			}
+
 			_, alreadyDenied := data[DeniedKeyName]
 			if !alreadyDenied {
 				data[DeniedKeyName] = err
