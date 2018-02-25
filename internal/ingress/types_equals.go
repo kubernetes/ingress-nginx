@@ -376,6 +376,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.Connection).Equal(&l2.Connection) {
 		return false
 	}
+	if !(&l1.Logs).Equal(&l2.Logs) {
+		return false
+	}
 
 	return true
 }

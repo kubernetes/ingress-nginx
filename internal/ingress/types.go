@@ -29,6 +29,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
@@ -257,6 +258,9 @@ type Location struct {
 	// original location.
 	// +optional
 	XForwardedPrefix bool `json:"xForwardedPrefix,omitempty"`
+	// Logs allows to enable or disable the nginx logs
+	// By default this is enabled
+	Logs log.Config `json:"logs,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
