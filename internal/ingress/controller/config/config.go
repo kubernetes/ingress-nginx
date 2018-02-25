@@ -475,6 +475,13 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status
 	// Default: 503
 	LimitReqStatusCode int `json:"limit-req-status-code"`
+
+	// EnableSyslog enables the configuration for remote logging in NGINX
+	EnableSyslog bool `json:"enable-syslog"`
+	// SyslogHost FQDN or IP address where the logs should be sent
+	SyslogHost string `json:"syslog-host"`
+	// SyslogPort port
+	SyslogPort int `json:"syslog-port",omitempty`
 }
 
 // NewDefault returns the default nginx configuration
@@ -569,6 +576,7 @@ func NewDefault() Configuration {
 		JaegerSamplerType:            "const",
 		JaegerSamplerParam:           "1",
 		LimitReqStatusCode:           503,
+		SyslogPort:                   514,
 	}
 
 	if glog.V(5) {

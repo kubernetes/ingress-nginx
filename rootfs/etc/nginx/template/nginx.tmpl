@@ -150,9 +150,18 @@ http {
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
+    {{ if $cfg.EnableSyslog }}
+    access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
+    {{ else }}
     access_log {{ $cfg.AccessLogPath }} upstreaminfo if=$loggable;
     {{ end }}
+    {{ end }}
+
+    {{ if $cfg.EnableSyslog }}
+    error_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} {{ $cfg.ErrorLogLevel }};
+    {{ else }}
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
+    {{ end }}
 
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
