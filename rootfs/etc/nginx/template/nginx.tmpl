@@ -711,7 +711,7 @@ stream {
 
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
 
-            {{ $ing := (getIngressInformation $location.Ingress $path) }}
+            {{ $ing := (getIngressInformation $location.Ingress) }}
             {{/* $ing.Metadata contains the Ingress metadata */}}
             set $namespace      "{{ $ing.Namespace }}";
             set $ingress_name   "{{ $ing.Rule }}";
