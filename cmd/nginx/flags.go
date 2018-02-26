@@ -127,6 +127,10 @@ func parseFlags() (bool, *controller.Configuration, error) {
 
 		syncRateLimit = flags.Float32("sync-rate-limit", 0.3,
 			`Define the sync frequency upper limit`)
+
+		publishStatusAddress = flags.String("publish-status-address", "",
+			`Address to expose the ingress controllers. The controller will set the
+		endpoint records on the ingress using this address.`)
 	)
 
 	flag.Set("logtostderr", "true")
@@ -204,6 +208,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		DefaultSSLCertificate:    *defSSLCertificate,
 		DefaultHealthzURL:        *defHealthzURL,
 		PublishService:           *publishSvc,
+		PublishStatusAddress:     *publishStatusAddress,
 		ForceNamespaceIsolation:  *forceIsolation,
 		UpdateStatusOnShutdown:   *updateStatusOnShutdown,
 		SortBackends:             *sortBackends,
