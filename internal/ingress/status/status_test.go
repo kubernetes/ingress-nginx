@@ -389,6 +389,25 @@ func TestRunningAddresessWithPods(t *testing.T) {
 	}
 }
 
+func TestRunningAddresessWithPublishStatusAddress(t *testing.T) {
+	fk := buildStatusSync()
+	fk.PublishService = ""
+	fk.PublishStatusAddress = "127.0.0.1"
+
+	r, _ := fk.runningAddresses()
+	if r == nil {
+		t.Fatalf("returned nil but expected valid []string")
+	}
+	rl := len(r)
+	if len(r) != 1 {
+		t.Errorf("returned %v but expected %v", rl, 1)
+	}
+	rv := r[0]
+	if rv != "127.0.0.1" {
+		t.Errorf("returned %v but expected %v", rv, "127.0.0.1")
+	}
+}
+
 /*
 TODO: this test requires a refactoring
 func TestUpdateStatus(t *testing.T) {

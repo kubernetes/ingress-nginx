@@ -32,8 +32,10 @@ Usage of :
       --log_dir string                    If non-empty, write log files in this directory
       --logtostderr                       log to standard error instead of files (default true)
       --profiling                         Enable profiling via web interface host:port/debug/pprof/ (default true)
-      --publish-service string            Service fronting the ingress controllers. Takes the form namespace/name. 
+      --publish-service string            Service fronting the ingress controllers. Takes the form namespace/name.
 		The controller will set the endpoint records on the ingress objects to reflect those on the service.
+      --publish-status-address string     User customized address to be set in the status of ingress resources.
+    The controller will set the endpoint records on the ingress using this address.
       --report-node-internal-ip-address   Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address
       --sort-backends                     Defines if backends and it's endpoints should be sorted
       --ssl-passtrough-proxy-port int     Default port to use internally for SSL when SSL Passthgough is enabled (default 442)
