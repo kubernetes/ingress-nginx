@@ -119,6 +119,12 @@ func main() {
 		glog.Fatalf("resync period (%vs) is too low", conf.ResyncPeriod.Seconds())
 	}
 
+	if conf.DynamicReload {
+		glog.Infof("Dynamic Reload ENABLED")
+	} else {
+		glog.Infof("Dynamic Reload DISABLED")
+	}
+
 	// create the default SSL certificate (dummy)
 	defCert, defKey := ssl.GetFakeSSLCert()
 	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{}, fs)

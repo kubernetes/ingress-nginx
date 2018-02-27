@@ -138,9 +138,14 @@ type Server struct {
 	SSLPassthrough bool `json:"sslPassthrough"`
 	// SSLCertificate path to the SSL certificate on disk
 	SSLCertificate string `json:"sslCertificate"`
+	// SSLCertificateReal real value
+	SSLCertificateReal string `json:"sslCertificateReal"`
 	// SSLFullChainCertificate path to the SSL certificate on disk
 	// This certificate contains the full chain (ca + intermediates + cert)
 	SSLFullChainCertificate string `json:"sslFullChainCertificate"`
+	// SSLFullChainCertificateReal real value
+	// This certificate contains the full chain (ca + intermediates + cert)
+	SSLFullChainCertificateReal string `json:"sslFullChainCertificateReal"`
 	// SSLExpireTime has the expire date of this certificate
 	SSLExpireTime time.Time `json:"sslExpireTime"`
 	// SSLPemChecksum returns the checksum of the certificate file on disk.

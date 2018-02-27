@@ -32,6 +32,14 @@ events {
 }
 
 http {
+    {{ if $all.DynamicReload }}
+    lua_package_path '/usr/local/lib/lua/0.10.12rc2/?.lua;;';
+    lua_shared_dict shared_memory 512m;
+    lua_shared_dict endpoints_roundrobin 512m;
+    lua_shared_dict endpoints_leastconn 512m;
+    lua_shared_dict endpoints_iphash 512m;
+    {{ end}}
+
     {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
@@ -305,6 +313,7 @@ http {
     {{ end }}
 
     {{ range $name, $upstream := $backends }}
+    {{ if (or (not ($all.DynamicReload)) (eq $upstream.Name "upstream-default-backend")) }}
     {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
     upstream sticky-{{ $upstream.Name }} {
         sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}  httponly;
@@ -335,6 +344,20 @@ http {
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
     }
+
+    {{ end }}
+    {{ end }}
+
+    {{ if $all.DynamicReload }}
+
+    ## start server vhosts
+
+    upstream dynamic-upstream {
+        server 0.0.0.1;
+        balancer_by_lua_file /etc/nginx/lua/balancer.lua;
+    }
+
+    ## end server vhosts
 
     {{ end }}
 
@@ -409,6 +432,65 @@ http {
     }
     {{ end }}
 
+    {{ if $all.DynamicReload }}
+
+    ## start server vhosts
+    server {
+        server_name _;
+        {{ range $address := $all.Cfg.BindAddressIpv4 }}
+        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        {{ else }}
+        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        {{ end }}
+        {{ if $all.IsIPV6Enabled }}
+        {{ range $address := $all.Cfg.BindAddressIpv6 }}
+        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        {{ else }}
+        listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+        {{ end }}
+        {{ end }}
+        set $proxy_upstream_name "-";
+
+
+        {{ range $address := $all.Cfg.BindAddressIpv4 }}
+        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
+        {{ else }}
+        listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
+        {{ end }}
+        {{ if $all.IsIPV6Enabled }}
+        {{ range $address := $all.Cfg.BindAddressIpv6 }}
+        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
+        {{ else }}
+        listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
+        {{ end }}
+        {{ end }}
+
+        ssl_certificate                         /ingress-controller/ssl/default-fake-certificate.pem;
+        ssl_certificate_key                     /ingress-controller/ssl/default-fake-certificate.pem;
+        ssl_certificate_by_lua_file             /etc/nginx/lua/ssl.lua;
+
+        {{ if not (empty $cfg.ServerSnippet) }}
+        # Custom code snippet configured in the configuration configmap
+        {{ $cfg.ServerSnippet }}
+        {{ end }}
+
+                location / {
+                    proxy_intercept_errors off;
+                    proxy_set_header       X-Format           $http_accept;
+                    proxy_set_header       X-Original-URI     $request_uri;
+                    proxy_set_header       X-Forwarded-For    $remote_addr;
+                    proxy_set_header       X-Forwarded-Proto  $scheme;
+                    proxy_set_header       HOST               $host;
+                    if ($scheme = https) {
+                        add_header HTTPS on;
+                    }
+                    proxy_pass http://dynamic-upstream;
+                }
+    }
+    ## end server vhosts
+
+    {{ else }}
+
     {{ range $index, $server := $servers }}
 
     ## start server {{ $server.Hostname }}
@@ -427,6 +509,8 @@ http {
 
     {{ end }}
 
+    {{ end }}
+
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
         # Use the port {{ $all.ListenPorts.Status }} (random value just to avoid known ports) as default port for nginx.
@@ -440,6 +524,18 @@ http {
             access_log off;
             return 200;
         }
+
+        {{ if $all.DynamicReload }}
+        location /nginx_update {
+            client_max_body_size 512m;
+            client_body_buffer_size 512m;
+            access_log off;
+            content_by_lua_file /etc/nginx/lua/update.lua;
+            limit_except POST {
+                deny all;
+            }
+        }
+        {{ end }}
 
         location /nginx_status {
             set $proxy_upstream_name "internal";

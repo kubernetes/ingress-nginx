@@ -1,0 +1,100 @@
+{{ $cfg := .Cfg }}
+{{ $listenports := .ListenPorts }}
+{{ $backlogsize := .BacklogSize }}
+{{ $isipv6enabled := .IsIPV6Enabled }}
+{{ $issslpassthroughenabled := .IsSSLPassthroughEnabled }}
+{{ $proxysetheaders := .ProxySetHeaders }}
+{{ $servers := .Servers }}
+{{ $backends := .Backends }}
+
+{
+    "cfg" : {
+        "upstreamkeepaliveconnections" : "{{ $cfg.UpstreamKeepaliveConnections }}",
+        "loadbalancealgorithm" : "{{ $cfg.LoadBalanceAlgorithm }}",
+        "serversnippet" : "{{ $cfg.ServerSnippet }}",
+        "customhttperrors" : [
+        {{ range $index, $errCode := $cfg.CustomHTTPErrors }}
+            {{if $index}},{{end}}
+            "{{ $errCode }}"
+        {{ end }}
+        ],
+        "bindaddressipv4" : [
+        {{ range $index, $address := $cfg.BindAddressIpv4 }}
+            {{if $index}},{{end}}
+            "{{ $address }}"
+        {{ end }}
+        ],
+        "bindaddressipv6" : [
+        {{ range $index, $address := $cfg.BindAddressIpv6 }}
+            {{if $index}},{{end}}
+            "{{ $address }}"
+        {{ end }}
+        ],
+        "useproxyprotocol" : "{{ $cfg.UseProxyProtocol }}",
+        "reuseport" : "{{ $cfg.ReusePort }}",
+        "usehttp2" : "{{ $cfg.UseHTTP2 }}",
+        "enablemodsecurity" : "{{ $cfg.EnableModsecurity }}",
+        "enableowaspcorerules" : "{{ $cfg.EnableOWASPCoreRules }}",
+        "computefullforwardedfor" : "{{ $cfg.ComputeFullForwardedFor }}",
+        "ForwardedForHeader" : "{{ $cfg.ForwardedForHeader }}",
+        "hsts" : "{{ $cfg.HSTS }}",
+        "hstsmaxage" : "{{ $cfg.HSTSMaxAge }}",
+        "hstsincludesubdomains" : "{{ $cfg.HSTSIncludeSubdomains }}",
+        "hstspreload" : "{{ $cfg.HSTSPreload }}",
+        "enablevtsstatus" : "{{ $cfg.EnableVtsStatus }}",
+        "httpredirectcode" : "{{ $cfg.HTTPRedirectCode }}",
+        "retrynonidempotent" : "{{ $cfg.RetryNonIdempotent }}",
+        "locationsnippet" : "{{ $cfg.LocationSnippet }}"
+    },
+    "listenports" : {
+        "http" : "{{ $listenports.HTTP }}",
+        "https" : "{{ $listenports.HTTPS }}",
+        "sslproxy" : "{{ $listenports.SSLProxy }}"
+    },
+    "backlogsize" : "{{ $backlogsize }}",
+    "isipv6enabled" : "{{ $isipv6enabled }}",
+    "issslpassthroughenabled" : "{{ $issslpassthroughenabled }}",
+    "servers" : {
+        {{ range $index, $server := $servers }}
+        {{if $index}},{{end}}
+        "{{ $server.Hostname }}" : {
+            "alias" : "{{ $server.Alias }}",
+            "sslcertificate" : "{{ $server.SSLCertificate }}",
+            "sslcertificatereal" : "{{ $server.SSLCertificateReal }}",
+            "sslfullchaincertificate" : "{{ $server.SSLFullChainCertificate }}",
+            "sslfullchaincertificatereal" : "{{ $server.SSLFullChainCertificateReal }}",
+            "locations" : {
+                {{ range $index, $location := $server.Locations }}
+                    {{if $index}},{{end}}
+                    "{{ $location.Path }}" : {
+                        {{ range $name, $upstream := $backends }}
+                            {{ if eq $upstream.Name $location.Backend }}
+                                "name" : "{{ $upstream.Name }}",
+                                "upstreamhashby" : "{{ $upstream.UpstreamHashBy }}",
+                                "sessionaffinity" : {
+                                    "affinitytype" : "{{ $upstream.SessionAffinity.AffinityType }}",
+                                    "cookiesessionaffinity" : {
+                                        "name" : "{{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}",
+                                        "hash" : "{{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }}"
+                                    }
+                                },
+                                "endpoints" : [
+                                    {{ range $index, $endpoint := $upstream.Endpoints }}
+                                        {{if $index}},{{end}}
+                                        {
+                                            "hostname" : "{{ $endpoint.Address | formatIP }}",
+                                            "port" : {{ $endpoint.Port }},
+                                            "maxfails" : {{ $endpoint.MaxFails }},
+                                            "failtimeout" : {{ $endpoint.FailTimeout }}
+                                        }
+                                    {{ end }}
+                                ]
+                            {{ end }}
+                        {{ end }}
+                    }
+                {{ end }}
+            }
+        }
+        {{ end }}
+    }
+}

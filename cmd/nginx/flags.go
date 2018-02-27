@@ -131,6 +131,8 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		publishStatusAddress = flags.String("publish-status-address", "",
 			`User customized address to be set in the status of ingress resources. The controller will set the
 		endpoint records on the ingress using this address.`)
+
+		dynamicReload = flags.Bool("dynamic-reload", false, `Enable dynamic reloads`)
 	)
 
 	flag.Set("logtostderr", "true")
@@ -222,6 +224,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			SSLProxy: *sslProxyPort,
 			Status:   *statusPort,
 		},
+		DynamicReload:            *dynamicReload,
 	}
 
 	return false, config, nil

@@ -60,4 +60,5 @@ Usage of :
       --version                           Shows release information about the NGINX Ingress controller
       --vmodule moduleSpec                comma-separated list of pattern=N settings for file-filtered logging
       --watch-namespace string            Namespace to watch for Ingress. Default is to watch all namespaces
+      --dynamic-reload                    Defines if NGINX should add/remove virtualhosts without the classic reload (default false)
 ```
