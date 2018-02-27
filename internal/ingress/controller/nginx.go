@@ -144,6 +144,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		n.syncStatus = status.NewStatusSyncer(status.Config{
 			Client:                 config.Client,
 			PublishService:         config.PublishService,
+			PublishStatusAddress:   config.PublishStatusAddress,
 			IngressLister:          n.store,
 			ElectionID:             config.ElectionID,
 			IngressClass:           class.IngressClass,

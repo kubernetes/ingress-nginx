@@ -65,6 +65,8 @@ type Config struct {
 
 	PublishService string
 
+	PublishStatusAddress string
+
 	ElectionID string
 
 	UpdateStatusOnShutdown bool
@@ -81,7 +83,9 @@ type Config struct {
 // in all the defined rules. To simplify the process leader election is used so the update
 // is executed only in one node (Ingress controllers can be scaled to more than one)
 // If the controller is running with the flag --publish-service (with a valid service)
-// the IP address behind the service is used, if not the source is the IP/s of the node/s
+// the IP address behind the service is used, if it is running with the flag
+// --publish-status-address, the address specified in the flag is used, if neither of the
+// two flags are set, the source is the IP/s of the node/s
 type statusSync struct {
 	Config
 	// pod contains runtime information about this pod
@@ -248,6 +252,11 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		}
 
 		addrs = append(addrs, svc.Spec.ExternalIPs...)
+		return addrs, nil
+	}
+
+	if s.PublishStatusAddress != "" {
+		addrs = append(addrs, s.PublishStatusAddress)
 		return addrs, nil
 	}
 
