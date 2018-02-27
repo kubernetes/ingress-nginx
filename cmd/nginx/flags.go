@@ -129,7 +129,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			`Define the sync frequency upper limit`)
 
 		publishStatusAddress = flags.String("publish-status-address", "",
-			`Address to expose the ingress controllers. The controller will set the
+			`User customized address to be set in the status of ingress resources. The controller will set the
 		endpoint records on the ingress using this address.`)
 	)
 
