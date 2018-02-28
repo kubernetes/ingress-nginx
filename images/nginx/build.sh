@@ -30,7 +30,7 @@ export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.2.1
 export OPENTRACING_CPP_VERSION=1.2.0
 export ZIPKIN_CPP_VERSION=0.2.0
-export JAEGER_VERSION=0.1.0
+export JAEGER_VERSION=0.2.0
 export MODSECURITY_VERSION=1.0.0
 export LUA_VERSION=0.10.12rc2
 export COOKIE_FLAG_VERSION=1.1.0
@@ -150,7 +150,7 @@ get_src 8deee6d6f7128f58bd6ba2893bd69c1fdbc8a3ad2797ba45ef94b977255d181c \
 get_src 18edf2d18fa331265c36516a4a19ba75d26f46eafcc5e0c2d9aa6c237e8bc110 \
         "https://github.com/openresty/lua-nginx-module/archive/v$LUA_VERSION.tar.gz"
 
-get_src 678ec4b6c2b6bba7e8000f42feb71d2bf044a44cf3909b3cbbccb708827ca7a6 \
+get_src 359274ebb0923c5a4d23e2e93d29262b2bc8a302ce37cf0a0b113fd4d623d389 \
         "https://github.com/jaegertracing/cpp-client/archive/v$JAEGER_VERSION.tar.gz"
 
 get_src 9915ad1cf0734cc5b357b0d9ea92fec94764b4bf22f4dce185cbd65feda30ec1 \
@@ -171,13 +171,15 @@ curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/
 
 export MAKEFLAGS=-j$(($(grep -c ^processor /proc/cpuinfo) - 0))
 
-cd "$BUILD_PATH/LuaJIT-2.1.0-beta3"
-make
-make install
-ln -sf luajit-2.1.0-beta3 /usr/local/bin/luajit
+if [[ ${ARCH} != "ppc64le" ]]; then
+  cd "$BUILD_PATH/LuaJIT-2.1.0-beta3"
+  make
+  make install
+  ln -sf luajit-2.1.0-beta3 /usr/local/bin/luajit
 
-export LUAJIT_LIB=/usr/local/lib
-export LUAJIT_INC=/usr/local/include/luajit-2.1
+  export LUAJIT_LIB=/usr/local/lib
+  export LUAJIT_INC=/usr/local/include/luajit-2.1
+fi
 
 cd "$BUILD_PATH/lua-resty-core-0.1.14rc1"
 make install
@@ -307,11 +309,11 @@ if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
 fi
 
-CC_OPT="-g -O3 -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
-LD_OPT="-ljemalloc -Wl,-Bsymbolic-functions -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
-   
+CC_OPT="-g -Og -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
+LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
+
 if [[ ${ARCH} == "x86_64" ]]; then
-  CC_OPT+=' -m64 -mtune=generic'
+  CC_OPT+=' -m64 -mtune=native'
 fi
 
 WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
