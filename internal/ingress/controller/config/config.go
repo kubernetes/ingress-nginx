@@ -616,6 +616,7 @@ type TemplateConfig struct {
 	RedirectServers         map[string]string
 	ListenPorts             *ListenPorts
 	PublishService          *apiv1.Service
+	DynamicReload           bool
 }
 
 // ListenPorts describe the ports required to run the

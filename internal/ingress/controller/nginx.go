@@ -44,6 +44,7 @@ import (
 
 	"path/filepath"
 
+	"encoding/json"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
@@ -58,6 +59,7 @@ import (
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
+	"net/http"
 )
 
 type statusModule string
@@ -70,10 +72,12 @@ const (
 )
 
 var (
-	tmplPath    = "/etc/nginx/template/nginx.tmpl"
-	geoipPath   = "/etc/nginx/geoip"
-	cfgPath     = "/etc/nginx/nginx.conf"
-	nginxBinary = "/usr/sbin/nginx"
+	tmplPath       = "/etc/nginx/template/nginx.tmpl"
+	geoipPath      = "/etc/nginx/geoip"
+	cfgPath        = "/etc/nginx/nginx.conf"
+	tmplvhostsPath = "/etc/nginx/template/routes.tmpl"
+	cfgvhostsPath  = "/etc/nginx/routes.json"
+	nginxBinary    = "/usr/sbin/nginx"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
@@ -181,6 +185,13 @@ Error loading new template : %v
 
 	n.t = ngxTpl
 
+	ngxvhostsTpl, err := ngx_template.NewTemplate(tmplvhostsPath, fs)
+	if err != nil {
+		glog.Fatalf("invalid NGINX VHOSTS template: %v", err)
+	}
+
+	n.tv = ngxvhostsTpl
+
 	// TODO: refactor
 	if _, ok := fs.(filesystem.DefaultFs); !ok {
 		watch.NewDummyFileWatcher(tmplPath, onTemplateChange)
@@ -254,7 +265,8 @@ type NGINXController struct {
 
 	forceReload int32
 
-	t *ngx_template.Template
+	t  *ngx_template.Template
+	tv *ngx_template.Template
 
 	binary   string
 	resolver []net.IP
@@ -620,6 +632,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		IsSSLPassthroughEnabled: n.cfg.EnableSSLPassthrough,
 		ListenPorts:             n.cfg.ListenPorts,
 		PublishService:          n.GetPublishService(),
+		DynamicReload:           n.cfg.DynamicReload,
 	}
 
 	content, err := n.t.Write(tc)
@@ -660,16 +673,78 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 	}
 
-	err = ioutil.WriteFile(cfgPath, content, 0644)
-	if err != nil {
-		return err
-	}
+	if n.cfg.DynamicReload {
+		src, _ := ioutil.ReadFile(cfgPath)
+		if !bytes.Equal(src, content) {
+			err = ioutil.WriteFile(cfgPath, content, 0644)
+			if err != nil {
+				return err
+			}
 
-	o, err := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v\n%v", err, string(o))
-	}
+			o, err := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
+			if err != nil {
+				return fmt.Errorf("%v\n%v", err, string(o))
+			}
+		} else {
+			glog.Infof("NGINX reload not needed, executing live update only\n")
+		}
 
+		content, err = n.tv.Write(tc)
+
+		if err != nil {
+			return err
+		}
+
+		err = os.Chmod(cfgvhostsPath, os.FileMode(0600))
+		if err != nil {
+			glog.Infof("Cannot chmod routes file\n")
+		}
+
+		err = ioutil.WriteFile(cfgvhostsPath, content, 0644)
+		if err != nil {
+			return err
+		}
+
+		retries := 1
+		updateOK := false
+		for retries <= 5 {
+			if !updateOK {
+				if retries > 1 {
+					glog.Infof("NGINX dynamic update (retrying)\n")
+				}
+				srcvhosts, _ := ioutil.ReadFile(cfgvhostsPath)
+				b := new(bytes.Buffer)
+				srcvhostsJSON := string(srcvhosts)
+				json.NewEncoder(b).Encode(srcvhostsJSON)
+				resp, err := http.Post("http://localhost:"+strconv.Itoa(n.cfg.ListenPorts.Status)+"/nginx_update",
+					"application/json", b)
+				if err != nil {
+					time.Sleep(1 * time.Second)
+					glog.Infof("NGINX dynamic update not ready\n")
+				} else if resp.StatusCode != 200 {
+					time.Sleep(1 * time.Second)
+					glog.Infof("NGINX dynamic update not ready\n")
+				} else {
+					updateOK = true
+					glog.Infof("NGINX dynamic update OK\n")
+				}
+			}
+			retries += 1
+		}
+		if !updateOK {
+			return fmt.Errorf("%v\n%v", err, "Unexpected NGINX update error")
+		}
+	} else {
+		err = ioutil.WriteFile(cfgPath, content, 0644)
+		if err != nil {
+			return err
+		}
+
+		o, err := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("%v\n%v", err, string(o))
+		}
+	}
 	return nil
 }
 
