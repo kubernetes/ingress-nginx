@@ -18,6 +18,8 @@ package controller
 
 import (
 	"github.com/golang/glog"
+	"math"
+	"syscall"
 
 	api "k8s.io/api/core/v1"
 	"k8s.io/kubernetes/pkg/util/sysctl"
@@ -55,12 +57,36 @@ func sysctlSomaxconn() int {
 // sysctlFSFileMax returns the value of fs.file-max, i.e.
 // maximum number of open file descriptors
 func sysctlFSFileMax() int {
-	fileMax, err := sysctl.New().GetSysctl("fs/file-max")
+	kernelFileMax, err := sysctl.New().GetSysctl("fs/file-max")
 	if err != nil {
-		glog.Errorf("unexpected error reading system maximum number of open file descriptors (fs.file-max): %v", err)
-		// returning 0 means don't render the value
-		return 0
+		glog.Warnf("unexpected error reading system maximum number of open file descriptors (fs.file-max): %v", err)
+		kernelFileMax = nil
 	}
-	glog.V(2).Infof("system fs.file-max=%v", fileMax)
-	return fileMax
+
+	if kernelFileMax != nil {
+		glog.V(2).Infof("system fs.file-max=%v", kernelFileMax)
+	}
+
+	var userLimit syscall.Rlimit
+	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &userLimit)
+	if err != nil {
+		glog.Warnf("unexpected error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
+		userLimit = nil
+	}
+
+	if kernelFileMax != nil && userLimit != nil {
+		return int(Min(kernelFileMax, userLimit.Max))
+	}
+
+	if kernelFileMax != nil {
+		return kernelFileMax
+	}
+
+	if userLimit != nil {
+		return int(userLimit.Max)
+	}
+
+	glog.Error("cannot read both (fs.file-max) and (RLIMIT_NOFILE)")
+	// returning 0 means don't render the value
+	return 0
 }
