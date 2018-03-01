@@ -36,9 +36,7 @@ import (
 	discovery "k8s.io/apimachinery/pkg/version"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
@@ -171,7 +169,7 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 // apiserverHost param is in the format of protocol://address:port/pathPrefix, e.g.http://localhost:8001.
 // kubeConfig location of kubeconfig file
 func createApiserverClient(apiserverHost string, kubeConfig string) (*kubernetes.Clientset, error) {
-	cfg, err := buildConfigFromFlags(apiserverHost, kubeConfig)
+	cfg, err := clientcmd.BuildConfigFromFlags(apiserverHost, kubeConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -240,27 +238,6 @@ const (
 
 	fakeCertificate = "default-fake-certificate"
 )
-
-// buildConfigFromFlags builds REST config based on master URL and kubeconfig path.
-// If both of them are empty then in cluster config is used.
-func buildConfigFromFlags(masterURL, kubeconfigPath string) (*rest.Config, error) {
-	if kubeconfigPath == "" && masterURL == "" {
-		kubeconfig, err := rest.InClusterConfig()
-		if err != nil {
-			return nil, err
-		}
-
-		return kubeconfig, nil
-	}
-
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
-		&clientcmd.ConfigOverrides{
-			ClusterInfo: clientcmdapi.Cluster{
-				Server: masterURL,
-			},
-		}).ClientConfig()
-}
 
 /**
  * Handles fatal init error that prevents server from doing any work. Prints verbose error
