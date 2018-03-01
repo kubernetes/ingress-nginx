@@ -32,6 +32,13 @@ events {
 }
 
 http {
+    {{ if $all.DynamicReload }}
+    lua_package_path '/usr/local/lib/lua/0.10.12rc2/?.lua;;';
+    lua_shared_dict shared_memory 512m;
+    lua_shared_dict endpoints_roundrobin 512m;
+    lua_shared_dict endpoints_leastconn 512m;
+    {{ end}}
+
     {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
@@ -305,6 +312,7 @@ http {
     {{ end }}
 
     {{ range $name, $upstream := $backends }}
+    {{ if (or (not ($all.DynamicReload)) (eq $upstream.Name "upstream-default-backend")) }}
     {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
     upstream sticky-{{ $upstream.Name }} {
         sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}  httponly;
@@ -335,6 +343,20 @@ http {
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
     }
+
+    {{ end }}
+    {{ end }}
+
+    {{ if $all.DynamicReload }}
+
+    ## start server vhosts
+
+    upstream dynamic-upstream {
+        server 0.0.0.1;
+        balancer_by_lua_file /etc/nginx/lua/balancer.ljbc;
+    }
+
+    ## end server vhosts
 
     {{ end }}
 
@@ -440,6 +462,18 @@ http {
             access_log off;
             return 200;
         }
+
+        {{ if $all.DynamicReload }}
+        location /nginx_update {
+            client_max_body_size 512m;
+            client_body_buffer_size 512m;
+            access_log off;
+            content_by_lua_file /etc/nginx/lua/update.ljbc;
+            limit_except POST {
+                deny all;
+            }
+        }
+        {{ end }}
 
         location /nginx_status {
             set $proxy_upstream_name "internal";
@@ -887,6 +921,10 @@ stream {
             proxy_set_header       X-Service-Name     $service_name;
             {{ end }}
 
+            {{ if $all.DynamicReload }}
+            proxy_pass             http://dynamic-upstream;
+            {{ else }}
+
             {{ if not (empty $location.Backend) }}
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
@@ -898,6 +936,9 @@ stream {
             # No endpoints available for the request
             return 503;
             {{ end }}
+
+            {{ end }}
+
             {{ else }}
             # Location denied. Reason: {{ $location.Denied }}
             return 503;

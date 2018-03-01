@@ -1,0 +1,34 @@
+{{ $cfg := .Cfg }}
+{{ $backends := .Backends }}
+
+{
+    "cfg" : {
+        "upstreamkeepaliveconnections" : "{{ $cfg.UpstreamKeepaliveConnections }}",
+        "loadbalancealgorithm" : "{{ $cfg.LoadBalanceAlgorithm }}"
+    },
+    "backends" : {
+        {{ range $index, $upstream := $backends }}
+        {{if $index}},{{ end }}
+        "{{ $upstream.Name }}" : {
+            "sessionaffinity" : {
+                "affinitytype" : "{{ $upstream.SessionAffinity.AffinityType }}",
+                "cookiesessionaffinity" : {
+                    "name" : "{{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}",
+                    "hash" : "{{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }}"
+                }
+            },
+            "endpoints" : [
+                {{ range $index, $endpoint := $upstream.Endpoints }}
+                {{if $index}},{{end}}
+                {
+                    "hostname" : "{{ $endpoint.Address | formatIP }}",
+                    "port" : {{ $endpoint.Port }},
+                    "maxfails" : {{ $endpoint.MaxFails }},
+                    "failtimeout" : {{ $endpoint.FailTimeout }}
+                }
+                {{ end }}
+            ]
+        }
+        {{ end }}
+    }
+}
