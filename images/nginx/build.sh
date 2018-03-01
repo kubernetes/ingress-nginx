@@ -169,7 +169,18 @@ get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
 
-export MAKEFLAGS=-j$(($(grep -c ^processor /proc/cpuinfo) - 0))
+update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 20
+update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 10
+
+update-alternatives --config ld
+
+# improve compilation times
+
+CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
+
+export MAKEFLAGS=-j${CORES}
+export CTEST_BUILD_FLAGS=${MAKEFLAGS}
+export HUNTER_JOBS_NUMBER=${CORES}
 
 if [[ ${ARCH} != "ppc64le" ]]; then
   cd "$BUILD_PATH/LuaJIT-2.1.0-beta3"
@@ -309,7 +320,9 @@ if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
 fi
 
-CC_OPT="-g -Og -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
+# "Combining -flto with -g is currently experimental and expected to produce unexpected results."
+# https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
+CC_OPT="-g -Og -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
 LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
 
 if [[ ${ARCH} == "x86_64" ]]; then
