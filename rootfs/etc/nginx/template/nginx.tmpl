@@ -36,6 +36,39 @@ events {
 }
 
 http {
+    lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;;";
+    lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
+
+    lua_shared_dict configuration_data 5M;
+    lua_shared_dict round_robin_state 1M;
+    lua_shared_dict locks 512k;
+
+    init_by_lua_block {
+        require("resty.core")
+        collectgarbage("collect")
+
+        -- init modules
+        local ok, res
+
+        ok, res = pcall(require, "configuration")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          configuration = res
+        end
+
+        ok, res = pcall(require, "balancer")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          balancer = res
+        end
+    }
+
+    init_worker_by_lua_block {
+        balancer.init_worker()
+    }
+
     {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
@@ -308,6 +341,7 @@ http {
     {{ $cfg.HTTPSnippet }}
     {{ end }}
 
+    {{ if not $all.DynamicConfigurationEnabled }}
     {{ range $name, $upstream := $backends }}
     {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
     upstream sticky-{{ $upstream.Name }} {
@@ -319,9 +353,7 @@ http {
 
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
-
     }
-
     {{ end }}
 
     upstream {{ $upstream.Name }} {
@@ -334,8 +366,18 @@ http {
         {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
         {{ end }}
     }
-
     {{ end }}
+    {{ end }}
+
+    upstream upstream_balancer {
+        server 0.0.0.1; # placeholder
+
+        balancer_by_lua_block {
+          balancer.call()
+        }
+
+        keepalive 1000;
+    }
 
     {{/* build the maps that will be use to validate the Whitelist */}}
     {{ range $index, $server := $servers }}
@@ -452,12 +494,24 @@ http {
             {{ end }}
         }
 
+        location /configuration {
+            allow 127.0.0.1;
+            deny all;
+            content_by_lua_block {
+              configuration.call()
+            }
+        }
+
         location / {
             {{ if .CustomErrors }}
             proxy_set_header    X-Code 404;
             {{ end }}
             set $proxy_upstream_name "upstream-default-backend";
+            {{ if $all.DynamicConfigurationEnabled }}
+            proxy_pass          http://upstream_balancer;
+            {{ else }}
             proxy_pass          http://upstream-default-backend;
+            {{ end }}
         }
 
         {{ template "CUSTOM_ERRORS" $all }}
@@ -550,7 +604,12 @@ stream {
             proxy_set_header       X-Service-Name     $service_name;
 
             rewrite                (.*) / break;
-            proxy_pass             http://upstream-default-backend;
+
+            {{ if .DynamicConfigurationEnabled }}
+            proxy_pass            http://upstream_balancer;
+            {{ else }}
+            proxy_pass            http://upstream-default-backend;
+            {{ end }}
         }
         {{ end }}
 {{ end }}
@@ -887,7 +946,7 @@ stream {
             {{ end }}
 
             {{ if not (empty $location.Backend) }}
-            {{ buildProxyPass $server.Hostname $all.Backends $location }}
+            {{ buildProxyPass $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
             {{ else }}
