@@ -1,5 +1,31 @@
 # Changelog
 
+### 0.12.0
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.12.0`
+
+*New Features:*
+
+- Add annotation to disable logs in a location
+- Remote logging (syslog) feature
+
+*Changes:*
+
+- [X] [#2127](https://github.com/kubernetes/ingress-nginx/pull/2127) Revert deletion of dependency version override
+- [X] [#2137](https://github.com/kubernetes/ingress-nginx/pull/2137) Updated log level to v2 for sysctlFSFileMax.
+- [X] [#2140](https://github.com/kubernetes/ingress-nginx/pull/2140) Cors header should always be returned
+- [X] [#2141](https://github.com/kubernetes/ingress-nginx/pull/2141) Fix error loading modules
+- [X] [#2143](https://github.com/kubernetes/ingress-nginx/pull/2143) Only add HSTS headers in HTTPS
+- [X] [#2144](https://github.com/kubernetes/ingress-nginx/pull/2144) Add annotation to disable logs in a location
+- [X] [#2145](https://github.com/kubernetes/ingress-nginx/pull/2145) Add option in the configuration configmap to enable remote logging
+- [X] [#2146](https://github.com/kubernetes/ingress-nginx/pull/2146) In case of TLS errors do not allow traffic
+
+*Documentation:*
+
+- [X] [#2124](https://github.com/kubernetes/ingress-nginx/pull/2124) Document how to provide list types in configmap
+- [X] [#2133](https://github.com/kubernetes/ingress-nginx/pull/2133) fix limit-req-status-code doc
+- [X] [#2139](https://github.com/kubernetes/ingress-nginx/pull/2139) Update documentation for nginx-ingress-role RBAC.
+
 ### 0.11.0
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.11.0`
