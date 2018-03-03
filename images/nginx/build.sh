@@ -169,20 +169,15 @@ get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
 
-update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 20
-update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 10
-
-update-alternatives --config ld
-
 # improve compilation times
-
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
 
 export MAKEFLAGS=-j${CORES}
 export CTEST_BUILD_FLAGS=${MAKEFLAGS}
 export HUNTER_JOBS_NUMBER=${CORES}
 
-if [[ ${ARCH} != "ppc64le" ]]; then
+# luajit is not available on ppc64le and s390x
+if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   cd "$BUILD_PATH/LuaJIT-2.1.0-beta3"
   make
   make install
