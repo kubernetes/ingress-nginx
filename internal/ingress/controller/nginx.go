@@ -284,7 +284,6 @@ func (n *NGINXController) Start() {
 		go n.syncStatus.Run()
 	}
 
-	done := make(chan error, 1)
 	cmd := exec.Command(n.binary, "-c", cfgPath)
 
 	// put nginx in another process group to prevent it
@@ -307,7 +306,7 @@ func (n *NGINXController) Start() {
 
 	for {
 		select {
-		case err := <-done:
+		case err := <-n.ngxErrCh:
 			if n.isShuttingDown {
 				break
 			}
