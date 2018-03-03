@@ -17,40 +17,10 @@ FROM BASEIMAGE
 
 CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
 
+COPY build.sh /
+
 RUN clean-install bash
 
-RUN mkdir -p /etc/nginx
-
-# install required packages to build
-RUN apt-get update && apt-get dist-upgrade -y && \
-  clean-install \
-  bash \
-  build-essential \
-  curl ca-certificates \
-  libgeoip1 \
-  libgeoip-dev \
-  patch \
-  libpcre3 \
-  libpcre3-dev \
-  libssl-dev \
-  zlib1g \
-  zlib1g-dev \
-  libaio1 \
-  libaio-dev \
-  openssl \
-  libperl-dev \
-  cmake \
-  util-linux \
-  lmdb-utils \
-  libjemalloc1 libjemalloc-dev \
-  wget \
-  libcurl4-openssl-dev \
-  procps \
-  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
-  lua-cjson \
-  || exit 1
-
-COPY build.sh /
 RUN /build.sh
 
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector

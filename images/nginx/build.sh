@@ -56,6 +56,41 @@ if [[ ${ARCH} == "ppc64le" ]]; then
   clean-install software-properties-common
 fi
 
+apt-get update && apt-get dist-upgrade -y
+
+# install required packages to build
+clean-install \
+  bash \
+  build-essential \
+  curl ca-certificates \
+  libgeoip1 \
+  libgeoip-dev \
+  patch \
+  libpcre3 \
+  libpcre3-dev \
+  libssl-dev \
+  zlib1g \
+  zlib1g-dev \
+  libaio1 \
+  libaio-dev \
+  openssl \
+  libperl-dev \
+  cmake \
+  util-linux \
+  lua5.1 liblua5.1-0 liblua5.1-dev \
+  lmdb-utils \
+  libjemalloc1 libjemalloc-dev \
+  wget \
+  libcurl4-openssl-dev \
+  procps \
+  git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
+  lua-cjson \
+  || exit 1
+
+ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
+
+mkdir -p /etc/nginx
+
 if [[ ${ARCH} == "s390x" ]]; then
   # avoid error:
   # git: ../nptl/pthread_mutex_lock.c:81: __pthread_mutex_lock: Assertion `mutex->__data.__owner == 0' failed.
