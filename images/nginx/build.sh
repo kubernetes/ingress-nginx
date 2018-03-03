@@ -30,7 +30,7 @@ export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.2.1
 export OPENTRACING_CPP_VERSION=1.2.0
 export ZIPKIN_CPP_VERSION=0.2.0
-export JAEGER_VERSION=0.1.0
+export JAEGER_VERSION=0.2.0
 export MODSECURITY_VERSION=1.0.0
 export LUA_VERSION=0.10.12rc2
 export COOKIE_FLAG_VERSION=1.1.0
@@ -83,6 +83,7 @@ clean-install \
   libcurl4-openssl-dev \
   procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
+  lua-cjson \
   || exit 1
 
 ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
@@ -149,16 +150,48 @@ get_src 8deee6d6f7128f58bd6ba2893bd69c1fdbc8a3ad2797ba45ef94b977255d181c \
 get_src 18edf2d18fa331265c36516a4a19ba75d26f46eafcc5e0c2d9aa6c237e8bc110 \
         "https://github.com/openresty/lua-nginx-module/archive/v$LUA_VERSION.tar.gz"
 
-get_src 678ec4b6c2b6bba7e8000f42feb71d2bf044a44cf3909b3cbbccb708827ca7a6 \
+get_src 359274ebb0923c5a4d23e2e93d29262b2bc8a302ce37cf0a0b113fd4d623d389 \
         "https://github.com/jaegertracing/cpp-client/archive/v$JAEGER_VERSION.tar.gz"
 
 get_src 9915ad1cf0734cc5b357b0d9ea92fec94764b4bf22f4dce185cbd65feda30ec1 \
         "https://github.com/AirisX/nginx_cookie_flag_module/archive/v$COOKIE_FLAG_VERSION.tar.gz"
 
+get_src d4a9ed0d2405f41eb0178462b398afde8599c5115dcc1ff8f60e2f34a41a4c21 \
+        "https://github.com/openresty/lua-resty-lrucache/archive/v0.07.tar.gz"
+
+get_src 92fd006d5ca3b3266847d33410eb280122a7f6c06334715f87acce064188a02e \
+        "https://github.com/openresty/lua-resty-core/archive/v0.1.14rc1.tar.gz"
+
+get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
+        "http://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz"
+
+
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
 
-export MAKEFLAGS=-j$(($(grep -c ^processor /proc/cpuinfo) - 0))
+# improve compilation times
+CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
+
+export MAKEFLAGS=-j${CORES}
+export CTEST_BUILD_FLAGS=${MAKEFLAGS}
+export HUNTER_JOBS_NUMBER=${CORES}
+
+# luajit is not available on ppc64le and s390x
+if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
+  cd "$BUILD_PATH/LuaJIT-2.1.0-beta3"
+  make
+  make install
+  ln -sf luajit-2.1.0-beta3 /usr/local/bin/luajit
+
+  export LUAJIT_LIB=/usr/local/lib
+  export LUAJIT_INC=/usr/local/include/luajit-2.1
+fi
+
+cd "$BUILD_PATH/lua-resty-core-0.1.14rc1"
+make install
+
+cd "$BUILD_PATH/lua-resty-lrucache-0.07"
+make install
 
 # build opentracing lib
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
@@ -282,11 +315,13 @@ if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
 fi
 
-CC_OPT="-g -O3 -flto -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
-LD_OPT="-ljemalloc -Wl,-Bsymbolic-functions -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
-   
+# "Combining -flto with -g is currently experimental and expected to produce unexpected results."
+# https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
+CC_OPT="-g -Og -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
+LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
+
 if [[ ${ARCH} == "x86_64" ]]; then
-  CC_OPT+=' -m64 -mtune=generic'
+  CC_OPT+=' -m64 -mtune=native'
 fi
 
 WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
@@ -296,6 +331,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
+  --add-module=$BUILD_PATH/lua-nginx-module-$LUA_VERSION \
   --add-module=$BUILD_PATH/nginx_cookie_flag_module-$COOKIE_FLAG_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/jaeger \
