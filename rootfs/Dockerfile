@@ -28,6 +28,9 @@ RUN mkdir -p /var/log/nginx \
 
 COPY . /
 
+RUN /usr/local/bin/luajit -b /etc/nginx/lua/balancer.lua /etc/nginx/lua/balancer.ljbc \
+  && /usr/local/bin/luajit -b /etc/nginx/lua/update.lua /etc/nginx/lua/update.ljbc
+
 ENTRYPOINT ["/usr/bin/dumb-init"]
 
 CMD ["/nginx-ingress-controller"]
