@@ -47,6 +47,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[nginx.ingress.kubernetes.io/secure-backends](#secure-backends)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
@@ -341,6 +342,9 @@ The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure
 ### Secure backends
 
 By default NGINX uses `http` to reach the services. Adding the annotation `nginx.ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to `https`.
+If you want to validate the upstream against a specific certificate, you can create a secret with it and reference the secret with the annotation `nginx.ingress.kubernetes.io/secure-verify-ca-secret`.
+
+Please note that if an invalid or non-existent secret is given, the NGINX ingress controller will ignore the `secure-backends` annotation.
 
 ### Service Upstream
 
