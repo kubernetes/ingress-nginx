@@ -74,11 +74,11 @@ func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretN
 // of rsaBits, valid for validFor time.
 func generateRSACerts(host string, isCA bool, keyOut, certOut io.Writer) error {
 	if len(host) == 0 {
-		return fmt.Errorf("Require a non-empty host for client hello")
+		return fmt.Errorf("require a non-empty host for client hello")
 	}
 	priv, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {
-		return fmt.Errorf("Failed to generate key: %v", err)
+		return fmt.Errorf("failed to generate key: %v", err)
 	}
 	notBefore := time.Now()
 	notAfter := notBefore.Add(validFor)
@@ -119,13 +119,13 @@ func generateRSACerts(host string, isCA bool, keyOut, certOut io.Writer) error {
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
 	if err != nil {
-		return fmt.Errorf("Failed to create certificate: %s", err)
+		return fmt.Errorf("failed to create certificate: %s", err)
 	}
 	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		return fmt.Errorf("Failed creating cert: %v", err)
+		return fmt.Errorf("failed creating cert: %v", err)
 	}
 	if err := pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)}); err != nil {
-		return fmt.Errorf("Failed creating keay: %v", err)
+		return fmt.Errorf("failed creating keay: %v", err)
 	}
 	return nil
 }

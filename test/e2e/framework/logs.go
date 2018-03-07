@@ -24,6 +24,7 @@ import (
 	"k8s.io/api/core/v1"
 )
 
+// Logs returns the log entries of a given Pod.
 func (f *Framework) Logs(pod *v1.Pod) (string, error) {
 	var (
 		execOut bytes.Buffer

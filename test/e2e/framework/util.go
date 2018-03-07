@@ -51,26 +51,30 @@ func log(level string, format string, args ...interface{}) {
 	fmt.Fprintf(GinkgoWriter, nowStamp()+": "+level+": "+format+"\n", args...)
 }
 
+// Logf logs to the INFO logs.
 func Logf(format string, args ...interface{}) {
 	log("INFO", format, args...)
 }
 
+// Failf logs to the INFO logs and fails the test.
 func Failf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	log("INFO", msg)
 	Fail(nowStamp()+": "+msg, 1)
 }
 
+// Skipf logs to the INFO logs and skips the test.
 func Skipf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	log("INFO", msg)
 	Skip(nowStamp() + ": " + msg)
 }
 
+// RestclientConfig deserializes the contents of a kubeconfig file into a Config object.
 func RestclientConfig(config, context string) (*api.Config, error) {
 	Logf(">>> config: %s\n", config)
 	if config == "" {
-		return nil, fmt.Errorf("Config file must be specified to load client config")
+		return nil, fmt.Errorf("config file must be specified to load client config")
 	}
 	c, err := clientcmd.LoadFromFile(config)
 	if err != nil {
@@ -83,8 +87,7 @@ func RestclientConfig(config, context string) (*api.Config, error) {
 	return c, nil
 }
 
-type ClientConfigGetter func() (*rest.Config, error)
-
+// LoadConfig deserializes the contents of a kubeconfig file into a REST configuration.
 func LoadConfig(config, context string) (*rest.Config, error) {
 	c, err := RestclientConfig(config, context)
 	if err != nil {
@@ -127,6 +130,7 @@ func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
 	return c.CoreV1().Namespaces().Delete(namespace, metav1.NewDeleteOptions(0))
 }
 
+// ExpectNoError tests whether an error occured.
 func ExpectNoError(err error, explain ...interface{}) {
 	if err != nil {
 		Logf("Unexpected error occurred: %v", err)
