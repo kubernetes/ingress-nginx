@@ -9,7 +9,7 @@ Session stickiness is achieved through 3 annotations on the Ingress, as shown in
 |Name|Description|Values|
 | --- | --- | --- |
 |nginx.ingress.kubernetes.io/affinity|Sets the affinity type|string (in NGINX only ``cookie`` is possible|
-|nginx.ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be used|string (default to route)|
+|nginx.ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be used|string (default to `INGRESSCOOKIE`)|
 |nginx.ingress.kubernetes.io/session-cookie-hash|Type of hash that will be used in cookie value|sha1/md5/index|
 
 You can create the ingress to test this
@@ -50,7 +50,7 @@ Date: Fri, 10 Feb 2017 14:11:12 GMT
 Content-Type: text/html
 Content-Length: 612
 Connection: keep-alive
-Set-Cookie: route=a9907b79b248140b56bb13723f72b67697baac3d; Path=/; HttpOnly
+Set-Cookie: INGRESSCOOKIE=a9907b79b248140b56bb13723f72b67697baac3d; Path=/; HttpOnly
 Last-Modified: Tue, 24 Jan 2017 14:02:19 GMT
 ETag: "58875e6b-264"
 Accept-Ranges: bytes
