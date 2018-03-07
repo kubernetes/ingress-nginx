@@ -997,7 +997,13 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				continue
 			}
 
-			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
+			key := ""
+
+			if strings.Contains(tlsSecretName, "/") {
+				key = tlsSecretName
+			} else {
+				key = fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
+			}
 			cert, err := n.store.GetLocalSecret(key)
 			if err != nil {
 				glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
