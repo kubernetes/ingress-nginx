@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
+// EnsureSecret creates a Secret object or returns it if it already exists.
 func (f *Framework) EnsureSecret(secret *api.Secret) (*api.Secret, error) {
 	s, err := f.KubeClientSet.CoreV1().Secrets(secret.Namespace).Create(secret)
 	if err != nil {
@@ -38,6 +39,7 @@ func (f *Framework) EnsureSecret(secret *api.Secret) (*api.Secret, error) {
 	return s, nil
 }
 
+// EnsureIngress creates an Ingress object or returns it if it already exists.
 func (f *Framework) EnsureIngress(ingress *extensions.Ingress) (*extensions.Ingress, error) {
 	s, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(ingress)
 	if err != nil {
@@ -49,6 +51,7 @@ func (f *Framework) EnsureIngress(ingress *extensions.Ingress) (*extensions.Ingr
 	return s, nil
 }
 
+// EnsureService creates a Service object or returns it if it already exists.
 func (f *Framework) EnsureService(service *core.Service) (*core.Service, error) {
 	s, err := f.KubeClientSet.CoreV1().Services(service.Namespace).Update(service)
 	if err != nil {
@@ -60,6 +63,7 @@ func (f *Framework) EnsureService(service *core.Service) (*core.Service, error) 
 	return s, nil
 }
 
+// EnsureDeployment creates a Deployment object or returns it if it already exists.
 func (f *Framework) EnsureDeployment(deployment *extensions.Deployment) (*extensions.Deployment, error) {
 	d, err := f.KubeClientSet.Extensions().Deployments(deployment.Namespace).Update(deployment)
 	if err != nil {
@@ -71,6 +75,7 @@ func (f *Framework) EnsureDeployment(deployment *extensions.Deployment) (*extens
 	return d, nil
 }
 
+// WaitForPodsReady waits for a given amount of time until a group of Pods is running.
 func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, timeout, func() (bool, error) {
 		pl, err := f.KubeClientSet.CoreV1().Pods(f.Namespace.Name).List(opts)

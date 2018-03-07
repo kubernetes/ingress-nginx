@@ -25,19 +25,17 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-const (
-	RecommendedConfigPathEnvVar = "INGRESSNGINXCONFIG"
-)
-
+// TestContextType describes the client context to use in communications with the Kubernetes API.
 type TestContextType struct {
 	KubeHost    string
 	KubeConfig  string
 	KubeContext string
 }
 
+// TestContext is the global client context for tests.
 var TestContext TestContextType
 
-// Register flags common to all e2e test suites.
+// RegisterCommonFlags registers flags common to all e2e test suites.
 func RegisterCommonFlags() {
 	// Turn on verbose by default to get spec names
 	config.DefaultReporterConfig.Verbose = true
@@ -53,6 +51,7 @@ func RegisterCommonFlags() {
 	flag.StringVar(&TestContext.KubeContext, "kubernetes-context", "", "config context to use for kubernetes. If unset, will use value from 'current-context'")
 }
 
+// RegisterParseFlags registers and parses flags for the test binary.
 func RegisterParseFlags() {
 	RegisterCommonFlags()
 	flag.Parse()
