@@ -32,16 +32,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const (
-	podName           = "test-ingress-controller"
-	controllerPodName = "nginx-ingress-controller"
-)
-
-const (
-	MaxRetry = 200
-	NoRetry  = 1
-)
-
+// RequestScheme define a scheme used in a test request.
 type RequestScheme string
 
 // These are valid test request schemes.
@@ -63,7 +54,7 @@ type Framework struct {
 	Namespace *v1.Namespace
 
 	// To make sure that this framework cleans up after itself, no matter what,
-	// we install a Cleanup action before each test and clear it after.  If we
+	// we install a Cleanup action before each test and clear it after. If we
 	// should abort, the AfterSuite hook should run all Cleanup actions.
 	cleanupHandle CleanupActionHandle
 
