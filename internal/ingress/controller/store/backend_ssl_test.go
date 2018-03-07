@@ -18,6 +18,7 @@ package store
 
 import (
 	"encoding/base64"
+	"testing"
 
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -125,6 +126,26 @@ func buildCrtKeyAndCA() ([]byte, []byte, []byte, error) {
 	dCa := dCrt
 
 	return dCrt, dKey, dCa, nil
+}
+
+func TestGetSecretKey(t *testing.T) {
+	secretName := "secretNamespace/superSecret"
+	ingressNamespace := "ingressNamespace"
+
+	// Test when secret is in not in the same namespace as ingress.
+
+	secretKey := getSecretKey(ingressNamespace, secretName)
+	if secretKey != "secretNamespace/superSecret" {
+		t.Errorf("expected 0 items in the store but %v returned", secretKey)
+	}
+
+	// Test when secret resides in the same namespace as ingress.
+	secretName = "superSecret"
+
+	secretKey = getSecretKey(ingressNamespace, secretName)
+	if secretKey != "ingressNamespace/superSecret" {
+		t.Errorf("expected 0 items in the store but %v returned", secretKey)
+	}
 }
 
 /*

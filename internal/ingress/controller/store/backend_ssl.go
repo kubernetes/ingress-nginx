@@ -188,7 +188,7 @@ func (s k8sStore) checkMissingSecrets() {
 				continue
 			}
 
-			key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+			key := getSecretKey(ing.Namespace, tls.SecretName)
 			if _, ok := s.sslStore.Get(key); !ok {
 				s.syncSecret(key)
 			}
@@ -212,7 +212,7 @@ func (s k8sStore) ReadSecrets(ing *extensions.Ingress) {
 			continue
 		}
 
-		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+		key := getSecretKey(ing.Namespace, tls.SecretName)
 		s.syncSecret(key)
 	}
 
@@ -235,4 +235,14 @@ func (s *k8sStore) sendDummyEvent() {
 			},
 		},
 	}
+}
+
+// getSecretKey gets a key in format namespace/secretName
+func getSecretKey(namespace, secretName string) (key string) {
+	if strings.Contains(secretName, "/") {
+		key = secretName
+	} else {
+		key = fmt.Sprintf("%v/%v", namespace, secretName)
+	}
+	return
 }
