@@ -320,8 +320,12 @@ func (n *NGINXController) Start() {
 				process.WaitUntilPortIsAvailable(n.cfg.ListenPorts.HTTP)
 				// release command resources
 				cmd.Process.Release()
-				cmd = exec.Command(n.binary, "-c", cfgPath)
 				// start a new nginx master process if the controller is not being stopped
+				cmd = exec.Command(n.binary, "-c", cfgPath)
+				cmd.SysProcAttr = &syscall.SysProcAttr{
+					Setpgid: true,
+					Pgid:    0,
+				}
 				n.start(cmd)
 			}
 		case event := <-n.updateCh.Out():
