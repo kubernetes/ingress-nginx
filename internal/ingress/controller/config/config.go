@@ -250,6 +250,11 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
 	MapHashBucketSize int `json:"map-hash-bucket-size,omitempty"`
 
+	// NginxStatusIpv4Whitelist has the list of cidr that are allowed to access
+	// the /nginx_status endpoint of the "_" server
+	NginxStatusIpv4Whitelist []string `json:"nginx-status-ipv4-whitelist,omitempty"`
+	NginxStatusIpv6Whitelist []string `json:"nginx-status-ipv6-whitelist,omitempty"`
+
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
 	ProxyRealIPCIDR []string `json:"proxy-real-ip-cidr,omitempty"`
@@ -499,8 +504,14 @@ type Configuration struct {
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	defIPCIDR := make([]string, 0)
-	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defBindAddress := make([]string, 0)
+	defNginxStatusIpv4Whitelist := make([]string, 0)
+	defNginxStatusIpv6Whitelist := make([]string, 0)
+
+	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
+	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
+	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
+
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
 		AccessLogPath:              "/var/log/nginx/access.log",
@@ -534,6 +545,8 @@ func NewDefault() Configuration {
 		LogFormatUpstream:          logFormatUpstream,
 		MaxWorkerConnections:       16384,
 		MapHashBucketSize:          64,
+		NginxStatusIpv4Whitelist:   defNginxStatusIpv4Whitelist,
+		NginxStatusIpv6Whitelist:   defNginxStatusIpv6Whitelist,
 		ProxyRealIPCIDR:            defIPCIDR,
 		ServerNameHashMaxSize:      1024,
 		ProxyHeadersHashMaxSize:    512,
@@ -629,6 +642,8 @@ type TemplateConfig struct {
 	Cfg                         Configuration
 	IsIPV6Enabled               bool
 	IsSSLPassthroughEnabled     bool
+	NginxStatusIpv4Whitelist    []string
+	NginxStatusIpv6Whitelist    []string
 	RedirectServers             map[string]string
 	ListenPorts                 *ListenPorts
 	PublishService              *apiv1.Service

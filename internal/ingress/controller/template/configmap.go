@@ -32,14 +32,16 @@ import (
 )
 
 const (
-	customHTTPErrors     = "custom-http-errors"
-	skipAccessLogUrls    = "skip-access-log-urls"
-	whitelistSourceRange = "whitelist-source-range"
-	proxyRealIPCIDR      = "proxy-real-ip-cidr"
-	bindAddress          = "bind-address"
-	httpRedirectCode     = "http-redirect-code"
-	proxyStreamResponses = "proxy-stream-responses"
-	hideHeaders          = "hide-headers"
+	customHTTPErrors         = "custom-http-errors"
+	skipAccessLogUrls        = "skip-access-log-urls"
+	whitelistSourceRange     = "whitelist-source-range"
+	proxyRealIPCIDR          = "proxy-real-ip-cidr"
+	bindAddress              = "bind-address"
+	httpRedirectCode         = "http-redirect-code"
+	proxyStreamResponses     = "proxy-stream-responses"
+	hideHeaders              = "hide-headers"
+	nginxStatusIpv4Whitelist = "nginx-status-ipv4-whitelist"
+	nginxStatusIpv6Whitelist = "nginx-status-ipv6-whitelist"
 )
 
 var (
@@ -54,6 +56,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 		conf[k] = v
 	}
 
+	to := config.NewDefault()
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
 	whiteList := make([]string, 0)
@@ -62,7 +65,6 @@ func ReadConfig(src map[string]string) config.Configuration {
 
 	bindAddressIpv4List := make([]string, 0)
 	bindAddressIpv6List := make([]string, 0)
-	redirectCode := 308
 
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
@@ -116,7 +118,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 			glog.Warningf("%v is not a valid HTTP code: %v", val, err)
 		} else {
 			if validRedirectCodes.Has(j) {
-				redirectCode = j
+				to.HTTPRedirectCode = j
 			} else {
 				glog.Warningf("The code %v is not a valid as HTTP redirect code. Using the default.", val)
 			}
@@ -134,7 +136,22 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 	}
 
-	to := config.NewDefault()
+	// Nginx Status whitlelist
+	if val, ok := conf[nginxStatusIpv4Whitelist]; ok {
+		whitelist := make([]string, 0)
+		whitelist = append(whitelist, strings.Split(val, ",")...)
+		to.NginxStatusIpv4Whitelist = whitelist
+
+		delete(conf, nginxStatusIpv4Whitelist)
+	}
+	if val, ok := conf[nginxStatusIpv6Whitelist]; ok {
+		whitelist := make([]string, 0)
+		whitelist = append(whitelist, strings.Split(val, ",")...)
+		to.NginxStatusIpv6Whitelist = whitelist
+
+		delete(conf, nginxStatusIpv6Whitelist)
+	}
+
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
 	to.WhitelistSourceRange = whiteList
@@ -142,7 +159,6 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.BindAddressIpv4 = bindAddressIpv4List
 	to.BindAddressIpv6 = bindAddressIpv6List
 	to.HideHeaders = hideHeadersList
-	to.HTTPRedirectCode = redirectCode
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
 
