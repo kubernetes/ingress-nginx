@@ -33,7 +33,6 @@ type Config struct {
 	CookieDomain      string `json:"cookieDomain"`
 	CookiePath        string `json:"cookiePath"`
 	NextUpstream      string `json:"nextUpstream"`
-	PassParams        string `json:"passParams"`
 	ProxyRedirectFrom string `json:"proxyRedirectFrom"`
 	ProxyRedirectTo   string `json:"proxyRedirectTo"`
 	RequestBuffering  string `json:"requestBuffering"`
@@ -70,9 +69,6 @@ func (l1 *Config) Equal(l2 *Config) bool {
 		return false
 	}
 	if l1.NextUpstream != l2.NextUpstream {
-		return false
-	}
-	if l1.PassParams != l2.PassParams {
 		return false
 	}
 	if l1.RequestBuffering != l2.RequestBuffering {
@@ -145,11 +141,6 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		nu = defBackend.ProxyNextUpstream
 	}
 
-	pp, err := parser.GetStringAnnotation("proxy-pass-params", ing)
-	if err != nil || pp == "" {
-		pp = defBackend.ProxyPassParams
-	}
-
 	rb, err := parser.GetStringAnnotation("proxy-request-buffering", ing)
 	if err != nil || rb == "" {
 		rb = defBackend.ProxyRequestBuffering
@@ -170,5 +161,5 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		pb = defBackend.ProxyBuffering
 	}
 
-	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, pp, prf, prt, rb, pb}, nil
+	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, prf, prt, rb, pb}, nil
 }
