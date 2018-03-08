@@ -69,9 +69,6 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
 	ProxyNextUpstream string `json:"proxy-next-upstream"`
 
-	// Parameters for proxy-pass directive (eg. Apache web server).
-	ProxyPassParams string `json:"proxy-pass-params"`
-
 	// Sets the original text that should be changed in the "Location" and "Refresh" header fields of a proxied server response.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect
 	// Default: off
