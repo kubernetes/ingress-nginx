@@ -55,11 +55,11 @@ func TestNginxCheck(t *testing.T) {
 
 	t.Run("no pid or process", func(t *testing.T) {
 		if err := callHealthz(true, mux); err == nil {
-			t.Errorf("expected an error but none returned")
+			t.Error("expected an error but none returned")
 		}
 	})
 
-	// create required files
+	// create pid file
 	fs.MkdirAll("/run", 0655)
 	pidFile, err := fs.Create("/run/nginx.pid")
 	if err != nil {
@@ -68,7 +68,7 @@ func TestNginxCheck(t *testing.T) {
 
 	t.Run("no process", func(t *testing.T) {
 		if err := callHealthz(true, mux); err == nil {
-			t.Errorf("expected an error but none returned")
+			t.Error("expected an error but none returned")
 		}
 	})
 
@@ -92,23 +92,20 @@ func TestNginxCheck(t *testing.T) {
 		}
 	})
 
-	pidFile, err = fs.Create("/run/nginx.pid")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	pidFile.Write([]byte(fmt.Sprintf("%v", pid)))
+	// pollute pid file
+	pidFile.Write([]byte(fmt.Sprint("999999")))
 	pidFile.Close()
 
-	t.Run("valid request", func(t *testing.T) {
+	t.Run("bad pid", func(t *testing.T) {
 		if err := callHealthz(true, mux); err == nil {
-			t.Errorf("expected an error but none returned")
+			t.Error("expected an error but none returned")
 		}
 	})
 
 	t.Run("invalid port", func(t *testing.T) {
 		n.cfg.ListenPorts.Status = 9000
 		if err := callHealthz(true, mux); err == nil {
-			t.Errorf("expected an error but none returned")
+			t.Error("expected an error but none returned")
 		}
 	})
 }
