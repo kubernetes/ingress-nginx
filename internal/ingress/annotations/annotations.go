@@ -34,6 +34,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/portinredirect"
@@ -83,6 +84,7 @@ type Ingress struct {
 	SSLPassthrough       bool
 	UsePortInRedirects   bool
 	UpstreamHashBy       string
+	LoadBalancing        string
 	UpstreamVhost        string
 	VtsFilterKey         string
 	Whitelist            ipwhitelist.SourceRange
@@ -121,6 +123,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"SSLPassthrough":       sslpassthrough.NewParser(cfg),
 			"UsePortInRedirects":   portinredirect.NewParser(cfg),
 			"UpstreamHashBy":       upstreamhashby.NewParser(cfg),
+			"LoadBalancing":        loadbalancing.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
 			"VtsFilterKey":         vtsfilterkey.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
