@@ -121,6 +121,9 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash
 	UpstreamHashBy string `json:"upstream-hash-by"`
 
+	// Let's us choose a load balancing algorithm per ingress
+	LoadBalancing string `json:"load-balance"`
+
 	// WhitelistSourceRange allows limiting access to certain client addresses
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
 	WhitelistSourceRange []string `json:"whitelist-source-range,-"`
