@@ -95,6 +95,8 @@ type Configuration struct {
 	FakeCertificateSHA  string
 
 	SyncRateLimit float32
+
+	DynamicReload bool
 }
 
 // GetPublishService returns the configured service used to set ingress status
@@ -169,7 +171,7 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 		return nil
 	}
 
-	glog.Infof("backend reload required")
+	glog.Infof("backend reload/update required")
 
 	err := n.OnUpdate(pcfg)
 	if err != nil {
@@ -178,7 +180,7 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 		return err
 	}
 
-	glog.Infof("ingress backend successfully reloaded...")
+	glog.Infof("ingress backend successfully reloaded/updated...")
 	incReloadCount()
 	setSSLExpireTime(servers)
 
