@@ -35,7 +35,7 @@ type Config struct {
 	Host            string   `json:"host"`
 	SigninURL       string   `json:"signinUrl"`
 	Method          string   `json:"method"`
-	ResponseHeaders []string `json:"responseHeaders,omitEmpty"`
+	ResponseHeaders []string `json:"responseHeaders,omitempty"`
 	RequestRedirect string   `json:"requestRedirect"`
 }
 
