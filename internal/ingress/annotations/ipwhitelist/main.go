@@ -32,7 +32,7 @@ import (
 
 // SourceRange returns the CIDR
 type SourceRange struct {
-	CIDR []string `json:"cidr,omitEmpty"`
+	CIDR []string `json:"cidr,omitempty"`
 }
 
 // Equal tests for equality between two SourceRange types

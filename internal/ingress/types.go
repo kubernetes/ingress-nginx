@@ -50,9 +50,9 @@ var (
 type Configuration struct {
 	// Backends are a list of backends used by all the Ingress rules in the
 	// ingress controller. This list includes the default backend
-	Backends []*Backend `json:"backends,omitEmpty"`
+	Backends []*Backend `json:"backends,omitempty"`
 	// Servers
-	Servers []*Server `json:"servers,omitEmpty"`
+	Servers []*Server `json:"servers,omitempty"`
 	// TCPEndpoints contain endpoints for tcp streams handled by this backend
 	// +optional
 	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
@@ -120,7 +120,7 @@ type Endpoint struct {
 	// Port number of the TCP port
 	Port string `json:"port"`
 	// MaxFails returns the number of unsuccessful attempts to communicate
-	// allowed before this should be considered dow.
+	// allowed before this should be considered down.
 	// Setting 0 indicates that the check is performed by a Kubernetes probe
 	MaxFails int `json:"maxFails"`
 	// FailTimeout returns the time in seconds during which the specified number
@@ -128,7 +128,7 @@ type Endpoint struct {
 	// to consider the endpoint unavailable
 	FailTimeout int `json:"failTimeout"`
 	// Target returns a reference to the object providing the endpoint
-	Target *apiv1.ObjectReference `json:"target,omipempty"`
+	Target *apiv1.ObjectReference `json:"target,omitempty"`
 }
 
 // Server describes a website
@@ -146,7 +146,7 @@ type Server struct {
 	// SSLExpireTime has the expire date of this certificate
 	SSLExpireTime time.Time `json:"sslExpireTime"`
 	// SSLPemChecksum returns the checksum of the certificate file on disk.
-	// There is no restriction in the hash generator. This checksim can be
+	// There is no restriction in the hash generator. This checksum can be
 	// used to  determine if the secret changed without the use of file
 	// system notifications
 	SSLPemChecksum string `json:"sslPemChecksum"`
@@ -247,7 +247,7 @@ type Location struct {
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
 	ConfigurationSnippet string `json:"configurationSnippet"`
-	// Connection contains connection header to orverride the default Connection header
+	// Connection contains connection header to override the default Connection header
 	// to the request.
 	// +optional
 	Connection connection.Config `json:"connection"`
@@ -272,7 +272,7 @@ type Location struct {
 // The endpoints must provide the TLS termination exposing the required SSL certificate.
 // The ingress controller only pipes the underlying TCP connection
 type SSLPassthroughBackend struct {
-	Service *apiv1.Service     `json:"service,omitEmpty"`
+	Service *apiv1.Service     `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
 	// Backend describes the endpoints to use.
 	Backend string `json:"namespace,omitempty"`
@@ -287,7 +287,7 @@ type L4Service struct {
 	// Backend of the service
 	Backend L4Backend `json:"backend"`
 	// Endpoints active endpoints of the service
-	Endpoints []Endpoint `json:"endpoins,omitEmpty"`
+	Endpoints []Endpoint `json:"endpoints,omitempty"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
