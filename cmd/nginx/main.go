@@ -241,7 +241,7 @@ const (
 
 /**
  * Handles fatal init error that prevents server from doing any work. Prints verbose error
- * message and quits the server.
+ * messages and quits the server.
  */
 func handleFatalInitError(err error) {
 	glog.Fatalf("Error while initializing connection to Kubernetes apiserver. "+
