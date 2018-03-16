@@ -16,10 +16,14 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
+{{ if gt (len $cfg.WorkerCpuAffinity) 0 }}
+worker_cpu_affinity {{ $cfg.WorkerCpuAffinity }};
+{{ end }}
+
 pid /run/nginx.pid;
 {{ if ne .MaxOpenFiles 0 }}
 worker_rlimit_nofile {{ .MaxOpenFiles }};
-{{ end}}
+{{ end }}
 
 {{/* http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout */}}
 {{/* avoid waiting too long during a reload */}}

@@ -56,9 +56,9 @@ func ReadConfig(src map[string]string) config.Configuration {
 
 	errors := make([]int, 0)
 	skipUrls := make([]string, 0)
-	whitelist := make([]string, 0)
-	proxylist := make([]string, 0)
-	hideHeaderslist := make([]string, 0)
+	whiteList := make([]string, 0)
+	proxyList := make([]string, 0)
+	hideHeadersList := make([]string, 0)
 
 	bindAddressIpv4List := make([]string, 0)
 	bindAddressIpv6List := make([]string, 0)
@@ -77,7 +77,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	}
 	if val, ok := conf[hideHeaders]; ok {
 		delete(conf, hideHeaders)
-		hideHeaderslist = strings.Split(val, ",")
+		hideHeadersList = strings.Split(val, ",")
 	}
 	if val, ok := conf[skipAccessLogUrls]; ok {
 		delete(conf, skipAccessLogUrls)
@@ -85,13 +85,13 @@ func ReadConfig(src map[string]string) config.Configuration {
 	}
 	if val, ok := conf[whitelistSourceRange]; ok {
 		delete(conf, whitelistSourceRange)
-		whitelist = append(whitelist, strings.Split(val, ",")...)
+		whiteList = append(whiteList, strings.Split(val, ",")...)
 	}
 	if val, ok := conf[proxyRealIPCIDR]; ok {
 		delete(conf, proxyRealIPCIDR)
-		proxylist = append(proxylist, strings.Split(val, ",")...)
+		proxyList = append(proxyList, strings.Split(val, ",")...)
 	} else {
-		proxylist = append(proxylist, "0.0.0.0/0")
+		proxyList = append(proxyList, "0.0.0.0/0")
 	}
 	if val, ok := conf[bindAddress]; ok {
 		delete(conf, bindAddress)
@@ -137,11 +137,11 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to := config.NewDefault()
 	to.CustomHTTPErrors = filterErrors(errors)
 	to.SkipAccessLogURLs = skipUrls
-	to.WhitelistSourceRange = whitelist
-	to.ProxyRealIPCIDR = proxylist
+	to.WhitelistSourceRange = whiteList
+	to.ProxyRealIPCIDR = proxyList
 	to.BindAddressIpv4 = bindAddressIpv4List
 	to.BindAddressIpv6 = bindAddressIpv6List
-	to.HideHeaders = hideHeaderslist
+	to.HideHeaders = hideHeadersList
 	to.HTTPRedirectCode = redirectCode
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
