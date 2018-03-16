@@ -36,12 +36,8 @@ events {
 }
 
 http {
-    {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
-    {{ if $cfg.UseProxyProtocol }}
-    real_ip_header      proxy_protocol;
-    {{ else }}
-    real_ip_header      {{ $cfg.ForwardedForHeader }};
-    {{ end }}
+
+    real_ip_header      $real_ip_header;
 
     real_ip_recursive   on;
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
@@ -181,13 +177,19 @@ http {
         ''               close;
     }
 
-    map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
-    {{ if $cfg.UseProxyProtocol }}
+    map $pass_server_port $real_ip_header {
+        {{ $all.ListenPorts.SSLProxy }} proxy_protocol;
+        default                         {{ $cfg.ForwardedForHeader }};
+    }
+
+    map $real_ip_header $the_real_ip {
         # Get IP address from Proxy Protocol
+        proxy_protocol   $proxy_protocol_addr;
+        {{ if $all.Cfg.UseProxyProtocol }}
         default          $proxy_protocol_addr;
-    {{ else }}
+        {{ else }}
         default          $remote_addr;
-    {{ end }}
+        {{ end }}
     }
 
     # trust http_x_forwarded_proto headers correctly indicate ssl offloading
