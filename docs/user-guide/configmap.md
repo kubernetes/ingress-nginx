@@ -88,6 +88,7 @@ The following table shows a configuration option's name, type, and the default v
 |[use-http2](#use-http2)|bool|"true"|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
+|[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
 |[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"10s"|
 |[load-balance](#load-balance)|string|"least_conn"|
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128|
@@ -488,6 +489,15 @@ Sets the MIME types in addition to "text/html" to compress. The special value "\
 
 Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes).
 The default of "auto" means number of available CPU cores.
+
+## worker-cpu-affinity
+
+Binds worker processes to the sets of CPUs. [worker_cpu_affinity](http://nginx.org/en/docs/ngx_core_module.html#worker_cpu_affinity).
+By default worker processes are not bound to any specific CPUs. The value can be:
+
+- "": empty string indicate no affinity is applied.
+- cpumask: e.g. `0001 0010 0100 1000` to bind processes to specific cpus.
+- auto: binding worker processes automatically to available CPUs.
 
 ## worker-shutdown-timeout
 
