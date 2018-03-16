@@ -97,7 +97,7 @@ container: .container-$(ARCH)
 .PHONY: .container-$(ARCH)
 .container-$(ARCH):
 	cp -RP ./* $(TEMP_DIR)
-	$(SED_I) 's|BASEIMAGE|$(BASEIMAGE)|g' $(DOCKERFILE)
+	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
 	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
 	$(SED_I) "s|DUMB_ARCH|$(DUMB_ARCH)|g" $(DOCKERFILE)
 
