@@ -196,11 +196,24 @@ http {
         ''               $scheme;
     }
 
+    map "$uri" $redirect_location {
+        default             1;
+        ^/\.well-known      0;
+    }
+
     # validate $pass_access_scheme and $scheme are http to force a redirect
-    map "$scheme:$pass_access_scheme" $redirect_to_https {
+    map "$scheme:$pass_access_scheme" $redirect_scheme {
         default          0;
         "http:http"      1;
         "https:http"     1;
+    }
+
+    # do not redirect if the location is /.well-known
+    map "$redirect_scheme:$redirect_location" $redirect_to_https {
+        default          1;
+        "1:1"            1;
+        "1:0"            0;
+        "0:0"            0;
     }
 
     map $http_x_forwarded_port $pass_server_port {
