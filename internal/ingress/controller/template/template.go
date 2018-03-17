@@ -129,6 +129,7 @@ var (
 		"buildRateLimit":           buildRateLimit,
 		"buildResolvers":           buildResolvers,
 		"buildUpstreamName":        buildUpstreamName,
+		"isLocationInLocationList": isLocationInLocationList,
 		"isLocationAllowed":        isLocationAllowed,
 		"buildLogFormatUpstream":   buildLogFormatUpstream,
 		"buildDenyVariable":        buildDenyVariable,
@@ -505,6 +506,25 @@ func buildRateLimit(input interface{}) []string {
 	}
 
 	return limits
+}
+
+func isLocationInLocationList(location interface{}, rawLocationList string) bool {
+	loc, ok := location.(*ingress.Location)
+	if !ok {
+		glog.Errorf("expected an '*ingress.Location' type but %T was returned", location)
+		return false
+	}
+
+	locationList := strings.Split(rawLocationList, "\n- ")
+
+	for _, locationListItem := range locationList {
+		locationListItem = strings.TrimLeft(locationListItem, "- ")
+		if strings.HasPrefix(loc.Path, locationListItem) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func isLocationAllowed(input interface{}) bool {

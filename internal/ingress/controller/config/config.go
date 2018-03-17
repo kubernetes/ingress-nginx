@@ -486,6 +486,10 @@ type Configuration struct {
 	SyslogHost string `json:"syslog-host"`
 	// SyslogPort port
 	SyslogPort int `json:"syslog-port",omitempty`
+
+	// NoTLSRedirectLocations is a "\n -" seperated list of locations
+	// that shall not get redirected to tls
+	NoTLSRedirectLocations string `json:"no-tls-redirect-locations"`
 }
 
 // NewDefault returns the default nginx configuration
