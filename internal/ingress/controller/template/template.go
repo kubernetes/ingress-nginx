@@ -519,6 +519,9 @@ func isLocationInLocationList(location interface{}, rawLocationList string) bool
 
 	for _, locationListItem := range locationList {
 		locationListItem = strings.TrimLeft(locationListItem, "- ")
+		if locationListItem == "" {
+			continue
+		}
 		if strings.HasPrefix(loc.Path, locationListItem) {
 			return true
 		}

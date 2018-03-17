@@ -454,3 +454,26 @@ func TestBuildAuthSignURL(t *testing.T) {
 		}
 	}
 }
+
+func TestIsLocationInLocationList(t *testing.T) {
+
+	testCases := []struct {
+		location        *ingress.Location
+		rawLocationList string
+		expected        bool
+	}{
+		{&ingress.Location{Path: "/match"}, "- /match", true},
+		{&ingress.Location{Path: "/match"}, "\n- /match", true},
+		{&ingress.Location{Path: "/match"}, "- /dontmatch", false},
+		{&ingress.Location{Path: "/match"}, "\n- /dontmatch", false},
+		{&ingress.Location{Path: "/match"}, "- /dontmatch\n- /match", true},
+		{&ingress.Location{Path: "/match"}, "\n- /dontmatch\n- /dontmatcheither", false},
+	}
+
+	for _, testCase := range testCases {
+		result := isLocationInLocationList(testCase.location, testCase.rawLocationList)
+		if result != testCase.expected {
+			t.Errorf(" expected %v but return %v, path: '%s', rawLocation: '%s'", testCase.expected, result, testCase.location.Path, testCase.rawLocationList)
+		}
+	}
+}
