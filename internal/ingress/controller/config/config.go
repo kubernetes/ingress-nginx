@@ -490,6 +490,10 @@ type Configuration struct {
 	SyslogHost string `json:"syslog-host"`
 	// SyslogPort port
 	SyslogPort int `json:"syslog-port",omitempty`
+
+	// NoTLSRedirectLocations is a comma-separated list of locations
+	// that should not get redirected to TLS
+	NoTLSRedirectLocations string `json:"no-tls-redirect-locations"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -587,6 +591,7 @@ func NewDefault() Configuration {
 		JaegerSamplerParam:           "1",
 		LimitReqStatusCode:           503,
 		SyslogPort:                   514,
+		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 	}
 
 	if glog.V(5) {
