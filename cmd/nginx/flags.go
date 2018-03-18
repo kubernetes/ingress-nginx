@@ -131,6 +131,9 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		publishStatusAddress = flags.String("publish-status-address", "",
 			`User customized address to be set in the status of ingress resources. The controller will set the
 		endpoint records on the ingress using this address.`)
+
+		dynamicConfigurationEnabled = flags.Bool("enable-dynamic-configuration", false,
+			`When enabled controller will try to avoid Nginx reloads as much as possible by using Lua. Disabled by default.`)
 	)
 
 	flag.Set("logtostderr", "true")
@@ -192,28 +195,29 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	}
 
 	config := &controller.Configuration{
-		APIServerHost:            *apiserverHost,
-		KubeConfigFile:           *kubeConfigFile,
-		UpdateStatus:             *updateStatus,
-		ElectionID:               *electionID,
-		EnableProfiling:          *profiling,
-		EnableSSLPassthrough:     *enableSSLPassthrough,
-		EnableSSLChainCompletion: *enableSSLChainCompletion,
-		ResyncPeriod:             *resyncPeriod,
-		DefaultService:           *defaultSvc,
-		Namespace:                *watchNamespace,
-		ConfigMapName:            *configMap,
-		TCPConfigMapName:         *tcpConfigMapName,
-		UDPConfigMapName:         *udpConfigMapName,
-		DefaultSSLCertificate:    *defSSLCertificate,
-		DefaultHealthzURL:        *defHealthzURL,
-		PublishService:           *publishSvc,
-		PublishStatusAddress:     *publishStatusAddress,
-		ForceNamespaceIsolation:  *forceIsolation,
-		UpdateStatusOnShutdown:   *updateStatusOnShutdown,
-		SortBackends:             *sortBackends,
-		UseNodeInternalIP:        *useNodeInternalIP,
-		SyncRateLimit:            *syncRateLimit,
+		APIServerHost:               *apiserverHost,
+		KubeConfigFile:              *kubeConfigFile,
+		UpdateStatus:                *updateStatus,
+		ElectionID:                  *electionID,
+		EnableProfiling:             *profiling,
+		EnableSSLPassthrough:        *enableSSLPassthrough,
+		EnableSSLChainCompletion:    *enableSSLChainCompletion,
+		ResyncPeriod:                *resyncPeriod,
+		DefaultService:              *defaultSvc,
+		Namespace:                   *watchNamespace,
+		ConfigMapName:               *configMap,
+		TCPConfigMapName:            *tcpConfigMapName,
+		UDPConfigMapName:            *udpConfigMapName,
+		DefaultSSLCertificate:       *defSSLCertificate,
+		DefaultHealthzURL:           *defHealthzURL,
+		PublishService:              *publishSvc,
+		PublishStatusAddress:        *publishStatusAddress,
+		ForceNamespaceIsolation:     *forceIsolation,
+		UpdateStatusOnShutdown:      *updateStatusOnShutdown,
+		SortBackends:                *sortBackends,
+		UseNodeInternalIP:           *useNodeInternalIP,
+		SyncRateLimit:               *syncRateLimit,
+		DynamicConfigurationEnabled: *dynamicConfigurationEnabled,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,

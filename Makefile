@@ -50,7 +50,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.34
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.37
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm

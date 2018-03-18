@@ -16,7 +16,78 @@ limitations under the License.
 
 package controller
 
-import "testing"
+import (
+	"testing"
+
+	"k8s.io/ingress-nginx/internal/ingress"
+)
+
+func TestIsDynamicallyConfigurable(t *testing.T) {
+	backends := []*ingress.Backend{{
+		Name: "fakenamespace-myapp-80",
+		Endpoints: []ingress.Endpoint{
+			{
+				Address: "10.0.0.1",
+				Port:    "8080",
+			},
+			{
+				Address: "10.0.0.2",
+				Port:    "8080",
+			},
+		},
+	}}
+
+	servers := []*ingress.Server{{
+		Hostname: "myapp.fake",
+		Locations: []*ingress.Location{
+			{
+				Path:    "/",
+				Backend: "fakenamespace-myapp-80",
+			},
+		},
+	}}
+
+	commonConfig := &ingress.Configuration{
+		Backends: backends,
+		Servers:  servers,
+	}
+
+	n := &NGINXController{
+		runningConfig: &ingress.Configuration{
+			Backends: backends,
+			Servers:  servers,
+		},
+	}
+
+	newConfig := commonConfig
+	if !n.IsDynamicallyConfigurable(newConfig) {
+		t.Errorf("When new config is same as the running config it should be deemed as dynamically configurable")
+	}
+
+	newConfig = &ingress.Configuration{
+		Backends: []*ingress.Backend{{Name: "another-backend-8081"}},
+		Servers:  []*ingress.Server{{Hostname: "myapp1.fake"}},
+	}
+	if n.IsDynamicallyConfigurable(newConfig) {
+		t.Errorf("Expected to not be dynamically configurable when there's more than just backends change")
+	}
+
+	newConfig = &ingress.Configuration{
+		Backends: []*ingress.Backend{{Name: "a-backend-8080"}},
+		Servers:  servers,
+	}
+	if !n.IsDynamicallyConfigurable(newConfig) {
+		t.Errorf("Expected to be dynamically configurable when only backends change")
+	}
+
+	if !n.runningConfig.Equal(commonConfig) {
+		t.Errorf("Expected running config to not change")
+	}
+
+	if !newConfig.Equal(&ingress.Configuration{Backends: []*ingress.Backend{{Name: "a-backend-8080"}}, Servers: servers}) {
+		t.Errorf("Expected new config to not change")
+	}
+}
 
 func TestNginxHashBucketSize(t *testing.T) {
 	tests := []struct {
