@@ -515,10 +515,10 @@ func isLocationInLocationList(location interface{}, rawLocationList string) bool
 		return false
 	}
 
-	locationList := strings.Split(rawLocationList, "\n- ")
+	locationList := strings.Split(rawLocationList, ",")
 
 	for _, locationListItem := range locationList {
-		locationListItem = strings.TrimLeft(locationListItem, "- ")
+		locationListItem = strings.Trim(locationListItem, " ")
 		if locationListItem == "" {
 			continue
 		}

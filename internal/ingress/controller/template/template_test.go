@@ -462,12 +462,12 @@ func TestIsLocationInLocationList(t *testing.T) {
 		rawLocationList string
 		expected        bool
 	}{
-		{&ingress.Location{Path: "/match"}, "- /match", true},
-		{&ingress.Location{Path: "/match"}, "\n- /match", true},
-		{&ingress.Location{Path: "/match"}, "- /dontmatch", false},
-		{&ingress.Location{Path: "/match"}, "\n- /dontmatch", false},
-		{&ingress.Location{Path: "/match"}, "- /dontmatch\n- /match", true},
-		{&ingress.Location{Path: "/match"}, "\n- /dontmatch\n- /dontmatcheither", false},
+		{&ingress.Location{Path: "/match"}, "/match", true},
+		{&ingress.Location{Path: "/match"}, ",/match", true},
+		{&ingress.Location{Path: "/match"}, "/dontmatch", false},
+		{&ingress.Location{Path: "/match"}, ",/dontmatch", false},
+		{&ingress.Location{Path: "/match"}, "/dontmatch,/match", true},
+		{&ingress.Location{Path: "/match"}, "/dontmatch,/dontmatcheither", false},
 	}
 
 	for _, testCase := range testCases {

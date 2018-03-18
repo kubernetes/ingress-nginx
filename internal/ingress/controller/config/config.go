@@ -487,8 +487,8 @@ type Configuration struct {
 	// SyslogPort port
 	SyslogPort int `json:"syslog-port",omitempty`
 
-	// NoTLSRedirectLocations is a "\n -" seperated list of locations
-	// that shall not get redirected to tls
+	// NoTLSRedirectLocations is a comma-seperated list of locations
+	// that should not get redirected to TLS
 	NoTLSRedirectLocations string `json:"no-tls-redirect-locations"`
 }
 
