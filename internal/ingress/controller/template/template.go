@@ -307,7 +307,7 @@ func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) strin
 // (specified through the nginx.ingress.kubernetes.io/rewrite-to annotation)
 // If the annotation nginx.ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
-func buildProxyPass(host string, b interface{}, loc interface{}) string {
+func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigurationEnabled bool) string {
 	backends, ok := b.([]*ingress.Backend)
 	if !ok {
 		glog.Errorf("expected an '[]*ingress.Backend' type but %T was returned", b)
@@ -323,14 +323,19 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	path := location.Path
 	proto := "http"
 
-	upstreamName := location.Backend
+	upstreamName := "upstream_balancer"
+
+	if !dynamicConfigurationEnabled {
+		upstreamName = location.Backend
+	}
+
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
 			if backend.Secure || backend.SSLPassthrough {
 				proto = "https"
 			}
 
-			if isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
+			if !dynamicConfigurationEnabled && isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
 				upstreamName = fmt.Sprintf("sticky-%v", upstreamName)
 			}
 
@@ -340,6 +345,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
 	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, upstreamName)
+
 	// if the path in the ingress rule is equals to the target: no special rewrite
 	if path == location.Rewrite.Target {
 		return defProxyPass
