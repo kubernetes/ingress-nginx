@@ -6,11 +6,11 @@ local lrucache = require("resty.lrucache")
 local resty_lock = require("resty.lock")
 
 -- measured in seconds
--- for an Nginx worker to pick up the new list of upstream peers 
+-- for an Nginx worker to pick up the new list of upstream peers
 -- it will take <the delay until controller POSTed the backend object to the Nginx endpoint> + BACKENDS_SYNC_INTERVAL
 local BACKENDS_SYNC_INTERVAL = 1
 
-ROUND_ROBIN_LOCK_KEY = "round_robin"
+local ROUND_ROBIN_LOCK_KEY = "round_robin"
 
 local round_robin_state = ngx.shared.round_robin_state
 
@@ -37,8 +37,8 @@ local function balance()
 
   -- Round-Robin
   round_robin_lock:lock(backend_name .. ROUND_ROBIN_LOCK_KEY)
-  local index = round_robin_state:get(backend_name)
-  local index, endpoint = next(backend.endpoints, index)
+  local last_index = round_robin_state:get(backend_name)
+  local index, endpoint = next(backend.endpoints, last_index)
   if not index then
     index = 1
     endpoint = backend.endpoints[index]
@@ -96,7 +96,8 @@ function _M.call()
 
   local host, port = balance()
 
-  local ok, err = ngx_balancer.set_current_peer(host, port)
+  local ok
+  ok, err = ngx_balancer.set_current_peer(host, port)
   if ok then
     ngx.log(ngx.INFO, "current peer is set to " .. host .. ":" .. port)
   else

@@ -7,6 +7,11 @@ services:
 
 language: go
 
+addons:
+  apt:
+    packages:
+    - luarocks
+
 notifications:
   email:
     on_failure: always
@@ -32,6 +37,8 @@ jobs:
   include:
   - stage: Static Check
     script:
+    - sudo luarocks install luacheck
+    - make luacheck
     - go get github.com/golang/lint/golint
     - make verify-all
   - stage: Coverage

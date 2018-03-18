@@ -180,6 +180,10 @@ cover:
 vet:
 	@go vet $(shell go list ${PKG}/... | grep -v vendor)
 
+.PHONY: luacheck
+luacheck:
+	luacheck -q ./rootfs/etc/nginx/lua/
+
 .PHONY: release
 release: all-container all-push
 	echo "done"
