@@ -487,7 +487,7 @@ type Configuration struct {
 	// SyslogPort port
 	SyslogPort int `json:"syslog-port",omitempty`
 
-	// NoTLSRedirectLocations is a comma-seperated list of locations
+	// NoTLSRedirectLocations is a comma-separated list of locations
 	// that should not get redirected to TLS
 	NoTLSRedirectLocations string `json:"no-tls-redirect-locations"`
 }
@@ -586,6 +586,7 @@ func NewDefault() Configuration {
 		JaegerSamplerParam:           "1",
 		LimitReqStatusCode:           503,
 		SyslogPort:                   514,
+		NoTLSRedirectLocations:       "/.well-known/acme-challenge/",
 	}
 
 	if glog.V(5) {
