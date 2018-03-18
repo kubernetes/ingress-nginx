@@ -586,7 +586,7 @@ func NewDefault() Configuration {
 		JaegerSamplerParam:           "1",
 		LimitReqStatusCode:           503,
 		SyslogPort:                   514,
-		NoTLSRedirectLocations:       "/.well-known/acme-challenge/",
+		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 	}
 
 	if glog.V(5) {
