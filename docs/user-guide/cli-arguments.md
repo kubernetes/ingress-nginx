@@ -13,8 +13,8 @@ Usage of :
       --default-ssl-certificate string    Name of the secret
 		that contains a SSL certificate to be used as default for a HTTPS catch-all server.
 		Takes the form <namespace>/<secret name>.
-      --disable-node-list                 Disable querying nodes. If --force-namespace-isolation is true, this should also be set. (DEPRECATED)
       --election-id string                Election id to use for status update. (default "ingress-controller-leader")
+      --enable-dynamic-configuration      When enabled controller will try to avoid Nginx reloads as much as possible by using Lua. Disabled by default.
       --enable-ssl-chain-completion       Defines if the nginx ingress controller should check the secrets for missing intermediate CA certificates.
 		If the certificate contain issues chain issues is not possible to enable OCSP.
 		Default is true. (default true)
@@ -34,14 +34,15 @@ Usage of :
       --profiling                         Enable profiling via web interface host:port/debug/pprof/ (default true)
       --publish-service string            Service fronting the ingress controllers. Takes the form namespace/name.
 		The controller will set the endpoint records on the ingress objects to reflect those on the service.
-      --publish-status-address string     User customized address to be set in the status of ingress resources.
-    The controller will set the endpoint records on the ingress using this address.
+      --publish-status-address string     User customized address to be set in the status of ingress resources. The controller will set the
+		endpoint records on the ingress using this address.
       --report-node-internal-ip-address   Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address
       --sort-backends                     Defines if backends and it's endpoints should be sorted
       --ssl-passtrough-proxy-port int     Default port to use internally for SSL when SSL Passthgough is enabled (default 442)
       --status-port int                   Indicates the TCP port to use for exposing the nginx status page (default 18080)
       --stderrthreshold severity          logs at or above this threshold go to stderr (default 2)
       --sync-period duration              Relist and confirm cloud resources this often. Default is 10 minutes (default 10m0s)
+      --sync-rate-limit float32           Define the sync frequency upper limit (default 0.3)
       --tcp-services-configmap string     Name of the ConfigMap that contains the definition of the TCP services to expose.
 		The key in the map indicates the external port to be used. The value is the name of the
 		service with the format namespace/serviceName and the port of the service could be a
