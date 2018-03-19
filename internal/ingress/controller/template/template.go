@@ -287,7 +287,7 @@ func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) strin
 	}
 
 	if backend.UpstreamHashBy != "" {
-		return "hash {{ $upstream.UpstreamHashBy }} consistent;"
+		return fmt.Sprintf("hash %s consistent;", backend.UpstreamHashBy)
 	}
 
 	if backend.LoadBalancing != "" {
