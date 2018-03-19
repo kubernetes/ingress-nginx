@@ -137,8 +137,6 @@ func TestSkipEnqueue(t *testing.T) {
 	atomic.StoreUint32(&sr, 0)
 	q := NewCustomTaskQueue(mockSynFn, mockKeyFn)
 	stopCh := make(chan struct{})
-	// run queue
-	go q.Run(time.Second, stopCh)
 	// mock object whichi will be enqueue
 	mo := mockEnqueueObj{
 		k: "testKey",
@@ -148,6 +146,8 @@ func TestSkipEnqueue(t *testing.T) {
 	q.Enqueue(mo)
 	q.Enqueue(mo)
 	q.Enqueue(mo)
+	// run queue
+	go q.Run(time.Second, stopCh)
 	// wait for 'mockSynFn'
 	time.Sleep(time.Millisecond * 10)
 	if atomic.LoadUint32(&sr) != 1 {
