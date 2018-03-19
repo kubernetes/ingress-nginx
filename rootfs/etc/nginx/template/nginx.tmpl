@@ -591,6 +591,7 @@ stream {
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
+        {{ $dynamicConfig := .DynamicConfigurationEnabled}}
         {{ $proxySetHeaders := .ProxySetHeaders }}
         {{ range $errCode := .Cfg.CustomHTTPErrors }}
         location @custom_{{ $errCode }} {
@@ -607,7 +608,7 @@ stream {
 
             rewrite                (.*) / break;
 
-            {{ if .DynamicConfigurationEnabled }}
+            {{ if $dynamicConfig }}
             proxy_pass            http://upstream_balancer;
             {{ else }}
             proxy_pass            http://upstream-default-backend;
