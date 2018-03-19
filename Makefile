@@ -135,7 +135,7 @@ clean:
 
 .PHONE: code-generator
 code-generator:
-		go-bindata -o internal/file/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
+		go-bindata -nometadata -o internal/file/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
 
 .PHONY: build
 build: clean
