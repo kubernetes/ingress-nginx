@@ -498,6 +498,9 @@ http {
 
         location /configuration {
             allow 127.0.0.1;
+            {{ if $IsIPV6Enabled }}
+            allow ::1;
+            {{ end }}
             deny all;
             content_by_lua_block {
               configuration.call()
