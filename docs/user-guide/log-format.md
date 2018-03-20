@@ -4,7 +4,7 @@ The default configuration uses a custom logging format to add additional informa
 
 ```
     log_format upstreaminfo '{{ if $cfg.useProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - '
-        '[$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
+        '[$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" '
         '$request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status';
 ```
 
@@ -17,7 +17,7 @@ Description:
 
 - `$proxy_protocol_addr`: if PROXY protocol is enabled
 - `$remote_addr`: if PROXY protocol is disabled (default)
-- `$proxy_add_x_forwarded_for`: the `X-Forwarded-For` client request header field with the $remote_addr variable appended to it, separated by a comma
+- `$the_real_ip`: the source IP address of the client
 - `$remote_user`: user name supplied with the Basic authentication
 - `$time_local`: local time in the Common Log Format
 - `$request`: full original request line
