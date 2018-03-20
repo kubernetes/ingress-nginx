@@ -59,7 +59,7 @@ The following table shows a configuration option's name, type, and the default v
 |[keep-alive-requests](#keep-alive-requests)|int|100|
 |[large-client-header-buffers](#large-client-header-buffers)|string|"4 8k"|
 |[log-format-escape-json](#log-format-escape-json)|bool|"false"|
-|[log-format-upstream](#log-format-upstream)|string|`%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status`|
+|[log-format-upstream](#log-format-upstream)|string|`%v - [$proxy_add_x_forwarded_for] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status`|
 |[log-format-stream](#log-format-stream)|string|`[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
 |[max-worker-connections](#max-worker-connections)|int|16384|
 |[map-hash-bucket-size](#max-worker-connections)|int|64|
