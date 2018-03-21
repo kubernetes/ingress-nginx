@@ -91,17 +91,13 @@ spec:
     - foo.bar.com
     # This secret must exist beforehand
     # The cert must also contain the subj-name foo.bar.com
-    # You can create it via:
-    # make keys secret SECRET=/tmp/foobar.json HOST=foo.bar.com NAME=foobar
-    # https://github.com/kubernetes/ingress/tree/master/controllers/gce/examples/https
+    # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
     secretName: foobar
   - hosts:
     - bar.baz.com
     # This secret must exist beforehand
     # The cert must also contain the subj-name bar.baz.com
-    # You can create it via:
-    # make keys secret SECRET=/tmp/barbaz.json HOST=bar.baz.com NAME=barbaz
-    # https://github.com/kubernetes/ingress/tree/master/controllers/gce/examples/https
+    # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
     secretName: barbaz
   rules:
   - host: foo.bar.com
