@@ -763,7 +763,15 @@ func (n *NGINXController) IsDynamicallyConfigurable(pcfg *ingress.Configuration)
 // ConfigureDynamically JSON encodes new Backends and POSTs it to an internal HTTP endpoint
 // that is handled by Lua
 func (n *NGINXController) ConfigureDynamically(pcfg *ingress.Configuration) error {
-	buf, err := json.Marshal(pcfg.Backends)
+	backends := make([]*ingress.Backend, len(pcfg.Backends))
+
+	for i, backend := range pcfg.Backends {
+		cleanedupBackend := *backend
+		cleanedupBackend.Service = nil
+		backends[i] = &cleanedupBackend
+	}
+
+	buf, err := json.Marshal(backends)
 	if err != nil {
 		return err
 	}
