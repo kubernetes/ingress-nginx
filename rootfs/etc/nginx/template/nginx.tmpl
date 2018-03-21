@@ -949,6 +949,7 @@ stream {
 
             # In case of errors try the next upstream server before returning an error
             proxy_next_upstream                     {{ buildNextUpstream $location.Proxy.NextUpstream $all.Cfg.RetryNonIdempotent }};
+            proxy_next_upstream_tries               {{ $location.Proxy.NextUpstreamTries }};
 
             {{/* rewrite only works if the content is not compressed */}}
             {{ if $location.Rewrite.AddBaseURL }}
