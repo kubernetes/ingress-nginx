@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.13.9
+export NGINX_VERSION=1.13.10
 export NDK_VERSION=0.3.0
 export VTS_VERSION=0.1.15
 export SETMISC_VERSION=0.31
@@ -28,7 +28,7 @@ export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.2.1
-export OPENTRACING_CPP_VERSION=1.2.0
+export OPENTRACING_CPP_VERSION=1.3.0
 export ZIPKIN_CPP_VERSION=0.2.0
 export JAEGER_VERSION=0.2.0
 export MODSECURITY_VERSION=1.0.0
@@ -112,7 +112,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 5faea18857516fe68d30be39c3032bd22ed9cf85e1a6fdf32e3721d96ff7fa42 \
+get_src 336182104d90be3c40c874f7f06f87dbb357da1dc74ea573ad081a0f29a94885 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
@@ -139,7 +139,7 @@ get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
 get_src ce66acf943a604ef9a0bb477c7efca1fe583076991647aa646aa3d8804328364 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
-get_src c77041cb2f147ac81b2b0702abfced5565a9cebc318d045c060a4c3e074009ee \
+get_src 06dc5f9740d27dc4684399e491211be46a8069a10277f25513dadeb71199ce4c \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
 get_src 611eb6a1ff1c326c472421ae2486ba34a94ddc78d90047df3f097bcdad3298e3 \
