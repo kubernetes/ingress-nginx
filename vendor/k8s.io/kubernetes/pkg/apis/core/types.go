@@ -574,7 +574,7 @@ type PersistentVolumeClaimConditionType string
 
 // These are valid conditions of Pvc
 const (
-	// An user trigger resize of pvc has been started
+	// A user trigger resize of pvc has been started
 	PersistentVolumeClaimResizing PersistentVolumeClaimConditionType = "Resizing"
 )
 
