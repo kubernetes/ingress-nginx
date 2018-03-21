@@ -378,7 +378,9 @@ http {
           balancer.call()
         }
 
-        keepalive 1000;
+        {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
+        keepalive {{ $cfg.UpstreamKeepaliveConnections }};
+        {{ end }}
     }
 
     {{/* build the maps that will be use to validate the Whitelist */}}
