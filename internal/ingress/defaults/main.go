@@ -69,6 +69,10 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
 	ProxyNextUpstream string `json:"proxy-next-upstream"`
 
+	// Limits the number of possible tries for passing a request to the next server.
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_tries
+	ProxyNextUpstreamTries int `json:"proxy-next-upstream-tries"`
+
 	// Sets the original text that should be changed in the "Location" and "Refresh" header fields of a proxied server response.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect
 	// Default: off

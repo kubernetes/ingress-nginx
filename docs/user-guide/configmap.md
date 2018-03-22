@@ -123,6 +123,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-cookie-path](#proxy-cookie-path)|string|"off"|
 |[proxy-cookie-domain](#proxy-cookie-domain)|string|"off"|
 |[proxy-next-upstream](#proxy-next-upstream)|string|"error timeout invalid_header http_502 http_503 http_504"|
+|[proxy-next-upstream-tries](#proxy-next-upstream-tries)|int|0|
 |[proxy-redirect-from](#proxy-redirect-from)|string|"off"|
 |[proxy-request-buffering](#proxy-request-buffering)|string|"on"|
 |[ssl-redirect](#ssl-redirect)|bool|"true"|
@@ -675,6 +676,10 @@ Sets a text that [should be changed in the domain attribute](http://nginx.org/en
 ## proxy-next-upstream
 
 Specifies in [which cases](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream) a request should be passed to the next server.
+
+## proxy-next-upstream-tries
+
+Limit the number of [possible tries](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_tries) a request should be passed to the next server.
 
 ## proxy-redirect-from
 
