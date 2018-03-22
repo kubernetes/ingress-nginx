@@ -382,6 +382,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.Logs).Equal(&l2.Logs) {
 		return false
 	}
+	if l1.GRPC != l2.GRPC {
+		return false
+	}
 
 	return true
 }

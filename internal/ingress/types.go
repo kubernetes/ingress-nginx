@@ -265,6 +265,9 @@ type Location struct {
 	// Logs allows to enable or disable the nginx logs
 	// By default this is enabled
 	Logs log.Config `json:"logs,omitempty"`
+	// GRPC indicates if the kubernetes service exposes a gRPC interface
+	// By default this is false
+	GRPC bool `json:"logs,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
