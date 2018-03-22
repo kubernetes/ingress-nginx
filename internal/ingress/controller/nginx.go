@@ -452,7 +452,7 @@ Error: %v
 // 2. write the custom template (the complexity depends on the implementation)
 // 3. write the configuration file
 //
-// returning nill implies the backend will be reloaded.
+// returning nil implies the backend will be reloaded.
 // if an error is returned means requeue the update
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := n.store.GetBackendConfiguration()
