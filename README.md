@@ -166,7 +166,7 @@ The previous behavior can be restored using `retry-non-idempotent=true` in the c
 
 ### Disabling NGINX ingress controller
 
-Setting the annotation `kubernetes.io/ingress.class` to any value other which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.  If you are only running a single NGINX ingress controller, this can be achieved by setting this to any value except "nginx" or an empty string.
+Setting the annotation `kubernetes.io/ingress.class` to any other value  which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.  If you are only running a single NGINX ingress controller, this can be achieved by setting this to any value except "nginx" or an empty string.
 
 Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
 
