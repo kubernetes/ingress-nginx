@@ -137,6 +137,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-buffering](#proxy-buffering)|string|"off"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
+|[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
 
 ## add-headers
 
@@ -744,4 +745,9 @@ Sets the [status code to return in response to rejected requests](http://nginx.o
 ## no-tls-redirect-locations
 
 A comma-separated list of locations on which http requests will never get redirected to their https counterpart.
+Default: "/.well-known/acme-challenge"
+
+## no-auth-locations
+
+A comma-separated list of locations that should not get authenticated.
 Default: "/.well-known/acme-challenge"

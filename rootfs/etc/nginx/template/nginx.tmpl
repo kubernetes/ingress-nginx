@@ -845,6 +845,7 @@ stream {
             }
             {{ end }}
 
+            {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}
             {{ if $authPath }}
             # this location requires authentication
             auth_request        {{ $authPath }};
@@ -859,11 +860,6 @@ stream {
             error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
             {{ end }}
 
-            {{/* if the location contains a rate limit annotation, create one */}}
-            {{ $limits := buildRateLimit $location }}
-            {{ range $limit := $limits }}
-            {{ $limit }}{{ end }}
-
             {{ if $location.BasicDigestAuth.Secured }}
             {{ if eq $location.BasicDigestAuth.Type "basic" }}
             auth_basic "{{ $location.BasicDigestAuth.Realm }}";
@@ -874,6 +870,12 @@ stream {
             {{ end }}
             proxy_set_header Authorization "";
             {{ end }}
+            {{ end }}
+
+            {{/* if the location contains a rate limit annotation, create one */}}
+            {{ $limits := buildRateLimit $location }}
+            {{ range $limit := $limits }}
+            {{ $limit }}{{ end }}
 
             {{ if $location.CorsConfig.CorsEnabled }}
             {{ template "CORS" $location }}
