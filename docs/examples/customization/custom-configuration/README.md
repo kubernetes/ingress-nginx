@@ -1,5 +1,5 @@
 
-Using a [ConfigMap](https://kubernetes.io/docs/user-guide/configmap/) is possible to customize the NGINX configuration
+Using a [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/) is possible to customize the NGINX configuration
 
 For example, if we want to change the timeouts we need to create a ConfigMap:
 
