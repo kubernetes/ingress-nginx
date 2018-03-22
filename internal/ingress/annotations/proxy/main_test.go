@@ -70,15 +70,16 @@ type mockBackend struct {
 
 func (m mockBackend) GetDefaultBackend() defaults.Backend {
 	return defaults.Backend{
-		UpstreamFailTimeout:   1,
-		ProxyConnectTimeout:   10,
-		ProxySendTimeout:      15,
-		ProxyReadTimeout:      20,
-		ProxyBufferSize:       "10k",
-		ProxyBodySize:         "3k",
-		ProxyNextUpstream:     "error",
-		ProxyRequestBuffering: "on",
-		ProxyBuffering:        "off",
+		UpstreamFailTimeout:    1,
+		ProxyConnectTimeout:    10,
+		ProxySendTimeout:       15,
+		ProxyReadTimeout:       20,
+		ProxyBufferSize:        "10k",
+		ProxyBodySize:          "3k",
+		ProxyNextUpstream:      "error",
+		ProxyNextUpstreamTries: 3,
+		ProxyRequestBuffering:  "on",
+		ProxyBuffering:         "off",
 	}
 }
 
@@ -92,6 +93,7 @@ func TestProxy(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-buffer-size")] = "1k"
 	data[parser.GetAnnotationWithPrefix("proxy-body-size")] = "2k"
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream")] = "off"
+	data[parser.GetAnnotationWithPrefix("proxy-next-upstream-tries")] = "3"
 	data[parser.GetAnnotationWithPrefix("proxy-request-buffering")] = "off"
 	data[parser.GetAnnotationWithPrefix("proxy-buffering")] = "on"
 	ing.SetAnnotations(data)
@@ -121,6 +123,9 @@ func TestProxy(t *testing.T) {
 	}
 	if p.NextUpstream != "off" {
 		t.Errorf("expected off as next-upstream but returned %v", p.NextUpstream)
+	}
+	if p.NextUpstreamTries != 3 {
+		t.Errorf("expected 3 as next-upstream-tries but returned %v", p.NextUpstreamTries)
 	}
 	if p.RequestBuffering != "off" {
 		t.Errorf("expected off as request-buffering but returned %v", p.RequestBuffering)
@@ -161,6 +166,9 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 	if p.NextUpstream != "error" {
 		t.Errorf("expected error as next-upstream but returned %v", p.NextUpstream)
+	}
+	if p.NextUpstreamTries != 3 {
+		t.Errorf("expected 3 as next-upstream-tries but returned %v", p.NextUpstreamTries)
 	}
 	if p.RequestBuffering != "on" {
 		t.Errorf("expected on as request-buffering but returned %v", p.RequestBuffering)
