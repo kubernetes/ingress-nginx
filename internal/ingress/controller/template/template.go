@@ -324,6 +324,12 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	path := location.Path
 	proto := "http"
 
+	proxyPass := "proxy_pass"
+	if location.GRPC {
+		proxyPass = "grpc_pass"
+		proto = "grpc"
+	}
+
 	upstreamName := "upstream_balancer"
 
 	if !dynamicConfigurationEnabled {
@@ -334,6 +340,9 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 		if backend.Name == location.Backend {
 			if backend.Secure || backend.SSLPassthrough {
 				proto = "https"
+				if location.GRPC {
+					proto = "grpcs"
+				}
 			}
 
 			if !dynamicConfigurationEnabled && isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
@@ -345,7 +354,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	}
 
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
-	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, upstreamName)
+	defProxyPass := fmt.Sprintf("%v %s://%s;", proxyPass, proto, upstreamName)
 
 	// if the path in the ingress rule is equals to the target: no special rewrite
 	if path == location.Rewrite.Target {
@@ -382,14 +391,14 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 			return fmt.Sprintf(`
 	    rewrite %s(.*) /$1 break;
 	    rewrite %s / break;
-	    %vproxy_pass %s://%s;
-	    %v`, path, location.Path, xForwardedPrefix, proto, upstreamName, abu)
+	    %v%v %s://%s;
+	    %v`, path, location.Path, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
 	    rewrite %s(.*) %s/$1 break;
-	    %vproxy_pass %s://%s;
-	    %v`, path, location.Rewrite.Target, xForwardedPrefix, proto, upstreamName, abu)
+	    %v%v %s://%s;
+	    %v`, path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 	}
 
 	// default proxy_pass

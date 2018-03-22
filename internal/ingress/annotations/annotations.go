@@ -32,6 +32,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/grpc"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
@@ -91,6 +92,7 @@ type Ingress struct {
 	XForwardedPrefix     bool
 	SSLCiphers           string
 	Logs                 log.Config
+	GRPC                 bool
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -130,6 +132,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),
+			"GRPC":                 grpc.NewParser(cfg),
 		},
 	}
 }
