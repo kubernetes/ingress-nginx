@@ -519,6 +519,7 @@ The value can either be:
 - round_robin: to use the default round robin loadbalancer
 - least_conn: to use the least connected method
 - ip_hash: to use a hash of the server for routing.
+- ewma: to use the peak ewma method for routing (only available with `enable-dynamic-configuration` flag) 
 
 The default is least_conn.
 

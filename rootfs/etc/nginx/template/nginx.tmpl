@@ -42,6 +42,8 @@ http {
     lua_shared_dict configuration_data 5M;
     lua_shared_dict round_robin_state 1M;
     lua_shared_dict locks 512k;
+    lua_shared_dict balancer_ewma 1M;
+    lua_shared_dict balancer_ewma_last_touched_at 1M;
 
     init_by_lua_block {
         require("resty.core")
@@ -976,6 +978,11 @@ stream {
             {{ end }}
 
             {{ if not (empty $location.Backend) }}
+            {{ if $all.DynamicConfigurationEnabled}}
+            log_by_lua_block {
+                balancer.call()
+            }
+            {{ end }}
             {{ buildProxyPass $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
