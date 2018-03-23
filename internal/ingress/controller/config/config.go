@@ -489,7 +489,7 @@ type Configuration struct {
 	// SyslogHost FQDN or IP address where the logs should be sent
 	SyslogHost string `json:"syslog-host"`
 	// SyslogPort port
-	SyslogPort int `json:"syslog-port",omitempty`
+	SyslogPort int `json:"syslog-port"`
 
 	// NoTLSRedirectLocations is a comma-separated list of locations
 	// that should not get redirected to TLS
