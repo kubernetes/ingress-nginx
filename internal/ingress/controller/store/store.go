@@ -111,6 +111,7 @@ const (
 	DeleteEvent EventType = "DELETE"
 	// ConfigurationEvent event associated when a configuration object is created or updated
 	ConfigurationEvent EventType = "CONFIGURATION"
+	slash                        = "/"
 )
 
 // Event holds the context of an event
@@ -516,7 +517,7 @@ func (s k8sStore) GetService(key string) (*apiv1.Service, error) {
 	return s.listers.Service.ByKey(key)
 }
 
-// GetSecret returns an Ingress using the namespace and name as key
+// GetIngress returns an Ingress using the namespace and name as key
 func (s k8sStore) GetIngress(key string) (*extensions.Ingress, error) {
 	return s.listers.Ingress.ByKey(key)
 }
@@ -530,7 +531,13 @@ func (s k8sStore) ListIngresses() []*extensions.Ingress {
 		if !class.IsValid(ing) {
 			continue
 		}
-
+		for ri, rule := range ing.Spec.Rules {
+			for pi, path := range rule.HTTP.Paths {
+				if path.Path == "" {
+					ing.Spec.Rules[ri].HTTP.Paths[pi].Path = slash
+				}
+			}
+		}
 		ingresses = append(ingresses, ing)
 	}
 
