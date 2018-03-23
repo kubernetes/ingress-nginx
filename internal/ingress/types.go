@@ -267,7 +267,7 @@ type Location struct {
 	Logs log.Config `json:"logs,omitempty"`
 	// GRPC indicates if the kubernetes service exposes a gRPC interface
 	// By default this is false
-	GRPC bool `json:"logs,omitempty"`
+	GRPC bool `json:"grpc"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
