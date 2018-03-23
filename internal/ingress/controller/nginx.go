@@ -533,7 +533,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 					}
 				}
 				if !found {
-					redirectServers[n] = srv.Hostname
+					redirectServers[srv.Hostname] = n
 				}
 			}
 		}
