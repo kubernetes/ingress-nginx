@@ -64,6 +64,8 @@ const (
 	// owner: @vishh
 	// alpha: v1.6
 	//
+	// This is deprecated and will be removed in v1.11. Use DevicePlugins instead.
+	//
 	// Enables support for GPUs as a schedulable resource.
 	// Only Nvidia GPUs are supported as of v1.6.
 	// Works only with Docker Container Runtime.
@@ -153,13 +155,13 @@ const (
 	CPUManager utilfeature.Feature = "CPUManager"
 
 	// owner: @derekwaynecarr
-	// alpha: v1.8
+	// beta: v1.10
 	//
 	// Enable pods to consume pre-allocated huge pages of varying page sizes
 	HugePages utilfeature.Feature = "HugePages"
 
 	// owner @brendandburns
-	// alpha: v1.8
+	// alpha: v1.9
 	//
 	// Enable nodes to exclude themselves from service load balancers
 	ServiceNodeExclusion utilfeature.Feature = "ServiceNodeExclusion"
@@ -235,14 +237,14 @@ var defaultKubernetesFeatureGates = map[utilfeature.Feature]utilfeature.FeatureS
 	RotateKubeletClientCertificate:              {Default: true, PreRelease: utilfeature.Beta},
 	PersistentLocalVolumes:                      {Default: false, PreRelease: utilfeature.Alpha},
 	LocalStorageCapacityIsolation:               {Default: false, PreRelease: utilfeature.Alpha},
-	HugePages:                                   {Default: false, PreRelease: utilfeature.Alpha},
+	HugePages:                                   {Default: true, PreRelease: utilfeature.Beta},
 	DebugContainers:                             {Default: false, PreRelease: utilfeature.Alpha},
 	PodPriority:                                 {Default: false, PreRelease: utilfeature.Alpha},
 	EnableEquivalenceClassCache:                 {Default: false, PreRelease: utilfeature.Alpha},
 	TaintNodesByCondition:                       {Default: false, PreRelease: utilfeature.Alpha},
 	MountPropagation:                            {Default: false, PreRelease: utilfeature.Alpha},
 	ExpandPersistentVolumes:                     {Default: false, PreRelease: utilfeature.Alpha},
-	CPUManager:                                  {Default: false, PreRelease: utilfeature.Alpha},
+	CPUManager:                                  {Default: true, PreRelease: utilfeature.Beta},
 	ServiceNodeExclusion:                        {Default: false, PreRelease: utilfeature.Alpha},
 	MountContainers:                             {Default: false, PreRelease: utilfeature.Alpha},
 	VolumeScheduling:                            {Default: false, PreRelease: utilfeature.Alpha},
