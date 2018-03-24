@@ -25,6 +25,7 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
 )
 
 // EnsureSecret creates a Secret object or returns it if it already exists.
@@ -75,10 +76,15 @@ func (f *Framework) EnsureDeployment(deployment *extensions.Deployment) (*extens
 	return d, nil
 }
 
-// WaitForPodsReady waits for a given amount of time until a group of Pods is running.
+// WaitForPodsReady waits for a given amount of time until a group of Pods is running in the framework's namespace.
 func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
+	return WaitForPodsReady(f.KubeClientSet, timeout, expectedReplicas, f.Namespace.Name, opts)
+}
+
+// WaitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
+func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration, expectedReplicas int, namespace string, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, timeout, func() (bool, error) {
-		pl, err := f.KubeClientSet.CoreV1().Pods(f.Namespace.Name).List(opts)
+		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(opts)
 		if err != nil {
 			return false, err
 		}
