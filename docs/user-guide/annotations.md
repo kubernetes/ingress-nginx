@@ -208,7 +208,7 @@ nginx.ingress.kubernetes.io/configuration-snippet: |
 
 ### Default Backend
 
-The ingress controller requires a default backend. This service is handle the response when the service in the Ingress rule does not have endpoints.
+The ingress controller requires a default backend. This service handles the response when the service in the Ingress rule does not have endpoints.
 This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.
 
 ### Enable CORS
