@@ -17,6 +17,7 @@ limitations under the License.
 package authreq
 
 import (
+	"net"
 	"net/url"
 	"regexp"
 	"strings"
@@ -133,6 +134,18 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 	if strings.Contains(authUrl.Host, "..") {
 		return nil, ing_errors.NewLocationDenied("invalid url host")
+	}
+
+	// The hostname can be partial, retrieving FQDN.
+	fqdn, err := net.LookupCNAME(authUrl.Hostname())
+	if err == nil {
+		fqdn = strings.TrimRight(fqdn, ".")
+		if port := authUrl.Port(); port != "" {
+			authUrl.Host = net.JoinHostPort(fqdn, port)
+		} else {
+			authUrl.Host = fqdn
+		}
+		urlString = authUrl.String()
 	}
 
 	authMethod, _ := parser.GetStringAnnotation("auth-method", ing)
