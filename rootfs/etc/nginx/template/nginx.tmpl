@@ -1011,8 +1011,14 @@ stream {
         # this is required to avoid error if nginx is being monitored
         # with an external software (like sysdig)
         location /nginx_status {
-            allow 127.0.0.1;
-            {{ if $all.IsIPV6Enabled }}allow ::1;{{ end }}
+            {{ range $v := $all.NginxStatusIpv4Whitelist }}
+            allow {{ $v }};
+            {{ end }}
+            {{ if $all.IsIPV6Enabled -}}
+            {{ range $v := $all.NginxStatusIpv6Whitelist }}
+            allow {{ $v }};
+            {{ end }}
+            {{ end -}}
             deny all;
 
             access_log off;
