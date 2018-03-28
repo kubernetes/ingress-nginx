@@ -26,6 +26,8 @@
 		"keepAlive": 75,
 		"mapHashBucketSize": 64,
 		"maxWorkerConnections": 16384,
+		"nginxStatusIpv4Whitelist": "127.0.0.1",
+		"nginxStatusIpv6Whitelist": "::1",
 		"proxyRealIpCidr": "0.0.0.0/0",
 		"retryNonIdempotent": false,
 		"serverNameHashBucketSize": 64,
@@ -113,7 +115,7 @@
 				"pemSha": ""
 			},
 			"vtsDefaultFilterKey": "$uri $server_name"
-			
+
 		}, {
 			"path": "/",
 			"isDefBackend": true,

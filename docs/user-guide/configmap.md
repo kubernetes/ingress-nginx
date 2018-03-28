@@ -63,6 +63,8 @@ The following table shows a configuration option's name, type, and the default v
 |[log-format-stream](#log-format-stream)|string|`[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
 |[max-worker-connections](#max-worker-connections)|int|16384|
 |[map-hash-bucket-size](#max-worker-connections)|int|64|
+|[nginx-status-ipv4-whitelist](#nginx-status-ipv4-whitelist)|[]string|"127.0.0.1"|
+|[nginx-status-ipv6-whitelist](#nginx-status-ipv6-whitelist)|[]string|"::1"|
 |[proxy-real-ip-cidr](#proxy-real-ip-cidr)|[]string|"0.0.0.0/0"|
 |[proxy-set-headers](#proxy-set-headers)|string|""|
 |[server-name-hash-max-size](#server-name-hash-max-size)|int|1024|
