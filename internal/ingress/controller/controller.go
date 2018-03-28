@@ -399,6 +399,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 			}
 
 			if server.CertificateAuth.CAFileName == "" {
+				server.CertificateAuth = anns.CertificateAuth
 				// It is possible that no CAFileName is found in the secret
 				if server.CertificateAuth.CAFileName == "" {
 					glog.V(3).Infof("secret %v does not contain 'ca.crt', mutual authentication not enabled - ingress rule %v/%v.", server.CertificateAuth.Secret, ing.Namespace, ing.Name)
