@@ -493,6 +493,9 @@ http {
 
         location /nginx_status {
             set $proxy_upstream_name "internal";
+            {{ if $cfg.EnableOpentracing }}
+            opentracing off;
+            {{ end }}
 
             {{ if $cfg.EnableVtsStatus }}
             vhost_traffic_status_display;
@@ -505,6 +508,10 @@ http {
 
         {{ if $all.DynamicConfigurationEnabled }}
         location /configuration {
+            {{ if $cfg.EnableOpentracing }}
+            opentracing off;
+            {{ end }}
+
             allow 127.0.0.1;
             {{ if $IsIPV6Enabled }}
             allow ::1;
@@ -995,6 +1002,10 @@ stream {
         {{ if eq $server.Hostname "_" }}
         # health checks in cloud providers require the use of port {{ $all.ListenPorts.HTTP }}
         location {{ $all.HealthzURI }} {
+            {{ if $all.Cfg.EnableOpentracing }}
+            opentracing off;
+            {{ end }}
+
             access_log off;
             return 200;
         }
@@ -1002,6 +1013,10 @@ stream {
         # this is required to avoid error if nginx is being monitored
         # with an external software (like sysdig)
         location /nginx_status {
+            {{ if $all.Cfg.EnableOpentracing }}
+            opentracing off;
+            {{ end }}
+
             {{ range $v := $all.NginxStatusIpv4Whitelist }}
             allow {{ $v }};
             {{ end }}
