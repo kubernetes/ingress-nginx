@@ -36,6 +36,7 @@ events {
 }
 
 http {
+    {{ if $all.DynamicConfigurationEnabled }}
     lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;;";
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
 
@@ -70,7 +71,7 @@ http {
     init_worker_by_lua_block {
         balancer.init_worker()
     }
-
+    {{ end }}
     {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
@@ -373,6 +374,7 @@ http {
     {{ end }}
     {{ end }}
 
+    {{ if $all.DynamicConfigurationEnabled }}
     upstream upstream_balancer {
         server 0.0.0.1; # placeholder
 
@@ -384,6 +386,7 @@ http {
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
         {{ end }}
     }
+    {{ end }}
 
     {{/* build the maps that will be use to validate the Whitelist */}}
     {{ range $index, $server := $servers }}
@@ -500,6 +503,7 @@ http {
             {{ end }}
         }
 
+        {{ if $all.DynamicConfigurationEnabled }}
         location /configuration {
             allow 127.0.0.1;
             {{ if $IsIPV6Enabled }}
@@ -510,6 +514,7 @@ http {
               configuration.call()
             }
         }
+        {{ end }}
 
         location / {
             {{ if .CustomErrors }}
@@ -760,17 +765,10 @@ stream {
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
             {{ if $server.CertificateAuth.PassCertToUpstream }}
             proxy_set_header ssl-client-cert        $ssl_client_escaped_cert;
-            {{ else }}
-            proxy_set_header ssl-client-cert        "";
             {{ end }}
             proxy_set_header ssl-client-verify      $ssl_client_verify;
             proxy_set_header ssl-client-subject-dn  $ssl_client_s_dn;
             proxy_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
-            {{ else }}
-            proxy_set_header ssl-client-cert        "";
-            proxy_set_header ssl-client-verify      "";
-            proxy_set_header ssl-client-client-dn   "";
-            proxy_set_header ssl-client-subject-dn  "";
             {{ end }}
 
             set $target {{ $location.ExternalAuth.URL }};
@@ -892,17 +890,10 @@ stream {
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
             {{ if $server.CertificateAuth.PassCertToUpstream }}
             proxy_set_header ssl-client-cert        $ssl_client_escaped_cert;
-            {{ else }}
-            proxy_set_header ssl-client-cert        "";
             {{ end }}
             proxy_set_header ssl-client-verify      $ssl_client_verify;
             proxy_set_header ssl-client-subject-dn  $ssl_client_s_dn;
             proxy_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
-            {{ else }}
-            proxy_set_header ssl-client-cert        "";
-            proxy_set_header ssl-client-verify      "";
-            proxy_set_header ssl-client-subject-dn  "";
-            proxy_set_header ssl-client-issuer-dn   "";
             {{ end }}
 
             # Allow websocket connections
