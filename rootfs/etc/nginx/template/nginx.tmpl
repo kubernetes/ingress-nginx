@@ -738,7 +738,11 @@ stream {
         {{ if $authPath }}
         location = {{ $authPath }} {
             internal;
-            set $proxy_upstream_name "external-authentication";
+
+            # ngx_auth_request module overrides variables in the parent request,
+            # therefore we have to explicitly set this variable again so that when the parent request
+            # resumes it has the correct value set for this variable so that Lua can pick backend correctly
+            set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
 
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
