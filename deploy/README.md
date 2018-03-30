@@ -160,12 +160,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 #### Network Load Balancer (NLB)
 
-This type of load balancer is supported since v1.9.0 as an ALPHA feature.
+This type of load balancer is supported since v1.10.0 as an ALPHA feature.
 
 ```console
-kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
-  --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/patch-deployment.yaml)"
-
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml
 ```
 
