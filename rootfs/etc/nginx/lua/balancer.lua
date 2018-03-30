@@ -27,7 +27,13 @@ end
 
 local function get_current_backend()
   local backend_name = ngx.var.proxy_upstream_name
-  return backends:get(backend_name)
+  local backend = backends:get(backend_name)
+
+  if not backend then
+    ngx.log(ngx.WARN, "no backend configuration found for " .. tostring(backend_name))
+  end
+
+  return backend
 end
 
 local function get_current_lb_alg()
