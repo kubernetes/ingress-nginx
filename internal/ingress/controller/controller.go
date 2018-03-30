@@ -990,8 +990,8 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				servers[host].SSLCiphers = anns.SSLCiphers
 			}
 
-			// only add a certificate if the server does not have one previously configured
-			if servers[host].SSLCert.PemFileName != "" {
+			// only add a certificate if the server does not have one previously configured that is not the default
+			if servers[host].SSLCert.PemFileName != "" && servers[host].SSLCert.PemFileName != defaultPemFileName {
 				continue
 			}
 
