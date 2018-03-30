@@ -21,7 +21,7 @@ This custom nginx image contains:
 - [brotli](https://github.com/google/brotli) (not supported in s390x)
 
 **How to use this image:**
-This image does provides a default configuration file with no backend servers.
+This image provides a default configuration file with no backend servers.
 
 *Using docker*
 
