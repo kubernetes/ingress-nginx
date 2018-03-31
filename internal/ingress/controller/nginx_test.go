@@ -22,7 +22,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 )
 
-func TestIsDynamicallyConfigurable(t *testing.T) {
+func IsDynamicConfiguratonEnough(t *testing.T) {
 	backends := []*ingress.Backend{{
 		Name: "fakenamespace-myapp-80",
 		Endpoints: []ingress.Endpoint{

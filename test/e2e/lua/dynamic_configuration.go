@@ -117,7 +117,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(log).ToNot(BeEmpty())
 
 			By("skipping Nginx reload")
-			Expect(log).To(ContainSubstring("skipping reload since only backends changed"))
+			Expect(log).To(ContainSubstring("skipping reload"))
 
 			By("POSTing new backends to Lua endpoint")
 			Expect(log).To(ContainSubstring("dynamic reconfiguration succeeded"))
@@ -138,7 +138,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(log).ToNot(BeEmpty())
 
 			By("skipping Nginx reload")
-			Expect(log).To(ContainSubstring("skipping reload since only backends changed"))
+			Expect(log).To(ContainSubstring("skipping reload"))
 
 			By("POSTing new backends to Lua endpoint")
 			Expect(log).To(ContainSubstring("dynamic reconfiguration succeeded"))

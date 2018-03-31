@@ -169,15 +169,21 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 	if !n.isForceReload() && n.runningConfig.Equal(&pcfg) {
 		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
-	} else if !n.isForceReload() && n.cfg.DynamicConfigurationEnabled && n.IsDynamicallyConfigurable(&pcfg) {
+	}
+
+	if n.cfg.DynamicConfigurationEnabled {
 		err := n.ConfigureDynamically(&pcfg)
 		if err == nil {
-			glog.Infof("dynamic reconfiguration succeeded, skipping reload")
-			n.runningConfig = &pcfg
-			return nil
-		}
+			glog.Infof("dynamic reconfiguration succeeded")
 
-		glog.Warningf("falling back to reload, could not dynamically reconfigure: %v", err)
+			if !n.isForceReload() && n.IsDynamicConfiguratonEnough(&pcfg) {
+				glog.Infof("skipping reload")
+				n.runningConfig = &pcfg
+				return nil
+			}
+		} else {
+			glog.Warningf("could not dynamically reconfigure: %v", err)
+		}
 	}
 
 	glog.Infof("backend reload required")
@@ -192,19 +198,6 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 	glog.Infof("ingress backend successfully reloaded...")
 	incReloadCount()
 	setSSLExpireTime(servers)
-
-	if n.isForceReload() && n.cfg.DynamicConfigurationEnabled {
-		go func() {
-			// it takes time for Nginx to start listening on the port
-			time.Sleep(1 * time.Second)
-			err := n.ConfigureDynamically(&pcfg)
-			if err == nil {
-				glog.Infof("dynamic reconfiguration succeeded")
-			} else {
-				glog.Warningf("could not dynamically reconfigure: %v", err)
-			}
-		}()
-	}
 
 	n.runningConfig = &pcfg
 	n.SetForceReload(false)

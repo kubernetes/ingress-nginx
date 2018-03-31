@@ -751,8 +751,8 @@ func (n *NGINXController) setupSSLProxy() {
 	}()
 }
 
-// IsDynamicallyConfigurable decides if the new configuration can be dynamically configured without reloading
-func (n *NGINXController) IsDynamicallyConfigurable(pcfg *ingress.Configuration) bool {
+// IsDynamicConfiguratonEnough decides if the new configuration changes can be dynamically applied without reloading
+func (n *NGINXController) IsDynamicConfiguratonEnough(pcfg *ingress.Configuration) bool {
 	var copyOfRunningConfig ingress.Configuration = *n.runningConfig
 	var copyOfPcfg ingress.Configuration = *pcfg
 
