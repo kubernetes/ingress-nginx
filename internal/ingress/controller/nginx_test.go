@@ -22,7 +22,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 )
 
-func IsDynamicConfiguratonEnough(t *testing.T) {
+func TestIsDynamicConfigurationEnough(t *testing.T) {
 	backends := []*ingress.Backend{{
 		Name: "fakenamespace-myapp-80",
 		Endpoints: []ingress.Endpoint{
@@ -60,7 +60,7 @@ func IsDynamicConfiguratonEnough(t *testing.T) {
 	}
 
 	newConfig := commonConfig
-	if !n.IsDynamicallyConfigurable(newConfig) {
+	if !n.IsDynamicConfigurationEnough(newConfig) {
 		t.Errorf("When new config is same as the running config it should be deemed as dynamically configurable")
 	}
 
@@ -68,7 +68,7 @@ func IsDynamicConfiguratonEnough(t *testing.T) {
 		Backends: []*ingress.Backend{{Name: "another-backend-8081"}},
 		Servers:  []*ingress.Server{{Hostname: "myapp1.fake"}},
 	}
-	if n.IsDynamicallyConfigurable(newConfig) {
+	if n.IsDynamicConfigurationEnough(newConfig) {
 		t.Errorf("Expected to not be dynamically configurable when there's more than just backends change")
 	}
 
@@ -76,7 +76,7 @@ func IsDynamicConfiguratonEnough(t *testing.T) {
 		Backends: []*ingress.Backend{{Name: "a-backend-8080"}},
 		Servers:  servers,
 	}
-	if !n.IsDynamicallyConfigurable(newConfig) {
+	if !n.IsDynamicConfigurationEnough(newConfig) {
 		t.Errorf("Expected to be dynamically configurable when only backends change")
 	}
 
