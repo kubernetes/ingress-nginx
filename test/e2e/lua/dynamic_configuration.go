@@ -51,8 +51,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
-		time.Sleep(5 * time.Second)
-
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
@@ -195,7 +193,11 @@ func enableDynamicConfiguration(kubeClientSet kubernetes.Interface) error {
 			args = append(args, "--enable-dynamic-configuration")
 			deployment.Spec.Template.Spec.Containers[0].Args = args
 			_, err := kubeClientSet.AppsV1beta1().Deployments("ingress-nginx").Update(deployment)
-			return err
+			if err != nil {
+				return err
+			}
+			time.Sleep(15 * time.Second)
+			return nil
 		})
 }
 
@@ -211,7 +213,11 @@ func disableDynamicConfiguration(kubeClientSet kubernetes.Interface) error {
 			}
 			deployment.Spec.Template.Spec.Containers[0].Args = newArgs
 			_, err := kubeClientSet.AppsV1beta1().Deployments("ingress-nginx").Update(deployment)
-			return err
+			if err != nil {
+				return err
+			}
+			time.Sleep(15 * time.Second)
+			return nil
 		})
 }
 
