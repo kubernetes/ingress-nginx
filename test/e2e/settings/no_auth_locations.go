@@ -63,7 +63,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		updateConfigmap(setting, "/.well-known/acme-challenge", f.KubeClientSet)
 	})
 
-	It("should return status code 401 when not accessing no-auth-location without authentication", func() {
+	It("should return status code 401 when accessing '/' unauthentication", func() {
 		err := f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("test auth"))
@@ -80,7 +80,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		Expect(body).Should(ContainSubstring("401 Authorization Required"))
 	})
 
-	It("should return status code 200 when not accessing no-auth-location with authentication", func() {
+	It("should return status code 200 when accessing '/'  authentication", func() {
 		err := f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("test auth"))
@@ -97,7 +97,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 
-	It("should return status code 200 when accessing no-auth-location without authenticating", func() {
+	It("should return status code 200 when accessing '/noauth' unauthenticated", func() {
 		err := f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("test auth"))
