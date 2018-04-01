@@ -171,33 +171,40 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 		return nil
 	}
 
-	if n.cfg.DynamicConfigurationEnabled && !n.runningConfig.Equal(&ingress.Configuration{}) {
-		err := n.ConfigureDynamically(&pcfg)
-		if err == nil {
-			glog.Infof("dynamic reconfiguration succeeded")
+	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(&pcfg) && !n.isForceReload() {
+		glog.Infof("skipping reload")
+	} else {
+		glog.Infof("backend reload required")
 
-			if !n.isForceReload() && n.IsDynamicConfigurationEnough(&pcfg) {
-				glog.Infof("skipping reload")
-				n.runningConfig = &pcfg
-				return nil
-			}
-		} else {
-			glog.Warningf("could not dynamically reconfigure: %v", err)
+		err := n.OnUpdate(pcfg)
+		if err != nil {
+			incReloadErrorCount()
+			glog.Errorf("unexpected failure restarting the backend: \n%v", err)
+			return err
 		}
+
+		glog.Infof("ingress backend successfully reloaded...")
+		incReloadCount()
+		setSSLExpireTime(servers)
 	}
 
-	glog.Infof("backend reload required")
+	if n.cfg.DynamicConfigurationEnabled {
+		isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
+		go func(isFirstSync bool) {
+			if isFirstSync {
+				glog.Infof("first sync of Nginx configuration")
 
-	err := n.OnUpdate(pcfg)
-	if err != nil {
-		incReloadErrorCount()
-		glog.Errorf("unexpected failure restarting the backend: \n%v", err)
-		return err
+				// it takes time for Nginx to start listening on the port
+				time.Sleep(1 * time.Second)
+			}
+			err := n.ConfigureDynamically(&pcfg)
+			if err == nil {
+				glog.Infof("dynamic reconfiguration succeeded")
+			} else {
+				glog.Warningf("could not dynamically reconfigure: %v", err)
+			}
+		}(isFirstSync)
 	}
-
-	glog.Infof("ingress backend successfully reloaded...")
-	incReloadCount()
-	setSSLExpireTime(servers)
 
 	n.runningConfig = &pcfg
 	n.SetForceReload(false)

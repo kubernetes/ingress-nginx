@@ -69,6 +69,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		log, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(ContainSubstring("could not dynamically reconfigure"))
+		Expect(log).To(ContainSubstring("first sync of Nginx configuration"))
 	})
 
 	AfterEach(func() {
@@ -106,9 +107,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
 
 			By("skipping Nginx reload")
-			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
 			Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
 			Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
+			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
+			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
 		})
 
 		It("should handle annotation changes", func() {
@@ -131,9 +133,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
 
 			By("skipping Nginx reload")
-			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
 			Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
 			Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
+			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
+			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
 		})
 	})
 
