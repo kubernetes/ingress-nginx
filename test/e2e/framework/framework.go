@@ -19,14 +19,17 @@ import (
 	"strings"
 	"time"
 
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 
 	"github.com/golang/glog"
+	"github.com/pkg/errors"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -254,4 +257,25 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 
 		return false, nil
 	}
+}
+
+// UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
+func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1beta1.Deployment) error) error {
+	deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	if err = updateFunc(deployment); err != nil {
+		return err
+	}
+
+	err = WaitForPodsReady(kubeClientSet, 60*time.Second, replicas, namespace, metav1.ListOptions{
+		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to wait for nginx-ingress-controller pods to restart")
+	}
+
+	return nil
 }

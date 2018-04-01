@@ -169,41 +169,41 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 	if !n.isForceReload() && n.runningConfig.Equal(&pcfg) {
 		glog.V(3).Infof("skipping backend reload (no changes detected)")
 		return nil
-	} else if !n.isForceReload() && n.cfg.DynamicConfigurationEnabled && n.IsDynamicallyConfigurable(&pcfg) {
-		err := n.ConfigureDynamically(&pcfg)
-		if err == nil {
-			glog.Infof("dynamic reconfiguration succeeded, skipping reload")
-			n.runningConfig = &pcfg
-			return nil
+	}
+
+	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(&pcfg) && !n.isForceReload() {
+		glog.Infof("skipping reload")
+	} else {
+		glog.Infof("backend reload required")
+
+		err := n.OnUpdate(pcfg)
+		if err != nil {
+			incReloadErrorCount()
+			glog.Errorf("unexpected failure restarting the backend: \n%v", err)
+			return err
 		}
 
-		glog.Warningf("falling back to reload, could not dynamically reconfigure: %v", err)
+		glog.Infof("ingress backend successfully reloaded...")
+		incReloadCount()
+		setSSLExpireTime(servers)
 	}
 
-	glog.Infof("backend reload required")
+	if n.cfg.DynamicConfigurationEnabled {
+		isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
+		go func(isFirstSync bool) {
+			if isFirstSync {
+				glog.Infof("first sync of Nginx configuration")
 
-	err := n.OnUpdate(pcfg)
-	if err != nil {
-		incReloadErrorCount()
-		glog.Errorf("unexpected failure restarting the backend: \n%v", err)
-		return err
-	}
-
-	glog.Infof("ingress backend successfully reloaded...")
-	incReloadCount()
-	setSSLExpireTime(servers)
-
-	if n.isForceReload() && n.cfg.DynamicConfigurationEnabled {
-		go func() {
-			// it takes time for Nginx to start listening on the port
-			time.Sleep(1 * time.Second)
+				// it takes time for Nginx to start listening on the port
+				time.Sleep(1 * time.Second)
+			}
 			err := n.ConfigureDynamically(&pcfg)
 			if err == nil {
 				glog.Infof("dynamic reconfiguration succeeded")
 			} else {
 				glog.Warningf("could not dynamically reconfigure: %v", err)
 			}
-		}()
+		}(isFirstSync)
 	}
 
 	n.runningConfig = &pcfg

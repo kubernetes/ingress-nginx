@@ -32,6 +32,7 @@ import (
 	// tests to run
 	_ "k8s.io/ingress-nginx/test/e2e/annotations"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
+	_ "k8s.io/ingress-nginx/test/e2e/lua"
 	_ "k8s.io/ingress-nginx/test/e2e/settings"
 	_ "k8s.io/ingress-nginx/test/e2e/ssl"
 )
