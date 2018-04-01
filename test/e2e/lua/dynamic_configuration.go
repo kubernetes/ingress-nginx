@@ -66,14 +66,9 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-		// NOTE(elvinefendi) this is to document the not so desired behaviour
-		// where the controller tries to POST to Lua endpoint right after starting
-		// Nginx when it does not have the correct endpoint configuration yet
 		log, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
-		index := strings.Index(log, "could not dynamically reconfigure")
-		Expect(index).Should(BeNumerically(">", -1))
-		Expect(strings.Index(log[index+1:], "could not dynamically reconfigure")).Should(Equal(-1))
+		Expect(log).ToNot(ContainSubstring("could not dynamically reconfigure"))
 	})
 
 	AfterEach(func() {

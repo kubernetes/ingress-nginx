@@ -171,7 +171,7 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 		return nil
 	}
 
-	if n.cfg.DynamicConfigurationEnabled {
+	if n.cfg.DynamicConfigurationEnabled && !n.runningConfig.Equal(&ingress.Configuration{}) {
 		err := n.ConfigureDynamically(&pcfg)
 		if err == nil {
 			glog.Infof("dynamic reconfiguration succeeded")
