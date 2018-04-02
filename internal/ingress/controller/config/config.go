@@ -499,6 +499,10 @@ type Configuration struct {
 	// NoTLSRedirectLocations is a comma-separated list of locations
 	// that should not get redirected to TLS
 	NoTLSRedirectLocations string `json:"no-tls-redirect-locations"`
+
+	// NoAuthLocations is a comma-separated list of locations that
+	// should not get authenticated
+	NoAuthLocations string `json:"no-auth-locations"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -606,6 +610,7 @@ func NewDefault() Configuration {
 		LimitReqStatusCode:           503,
 		SyslogPort:                   514,
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
+		NoAuthLocations:              "/.well-known/acme-challenge",
 	}
 
 	if glog.V(5) {
