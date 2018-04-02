@@ -1090,7 +1090,7 @@ func (n *NGINXController) getEndpoints(
 
 	// ExternalName services
 	if s.Spec.Type == apiv1.ServiceTypeExternalName {
-		glog.V(3).Info("Ingress using a service %v of type=ExternalName : %v", s.Name)
+		glog.V(3).Infof("Ingress using a service %v of type=ExternalName : %v", s.Name)
 
 		targetPort := servicePort.TargetPort.IntValue()
 		// check for invalid port value
