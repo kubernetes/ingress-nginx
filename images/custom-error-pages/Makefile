@@ -1,4 +1,4 @@
-all: push
+all: all-container
 
 BUILDTAGS=
 
@@ -6,11 +6,11 @@ BUILDTAGS=
 TAG?=0.1
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
-DOCKER?=gcloud docker --
+DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
-PKG=k8s.io/ingress/images/custom-error-pages
+PKG=k8s.io/ingress-nginx/images/custom-error-pages
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -51,8 +51,6 @@ endif
 TEMP_DIR := $(shell mktemp -d)
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
-
-all: all-container
 
 sub-container-%:
 	$(MAKE) ARCH=$* build container
