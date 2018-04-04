@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.13.10
+export NGINX_VERSION=1.13.11
 export NDK_VERSION=0.3.0
 export VTS_VERSION=0.1.15
 export SETMISC_VERSION=0.31
@@ -29,7 +29,7 @@ export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.2.1
 export OPENTRACING_CPP_VERSION=1.3.0
-export ZIPKIN_CPP_VERSION=0.2.0
+export ZIPKIN_CPP_VERSION=0.3.0
 export JAEGER_VERSION=0.2.0
 export MODSECURITY_VERSION=1.0.0
 export LUA_NGX_VERSION=0.10.12rc2
@@ -112,7 +112,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 336182104d90be3c40c874f7f06f87dbb357da1dc74ea573ad081a0f29a94885 \
+get_src 35799c974644d2896b34ba876461dfd142c1b11f06f5aa57d255a77d4da36f05 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
@@ -142,7 +142,7 @@ get_src ce66acf943a604ef9a0bb477c7efca1fe583076991647aa646aa3d8804328364 \
 get_src 06dc5f9740d27dc4684399e491211be46a8069a10277f25513dadeb71199ce4c \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
-get_src 611eb6a1ff1c326c472421ae2486ba34a94ddc78d90047df3f097bcdad3298e3 \
+get_src b65bb78bcd8806cf11695b980577abb5379369929240414c75eb4623a4d45cc3 \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
 get_src 8deee6d6f7128f58bd6ba2893bd69c1fdbc8a3ad2797ba45ef94b977255d181c \
@@ -172,9 +172,6 @@ get_src eaf84f58b43289c1c3e0442ada9ed40406357f203adc96e2091638080cb8d361 \
 get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
         "http://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz"
 
-
-#https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
-curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
@@ -221,6 +218,9 @@ make
 make install
 
 export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir)
+echo "HUNTER_INSTALL_DIR: ${HUNTER_INSTALL_DIR}"
+cp $HUNTER_INSTALL_DIR/lib/libthrift* /usr/local/lib
+rm /usr/local/lib/libthrift*.a
 
 # build zipkin lib
 cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
@@ -239,9 +239,10 @@ git submodule update
 
 # build modsecurity library
 cd "$BUILD_PATH"
-git clone -b v3/dev/performance --single-branch https://github.com/SpiderLabs/ModSecurity
+git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
-git checkout 62022b49a22389cdecd35110e503285494fdf938 
+# checkout v3.0.2
+git checkout 8d0f51beda5c031e38741c27f29b67f0266352bb
 git submodule init
 git submodule update
 sh build.sh
@@ -253,7 +254,7 @@ make install
 cd /etc/nginx/
 git clone -b v3.1/dev --single-branch https://github.com/SpiderLabs/owasp-modsecurity-crs
 cd owasp-modsecurity-crs
-git checkout ce36edef52c17ad4d607d435477511d1b6dbe162
+git checkout d7571979b534ae6d9968a6e3582fb4f5212c3586
 
 mv crs-setup.conf.example crs-setup.conf
 mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
@@ -263,7 +264,7 @@ cd ..
 # Download modsecurity.conf
 mkdir modsecurity
 cd modsecurity
-curl -sSL -o modsecurity.conf https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/dev/performance/modsecurity.conf-recommended
+curl -sSL -o modsecurity.conf https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended
 
 # OWASP CRS v3 rules
 echo "
@@ -299,9 +300,6 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTE
 
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
-
-echo "Applying nginx patches..."
-patch -p1 < $BUILD_PATH/nginx__dynamic_tls_records.patch
 
 WITH_FLAGS="--with-debug \
   --with-pcre-jit \
@@ -421,7 +419,7 @@ rm -rf /usr/local/modsecurity/bin
 rm -rf /usr/local/modsecurity/include
 rm -rf /usr/local/modsecurity/lib/libmodsecurity.a
 
-cp $HUNTER_INSTALL_DIR/lib/libthrift* /usr/local/lib
-rm /usr/local/lib/libthrift*.a
+rm -rf /etc/nginx/owasp-modsecurity-crs/.git
+rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
 rm -rf $HOME/.hunter
