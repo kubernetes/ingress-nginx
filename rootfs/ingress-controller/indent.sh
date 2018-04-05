@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/awk -f
 
 # Copyright 2017 The Kubernetes Authors.
 #
@@ -14,14 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script removes consecutive empty lines in nginx.conf
-# Using sed is more simple than using a go regex
+# Credits to https://evasive.ru/f29bd7ebacf24a50c582f973a55eee28.html
 
-# Sed commands:
-# 1. remove the return carrier character/s
-# 2. remove empty lines
-# 3. replace multiple empty lines
-
-SCRIPT_ROOT=$(dirname ${BASH_SOURCE})
-
-sed -e 's/\r//g' | sed -e 's/^  *$/\'$'\n/g' | sed -e '/^$/{N;/^\n$/D;}' | ${SCRIPT_ROOT}/indent.sh
+{sub(/^[ \t]+/,"");idx=0}
+/\{/{ctx++;idx=1}
+/\}/{ctx--}
+{id="";for(i=idx;i<ctx;i++)id=sprintf("%s%s", id, "\t");printf "%s%s\n", id, $0}
