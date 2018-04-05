@@ -104,6 +104,41 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
 		})
 
+		It("should be able to update endpoints even when the update POST size(request body) > size(client_body_buffer_size)", func() {
+			// Update client-body-buffer-size to 1 byte
+			err := f.UpdateNginxConfigMapData("client-body-buffer-size", "1")
+			Expect(err).NotTo(HaveOccurred())
+
+			replicas := 0
+			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			replicas = 4
+			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(5 * time.Second)
+
+			resp, _, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", "foo.com").
+				End()
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			log, err := f.NginxLogs()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(log).ToNot(BeEmpty())
+			index := strings.Index(log, "POST /configuration/backends HTTP/1.1")
+			restOfLogs := log[index:]
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(log).ToNot(BeEmpty())
+
+			By("POSTing new backends to Lua endpoint")
+			Expect(restOfLogs).To(ContainSubstring("a client request body is buffered to a temporary file"))
+			Expect(restOfLogs).ToNot(ContainSubstring("dynamic-configuration: unable to read valid request body"))
+		})
+
 		It("should handle annotation changes", func() {
 			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
 			Expect(err).ToNot(HaveOccurred())
