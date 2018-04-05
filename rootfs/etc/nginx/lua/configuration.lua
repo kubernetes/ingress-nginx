@@ -27,10 +27,21 @@ function _M.call()
   end
 
   ngx.req.read_body()
+  local backends = ngx.req.get_body_data()
+  if not backends then
+    -- response might be have been written to tmp file if size(body) > client_body_buffer_size
+    backends = ngx.req.get_body_file()
+  end
+  if not backends then
+    -- no current backends data found
+    ngx.log(ngx.ERR, "configuration/backends: empty response body")
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
 
   local success, err = configuration_data:set("backends", ngx.req.get_body_data())
   if not success then
-    ngx.log(ngx.ERR, "error while saving configuration: " .. tostring(err))
+    ngx.log(ngx.ERR, "configuration/backends: error updating configuration: " .. tostring(err))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
