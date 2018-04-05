@@ -20,7 +20,7 @@ function _M.new_backends()
 
   if not backends then
     -- no current backends data found
-    ngx.log(ngx.ERR, "configuration/backends: empty response body")
+    ngx.log(ngx.ERR, "dynamic-configuration: empty response body")
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
@@ -49,7 +49,7 @@ function _M.call()
 
   local success, err = configuration_data:set("backends", _M.new_backends())
   if not success then
-    ngx.log(ngx.ERR, "configuration/backends: error updating configuration: " .. tostring(err))
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
