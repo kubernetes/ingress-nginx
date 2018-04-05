@@ -790,7 +790,7 @@ stream {
         location {{ $path }} {
             {{ if (and (not (empty $server.SSLCertificate)) $all.Cfg.HSTS) }}
             if ($scheme = https) {
-            more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }};{{ if $all.Cfg.HSTSPreload }} preload{{ end }}";
+            more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";
             }
             {{ end }}
 
