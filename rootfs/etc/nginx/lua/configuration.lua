@@ -11,7 +11,7 @@ function _M.new_backends()
   ngx.req.read_body()
   local backends = ngx.req.get_body_data()
   if not backends then
-    -- response might be have been written to tmp file if size(body) > client_body_buffer_size
+    -- request body might've been wrote to tmp file if body > client_body_buffer_size
     local file_name = ngx.req.get_body_file()
     local file = assert(io.open(file_name, "rb"))
     backends = file:read("*all")
@@ -19,8 +19,7 @@ function _M.new_backends()
   end
 
   if not backends then
-    -- no current backends data found
-    ngx.log(ngx.ERR, "dynamic-configuration: empty response body")
+    ngx.log(ngx.ERR, "dynamic-configuration: empty request body")
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
