@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/golang/glog"
@@ -192,6 +193,12 @@ func parseFlags() (bool, *controller.Configuration, error) {
 
 	if !*enableSSLChainCompletion {
 		glog.Warningf("Check of SSL certificate chain is disabled (--enable-ssl-chain-completion=false)")
+	}
+
+	if *dynamicConfigurationEnabled && (runtime.GOARCH == "s390x" || runtime.GOARCH == "ppc64le") {
+		b := false
+		dynamicConfigurationEnabled = &b
+		glog.Warningf("Disabling dynamic configuration feature (LuaJIT is not available in s390x and ppc64le)")
 	}
 
 	config := &controller.Configuration{
