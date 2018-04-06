@@ -38,6 +38,10 @@ end
 
 local function get_current_lb_alg()
   local backend = get_current_backend()
+  if not backend then
+    return nil
+  end
+
   return backend["load-balance"] or DEFAULT_LB_ALG
 end
 

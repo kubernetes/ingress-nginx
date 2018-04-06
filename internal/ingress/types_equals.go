@@ -385,6 +385,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if l1.GRPC != l2.GRPC {
 		return false
 	}
+	if !(&l1.LuaRestyWAF).Equal(&l2.LuaRestyWAF) {
+		return false
+	}
 
 	return true
 }
