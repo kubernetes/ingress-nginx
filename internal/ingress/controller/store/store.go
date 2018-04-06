@@ -347,7 +347,9 @@ func New(checkOCSP bool,
 
 					for _, name := range set.List() {
 						ing, _ := store.GetIngress(name)
-						store.extractAnnotations(ing)
+						if ing != nil {
+							store.extractAnnotations(ing)
+						}
 					}
 
 					updateCh.In() <- Event{
@@ -479,7 +481,7 @@ func (s *k8sStore) extractAnnotations(ing *extensions.Ingress) {
 	secName := anns.BasicDigestAuth.Secret
 	if secName != "" {
 		if _, ok := s.secretIngressMap[secName]; !ok {
-			s.secretIngressMap[secName] = sets.NewString()
+			s.secretIngressMap[secName] = sets.String{}
 		}
 		v := s.secretIngressMap[secName]
 		if !v.Has(key) {
@@ -490,7 +492,7 @@ func (s *k8sStore) extractAnnotations(ing *extensions.Ingress) {
 	secName = anns.CertificateAuth.Secret
 	if secName != "" {
 		if _, ok := s.secretIngressMap[secName]; !ok {
-			s.secretIngressMap[secName] = sets.NewString()
+			s.secretIngressMap[secName] = sets.String{}
 		}
 		v := s.secretIngressMap[secName]
 		if !v.Has(key) {
