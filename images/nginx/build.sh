@@ -85,6 +85,7 @@ clean-install \
   procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
   lua-cjson \
+  python \
   || exit 1
 
 ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
@@ -148,8 +149,8 @@ get_src b65bb78bcd8806cf11695b980577abb5379369929240414c75eb4623a4d45cc3 \
 get_src 8deee6d6f7128f58bd6ba2893bd69c1fdbc8a3ad2797ba45ef94b977255d181c \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
 
-get_src 359274ebb0923c5a4d23e2e93d29262b2bc8a302ce37cf0a0b113fd4d623d389 \
-        "https://github.com/jaegertracing/cpp-client/archive/v$JAEGER_VERSION.tar.gz"
+get_src 841916d60fee16fe245b67fe6938ad861ddd3f3ecf0df561d764baeda8739362 \
+        "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
 
 get_src 9915ad1cf0734cc5b357b0d9ea92fec94764b4bf22f4dce185cbd65feda30ec1 \
         "https://github.com/AirisX/nginx_cookie_flag_module/archive/v$COOKIE_FLAG_VERSION.tar.gz"
@@ -168,6 +169,9 @@ get_src 92fd006d5ca3b3266847d33410eb280122a7f6c06334715f87acce064188a02e \
 
 get_src eaf84f58b43289c1c3e0442ada9ed40406357f203adc96e2091638080cb8d361 \
         "https://github.com/openresty/lua-resty-lock/archive/v0.07.tar.gz"
+
+get_src 3917d506e2d692088f7b4035c589cc32634de4ea66e40fc51259fbae43c9258d \
+        "https://github.com/hamishforbes/lua-resty-iputils/archive/v0.3.0.tar.gz"
 
 get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
         "http://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz"
@@ -189,6 +193,7 @@ if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
 
   export LUAJIT_LIB=/usr/local/lib
   export LUAJIT_INC=/usr/local/include/luajit-2.1
+  export LUA_LIB_DIR="$LUAJIT_LIB/lua"
 fi
 
 cd "$BUILD_PATH/lua-resty-core-0.1.14rc1"
@@ -200,6 +205,9 @@ make install
 cd "$BUILD_PATH/lua-resty-lock-0.07"
 make install
 
+# build and install lua-resty-waf with dependencies
+/install_lua_resty_waf.sh
+
 # build opentracing lib
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
 mkdir .build
@@ -209,7 +217,7 @@ make
 make install
 
 # build zipkin lib
-cd "$BUILD_PATH/cpp-client-$JAEGER_VERSION"
+cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
 sed -i 's/-Werror//' CMakeLists.txt
 mkdir .build
 cd .build
