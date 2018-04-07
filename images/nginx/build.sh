@@ -204,31 +204,32 @@ if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   export LUAJIT_LIB=/usr/local/lib
   export LUAJIT_INC=/usr/local/include/luajit-2.1
   export LUA_LIB_DIR="$LUAJIT_LIB/lua"
+
+  cd "$BUILD_PATH/lua-resty-core-0.1.14rc1"
+  make install
+
+  cd "$BUILD_PATH/lua-resty-lrucache-0.07"
+  make install
+
+  cd "$BUILD_PATH/lua-resty-lock-0.07"
+  make install
+
+  cd "$BUILD_PATH/lua-resty-iputils-0.3.0"
+  make install
+
+  cd "$BUILD_PATH/lua-resty-upload-0.10"
+  make install
+
+  cd "$BUILD_PATH/lua-resty-dns-0.21rc2"
+  make install
+
+  cd "$BUILD_PATH/lua-resty-string-0.11rc1"
+  make install
+
+  # build and install lua-resty-waf with dependencies
+  /install_lua_resty_waf.sh
+
 fi
-
-cd "$BUILD_PATH/lua-resty-core-0.1.14rc1"
-make install
-
-cd "$BUILD_PATH/lua-resty-lrucache-0.07"
-make install
-
-cd "$BUILD_PATH/lua-resty-lock-0.07"
-make install
-
-cd "$BUILD_PATH/lua-resty-iputils-0.3.0"
-make install
-
-cd "$BUILD_PATH/lua-resty-upload-0.10"
-make install
-
-cd "$BUILD_PATH/lua-resty-dns-0.21rc2"
-make install
-
-cd "$BUILD_PATH/lua-resty-string-0.11rc1"
-make install
-
-# build and install lua-resty-waf with dependencies
-/install_lua_resty_waf.sh
 
 # build opentracing lib
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
