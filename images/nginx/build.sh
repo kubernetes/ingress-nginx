@@ -86,6 +86,7 @@ clean-install \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
   lua-cjson \
   python \
+  luarocks \
   || exit 1
 
 ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
@@ -173,6 +174,15 @@ get_src eaf84f58b43289c1c3e0442ada9ed40406357f203adc96e2091638080cb8d361 \
 get_src 3917d506e2d692088f7b4035c589cc32634de4ea66e40fc51259fbae43c9258d \
         "https://github.com/hamishforbes/lua-resty-iputils/archive/v0.3.0.tar.gz"
 
+get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
+        "https://github.com/openresty/lua-resty-upload/archive/v0.10.tar.gz"
+
+get_src feacc662fd7724741c2b3277b2d27b5ab2821bdb28b499d063dbd23414447249 \
+        "https://github.com/openresty/lua-resty-dns/archive/v0.21rc2.tar.gz"
+
+get_src 30a68f1828ed6a53ee6ed062132ea914201076058b1d126ea90ff8e55df09daf \
+        "https://github.com/openresty/lua-resty-string/archive/v0.11rc1.tar.gz"
+
 get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
         "http://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz"
 
@@ -203,6 +213,18 @@ cd "$BUILD_PATH/lua-resty-lrucache-0.07"
 make install
 
 cd "$BUILD_PATH/lua-resty-lock-0.07"
+make install
+
+cd "$BUILD_PATH/lua-resty-iputils-0.3.0"
+make install
+
+cd "$BUILD_PATH/lua-resty-upload-0.10"
+make install
+
+cd "$BUILD_PATH/lua-resty-dns-0.21rc2"
+make install
+
+cd "$BUILD_PATH/lua-resty-string-0.11rc1"
 make install
 
 # build and install lua-resty-waf with dependencies
