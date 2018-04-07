@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2015 The Kubernetes Authors.
+# Copyright 2018 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,15 @@ cd "$BUILD_PATH"
 git clone --recursive --single-branch -b v0.11.1 https://github.com/p0pr0ck5/lua-resty-waf
 
 cd lua-resty-waf
+
+ARCH=$(uname -m)
+if [[ ${ARCH} != "x86_64" ]]; then
+  # replace CFLAGS
+  sed -i 's/CFLAGS = -msse2 -msse3 -msse4.1 -O3/CFLAGS = -O3/' lua-aho-corasick/Makefile
+  # export PCRE lib directory
+  export PCRE_LIBDIR=$(find /usr/lib -name libpcre*.so* | head -1 | xargs dirname)
+fi
+
 make
 make install-check
 
@@ -46,7 +55,11 @@ git clone -b master --single-branch https://github.com/bungle/lua-resty-random.g
 cd "$BUILD_PATH/lua-resty-cookie"
 make install
 
-luarocks install lrexlib-pcre 2.7.2-1
+if [[ ${ARCH} != "x86_64" ]]; then
+  luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_LIBDIR}
+else
+  luarocks install lrexlib-pcre 2.7.2-1
+fi
 
 # and do the rest of what "make instal" does
 cd "$BUILD_PATH/lua-resty-waf"
