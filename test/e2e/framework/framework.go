@@ -177,8 +177,8 @@ func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) err
 }
 
 // NginxLogs returns the logs of the nginx ingress controller pod running
-func (f *Framework) NginxLogs() (string, error) {
-	l, err := f.KubeClientSet.CoreV1().Pods("ingress-nginx").List(metav1.ListOptions{
+func NginxLogs(c kubernetes.Interface) (string, error) {
+	l, err := c.CoreV1().Pods("ingress-nginx").List(metav1.ListOptions{
 		LabelSelector: "app=ingress-nginx",
 	})
 	if err != nil {
@@ -193,7 +193,7 @@ func (f *Framework) NginxLogs() (string, error) {
 		if strings.HasPrefix(pod.GetName(), "nginx-ingress-controller") &&
 			len(pod.Status.ContainerStatuses) > 0 &&
 			pod.Status.ContainerStatuses[0].State.Running != nil {
-			return f.Logs(&pod)
+			return Logs(&pod)
 		}
 	}
 

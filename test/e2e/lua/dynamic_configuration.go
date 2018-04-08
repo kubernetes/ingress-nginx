@@ -64,7 +64,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-		log, err := f.NginxLogs()
+		log, err := framework.NginxLogs(f.KubeClientSet)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(ContainSubstring("could not dynamically reconfigure"))
 		Expect(log).To(ContainSubstring("first sync of Nginx configuration"))
@@ -94,7 +94,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			time.Sleep(5 * time.Second)
-			log, err := f.NginxLogs()
+			log, err := framework.NginxLogs(f.KubeClientSet)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(log).ToNot(BeEmpty())
 			index := strings.Index(log, "id=endpoints_only_changes")
@@ -120,7 +120,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			time.Sleep(5 * time.Second)
-			log, err := f.NginxLogs()
+			log, err := framework.NginxLogs(f.KubeClientSet)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(log).ToNot(BeEmpty())
 			index := strings.Index(log, fmt.Sprintf("reason: 'UPDATE' Ingress %s/foo.com", f.Namespace.Name))
@@ -159,7 +159,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		time.Sleep(5 * time.Second)
-		log, err := f.NginxLogs()
+		log, err := framework.NginxLogs(f.KubeClientSet)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(BeEmpty())
 

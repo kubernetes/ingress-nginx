@@ -105,7 +105,7 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 			})
 		Expect(err).ToNot(HaveOccurred())
 
-		log, err := f.NginxLogs()
+		log, err := framework.NginxLogs(f.KubeClientSet)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(BeEmpty())
 
