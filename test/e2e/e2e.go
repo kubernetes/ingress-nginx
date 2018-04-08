@@ -43,7 +43,15 @@ func RunE2ETests(t *testing.T) {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	gomega.RegisterFailHandler(ginkgo.Fail)
+	gomega.RegisterFailHandler(func(message string, callerSkip ...int) {
+		// Print pod log
+		glog.Errorf("NGINX Ingress controller log:")
+		f := framework.NewDefaultFramework("fail")
+		log, _ := f.NginxLogs()
+		glog.Infof("%v", log)
+
+		ginkgo.Fail(message, callerSkip...)
+	})
 	// Disable skipped tests unless they are explicitly requested.
 	if config.GinkgoConfig.FocusString == "" && config.GinkgoConfig.SkipString == "" {
 		config.GinkgoConfig.SkipString = `\[Flaky\]|\[Feature:.+\]`
