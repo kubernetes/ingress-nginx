@@ -66,6 +66,8 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/lua-resty-waf](#lua-resty-waf)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
 
 **Note:** all the values must be a string. In case of booleans or number it must be quoted.
 
@@ -463,3 +465,14 @@ In some scenarios could be required to disable NGINX access logs. To enable this
 ```yaml
 nginx.ingress.kubernetes.io/enable-access-log: "false"
 ```
+
+### Lua Resty WAF
+
+Using `lua-resty-waf-*` annotations we can enable and control [lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf) per location.
+Following configuration will enable WAF for the paths defined in the corresponding ingress:
+
+```yaml
+nginx.ingress.kubernetes.io/lua-resty-waf: "true"
+```
+
+In order to run it in debugging mode you can set `nginx.ingress.kubernetes.io/lua-resty-waf-debug` to `"true"` in addition to the above configuration.

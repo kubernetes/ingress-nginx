@@ -457,6 +457,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.Connection = anns.Connection
 						loc.Logs = anns.Logs
 						loc.GRPC = anns.GRPC
+						loc.LuaRestyWAF = anns.LuaRestyWAF
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -492,6 +493,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						Connection:           anns.Connection,
 						Logs:                 anns.Logs,
 						GRPC:                 anns.GRPC,
+						LuaRestyWAF:          anns.LuaRestyWAF,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -928,6 +930,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.Whitelist = anns.Whitelist
 					defLoc.Denied = anns.Denied
 					defLoc.GRPC = anns.GRPC
+					defLoc.LuaRestyWAF = anns.LuaRestyWAF
 				}
 			}
 		}

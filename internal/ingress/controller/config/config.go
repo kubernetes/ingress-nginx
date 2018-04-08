@@ -503,6 +503,10 @@ type Configuration struct {
 	// NoAuthLocations is a comma-separated list of locations that
 	// should not get authenticated
 	NoAuthLocations string `json:"no-auth-locations"`
+
+	// DisableLuaRestyWAF disables lua-resty-waf globally regardless
+	// of whether there's an ingress that has enabled the WAF using annotation
+	DisableLuaRestyWAF bool `json:"disable-lua-resty-waf"`
 }
 
 // NewDefault returns the default nginx configuration

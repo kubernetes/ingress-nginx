@@ -119,29 +119,30 @@ var (
 			}
 			return true
 		},
-		"buildLocation":            buildLocation,
-		"buildAuthLocation":        buildAuthLocation,
-		"buildAuthResponseHeaders": buildAuthResponseHeaders,
-		"buildLoadBalancingConfig": buildLoadBalancingConfig,
-		"buildProxyPass":           buildProxyPass,
-		"filterRateLimits":         filterRateLimits,
-		"buildRateLimitZones":      buildRateLimitZones,
-		"buildRateLimit":           buildRateLimit,
-		"buildResolvers":           buildResolvers,
-		"buildUpstreamName":        buildUpstreamName,
-		"isLocationInLocationList": isLocationInLocationList,
-		"isLocationAllowed":        isLocationAllowed,
-		"buildLogFormatUpstream":   buildLogFormatUpstream,
-		"buildDenyVariable":        buildDenyVariable,
-		"getenv":                   os.Getenv,
-		"contains":                 strings.Contains,
-		"hasPrefix":                strings.HasPrefix,
-		"hasSuffix":                strings.HasSuffix,
-		"toUpper":                  strings.ToUpper,
-		"toLower":                  strings.ToLower,
-		"formatIP":                 formatIP,
-		"buildNextUpstream":        buildNextUpstream,
-		"getIngressInformation":    getIngressInformation,
+		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
+		"buildLocation":              buildLocation,
+		"buildAuthLocation":          buildAuthLocation,
+		"buildAuthResponseHeaders":   buildAuthResponseHeaders,
+		"buildLoadBalancingConfig":   buildLoadBalancingConfig,
+		"buildProxyPass":             buildProxyPass,
+		"filterRateLimits":           filterRateLimits,
+		"buildRateLimitZones":        buildRateLimitZones,
+		"buildRateLimit":             buildRateLimit,
+		"buildResolvers":             buildResolvers,
+		"buildUpstreamName":          buildUpstreamName,
+		"isLocationInLocationList":   isLocationInLocationList,
+		"isLocationAllowed":          isLocationAllowed,
+		"buildLogFormatUpstream":     buildLogFormatUpstream,
+		"buildDenyVariable":          buildDenyVariable,
+		"getenv":                     os.Getenv,
+		"contains":                   strings.Contains,
+		"hasPrefix":                  strings.HasPrefix,
+		"hasSuffix":                  strings.HasSuffix,
+		"toUpper":                    strings.ToUpper,
+		"toLower":                    strings.ToLower,
+		"formatIP":                   formatIP,
+		"buildNextUpstream":          buildNextUpstream,
+		"getIngressInformation":      getIngressInformation,
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
@@ -165,6 +166,47 @@ func formatIP(input string) string {
 		return input
 	}
 	return fmt.Sprintf("[%s]", input)
+}
+
+func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool, disableLuaRestyWAF bool) string {
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		glog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return ""
+	}
+
+	out := []string{}
+
+	if dynamicConfigurationEnabled {
+		out = append(out,
+			"lua_shared_dict configuration_data 5M",
+			"lua_shared_dict round_robin_state 1M",
+			"lua_shared_dict locks 512k",
+			"lua_shared_dict balancer_ewma 1M",
+			"lua_shared_dict balancer_ewma_last_touched_at 1M",
+		)
+	}
+
+	if !disableLuaRestyWAF {
+		luaRestyWAFEnabled := func() bool {
+			for _, server := range servers {
+				for _, location := range server.Locations {
+					if location.LuaRestyWAF.Enabled {
+						return true
+					}
+				}
+			}
+			return false
+		}()
+		if luaRestyWAFEnabled {
+			out = append(out, "lua_shared_dict waf_storage 64M")
+		}
+	}
+
+	if len(out) == 0 {
+		return ""
+	}
+	return strings.Join(out, ";\n\r") + ";"
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file

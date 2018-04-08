@@ -30,6 +30,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
@@ -268,6 +269,8 @@ type Location struct {
 	// GRPC indicates if the kubernetes service exposes a gRPC interface
 	// By default this is false
 	GRPC bool `json:"grpc"`
+	// LuaRestyWAF contains parameters to configure lua-resty-waf
+	LuaRestyWAF luarestywaf.Config `json:"luaRestyWAF"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
