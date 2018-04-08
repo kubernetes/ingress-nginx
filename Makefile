@@ -21,7 +21,7 @@ BUILDTAGS=
 TAG?=0.12.0
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
-DOCKER?=gcloud docker --
+DOCKER?= docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 

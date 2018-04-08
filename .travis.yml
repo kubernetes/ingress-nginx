@@ -48,10 +48,12 @@ jobs:
     - test/e2e/up.sh
     script:
     - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
+    - make code-generator
     - make cover
   - stage: e2e
     before_script:
     - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
+    - make code-generator
     - make e2e-image
     - test/e2e/up.sh
     - test/e2e/wait-for-nginx.sh
