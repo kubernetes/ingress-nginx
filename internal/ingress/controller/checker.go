@@ -42,6 +42,17 @@ func (n *NGINXController) Check(_ *http.Request) error {
 		return fmt.Errorf("ingress controller is not healthy")
 	}
 
+	if n.cfg.DynamicConfigurationEnabled {
+		res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v/is-dynamic-lb-initialized", n.cfg.ListenPorts.Status))
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
+		if res.StatusCode != 200 {
+			return fmt.Errorf("dynamic load balancer not started")
+		}
+	}
+
 	// check the nginx master process is running
 	fs, err := proc.NewFS("/proc")
 	if err != nil {
