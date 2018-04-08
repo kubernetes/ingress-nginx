@@ -487,8 +487,30 @@ http {
         set $proxy_upstream_name "-";
 
         location {{ $healthzURI }} {
+            {{ if $cfg.EnableOpentracing }}
+            opentracing off;
+            {{ end }}
             access_log off;
             return 200;
+        }
+
+        location /is-dynamic-lb-initialized {
+            {{ if $cfg.EnableOpentracing }}
+            opentracing off;
+            {{ end }}
+            access_log off;
+
+            content_by_lua_block {
+                local configuration = require("configuration")
+                local backend_data = configuration.get_backends_data()
+                if not backend_data then
+                    ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+                    return
+                end
+
+                ngx.say("OK")
+                ngx.exit(ngx.HTTP_OK)
+            }
         }
 
         location /nginx_status {
