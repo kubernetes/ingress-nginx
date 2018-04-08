@@ -32,6 +32,7 @@ import (
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 )
@@ -295,6 +296,46 @@ var (
 			false},
 	}
 )
+
+func TestBuildLuaSharedDictionaries(t *testing.T) {
+	servers := []*ingress.Server{
+		{
+			Hostname:  "foo.bar",
+			Locations: []*ingress.Location{{Path: "/", LuaRestyWAF: luarestywaf.Config{}}},
+		},
+		{
+			Hostname:  "another.host",
+			Locations: []*ingress.Location{{Path: "/", LuaRestyWAF: luarestywaf.Config{}}},
+		},
+	}
+
+	config := buildLuaSharedDictionaries(servers, false, false)
+	if config != "" {
+		t.Errorf("expected to not configure any lua shared dictionary, but generated %s", config)
+	}
+	config = buildLuaSharedDictionaries(servers, true, false)
+	if !strings.Contains(config, "lua_shared_dict configuration_data") {
+		t.Errorf("expected to include 'configuration_data' but got %s", config)
+	}
+	if strings.Contains(config, "waf_storage") {
+		t.Errorf("expected to not include 'waf_storage' but got %s", config)
+	}
+
+	servers[1].Locations[0].LuaRestyWAF = luarestywaf.Config{Enabled: true}
+	config = buildLuaSharedDictionaries(servers, false, false)
+	if !strings.Contains(config, "lua_shared_dict waf_storage") {
+		t.Errorf("expected to configure 'waf_storage', but got %s", config)
+	}
+	config = buildLuaSharedDictionaries(servers, true, false)
+	if !strings.Contains(config, "lua_shared_dict waf_storage") {
+		t.Errorf("expected to configure 'waf_storage', but got %s", config)
+	}
+
+	config = buildLuaSharedDictionaries(servers, false, true)
+	if config != "" {
+		t.Errorf("expected to not configure any lua shared dictionary, but generated %s", config)
+	}
+}
 
 func TestFormatIP(t *testing.T) {
 	cases := map[string]struct {

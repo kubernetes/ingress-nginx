@@ -36,20 +36,19 @@ events {
 }
 
 http {
-    {{ if $all.DynamicConfigurationEnabled }}
     lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;;";
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
 
-    lua_shared_dict configuration_data 5M;
-    lua_shared_dict round_robin_state 1M;
-    lua_shared_dict locks 512k;
-    lua_shared_dict balancer_ewma 1M;
-    lua_shared_dict balancer_ewma_last_touched_at 1M;
+    {{ buildLuaSharedDictionaries $servers $all.DynamicConfigurationEnabled $all.Cfg.DisableLuaRestyWAF }}
 
     init_by_lua_block {
         require("resty.core")
         collectgarbage("collect")
 
+        local lua_resty_waf = require("resty.waf")
+        lua_resty_waf.init()
+
+        {{ if $all.DynamicConfigurationEnabled }}
         -- init modules
         local ok, res
 
@@ -66,8 +65,10 @@ http {
         else
           balancer = res
         end
+        {{ end }}
     }
 
+    {{ if $all.DynamicConfigurationEnabled }}
     init_worker_by_lua_block {
         balancer.init_worker()
     }
@@ -815,6 +816,48 @@ stream {
         {{ end }}
 
         location {{ $path }} {
+            {{ if (and (not $all.Cfg.DisableLuaRestyWAF) $location.LuaRestyWAF.Enabled) }}
+            access_by_lua_block {
+                local lua_resty_waf = require("resty.waf")
+                local waf = lua_resty_waf:new()
+
+                waf:set_option("mode", "ACTIVE")
+                waf:set_option("storage_zone", "waf_storage")
+                waf:set_option("allowed_content_types", { "text/html", "text/json", "application/json" })
+                waf:set_option("event_log_level", ngx.WARN)
+
+                {{ if $location.LuaRestyWAF.Debug }}
+                waf:set_option("debug", true)
+                waf:set_option("event_log_request_arguments", true)
+                waf:set_option("event_log_request_body", true)
+                waf:set_option("event_log_request_headers", true)
+                waf:set_option("req_tid_header", true)
+                waf:set_option("res_tid_header", true)
+                {{ end }}
+
+                waf:exec()
+            }
+            header_filter_by_lua_block {
+                local lua_resty_waf = require "resty.waf"
+                local waf = lua_resty_waf:new()
+                waf:exec()
+            }
+            body_filter_by_lua_block {
+                local lua_resty_waf = require "resty.waf"
+                local waf = lua_resty_waf:new()
+                waf:exec()
+            }
+            {{ end }}
+            log_by_lua_block {
+                {{ if (and (not $all.Cfg.DisableLuaRestyWAF) $location.LuaRestyWAF.Enabled) }}
+                local lua_resty_waf = require "resty.waf"
+                local waf = lua_resty_waf:new()
+                waf:exec()
+                {{ end }}
+                {{ if $all.DynamicConfigurationEnabled}}
+                balancer.call()
+                {{ end }}
+            }
             {{ if (and (not (empty $server.SSLCertificate)) $all.Cfg.HSTS) }}
             if ($scheme = https) {
             more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";
@@ -1009,11 +1052,6 @@ stream {
             {{ end }}
 
             {{ if not (empty $location.Backend) }}
-            {{ if $all.DynamicConfigurationEnabled}}
-            log_by_lua_block {
-                balancer.call()
-            }
-            {{ end }}
             {{ buildProxyPass $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
