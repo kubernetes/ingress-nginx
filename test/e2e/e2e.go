@@ -24,6 +24,7 @@ import (
 	"github.com/onsi/ginkgo/config"
 	"github.com/onsi/gomega"
 	"k8s.io/apiserver/pkg/util/logs"
+	"k8s.io/client-go/kubernetes"
 	// required
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
@@ -43,7 +44,17 @@ func RunE2ETests(t *testing.T) {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	gomega.RegisterFailHandler(ginkgo.Fail)
+	gomega.RegisterFailHandler(func(message string, callerSkip ...int) {
+		// Print pod log
+		glog.Errorf("NGINX Ingress controller log:")
+		kubeConfig, err := framework.LoadConfig(framework.TestContext.KubeConfig, framework.TestContext.KubeContext)
+		c, err := kubernetes.NewForConfig(kubeConfig)
+		if err == nil {
+			log, _ := framework.NginxLogs(c)
+			glog.Infof("%v", log)
+		}
+		ginkgo.Fail(message, callerSkip...)
+	})
 	// Disable skipped tests unless they are explicitly requested.
 	if config.GinkgoConfig.FocusString == "" && config.GinkgoConfig.SkipString == "" {
 		config.GinkgoConfig.SkipString = `\[Flaky\]|\[Feature:.+\]`
