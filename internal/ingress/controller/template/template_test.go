@@ -321,7 +321,7 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 		t.Errorf("expected to not include 'waf_storage' but got %s", config)
 	}
 
-	servers[1].Locations[0].LuaRestyWAF = luarestywaf.Config{Enabled: true}
+	servers[1].Locations[0].LuaRestyWAF = luarestywaf.Config{Mode: "ACTIVE"}
 	config = buildLuaSharedDictionaries(servers, false, false)
 	if !strings.Contains(config, "lua_shared_dict waf_storage") {
 		t.Errorf("expected to configure 'waf_storage', but got %s", config)

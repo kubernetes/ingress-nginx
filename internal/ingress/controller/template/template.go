@@ -119,6 +119,7 @@ var (
 			}
 			return true
 		},
+		"shouldConfigureLuaRestyWAF": shouldConfigureLuaRestyWAF,
 		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
 		"buildLocation":              buildLocation,
 		"buildAuthLocation":          buildAuthLocation,
@@ -168,6 +169,14 @@ func formatIP(input string) string {
 	return fmt.Sprintf("[%s]", input)
 }
 
+func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
+	if !disableLuaRestyWAF && len(mode) > 0 {
+		return true
+	}
+
+	return false
+}
+
 func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool, disableLuaRestyWAF bool) string {
 	servers, ok := s.([]*ingress.Server)
 	if !ok {
@@ -191,7 +200,7 @@ func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool,
 		luaRestyWAFEnabled := func() bool {
 			for _, server := range servers {
 				for _, location := range server.Locations {
-					if location.LuaRestyWAF.Enabled {
+					if len(location.LuaRestyWAF.Mode) > 0 {
 						return true
 					}
 				}
