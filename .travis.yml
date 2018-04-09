@@ -59,7 +59,7 @@ jobs:
     - make e2e-test
   # split builds to avoid job timeouts
   - stage: publish amd64
-    if: type = api AND branch = master AND repo = kubernetes/ingress-nginx
+    if: type = push AND branch = master AND repo = Shopify/ingress
     script:
     - travis_wait ${TRAVIS_TIMEOUT} .travis/publish.sh amd64
   - stage: publish arm

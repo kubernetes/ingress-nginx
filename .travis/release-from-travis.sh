@@ -33,7 +33,7 @@ body=$(cat <<EOF
 {
   "request": {
     "branch": "master",
-		"message": "Publishing image for component $2 to quay.io",
+		"message": "Publishing image for component $2 to Docker Hub",
     "config": {
       "merge_mode": "deep_merge",
 			"env": {
