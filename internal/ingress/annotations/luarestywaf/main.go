@@ -23,12 +23,15 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+var luaRestyWAFModes = map[string]bool{"ACTIVE": true, "INACTIVE": true, "SIMULATE": true}
+
 // Config returns lua-resty-waf configuration for an Ingress rule
 type Config struct {
-	Enabled            bool     `json:"enabled"`
+	Mode               string   `json:"mode"`
 	Debug              bool     `json:"debug"`
 	IgnoredRuleSets    []string `json: "ignored-rulesets"`
 	ExtraRulesetString string   `json: "extra-ruleset-string"`
@@ -42,7 +45,7 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	if e1 == nil || e2 == nil {
 		return false
 	}
-	if e1.Enabled != e2.Enabled {
+	if e1.Mode != e2.Mode {
 		return false
 	}
 	if e1.Debug != e2.Debug {
@@ -71,9 +74,14 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // used to indicate if the location/s contains a fragment of
 // configuration to be included inside the paths of the rules
 func (a luarestywaf) Parse(ing *extensions.Ingress) (interface{}, error) {
-	enabled, err := parser.GetBoolAnnotation("lua-resty-waf", ing)
+	mode, err := parser.GetStringAnnotation("lua-resty-waf", ing)
 	if err != nil {
 		return &Config{}, err
+	}
+
+	mode = strings.ToUpper(mode)
+	if _, ok := luaRestyWAFModes[mode]; !ok {
+		return &Config{}, errors.NewInvalidAnnotationContent("lua-resty-waf", mode)
 	}
 
 	debug, _ := parser.GetBoolAnnotation("lua-resty-waf-debug", ing)
@@ -88,7 +96,7 @@ func (a luarestywaf) Parse(ing *extensions.Ingress) (interface{}, error) {
 	extraRulesetString, _ := parser.GetStringAnnotation("lua-resty-waf-extra-rules", ing)
 
 	return &Config{
-		Enabled:            enabled,
+		Mode:               mode,
 		Debug:              debug,
 		IgnoredRuleSets:    ignoredRuleSets,
 		ExtraRulesetString: extraRulesetString,

@@ -816,12 +816,12 @@ stream {
         {{ end }}
 
         location {{ $path }} {
-            {{ if (and (not $all.Cfg.DisableLuaRestyWAF) $location.LuaRestyWAF.Enabled) }}
+            {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
             access_by_lua_block {
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 
-                waf:set_option("mode", "ACTIVE")
+                waf:set_option("mode", "{{ $location.LuaRestyWAF.Mode }}")
                 waf:set_option("storage_zone", "waf_storage")
                 waf:set_option("allowed_content_types", { "text/html", "text/json", "application/json" })
                 waf:set_option("event_log_level", ngx.WARN)
@@ -857,7 +857,7 @@ stream {
             }
             {{ end }}
             log_by_lua_block {
-                {{ if (and (not $all.Cfg.DisableLuaRestyWAF) $location.LuaRestyWAF.Enabled) }}
+                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require "resty.waf"
                 local waf = lua_resty_waf:new()
                 waf:exec()
