@@ -69,6 +69,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/lua-resty-waf](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
+|[nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules](#lua-resty-waf)|string|
 
 **Note:** all the values must be a string. In case of booleans or number it must be quoted.
 
@@ -486,3 +487,13 @@ nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets: "41000_sqli, 42000_xs
 ```
 
 will ignore the two mentioned rulesets.
+
+It is also possible to configure custom WAF rules per ingress using `nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules` annotation. For an example the following snippet will
+configure a WAF rule to deny requests with query string value that contains word `foo`:
+
+
+```yaml
+nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules: '[=[ { "access": [ { "actions": { "disrupt" : "DENY" }, "id": 10001, "msg": "my custom rule", "operator": "STR_CONTAINS", "pattern": "foo", "vars": [ { "parse": [ "values", 1 ], "type": "REQUEST_ARGS" } ] } ], "body_filter": [], "header_filter":[] } ]=]'
+```
+
+For details on how to write WAF rules, please refer to https://github.com/p0pr0ck5/lua-resty-waf.
