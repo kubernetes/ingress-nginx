@@ -43,18 +43,21 @@ func TestParse(t *testing.T) {
 		{nil, &Config{}},
 		{map[string]string{}, &Config{}},
 
-		{map[string]string{luaRestyWAFAnnotation: "true"}, &Config{Enabled: true, Debug: false, IgnoredRuleSets: []string{}}},
-		{map[string]string{luaRestyWAFDebugAnnotation: "true"}, &Config{Enabled: false, Debug: false}},
+		{map[string]string{luaRestyWAFAnnotation: "active"}, &Config{Mode: "ACTIVE", Debug: false, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFDebugAnnotation: "true"}, &Config{Debug: false}},
 
-		{map[string]string{luaRestyWAFAnnotation: "true", luaRestyWAFDebugAnnotation: "true"}, &Config{Enabled: true, Debug: true, IgnoredRuleSets: []string{}}},
-		{map[string]string{luaRestyWAFAnnotation: "true", luaRestyWAFDebugAnnotation: "false"}, &Config{Enabled: true, Debug: false, IgnoredRuleSets: []string{}}},
-		{map[string]string{luaRestyWAFAnnotation: "false", luaRestyWAFDebugAnnotation: "true"}, &Config{Enabled: false, Debug: true, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "ACTIVE", Debug: true, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFDebugAnnotation: "false"}, &Config{Mode: "ACTIVE", Debug: false, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "inactive", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "INACTIVE", Debug: true, IgnoredRuleSets: []string{}}},
 
 		{map[string]string{
-			luaRestyWAFAnnotation:                "true",
+			luaRestyWAFAnnotation:                "active",
 			luaRestyWAFDebugAnnotation:           "true",
 			luaRestyWAFIgnoredRuleSetsAnnotation: "ruleset1, ruleset2 ruleset3,   another.ruleset"},
-			&Config{Enabled: true, Debug: true, IgnoredRuleSets: []string{"ruleset1", "ruleset2", "ruleset3", "another.ruleset"}}},
+			&Config{Mode: "ACTIVE", Debug: true, IgnoredRuleSets: []string{"ruleset1", "ruleset2", "ruleset3", "another.ruleset"}}},
+
+		{map[string]string{luaRestyWAFAnnotation: "siMulate", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "SIMULATE", Debug: true, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "siMulateX", luaRestyWAFDebugAnnotation: "true"}, &Config{Debug: false}},
 	}
 
 	ing := &extensions.Ingress{

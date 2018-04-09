@@ -19,6 +19,7 @@ package annotations
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -42,7 +43,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 	Context("when lua-resty-waf is enabled", func() {
 		It("should return 403 for a malicious request that matches a default WAF rule and 200 for other requests", func() {
 			host := "foo"
-			createIngress(f, host, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "true"})
+			createIngress(f, host, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
 
 			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.NginxHTTPURL)
 			resp, _, errs := gorequest.New().
@@ -56,7 +57,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		It("should not apply ignored rulesets", func() {
 			host := "foo"
 			createIngress(f, host, map[string]string{
-				"nginx.ingress.kubernetes.io/lua-resty-waf":                 "true",
+				"nginx.ingress.kubernetes.io/lua-resty-waf":                 "active",
 				"nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets": "41000_sqli, 42000_xss"})
 
 			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.NginxHTTPURL)
@@ -71,20 +72,20 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		It("should apply configured extra rules", func() {
 			host := "foo"
 			createIngress(f, host, map[string]string{
-				"nginx.ingress.kubernetes.io/lua-resty-waf": "true",
+				"nginx.ingress.kubernetes.io/lua-resty-waf": "active",
 				"nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules": `[=[
-					{ "access": [
-							{ "actions": { "disrupt" : "DENY" },
-							"id": 10001,
-							"msg": "my custom rule",
-							"operator": "STR_CONTAINS",
-							"pattern": "foo",
-							"vars": [ { "parse": [ "values", 1 ], "type": "REQUEST_ARGS" } ] }
-						],
-						"body_filter": [],
-						"header_filter":[]
-					}
-				]=]`,
+						{ "access": [
+								{ "actions": { "disrupt" : "DENY" },
+								"id": 10001,
+								"msg": "my custom rule",
+								"operator": "STR_CONTAINS",
+								"pattern": "foo",
+								"vars": [ { "parse": [ "values", 1 ], "type": "REQUEST_ARGS" } ] }
+							],
+							"body_filter": [],
+							"header_filter":[]
+						}
+					]=]`,
 			})
 
 			url := fmt.Sprintf("%s?msg=my-message", f.NginxHTTPURL)
@@ -119,6 +120,24 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 
 			Expect(len(errs)).Should(Equal(0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		})
+		It("should run in simulate mode", func() {
+			host := "foo"
+			createIngress(f, host, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "simulate"})
+
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.NginxHTTPURL)
+			resp, _, errs := gorequest.New().
+				Get(url).
+				Set("Host", host).
+				End()
+
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			time.Sleep(5 * time.Second)
+			log, err := f.NginxLogs()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(log).To(ContainSubstring("Request score greater than score threshold"))
 		})
 	})
 })
