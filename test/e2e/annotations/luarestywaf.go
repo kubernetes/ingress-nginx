@@ -53,6 +53,21 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			Expect(len(errs)).Should(Equal(0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
 		})
+		It("should not apply ignored rulesets", func() {
+			host := "foo"
+			createIngress(f, host, map[string]string{
+				"nginx.ingress.kubernetes.io/lua-resty-waf":                 "true",
+				"nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets": "41000_sqli, 42000_xss"})
+
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.NginxHTTPURL)
+			resp, _, errs := gorequest.New().
+				Get(url).
+				Set("Host", host).
+				End()
+
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		})
 	})
 
 	Context("when lua-resty-waf is not enabled", func() {

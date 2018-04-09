@@ -68,6 +68,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
 
 **Note:** all the values must be a string. In case of booleans or number it must be quoted.
 
@@ -476,3 +477,12 @@ nginx.ingress.kubernetes.io/lua-resty-waf: "true"
 ```
 
 In order to run it in debugging mode you can set `nginx.ingress.kubernetes.io/lua-resty-waf-debug` to `"true"` in addition to the above configuration.
+
+`lua-resty-waf` comes with predefined set of rules(https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules) that covers ModSecurity CRS.
+You can use `nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets` to ignore subset of those rulesets. For an example:
+
+```yaml
+nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets: "41000_sqli, 42000_xss"
+```
+
+will ignore the two mentioned rulesets.
