@@ -839,6 +839,10 @@ stream {
                 waf:set_option("ignore_ruleset", "{{ $ruleset }}")
                 {{ end }}
 
+                {{ if gt (len $location.LuaRestyWAF.ExtraRulesetString) 0 }}
+                waf:set_option("add_ruleset_string", "10000_extra_rules", {{ $location.LuaRestyWAF.ExtraRulesetString }})
+                {{ end }}
+
                 waf:exec()
             }
             header_filter_by_lua_block {
