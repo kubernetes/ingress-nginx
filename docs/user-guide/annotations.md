@@ -66,7 +66,7 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/lua-resty-waf](#lua-resty-waf)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/lua-resty-waf](#lua-resty-waf)|string|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules](#lua-resty-waf)|string|
@@ -474,10 +474,12 @@ Using `lua-resty-waf-*` annotations we can enable and control [lua-resty-waf](ht
 Following configuration will enable WAF for the paths defined in the corresponding ingress:
 
 ```yaml
-nginx.ingress.kubernetes.io/lua-resty-waf: "true"
+nginx.ingress.kubernetes.io/lua-resty-waf: "active"
 ```
 
 In order to run it in debugging mode you can set `nginx.ingress.kubernetes.io/lua-resty-waf-debug` to `"true"` in addition to the above configuration.
+The other possible values for `nginx.ingress.kubernetes.io/lua-resty-waf` are `inactive` and `simulate`. In `inactive` mode WAF won't do anything, whereas
+in `simulate` mode it will log a warning message if there's a matching WAF rule for given request. This is useful to debug a rule and eliminate possible false positives before fully deploying it.
 
 `lua-resty-waf` comes with predefined set of rules(https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules) that covers ModSecurity CRS.
 You can use `nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets` to ignore subset of those rulesets. For an example:
