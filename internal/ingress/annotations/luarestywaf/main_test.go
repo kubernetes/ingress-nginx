@@ -29,6 +29,7 @@ import (
 func TestParse(t *testing.T) {
 	luaRestyWAFAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf")
 	luaRestyWAFDebugAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf-debug")
+	luaRestyWAFIgnoredRuleSetsAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf-ignore-rulesets")
 
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
@@ -42,12 +43,18 @@ func TestParse(t *testing.T) {
 		{nil, &Config{}},
 		{map[string]string{}, &Config{}},
 
-		{map[string]string{luaRestyWAFAnnotation: "true"}, &Config{Enabled: true, Debug: false}},
+		{map[string]string{luaRestyWAFAnnotation: "true"}, &Config{Enabled: true, Debug: false, IgnoredRuleSets: []string{}}},
 		{map[string]string{luaRestyWAFDebugAnnotation: "true"}, &Config{Enabled: false, Debug: false}},
 
-		{map[string]string{luaRestyWAFAnnotation: "true", luaRestyWAFDebugAnnotation: "true"}, &Config{Enabled: true, Debug: true}},
-		{map[string]string{luaRestyWAFAnnotation: "true", luaRestyWAFDebugAnnotation: "false"}, &Config{Enabled: true, Debug: false}},
-		{map[string]string{luaRestyWAFAnnotation: "false", luaRestyWAFDebugAnnotation: "true"}, &Config{Enabled: false, Debug: true}},
+		{map[string]string{luaRestyWAFAnnotation: "true", luaRestyWAFDebugAnnotation: "true"}, &Config{Enabled: true, Debug: true, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "true", luaRestyWAFDebugAnnotation: "false"}, &Config{Enabled: true, Debug: false, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "false", luaRestyWAFDebugAnnotation: "true"}, &Config{Enabled: false, Debug: true, IgnoredRuleSets: []string{}}},
+
+		{map[string]string{
+			luaRestyWAFAnnotation:                "true",
+			luaRestyWAFDebugAnnotation:           "true",
+			luaRestyWAFIgnoredRuleSetsAnnotation: "ruleset1, ruleset2 ruleset3,   another.ruleset"},
+			&Config{Enabled: true, Debug: true, IgnoredRuleSets: []string{"ruleset1", "ruleset2", "ruleset3", "another.ruleset"}}},
 	}
 
 	ing := &extensions.Ingress{
