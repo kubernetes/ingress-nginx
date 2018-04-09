@@ -28,9 +28,10 @@ import (
 
 // Config returns lua-resty-waf configuration for an Ingress rule
 type Config struct {
-	Enabled         bool     `json:"enabled"`
-	Debug           bool     `json:"debug"`
-	IgnoredRuleSets []string `json: "ignored-rulesets"`
+	Enabled            bool     `json:"enabled"`
+	Debug              bool     `json:"debug"`
+	IgnoredRuleSets    []string `json: "ignored-rulesets"`
+	ExtraRulesetString string   `json: "extra-ruleset-string"`
 }
 
 // Equal tests for equality between two Config types
@@ -48,6 +49,9 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		return false
 	}
 	if !reflect.DeepEqual(e1.IgnoredRuleSets, e2.IgnoredRuleSets) {
+		return false
+	}
+	if e1.ExtraRulesetString != e2.ExtraRulesetString {
 		return false
 	}
 
@@ -80,9 +84,13 @@ func (a luarestywaf) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return strC == "," || strC == " "
 	})
 
+	// TODO(elvinefendi) maybe validate the ruleset string here
+	extraRulesetString, _ := parser.GetStringAnnotation("lua-resty-waf-extra-rules", ing)
+
 	return &Config{
-		Enabled:         enabled,
-		Debug:           debug,
-		IgnoredRuleSets: ignoredRuleSets,
+		Enabled:            enabled,
+		Debug:              debug,
+		IgnoredRuleSets:    ignoredRuleSets,
+		ExtraRulesetString: extraRulesetString,
 	}, nil
 }

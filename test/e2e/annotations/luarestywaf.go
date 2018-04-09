@@ -68,8 +68,44 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			Expect(len(errs)).Should(Equal(0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		})
-	})
+		It("should apply configured extra rules", func() {
+			host := "foo"
+			createIngress(f, host, map[string]string{
+				"nginx.ingress.kubernetes.io/lua-resty-waf": "true",
+				"nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules": `[=[
+					{ "access": [
+							{ "actions": { "disrupt" : "DENY" },
+							"id": 10001,
+							"msg": "my custom rule",
+							"operator": "STR_CONTAINS",
+							"pattern": "foo",
+							"vars": [ { "parse": [ "values", 1 ], "type": "REQUEST_ARGS" } ] }
+						],
+						"body_filter": [],
+						"header_filter":[]
+					}
+				]=]`,
+			})
 
+			url := fmt.Sprintf("%s?msg=my-message", f.NginxHTTPURL)
+			resp, _, errs := gorequest.New().
+				Get(url).
+				Set("Host", host).
+				End()
+
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			url = fmt.Sprintf("%s?msg=my-foo-message", f.NginxHTTPURL)
+			resp, _, errs = gorequest.New().
+				Get(url).
+				Set("Host", host).
+				End()
+
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
+		})
+	})
 	Context("when lua-resty-waf is not enabled", func() {
 		It("should return 200 even for a malicious request", func() {
 			host := "foo"
