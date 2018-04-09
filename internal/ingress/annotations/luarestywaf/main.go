@@ -17,6 +17,9 @@ limitations under the License.
 package luarestywaf
 
 import (
+	"reflect"
+	"strings"
+
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -25,8 +28,9 @@ import (
 
 // Config returns lua-resty-waf configuration for an Ingress rule
 type Config struct {
-	Enabled bool `json:"enabled"`
-	Debug   bool `json:"debug"`
+	Enabled         bool     `json:"enabled"`
+	Debug           bool     `json:"debug"`
+	IgnoredRuleSets []string `json: "ignored-rulesets"`
 }
 
 // Equal tests for equality between two Config types
@@ -41,6 +45,9 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		return false
 	}
 	if e1.Debug != e2.Debug {
+		return false
+	}
+	if !reflect.DeepEqual(e1.IgnoredRuleSets, e2.IgnoredRuleSets) {
 		return false
 	}
 
@@ -67,8 +74,15 @@ func (a luarestywaf) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	debug, _ := parser.GetBoolAnnotation("lua-resty-waf-debug", ing)
 
+	ignoredRuleSetsStr, _ := parser.GetStringAnnotation("lua-resty-waf-ignore-rulesets", ing)
+	ignoredRuleSets := strings.FieldsFunc(ignoredRuleSetsStr, func(c rune) bool {
+		strC := string(c)
+		return strC == "," || strC == " "
+	})
+
 	return &Config{
-		Enabled: enabled,
-		Debug:   debug,
+		Enabled:         enabled,
+		Debug:           debug,
+		IgnoredRuleSets: ignoredRuleSets,
 	}, nil
 }

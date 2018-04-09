@@ -835,6 +835,10 @@ stream {
                 waf:set_option("res_tid_header", true)
                 {{ end }}
 
+                {{ range $ruleset := $location.LuaRestyWAF.IgnoredRuleSets }}
+                waf:set_option("ignore_ruleset", "{{ $ruleset }}")
+                {{ end }}
+
                 waf:exec()
             }
             header_filter_by_lua_block {
