@@ -7,6 +7,21 @@ function _M.get_backends_data()
   return configuration_data:get("backends")
 end
 
+function _M.new_backends()
+  ngx.req.read_body()
+  local backends = ngx.req.get_body_data()
+
+  if not backends then
+    -- request body might've been wrote to tmp file if body > client_body_buffer_size
+    local file_name = ngx.req.get_body_file()
+    local file = assert(io.open(file_name, "rb"))
+    backends = file:read("*all")
+    file:close()
+  end
+
+  return backends
+end
+
 function _M.call()
   if ngx.var.request_method ~= "POST" and ngx.var.request_method ~= "GET" then
     ngx.status = ngx.HTTP_BAD_REQUEST
@@ -26,11 +41,17 @@ function _M.call()
     return
   end
 
-  ngx.req.read_body()
+  local backends = _M.new_backends()
+  if not backends then
+    ngx.log(ngx.ERR, "dynamic-configuration: POST carries empty response body")
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
 
-  local success, err = configuration_data:set("backends", ngx.req.get_body_data())
+
+  local success, err = configuration_data:set("backends", backends)
   if not success then
-    ngx.log(ngx.ERR, "error while saving configuration: " .. tostring(err))
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end

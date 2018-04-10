@@ -270,7 +270,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		return err
 	}
 
-	err = WaitForPodsReady(kubeClientSet, 60*time.Second, replicas, namespace, metav1.ListOptions{
+	err = WaitForPodsReady(kubeClientSet, 90*time.Second, replicas, namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {
