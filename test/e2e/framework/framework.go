@@ -259,6 +259,76 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 	}
 }
 
+// GetNginxConfigMap gets ingress-nginx's nginx-configuration map
+func (f *Framework) GetNginxConfigMap() (*v1.ConfigMap, error) {
+	if f.KubeClientSet == nil {
+		return nil, fmt.Errorf("KubeClientSet not initialized")
+	}
+
+	config, err := f.KubeClientSet.CoreV1().ConfigMaps("ingress-nginx").Get("nginx-configuration", metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	time.Sleep(1 * time.Second)
+	return config, err
+}
+
+// GetNginxConfigMapData gets ingress-nginx's nginx-configuration map's data
+func (f *Framework) GetNginxConfigMapData() (map[string]string, error) {
+	config, err := f.GetNginxConfigMap()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if config == nil {
+		return nil, fmt.Errorf("Unable to get nginx-configuration configMap")
+	}
+
+	if config.Data == nil {
+		config.Data = map[string]string{}
+	}
+
+	return config.Data, err
+}
+
+// SetNginxConfigMapData sets ingress-nginx's nginx-configuration configMap data
+func (f *Framework) SetNginxConfigMapData(cmData map[string]string) error {
+	// Needs to do a Get and Set, Update will not take just the Data field
+	// or a configMap that is not the very last revision
+	config, err := f.GetNginxConfigMap()
+	if err != nil {
+		return err
+	}
+	if config == nil {
+		return fmt.Errorf("Unable to get nginx-configuration configMap")
+	}
+
+	config.Data = cmData
+
+	_, err = f.KubeClientSet.CoreV1().ConfigMaps("ingress-nginx").Update(config)
+	if err != nil {
+		return err
+	}
+
+	time.Sleep(1 * time.Second)
+
+	return err
+}
+
+// UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-configuration map data
+func (f *Framework) UpdateNginxConfigMapData(key string, value string) error {
+	config, err := f.GetNginxConfigMapData()
+	if err != nil {
+		return err
+	}
+
+	config[key] = value
+
+	return f.SetNginxConfigMapData(config)
+}
+
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
 func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1beta1.Deployment) error) error {
 	deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
