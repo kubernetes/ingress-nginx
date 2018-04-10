@@ -111,6 +111,53 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
 		})
 
+		It("should handle large scale endpoints changes", func() {
+			resp, _, errs := gorequest.New().
+				Get(fmt.Sprintf("%s?id=endpoints_only_changes", f.NginxHTTPURL)).
+				Set("Host", "foo.com").
+				End()
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Update client-body-buffer-size to 1k...
+			cm, getErr := f.KubeClientSet.CoreV1().ConfigMaps("ingress-nginx").Get("nginx-configuration", metav1.GetOptions{})
+			Expect(getErr).ToNot(HaveOccurred())
+			oldClientBodyBufferSize, oldClientBodyBufferSizeExists := cm.Data["client-body-buffer-size"];
+			if !oldClientBodyBufferSizeExists {
+				// Changes state??
+				oldClientBodyBufferSize = "8k"
+			}
+			cm.Data["client-body-buffer-size"] = "1k"
+			_, updateErr := f.KubeClientSet.CoreV1().ConfigMaps("ingress-nginx").Update(cm)
+			Expect(updateErr).ToNot(HaveOccurred())
+
+			replicas := 30
+			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace.Name, "http-svc", replicas,
+				func(deployment *appsv1beta1.Deployment) error {
+					deployment.Spec.Replicas = framework.NewInt32(int32(replicas))
+					_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace.Name).Update(deployment)
+					return err
+				})
+			Expect(err).NotTo(HaveOccurred())
+
+			time.Sleep(5 * time.Second)
+			log, err := f.NginxLogs()
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(log).ToNot(BeEmpty())
+			index := strings.Index(log, "id=endpoints_only_changes")
+			restOfLogs := log[index:]
+
+			By("POSTing new backends to Lua endpoint")
+			Expect(restOfLogs).To(ContainSubstring("a client request body is buffered to a temporary file"))
+			Expect(restOfLogs).ToNot(ContainSubstring("POST carries empty response body"))
+
+			// Reset client-body-buffer-size
+			cm.Data["client-body-buffer-size"] = oldClientBodyBufferSize
+			_, updateErr = f.KubeClientSet.CoreV1().ConfigMaps("ingress-nginx").Update(cm)
+			Expect(updateErr).ToNot(HaveOccurred())			
+		})
+
 		It("should handle annotation changes", func() {
 			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
 			Expect(err).ToNot(HaveOccurred())
