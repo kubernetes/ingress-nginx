@@ -265,7 +265,7 @@ func AddCertAuth(name string, ca []byte, fs file.Filesystem) (*ingress.SSLCert, 
 		return nil, fmt.Errorf("CA file %v contains invalid data, and must be created only with PEM formatted certificates", name)
 	}
 
-	_, err := x509.ParseCertificate(pemCABlock.Bytes)
+	pemCert, err := x509.ParseCertificate(pemCABlock.Bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -283,6 +283,7 @@ func AddCertAuth(name string, ca []byte, fs file.Filesystem) (*ingress.SSLCert, 
 
 	glog.V(3).Infof("Created CA Certificate for Authentication: %v", caFileName)
 	return &ingress.SSLCert{
+		Certificate: pemCert,
 		CAFileName:  caFileName,
 		PemFileName: caFileName,
 		PemSHA:      file.SHA1(caFileName),
