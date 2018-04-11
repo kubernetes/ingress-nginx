@@ -36,6 +36,7 @@ events {
 }
 
 http {
+    {{ if not $all.DisableLua }}
     lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;;";
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
 
@@ -72,6 +73,7 @@ http {
     init_worker_by_lua_block {
         balancer.init_worker()
     }
+    {{ end }}
     {{ end }}
     {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
     {{ if $cfg.UseProxyProtocol }}
@@ -494,7 +496,7 @@ http {
             access_log off;
             return 200;
         }
-
+        {{ if not $all.DisableLua }}
         location /is-dynamic-lb-initialized {
             {{ if $cfg.EnableOpentracing }}
             opentracing off;
@@ -513,7 +515,7 @@ http {
                 ngx.exit(ngx.HTTP_OK)
             }
         }
-
+        {{ end }}
         location /nginx_status {
             set $proxy_upstream_name "internal";
             {{ if $cfg.EnableOpentracing }}
@@ -816,6 +818,7 @@ stream {
         {{ end }}
 
         location {{ $path }} {
+            {{ if not $all.DisableLua }}
             {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
             access_by_lua_block {
                 local lua_resty_waf = require("resty.waf")
@@ -866,6 +869,8 @@ stream {
                 balancer.call()
                 {{ end }}
             }
+            {{ end }}
+
             {{ if (and (not (empty $server.SSLCertificate)) $all.Cfg.HSTS) }}
             if ($scheme = https) {
             more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";

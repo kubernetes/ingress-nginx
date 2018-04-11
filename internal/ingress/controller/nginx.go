@@ -628,6 +628,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		ListenPorts:                 n.cfg.ListenPorts,
 		PublishService:              n.GetPublishService(),
 		DynamicConfigurationEnabled: n.cfg.DynamicConfigurationEnabled,
+		DisableLua:                  n.cfg.DisableLua,
 	}
 
 	content, err := n.t.Write(tc)
