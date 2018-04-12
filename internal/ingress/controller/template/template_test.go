@@ -709,3 +709,46 @@ func TestIsLocationInLocationList(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildUpstreamName(t *testing.T) {
+	defaultBackend := "upstream-name"
+	defaultHost := "example.com"
+
+	for k, tc := range tmplFuncTestcases {
+		loc := &ingress.Location{
+			Path:             tc.Path,
+			Rewrite:          rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL, BaseURLScheme: tc.BaseURLScheme},
+			Backend:          defaultBackend,
+			XForwardedPrefix: tc.XForwardedPrefix,
+		}
+
+		backend := &ingress.Backend{
+			Name:   defaultBackend,
+			Secure: tc.SecureBackend,
+		}
+
+		expected := defaultBackend
+
+		if tc.Sticky {
+			if !tc.DynamicConfigurationEnabled {
+				expected = fmt.Sprintf("sticky-" + expected)
+			}
+
+			backend.SessionAffinity = ingress.SessionAffinityConfig{
+				AffinityType: "cookie",
+				CookieSessionAffinity: ingress.CookieSessionAffinity{
+					Locations: map[string][]string{
+						defaultHost: {tc.Path},
+					},
+				},
+			}
+		}
+
+		backends := []*ingress.Backend{backend}
+
+		pp := buildUpstreamName(defaultHost, backends, loc, tc.DynamicConfigurationEnabled)
+		if !strings.EqualFold(expected, pp) {
+			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, expected, pp)
+		}
+	}
+}
