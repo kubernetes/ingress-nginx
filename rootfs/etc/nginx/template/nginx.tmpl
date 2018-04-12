@@ -886,7 +886,7 @@ stream {
 
             {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
 
-            set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location }}";
+            set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}";
 
             {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
             {{/* $ing.Metadata contains the Ingress metadata */}}
