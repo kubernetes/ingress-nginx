@@ -95,7 +95,7 @@ local function sync_backend(backend)
     ngx.shared.balancer_ewma_last_touched_at:flush_all()
   end
 
-  ngx.log(ngx.INFO, "syncronization completed for: " .. backend.name)
+  ngx.log(ngx.INFO, "synchronization completed for: " .. backend.name)
 end
 
 local function sync_backends()
