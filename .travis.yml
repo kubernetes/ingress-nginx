@@ -41,7 +41,7 @@ jobs:
     - make luacheck
     - go get github.com/golang/lint/golint
     - go get -u github.com/jteeuwen/go-bindata/...
-    - make verify-all
+    - make verify-all-verbose
   - stage: Coverage
     before_script:
     # start minikube 
