@@ -147,6 +147,10 @@ build: clean
 verify-all:
 	@./hack/verify-all.sh
 
+.PHONY: verify-all-verbose
+verify-all:
+	@./hack/verify-all.sh -v	
+
 .PHONY: test
 test:
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
