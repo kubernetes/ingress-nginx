@@ -645,14 +645,14 @@ func buildUpstreamName(host string, b interface{}, loc interface{}, dynamicConfi
 
 	upstreamName := location.Backend
 
-	if !dynamicConfigurationEnabled{
+	if !dynamicConfigurationEnabled {
 		for _, backend := range backends {
 			if backend.Name == location.Backend {
 				if backend.SessionAffinity.AffinityType == "cookie" &&
 					isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
 					upstreamName = fmt.Sprintf("sticky-%v", upstreamName)
 				}
-				
+
 				break
 			}
 		}
