@@ -730,8 +730,8 @@ func TestBuildUpstreamName(t *testing.T) {
 		expected := defaultBackend
 
 		if tc.Sticky {
-			if !tc.DynamicConfigurationEnabled{
-			expected = fmt.Sprintf("sticky-" + expected)
+			if !tc.DynamicConfigurationEnabled {
+				expected = fmt.Sprintf("sticky-" + expected)
 			}
 
 			backend.SessionAffinity = ingress.SessionAffinityConfig{
