@@ -177,6 +177,10 @@ static-check:
 	@$(DEF_VARS) \
 	build/go-in-docker.sh build/static-check.sh
 
+.PHONY: verify-all-verbose
+verify-all:
+	@./hack/verify-all.sh -v	
+
 .PHONY: test
 test:
 	@$(DEF_VARS)                 \
