@@ -88,7 +88,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected an Ingres but none returned")
 		}
 
-		ls, err := storer.GetLocalSecret(key)
+		ls, err := storer.GetLocalSSLCert(key)
 		if err == nil {
 			t.Errorf("expected an error but none returned")
 		}
@@ -467,7 +467,7 @@ func TestStore(t *testing.T) {
 			}
 
 			secretName := fmt.Sprintf("%v/%v", ns.Name, name)
-			sslCert, err := storer.GetLocalSecret(secretName)
+			sslCert, err := storer.GetLocalSSLCert(secretName)
 			if err != nil {
 				t.Errorf("unexpected error reading local secret %v: %v", secretName, err)
 			}
