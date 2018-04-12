@@ -195,10 +195,14 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		glog.Warningf("Check of SSL certificate chain is disabled (--enable-ssl-chain-completion=false)")
 	}
 
-	if *dynamicConfigurationEnabled && (runtime.GOARCH == "s390x" || runtime.GOARCH == "ppc64le") {
-		b := false
-		dynamicConfigurationEnabled = &b
-		glog.Warningf("Disabling dynamic configuration feature (LuaJIT is not available in s390x and ppc64le)")
+	// LuaJIT is not available on arch s390x and ppc64le
+	disableLua := false
+	if runtime.GOARCH == "s390x" || runtime.GOARCH == "ppc64le" {
+		disableLua = true
+		if *dynamicConfigurationEnabled {
+			*dynamicConfigurationEnabled = false
+			glog.Warningf("Disabling dynamic configuration feature (LuaJIT is not available in s390x and ppc64le)")
+		}
 	}
 
 	config := &controller.Configuration{
@@ -225,6 +229,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		UseNodeInternalIP:           *useNodeInternalIP,
 		SyncRateLimit:               *syncRateLimit,
 		DynamicConfigurationEnabled: *dynamicConfigurationEnabled,
+		DisableLua:                  disableLua,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
