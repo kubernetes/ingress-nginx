@@ -19,6 +19,7 @@ package lua
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -43,7 +44,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		err := enableDynamicConfiguration(f.KubeClientSet)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = f.NewEchoDeploymentWithReplicas(1)
+		err = f.NewEchoDeploymentWithReplicas(3)
 		Expect(err).NotTo(HaveOccurred())
 
 		host := "foo.com"
@@ -75,114 +76,274 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Context("when only backends change", func() {
-		It("should handle endpoints only changes", func() {
+	// Context("when only backends change", func() {
+	// 	It("should handle endpoints only changes", func() {
+	// 		resp, _, errs := gorequest.New().
+	// 			Get(fmt.Sprintf("%s?id=endpoints_only_changes", f.NginxHTTPURL)).
+	// 			Set("Host", "foo.com").
+	// 			End()
+	// 		Expect(len(errs)).Should(BeNumerically("==", 0))
+	// 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+	// 		replicas := 2
+	// 		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace.Name, "http-svc", replicas,
+	// 			func(deployment *appsv1beta1.Deployment) error {
+	// 				deployment.Spec.Replicas = framework.NewInt32(int32(replicas))
+	// 				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace.Name).Update(deployment)
+	// 				return err
+	// 			})
+	// 		Expect(err).NotTo(HaveOccurred())
+
+	// 		time.Sleep(5 * time.Second)
+	// 		log, err := f.NginxLogs()
+	// 		Expect(err).ToNot(HaveOccurred())
+	// 		Expect(log).ToNot(BeEmpty())
+	// 		index := strings.Index(log, "id=endpoints_only_changes")
+	// 		restOfLogs := log[index:]
+
+	// 		By("POSTing new backends to Lua endpoint")
+	// 		Expect(restOfLogs).To(ContainSubstring("dynamic reconfiguration succeeded"))
+	// 		Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
+
+	// 		By("skipping Nginx reload")
+	// 		Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
+	// 		Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
+	// 		Expect(restOfLogs).To(ContainSubstring("skipping reload"))
+	// 		Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
+	// 	})
+
+	// 	It("should handle annotation changes", func() {
+	// 		ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
+	// 		Expect(err).ToNot(HaveOccurred())
+
+	// 		ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
+	// 		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
+	// 		Expect(err).ToNot(HaveOccurred())
+
+	// 		time.Sleep(5 * time.Second)
+	// 		log, err := f.NginxLogs()
+	// 		Expect(err).ToNot(HaveOccurred())
+	// 		Expect(log).ToNot(BeEmpty())
+	// 		index := strings.Index(log, fmt.Sprintf("reason: 'UPDATE' Ingress %s/foo.com", f.Namespace.Name))
+	// 		restOfLogs := log[index:]
+
+	// 		By("POSTing new backends to Lua endpoint")
+	// 		Expect(restOfLogs).To(ContainSubstring("dynamic reconfiguration succeeded"))
+	// 		Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
+
+	// 		By("skipping Nginx reload")
+	// 		Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
+	// 		Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
+	// 		Expect(restOfLogs).To(ContainSubstring("skipping reload"))
+	// 		Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
+	// 	})
+	// })
+
+	// It("should handle a non backend update", func() {
+	// 	ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
+	// 	Expect(err).ToNot(HaveOccurred())
+
+	// 	ingress.Spec.TLS = []v1beta1.IngressTLS{
+	// 		{
+	// 			Hosts:      []string{"foo.com"},
+	// 			SecretName: "foo.com",
+	// 		},
+	// 	}
+
+	// 	_, _, _, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
+	// 		ingress.Spec.TLS[0].Hosts,
+	// 		ingress.Spec.TLS[0].SecretName,
+	// 		ingress.Namespace)
+	// 	Expect(err).ToNot(HaveOccurred())
+
+	// 	_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
+	// 	Expect(err).ToNot(HaveOccurred())
+
+	// 	time.Sleep(5 * time.Second)
+	// 	log, err := f.NginxLogs()
+	// 	Expect(err).ToNot(HaveOccurred())
+	// 	Expect(log).ToNot(BeEmpty())
+
+	// 	By("reloading Nginx")
+	// 	Expect(log).To(ContainSubstring("ingress backend successfully reloaded"))
+
+	// 	By("POSTing new backends to Lua endpoint")
+	// 	Expect(log).To(ContainSubstring("dynamic reconfiguration succeeded"))
+
+	// 	By("still be proxying requests through Lua balancer")
+	// 	err = f.WaitForNginxServer("foo.com",
+	// 		func(server string) bool {
+	// 			return strings.Contains(server, "proxy_pass http://upstream_balancer;")
+	// 		})
+	// 	Expect(err).NotTo(HaveOccurred())
+
+	// 	By("generating the respective ssl listen directive")
+	// 	err = f.WaitForNginxServer("foo.com",
+	// 		func(server string) bool {
+	// 			return strings.Contains(server, "server_name foo.com") &&
+	// 				strings.Contains(server, "listen 443")
+	// 		})
+	// 	Expect(err).ToNot(HaveOccurred())
+	// })
+
+	Context("when session affinity annotation is present", func() {
+		// It("should use sticky sessions when ingress rules are configured", func() {
+		// 	cookieName := "STICKYSESSION"
+
+		// 	By("Updating affinity annotation on ingress")
+		// 	ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
+		// 	Expect(err).ToNot(HaveOccurred())
+		// 	ingress.ObjectMeta.Annotations = map[string]string{
+		// 		"nginx.ingress.kubernetes.io/affinity":            "cookie",
+		// 		"nginx.ingress.kubernetes.io/session-cookie-name": cookieName,
+		// 	}
+		// 	_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
+		// 	Expect(err).ToNot(HaveOccurred())
+		// 	time.Sleep(5 * time.Second)
+
+		// 	By("Making a first request")
+		// 	host := "foo.com"
+		// 	resp, _, errs := gorequest.New().
+		// 		Get(f.NginxHTTPURL).
+		// 		Set("Host", host).
+		// 		End()
+		// 	Expect(len(errs)).Should(BeNumerically("==", 0))
+		// 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		// 	cookies := (*http.Response)(resp).Cookies()
+		// 	sessionCookie, err := getCookie(cookieName, cookies)
+		// 	Expect(err).ToNot(HaveOccurred())
+
+		// 	By("Making a second request with the previous session cookie")
+		// 	resp, _, errs = gorequest.New().
+		// 		Get(f.NginxHTTPURL).
+		// 		AddCookie(sessionCookie).
+		// 		Set("Host", host).
+		// 		End()
+		// 	Expect(len(errs)).Should(BeNumerically("==", 0))
+		// 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		// 	By("Making a third request with no cookie")
+		// 	resp, _, errs = gorequest.New().
+		// 		Get(f.NginxHTTPURL).
+		// 		Set("Host", host).
+		// 		End()
+
+		// 	Expect(len(errs)).Should(BeNumerically("==", 0))
+		// 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		// 	log, err := f.NginxLogs()
+		// 	Expect(err).ToNot(HaveOccurred())
+		// 	Expect(log).ToNot(BeEmpty())
+
+		// 	By("Checking that upstreams are sticky when session cookie is used")
+		// 	index := strings.Index(log, fmt.Sprintf("reason: 'UPDATE' Ingress %s/foo.com", f.Namespace.Name))
+		// 	reqLogs := log[index:]
+		// 	re := regexp.MustCompile(`\d{1,3}(?:\.\d{1,3}){3}(?::\d{1,5})`)
+		// 	upstreams := re.FindAllString(reqLogs, -1)
+		// 	Expect(len(upstreams)).Should(BeNumerically("==", 3))
+		// 	Expect(upstreams[0]).To(Equal(upstreams[1]))
+		// 	Expect(upstreams[1]).ToNot(Equal(upstreams[2]))
+		// })
+
+		// It("should NOT use sticky sessions when a default backend and no ingress rules configured", func() {
+		// 	By("Updating affinity annotation and rules on ingress")
+		// 	ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
+		// 	Expect(err).ToNot(HaveOccurred())
+		// 	ingress.Spec = v1beta1.IngressSpec{
+		// 		Backend: &v1beta1.IngressBackend{
+		// 			ServiceName: "http-svc",
+		// 			ServicePort: intstr.FromInt(80),
+		// 		},
+		// 	}
+		// 	ingress.ObjectMeta.Annotations = map[string]string{
+		// 		"nginx.ingress.kubernetes.io/affinity": "cookie",
+		// 	}
+		// 	_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
+		// 	Expect(err).ToNot(HaveOccurred())
+		// 	time.Sleep(5 * time.Second)
+
+		// 	By("Making a request")
+		// 	host := "foo.com"
+		// 	resp, _, errs := gorequest.New().
+		// 		Get(f.NginxHTTPURL).
+		// 		Set("Host", host).
+		// 		End()
+		// 	Expect(len(errs)).Should(BeNumerically("==", 0))
+		// 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		// 	By("Ensuring no cookies are set")
+		// 	cookies := (*http.Response)(resp).Cookies()
+		// 	Expect(len(cookies)).Should(BeNumerically("==", 0))
+		// })
+
+		It("should use sticky sessions when dynamic configuration is disabled", func() {
+			cookieName := "STICKYSESSION"
+			
+			By("Disabling dynamic configuration")
+			err := disableDynamicConfiguration(f.KubeClientSet)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Updating affinity annotation on ingress")
+			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
+			Expect(err).ToNot(HaveOccurred())
+			ingress.ObjectMeta.Annotations = map[string]string{
+				"nginx.ingress.kubernetes.io/affinity":            "cookie",
+				"nginx.ingress.kubernetes.io/session-cookie-name": cookieName,
+			}
+			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
+			Expect(err).ToNot(HaveOccurred())
+			time.Sleep(5 * time.Second)
+
+			By("Making a first request")
+			host := "foo.com"
 			resp, _, errs := gorequest.New().
-				Get(fmt.Sprintf("%s?id=endpoints_only_changes", f.NginxHTTPURL)).
-				Set("Host", "foo.com").
+				Get(f.NginxHTTPURL).
+				Set("Host", host).
+				End()
+			// Expect(len(errs)).Should(BeNumerically("==", 0))
+			// Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			// Expect(resp).To(BeNil())
+
+			log, err := f.NginxLogs()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(log).To(BeEmpty())
+
+			cookies := (*http.Response)(resp).Cookies()
+			sessionCookie, err := getCookie(cookieName, cookies)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Making a second request with the previous session cookie")
+			resp, _, errs = gorequest.New().
+				Get(f.NginxHTTPURL).
+				AddCookie(sessionCookie).
+				Set("Host", host).
 				End()
 			Expect(len(errs)).Should(BeNumerically("==", 0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			replicas := 2
-			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace.Name, "http-svc", replicas,
-				func(deployment *appsv1beta1.Deployment) error {
-					deployment.Spec.Replicas = framework.NewInt32(int32(replicas))
-					_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace.Name).Update(deployment)
-					return err
-				})
-			Expect(err).NotTo(HaveOccurred())
+			By("Making a third request with no cookie")
+			resp, _, errs = gorequest.New().
+				Get(f.NginxHTTPURL).
+				Set("Host", host).
+				End()
 
-			time.Sleep(5 * time.Second)
-			log, err := f.NginxLogs()
-			Expect(err).ToNot(HaveOccurred())
-			Expect(log).ToNot(BeEmpty())
-			index := strings.Index(log, "id=endpoints_only_changes")
-			restOfLogs := log[index:]
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			By("POSTing new backends to Lua endpoint")
-			Expect(restOfLogs).To(ContainSubstring("dynamic reconfiguration succeeded"))
-			Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
+			// log, err := f.NginxLogs()
+			// Expect(err).ToNot(HaveOccurred())
+			// Expect(log).ToNot(BeEmpty())
 
-			By("skipping Nginx reload")
-			Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
-			Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
-			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
-			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
-		})
-
-		It("should handle annotation changes", func() {
-			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
-			Expect(err).ToNot(HaveOccurred())
-
-			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
-			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
-			Expect(err).ToNot(HaveOccurred())
-
-			time.Sleep(5 * time.Second)
-			log, err := f.NginxLogs()
-			Expect(err).ToNot(HaveOccurred())
-			Expect(log).ToNot(BeEmpty())
+			By("Checking that upstreams are sticky when session cookie is used")
 			index := strings.Index(log, fmt.Sprintf("reason: 'UPDATE' Ingress %s/foo.com", f.Namespace.Name))
-			restOfLogs := log[index:]
-
-			By("POSTing new backends to Lua endpoint")
-			Expect(restOfLogs).To(ContainSubstring("dynamic reconfiguration succeeded"))
-			Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
-
-			By("skipping Nginx reload")
-			Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
-			Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
-			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
-			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
+			reqLogs := log[index:]
+			re := regexp.MustCompile(`\d{1,3}(?:\.\d{1,3}){3}(?::\d{1,5})`)
+			upstreams := re.FindAllString(reqLogs, -1)
+			Expect(len(upstreams)).Should(BeNumerically("==", 3))
+			Expect(upstreams[0]).To(Equal(upstreams[1]))
+			Expect(upstreams[1]).ToNot(Equal(upstreams[2]))
 		})
-	})
-
-	It("should handle a non backend update", func() {
-		ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
-		Expect(err).ToNot(HaveOccurred())
-
-		ingress.Spec.TLS = []v1beta1.IngressTLS{
-			{
-				Hosts:      []string{"foo.com"},
-				SecretName: "foo.com",
-			},
-		}
-
-		_, _, _, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
-			ingress.Spec.TLS[0].Hosts,
-			ingress.Spec.TLS[0].SecretName,
-			ingress.Namespace)
-		Expect(err).ToNot(HaveOccurred())
-
-		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
-		Expect(err).ToNot(HaveOccurred())
-
-		time.Sleep(5 * time.Second)
-		log, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(log).ToNot(BeEmpty())
-
-		By("reloading Nginx")
-		Expect(log).To(ContainSubstring("ingress backend successfully reloaded"))
-
-		By("POSTing new backends to Lua endpoint")
-		Expect(log).To(ContainSubstring("dynamic reconfiguration succeeded"))
-
-		By("still be proxying requests through Lua balancer")
-		err = f.WaitForNginxServer("foo.com",
-			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
-			})
-		Expect(err).NotTo(HaveOccurred())
-
-		By("generating the respective ssl listen directive")
-		err = f.WaitForNginxServer("foo.com",
-			func(server string) bool {
-				return strings.Contains(server, "server_name foo.com") &&
-					strings.Contains(server, "listen 443")
-			})
-		Expect(err).ToNot(HaveOccurred())
 	})
 })
 
@@ -251,4 +412,13 @@ func ensureIngress(f *framework.Framework, host string) (*extensions.Ingress, er
 			},
 		},
 	})
+}
+
+func getCookie(name string, cookies []*http.Cookie) (*http.Cookie, error) {
+	for _, cookie := range cookies {
+		if cookie.Name == name {
+			return cookie, nil
+		}
+	}
+	return &http.Cookie{}, fmt.Errorf("Cookie does not exist")
 }
