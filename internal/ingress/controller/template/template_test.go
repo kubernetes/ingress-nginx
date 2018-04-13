@@ -122,9 +122,9 @@ var (
 			"/jenkins",
 			"~* /",
 			`
-	    rewrite /(.*) /jenkins/$1 break;
-	    proxy_pass http://upstream-name;
-	    `,
+rewrite /(.*) /jenkins/$1 break;
+proxy_pass http://upstream-name;
+`,
 			false,
 			"",
 			false,
@@ -136,10 +136,10 @@ var (
 			"/",
 			`~* ^/something\/?(?<baseuri>.*)`,
 			`
-	    rewrite /something/(.*) /$1 break;
-	    rewrite /something / break;
-	    proxy_pass http://upstream-name;
-	    `,
+rewrite /something/(.*) /$1 break;
+rewrite /something / break;
+proxy_pass http://upstream-name;
+`,
 			false,
 			"",
 			false,
@@ -151,9 +151,9 @@ var (
 			"/not-root",
 			"~* ^/end-with-slash/(?<baseuri>.*)",
 			`
-	    rewrite /end-with-slash/(.*) /not-root/$1 break;
-	    proxy_pass http://upstream-name;
-	    `,
+rewrite /end-with-slash/(.*) /not-root/$1 break;
+proxy_pass http://upstream-name;
+`,
 			false,
 			"",
 			false,
@@ -165,9 +165,9 @@ var (
 			"/not-root",
 			`~* ^/something-complex\/?(?<baseuri>.*)`,
 			`
-	    rewrite /something-complex/(.*) /not-root/$1 break;
-	    proxy_pass http://upstream-name;
-	    `,
+rewrite /something-complex/(.*) /not-root/$1 break;
+proxy_pass http://upstream-name;
+`,
 			false,
 			"",
 			false,
@@ -179,10 +179,12 @@ var (
 			"/jenkins",
 			"~* /",
 			`
-	    rewrite /(.*) /jenkins/$1 break;
-	    proxy_pass http://upstream-name;
-	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/$baseuri">' ro;
-	    `,
+rewrite /(.*) /jenkins/$1 break;
+proxy_pass http://upstream-name;
+
+set_escape_uri $escaped_base_uri $baseuri;
+subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/$escaped_base_uri">' ro;
+`,
 			true,
 			"",
 			false,
@@ -194,11 +196,13 @@ var (
 			"/",
 			`~* ^/something\/?(?<baseuri>.*)`,
 			`
-	    rewrite /something/(.*) /$1 break;
-	    rewrite /something / break;
-	    proxy_pass http://upstream-name;
-	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/something/$baseuri">' ro;
-	    `,
+rewrite /something/(.*) /$1 break;
+rewrite /something / break;
+proxy_pass http://upstream-name;
+
+set_escape_uri $escaped_base_uri $baseuri;
+subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/something/$escaped_base_uri">' ro;
+`,
 			true,
 			"",
 			false,
@@ -210,10 +214,12 @@ var (
 			"/not-root",
 			`~* ^/end-with-slash/(?<baseuri>.*)`,
 			`
-	    rewrite /end-with-slash/(.*) /not-root/$1 break;
-	    proxy_pass http://upstream-name;
-	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/end-with-slash/$baseuri">' ro;
-	    `,
+rewrite /end-with-slash/(.*) /not-root/$1 break;
+proxy_pass http://upstream-name;
+
+set_escape_uri $escaped_base_uri $baseuri;
+subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/end-with-slash/$escaped_base_uri">' ro;
+`,
 			true,
 			"",
 			false,
@@ -225,10 +231,12 @@ var (
 			"/not-root",
 			`~* ^/something-complex\/?(?<baseuri>.*)`,
 			`
-	    rewrite /something-complex/(.*) /not-root/$1 break;
-	    proxy_pass http://upstream-name;
-	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/something-complex/$baseuri">' ro;
-	    `,
+rewrite /something-complex/(.*) /not-root/$1 break;
+proxy_pass http://upstream-name;
+
+set_escape_uri $escaped_base_uri $baseuri;
+subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/something-complex/$escaped_base_uri">' ro;
+`,
 			true,
 			"",
 			false,
@@ -240,11 +248,13 @@ var (
 			"/",
 			`~* ^/something\/?(?<baseuri>.*)`,
 			`
-	    rewrite /something/(.*) /$1 break;
-	    rewrite /something / break;
-	    proxy_pass http://upstream-name;
-	    subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="http://$http_host/something/$baseuri">' ro;
-	    `,
+rewrite /something/(.*) /$1 break;
+rewrite /something / break;
+proxy_pass http://upstream-name;
+
+set_escape_uri $escaped_base_uri $baseuri;
+subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="http://$http_host/something/$escaped_base_uri">' ro;
+`,
 			true,
 			"http",
 			false,
@@ -256,9 +266,9 @@ var (
 			"/something",
 			`~* /`,
 			`
-	    rewrite /(.*) /something/$1 break;
-	    proxy_pass http://sticky-upstream-name;
-	    `,
+rewrite /(.*) /something/$1 break;
+proxy_pass http://sticky-upstream-name;
+`,
 			false,
 			"http",
 			true,
@@ -270,9 +280,9 @@ var (
 			"/something",
 			`~* /`,
 			`
-	    rewrite /(.*) /something/$1 break;
-	    proxy_pass http://upstream_balancer;
-	    `,
+rewrite /(.*) /something/$1 break;
+proxy_pass http://upstream_balancer;
+`,
 			false,
 			"http",
 			true,
@@ -284,10 +294,10 @@ var (
 			"/something",
 			`~* ^/there\/?(?<baseuri>.*)`,
 			`
-	    rewrite /there/(.*) /something/$1 break;
-	    proxy_set_header X-Forwarded-Prefix "/there/";
-	    proxy_pass http://sticky-upstream-name;
-	    `,
+rewrite /there/(.*) /something/$1 break;
+proxy_set_header X-Forwarded-Prefix "/there/";
+proxy_pass http://sticky-upstream-name;
+`,
 			false,
 			"http",
 			true,
