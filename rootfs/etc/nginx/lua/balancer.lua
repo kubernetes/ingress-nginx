@@ -5,6 +5,7 @@ local util = require("util")
 local lrucache = require("resty.lrucache")
 local resty_lock = require("resty.lock")
 local ewma = require("balancer.ewma")
+local sticky = require("sticky")
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -48,6 +49,15 @@ end
 local function balance()
   local backend = get_current_backend()
   local lb_alg = get_current_lb_alg()
+  local is_sticky = sticky.is_sticky(backend)
+
+  if is_sticky then
+    local endpoint = sticky.get_endpoint(backend)
+    if endpoint ~= nil then
+      return endpoint.address, endpoint.port
+    end
+    lb_alg = "round_robin"
+  end
 
   if lb_alg == "ip_hash" then
     -- TODO(elvinefendi) implement me
@@ -76,6 +86,9 @@ local function balance()
   end
   if forcible then
     ngx.log(ngx.WARN, "round_robin_state:set valid items forcibly overwritten")
+  end
+  if is_sticky then
+    sticky.set_endpoint(endpoint, backend)
   end
   round_robin_lock:unlock(backend.name .. ROUND_ROBIN_LOCK_KEY)
 

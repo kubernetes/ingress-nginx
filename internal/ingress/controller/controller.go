@@ -97,6 +97,8 @@ type Configuration struct {
 	SyncRateLimit float32
 
 	DynamicConfigurationEnabled bool
+
+	DisableLua bool
 }
 
 // GetPublishService returns the configured service used to set ingress status
