@@ -265,12 +265,12 @@ func New(checkOCSP bool,
 				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
 				return
 			}
+			recorder.Eventf(ing, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 
 			store.extractAnnotations(ing)
 			store.updateSecretIngressMap(ing)
 			store.syncSecrets(ing)
 
-			recorder.Eventf(ing, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 			updateCh.In() <- Event{
 				Type: CreateEvent,
 				Obj:  obj,
@@ -295,13 +295,13 @@ func New(checkOCSP bool,
 				glog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
 				return
 			}
+			recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 
 			store.listers.IngressAnnotation.Delete(ing)
 
 			key := k8s.MetaNamespaceKey(ing)
 			store.secretIngressMap.Delete(key)
 
-			recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 			updateCh.In() <- Event{
 				Type: DeleteEvent,
 				Obj:  obj,
@@ -355,7 +355,7 @@ func New(checkOCSP bool,
 					store.syncSecrets(ing)
 				}
 				updateCh.In() <- Event{
-					Type: UpdateEvent,
+					Type: CreateEvent,
 					Obj:  obj,
 				}
 			}
@@ -458,7 +458,6 @@ func New(checkOCSP bool,
 			key := k8s.MetaNamespaceKey(cm)
 			// updates to configuration configmaps can trigger an update
 			if key == configmap || key == tcp || key == udp {
-				glog.V(2).Infof("adding configmap %v to backend", key)
 				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
 				if key == configmap {
 					store.setConfig(cm)
