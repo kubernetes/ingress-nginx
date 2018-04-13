@@ -352,7 +352,6 @@ func New(checkOCSP bool,
 						continue
 					}
 					store.extractAnnotations(ing)
-					store.updateSecretIngressMap(ing)
 					store.syncSecrets(ing)
 				}
 				updateCh.In() <- Event{
@@ -380,7 +379,6 @@ func New(checkOCSP bool,
 							continue
 						}
 						store.extractAnnotations(ing)
-						store.updateSecretIngressMap(ing)
 						store.syncSecrets(ing)
 					}
 					updateCh.In() <- Event{
@@ -420,7 +418,6 @@ func New(checkOCSP bool,
 						continue
 					}
 					store.extractAnnotations(ing)
-					store.updateSecretIngressMap(ing)
 				}
 				updateCh.In() <- Event{
 					Type: DeleteEvent,
@@ -533,18 +530,19 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 		}
 	}
 
-	anns, err := s.GetIngressAnnotations(ing)
-	if err != nil {
-		glog.Errorf("Error reading Ingress annotations: %v", err)
-		return
-	}
-
+	// We can not rely on cached ingress annotations because these are
+	// discarded when the referenced secret does not exist in the local
+	// store. As a result, adding a secret *after* the ingress(es) which
+	// references it would not trigger a resync of that secret.
 	secretAnnotations := []string{
-		anns.BasicDigestAuth.Secret,
-		anns.CertificateAuth.Secret,
+		"auth-secret",
+		"auth-tls-secret",
 	}
-
-	for _, secrName := range secretAnnotations {
+	for _, ann := range secretAnnotations {
+		secrName, err := parser.GetStringAnnotation(ann, ing)
+		if err != nil {
+			continue
+		}
 		if secrName != "" {
 			secrKey := fmt.Sprintf("%v/%v", ing.Namespace, secrName)
 			refSecrets = append(refSecrets, secrKey)
