@@ -29,7 +29,6 @@ import (
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 )
@@ -51,7 +50,7 @@ func (s k8sStore) syncSecret(key string) {
 	}
 
 	// create certificates and add or update the item in the store
-	cur, err := s.GetLocalSecret(key)
+	cur, err := s.GetLocalSSLCert(key)
 	if err == nil {
 		if cur.Equal(cert) {
 			// no need to update
@@ -129,9 +128,9 @@ func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error)
 }
 
 func (s k8sStore) checkSSLChainIssues() {
-	for _, item := range s.ListLocalSecrets() {
+	for _, item := range s.ListLocalSSLCerts() {
 		secretName := k8s.MetaNamespaceKey(item)
-		secret, err := s.GetLocalSecret(secretName)
+		secret, err := s.GetLocalSSLCert(secretName)
 		if err != nil {
 			continue
 		}
@@ -177,50 +176,6 @@ func (s k8sStore) checkSSLChainIssues() {
 		// (like an update event from a change in Ingress)
 		s.sendDummyEvent()
 	}
-}
-
-// checkMissingSecrets verifies if one or more ingress rules contains
-// a reference to a secret that is not present in the local secret store.
-func (s k8sStore) checkMissingSecrets() {
-	for _, ing := range s.ListIngresses() {
-		for _, tls := range ing.Spec.TLS {
-			if tls.SecretName == "" {
-				continue
-			}
-
-			key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
-			if _, ok := s.sslStore.Get(key); !ok {
-				s.syncSecret(key)
-			}
-		}
-
-		key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
-		if key == "" {
-			continue
-		}
-
-		if _, ok := s.sslStore.Get(key); !ok {
-			s.syncSecret(key)
-		}
-	}
-}
-
-// ReadSecrets extracts information about secrets from an Ingress rule
-func (s k8sStore) ReadSecrets(ing *extensions.Ingress) {
-	for _, tls := range ing.Spec.TLS {
-		if tls.SecretName == "" {
-			continue
-		}
-
-		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
-		s.syncSecret(key)
-	}
-
-	key, _ := parser.GetStringAnnotation("auth-tls-secret", ing)
-	if key == "" {
-		return
-	}
-	s.syncSecret(key)
 }
 
 // sendDummyEvent sends a dummy event to trigger an update

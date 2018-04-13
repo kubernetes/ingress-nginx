@@ -88,7 +88,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected an Ingres but none returned")
 		}
 
-		ls, err := storer.GetLocalSecret(key)
+		ls, err := storer.GetLocalSSLCert(key)
 		if err == nil {
 			t.Errorf("expected an error but none returned")
 		}
@@ -116,7 +116,7 @@ func TestStore(t *testing.T) {
 		close(stopCh)
 	})
 
-	t.Run("should return ingress one event for add, update and delete", func(t *testing.T) {
+	t.Run("should return one event for add, update and delete of ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
 
@@ -260,7 +260,7 @@ func TestStore(t *testing.T) {
 		close(stopCh)
 	})
 
-	t.Run("should not receive events from new secret no referenced from ingress", func(t *testing.T) {
+	t.Run("should not receive events from secret not referenced from ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
 
@@ -307,13 +307,16 @@ func TestStore(t *testing.T) {
 
 		storer.Run(stopCh)
 
-		secretName := "no-referenced"
+		secretName := "not-referenced"
 		_, _, _, err = framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns.Name)
 		if err != nil {
 			t.Errorf("unexpected error creating secret: %v", err)
 		}
 
-		time.Sleep(1 * time.Second)
+		err = framework.WaitForSecretInNamespace(clientSet, ns.Name, secretName)
+		if err != nil {
+			t.Errorf("unexpected error waiting for secret: %v", err)
+		}
 
 		if atomic.LoadUint64(&add) != 0 {
 			t.Errorf("expected 0 events of type Create but %v occurred", add)
@@ -338,6 +341,118 @@ func TestStore(t *testing.T) {
 		if atomic.LoadUint64(&upd) != 0 {
 			t.Errorf("expected 0 events of type Update but %v occurred", upd)
 		}
+		if atomic.LoadUint64(&del) != 0 {
+			t.Errorf("expected 0 events of type Delete but %v occurred", del)
+		}
+
+		updateCh.Close()
+		close(stopCh)
+	})
+
+	t.Run("should receive events from secret referenced from ingress", func(t *testing.T) {
+		ns := createNamespace(clientSet, t)
+		defer deleteNamespace(ns, clientSet, t)
+
+		stopCh := make(chan struct{})
+		updateCh := channels.NewRingChannel(1024)
+
+		var add uint64
+		var upd uint64
+		var del uint64
+
+		go func(ch *channels.RingChannel) {
+			for {
+				evt, ok := <-ch.Out()
+				if !ok {
+					return
+				}
+
+				e := evt.(Event)
+				if e.Obj == nil {
+					continue
+				}
+				switch e.Type {
+				case CreateEvent:
+					atomic.AddUint64(&add, 1)
+				case UpdateEvent:
+					atomic.AddUint64(&upd, 1)
+				case DeleteEvent:
+					atomic.AddUint64(&del, 1)
+				}
+			}
+		}(updateCh)
+
+		fs := newFS(t)
+		storer := New(true,
+			ns.Name,
+			fmt.Sprintf("%v/config", ns.Name),
+			fmt.Sprintf("%v/tcp", ns.Name),
+			fmt.Sprintf("%v/udp", ns.Name),
+			"",
+			10*time.Minute,
+			clientSet,
+			fs,
+			updateCh)
+
+		storer.Run(stopCh)
+
+		ingressName := "ingress-with-secret"
+		secretName := "referenced"
+
+		_, err := ensureIngress(&v1beta1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      ingressName,
+				Namespace: ns.Name,
+			},
+			Spec: v1beta1.IngressSpec{
+				TLS: []v1beta1.IngressTLS{
+					{
+						SecretName: secretName,
+					},
+				},
+				Backend: &v1beta1.IngressBackend{
+					ServiceName: "http-svc",
+					ServicePort: intstr.FromInt(80),
+				},
+			},
+		}, clientSet)
+		if err != nil {
+			t.Errorf("unexpected error creating ingress: %v", err)
+		}
+
+		err = framework.WaitForIngressInNamespace(clientSet, ns.Name, ingressName)
+		if err != nil {
+			t.Errorf("unexpected error waiting for secret: %v", err)
+		}
+
+		_, _, _, err = framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns.Name)
+		if err != nil {
+			t.Errorf("unexpected error creating secret: %v", err)
+		}
+
+		err = framework.WaitForSecretInNamespace(clientSet, ns.Name, secretName)
+		if err != nil {
+			t.Errorf("unexpected error waiting for secret: %v", err)
+		}
+
+		// take into account secret sync
+		time.Sleep(3 * time.Second)
+
+		if atomic.LoadUint64(&add) != 2 {
+			t.Errorf("expected 2 events of type Create but %v occurred", add)
+		}
+		// secret sync triggers a dummy event
+		if atomic.LoadUint64(&upd) != 1 {
+			t.Errorf("expected 1 events of type Update but %v occurred", upd)
+		}
+
+		err = clientSet.CoreV1().Secrets(ns.Name).Delete(secretName, &metav1.DeleteOptions{})
+		if err != nil {
+			t.Errorf("unexpected error deleting secret: %v", err)
+		}
+
+		time.Sleep(1 * time.Second)
+
 		if atomic.LoadUint64(&del) != 1 {
 			t.Errorf("expected 1 events of type Delete but %v occurred", del)
 		}
@@ -346,7 +461,7 @@ func TestStore(t *testing.T) {
 		close(stopCh)
 	})
 
-	t.Run("should create an ingress with a secret it doesn't exists", func(t *testing.T) {
+	t.Run("should create an ingress with a secret which does not exist", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
 
@@ -434,8 +549,14 @@ func TestStore(t *testing.T) {
 
 		err = framework.WaitForIngressInNamespace(clientSet, ns.Name, name)
 		if err != nil {
-			t.Errorf("unexpected error waiting for secret: %v", err)
+			t.Errorf("unexpected error waiting for ingress: %v", err)
 		}
+
+		// take into account delay caused by:
+		//  * ingress annotations extraction
+		//  * secretIngressMap update
+		//  * secrets sync
+		time.Sleep(3 * time.Second)
 
 		if atomic.LoadUint64(&add) != 1 {
 			t.Errorf("expected 1 events of type Create but %v occurred", add)
@@ -458,16 +579,16 @@ func TestStore(t *testing.T) {
 				t.Errorf("unexpected error waiting for secret: %v", err)
 			}
 
-			time.Sleep(30 * time.Second)
+			time.Sleep(5 * time.Second)
 
 			pemFile := fmt.Sprintf("%v/%v-%v.pem", file.DefaultSSLDirectory, ns.Name, name)
 			err = framework.WaitForFileInFS(pemFile, fs)
 			if err != nil {
-				t.Errorf("unexpected error waiting for file to exists in the filesystem: %v", err)
+				t.Errorf("unexpected error waiting for file to exist on the file system: %v", err)
 			}
 
 			secretName := fmt.Sprintf("%v/%v", ns.Name, name)
-			sslCert, err := storer.GetLocalSecret(secretName)
+			sslCert, err := storer.GetLocalSSLCert(secretName)
 			if err != nil {
 				t.Errorf("unexpected error reading local secret %v: %v", secretName, err)
 			}
