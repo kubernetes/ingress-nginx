@@ -37,7 +37,7 @@ Usage of :
       --publish-status-address string     User customized address to be set in the status of ingress resources. The controller will set the
 		endpoint records on the ingress using this address.
       --report-node-internal-ip-address   Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address
-      --sort-backends                     Defines if backends and it's endpoints should be sorted
+      --sort-backends                     Defines if backends and its endpoints should be sorted
       --ssl-passtrough-proxy-port int     Default port to use internally for SSL when SSL Passthgough is enabled (default 442)
       --status-port int                   Indicates the TCP port to use for exposing the nginx status page (default 18080)
       --stderrthreshold severity          logs at or above this threshold go to stderr (default 2)
