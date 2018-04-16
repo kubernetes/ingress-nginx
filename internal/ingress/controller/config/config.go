@@ -424,6 +424,10 @@ type Configuration struct {
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
 
+	// Adds an X-Original-Uri header with the original request URI to the backend request
+	// Default: true
+	ProxyAddOriginalUriHeader bool `json:"proxy-add-original-uri-header"`
+
 	// EnableOpentracing enables the nginx Opentracing extension
 	// https://github.com/rnburn/nginx-opentracing
 	// By default this is disabled
@@ -536,6 +540,7 @@ func NewDefault() Configuration {
 		ErrorLogLevel:              errorLevel,
 		ForwardedForHeader:         "X-Forwarded-For",
 		ComputeFullForwardedFor:    false,
+		ProxyAddOriginalUriHeader:  true,
 		HTTP2MaxFieldSize:          "4k",
 		HTTP2MaxHeaderSize:         "16k",
 		HTTPRedirectCode:           308,

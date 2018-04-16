@@ -1009,7 +1009,9 @@ stream {
             proxy_set_header X-Forwarded-Host       $best_http_host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            {{ if $all.Cfg.ProxyAddOriginalUriHeader }}
             proxy_set_header X-Original-URI         $request_uri;
+            {{ end }}
             proxy_set_header X-Scheme               $pass_access_scheme;
 
             # Pass the original X-Forwarded-For
