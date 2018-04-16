@@ -41,7 +41,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		updateConfigmap(serverTokens, "false", f.KubeClientSet)
 	})
 
-	It("should not exists Server header in the response", func() {
+	It("should not exist Server header in the response", func() {
 		updateConfigmap(serverTokens, "false", f.KubeClientSet)
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
@@ -83,7 +83,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("should exists Server header in the response when is enabled", func() {
+	It("should exist Server header in the response when is enabled", func() {
 		updateConfigmap(serverTokens, "true", f.KubeClientSet)
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
