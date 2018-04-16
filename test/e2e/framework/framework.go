@@ -61,6 +61,9 @@ type Framework struct {
 	// should abort, the AfterSuite hook should run all Cleanup actions.
 	cleanupHandle CleanupActionHandle
 
+	// Map to hold the default nginx-configuration configmap data before a test run
+	DefaultNginxConfigMapData map[string]string
+
 	NginxHTTPURL  string
 	NginxHTTPSURL string
 }
@@ -69,7 +72,8 @@ type Framework struct {
 // you (you can write additional before/after each functions).
 func NewDefaultFramework(baseName string) *Framework {
 	f := &Framework{
-		BaseName: baseName,
+		BaseName:                  baseName,
+		DefaultNginxConfigMapData: nil,
 	}
 
 	BeforeEach(f.BeforeEach)
@@ -101,6 +105,13 @@ func (f *Framework) BeforeEach() {
 	By("Building NGINX HTTPS URL")
 	f.NginxHTTPSURL, err = f.GetNginxURL(HTTPS)
 	Expect(err).NotTo(HaveOccurred())
+
+	By("Persist nginx-configuration configMap Data")
+	if f.DefaultNginxConfigMapData == nil {
+		f.DefaultNginxConfigMapData, err = f.GetNginxConfigMapData()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(f.DefaultNginxConfigMapData).NotTo(BeNil())
+	}
 }
 
 // AfterEach deletes the namespace, after reading its events.
@@ -113,6 +124,10 @@ func (f *Framework) AfterEach() {
 
 	By("Waiting for test namespace to no longer exist")
 	err = WaitForNoPodsInNamespace(f.KubeClientSet, f.Namespace.Name)
+	Expect(err).NotTo(HaveOccurred())
+
+	By("Reset nginx-configuration configMap to default state")
+	err = f.SetNginxConfigMapData(f.DefaultNginxConfigMapData)
 	Expect(err).NotTo(HaveOccurred())
 }
 
@@ -259,8 +274,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 	}
 }
 
-// GetNginxConfigMap gets ingress-nginx's nginx-configuration map
-func (f *Framework) GetNginxConfigMap() (*v1.ConfigMap, error) {
+func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
 	if f.KubeClientSet == nil {
 		return nil, fmt.Errorf("KubeClientSet not initialized")
 	}
@@ -270,22 +284,15 @@ func (f *Framework) GetNginxConfigMap() (*v1.ConfigMap, error) {
 		return nil, err
 	}
 
-	time.Sleep(1 * time.Second)
 	return config, err
 }
 
 // GetNginxConfigMapData gets ingress-nginx's nginx-configuration map's data
 func (f *Framework) GetNginxConfigMapData() (map[string]string, error) {
-	config, err := f.GetNginxConfigMap()
-
+	config, err := f.getNginxConfigMap()
 	if err != nil {
 		return nil, err
 	}
-
-	if config == nil {
-		return nil, fmt.Errorf("Unable to get nginx-configuration configMap")
-	}
-
 	if config.Data == nil {
 		config.Data = map[string]string{}
 	}
@@ -297,7 +304,7 @@ func (f *Framework) GetNginxConfigMapData() (map[string]string, error) {
 func (f *Framework) SetNginxConfigMapData(cmData map[string]string) error {
 	// Needs to do a Get and Set, Update will not take just the Data field
 	// or a configMap that is not the very last revision
-	config, err := f.GetNginxConfigMap()
+	config, err := f.getNginxConfigMap()
 	if err != nil {
 		return err
 	}

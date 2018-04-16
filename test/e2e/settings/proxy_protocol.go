@@ -35,25 +35,16 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 	f := framework.NewDefaultFramework("proxy-protocol")
 
 	setting := "use-proxy-protocol"
-	var defaultNginxConfigMapData map[string]string = nil
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
 		Expect(err).NotTo(HaveOccurred())
-
-		if defaultNginxConfigMapData == nil {
-			defaultNginxConfigMapData, err = f.GetNginxConfigMapData()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(defaultNginxConfigMapData).NotTo(BeNil())
-		}
 
 		err = f.UpdateNginxConfigMapData(setting, "false")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		err := f.SetNginxConfigMapData(defaultNginxConfigMapData)
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should respect port passed by the PROXY Protocol", func() {

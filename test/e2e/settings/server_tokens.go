@@ -31,32 +31,18 @@ import (
 var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 	f := framework.NewDefaultFramework("server-tokens")
 	serverTokens := "server-tokens"
-	var defaultNginxConfigMapData map[string]string = nil
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
 		Expect(err).NotTo(HaveOccurred())
-
-		if defaultNginxConfigMapData == nil {
-			defaultNginxConfigMapData, err = f.GetNginxConfigMapData()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(defaultNginxConfigMapData).NotTo(BeNil())
-		}
 	})
 
 	AfterEach(func() {
-		err := f.SetNginxConfigMapData(defaultNginxConfigMapData)
-		Expect(err).NotTo(HaveOccurred())
 	})
 
-<<<<<<< HEAD
-	It("should not exist Server header in the response", func() {
-		updateConfigmap(serverTokens, "false", f.KubeClientSet)
-=======
 	It("should not exists Server header in the response", func() {
 		err := f.UpdateNginxConfigMapData(serverTokens, "false")
 		Expect(err).NotTo(HaveOccurred())
->>>>>>> Introduce ConfigMap updating helpers into e2e/framework and retain default nginx-configuration state between tests
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
