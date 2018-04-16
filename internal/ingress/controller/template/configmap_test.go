@@ -33,22 +33,23 @@ func TestFilterErrors(t *testing.T) {
 
 func TestMergeConfigMapToStruct(t *testing.T) {
 	conf := map[string]string{
-		"custom-http-errors":          "300,400,demo",
-		"proxy-read-timeout":          "1",
-		"proxy-send-timeout":          "2",
-		"skip-access-log-urls":        "/log,/demo,/test",
-		"use-proxy-protocol":          "true",
-		"disable-access-log":          "true",
-		"access-log-path":             "/var/log/test/access.log",
-		"error-log-path":              "/var/log/test/error.log",
-		"use-gzip":                    "true",
-		"enable-dynamic-tls-records":  "false",
-		"gzip-types":                  "text/html",
-		"proxy-real-ip-cidr":          "1.1.1.1/8,2.2.2.2/24",
-		"bind-address":                "1.1.1.1,2.2.2.2,3.3.3,2001:db8:a0b:12f0::1,3731:54:65fe:2::a7,33:33:33::33::33",
-		"worker-shutdown-timeout":     "99s",
-		"nginx-status-ipv4-whitelist": "127.0.0.1,10.0.0.0/24",
-		"nginx-status-ipv6-whitelist": "::1,2001::/16",
+		"custom-http-errors":            "300,400,demo",
+		"proxy-read-timeout":            "1",
+		"proxy-send-timeout":            "2",
+		"skip-access-log-urls":          "/log,/demo,/test",
+		"use-proxy-protocol":            "true",
+		"disable-access-log":            "true",
+		"access-log-path":               "/var/log/test/access.log",
+		"error-log-path":                "/var/log/test/error.log",
+		"use-gzip":                      "true",
+		"enable-dynamic-tls-records":    "false",
+		"gzip-types":                    "text/html",
+		"proxy-real-ip-cidr":            "1.1.1.1/8,2.2.2.2/24",
+		"bind-address":                  "1.1.1.1,2.2.2.2,3.3.3,2001:db8:a0b:12f0::1,3731:54:65fe:2::a7,33:33:33::33::33",
+		"worker-shutdown-timeout":       "99s",
+		"nginx-status-ipv4-whitelist":   "127.0.0.1,10.0.0.0/24",
+		"nginx-status-ipv6-whitelist":   "::1,2001::/16",
+		"proxy-add-original-uri-header": "false",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -67,6 +68,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.WorkerShutdownTimeout = "99s"
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
+	def.ProxyAddOriginalUriHeader = false
 
 	to := ReadConfig(conf)
 	if diff := pretty.Compare(to, def); diff != "" {

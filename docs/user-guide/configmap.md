@@ -104,6 +104,7 @@ The following table shows a configuration option's name, type, and the default v
 |[bind-address-ipv6](#bind-address-ipv6)|[]string|""|
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
+|[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"true"|
 |[enable-opentracing](#enable-opentracing)|bool|"false"|
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
 |[zipkin-collector-port](#zipkin-collector-port)|int|9411|
@@ -584,6 +585,10 @@ Sets the header field for identifying the originating IP address of a client. De
 ## compute-full-forwarded-for
 
 Append the remote address to the X-Forwarded-For header instead of replacing it. When this option is enabled, the upstream application is responsible for extracting the client IP based on its own list of trusted proxies.
+
+## proxy-add-original-uri-header
+
+Adds an X-Original-Uri header with the original request URI to the backend request
 
 ## enable-opentracing
 
