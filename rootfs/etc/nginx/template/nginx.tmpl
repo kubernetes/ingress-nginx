@@ -532,6 +532,7 @@ http {
             {{ if $cfg.EnableVtsStatus }}
             vhost_traffic_status_display;
             vhost_traffic_status_display_format html;
+            vhost_traffic_status_display_sum_key {{ $cfg.VtsSumKey }};
             {{ else }}
             access_log off;
             stub_status on;

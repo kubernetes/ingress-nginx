@@ -46,6 +46,7 @@ The following table shows a configuration option's name, type, and the default v
 |[ignore-invalid-headers](#ignore-invalid-headers)|bool|true|
 |[enable-vts-status](#enable-vts-status)|bool|false|
 |[vts-status-zone-size](#vts-status-zone-size)|string|"10m"|
+|[vts-sum-key](#vts-sum-key)|string|"*"|
 |[vts-default-filter-key](#vts-default-filter-key)|string|"$geoip_country_code country::*"|
 |[retry-non-idempotent](#retry-non-idempotent)|bool|"false"|
 |[error-log-level](#error-log-level)|string|"notice"|
@@ -253,6 +254,13 @@ Vts config on http level enables the keys by user defined variable. The key is a
 
 _References:_
 - https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key
+
+## vts-sum-key
+
+For metrics keyed (or when using Prometheus, labeled) by server zone, this value is used to indicate metrics for all server zones combined. Default value is *
+
+_References:_
+- https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key
 
 ## retry-non-idempotent
 
