@@ -332,7 +332,7 @@ Example for json output:
 
 ```console
 log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr",
-    "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$request_id", "remote_user":
+    "x-forward-for": "$proxy_add_x_forwarded_for", "request_id": "$req_id", "remote_user":
     "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status":
     $status, "vhost": "$host", "request_proto": "$server_protocol", "path": "$uri",
     "request_query": "$args", "request_length": $request_length, "duration": $request_time,

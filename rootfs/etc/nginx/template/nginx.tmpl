@@ -273,6 +273,13 @@ http {
         ''               $this_host;
     }
 
+    # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
+    # If no such header is provided, it can provide a random value.
+    map $http_x_request_id $req_id {                                                 
+        default   $http_x_request_id;                                               
+        ""        $request_id;                                                      
+    }
+
     {{ if $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
