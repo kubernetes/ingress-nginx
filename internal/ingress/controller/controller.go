@@ -859,7 +859,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	defaultPemSHA := n.cfg.FakeCertificateSHA
 
 	// Tries to fetch the default Certificate from nginx configuration.
-	// If it does not exists, use the ones generated on Start()
+	// If it does not exist, use the ones generated on Start()
 	defaultCertificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
 	if err == nil {
 		defaultPemFileName = defaultCertificate.PemFileName
