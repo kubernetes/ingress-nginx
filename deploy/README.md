@@ -88,7 +88,7 @@ $ minikube addons disable ingress
 $ kubectl edit deployment nginx-ingress-controller -n ingress-nginx
 ```
 
-edit the following section:
+Edit the following section:
 
 ```yaml
 image: <IMAGE-NAME>:<TAG>
@@ -281,10 +281,10 @@ kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --vers
 
 ## Deploying the config-map
 
-A config map can be used to configure system components for the nginx-controller. In order to begin using a config-map
+A config-map can be used to configure system components for the nginx-controller. In order to begin using a config-map
 make sure it has been created and is being used in the deployment.
 
-It is created as seen in the [Mandatory Commands](#mandatory-commands) section above.
+It is created as seen in the [Mandatory Commands](#mandatory-commands) section above,
 ```console
 curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/configmap.yaml \
     | kubectl apply -f -
