@@ -180,6 +180,11 @@ type Configuration struct {
 	// Default value is $geoip_country_code country::*
 	VtsDefaultFilterKey string `json:"vts-default-filter-key,omitempty"`
 
+	// Description: Sets sum key used by vts json output, and the sum label in prometheus output.
+	// These indicate metrics values for all server zones combined, rather than for a specific one.
+	// Default value is *
+	VtsSumKey string `json:"vts-sum-key,omitempty"`
+
 	// RetryNonIdempotent since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH)
 	// in case of an error. The previous behavior can be restored using the value true
 	RetryNonIdempotent bool `json:"retry-non-idempotent"`
@@ -582,6 +587,7 @@ func NewDefault() Configuration {
 		LoadBalanceAlgorithm:       defaultLoadBalancerAlgorithm,
 		VtsStatusZoneSize:          "10m",
 		VtsDefaultFilterKey:        "$geoip_country_code country::*",
+		VtsSumKey:                  "*",
 		VariablesHashBucketSize:    128,
 		VariablesHashMaxSize:       2048,
 		UseHTTP2:                   true,
