@@ -25,10 +25,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -45,7 +41,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			host := "foo"
 			createIngress(f, host, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.NginxHTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -60,7 +56,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 				"nginx.ingress.kubernetes.io/lua-resty-waf":                 "active",
 				"nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets": "41000_sqli, 42000_xss"})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.NginxHTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -88,7 +84,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 					]=]`,
 			})
 
-			url := fmt.Sprintf("%s?msg=my-message", f.NginxHTTPURL)
+			url := fmt.Sprintf("%s?msg=my-message", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -97,7 +93,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			Expect(len(errs)).Should(Equal(0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			url = fmt.Sprintf("%s?msg=my-foo-message", f.NginxHTTPURL)
+			url = fmt.Sprintf("%s?msg=my-foo-message", f.IngressController.HTTPURL)
 			resp, _, errs = gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -112,7 +108,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			host := "foo"
 			createIngress(f, host, map[string]string{})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.NginxHTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -125,7 +121,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			host := "foo"
 			createIngress(f, host, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "simulate"})
 
-			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.NginxHTTPURL)
+			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
 				Get(url).
 				Set("Host", host).
@@ -143,33 +139,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 })
 
 func createIngress(f *framework.Framework, host string, annotations map[string]string) {
-	ing, err := f.EnsureIngress(&v1beta1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        host,
-			Namespace:   f.Namespace.Name,
-			Annotations: annotations,
-		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
-				{
-					Host: host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
-								{
-									Path: "/",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: "http-svc",
-										ServicePort: intstr.FromInt(80),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	})
+	ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, &annotations))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(ing).NotTo(BeNil())
 
@@ -181,7 +151,7 @@ func createIngress(f *framework.Framework, host string, annotations map[string]s
 	Expect(err).NotTo(HaveOccurred())
 
 	resp, body, errs := gorequest.New().
-		Get(f.NginxHTTPURL).
+		Get(f.IngressController.HTTPURL).
 		Set("Host", host).
 		End()
 

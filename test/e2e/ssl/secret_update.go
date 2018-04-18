@@ -25,9 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -48,7 +46,7 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 		dummySecret, err := f.EnsureSecret(&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
-				Namespace: f.Namespace.Name,
+				Namespace: f.IngressController.Namespace,
 			},
 			Data: map[string][]byte{
 				"key": []byte("value"),
@@ -56,39 +54,7 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.Namespace.Name,
-			},
-			Spec: v1beta1.IngressSpec{
-				TLS: []v1beta1.IngressTLS{
-					{
-						Hosts:      []string{host},
-						SecretName: host,
-					},
-				},
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
-
+		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
 		Expect(err).ToNot(HaveOccurred())
 		Expect(ing).ToNot(BeNil())
 
@@ -109,12 +75,12 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(BeEmpty())
 
-		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("starting syncing of secret %v/dummy", f.Namespace.Name)))
-		time.Sleep(30 * time.Second)
+		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("starting syncing of secret %v/dummy", f.IngressController.Namespace)))
+		time.Sleep(5 * time.Second)
 		dummySecret.Data["some-key"] = []byte("some value")
-		f.KubeClientSet.CoreV1().Secrets(f.Namespace.Name).Update(dummySecret)
-		time.Sleep(30 * time.Second)
-		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("starting syncing of secret %v/dummy", f.Namespace.Name)))
-		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("error obtaining PEM from secret %v/dummy", f.Namespace.Name)))
+		f.KubeClientSet.CoreV1().Secrets(f.IngressController.Namespace).Update(dummySecret)
+		time.Sleep(5 * time.Second)
+		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("starting syncing of secret %v/dummy", f.IngressController.Namespace)))
+		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("error obtaining PEM from secret %v/dummy", f.IngressController.Namespace)))
 	})
 })

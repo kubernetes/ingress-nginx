@@ -40,7 +40,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "http-svc",
-			Namespace: f.Namespace.Name,
+			Namespace: f.IngressController.Namespace,
 		},
 		Spec: extensions.DeploymentSpec{
 			Replicas: NewInt32(replicas),
@@ -84,7 +84,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 		return fmt.Errorf("unexpected error creating deployement for echoserver")
 	}
 
-	err = f.WaitForPodsReady(10*time.Second, int(replicas), metav1.ListOptions{
+	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, int(replicas), f.IngressController.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {
@@ -94,7 +94,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "http-svc",
-			Namespace: f.Namespace.Name,
+			Namespace: f.IngressController.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{

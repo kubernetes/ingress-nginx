@@ -48,7 +48,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      host,
-				Namespace: f.Namespace.Name,
+				Namespace: f.IngressController.Namespace,
 			},
 			Spec: v1beta1.IngressSpec{
 				Rules: []v1beta1.IngressRule{
@@ -83,7 +83,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
 
@@ -92,7 +92,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
 
 		resp, body, errs = gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", "bar").
 			End()
 
@@ -106,7 +106,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      host,
-				Namespace: f.Namespace.Name,
+				Namespace: f.IngressController.Namespace,
 				Annotations: map[string]string{
 					"nginx.ingress.kubernetes.io/server-alias": "bar",
 				},
@@ -146,7 +146,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		hosts := []string{"foo", "bar"}
 		for _, host := range hosts {
 			resp, body, errs := gorequest.New().
-				Get(f.NginxHTTPURL).
+				Get(f.IngressController.HTTPURL).
 				Set("Host", host).
 				End()
 

@@ -49,7 +49,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      host,
-				Namespace: f.Namespace.Name,
+				Namespace: f.IngressController.Namespace,
 				Annotations: map[string]string{
 					"nginx.ingress.kubernetes.io/affinity":            "cookie",
 					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
@@ -81,12 +81,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.Namespace.Name+"-http-svc-80;")
+				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
 
@@ -101,7 +101,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      host,
-				Namespace: f.Namespace.Name,
+				Namespace: f.IngressController.Namespace,
 				Annotations: map[string]string{
 					"nginx.ingress.kubernetes.io/affinity":            "cookie",
 					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
@@ -135,12 +135,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.Namespace.Name+"-http-svc-80;")
+				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
 

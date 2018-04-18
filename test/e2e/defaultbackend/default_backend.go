@@ -76,9 +76,9 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 
 			switch test.Scheme {
 			case framework.HTTP:
-				cm = request.CustomMethod(test.Method, f.NginxHTTPURL)
+				cm = request.CustomMethod(test.Method, f.IngressController.HTTPURL)
 			case framework.HTTPS:
-				cm = request.CustomMethod(test.Method, f.NginxHTTPSURL)
+				cm = request.CustomMethod(test.Method, f.IngressController.HTTPSURL)
 				// the default backend uses a self generated certificate
 				cm.Transport = &http.Transport{
 					TLSClientConfig: &tls.Config{
