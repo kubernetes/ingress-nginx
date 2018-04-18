@@ -51,7 +51,8 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		updateConfigmap(setting, noAuthPath, f.KubeClientSet)
+		err = f.UpdateNginxConfigMapData(setting, noAuthPath)
+		Expect(err).NotTo(HaveOccurred())
 
 		bi := buildBasicAuthIngressWithSecondPath(host, f.Namespace.Name, s.Name, noAuthPath)
 		ing, err := f.EnsureIngress(bi)
@@ -60,7 +61,6 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 	})
 
 	AfterEach(func() {
-		updateConfigmap(setting, "/.well-known/acme-challenge", f.KubeClientSet)
 	})
 
 	It("should return status code 401 when accessing '/' unauthentication", func() {

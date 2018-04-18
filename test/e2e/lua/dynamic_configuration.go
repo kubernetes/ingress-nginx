@@ -210,6 +210,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 					return err
 				})
 			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(5 * time.Second)
 
 			By("Making a first request")
 			host := "foo.com"

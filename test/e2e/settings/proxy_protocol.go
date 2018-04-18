@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"net"
 	"strings"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,7 +28,6 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -41,16 +39,19 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
 		Expect(err).NotTo(HaveOccurred())
+
+		err = f.UpdateNginxConfigMapData(setting, "false")
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		updateConfigmap(setting, "false", f.KubeClientSet)
 	})
 
 	It("should respect port passed by the PROXY Protocol", func() {
 		host := "proxy-protocol"
 
-		updateConfigmap(setting, "true", f.KubeClientSet)
+		err := f.UpdateNginxConfigMapData(setting, "true")
+		Expect(err).NotTo(HaveOccurred())
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -111,19 +112,3 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-for=192.168.0.1")))
 	})
 })
-
-func updateConfigmap(k, v string, c kubernetes.Interface) {
-	By(fmt.Sprintf("updating configuration configmap setting %v to '%v'", k, v))
-	config, err := c.CoreV1().ConfigMaps("ingress-nginx").Get("nginx-configuration", metav1.GetOptions{})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(config).NotTo(BeNil())
-
-	if config.Data == nil {
-		config.Data = map[string]string{}
-	}
-
-	config.Data[k] = v
-	_, err = c.CoreV1().ConfigMaps("ingress-nginx").Update(config)
-	Expect(err).NotTo(HaveOccurred())
-	time.Sleep(1 * time.Second)
-}
