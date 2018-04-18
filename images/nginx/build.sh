@@ -183,6 +183,9 @@ get_src feacc662fd7724741c2b3277b2d27b5ab2821bdb28b499d063dbd23414447249 \
 get_src 30a68f1828ed6a53ee6ed062132ea914201076058b1d126ea90ff8e55df09daf \
         "https://github.com/openresty/lua-resty-string/archive/v0.11rc1.tar.gz"
 
+get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
+        "https://github.com/openresty/lua-resty-balancer/archive/v0.02rc4.tar.gz"
+
 get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
         "http://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz"
 
@@ -224,6 +227,10 @@ if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   make install
 
   cd "$BUILD_PATH/lua-resty-string-0.11rc1"
+  make install
+
+  cd "$BUILD_PATH/lua-resty-balancer-0.02rc4"
+  make all
   make install
 
   # build and install lua-resty-waf with dependencies
