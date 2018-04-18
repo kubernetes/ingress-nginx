@@ -38,6 +38,8 @@ type Config struct {
 	ForceSSLRedirect bool `json:"forceSSLRedirect"`
 	// AppRoot defines the Application Root that the Controller must redirect if it's in '/' context
 	AppRoot string `json:"appRoot"`
+	// Location modifier
+	LocationModifier string `json:"locationModifier"`
 }
 
 // Equal tests for equality between two Redirect types
@@ -49,6 +51,9 @@ func (r1 *Config) Equal(r2 *Config) bool {
 		return false
 	}
 	if r1.Target != r2.Target {
+		return false
+	}
+	if r1.LocationModifier != r2.LocationModifier {
 		return false
 	}
 	if r1.AddBaseURL != r2.AddBaseURL {
@@ -83,6 +88,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 	rt, _ := parser.GetStringAnnotation("rewrite-target", ing)
+
 	sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing)
 	if err != nil {
 		sslRe = a.r.GetDefaultBackend().SSLRedirect
@@ -94,6 +100,7 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 	abu, _ := parser.GetBoolAnnotation("add-base-url", ing)
 	bus, _ := parser.GetStringAnnotation("base-url-scheme", ing)
 	ar, _ := parser.GetStringAnnotation("app-root", ing)
+	locMod, _ := parser.GetStringAnnotation("location-modifier", ing)
 
 	return &Config{
 		Target:           rt,
@@ -102,5 +109,6 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 		SSLRedirect:      sslRe,
 		ForceSSLRedirect: fSslRe,
 		AppRoot:          ar,
+		LocationModifier: locMod,
 	}, nil
 }

@@ -42,6 +42,7 @@ var (
 	tmplFuncTestcases = map[string]struct {
 		Path                        string
 		Target                      string
+		LocationModifier            string
 		Location                    string
 		ProxyPass                   string
 		AddBaseURL                  bool
@@ -51,9 +52,22 @@ var (
 		DynamicConfigurationEnabled bool
 		SecureBackend               bool
 	}{
+		"when location modifier specified": {
+			"/",
+			"/",
+			"~*",
+			"~* /",
+			"proxy_pass http://upstream-name;",
+			false,
+			"",
+			false,
+			false,
+			false,
+			false},
 		"when secure backend enabled": {
 			"/",
 			"/",
+			"",
 			"/",
 			"proxy_pass https://upstream-name;",
 			false,
@@ -65,6 +79,7 @@ var (
 		"when secure backend and stickeness enabled": {
 			"/",
 			"/",
+			"",
 			"/",
 			"proxy_pass https://sticky-upstream-name;",
 			false,
@@ -76,6 +91,7 @@ var (
 		"when secure backend and dynamic config enabled": {
 			"/",
 			"/",
+			"",
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			false,
@@ -87,6 +103,7 @@ var (
 		"when secure backend, stickeness and dynamic config enabled": {
 			"/",
 			"/",
+			"",
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			false,
@@ -98,6 +115,7 @@ var (
 		"invalid redirect / to / with dynamic config enabled": {
 			"/",
 			"/",
+			"",
 			"/",
 			"proxy_pass http://upstream_balancer;",
 			false,
@@ -109,6 +127,7 @@ var (
 		"invalid redirect / to /": {
 			"/",
 			"/",
+			"",
 			"/",
 			"proxy_pass http://upstream-name;",
 			false,
@@ -120,6 +139,7 @@ var (
 		"redirect / to /jenkins": {
 			"/",
 			"/jenkins",
+			"~*",
 			"~* /",
 			`
 rewrite /(.*) /jenkins/$1 break;
@@ -134,6 +154,7 @@ proxy_pass http://upstream-name;
 		"redirect /something to /": {
 			"/something",
 			"/",
+			"",
 			`~* ^/something\/?(?<baseuri>.*)`,
 			`
 rewrite /something/(.*) /$1 break;
@@ -146,9 +167,26 @@ proxy_pass http://upstream-name;
 			false,
 			false,
 			false},
+		"redirect /something to ~/": {
+			"/something",
+			"/",
+			"~",
+			`~ ^/something\/?(?<baseuri>.*)`,
+			`
+	    rewrite /something/(.*) /$1 break;
+	    rewrite /something / break;
+	    proxy_pass http://upstream-name;
+	    `,
+			false,
+			"",
+			false,
+			false,
+			false,
+			false},
 		"redirect /end-with-slash/ to /not-root": {
 			"/end-with-slash/",
 			"/not-root",
+			"",
 			"~* ^/end-with-slash/(?<baseuri>.*)",
 			`
 rewrite /end-with-slash/(.*) /not-root/$1 break;
@@ -163,6 +201,7 @@ proxy_pass http://upstream-name;
 		"redirect /something-complex to /not-root": {
 			"/something-complex",
 			"/not-root",
+			"",
 			`~* ^/something-complex\/?(?<baseuri>.*)`,
 			`
 rewrite /something-complex/(.*) /not-root/$1 break;
@@ -177,6 +216,7 @@ proxy_pass http://upstream-name;
 		"redirect / to /jenkins and rewrite": {
 			"/",
 			"/jenkins",
+			"",
 			"~* /",
 			`
 rewrite /(.*) /jenkins/$1 break;
@@ -194,6 +234,7 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 		"redirect /something to / and rewrite": {
 			"/something",
 			"/",
+			"",
 			`~* ^/something\/?(?<baseuri>.*)`,
 			`
 rewrite /something/(.*) /$1 break;
@@ -212,6 +253,7 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 		"redirect /end-with-slash/ to /not-root and rewrite": {
 			"/end-with-slash/",
 			"/not-root",
+			"",
 			`~* ^/end-with-slash/(?<baseuri>.*)`,
 			`
 rewrite /end-with-slash/(.*) /not-root/$1 break;
@@ -229,6 +271,7 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 		"redirect /something-complex to /not-root and rewrite": {
 			"/something-complex",
 			"/not-root",
+			"",
 			`~* ^/something-complex\/?(?<baseuri>.*)`,
 			`
 rewrite /something-complex/(.*) /not-root/$1 break;
@@ -246,6 +289,7 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 		"redirect /something to / and rewrite with specific scheme": {
 			"/something",
 			"/",
+			"",
 			`~* ^/something\/?(?<baseuri>.*)`,
 			`
 rewrite /something/(.*) /$1 break;
@@ -264,6 +308,7 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 		"redirect / to /something with sticky enabled": {
 			"/",
 			"/something",
+			"",
 			`~* /`,
 			`
 rewrite /(.*) /something/$1 break;
@@ -278,6 +323,7 @@ proxy_pass http://sticky-upstream-name;
 		"redirect / to /something with sticky and dynamic config enabled": {
 			"/",
 			"/something",
+			"",
 			`~* /`,
 			`
 rewrite /(.*) /something/$1 break;
@@ -292,6 +338,7 @@ proxy_pass http://upstream_balancer;
 		"add the X-Forwarded-Prefix header": {
 			"/there",
 			"/something",
+			"",
 			`~* ^/there\/?(?<baseuri>.*)`,
 			`
 rewrite /there/(.*) /something/$1 break;
@@ -370,12 +417,12 @@ func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:    tc.Path,
-			Rewrite: rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
+			Rewrite: rewrite.Config{Target: tc.Target, LocationModifier: tc.LocationModifier, AddBaseURL: tc.AddBaseURL},
 		}
 
 		newLoc := buildLocation(loc)
 		if tc.Location != newLoc {
-			t.Errorf("%s: expected '%v' but returned %v", k, tc.Location, newLoc)
+			t.Errorf("%s: expected '%v' but returned '%v'", k, tc.Location, newLoc)
 		}
 	}
 }
