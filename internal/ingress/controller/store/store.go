@@ -538,18 +538,37 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 		"auth-tls-secret",
 	}
 	for _, ann := range secretAnnotations {
-		secrName, err := parser.GetStringAnnotation(ann, ing)
+		secrKey, err := objectRefAnnotationNsKey(ann, ing)
 		if err != nil {
+			glog.Errorf("error reading secret reference in annotation %q: %s", ann, err)
 			continue
 		}
-		if secrName != "" {
-			secrKey := fmt.Sprintf("%v/%v", ing.Namespace, secrName)
+		if secrKey != "" {
 			refSecrets = append(refSecrets, secrKey)
 		}
 	}
 
 	// populate map with all secret references
 	s.secretIngressMap.Insert(key, refSecrets...)
+}
+
+// objectRefAnnotationNsKey returns an object reference formatted as a
+// 'namespace/name' key from the given annotation name.
+func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, error) {
+	annValue, err := parser.GetStringAnnotation(ann, ing)
+	if annValue == "" {
+		return "", err
+	}
+
+	secrNs, secrName, err := cache.SplitMetaNamespaceKey(annValue)
+	if secrName == "" {
+		return "", err
+	}
+
+	if secrNs == "" {
+		return fmt.Sprintf("%v/%v", ing.Namespace, secrName), nil
+	}
+	return annValue, nil
 }
 
 // syncSecrets synchronizes data from all Secrets referenced by the given
