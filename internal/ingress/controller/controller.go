@@ -147,10 +147,11 @@ func (n *NGINXController) syncIngress(interface{}) error {
 				continue
 			}
 			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
-				Backend:  loc.Backend,
-				Hostname: server.Hostname,
-				Service:  loc.Service,
-				Port:     loc.Port,
+				Backend:       loc.Backend,
+				Hostname:      server.Hostname,
+				Service:       loc.Service,
+				Port:          loc.Port,
+				ProxyProtocol: server.ProxyProtocol,
 			})
 			break
 		}
@@ -1069,6 +1070,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			// only add a certificate if the server does not have one previously configured
 			if servers[host].SSLCert.PemFileName != "" {
 				continue
+			}
+
+			if anns.ProxyProtocol {
+				servers[host].ProxyProtocol = anns.ProxyProtocol
 			}
 
 			if len(ing.Spec.TLS) == 0 {

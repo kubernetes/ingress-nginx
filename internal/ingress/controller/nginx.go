@@ -463,12 +463,11 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				}
 			}
 
-			// TODO: Allow PassthroughBackends to specify they support proxy-protocol
 			servers = append(servers, &TCPServer{
 				Hostname:      pb.Hostname,
 				IP:            svc.Spec.ClusterIP,
 				Port:          port,
-				ProxyProtocol: false,
+				ProxyProtocol: pb.ProxyProtocol,
 			})
 		}
 

@@ -45,6 +45,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/portinredirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyprotocol"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
@@ -81,6 +82,7 @@ type Ingress struct {
 	Denied               error
 	ExternalAuth         authreq.Config
 	Proxy                proxy.Config
+	ProxyProtocol        bool
 	RateLimit            ratelimit.Config
 	Redirect             redirect.Config
 	Rewrite              rewrite.Config
@@ -123,6 +125,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
+			"ProxyProtocol":        proxyprotocol.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
