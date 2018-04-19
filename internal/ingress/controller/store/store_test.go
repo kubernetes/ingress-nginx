@@ -19,6 +19,7 @@ package store
 import (
 	"fmt"
 	"os"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -31,8 +32,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -652,4 +655,89 @@ func newFS(t *testing.T) file.Filesystem {
 		t.Fatalf("unexpected error creating filesystem: %v", err)
 	}
 	return fs
+}
+
+// newStore creates a new mock object store for tests which do not require the
+// use of Informers.
+func newStore(t *testing.T) *k8sStore {
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	return &k8sStore{
+		listers: &Lister{
+			// add more listers if needed
+			Ingress: IngressLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
+		},
+		sslStore:         NewSSLCertTracker(),
+		filesystem:       fs,
+		updateCh:         channels.NewRingChannel(10),
+		mu:               new(sync.Mutex),
+		secretIngressMap: NewObjectRefMap(),
+	}
+}
+
+func TestUpdateSecretIngressMap(t *testing.T) {
+	s := newStore(t)
+
+	ingTpl := &v1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "testns",
+		},
+	}
+	s.listers.Ingress.Add(ingTpl)
+
+	t.Run("with TLS secret", func(t *testing.T) {
+		ing := ingTpl.DeepCopy()
+		ing.Spec = v1beta1.IngressSpec{
+			TLS: []v1beta1.IngressTLS{{SecretName: "tls"}},
+		}
+		s.listers.Ingress.Update(ing)
+		s.updateSecretIngressMap(ing)
+
+		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/tls")) {
+			t.Errorf("Expected \"testns/tls\" to be the only referenced Secret (got %d)", l)
+		}
+	})
+
+	t.Run("with annotation in simple name format", func(t *testing.T) {
+		ing := ingTpl.DeepCopy()
+		ing.ObjectMeta.SetAnnotations(map[string]string{
+			parser.GetAnnotationWithPrefix("auth-secret"): "auth",
+		})
+		s.listers.Ingress.Update(ing)
+		s.updateSecretIngressMap(ing)
+
+		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/auth")) {
+			t.Errorf("Expected \"testns/auth\" to be the only referenced Secret (got %d)", l)
+		}
+	})
+
+	t.Run("with annotation in namespace/name format", func(t *testing.T) {
+		ing := ingTpl.DeepCopy()
+		ing.ObjectMeta.SetAnnotations(map[string]string{
+			parser.GetAnnotationWithPrefix("auth-secret"): "otherns/auth",
+		})
+		s.listers.Ingress.Update(ing)
+		s.updateSecretIngressMap(ing)
+
+		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("otherns/auth")) {
+			t.Errorf("Expected \"otherns/auth\" to be the only referenced Secret (got %d)", l)
+		}
+	})
+
+	t.Run("with annotation in invalid format", func(t *testing.T) {
+		ing := ingTpl.DeepCopy()
+		ing.ObjectMeta.SetAnnotations(map[string]string{
+			parser.GetAnnotationWithPrefix("auth-secret"): "ns/name/garbage",
+		})
+		s.listers.Ingress.Update(ing)
+		s.updateSecretIngressMap(ing)
+
+		if l := s.secretIngressMap.Len(); l != 0 {
+			t.Errorf("Expected 0 referenced Secret (got %d)", l)
+		}
+	})
 }
