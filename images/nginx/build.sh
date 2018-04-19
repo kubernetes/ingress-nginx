@@ -283,9 +283,9 @@ make install
 
 # Download owasp modsecurity crs
 cd /etc/nginx/
-git clone -b v3.1/dev --single-branch https://github.com/SpiderLabs/owasp-modsecurity-crs
+git clone -b v3.0/master --single-branch https://github.com/SpiderLabs/owasp-modsecurity-crs
 cd owasp-modsecurity-crs
-git checkout d7571979b534ae6d9968a6e3582fb4f5212c3586
+git checkout e4e0497be4d598cce0e0a8fef20d1f1e5578c8d0
 
 mv crs-setup.conf.example crs-setup.conf
 mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
