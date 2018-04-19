@@ -361,6 +361,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.Proxy).Equal(&l2.Proxy) {
 		return false
 	}
+	if !(&l1.ProxyPass).Equal(&l2.ProxyPass) {
+		return false
+	}
 	if l1.UsePortInRedirects != l2.UsePortInRedirects {
 		return false
 	}

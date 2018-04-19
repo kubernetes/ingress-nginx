@@ -437,6 +437,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.CorsConfig = anns.CorsConfig
 						loc.ExternalAuth = anns.ExternalAuth
 						loc.Proxy = anns.Proxy
+						loc.ProxyPass = anns.ProxyPass
 						loc.RateLimit = anns.RateLimit
 						loc.Redirect = anns.Redirect
 						loc.Rewrite = anns.Rewrite
@@ -475,6 +476,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						CorsConfig:           anns.CorsConfig,
 						ExternalAuth:         anns.ExternalAuth,
 						Proxy:                anns.Proxy,
+						ProxyPass:            anns.ProxyPass,
 						RateLimit:            anns.RateLimit,
 						Redirect:             anns.Redirect,
 						Rewrite:              anns.Rewrite,

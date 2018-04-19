@@ -407,6 +407,14 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 		}
 	}
 
+	if location.ProxyPass.Address != "" || location.ProxyPass.Port != "" {
+		if location.ProxyPass.ProxyToLocalNode {
+			upstreamName = fmt.Sprintf("%s:%s", os.Getenv("NODE_NAME"), location.ProxyPass.Port)
+		} else {
+			upstreamName = fmt.Sprintf("%s:%s", location.ProxyPass.Address, location.ProxyPass.Port)
+		}
+	}
+
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
 	defProxyPass := fmt.Sprintf("%v %s://%s;", proxyPass, proto, upstreamName)
 

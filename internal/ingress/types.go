@@ -33,6 +33,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/proxypass"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
@@ -206,6 +207,9 @@ type Location struct {
 	// vhost of the incoming request.
 	// +optional
 	UpstreamVhost string `json:"upstream-vhost"`
+	// ProxyPass allows customization of the proxy_pass directive.
+	// +optional
+	ProxyPass proxypass.Config `json:"proxyPass,omitempty"`
 	// BasicDigestAuth returns authentication configuration for
 	// an Ingress rule.
 	// +optional
