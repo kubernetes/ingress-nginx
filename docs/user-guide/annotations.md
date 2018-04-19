@@ -348,7 +348,7 @@ The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure
 **Important:**
 
 - Using the annotation `nginx.ingress.kubernetes.io/ssl-passthrough` invalidates all the other available annotations. This is because SSL Passthrough works in L4 (TCP).
-- The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled)
+- The use of this annotation requires Proxy Protocol to be enabled in the load-balancer. For example enabling Proxy Protocol for AWS ELB is described [here](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html). If you're using ingress-controller without load balancer then the flag `--enable-ssl-passthrough` is required (by default it is disabled).
 
 ### Secure backends
 
