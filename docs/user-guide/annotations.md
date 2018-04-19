@@ -16,11 +16,11 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
-|[nginx.ingress.kubernetes.io/auth-tls-secret](#certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#certificate-authentication)|number|
-|[nginx.ingress.kubernetes.io/auth-tls-verify-client](#certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-tls-error-page](#certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#certificate-authentication)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/auth-tls-secret](#client-certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#client-certificate-authentication)|number|
+|[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
@@ -108,8 +108,8 @@ Indicates the [HTTP Authentication Type: Basic or Digest Access Authentication](
 nginx.ingress.kubernetes.io/auth-secret: secretName
 ```
 
-The name of the secret that contains the usernames and passwords with access to the `path`s defined in the Ingress Rule.
-The secret must be created in the same namespace as the Ingress rule.
+The name of the Secret that contains the usernames and passwords which are granted access to the `path`s defined in the Ingress rules.
+This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.
 
 ```
 nginx.ingress.kubernetes.io/auth-realm: "realm string"
@@ -161,7 +161,8 @@ The annotations are:
 nginx.ingress.kubernetes.io/auth-tls-secret: secretName
 ```
 
-The name of the secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this ingress. It's composed of namespace/secretName.
+The name of the Secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
+This annotation also accepts the alternative form "namespace/secretName", in which case the Secret lookup is performed in the referenced namespace instead of the Ingress namespace.
 
 ```
 nginx.ingress.kubernetes.io/auth-tls-verify-depth
