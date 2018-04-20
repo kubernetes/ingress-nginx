@@ -492,10 +492,10 @@
   version = "v1.7.2"
 
 [[projects]]
-  name = "gopkg.in/fsnotify.v1"
+  name = "gopkg.in/fsnotify/fsnotify.v1"
   packages = ["."]
-  revision = "629574ca2a5df945712d3079857300b5e4da0236"
-  version = "v1.4.2"
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  version = "v1.4.7"
 
 [[projects]]
   name = "gopkg.in/go-playground/pool.v3"
@@ -865,6 +865,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "262bd1cf8d4735c8d09a6f6d83fed25ad9e1478443a7f6368210e7c3fbb58977"
+  inputs-digest = "b73a300a6dbcaac85d84661c5bb1a29e86fbad84ba2c8676ab71f554bf61c2b0"
   solver-name = "gps-cdcl"
   solver-version = 1
