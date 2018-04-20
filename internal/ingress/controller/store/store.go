@@ -47,6 +47,7 @@ import (
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
 )
@@ -539,7 +540,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 	}
 	for _, ann := range secretAnnotations {
 		secrKey, err := objectRefAnnotationNsKey(ann, ing)
-		if err != nil {
+		if err != nil && !errors.IsMissingAnnotations(err) {
 			glog.Errorf("error reading secret reference in annotation %q: %s", ann, err)
 			continue
 		}
