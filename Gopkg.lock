@@ -182,12 +182,6 @@
   version = "1.0.3"
 
 [[projects]]
-  name = "github.com/kr/pty"
-  packages = ["."]
-  revision = "95d05c1eef33a45bd58676b6ce28d105839b8d0b"
-  version = "v1.0.1"
-
-[[projects]]
   branch = "master"
   name = "github.com/kylelemons/godebug"
   packages = [
@@ -362,7 +356,11 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["ssh/terminal"]
+  packages = [
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "ssh/terminal"
+  ]
   revision = "6a293f2d4b14b8e6d3f0539e383f6d0d30fce3fd"
 
 [[projects]]
@@ -492,10 +490,10 @@
   version = "v1.7.2"
 
 [[projects]]
-  name = "gopkg.in/fsnotify.v1"
+  name = "gopkg.in/fsnotify/fsnotify.v1"
   packages = ["."]
-  revision = "629574ca2a5df945712d3079857300b5e4da0236"
-  version = "v1.4.2"
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  version = "v1.4.7"
 
 [[projects]]
   name = "gopkg.in/go-playground/pool.v3"
@@ -508,6 +506,17 @@
   packages = ["."]
   revision = "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"
   version = "v0.9.0"
+
+[[projects]]
+  name = "gopkg.in/square/go-jose.v2"
+  packages = [
+    ".",
+    "cipher",
+    "json",
+    "jwt"
+  ]
+  revision = "76dd09796242edb5b897103a75df2645c028c960"
+  version = "v2.1.6"
 
 [[projects]]
   branch = "v2"
@@ -824,13 +833,14 @@
     "pkg/apis/core/validation",
     "pkg/apis/extensions",
     "pkg/apis/networking",
+    "pkg/apis/policy",
+    "pkg/apis/scheduling",
     "pkg/capabilities",
     "pkg/cloudprovider",
     "pkg/controller",
     "pkg/features",
     "pkg/fieldpath",
-    "pkg/kubelet/apis",
-    "pkg/kubelet/apis/cri/v1alpha1/runtime",
+    "pkg/kubelet/apis/cri/runtime/v1alpha2",
     "pkg/kubelet/container",
     "pkg/kubelet/types",
     "pkg/kubelet/util/format",
@@ -851,7 +861,8 @@
     "pkg/util/sysctl",
     "pkg/util/taints",
     "pkg/volume",
-    "pkg/volume/util",
+    "pkg/volume/util/fs",
+    "pkg/volume/util/recyclerclient",
     "third_party/forked/golang/expansion"
   ]
   revision = "master"
@@ -865,6 +876,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "262bd1cf8d4735c8d09a6f6d83fed25ad9e1478443a7f6368210e7c3fbb58977"
+  inputs-digest = "b73a300a6dbcaac85d84661c5bb1a29e86fbad84ba2c8676ab71f554bf61c2b0"
   solver-name = "gps-cdcl"
   solver-version = 1
