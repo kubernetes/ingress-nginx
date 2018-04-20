@@ -237,12 +237,12 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		}
 
 		var pod *v1.Pod
-	Loop:
+
 		for _, p := range l.Items {
 			if strings.HasPrefix(p.GetName(), "nginx-ingress-controller") {
 				if isRunning, err := podRunningReady(&p); err == nil && isRunning {
 					pod = &p
-					break Loop
+					break
 				}
 			}
 		}

@@ -55,7 +55,7 @@ func (f *Framework) NewIngressController(namespace string) error {
 		execErr bytes.Buffer
 	)
 
-	cmd := exec.Command("test/e2e/wait-for-nginx.sh", namespace)
+	cmd := exec.Command("./wait-for-nginx.sh", namespace)
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 

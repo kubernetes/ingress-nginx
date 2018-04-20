@@ -52,7 +52,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
