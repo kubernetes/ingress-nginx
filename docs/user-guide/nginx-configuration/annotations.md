@@ -82,6 +82,9 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/proxy-pass-address](#custom-proxy-pass)|string|
+|[nginx.ingress.kubernetes.io/proxy-pass-port](#custom-proxy-pass)|string|
+|[nginx.ingress.kubernetes.io/proxy-to-local-node](#custom-proxy-pass)|"true" or "false"|
 
 ### Rewrite
 
@@ -580,3 +583,19 @@ To use the module in the Kubernetes Nginx ingress controller, you have two optio
 - Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
 anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs)
 
+### Custom Proxy Pass
+
+We can override the `proxy_pass` value in the nginx config per location using the `proxy-pass-address`, `proxy-pass-port`,
+and `proxy-to-local-node` annotations.
+
+`proxy-pass-address` and `proxy-pass-port` directly set the `proxy_pass` value, i.e:
+ ```yaml
+nginx.ingress.kubernetes.io/proxy-pass-address: l5d.linkerd.svc.cluster.local
+nginx.ingress.kubernetes.io/proxy-pass-port: "4140"
+ ```
+
+will produce the string `proxy_pass http://l5d.linkerd.svc.cluster.local:4140`
+
+If `proxy-to-local-node` is true, the `proxy_pass` address will be set to the value parsed by `os.Getenv("NODE_NAME")`,
+which can be set to the name of the node using the downward API; this is useful when combining the nginx-ingress-controller
+with a service mesh running as a daemonset such as linkerd.
