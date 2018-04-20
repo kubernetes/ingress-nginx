@@ -44,34 +44,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		err := f.UpdateNginxConfigMapData(serverTokens, "false")
 		Expect(err).NotTo(HaveOccurred())
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        serverTokens,
-				Namespace:   f.Namespace.Name,
-				Annotations: map[string]string{},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: serverTokens,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
-
+		ing, err := f.EnsureIngress(framework.NewSingleIngress(serverTokens, "/", serverTokens, f.IngressController.Namespace, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -90,7 +63,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        serverTokens,
-				Namespace:   f.Namespace.Name,
+				Namespace:   f.IngressController.Namespace,
 				Annotations: map[string]string{},
 			},
 			Spec: v1beta1.IngressSpec{

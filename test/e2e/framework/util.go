@@ -100,7 +100,7 @@ func LoadConfig(config, context string) (*rest.Config, error) {
 var RunID = uuid.NewUUID()
 
 // CreateKubeNamespace creates a new namespace in the cluster
-func CreateKubeNamespace(baseName string, c kubernetes.Interface) (*v1.Namespace, error) {
+func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
 	ts := time.Now().UnixNano()
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -120,9 +120,9 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (*v1.Namespace
 		return true, nil
 	})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return got, nil
+	return got.Name, nil
 }
 
 // DeleteKubeNamespace deletes a namespace and all the objects inside
@@ -140,7 +140,7 @@ func ExpectNoError(err error, explain ...interface{}) {
 
 // WaitForKubeNamespaceNotExist waits until a namespaces is not present in the cluster
 func WaitForKubeNamespaceNotExist(c kubernetes.Interface, namespace string) error {
-	return wait.PollImmediate(Poll, time.Minute*2, namespaceNotExist(c, namespace))
+	return wait.PollImmediate(Poll, time.Minute*5, namespaceNotExist(c, namespace))
 }
 
 func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionFunc {
@@ -158,7 +158,7 @@ func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionF
 
 // WaitForNoPodsInNamespace waits until there are no pods running in a namespace
 func WaitForNoPodsInNamespace(c kubernetes.Interface, namespace string) error {
-	return wait.PollImmediate(Poll, time.Minute*2, noPodsInNamespace(c, namespace))
+	return wait.PollImmediate(Poll, time.Minute*5, noPodsInNamespace(c, namespace))
 }
 
 func noPodsInNamespace(c kubernetes.Interface, namespace string) wait.ConditionFunc {

@@ -47,3 +47,26 @@ func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
 
 	return execOut.String(), nil
 }
+
+// NewIngressController deploys a new NGINX Ingress controller in a namespace
+func (f *Framework) NewIngressController(namespace string) error {
+	var (
+		execOut bytes.Buffer
+		execErr bytes.Buffer
+	)
+
+	cmd := exec.Command("test/e2e/wait-for-nginx.sh", namespace)
+	cmd.Stdout = &execOut
+	cmd.Stderr = &execErr
+
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("could not execute: %v", err)
+	}
+
+	if execErr.Len() > 0 {
+		return fmt.Errorf("stderr: %v", execErr.String())
+	}
+
+	return nil
+}

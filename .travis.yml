@@ -54,7 +54,6 @@ jobs:
     - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
     - make e2e-image
     - test/e2e/up.sh
-    - test/e2e/wait-for-nginx.sh
     script:
     - make e2e-test
   # split builds to avoid job timeouts
