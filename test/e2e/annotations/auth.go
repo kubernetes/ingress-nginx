@@ -26,9 +26,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -47,9 +45,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	It("should return status code 200 when no authentication is configured", func() {
 		host := "auth"
 
-		ing, err := f.EnsureIngress(buildIngress(host, f.Namespace.Name))
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
 		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		Expect(bi).NotTo(BeNil())
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -59,7 +57,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
 
@@ -71,7 +69,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	It("should return status code 503 when authentication is configured with an invalid secret", func() {
 		host := "auth"
 
-		bi := buildIngress(host, f.Namespace.Name)
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(bi).NotTo(BeNil())
+
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = "something"
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
@@ -88,7 +89,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
 
@@ -100,12 +101,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	It("should return status code 401 when authentication is configured but Authorization header is not configured", func() {
 		host := "auth"
 
-		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace.Name))
+		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi := buildIngress(host, f.Namespace.Name)
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(bi).NotTo(BeNil())
+
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = s.Name
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
@@ -122,7 +126,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
 
@@ -134,12 +138,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	It("should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials", func() {
 		host := "auth"
 
-		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace.Name))
+		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi := buildIngress(host, f.Namespace.Name)
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(bi).NotTo(BeNil())
+
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = s.Name
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
@@ -156,7 +163,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			SetBasicAuth("user", "pass").
 			End()
@@ -169,12 +176,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	It("should return status code 200 when authentication is configured and Authorization header is sent", func() {
 		host := "auth"
 
-		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace.Name))
+		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi := buildIngress(host, f.Namespace.Name)
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(bi).NotTo(BeNil())
+
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = s.Name
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
@@ -191,7 +201,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			SetBasicAuth("foo", "bar").
 			End()
@@ -207,7 +217,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
-					Namespace: f.Namespace.Name,
+					Namespace: f.IngressController.Namespace,
 				},
 				Data: map[string][]byte{
 					// invalid content
@@ -220,7 +230,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi := buildIngress(host, f.Namespace.Name)
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(bi).NotTo(BeNil())
+
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = s.Name
 		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
@@ -237,7 +250,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			SetBasicAuth("foo", "bar").
 			End()
@@ -252,36 +265,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 //   Realm name
 //   Auth ok
 //   Auth error
-
-func buildIngress(host, namespace string) *v1beta1.Ingress {
-	return &v1beta1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        host,
-			Namespace:   namespace,
-			Annotations: map[string]string{},
-		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
-				{
-					Host: host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
-								{
-									Path: "/",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: "http-svc",
-										ServicePort: intstr.FromInt(80),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
 
 func buildSecret(username, password, name, namespace string) *corev1.Secret {
 	out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
