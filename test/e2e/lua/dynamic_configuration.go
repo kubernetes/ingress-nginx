@@ -218,6 +218,51 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
+
+	It("should not fail requests when upstream-hash-by annotation is set", func() {
+		ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
+		Expect(err).ToNot(HaveOccurred())
+
+		ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/upstream-hash-by"] = "$query_string"
+		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
+		Expect(err).ToNot(HaveOccurred())
+
+		replicas := 2
+		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
+		Expect(err).NotTo(HaveOccurred())
+		time.Sleep(5 * time.Second)
+
+		resp, body, errs := gorequest.New().
+			Get(fmt.Sprintf("%s?a-unique-request-uri", f.IngressController.HTTPURL)).
+			Set("Host", "foo.com").
+			End()
+		Expect(len(errs)).Should(Equal(0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		hostnamePattern := regexp.MustCompile(`Hostname: ([a-zA-Z0-9\-]+)`)
+		upstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
+
+		for i := 0; i < 5; i++ {
+			resp, body, errs := gorequest.New().
+				Get(fmt.Sprintf("%s?a-unique-request-uri", f.IngressController.HTTPURL)).
+				Set("Host", "foo.com").
+				End()
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			newUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
+			Expect(newUpstreamName).Should(Equal(upstreamName))
+		}
+
+		resp, body, errs = gorequest.New().
+			Get(fmt.Sprintf("%s?completely-different-path", f.IngressController.HTTPURL)).
+			Set("Host", "foo.com").
+			End()
+		Expect(len(errs)).Should(Equal(0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		anotherUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
+		Expect(anotherUpstreamName).NotTo(Equal(upstreamName))
+	})
+
 	Context("when session affinity annotation is present", func() {
 		It("should use sticky sessions when ingress rules are configured", func() {
 			cookieName := "STICKYSESSION"
