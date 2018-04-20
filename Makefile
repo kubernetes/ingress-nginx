@@ -21,7 +21,7 @@ BUILDTAGS=
 TAG?=0.13.0
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
-DOCKER?=gcloud docker --
+DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
@@ -50,7 +50,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.41
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.43
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
