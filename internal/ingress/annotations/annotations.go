@@ -34,6 +34,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/grpc"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/http2"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
@@ -95,6 +96,7 @@ type Ingress struct {
 	Logs                 log.Config
 	GRPC                 bool
 	LuaRestyWAF          luarestywaf.Config
+	UseHTTP2             bool
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -136,6 +138,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Logs":                 log.NewParser(cfg),
 			"GRPC":                 grpc.NewParser(cfg),
 			"LuaRestyWAF":          luarestywaf.NewParser(cfg),
+			"UseHTTP2":             http2.NewParser(cfg),
 		},
 	}
 }

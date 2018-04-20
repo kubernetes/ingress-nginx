@@ -167,6 +167,8 @@ type Server struct {
 	SSLCiphers string `json:"sslCiphers,omitempty"`
 	// AuthTLSError contains the reason why the access to a server should be denied
 	AuthTLSError string `json:"authTLSError,omitempty"`
+	// UseHTTP2 determines if the server protocol is HTTP2
+	UseHTTP2 bool `json:"UseHTTP2,omitempty"`
 }
 
 // Location describes an URI inside a server.
