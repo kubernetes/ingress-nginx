@@ -618,6 +618,9 @@ func (s k8sStore) ListIngresses() []*extensions.Ingress {
 			continue
 		}
 		for ri, rule := range ing.Spec.Rules {
+			if rule.HTTP == nil {
+				continue
+			}
 			for pi, path := range rule.HTTP.Paths {
 				if path.Path == "" {
 					ing.Spec.Rules[ri].HTTP.Paths[pi].Path = "/"
