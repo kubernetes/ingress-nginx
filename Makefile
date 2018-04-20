@@ -158,8 +158,8 @@ e2e-image: sub-container-amd64
 
 .PHONY: e2e-test
 e2e-test:
-	@go test -o e2e-tests -c ./test/e2e
-	@KUBECONFIG=${HOME}/.kube/config ./e2e-tests -alsologtostderr -test.v -logtostderr -ginkgo.trace
+	@ginkgo build ./test/e2e
+	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 -p -trace -nodes=2 ./test/e2e/e2e.test
 
 .PHONY: cover
 cover:

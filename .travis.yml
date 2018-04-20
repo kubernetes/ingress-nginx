@@ -47,11 +47,12 @@ jobs:
     # start minikube 
     - test/e2e/up.sh
     script:
-    - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
+    - go get github.com/jteeuwen/go-bindata/...
     - make cover
   - stage: e2e
     before_script:
-    - if ! go get github.com/jteeuwen/go-bindata/...; then github.com/jteeuwen/go-bindata/...;fi
+    - go get github.com/jteeuwen/go-bindata/...
+    - go get github.com/onsi/ginkgo/ginkgo
     - make e2e-image
     - test/e2e/up.sh
     script:
