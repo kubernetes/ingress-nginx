@@ -197,3 +197,9 @@ docker-push: all-push
 .PHONY: check_dead_links
 check_dead_links:
 	docker run -t -v $$PWD:/tmp aledbf/awesome_bot:0.1 --allow-dupe --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
+
+.PHONY: dep-ensure
+dep-ensure:
+	dep version || go get -u github.com/golang/dep/cmd/dep
+	dep ensure -v
+	dep prune -v
