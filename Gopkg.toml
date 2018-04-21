@@ -20,6 +20,11 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+[prune]
+  non-go = true
+  go-tests = true
+  unused-packages = true
+
 [[override]]
   name = "github.com/docker/distribution"
   revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
@@ -78,7 +83,7 @@
   version = "1.0.1"
 
 [[constraint]]
-  name = "gopkg.in/fsnotify.v1"
+  name = "gopkg.in/fsnotify/fsnotify.v1"
   version = "1.4.2"
 
 [[constraint]]
