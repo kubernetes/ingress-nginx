@@ -51,13 +51,15 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		ing, err := ensureIngress(f, host)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
-		time.Sleep(5 * time.Second)
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 		Expect(err).NotTo(HaveOccurred())
+
+		// give some time for Lua to sync the backend
+		time.Sleep(2 * time.Second)
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -160,7 +162,14 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 		Expect(err).ToNot(HaveOccurred())
 
-		time.Sleep(5 * time.Second)
+		By("generating the respective ssl listen directive")
+		err = f.WaitForNginxServer("foo.com",
+			func(server string) bool {
+				return strings.Contains(server, "server_name foo.com") &&
+					strings.Contains(server, "listen 443")
+			})
+		Expect(err).ToNot(HaveOccurred())
+
 		log, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(BeEmpty())
@@ -177,14 +186,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 		Expect(err).NotTo(HaveOccurred())
-
-		By("generating the respective ssl listen directive")
-		err = f.WaitForNginxServer("foo.com",
-			func(server string) bool {
-				return strings.Contains(server, "server_name foo.com") &&
-					strings.Contains(server, "listen 443")
-			})
-		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context("when session affinity annotation is present", func() {
@@ -200,12 +201,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			}
 			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 			Expect(err).ToNot(HaveOccurred())
-			time.Sleep(5 * time.Second)
 
 			By("Increasing the number of service replicas")
 			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", 2, nil)
 			Expect(err).NotTo(HaveOccurred())
-
 			time.Sleep(5 * time.Second)
 
 			By("Making a first request")
