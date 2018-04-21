@@ -29,7 +29,6 @@ import (
 
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
@@ -72,9 +71,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(ContainSubstring("could not dynamically reconfigure"))
 		Expect(log).To(ContainSubstring("first sync of Nginx configuration"))
-	})
-
-	AfterEach(func() {
 	})
 
 	Context("when only backends change", func() {
@@ -146,7 +142,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
 		Expect(err).ToNot(HaveOccurred())
 
-		ingress.Spec.TLS = []v1beta1.IngressTLS{
+		ingress.Spec.TLS = []extensions.IngressTLS{
 			{
 				Hosts:      []string{"foo.com"},
 				SecretName: "foo.com",
@@ -187,7 +183,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
-
 	Context("when session affinity annotation is present", func() {
 		It("should use sticky sessions when ingress rules are configured", func() {
 			cookieName := "STICKYSESSION"
@@ -256,8 +251,8 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			By("Updating affinity annotation and rules on ingress")
 			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
 			Expect(err).ToNot(HaveOccurred())
-			ingress.Spec = v1beta1.IngressSpec{
-				Backend: &v1beta1.IngressBackend{
+			ingress.Spec = extensions.IngressSpec{
+				Backend: &extensions.IngressBackend{
 					ServiceName: "http-svc",
 					ServicePort: intstr.FromInt(80),
 				},
