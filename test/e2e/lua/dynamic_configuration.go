@@ -51,8 +51,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		ing, err := ensureIngress(f, host)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
-
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -88,6 +87,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			replicas := 2
 			err := framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(5 * time.Second)
 
 			log, err := f.NginxLogs()
 			Expect(err).ToNot(HaveOccurred())
@@ -110,15 +110,22 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
 			Expect(err).ToNot(HaveOccurred())
 
+			resp, _, errs := gorequest.New().
+				Get(fmt.Sprintf("%s?id=should_handle_annotation_changes", f.IngressController.HTTPURL)).
+				Set("Host", "foo.com").
+				End()
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
 			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
 			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 			Expect(err).ToNot(HaveOccurred())
-
 			time.Sleep(5 * time.Second)
+
 			log, err := f.NginxLogs()
 			Expect(err).ToNot(HaveOccurred())
 			Expect(log).ToNot(BeEmpty())
-			index := strings.Index(log, fmt.Sprintf("reason: 'UPDATE' Ingress %s/foo.com", f.IngressController.Namespace))
+			index := strings.Index(log, "id=should_handle_annotation_changes")
 			restOfLogs := log[index:]
 
 			By("POSTing new backends to Lua endpoint")
@@ -289,8 +296,6 @@ func enableDynamicConfiguration(namespace string, kubeClientSet kubernetes.Inter
 			if err != nil {
 				return err
 			}
-
-			time.Sleep(5 * time.Second)
 
 			return nil
 		})
