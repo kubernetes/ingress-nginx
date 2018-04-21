@@ -36,6 +36,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/io"
 	"k8s.io/kubernetes/pkg/util/mount"
 	"k8s.io/kubernetes/pkg/volume"
+	"k8s.io/kubernetes/pkg/volume/util"
 )
 
 // NewInitializedVolumePluginMgr returns a new instance of
@@ -94,7 +95,7 @@ func (kvh *kubeletVolumeHost) GetVolumeDevicePluginDir(pluginName string) string
 func (kvh *kubeletVolumeHost) GetPodVolumeDir(podUID types.UID, pluginName string, volumeName string) string {
 	dir := kvh.kubelet.getPodVolumeDir(podUID, pluginName, volumeName)
 	if runtime.GOOS == "windows" {
-		dir = volume.GetWindowsPath(dir)
+		dir = util.GetWindowsPath(dir)
 	}
 	return dir
 }
@@ -147,7 +148,7 @@ func (kvh *kubeletVolumeHost) GetCloudProvider() cloudprovider.Interface {
 func (kvh *kubeletVolumeHost) GetMounter(pluginName string) mount.Interface {
 	exec, err := kvh.getMountExec(pluginName)
 	if err != nil {
-		glog.V(2).Info("Error finding mount pod for plugin %s: %s", pluginName, err.Error())
+		glog.V(2).Infof("Error finding mount pod for plugin %s: %s", pluginName, err.Error())
 		// Use the default mounter
 		exec = nil
 	}
@@ -200,7 +201,7 @@ func (kvh *kubeletVolumeHost) GetNodeName() types.NodeName {
 func (kvh *kubeletVolumeHost) GetExec(pluginName string) mount.Exec {
 	exec, err := kvh.getMountExec(pluginName)
 	if err != nil {
-		glog.V(2).Info("Error finding mount pod for plugin %s: %s", pluginName, err.Error())
+		glog.V(2).Infof("Error finding mount pod for plugin %s: %s", pluginName, err.Error())
 		// Use the default exec
 		exec = nil
 	}
