@@ -1007,20 +1007,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				continue
 			}
 
-			tlsSecretName := ""
-			found := false
-			for _, tls := range ing.Spec.TLS {
-				if sets.NewString(tls.Hosts...).Has(host) {
-					tlsSecretName = tls.SecretName
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				// does not contains a TLS section but none of the host match
-				continue
-			}
+			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
 
 			if tlsSecretName == "" {
 				glog.V(3).Infof("host %v is listed on tls section but secretName is empty. Using default cert", host)
@@ -1173,4 +1160,42 @@ func (n *NGINXController) SetForceReload(shouldReload bool) {
 	} else {
 		atomic.StoreInt32(&n.forceReload, 0)
 	}
+}
+
+// extractTLSSecretName returns the name of the secret that
+// contains a SSL certificate for a particular hostname.
+// In case there is no match, an empty string is returned.
+func extractTLSSecretName(host string, ing *extensions.Ingress,
+	getLocalSSLCert func(string) (*ingress.SSLCert, error)) string {
+	if ing == nil {
+		return ""
+	}
+
+	for _, tls := range ing.Spec.TLS {
+		if sets.NewString(tls.Hosts...).Has(host) {
+			return tls.SecretName
+		}
+	}
+
+	// contains a TLS section but none of the host match or there
+	// is no hosts in the TLS section. As last resort we valide
+	// the host against the certificate and we use it if is valid
+	for _, tls := range ing.Spec.TLS {
+		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+		cert, err := getLocalSSLCert(key)
+		if err != nil {
+			glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
+			continue
+		}
+
+		if cert == nil {
+			continue
+		}
+
+		if sets.NewString(cert.CN...).Has(host) {
+			return tls.SecretName
+		}
+	}
+
+	return ""
 }
