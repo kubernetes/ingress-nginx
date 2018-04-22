@@ -740,3 +740,106 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		}
 	})
 }
+
+func TestListIngresses(t *testing.T) {
+	s := newStore(t)
+
+	ingEmptyClass := &v1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-1",
+			Namespace: "testns",
+		},
+		Spec: v1beta1.IngressSpec{
+			Backend: &v1beta1.IngressBackend{
+				ServiceName: "demo",
+				ServicePort: intstr.FromInt(80),
+			},
+			Rules: []v1beta1.IngressRule{
+				{
+					Host: "foo.bar",
+				},
+			},
+		},
+	}
+	s.listers.Ingress.Add(ingEmptyClass)
+
+	ingressToIgnore := &v1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-2",
+			Namespace: "testns",
+			Annotations: map[string]string{
+				"kubernetes.io/ingress.class": "something",
+			},
+		},
+		Spec: v1beta1.IngressSpec{
+			Backend: &v1beta1.IngressBackend{
+				ServiceName: "demo",
+				ServicePort: intstr.FromInt(80),
+			},
+		},
+	}
+	s.listers.Ingress.Add(ingressToIgnore)
+
+	ingressWithoutPath := &v1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-3",
+			Namespace: "testns",
+		},
+		Spec: v1beta1.IngressSpec{
+			Rules: []v1beta1.IngressRule{
+				{
+					Host: "foo.bar",
+					IngressRuleValue: v1beta1.IngressRuleValue{
+						HTTP: &v1beta1.HTTPIngressRuleValue{
+							Paths: []v1beta1.HTTPIngressPath{
+								{
+									Backend: v1beta1.IngressBackend{
+										ServiceName: "demo",
+										ServicePort: intstr.FromInt(80),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	s.listers.Ingress.Add(ingressWithoutPath)
+
+	ingressWithNginxClass := &v1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-4",
+			Namespace: "testns",
+			Annotations: map[string]string{
+				"kubernetes.io/ingress.class": "nginx",
+			},
+		},
+		Spec: v1beta1.IngressSpec{
+			Rules: []v1beta1.IngressRule{
+				{
+					Host: "foo.bar",
+					IngressRuleValue: v1beta1.IngressRuleValue{
+						HTTP: &v1beta1.HTTPIngressRuleValue{
+							Paths: []v1beta1.HTTPIngressPath{
+								{
+									Path: "/demo",
+									Backend: v1beta1.IngressBackend{
+										ServiceName: "demo",
+										ServicePort: intstr.FromInt(80),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	s.listers.Ingress.Add(ingressWithNginxClass)
+
+	ingresses := s.ListIngresses()
+	if s := len(ingresses); s != 3 {
+		t.Errorf("Expected 3 Ingresses but got %v", s)
+	}
+}
