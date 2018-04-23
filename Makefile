@@ -45,6 +45,8 @@ ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
 QEMUVERSION=v2.9.1-1
 
+BUSTED_ARGS=-v --pattern=_test
+
 IMGNAME = nginx-ingress-controller
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
@@ -150,6 +152,10 @@ verify-all:
 .PHONY: test
 test:
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
+
+.PHONY: lua-test
+lua-test:
+	@busted $(BUSTED_ARGS) ./rootfs/etc/nginx/lua/test;
 
 .PHONY: e2e-image
 e2e-image: sub-container-amd64
