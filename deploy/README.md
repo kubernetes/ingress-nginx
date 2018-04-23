@@ -6,6 +6,7 @@
 - [Install without RBAC roles](#install-without-rbac-roles)
 - [Install with RBAC roles](#install-with-rbac-roles)
 - [Custom Provider](#custom-provider)
+  - [Docker for Mac](#docker-for-mac)
   - [minikube](#minikube)
   - [AWS](#aws)
   - [GCE - GKE](#gce---gke)
@@ -61,6 +62,28 @@ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/wi
 ## Custom Service Provider Deployment
 
 There are cloud provider specific yaml files.
+
+### Docker for Mac
+
+Kubernetes is available for Docker for Mac's Edge channel. Switch to the [Edge
+channel][edge] and [enable Kubernetes][enable].
+
+[edge]: https://docs.docker.com/docker-for-mac/install/
+[enable]: https://docs.docker.com/docker-for-mac/#kubernetes
+
+Patch the nginx ingress controller deployment to add the flag `--publish-service`
+
+```console
+kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json' \
+    --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)"
+```
+
+Create a service
+
+```console
+curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/docker-for-mac/service.yaml \
+    | kubectl apply -f -
+```
 
 ### minikube
 
