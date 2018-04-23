@@ -27,7 +27,7 @@ export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.2.1
+export NGINX_OPENTRACING_VERSION=0.3.0
 export OPENTRACING_CPP_VERSION=1.3.0
 export ZIPKIN_CPP_VERSION=0.3.0
 export JAEGER_VERSION=0.2.0
@@ -138,7 +138,7 @@ get_src ede0ad490cb9dd69da348bdea2a60a4c45284c9777b2f13fa48394b6b8e7671c \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src ce66acf943a604ef9a0bb477c7efca1fe583076991647aa646aa3d8804328364 \
+get_src 2d2b8784a09c7bb4ae7f8a76ab679c54a683b8dda26db2f948982de0ad44c7a5 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src 06dc5f9740d27dc4684399e491211be46a8069a10277f25513dadeb71199ce4c \
