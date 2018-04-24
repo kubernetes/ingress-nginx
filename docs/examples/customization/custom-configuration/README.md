@@ -1,3 +1,4 @@
+# Custom Configuration
 
 Using a [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/) is possible to customize the NGINX configuration
 
