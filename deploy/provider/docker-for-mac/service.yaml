@@ -6,7 +6,6 @@ metadata:
   labels:
     app: ingress-nginx
 spec:
-  externalTrafficPolicy: Local
   type: LoadBalancer
   selector:
     app: ingress-nginx
