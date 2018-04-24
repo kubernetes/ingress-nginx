@@ -16,7 +16,7 @@
 TAG ?= 0.43
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
-DOCKER ?= gcloud docker --
+DOCKER ?= docker
 
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
 SED_I?=sed -i
