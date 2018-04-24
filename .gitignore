@@ -33,3 +33,6 @@ e2e-tests
 
 coverage.txt
 test/e2e/e2e\.test
+
+# mkdocs
+/site
