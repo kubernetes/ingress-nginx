@@ -1,10 +1,10 @@
-**IMPORTANT:**
-
-The key and values in annotations can only be strings.
-This means that we want a value with boolean values we need to quote the values, like "true" or "false".
-Same for numbers, like "100".
-
 # Annotations
+
+!!! tip
+    Annotation keys and values can only be strings.
+    Other types, such as boolean or numeric values must be quoted,
+    i.e. `"true"`, `"false"`, `"100"`.
+
 
 The following annotations are supported:
 
@@ -70,8 +70,6 @@ The following annotations are supported:
 |[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules](#lua-resty-waf)|string|
-
-**Note:** all the values must be a string. In case of booleans or number it must be quoted.
 
 ### Rewrite
 
