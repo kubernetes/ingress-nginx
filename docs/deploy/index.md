@@ -102,7 +102,7 @@ $ minikube addons disable ingress
 ```
 
 2. Use the [docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md)
-3. [Build the image](./development.md)
+3. [Build the image](../development.md)
 4. Perform [Mandatory commands](#mandatory-commands)
 5. Install the `nginx-ingress-controller` deployment [without RBAC roles](#install-without-rbac-roles) or [with RBAC roles](#install-with-rbac-roles)
 6. Edit the `nginx-ingress-controller` deployment to use your custom image. Local images can be seen by performing `docker images`.
@@ -318,4 +318,4 @@ and is setup to be used in the deployment [without-rbac](../deploy/without-rbac.
 - --configmap=$(POD_NAMESPACE)/nginx-configuration
 ```
 
-For information on using the config-map, see its [user-guide](./user-guide/configmap.md).
+For information on using the config-map, see its [user-guide](../user-guide/configmap.md).

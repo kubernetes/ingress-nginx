@@ -1,3 +1,3 @@
 # Deployment documentation moved!
 
-See (/docs/deploy.md)[../docs/deploy.md].
+See (/docs/deploy)[../docs/deploy/index.md].
