@@ -1,4 +1,4 @@
-# Getting Started
+# Developing for NGINX Ingress controller
 
 This document explains how to get started with developing for NGINX Ingress controller.
 It includes how to build, test, and release ingress controllers.
