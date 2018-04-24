@@ -3,6 +3,32 @@
 This document explains how to get started with developing for NGINX Ingress controller.
 It includes how to build, test, and release ingress controllers.
 
+## Quick Start
+
+### Initial developer environment build
+
+**Prequisites**: Minikube must be installed; See [releases](https://github.com/kubernetes/minikube/releases) for installation instructions. 
+
+If you are using **MacOS** and deploying to **minikube**, the following command will build the local nginx controller container image and deploy the ingress controller onto a minikube cluster with RBAC enabled in the namespace `ingress-nginx`:
+
+```
+$ make dev-env
+```
+
+### Updating the deployment
+
+The nginx controller container image can be rebuilt using:
+```
+$ ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build container
+```
+
+The image will only be used by pods created after the rebuild. To delete old pods which will cause new ones to spin up:
+```
+$ kubectl get pods -n ingress-nginx
+$ kubectl delete pod -n ingress-nginx nginx-ingress-controller-<unique-pod-id>
+```
+
+
 ## Dependencies
 
 The build uses dependencies in the `vendor` directory, which
