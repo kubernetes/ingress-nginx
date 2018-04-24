@@ -1,4 +1,4 @@
-# NGINX Ingress Controller
+# Welcome
 
 This is the documentation for the NGINX Ingress Controller.
 
