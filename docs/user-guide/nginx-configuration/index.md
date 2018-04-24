@@ -1,4 +1,4 @@
-# Customizing NGINX
+# NGINX Configuration
 
 There are three ways to customize NGINX:
 

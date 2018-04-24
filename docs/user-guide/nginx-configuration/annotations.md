@@ -1,12 +1,12 @@
 # Annotations
 
+You can add these Kubernetes annotations to specific Ingress objects to customize their behavior.
+
 !!! tip
     Annotation keys and values can only be strings.
     Other types, such as boolean or numeric values must be quoted,
     i.e. `"true"`, `"false"`, `"100"`.
 
-
-The following annotations are supported:
 
 |Name                       | type |
 |---------------------------|------|
@@ -82,14 +82,14 @@ If the scheme of [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Ele
 
 If the Application Root is exposed in a different path and needs to be redirected, set the annotation `nginx.ingress.kubernetes.io/app-root` to redirect requests for `/`.
 
-Please check the [rewrite](../examples/rewrite/README.md) example.
+Please check the [rewrite](../../examples/rewrite/README.md) example.
 
 ### Session Affinity
 
 The annotation `nginx.ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is `cookie`.
 
-Please check the [affinity](../examples/affinity/cookie/README.md) example.
+Please check the [affinity](../../examples/affinity/cookie/README.md) example.
 
 ### Authentication
 
@@ -113,7 +113,7 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 nginx.ingress.kubernetes.io/auth-realm: "realm string"
 ```
 
-Please check the [auth](../examples/auth/basic/README.md) example.
+Please check the [auth](../../examples/auth/basic/README.md) example.
 
 ### Custom NGINX upstream checks
 
@@ -131,7 +131,7 @@ In NGINX, backend server pools are called "[upstreams](http://nginx.org/en/docs/
 
 **Important:** All Ingress rules using the same service will use the same upstream. Only one of the Ingress rules should define annotations to configure the upstream servers.
 
-Please check the [custom upstream check](../examples/customization/custom-upstream-check/README.md) example.
+Please check the [custom upstream check](../../examples/customization/custom-upstream-check/README.md) example.
 
 ### Custom NGINX upstream hashing
 
@@ -187,7 +187,7 @@ nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream
 Indicates if the received certificates should be passed or not to the upstream server.
 By default this is disabled.
 
-Please check the [client-certs](../examples/auth/client-certs/README.md) example.
+Please check the [client-certs](../../examples/auth/client-certs/README.md) example.
 
 **Important:**
 
@@ -313,7 +313,7 @@ Additionally it is possible to set:
 
 `nginx.ingress.kubernetes.io/auth-request-redirect`: `<Request_Redirect_URL>`  to specify the X-Auth-Request-Redirect header value.
 
-Please check the [external-auth](../examples/auth/external-auth/README.md) example.
+Please check the [external-auth](../../examples/auth/external-auth/README.md) example.
 
 ### Rate limiting
 

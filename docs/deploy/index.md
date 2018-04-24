@@ -318,4 +318,4 @@ and is setup to be used in the deployment [without-rbac](../deploy/without-rbac.
 - --configmap=$(POD_NAMESPACE)/nginx-configuration
 ```
 
-For information on using the config-map, see its [user-guide](../user-guide/configmap.md).
+For information on using the config-map, see its [user-guide](../user-guide/nginx-configuration/configmap.md).
