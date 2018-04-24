@@ -107,7 +107,7 @@ $ TAG=<tag> REGISTRY=$USER/ingress-controller make docker-push
 ## Deploying
 
 There are several ways to deploy the ingress controller onto a cluster.
-Please check the [deployment guide](../deploy/README.md)
+Please check the [deployment guide](./deploy.md)
 
 ## Testing
 
