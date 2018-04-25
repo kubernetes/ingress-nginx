@@ -604,6 +604,7 @@ func NewDefault() Configuration {
 			ProxyNextUpstreamTries: 0,
 			ProxyRequestBuffering:  "on",
 			ProxyRedirectFrom:      "off",
+			ProxyRedirectTo:        "off",
 			SSLRedirect:            true,
 			CustomHTTPErrors:       []int{},
 			WhitelistSourceRange:   []string{},

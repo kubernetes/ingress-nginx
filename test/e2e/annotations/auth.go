@@ -31,8 +31,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
-	f := framework.NewDefaultFramework("alias")
+var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
+	f := framework.NewDefaultFramework("auth")
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
