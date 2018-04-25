@@ -73,7 +73,6 @@ const (
 
 var (
 	tmplPath    = "/etc/nginx/template/nginx.tmpl"
-	geoipPath   = "/etc/nginx/geoip"
 	cfgPath     = "/etc/nginx/nginx.conf"
 	nginxBinary = "/usr/sbin/nginx"
 )
@@ -158,8 +157,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
 	}
 
-	var onTemplateChange func()
-	onTemplateChange = func() {
+	onTemplateChange := func() {
 		template, err := ngx_template.NewTemplate(tmplPath, fs)
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
