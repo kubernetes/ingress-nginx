@@ -476,6 +476,9 @@ type Configuration struct {
 	// LocationSnippet adds custom configuration to all the locations in the nginx configuration
 	LocationSnippet string `json:"location-snippet"`
 
+	// LuaSnippet adds custom configuration to the init_by_lua_block section of the nginx configuration
+	LuaSnippet string `json:"lua-snippet"`
+
 	// HTTPRedirectCode sets the HTTP status code to be used in redirects.
 	// Supported codes are 301,302,307 and 308
 	// Default: 308
