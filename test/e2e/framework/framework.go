@@ -262,7 +262,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 				glog.Infof("nginx.conf:\n%v", o)
 			}
 
-			if matcher(o) {
+			if matcher(strings.Join(strings.Fields(o), " ")) {
 				match = true
 			}
 		})
