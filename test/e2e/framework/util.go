@@ -130,7 +130,7 @@ func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
 	return c.CoreV1().Namespaces().Delete(namespace, metav1.NewDeleteOptions(0))
 }
 
-// ExpectNoError tests whether an error occured.
+// ExpectNoError tests whether an error occurred.
 func ExpectNoError(err error, explain ...interface{}) {
 	if err != nil {
 		Logf("Unexpected error occurred: %v", err)

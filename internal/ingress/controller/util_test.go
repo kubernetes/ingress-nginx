@@ -20,12 +20,6 @@ import (
 	"testing"
 )
 
-type fakeError struct{}
-
-func (fe *fakeError) Error() string {
-	return "fakeError"
-}
-
 func TestSysctlFSFileMax(t *testing.T) {
 	i := sysctlFSFileMax()
 	if i < 1 {
