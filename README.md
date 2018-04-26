@@ -7,6 +7,21 @@
 [![Build Status](https://travis-ci.org/kubernetes/ingress-nginx.svg?branch=master)](https://travis-ci.org/kubernetes/ingress-nginx)
 [![Coverage Status](https://codecov.io/gh/kubernetes/ingress-nginx/branch/master/graph/badge.svg)](https://codecov.io/gh/kubernetes/ingress-nginx)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx)
+[![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/stargazers)
+[![GitHub stars](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md)
+
+
+
+# Get Involved
+
+* **Contributing**: Pull requests are welcome!
+  * Read [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) and check out [help-wanted](https://github.com/kubernetes/ingress-nginx/labels/help%20wanted) issues
+  * Submit github issues for any feature enhancements, bugs or documentation problems
+* **Support**: Join to [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions to get support from the maintainers and other developers
+  * Questions/comments can also be posted as [github issues](https://github.com/kubernetes/ingress-nginx/issues)
+* **Discuss**: Tweet using the `#NginxIngress` hashtag
+
 
 ## Description
 
@@ -22,6 +37,41 @@ The Ingress resource embodies this idea, and an Ingress controller is meant to h
 
 An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches the apiserver's `/ingresses` endpoint for updates to the [Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/). Its job is to satisfy requests for Ingresses.
 
+
 ## Documentation
 
-See [docs/index.md](docs/index.md) for detailed documentation.
+To check out [Live Docs](https://kubernetes.github.io/ingress-nginx/)
+
+
+## Questions
+
+For questions and support please use the kubernetes-users room in the [Kubernetes Slack](http://slack.kubernetes.io/) or [kubernetes-users](https://groups.google.com/forum/#!forum/kubernetes-users) mailing list. The issue list of this repo is **exclusively** for bug reports and feature requests.
+
+
+## Issues
+
+Please make sure to read the [Issue Reporting Checklist](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines may be closed immediately.
+
+
+## Changelog
+
+Detailed changes for each release are documented in the [CHANGELOG.md](CHANGELOG.md)
+
+
+## Contribution
+
+Please make sure to read the [Contributing Guide](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md) before making a pull request.
+
+Thank you to all the people who already contributed to NGINX Ingress Controller!
+
+
+## Code of Conduct
+
+This project adheres to the [Kubernetes Community Code of Conduct](https://git.k8s.io/community/code-of-conduct.md).
+By participating in this project you agree to abide by its terms.
+
+
+## License
+
+[Apache License 2.0](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
+
