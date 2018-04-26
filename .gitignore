@@ -35,4 +35,7 @@ coverage.txt
 test/e2e/e2e\.test
 
 # mkdocs
-/site
+site
+
+# temporal github pages
+gh-pages
