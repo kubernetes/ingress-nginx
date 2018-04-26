@@ -119,6 +119,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
 |[location-snippet](#location-snippet)|string|""|
+|[lua-snippet](#lua-snippet)|string|""|
 |[custom-http-errors](#custom-http-errors)|[]int]|[]int{}|
 |[proxy-body-size](#proxy-body-size)|string|"1m"|
 |[proxy-connect-timeout](#proxy-connect-timeout)|int|5|
@@ -652,6 +653,11 @@ Default: ""
 ## location-snippet
 
 Adds custom configuration to all the locations in the nginx configuration.
+Default: ""
+
+## lua-snippet
+
+Adds custom configuration to the init_by_lua_block section of the nginx configuration.
 Default: ""
 
 ## custom-http-errors

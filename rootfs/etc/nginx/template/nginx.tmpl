@@ -67,6 +67,11 @@ http {
           balancer = res
         end
         {{ end }}
+
+        {{ if not (empty $cfg.LuaSnippet) }}
+        -- Custom lua code snippet configured in the configuration configmap
+        {{ $cfg.LuaSnippet }}
+        {{ end }}
     }
 
     {{ if $all.DynamicConfigurationEnabled }}
