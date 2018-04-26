@@ -1,6 +1,7 @@
-# NGINX Ingress controller configuration ConfigMap
+# ConfigMaps
 
 ConfigMaps allow you to decouple configuration artifacts from image content to keep containerized applications portable.
+
 The ConfigMap API resource stores configuration data as key-value pairs. The data provides the configurations for system
 components for the nginx-controller. Before you can begin using a config-map it must be [deployed](../../deploy/README.md/#deploying-the-config-map).
 
