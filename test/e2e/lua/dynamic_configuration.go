@@ -58,7 +58,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// give some time for Lua to sync the backend
-		time.Sleep(2 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
