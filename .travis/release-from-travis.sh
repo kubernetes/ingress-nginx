@@ -57,7 +57,7 @@ EOF
 }
 
 case "$1" in
-	ingress-controller|nginx)
+	ingress-controller|nginx|docs)
 		publish $TRAVIS_CI_TOKEN $1
 	;;
 	*)
