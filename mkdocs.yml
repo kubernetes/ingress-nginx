@@ -22,3 +22,4 @@ plugins:
   - search
   - awesome-pages:
       collapse_single_pages: true
+extra_css: [extra.css]
