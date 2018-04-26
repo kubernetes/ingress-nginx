@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,8 +44,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/kubernetes/pkg/util/filesystem"
-
-	"path/filepath"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -752,8 +751,8 @@ func (n *NGINXController) setupSSLProxy() {
 
 // IsDynamicConfigurationEnough decides if the new configuration changes can be dynamically applied without reloading
 func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configuration) bool {
-	var copyOfRunningConfig ingress.Configuration = *n.runningConfig
-	var copyOfPcfg ingress.Configuration = *pcfg
+	copyOfRunningConfig := *n.runningConfig
+	copyOfPcfg := *pcfg
 
 	copyOfRunningConfig.Backends = []*ingress.Backend{}
 	copyOfPcfg.Backends = []*ingress.Backend{}
@@ -761,15 +760,34 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 	return copyOfRunningConfig.Equal(&copyOfPcfg)
 }
 
-// ConfigureDynamically JSON encodes new Backends and POSTs it to an internal HTTP endpoint
+// configureDynamically JSON encodes new Backends and POSTs it to an internal HTTP endpoint
 // that is handled by Lua
-func (n *NGINXController) ConfigureDynamically(pcfg *ingress.Configuration) error {
+func configureDynamically(pcfg *ingress.Configuration, port int) error {
 	backends := make([]*ingress.Backend, len(pcfg.Backends))
 
 	for i, backend := range pcfg.Backends {
-		cleanedupBackend := *backend
-		cleanedupBackend.Service = nil
-		backends[i] = &cleanedupBackend
+		luaBackend := &ingress.Backend{
+			Name:            backend.Name,
+			Port:            backend.Port,
+			Secure:          backend.Secure,
+			SSLPassthrough:  backend.SSLPassthrough,
+			SessionAffinity: backend.SessionAffinity,
+			UpstreamHashBy:  backend.UpstreamHashBy,
+			LoadBalancing:   backend.LoadBalancing,
+		}
+
+		var endpoints []ingress.Endpoint
+		for _, endpoint := range backend.Endpoints {
+			endpoints = append(endpoints, ingress.Endpoint{
+				Address:     endpoint.Address,
+				FailTimeout: endpoint.FailTimeout,
+				MaxFails:    endpoint.MaxFails,
+				Port:        endpoint.Port,
+			})
+		}
+
+		luaBackend.Endpoints = endpoints
+		backends[i] = luaBackend
 	}
 
 	buf, err := json.Marshal(backends)
@@ -779,7 +797,7 @@ func (n *NGINXController) ConfigureDynamically(pcfg *ingress.Configuration) erro
 
 	glog.V(2).Infof("posting backends configuration: %s", buf)
 
-	url := fmt.Sprintf("http://localhost:%d/configuration/backends", n.cfg.ListenPorts.Status)
+	url := fmt.Sprintf("http://localhost:%d/configuration/backends", port)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(buf))
 	if err != nil {
 		return err

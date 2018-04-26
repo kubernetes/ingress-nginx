@@ -99,7 +99,6 @@ func getEndpoints(
 				targetPort = epPort.Port
 			}
 
-			glog.Infof("TP: %v", targetPort)
 			// check for invalid port value
 			if targetPort <= 0 {
 				continue
