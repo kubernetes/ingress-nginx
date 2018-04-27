@@ -6,6 +6,7 @@ local lrucache = require("resty.lrucache")
 local resty_lock = require("resty.lock")
 local ewma = require("balancer.ewma")
 local sticky = require("sticky")
+local chash = require("balancer.chash")
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -62,6 +63,11 @@ local function balance()
     lb_alg = "round_robin"
   end
 
+  if backend["upstream-hash-by"] then
+    local endpoint = chash.balance(backend)
+    return endpoint.address, endpoint.port
+  end
+
   if lb_alg == "ip_hash" then
     -- TODO(elvinefendi) implement me
     return backend.endpoints[0].address, backend.endpoints[0].port
@@ -109,6 +115,11 @@ local function sync_backend(backend)
   if lb_alg == "ewma" then
     ngx.shared.balancer_ewma:flush_all()
     ngx.shared.balancer_ewma_last_touched_at:flush_all()
+  end
+
+  -- reset chash for this backend
+  if backend["upstream-hash-by"] then
+    chash.reinit(backend)
   end
 
   ngx.log(ngx.INFO, "syncronization completed for: " .. backend.name)
