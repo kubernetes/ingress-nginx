@@ -20,7 +20,7 @@
   * Submit github issues for any feature enhancements, bugs or documentation problems
 * **Support**: Join to [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions to get support from the maintainers and other developers
   * Questions/comments can also be posted as [github issues](https://github.com/kubernetes/ingress-nginx/issues)
-* **Discuss**: Tweet using the `#NginxIngress` hashtag
+* **Discuss**: Tweet using the `#IngressNginx` hashtag
 
 
 ## Description
