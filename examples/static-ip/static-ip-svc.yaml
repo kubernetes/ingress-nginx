@@ -1,0 +1,22 @@
+# This is the backend service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-lb
+  labels:
+    app: nginx-ingress-lb
+spec:
+  externalTrafficPolicy: Local
+  type: LoadBalancer
+  loadBalancerIP: 104.154.109.191
+  ports:
+  - port: 80
+    name: http
+    targetPort: 80
+  - port: 443
+    name: https
+    targetPort: 443
+  selector:
+    # Selects nginx-ingress-controller pods
+    k8s-app: nginx-ingress-controller
+

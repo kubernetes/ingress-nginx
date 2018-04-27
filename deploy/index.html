@@ -1,0 +1,1685 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-0.17.3, mkdocs-material-2.7.3">
+    
+    
+      
+        <title>Installation Guide - NGINX Ingress Controller</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/application.8d40d89b.css">
+      
+        <link rel="stylesheet" href="../assets/stylesheets/application-palette.6079476c.css">
+      
+    
+    
+      <script src="../assets/javascripts/modernizr.1aa3b519.js"></script>
+    
+    
+      <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+      
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="teal" data-md-color-accent="green">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448"
+    viewBox="0 0 416 448" id="github">
+  <path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19-18.125
+        8.5-18.125-8.5-10.75-19-3.125-20.5 3.125-20.5 10.75-19 18.125-8.5
+        18.125 8.5 10.75 19 3.125 20.5zM320 304q0 10-3.125 20.5t-10.75
+        19-18.125 8.5-18.125-8.5-10.75-19-3.125-20.5 3.125-20.5 10.75-19
+        18.125-8.5 18.125 8.5 10.75 19 3.125 20.5zM360
+        304q0-30-17.25-51t-46.75-21q-10.25 0-48.75 5.25-17.75 2.75-39.25
+        2.75t-39.25-2.75q-38-5.25-48.75-5.25-29.5 0-46.75 21t-17.25 51q0 22 8
+        38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0
+        37.25-1.75t35-7.375 30.5-15 20.25-25.75 8-38.375zM416 260q0 51.75-15.25
+        82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5-41.75
+        1.125q-19.5 0-35.5-0.75t-36.875-3.125-38.125-7.5-34.25-12.875-30.25-20.25-21.5-28.75q-15.5-30.75-15.5-82.75
+        0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25
+        30.875q36.75-8.75 77.25-8.75 37 0 70 8 26.25-20.5
+        46.75-30.25t47.25-9.75q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34
+        99.5z" />
+</svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="drawer"></label>
+    
+      <a href="#installation-guide" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href=".." title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon">public</i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            
+              <span class="md-header-nav__topic">
+                NGINX Ingress Controller
+              </span>
+              <span class="md-header-nav__topic">
+                Installation Guide
+              </span>
+            
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          
+            <label class="md-icon md-icon--search md-header-nav__button" for="search"></label>
+            
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+          
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+
+  <a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
+    
+      <div class="md-source__icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <use xlink:href="#github" width="24" height="24"></use>
+        </svg>
+      </div>
+    
+    <div class="md-source__repository">
+      kubernetes/ingress-nginx
+    </div>
+  </a>
+
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+        
+
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  <li class="md-tabs__item">
+    
+      <a href=".." title="Welcome" class="md-tabs__link">
+        Welcome
+      </a>
+    
+  </li>
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="./" title="Deployment" class="md-tabs__link md-tabs__link--active">
+          Deployment
+        </a>
+      
+    </li>
+  
+
+      
+        
+  
+  
+    
+    
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../user-guide/nginx-configuration/" title="User guide" class="md-tabs__link">
+          User guide
+        </a>
+      
+    </li>
+  
+
+  
+
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../examples/PREREQUISITES/" title="Examples" class="md-tabs__link">
+          Examples
+        </a>
+      
+    </li>
+  
+
+      
+        
+      
+        
+      
+        
+      
+    </ul>
+  </div>
+</nav>
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="drawer">
+    <span class="md-nav__button md-logo">
+      
+        <i class="md-icon">public</i>
+      
+    </span>
+    NGINX Ingress Controller
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+
+  <a href="https://github.com/kubernetes/ingress-nginx/" title="Go to repository" class="md-source" data-md-source="github">
+    
+      <div class="md-source__icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <use xlink:href="#github" width="24" height="24"></use>
+        </svg>
+      </div>
+    
+    <div class="md-source__repository">
+      kubernetes/ingress-nginx
+    </div>
+  </a>
+
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href=".." title="Welcome" class="md-nav__link">
+      Welcome
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
+    
+    <label class="md-nav__link" for="nav-2">
+      Deployment
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        Deployment
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="toc">
+        Installation Guide
+      </label>
+    
+    <a href="./" title="Installation Guide" class="md-nav__link md-nav__link--active">
+      Installation Guide
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#contents" title="Contents" class="md-nav__link">
+    Contents
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generic-deployment" title="Generic Deployment" class="md-nav__link">
+    Generic Deployment
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mandatory-commands" title="Mandatory commands" class="md-nav__link">
+    Mandatory commands
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-without-rbac-roles" title="Install without RBAC roles" class="md-nav__link">
+    Install without RBAC roles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-with-rbac-roles" title="Install with RBAC roles" class="md-nav__link">
+    Install with RBAC roles
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-service-provider-deployment" title="Custom Service Provider Deployment" class="md-nav__link">
+    Custom Service Provider Deployment
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#docker-for-mac" title="Docker for Mac" class="md-nav__link">
+    Docker for Mac
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minikube" title="minikube" class="md-nav__link">
+    minikube
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws" title="AWS" class="md-nav__link">
+    AWS
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#elastic-load-balancer-elb" title="Elastic Load Balancer - ELB" class="md-nav__link">
+    Elastic Load Balancer - ELB
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-load-balancer-nlb" title="Network Load Balancer (NLB)" class="md-nav__link">
+    Network Load Balancer (NLB)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gce-gke" title="GCE - GKE" class="md-nav__link">
+    GCE - GKE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#azure" title="Azure" class="md-nav__link">
+    Azure
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baremetal" title="Baremetal" class="md-nav__link">
+    Baremetal
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-helm" title="Using Helm" class="md-nav__link">
+    Using Helm
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-installation" title="Verify installation" class="md-nav__link">
+    Verify installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detect-installed-version" title="Detect installed version" class="md-nav__link">
+    Detect installed version
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploying-the-config-map" title="Deploying the config-map" class="md-nav__link">
+    Deploying the config-map
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
+      Role Based Access Control (RBAC)
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+    
+    <label class="md-nav__link" for="nav-3">
+      User guide
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-3">
+        User guide
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1">
+    
+    <label class="md-nav__link" for="nav-3-1">
+      NGINX Configuration
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-3-1">
+        NGINX Configuration
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/" title="NGINX Configuration" class="md-nav__link">
+      NGINX Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/annotations/" title="Annotations" class="md-nav__link">
+      Annotations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/configmap/" title="ConfigMaps" class="md-nav__link">
+      ConfigMaps
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/custom-template/" title="Custom NGINX template" class="md-nav__link">
+      Custom NGINX template
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-configuration/log-format/" title="Log format" class="md-nav__link">
+      Log format
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/cli-arguments/" title="Command line arguments" class="md-nav__link">
+      Command line arguments
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/custom-errors/" title="Custom errors" class="md-nav__link">
+      Custom errors
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
+      Exposing TCP and UDP services
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/external-articles/" title="External Articles" class="md-nav__link">
+      External Articles
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/miscellaneous/" title="Miscellaneous" class="md-nav__link">
+      Miscellaneous
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/multiple-ingress/" title="Multiple ingress controllers" class="md-nav__link">
+      Multiple ingress controllers
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/nginx-status-page/" title="NGINX status page" class="md-nav__link">
+      NGINX status page
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/tls/" title="TLS" class="md-nav__link">
+      TLS
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-10" type="checkbox" id="nav-3-10">
+    
+    <label class="md-nav__link" for="nav-3-10">
+      Third party addons
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-3-10">
+        Third party addons
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/third-party-addons/modsecurity/" title="ModSecurity Web Application Firewall" class="md-nav__link">
+      ModSecurity Web Application Firewall
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../user-guide/third-party-addons/opentracing/" title="OpenTracing" class="md-nav__link">
+      OpenTracing
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+    
+    <label class="md-nav__link" for="nav-4">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-4">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/PREREQUISITES/" title="Prerequisites" class="md-nav__link">
+      Prerequisites
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/README/" title="Ingress examples" class="md-nav__link">
+      Ingress examples
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/affinity/cookie/README/" title="Sticky Session" class="md-nav__link">
+      Sticky Session
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4">
+    
+    <label class="md-nav__link" for="nav-4-4">
+      Auth
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-4-4">
+        Auth
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/auth/basic/README/" title="Basic Authentication" class="md-nav__link">
+      Basic Authentication
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/auth/client-certs/README/" title="Client Certificate Authentication" class="md-nav__link">
+      Client Certificate Authentication
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/auth/external-auth/README/" title="External authentication" class="md-nav__link">
+      External authentication
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
+    
+    <label class="md-nav__link" for="nav-4-5">
+      Customization
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+      <label class="md-nav__title" for="nav-4-5">
+        Customization
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/configuration-snippets/README/" title="Configuration Snippets" class="md-nav__link">
+      Configuration Snippets
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/custom-configuration/README/" title="Custom Configuration" class="md-nav__link">
+      Custom Configuration
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/custom-errors/README/" title="Custom Errors" class="md-nav__link">
+      Custom Errors
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/custom-headers/README/" title="Custom Headers" class="md-nav__link">
+      Custom Headers
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/custom-upstream-check/README/" title="Custom Upstream server checks" class="md-nav__link">
+      Custom Upstream server checks
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/custom-vts-metrics-prometheus/README/" title="Deploying the Nginx Ingress controller" class="md-nav__link">
+      Deploying the Nginx Ingress controller
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/external-auth-headers/README/" title="External authentication, authentication service response headers propagation" class="md-nav__link">
+      External authentication, authentication service response headers propagation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/ssl-dh-param/README/" title="Deploying the Nginx Ingress controller" class="md-nav__link">
+      Deploying the Nginx Ingress controller
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/customization/sysctl/README/" title="Sysctl tuning" class="md-nav__link">
+      Sysctl tuning
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/docker-registry/README/" title="Docker registry" class="md-nav__link">
+      Docker registry
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/external-auth/README/" title="External Authentication" class="md-nav__link">
+      External Authentication
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/multi-tls/README/" title="Multi TLS certificate termination" class="md-nav__link">
+      Multi TLS certificate termination
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/rewrite/README/" title="Rewrite" class="md-nav__link">
+      Rewrite
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/static-ip/README/" title="Static IPs" class="md-nav__link">
+      Static IPs
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../examples/tls-termination/README/" title="TLS termination" class="md-nav__link">
+      TLS termination
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../development/" title="Developing for NGINX Ingress controller" class="md-nav__link">
+      Developing for NGINX Ingress controller
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../ingress-controller-catalog/" title="Ingress Controller Catalog" class="md-nav__link">
+      Ingress Controller Catalog
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../troubleshooting/" title="Debug & Troubleshooting" class="md-nav__link">
+      Debug & Troubleshooting
+    </a>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#contents" title="Contents" class="md-nav__link">
+    Contents
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generic-deployment" title="Generic Deployment" class="md-nav__link">
+    Generic Deployment
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mandatory-commands" title="Mandatory commands" class="md-nav__link">
+    Mandatory commands
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-without-rbac-roles" title="Install without RBAC roles" class="md-nav__link">
+    Install without RBAC roles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-with-rbac-roles" title="Install with RBAC roles" class="md-nav__link">
+    Install with RBAC roles
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-service-provider-deployment" title="Custom Service Provider Deployment" class="md-nav__link">
+    Custom Service Provider Deployment
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#docker-for-mac" title="Docker for Mac" class="md-nav__link">
+    Docker for Mac
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minikube" title="minikube" class="md-nav__link">
+    minikube
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws" title="AWS" class="md-nav__link">
+    AWS
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#elastic-load-balancer-elb" title="Elastic Load Balancer - ELB" class="md-nav__link">
+    Elastic Load Balancer - ELB
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-load-balancer-nlb" title="Network Load Balancer (NLB)" class="md-nav__link">
+    Network Load Balancer (NLB)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gce-gke" title="GCE - GKE" class="md-nav__link">
+    GCE - GKE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#azure" title="Azure" class="md-nav__link">
+    Azure
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baremetal" title="Baremetal" class="md-nav__link">
+    Baremetal
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-helm" title="Using Helm" class="md-nav__link">
+    Using Helm
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-installation" title="Verify installation" class="md-nav__link">
+    Verify installation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detect-installed-version" title="Detect installed version" class="md-nav__link">
+    Detect installed version
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploying-the-config-map" title="Deploying the config-map" class="md-nav__link">
+    Deploying the config-map
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/deploy/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="installation-guide">Installation Guide<a class="headerlink" href="#installation-guide" title="Permanent link">&para;</a></h1>
+<h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="#mandatory-commands">Mandatory commands</a></li>
+<li><a href="#install-without-rbac-roles">Install without RBAC roles</a></li>
+<li><a href="#install-with-rbac-roles">Install with RBAC roles</a></li>
+<li><a href="#custom-provider">Custom Provider</a></li>
+<li><a href="#docker-for-mac">Docker for Mac</a></li>
+<li><a href="#minikube">minikube</a></li>
+<li><a href="#aws">AWS</a></li>
+<li><a href="#gce---gke">GCE - GKE</a></li>
+<li><a href="#azure">Azure</a></li>
+<li><a href="#baremetal">Baremetal</a></li>
+<li><a href="#using-helm">Using Helm</a></li>
+<li><a href="#verify-installation">Verify installation</a></li>
+<li><a href="#detect-installed-version">Detect installed version</a></li>
+<li><a href="#deploying-the-config-map">Deploying the config-map</a></li>
+</ul>
+<h2 id="generic-deployment">Generic Deployment<a class="headerlink" href="#generic-deployment" title="Permanent link">&para;</a></h2>
+<p>The following resources are required for a generic deployment.</p>
+<h3 id="mandatory-commands">Mandatory commands<a class="headerlink" href="#mandatory-commands" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/namespace.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+
+<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/default-backend.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+
+<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/configmap.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+
+<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/tcp-services-configmap.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+
+<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/udp-services-configmap.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+</pre></div>
+
+
+<h3 id="install-without-rbac-roles">Install without RBAC roles<a class="headerlink" href="#install-without-rbac-roles" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/without-rbac.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+</pre></div>
+
+
+<h3 id="install-with-rbac-roles">Install with RBAC roles<a class="headerlink" href="#install-with-rbac-roles" title="Permanent link">&para;</a></h3>
+<p>Please check the <a href="rbac/">RBAC</a> document.</p>
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/rbac.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+
+<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/with-rbac.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+</pre></div>
+
+
+<h2 id="custom-service-provider-deployment">Custom Service Provider Deployment<a class="headerlink" href="#custom-service-provider-deployment" title="Permanent link">&para;</a></h2>
+<p>There are cloud provider specific yaml files.</p>
+<h3 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link">&para;</a></h3>
+<p>Kubernetes is available for Docker for Mac's Edge channel. Switch to the <a href="https://docs.docker.com/docker-for-mac/install/">Edge
+channel</a> and <a href="https://docs.docker.com/docker-for-mac/#kubernetes">enable Kubernetes</a>.</p>
+<p>Patch the nginx ingress controller deployment to add the flag <code class="codehilite">--publish-service</code></p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type=&#39;json&#39; \</span>
+<span class="go">    --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)&quot;</span>
+</pre></div>
+
+
+<p>Create a service</p>
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/docker-for-mac/service.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+</pre></div>
+
+
+<h3 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link">&para;</a></h3>
+<p>For standard usage:</p>
+<div class="codehilite"><pre><span></span><span class="go">minikube addons enable ingress</span>
+</pre></div>
+
+
+<p>For development:</p>
+<ol>
+<li>Disable the ingress addon:</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> minikube addons disable ingress
+</pre></div>
+
+
+<ol>
+<li>Use the <a href="https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md">docker daemon</a></li>
+<li><a href="../development/">Build the image</a></li>
+<li>Perform <a href="#mandatory-commands">Mandatory commands</a></li>
+<li>Install the <code class="codehilite">nginx-ingress-controller</code> deployment <a href="#install-without-rbac-roles">without RBAC roles</a> or <a href="#install-with-rbac-roles">with RBAC roles</a></li>
+<li>Edit the <code class="codehilite">nginx-ingress-controller</code> deployment to use your custom image. Local images can be seen by performing <code class="codehilite">docker images</code>.</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl edit deployment nginx-ingress-controller -n ingress-nginx
+</pre></div>
+
+
+<p>edit the following section:</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">image</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;IMAGE-NAME&gt;:&lt;TAG&gt;</span>
+<span class="l l-Scalar l-Scalar-Plain">imagePullPolicy</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+<span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-ingress-controller</span>
+</pre></div>
+
+
+<ol>
+<li>Confirm the <code class="codehilite">nginx-ingress-controller</code> deployment exists:</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n ingress-nginx 
+<span class="go">NAME                                       READY     STATUS    RESTARTS   AGE</span>
+<span class="go">default-http-backend-66b447d9cf-rrlf9      1/1       Running   0          12s</span>
+<span class="go">nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s</span>
+</pre></div>
+
+
+<h3 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link">&para;</a></h3>
+<p>In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of <code class="codehilite">Type=LoadBalancer</code>.
+Since Kubernetes v1.9.0 it is possible to use a classic load balancer (ELB) or network load balancer (NLB)
+Please check the <a href="https://aws.amazon.com/es/elasticloadbalancing/details/">elastic load balancing AWS details page</a></p>
+<h4 id="elastic-load-balancer-elb">Elastic Load Balancer - ELB<a class="headerlink" href="#elastic-load-balancer-elb" title="Permanent link">&para;</a></h4>
+<p>This setup requires to choose in which layer (L4 or L7) we want to configure the ELB:</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer">Layer 4</a>: use TCP as the listener protocol for ports 80 and 443.</li>
+<li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer">Layer 7</a>: use HTTP as the listener protocol for port 80 and terminate TLS in the ELB</li>
+</ul>
+<p>Patch the nginx ingress controller deployment to add the flag <code class="codehilite">--publish-service</code></p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type=&#39;json&#39; \</span>
+<span class="go">  --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)&quot;</span>
+</pre></div>
+
+
+<p>For L4:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l4.yaml</span>
+<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml</span>
+</pre></div>
+
+
+<p>For L7:</p>
+<p>Change line of the file <code class="codehilite">provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code class="codehilite">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</code>
+Then execute:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f provider/aws/service-l7.yaml</span>
+<span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l7.yaml</span>
+</pre></div>
+
+
+<p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
+<p><img alt="Listeners" src="./../docs/images/elb-l7-listener.png" /></p>
+<p>If the ingress controller uses RBAC run:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml</span>
+</pre></div>
+
+
+<p>If not run:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml</span>
+</pre></div>
+
+
+<h4 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link">&para;</a></h4>
+<p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml</span>
+</pre></div>
+
+
+<p>If the ingress controller uses RBAC run:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml</span>
+</pre></div>
+
+
+<p>If not run:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml</span>
+</pre></div>
+
+
+<h3 id="gce-gke">GCE - GKE<a class="headerlink" href="#gce-gke" title="Permanent link">&para;</a></h3>
+<p>Patch the nginx ingress controller deployment to add the flag <code class="codehilite">--publish-service</code></p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type=&#39;json&#39; \</span>
+<span class="go">  --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)&quot;</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/gce-gke/service.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+</pre></div>
+
+
+<p>If the ingress controller uses RBAC run:</p>
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml | kubectl apply -f -</span>
+</pre></div>
+
+
+<p>If not run:</p>
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml | kubectl apply -f -</span>
+</pre></div>
+
+
+<p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
+<h3 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link">&para;</a></h3>
+<p>Patch the nginx ingress controller deployment to add the flag <code class="codehilite">--publish-service</code></p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type=&#39;json&#39; \</span>
+<span class="go">  --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)&quot;</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/azure/service.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+</pre></div>
+
+
+<p>If the ingress controller uses RBAC run:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml</span>
+</pre></div>
+
+
+<p>If not run:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml</span>
+</pre></div>
+
+
+<p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
+<h3 id="baremetal">Baremetal<a class="headerlink" href="#baremetal" title="Permanent link">&para;</a></h3>
+<p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+</pre></div>
+
+
+<h2 id="using-helm">Using Helm<a class="headerlink" href="#using-helm" title="Permanent link">&para;</a></h2>
+<p>NGINX Ingress controller can be installed via <a href="https://helm.sh/">Helm</a> using the chart <a href="https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress">stable/nginx</a> from the official charts repository. 
+To install the chart with the release name <code class="codehilite">my-nginx</code>:</p>
+<div class="codehilite"><pre><span></span><span class="go">helm install stable/nginx-ingress --name my-nginx</span>
+</pre></div>
+
+
+<p>If the kubernetes cluster has RBAC enabled, then run:</p>
+<div class="codehilite"><pre><span></span><span class="go">helm install stable/nginx-ingress --name my-nginx --set rbac.create=true</span>
+</pre></div>
+
+
+<h2 id="verify-installation">Verify installation<a class="headerlink" href="#verify-installation" title="Permanent link">&para;</a></h2>
+<p>To check if the ingress controller pods have started, run the following command:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl get pods --all-namespaces -l app=ingress-nginx --watch</span>
+</pre></div>
+
+
+<p>Once the operator pods are running, you can cancel the above command by typing <code class="codehilite">Ctrl+C</code>.
+Now, you are ready to create your first ingress.</p>
+<h2 id="detect-installed-version">Detect installed version<a class="headerlink" href="#detect-installed-version" title="Permanent link">&para;</a></h2>
+<p>To detect which version of the ingress controller is running, exec into the pod and run <code class="codehilite">nginx-ingress-controller version</code> command.</p>
+<div class="codehilite"><pre><span></span><span class="go">POD_NAMESPACE=ingress-nginx</span>
+<span class="go">POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app=ingress-nginx -o jsonpath={.items[0].metadata.name})</span>
+<span class="go">kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version</span>
+</pre></div>
+
+
+<h2 id="deploying-the-config-map">Deploying the config-map<a class="headerlink" href="#deploying-the-config-map" title="Permanent link">&para;</a></h2>
+<p>A config map can be used to configure system components for the nginx-controller. In order to begin using a config-map
+make sure it has been created and is being used in the deployment.</p>
+<p>It is created as seen in the <a href="#mandatory-commands">Mandatory Commands</a> section above.</p>
+<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/configmap.yaml \</span>
+<span class="go">    | kubectl apply -f -</span>
+</pre></div>
+
+
+<p>and is setup to be used in the deployment <a href="./../deploy/without-rbac.yaml">without-rbac</a> or <a href="./../deploy/with-rbac.yaml">with-rbac</a> with the following line:</p>
+<div class="codehilite"><pre><span></span><span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">--configmap=$(POD_NAMESPACE)/nginx-configuration</span>
+</pre></div>
+
+
+<p>For information on using the config-map, see its <a href="../user-guide/nginx-configuration/configmap/">user-guide</a>.</p>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href=".." title="Welcome" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Welcome
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="rbac/" title="Role Based Access Control (RBAC)" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Role Based Access Control (RBAC)
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="http://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+        
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../assets/javascripts/application.b438e6c5.js"></script>
+      
+      <script>app.initialize({version:"0.17.3",url:{base:".."}})</script>
+      
+    
+    
+      
+    
+  </body>
+</html>
