@@ -230,6 +230,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 	rp := []int{
 		n.cfg.ListenPorts.HTTP,
 		n.cfg.ListenPorts.HTTPS,
+		n.cfg.ListenPorts.GRPC,
 		n.cfg.ListenPorts.SSLProxy,
 		n.cfg.ListenPorts.Status,
 		n.cfg.ListenPorts.Health,

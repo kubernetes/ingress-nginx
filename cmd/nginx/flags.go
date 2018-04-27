@@ -114,6 +114,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 
 		httpPort      = flags.Int("http-port", 80, `Indicates the port to use for HTTP traffic`)
 		httpsPort     = flags.Int("https-port", 443, `Indicates the port to use for HTTPS traffic`)
+		grpcPort      = flags.Int("grpc-port", 9200, `Indicates the port to use for GRPC traffic`)
 		statusPort    = flags.Int("status-port", 18080, `Indicates the TCP port to use for exposing the nginx status page`)
 		sslProxyPort  = flags.Int("ssl-passtrough-proxy-port", 442, `Default port to use internally for SSL when SSL Passthgough is enabled`)
 		defServerPort = flags.Int("default-server-port", 8181, `Default port to use for exposing the default server (catch all)`)
@@ -179,6 +180,10 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --https-port", *httpsPort)
 	}
 
+	if !ing_net.IsPortAvailable(*grpcPort) {
+		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --grpc-port", *grpcPort)
+	}
+
 	if !ing_net.IsPortAvailable(*statusPort) {
 		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --status-port", *statusPort)
 	}
@@ -235,6 +240,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 			Health:   *healthzPort,
 			HTTP:     *httpPort,
 			HTTPS:    *httpsPort,
+			GRPC:     *grpcPort,
 			SSLProxy: *sslProxyPort,
 			Status:   *statusPort,
 		},
