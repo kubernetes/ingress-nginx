@@ -143,7 +143,7 @@ To enable consistent hashing for a backend:
 
 ### Custom NGINX load balancing
 
-This is similar to https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md#load-balance but configures load balancing algorithm per ingress.
+This is similar to https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#load-balance but configures load balancing algorithm per ingress.
 Note that `nginx.ingress.kubernetes.io/upstream-hash-by` takes preference over this. If this and `nginx.ingress.kubernetes.io/upstream-hash-by` are not set then we fallback to using globally configured load balancing algorithm.
 
 ### Custom NGINX upstream vhost
