@@ -117,7 +117,7 @@ endif
 	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
 
 ifeq ($(ARCH), amd64)
-	# This is for to maintain the backward compatibility
+	# This is for maintaining backward compatibility
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
@@ -159,7 +159,7 @@ lua-test:
 
 .PHONY: e2e-image
 e2e-image: sub-container-amd64
-	TAG=$(TAG) IMAGE=$(MULTI_ARCH_IMG) docker tag $(IMAGE):$(TAG) $(IMAGE):test
+	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMGNAME):e2e
 	docker images
 
 .PHONY: e2e-test

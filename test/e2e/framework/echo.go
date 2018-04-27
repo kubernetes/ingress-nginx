@@ -60,7 +60,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 					Containers: []corev1.Container{
 						{
 							Name:  "http-svc",
-							Image: "gcr.io/google_containers/echoserver:1.8",
+							Image: "gcr.io/google_containers/echoserver:1.10",
 							Env:   []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{

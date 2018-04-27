@@ -184,7 +184,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			},
 		}
 
-		_, _, _, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
+		_, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ingress.Spec.TLS[0].Hosts,
 			ingress.Spec.TLS[0].SecretName,
 			ingress.Namespace)
