@@ -213,3 +213,11 @@ dep-ensure:
 .PHONY: dev-env
 dev-env:
 	@./hack/build-dev-env.sh
+
+.PHONY: live-docs
+live-docs:
+	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs aledbf/mkdocs:0.1
+
+.PHONY: build-docs
+build-docs:
+	@docker run --rm -it -v ${PWD}:/docs aledbf/mkdocs:0.1 build

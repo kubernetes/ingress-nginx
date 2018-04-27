@@ -1,3 +1,5 @@
+# Custom Errors
+
 This example shows how is possible to use a custom backend to render custom error pages. The code of this example is located here [custom-error-pages](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-errors)
 
 

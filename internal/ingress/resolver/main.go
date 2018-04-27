@@ -52,6 +52,13 @@ type AuthSSLCert struct {
 
 // Equal tests for equality between two AuthSSLCert types
 func (asslc1 *AuthSSLCert) Equal(assl2 *AuthSSLCert) bool {
+	if asslc1 == assl2 {
+		return true
+	}
+	if asslc1 == nil || assl2 == nil {
+		return false
+	}
+
 	if asslc1.Secret != assl2.Secret {
 		return false
 	}

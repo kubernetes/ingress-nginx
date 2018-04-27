@@ -188,7 +188,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 				// it takes time for Nginx to start listening on the port
 				time.Sleep(1 * time.Second)
 			}
-			err := n.ConfigureDynamically(&pcfg)
+			err := configureDynamically(&pcfg, n.cfg.ListenPorts.Status)
 			if err == nil {
 				glog.Infof("dynamic reconfiguration succeeded")
 			} else {

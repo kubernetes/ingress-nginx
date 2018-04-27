@@ -802,6 +802,11 @@ stream {
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
 
+            proxy_buffering                         "{{ $location.Proxy.ProxyBuffering }}";
+            proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
+            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
+            proxy_request_buffering                 "{{ $location.Proxy.RequestBuffering }}";
+
             proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;

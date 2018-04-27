@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2017 The Kubernetes Authors.
+# Copyright 2018 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,32 +14,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if ! [ -z $DEBUG ]; then
+  set -x
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [ "$COMPONENT" == "docs" ]; then
-    echo "Skipping because we are publishing docs"
+if [ "$COMPONENT" != "docs" ]; then
+    echo "This task runs only to publish docs"
     exit 0
 fi
 
-if [ $# -eq "1" ]
-then
-    export ARCH=$1
-fi
+make -C ${DIR}/.. build-docs
 
-source $DIR/common.sh
+git config --global user.email "travis@travis-ci.com"
+git config --global user.name "Travis Bot"
 
-echo "Login to quay.io..."
-docker login --username=$QUAY_USERNAME --password=$QUAY_PASSWORD quay.io >/dev/null 2>&1
+git clone --branch=gh-pages --depth=1 https://${GH_REF} ${DIR}/gh-pages
+cd ${DIR}/gh-pages
 
-case "$COMPONENT" in
-"ingress-controller")
-    $DIR/ingress-controller.sh
-    ;;
-"nginx")
-    $DIR/nginx.sh
-    ;;
-*)
-    echo "Invalid option in environment variable COMPONENT"
-    exit 1
-    ;;
-esac
+git rm -r .
+
+cp -r ${DIR}/../site/* .
+
+git add .
+git commit -m "Deploy GitHub Pages"
+git push --force --quiet "https://${GH_TOKEN}@${GH_REF}" gh-pages > /dev/null 2>&1
