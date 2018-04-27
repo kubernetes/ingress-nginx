@@ -676,6 +676,7 @@ type TemplateConfig struct {
 type ListenPorts struct {
 	HTTP     int
 	HTTPS    int
+	GRPC     int
 	Status   int
 	Health   int
 	Default  int
