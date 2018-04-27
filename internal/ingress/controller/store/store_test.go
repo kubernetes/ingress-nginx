@@ -304,7 +304,7 @@ func TestStore(t *testing.T) {
 		storer.Run(stopCh)
 
 		secretName := "not-referenced"
-		_, _, _, err = framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns)
+		_, err = framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns)
 		if err != nil {
 			t.Errorf("unexpected error creating secret: %v", err)
 		}
@@ -418,7 +418,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("unexpected error waiting for secret: %v", err)
 		}
 
-		_, _, _, err = framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns)
+		_, err = framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns)
 		if err != nil {
 			t.Errorf("unexpected error creating secret: %v", err)
 		}
@@ -558,7 +558,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected 0 events of type Delete but %v occurred", del)
 		}
 
-		_, _, _, err = framework.CreateIngressTLSSecret(clientSet, secretHosts, name, ns)
+		_, err = framework.CreateIngressTLSSecret(clientSet, secretHosts, name, ns)
 		if err != nil {
 			t.Errorf("unexpected error creating secret: %v", err)
 		}

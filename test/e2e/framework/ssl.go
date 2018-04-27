@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -27,11 +28,13 @@ import (
 	"io"
 	"math/big"
 	"net"
+	net_url "net/url"
 	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -40,18 +43,22 @@ const (
 	validFor = 365 * 24 * time.Hour
 )
 
-// CreateIngressTLSSecret creates a secret containing TLS certificates for the given Ingress.
-// If a secret with the same name already pathExists in the namespace of the
-// Ingress, it's updated.
-func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretName, namespace string) (host string, rootCA, privKey []byte, err error) {
-	var k, c bytes.Buffer
-	host = strings.Join(hosts, ",")
-	if err = generateRSACerts(host, true, &k, &c); err != nil {
-		return
+// CreateIngressTLSSecret creates or updates a Secret containing a TLS
+// certificate for the given Ingress and returns a TLS configuration suitable
+// for HTTP clients to use against that particular Ingress.
+func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretName, namespace string) (*tls.Config, error) {
+	if len(hosts) == 0 {
+		return nil, fmt.Errorf("require a non-empty host for client hello")
 	}
-	cert := c.Bytes()
-	key := k.Bytes()
-	secret := &v1.Secret{
+
+	var k, c bytes.Buffer
+	host := strings.Join(hosts, ",")
+	if err := generateRSACert(host, true, &k, &c); err != nil {
+		return nil, err
+	}
+
+	cert, key := c.Bytes(), k.Bytes()
+	newSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,
 		},
@@ -60,22 +67,31 @@ func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretN
 			v1.TLSPrivateKeyKey: key,
 		},
 	}
-	var s *v1.Secret
-	if s, err = client.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{}); err == nil {
-		s.Data = secret.Data
-		_, err = client.CoreV1().Secrets(namespace).Update(s)
+
+	var apierr error
+	curSecret, err := client.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err == nil && curSecret != nil {
+		curSecret.Data = newSecret.Data
+		_, apierr = client.CoreV1().Secrets(namespace).Update(curSecret)
 	} else {
-		_, err = client.CoreV1().Secrets(namespace).Create(secret)
+		_, apierr = client.CoreV1().Secrets(namespace).Create(newSecret)
 	}
-	return host, cert, key, err
+	if apierr != nil {
+		return nil, apierr
+	}
+
+	serverName := hosts[0]
+	return tlsConfig(serverName, cert)
 }
 
-// generateRSACerts generates a basic self signed certificate using a key length
+// WaitForTLS waits until the TLS handshake with a given server completes successfully.
+func WaitForTLS(url string, tlsConfig *tls.Config) error {
+	return wait.Poll(Poll, 30*time.Second, matchTLSServerName(url, tlsConfig))
+}
+
+// generateRSACert generates a basic self signed certificate using a key length
 // of rsaBits, valid for validFor time.
-func generateRSACerts(host string, isCA bool, keyOut, certOut io.Writer) error {
-	if len(host) == 0 {
-		return fmt.Errorf("require a non-empty host for client hello")
-	}
+func generateRSACert(host string, isCA bool, keyOut, certOut io.Writer) error {
 	priv, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {
 		return fmt.Errorf("failed to generate key: %v", err)
@@ -128,4 +144,38 @@ func generateRSACerts(host string, isCA bool, keyOut, certOut io.Writer) error {
 		return fmt.Errorf("failed creating keay: %v", err)
 	}
 	return nil
+}
+
+// tlsConfig returns a client TLS configuration for the given server name and
+// CA certificate (PEM).
+func tlsConfig(serverName string, pemCA []byte) (*tls.Config, error) {
+	rootCAPool := x509.NewCertPool()
+	if !rootCAPool.AppendCertsFromPEM(pemCA) {
+		return nil, fmt.Errorf("error creating CA certificate pool (%s)", serverName)
+	}
+	return &tls.Config{
+		ServerName: serverName,
+		RootCAs:    rootCAPool,
+	}, nil
+}
+
+// matchTLSServerName connects to the network address corresponding to the
+// given URL using the given TLS configuration and returns whether the TLS
+// handshake completed successfully.
+func matchTLSServerName(url string, tlsConfig *tls.Config) wait.ConditionFunc {
+	return func() (ready bool, err error) {
+		u, err := net_url.Parse(url)
+		if err != nil {
+			return
+		}
+
+		conn, err := tls.Dial("tcp", u.Host, tlsConfig)
+		if err != nil {
+			return false, nil
+		}
+		conn.Close()
+
+		ready = true
+		return
+	}
 }
