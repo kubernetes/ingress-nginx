@@ -1035,13 +1035,13 @@ Adding <code class="codehilite">PROXY</code> in either or both of the two last f
 
 <p>Since 1.9.13 NGINX provides <a href="https://www.nginx.com/blog/announcing-udp-load-balancing/">UDP Load Balancing</a>.
 The next example shows how to expose the service <code class="codehilite">kube-dns</code> running in the namespace <code class="codehilite">kube-system</code> in the port <code class="codehilite">53</code> using the port <code class="codehilite">53</code></p>
-<p>```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: udp-configmap-example
-data:
-  53: "kube-system/kube-dns:53"</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
+<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">udp-configmap-example</span>
+<span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
+<span class="err">  </span><span class="l l-Scalar l-Scalar-Plain">53</span><span class="p p-Indicator">:</span> <span class="s">&quot;kube-system/kube-dns:53&quot;</span>
+</pre></div>
                 
                   
                 
