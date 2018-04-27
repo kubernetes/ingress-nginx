@@ -49,6 +49,7 @@ local function init()
   mock_sticky = {}
   mock_ngx_balancer = {}
   mock_ewma = {}
+  mock_chash = {}
   mock_backends = dict_generator(default_backends)
   mock_lrucache = {
     new = function () return mock_backends end
@@ -78,6 +79,7 @@ local function init()
   package.loaded["cjson"] = mock_cjson
   package.loaded["resty.lock"] = mock_lock
   package.loaded["balancer.ewma"] = mock_ewma
+  package.loaded["balancer.chash"] = mock_chash
   package.loaded["configuration"] = mock_config
   package.loaded["sticky"] = mock_sticky
   balancer = require("balancer")
