@@ -26,4 +26,5 @@ kind: ConfigMap
 metadata:
   name: udp-configmap-example
 data:
-  53: "kube-system/kube-dns:53"
+  53: "kube-system/kube-dns:53"
+```
