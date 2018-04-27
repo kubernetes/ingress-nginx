@@ -49,9 +49,9 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		Expect(ing).NotTo(BeNil())
 
 		err = f.WaitForNginxConfiguration(
-			func(server string) bool {
-				return strings.Contains(server, "server_tokens off") &&
-					strings.Contains(server, "more_set_headers \"Server: \"")
+			func(cfg string) bool {
+				return strings.Contains(cfg, "server_tokens off") &&
+					strings.Contains(cfg, "more_set_headers \"Server: \"")
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -92,8 +92,8 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		Expect(ing).NotTo(BeNil())
 
 		err = f.WaitForNginxConfiguration(
-			func(server string) bool {
-				return strings.Contains(server, "server_tokens on")
+			func(cfg string) bool {
+				return strings.Contains(cfg, "server_tokens on")
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
