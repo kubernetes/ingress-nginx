@@ -264,7 +264,7 @@ type Location struct {
 	// +optional
 	XForwardedPrefix bool `json:"xForwardedPrefix,omitempty"`
 	// Logs allows to enable or disable the nginx logs
-	// By default this is enabled
+	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`
 	// GRPC indicates if the kubernetes service exposes a gRPC interface
 	// By default this is false

@@ -46,6 +46,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
+|[nginx.ingress.kubernetes.io/rewrite-log](#enable-rewrite-log)|URI|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[nginx.ingress.kubernetes.io/secure-backends](#secure-backends)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
@@ -465,6 +466,14 @@ In some scenarios could be required to disable NGINX access logs. To enable this
 
 ```yaml
 nginx.ingress.kubernetes.io/enable-access-log: "false"
+```
+
+### Enable Rewrite Log
+
+In some scenarios it could be required to enable NGINX rewrite logs. Note that rewrite logs are sent to the error_log file at the notice level. To enable this feature use the annotation:
+
+```yaml
+nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
 ```
 
 ### Lua Resty WAF
