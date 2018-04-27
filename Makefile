@@ -164,6 +164,7 @@ e2e-image: sub-container-amd64
 
 .PHONY: e2e-test
 e2e-test:
+	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
 	@ginkgo build ./test/e2e
 	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 -p -trace -nodes=2 ./test/e2e/e2e.test
 
