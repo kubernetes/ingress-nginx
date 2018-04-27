@@ -57,6 +57,8 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     
     
+      <link rel="stylesheet" href="../../extra.css">
+    
     
   </head>
   
@@ -1276,9 +1278,9 @@ By default this feature is disabled</p>
 <p>To setup Kube-Lego you can take a look at this <a href="https://github.com/jetstack/kube-lego/tree/master/examples">full example</a>. The first
 version to fully support Kube-Lego is nginx Ingress controller 0.8.</p>
 <h2 id="default-tls-version-and-ciphers">Default TLS Version and Ciphers<a class="headerlink" href="#default-tls-version-and-ciphers" title="Permanent link">&para;</a></h2>
-<p>To provide the most secure baseline configuration possible, nginx-ingress defaults to using TLS 1.2 and a <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md#ssl-ciphers">secure set of TLS ciphers</a></p>
+<p>To provide the most secure baseline configuration possible, nginx-ingress defaults to using TLS 1.2 and a <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#ssl-ciphers">secure set of TLS ciphers</a></p>
 <h2 id="legacy-tls">Legacy TLS<a class="headerlink" href="#legacy-tls" title="Permanent link">&para;</a></h2>
-<p>The default configuration, though secure, does not support some older browsers and operating systems. For instance, 20% of Android phones in use today are not compatible with nginx-ingress's default configuration. To change this default behavior, use a <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md#ssl-ciphers">ConfigMap</a>.</p>
+<p>The default configuration, though secure, does not support some older browsers and operating systems. For instance, 20% of Android phones in use today are not compatible with nginx-ingress's default configuration. To change this default behavior, use a <a href="https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#ssl-ciphers">ConfigMap</a>.</p>
 <p>A sample ConfigMap to allow these older clients connect could look something like the following:</p>
 <div class="codehilite"><pre><span></span><span class="n">kind</span><span class="o">:</span> <span class="n">ConfigMap</span>
 <span class="n">apiVersion</span><span class="o">:</span> <span class="n">v1</span>

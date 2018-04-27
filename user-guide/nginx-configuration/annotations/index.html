@@ -57,6 +57,8 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     
     
+      <link rel="stylesheet" href="../../../extra.css">
+    
     
   </head>
   
@@ -1825,7 +1827,7 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <p>To enable consistent hashing for a backend:</p>
 <p><code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code>: the nginx variable, text value or any combination thereof to use for consistent hashing. For example <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by: &quot;$request_uri&quot;</code> to consistently hash upstream requests by the current request URI.</p>
 <h3 id="custom-nginx-load-balancing">Custom NGINX load balancing<a class="headerlink" href="#custom-nginx-load-balancing" title="Permanent link">&para;</a></h3>
-<p>This is similar to https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md#load-balance but configures load balancing algorithm per ingress.
+<p>This is similar to https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#load-balance but configures load balancing algorithm per ingress.
 Note that <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> takes preference over this. If this and <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> are not set then we fallback to using globally configured load balancing algorithm.</p>
 <h3 id="custom-nginx-upstream-vhost">Custom NGINX upstream vhost<a class="headerlink" href="#custom-nginx-upstream-vhost" title="Permanent link">&para;</a></h3>
 <p>This configuration setting allows you to control the value for host in the following statement: <code class="codehilite">proxy_set_header Host $host</code>, which forms part of the location block.  This is useful if you need to call the upstream server by something other than <code class="codehilite">$host</code>.</p>
