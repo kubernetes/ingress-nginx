@@ -113,9 +113,6 @@ func TestStore(t *testing.T) {
 		if svc != nil {
 			t.Errorf("expected an Ingres but none returned")
 		}
-
-		updateCh.Close()
-		close(stopCh)
 	})
 
 	t.Run("should return one event for add, update and delete of ingress", func(t *testing.T) {
@@ -257,9 +254,6 @@ func TestStore(t *testing.T) {
 		if atomic.LoadUint64(&del) != 1 {
 			t.Errorf("expected 1 event of type Delete but %v occurred", del)
 		}
-
-		updateCh.Close()
-		close(stopCh)
 	})
 
 	t.Run("should not receive events from secret not referenced from ingress", func(t *testing.T) {
@@ -346,9 +340,6 @@ func TestStore(t *testing.T) {
 		if atomic.LoadUint64(&del) != 0 {
 			t.Errorf("expected 0 events of type Delete but %v occurred", del)
 		}
-
-		updateCh.Close()
-		close(stopCh)
 	})
 
 	t.Run("should receive events from secret referenced from ingress", func(t *testing.T) {
@@ -458,9 +449,6 @@ func TestStore(t *testing.T) {
 		if atomic.LoadUint64(&del) != 1 {
 			t.Errorf("expected 1 events of type Delete but %v occurred", del)
 		}
-
-		updateCh.Close()
-		close(stopCh)
 	})
 
 	t.Run("should create an ingress with a secret which does not exist", func(t *testing.T) {
@@ -604,9 +592,6 @@ func TestStore(t *testing.T) {
 				t.Errorf("SHA of secret on disk differs from local secret store (%v != %v)", pemSHA, sslCert.PemSHA)
 			}
 		})
-
-		updateCh.Close()
-		close(stopCh)
 	})
 
 	// test add ingress with secret it doesn't exists and then add secret
