@@ -275,9 +275,9 @@ http {
 
     # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
     # If no such header is provided, it can provide a random value.
-    map $http_x_request_id $req_id {                                                 
-        default   $http_x_request_id;                                               
-        ""        $request_id;                                                      
+    map $http_x_request_id $req_id {
+        default   $http_x_request_id;
+        ""        $request_id;
     }
 
     {{ if $cfg.ComputeFullForwardedFor }}
@@ -296,8 +296,6 @@ http {
 
     server_name_in_redirect off;
     port_in_redirect        off;
-
-    rewrite_log             on;
 
     ssl_protocols {{ $cfg.SSLProtocols }};
 
@@ -550,7 +548,7 @@ http {
             allow ::1;
             {{ end }}
             deny all;
-            
+
             # this should be equals to configuration_data dict
             client_max_body_size                    "10m";
             proxy_buffering                         off;
@@ -893,6 +891,10 @@ stream {
 
             {{ if not $location.Logs.Access }}
             access_log off;
+            {{ end }}
+
+            {{ if $location.Logs.Rewrite }}
+            rewrite_log on;
             {{ end }}
 
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
