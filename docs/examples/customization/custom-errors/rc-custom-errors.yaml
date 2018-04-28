@@ -49,3 +49,5 @@ spec:
         args:
         - /nginx-ingress-controller
         - --default-backend-service=$(POD_NAMESPACE)/nginx-errors
+        securityContext:
+          runAsNonRoot: false
