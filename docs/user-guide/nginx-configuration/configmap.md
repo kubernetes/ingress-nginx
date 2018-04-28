@@ -49,6 +49,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
 |[http2-max-header-size](#http2-max-header-size)|string|"16k"|
 |[http2-max-requests](#http2-max-requests)|int|1000|
+|[http2-host-blacklist](#http2-host-blacklist)|[]string|""|
 |[hsts](#hsts)|bool|"true"|
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"|
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
@@ -277,6 +278,10 @@ Sets the maximum number of requests (including push requests) that can be served
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests)
+
+## http2-host-blacklist
+
+Disables http2 for traffic to listed host names. Takes priority over [`use-http2`](#use-http2).
 
 ## hsts
 

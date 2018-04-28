@@ -50,6 +50,7 @@ const (
 	nginxStatusIpv6Whitelist = "nginx-status-ipv6-whitelist"
 	proxyHeaderTimeout       = "proxy-protocol-header-timeout"
 	workerProcesses          = "worker-processes"
+	http2HostBlacklist       = "http2-host-blacklist"
 )
 
 var (
@@ -70,7 +71,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	whiteList := make([]string, 0)
 	proxyList := make([]string, 0)
 	hideHeadersList := make([]string, 0)
-
+	http2Blacklist := make([]string, 0)
 	bindAddressIpv4List := make([]string, 0)
 	bindAddressIpv6List := make([]string, 0)
 
@@ -96,6 +97,10 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[skipAccessLogUrls]; ok {
 		delete(conf, skipAccessLogUrls)
 		skipUrls = strings.Split(val, ",")
+	}
+	if val, ok := conf[http2HostBlacklist]; ok {
+		delete(conf, http2HostBlacklist)
+		http2Blacklist = append(http2Blacklist, strings.Split(val, ",")...)
 	}
 	if val, ok := conf[whitelistSourceRange]; ok {
 		delete(conf, whitelistSourceRange)
@@ -210,6 +215,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.HideHeaders = hideHeadersList
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
+	to.HTTP2HostBlacklist = http2Blacklist
 
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,

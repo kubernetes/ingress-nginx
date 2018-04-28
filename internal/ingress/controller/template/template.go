@@ -157,6 +157,7 @@ var (
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
 		"atLeastOneNeedsRewrite":      atLeastOneNeedsRewrite,
+		"includes":                    includes,
 	}
 )
 
@@ -976,4 +977,13 @@ func proxySetHeader(loc interface{}) string {
 	}
 
 	return "proxy_set_header"
+}
+
+func includes(xs []string, s string) bool {
+	for _, x := range xs {
+		if x == s {
+			return true
+		}
+	}
+	return false
 }

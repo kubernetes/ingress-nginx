@@ -184,6 +184,9 @@ type Configuration struct {
 	// and the need of establishing a new connection.
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
 
+	// Disables http2 for matching hosts
+	HTTP2HostBlacklist []string `json:"http2-server-blacklist,omitempty"`
+
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
 
@@ -551,6 +554,7 @@ func NewDefault() Configuration {
 	defBlockEntity := make([]string, 0)
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
+	defHTTP2HostBlacklist := make([]string, 0)
 
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
@@ -582,6 +586,7 @@ func NewDefault() Configuration {
 		HTTP2MaxFieldSize:          "4k",
 		HTTP2MaxHeaderSize:         "16k",
 		HTTP2MaxRequests:           1000,
+		HTTP2HostBlacklist:         defHTTP2HostBlacklist,
 		HTTPRedirectCode:           308,
 		HSTS:                       true,
 		HSTSIncludeSubdomains:      true,
