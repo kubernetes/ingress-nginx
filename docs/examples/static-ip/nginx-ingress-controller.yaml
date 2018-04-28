@@ -53,3 +53,5 @@ spec:
         - /nginx-ingress-controller
         - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
         - --publish-service=$(POD_NAMESPACE)/nginx-ingress-lb
+        securityContext:
+          runAsNonRoot: false
