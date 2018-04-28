@@ -14,20 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-NAMESPACE=ingress-nginx
+: "${NAMESPACE:=ingress-nginx}"
+echo "NAMESPACE is set to ${NAMESPACE}"
 
-minikube start
+test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start
 eval $(minikube docker-env)
 
 echo "[dev-env] installing dependencies"
-go get -u github.com/golang/dep
+dep version || go get -u github.com/golang/dep
 dep ensure
 
 echo "[dev-env] building container"
 ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build container
 
 echo "[dev-env] installing kubectl"
-brew install kubectl
+kubectl version || brew install kubectl
 
 echo "[dev-env] deploying NGINX Ingress controller in namespace $NAMESPACE"
 cat ./deploy/namespace.yaml                  | kubectl apply --namespace=$NAMESPACE -f -
