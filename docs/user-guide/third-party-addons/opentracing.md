@@ -39,4 +39,4 @@ $ curl -v http://$(minikube ip)
 
 In the zipkin interface we can see the details:
 
-![zipkin screenshot](../images/zipkin-demo.png "zipkin collector screenshot")
+![zipkin screenshot](../../images/zipkin-demo.png "zipkin collector screenshot")

@@ -14,13 +14,12 @@ data:
   ssl-protocols: SSLv2
 ```
 
-**IMPORTANT:**
+!!! Important
+	The key and values in a ConfigMap can only be strings.
+	This means that we want a value with boolean values we need to quote the values, like "true" or "false".
+	Same for numbers, like "100".
 
-The key and values in a ConfigMap can only be strings.
-This means that we want a value with boolean values we need to quote the values, like "true" or "false".
-Same for numbers, like "100".
-
-"Slice" types (defined below as `[]string` or `[]int` can be provided as a comma-delimited string.
+	"Slice" types (defined below as `[]string` or `[]int` can be provided as a comma-delimited string.
 
 ## Configuration options
 
@@ -148,120 +147,123 @@ Sets custom headers from named configmap before sending traffic to the client. S
 
 ## allow-backend-server-header
 
-Enables the return of the header Server from the backend instead of the generic nginx string. By default this is disabled.
+Enables the return of the header Server from the backend instead of the generic nginx string. _**default:**_ is disabled
 
 ## hide-headers
 
 Sets additional header that will not be passed from the upstream server to the client response.
-Default: empty
+_**default:**_ empty
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header
+[http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header)
 
 ## access-log-path
 
 Access log path. Goes to `/var/log/nginx/access.log` by default.
 
-**Note:** the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
+__Note:__ the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
 
 ## error-log-path
 
 Error log path. Goes to `/var/log/nginx/error.log` by default.
 
-**Note:** the file `/var/log/nginx/error.log` is a symlink to `/dev/stderr`
+__Note:__ the file `/var/log/nginx/error.log` is a symlink to `/dev/stderr`
 
 _References:_
-- http://nginx.org/en/docs/ngx_core_module.html#error_log
+[http://nginx.org/en/docs/ngx_core_module.html#error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log)
 
 ## enable-dynamic-tls-records
 
-Enables dynamically sized TLS records to improve time-to-first-byte. By default this is enabled. See [CloudFlare's blog](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency) for more information.
+Enables dynamically sized TLS records to improve time-to-first-byte. _**default:**_ is enabled
+
+_References:_
+[https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency)
 
 ## enable-modsecurity
 
-Enables the modsecurity module for NGINX. By default this is disabled.
+Enables the modsecurity module for NGINX. _**default:**_ is disabled
 
 ## enable-owasp-modsecurity-crs
 
-Enables the OWASP ModSecurity Core Rule Set (CRS). By default this is disabled.
+Enables the OWASP ModSecurity Core Rule Set (CRS). _**default:**_ is disabled
 
 ## client-header-buffer-size
 
 Allows to configure a custom buffer size for reading client request header.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size)
 
 ## client-header-timeout
 
 Defines a timeout for reading client request header, in seconds.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout)
 
 ## client-body-buffer-size
 
 Sets buffer size for reading client request body.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size)
 
 ## client-body-timeout
 
 Defines a timeout for reading client request body, in seconds.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout)
 
 ## disable-access-log
 
-Disables the Access Log from the entire Ingress Controller. This is '"false"' by default.
+Disables the Access Log from the entire Ingress Controller. _**default:**_ '"false"'
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+[http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log](http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log)
 
 ## disable-ipv6
 
-Disable listening on IPV6. By default this is disabled.
+Disable listening on IPV6. _**default:**_ is disabled
 
 ## disable-ipv6-dns
 
-Disable IPV6 for nginx DNS resolver. By default this is disabled.
+Disable IPV6 for nginx DNS resolver. _**default:**_ is disabled
 
 ## enable-underscores-in-headers
 
-Enables underscores in header names. By default this is disabled.
+Enables underscores in header names. _**default:**_ is disabled
 
 ## ignore-invalid-headers
 
 Set if header fields with invalid names should be ignored.
-By default this is enabled.
+_**default:**_ is enabled
 
 ## enable-vts-status
 
 Allows the replacement of the default status page with a third party module named [nginx-module-vts](https://github.com/vozlt/nginx-module-vts).
-By default this is disabled.
+_**default:**_ is disabled
 
 ## vts-status-zone-size
 
-Vts config on http level sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processes. Default value is 10m
+Vts config on http level sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processes. _**default:**_ 10m
 
 _References:_
-- https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone
+[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone)
 
 ## vts-default-filter-key
 
-Vts config on http level enables the keys by user defined variable. The key is a key string to calculate traffic. The name is a group string to calculate traffic. The key and name can contain variables such as $host, $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones if not specified second argument name. Default value is $geoip_country_code country::*
+Vts config on http level enables the keys by user defined variable. The key is a key string to calculate traffic. The name is a group string to calculate traffic. The key and name can contain variables such as $host, $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones if not specified second argument name. _**default:**_ $geoip_country_code country::*
 
 _References:_
-- https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key
+[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key)
 
 ## vts-sum-key
 
-For metrics keyed (or when using Prometheus, labeled) by server zone, this value is used to indicate metrics for all server zones combined. Default value is *
+For metrics keyed (or when using Prometheus, labeled) by server zone, this value is used to indicate metrics for all server zones combined. _**default:**_ *
 
 _References:_
-- https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key
+[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key)
 
 ## retry-non-idempotent
 
@@ -272,21 +274,21 @@ Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in
 Configures the logging level of errors. Log levels above are listed in the order of increasing severity.
 
 _References:_
-- http://nginx.org/en/docs/ngx_core_module.html#error_log
+[http://nginx.org/en/docs/ngx_core_module.html#error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log)
 
 ## http2-max-field-size
 
 Limits the maximum size of an HPACK-compressed request header field.
 
 _References:_
-- https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
+[https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size](https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size)
 
 ## http2-max-header-size
 
 Limits the maximum size of the entire request header list after HPACK decompression.
 
 _References:_
-- https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
+[https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size](https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size)
 
 ## hsts
 
@@ -294,8 +296,9 @@ Enables or disables the header HSTS in servers running SSL.
 HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header) that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP. It provides protection against protocol downgrade attacks and cookie theft.
 
 _References:_
-- https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
-- https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-strict-transport-security-implementation-on-your-web-server
+
+- [https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security](https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security)
+- [https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-strict-transport-security-implementation-on-your-web-server](https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-strict-transport-security-implementation-on-your-web-server)
 
 ## hsts-include-subdomains
 
@@ -314,21 +317,21 @@ Enables or disables the preload attribute in the HSTS feature (when it is enable
 Sets the time during which a keep-alive client connection will stay open on the server side. The zero value disables keep-alive client connections.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout)
 
 ## keep-alive-requests
 
 Sets the maximum number of requests that can be served through one keep-alive connection.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests)
 
 ## large-client-header-buffers
 
-Sets the maximum number and size of buffers used for reading large client request header. Default: 4 8k.
+Sets the maximum number and size of buffers used for reading large client request header. _**default:**_ 4 8k
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers](http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers)
 
 ## log-format-escape-json
 
@@ -349,7 +352,7 @@ log-format-upstream: '{ "time": "$time_iso8601", "remote_addr": "$proxy_protocol
     "$http_user_agent" }'
   ```
 
-Please check [log-format](log-format.md) for definition of each field.
+Please check the [log-format](log-format.md) for definition of each field.
 
 ## log-format-stream
 
@@ -376,35 +379,38 @@ Sets custom headers from named configmap before sending traffic to backends. The
 Sets the maximum size of the [server names hash tables](http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) used in server names,map directive’s values, MIME types, names of request header strings, etc.
 
 _References:_
-- http://nginx.org/en/docs/hash.html
+[http://nginx.org/en/docs/hash.html](http://nginx.org/en/docs/hash.html)
 
 ## server-name-hash-bucket-size
 
 Sets the size of the bucket for the server names hash tables.
 
 _References:_
-- http://nginx.org/en/docs/hash.html
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
+
+- [http://nginx.org/en/docs/hash.html](http://nginx.org/en/docs/hash.html)
+- [http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size)
 
 ## proxy-headers-hash-max-size
 
 Sets the maximum size of the proxy headers hash tables.
 
 _References:_
-- http://nginx.org/en/docs/hash.html
-- https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size
+
+- [http://nginx.org/en/docs/hash.html](http://nginx.org/en/docs/hash.html)
+- [https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size)
 
 ## proxy-headers-hash-bucket-size
 
 Sets the size of the bucket for the proxy headers hash tables.
 
 _References:_
-- http://nginx.org/en/docs/hash.html
-- https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size
+
+- [http://nginx.org/en/docs/hash.html](http://nginx.org/en/docs/hash.html)
+- [https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size)
 
 ## server-tokens
 
-Send NGINX Server header in responses and display NGINX version in error pages. By default this is enabled.
+Send NGINX Server header in responses and display NGINX version in error pages. _**default:**_ is enabled
 
 ## ssl-ciphers
 
@@ -422,16 +428,17 @@ Please check the [Mozilla SSL Configuration Generator](https://mozilla.github.io
 Specifies a curve for ECDHE ciphers.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve
+[http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve)
 
 ## ssl-dh-param
 
 Sets the name of the secret that contains Diffie-Hellman key to help with "Perfect Forward Secrecy".
 
 _References:_
-- https://wiki.openssl.org/index.php/Diffie-Hellman_parameters
-- https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
-- http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+
+- [https://wiki.openssl.org/index.php/Diffie-Hellman_parameters](https://wiki.openssl.org/index.php/Diffie-Hellman_parameters)
+- [https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam](https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam)
+- [http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam)
 
 ## ssl-protocols
 
@@ -466,7 +473,7 @@ Sets the time during which a client may [reuse the session](http://nginx.org/en/
 Sets the size of the [SSL buffer](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size) used for sending data. The default of 4k helps NGINX to improve TLS Time To First Byte (TTTFB).
 
 _References:_
-- https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
+[https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/](https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/)
 
 ## use-proxy-protocol
 
@@ -480,23 +487,23 @@ The default mime type list to compress is: `application/atom+xml application/jav
 ## use-geoip
 
 Enables or disables ["geoip" module](http://nginx.org/en/docs/http/ngx_http_geoip_module.html) that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
-The default value is true.
+_**default:**_ true
 
 ## enable-brotli
 
 Enables or disables compression of HTTP responses using the ["brotli" module](https://github.com/google/ngx_brotli).
-The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`. This is *disabled* by default.
+The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`. _**default:**_ is disabled
 
-*Note:* Brotli does not works in Safari < 11 https://caniuse.com/#feat=brotli
+> __Note:__ Brotli does not works in Safari < 11. For more information see [https://caniuse.com/#feat=brotli](https://caniuse.com/#feat=brotli)
 
 ## brotli-level
 
-Sets the Brotli Compression Level that will be used. *Defaults to* 4.
+Sets the Brotli Compression Level that will be used. _**default:**_ 4
 
 ## brotli-types
 
 Sets the MIME Types that will be compressed on-the-fly by brotli.
-*Defaults to* `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
+_**default:**_ `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`
 
 ## use-http2
 
@@ -522,7 +529,7 @@ By default worker processes are not bound to any specific CPUs. The value can be
 
 ## worker-shutdown-timeout
 
-Sets a timeout for Nginx to [wait for worker to gracefully shutdown](http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout). The default is "10s".
+Sets a timeout for Nginx to [wait for worker to gracefully shutdown](http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout). _**default:**_ "10s"
 
 ## load-balance
 
@@ -537,29 +544,29 @@ The value can either be:
 The default is least_conn.
 
 _References:_
-- http://nginx.org/en/docs/http/load_balancing.html.
+[http://nginx.org/en/docs/http/load_balancing.html](http://nginx.org/en/docs/http/load_balancing.html)
 
 ## variables-hash-bucket-size
 
 Sets the bucket size for the variables hash table.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size
+[http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size](http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size)
 
 ## variables-hash-max-size
 
 Sets the maximum size of the variables hash table.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
+[http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size](http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size)
 
 ## upstream-keepalive-connections
 
 Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle keepalive connections to upstream servers that are preserved in the cache of each worker process. When this
-number is exceeded, the least recently used connections are closed. Default: 32
+number is exceeded, the least recently used connections are closed. _**default:**_ 32
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
+[http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive)
 
 ## limit-conn-zone-variable
 
@@ -570,26 +577,28 @@ Sets parameters for a shared memory zone that will keep states for various keys 
 Sets the timeout between two successive read or write operations on client or proxied server connections. If no data is transmitted within this time, the connection is closed.
 
 _References:_
-- http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout)
 
 ## proxy-stream-responses
 
 Sets the number of datagrams expected from the proxied server in response to the client request if the UDP protocol is used.
 
 _References:_
-- http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses
+[http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses)
 
 ## bind-address-ipv4
 
 Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
 
+
 ## bind-address-ipv6
 
 Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
 
+
 ## forwarded-for-header
 
-Sets the header field for identifying the originating IP address of a client. Default is X-Forwarded-For
+Sets the header field for identifying the originating IP address of a client. _**default:**_ X-Forwarded-For
 
 ## compute-full-forwarded-for
 
@@ -601,10 +610,10 @@ Adds an X-Original-Uri header with the original request URI to the backend reque
 
 ## enable-opentracing
 
-Enables the nginx Opentracing extension. By default this is disabled.
+Enables the nginx Opentracing extension. _**default:**_ is disabled
 
 _References:_
-- https://github.com/opentracing-contrib/nginx-opentracing
+[https://github.com/opentracing-contrib/nginx-opentracing](https://github.com/opentracing-contrib/nginx-opentracing)
 
 ## zipkin-collector-host
 
@@ -612,11 +621,11 @@ Specifies the host to use when uploading traces. It must be a valid URL.
 
 ## zipkin-collector-port
 
-Specifies the port to use when uploading traces. Default: 9411
+Specifies the port to use when uploading traces. _**default:**_ 9411
 
 ## zipkin-service-name
 
-Specifies the service name to use for any traces created. Default: nginx
+Specifies the service name to use for any traces created. _**default:**_ nginx
 
 ## jaeger-collector-host
 
@@ -624,35 +633,35 @@ Specifies the host to use when uploading traces. It must be a valid URL.
 
 ## jaeger-collector-port
 
-Specifies the port to use when uploading traces. Default: 6831
+Specifies the port to use when uploading traces. _**default:**_ 6831
 
 ## jaeger-service-name
 
-Specifies the service name to use for any traces created. Default: nginx
+Specifies the service name to use for any traces created. _**default:**_ nginx
 
 ## jaeger-sampler-type
 
-Specifies the sampler to be used when sampling traces. The available samplers are: const, probabilistic, ratelimiting, remote. Default const.
+Specifies the sampler to be used when sampling traces. The available samplers are: const, probabilistic, ratelimiting, remote. _**default:**_ const
 
 ## jaeger-sampler-param
 
 Specifies the argument to be passed to the sampler constructor. Must be a number.
-For const this should be 0 to never sample and 1 to always sample. Default: 1
+For const this should be 0 to never sample and 1 to always sample. _**default:**_ 1
 
 ## http-snippet
 
 Adds custom configuration to the http section of the nginx configuration.
-Default: ""
+_**default:**_ ""
 
 ## server-snippet
 
 Adds custom configuration to all the servers in the nginx configuration.
-Default: ""
+_**default:**_ ""
 
 ## location-snippet
 
 Adds custom configuration to all the locations in the nginx configuration.
-Default: ""
+_**default:**_ ""
 
 ## custom-http-errors
 
@@ -701,10 +710,10 @@ Limit the number of [possible tries](http://nginx.org/en/docs/http/ngx_http_prox
 
 ## proxy-redirect-from
 
-Sets the original text that should be changed in the "Location" and "Refresh" header fields of a proxied server response. Default: off.
+Sets the original text that should be changed in the "Location" and "Refresh" header fields of a proxied server response. _**default:**_ off
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect
+[http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)
 
 ## proxy-request-buffering
 
@@ -713,7 +722,7 @@ Enables or disables [buffering of a client request body](http://nginx.org/en/doc
 ## ssl-redirect
 
 Sets the global value of redirects (301) to HTTPS if the server has a TLS certificate (defined in an Ingress rule).
-Default is "true".
+_**default:**_ "true"
 
 ## whitelist-source-range
 
@@ -722,31 +731,31 @@ See [ngx_http_access_module](http://nginx.org/en/docs/http/ngx_http_access_modul
 
 ## skip-access-log-urls
 
-Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like `/health` or `health-check` that make "complex" reading the logs. By default this list is empty
+Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like `/health` or `health-check` that make "complex" reading the logs. _**default:**_ is empty
 
 ## limit-rate
 
 Limits the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate](http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate)
 
 ## limit-rate-after
 
 Sets the initial amount after which the further transmission of a response to a client will be rate limited.
 
 _References:_
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after
+[http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)
 
 ## http-redirect-code
 
 Sets the HTTP status code to be used in redirects.
 Supported codes are [301](https://developer.mozilla.org/es/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/es/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/es/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/es/docs/Web/HTTP/Status/308)
-Default code is 308.
+_**default:**_ 308
 
-Why the default code is 308?
+> __Why the default code is 308?__
 
-[RFC 7238](https://tools.ietf.org/html/rfc7238) was created to define the 308 (Permanent Redirect) status code that is similar to 301 (Moved Permanently) but it keeps the payload in the redirect. This is important if the we send a redirect in methods like POST.
+> [RFC 7238](https://tools.ietf.org/html/rfc7238) was created to define the 308 (Permanent Redirect) status code that is similar to 301 (Moved Permanently) but it keeps the payload in the redirect. This is important if the we send a redirect in methods like POST.
 
 ## proxy-buffering
 
@@ -754,14 +763,14 @@ Enables or disables [buffering of responses from the proxied server](http://ngin
 
 ## limit-req-status-code
 
-Sets the [status code to return in response to rejected requests](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status).Default: 503
+Sets the [status code to return in response to rejected requests](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status). _**default:**_ 503
 
 ## no-tls-redirect-locations
 
 A comma-separated list of locations on which http requests will never get redirected to their https counterpart.
-Default: "/.well-known/acme-challenge"
+_**default:**_ "/.well-known/acme-challenge"
 
 ## no-auth-locations
 
 A comma-separated list of locations that should not get authenticated.
-Default: "/.well-known/acme-challenge"
+_**default:**_ "/.well-known/acme-challenge"

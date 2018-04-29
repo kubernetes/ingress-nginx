@@ -5,7 +5,8 @@
 The `auth-url` and `auth-signin` annotations allow you to use an external
 authentication provider to protect your Ingress resources.
 
-(Note, this annotation requires `nginx-ingress-controller v0.9.0` or greater.)
+!!! Important
+	this annotation requires `nginx-ingress-controller v0.9.0` or greater.)
 
 ### Key Detail
 
@@ -41,7 +42,7 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using g
 kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addons/kubernetes-dashboard/v1.5.0.yaml
 ```
 
-2. Create a custom Github OAuth application https://github.com/settings/applications/new
+2. Create a [custom Github OAuth application](https://github.com/settings/applications/new)
 
 ![Register OAuth2 Application](images/register-oauth-app.png)
 
