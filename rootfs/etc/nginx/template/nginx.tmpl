@@ -1015,6 +1015,7 @@ stream {
             proxy_set_header                        Connection        $connection_upgrade;
             {{ end }}
 
+            proxy_set_header X-Request-ID           $req_id;
             proxy_set_header X-Real-IP              $the_real_ip;
             {{ if $all.Cfg.ComputeFullForwardedFor }}
             proxy_set_header X-Forwarded-For        $full_x_forwarded_for;
