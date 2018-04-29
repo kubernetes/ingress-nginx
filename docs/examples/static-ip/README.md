@@ -79,9 +79,9 @@ NAME            HOSTS     ADDRESS           PORTS     AGE
 nginx-ingress   *         104.154.109.191   80, 443   13m
 ```
 
-Note that unlike the GCE Ingress, the same loadbalancer IP is shared amongst all
-Ingresses, because all requests are proxied through the same set of nginx
-controllers.
+> Note that unlike the GCE Ingress, the same loadbalancer IP is shared amongst all
+> Ingresses, because all requests are proxied through the same set of nginx
+> controllers.
 
 ## Promote ephemeral to static IP
 
