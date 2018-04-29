@@ -1187,9 +1187,11 @@ already has it set to "nginx-ingress-lb").</p>
 </pre></div>
 
 
+<blockquote>
 <p>Note that unlike the GCE Ingress, the same loadbalancer IP is shared amongst all
 Ingresses, because all requests are proxied through the same set of nginx
 controllers.</p>
+</blockquote>
 <h2 id="promote-ephemeral-to-static-ip">Promote ephemeral to static IP<a class="headerlink" href="#promote-ephemeral-to-static-ip" title="Permanent link">&para;</a></h2>
 <p>To promote the allocated IP to static, you can update the Service manifest</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl patch svc nginx-ingress-lb -p <span class="s1">&#39;{&quot;spec&quot;: {&quot;loadBalancerIP&quot;: &quot;104.154.109.191&quot;}}&#39;</span>

@@ -682,6 +682,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-rewrite-log" title="Enable Rewrite Log" class="md-nav__link">
+    Enable Rewrite Log
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#lua-resty-waf" title="Lua Resty WAF" class="md-nav__link">
     Lua Resty WAF
   </a>
@@ -1500,6 +1507,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-rewrite-log" title="Enable Rewrite Log" class="md-nav__link">
+    Enable Rewrite Log
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#lua-resty-waf" title="Lua Resty WAF" class="md-nav__link">
     Lua Resty WAF
   </a>
@@ -1686,6 +1700,10 @@ i.e. <code class="codehilite">&quot;true&quot;</code>, <code class="codehilite">
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#enable-rewrite-log">nginx.ingress.kubernetes.io/rewrite-log</a></td>
+<td>URI</td>
+</tr>
+<tr>
 <td><a href="#rewrite">nginx.ingress.kubernetes.io/rewrite-target</a></td>
 <td>URI</td>
 </tr>
@@ -1815,20 +1833,28 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <p>Please check the <a href="../../../examples/auth/basic/README/">auth</a> example.</p>
 <h3 id="custom-nginx-upstream-checks">Custom NGINX upstream checks<a class="headerlink" href="#custom-nginx-upstream-checks" title="Permanent link">&para;</a></h3>
 <p>NGINX exposes some flags in the <a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream">upstream configuration</a> that enable the configuration of each server in the upstream. The Ingress controller allows custom <code class="codehilite">max_fails</code> and <code class="codehilite">fail_timeout</code> parameters in a global context using <code class="codehilite">upstream-max-fails</code> and <code class="codehilite">upstream-fail-timeout</code> in the NGINX ConfigMap or in a particular Ingress rule. <code class="codehilite">upstream-max-fails</code> defaults to 0. This means NGINX will respect the container's <code class="codehilite">readinessProbe</code> if it is defined. If there is no probe and no values for <code class="codehilite">upstream-max-fails</code> NGINX will continue to send traffic to the container.</p>
-<p><strong>With the default configuration NGINX will not health check your backends. Whenever the endpoints controller notices a readiness probe failure, that pod's IP will be removed from the list of endpoints. This will trigger the NGINX controller to also remove it from the upstreams.</strong></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>With the default configuration NGINX will not health check your backends. Whenever the endpoints controller notices a readiness probe failure, that pod's IP will be removed from the list of endpoints. This will trigger the NGINX controller to also remove it from the upstreams.**</p>
+</div>
 <p>To use custom values in an Ingress rule define these annotations:</p>
 <p><code class="codehilite">nginx.ingress.kubernetes.io/upstream-max-fails</code>: number of unsuccessful attempts to communicate with the server that should occur in the duration set by the <code class="codehilite">upstream-fail-timeout</code> parameter to consider the server unavailable.</p>
 <p><code class="codehilite">nginx.ingress.kubernetes.io/upstream-fail-timeout</code>: time in seconds during which the specified number of unsuccessful attempts to communicate with the server should occur to consider the server unavailable. This is also the period of time the server will be considered unavailable.</p>
 <p>In NGINX, backend server pools are called "<a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html">upstreams</a>". Each upstream contains the endpoints for a service. An upstream is created for each service that has Ingress rules defined.</p>
-<p><strong>Important:</strong> All Ingress rules using the same service will use the same upstream. Only one of the Ingress rules should define annotations to configure the upstream servers.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>All Ingress rules using the same service will use the same upstream. Only one of the Ingress rules should define annotations to configure the upstream servers.</p>
+</div>
 <p>Please check the <a href="../../../examples/customization/custom-upstream-check/README/">custom upstream check</a> example.</p>
 <h3 id="custom-nginx-upstream-hashing">Custom NGINX upstream hashing<a class="headerlink" href="#custom-nginx-upstream-hashing" title="Permanent link">&para;</a></h3>
 <p>NGINX supports load balancing by client-server mapping based on <a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash">consistent hashing</a> for a given key. The key can contain text, variables or any combination thereof. This feature allows for request stickiness other than client IP or cookies. The <a href="http://www.last.fm/user/RJ/journal/2007/04/10/392555/">ketama</a> consistent hashing method will be used which ensures only a few keys would be remapped to different servers on upstream group changes.</p>
 <p>To enable consistent hashing for a backend:</p>
 <p><code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code>: the nginx variable, text value or any combination thereof to use for consistent hashing. For example <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by: &quot;$request_uri&quot;</code> to consistently hash upstream requests by the current request URI.</p>
 <h3 id="custom-nginx-load-balancing">Custom NGINX load balancing<a class="headerlink" href="#custom-nginx-load-balancing" title="Permanent link">&para;</a></h3>
-<p>This is similar to https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#load-balance but configures load balancing algorithm per ingress.
-Note that <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> takes preference over this. If this and <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> are not set then we fallback to using globally configured load balancing algorithm.</p>
+<p>This is similar to (https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#load-balance) but configures load balancing algorithm per ingress.</p>
+<blockquote>
+<p>Note that <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> takes preference over this. If this and <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> are not set then we fallback to using globally configured load balancing algorithm.</p>
+</blockquote>
 <h3 id="custom-nginx-upstream-vhost">Custom NGINX upstream vhost<a class="headerlink" href="#custom-nginx-upstream-vhost" title="Permanent link">&para;</a></h3>
 <p>This configuration setting allows you to control the value for host in the following statement: <code class="codehilite">proxy_set_header Host $host</code>, which forms part of the location block.  This is useful if you need to call the upstream server by something other than <code class="codehilite">$host</code>.</p>
 <h3 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link">&para;</a></h3>
@@ -1862,12 +1888,12 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <p>Indicates if the received certificates should be passed or not to the upstream server.
 By default this is disabled.</p>
 <p>Please check the <a href="../../../examples/auth/client-certs/README/">client-certs</a> example.</p>
-<p><strong>Important:</strong></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
 <p>TLS with Client Authentication is NOT possible in Cloudflare as is not allowed it and might result in unexpected behavior.</p>
-<p>Cloudflare only allows Authenticated Origin Pulls and is required to use their own certificate:
-https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/</p>
-<p>Only Authenticated Origin Pulls are allowed and can be configured by following their tutorial:
-https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls</p>
+<p>Cloudflare only allows Authenticated Origin Pulls and is required to use their own certificate: <a href="https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/">https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/</a></p>
+<p>Only Authenticated Origin Pulls are allowed and can be configured by following their tutorial: <a href="https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls">https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls</a></p>
+</div>
 <h3 id="configuration-snippet">Configuration snippet<a class="headerlink" href="#configuration-snippet" title="Permanent link">&para;</a></h3>
 <p>Using this annotation you can add additional configuration to the NGINX location. For example:</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/configuration-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
@@ -1901,14 +1927,15 @@ This is a global configuration for the ingress controller. In some cases could b
 <li><code class="codehilite">nginx.ingress.kubernetes.io/cors-max-age</code> controls how long preflight requests can be cached.</li>
 </ul>
 <p>Example: <code class="codehilite">nginx.ingress.kubernetes.io/cors-max-age: 600</code></p>
-<p>For more information please check https://enable-cors.org/server_nginx.html</p>
+<p>For more information please see <a href="https://enable-cors.org/server_nginx.html">https://enable-cors.org</a></p>
 <h3 id="server-alias">Server Alias<a class="headerlink" href="#server-alias" title="Permanent link">&para;</a></h3>
 <p>To add Server Aliases to an Ingress rule add the annotation <code class="codehilite">nginx.ingress.kubernetes.io/server-alias: &quot;&lt;alias&gt;&quot;</code>.
 This will create a server with the same configuration, but a different server_name as the provided host.</p>
-<p><em>Note:</em> A server-alias name cannot conflict with the hostname of an existing server. If it does the server-alias
-annotation will be ignored. If a server-alias is created and later a new server with the same hostname is created
-the new server configuration will take place over the alias configuration.</p>
-<p>For more information please see http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A server-alias name cannot conflict with the hostname of an existing server. If it does the server-alias annotation will be ignored. If a server-alias is created and later a new server with the same hostname is created the new server configuration will take place over the alias configuration.</p>
+</div>
+<p>For more information please see <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name">http://nginx.org</a></p>
 <h3 id="server-snippet">Server snippet<a class="headerlink" href="#server-snippet" title="Permanent link">&para;</a></h3>
 <p>Using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/server-snippet</code> it is possible to add custom configuration in the server configuration block.</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
@@ -1928,13 +1955,16 @@ the new server configuration will take place over the alias configuration.</p>
 </pre></div>
 
 
-<p><strong>Important:</strong> This annotation can be used only once per host</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This annotation can be used only once per host</p>
+</div>
 <h3 id="client-body-buffer-size">Client Body Buffer Size<a class="headerlink" href="#client-body-buffer-size" title="Permanent link">&para;</a></h3>
 <p>Sets buffer size for reading client request body per location. In case the request body is larger than the buffer,
 the whole body or only its part is written to a temporary file. By default, buffer size is equal to two memory pages.
 This is 8K on x86, other 32-bit platforms, and x86-64. It is usually 16K on other 64-bit platforms. This annotation is
 applied to each location provided in the ingress rule.</p>
-<p><em>Note:</em> The annotation value must be given in a valid format otherwise the
+<p><strong>Note:</strong> The annotation value must be given in a valid format otherwise the
 For example to set the client-body-buffer-size the following can be done:</p>
 <ul>
 <li><code class="codehilite">nginx.ingress.kubernetes.io/client-body-buffer-size: &quot;1000&quot;</code> # 1000 bytes</li>
@@ -1943,7 +1973,7 @@ For example to set the client-body-buffer-size the following can be done:</p>
 <li><code class="codehilite">nginx.ingress.kubernetes.io/client-body-buffer-size: 1m</code> # 1 megabyte</li>
 <li><code class="codehilite">nginx.ingress.kubernetes.io/client-body-buffer-size: 1M</code> # 1 megabyte</li>
 </ul>
-<p>For more information please see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size</p>
+<p>For more information please see <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size">http://nginx.org</a></p>
 <h3 id="external-authentication">External Authentication<a class="headerlink" href="#external-authentication" title="Permanent link">&para;</a></h3>
 <p>To use an existing service that provides authentication the Ingress rule can be annotated with <code class="codehilite">nginx.ingress.kubernetes.io/auth-url</code> to indicate the URL where the HTTP request should be sent.</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-url</span><span class="p p-Indicator">:</span> <span class="s">&quot;URL</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">authentication</span><span class="nv"> </span><span class="s">service&quot;</span>
@@ -1971,15 +2001,23 @@ For example to set the client-body-buffer-size the following can be done:</p>
 <p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
 <h3 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h3>
 <p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> allows to configure TLS termination in the pod and not in NGINX.</p>
-<p><strong>Important:</strong></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
 <ul>
-<li>Using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> invalidates all the other available annotations. This is because SSL Passthrough works in L4 (TCP).</li>
-<li>The use of this annotation requires Proxy Protocol to be enabled in the load-balancer. For example enabling Proxy Protocol for AWS ELB is described <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html">here</a>. If you're using ingress-controller without load balancer then the flag <code class="codehilite">--enable-ssl-passthrough</code> is required (by default it is disabled).</li>
+<li>
+<p>Using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> invalidates all the other available annotations. This is because SSL Passthrough works in L4 (TCP).</p>
+</li>
+<li>
+<p>The use of this annotation requires Proxy Protocol to be enabled in the load-balancer. For example enabling Proxy Protocol for AWS ELB is described <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html">here</a>. If you're using ingress-controller without load balancer then the flag <code class="codehilite">--enable-ssl-passthrough</code> is required (by default it is disabled).</p>
+</li>
 </ul>
+</div>
 <h3 id="secure-backends">Secure backends<a class="headerlink" href="#secure-backends" title="Permanent link">&para;</a></h3>
 <p>By default NGINX uses <code class="codehilite">http</code> to reach the services. Adding the annotation <code class="codehilite">nginx.ingress.kubernetes.io/secure-backends: &quot;true&quot;</code> in the Ingress rule changes the protocol to <code class="codehilite">https</code>.
 If you want to validate the upstream against a specific certificate, you can create a secret with it and reference the secret with the annotation <code class="codehilite">nginx.ingress.kubernetes.io/secure-verify-ca-secret</code>.</p>
-<p>Please note that if an invalid or non-existent secret is given, the NGINX ingress controller will ignore the <code class="codehilite">secure-backends</code> annotation.</p>
+<blockquote>
+<p>Note that if an invalid or non-existent secret is given, the NGINX ingress controller will ignore the <code class="codehilite">secure-backends</code> annotation.</p>
+</blockquote>
 <h3 id="service-upstream">Service Upstream<a class="headerlink" href="#service-upstream" title="Permanent link">&para;</a></h3>
 <p>By default the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration. This annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port. This can be desirable for things like zero-downtime deployments as it reduces the need to reload NGINX configuration when Pods come up and down. See issue <a href="https://github.com/kubernetes/ingress-nginx/issues/257">#257</a>.</p>
 <h4 id="known-issues">Known Issues<a class="headerlink" href="#known-issues" title="Permanent link">&para;</a></h4>
@@ -1995,16 +2033,18 @@ If you want to validate the upstream against a specific certificate, you can cre
 <h3 id="redirect-from-to-www">Redirect from to www<a class="headerlink" href="#redirect-from-to-www" title="Permanent link">&para;</a></h3>
 <p>In some scenarios is required to redirect from <code class="codehilite">www.domain.com</code> to <code class="codehilite">domain.com</code> or viceversa.
 To enable this feature use the annotation <code class="codehilite">nginx.ingress.kubernetes.io/from-to-www-redirect: &quot;true&quot;</code></p>
-<p><strong>Important:</strong>
-If at some point a new Ingress is created with a host equal to one of the options (like <code class="codehilite">domain.com</code>) the annotation will be omitted.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If at some point a new Ingress is created with a host equal to one of the options (like <code class="codehilite">domain.com</code>) the annotation will be omitted.</p>
+</div>
 <h3 id="whitelist-source-range">Whitelist source range<a class="headerlink" href="#whitelist-source-range" title="Permanent link">&para;</a></h3>
 <p>You can specify the allowed client IP source ranges through the <code class="codehilite">nginx.ingress.kubernetes.io/whitelist-source-range</code> annotation. The value is a comma separated list of <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDRs</a>, e.g.  <code class="codehilite">10.0.0.0/24,172.10.0.1</code>.</p>
 <p>To configure this setting globally for all Ingress rules, the <code class="codehilite">whitelist-source-range</code> value may be set in the NGINX ConfigMap.</p>
-<p><em>Note:</em> Adding an annotation to an Ingress rule overrides any global restriction.</p>
+<p><strong>Note:</strong> Adding an annotation to an Ingress rule overrides any global restriction.</p>
 <h3 id="cookie-affinity">Cookie affinity<a class="headerlink" href="#cookie-affinity" title="Permanent link">&para;</a></h3>
 <p>If you use the <code class="codehilite">cookie</code> type you can also specify the name of the cookie that will be used to route the requests with the annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-name</code>. The default is to create a cookie named 'INGRESSCOOKIE'.</p>
 <p>In case of NGINX the annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-hash</code> defines which algorithm will be used to 'hash' the used upstream. Default value is <code class="codehilite">md5</code> and possible values are <code class="codehilite">md5</code>, <code class="codehilite">sha1</code> and <code class="codehilite">index</code>.
-The <code class="codehilite">index</code> option is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranteed to correspond to the same server as before! USE IT WITH CAUTION and only if you need to!</p>
+The <code class="codehilite">index</code> option is not hashed, an in-memory index is used instead, it's quicker and the overhead is shorter Warning: the matching against upstream servers list is inconsistent. So, at reload, if upstreams servers has changed, index values are not guaranteed to correspond to the same server as before! <strong>USE IT WITH CAUTION</strong> and only if you need to!</p>
 <p>In NGINX this feature is implemented by the third party module <a href="https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng">nginx-sticky-module-ng</a>. The workflow used to define which upstream server will be used is explained <a href="https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf">here</a></p>
 <h3 id="custom-timeouts">Custom timeouts<a class="headerlink" href="#custom-timeouts" title="Permanent link">&para;</a></h3>
 <p>Using the configuration configmap it is possible to set the default global timeout for connections to the upstream servers.
@@ -2058,6 +2098,12 @@ To use custom values in an Ingress rule define these annotation:</p>
 </pre></div>
 
 
+<h3 id="enable-rewrite-log">Enable Rewrite Log<a class="headerlink" href="#enable-rewrite-log" title="Permanent link">&para;</a></h3>
+<p>In some scenarios it could be required to enable NGINX rewrite logs. Note that rewrite logs are sent to the error_log file at the notice level. To enable this feature use the annotation:</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-rewrite-log</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+</pre></div>
+
+
 <h3 id="lua-resty-waf">Lua Resty WAF<a class="headerlink" href="#lua-resty-waf" title="Permanent link">&para;</a></h3>
 <p>Using <code class="codehilite">lua-resty-waf-*</code> annotations we can enable and control <a href="https://github.com/p0pr0ck5/lua-resty-waf">lua-resty-waf</a> per location.
 Following configuration will enable WAF for the paths defined in the corresponding ingress:</p>
@@ -2068,7 +2114,7 @@ Following configuration will enable WAF for the paths defined in the correspondi
 <p>In order to run it in debugging mode you can set <code class="codehilite">nginx.ingress.kubernetes.io/lua-resty-waf-debug</code> to <code class="codehilite">&quot;true&quot;</code> in addition to the above configuration.
 The other possible values for <code class="codehilite">nginx.ingress.kubernetes.io/lua-resty-waf</code> are <code class="codehilite">inactive</code> and <code class="codehilite">simulate</code>. In <code class="codehilite">inactive</code> mode WAF won't do anything, whereas
 in <code class="codehilite">simulate</code> mode it will log a warning message if there's a matching WAF rule for given request. This is useful to debug a rule and eliminate possible false positives before fully deploying it.</p>
-<p><code class="codehilite">lua-resty-waf</code> comes with predefined set of rules(https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules) that covers ModSecurity CRS.
+<p><code class="codehilite">lua-resty-waf</code> comes with predefined set of rules <a href="https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules">https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules</a> that covers ModSecurity CRS.
 You can use <code class="codehilite">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</code> to ignore subset of those rulesets. For an example:</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</span><span class="p p-Indicator">:</span> <span class="s">&quot;41000_sqli,</span><span class="nv"> </span><span class="s">42000_xss&quot;</span>
 </pre></div>
@@ -2081,7 +2127,7 @@ configure a WAF rule to deny requests with query string value that contains word
 </pre></div>
 
 
-<p>For details on how to write WAF rules, please refer to https://github.com/p0pr0ck5/lua-resty-waf.</p>
+<p>For details on how to write WAF rules, please refer to <a href="https://github.com/p0pr0ck5/lua-resty-waf">https://github.com/p0pr0ck5/lua-resty-waf</a>.</p>
                 
                   
                 

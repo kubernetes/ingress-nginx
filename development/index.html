@@ -1200,7 +1200,10 @@
 It includes how to build, test, and release ingress controllers.</p>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <h3 id="initial-developer-environment-build">Initial developer environment build<a class="headerlink" href="#initial-developer-environment-build" title="Permanent link">&para;</a></h3>
-<p><strong>Prequisites</strong>: Minikube must be installed; See <a href="https://github.com/kubernetes/minikube/releases">releases</a> for installation instructions. </p>
+<blockquote>
+<p><strong>Prequisites</strong>: Minikube must be installed.
+See <a href="https://github.com/kubernetes/minikube/releases">releases</a> for installation instructions. </p>
+</blockquote>
 <p>If you are using <strong>MacOS</strong> and deploying to <strong>minikube</strong>, the following command will build the local nginx controller container image and deploy the ingress controller onto a minikube cluster with RBAC enabled in the namespace <code class="codehilite">ingress-nginx</code>:</p>
 <div class="codehilite"><pre><span></span>$ make dev-env
 </pre></div>

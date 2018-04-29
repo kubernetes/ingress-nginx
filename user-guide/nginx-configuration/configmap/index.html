@@ -2631,11 +2631,13 @@ you can add key-value pairs to the data section of the config-map. For Example:<
 </pre></div>
 
 
-<p><strong>IMPORTANT:</strong></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
 <p>The key and values in a ConfigMap can only be strings.
 This means that we want a value with boolean values we need to quote the values, like "true" or "false".
 Same for numbers, like "100".</p>
 <p>"Slice" types (defined below as <code class="codehilite">[]string</code> or <code class="codehilite">[]int</code> can be provided as a comma-delimited string.</p>
+</div>
 <h2 id="configuration-options">Configuration options<a class="headerlink" href="#configuration-options" title="Permanent link">&para;</a></h2>
 <p>The following table shows a configuration option's name, type, and the default value:</p>
 <table>
@@ -3217,12 +3219,12 @@ Same for numbers, like "100".</p>
 <h2 id="add-headers">add-headers<a class="headerlink" href="#add-headers" title="Permanent link">&para;</a></h2>
 <p>Sets custom headers from named configmap before sending traffic to the client. See <a href="#proxy-set-headers">proxy-set-headers</a>. <a href="https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers">example</a></p>
 <h2 id="allow-backend-server-header">allow-backend-server-header<a class="headerlink" href="#allow-backend-server-header" title="Permanent link">&para;</a></h2>
-<p>Enables the return of the header Server from the backend instead of the generic nginx string. By default this is disabled.</p>
+<p>Enables the return of the header Server from the backend instead of the generic nginx string. <em><strong>default:</strong></em> is disabled</p>
 <h2 id="hide-headers">hide-headers<a class="headerlink" href="#hide-headers" title="Permanent link">&para;</a></h2>
 <p>Sets additional header that will not be passed from the upstream server to the client response.
-Default: empty</p>
+<em><strong>default:</strong></em> empty</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header">http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header</a></p>
 <h2 id="access-log-path">access-log-path<a class="headerlink" href="#access-log-path" title="Permanent link">&para;</a></h2>
 <p>Access log path. Goes to <code class="codehilite">/var/log/nginx/access.log</code> by default.</p>
 <p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/access.log</code> is a symlink to <code class="codehilite">/dev/stdout</code></p>
@@ -3230,77 +3232,81 @@ Default: empty</p>
 <p>Error log path. Goes to <code class="codehilite">/var/log/nginx/error.log</code> by default.</p>
 <p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/error.log</code> is a symlink to <code class="codehilite">/dev/stderr</code></p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/ngx_core_module.html#error_log</p>
+<a href="http://nginx.org/en/docs/ngx_core_module.html#error_log">http://nginx.org/en/docs/ngx_core_module.html#error_log</a></p>
 <h2 id="enable-dynamic-tls-records">enable-dynamic-tls-records<a class="headerlink" href="#enable-dynamic-tls-records" title="Permanent link">&para;</a></h2>
-<p>Enables dynamically sized TLS records to improve time-to-first-byte. By default this is enabled. See <a href="https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency">CloudFlare's blog</a> for more information.</p>
+<p>Enables dynamically sized TLS records to improve time-to-first-byte. <em><strong>default:</strong></em> is enabled</p>
+<p><em>References:</em>
+<a href="https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency">https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency</a></p>
 <h2 id="enable-modsecurity">enable-modsecurity<a class="headerlink" href="#enable-modsecurity" title="Permanent link">&para;</a></h2>
-<p>Enables the modsecurity module for NGINX. By default this is disabled.</p>
+<p>Enables the modsecurity module for NGINX. <em><strong>default:</strong></em> is disabled</p>
 <h2 id="enable-owasp-modsecurity-crs">enable-owasp-modsecurity-crs<a class="headerlink" href="#enable-owasp-modsecurity-crs" title="Permanent link">&para;</a></h2>
-<p>Enables the OWASP ModSecurity Core Rule Set (CRS). By default this is disabled.</p>
+<p>Enables the OWASP ModSecurity Core Rule Set (CRS). <em><strong>default:</strong></em> is disabled</p>
 <h2 id="client-header-buffer-size">client-header-buffer-size<a class="headerlink" href="#client-header-buffer-size" title="Permanent link">&para;</a></h2>
 <p>Allows to configure a custom buffer size for reading client request header.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size">http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size</a></p>
 <h2 id="client-header-timeout">client-header-timeout<a class="headerlink" href="#client-header-timeout" title="Permanent link">&para;</a></h2>
 <p>Defines a timeout for reading client request header, in seconds.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout">http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout</a></p>
 <h2 id="client-body-buffer-size">client-body-buffer-size<a class="headerlink" href="#client-body-buffer-size" title="Permanent link">&para;</a></h2>
 <p>Sets buffer size for reading client request body.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size">http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size</a></p>
 <h2 id="client-body-timeout">client-body-timeout<a class="headerlink" href="#client-body-timeout" title="Permanent link">&para;</a></h2>
 <p>Defines a timeout for reading client request body, in seconds.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout">http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout</a></p>
 <h2 id="disable-access-log">disable-access-log<a class="headerlink" href="#disable-access-log" title="Permanent link">&para;</a></h2>
-<p>Disables the Access Log from the entire Ingress Controller. This is '"false"' by default.</p>
+<p>Disables the Access Log from the entire Ingress Controller. <em><strong>default:</strong></em> '"false"'</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log">http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log</a></p>
 <h2 id="disable-ipv6">disable-ipv6<a class="headerlink" href="#disable-ipv6" title="Permanent link">&para;</a></h2>
-<p>Disable listening on IPV6. By default this is disabled.</p>
+<p>Disable listening on IPV6. <em><strong>default:</strong></em> is disabled</p>
 <h2 id="disable-ipv6-dns">disable-ipv6-dns<a class="headerlink" href="#disable-ipv6-dns" title="Permanent link">&para;</a></h2>
-<p>Disable IPV6 for nginx DNS resolver. By default this is disabled.</p>
+<p>Disable IPV6 for nginx DNS resolver. <em><strong>default:</strong></em> is disabled</p>
 <h2 id="enable-underscores-in-headers">enable-underscores-in-headers<a class="headerlink" href="#enable-underscores-in-headers" title="Permanent link">&para;</a></h2>
-<p>Enables underscores in header names. By default this is disabled.</p>
+<p>Enables underscores in header names. <em><strong>default:</strong></em> is disabled</p>
 <h2 id="ignore-invalid-headers">ignore-invalid-headers<a class="headerlink" href="#ignore-invalid-headers" title="Permanent link">&para;</a></h2>
 <p>Set if header fields with invalid names should be ignored.
-By default this is enabled.</p>
+<em><strong>default:</strong></em> is enabled</p>
 <h2 id="enable-vts-status">enable-vts-status<a class="headerlink" href="#enable-vts-status" title="Permanent link">&para;</a></h2>
 <p>Allows the replacement of the default status page with a third party module named <a href="https://github.com/vozlt/nginx-module-vts">nginx-module-vts</a>.
-By default this is disabled.</p>
+<em><strong>default:</strong></em> is disabled</p>
 <h2 id="vts-status-zone-size">vts-status-zone-size<a class="headerlink" href="#vts-status-zone-size" title="Permanent link">&para;</a></h2>
-<p>Vts config on http level sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processes. Default value is 10m</p>
+<p>Vts config on http level sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processes. <em><strong>default:</strong></em> 10m</p>
 <p><em>References:</em>
-- https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone</p>
+<a href="https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone">https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone</a></p>
 <h2 id="vts-default-filter-key">vts-default-filter-key<a class="headerlink" href="#vts-default-filter-key" title="Permanent link">&para;</a></h2>
-<p>Vts config on http level enables the keys by user defined variable. The key is a key string to calculate traffic. The name is a group string to calculate traffic. The key and name can contain variables such as $host, $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones if not specified second argument name. Default value is $geoip_country_code country::*</p>
+<p>Vts config on http level enables the keys by user defined variable. The key is a key string to calculate traffic. The name is a group string to calculate traffic. The key and name can contain variables such as $host, $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones if not specified second argument name. <em><strong>default:</strong></em> $geoip_country_code country::*</p>
 <p><em>References:</em>
-- https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key</p>
+<a href="https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key">https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key</a></p>
 <h2 id="vts-sum-key">vts-sum-key<a class="headerlink" href="#vts-sum-key" title="Permanent link">&para;</a></h2>
-<p>For metrics keyed (or when using Prometheus, labeled) by server zone, this value is used to indicate metrics for all server zones combined. Default value is *</p>
+<p>For metrics keyed (or when using Prometheus, labeled) by server zone, this value is used to indicate metrics for all server zones combined. <em><strong>default:</strong></em> *</p>
 <p><em>References:</em>
-- https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key</p>
+<a href="https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key">https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key</a></p>
 <h2 id="retry-non-idempotent">retry-non-idempotent<a class="headerlink" href="#retry-non-idempotent" title="Permanent link">&para;</a></h2>
 <p>Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error in the upstream server. The previous behavior can be restored using the value "true".</p>
 <h2 id="error-log-level">error-log-level<a class="headerlink" href="#error-log-level" title="Permanent link">&para;</a></h2>
 <p>Configures the logging level of errors. Log levels above are listed in the order of increasing severity.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/ngx_core_module.html#error_log</p>
+<a href="http://nginx.org/en/docs/ngx_core_module.html#error_log">http://nginx.org/en/docs/ngx_core_module.html#error_log</a></p>
 <h2 id="http2-max-field-size">http2-max-field-size<a class="headerlink" href="#http2-max-field-size" title="Permanent link">&para;</a></h2>
 <p>Limits the maximum size of an HPACK-compressed request header field.</p>
 <p><em>References:</em>
-- https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size</p>
+<a href="https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size">https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size</a></p>
 <h2 id="http2-max-header-size">http2-max-header-size<a class="headerlink" href="#http2-max-header-size" title="Permanent link">&para;</a></h2>
 <p>Limits the maximum size of the entire request header list after HPACK decompression.</p>
 <p><em>References:</em>
-- https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size</p>
+<a href="https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size">https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size</a></p>
 <h2 id="hsts">hsts<a class="headerlink" href="#hsts" title="Permanent link">&para;</a></h2>
 <p>Enables or disables the header HSTS in servers running SSL.
 HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header) that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP. It provides protection against protocol downgrade attacks and cookie theft.</p>
-<p><em>References:</em>
-- https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
-- https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-strict-transport-security-implementation-on-your-web-server</p>
+<p><em>References:</em></p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security">https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security</a></li>
+<li><a href="https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-strict-transport-security-implementation-on-your-web-server">https://blog.qualys.com/securitylabs/2016/03/28/the-importance-of-a-proper-http-strict-transport-security-implementation-on-your-web-server</a></li>
+</ul>
 <h2 id="hsts-include-subdomains">hsts-include-subdomains<a class="headerlink" href="#hsts-include-subdomains" title="Permanent link">&para;</a></h2>
 <p>Enables or disables the use of HSTS in all the subdomains of the server-name.</p>
 <h2 id="hsts-max-age">hsts-max-age<a class="headerlink" href="#hsts-max-age" title="Permanent link">&para;</a></h2>
@@ -3310,22 +3316,22 @@ HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature
 <h2 id="keep-alive">keep-alive<a class="headerlink" href="#keep-alive" title="Permanent link">&para;</a></h2>
 <p>Sets the time during which a keep-alive client connection will stay open on the server side. The zero value disables keep-alive client connections.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout</a></p>
 <h2 id="keep-alive-requests">keep-alive-requests<a class="headerlink" href="#keep-alive-requests" title="Permanent link">&para;</a></h2>
 <p>Sets the maximum number of requests that can be served through one keep-alive connection.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests">http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests</a></p>
 <h2 id="large-client-header-buffers">large-client-header-buffers<a class="headerlink" href="#large-client-header-buffers" title="Permanent link">&para;</a></h2>
-<p>Sets the maximum number and size of buffers used for reading large client request header. Default: 4 8k.</p>
+<p>Sets the maximum number and size of buffers used for reading large client request header. <em><strong>default:</strong></em> 4 8k</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers">http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers</a></p>
 <h2 id="log-format-escape-json">log-format-escape-json<a class="headerlink" href="#log-format-escape-json" title="Permanent link">&para;</a></h2>
 <p>Sets if the escape parameter allows JSON ("true") or default characters escaping in variables ("false") Sets the nginx <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format">log format</a>.</p>
 <h2 id="log-format-upstream">log-format-upstream<a class="headerlink" href="#log-format-upstream" title="Permanent link">&para;</a></h2>
 <p>Sets the nginx <a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format">log format</a>.
 Example for json output:</p>
 <p><code class="codehilite">consolelog-format-upstream: &#39;{ &quot;time&quot;: &quot;$time_iso8601&quot;, &quot;remote_addr&quot;: &quot;$proxy_protocol_addr&quot;,&quot;x-forward-for&quot;: &quot;$proxy_add_x_forwarded_for&quot;, &quot;request_id&quot;: &quot;$req_id&quot;, &quot;remote_user&quot;:&quot;$remote_user&quot;, &quot;bytes_sent&quot;: $bytes_sent, &quot;request_time&quot;: $request_time, &quot;status&quot;:$status, &quot;vhost&quot;: &quot;$host&quot;, &quot;request_proto&quot;: &quot;$server_protocol&quot;, &quot;path&quot;: &quot;$uri&quot;,&quot;request_query&quot;: &quot;$args&quot;, &quot;request_length&quot;: $request_length, &quot;duration&quot;: $request_time,&quot;method&quot;: &quot;$request_method&quot;, &quot;http_referrer&quot;: &quot;$http_referer&quot;, &quot;http_user_agent&quot;:&quot;$http_user_agent&quot; }&#39;</code></p>
-<p>Please check <a href="../log-format/">log-format</a> for definition of each field.</p>
+<p>Please check the <a href="../log-format/">log-format</a> for definition of each field.</p>
 <h2 id="log-format-stream">log-format-stream<a class="headerlink" href="#log-format-stream" title="Permanent link">&para;</a></h2>
 <p>Sets the nginx <a href="https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format">stream format</a>.</p>
 <h2 id="max-worker-connections">max-worker-connections<a class="headerlink" href="#max-worker-connections" title="Permanent link">&para;</a></h2>
@@ -3339,24 +3345,30 @@ Example for json output:</p>
 <h2 id="server-name-hash-max-size">server-name-hash-max-size<a class="headerlink" href="#server-name-hash-max-size" title="Permanent link">&para;</a></h2>
 <p>Sets the maximum size of the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size">server names hash tables</a> used in server names,map directive’s values, MIME types, names of request header strings, etc.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/hash.html</p>
+<a href="http://nginx.org/en/docs/hash.html">http://nginx.org/en/docs/hash.html</a></p>
 <h2 id="server-name-hash-bucket-size">server-name-hash-bucket-size<a class="headerlink" href="#server-name-hash-bucket-size" title="Permanent link">&para;</a></h2>
 <p>Sets the size of the bucket for the server names hash tables.</p>
-<p><em>References:</em>
-- http://nginx.org/en/docs/hash.html
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size</p>
+<p><em>References:</em></p>
+<ul>
+<li><a href="http://nginx.org/en/docs/hash.html">http://nginx.org/en/docs/hash.html</a></li>
+<li><a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size">http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size</a></li>
+</ul>
 <h2 id="proxy-headers-hash-max-size">proxy-headers-hash-max-size<a class="headerlink" href="#proxy-headers-hash-max-size" title="Permanent link">&para;</a></h2>
 <p>Sets the maximum size of the proxy headers hash tables.</p>
-<p><em>References:</em>
-- http://nginx.org/en/docs/hash.html
-- https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size</p>
+<p><em>References:</em></p>
+<ul>
+<li><a href="http://nginx.org/en/docs/hash.html">http://nginx.org/en/docs/hash.html</a></li>
+<li><a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size">https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size</a></li>
+</ul>
 <h2 id="proxy-headers-hash-bucket-size">proxy-headers-hash-bucket-size<a class="headerlink" href="#proxy-headers-hash-bucket-size" title="Permanent link">&para;</a></h2>
 <p>Sets the size of the bucket for the proxy headers hash tables.</p>
-<p><em>References:</em>
-- http://nginx.org/en/docs/hash.html
-- https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size</p>
+<p><em>References:</em></p>
+<ul>
+<li><a href="http://nginx.org/en/docs/hash.html">http://nginx.org/en/docs/hash.html</a></li>
+<li><a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size">https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size</a></li>
+</ul>
 <h2 id="server-tokens">server-tokens<a class="headerlink" href="#server-tokens" title="Permanent link">&para;</a></h2>
-<p>Send NGINX Server header in responses and display NGINX version in error pages. By default this is enabled.</p>
+<p>Send NGINX Server header in responses and display NGINX version in error pages. <em><strong>default:</strong></em> is enabled</p>
 <h2 id="ssl-ciphers">ssl-ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link">&para;</a></h2>
 <p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers">ciphers</a> list to enable. The ciphers are specified in the format understood by the OpenSSL library.</p>
 <p>The default cipher list is:
@@ -3366,13 +3378,15 @@ Example for json output:</p>
 <h2 id="ssl-ecdh-curve">ssl-ecdh-curve<a class="headerlink" href="#ssl-ecdh-curve" title="Permanent link">&para;</a></h2>
 <p>Specifies a curve for ECDHE ciphers.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve">http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve</a></p>
 <h2 id="ssl-dh-param">ssl-dh-param<a class="headerlink" href="#ssl-dh-param" title="Permanent link">&para;</a></h2>
 <p>Sets the name of the secret that contains Diffie-Hellman key to help with "Perfect Forward Secrecy".</p>
-<p><em>References:</em>
-- https://wiki.openssl.org/index.php/Diffie-Hellman_parameters
-- https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
-- http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam</p>
+<p><em>References:</em></p>
+<ul>
+<li><a href="https://wiki.openssl.org/index.php/Diffie-Hellman_parameters">https://wiki.openssl.org/index.php/Diffie-Hellman_parameters</a></li>
+<li><a href="https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam">https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam</a></li>
+<li><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam">http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam</a></li>
+</ul>
 <h2 id="ssl-protocols">ssl-protocols<a class="headerlink" href="#ssl-protocols" title="Permanent link">&para;</a></h2>
 <p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols">SSL protocols</a> to use. The default is: <code class="codehilite">TLSv1.2</code>.</p>
 <p>Please check the result of the configuration using <code class="codehilite">https://ssllabs.com/ssltest/analyze.html</code> or <code class="codehilite">https://testssl.sh</code>.</p>
@@ -3390,7 +3404,7 @@ Example for json output:</p>
 <h2 id="ssl-buffer-size">ssl-buffer-size<a class="headerlink" href="#ssl-buffer-size" title="Permanent link">&para;</a></h2>
 <p>Sets the size of the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size">SSL buffer</a> used for sending data. The default of 4k helps NGINX to improve TLS Time To First Byte (TTTFB).</p>
 <p><em>References:</em>
-- https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/</p>
+<a href="https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/">https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/</a></p>
 <h2 id="use-proxy-protocol">use-proxy-protocol<a class="headerlink" href="#use-proxy-protocol" title="Permanent link">&para;</a></h2>
 <p>Enables or disables the <a href="https://www.nginx.com/resources/admin-guide/proxy-protocol/">PROXY protocol</a> to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAProxy and Amazon Elastic Load Balancer (ELB).</p>
 <h2 id="use-gzip">use-gzip<a class="headerlink" href="#use-gzip" title="Permanent link">&para;</a></h2>
@@ -3398,16 +3412,18 @@ Example for json output:</p>
 The default mime type list to compress is: <code class="codehilite">application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>.</p>
 <h2 id="use-geoip">use-geoip<a class="headerlink" href="#use-geoip" title="Permanent link">&para;</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_geoip_module.html">"geoip" module</a> that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
-The default value is true.</p>
+<em><strong>default:</strong></em> true</p>
 <h2 id="enable-brotli">enable-brotli<a class="headerlink" href="#enable-brotli" title="Permanent link">&para;</a></h2>
 <p>Enables or disables compression of HTTP responses using the <a href="https://github.com/google/ngx_brotli">"brotli" module</a>.
-The default mime type list to compress is: <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>. This is <em>disabled</em> by default.</p>
-<p><em>Note:</em> Brotli does not works in Safari &lt; 11 https://caniuse.com/#feat=brotli</p>
+The default mime type list to compress is: <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>. <em><strong>default:</strong></em> is disabled</p>
+<blockquote>
+<p><strong>Note:</strong> Brotli does not works in Safari &lt; 11. For more information see <a href="https://caniuse.com/#feat=brotli">https://caniuse.com/#feat=brotli</a></p>
+</blockquote>
 <h2 id="brotli-level">brotli-level<a class="headerlink" href="#brotli-level" title="Permanent link">&para;</a></h2>
-<p>Sets the Brotli Compression Level that will be used. <em>Defaults to</em> 4.</p>
+<p>Sets the Brotli Compression Level that will be used. <em><strong>default:</strong></em> 4</p>
 <h2 id="brotli-types">brotli-types<a class="headerlink" href="#brotli-types" title="Permanent link">&para;</a></h2>
 <p>Sets the MIME Types that will be compressed on-the-fly by brotli.
-<em>Defaults to</em> <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>.</p>
+<em><strong>default:</strong></em> <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code></p>
 <h2 id="use-http2">use-http2<a class="headerlink" href="#use-http2" title="Permanent link">&para;</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_v2_module.html">HTTP/2</a> support in secure connections.</p>
 <h2 id="gzip-types">gzip-types<a class="headerlink" href="#gzip-types" title="Permanent link">&para;</a></h2>
@@ -3424,7 +3440,7 @@ By default worker processes are not bound to any specific CPUs. The value can be
 <li>auto: binding worker processes automatically to available CPUs.</li>
 </ul>
 <h2 id="worker-shutdown-timeout">worker-shutdown-timeout<a class="headerlink" href="#worker-shutdown-timeout" title="Permanent link">&para;</a></h2>
-<p>Sets a timeout for Nginx to <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout">wait for worker to gracefully shutdown</a>. The default is "10s".</p>
+<p>Sets a timeout for Nginx to <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout">wait for worker to gracefully shutdown</a>. <em><strong>default:</strong></em> "10s"</p>
 <h2 id="load-balance">load-balance<a class="headerlink" href="#load-balance" title="Permanent link">&para;</a></h2>
 <p>Sets the algorithm to use for load balancing.
 The value can either be:</p>
@@ -3436,70 +3452,70 @@ The value can either be:</p>
 </ul>
 <p>The default is least_conn.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/load_balancing.html.</p>
+<a href="http://nginx.org/en/docs/http/load_balancing.html">http://nginx.org/en/docs/http/load_balancing.html</a></p>
 <h2 id="variables-hash-bucket-size">variables-hash-bucket-size<a class="headerlink" href="#variables-hash-bucket-size" title="Permanent link">&para;</a></h2>
 <p>Sets the bucket size for the variables hash table.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size">http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size</a></p>
 <h2 id="variables-hash-max-size">variables-hash-max-size<a class="headerlink" href="#variables-hash-max-size" title="Permanent link">&para;</a></h2>
 <p>Sets the maximum size of the variables hash table.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size">http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size</a></p>
 <h2 id="upstream-keepalive-connections">upstream-keepalive-connections<a class="headerlink" href="#upstream-keepalive-connections" title="Permanent link">&para;</a></h2>
 <p>Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle keepalive connections to upstream servers that are preserved in the cache of each worker process. When this
-number is exceeded, the least recently used connections are closed. Default: 32</p>
+number is exceeded, the least recently used connections are closed. <em><strong>default:</strong></em> 32</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive">http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive</a></p>
 <h2 id="limit-conn-zone-variable">limit-conn-zone-variable<a class="headerlink" href="#limit-conn-zone-variable" title="Permanent link">&para;</a></h2>
 <p>Sets parameters for a shared memory zone that will keep states for various keys of <a href="http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone">limit_conn_zone</a>. The default of "$binary_remote_addr" variable’s size is always 4 bytes for IPv4 addresses or 16 bytes for IPv6 addresses.</p>
 <h2 id="proxy-stream-timeout">proxy-stream-timeout<a class="headerlink" href="#proxy-stream-timeout" title="Permanent link">&para;</a></h2>
 <p>Sets the timeout between two successive read or write operations on client or proxied server connections. If no data is transmitted within this time, the connection is closed.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout</p>
+<a href="http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout">http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout</a></p>
 <h2 id="proxy-stream-responses">proxy-stream-responses<a class="headerlink" href="#proxy-stream-responses" title="Permanent link">&para;</a></h2>
 <p>Sets the number of datagrams expected from the proxied server in response to the client request if the UDP protocol is used.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses</p>
+<a href="http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses">http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses</a></p>
 <h2 id="bind-address-ipv4">bind-address-ipv4<a class="headerlink" href="#bind-address-ipv4" title="Permanent link">&para;</a></h2>
 <p>Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.</p>
 <h2 id="bind-address-ipv6">bind-address-ipv6<a class="headerlink" href="#bind-address-ipv6" title="Permanent link">&para;</a></h2>
 <p>Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.</p>
 <h2 id="forwarded-for-header">forwarded-for-header<a class="headerlink" href="#forwarded-for-header" title="Permanent link">&para;</a></h2>
-<p>Sets the header field for identifying the originating IP address of a client. Default is X-Forwarded-For</p>
+<p>Sets the header field for identifying the originating IP address of a client. <em><strong>default:</strong></em> X-Forwarded-For</p>
 <h2 id="compute-full-forwarded-for">compute-full-forwarded-for<a class="headerlink" href="#compute-full-forwarded-for" title="Permanent link">&para;</a></h2>
 <p>Append the remote address to the X-Forwarded-For header instead of replacing it. When this option is enabled, the upstream application is responsible for extracting the client IP based on its own list of trusted proxies.</p>
 <h2 id="proxy-add-original-uri-header">proxy-add-original-uri-header<a class="headerlink" href="#proxy-add-original-uri-header" title="Permanent link">&para;</a></h2>
 <p>Adds an X-Original-Uri header with the original request URI to the backend request</p>
 <h2 id="enable-opentracing">enable-opentracing<a class="headerlink" href="#enable-opentracing" title="Permanent link">&para;</a></h2>
-<p>Enables the nginx Opentracing extension. By default this is disabled.</p>
+<p>Enables the nginx Opentracing extension. <em><strong>default:</strong></em> is disabled</p>
 <p><em>References:</em>
-- https://github.com/opentracing-contrib/nginx-opentracing</p>
+<a href="https://github.com/opentracing-contrib/nginx-opentracing">https://github.com/opentracing-contrib/nginx-opentracing</a></p>
 <h2 id="zipkin-collector-host">zipkin-collector-host<a class="headerlink" href="#zipkin-collector-host" title="Permanent link">&para;</a></h2>
 <p>Specifies the host to use when uploading traces. It must be a valid URL.</p>
 <h2 id="zipkin-collector-port">zipkin-collector-port<a class="headerlink" href="#zipkin-collector-port" title="Permanent link">&para;</a></h2>
-<p>Specifies the port to use when uploading traces. Default: 9411</p>
+<p>Specifies the port to use when uploading traces. <em><strong>default:</strong></em> 9411</p>
 <h2 id="zipkin-service-name">zipkin-service-name<a class="headerlink" href="#zipkin-service-name" title="Permanent link">&para;</a></h2>
-<p>Specifies the service name to use for any traces created. Default: nginx</p>
+<p>Specifies the service name to use for any traces created. <em><strong>default:</strong></em> nginx</p>
 <h2 id="jaeger-collector-host">jaeger-collector-host<a class="headerlink" href="#jaeger-collector-host" title="Permanent link">&para;</a></h2>
 <p>Specifies the host to use when uploading traces. It must be a valid URL.</p>
 <h2 id="jaeger-collector-port">jaeger-collector-port<a class="headerlink" href="#jaeger-collector-port" title="Permanent link">&para;</a></h2>
-<p>Specifies the port to use when uploading traces. Default: 6831</p>
+<p>Specifies the port to use when uploading traces. <em><strong>default:</strong></em> 6831</p>
 <h2 id="jaeger-service-name">jaeger-service-name<a class="headerlink" href="#jaeger-service-name" title="Permanent link">&para;</a></h2>
-<p>Specifies the service name to use for any traces created. Default: nginx</p>
+<p>Specifies the service name to use for any traces created. <em><strong>default:</strong></em> nginx</p>
 <h2 id="jaeger-sampler-type">jaeger-sampler-type<a class="headerlink" href="#jaeger-sampler-type" title="Permanent link">&para;</a></h2>
-<p>Specifies the sampler to be used when sampling traces. The available samplers are: const, probabilistic, ratelimiting, remote. Default const.</p>
+<p>Specifies the sampler to be used when sampling traces. The available samplers are: const, probabilistic, ratelimiting, remote. <em><strong>default:</strong></em> const</p>
 <h2 id="jaeger-sampler-param">jaeger-sampler-param<a class="headerlink" href="#jaeger-sampler-param" title="Permanent link">&para;</a></h2>
 <p>Specifies the argument to be passed to the sampler constructor. Must be a number.
-For const this should be 0 to never sample and 1 to always sample. Default: 1</p>
+For const this should be 0 to never sample and 1 to always sample. <em><strong>default:</strong></em> 1</p>
 <h2 id="http-snippet">http-snippet<a class="headerlink" href="#http-snippet" title="Permanent link">&para;</a></h2>
 <p>Adds custom configuration to the http section of the nginx configuration.
-Default: ""</p>
+<em><strong>default:</strong></em> ""</p>
 <h2 id="server-snippet">server-snippet<a class="headerlink" href="#server-snippet" title="Permanent link">&para;</a></h2>
 <p>Adds custom configuration to all the servers in the nginx configuration.
-Default: ""</p>
+<em><strong>default:</strong></em> ""</p>
 <h2 id="location-snippet">location-snippet<a class="headerlink" href="#location-snippet" title="Permanent link">&para;</a></h2>
 <p>Adds custom configuration to all the locations in the nginx configuration.
-Default: ""</p>
+<em><strong>default:</strong></em> ""</p>
 <h2 id="custom-http-errors">custom-http-errors<a class="headerlink" href="#custom-http-errors" title="Permanent link">&para;</a></h2>
 <p>Enables which HTTP codes should be passed for processing with the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page">error_page directive</a></p>
 <p>Setting at least one code also enables <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors">proxy_intercept_errors</a> which are required to process error_page.</p>
@@ -3524,43 +3540,45 @@ See NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#clien
 <h2 id="proxy-next-upstream-tries">proxy-next-upstream-tries<a class="headerlink" href="#proxy-next-upstream-tries" title="Permanent link">&para;</a></h2>
 <p>Limit the number of <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_tries">possible tries</a> a request should be passed to the next server.</p>
 <h2 id="proxy-redirect-from">proxy-redirect-from<a class="headerlink" href="#proxy-redirect-from" title="Permanent link">&para;</a></h2>
-<p>Sets the original text that should be changed in the "Location" and "Refresh" header fields of a proxied server response. Default: off.</p>
+<p>Sets the original text that should be changed in the "Location" and "Refresh" header fields of a proxied server response. <em><strong>default:</strong></em> off</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect">http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect</a></p>
 <h2 id="proxy-request-buffering">proxy-request-buffering<a class="headerlink" href="#proxy-request-buffering" title="Permanent link">&para;</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering">buffering of a client request body</a>.</p>
 <h2 id="ssl-redirect">ssl-redirect<a class="headerlink" href="#ssl-redirect" title="Permanent link">&para;</a></h2>
 <p>Sets the global value of redirects (301) to HTTPS if the server has a TLS certificate (defined in an Ingress rule).
-Default is "true".</p>
+<em><strong>default:</strong></em> "true"</p>
 <h2 id="whitelist-source-range">whitelist-source-range<a class="headerlink" href="#whitelist-source-range" title="Permanent link">&para;</a></h2>
 <p>Sets the default whitelisted IPs for each <code class="codehilite">server</code> block. This can be overwritten by an annotation on an Ingress rule.
 See <a href="http://nginx.org/en/docs/http/ngx_http_access_module.html">ngx_http_access_module</a>.</p>
 <h2 id="skip-access-log-urls">skip-access-log-urls<a class="headerlink" href="#skip-access-log-urls" title="Permanent link">&para;</a></h2>
-<p>Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like <code class="codehilite">/health</code> or <code class="codehilite">health-check</code> that make "complex" reading the logs. By default this list is empty</p>
+<p>Sets a list of URLs that should not appear in the NGINX access log. This is useful with urls like <code class="codehilite">/health</code> or <code class="codehilite">health-check</code> that make "complex" reading the logs. <em><strong>default:</strong></em> is empty</p>
 <h2 id="limit-rate">limit-rate<a class="headerlink" href="#limit-rate" title="Permanent link">&para;</a></h2>
 <p>Limits the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate">http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate</a></p>
 <h2 id="limit-rate-after">limit-rate-after<a class="headerlink" href="#limit-rate-after" title="Permanent link">&para;</a></h2>
 <p>Sets the initial amount after which the further transmission of a response to a client will be rate limited.</p>
 <p><em>References:</em>
-- http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after</p>
+<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after">http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after</a></p>
 <h2 id="http-redirect-code">http-redirect-code<a class="headerlink" href="#http-redirect-code" title="Permanent link">&para;</a></h2>
 <p>Sets the HTTP status code to be used in redirects.
 Supported codes are <a href="https://developer.mozilla.org/es/docs/Web/HTTP/Status/301">301</a>,<a href="https://developer.mozilla.org/es/docs/Web/HTTP/Status/302">302</a>,<a href="https://developer.mozilla.org/es/docs/Web/HTTP/Status/307">307</a> and <a href="https://developer.mozilla.org/es/docs/Web/HTTP/Status/308">308</a>
-Default code is 308.</p>
-<p>Why the default code is 308?</p>
+<em><strong>default:</strong></em> 308</p>
+<blockquote>
+<p><strong>Why the default code is 308?</strong></p>
 <p><a href="https://tools.ietf.org/html/rfc7238">RFC 7238</a> was created to define the 308 (Permanent Redirect) status code that is similar to 301 (Moved Permanently) but it keeps the payload in the redirect. This is important if the we send a redirect in methods like POST.</p>
+</blockquote>
 <h2 id="proxy-buffering">proxy-buffering<a class="headerlink" href="#proxy-buffering" title="Permanent link">&para;</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering">buffering of responses from the proxied server</a>.</p>
 <h2 id="limit-req-status-code">limit-req-status-code<a class="headerlink" href="#limit-req-status-code" title="Permanent link">&para;</a></h2>
-<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status">status code to return in response to rejected requests</a>.Default: 503</p>
+<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status">status code to return in response to rejected requests</a>. <em><strong>default:</strong></em> 503</p>
 <h2 id="no-tls-redirect-locations">no-tls-redirect-locations<a class="headerlink" href="#no-tls-redirect-locations" title="Permanent link">&para;</a></h2>
 <p>A comma-separated list of locations on which http requests will never get redirected to their https counterpart.
-Default: "/.well-known/acme-challenge"</p>
+<em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>
 <h2 id="no-auth-locations">no-auth-locations<a class="headerlink" href="#no-auth-locations" title="Permanent link">&para;</a></h2>
 <p>A comma-separated list of locations that should not get authenticated.
-Default: "/.well-known/acme-challenge"</p>
+<em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>
                 
                   
                 

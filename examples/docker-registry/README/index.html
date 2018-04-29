@@ -1125,8 +1125,11 @@
 </pre></div>
 
 
-<p><strong>Important:</strong> DO NOT RUN THIS IN PRODUCTION.
-This deployment uses <code class="codehilite">emptyDir</code> in the <code class="codehilite">volumeMount</code> which means the contents of the registry will be deleted when the pod dies.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><strong>DO NOT RUN THIS IN PRODUCTION</strong></p>
+<p>This deployment uses <code class="codehilite">emptyDir</code> in the <code class="codehilite">volumeMount</code> which means the contents of the registry will be deleted when the pod dies.</p>
+</div>
 <p>The next required step is creation of the ingress rules. To do this we have two options: with and without TLS</p>
 <h3 id="without-tls">Without TLS<a class="headerlink" href="#without-tls" title="Permanent link">&para;</a></h3>
 <p>Download and edit the yaml deployment replacing <code class="codehilite">registry.&lt;your domain&gt;</code> with a valid DNS name pointing to the ingress controller:</p>
@@ -1134,8 +1137,11 @@ This deployment uses <code class="codehilite">emptyDir</code> in the <code class
 </pre></div>
 
 
-<p><strong>Important:</strong> running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.
-Please check <a href="https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry">deploy a plain http registry</a></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.</p>
+<p>Please check <a href="https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry">deploy a plain http registry</a></p>
+</div>
 <h3 id="with-tls">With TLS<a class="headerlink" href="#with-tls" title="Permanent link">&para;</a></h3>
 <p>Download and edit the yaml deployment replacing <code class="codehilite">registry.&lt;your domain&gt;</code> with a valid DNS name pointing to the ingress controller:</p>
 <div class="codehilite"><pre><span></span><span class="go">wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-with-tls.yaml</span>

@@ -1293,9 +1293,10 @@ delete it with <code class="codehilite">kubectl delete secret &lt;name&gt;</code
 The API server will mount a volume containing this file, but only if the API server is configured to use
 the ServiceAccount admission controller.
 If you experience this error, verify that your API server is using the ServiceAccount admission controller.
-If you are configuring the API server by hand, you can set this with the <code class="codehilite">--admission-control</code> parameter.
-Please note that you should use other admission controllers as well. Before configuring this option, you should
-read about admission controllers.</p>
+If you are configuring the API server by hand, you can set this with the <code class="codehilite">--admission-control</code> parameter.</p>
+<blockquote>
+<p>Note that you should use other admission controllers as well. Before configuring this option, you should read about admission controllers.</p>
+</blockquote>
 </li>
 </ol>
 <p>More information:</p>

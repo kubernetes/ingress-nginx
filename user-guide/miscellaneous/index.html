@@ -1201,7 +1201,10 @@ Basically a default backend exposes two URLs:</p>
 <p>The only requirement to avoid the close of connections is the increase of the values of <code class="codehilite">proxy-read-timeout</code> and <code class="codehilite">proxy-send-timeout</code>.</p>
 <p>The default value of this settings is <code class="codehilite">60 seconds</code>.</p>
 <p>A more adequate value to support websockets is a value higher than one hour (<code class="codehilite">3600</code>).</p>
-<p><strong>Important:</strong> If the NGINX ingress controller is exposed with a service <code class="codehilite">type=LoadBalancer</code> make sure the protocol between the loadbalancer and NGINX is TCP.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If the NGINX ingress controller is exposed with a service <code class="codehilite">type=LoadBalancer</code> make sure the protocol between the loadbalancer and NGINX is TCP.</p>
+</div>
 <h2 id="optimizing-tls-time-to-first-byte-tttfb">Optimizing TLS Time To First Byte (TTTFB)<a class="headerlink" href="#optimizing-tls-time-to-first-byte-tttfb" title="Permanent link">&para;</a></h2>
 <p>NGINX provides the configuration option <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size">ssl_buffer_size</a> to allow the optimization of the TLS record size.</p>
 <p>This improves the <a href="https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/">TLS Time To First Byte</a> (TTTFB).

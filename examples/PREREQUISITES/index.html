@@ -1165,7 +1165,7 @@ key/cert pair with an arbitrarily chosen hostname, created as follows</p>
 <h2 id="ca-authentication">CA Authentication<a class="headerlink" href="#ca-authentication" title="Permanent link">&para;</a></h2>
 <p>You can act as your very own CA, or use an existing one. As an exercise / learning, we're going to generate our
 own CA, and also generate a client certificate.</p>
-<p>These instructions are based on CoreOS OpenSSL <a href="https://coreos.com/kubernetes/docs/latest/openssl.html">instructions</a></p>
+<p>These instructions are based on CoreOS OpenSSL. <a href="https://coreos.com/kubernetes/docs/latest/openssl.html">See live doc.</a></p>
 <h3 id="generating-a-ca">Generating a CA<a class="headerlink" href="#generating-a-ca" title="Permanent link">&para;</a></h3>
 <p>First of all, you've to generate a CA. This is going to be the one who will sign your client certificates.
 In real production world, you may face CAs with intermediate certificates, as the following:</p>
@@ -1243,7 +1243,7 @@ the TLS Auth directive:</p>
 </pre></div>
 
 
-<p>Note: You can also generate the CA Authentication Secret along with the TLS Secret by using:</p>
+<p><strong>Note:</strong> You can also generate the CA Authentication Secret along with the TLS Secret by using:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create secret generic caingress --namespace<span class="o">=</span>default --from-file<span class="o">=</span>ca.crt<span class="o">=</span>&lt;ca.crt&gt; --from-file<span class="o">=</span>tls.crt<span class="o">=</span>&lt;tls.crt&gt; --from-file<span class="o">=</span>tls.key<span class="o">=</span>&lt;tls.key&gt;
 </pre></div>
 

@@ -1121,7 +1121,10 @@
 <h3 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h3>
 <p>The <code class="codehilite">auth-url</code> and <code class="codehilite">auth-signin</code> annotations allow you to use an external
 authentication provider to protect your Ingress resources.</p>
-<p>(Note, this annotation requires <code class="codehilite">nginx-ingress-controller v0.9.0</code> or greater.)</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>this annotation requires <code class="codehilite">nginx-ingress-controller v0.9.0</code> or greater.)</p>
+</div>
 <h3 id="key-detail">Key Detail<a class="headerlink" href="#key-detail" title="Permanent link">&para;</a></h3>
 <p>This functionality is enabled by deploying multiple Ingress objects for a single host.
 One Ingress object has no special annotations and handles authentication.</p>
@@ -1151,7 +1154,7 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using g
 
 
 <ol>
-<li>Create a custom Github OAuth application https://github.com/settings/applications/new</li>
+<li>Create a <a href="https://github.com/settings/applications/new">custom Github OAuth application</a></li>
 </ol>
 <p><img alt="Register OAuth2 Application" src="../images/register-oauth-app.png" /></p>
 <ul>
