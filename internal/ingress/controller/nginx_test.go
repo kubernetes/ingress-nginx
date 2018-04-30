@@ -154,18 +154,10 @@ func TestConfigureDynamically(t *testing.T) {
 
 	}))
 
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Errorf("unexpected error listening on a random port: %v", err)
-	}
-	defer listener.Close()
-
-	port := listener.Addr().(*net.TCPAddr).Port
-
-	ts.Listener = listener
+	port := ts.Listener.Addr().(*net.TCPAddr).Port
 	defer ts.Close()
 
-	err = configureDynamically(commonConfig, port)
+	err := configureDynamically(commonConfig, port)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic configuration: %v", err)
 	}

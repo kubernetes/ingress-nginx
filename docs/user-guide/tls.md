@@ -151,10 +151,10 @@ version to fully support Kube-Lego is nginx Ingress controller 0.8.
 
 ## Default TLS Version and Ciphers
 
-To provide the most secure baseline configuration possible, nginx-ingress defaults to using TLS 1.2 and a [secure set of TLS ciphers](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md#ssl-ciphers)
+To provide the most secure baseline configuration possible, nginx-ingress defaults to using TLS 1.2 and a [secure set of TLS ciphers](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#ssl-ciphers)
 
 ## Legacy TLS 
-The default configuration, though secure, does not support some older browsers and operating systems. For instance, 20% of Android phones in use today are not compatible with nginx-ingress's default configuration. To change this default behavior, use a [ConfigMap](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md#ssl-ciphers).
+The default configuration, though secure, does not support some older browsers and operating systems. For instance, 20% of Android phones in use today are not compatible with nginx-ingress's default configuration. To change this default behavior, use a [ConfigMap](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#ssl-ciphers).
 
 A sample ConfigMap to allow these older clients connect could look something like the following:
 

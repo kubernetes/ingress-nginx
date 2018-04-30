@@ -23,36 +23,46 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-type cors struct {
+type log struct {
 	r resolver.Resolver
 }
 
 // Config contains the configuration to be used in the Ingress
 type Config struct {
-	Access bool `json:"accessLog"`
+	Access  bool `json:"accessLog"`
+	Rewrite bool `json:"rewriteLog"`
 }
 
 // Equal tests for equality between two Config types
 func (bd1 *Config) Equal(bd2 *Config) bool {
-	if bd1.Access == bd2.Access {
-		return true
+	if bd1.Access != bd2.Access {
+		return false
 	}
 
-	return false
+	if bd1.Rewrite != bd2.Rewrite {
+		return false
+	}
+
+	return true
 }
 
-// NewParser creates a new access log annotation parser
+// NewParser creates a new log annotations parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return cors{r}
+	return log{r}
 }
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should enable logs
-func (c cors) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (l log) Parse(ing *extensions.Ingress) (interface{}, error) {
 	accessEnabled, err := parser.GetBoolAnnotation("enable-access-log", ing)
 	if err != nil {
 		accessEnabled = true
 	}
 
-	return &Config{accessEnabled}, nil
+	rewriteEnabled, err := parser.GetBoolAnnotation("enable-rewrite-log", ing)
+	if err != nil {
+		rewriteEnabled = false
+	}
+
+	return &Config{Access: accessEnabled, Rewrite: rewriteEnabled}, nil
 }

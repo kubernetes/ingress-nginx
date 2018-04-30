@@ -16,11 +16,11 @@
 # Get Involved
 
 * **Contributing**: Pull requests are welcome!
-  * Read [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) and check out [help-wanted](https://github.com/kubernetes/ingress-nginx/labels/help%20wanted) issues
+  * Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and check out [help-wanted](https://github.com/kubernetes/ingress-nginx/labels/help%20wanted) issues
   * Submit github issues for any feature enhancements, bugs or documentation problems
 * **Support**: Join to [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions to get support from the maintainers and other developers
   * Questions/comments can also be posted as [github issues](https://github.com/kubernetes/ingress-nginx/issues)
-* **Discuss**: Tweet using the `#NginxIngress` hashtag
+* **Discuss**: Tweet using the `#IngressNginx` hashtag
 
 
 ## Description
@@ -60,7 +60,7 @@ Detailed changes for each release are documented in the [CHANGELOG.md](CHANGELOG
 
 ## Contribution
 
-Please make sure to read the [Contributing Guide](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md) before making a pull request.
+Please make sure to read the [Contributing Guide](CONTRIBUTING.md) before making a pull request.
 
 Thank you to all the people who already contributed to NGINX Ingress Controller!
 

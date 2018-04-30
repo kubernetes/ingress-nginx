@@ -58,7 +58,7 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(ing).ToNot(BeNil())
 
-		_, _, _, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
+		_, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
 			ing.Namespace)

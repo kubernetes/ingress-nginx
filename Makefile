@@ -18,7 +18,7 @@ all: all-container
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.13.0
+TAG?=0.14.0
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
 DOCKER?=docker
@@ -117,7 +117,7 @@ endif
 	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
 
 ifeq ($(ARCH), amd64)
-	# This is for to maintain the backward compatibility
+	# This is for maintaining backward compatibility
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
@@ -159,11 +159,12 @@ lua-test:
 
 .PHONY: e2e-image
 e2e-image: sub-container-amd64
-	TAG=$(TAG) IMAGE=$(MULTI_ARCH_IMG) docker tag $(IMAGE):$(TAG) $(IMAGE):test
+	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMGNAME):e2e
 	docker images
 
 .PHONY: e2e-test
 e2e-test:
+	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
 	@ginkgo build ./test/e2e
 	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 -p -trace -nodes=2 ./test/e2e/e2e.test
 
