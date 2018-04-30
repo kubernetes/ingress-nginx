@@ -23,3 +23,4 @@ plugins:
   - awesome-pages:
       collapse_single_pages: true
 extra_css: [extra.css]
+google_analytics: ['UA-118407822-1', 'kubernetes.github.io']
