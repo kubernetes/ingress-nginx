@@ -149,4 +149,117 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("request_uri=http://%v:8080/something/", host)))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
 	})
+
+	It("should set the path to /something on the generated cookie", func() {
+		host := "example.com"
+
+		ing, err := f.EnsureIngress(&v1beta1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      host,
+				Namespace: f.IngressController.Namespace,
+				Annotations: map[string]string{
+					"nginx.ingress.kubernetes.io/affinity":            "cookie",
+					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+				},
+			},
+			Spec: v1beta1.IngressSpec{
+				Rules: []v1beta1.IngressRule{
+					{
+						Host: host,
+						IngressRuleValue: v1beta1.IngressRuleValue{
+							HTTP: &v1beta1.HTTPIngressRuleValue{
+								Paths: []v1beta1.HTTPIngressPath{
+									{
+										Path: "/something",
+										Backend: v1beta1.IngressBackend{
+											ServiceName: "http-svc",
+											ServicePort: intstr.FromInt(80),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		})
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ing).NotTo(BeNil())
+
+		err = f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL+"/something").
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/something"))
+	})
+
+	It("should set the path to / on the generated cookie if there's more than one rule referring to the same backend", func() {
+		host := "example.com"
+
+		ing, err := f.EnsureIngress(&v1beta1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      host,
+				Namespace: f.IngressController.Namespace,
+				Annotations: map[string]string{
+					"nginx.ingress.kubernetes.io/affinity":            "cookie",
+					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+				},
+			},
+			Spec: v1beta1.IngressSpec{
+				Rules: []v1beta1.IngressRule{
+					{
+						Host: host,
+						IngressRuleValue: v1beta1.IngressRuleValue{
+							HTTP: &v1beta1.HTTPIngressRuleValue{
+								Paths: []v1beta1.HTTPIngressPath{
+									{
+										Path: "/something",
+										Backend: v1beta1.IngressBackend{
+											ServiceName: "http-svc",
+											ServicePort: intstr.FromInt(80),
+										},
+									},
+									{
+										Path: "/somewhereelese",
+										Backend: v1beta1.IngressBackend{
+											ServiceName: "http-svc",
+											ServicePort: intstr.FromInt(80),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		})
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ing).NotTo(BeNil())
+
+		err = f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL+"/something").
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/;"))
+	})
 })
