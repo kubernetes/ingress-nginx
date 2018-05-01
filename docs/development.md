@@ -1,9 +1,21 @@
-# Developing for NGINX Ingress controller
+# Developing for NGINX Ingress Controller
 
 This document explains how to get started with developing for NGINX Ingress controller.
 It includes how to build, test, and release ingress controllers.
 
 ## Quick Start
+
+### Getting the code
+
+The code must be checked out as a subdirectory of k8s.io, and not github.com.
+
+```
+mkdir -p $GOPATH/src/k8s.io
+cd $GOPATH/src/k8s.io
+# Replace "$YOUR_GITHUB_USERNAME" below with your github username
+git clone https://github.com/$YOUR_GITHUB_USERNAME/ingress-nginx.git
+cd ingress-nginx
+```
 
 ### Initial developer environment build
 
@@ -28,7 +40,6 @@ The image will only be used by pods created after the rebuild. To delete old pod
 $ kubectl get pods -n ingress-nginx
 $ kubectl delete pod -n ingress-nginx nginx-ingress-controller-<unique-pod-id>
 ```
-
 
 ## Dependencies
 
