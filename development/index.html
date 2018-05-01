@@ -36,7 +36,7 @@
     
     
       
-        <title>Developing for NGINX Ingress controller - NGINX Ingress Controller</title>
+        <title>Developing for NGINX Ingress Controller - NGINX Ingress Controller</title>
       
     
     
@@ -121,7 +121,7 @@
                 NGINX Ingress Controller
               </span>
               <span class="md-header-nav__topic">
-                Developing for NGINX Ingress controller
+                Developing for NGINX Ingress Controller
               </span>
             
           
@@ -954,11 +954,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="toc">
-        Developing for NGINX Ingress controller
+        Developing for NGINX Ingress Controller
       </label>
     
-    <a href="./" title="Developing for NGINX Ingress controller" class="md-nav__link md-nav__link--active">
-      Developing for NGINX Ingress controller
+    <a href="./" title="Developing for NGINX Ingress Controller" class="md-nav__link md-nav__link--active">
+      Developing for NGINX Ingress Controller
     </a>
     
       
@@ -978,6 +978,13 @@
   
     <nav class="md-nav">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#getting-the-code" title="Getting the code" class="md-nav__link">
+    Getting the code
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#initial-developer-environment-build" title="Initial developer environment build" class="md-nav__link">
@@ -1110,6 +1117,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#getting-the-code" title="Getting the code" class="md-nav__link">
+    Getting the code
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#initial-developer-environment-build" title="Initial developer environment build" class="md-nav__link">
     Initial developer environment build
   </a>
@@ -1195,10 +1209,20 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/development.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="developing-for-nginx-ingress-controller">Developing for NGINX Ingress controller<a class="headerlink" href="#developing-for-nginx-ingress-controller" title="Permanent link">&para;</a></h1>
+                <h1 id="developing-for-nginx-ingress-controller">Developing for NGINX Ingress Controller<a class="headerlink" href="#developing-for-nginx-ingress-controller" title="Permanent link">&para;</a></h1>
 <p>This document explains how to get started with developing for NGINX Ingress controller.
 It includes how to build, test, and release ingress controllers.</p>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<h3 id="getting-the-code">Getting the code<a class="headerlink" href="#getting-the-code" title="Permanent link">&para;</a></h3>
+<p>The code must be checked out as a subdirectory of k8s.io, and not github.com.</p>
+<div class="codehilite"><pre><span></span>mkdir -p $GOPATH/src/k8s.io
+cd $GOPATH/src/k8s.io
+# Replace &quot;$YOUR_GITHUB_USERNAME&quot; below with your github username
+git clone https://github.com/$YOUR_GITHUB_USERNAME/ingress-nginx.git
+cd ingress-nginx
+</pre></div>
+
+
 <h3 id="initial-developer-environment-build">Initial developer environment build<a class="headerlink" href="#initial-developer-environment-build" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>Prequisites</strong>: Minikube must be installed.
