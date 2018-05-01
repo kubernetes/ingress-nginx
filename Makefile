@@ -137,6 +137,7 @@ clean:
 
 .PHONE: code-generator
 code-generator:
+		@go-bindata -version || go get -u github.com/jteeuwen/go-bindata/...
 		go-bindata -nometadata -o internal/file/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
 
 .PHONY: build
