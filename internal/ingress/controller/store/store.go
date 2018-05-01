@@ -523,10 +523,15 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 	var refSecrets []string
 
 	for _, tls := range ing.Spec.TLS {
-		secrName := tls.SecretName
-		if secrName != "" {
-			secrKey := fmt.Sprintf("%v/%v", ing.Namespace, secrName)
-			refSecrets = append(refSecrets, secrKey)
+		if tls.SecretName != "" {
+			secrKey, err := objectRefNamespaceKey(tls.SecretName, ing)
+			if err != nil {
+				glog.Errorf("error reading secret reference in Ingress TLS %q: %s", key, err)
+				continue
+			}
+			if secrKey != "" {
+				refSecrets = append(refSecrets, secrKey)
+			}
 		}
 	}
 
@@ -539,13 +544,19 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 		"auth-tls-secret",
 	}
 	for _, ann := range secretAnnotations {
-		secrKey, err := objectRefAnnotationNsKey(ann, ing)
+		annValue, err := parser.GetStringAnnotation(ann, ing)
 		if err != nil && !errors.IsMissingAnnotations(err) {
-			glog.Errorf("error reading secret reference in annotation %q: %s", ann, err)
-			continue
+			glog.Errorf("error parsing annotation %q: %s", ann, err)
 		}
-		if secrKey != "" {
-			refSecrets = append(refSecrets, secrKey)
+		if annValue != "" {
+			secrKey, err := objectRefNamespaceKey(annValue, ing)
+			if err != nil {
+				glog.Errorf("error reading secret reference in annotation %q: %s", ann, err)
+				continue
+			}
+			if secrKey != "" {
+				refSecrets = append(refSecrets, secrKey)
+			}
 		}
 	}
 
@@ -553,23 +564,17 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 	s.secretIngressMap.Insert(key, refSecrets...)
 }
 
-// objectRefAnnotationNsKey returns an object reference formatted as a
-// 'namespace/name' key from the given annotation name.
-func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, error) {
-	annValue, err := parser.GetStringAnnotation(ann, ing)
-	if annValue == "" {
-		return "", err
-	}
-
-	secrNs, secrName, err := cache.SplitMetaNamespaceKey(annValue)
+// objectRefNamespaceKey takes an object key in either 'name' or 'namespace/name'
+// form and returns it prepended with the Ingress namespace in the former case.
+func objectRefNamespaceKey(key string, ing *extensions.Ingress) (string, error) {
+	secrNs, secrName, err := cache.SplitMetaNamespaceKey(key)
 	if secrName == "" {
 		return "", err
 	}
-
 	if secrNs == "" {
 		return fmt.Sprintf("%v/%v", ing.Namespace, secrName), nil
 	}
-	return annValue, nil
+	return key, nil
 }
 
 // syncSecrets synchronizes data from all Secrets referenced by the given
