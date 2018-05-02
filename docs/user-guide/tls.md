@@ -31,7 +31,9 @@ The resulting secret will be of type `kubernetes.io/tls`.
 
 NGINX provides the option to configure a server as a catch-all with [server_name](http://nginx.org/en/docs/http/server_names.html) for requests that do not match any of the configured server names. This configuration works without issues for HTTP traffic.
 In case of HTTPS, NGINX requires a certificate.
-For this reason the Ingress controller provides the flag `--default-ssl-certificate`. The secret behind this flag contains the default certificate to be used in the mentioned scenario. If this flag is not provided NGINX will use a self signed certificate.
+For this reason the Ingress controller provides the flag `--default-ssl-certificate`. The secret referred to by this flag contains the default certificate to be used when accessing the catch-all server. If this flag is not provided NGINX will use a self-signed certificate.
+
+For instance, if you have a TLS secret `foo-tls` in the `default` namespace, add `--default-ssl-certificate=default/foo-tls` in the `nginx-controller` deployment.
 
 Running without the flag `--default-ssl-certificate`:
 
