@@ -1,6 +1,6 @@
 # Custom errors
 
-In case of an error in a request the body of the response is obtained from the `default backend`.
+In case of an error in a request, the body of the response is obtained from the `default backend`.
 Each request to the default backend includes two headers:
 
 - `X-Code` indicates the HTTP code to be returned to the client.
