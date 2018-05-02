@@ -695,6 +695,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#grpc-backend" title="gRPC backend" class="md-nav__link">
+    gRPC backend
+  </a>
+  
+</li>
+      
       
       
       
@@ -1520,6 +1527,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#grpc-backend" title="gRPC backend" class="md-nav__link">
+    gRPC backend
+  </a>
+  
+</li>
+      
       
       
       
@@ -1649,6 +1663,10 @@ i.e. <code class="codehilite">&quot;true&quot;</code>, <code class="codehilite">
 </tr>
 <tr>
 <td><a href="#redirect-from-to-www">nginx.ingress.kubernetes.io/from-to-www-redirect</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
+<td><a href="#grpc-backend">nginx.ingress.kubernetes.io/grpc-backend</a></td>
 <td>"true" or "false"</td>
 </tr>
 <tr>
@@ -2128,6 +2146,14 @@ configure a WAF rule to deny requests with query string value that contains word
 
 
 <p>For details on how to write WAF rules, please refer to <a href="https://github.com/p0pr0ck5/lua-resty-waf">https://github.com/p0pr0ck5/lua-resty-waf</a>.</p>
+<h3 id="grpc-backend">gRPC backend<a class="headerlink" href="#grpc-backend" title="Permanent link">&para;</a></h3>
+<p>Since NGINX 1.13.10 it is possible to expose <a href="http://nginx.org/en/docs/http/ngx_http_grpc_module.html">gRPC services natively</a></p>
+<p>You only need to add the annotation <code class="codehilite">nginx.ingress.kubernetes.io/grpc-backend: &quot;true&quot;</code> to enable this feature. Additionally, if the gRPC service requires TLS <code class="codehilite">nginx.ingress.kubernetes.io/secure-backends: &quot;true&quot;</code></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This feature requires HTTP2 to work which means we need to expose this service using HTTPS.</p>
+</div>
+<p>Exposing a gRPC service using HTTP is not supported.</p>
                 
                   
                 
