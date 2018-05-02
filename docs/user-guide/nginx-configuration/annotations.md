@@ -34,6 +34,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/grpc-backend](#grpc-backend)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
@@ -507,3 +508,13 @@ nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules: '[=[ { "access": [ { "act
 ```
 
 For details on how to write WAF rules, please refer to [https://github.com/p0pr0ck5/lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf).
+
+### gRPC backend
+
+Since NGINX 1.13.10 it is possible to expose [gRPC services natively](http://nginx.org/en/docs/http/ngx_http_grpc_module.html)
+
+You only need to add the annotation `nginx.ingress.kubernetes.io/grpc-backend: "true"` to enable this feature. Additionally, if the gRPC service requires TLS `nginx.ingress.kubernetes.io/secure-backends: "true"`
+
+!!! Important
+    This feature requires HTTP2 to work which means we need to expose this service using HTTPS.
+Exposing a gRPC service using HTTP is not supported.
