@@ -408,10 +408,13 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	}
 
 	if location.ProxyPass.Address != "" || location.ProxyPass.Port != "" {
+		adr := location.ProxyPass.Address
 		if location.ProxyPass.ProxyToLocalNode {
-			upstreamName = fmt.Sprintf("%s:%s", os.Getenv("NODE_NAME"), location.ProxyPass.Port)
-		} else {
-			upstreamName = fmt.Sprintf("%s:%s", location.ProxyPass.Address, location.ProxyPass.Port)
+			adr = os.Getenv("NODE_NAME")
+		}
+
+		if adr != "" {
+			upstreamName = fmt.Sprintf("%s:%s", adr, location.ProxyPass.Port)
 		}
 	}
 
