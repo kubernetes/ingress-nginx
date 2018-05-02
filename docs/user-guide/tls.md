@@ -1,13 +1,4 @@
-# TLS
-
-- [Default SSL Certificate](#default-ssl-certificate)
-- [SSL Passthrough](#ssl-passthrough)
-- [HTTPS enforcement](#server-side-https-enforcement)
-- [HSTS](#http-strict-transport-security)
-- [Server-side HTTPS enforcement through redirect](#server-side-https-enforcement-through-redirect) 
-- [Kube-Lego](#automated-certificate-management-with-kube-lego)
-- [Default TLS Version and Ciphers](#default-tls-version-and-ciphers)
-- [Legacy TLS](#legacy-tls)
+# TLS/HTTPS
 
 ## TLS Secrets
 
