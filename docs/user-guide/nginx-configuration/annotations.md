@@ -7,6 +7,11 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
     Other types, such as boolean or numeric values must be quoted,
     i.e. `"true"`, `"false"`, `"100"`.
 
+!!! note
+    The annotation prefix can be changed using the
+    [`--annotations-prefix` command line argument](../cli-arguments.md),
+    but the default is `nginx.ingress.kubernetes.io`, as described in the
+    table below.
 
 |Name                       | type |
 |---------------------------|------|
