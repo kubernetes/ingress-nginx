@@ -1,15 +1,5 @@
 # Miscellaneous
 
-## Requirements
-
-The default backend is a service which handles all url paths and hosts the nginx controller doesn't understand (i.e., all the requests that are not mapped with an Ingress).
-Basically a default backend exposes two URLs:
-
-- `/healthz` that returns 200
-- `/` that returns 404
-
-The sub-directory [`/images/404-server`](https://github.com/kubernetes/ingress-nginx/tree/master/images/404-server) provides a service which satisfies the requirements for a default backend.  The sub-directory [`/images/custom-error-pages`](https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages) provides an additional service for the purpose of customizing the error pages served via the default backend.
-
 ## Source IP address
 
 By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of trusted external load balancer.

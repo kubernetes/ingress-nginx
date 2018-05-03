@@ -57,7 +57,7 @@ To disable this behavior use `hsts: "false"` in the configuration [ConfigMap][Co
 ## Server-side HTTPS enforcement through redirect
 
 By default the controller redirects HTTP clients to the HTTPS port
-443 using a 301 Moved Permanently response if TLS is enabled for that Ingress.
+443 using a 308 Permanent Redirect response if TLS is enabled for that Ingress.
 
 This can be disabled globally using `ssl-redirect: "false"` in the NGINX [config map][ConfigMap],
 or per-Ingress with the `nginx.ingress.kubernetes.io/ssl-redirect: "false"`
@@ -102,7 +102,7 @@ For instance, TLS 1.1+ is only enabled by default from Android 5.0 on. At the ti
 May 2018, [approximately 15% of Android devices](https://developer.android.com/about/dashboards/#Platform)
 are not compatible with nginx-ingress's default configuration.
 
-To change this default behavior, use a [ConfigMap].
+To change this default behavior, use a [ConfigMap][ConfigMap].
 
 A sample ConfigMap fragment to allow these older clients to connect could look something like the following:
 
