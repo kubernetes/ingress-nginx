@@ -1,21 +1,5 @@
 # Miscellaneous
 
-## Conventions
-
-Anytime we reference a tls secret, we mean (x509, pem encoded, RSA 2048, etc). You can generate such a certificate with:
-`openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE} -subj "/CN=${HOST}/O=${HOST}"`
-and create the secret via `kubectl create secret tls ${CERT_NAME} --key ${KEY_FILE} --cert ${CERT_FILE}`
-
-## Requirements
-
-The default backend is a service which handles all url paths and hosts the nginx controller doesn't understand (i.e., all the requests that are not mapped with an Ingress).
-Basically a default backend exposes two URLs:
-
-- `/healthz` that returns 200
-- `/` that returns 404
-
-The sub-directory [`/images/404-server`](https://github.com/kubernetes/ingress-nginx/tree/master/images/404-server) provides a service which satisfies the requirements for a default backend.  The sub-directory [`/images/custom-error-pages`](https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages) provides an additional service for the purpose of customizing the error pages served via the default backend.
-
 ## Source IP address
 
 By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of trusted external load balancer.
