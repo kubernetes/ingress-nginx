@@ -36,7 +36,7 @@
     
     
       
-        <title>Multiple Ingress controllers - NGINX Ingress Controller</title>
+        <title>Upgrading - NGINX Ingress Controller</title>
       
     
     
@@ -95,7 +95,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="drawer"></label>
     
-      <a href="#multiple-ingress-controllers" tabindex="1" class="md-skip">
+      <a href="#upgrading" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -121,7 +121,7 @@
                 NGINX Ingress Controller
               </span>
               <span class="md-header-nav__topic">
-                Multiple Ingress controllers
+                Upgrading
               </span>
             
           
@@ -214,7 +214,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../deploy/" title="Deployment" class="md-tabs__link">
+        <a href="../" title="Deployment" class="md-tabs__link md-tabs__link--active">
           Deployment
         </a>
       
@@ -231,7 +231,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../nginx-configuration/" title="User guide" class="md-tabs__link">
+        <a href="../../user-guide/nginx-configuration/" title="User guide" class="md-tabs__link">
           User guide
         </a>
       
@@ -321,10 +321,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
     
     <label class="md-nav__link" for="nav-2">
       Deployment
@@ -342,7 +344,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../deploy/" title="Installation Guide" class="md-nav__link">
+    <a href="../" title="Installation Guide" class="md-nav__link">
       Installation Guide
     </a>
   </li>
@@ -354,7 +356,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
+    <a href="../rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
   </li>
@@ -364,11 +366,56 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="../../deploy/upgrade/" title="Upgrading" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="toc">
+        Upgrading
+      </label>
+    
+    <a href="./" title="Upgrading" class="md-nav__link md-nav__link--active">
       Upgrading
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#without-helm" title="Without Helm" class="md-nav__link">
+    Without Helm
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-helm" title="With Helm" class="md-nav__link">
+    With Helm
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -381,12 +428,10 @@
       
       
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
     
     <label class="md-nav__link" for="nav-3">
       User guide
@@ -423,7 +468,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../nginx-configuration/" title="NGINX Configuration" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/" title="NGINX Configuration" class="md-nav__link">
       NGINX Configuration
     </a>
   </li>
@@ -435,7 +480,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../nginx-configuration/annotations/" title="Annotations" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/annotations/" title="Annotations" class="md-nav__link">
       Annotations
     </a>
   </li>
@@ -447,7 +492,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../nginx-configuration/configmap/" title="ConfigMaps" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/configmap/" title="ConfigMaps" class="md-nav__link">
       ConfigMaps
     </a>
   </li>
@@ -459,7 +504,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../nginx-configuration/custom-template/" title="Custom NGINX template" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/custom-template/" title="Custom NGINX template" class="md-nav__link">
       Custom NGINX template
     </a>
   </li>
@@ -471,7 +516,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../nginx-configuration/log-format/" title="Log format" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/log-format/" title="Log format" class="md-nav__link">
       Log format
     </a>
   </li>
@@ -488,7 +533,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../cli-arguments/" title="Command line arguments" class="md-nav__link">
+    <a href="../../user-guide/cli-arguments/" title="Command line arguments" class="md-nav__link">
       Command line arguments
     </a>
   </li>
@@ -500,7 +545,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../custom-errors/" title="Custom errors" class="md-nav__link">
+    <a href="../../user-guide/custom-errors/" title="Custom errors" class="md-nav__link">
       Custom errors
     </a>
   </li>
@@ -512,7 +557,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../default-backend/" title="Default backend" class="md-nav__link">
+    <a href="../../user-guide/default-backend/" title="Default backend" class="md-nav__link">
       Default backend
     </a>
   </li>
@@ -524,7 +569,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
+    <a href="../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
       Exposing TCP and UDP services
     </a>
   </li>
@@ -536,7 +581,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../external-articles/" title="External Articles" class="md-nav__link">
+    <a href="../../user-guide/external-articles/" title="External Articles" class="md-nav__link">
       External Articles
     </a>
   </li>
@@ -548,7 +593,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../miscellaneous/" title="Miscellaneous" class="md-nav__link">
+    <a href="../../user-guide/miscellaneous/" title="Miscellaneous" class="md-nav__link">
       Miscellaneous
     </a>
   </li>
@@ -558,49 +603,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="toc">
-    
-      
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="toc">
-        Multiple Ingress controllers
-      </label>
-    
-    <a href="./" title="Multiple Ingress controllers" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../../user-guide/multiple-ingress/" title="Multiple Ingress controllers" class="md-nav__link">
       Multiple Ingress controllers
     </a>
-    
-      
-<nav class="md-nav md-nav--secondary">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="toc">Table of contents</label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#multiple-ingress-nginx-controllers" title="Multiple ingress-nginx controllers" class="md-nav__link">
-    Multiple ingress-nginx controllers
-  </a>
-  
-</li>
-      
-      
-      
-      
-      
-    </ul>
-  
-</nav>
-    
   </li>
 
         
@@ -610,7 +617,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../nginx-status-page/" title="NGINX status page" class="md-nav__link">
+    <a href="../../user-guide/nginx-status-page/" title="NGINX status page" class="md-nav__link">
       NGINX status page
     </a>
   </li>
@@ -622,7 +629,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../tls/" title="TLS/HTTPS" class="md-nav__link">
+    <a href="../../user-guide/tls/" title="TLS/HTTPS" class="md-nav__link">
       TLS/HTTPS
     </a>
   </li>
@@ -653,7 +660,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../third-party-addons/modsecurity/" title="ModSecurity Web Application Firewall" class="md-nav__link">
+    <a href="../../user-guide/third-party-addons/modsecurity/" title="ModSecurity Web Application Firewall" class="md-nav__link">
       ModSecurity Web Application Firewall
     </a>
   </li>
@@ -665,7 +672,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../third-party-addons/opentracing/" title="OpenTracing" class="md-nav__link">
+    <a href="../../user-guide/third-party-addons/opentracing/" title="OpenTracing" class="md-nav__link">
       OpenTracing
     </a>
   </li>
@@ -1062,8 +1069,15 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#multiple-ingress-nginx-controllers" title="Multiple ingress-nginx controllers" class="md-nav__link">
-    Multiple ingress-nginx controllers
+  <a href="#without-helm" title="Without Helm" class="md-nav__link">
+    Without Helm
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-helm" title="With Helm" class="md-nav__link">
+    With Helm
   </a>
   
 </li>
@@ -1084,53 +1098,48 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/user-guide/multiple-ingress.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/deploy/upgrade.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="multiple-ingress-controllers">Multiple Ingress controllers<a class="headerlink" href="#multiple-ingress-controllers" title="Permanent link">&para;</a></h1>
-<p>If you're running multiple ingress controllers, or running on a cloud provider that natively handles ingress such as GKE,
-you need to specify the annotation <code class="codehilite">kubernetes.io/ingress.class: &quot;nginx&quot;</code> in all ingresses that you would like the ingress-nginx controller to claim.</p>
-<p>For instance,</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
-  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">kubernetes.io/ingress.class</span><span class="p p-Indicator">:</span> <span class="s">&quot;gce&quot;</span>
-</pre></div>
-
-
-<p>will target the GCE controller, forcing the nginx controller to ignore it, while an annotation like</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
-  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">kubernetes.io/ingress.class</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx&quot;</span>
-</pre></div>
-
-
-<p>will target the nginx controller, forcing the GCE controller to ignore it.</p>
-<p>To reiterate, setting the annotation to any value which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.
-If you are only running a single NGINX ingress controller, this can be achieved by setting the annotation to any value except "nginx" or an empty string.</p>
-<p>Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.</p>
+                <h1 id="upgrading">Upgrading<a class="headerlink" href="#upgrading" title="Permanent link">&para;</a></h1>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>Deploying multiple Ingress controllers and not specifying a class annotation will
-result in both or all controllers fighting to satisfy the Ingress, and all of them
-updating the Ingress status field in confusing ways.</p>
+<p>No matter the method you use for upgrading, <em>if you use template overrides,
+make sure your templates are compatible with the new version of ingress-nginx</em>.</p>
 </div>
-<h2 id="multiple-ingress-nginx-controllers">Multiple ingress-nginx controllers<a class="headerlink" href="#multiple-ingress-nginx-controllers" title="Permanent link">&para;</a></h2>
-<p>This mechanism also provides users the ability to run <em>multiple</em> NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).
-To do this, the option <code class="codehilite">--ingress-class</code> must be changed to a value unique for the cluster within the definition of the replication controller.
-Here is a partial example:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
+<h2 id="without-helm">Without Helm<a class="headerlink" href="#without-helm" title="Permanent link">&para;</a></h2>
+<p>To upgrade your ingress-nginx installation, it should be enough to change the version of the image
+in the controller Deployment.</p>
+<p>I.e. if your deployment resource looks like (partial example):</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Deployment</span>
+<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-ingress-controller</span>
+  <span class="l l-Scalar l-Scalar-Plain">namespace</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ingress-nginx</span>
+<span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">replicas</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+  <span class="l l-Scalar l-Scalar-Plain">selector</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
   <span class="l l-Scalar l-Scalar-Plain">template</span><span class="p p-Indicator">:</span>
-     <span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-       <span class="l l-Scalar l-Scalar-Plain">containers</span><span class="p p-Indicator">:</span>
-         <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-ingress-internal-controller</span>
-           <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
-             <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/nginx-ingress-controller</span>
-             <span class="p p-Indicator">-</span> <span class="s">&#39;--default-backend-service=ingress/nginx-ingress-default-backend&#39;</span>
-             <span class="p p-Indicator">-</span> <span class="s">&#39;--election-id=ingress-controller-leader-internal&#39;</span>
-             <span class="p p-Indicator">-</span> <span class="s">&#39;--ingress-class=nginx-internal&#39;</span>
-             <span class="p p-Indicator">-</span> <span class="s">&#39;--configmap=ingress/nginx-ingress-internal-controller&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">containers</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-ingress-controller</span>
+          <span class="l l-Scalar l-Scalar-Plain">image</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0</span>
+          <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+
+
+<p>simply change the <code class="codehilite">0.9.0</code> tag to the version you wish to upgrade to.
+The easiest way to do this is e.g. (do note you may need to change the name parameter according to your installation):</p>
+<div class="codehilite"><pre><span></span>kubectl set image deployment/nginx-ingress-controller \
+  nginx-ingress-controller=nginx:quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.14.0
+</pre></div>
+
+
+<p>For interactive editing, use <code class="codehilite">kubectl edit deployment nginx-ingress-controller</code>.</p>
+<h2 id="with-helm">With Helm<a class="headerlink" href="#with-helm" title="Permanent link">&para;</a></h2>
+<p>If you installed ingress-nginx using the Helm command in the deployment docs so its name is <code class="codehilite">ngx-ingress</code>,
+you should be able to upgrade using</p>
+<div class="codehilite"><pre><span></span>helm upgrade --reuse-values ngx-ingress stable/nginx-ingress
 </pre></div>
                 
                   
@@ -1152,7 +1161,7 @@ Here is a partial example:</p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../miscellaneous/" title="Miscellaneous" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../rbac/" title="Role Based Access Control (RBAC)" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1161,19 +1170,19 @@ Here is a partial example:</p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Miscellaneous
+                Role Based Access Control (RBAC)
               </span>
             </div>
           </a>
         
         
-          <a href="../nginx-status-page/" title="NGINX status page" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../../user-guide/nginx-configuration/" title="NGINX Configuration" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                NGINX status page
+                NGINX Configuration
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
