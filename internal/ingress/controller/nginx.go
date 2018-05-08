@@ -516,7 +516,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		if srv.RedirectFromToWWW {
 			var n string
 			if strings.HasPrefix(srv.Hostname, "www.") {
-				n = strings.TrimLeft(srv.Hostname, "www.")
+				n = strings.TrimPrefix(srv.Hostname, "www.")
 			} else {
 				n = fmt.Sprintf("www.%v", srv.Hostname)
 			}
