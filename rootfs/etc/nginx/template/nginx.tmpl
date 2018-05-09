@@ -182,6 +182,7 @@ http {
     # $namespace
     # $ingress_name
     # $service_name
+    # $service_port
     log_format upstreaminfo {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ buildLogFormatUpstream $cfg }}';
 
     {{/* map urls that should not appear in access.log */}}
@@ -663,6 +664,7 @@ stream {
             proxy_set_header       X-Namespace        $namespace;
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
+            proxy_set_header       X-Service-Port     $service_port;
 
             rewrite                (.*) / break;
 
@@ -837,6 +839,7 @@ stream {
             set $namespace      "{{ $ing.Namespace }}";
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
+            set $service_port   "{{ $location.Port }}";
 
             {{ if not $all.DisableLua }}
             rewrite_by_lua_block {
@@ -1090,6 +1093,7 @@ stream {
             proxy_set_header       X-Namespace        $namespace;
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
+            proxy_set_header       X-Service-Port     $service_port;
             {{ end }}
 
             {{ if not (empty $location.Backend) }}
