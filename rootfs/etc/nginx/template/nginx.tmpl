@@ -840,6 +840,7 @@ stream {
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
             set $service_port   "{{ $location.Port }}";
+            set $location_path  "{{ $location.Path }}";
 
             {{ if not $all.DisableLua }}
             rewrite_by_lua_block {
