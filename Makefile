@@ -172,7 +172,7 @@ e2e-test:
 .PHONY: cover
 cover:
 	@rm -rf coverage.txt
-	@for d in `go list ./... | grep -v vendor | grep -v '/test/e2e'`; do \
+	@for d in `go list ./... | grep -v vendor | grep -v '/test/e2e' | grep -v 'images/grpc-fortune-teller'`; do \
 		t=$$(date +%s); \
 		go test -coverprofile=cover.out -covermode=atomic $$d || exit 1; \
 		echo "Coverage test $$d took $$(($$(date +%s)-t)) seconds"; \
