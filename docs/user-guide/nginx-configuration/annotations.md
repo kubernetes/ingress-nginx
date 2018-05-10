@@ -215,7 +215,7 @@ Using this annotation you can add additional configuration to the NGINX location
 
 ```yaml
 nginx.ingress.kubernetes.io/configuration-snippet: |
-  more_set_headers "Request-Id: $req_id";
+  more_set_input_headers "X-Request-ID: $request_id";
 ```
 
 ### Default Backend
