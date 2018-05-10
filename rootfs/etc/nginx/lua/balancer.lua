@@ -3,25 +3,21 @@ local json = require("cjson")
 local configuration = require("configuration")
 local util = require("util")
 local lrucache = require("resty.lrucache")
-local resty_lock = require("resty.lock")
 local ewma = require("balancer.ewma")
 local sticky = require("sticky")
-local chash = require("balancer.chash")
+local resty_balancer = require("balancer.resty")
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
 -- it will take <the delay until controller POSTed the backend object to the Nginx endpoint> + BACKENDS_SYNC_INTERVAL
 local BACKENDS_SYNC_INTERVAL = 1
 
-local ROUND_ROBIN_LOCK_KEY = "round_robin"
 local DEFAULT_LB_ALG = "round_robin"
-
-local round_robin_state = ngx.shared.round_robin_state
 
 local _M = {}
 
-local round_robin_lock = resty_lock:new("locks", {timeout = 0, exptime = 0.1})
-
+-- TODO(elvinefendi) we can probably avoid storing all backends here. We already store them in their respective
+-- load balancer implementations
 local backends, err = lrucache.new(1024)
 if not backends then
   return error("failed to create the cache for backends: " .. (err or "unknown"))
@@ -64,42 +60,31 @@ local function balance()
   end
 
   if backend["upstream-hash-by"] then
-    local endpoint = chash.balance(backend)
+    local endpoint = resty_balancer.balance(backend)
+    if not endpoint then
+      return nil, nil
+    end
+
     return endpoint.address, endpoint.port
   end
 
-  if lb_alg == "ip_hash" then
-    -- TODO(elvinefendi) implement me
-    return backend.endpoints[0].address, backend.endpoints[0].port
-  elseif lb_alg == "ewma" then
+  if lb_alg == "ewma" then
     local endpoint = ewma.balance(backend.endpoints)
     return endpoint.address, endpoint.port
   end
 
   if lb_alg ~= DEFAULT_LB_ALG then
-    ngx.log(ngx.WARN, tostring(lb_alg) .. " is not supported, falling back to " .. DEFAULT_LB_ALG)
+    ngx.log(ngx.WARN, string.format("%s is not supported, falling back to %s", tostring(lb_alg), DEFAULT_LB_ALG))
   end
 
-  -- Round-Robin
-  round_robin_lock:lock(backend.name .. ROUND_ROBIN_LOCK_KEY)
-  local last_index = round_robin_state:get(backend.name)
-  local index, endpoint = next(backend.endpoints, last_index)
-  if not index then
-    index = 1
-    endpoint = backend.endpoints[index]
+  local endpoint = resty_balancer.balance(backend)
+  if not endpoint then
+    return nil, nil
   end
-  local success, forcible
-  success, err, forcible = round_robin_state:set(backend.name, index)
-  if not success then
-    ngx.log(ngx.WARN, "round_robin_state:set failed " .. err)
-  end
-  if forcible then
-    ngx.log(ngx.WARN, "round_robin_state:set valid items forcibly overwritten")
-  end
+
   if is_sticky then
     sticky.set_endpoint(endpoint, backend)
   end
-  round_robin_lock:unlock(backend.name .. ROUND_ROBIN_LOCK_KEY)
 
   return endpoint.address, endpoint.port
 end
@@ -107,22 +92,17 @@ end
 local function sync_backend(backend)
   backends:set(backend.name, backend)
 
-  -- also reset the respective balancer state since backend has changed
-  round_robin_state:delete(backend.name)
+  local lb_alg = backend["load-balance"] or DEFAULT_LB_ALG
+
+  if backend["upstream-hash-by"] or lb_alg == "round_robin" then
+    resty_balancer.reinit(backend)
+  end
 
   -- TODO: Reset state of EWMA per backend
-  local lb_alg = backend["load-balance"] or DEFAULT_LB_ALG
   if lb_alg == "ewma" then
     ngx.shared.balancer_ewma:flush_all()
     ngx.shared.balancer_ewma_last_touched_at:flush_all()
   end
-
-  -- reset chash for this backend
-  if backend["upstream-hash-by"] then
-    chash.reinit(backend)
-  end
-
-  ngx.log(ngx.INFO, "syncronization completed for: " .. backend.name)
 end
 
 local function sync_backends()
@@ -161,7 +141,7 @@ end
 function _M.init_worker()
   _, err = ngx.timer.every(BACKENDS_SYNC_INTERVAL, sync_backends)
   if err then
-    ngx.log(ngx.ERR, "error when setting up timer.every for sync_backends: " .. tostring(err))
+    ngx.log(ngx.ERR, string.format("error when setting up timer.every for sync_backends: %s", tostring(err)))
   end
 end
 
@@ -186,12 +166,10 @@ function _M.call()
   local ok
   ok, err = ngx_balancer.set_current_peer(host, port)
   if ok then
-    ngx.log(
-      ngx.INFO,
-      "current peer is set to " .. host .. ":" .. port .. " using lb_alg " .. tostring(get_current_lb_alg())
-    )
+    ngx.log(ngx.INFO,
+      string.format("current peer is set to %s:%s using lb_alg %s", host, port, tostring(get_current_lb_alg())))
   else
-    ngx.log(ngx.ERR, "error while setting current upstream peer to: " .. tostring(err))
+    ngx.log(ngx.ERR, string.format("error while setting current upstream peer to %s", tostring(err)))
   end
 end
 
