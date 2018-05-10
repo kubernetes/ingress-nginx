@@ -1,5 +1,13 @@
 local _M = {}
 local string_len = string.len
+local string_sub = string.sub
+
+-- given an Nginx variable i.e $request_uri
+-- it returns value of ngx.var[request_uri]
+function _M.lua_ngx_var(ngx_var)
+  local var_name = string_sub(ngx_var, 2)
+  return ngx.var[var_name]
+end
 
 function _M.split_pair(pair, seperator)
   local i = pair:find(seperator)
