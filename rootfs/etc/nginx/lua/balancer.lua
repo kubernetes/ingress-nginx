@@ -61,6 +61,10 @@ local function balance()
 
   if backend["upstream-hash-by"] then
     local endpoint = resty_balancer.balance(backend)
+    if not endpoint then
+      return nil, nil
+    end
+
     return endpoint.address, endpoint.port
   end
 
@@ -90,14 +94,15 @@ local function sync_backend(backend)
 
   local lb_alg = backend["load-balance"] or DEFAULT_LB_ALG
 
+  if backend["upstream-hash-by"] or lb_alg == "round_robin" then
+    resty_balancer.reinit(backend)
+  end
+
   -- TODO: Reset state of EWMA per backend
   if lb_alg == "ewma" then
     ngx.shared.balancer_ewma:flush_all()
     ngx.shared.balancer_ewma_last_touched_at:flush_all()
-    return
   end
-
-  resty_balancer.reinit(backend)
 end
 
 local function sync_backends()
