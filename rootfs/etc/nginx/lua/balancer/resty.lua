@@ -32,6 +32,7 @@ end
 function _M.balance(backend)
   local instance = instances[backend.name]
   if not instance then
+    ngx.log(ngx.ERR, "no LB algorithm instance was found")
     return nil
   end
 
