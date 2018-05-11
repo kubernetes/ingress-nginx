@@ -29,11 +29,6 @@ If you are only running a single NGINX ingress controller, this can be achieved 
 
 Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.
 
-!!! important
-    Deploying multiple Ingress controllers and not specifying a class annotation will
-    result in both or all controllers fighting to satisfy the Ingress, and all of them
-    updating the Ingress status field in confusing ways.
-
 ## Multiple ingress-nginx controllers
 
 This mechanism also provides users the ability to run _multiple_ NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).
@@ -53,3 +48,11 @@ spec:
              - '--ingress-class=nginx-internal'
              - '--configmap=ingress/nginx-ingress-internal-controller'
 ```
+
+## !!! important
+
+Deploying multiple Ingress controllers, of different types (e.g., `ingress-nginx` & `gce`), and not specifying a class annotation will
+result in both or all controllers fighting to satisfy the Ingress, and all of them racing to update Ingress status field in confusing ways.
+
+ When running multiple ingress-nginx controllers, it will only process an unset class annotation if one of the controllers uses the default
+ `--ingress-class` value (see `IsValid` method in `internal/ingress/annotations/class/main.go`), otherwise the class annotation become required.
