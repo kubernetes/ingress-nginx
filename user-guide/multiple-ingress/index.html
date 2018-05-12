@@ -593,6 +593,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#important" title="!!! important" class="md-nav__link">
+    !!! important
+  </a>
+  
+</li>
+      
       
       
       
@@ -958,6 +965,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../examples/grpc/README/" title="gRPC" class="md-nav__link">
+      gRPC
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../examples/multi-tls/README/" title="Multi TLS certificate termination" class="md-nav__link">
       Multi TLS certificate termination
     </a>
@@ -1068,6 +1087,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#important" title="!!! important" class="md-nav__link">
+    !!! important
+  </a>
+  
+</li>
+      
       
       
       
@@ -1110,12 +1136,6 @@ you need to specify the annotation <code class="codehilite">kubernetes.io/ingres
 <p>To reiterate, setting the annotation to any value which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.
 If you are only running a single NGINX ingress controller, this can be achieved by setting the annotation to any value except "nginx" or an empty string.</p>
 <p>Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>Deploying multiple Ingress controllers and not specifying a class annotation will
-result in both or all controllers fighting to satisfy the Ingress, and all of them
-updating the Ingress status field in confusing ways.</p>
-</div>
 <h2 id="multiple-ingress-nginx-controllers">Multiple ingress-nginx controllers<a class="headerlink" href="#multiple-ingress-nginx-controllers" title="Permanent link">&para;</a></h2>
 <p>This mechanism also provides users the ability to run <em>multiple</em> NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).
 To do this, the option <code class="codehilite">--ingress-class</code> must be changed to a value unique for the cluster within the definition of the replication controller.
@@ -1132,6 +1152,13 @@ Here is a partial example:</p>
              <span class="p p-Indicator">-</span> <span class="s">&#39;--ingress-class=nginx-internal&#39;</span>
              <span class="p p-Indicator">-</span> <span class="s">&#39;--configmap=ingress/nginx-ingress-internal-controller&#39;</span>
 </pre></div>
+
+
+<h2 id="important">!!! important<a class="headerlink" href="#important" title="Permanent link">&para;</a></h2>
+<p>Deploying multiple Ingress controllers, of different types (e.g., <code class="codehilite">ingress-nginx</code> &amp; <code class="codehilite">gce</code>), and not specifying a class annotation will
+result in both or all controllers fighting to satisfy the Ingress, and all of them racing to update Ingress status field in confusing ways.</p>
+<p>When running multiple ingress-nginx controllers, it will only process an unset class annotation if one of the controllers uses the default
+ <code class="codehilite">--ingress-class</code> value (see <code class="codehilite">IsValid</code> method in <code class="codehilite">internal/ingress/annotations/class/main.go</code>), otherwise the class annotation become required.</p>
                 
                   
                 
