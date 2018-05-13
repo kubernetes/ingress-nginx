@@ -20,7 +20,7 @@ http_archive(
 load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains")
 load("@com_github_scele_rules_go_dep//dep:dep.bzl", "dep_import")
 
-go_register_toolchains(go_version = "1.9")
+go_register_toolchains(go_version = "1.10.1")
 
 go_rules_dependencies()
 
