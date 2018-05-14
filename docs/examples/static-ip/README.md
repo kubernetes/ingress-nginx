@@ -4,10 +4,10 @@ This example demonstrates how to assign a static-ip to an Ingress on through the
 
 ## Prerequisites
 
-You need a [TLS cert](/docs/examples/PREREQUISITES.md#tls-certificates) and a [test HTTP service](/docs/examples/PREREQUISITES.md#test-http-service) for this example.
+You need a [TLS cert](../PREREQUISITES.md#tls-certificates) and a [test HTTP service](../PREREQUISITES.md#test-http-service) for this example.
 You will also need to make sure your Ingress targets exactly one Ingress
-controller by specifying the [ingress.class annotation](/README.md#annotation-ingressclass),
-and that you have an ingress controller [running](/deploy/README.md) in your cluster.
+controller by specifying the [ingress.class annotation](../../user-guide/multiple-ingress.md),
+and that you have an ingress controller [running](../../deploy) in your cluster.
 
 ## Acquiring an IP
 
@@ -79,9 +79,9 @@ NAME            HOSTS     ADDRESS           PORTS     AGE
 nginx-ingress   *         104.154.109.191   80, 443   13m
 ```
 
-Note that unlike the GCE Ingress, the same loadbalancer IP is shared amongst all
-Ingresses, because all requests are proxied through the same set of nginx
-controllers.
+> Note that unlike the GCE Ingress, the same loadbalancer IP is shared amongst all
+> Ingresses, because all requests are proxied through the same set of nginx
+> controllers.
 
 ## Promote ephemeral to static IP
 

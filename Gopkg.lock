@@ -362,7 +362,11 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["ssh/terminal"]
+  packages = [
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "ssh/terminal"
+  ]
   revision = "6a293f2d4b14b8e6d3f0539e383f6d0d30fce3fd"
 
 [[projects]]
@@ -492,10 +496,10 @@
   version = "v1.7.2"
 
 [[projects]]
-  name = "gopkg.in/fsnotify.v1"
+  name = "gopkg.in/fsnotify/fsnotify.v1"
   packages = ["."]
-  revision = "629574ca2a5df945712d3079857300b5e4da0236"
-  version = "v1.4.2"
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  version = "v1.4.7"
 
 [[projects]]
   name = "gopkg.in/go-playground/pool.v3"
@@ -508,6 +512,17 @@
   packages = ["."]
   revision = "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"
   version = "v0.9.0"
+
+[[projects]]
+  name = "gopkg.in/square/go-jose.v2"
+  packages = [
+    ".",
+    "cipher",
+    "json",
+    "jwt"
+  ]
+  revision = "76dd09796242edb5b897103a75df2645c028c960"
+  version = "v2.1.6"
 
 [[projects]]
   branch = "v2"
@@ -547,7 +562,7 @@
     "storage/v1alpha1",
     "storage/v1beta1"
   ]
-  revision = "kubernetes-1.10.0-rc.1"
+  revision = "kubernetes-1.10.1"
 
 [[projects]]
   name = "k8s.io/apiextensions-apiserver"
@@ -559,7 +574,7 @@
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
     "pkg/features"
   ]
-  revision = "kubernetes-1.10.0-rc.1"
+  revision = "kubernetes-1.10.1"
 
 [[projects]]
   name = "k8s.io/apimachinery"
@@ -617,10 +632,9 @@
     "third_party/forked/golang/netutil",
     "third_party/forked/golang/reflect"
   ]
-  revision = "kubernetes-1.10.0-rc.1"
+  revision = "kubernetes-1.10.1"
 
 [[projects]]
-  branch = "master"
   name = "k8s.io/apiserver"
   packages = [
     "pkg/authentication/authenticator",
@@ -631,7 +645,7 @@
     "pkg/util/feature",
     "pkg/util/logs"
   ]
-  revision = "7001bc4df8883d4a0ec84cd4b2117655a0009b6c"
+  revision = "kubernetes-1.10.1"
 
 [[projects]]
   name = "k8s.io/client-go"
@@ -800,7 +814,7 @@
     "util/retry",
     "util/workqueue"
   ]
-  revision = "kubernetes-1.10.0-rc.1"
+  revision = "kubernetes-1.10.1"
 
 [[projects]]
   branch = "master"
@@ -829,14 +843,14 @@
     "pkg/controller",
     "pkg/features",
     "pkg/fieldpath",
-    "pkg/kubelet/apis",
-    "pkg/kubelet/apis/cri/v1alpha1/runtime",
+    "pkg/kubelet/apis/cri/runtime/v1alpha2",
     "pkg/kubelet/container",
     "pkg/kubelet/types",
     "pkg/kubelet/util/format",
     "pkg/kubelet/util/ioutils",
     "pkg/kubelet/util/sliceutils",
     "pkg/master/ports",
+    "pkg/scheduler/api",
     "pkg/security/apparmor",
     "pkg/serviceaccount",
     "pkg/util/file",
@@ -851,10 +865,11 @@
     "pkg/util/sysctl",
     "pkg/util/taints",
     "pkg/volume",
-    "pkg/volume/util",
+    "pkg/volume/util/fs",
+    "pkg/volume/util/recyclerclient",
     "third_party/forked/golang/expansion"
   ]
-  revision = "master"
+  revision = "v1.10.1"
 
 [[projects]]
   branch = "master"
@@ -865,6 +880,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "37155c2e5c2212237cff4f2cc220127e9aff6205e2b7cd05af11c42d4d0062ea"
+  inputs-digest = "62df75064eae4ba4c59404c14d995f4d54774da2675b33295f8a14088886fa82"
   solver-name = "gps-cdcl"
   solver-version = 1

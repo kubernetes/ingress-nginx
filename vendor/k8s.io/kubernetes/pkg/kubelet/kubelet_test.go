@@ -52,6 +52,7 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/gpu"
 	"k8s.io/kubernetes/pkg/kubelet/images"
 	"k8s.io/kubernetes/pkg/kubelet/lifecycle"
+	"k8s.io/kubernetes/pkg/kubelet/logs"
 	"k8s.io/kubernetes/pkg/kubelet/network"
 	nettest "k8s.io/kubernetes/pkg/kubelet/network/testing"
 	"k8s.io/kubernetes/pkg/kubelet/pleg"
@@ -72,7 +73,7 @@ import (
 	"k8s.io/kubernetes/pkg/volume"
 	_ "k8s.io/kubernetes/pkg/volume/host_path"
 	volumetest "k8s.io/kubernetes/pkg/volume/testing"
-	"k8s.io/kubernetes/pkg/volume/util/volumehelper"
+	"k8s.io/kubernetes/pkg/volume/util"
 )
 
 func init() {
@@ -127,12 +128,12 @@ func newTestKubelet(t *testing.T, controllerAttachDetachEnabled bool) *TestKubel
 	imageList := []kubecontainer.Image{
 		{
 			ID:       "abc",
-			RepoTags: []string{"gcr.io/google_containers:v1", "gcr.io/google_containers:v2"},
+			RepoTags: []string{"k8s.gcr.io:v1", "k8s.gcr.io:v2"},
 			Size:     123,
 		},
 		{
 			ID:       "efg",
-			RepoTags: []string{"gcr.io/google_containers:v3", "gcr.io/google_containers:v4"},
+			RepoTags: []string{"k8s.gcr.io:v3", "k8s.gcr.io:v4"},
 			Size:     456,
 		},
 	}
@@ -256,12 +257,22 @@ func newTestKubeletWithImageList(
 		HighThresholdPercent: 90,
 		LowThresholdPercent:  80,
 	}
-	imageGCManager, err := images.NewImageGCManager(fakeRuntime, kubelet.StatsProvider, fakeRecorder, fakeNodeRef, fakeImageGCPolicy)
+	imageGCManager, err := images.NewImageGCManager(fakeRuntime, kubelet.StatsProvider, fakeRecorder, fakeNodeRef, fakeImageGCPolicy, "")
 	assert.NoError(t, err)
 	kubelet.imageManager = &fakeImageGCManager{
 		fakeImageService: fakeRuntime,
 		ImageGCManager:   imageGCManager,
 	}
+	kubelet.containerLogManager = logs.NewStubContainerLogManager()
+	containerGCPolicy := kubecontainer.ContainerGCPolicy{
+		MinAge:             time.Duration(0),
+		MaxPerPodContainer: 1,
+		MaxContainers:      -1,
+	}
+	containerGC, err := kubecontainer.NewContainerGC(fakeRuntime, containerGCPolicy, kubelet.sourcesReady)
+	assert.NoError(t, err)
+	kubelet.containerGC = containerGC
+
 	fakeClock := clock.NewFakeClock(time.Now())
 	kubelet.backOff = flowcontrol.NewBackOff(time.Second, time.Minute)
 	kubelet.backOff.Clock = fakeClock
@@ -333,8 +344,6 @@ func newTestPods(count int) []*v1.Pod {
 	}
 	return pods
 }
-
-var emptyPodUIDs map[types.UID]kubetypes.SyncPodType
 
 func TestSyncLoopAbort(t *testing.T) {
 	testKubelet := newTestKubelet(t, false /* controllerAttachDetachEnabled */)
@@ -583,8 +592,10 @@ func TestHandlePluginResources(t *testing.T) {
 	kl := testKubelet.kubelet
 
 	adjustedResource := v1.ResourceName("domain1.com/adjustedResource")
-	unadjustedResouce := v1.ResourceName("domain2.com/unadjustedResouce")
+	emptyResource := v1.ResourceName("domain2.com/emptyResource")
+	missingResource := v1.ResourceName("domain2.com/missingResource")
 	failedResource := v1.ResourceName("domain2.com/failedResource")
+	resourceQuantity0 := *resource.NewQuantity(int64(0), resource.DecimalSI)
 	resourceQuantity1 := *resource.NewQuantity(int64(1), resource.DecimalSI)
 	resourceQuantity2 := *resource.NewQuantity(int64(2), resource.DecimalSI)
 	resourceQuantityInvalid := *resource.NewQuantity(int64(-1), resource.DecimalSI)
@@ -592,9 +603,9 @@ func TestHandlePluginResources(t *testing.T) {
 	nodes := []*v1.Node{
 		{ObjectMeta: metav1.ObjectMeta{Name: testKubeletHostname},
 			Status: v1.NodeStatus{Capacity: v1.ResourceList{}, Allocatable: v1.ResourceList{
-				adjustedResource:  resourceQuantity1,
-				unadjustedResouce: resourceQuantity1,
-				v1.ResourcePods:   allowedPodQuantity,
+				adjustedResource: resourceQuantity1,
+				emptyResource:    resourceQuantity0,
+				v1.ResourcePods:  allowedPodQuantity,
 			}}},
 	}
 	kl.nodeInfo = testNodeInfo{nodes: nodes}
@@ -607,6 +618,7 @@ func TestHandlePluginResources(t *testing.T) {
 		// quantity unchanged.
 		updateResourceMap := map[v1.ResourceName]resource.Quantity{
 			adjustedResource: resourceQuantity2,
+			emptyResource:    resourceQuantity0,
 			failedResource:   resourceQuantityInvalid,
 		}
 		pod := attrs.Pod
@@ -634,7 +646,7 @@ func TestHandlePluginResources(t *testing.T) {
 
 	// pod requiring adjustedResource can be successfully allocated because updatePluginResourcesFunc
 	// adjusts node.allocatableResource for this resource to a sufficient value.
-	fittingPodspec := v1.PodSpec{NodeName: string(kl.nodeName),
+	fittingPodSpec := v1.PodSpec{NodeName: string(kl.nodeName),
 		Containers: []v1.Container{{Resources: v1.ResourceRequirements{
 			Limits: v1.ResourceList{
 				adjustedResource: resourceQuantity2,
@@ -644,14 +656,30 @@ func TestHandlePluginResources(t *testing.T) {
 			},
 		}}},
 	}
-	// pod requiring unadjustedResouce with insufficient quantity will still fail PredicateAdmit.
-	exceededPodSpec := v1.PodSpec{NodeName: string(kl.nodeName),
+	// pod requiring emptyResource (extended resources with 0 allocatable) will
+	// not pass PredicateAdmit.
+	emptyPodSpec := v1.PodSpec{NodeName: string(kl.nodeName),
 		Containers: []v1.Container{{Resources: v1.ResourceRequirements{
 			Limits: v1.ResourceList{
-				unadjustedResouce: resourceQuantity2,
+				emptyResource: resourceQuantity2,
 			},
 			Requests: v1.ResourceList{
-				unadjustedResouce: resourceQuantity2,
+				emptyResource: resourceQuantity2,
+			},
+		}}},
+	}
+	// pod requiring missingResource will pass PredicateAdmit.
+	//
+	// Extended resources missing in node status are ignored in PredicateAdmit.
+	// This is required to support extended resources that are not managed by
+	// device plugin, such as cluster-level resources.
+	missingPodSpec := v1.PodSpec{NodeName: string(kl.nodeName),
+		Containers: []v1.Container{{Resources: v1.ResourceRequirements{
+			Limits: v1.ResourceList{
+				missingResource: resourceQuantity2,
+			},
+			Requests: v1.ResourceList{
+				missingResource: resourceQuantity2,
 			},
 		}}},
 	}
@@ -666,21 +694,18 @@ func TestHandlePluginResources(t *testing.T) {
 			},
 		}}},
 	}
-	pods := []*v1.Pod{
-		podWithUIDNameNsSpec("123", "fittingpod", "foo", fittingPodspec),
-		podWithUIDNameNsSpec("456", "exceededpod", "foo", exceededPodSpec),
-		podWithUIDNameNsSpec("789", "failedpod", "foo", failedPodSpec),
-	}
-	// The latter two pod should be rejected.
-	fittingPod := pods[0]
-	exceededPod := pods[1]
-	failedPod := pods[2]
 
-	kl.HandlePodAdditions(pods)
+	fittingPod := podWithUIDNameNsSpec("1", "fittingpod", "foo", fittingPodSpec)
+	emptyPod := podWithUIDNameNsSpec("2", "emptypod", "foo", emptyPodSpec)
+	missingPod := podWithUIDNameNsSpec("3", "missingpod", "foo", missingPodSpec)
+	failedPod := podWithUIDNameNsSpec("4", "failedpod", "foo", failedPodSpec)
+
+	kl.HandlePodAdditions([]*v1.Pod{fittingPod, emptyPod, missingPod, failedPod})
 
 	// Check pod status stored in the status map.
 	checkPodStatus(t, kl, fittingPod, v1.PodPending)
-	checkPodStatus(t, kl, exceededPod, v1.PodFailed)
+	checkPodStatus(t, kl, emptyPod, v1.PodFailed)
+	checkPodStatus(t, kl, missingPod, v1.PodPending)
 	checkPodStatus(t, kl, failedPod, v1.PodFailed)
 }
 
@@ -733,7 +758,7 @@ func TestValidateContainerLogStatus(t *testing.T) {
 						Running: &v1.ContainerStateRunning{},
 					},
 					LastTerminationState: v1.ContainerState{
-						Terminated: &v1.ContainerStateTerminated{},
+						Terminated: &v1.ContainerStateTerminated{ContainerID: "docker://fakeid"},
 					},
 				},
 			},
@@ -761,8 +786,50 @@ func TestValidateContainerLogStatus(t *testing.T) {
 					},
 				},
 			},
+			success:  false,
+			pSuccess: false,
+		},
+		{
+			statuses: []v1.ContainerStatus{
+				{
+					Name: containerName,
+					State: v1.ContainerState{
+						Terminated: &v1.ContainerStateTerminated{ContainerID: "docker://fakeid"},
+					},
+				},
+			},
 			success:  true,
 			pSuccess: false,
+		},
+		{
+			statuses: []v1.ContainerStatus{
+				{
+					Name: containerName,
+					State: v1.ContainerState{
+						Terminated: &v1.ContainerStateTerminated{},
+					},
+					LastTerminationState: v1.ContainerState{
+						Terminated: &v1.ContainerStateTerminated{},
+					},
+				},
+			},
+			success:  false,
+			pSuccess: false,
+		},
+		{
+			statuses: []v1.ContainerStatus{
+				{
+					Name: containerName,
+					State: v1.ContainerState{
+						Terminated: &v1.ContainerStateTerminated{},
+					},
+					LastTerminationState: v1.ContainerState{
+						Terminated: &v1.ContainerStateTerminated{ContainerID: "docker://fakeid"},
+					},
+				},
+			},
+			success:  true,
+			pSuccess: true,
 		},
 		{
 			statuses: []v1.ContainerStatus{
@@ -2092,7 +2159,7 @@ func waitForVolumeUnmount(
 		func() (bool, error) {
 			// Verify volumes detached
 			podVolumes = volumeManager.GetMountedVolumesForPod(
-				volumehelper.GetUniquePodName(pod))
+				util.GetUniquePodName(pod))
 
 			if len(podVolumes) != 0 {
 				return false, nil

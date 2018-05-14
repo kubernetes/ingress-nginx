@@ -33,8 +33,8 @@ var luaRestyWAFModes = map[string]bool{"ACTIVE": true, "INACTIVE": true, "SIMULA
 type Config struct {
 	Mode               string   `json:"mode"`
 	Debug              bool     `json:"debug"`
-	IgnoredRuleSets    []string `json: "ignored-rulesets"`
-	ExtraRulesetString string   `json: "extra-ruleset-string"`
+	IgnoredRuleSets    []string `json:"ignored-rulesets"`
+	ExtraRulesetString string   `json:"extra-ruleset-string"`
 }
 
 // Equal tests for equality between two Config types

@@ -16,6 +16,11 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+if [ "$COMPONENT" == "docs" ]; then
+    echo "Skipping because we are publishing docs"
+    exit 0
+fi
+
 if [ $# -eq "1" ]
 then
     export ARCH=$1
@@ -25,11 +30,6 @@ source $DIR/common.sh
 
 echo "Login to Docker Hub..."
 docker login --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD >/dev/null 2>&1
-
-if [ $# -eq "1" ]
-then
-    export ARCH=$1
-fi
 
 case "$COMPONENT" in
 "ingress-controller")

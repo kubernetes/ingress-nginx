@@ -13,10 +13,10 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.41
+TAG ?= 0.45
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
-DOCKER ?= gcloud docker --
+DOCKER ?= docker
 
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
 SED_I?=sed -i

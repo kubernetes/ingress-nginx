@@ -19,7 +19,7 @@ spec:
       serviceAccountName: nginx-ingress-serviceaccount
       containers:
         - name: nginx-ingress-controller
-          image: shopify/nginx-ingress-controller:0.12.0
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.14.0
           args:
             - /nginx-ingress-controller
             - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
@@ -60,3 +60,5 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
+          securityContext:
+            runAsNonRoot: false

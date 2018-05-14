@@ -18,10 +18,10 @@ all: all-container
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.12.0
+TAG?=0.14.0
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
-DOCKER?=gcloud docker --
+DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
@@ -45,12 +45,14 @@ ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
 QEMUVERSION=v2.9.1-1
 
+BUSTED_ARGS=-v --pattern=_test
+
 IMGNAME = nginx-ingress-controller
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.41
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.45
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
@@ -115,7 +117,7 @@ endif
 	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
 
 ifeq ($(ARCH), amd64)
-	# This is for to maintain the backward compatibility
+	# This is for maintaining backward compatibility
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
@@ -135,6 +137,7 @@ clean:
 
 .PHONE: code-generator
 code-generator:
+		@go-bindata -version || go get -u github.com/jteeuwen/go-bindata/...
 		go-bindata -nometadata -o internal/file/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
 
 .PHONY: build
@@ -155,20 +158,25 @@ verify-all:
 test:
 	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
 
+.PHONY: lua-test
+lua-test:
+	@busted $(BUSTED_ARGS) ./rootfs/etc/nginx/lua/test;
+
 .PHONY: e2e-image
 e2e-image: sub-container-amd64
-	TAG=$(TAG) IMAGE=$(MULTI_ARCH_IMG) docker tag $(IMAGE):$(TAG) $(IMAGE):test
+	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMGNAME):e2e
 	docker images
 
 .PHONY: e2e-test
 e2e-test:
-	@go test -o e2e-tests -c ./test/e2e
-	@KUBECONFIG=${HOME}/.kube/config ./e2e-tests -test.parallel 1
+	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
+	@ginkgo build ./test/e2e
+	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 -p -trace -nodes=2 ./test/e2e/e2e.test
 
 .PHONY: cover
 cover:
 	@rm -rf coverage.txt
-	@for d in `go list ./... | grep -v vendor | grep -v '/test/e2e'`; do \
+	@for d in `go list ./... | grep -v vendor | grep -v '/test/e2e' | grep -v 'images/grpc-fortune-teller'`; do \
 		t=$$(date +%s); \
 		go test -coverprofile=cover.out -covermode=atomic $$d || exit 1; \
 		echo "Coverage test $$d took $$(($$(date +%s)-t)) seconds"; \
@@ -201,3 +209,21 @@ docker-push: all-push
 .PHONY: check_dead_links
 check_dead_links:
 	docker run -t -v $$PWD:/tmp aledbf/awesome_bot:0.1 --allow-dupe --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
+
+.PHONY: dep-ensure
+dep-ensure:
+	dep version || go get -u github.com/golang/dep/cmd/dep
+	dep ensure -v
+	dep prune -v
+
+.PHONY: dev-env
+dev-env:
+	@./hack/build-dev-env.sh
+
+.PHONY: live-docs
+live-docs:
+	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs aledbf/mkdocs:0.1
+
+.PHONY: build-docs
+build-docs:
+	@docker run --rm -it -v ${PWD}:/docs aledbf/mkdocs:0.1 build

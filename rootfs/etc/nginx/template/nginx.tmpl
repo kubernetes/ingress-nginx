@@ -273,6 +273,13 @@ http {
         ''               $this_host;
     }
 
+    # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
+    # If no such header is provided, it can provide a random value.
+    map $http_x_request_id $req_id {
+        default   $http_x_request_id;
+        ""        $request_id;
+    }
+
     {{ if $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
@@ -289,8 +296,6 @@ http {
 
     server_name_in_redirect off;
     port_in_redirect        off;
-
-    rewrite_log             on;
 
     ssl_protocols {{ $cfg.SSLProtocols }};
 
@@ -525,6 +530,7 @@ http {
             {{ if $cfg.EnableVtsStatus }}
             vhost_traffic_status_display;
             vhost_traffic_status_display_format html;
+            vhost_traffic_status_display_sum_key {{ $cfg.VtsSumKey }};
             {{ else }}
             access_log off;
             stub_status on;
@@ -542,7 +548,7 @@ http {
             allow ::1;
             {{ end }}
             deny all;
-            
+
             # this should be equals to configuration_data dict
             client_max_body_size                    "10m";
             proxy_buffering                         off;
@@ -794,6 +800,11 @@ stream {
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
 
+            proxy_buffering                         "{{ $location.Proxy.ProxyBuffering }}";
+            proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
+            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
+            proxy_request_buffering                 "{{ $location.Proxy.RequestBuffering }}";
+
             proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
@@ -880,6 +891,10 @@ stream {
 
             {{ if not $location.Logs.Access }}
             access_log off;
+            {{ end }}
+
+            {{ if $location.Logs.Rewrite }}
+            rewrite_log on;
             {{ end }}
 
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
@@ -1000,6 +1015,7 @@ stream {
             proxy_set_header                        Connection        $connection_upgrade;
             {{ end }}
 
+            proxy_set_header X-Request-ID           $req_id;
             proxy_set_header X-Real-IP              $the_real_ip;
             {{ if $all.Cfg.ComputeFullForwardedFor }}
             proxy_set_header X-Forwarded-For        $full_x_forwarded_for;
@@ -1009,7 +1025,9 @@ stream {
             proxy_set_header X-Forwarded-Host       $best_http_host;
             proxy_set_header X-Forwarded-Port       $pass_port;
             proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            {{ if $all.Cfg.ProxyAddOriginalUriHeader }}
             proxy_set_header X-Original-URI         $request_uri;
+            {{ end }}
             proxy_set_header X-Scheme               $pass_access_scheme;
 
             # Pass the original X-Forwarded-For

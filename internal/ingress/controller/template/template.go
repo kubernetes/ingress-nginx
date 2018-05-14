@@ -189,7 +189,6 @@ func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool,
 	if dynamicConfigurationEnabled {
 		out = append(out,
 			"lua_shared_dict configuration_data 5M",
-			"lua_shared_dict round_robin_state 1M",
 			"lua_shared_dict locks 512k",
 			"lua_shared_dict balancer_ewma 1M",
 			"lua_shared_dict balancer_ewma_last_touched_at 1M",
@@ -418,39 +417,43 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	}
 
 	if len(location.Rewrite.Target) > 0 {
-		abu := ""
+		var abu string
+		var xForwardedPrefix string
+
 		if location.Rewrite.AddBaseURL {
 			// path has a slash suffix, so that it can be connected with baseuri directly
-			bPath := fmt.Sprintf("%s%s", path, "$baseuri")
+			bPath := fmt.Sprintf("%s$escaped_base_uri", path)
 			regex := `(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)`
+			scheme := "$scheme"
+
 			if len(location.Rewrite.BaseURLScheme) > 0 {
-				abu = fmt.Sprintf(`subs_filter '%v' '$1<base href="%v://$http_host%v">' ro;
-	    `, regex, location.Rewrite.BaseURLScheme, bPath)
-			} else {
-				abu = fmt.Sprintf(`subs_filter '%v' '$1<base href="$scheme://$http_host%v">' ro;
-	    `, regex, bPath)
+				scheme = location.Rewrite.BaseURLScheme
 			}
+
+			abu = fmt.Sprintf(`
+set_escape_uri $escaped_base_uri $baseuri;
+subs_filter '%v' '$1<base href="%v://$http_host%v">' ro;
+`, regex, scheme, bPath)
 		}
 
-		xForwardedPrefix := ""
 		if location.XForwardedPrefix {
-			xForwardedPrefix = fmt.Sprintf(`proxy_set_header X-Forwarded-Prefix "%s";
-	    `, path)
+			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", path)
 		}
+
 		if location.Rewrite.Target == slash {
 			// special case redirect to /
 			// ie /something to /
 			return fmt.Sprintf(`
-	    rewrite %s(.*) /$1 break;
-	    rewrite %s / break;
-	    %v%v %s://%s;
-	    %v`, path, location.Path, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
+rewrite %s(.*) /$1 break;
+rewrite %s / break;
+%v%v %s://%s;
+%v`, path, location.Path, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
-	    rewrite %s(.*) %s/$1 break;
-	    %v%v %s://%s;
-	    %v`, path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
+rewrite %s(.*) %s/$1 break;
+%v%v %s://%s;
+%v`, path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 	}
 
 	// default proxy_pass

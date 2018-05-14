@@ -1,0 +1,26 @@
+site_name: NGINX Ingress Controller
+strict: true
+repo_name: 'kubernetes/ingress-nginx'
+repo_url: 'https://github.com/kubernetes/ingress-nginx'
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.inlinehilite
+  - pymdownx.tasklist(custom_checkbox=true)
+  - toc:
+      permalink: true
+theme:
+  name: material
+  feature:
+    tabs: true
+  logo:
+    icon: 'public'   # globe icon
+  palette:
+    primary: 'teal'
+    accent: 'green'
+plugins:
+  - search
+  - awesome-pages:
+      collapse_single_pages: true
+extra_css: [extra.css]
+google_analytics: ['UA-118407822-1', 'kubernetes.github.io']

@@ -29,7 +29,6 @@ import (
 
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
@@ -41,7 +40,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	f := framework.NewDefaultFramework("dynamic-configuration")
 
 	BeforeEach(func() {
-		err := enableDynamicConfiguration(f.KubeClientSet)
+		err := enableDynamicConfiguration(f.IngressController.Namespace, f.KubeClientSet)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = f.NewEchoDeploymentWithReplicas(1)
@@ -58,8 +57,11 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 
+		// give some time for Lua to sync the backend
+		time.Sleep(5 * time.Second)
+
 		resp, _, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
 		Expect(len(errs)).Should(BeNumerically("==", 0))
@@ -71,30 +73,20 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(log).To(ContainSubstring("first sync of Nginx configuration"))
 	})
 
-	AfterEach(func() {
-		err := disableDynamicConfiguration(f.KubeClientSet)
-		Expect(err).NotTo(HaveOccurred())
-	})
-
 	Context("when only backends change", func() {
 		It("should handle endpoints only changes", func() {
 			resp, _, errs := gorequest.New().
-				Get(fmt.Sprintf("%s?id=endpoints_only_changes", f.NginxHTTPURL)).
+				Get(fmt.Sprintf("%s?id=endpoints_only_changes", f.IngressController.HTTPURL)).
 				Set("Host", "foo.com").
 				End()
 			Expect(len(errs)).Should(BeNumerically("==", 0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			replicas := 2
-			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace.Name, "http-svc", replicas,
-				func(deployment *appsv1beta1.Deployment) error {
-					deployment.Spec.Replicas = framework.NewInt32(int32(replicas))
-					_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace.Name).Update(deployment)
-					return err
-				})
+			err := framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
-
 			time.Sleep(5 * time.Second)
+
 			log, err := f.NginxLogs()
 			Expect(err).ToNot(HaveOccurred())
 			Expect(log).ToNot(BeEmpty())
@@ -112,19 +104,61 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
 		})
 
-		It("should handle annotation changes", func() {
-			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
-			Expect(err).ToNot(HaveOccurred())
+		It("should be able to update endpoints even when the update POST size(request body) > size(client_body_buffer_size)", func() {
+			// Update client-body-buffer-size to 1 byte
+			err := f.UpdateNginxConfigMapData("client-body-buffer-size", "1")
+			Expect(err).NotTo(HaveOccurred())
 
-			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
-			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
-			Expect(err).ToNot(HaveOccurred())
+			replicas := 0
+			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
+			Expect(err).NotTo(HaveOccurred())
 
+			replicas = 4
+			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
+			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(5 * time.Second)
+
+			resp, _, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", "foo.com").
+				End()
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
 			log, err := f.NginxLogs()
 			Expect(err).ToNot(HaveOccurred())
 			Expect(log).ToNot(BeEmpty())
-			index := strings.Index(log, fmt.Sprintf("reason: 'UPDATE' Ingress %s/foo.com", f.Namespace.Name))
+			index := strings.Index(log, "POST /configuration/backends HTTP/1.1")
+			restOfLogs := log[index:]
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(log).ToNot(BeEmpty())
+
+			By("POSTing new backends to Lua endpoint")
+			Expect(restOfLogs).To(ContainSubstring("a client request body is buffered to a temporary file"))
+			Expect(restOfLogs).ToNot(ContainSubstring("dynamic-configuration: unable to read valid request body"))
+		})
+
+		It("should handle annotation changes", func() {
+			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
+			Expect(err).ToNot(HaveOccurred())
+
+			resp, _, errs := gorequest.New().
+				Get(fmt.Sprintf("%s?id=should_handle_annotation_changes", f.IngressController.HTTPURL)).
+				Set("Host", "foo.com").
+				End()
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
+			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
+			Expect(err).ToNot(HaveOccurred())
+			time.Sleep(5 * time.Second)
+
+			log, err := f.NginxLogs()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(log).ToNot(BeEmpty())
+			index := strings.Index(log, "id=should_handle_annotation_changes")
 			restOfLogs := log[index:]
 
 			By("POSTing new backends to Lua endpoint")
@@ -140,26 +174,33 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	})
 
 	It("should handle a non backend update", func() {
-		ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Get("foo.com", metav1.GetOptions{})
+		ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
 		Expect(err).ToNot(HaveOccurred())
 
-		ingress.Spec.TLS = []v1beta1.IngressTLS{
+		ingress.Spec.TLS = []extensions.IngressTLS{
 			{
 				Hosts:      []string{"foo.com"},
 				SecretName: "foo.com",
 			},
 		}
 
-		_, _, _, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
+		_, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ingress.Spec.TLS[0].Hosts,
 			ingress.Spec.TLS[0].SecretName,
 			ingress.Namespace)
 		Expect(err).ToNot(HaveOccurred())
 
-		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace.Name).Update(ingress)
+		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 		Expect(err).ToNot(HaveOccurred())
 
-		time.Sleep(5 * time.Second)
+		By("generating the respective ssl listen directive")
+		err = f.WaitForNginxServer("foo.com",
+			func(server string) bool {
+				return strings.Contains(server, "server_name foo.com") &&
+					strings.Contains(server, "listen 443")
+			})
+		Expect(err).ToNot(HaveOccurred())
+
 		log, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(BeEmpty())
@@ -176,14 +217,146 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 		Expect(err).NotTo(HaveOccurred())
+	})
 
-		By("generating the respective ssl listen directive")
-		err = f.WaitForNginxServer("foo.com",
-			func(server string) bool {
-				return strings.Contains(server, "server_name foo.com") &&
-					strings.Contains(server, "listen 443")
-			})
+	It("should not fail requests when upstream-hash-by annotation is set", func() {
+		ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
 		Expect(err).ToNot(HaveOccurred())
+
+		ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/upstream-hash-by"] = "$query_string"
+		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
+		Expect(err).ToNot(HaveOccurred())
+
+		replicas := 2
+		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
+		Expect(err).NotTo(HaveOccurred())
+		time.Sleep(5 * time.Second)
+
+		resp, body, errs := gorequest.New().
+			Get(fmt.Sprintf("%s?a-unique-request-uri", f.IngressController.HTTPURL)).
+			Set("Host", "foo.com").
+			End()
+		Expect(len(errs)).Should(Equal(0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		hostnamePattern := regexp.MustCompile(`Hostname: ([a-zA-Z0-9\-]+)`)
+		upstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
+
+		for i := 0; i < 5; i++ {
+			resp, body, errs := gorequest.New().
+				Get(fmt.Sprintf("%s?a-unique-request-uri", f.IngressController.HTTPURL)).
+				Set("Host", "foo.com").
+				End()
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			newUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
+			Expect(newUpstreamName).Should(Equal(upstreamName))
+		}
+
+		resp, body, errs = gorequest.New().
+			Get(fmt.Sprintf("%s?completely-different-path", f.IngressController.HTTPURL)).
+			Set("Host", "foo.com").
+			End()
+		Expect(len(errs)).Should(Equal(0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		anotherUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
+		Expect(anotherUpstreamName).NotTo(Equal(upstreamName))
+	})
+
+	Context("when session affinity annotation is present", func() {
+		It("should use sticky sessions when ingress rules are configured", func() {
+			cookieName := "STICKYSESSION"
+
+			By("Updating affinity annotation on ingress")
+			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
+			Expect(err).ToNot(HaveOccurred())
+			ingress.ObjectMeta.Annotations = map[string]string{
+				"nginx.ingress.kubernetes.io/affinity":            "cookie",
+				"nginx.ingress.kubernetes.io/session-cookie-name": cookieName,
+			}
+			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Increasing the number of service replicas")
+			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", 2, nil)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(5 * time.Second)
+
+			By("Making a first request")
+			host := "foo.com"
+			resp, _, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", host).
+				End()
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			cookies := (*http.Response)(resp).Cookies()
+			sessionCookie, err := getCookie(cookieName, cookies)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Making a second request with the previous session cookie")
+			resp, _, errs = gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				AddCookie(sessionCookie).
+				Set("Host", host).
+				End()
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			By("Making a third request with no cookie")
+			resp, _, errs = gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", host).
+				End()
+
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			log, err := f.NginxLogs()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(log).ToNot(BeEmpty())
+
+			By("Checking that upstreams are sticky when session cookie is used")
+			index := strings.Index(log, fmt.Sprintf("reason: 'UPDATE' Ingress %s/foo.com", f.IngressController.Namespace))
+			reqLogs := log[index:]
+			re := regexp.MustCompile(`\d{1,3}(?:\.\d{1,3}){3}(?::\d{1,5})`)
+			upstreams := re.FindAllString(reqLogs, -1)
+			Expect(len(upstreams)).Should(BeNumerically("==", 3))
+			Expect(upstreams[0]).To(Equal(upstreams[1]))
+			Expect(upstreams[1]).ToNot(Equal(upstreams[2]))
+		})
+
+		It("should NOT use sticky sessions when a default backend and no ingress rules configured", func() {
+			By("Updating affinity annotation and rules on ingress")
+			ingress, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get("foo.com", metav1.GetOptions{})
+			Expect(err).ToNot(HaveOccurred())
+			ingress.Spec = extensions.IngressSpec{
+				Backend: &extensions.IngressBackend{
+					ServiceName: "http-svc",
+					ServicePort: intstr.FromInt(80),
+				},
+			}
+			ingress.ObjectMeta.Annotations = map[string]string{
+				"nginx.ingress.kubernetes.io/affinity": "cookie",
+			}
+			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
+			Expect(err).ToNot(HaveOccurred())
+			time.Sleep(5 * time.Second)
+
+			By("Making a request")
+			host := "foo.com"
+			resp, _, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", host).
+				End()
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			By("Ensuring no cookies are set")
+			cookies := (*http.Response)(resp).Cookies()
+			Expect(len(cookies)).Should(BeNumerically("==", 0))
+		})
 	})
 
 	Context("when session affinity annotation is present", func() {
@@ -289,71 +462,34 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	})
 })
 
-func enableDynamicConfiguration(kubeClientSet kubernetes.Interface) error {
-	return framework.UpdateDeployment(kubeClientSet, "ingress-nginx", "nginx-ingress-controller", 1,
+func enableDynamicConfiguration(namespace string, kubeClientSet kubernetes.Interface) error {
+	return framework.UpdateDeployment(kubeClientSet, namespace, "nginx-ingress-controller", 1,
 		func(deployment *appsv1beta1.Deployment) error {
 			args := deployment.Spec.Template.Spec.Containers[0].Args
 			args = append(args, "--enable-dynamic-configuration")
 			deployment.Spec.Template.Spec.Containers[0].Args = args
-			_, err := kubeClientSet.AppsV1beta1().Deployments("ingress-nginx").Update(deployment)
+			_, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Update(deployment)
 			if err != nil {
 				return err
 			}
-			time.Sleep(15 * time.Second)
-			return nil
-		})
-}
 
-func disableDynamicConfiguration(kubeClientSet kubernetes.Interface) error {
-	return framework.UpdateDeployment(kubeClientSet, "ingress-nginx", "nginx-ingress-controller", 1,
-		func(deployment *appsv1beta1.Deployment) error {
-			args := deployment.Spec.Template.Spec.Containers[0].Args
-			var newArgs []string
-			for _, arg := range args {
-				if arg != "--enable-dynamic-configuration" {
-					newArgs = append(newArgs, arg)
-				}
-			}
-			deployment.Spec.Template.Spec.Containers[0].Args = newArgs
-			_, err := kubeClientSet.AppsV1beta1().Deployments("ingress-nginx").Update(deployment)
-			if err != nil {
-				return err
-			}
-			time.Sleep(15 * time.Second)
 			return nil
 		})
 }
 
 func ensureIngress(f *framework.Framework, host string) (*extensions.Ingress, error) {
-	return f.EnsureIngress(&v1beta1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      host,
-			Namespace: f.Namespace.Name,
-			Annotations: map[string]string{
-				"nginx.ingress.kubernetes.io/load-balance": "ewma",
-			},
-		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
-				{
-					Host: host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
-								{
-									Path: "/",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: "http-svc",
-										ServicePort: intstr.FromInt(80),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	})
+	return f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, &map[string]string{
+		"nginx.ingress.kubernetes.io/load-balance": "ewma",
+	}))
+}
+
+func getCookie(name string, cookies []*http.Cookie) (*http.Cookie, error) {
+	for _, cookie := range cookies {
+		if cookie.Name == name {
+			return cookie, nil
+		}
+	}
+	return &http.Cookie{}, fmt.Errorf("Cookie does not exist")
 }
 
 func getCookie(name string, cookies []*http.Cookie) (*http.Cookie, error) {

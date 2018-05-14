@@ -135,9 +135,5 @@ func restoreAsset(dir, name string, fs Filesystem) error {
 
 	//Missing info.Mode()
 
-	err = fs.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
-	if err != nil {
-		return err
-	}
-	return nil
+	return fs.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
 }

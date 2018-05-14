@@ -37,7 +37,6 @@ var (
 	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
 	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
 	annotationCorsEnabled          = parser.GetAnnotationWithPrefix("enable-cors")
-	annotationCorsAllowOrigin      = parser.GetAnnotationWithPrefix("cors-allow-origin")
 	annotationCorsAllowMethods     = parser.GetAnnotationWithPrefix("cors-allow-methods")
 	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
 	annotationCorsAllowCredentials = parser.GetAnnotationWithPrefix("cors-allow-credentials")
