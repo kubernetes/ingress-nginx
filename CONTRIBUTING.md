@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-Read the following guide if you're interested in contributing to Ingress.
+Read the following guide if you're interested in contributing to Ingress. [Make Ingress-Nginx Work for you, and the Community](https://youtu.be/GDm-7BlmPPg) from KubeCon Europe 2018 is a great video to get you started!!
 
 ## Contributor License Agreements
 
