@@ -71,7 +71,8 @@ local function init()
     WARN = "warn",
     INFO = "info",
     ERR = "err",
-    HTTP_SERVICE_UNAVAILABLE = 503
+    HTTP_SERVICE_UNAVAILABLE = 503,
+    exit = function(status) return end,
   }
   package.loaded["ngx.balancer"] = mock_ngx_balancer
   package.loaded["resty.lrucache"] = mock_lrucache
@@ -218,13 +219,11 @@ describe("[balancer_test]", function()
         mock_backends._vals = {}
 
         local backend_get_spy = spy.on(mock_backends, "get")
-        local set_more_tries_spy = spy.on(mock_ngx_balancer, "set_more_tries")
         local set_current_peer_spy = spy.on(mock_ngx_balancer, "set_current_peer")
 
         assert.has_no_errors(balancer.call)
         assert.are_equal(ngx.status, 503)
         assert.spy(backend_get_spy).was_called_with(match.is_table(), "mock_rr_backend")
-        assert.spy(set_more_tries_spy).was_called_with(1)
         assert.spy(set_current_peer_spy).was_not_called()
       end)
     end)
