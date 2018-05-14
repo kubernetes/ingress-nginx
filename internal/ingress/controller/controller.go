@@ -19,8 +19,6 @@ package controller
 import (
 	"fmt"
 	"math/rand"
-	"net"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -40,7 +38,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
-	"k8s.io/ingress-nginx/internal/task"
 )
 
 const (
@@ -114,19 +111,11 @@ func (n NGINXController) GetPublishService() *apiv1.Service {
 // sync collects all the pieces required to assemble the configuration file and
 // then sends the content to the backend (OnUpdate) receiving the populated
 // template as response reloading the backend if is required.
-func (n *NGINXController) syncIngress(item interface{}) error {
+func (n *NGINXController) syncIngress(interface{}) error {
 	n.syncRateLimiter.Accept()
 
 	if n.syncQueue.IsShuttingDown() {
 		return nil
-	}
-
-	if element, ok := item.(task.Element); ok {
-		if name, ok := element.Key.(string); ok {
-			if ing, err := n.store.GetIngress(name); err == nil {
-				n.store.ReadSecrets(ing)
-			}
-		}
 	}
 
 	// Sort ingress rules using the ResourceVersion field
@@ -199,7 +188,7 @@ func (n *NGINXController) syncIngress(item interface{}) error {
 				// it takes time for Nginx to start listening on the port
 				time.Sleep(1 * time.Second)
 			}
-			err := n.ConfigureDynamically(&pcfg)
+			err := configureDynamically(&pcfg, n.cfg.ListenPorts.Status)
 			if err == nil {
 				glog.Infof("dynamic reconfiguration succeeded")
 			} else {
@@ -300,7 +289,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			for _, sp := range svc.Spec.Ports {
 				if sp.Name == svcPort {
 					if sp.Protocol == proto {
-						endps = n.getEndpoints(svc, &sp, proto, &healthcheck.Config{})
+						endps = getEndpoints(svc, &sp, proto, &healthcheck.Config{}, n.store.GetServiceEndpoints)
 						break
 					}
 				}
@@ -311,7 +300,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			for _, sp := range svc.Spec.Ports {
 				if sp.Port == int32(targetPort) {
 					if sp.Protocol == proto {
-						endps = n.getEndpoints(svc, &sp, proto, &healthcheck.Config{})
+						endps = getEndpoints(svc, &sp, proto, &healthcheck.Config{}, n.store.GetServiceEndpoints)
 						break
 					}
 				}
@@ -356,7 +345,7 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 		return upstream
 	}
 
-	endps := n.getEndpoints(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, &healthcheck.Config{})
+	endps := getEndpoints(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, &healthcheck.Config{}, n.store.GetServiceEndpoints)
 	if len(endps) == 0 {
 		glog.Warningf("service %v does not have any active endpoints", svcKey)
 		endps = []ingress.Endpoint{n.DefaultEndpoint()}
@@ -537,7 +526,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						// check if the location contains endpoints and a custom default backend
 						if location.DefaultBackend != nil {
 							sp := location.DefaultBackend.Spec.Ports[0]
-							endps := n.getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, &healthcheck.Config{})
+							endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, &healthcheck.Config{}, n.store.GetServiceEndpoints)
 							if len(endps) > 0 {
 								glog.V(3).Infof("using custom default backend in server %v location %v (service %v/%v)",
 									server.Hostname, location.Path, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
@@ -779,7 +768,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
 			servicePort.TargetPort.String() == backendPort ||
 			servicePort.Name == backendPort {
 
-			endps := n.getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz)
+			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz, n.store.GetServiceEndpoints)
 			if len(endps) == 0 {
 				glog.Warningf("service %v does not have any active endpoints", svcKey)
 			}
@@ -813,7 +802,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
 			Port:       int32(externalPort),
 			TargetPort: intstr.FromString(backendPort),
 		}
-		endps := n.getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz)
+		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz, n.store.GetServiceEndpoints)
 		if len(endps) == 0 {
 			glog.Warningf("service %v does not have any active endpoints", svcKey)
 			return upstreams, nil
@@ -869,7 +858,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	// Tries to fetch the default Certificate from nginx configuration.
 	// If it does not exists, use the ones generated on Start()
-	defaultCertificate, err := n.store.GetLocalSecret(n.cfg.DefaultSSLCertificate)
+	defaultCertificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
 	if err == nil {
 		defaultPemFileName = defaultCertificate.PemFileName
 		defaultPemSHA = defaultCertificate.PemSHA
@@ -1016,20 +1005,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				continue
 			}
 
-			tlsSecretName := ""
-			found := false
-			for _, tls := range ing.Spec.TLS {
-				if sets.NewString(tls.Hosts...).Has(host) {
-					tlsSecretName = tls.SecretName
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				// does not contains a TLS section but none of the host match
-				continue
-			}
+			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
 
 			if tlsSecretName == "" {
 				glog.V(3).Infof("host %v is listed on tls section but secretName is empty. Using default cert", host)
@@ -1039,7 +1015,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			}
 
 			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
-			cert, err := n.store.GetLocalSecret(key)
+			cert, err := n.store.GetLocalSSLCert(key)
 			if err != nil {
 				glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
 				continue
@@ -1079,97 +1055,6 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	return servers
 }
 
-// getEndpoints returns a list of <endpoint ip>:<port> for a given service/target port combination.
-func (n *NGINXController) getEndpoints(
-	s *apiv1.Service,
-	servicePort *apiv1.ServicePort,
-	proto apiv1.Protocol,
-	hz *healthcheck.Config) []ingress.Endpoint {
-
-	upsServers := []ingress.Endpoint{}
-
-	// avoid duplicated upstream servers when the service
-	// contains multiple port definitions sharing the same
-	// targetport.
-	adus := make(map[string]bool)
-
-	// ExternalName services
-	if s.Spec.Type == apiv1.ServiceTypeExternalName {
-		glog.V(3).Infof("Ingress using a service %v of type=ExternalName : %v", s.Name)
-
-		targetPort := servicePort.TargetPort.IntValue()
-		// check for invalid port value
-		if targetPort <= 0 {
-			glog.Errorf("ExternalName service with an invalid port: %v", targetPort)
-			return upsServers
-		}
-
-		if net.ParseIP(s.Spec.ExternalName) == nil {
-			_, err := net.LookupHost(s.Spec.ExternalName)
-			if err != nil {
-				glog.Errorf("unexpected error resolving host %v: %v", s.Spec.ExternalName, err)
-				return upsServers
-			}
-		}
-
-		return append(upsServers, ingress.Endpoint{
-			Address:     s.Spec.ExternalName,
-			Port:        fmt.Sprintf("%v", targetPort),
-			MaxFails:    hz.MaxFails,
-			FailTimeout: hz.FailTimeout,
-		})
-	}
-
-	glog.V(3).Infof("getting endpoints for service %v/%v and port %v", s.Namespace, s.Name, servicePort.String())
-	ep, err := n.store.GetServiceEndpoints(s)
-	if err != nil {
-		glog.Warningf("unexpected error obtaining service endpoints: %v", err)
-		return upsServers
-	}
-
-	for _, ss := range ep.Subsets {
-		for _, epPort := range ss.Ports {
-
-			if !reflect.DeepEqual(epPort.Protocol, proto) {
-				continue
-			}
-
-			var targetPort int32
-
-			if servicePort.Name == "" {
-				// ServicePort.Name is optional if there is only one port
-				targetPort = epPort.Port
-			} else if servicePort.Name == epPort.Name {
-				targetPort = epPort.Port
-			}
-
-			// check for invalid port value
-			if targetPort <= 0 {
-				continue
-			}
-
-			for _, epAddress := range ss.Addresses {
-				ep := fmt.Sprintf("%v:%v", epAddress.IP, targetPort)
-				if _, exists := adus[ep]; exists {
-					continue
-				}
-				ups := ingress.Endpoint{
-					Address:     epAddress.IP,
-					Port:        fmt.Sprintf("%v", targetPort),
-					MaxFails:    hz.MaxFails,
-					FailTimeout: hz.FailTimeout,
-					Target:      epAddress.TargetRef,
-				}
-				upsServers = append(upsServers, ups)
-				adus[ep] = true
-			}
-		}
-	}
-
-	glog.V(3).Infof("endpoints found: %v", upsServers)
-	return upsServers
-}
-
 func (n *NGINXController) isForceReload() bool {
 	return atomic.LoadInt32(&n.forceReload) != 0
 }
@@ -1182,4 +1067,42 @@ func (n *NGINXController) SetForceReload(shouldReload bool) {
 	} else {
 		atomic.StoreInt32(&n.forceReload, 0)
 	}
+}
+
+// extractTLSSecretName returns the name of the secret that
+// contains a SSL certificate for a particular hostname.
+// In case there is no match, an empty string is returned.
+func extractTLSSecretName(host string, ing *extensions.Ingress,
+	getLocalSSLCert func(string) (*ingress.SSLCert, error)) string {
+	if ing == nil {
+		return ""
+	}
+
+	for _, tls := range ing.Spec.TLS {
+		if sets.NewString(tls.Hosts...).Has(host) {
+			return tls.SecretName
+		}
+	}
+
+	// contains a TLS section but none of the host match or there
+	// is no hosts in the TLS section. As last resort we valide
+	// the host against the certificate and we use it if is valid
+	for _, tls := range ing.Spec.TLS {
+		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+		cert, err := getLocalSSLCert(key)
+		if err != nil {
+			glog.Warningf("ssl certificate \"%v\" does not exist in local store", key)
+			continue
+		}
+
+		if cert == nil {
+			continue
+		}
+
+		if sets.NewString(cert.CN...).Has(host) {
+			return tls.SecretName
+		}
+	}
+
+	return ""
 }

@@ -12,10 +12,13 @@ spec:
     metadata:
       labels:
         app: ingress-nginx
+      annotations:
+        prometheus.io/port: '10254'
+        prometheus.io/scrape: 'true'
     spec:
       containers:
         - name: nginx-ingress-controller
-          image: shopify/nginx-ingress-controller:0.12.0
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.14.0
           args:
             - /nginx-ingress-controller
             - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
@@ -38,3 +41,24 @@ spec:
             containerPort: 80
           - name: https
             containerPort: 443
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 10254
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 10254
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          securityContext:
+            runAsNonRoot: false

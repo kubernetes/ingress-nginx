@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package setting
+package settings
 
 import (
 	"fmt"
@@ -47,12 +47,15 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		err := f.NewEchoDeployment()
 		Expect(err).NotTo(HaveOccurred())
 
-		s, err := f.EnsureSecret(buildSecret(username, password, secretName, f.Namespace.Name))
+		s, err := f.EnsureSecret(buildSecret(username, password, secretName, f.IngressController.Namespace))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi := buildBasicAuthIngressWithSecondPath(host, f.Namespace.Name, s.Name, noAuthPath)
+		err = f.UpdateNginxConfigMapData(setting, noAuthPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		bi := buildBasicAuthIngressWithSecondPath(host, f.IngressController.Namespace, s.Name, noAuthPath)
 		ing, err := f.EnsureIngress(bi)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
@@ -68,8 +71,6 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 	})
 
 	AfterEach(func() {
-		err := f.SetNginxConfigMapData(defaultNginxConfigMapData)
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should return status code 401 when accessing '/' unauthentication", func() {
@@ -80,7 +81,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
 
@@ -97,7 +98,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
-			Get(f.NginxHTTPURL).
+			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			SetBasicAuth(username, password).
 			End()
@@ -114,7 +115,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf("%s/noauth", f.NginxHTTPURL)).
+			Get(fmt.Sprintf("%s/noauth", f.IngressController.HTTPURL)).
 			Set("Host", host).
 			End()
 

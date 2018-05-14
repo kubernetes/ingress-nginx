@@ -62,7 +62,7 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
-func TestIngressLogConfig(t *testing.T) {
+func TestIngressAccessLogConfig(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
@@ -77,5 +77,23 @@ func TestIngressLogConfig(t *testing.T) {
 
 	if nginxLogs.Access {
 		t.Errorf("expected access be disabled but is enabled")
+	}
+}
+
+func TestIngressRewriteLogConfig(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("enable-rewrite-log")] = "true"
+	ing.SetAnnotations(data)
+
+	log, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	nginxLogs, ok := log.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type")
+	}
+
+	if !nginxLogs.Rewrite {
+		t.Errorf("expected rewrite log to be enabled but it is disabled")
 	}
 }

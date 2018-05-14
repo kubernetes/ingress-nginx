@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package setting
+package settings
 
 import (
 	"fmt"
@@ -25,9 +25,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -41,19 +38,11 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		err := f.NewEchoDeployment()
 		Expect(err).NotTo(HaveOccurred())
 
-		if defaultNginxConfigMapData == nil {
-			defaultNginxConfigMapData, err = f.GetNginxConfigMapData()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(defaultNginxConfigMapData).NotTo(BeNil())
-		}
-
 		err = f.UpdateNginxConfigMapData(setting, "false")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		err := f.SetNginxConfigMapData(defaultNginxConfigMapData)
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should respect port passed by the PROXY Protocol", func() {
@@ -62,34 +51,7 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		err := f.UpdateNginxConfigMapData(setting, "true")
 		Expect(err).NotTo(HaveOccurred())
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        host,
-				Namespace:   f.Namespace.Name,
-				Annotations: map[string]string{},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
-
+		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 

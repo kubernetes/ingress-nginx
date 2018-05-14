@@ -4,7 +4,7 @@ metadata:
   name: nginx-configuration-snippet
   annotations:
     nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_set_headers "Request-Id: $request_id";
+      more_set_headers "Request-Id: $req_id";
 
 spec:
   rules:

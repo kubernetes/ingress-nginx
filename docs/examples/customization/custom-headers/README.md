@@ -1,4 +1,4 @@
-# Custom configuration
+# Custom Headers
 
 This example aims to demonstrate the deployment of an nginx ingress controller and
 use a ConfigMap to configure a custom list of headers to be passed to the upstream

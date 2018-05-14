@@ -121,17 +121,17 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
 	}
 
-	authUrl, err := url.Parse(urlString)
+	authURL, err := url.Parse(urlString)
 	if err != nil {
 		return nil, err
 	}
-	if authUrl.Scheme == "" {
+	if authURL.Scheme == "" {
 		return nil, ing_errors.NewLocationDenied("url scheme is empty")
 	}
-	if authUrl.Host == "" {
+	if authURL.Host == "" {
 		return nil, ing_errors.NewLocationDenied("url host is empty")
 	}
-	if strings.Contains(authUrl.Host, "..") {
+	if strings.Contains(authURL.Host, "..") {
 		return nil, ing_errors.NewLocationDenied("invalid url host")
 	}
 
@@ -162,7 +162,7 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	return &Config{
 		URL:             urlString,
-		Host:            authUrl.Hostname(),
+		Host:            authURL.Hostname(),
 		SigninURL:       signIn,
 		Method:          authMethod,
 		ResponseHeaders: responseHeaders,

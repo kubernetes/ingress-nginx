@@ -170,8 +170,7 @@ The API server will mount a volume containing this file, but only if the API ser
 the ServiceAccount admission controller.
 If you experience this error, verify that your API server is using the ServiceAccount admission controller.
 If you are configuring the API server by hand, you can set this with the `--admission-control` parameter.
-Please note that you should use other admission controllers as well. Before configuring this option, you should
-read about admission controllers.
+> Note that you should use other admission controllers as well. Before configuring this option, you should read about admission controllers.
 
 More information:
 

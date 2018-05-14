@@ -1,4 +1,4 @@
-# Deploying the Nginx Ingress controller
+# Custom VTS metrics with Prometheus
 
 This example aims to demonstrate the deployment of an nginx ingress controller and use a ConfigMap to enable [nginx vts module](https://github.com/vozlt/nginx-module-vts
 ) to export metrics in prometheus format. 
