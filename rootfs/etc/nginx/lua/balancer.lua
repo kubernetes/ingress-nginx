@@ -28,6 +28,7 @@ local function get_current_backend()
   local backend = backends:get(backend_name)
 
   if not backend then
+    -- TODO(elvinefendi) maybe force backend sync here?
     ngx.log(ngx.WARN, "no backend configuration found for " .. tostring(backend_name))
   end
 
@@ -139,6 +140,7 @@ local function after_balance()
 end
 
 function _M.init_worker()
+  sync_backends() -- when worker starts, sync backends without delay
   _, err = ngx.timer.every(BACKENDS_SYNC_INTERVAL, sync_backends)
   if err then
     ngx.log(ngx.ERR, string.format("error when setting up timer.every for sync_backends: %s", tostring(err)))
@@ -155,13 +157,13 @@ function _M.call()
     return error("must be called in balancer or log, but was called in: " .. phase)
   end
 
-  ngx_balancer.set_more_tries(1)
-
   local host, port = balance()
   if not host then
     ngx.status = ngx.HTTP_SERVICE_UNAVAILABLE
-    return
+    return ngx.exit(ngx.status)
   end
+
+  ngx_balancer.set_more_tries(1)
 
   local ok
   ok, err = ngx_balancer.set_current_peer(host, port)
