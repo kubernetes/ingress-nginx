@@ -243,6 +243,11 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 			return nil, err
 		}
 
+		if svc.Spec.Type == apiv1.ServiceTypeExternalName {
+			addrs = append(addrs, svc.Spec.ExternalName)
+			return addrs, nil
+		}
+
 		for _, ip := range svc.Status.LoadBalancer.Ingress {
 			if ip.IP == "" {
 				addrs = append(addrs, ip.Hostname)
