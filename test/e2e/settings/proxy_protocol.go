@@ -32,7 +32,6 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 	f := framework.NewDefaultFramework("proxy-protocol")
 
 	setting := "use-proxy-protocol"
-	var defaultNginxConfigMapData map[string]string = nil
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()

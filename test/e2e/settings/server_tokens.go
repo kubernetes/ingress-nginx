@@ -31,17 +31,10 @@ import (
 var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 	f := framework.NewDefaultFramework("server-tokens")
 	serverTokens := "server-tokens"
-	var defaultNginxConfigMapData map[string]string = nil
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
 		Expect(err).NotTo(HaveOccurred())
-
-		if defaultNginxConfigMapData == nil {
-			defaultNginxConfigMapData, err = f.GetNginxConfigMapData()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(defaultNginxConfigMapData).NotTo(BeNil())
-		}
 	})
 
 	AfterEach(func() {
