@@ -45,7 +45,9 @@ func (s k8sStore) syncSecret(key string) {
 	// TODO: getPemCertificate should not write to disk to avoid unnecessary overhead
 	cert, err := s.getPemCertificate(key)
 	if err != nil {
-		glog.Warningf("error obtaining PEM from secret %v: %v", key, err)
+		if !isErrSecretForAuth(err) {
+			glog.Warningf("error obtaining PEM from secret %v: %v", key, err)
+		}
 		return
 	}
 
@@ -83,6 +85,8 @@ func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error)
 	key, okkey := secret.Data[apiv1.TLSPrivateKeyKey]
 	ca := secret.Data["ca.crt"]
 
+	auth := secret.Data["auth"]
+
 	// namespace/secretName -> namespace-secretName
 	nsSecName := strings.Replace(secretName, "/", "-", -1)
 
@@ -118,6 +122,10 @@ func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error)
 		glog.V(3).Infof("found only 'ca.crt', configuring %v as an Certificate Authentication Secret", secretName)
 
 	} else {
+		if auth != nil {
+			return nil, ErrSecretForAuth
+		}
+
 		return nil, fmt.Errorf("no keypair or CA cert could be found in %v", secretName)
 	}
 
@@ -190,4 +198,11 @@ func (s *k8sStore) sendDummyEvent() {
 			},
 		},
 	}
+}
+
+// ErrSecretForAuth error to indicate a secret is used for authentication
+var ErrSecretForAuth = fmt.Errorf("Secret is used for authentication")
+
+func isErrSecretForAuth(e error) bool {
+	return e == ErrSecretForAuth
 }
