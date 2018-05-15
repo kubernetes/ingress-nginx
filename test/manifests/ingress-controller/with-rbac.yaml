@@ -16,7 +16,7 @@ spec:
       #serviceAccountName: nginx-ingress-serviceaccount
       containers:
         - name: nginx-ingress-controller
-          image: nginx-ingress-controller:e2e
+          image: ingress-controller/nginx-ingress-controller:dev
           args:
             - /nginx-ingress-controller
             - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
