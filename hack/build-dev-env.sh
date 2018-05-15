@@ -20,12 +20,11 @@ echo "NAMESPACE is set to ${NAMESPACE}"
 test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start
 eval $(minikube docker-env)
 
-echo "[dev-env] installing dependencies"
-dep version || go get -u github.com/golang/dep
-dep ensure
+export TAG=dev
+export REGISTRY=ingress-controller
 
 echo "[dev-env] building container"
-ARCH=amd64 TAG=dev REGISTRY=$USER/ingress-controller make build container
+ARCH=amd64 make build container
 
 echo "[dev-env] installing kubectl"
 kubectl version || brew install kubectl
@@ -44,4 +43,4 @@ kubectl set image \
     deployments \
     --namespace ingress-nginx \
     --selector app=ingress-nginx \
-    nginx-ingress-controller=index.docker.io/$USER/ingress-controller/nginx-ingress-controller:dev
+    nginx-ingress-controller=${REGISTRY}/nginx-ingress-controller:${TAG}
