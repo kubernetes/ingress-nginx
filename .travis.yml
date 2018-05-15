@@ -63,8 +63,8 @@ jobs:
     before_script:
     - go get github.com/jteeuwen/go-bindata/...
     - go get github.com/onsi/ginkgo/ginkgo
-    - make e2e-image
     - test/e2e/up.sh
+    - make dev-env
     script:
     - make e2e-test
   # split builds to avoid job timeouts
