@@ -41,7 +41,6 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 	secretName := "test-secret"
 	host := "no-auth-locations"
 	noAuthPath := "/noauth"
-	var defaultNginxConfigMapData map[string]string = nil
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
@@ -59,15 +58,6 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 		ing, err := f.EnsureIngress(bi)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
-
-		if defaultNginxConfigMapData == nil {
-			defaultNginxConfigMapData, err = f.GetNginxConfigMapData()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(defaultNginxConfigMapData).NotTo(BeNil())
-		}
-
-		err = f.UpdateNginxConfigMapData(setting, noAuthPath)
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
