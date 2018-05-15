@@ -158,11 +158,6 @@ test:
 lua-test:
 	@busted $(BUSTED_ARGS) ./rootfs/etc/nginx/lua/test;
 
-.PHONY: e2e-image
-e2e-image: sub-container-amd64
-	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMGNAME):e2e
-	docker images
-
 .PHONY: e2e-test
 e2e-test:
 	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
