@@ -1,5 +1,39 @@
 # Changelog
 
+### 0.15.0
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.15.0`
+
+*Changes:*
+
+- [X] [#2440](https://github.com/kubernetes/ingress-nginx/pull/2440) TLS tests
+- [X] [#2443](https://github.com/kubernetes/ingress-nginx/pull/2443) improve build-dev-env.sh script
+- [X] [#2446](https://github.com/kubernetes/ingress-nginx/pull/2446) always use x-request-id
+- [X] [#2447](https://github.com/kubernetes/ingress-nginx/pull/2447) Add basic security context to deployment YAMLs
+- [X] [#2453](https://github.com/kubernetes/ingress-nginx/pull/2453) Add google analytics [ci skip]
+- [X] [#2456](https://github.com/kubernetes/ingress-nginx/pull/2456) Assert or install go-bindata before incanting
+- [X] [#2472](https://github.com/kubernetes/ingress-nginx/pull/2472) Refactor Lua balancer
+- [X] [#2477](https://github.com/kubernetes/ingress-nginx/pull/2477) Change TrimLeft for TrimPrefix on the from-to-www redirect
+- [X] [#2490](https://github.com/kubernetes/ingress-nginx/pull/2490) add resty cookie
+- [X] [#2495](https://github.com/kubernetes/ingress-nginx/pull/2495) [ci skip] bump nginx baseimage version
+- [X] [#2501](https://github.com/kubernetes/ingress-nginx/pull/2501) Refactor update of status removing initial check for loadbalancer
+- [X] [#2502](https://github.com/kubernetes/ingress-nginx/pull/2502) Update go version in fortune teller image
+- [X] [#2511](https://github.com/kubernetes/ingress-nginx/pull/2511) force backend sync when worker starts
+- [X] [#2512](https://github.com/kubernetes/ingress-nginx/pull/2512) Remove warning when secret is used only for authentication
+- [X] [#2514](https://github.com/kubernetes/ingress-nginx/pull/2514) Fix and simplify local dev workflow and execution of e2e tests
+
+*Documentation:*
+
+- [X] [#2448](https://github.com/kubernetes/ingress-nginx/pull/2448) Update GitHub pull request template
+- [X] [#2449](https://github.com/kubernetes/ingress-nginx/pull/2449) Improve documentation format
+- [X] [#2454](https://github.com/kubernetes/ingress-nginx/pull/2454) Add gRPC annotation doc
+- [X] [#2455](https://github.com/kubernetes/ingress-nginx/pull/2455) Adjust size of tables and only adjust the first column on mobile
+- [X] [#2457](https://github.com/kubernetes/ingress-nginx/pull/2457) Add Getting the Code section to Quick Start
+- [X] [#2464](https://github.com/kubernetes/ingress-nginx/pull/2464) Documentation fixes & improvements
+- [X] [#2467](https://github.com/kubernetes/ingress-nginx/pull/2467) Fixed broken link in deploy README
+- [X] [#2498](https://github.com/kubernetes/ingress-nginx/pull/2498) Add some clarification around multiple ingress controller behavior
+- [X] [#2503](https://github.com/kubernetes/ingress-nginx/pull/2503) Add KubeCon Europe 2018 Video to documentation
+
 ### 0.14.0
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.14.0`
