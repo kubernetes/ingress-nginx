@@ -1,6 +1,7 @@
 local resty_roundrobin = require("resty.roundrobin")
 local resty_chash = require("resty.chash")
 local util = require("util")
+local split = require("util.split")
 local ck = require("resty.cookie")
 
 local _M = {}
@@ -114,7 +115,7 @@ function _M.balance(backend)
     endpoint_string = instance:find()
   end
 
-  local address, port = util.split_pair(endpoint_string, ":")
+  local address, port = split.split_pair(endpoint_string, ":")
   return { address = address, port = port }
 end
 

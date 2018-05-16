@@ -66,6 +66,13 @@ http {
         else
           balancer = res
         end
+
+        ok, res = pcall(require, "monitor")
+        if not ok then
+            error("require(monitor) failed: " .. tostring(res))
+        else
+            monitor = res
+        end
         {{ end }}
     }
 
@@ -881,6 +888,7 @@ stream {
                 {{ end }}
                 {{ if $all.DynamicConfigurationEnabled}}
                 balancer.call()
+                monitor.call()
                 {{ end }}
             }
             {{ end }}
