@@ -590,7 +590,7 @@ stream {
     {{ range $i, $tcpServer := .TCPBackends }}
     upstream tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
     {{ range $j, $endpoint := $tcpServer.Endpoints }}
-        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+        server 			{{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
     {{ end }}
     }
     server {
@@ -619,7 +619,7 @@ stream {
     {{ range $i, $udpServer := .UDPBackends }}
     upstream udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
     {{ range $j, $endpoint := $udpServer.Endpoints }}
-        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+        server 			{{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
     {{ end }}
     }
 
