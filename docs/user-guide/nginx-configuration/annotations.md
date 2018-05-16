@@ -329,7 +329,7 @@ Additionally it is possible to set:
 * `nginx.ingress.kubernetes.io/auth-signin`:
   `<SignIn_URL>` to specify the location of the error page.
 * `nginx.ingress.kubernetes.io/auth-response-headers`:
-  `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authorization request completes.
+  `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authentication request completes.
 * `nginx.ingress.kubernetes.io/auth-request-redirect`:
   `<Request_Redirect_URL>`  to specify the X-Auth-Request-Redirect header value.
 
