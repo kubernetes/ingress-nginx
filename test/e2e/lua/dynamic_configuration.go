@@ -227,10 +227,9 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 		Expect(err).ToNot(HaveOccurred())
 
-		replicas := 2
-		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
+		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", 2, nil)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 
 		resp, body, errs := gorequest.New().
 			Get(fmt.Sprintf("%s?a-unique-request-uri", f.IngressController.HTTPURL)).
