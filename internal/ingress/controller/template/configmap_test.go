@@ -17,6 +17,7 @@ limitations under the License.
 package template
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -73,6 +74,19 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	to := ReadConfig(conf)
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
+	}
+
+	to = ReadConfig(conf)
+	def.BindAddressIpv4 = []string{}
+	def.BindAddressIpv6 = []string{}
+
+	if !reflect.DeepEqual(to.BindAddressIpv4, []string{"1.1.1.1", "2.2.2.2"}) {
+		t.Errorf("unexpected bindAddressIpv4")
+	}
+
+	if !reflect.DeepEqual(to.BindAddressIpv6, []string{"[2001:db8:a0b:12f0::1]", "[3731:54:65fe:2::a7]"}) {
+		t.Logf("%v", to.BindAddressIpv6)
+		t.Errorf("unexpected bindAddressIpv6")
 	}
 
 	def = config.NewDefault()
