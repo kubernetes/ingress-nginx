@@ -18,6 +18,7 @@ package lua
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
@@ -253,14 +254,21 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(newUpstreamName).Should(Equal(upstreamName))
 		}
 
-		resp, body, errs = gorequest.New().
-			Get(fmt.Sprintf("%s?completely-different-path", f.IngressController.HTTPURL)).
-			Set("Host", "foo.com").
-			End()
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		anotherUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
-		Expect(anotherUpstreamName).NotTo(Equal(upstreamName))
+		notEqualFound := false
+		for i := 0; i < 5; i++ {
+			resp, body, errs = gorequest.New().
+				Get(fmt.Sprintf("%s?completely-different-path=%f", f.IngressController.HTTPURL, rand.Float64())).
+				Set("Host", "foo.com").
+				End()
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			anotherUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
+			notEqualFound = anotherUpstreamName != upstreamName
+			if notEqualFound {
+				break
+			}
+		}
+		Expect(notEqualFound).Should(Equal(true))
 	})
 
 	Context("when session affinity annotation is present", func() {
