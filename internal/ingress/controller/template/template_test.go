@@ -483,9 +483,21 @@ func TestTemplateWithData(t *testing.T) {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
 
-	_, err = ngxTpl.Write(dat)
+	rt, err := ngxTpl.Write(dat)
 	if err != nil {
 		t.Errorf("invalid NGINX template: %v", err)
+	}
+
+	if !strings.Contains(string(rt), "listen [2001:db8:a0b:12f0::1]") {
+		t.Errorf("invalid NGINX template, expected IPV6 listen address not present")
+	}
+
+	if !strings.Contains(string(rt), "listen [3731:54:65fe:2::a7]") {
+		t.Errorf("invalid NGINX template, expected IPV6 listen address not present")
+	}
+
+	if !strings.Contains(string(rt), "listen 2.2.2.2") {
+		t.Errorf("invalid NGINX template, expected IPV4 listen address not present")
 	}
 }
 

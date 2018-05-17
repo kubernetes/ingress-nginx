@@ -1,6 +1,7 @@
 local resty_roundrobin = require("resty.roundrobin")
 local resty_chash = require("resty.chash")
 local util = require("util")
+local ck = require("resty.cookie")
 
 local _M = {}
 local instances = {}
@@ -29,6 +30,73 @@ local function init_resty_balancer(factory, instance, endpoints)
   return instance
 end
 
+local function is_sticky(backend)
+  return backend["sessionAffinityConfig"] and backend["sessionAffinityConfig"]["name"] == "cookie"
+end
+
+local function cookie_name(backend)
+  return backend["sessionAffinityConfig"]["cookieSessionAffinity"]["name"] or "route"
+end
+
+local function encrypted_endpoint_string(backend, endpoint_string)
+  local encrypted, err
+  if backend["sessionAffinityConfig"]["cookieSessionAffinity"]["hash"] == "sha1" then
+    encrypted, err = util.sha1_digest(endpoint_string)
+  else
+    encrypted, err = util.md5_digest(endpoint_string)
+  end
+  if err ~= nil then
+    ngx.log(ngx.ERR, err)
+  end
+
+  return encrypted
+end
+
+local function set_cookie(backend, value)
+  local cookie, err = ck:new()
+  if not cookie then
+    ngx.log(ngx.ERR, err)
+  end
+
+  local ok
+  ok, err = cookie:set({
+    key = cookie_name(backend),
+    value = value,
+    path = "/",
+    domain = ngx.var.host,
+    httponly = true,
+  })
+  if not ok then
+    ngx.log(ngx.ERR, err)
+  end
+end
+
+local function pick_random(instance)
+  local index = math.random(instance.npoints)
+  return instance:next(index)
+end
+
+local function sticky_endpoint_string(instance, backend)
+  local cookie, err = ck:new()
+  if not cookie then
+    ngx.log(ngx.ERR, err)
+    return pick_random(instance)
+  end
+
+  local key = cookie:get(cookie_name(backend))
+  if not key then
+    local tmp_endpoint_string = pick_random(instance)
+    key = encrypted_endpoint_string(backend, tmp_endpoint_string)
+    set_cookie(backend, key)
+  end
+
+  return instance:find(key)
+end
+
+function _M.is_applicable(backend)
+  return is_sticky(backend) or backend["upstream-hash-by"] or backend["load-balance"] == "round_robin"
+end
+
 function _M.balance(backend)
   local instance = instances[backend.name]
   if not instance then
@@ -37,7 +105,9 @@ function _M.balance(backend)
   end
 
   local endpoint_string
-  if backend["upstream-hash-by"] then
+  if is_sticky(backend) then
+    endpoint_string = sticky_endpoint_string(instance, backend)
+  elseif backend["upstream-hash-by"] then
     local key = util.lua_ngx_var(backend["upstream-hash-by"])
     endpoint_string = instance:find(key)
   else
@@ -48,10 +118,10 @@ function _M.balance(backend)
   return { address = address, port = port }
 end
 
-function _M.reinit(backend)
+function _M.sync(backend)
   local instance = instances[backend.name]
   local factory = resty_roundrobin
-  if backend["upstream-hash-by"] then
+  if is_sticky(backend) or backend["upstream-hash-by"] then
     factory = resty_chash
   end
 
@@ -64,6 +134,9 @@ function _M.reinit(backend)
   end
 
   instances[backend.name] = init_resty_balancer(factory, instance, backend.endpoints)
+end
+
+function _M.after_balance()
 end
 
 return _M

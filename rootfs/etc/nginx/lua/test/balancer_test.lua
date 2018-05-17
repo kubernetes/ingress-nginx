@@ -1,7 +1,7 @@
 local cwd = io.popen("pwd"):read('*l')
 package.path = cwd .. "/rootfs/etc/nginx/lua/?.lua;" .. package.path
 
-local balancer, mock_cjson, mock_config, mock_sticky, mock_backends, mock_lrucache, lock, mock_lock,
+local balancer, mock_cjson, mock_config, mock_backends, mock_lrucache, lock, mock_lock,
   mock_ngx_balancer, mock_ewma
 
 local function dict_generator(vals)
@@ -46,10 +46,14 @@ local default_backends = {
 local function init()
   mock_cjson = {}
   mock_config = {}
-  mock_sticky = {}
   mock_ngx_balancer = {}
-  mock_ewma = {}
-  mock_resty_balancer = {}
+  mock_ewma = {
+    sync = function(b) return end
+  }
+  mock_resty_balancer = {
+    sync = function(b) return end,
+    after_balance = function () return end
+  }
   mock_backends = dict_generator(default_backends)
   mock_lrucache = {
     new = function () return mock_backends end
@@ -76,12 +80,15 @@ local function init()
   }
   package.loaded["ngx.balancer"] = mock_ngx_balancer
   package.loaded["resty.lrucache"] = mock_lrucache
+  package.loaded["resty.string"] = {}
+  package.loaded["resty.sha1"] = {}
+  package.loaded["resty.md5"] = {}
+  package.loaded["resty.cookie"] = {}
   package.loaded["cjson"] = mock_cjson
   package.loaded["resty.lock"] = mock_lock
   package.loaded["balancer.ewma"] = mock_ewma
   package.loaded["balancer.resty"] = mock_resty_balancer
   package.loaded["configuration"] = mock_config
-  package.loaded["sticky"] = mock_sticky
   balancer = require("balancer")
 end
 
@@ -91,7 +98,7 @@ describe("[balancer_test]", function()
   end)
 
   teardown(function()
-    local packages = {"ngx.balancer", "resty.lrucache","cjson", "resty.lock", "balancer.ewma","configuration", "sticky"}
+    local packages = {"ngx.balancer", "resty.lrucache","cjson", "resty.lock", "balancer.ewma","configuration"}
     for i, package_name in ipairs(packages) do
       package.loaded[package_name] = nil
     end
@@ -108,7 +115,6 @@ describe("[balancer_test]", function()
       _G.ngx.get_phase = nil
       _G.ngx.var = {}
       mock_backends._vals = default_backends
-      mock_sticky.is_sticky = function(b) return false end
     end)
 
     describe("phase=log", function()
@@ -121,6 +127,7 @@ describe("[balancer_test]", function()
 
         local ewma_after_balance_spy = spy.on(mock_ewma, "after_balance")
 
+        mock_resty_balancer.is_applicable = function(b) return false end
         assert.has_no_errors(balancer.call)
         assert.spy(ewma_after_balance_spy).was_called()
       end)
@@ -130,6 +137,7 @@ describe("[balancer_test]", function()
 
         local ewma_after_balance_spy = spy.on(mock_ewma, "after_balance")
 
+        mock_resty_balancer.is_applicable = function(b) return true end
         assert.has_no_errors(balancer.call)
         assert.spy(ewma_after_balance_spy).was_not_called()
       end)
@@ -173,44 +181,11 @@ describe("[balancer_test]", function()
         local set_more_tries_spy = spy.on(mock_ngx_balancer, "set_more_tries")
         local set_current_peer_spy = spy.on(mock_ngx_balancer, "set_current_peer")
 
+        mock_resty_balancer.is_applicable = function(b) return false end
         assert.has_no_errors(balancer.call)
         assert.spy(backend_get_spy).was_called_with(match.is_table(), "mock_ewma_backend")
         assert.spy(set_more_tries_spy).was_called_with(1)
         assert.spy(set_current_peer_spy).was_called_with("000.000.111", "8083")
-      end)
-
-      it("sticky=true, returns stored endpoints and peer was successfully set", function()
-        _G.ngx.var.proxy_upstream_name = "mock_rr_backend"
-
-        mock_sticky.is_sticky = function(b) return true end
-        mock_sticky.get_endpoint = function() return {address = "000.000.011", port = "8082"} end
-
-        local backend_get_spy = spy.on(mock_backends, "get")
-        local set_more_tries_spy = spy.on(mock_ngx_balancer, "set_more_tries")
-        local set_current_peer_spy = spy.on(mock_ngx_balancer, "set_current_peer")
-
-        assert.has_no_errors(balancer.call)
-        assert.spy(backend_get_spy).was_called_with(match.is_table(), "mock_rr_backend")
-        assert.spy(set_more_tries_spy).was_called_with(1)
-        assert.spy(set_current_peer_spy).was_called_with("000.000.011", "8082")
-      end)
-
-      it("sticky=true, does not return stored endpoints, defaults to round robin", function()
-        _G.ngx.var.proxy_upstream_name = "mock_rr_backend"
-
-        mock_sticky.is_sticky = function(b) return true end
-        mock_sticky.get_endpoint = function() return nil end
-        mock_sticky.set_endpoint = function(b) return end
-
-        local backend_get_spy = spy.on(mock_backends, "get")
-        local set_more_tries_spy = spy.on(mock_ngx_balancer, "set_more_tries")
-        local set_current_peer_spy = spy.on(mock_ngx_balancer, "set_current_peer")
-
-        mock_resty_balancer.balance = function(b) return {address = "000.000.000", port = "8080"} end
-        assert.has_no_errors(balancer.call)
-        assert.spy(backend_get_spy).was_called_with(match.is_table(), "mock_rr_backend")
-        assert.spy(set_more_tries_spy).was_called_with(1)
-        assert.spy(set_current_peer_spy).was_called_with("000.000.000", "8080")
       end)
 
       it("fails when no backend exists", function()
@@ -276,18 +251,18 @@ describe("[balancer_test]", function()
       end)
 
       it("lb_alg=ewma, updates backend when sync is required", function()
+        _G.ngx.var.proxy_upstream_name = "mock_ewma_backend"
         mock_config.get_backends_data = function() return { default_backends.mock_ewma_backend } end
         mock_backends._vals = {}
 
         local backend_set_spy = spy.on(mock_backends, "set")
-        local ewma_flush_spy = spy.on(_G.ngx.shared.balancer_ewma, "flush_all")
-        local ewma_lta_flush_spy = spy.on(_G.ngx.shared.balancer_ewma_last_touched_at, "flush_all")
+        local ewma_sync_spy = spy.on(mock_ewma, "sync")
 
+        mock_resty_balancer.is_applicable = function(b) return false end
         assert.has_no_errors(balancer.init_worker)
         assert.spy(backend_set_spy)
           .was_called_with(match.is_table(), default_backends.mock_ewma_backend.name, match.is_table())
-        assert.spy(ewma_flush_spy).was_called_with(match.is_table())
-        assert.spy(ewma_lta_flush_spy).was_called_with(match.is_table())
+        assert.spy(ewma_sync_spy).was_called()
       end)
     end)
   end)

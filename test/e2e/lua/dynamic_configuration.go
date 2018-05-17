@@ -252,19 +252,13 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			newUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
 			Expect(newUpstreamName).Should(Equal(upstreamName))
 		}
-
-		resp, body, errs = gorequest.New().
-			Get(fmt.Sprintf("%s?completely-different-path", f.IngressController.HTTPURL)).
-			Set("Host", "foo.com").
-			End()
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		anotherUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
-		Expect(anotherUpstreamName).NotTo(Equal(upstreamName))
 	})
 
 	Context("when session affinity annotation is present", func() {
 		It("should use sticky sessions when ingress rules are configured", func() {
+			err := framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 2, nil)
+			Expect(err).NotTo(HaveOccurred())
+
 			cookieName := "STICKYSESSION"
 
 			By("Updating affinity annotation on ingress")
@@ -284,47 +278,41 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 			By("Making a first request")
 			host := "foo.com"
-			resp, _, errs := gorequest.New().
+			resp, body, errs := gorequest.New().
 				Get(f.IngressController.HTTPURL).
 				Set("Host", host).
 				End()
 			Expect(len(errs)).Should(BeNumerically("==", 0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			hostnamePattern := regexp.MustCompile(`Hostname: ([a-zA-Z0-9\-]+)`)
+			upstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
 
 			cookies := (*http.Response)(resp).Cookies()
 			sessionCookie, err := getCookie(cookieName, cookies)
 			Expect(err).ToNot(HaveOccurred())
 
-			By("Making a second request with the previous session cookie")
-			resp, _, errs = gorequest.New().
-				Get(f.IngressController.HTTPURL).
-				AddCookie(sessionCookie).
-				Set("Host", host).
-				End()
-			Expect(len(errs)).Should(BeNumerically("==", 0))
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(sessionCookie.Domain).Should(Equal(host))
 
-			By("Making a third request with no cookie")
-			resp, _, errs = gorequest.New().
-				Get(f.IngressController.HTTPURL).
-				Set("Host", host).
-				End()
+			By("Making many requests with the previous session cookie")
+			for i := 0; i < 5; i++ {
+				resp, _, errs = gorequest.New().
+					Get(f.IngressController.HTTPURL).
+					AddCookie(sessionCookie).
+					Set("Host", host).
+					End()
+				Expect(len(errs)).Should(BeNumerically("==", 0))
+				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			Expect(len(errs)).Should(BeNumerically("==", 0))
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+				newCookies := (*http.Response)(resp).Cookies()
+				_, err := getCookie(cookieName, newCookies)
+				By("Omitting cookie in all subsequent requests")
+				Expect(err).To(HaveOccurred())
 
-			log, err := f.NginxLogs()
-			Expect(err).ToNot(HaveOccurred())
-			Expect(log).ToNot(BeEmpty())
-
-			By("Checking that upstreams are sticky when session cookie is used")
-			index := strings.Index(log, fmt.Sprintf("reason: 'UPDATE' Ingress %s/foo.com", f.IngressController.Namespace))
-			reqLogs := log[index:]
-			re := regexp.MustCompile(`\d{1,3}(?:\.\d{1,3}){3}(?::\d{1,5})`)
-			upstreams := re.FindAllString(reqLogs, -1)
-			Expect(len(upstreams)).Should(BeNumerically("==", 3))
-			Expect(upstreams[0]).To(Equal(upstreams[1]))
-			Expect(upstreams[1]).ToNot(Equal(upstreams[2]))
+				By("By proxying to the same upstream")
+				newUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
+				Expect(newUpstreamName).Should(Equal(upstreamName))
+			}
 		})
 
 		It("should NOT use sticky sessions when a default backend and no ingress rules configured", func() {
@@ -376,7 +364,7 @@ func enableDynamicConfiguration(namespace string, kubeClientSet kubernetes.Inter
 }
 
 func ensureIngress(f *framework.Framework, host string) (*extensions.Ingress, error) {
-	return f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, &map[string]string{
+	return f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{
 		"nginx.ingress.kubernetes.io/load-balance": "ewma",
 	}))
 }

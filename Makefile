@@ -18,12 +18,13 @@ all: all-container
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.15.0-rc.1
+TAG?=0.16.0-rc.1
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
 DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
+FOCUS?=.*
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -135,11 +136,6 @@ endif
 clean:
 	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
 
-.PHONE: code-generator
-code-generator:
-		@go-bindata -version || go get -u github.com/jteeuwen/go-bindata/...
-		go-bindata -nometadata -o internal/file/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
-
 .PHONY: build
 build: clean
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
@@ -162,16 +158,11 @@ test:
 lua-test:
 	@busted $(BUSTED_ARGS) ./rootfs/etc/nginx/lua/test;
 
-.PHONY: e2e-image
-e2e-image: sub-container-amd64
-	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMGNAME):e2e
-	docker images
-
 .PHONY: e2e-test
 e2e-test:
 	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
 	@ginkgo build ./test/e2e
-	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 -p -trace -nodes=2 ./test/e2e/e2e.test
+	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 --focus=$(FOCUS) -p -trace -nodes=2 ./test/e2e/e2e.test
 
 .PHONY: cover
 cover:
