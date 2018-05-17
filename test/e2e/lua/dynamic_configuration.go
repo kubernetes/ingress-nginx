@@ -364,7 +364,7 @@ func enableDynamicConfiguration(namespace string, kubeClientSet kubernetes.Inter
 }
 
 func ensureIngress(f *framework.Framework, host string) (*extensions.Ingress, error) {
-	return f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, &map[string]string{
+	return f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{
 		"nginx.ingress.kubernetes.io/load-balance": "ewma",
 	}))
 }
