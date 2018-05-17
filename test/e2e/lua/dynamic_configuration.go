@@ -252,15 +252,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			newUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
 			Expect(newUpstreamName).Should(Equal(upstreamName))
 		}
-
-		resp, body, errs = gorequest.New().
-			Get(fmt.Sprintf("%s?completely-different-path", f.IngressController.HTTPURL)).
-			Set("Host", "foo.com").
-			End()
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		anotherUpstreamName := hostnamePattern.FindAllStringSubmatch(body, -1)[0][1]
-		Expect(anotherUpstreamName).NotTo(Equal(upstreamName))
 	})
 
 	Context("when session affinity annotation is present", func() {
