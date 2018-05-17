@@ -17,10 +17,10 @@ limitations under the License.
 package file
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/golang/glog"
+	"strings"
 
 	"k8s.io/kubernetes/pkg/util/filesystem"
 )
@@ -34,9 +34,11 @@ type Filesystem interface {
 func NewLocalFS() (Filesystem, error) {
 	fs := filesystem.DefaultFs{}
 
-	err := initialize(false, fs)
-	if err != nil {
-		return nil, err
+	for _, directory := range directories {
+		err := fs.MkdirAll(directory, 0655)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return fs, nil
@@ -46,94 +48,61 @@ func NewLocalFS() (Filesystem, error) {
 // paths used by the ingress controller.
 // This allows running test without polluting the local machine.
 func NewFakeFS() (Filesystem, error) {
-	fs := filesystem.NewFakeFs()
+	osFs := filesystem.DefaultFs{}
+	fakeFs := filesystem.NewFakeFs()
 
-	err := initialize(true, fs)
+	//TODO: find another way to do this
+	rootFS := filepath.Clean(fmt.Sprintf("%v/%v", os.Getenv("GOPATH"), "src/k8s.io/ingress-nginx/rootfs"))
+
+	var fileList []string
+	err := filepath.Walk(rootFS, func(path string, f os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if f.IsDir() {
+			return nil
+		}
+
+		file := strings.TrimPrefix(path, rootFS)
+		if file == "" {
+			return nil
+		}
+
+		fileList = append(fileList, file)
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	return fs, nil
-}
+	for _, file := range fileList {
+		realPath := fmt.Sprintf("%v%v", rootFS, file)
 
-// initialize creates the required directory structure and when
-// runs as virtual filesystem it copies the local files to it
-func initialize(isVirtual bool, fs Filesystem) error {
-	for _, directory := range directories {
-		err := fs.MkdirAll(directory, 0655)
+		data, err := osFs.ReadFile(realPath)
 		if err != nil {
-			return err
+			return nil, err
+		}
+
+		fakeFile, err := fakeFs.Create(file)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = fakeFile.Write(data)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	if !isVirtual {
-		return nil
-	}
+	fakeFs.MkdirAll("/run", 0655)
+	fakeFs.MkdirAll("/proc", 0655)
+	fakeFs.MkdirAll("/etc/nginx/template", 0655)
 
-	for _, file := range files {
-		f, err := fs.Create(file)
-		if err != nil {
-			return err
-		}
+	fakeFs.MkdirAll(DefaultSSLDirectory, 0655)
+	fakeFs.MkdirAll(AuthDirectory, 0655)
 
-		_, err = f.Write([]byte(""))
-		if err != nil {
-			return err
-		}
-
-		err = f.Close()
-		if err != nil {
-			return err
-		}
-	}
-
-	err := fs.MkdirAll("/proc", 0655)
-	if err != nil {
-		return err
-	}
-
-	glog.Info("Restoring generated (go-bindata) assets in virtual filesystem...")
-	for _, assetName := range AssetNames() {
-		err := restoreAsset("/", assetName, fs)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// restoreAsset restores an asset under the given directory
-func restoreAsset(dir, name string, fs Filesystem) error {
-	data, err := Asset(name)
-	if err != nil {
-		return err
-	}
-	info, err := AssetInfo(name)
-	if err != nil {
-		return err
-	}
-	err = fs.MkdirAll(_filePath(dir, filepath.Dir(name)), os.FileMode(0755))
-	if err != nil {
-		return err
-	}
-
-	f, err := fs.Create(_filePath(dir, name))
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(data)
-	if err != nil {
-		return err
-	}
-
-	err = f.Close()
-	if err != nil {
-		return err
-	}
-
-	//Missing info.Mode()
-
-	return fs.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
+	return fakeFs, nil
 }
