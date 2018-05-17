@@ -26,7 +26,7 @@ go_import_path: k8s.io/ingress-nginx
 env:
   global:
   - CHANGE_MINIKUBE_NONE_USER=true
-  - KUBERNETES_VERSION=v1.9.4
+  - KUBERNETES_VERSION=v1.10.0
   - DOCKER=docker
   - BUSTED_VERSION=2.0.rc12
   - GH_REF=github.com/kubernetes/ingress-nginx
