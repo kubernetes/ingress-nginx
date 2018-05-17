@@ -152,6 +152,7 @@ var (
 		"buildAuthSignURL":            buildAuthSignURL,
 		"buildOpentracingLoad":        buildOpentracingLoad,
 		"buildOpentracing":            buildOpentracing,
+		"proxySetHeader":              proxySetHeader,
 	}
 )
 
@@ -894,4 +895,18 @@ func buildOpentracing(input interface{}) string {
 
 	buf.WriteString("\r\n")
 	return buf.String()
+}
+
+func proxySetHeader(loc interface{}) string {
+	location, ok := loc.(*ingress.Location)
+	if !ok {
+		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		return "proxy_set_header"
+	}
+
+	if location.GRPC {
+		return "grpc_set_header"
+	}
+
+	return "proxy_set_header"
 }

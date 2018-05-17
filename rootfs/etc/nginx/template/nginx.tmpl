@@ -763,6 +763,7 @@ stream {
 
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location }}
+        {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location }}
 
         {{ if not (empty $location.Rewrite.AppRoot)}}
@@ -992,54 +993,54 @@ stream {
 
             {{/* By default use vhost as Host to upstream, but allow overrides */}}
             {{ if not (empty $location.UpstreamVhost) }}
-            proxy_set_header Host                   "{{ $location.UpstreamVhost }}";
+            {{ $proxySetHeader }} Host                   "{{ $location.UpstreamVhost }}";
             {{ else }}
-            proxy_set_header Host                   $best_http_host;
+            {{ $proxySetHeader }} Host                   $best_http_host;
             {{ end }}
 
             # Pass the extracted client certificate to the backend
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
             {{ if $server.CertificateAuth.PassCertToUpstream }}
-            proxy_set_header ssl-client-cert        $ssl_client_escaped_cert;
+            {{ $proxySetHeader }} ssl-client-cert        $ssl_client_escaped_cert;
             {{ end }}
-            proxy_set_header ssl-client-verify      $ssl_client_verify;
-            proxy_set_header ssl-client-subject-dn  $ssl_client_s_dn;
-            proxy_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
+            {{ $proxySetHeader }} ssl-client-verify      $ssl_client_verify;
+            {{ $proxySetHeader }} ssl-client-subject-dn  $ssl_client_s_dn;
+            {{ $proxySetHeader }} ssl-client-issuer-dn   $ssl_client_i_dn;
             {{ end }}
 
             # Allow websocket connections
-            proxy_set_header                        Upgrade           $http_upgrade;
+            {{ $proxySetHeader }}                        Upgrade           $http_upgrade;
             {{ if $location.Connection.Enabled}}
-            proxy_set_header                        Connection        {{ $location.Connection.Header }};
+            {{ $proxySetHeader }}                        Connection        {{ $location.Connection.Header }};
             {{ else }}
-            proxy_set_header                        Connection        $connection_upgrade;
+            {{ $proxySetHeader }}                        Connection        $connection_upgrade;
             {{ end }}
 
-            proxy_set_header X-Request-ID           $req_id;
-            proxy_set_header X-Real-IP              $the_real_ip;
+            {{ $proxySetHeader }} X-Request-ID           $req_id;
+            {{ $proxySetHeader }} X-Real-IP              $the_real_ip;
             {{ if $all.Cfg.ComputeFullForwardedFor }}
-            proxy_set_header X-Forwarded-For        $full_x_forwarded_for;
+            {{ $proxySetHeader }} X-Forwarded-For        $full_x_forwarded_for;
             {{ else }}
-            proxy_set_header X-Forwarded-For        $the_real_ip;
+            {{ $proxySetHeader }} X-Forwarded-For        $the_real_ip;
             {{ end }}
-            proxy_set_header X-Forwarded-Host       $best_http_host;
-            proxy_set_header X-Forwarded-Port       $pass_port;
-            proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
+            {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
+            {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
             {{ if $all.Cfg.ProxyAddOriginalUriHeader }}
-            proxy_set_header X-Original-URI         $request_uri;
+            {{ $proxySetHeader }} X-Original-URI         $request_uri;
             {{ end }}
-            proxy_set_header X-Scheme               $pass_access_scheme;
+            {{ $proxySetHeader }} X-Scheme               $pass_access_scheme;
 
             # Pass the original X-Forwarded-For
-            proxy_set_header X-Original-Forwarded-For {{ buildForwardedFor $all.Cfg.ForwardedForHeader }};
+            {{ $proxySetHeader }} X-Original-Forwarded-For {{ buildForwardedFor $all.Cfg.ForwardedForHeader }};
 
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
-            proxy_set_header Proxy                  "";
+            {{ $proxySetHeader }} Proxy                  "";
 
             # Custom headers to proxied server
             {{ range $k, $v := $all.ProxySetHeaders }}
-            proxy_set_header {{ $k }}                    "{{ $v }}";
+            {{ $proxySetHeader }} {{ $k }}                    "{{ $v }}";
             {{ end }}
 
             proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
@@ -1062,7 +1063,7 @@ stream {
 
             {{/* rewrite only works if the content is not compressed */}}
             {{ if $location.Rewrite.AddBaseURL }}
-            proxy_set_header                        Accept-Encoding     "";
+            {{ $proxySetHeader }}                        Accept-Encoding     "";
             {{ end }}
 
             {{/* Add any additional configuration defined */}}

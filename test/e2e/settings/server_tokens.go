@@ -44,7 +44,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		err := f.UpdateNginxConfigMapData(serverTokens, "false")
 		Expect(err).NotTo(HaveOccurred())
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(serverTokens, "/", serverTokens, f.IngressController.Namespace, nil))
+		ing, err := f.EnsureIngress(framework.NewSingleIngress(serverTokens, "/", serverTokens, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 

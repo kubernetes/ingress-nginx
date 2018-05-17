@@ -385,7 +385,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 }
 
 // NewSingleIngress creates a simple ingress rule
-func NewSingleIngress(name, path, host, ns string, annotations *map[string]string) *extensions.Ingress {
+func NewSingleIngress(name, path, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
 	if annotations == nil {
 		annotations = &map[string]string{}
 	}
@@ -412,8 +412,8 @@ func NewSingleIngress(name, path, host, ns string, annotations *map[string]strin
 								{
 									Path: path,
 									Backend: extensions.IngressBackend{
-										ServiceName: "http-svc",
-										ServicePort: intstr.FromInt(80),
+										ServiceName: service,
+										ServicePort: intstr.FromInt(port),
 									},
 								},
 							},
