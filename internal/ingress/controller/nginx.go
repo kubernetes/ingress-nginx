@@ -53,21 +53,21 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
+	"k8s.io/ingress-nginx/internal/ingress/metric/collector"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
+
+	logcollector "k8s.io/ingress-nginx/internal/ingress/metric/server"
 )
 
 type statusModule string
 
 const (
 	ngxHealthPath = "/healthz"
-
-	defaultStatusModule statusModule = "default"
-	vtsStatusModule     statusModule = "vts"
 )
 
 var (
@@ -134,7 +134,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		fs,
 		n.updateCh)
 
-	n.stats = newStatsCollector(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
+	collector.NewInstance(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -258,8 +258,7 @@ type NGINXController struct {
 	binary   string
 	resolver []net.IP
 
-	stats        *statsCollector
-	statusModule statusModule
+	logCollector *logcollector.UDPLogListener
 
 	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
@@ -278,6 +277,8 @@ func (n *NGINXController) Start() {
 	glog.Infof("starting Ingress controller")
 
 	n.store.Run(n.stopCh)
+
+	go n.logCollector.Run(n.stopCh)
 
 	if n.syncStatus != nil {
 		go n.syncStatus.Run()
@@ -490,13 +491,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 
 		n.Proxy.ServerList = servers
-	}
-
-	// we need to check if the status module configuration changed
-	if cfg.EnableVtsStatus {
-		n.setupMonitor(vtsStatusModule)
-	} else {
-		n.setupMonitor(defaultStatusModule)
 	}
 
 	// NGINX cannot resize the hash tables used to store server names.

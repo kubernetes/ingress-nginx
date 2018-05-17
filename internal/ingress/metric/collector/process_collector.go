@@ -26,6 +26,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type scrapeRequest struct {
+	results chan<- prometheus.Metric
+	done    chan struct{}
+}
+
 // BinaryNameMatcher ...
 type BinaryNameMatcher struct {
 	Name   string
@@ -60,8 +65,8 @@ type namedProcess struct {
 	data       namedProcessData
 }
 
-// NewNamedProcess returns a new prometheus collector for the nginx process
-func NewNamedProcess(children bool, mn common.MatchNamer) (prometheus.Collector, error) {
+// newNamedProcess returns a new prometheus collector for the nginx process
+func newNamedProcess(children bool, mn common.MatchNamer) (prometheus.Collector, error) {
 	fs, err := proc.NewFS("/proc")
 	if err != nil {
 		return nil, err
