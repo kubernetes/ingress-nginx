@@ -345,6 +345,27 @@ func (jt *JSONRFC3339NoZ) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// RFC3339ZNoT is the time format used in Zun (Containers Service).
+const RFC3339ZNoT = "2006-01-02 15:04:05-07:00"
+
+type JSONRFC3339ZNoT time.Time
+
+func (jt *JSONRFC3339ZNoT) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	if s == "" {
+		return nil
+	}
+	t, err := time.Parse(RFC3339ZNoT, s)
+	if err != nil {
+		return err
+	}
+	*jt = JSONRFC3339ZNoT(t)
+	return nil
+}
+
 /*
 Link is an internal type to be used in packages of collection resources that are
 paginated in a certain way.
