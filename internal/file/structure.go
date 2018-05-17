@@ -25,18 +25,12 @@ const (
 	// This directory contains all the SSL certificates that are specified in Ingress rules.
 	// The name of each file is <namespace>-<secret name>.pem. The content is the concatenated
 	// certificate and key.
-	DefaultSSLDirectory = "/ingress-controller/ssl"
+	DefaultSSLDirectory = "/etc/ingress-controller/ssl"
 )
 
 var (
 	directories = []string{
-		"/etc/nginx/template",
-		"/run",
 		DefaultSSLDirectory,
 		AuthDirectory,
-	}
-
-	files = []string{
-		"/run/nginx.pid",
 	}
 )
