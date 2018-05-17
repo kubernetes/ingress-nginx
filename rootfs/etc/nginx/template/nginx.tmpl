@@ -980,9 +980,7 @@ stream {
             {{ template "CORS" $location }}
             {{ end }}
 
-            {{ if $location.InfluxDB.InfluxDBEnabled }}
-            influxdb server_name=$location.InfluxDB.InfluxDBServerName host=$location.InfluxDB.InfluxDBHost port=$location.InfluxDB.InfluxDBPort measurement=$location.InfluxDB.InfluxDBMeasurement enabled=true;
-            {{ end }}
+            {{ buildInfluxDB $location.InfluxDB }}
 
             {{ if not (empty $location.Redirect.URL) }}
             if ($uri ~* {{ $path }}) {
