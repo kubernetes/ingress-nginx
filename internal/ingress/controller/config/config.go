@@ -516,6 +516,11 @@ type Configuration struct {
 	// DisableLuaRestyWAF disables lua-resty-waf globally regardless
 	// of whether there's an ingress that has enabled the WAF using annotation
 	DisableLuaRestyWAF bool `json:"disable-lua-resty-waf"`
+
+	// EnableInfluxDB enables the nginx InfluxDB extension
+	// http://github.com/influxdata/nginx-influxdb-module/
+	// By default this is disabled
+	EnableInfluxDB bool `json:"enable-influxdb"`
 }
 
 // NewDefault returns the default nginx configuration
