@@ -24,6 +24,7 @@ GOOS?=linux
 DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
+FOCUS?=.*
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -157,7 +158,7 @@ lua-test:
 e2e-test:
 	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
 	@ginkgo build ./test/e2e
-	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 -p -trace -nodes=2 ./test/e2e/e2e.test
+	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 --focus=$(FOCUS) -p -trace -nodes=2 ./test/e2e/e2e.test
 
 .PHONY: cover
 cover:
