@@ -386,22 +386,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mandatory-commands" title="Mandatory commands" class="md-nav__link">
-    Mandatory commands
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#install-without-rbac-roles" title="Install without RBAC roles" class="md-nav__link">
-    Install without RBAC roles
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#install-with-rbac-roles" title="Install with RBAC roles" class="md-nav__link">
-    Install with RBAC roles
+  <a href="#mandatory-command" title="Mandatory command" class="md-nav__link">
+    Mandatory command
   </a>
   
 </li>
@@ -503,13 +489,6 @@
         <li class="md-nav__item">
   <a href="#detect-installed-version" title="Detect installed version" class="md-nav__link">
     Detect installed version
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#deploying-the-config-map" title="Deploying the config-map" class="md-nav__link">
-    Deploying the config-map
   </a>
   
 </li>
@@ -1226,22 +1205,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mandatory-commands" title="Mandatory commands" class="md-nav__link">
-    Mandatory commands
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#install-without-rbac-roles" title="Install without RBAC roles" class="md-nav__link">
-    Install without RBAC roles
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#install-with-rbac-roles" title="Install with RBAC roles" class="md-nav__link">
-    Install with RBAC roles
+  <a href="#mandatory-command" title="Mandatory command" class="md-nav__link">
+    Mandatory command
   </a>
   
 </li>
@@ -1347,13 +1312,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#deploying-the-config-map" title="Deploying the config-map" class="md-nav__link">
-    Deploying the config-map
-  </a>
-  
-</li>
-      
       
       
       
@@ -1376,9 +1334,7 @@
                 <h1 id="installation-guide">Installation Guide<a class="headerlink" href="#installation-guide" title="Permanent link">&para;</a></h1>
 <h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="#mandatory-commands">Mandatory commands</a></li>
-<li><a href="#install-without-rbac-roles">Install without RBAC roles</a></li>
-<li><a href="#install-with-rbac-roles">Install with RBAC roles</a></li>
+<li><a href="#mandatory-command">Mandatory command</a></li>
 <li><a href="#custom-provider">Custom Provider</a></li>
 <li><a href="#docker-for-mac">Docker for Mac</a></li>
 <li><a href="#minikube">minikube</a></li>
@@ -1389,41 +1345,11 @@
 <li><a href="#using-helm">Using Helm</a></li>
 <li><a href="#verify-installation">Verify installation</a></li>
 <li><a href="#detect-installed-version">Detect installed version</a></li>
-<li><a href="#deploying-the-config-map">Deploying the config-map</a></li>
 </ul>
 <h2 id="generic-deployment">Generic Deployment<a class="headerlink" href="#generic-deployment" title="Permanent link">&para;</a></h2>
 <p>The following resources are required for a generic deployment.</p>
-<h3 id="mandatory-commands">Mandatory commands<a class="headerlink" href="#mandatory-commands" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/namespace.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-
-<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/default-backend.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-
-<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/configmap.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-
-<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/tcp-services-configmap.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-
-<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/udp-services-configmap.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-</pre></div>
-
-
-<h3 id="install-without-rbac-roles">Install without RBAC roles<a class="headerlink" href="#install-without-rbac-roles" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/without-rbac.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-</pre></div>
-
-
-<h3 id="install-with-rbac-roles">Install with RBAC roles<a class="headerlink" href="#install-with-rbac-roles" title="Permanent link">&para;</a></h3>
-<p>Please check the <a href="rbac/">RBAC</a> document.</p>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/rbac.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-
-<span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/with-rbac.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
+<h3 id="mandatory-command">Mandatory command<a class="headerlink" href="#mandatory-command" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml</span>
 </pre></div>
 
 
@@ -1432,15 +1358,8 @@
 <h3 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link">&para;</a></h3>
 <p>Kubernetes is available for Docker for Mac's Edge channel. Switch to the <a href="https://docs.docker.com/docker-for-mac/install/">Edge
 channel</a> and <a href="https://docs.docker.com/docker-for-mac/#kubernetes">enable Kubernetes</a>.</p>
-<p>Patch the nginx ingress controller deployment to add the flag <code class="codehilite">--publish-service</code></p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type=&#39;json&#39; \</span>
-<span class="go">    --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)&quot;</span>
-</pre></div>
-
-
 <p>Create a service</p>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/docker-for-mac/service.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
 </pre></div>
 
 
@@ -1459,24 +1378,7 @@ channel</a> and <a href="https://docs.docker.com/docker-for-mac/#kubernetes">ena
 
 
 <ol>
-<li>Use the <a href="https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md">docker daemon</a></li>
-<li><a href="../development/">Build the image</a></li>
-<li>Perform <a href="#mandatory-commands">Mandatory commands</a></li>
-<li>Install the <code class="codehilite">nginx-ingress-controller</code> deployment <a href="#install-without-rbac-roles">without RBAC roles</a> or <a href="#install-with-rbac-roles">with RBAC roles</a></li>
-<li>Edit the <code class="codehilite">nginx-ingress-controller</code> deployment to use your custom image. Local images can be seen by performing <code class="codehilite">docker images</code>.</li>
-</ol>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl edit deployment nginx-ingress-controller -n ingress-nginx
-</pre></div>
-
-
-<p>edit the following section:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">image</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;IMAGE-NAME&gt;:&lt;TAG&gt;</span>
-<span class="l l-Scalar l-Scalar-Plain">imagePullPolicy</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
-<span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-ingress-controller</span>
-</pre></div>
-
-
-<ol>
+<li>Execute <code class="codehilite">make dev-env</code></li>
 <li>Confirm the <code class="codehilite">nginx-ingress-controller</code> deployment exists:</li>
 </ol>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n ingress-nginx 
@@ -1496,12 +1398,6 @@ Please check the <a href="https://aws.amazon.com/es/elasticloadbalancing/details
 <li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer">Layer 4</a>: use TCP as the listener protocol for ports 80 and 443.</li>
 <li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer">Layer 7</a>: use HTTP as the listener protocol for port 80 and terminate TLS in the ELB</li>
 </ul>
-<p>Patch the nginx ingress controller deployment to add the flag <code class="codehilite">--publish-service</code></p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type=&#39;json&#39; \</span>
-<span class="go">  --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)&quot;</span>
-</pre></div>
-
-
 <p>For L4:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l4.yaml</span>
 <span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml</span>
@@ -1511,89 +1407,34 @@ Please check the <a href="https://aws.amazon.com/es/elasticloadbalancing/details
 <p>For L7:</p>
 <p>Change line of the file <code class="codehilite">provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code class="codehilite">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</code>
 Then execute:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f provider/aws/service-l7.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l7.yaml</span>
 <span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l7.yaml</span>
 </pre></div>
 
 
 <p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
 <p><img alt="Listeners" src="./../images/elb-l7-listener.png" /></p>
-<p>If the ingress controller uses RBAC run:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml</span>
-</pre></div>
-
-
-<p>If not run:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml</span>
-</pre></div>
-
-
 <h4 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link">&para;</a></h4>
 <p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml</span>
 </pre></div>
 
 
-<p>If the ingress controller uses RBAC run:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml</span>
-</pre></div>
-
-
-<p>If not run:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml</span>
-</pre></div>
-
-
 <h3 id="gce-gke">GCE - GKE<a class="headerlink" href="#gce-gke" title="Permanent link">&para;</a></h3>
-<p>Patch the nginx ingress controller deployment to add the flag <code class="codehilite">--publish-service</code></p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type=&#39;json&#39; \</span>
-<span class="go">  --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)&quot;</span>
-</pre></div>
-
-
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/gce-gke/service.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-</pre></div>
-
-
-<p>If the ingress controller uses RBAC run:</p>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml | kubectl apply -f -</span>
-</pre></div>
-
-
-<p>If not run:</p>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml | kubectl apply -f -</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/cloud-generic.yaml</span>
 </pre></div>
 
 
 <p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
 <h3 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link">&para;</a></h3>
-<p>Patch the nginx ingress controller deployment to add the flag <code class="codehilite">--publish-service</code></p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type=&#39;json&#39; \</span>
-<span class="go">  --patch=&quot;$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/publish-service-patch.yaml)&quot;</span>
-</pre></div>
-
-
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/azure/service.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-</pre></div>
-
-
-<p>If the ingress controller uses RBAC run:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-with-rbac.yaml</span>
-</pre></div>
-
-
-<p>If not run:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/patch-service-without-rbac.yaml</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/cloud-generic.yaml</span>
 </pre></div>
 
 
 <p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
 <h3 id="baremetal">Baremetal<a class="headerlink" href="#baremetal" title="Permanent link">&para;</a></h3>
 <p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml</span>
 </pre></div>
 
 
@@ -1623,23 +1464,6 @@ Now, you are ready to create your first ingress.</p>
 <span class="go">POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app=ingress-nginx -o jsonpath={.items[0].metadata.name})</span>
 <span class="go">kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version</span>
 </pre></div>
-
-
-<h2 id="deploying-the-config-map">Deploying the config-map<a class="headerlink" href="#deploying-the-config-map" title="Permanent link">&para;</a></h2>
-<p>A config map can be used to configure system components for the nginx-controller. In order to begin using a config-map
-make sure it has been created and is being used in the deployment.</p>
-<p>It is created as seen in the <a href="#mandatory-commands">Mandatory Commands</a> section above.</p>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/configmap.yaml \</span>
-<span class="go">    | kubectl apply -f -</span>
-</pre></div>
-
-
-<p>and is setup to be used in the deployment <a href="./../deploy/without-rbac.yaml">without-rbac</a> or <a href="./../deploy/with-rbac.yaml">with-rbac</a> with the following line:</p>
-<div class="codehilite"><pre><span></span><span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">--configmap=$(POD_NAMESPACE)/nginx-configuration</span>
-</pre></div>
-
-
-<p>For information on using the config-map, see its <a href="../user-guide/nginx-configuration/configmap/">user-guide</a>.</p>
                 
                   
                 
