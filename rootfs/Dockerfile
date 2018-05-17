@@ -16,6 +16,8 @@ FROM BASEIMAGE
 
 CROSS_BUILD_COPY qemu-QEMUARCH-static /usr/bin/
 
+WORKDIR  /etc/nginx
+
 RUN clean-install \
   diffutils \
   dumb-init
