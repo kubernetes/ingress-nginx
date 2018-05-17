@@ -35,6 +35,7 @@ export MODSECURITY_VERSION=1.0.0
 export LUA_NGX_VERSION=0.10.12rc2
 export LUA_UPSTREAM_VERSION=0.07
 export COOKIE_FLAG_VERSION=1.1.0
+export NGINX_INFLUXDB_VERSION=41eef3df53d867483037bb84dd4816c9a9a4c24b
 
 export BUILD_PATH=/tmp/build
 
@@ -191,6 +192,9 @@ get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
 
 get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
         "http://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz"
+
+get_src 3926d41fb23fc2f4e54773f3c847153f6f17195a03677f9624e740605c49a771 \
+        "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
 
 
 # improve compilation times
@@ -386,6 +390,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/lua-nginx-module-$LUA_NGX_VERSION \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION \
   --add-module=$BUILD_PATH/nginx_cookie_flag_module-$COOKIE_FLAG_VERSION \
+  --add-module=$BUILD_PATH/nginx-influxdb-module-$NGINX_INFLUXDB_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/jaeger \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin \
