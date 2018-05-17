@@ -39,7 +39,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 	Context("when lua-resty-waf is enabled", func() {
 		It("should return 403 for a malicious request that matches a default WAF rule and 200 for other requests", func() {
 			host := "foo"
-			createIngress(f, host, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
+			createIngress(f, host, "http-svc", 80, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
 
 			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
@@ -52,7 +52,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		})
 		It("should not apply ignored rulesets", func() {
 			host := "foo"
-			createIngress(f, host, map[string]string{
+			createIngress(f, host, "http-svc", 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf":                 "active",
 				"nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets": "41000_sqli, 42000_xss"})
 
@@ -67,7 +67,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		})
 		It("should apply configured extra rules", func() {
 			host := "foo"
-			createIngress(f, host, map[string]string{
+			createIngress(f, host, "http-svc", 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf": "active",
 				"nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules": `[=[
 						{ "access": [
@@ -106,7 +106,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 	Context("when lua-resty-waf is not enabled", func() {
 		It("should return 200 even for a malicious request", func() {
 			host := "foo"
-			createIngress(f, host, map[string]string{})
+			createIngress(f, host, "http-svc", 80, map[string]string{})
 
 			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
@@ -119,7 +119,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		})
 		It("should run in simulate mode", func() {
 			host := "foo"
-			createIngress(f, host, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "simulate"})
+			createIngress(f, host, "http-svc", 80, map[string]string{"nginx.ingress.kubernetes.io/lua-resty-waf": "simulate"})
 
 			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
@@ -138,14 +138,14 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 	})
 })
 
-func createIngress(f *framework.Framework, host string, annotations map[string]string) {
-	ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, &annotations))
+func createIngress(f *framework.Framework, host, service string, port int, annotations map[string]string) {
+	ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, service, port, &annotations))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(ing).NotTo(BeNil())
 
 	err = f.WaitForNginxServer(host,
 		func(server string) bool {
-			return Expect(server).Should(ContainSubstring("server_name foo")) &&
+			return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host))) &&
 				Expect(server).ShouldNot(ContainSubstring("return 503"))
 		})
 	Expect(err).NotTo(HaveOccurred())
