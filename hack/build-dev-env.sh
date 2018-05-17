@@ -30,13 +30,8 @@ echo "[dev-env] installing kubectl"
 kubectl version || brew install kubectl
 
 echo "[dev-env] deploying NGINX Ingress controller in namespace $NAMESPACE"
-cat ./deploy/namespace.yaml                  | kubectl apply --namespace=$NAMESPACE -f -
-cat ./deploy/default-backend.yaml            | kubectl apply --namespace=$NAMESPACE -f -
-cat ./deploy/configmap.yaml                  | kubectl apply --namespace=$NAMESPACE -f -
-cat ./deploy/tcp-services-configmap.yaml     | kubectl apply --namespace=$NAMESPACE -f -
-cat ./deploy/udp-services-configmap.yaml     | kubectl apply --namespace=$NAMESPACE -f -
-cat ./deploy/rbac.yaml                       | kubectl apply --namespace=$NAMESPACE -f -
-cat ./deploy/with-rbac.yaml                  | kubectl apply --namespace=$NAMESPACE -f -
+cat ./deploy/mandatory.yaml                            | kubectl apply --namespace=$NAMESPACE -f -
+cat ./deploy/provider/baremetal/service-nodeport.yaml  | kubectl apply --namespace=$NAMESPACE -f -
 
 echo "updating image..."
 kubectl set image \
