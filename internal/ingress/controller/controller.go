@@ -169,13 +169,15 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 		err := n.OnUpdate(pcfg)
 		if err != nil {
-			incReloadErrorCount()
+			IncReloadErrorCount()
+			ConfigSuccess(false)
 			glog.Errorf("unexpected failure restarting the backend: \n%v", err)
 			return err
 		}
 
 		glog.Infof("ingress backend successfully reloaded...")
-		incReloadCount()
+		ConfigSuccess(true)
+		IncReloadCount()
 		setSSLExpireTime(servers)
 	}
 
