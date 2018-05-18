@@ -17,6 +17,8 @@ limitations under the License.
 package controller
 
 import (
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -34,22 +36,42 @@ func init() {
 	prometheus.MustRegister(reloadOperation)
 	prometheus.MustRegister(reloadOperationErrors)
 	prometheus.MustRegister(sslExpireTime)
+	prometheus.MustRegister(configSuccess)
+	prometheus.MustRegister(configSuccessTime)
 }
 
 var (
+	configSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: ns,
+		Name:      "config_last_reload_successfull",
+		Help: `Whether the last configuration reload attemp was successfull.
+		Prometheus alert example:
+		alert: IngressControllerFailedReload 
+		expr: ingress_controller_config_last_reload_successfull == 0
+		for: 10m`,
+	})
+	configSuccessTime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: ns,
+		Name:      "config_last_reload_successfull_timestamp_seconds",
+		Help:      "Timestamp of the last successfull configuration reload.",
+	})
+	// TODO depreciate this metrics in favor of ingress_controller_config_last_reload_successfull_timestamp_seconds
 	reloadOperation = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: ns,
 			Name:      "success",
-			Help:      "Cumulative number of Ingress controller reload operations",
+			Help: `DEPRECATED: use ingress_controller_config_last_reload_successfull_timestamp_seconds or ingress_controller_config_last_reload_successfull instead.
+			 Cumulative number of Ingress controller reload operations`,
 		},
 		[]string{operation},
 	)
+	// TODO depreciate this metrics in favor of ingress_controller_config_last_reload_successfull_timestamp_seconds
 	reloadOperationErrors = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: ns,
 			Name:      "errors",
-			Help:      "Cumulative number of Ingress controller errors during reload operations",
+			Help: `DEPRECATED: use ingress_controller_config_last_reload_successfull_timestamp_seconds or ingress_controller_config_last_reload_successfull instead.
+			 Cumulative number of Ingress controller errors during reload operations`,
 		},
 		[]string{operation},
 	)
@@ -64,12 +86,29 @@ var (
 	)
 )
 
-func incReloadCount() {
+// IncReloadCount increment the reload counter
+func IncReloadCount() {
 	reloadOperation.WithLabelValues(reloadLabel).Inc()
 }
 
-func incReloadErrorCount() {
+// IncReloadErrorCount increment the reload error counter
+func IncReloadErrorCount() {
 	reloadOperationErrors.WithLabelValues(reloadLabel).Inc()
+}
+
+// ConfigSuccess set a boolean flag according to the output of the controller configuration reload
+func ConfigSuccess(success bool) {
+	if success {
+		ConfigSuccessTime()
+		configSuccess.Set(1)
+	} else {
+		configSuccess.Set(0)
+	}
+}
+
+// ConfigSuccessTime set the current timestamp when the controller is successfully reloaded
+func ConfigSuccessTime() {
+	configSuccessTime.Set(float64(time.Now().Unix()))
 }
 
 func setSSLExpireTime(servers []*ingress.Server) {
