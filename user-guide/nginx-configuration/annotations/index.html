@@ -2129,10 +2129,7 @@ This is because SSL Passthrough works on level 4 of the OSI stack (TCP), not on 
 </div>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
-<p>The use of this annotation requires the Proxy Protocol to be enabled in the front-end load-balancer.
-For example enabling Proxy Protocol for AWS ELB is described <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html">here</a>.
-If you're using ingress-controller without load balancer then the flag
-<code class="codehilite">--enable-ssl-passthrough</code> is required (by default it is disabled).</p>
+<p>The use of this annotation requires the flag <code class="codehilite">--enable-ssl-passthrough</code> (By default it is disabled).</p>
 </div>
 <h3 id="secure-backends">Secure backends<a class="headerlink" href="#secure-backends" title="Permanent link">&para;</a></h3>
 <p>By default NGINX uses plain HTTP to reach the services.
