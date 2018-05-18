@@ -14,9 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if luarocks list --porcelain busted $BUSTED_VERSION | grep -q "installed"; then
-  echo busted already installed, skipping ;
-else
-  echo busted not found, installing via luarocks...;
-  sudo luarocks install busted $BUSTED_VERSION;
-fi
+install()
+{
+  package="$1"
+  version="$2"
+
+  if luarocks list --porcelain $package $version | grep -q "installed"; then
+    echo $package already installed, skipping ;
+  else
+    sudo luarocks install $package $version;
+  fi
+}
+
+install busted 2.0.rc12
+install lua-cjson 2.1.0-1
