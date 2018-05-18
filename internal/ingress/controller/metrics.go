@@ -86,14 +86,17 @@ var (
 	)
 )
 
+// IncReloadCount increment the reload counter
 func IncReloadCount() {
 	reloadOperation.WithLabelValues(reloadLabel).Inc()
 }
 
+// IncReloadErrorCount increment the reload error counter
 func IncReloadErrorCount() {
 	reloadOperationErrors.WithLabelValues(reloadLabel).Inc()
 }
 
+// ConfigSuccess set a boolean flag according to the output of the controller configuration reload
 func ConfigSuccess(success bool) {
 	if success {
 		ConfigSuccessTime()
@@ -103,6 +106,7 @@ func ConfigSuccess(success bool) {
 	}
 }
 
+// ConfigSuccessTime set the current timestamp when the controller is successfully reloaded
 func ConfigSuccessTime() {
 	configSuccessTime.Set(float64(time.Now().Unix()))
 }
