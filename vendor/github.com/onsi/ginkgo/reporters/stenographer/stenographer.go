@@ -178,7 +178,7 @@ func (s *consoleStenographer) AnnounceSpecRunCompletion(summary *types.SuiteSumm
 	}
 
 	s.print(0,
-		"%s -- %s | %s | %s | %s ",
+		"%s -- %s | %s | %s | %s\n",
 		status,
 		s.colorize(greenColor+boldStyle, "%d Passed", summary.NumberOfPassedSpecs),
 		s.colorize(redColor+boldStyle, "%d Failed", summary.NumberOfFailedSpecs)+flakes,
