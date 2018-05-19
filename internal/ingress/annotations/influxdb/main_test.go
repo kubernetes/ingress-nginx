@@ -69,7 +69,7 @@ func TestIngressInfluxDB(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("enable-influxdb")] = "true"
 	data[parser.GetAnnotationWithPrefix("influxdb-measurement")] = "nginxmeasures"
 	data[parser.GetAnnotationWithPrefix("influxdb-port")] = "9091"
-	data[parser.GetAnnotationWithPrefix("influxdb-host")] = "mytelegrafserver.mycompany.mytld"
+	data[parser.GetAnnotationWithPrefix("influxdb-host")] = "10.99.0.13"
 	data[parser.GetAnnotationWithPrefix("influxdb-server-name")] = "nginx-test-1"
 	ing.SetAnnotations(data)
 
@@ -91,7 +91,7 @@ func TestIngressInfluxDB(t *testing.T) {
 		t.Errorf("expected port not found. Found %v", nginxInflux.InfluxDBPort)
 	}
 
-	if nginxInflux.InfluxDBHost != "mytelegrafserver.mycompany.mytld" {
+	if nginxInflux.InfluxDBHost != "10.99.0.13" {
 		t.Errorf("expected host not found. Found %v", nginxInflux.InfluxDBHost)
 	}
 
