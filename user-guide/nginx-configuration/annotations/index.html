@@ -2185,9 +2185,11 @@ In some scenarios is required to have different values. To allow this we provide
 <li><code class="codehilite">nginx.ingress.kubernetes.io/proxy-request-buffering</code></li>
 </ul>
 <h3 id="proxy-redirect">Proxy redirect<a class="headerlink" href="#proxy-redirect" title="Permanent link">&para;</a></h3>
-<p>With the annotations <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-from</code> and <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-to</code> it is possible to set the text that should be changed in the <code class="codehilite">Location</code> and <code class="codehilite">Refresh</code> header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)</p>
-<p>Setting "off" or "default" in the annotation <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-from</code> disables <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-to</code>.</p>
-<p>Both annotations will be used in any other case. By default the value is "off".</p>
+<p>With the annotations <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-from</code> and <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-to</code> it is possible to
+set the text that should be changed in the <code class="codehilite">Location</code> and <code class="codehilite">Refresh</code> header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)</p>
+<p>Setting "off" or "default" in the annotation <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-from</code> disables <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-to</code>,
+otherwise, both annotations must be used in unison. Note that each annotation must be a string without spaces.</p>
+<p>By default the value of each annotation is "off".</p>
 <h3 id="custom-max-body-size">Custom max body size<a class="headerlink" href="#custom-max-body-size" title="Permanent link">&para;</a></h3>
 <p>For NGINX, an 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size"><code class="codehilite">client_max_body_size</code></a>.</p>
 <p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-body-size</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.
