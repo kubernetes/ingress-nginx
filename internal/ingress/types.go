@@ -28,6 +28,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
@@ -271,6 +272,9 @@ type Location struct {
 	GRPC bool `json:"grpc"`
 	// LuaRestyWAF contains parameters to configure lua-resty-waf
 	LuaRestyWAF luarestywaf.Config `json:"luaRestyWAF"`
+	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database
+	// +optional
+	InfluxDB influxdb.Config `json:"influxDB,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
