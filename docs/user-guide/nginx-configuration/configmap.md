@@ -105,6 +105,7 @@ The following table shows a configuration option's name, type, and the default v
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"true"|
+|[generate-request-id](#generate-request-id)|bool|"true"|
 |[enable-opentracing](#enable-opentracing)|bool|"false"|
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
 |[zipkin-collector-port](#zipkin-collector-port)|int|9411|
@@ -600,6 +601,10 @@ Append the remote address to the X-Forwarded-For header instead of replacing it.
 ## proxy-add-original-uri-header
 
 Adds an X-Original-Uri header with the original request URI to the backend request
+
+## generate-request-id 
+
+Ensures that X-Request-ID is defaulted to a random value, if no X-Request-ID is present in the request
 
 ## enable-opentracing
 
