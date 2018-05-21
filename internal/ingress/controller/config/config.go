@@ -429,6 +429,10 @@ type Configuration struct {
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
 
+	// If the request does not have a request-id, should we generate a random value?
+	// Default: true
+	GenerateRequestId bool `json:"generate-request-id,omitempty"`
+
 	// Adds an X-Original-Uri header with the original request URI to the backend request
 	// Default: true
 	ProxyAddOriginalUriHeader bool `json:"proxy-add-original-uri-header"`
@@ -546,6 +550,7 @@ func NewDefault() Configuration {
 		ForwardedForHeader:         "X-Forwarded-For",
 		ComputeFullForwardedFor:    false,
 		ProxyAddOriginalUriHeader:  true,
+		GenerateRequestId:          true,
 		HTTP2MaxFieldSize:          "4k",
 		HTTP2MaxHeaderSize:         "16k",
 		HTTPRedirectCode:           308,
