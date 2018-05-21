@@ -89,6 +89,8 @@ type Configuration struct {
 
 	// Sets the name of the configmap that contains the headers to pass to the client
 	AddHeaders string `json:"add-headers,omitempty"`
+	// Same as AddHeaders but with the always flag on
+	AddHeadersAlways string `json:"add-headers-always,omitempty"`
 
 	// AllowBackendServerHeader enables the return of the header Server from the backend
 	// instead of the generic nginx string.
@@ -661,6 +663,7 @@ func (cfg Configuration) BuildLogFormatUpstream() string {
 type TemplateConfig struct {
 	ProxySetHeaders             map[string]string
 	AddHeaders                  map[string]string
+	AddHeadersAlways            map[string]string
 	MaxOpenFiles                int
 	BacklogSize                 int
 	Backends                    []*ingress.Backend

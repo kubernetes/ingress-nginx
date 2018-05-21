@@ -580,6 +580,16 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		addHeaders = cmap.Data
 	}
 
+	addHeadersAlways := map[string]string{}
+	if cfg.AddHeadersAlways != "" {
+		cmap, err := n.store.GetConfigMap(cfg.AddHeadersAlways)
+		if err != nil {
+			glog.Warningf("unexpected error reading configmap %v: %v", cfg.AddHeadersAlways, err)
+		}
+
+		addHeadersAlways = cmap.Data
+	}
+
 	sslDHParam := ""
 	if cfg.SSLDHParam != "" {
 		secretName := cfg.SSLDHParam
@@ -607,6 +617,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:             setHeaders,
 		AddHeaders:                  addHeaders,
+		AddHeadersAlways:            addHeadersAlways,
 		MaxOpenFiles:                maxOpenFiles,
 		BacklogSize:                 sysctlSomaxconn(),
 		Backends:                    ingressCfg.Backends,

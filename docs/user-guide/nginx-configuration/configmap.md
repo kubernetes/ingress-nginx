@@ -28,6 +28,7 @@ The following table shows a configuration option's name, type, and the default v
 |name|type|default|
 |:---|:---|:------|
 |[add-headers](#add-headers)|string|""|
+|[add-headers-always](#add-headers-always)|string|""|
 |[allow-backend-server-header](#allow-backend-server-header)|bool|"false"|
 |[hide-headers](#hide-headers)|string array|empty|
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
@@ -144,6 +145,10 @@ The following table shows a configuration option's name, type, and the default v
 ## add-headers
 
 Sets custom headers from named configmap before sending traffic to the client. See [proxy-set-headers](#proxy-set-headers). [example](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-headers)
+
+## add-headers-always
+
+Sets custom headers from named configmap before sending traffic to the client regardless of status code. See [add-headers](#add-headers).
 
 ## allow-backend-server-header
 

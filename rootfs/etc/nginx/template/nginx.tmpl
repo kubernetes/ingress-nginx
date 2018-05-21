@@ -6,6 +6,7 @@
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
+{{ $addHeadersAlways := .AddHeadersAlways }}
 
 {{ if $cfg.EnableModsecurity }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
@@ -168,6 +169,9 @@ http {
     # Custom headers for response
     {{ range $k, $v := $addHeaders }}
     add_header {{ $k }}            "{{ $v }}";
+    {{ end }}
+    {{ range $k, $v := $addHeadersAlways }}
+    add_header {{ $k }}            "{{ $v }}" always;
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
