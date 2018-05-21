@@ -77,6 +77,11 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules](#lua-resty-waf)|string|
+|[nginx.ingress.kubernetes.io/enable-influxdb](#influxdb)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/influxdb-measurement](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
 
 ### Rewrite
 
@@ -553,3 +558,25 @@ Additionally, if the gRPC service requires TLS, add `nginx.ingress.kubernetes.io
     Exposing a gRPC service using HTTP is not supported.
 
 [configmap]: ./configmap.md
+
+### InfluxDB
+
+Using `influxdb-*` annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
+using the [nginx-influxdb-module](https://github.com/influxdata/nginx-influxdb-module/).
+
+```yaml
+nginx.ingress.kubernetes.io/enable-influxdb: "true"
+nginx.ingress.kubernetes.io/influxdb-measurement: "nginx-reqs"
+nginx.ingress.kubernetes.io/influxdb-port: "8089"
+nginx.ingress.kubernetes.io/influxdb-host: "influxdb"
+nginx.ingress.kubernetes.io/influxdb-server-name: "nginx-ingress"
+```
+
+For the `influxdb-host` parameter you have two options:
+
+To use the module in the Kubernetes Nginx ingress controller, you have two options:
+
+- Use an InfluxDB server configured to enable the [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/).
+- Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
+anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs)
+
