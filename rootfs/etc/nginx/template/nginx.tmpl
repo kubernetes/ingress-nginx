@@ -277,7 +277,9 @@ http {
     # If no such header is provided, it can provide a random value.
     map $http_x_request_id $req_id {
         default   $http_x_request_id;
+        {{ if $cfg.GenerateRequestId }}
         ""        $request_id;
+        {{ end }}
     }
 
     {{ if $cfg.ComputeFullForwardedFor }}
