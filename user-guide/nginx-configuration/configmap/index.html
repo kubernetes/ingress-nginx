@@ -1015,6 +1015,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generate-request-id" title="generate-request-id" class="md-nav__link">
+    generate-request-id
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#enable-opentracing" title="enable-opentracing" class="md-nav__link">
     enable-opentracing
   </a>
@@ -2385,6 +2392,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generate-request-id" title="generate-request-id" class="md-nav__link">
+    generate-request-id
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#enable-opentracing" title="enable-opentracing" class="md-nav__link">
     enable-opentracing
   </a>
@@ -3062,6 +3076,11 @@ Same for numbers, like "100".</p>
 <td align="left">"true"</td>
 </tr>
 <tr>
+<td align="left"><a href="#generate-request-id">generate-request-id</a></td>
+<td align="left">bool</td>
+<td align="left">"true"</td>
+</tr>
+<tr>
 <td align="left"><a href="#enable-opentracing">enable-opentracing</a></td>
 <td align="left">bool</td>
 <td align="left">"false"</td>
@@ -3501,6 +3520,8 @@ number is exceeded, the least recently used connections are closed. <em><strong>
 <p>Append the remote address to the X-Forwarded-For header instead of replacing it. When this option is enabled, the upstream application is responsible for extracting the client IP based on its own list of trusted proxies.</p>
 <h2 id="proxy-add-original-uri-header">proxy-add-original-uri-header<a class="headerlink" href="#proxy-add-original-uri-header" title="Permanent link">&para;</a></h2>
 <p>Adds an X-Original-Uri header with the original request URI to the backend request</p>
+<h2 id="generate-request-id">generate-request-id<a class="headerlink" href="#generate-request-id" title="Permanent link">&para;</a></h2>
+<p>Ensures that X-Request-ID is defaulted to a random value, if no X-Request-ID is present in the request</p>
 <h2 id="enable-opentracing">enable-opentracing<a class="headerlink" href="#enable-opentracing" title="Permanent link">&para;</a></h2>
 <p>Enables the nginx Opentracing extension. <em><strong>default:</strong></em> is disabled</p>
 <p><em>References:</em>

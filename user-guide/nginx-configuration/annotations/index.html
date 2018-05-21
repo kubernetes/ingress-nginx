@@ -720,6 +720,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#influxdb" title="InfluxDB" class="md-nav__link">
+    InfluxDB
+  </a>
+  
+</li>
+      
       
       
       
@@ -1582,6 +1589,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#influxdb" title="InfluxDB" class="md-nav__link">
+    InfluxDB
+  </a>
+  
+</li>
+      
       
       
       
@@ -1870,6 +1884,26 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#influxdb">nginx.ingress.kubernetes.io/enable-influxdb</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
+<td><a href="#influxdb">nginx.ingress.kubernetes.io/influxdb-measurement</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#influxdb">nginx.ingress.kubernetes.io/influxdb-port</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#influxdb">nginx.ingress.kubernetes.io/influxdb-host</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#influxdb">nginx.ingress.kubernetes.io/influxdb-server-name</a></td>
 <td>string</td>
 </tr>
 </tbody>
@@ -2268,6 +2302,24 @@ Additionally, if the gRPC service requires TLS, add <code class="codehilite">ngi
 <p>This feature requires HTTP2 to work which means we need to expose this service using HTTPS.
 Exposing a gRPC service using HTTP is not supported.</p>
 </div>
+<h3 id="influxdb">InfluxDB<a class="headerlink" href="#influxdb" title="Permanent link">&para;</a></h3>
+<p>Using <code class="codehilite">influxdb-*</code> annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
+using the <a href="https://github.com/influxdata/nginx-influxdb-module/">nginx-influxdb-module</a>.</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-influxdb</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-measurement</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx-reqs&quot;</span>
+<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-port</span><span class="p p-Indicator">:</span> <span class="s">&quot;8089&quot;</span>
+<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-host</span><span class="p p-Indicator">:</span> <span class="s">&quot;influxdb&quot;</span>
+<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-server-name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx-ingress&quot;</span>
+</pre></div>
+
+
+<p>For the <code class="codehilite">influxdb-host</code> parameter you have two options:</p>
+<p>To use the module in the Kubernetes Nginx ingress controller, you have two options:</p>
+<ul>
+<li>Use an InfluxDB server configured to enable the <a href="https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/">UDP protocol</a>.</li>
+<li>Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the <a href="https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener">socket listener input</a> and to write using
+anyone of the <a href="https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs">outputs plugins</a></li>
+</ul>
                 
                   
                 
