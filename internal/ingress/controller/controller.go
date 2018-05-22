@@ -169,13 +169,15 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 		err := n.OnUpdate(pcfg)
 		if err != nil {
-			incReloadErrorCount()
+			IncReloadErrorCount()
+			ConfigSuccess(false)
 			glog.Errorf("unexpected failure restarting the backend: \n%v", err)
 			return err
 		}
 
 		glog.Infof("ingress backend successfully reloaded...")
-		incReloadCount()
+		ConfigSuccess(true)
+		IncReloadCount()
 		setSSLExpireTime(servers)
 	}
 
@@ -426,7 +428,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						glog.V(3).Infof("replacing ingress rule %v/%v location %v upstream %v (%v)", ing.Namespace, ing.Name, loc.Path, ups.Name, loc.Backend)
 						loc.Backend = ups.Name
 						loc.IsDefBackend = false
-						loc.Backend = ups.Name
 						loc.Port = ups.Port
 						loc.Service = ups.Service
 						loc.Ingress = ing
@@ -449,6 +450,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.Logs = anns.Logs
 						loc.GRPC = anns.GRPC
 						loc.LuaRestyWAF = anns.LuaRestyWAF
+						loc.InfluxDB = anns.InfluxDB
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -485,6 +487,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						Logs:                 anns.Logs,
 						GRPC:                 anns.GRPC,
 						LuaRestyWAF:          anns.LuaRestyWAF,
+						InfluxDB:             anns.InfluxDB,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -521,7 +524,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 				if upstream.Name == location.Backend {
 					if len(upstream.Endpoints) == 0 {
 						glog.V(3).Infof("upstream %v does not have any active endpoints.", upstream.Name)
-						location.Backend = ""
 
 						// check if the location contains endpoints and a custom default backend
 						if location.DefaultBackend != nil {
@@ -922,6 +924,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.Denied = anns.Denied
 					defLoc.GRPC = anns.GRPC
 					defLoc.LuaRestyWAF = anns.LuaRestyWAF
+					defLoc.InfluxDB = anns.InfluxDB
 				}
 			}
 		}

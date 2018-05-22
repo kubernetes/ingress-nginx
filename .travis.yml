@@ -26,7 +26,7 @@ go_import_path: k8s.io/ingress-nginx
 env:
   global:
   - CHANGE_MINIKUBE_NONE_USER=true
-  - KUBERNETES_VERSION=v1.9.4
+  - KUBERNETES_VERSION=v1.10.0
   - DOCKER=docker
   - BUSTED_VERSION=2.0.rc12
   - GH_REF=github.com/kubernetes/ingress-nginx
@@ -45,7 +45,6 @@ jobs:
       && git clone --depth=1 https://go.googlesource.com/lint $GOPATH/src/golang.org/x/lint
       && go get golang.org/x/lint/golint
     - go get github.com/vbatts/git-validation
-    - go get -u github.com/jteeuwen/go-bindata/...
     - make verify-all
   - stage: Lua Unit Test
     before_script:
@@ -57,11 +56,9 @@ jobs:
     # start minikube
     - test/e2e/up.sh
     script:
-    - go get github.com/jteeuwen/go-bindata/...
     - make cover
   - stage: e2e
     before_script:
-    - go get github.com/jteeuwen/go-bindata/...
     - go get github.com/onsi/ginkgo/ginkgo
     - test/e2e/up.sh
     - make dev-env

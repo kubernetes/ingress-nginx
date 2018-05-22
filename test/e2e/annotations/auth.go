@@ -31,8 +31,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
-	f := framework.NewDefaultFramework("alias")
+var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
+	f := framework.NewDefaultFramework("auth")
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
@@ -45,7 +45,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	It("should return status code 200 when no authentication is configured", func() {
 		host := "auth"
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(bi).NotTo(BeNil())
 
@@ -69,7 +69,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	It("should return status code 503 when authentication is configured with an invalid secret", func() {
 		host := "auth"
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(bi).NotTo(BeNil())
 
@@ -106,7 +106,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(bi).NotTo(BeNil())
 
@@ -143,7 +143,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(bi).NotTo(BeNil())
 
@@ -181,7 +181,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(bi).NotTo(BeNil())
 
@@ -230,7 +230,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(bi).NotTo(BeNil())
 

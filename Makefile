@@ -24,6 +24,7 @@ GOOS?=linux
 DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
+FOCUS?=.*
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -52,7 +53,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.45
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.46
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
@@ -135,11 +136,6 @@ endif
 clean:
 	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
 
-.PHONE: code-generator
-code-generator:
-		@go-bindata -version || go get -u github.com/jteeuwen/go-bindata/...
-		go-bindata -nometadata -o internal/file/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
-
 .PHONY: build
 build: clean
 	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
@@ -162,7 +158,7 @@ lua-test:
 e2e-test:
 	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
 	@ginkgo build ./test/e2e
-	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 -p -trace -nodes=2 ./test/e2e/e2e.test
+	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 --focus=$(FOCUS) -p -trace -nodes=2 ./test/e2e/e2e.test
 
 .PHONY: cover
 cover:

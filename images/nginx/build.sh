@@ -28,14 +28,15 @@ export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.3.0
-export OPENTRACING_CPP_VERSION=1.3.0
-export ZIPKIN_CPP_VERSION=0.3.0
-export JAEGER_VERSION=0.2.0
+export OPENTRACING_CPP_VERSION=1.4.0
+export ZIPKIN_CPP_VERSION=0.3.1
+export JAEGER_VERSION=0.4.1
 export MODSECURITY_VERSION=1.0.0
-export LUA_NGX_VERSION=0.10.12rc2
+export LUA_NGX_VERSION=0.10.13
 export LUA_UPSTREAM_VERSION=0.07
 export COOKIE_FLAG_VERSION=1.1.0
 export GEOIP2_VERSION=2.0
+export NGINX_INFLUXDB_VERSION=41eef3df53d867483037bb84dd4816c9a9a4c24b
 
 export BUILD_PATH=/tmp/build
 
@@ -145,22 +146,22 @@ get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
 get_src 2d2b8784a09c7bb4ae7f8a76ab679c54a683b8dda26db2f948982de0ad44c7a5 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
-get_src 06dc5f9740d27dc4684399e491211be46a8069a10277f25513dadeb71199ce4c \
+get_src 2eb0a4a7dc62bc8cbf12872080197b41d53b4c04966c860774a6b11fd59fad55 \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
-get_src b65bb78bcd8806cf11695b980577abb5379369929240414c75eb4623a4d45cc3 \
+get_src f16a6f1eed494ca3c2607d7ad671cb134bd7eb320c5969c8281c10922a146589 \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
 get_src 8deee6d6f7128f58bd6ba2893bd69c1fdbc8a3ad2797ba45ef94b977255d181c \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
 
-get_src 841916d60fee16fe245b67fe6938ad861ddd3f3ecf0df561d764baeda8739362 \
+get_src 35b5a96ceb0aec68abdf25cdb9fe43cce09b2ab7bf52fb32d77038f21fef75ac \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
 
 get_src 9915ad1cf0734cc5b357b0d9ea92fec94764b4bf22f4dce185cbd65feda30ec1 \
         "https://github.com/AirisX/nginx_cookie_flag_module/archive/v$COOKIE_FLAG_VERSION.tar.gz"
 
-get_src 18edf2d18fa331265c36516a4a19ba75d26f46eafcc5e0c2d9aa6c237e8bc110 \
+get_src ecea8c3d7f69dd48c6132498ddefb5d83ba9f387fa3d4da14e2abeacdfc8a3ee \
         "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
@@ -193,11 +194,10 @@ get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3 \
-        "http://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz"
+get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \
+        "https://github.com/openresty/luajit2/archive/v2.1-20180420.tar.gz"
 
-get_src ebb4652c4f9a2e1ee31fddefc4c93ff78e651a4b2727d3453d026bccbd708d99 \
-        "https://github.com/leev/ngx_http_geoip2_module/archive/${GEOIP2_VERSION}.tar.gz"
+
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
@@ -208,10 +208,9 @@ export HUNTER_JOBS_NUMBER=${CORES}
 
 # luajit is not available on ppc64le and s390x
 if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
-  cd "$BUILD_PATH/LuaJIT-2.1.0-beta3"
+  cd "$BUILD_PATH/luajit2-2.1-20180420"
   make
   make install
-  ln -sf luajit-2.1.0-beta3 /usr/local/bin/luajit
 
   export LUAJIT_LIB=/usr/local/lib
   export LUAJIT_INC=/usr/local/include/luajit-2.1
@@ -263,7 +262,7 @@ cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
 sed -i 's/-Werror//' CMakeLists.txt
 mkdir .build
 cd .build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DBUILD_TESTING=OFF -DJAEGERTRACING_WITH_YAML_CPP=OFF ..
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DBUILD_TESTING=OFF -DJAEGERTRACING_WITH_YAML_CPP=OFF -DJAEGERTRACING_BUILD_EXAMPLES=OFF ..
 make
 make install
 
@@ -392,6 +391,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/lua-nginx-module-$LUA_NGX_VERSION \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION \
   --add-module=$BUILD_PATH/nginx_cookie_flag_module-$COOKIE_FLAG_VERSION \
+  --add-module=$BUILD_PATH/nginx-influxdb-module-$NGINX_INFLUXDB_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/jaeger \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin \

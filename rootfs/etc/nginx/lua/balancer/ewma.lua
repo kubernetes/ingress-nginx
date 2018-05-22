@@ -117,7 +117,8 @@ local function pick_and_score(peers, k)
   return peers[lowest_score_index]
 end
 
-function _M.balance(peers)
+function _M.balance(backend)
+  local peers = backend.endpoints
   if #peers == 1 then
     return peers[1]
   end
@@ -136,6 +137,12 @@ function _M.after_balance()
     return
   end
   get_or_update_ewma(upstream, rtt, true)
+end
+
+function _M.sync(_)
+  -- TODO: Reset state of EWMA per backend
+  ngx.shared.balancer_ewma:flush_all()
+  ngx.shared.balancer_ewma_last_touched_at:flush_all()
 end
 
 return _M

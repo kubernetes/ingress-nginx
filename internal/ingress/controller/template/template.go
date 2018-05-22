@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
@@ -152,6 +153,8 @@ var (
 		"buildAuthSignURL":            buildAuthSignURL,
 		"buildOpentracingLoad":        buildOpentracingLoad,
 		"buildOpentracing":            buildOpentracing,
+		"proxySetHeader":              proxySetHeader,
+		"buildInfluxDB":               buildInfluxDB,
 	}
 )
 
@@ -894,4 +897,41 @@ func buildOpentracing(input interface{}) string {
 
 	buf.WriteString("\r\n")
 	return buf.String()
+}
+
+// buildInfluxDB produces the single line configuration
+// needed by the InfluxDB module to send request's metrics
+// for the current resource
+func buildInfluxDB(input interface{}) string {
+	cfg, ok := input.(influxdb.Config)
+	if !ok {
+		glog.Errorf("expected an 'influxdb.Config' type but %T was returned", input)
+		return ""
+	}
+
+	if !cfg.InfluxDBEnabled {
+		return ""
+	}
+
+	return fmt.Sprintf(
+		"influxdb server_name=%s host=%s port=%s measurement=%s enabled=true;",
+		cfg.InfluxDBServerName,
+		cfg.InfluxDBHost,
+		cfg.InfluxDBPort,
+		cfg.InfluxDBMeasurement,
+	)
+}
+
+func proxySetHeader(loc interface{}) string {
+	location, ok := loc.(*ingress.Location)
+	if !ok {
+		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		return "proxy_set_header"
+	}
+
+	if location.GRPC {
+		return "grpc_set_header"
+	}
+
+	return "proxy_set_header"
 }

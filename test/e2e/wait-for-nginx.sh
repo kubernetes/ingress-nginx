@@ -16,13 +16,9 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-NAMESPACE=$1
+export NAMESPACE=$1
 
 echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
 
-cat $DIR/../manifests/ingress-controller/default-backend.yaml            | kubectl create --namespace=$NAMESPACE -f -
-cat $DIR/../manifests/ingress-controller/configmap.yaml                  | kubectl create --namespace=$NAMESPACE -f -
-cat $DIR/../manifests/ingress-controller/tcp-services-configmap.yaml     | kubectl create --namespace=$NAMESPACE -f -
-cat $DIR/../manifests/ingress-controller/udp-services-configmap.yaml     | kubectl create --namespace=$NAMESPACE -f -
-cat $DIR/../manifests/ingress-controller/with-rbac.yaml                  | kubectl create --namespace=$NAMESPACE -f -
-cat $DIR/../manifests/ingress-controller/service-nodeport.yaml           | kubectl create --namespace=$NAMESPACE -f -
+sed "s@\${NAMESPACE}@${NAMESPACE}@" $DIR/../manifests/ingress-controller/mandatory.yaml | kubectl apply --namespace=$NAMESPACE -f -
+cat $DIR/../manifests/ingress-controller/service-nodeport.yaml | kubectl apply --namespace=$NAMESPACE -f -

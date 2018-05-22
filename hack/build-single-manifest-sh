@@ -18,23 +18,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-TMP_DIR="_tmp"
+SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
 
-cleanup() {
-  rm -rf "${TMP_DIR}"
-}
-trap "cleanup" EXIT SIGINT
+INPUT="namespace.yaml default-backend.yaml configmap.yaml tcp-services-configmap.yaml udp-services-configmap.yaml rbac.yaml with-rbac.yaml"
+MANIFEST=$(cd ${SCRIPT_ROOT}/deploy; cat ${INPUT})
 
-cleanup
-
-go-bindata -nometadata -o ${TMP_DIR}/bindata.go -prefix="rootfs" -pkg=file -ignore=Dockerfile -ignore=".DS_Store" rootfs/...
-
-ret=0
-diff -Naupr "${TMP_DIR}/bindata.go" "internal/file/bindata.go" || ret=$?
-if [[ ${ret} -eq 0 ]]
-then
-  echo "bindata.go up to date."
-else
-  echo "bindata.go is out of date. Please run make code-generator and NOT gofmt internal/file/bindata.go"
-  exit 1
-fi
+echo "${MANIFEST}" > ${SCRIPT_ROOT}/deploy/mandatory.yaml

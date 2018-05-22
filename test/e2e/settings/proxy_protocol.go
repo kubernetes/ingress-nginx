@@ -50,7 +50,7 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		err := f.UpdateNginxConfigMapData(setting, "true")
 		Expect(err).NotTo(HaveOccurred())
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, nil))
+		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
