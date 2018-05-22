@@ -119,6 +119,10 @@ type Configuration struct {
 	// By default this is disabled
 	EnableModsecurity bool `json:"enable-modsecurity"`
 
+	// EnableGeoIp2 enables the geoip2 module for NGINX
+	// By default this is disabled
+	EnableGeoIp2 bool `json:"enable-geoip2"`
+
 	// EnableModsecurity enables the OWASP ModSecurity Core Rule Set (CRS)
 	// By default this is disabled
 	EnableOWASPCoreRules bool `json:"enable-owasp-modsecurity-crs"`
