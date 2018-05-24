@@ -126,8 +126,8 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-buffer-size](#proxy-buffer-size)|string|"4k"|
 |[proxy-cookie-path](#proxy-cookie-path)|string|"off"|
 |[proxy-cookie-domain](#proxy-cookie-domain)|string|"off"|
-|[proxy-next-upstream](#proxy-next-upstream)|string|"error timeout invalid_header http_502 http_503 http_504"|
-|[proxy-next-upstream-tries](#proxy-next-upstream-tries)|int|0|
+|[proxy-next-upstream](#proxy-next-upstream)|string|"error timeout"|
+|[proxy-next-upstream-tries](#proxy-next-upstream-tries)|int|3|
 |[proxy-redirect-from](#proxy-redirect-from)|string|"off"|
 |[proxy-request-buffering](#proxy-request-buffering)|string|"on"|
 |[ssl-redirect](#ssl-redirect)|bool|"true"|
