@@ -86,7 +86,7 @@ The following table shows a configuration option's name, type, and the default v
 |[use-proxy-protocol](#use-proxy-protocol)|bool|"false"|
 |[use-gzip](#use-gzip)|bool|"true"|
 |[use-geoip](#use-geoip)|bool|"true"|
-|[enable-brotli](#enable-brotli)|bool|"true"|
+|[enable-brotli](#enable-brotli)|bool|"false"|
 |[brotli-level](#brotli-level)|int|4|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
