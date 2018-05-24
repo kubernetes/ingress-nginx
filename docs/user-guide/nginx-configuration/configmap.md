@@ -86,7 +86,7 @@ The following table shows a configuration option's name, type, and the default v
 |[use-proxy-protocol](#use-proxy-protocol)|bool|"false"|
 |[use-gzip](#use-gzip)|bool|"true"|
 |[use-geoip](#use-geoip)|bool|"true"|
-|[enable-brotli](#enable-brotli)|bool|"true"|
+|[enable-brotli](#enable-brotli)|bool|"false"|
 |[brotli-level](#brotli-level)|int|4|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
@@ -105,6 +105,7 @@ The following table shows a configuration option's name, type, and the default v
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"true"|
+|[generate-request-id](#generate-request-id)|bool|"true"|
 |[enable-opentracing](#enable-opentracing)|bool|"false"|
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
 |[zipkin-collector-port](#zipkin-collector-port)|int|9411|
@@ -125,8 +126,8 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-buffer-size](#proxy-buffer-size)|string|"4k"|
 |[proxy-cookie-path](#proxy-cookie-path)|string|"off"|
 |[proxy-cookie-domain](#proxy-cookie-domain)|string|"off"|
-|[proxy-next-upstream](#proxy-next-upstream)|string|"error timeout invalid_header http_502 http_503 http_504"|
-|[proxy-next-upstream-tries](#proxy-next-upstream-tries)|int|0|
+|[proxy-next-upstream](#proxy-next-upstream)|string|"error timeout"|
+|[proxy-next-upstream-tries](#proxy-next-upstream-tries)|int|3|
 |[proxy-redirect-from](#proxy-redirect-from)|string|"off"|
 |[proxy-request-buffering](#proxy-request-buffering)|string|"on"|
 |[ssl-redirect](#ssl-redirect)|bool|"true"|
@@ -600,6 +601,10 @@ Append the remote address to the X-Forwarded-For header instead of replacing it.
 ## proxy-add-original-uri-header
 
 Adds an X-Original-Uri header with the original request URI to the backend request
+
+## generate-request-id 
+
+Ensures that X-Request-ID is defaulted to a random value, if no X-Request-ID is present in the request
 
 ## enable-opentracing
 

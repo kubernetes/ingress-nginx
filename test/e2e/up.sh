@@ -21,13 +21,29 @@ curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBE
     chmod +x kubectl && sudo mv kubectl /usr/local/bin/
 
 echo "downloading minikube..."
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.25.2/minikube-linux-amd64 && \
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
     chmod +x minikube && \
     sudo mv minikube /usr/local/bin/
 
 echo "starting minikube..."
 # Using a lower value for sync-frequency to speed up the tests (during the cleanup of resources inside a namespace)
-sudo minikube start --vm-driver=none --kubernetes-version=$KUBERNETES_VERSION --extra-config=kubelet.sync-frequency=1s
+
+export MINIKUBE_WANTUPDATENOTIFICATION=false
+export MINIKUBE_WANTREPORTERRORPROMPT=false
+export MINIKUBE_HOME=$HOME
+mkdir $HOME/.kube || true
+touch $HOME/.kube/config
+
+export KUBECONFIG=$HOME/.kube/config
+
+# --vm-driver=none, use host docker (avoid docker-in-docker)
+# --bootstrapper=localkube, works around https://github.com/kubernetes/minikube/issues/2704
+sudo -E minikube start \
+    --bootstrapper=localkube \
+    --vm-driver=none \
+    --kubernetes-version=$KUBERNETES_VERSION \
+    --extra-config=kubelet.sync-frequency=1s \
+    --extra-config=apiserver.authorization-mode=RBAC
 
 minikube update-context
 

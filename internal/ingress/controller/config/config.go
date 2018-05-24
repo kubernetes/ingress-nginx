@@ -429,6 +429,10 @@ type Configuration struct {
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
 
+	// If the request does not have a request-id, should we generate a random value?
+	// Default: true
+	GenerateRequestId bool `json:"generate-request-id,omitempty"`
+
 	// Adds an X-Original-Uri header with the original request URI to the backend request
 	// Default: true
 	ProxyAddOriginalUriHeader bool `json:"proxy-add-original-uri-header"`
@@ -516,6 +520,11 @@ type Configuration struct {
 	// DisableLuaRestyWAF disables lua-resty-waf globally regardless
 	// of whether there's an ingress that has enabled the WAF using annotation
 	DisableLuaRestyWAF bool `json:"disable-lua-resty-waf"`
+
+	// EnableInfluxDB enables the nginx InfluxDB extension
+	// http://github.com/influxdata/nginx-influxdb-module/
+	// By default this is disabled
+	EnableInfluxDB bool `json:"enable-influxdb"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -546,6 +555,7 @@ func NewDefault() Configuration {
 		ForwardedForHeader:         "X-Forwarded-For",
 		ComputeFullForwardedFor:    false,
 		ProxyAddOriginalUriHeader:  true,
+		GenerateRequestId:          true,
 		HTTP2MaxFieldSize:          "4k",
 		HTTP2MaxHeaderSize:         "16k",
 		HTTPRedirectCode:           308,
@@ -600,10 +610,11 @@ func NewDefault() Configuration {
 			ProxyBufferSize:        "4k",
 			ProxyCookieDomain:      "off",
 			ProxyCookiePath:        "off",
-			ProxyNextUpstream:      "error timeout invalid_header http_502 http_503 http_504",
-			ProxyNextUpstreamTries: 0,
+			ProxyNextUpstream:      "error timeout",
+			ProxyNextUpstreamTries: 3,
 			ProxyRequestBuffering:  "on",
 			ProxyRedirectFrom:      "off",
+			ProxyRedirectTo:        "off",
 			SSLRedirect:            true,
 			CustomHTTPErrors:       []int{},
 			WhitelistSourceRange:   []string{},

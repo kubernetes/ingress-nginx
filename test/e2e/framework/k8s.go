@@ -42,6 +42,18 @@ func (f *Framework) EnsureSecret(secret *api.Secret) (*api.Secret, error) {
 	return s, nil
 }
 
+// EnsureConfigMap creates a ConfigMap object or returns it if it already exists.
+func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, error) {
+	cm, err := f.KubeClientSet.CoreV1().ConfigMaps(configMap.Namespace).Create(configMap)
+	if err != nil {
+		if k8sErrors.IsAlreadyExists(err) {
+			return f.KubeClientSet.CoreV1().ConfigMaps(configMap.Namespace).Update(configMap)
+		}
+		return nil, err
+	}
+	return cm, nil
+}
+
 // EnsureIngress creates an Ingress object or returns it if it already exists.
 func (f *Framework) EnsureIngress(ingress *extensions.Ingress) (*extensions.Ingress, error) {
 	s, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(ingress)

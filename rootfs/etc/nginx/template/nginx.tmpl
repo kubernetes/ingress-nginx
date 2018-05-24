@@ -277,7 +277,9 @@ http {
     # If no such header is provided, it can provide a random value.
     map $http_x_request_id $req_id {
         default   $http_x_request_id;
+        {{ if $cfg.GenerateRequestId }}
         ""        $request_id;
+        {{ end }}
     }
 
     {{ if $cfg.ComputeFullForwardedFor }}
@@ -980,6 +982,8 @@ stream {
             {{ template "CORS" $location }}
             {{ end }}
 
+            {{ buildInfluxDB $location.InfluxDB }}
+
             {{ if not (empty $location.Redirect.URL) }}
             if ($uri ~* {{ $path }}) {
                 return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
@@ -1087,7 +1091,7 @@ stream {
             {{ buildProxyPass $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
-            {{ else }}
+            {{ else if not (eq $location.Proxy.ProxyRedirectTo "off") }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }} {{ $location.Proxy.ProxyRedirectTo }};
             {{ end }}
             {{ else }}

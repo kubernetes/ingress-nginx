@@ -169,13 +169,15 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 		err := n.OnUpdate(pcfg)
 		if err != nil {
-			incReloadErrorCount()
+			IncReloadErrorCount()
+			ConfigSuccess(false)
 			glog.Errorf("unexpected failure restarting the backend: \n%v", err)
 			return err
 		}
 
 		glog.Infof("ingress backend successfully reloaded...")
-		incReloadCount()
+		ConfigSuccess(true)
+		IncReloadCount()
 		setSSLExpireTime(servers)
 	}
 
@@ -448,6 +450,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.Logs = anns.Logs
 						loc.GRPC = anns.GRPC
 						loc.LuaRestyWAF = anns.LuaRestyWAF
+						loc.InfluxDB = anns.InfluxDB
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -484,6 +487,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						Logs:                 anns.Logs,
 						GRPC:                 anns.GRPC,
 						LuaRestyWAF:          anns.LuaRestyWAF,
+						InfluxDB:             anns.InfluxDB,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -920,6 +924,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.Denied = anns.Denied
 					defLoc.GRPC = anns.GRPC
 					defLoc.LuaRestyWAF = anns.LuaRestyWAF
+					defLoc.InfluxDB = anns.InfluxDB
 				}
 			}
 		}

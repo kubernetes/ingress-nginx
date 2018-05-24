@@ -77,6 +77,11 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules](#lua-resty-waf)|string|
+|[nginx.ingress.kubernetes.io/enable-influxdb](#influxdb)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/influxdb-measurement](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
 
 ### Rewrite
 
@@ -368,10 +373,7 @@ The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure
     This is because SSL Passthrough works on level 4 of the OSI stack (TCP), not on the HTTP/HTTPS level.
 
 !!! attention
-    The use of this annotation requires the Proxy Protocol to be enabled in the front-end load-balancer.
-    For example enabling Proxy Protocol for AWS ELB is described [here](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html).
-    If you're using ingress-controller without load balancer then the flag
-    `--enable-ssl-passthrough` is required (by default it is disabled).
+    The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled).
 
 ### Secure backends
 
@@ -443,11 +445,13 @@ In some scenarios is required to have different values. To allow this we provide
 
 ### Proxy redirect
 
-With the annotations `nginx.ingress.kubernetes.io/proxy-redirect-from` and `nginx.ingress.kubernetes.io/proxy-redirect-to` it is possible to set the text that should be changed in the `Location` and `Refresh` header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)
+With the annotations `nginx.ingress.kubernetes.io/proxy-redirect-from` and `nginx.ingress.kubernetes.io/proxy-redirect-to` it is possible to
+set the text that should be changed in the `Location` and `Refresh` header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)
 
-Setting "off" or "default" in the annotation `nginx.ingress.kubernetes.io/proxy-redirect-from` disables `nginx.ingress.kubernetes.io/proxy-redirect-to`.
+Setting "off" or "default" in the annotation `nginx.ingress.kubernetes.io/proxy-redirect-from` disables `nginx.ingress.kubernetes.io/proxy-redirect-to`,
+otherwise, both annotations must be used in unison. Note that each annotation must be a string without spaces.
 
-Both annotations will be used in any other case. By default the value is "off".
+By default the value of each annotation is "off".
 
 ### Custom max body size
 
@@ -554,3 +558,25 @@ Additionally, if the gRPC service requires TLS, add `nginx.ingress.kubernetes.io
     Exposing a gRPC service using HTTP is not supported.
 
 [configmap]: ./configmap.md
+
+### InfluxDB
+
+Using `influxdb-*` annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
+using the [nginx-influxdb-module](https://github.com/influxdata/nginx-influxdb-module/).
+
+```yaml
+nginx.ingress.kubernetes.io/enable-influxdb: "true"
+nginx.ingress.kubernetes.io/influxdb-measurement: "nginx-reqs"
+nginx.ingress.kubernetes.io/influxdb-port: "8089"
+nginx.ingress.kubernetes.io/influxdb-host: "influxdb"
+nginx.ingress.kubernetes.io/influxdb-server-name: "nginx-ingress"
+```
+
+For the `influxdb-host` parameter you have two options:
+
+To use the module in the Kubernetes Nginx ingress controller, you have two options:
+
+- Use an InfluxDB server configured to enable the [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/).
+- Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
+anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs)
+
