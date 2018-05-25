@@ -163,11 +163,11 @@ get_src ecea8c3d7f69dd48c6132498ddefb5d83ba9f387fa3d4da14e2abeacdfc8a3ee \
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
 
-get_src d4a9ed0d2405f41eb0178462b398afde8599c5115dcc1ff8f60e2f34a41a4c21 \
-        "https://github.com/openresty/lua-resty-lrucache/archive/v0.07.tar.gz"
+get_src 2349dd0b7ee37680306ee76bc4b6bf5c7509a4a4be16d246d9bbff44f564e4a0 \
+        "https://github.com/openresty/lua-resty-lrucache/archive/v0.08.tar.gz"
 
-get_src 92fd006d5ca3b3266847d33410eb280122a7f6c06334715f87acce064188a02e \
-        "https://github.com/openresty/lua-resty-core/archive/v0.1.14rc1.tar.gz"
+get_src 2bba995e715a93134b86939c83baa33a1189f2461c41762619f3760e75311a18 \
+        "https://github.com/openresty/lua-resty-core/archive/v0.1.15.tar.gz"
 
 get_src eaf84f58b43289c1c3e0442ada9ed40406357f203adc96e2091638080cb8d361 \
         "https://github.com/openresty/lua-resty-lock/archive/v0.07.tar.gz"
@@ -178,11 +178,11 @@ get_src 3917d506e2d692088f7b4035c589cc32634de4ea66e40fc51259fbae43c9258d \
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
         "https://github.com/openresty/lua-resty-upload/archive/v0.10.tar.gz"
 
-get_src feacc662fd7724741c2b3277b2d27b5ab2821bdb28b499d063dbd23414447249 \
-        "https://github.com/openresty/lua-resty-dns/archive/v0.21rc2.tar.gz"
+get_src 4aca34f324d543754968359672dcf5f856234574ee4da360ce02c778d244572a \
+        "https://github.com/openresty/lua-resty-dns/archive/v0.21.tar.gz"
 
-get_src 30a68f1828ed6a53ee6ed062132ea914201076058b1d126ea90ff8e55df09daf \
-        "https://github.com/openresty/lua-resty-string/archive/v0.11rc1.tar.gz"
+get_src 095615fe94e64615c4a27f4f4475b91c047cf8d10bc2dbde8d5ba6aa625fc5ab \
+        "https://github.com/openresty/lua-resty-string/archive/v0.11.tar.gz"
 
 get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
         "https://github.com/openresty/lua-resty-balancer/archive/v0.02rc4.tar.gz"
@@ -190,7 +190,7 @@ get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \
+get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \ 
         "https://github.com/openresty/luajit2/archive/v2.1-20180420.tar.gz"
 
 get_src 3926d41fb23fc2f4e54773f3c847153f6f17195a03677f9624e740605c49a771 \
@@ -214,10 +214,10 @@ if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   export LUAJIT_INC=/usr/local/include/luajit-2.1
   export LUA_LIB_DIR="$LUAJIT_LIB/lua"
 
-  cd "$BUILD_PATH/lua-resty-core-0.1.14rc1"
+  cd "$BUILD_PATH/lua-resty-core-0.1.15"
   make install
 
-  cd "$BUILD_PATH/lua-resty-lrucache-0.07"
+  cd "$BUILD_PATH/lua-resty-lrucache-0.08"
   make install
 
   cd "$BUILD_PATH/lua-resty-lock-0.07"
@@ -229,10 +229,10 @@ if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   cd "$BUILD_PATH/lua-resty-upload-0.10"
   make install
 
-  cd "$BUILD_PATH/lua-resty-dns-0.21rc2"
+  cd "$BUILD_PATH/lua-resty-dns-0.21"
   make install
 
-  cd "$BUILD_PATH/lua-resty-string-0.11rc1"
+  cd "$BUILD_PATH/lua-resty-string-0.11"
   make install
 
   cd "$BUILD_PATH/lua-resty-balancer-0.02rc4"
