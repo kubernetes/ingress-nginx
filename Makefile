@@ -44,7 +44,7 @@ DUMB_ARCH = ${ARCH}
 
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
-QEMUVERSION=v2.9.1-1
+QEMUVERSION=v2.12.0
 
 BUSTED_ARGS=-v --pattern=_test
 
@@ -53,7 +53,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.46
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.48
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
