@@ -31,6 +31,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -77,12 +78,20 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 			Expect(res.StatusCode).Should(Equal(http.StatusOK))
 
 			time.Sleep(5 * time.Second)
-			measurements, err := extractInfluxDBMeasurements(f)
+
+			var measurements string
+			err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+				measurements, err = extractInfluxDBMeasurements(f)
+				if err != nil {
+					return false, nil
+				}
+				return true, nil
+			})
+			Expect(err).NotTo(HaveOccurred())
 
 			var results map[string][]map[string]interface{}
 			json.Unmarshal([]byte(measurements), &results)
 
-			Expect(err).NotTo(HaveOccurred())
 			Expect(len(measurements)).ShouldNot(Equal(0))
 			for _, elem := range results["results"] {
 				Expect(len(elem)).ShouldNot(Equal(0))
