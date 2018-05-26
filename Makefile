@@ -24,7 +24,13 @@ GOOS?=linux
 DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
+
+# e2e settings
+# Allow limiting the scope of the e2e tests. By default run everything
 FOCUS?=.*
+# number of parallel test
+E2E_NODES?=3
+
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -158,7 +164,15 @@ lua-test:
 e2e-test:
 	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
 	@ginkgo build ./test/e2e
-	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 --focus=$(FOCUS) -p -trace -nodes=2 ./test/e2e/e2e.test
+	@KUBECONFIG=${HOME}/.kube/config ginkgo \
+		-randomizeSuites \
+		-randomizeAllSpecs \
+		-flakeAttempts=2 \
+		--focus=$(FOCUS) \
+		-p \
+		-trace \
+		-nodes=$(E2E_NODES) \
+		./test/e2e/e2e.test
 
 .PHONY: cover
 cover:
