@@ -119,12 +119,14 @@ end
 
 function _M.balance(self)
   local peers = self.peers
-  if #peers == 1 then
-    return peers[1]
+  local endpoint = peers[1]
+
+  if #peers > 1 then
+    local k = (#peers < PICK_SET_SIZE) and #peers or PICK_SET_SIZE
+    local peer_copy = util.deepcopy(peers)
+    endpoint = pick_and_score(peer_copy, k)
   end
-  local k = (#peers < PICK_SET_SIZE) and #peers or PICK_SET_SIZE
-  local peer_copy = util.deepcopy(peers)
-  local endpoint = pick_and_score(peer_copy, k)
+
   return endpoint.address, endpoint.port
 end
 
@@ -145,6 +147,9 @@ function _M.sync(self, backend)
   if not changed then
     return
   end
+
+  self.peers = backend.endpoints
+
   -- TODO: Reset state of EWMA per backend
   ngx.shared.balancer_ewma:flush_all()
   ngx.shared.balancer_ewma_last_touched_at:flush_all()
