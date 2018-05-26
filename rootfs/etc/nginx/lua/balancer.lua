@@ -62,6 +62,7 @@ end
 local function sync_backends()
   local backends_data = configuration.get_backends_data()
   if not backends_data then
+    balancers = {}
     return
   end
 
@@ -71,9 +72,22 @@ local function sync_backends()
     return
   end
 
-  for _, new_backend in pairs(new_backends) do
+  local balancers_to_keep = {}
+  for _, new_backend in ipairs(new_backends) do
     sync_backend(new_backend)
+    balancers_to_keep[new_backend.name] = balancers[new_backend.name]
   end
+
+  for backend_name, _ in pairs(balancers) do
+    if not balancers_to_keep[backend_name] then
+      balancers[backend_name] = nil
+    end
+  end
+end
+
+local function get_balancer()
+  local backend_name = ngx.var.proxy_upstream_name
+  return balancers[backend_name]
 end
 
 function _M.init_worker()
@@ -84,29 +98,24 @@ function _M.init_worker()
   end
 end
 
-function _M.call()
-  local phase = ngx.get_phase()
-  if phase ~= "log" and phase ~= "balancer" then
-    ngx.log(ngx.ERR, "must be called in balancer or log, but was called in: " .. phase)
-    return
-  end
-
-  local backend_name = ngx.var.proxy_upstream_name
-  local balancer = balancers[backend_name]
+function _M.rewrite()
+  local balancer = get_balancer()
   if not balancer then
     ngx.status = ngx.HTTP_SERVICE_UNAVAILABLE
     return ngx.exit(ngx.status)
   end
+end
 
-  if phase == "log" then
-    balancer:after_balance()
+function _M.balance()
+  local balancer = get_balancer()
+  if not balancer then
     return
   end
 
   local host, port = balancer:balance()
   if not host then
-    ngx.status = ngx.HTTP_SERVICE_UNAVAILABLE
-    return ngx.exit(ngx.status)
+    ngx.log(ngx.WARN, "no host returned, balancer: " .. balancer.name)
+    return
   end
 
   ngx_balancer.set_more_tries(1)
@@ -115,6 +124,15 @@ function _M.call()
   if not ok then
     ngx.log(ngx.ERR, "error while setting current upstream peer to " .. tostring(err))
   end
+end
+
+function _M.log()
+  local balancer = get_balancer()
+  if not balancer then
+    return
+  end
+
+  balancer:after_balance()
 end
 
 if _TEST then
