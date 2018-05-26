@@ -115,8 +115,6 @@ ifeq ($(ARCH),amd64)
 	$(SED_I) "/CROSS_BUILD_/d" $(DOCKERFILE)
 else
 	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
-	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)/rootfs
 	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
 endif
@@ -127,6 +125,11 @@ ifeq ($(ARCH), amd64)
 	# This is for maintaining backward compatibility
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
+
+.PHONY: register-qemu
+register-qemu:
+	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 
 .PHONY: push
 push: .push-$(ARCH)
