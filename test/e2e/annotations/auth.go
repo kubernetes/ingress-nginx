@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"os/exec"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -58,6 +59,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
+			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
 
@@ -90,6 +92,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
+			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
 
@@ -127,6 +130,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
+			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
 
@@ -164,6 +168,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
+			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("user", "pass").
 			End()
@@ -202,6 +207,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
+			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("foo", "bar").
 			End()
@@ -251,6 +257,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
+			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("foo", "bar").
 			End()
