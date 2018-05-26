@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -289,10 +290,12 @@ func checkAlphaNodeAffinity(pv *v1.PersistentVolume, nodeLabels map[string]strin
 			if err != nil {
 				return fmt.Errorf("Failed to parse MatchExpressions: %v", err)
 			}
-			if !selector.Matches(labels.Set(nodeLabels)) {
-				return fmt.Errorf("NodeSelectorTerm %+v does not match node labels", term.MatchExpressions)
+			if selector.Matches(labels.Set(nodeLabels)) {
+				// Terms are ORed, so only one needs to match
+				return nil
 			}
 		}
+		return fmt.Errorf("No matching NodeSelectorTerms")
 	}
 	return nil
 }
@@ -310,10 +313,12 @@ func checkVolumeNodeAffinity(pv *v1.PersistentVolume, nodeLabels map[string]stri
 			if err != nil {
 				return fmt.Errorf("Failed to parse MatchExpressions: %v", err)
 			}
-			if !selector.Matches(labels.Set(nodeLabels)) {
-				return fmt.Errorf("NodeSelectorTerm %+v does not match node labels", term.MatchExpressions)
+			if selector.Matches(labels.Set(nodeLabels)) {
+				// Terms are ORed, so only one needs to match
+				return nil
 			}
 		}
+		return fmt.Errorf("No matching NodeSelectorTerms")
 	}
 	return nil
 }
@@ -748,4 +753,22 @@ func CheckVolumeModeFilesystem(volumeSpec *volume.Spec) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+// MakeAbsolutePath convert path to absolute path according to GOOS
+func MakeAbsolutePath(goos, path string) string {
+	if goos != "windows" {
+		return filepath.Clean("/" + path)
+	}
+	// These are all for windows
+	// If there is a colon, give up.
+	if strings.Contains(path, ":") {
+		return path
+	}
+	// If there is a slash, but no drive, add 'c:'
+	if strings.HasPrefix(path, "/") || strings.HasPrefix(path, "\\") {
+		return "c:" + path
+	}
+	// Otherwise, add 'c:\'
+	return "c:\\" + path
 }

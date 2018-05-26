@@ -1,5 +1,30 @@
 ## HEAD
 
+### Features
+- Make string pretty diff user configurable (#273) [eb112ce, 649b44d]
+
+### Fixes
+- Use httputil.DumpRequest to pretty-print unhandled requests (#278) [a4ff0fc, b7d1a52]
+- fix typo floa32 > float32 (#272) [041ae3b, 6e33911]
+- Fix link to documentation on adding your own matchers (#270) [bb2c830, fcebc62]
+- Use setters and getters to avoid race condition (#262) [13057c3, a9c79f1]
+- Avoid sending a signal if the process is not alive (#259) [b8043e5, 4fc1762]
+- Improve message from AssignableToTypeOf when expected value is nil (#281) [9c1fb20]
+
+## 1.3.0
+
+Improvements:
+
+- The `Equal` matcher matches byte slices more performantly.
+- Improved how `MatchError` matches error strings.
+- `MatchXML` ignores the order of xml node attributes.
+- Improve support for XUnit style golang tests. ([#254](https://github.com/onsi/gomega/issues/254))
+
+Bug Fixes:
+
+- Diff generation now handles multi-byte sequences correctly.
+- Multiple goroutines can now call `gexec.Build` concurrently.
+
 ## 1.2.0
 
 Improvements:

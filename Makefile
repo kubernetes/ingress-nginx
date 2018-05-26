@@ -202,6 +202,7 @@ dep-ensure:
 	dep version || go get -u github.com/golang/dep/cmd/dep
 	dep ensure -v
 	dep prune -v
+	find vendor -name '*_test.go' -delete
 
 .PHONY: dev-env
 dev-env:
