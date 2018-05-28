@@ -181,7 +181,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
-  name: nginx-ingress-role-nisa-binding
+  name: nginx-ingress-role-${NAMESPACE}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -196,7 +196,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: nginx-ingress-clusterrole-nisa-binding
+  name: nginx-ingress-clusterrole-${NAMESPACE}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -205,6 +205,7 @@ subjects:
   - kind: ServiceAccount
     name: nginx-ingress-serviceaccount
     namespace: ${NAMESPACE}
+    
 ---
 
 apiVersion: extensions/v1beta1
@@ -226,6 +227,18 @@ spec:
     spec:
       terminationGracePeriodSeconds: 0
       serviceAccountName: nginx-ingress-serviceaccount
+      initContainers:
+      - name: enable-coredump
+        image: busybox
+        command:
+        - /bin/sh
+        - -c
+        - |
+          ulimit -c unlimited
+          echo "/tmp/core.%e.%p" > /proc/sys/kernel/core_pattern
+          sysctl -w fs.suid_dumpable=2
+        securityContext:
+          privileged: true
       containers:
         - name: nginx-ingress-controller
           image: ingress-controller/nginx-ingress-controller:dev
@@ -275,4 +288,4 @@ spec:
             successThreshold: 1
             timeoutSeconds: 1
           securityContext:
-            runAsNonRoot: false
+            privileged: true

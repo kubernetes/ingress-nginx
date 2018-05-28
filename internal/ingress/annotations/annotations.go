@@ -21,6 +21,7 @@ import (
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 
+	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -72,7 +73,7 @@ type Ingress struct {
 	ConfigurationSnippet string
 	Connection           connection.Config
 	CorsConfig           cors.Config
-	DefaultBackend       string
+	DefaultBackend       *apiv1.Service
 	Denied               error
 	ExternalAuth         authreq.Config
 	HealthCheck          healthcheck.Config

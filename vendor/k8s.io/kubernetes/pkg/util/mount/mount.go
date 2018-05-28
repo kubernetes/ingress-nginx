@@ -19,6 +19,7 @@ limitations under the License.
 package mount
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -123,6 +124,8 @@ type Subpath struct {
 	PodDir string
 	// Name of the container
 	ContainerName string
+	// True if the mount needs to be readonly
+	ReadOnly bool
 }
 
 // Exec executes command where mount utilities are. This can be either the host,
@@ -281,7 +284,13 @@ func IsNotMountPoint(mounter Interface, file string) (bool, error) {
 // The list equals:
 //   options - 'bind' + 'remount' (no duplicate)
 func isBind(options []string) (bool, []string) {
-	bindRemountOpts := []string{"remount"}
+	// Because we have an FD opened on the subpath bind mount, the "bind" option
+	// needs to be included, otherwise the mount target will error as busy if you
+	// remount as readonly.
+	//
+	// As a consequence, all read only bind mounts will no longer change the underlying
+	// volume mount to be read only.
+	bindRemountOpts := []string{"bind", "remount"}
 	bind := false
 
 	if len(options) != 0 {
@@ -336,4 +345,38 @@ func pathWithinBase(fullPath, basePath string) bool {
 func startsWithBackstep(rel string) bool {
 	// normalize to / and check for ../
 	return rel == ".." || strings.HasPrefix(filepath.ToSlash(rel), "../")
+}
+
+// getFileType checks for file/directory/socket and block/character devices
+func getFileType(pathname string) (FileType, error) {
+	var pathType FileType
+	info, err := os.Stat(pathname)
+	if os.IsNotExist(err) {
+		return pathType, fmt.Errorf("path %q does not exist", pathname)
+	}
+	// err in call to os.Stat
+	if err != nil {
+		return pathType, err
+	}
+
+	// checks whether the mode is the target mode
+	isSpecificMode := func(mode, targetMode os.FileMode) bool {
+		return mode&targetMode == targetMode
+	}
+
+	mode := info.Mode()
+	if mode.IsDir() {
+		return FileTypeDirectory, nil
+	} else if mode.IsRegular() {
+		return FileTypeFile, nil
+	} else if isSpecificMode(mode, os.ModeSocket) {
+		return FileTypeSocket, nil
+	} else if isSpecificMode(mode, os.ModeDevice) {
+		if isSpecificMode(mode, os.ModeCharDevice) {
+			return FileTypeCharDev, nil
+		}
+		return FileTypeBlockDev, nil
+	}
+
+	return pathType, fmt.Errorf("only recognise file, directory, socket, block device and character device")
 }

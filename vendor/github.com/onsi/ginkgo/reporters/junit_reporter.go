@@ -21,6 +21,7 @@ import (
 type JUnitTestSuite struct {
 	XMLName   xml.Name        `xml:"testsuite"`
 	TestCases []JUnitTestCase `xml:"testcase"`
+	Name      string          `xml:"name,attr"`
 	Tests     int             `xml:"tests,attr"`
 	Failures  int             `xml:"failures,attr"`
 	Time      float64         `xml:"time,attr"`
@@ -59,6 +60,7 @@ func NewJUnitReporter(filename string) *JUnitReporter {
 
 func (reporter *JUnitReporter) SpecSuiteWillBegin(config config.GinkgoConfigType, summary *types.SuiteSummary) {
 	reporter.suite = JUnitTestSuite{
+		Name:      summary.SuiteDescription,
 		TestCases: []JUnitTestCase{},
 	}
 	reporter.testSuiteName = summary.SuiteDescription

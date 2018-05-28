@@ -39,7 +39,7 @@ const (
 	operationSucceeded  string = "Succeeded"
 )
 
-var pollingCodes = [...]int{http.StatusAccepted, http.StatusCreated, http.StatusOK}
+var pollingCodes = [...]int{http.StatusNoContent, http.StatusAccepted, http.StatusCreated, http.StatusOK}
 
 // Future provides a mechanism to access the status and results of an asynchronous request.
 // Since futures are stateful they should be passed by value to avoid race conditions.
@@ -234,20 +234,15 @@ func getAsyncOperation(resp *http.Response) string {
 }
 
 func hasSucceeded(state string) bool {
-	return state == operationSucceeded
+	return strings.EqualFold(state, operationSucceeded)
 }
 
 func hasTerminated(state string) bool {
-	switch state {
-	case operationCanceled, operationFailed, operationSucceeded:
-		return true
-	default:
-		return false
-	}
+	return strings.EqualFold(state, operationCanceled) || strings.EqualFold(state, operationFailed) || strings.EqualFold(state, operationSucceeded)
 }
 
 func hasFailed(state string) bool {
-	return state == operationFailed
+	return strings.EqualFold(state, operationFailed)
 }
 
 type provisioningTracker interface {
@@ -426,7 +421,7 @@ func updatePollingState(resp *http.Response, ps *pollingState) error {
 		}
 	}
 
-	if ps.State == operationInProgress && ps.URI == "" {
+	if strings.EqualFold(ps.State, operationInProgress) && ps.URI == "" {
 		return autorest.NewError("azure", "updatePollingState", "Azure Polling Error - Unable to obtain polling URI for %s %s", resp.Request.Method, resp.Request.URL)
 	}
 
@@ -462,4 +457,22 @@ func newPollingRequest(ps pollingState) (*http.Request, error) {
 	}
 
 	return reqPoll, nil
+}
+
+// AsyncOpIncompleteError is the type that's returned from a future that has not completed.
+type AsyncOpIncompleteError struct {
+	// FutureType is the name of the type composed of a azure.Future.
+	FutureType string
+}
+
+// Error returns an error message including the originating type name of the error.
+func (e AsyncOpIncompleteError) Error() string {
+	return fmt.Sprintf("%s: asynchronous operation has not completed", e.FutureType)
+}
+
+// NewAsyncOpIncompleteError creates a new AsyncOpIncompleteError with the specified parameters.
+func NewAsyncOpIncompleteError(futureType string) AsyncOpIncompleteError {
+	return AsyncOpIncompleteError{
+		FutureType: futureType,
+	}
 }

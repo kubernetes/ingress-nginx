@@ -159,7 +159,7 @@ func ProtoSink(m proto.Message) Sink {
 }
 
 type protoSink struct {
-	dst proto.Message // authorative value
+	dst proto.Message // authoritative value
 	typ string
 
 	v ByteView // encoded
