@@ -59,6 +59,8 @@ func main() {
 		glog.Fatal(err)
 	}
 
+	nginxVersion()
+
 	fs, err := file.NewLocalFS()
 	if err != nil {
 		glog.Fatal(err)
