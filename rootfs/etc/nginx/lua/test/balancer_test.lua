@@ -1,269 +1,118 @@
-local cwd = io.popen("pwd"):read('*l')
-package.path = cwd .. "/rootfs/etc/nginx/lua/?.lua;" .. package.path
+package.path = "./rootfs/etc/nginx/lua/?.lua;./rootfs/etc/nginx/lua/test/mocks/?.lua;" .. package.path
+_G._TEST = true
 
-local balancer, mock_cjson, mock_config, mock_backends, mock_lrucache, lock, mock_lock,
-  mock_ngx_balancer, mock_ewma
-
-local function dict_generator(vals)
-  local _dict = { __index = {
-      get = function(self, key)
-        return self._vals[key]
-      end,
-      set = function(self, key, val)
-          self._vals[key] = val
-          return true, nil, false
-      end,
-      delete = function(self, key)
-        return self:set(key, nil)
-      end,
-      flush_all = function(self)
-        return
-      end,
-      _vals = vals
-    }
-  }
-  return setmetatable({_vals = vals}, _dict)
-end
-
-local function backend_generator(name, endpoints, lb_alg)
-  return {
-    name = name,
-    endpoints = endpoints,
-    ["load-balance"] = lb_alg,
-  }
-end
-
-local default_endpoints = {
-  {address = "000.000.000", port = "8080"},
-  {address = "000.000.001", port = "8081"},
+local _ngx = {
+  shared = {},
+  log = function(...) end,
 }
+_G.ngx = _ngx
 
-local default_backends = {
-  mock_rr_backend = backend_generator("mock_rr_backend", default_endpoints, "round_robin"),
-  mock_ewma_backend = backend_generator("mock_ewma_backend", default_endpoints, "ewma"),
-}
+local balancer, expected_implementations, backends
 
-local function init()
-  mock_cjson = {}
-  mock_config = {}
-  mock_ngx_balancer = {}
-  mock_ewma = {
-    sync = function(b) return end
-  }
-  mock_resty_balancer = {
-    sync = function(b) return end,
-    after_balance = function () return end
-  }
-  mock_backends = dict_generator(default_backends)
-  mock_lrucache = {
-    new = function () return mock_backends end
-  }
-  lock = {
-    lock = function() return end,
-    unlock = function() return end
-  }
-  mock_lock = {
-    new = function () return lock end
-  }
-  _G.ngx = {
-    shared = {
-      balancer_ewma = dict_generator({}),
-      balancer_ewma_last_touched_at = dict_generator({}),
-    },
-    var = {},
-    log = function() return end,
-    WARN = "warn",
-    INFO = "info",
-    ERR = "err",
-    HTTP_SERVICE_UNAVAILABLE = 503,
-    exit = function(status) return end,
-  }
-  package.loaded["ngx.balancer"] = mock_ngx_balancer
-  package.loaded["resty.lrucache"] = mock_lrucache
-  package.loaded["resty.string"] = {}
-  package.loaded["resty.sha1"] = {}
-  package.loaded["resty.md5"] = {}
-  package.loaded["resty.cookie"] = {}
-  package.loaded["cjson"] = mock_cjson
-  package.loaded["resty.lock"] = mock_lock
-  package.loaded["balancer.ewma"] = mock_ewma
-  package.loaded["balancer.resty"] = mock_resty_balancer
-  package.loaded["configuration"] = mock_config
+local function reset_balancer()
+  package.loaded["balancer"] = nil
   balancer = require("balancer")
 end
 
-describe("[balancer_test]", function()
-  setup(function()
-    init()
+local function reset_expected_implementations()
+  expected_implementations = {
+    ["access-router-production-web-80"] = package.loaded["balancer.round_robin"],
+    ["my-dummy-app-1"] = package.loaded["balancer.round_robin"],
+    ["my-dummy-app-2"] = package.loaded["balancer.chash"],
+    ["my-dummy-app-3"] = package.loaded["balancer.sticky"],
+    ["my-dummy-app-4"] = package.loaded["balancer.ewma"],
+    ["my-dummy-app-5"] = package.loaded["balancer.sticky"],
+  }
+end
+
+local function reset_backends()
+  backends = {
+    {
+      name = "access-router-production-web-80", port = "80", secure = false,
+      secureCACert = { secret = "", caFilename = "", pemSha = "" },
+      sslPassthrough = false,
+      endpoints = {
+        { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
+        { address = "10.184.97.100", port = "8080", maxFails = 0, failTimeout = 0 },
+        { address = "10.184.98.239", port = "8080", maxFails = 0, failTimeout = 0 },
+      },
+      sessionAffinityConfig = { name = "", cookieSessionAffinity = { name = "", hash = "" } },
+    },
+    { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
+    { name = "my-dummy-app-2", ["load-balance"] = "round_robin", ["upstream-hash-by"] = "$request_uri", },
+    {
+      name = "my-dummy-app-3", ["load-balance"] = "ewma",
+      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route", hash = "sha1" } }
+    },
+    { name = "my-dummy-app-4", ["load-balance"] = "ewma", },
+    {
+      name = "my-dummy-app-5", ["load-balance"] = "ewma", ["upstream-hash-by"] = "$request_uri",
+      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route", hash = "sha1" } }
+    },
+  }
+end
+
+describe("Balancer", function()
+  before_each(function()
+    reset_balancer()
+    reset_expected_implementations()
+    reset_backends()
   end)
 
-  teardown(function()
-    local packages = {"ngx.balancer", "resty.lrucache","cjson", "resty.lock", "balancer.ewma","configuration"}
-    for i, package_name in ipairs(packages) do
-      package.loaded[package_name] = nil
-    end
-  end)
-
-  describe("balancer.call():", function()
-    setup(function()
-      mock_ngx_balancer.set_more_tries = function () return end
-      mock_ngx_balancer.set_current_peer = function () return end
-      mock_ewma.after_balance = function () return end
+  describe("get_implementation()", function()
+    it("returns correct implementation for given backend", function()
+      for _, backend in pairs(backends) do
+        local expected_implementation = expected_implementations[backend.name]
+        local implementation = balancer.get_implementation(backend)
+        assert.equal(expected_implementation, balancer.get_implementation(backend))
+      end
     end)
+  end)
+
+  describe("sync_backend()", function()
+    local backend, implementation
 
     before_each(function()
-      _G.ngx.get_phase = nil
-      _G.ngx.var = {}
-      mock_backends._vals = default_backends
+      backend = backends[1]
+      implementation = expected_implementations[backend.name]
     end)
 
-    describe("phase=log", function()
-      before_each(function()
-        _G.ngx.get_phase = function() return "log" end
-      end)
+    it("initializes balancer for given backend", function()
+      local s = spy.on(implementation, "new")
 
-      it("lb_alg=ewma, ewma_after_balance was called", function()
-        _G.ngx.var.proxy_upstream_name = "mock_ewma_backend"
-
-        local ewma_after_balance_spy = spy.on(mock_ewma, "after_balance")
-
-        mock_resty_balancer.is_applicable = function(b) return false end
-        assert.has_no_errors(balancer.call)
-        assert.spy(ewma_after_balance_spy).was_called()
-      end)
-
-      it("lb_alg=round_robin, ewma_after_balance was not called", function()
-        _G.ngx.var.proxy_upstream_name = "mock_rr_backend"
-
-        local ewma_after_balance_spy = spy.on(mock_ewma, "after_balance")
-
-        mock_resty_balancer.is_applicable = function(b) return true end
-        assert.has_no_errors(balancer.call)
-        assert.spy(ewma_after_balance_spy).was_not_called()
-      end)
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.spy(s).was_called_with(implementation, backend)
     end)
 
-    describe("phase=balancer", function()
-      before_each(function()
-        _G.ngx.get_phase = function() return "balancer" end
-      end)
+    it("replaces the existing balancer when load balancing config changes for backend", function()
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
 
-      it("lb_alg=round_robin, peer was successfully set", function()
-        _G.ngx.var.proxy_upstream_name = "mock_rr_backend"
+      backend["load-balance"] = "ewma"
+      local new_implementation = package.loaded["balancer.ewma"]
 
-        local backend_get_spy = spy.on(mock_backends, "get")
-        local set_more_tries_spy = spy.on(mock_ngx_balancer, "set_more_tries")
-        local set_current_peer_spy = spy.on(mock_ngx_balancer, "set_current_peer")
+      local s_old = spy.on(implementation, "new")
+      local s = spy.on(new_implementation, "new")
+      local s_ngx_log = spy.on(_G.ngx, "log")
 
-        mock_resty_balancer.balance = function(b) return {address = "000.000.000", port = "8080"} end
-        assert.has_no_errors(balancer.call)
-        assert.spy(backend_get_spy).was_called_with(match.is_table(), "mock_rr_backend")
-        assert.spy(set_more_tries_spy).was_called_with(1)
-        assert.spy(set_current_peer_spy).was_called_with("000.000.000", "8080")
-
-        mock_backends.get:clear()
-        mock_ngx_balancer.set_more_tries:clear()
-        mock_ngx_balancer.set_current_peer:clear()
-
-        mock_resty_balancer.balance = function(b) return {address = "000.000.001", port = "8081"} end
-        assert.has_no_errors(balancer.call)
-        assert.spy(backend_get_spy).was_called_with(match.is_table(), "mock_rr_backend")
-        assert.spy(set_more_tries_spy).was_called_with(1)
-        assert.spy(set_current_peer_spy).was_called_with("000.000.001", "8081")
-      end)
-
-      it("lb_alg=ewma, peer was successfully set", function()
-        _G.ngx.var.proxy_upstream_name = "mock_ewma_backend"
-
-        mock_ewma.balance = function(b) return {address = "000.000.111", port = "8083"} end
-
-        local backend_get_spy = spy.on(mock_backends, "get")
-        local set_more_tries_spy = spy.on(mock_ngx_balancer, "set_more_tries")
-        local set_current_peer_spy = spy.on(mock_ngx_balancer, "set_current_peer")
-
-        mock_resty_balancer.is_applicable = function(b) return false end
-        assert.has_no_errors(balancer.call)
-        assert.spy(backend_get_spy).was_called_with(match.is_table(), "mock_ewma_backend")
-        assert.spy(set_more_tries_spy).was_called_with(1)
-        assert.spy(set_current_peer_spy).was_called_with("000.000.111", "8083")
-      end)
-
-      it("fails when no backend exists", function()
-        _G.ngx.var.proxy_upstream_name = "mock_rr_backend"
-
-        mock_backends._vals = {}
-
-        local backend_get_spy = spy.on(mock_backends, "get")
-        local set_current_peer_spy = spy.on(mock_ngx_balancer, "set_current_peer")
-
-        assert.has_no_errors(balancer.call)
-        assert.are_equal(ngx.status, 503)
-        assert.spy(backend_get_spy).was_called_with(match.is_table(), "mock_rr_backend")
-        assert.spy(set_current_peer_spy).was_not_called()
-      end)
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.spy(s_ngx_log).was_called_with(ngx.ERR,
+      "LB algorithm changed from round_robin to ewma, resetting the instance")
+      -- TODO(elvinefendi) figure out why
+      -- assert.spy(s).was_called_with(new_implementation, backend) does not work here
+      assert.spy(s).was_called(1)
+      assert.spy(s_old).was_not_called()
     end)
 
-    describe("not in phase log or balancer", function()
-      it("returns errors", function()
-        _G.ngx.get_phase = function() return "nope" end
-        assert.has_error(balancer.call, "must be called in balancer or log, but was called in: nope")
-      end)
-    end)
-  end)
+    it("calls sync(backend) on existing balancer instance when load balancing config does not change", function()
+      local mock_instance = { sync = function(...) end }
+      setmetatable(mock_instance, implementation)
+      implementation.new = function(self, backend) return mock_instance end
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
 
-  describe("balancer.init_worker():", function()
-    setup(function()
-      _G.ngx.timer = {
-        every = function(interval, func) return func() end
-      }
-      mock_cjson.decode = function(x) return x end
-    end)
+      stub(mock_instance, "sync")
 
-    before_each(function()
-      mock_backends._vals = default_backends
-    end)
-
-    describe("sync_backends():", function()
-      it("succeeds when no sync is required", function()
-        mock_config.get_backends_data = function() return default_backends end
-
-        local backend_set_spy = spy.on(mock_backends, "set")
-
-        assert.has_no_errors(balancer.init_worker)
-        assert.spy(backend_set_spy).was_not_called()
-      end)
-
-      it("lb_alg=round_robin, updates backend when sync is required", function()
-        mock_config.get_backends_data = function() return { default_backends.mock_rr_backend } end
-        mock_backends._vals = {}
-
-        local backend_set_spy = spy.on(mock_backends, "set")
-        local ewma_flush_spy = spy.on(_G.ngx.shared.balancer_ewma, "flush_all")
-        local ewma_lta_flush_spy = spy.on(_G.ngx.shared.balancer_ewma_last_touched_at, "flush_all")
-
-        mock_resty_balancer.balance = function(b) return {address = "000.000.000", port = "8080"} end
-        mock_resty_balancer.reinit = function(b) return end
-        assert.has_no_errors(balancer.init_worker)
-        assert.spy(backend_set_spy)
-          .was_called_with(match.is_table(), default_backends.mock_rr_backend.name, match.is_table())
-        assert.spy(ewma_flush_spy).was_not_called()
-        assert.spy(ewma_lta_flush_spy).was_not_called()
-      end)
-
-      it("lb_alg=ewma, updates backend when sync is required", function()
-        _G.ngx.var.proxy_upstream_name = "mock_ewma_backend"
-        mock_config.get_backends_data = function() return { default_backends.mock_ewma_backend } end
-        mock_backends._vals = {}
-
-        local backend_set_spy = spy.on(mock_backends, "set")
-        local ewma_sync_spy = spy.on(mock_ewma, "sync")
-
-        mock_resty_balancer.is_applicable = function(b) return false end
-        assert.has_no_errors(balancer.init_worker)
-        assert.spy(backend_set_spy)
-          .was_called_with(match.is_table(), default_backends.mock_ewma_backend.name, match.is_table())
-        assert.spy(ewma_sync_spy).was_called()
-      end)
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.stub(mock_instance.sync).was_called_with(mock_instance, backend)
     end)
   end)
 end)
