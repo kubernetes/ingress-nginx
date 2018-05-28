@@ -49,6 +49,9 @@ local function sync_backend(backend)
     return
   end
 
+  -- every implementation is the metatable of its instances (see .new(...) functions)
+  -- here we check if `balancer` is the instance of `implementation`
+  -- if it is not then we deduce LB algorithm has changed for the backend
   if getmetatable(balancer) ~= implementation then
     ngx.log(ngx.INFO,
       string.format("LB algorithm changed from %s to %s, resetting the instance", balancer.name, implementation.name))
@@ -113,8 +116,9 @@ function _M.balance()
   end
 
   local host, port = balancer:balance()
-  if not host then
-    ngx.log(ngx.WARN, "no host returned, balancer: " .. balancer.name)
+  if not (host and port) then
+    ngx.log(ngx.WARN,
+      string.format("host or port is missing, balancer: %s, host: %s, port: %s", balancer.name, host, port))
     return
   end
 
@@ -129,6 +133,10 @@ end
 function _M.log()
   local balancer = get_balancer()
   if not balancer then
+    return
+  end
+
+  if not balancer.after_balance then
     return
   end
 
