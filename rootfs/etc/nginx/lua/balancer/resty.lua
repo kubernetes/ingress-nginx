@@ -19,7 +19,4 @@ function _M.sync(self, backend)
   self.instance:reinit(nodes)
 end
 
-function _M.after_balance(_)
-end
-
 return _M
