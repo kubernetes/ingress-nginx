@@ -24,7 +24,13 @@ GOOS?=linux
 DOCKER?=docker
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
+
+# e2e settings
+# Allow limiting the scope of the e2e tests. By default run everything
 FOCUS?=.*
+# number of parallel test
+E2E_NODES?=3
+
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -109,8 +115,6 @@ ifeq ($(ARCH),amd64)
 	$(SED_I) "/CROSS_BUILD_/d" $(DOCKERFILE)
 else
 	# When cross-building, only the placeholder "CROSS_BUILD_" should be removed
-	# Register /usr/bin/qemu-ARCH-static as the handler for ARM binaries in the kernel
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 	curl -sSL https://github.com/multiarch/qemu-user-static/releases/download/$(QEMUVERSION)/x86_64_qemu-$(QEMUARCH)-static.tar.gz | tar -xz -C $(TEMP_DIR)/rootfs
 	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
 endif
@@ -121,6 +125,11 @@ ifeq ($(ARCH), amd64)
 	# This is for maintaining backward compatibility
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
+
+.PHONY: register-qemu
+register-qemu:
+	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static:register --reset
 
 .PHONY: push
 push: .push-$(ARCH)
@@ -158,7 +167,15 @@ lua-test:
 e2e-test:
 	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
 	@ginkgo build ./test/e2e
-	@KUBECONFIG=${HOME}/.kube/config ginkgo -randomizeSuites -randomizeAllSpecs -flakeAttempts=2 --focus=$(FOCUS) -p -trace -nodes=2 ./test/e2e/e2e.test
+	@KUBECONFIG=${HOME}/.kube/config ginkgo \
+		-randomizeSuites \
+		-randomizeAllSpecs \
+		-flakeAttempts=2 \
+		--focus=$(FOCUS) \
+		-p \
+		-trace \
+		-nodes=$(E2E_NODES) \
+		./test/e2e/e2e.test
 
 .PHONY: cover
 cover:
@@ -202,6 +219,7 @@ dep-ensure:
 	dep version || go get -u github.com/golang/dep/cmd/dep
 	dep ensure -v
 	dep prune -v
+	find vendor -name '*_test.go' -delete
 
 .PHONY: dev-env
 dev-env:
