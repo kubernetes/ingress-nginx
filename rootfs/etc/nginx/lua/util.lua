@@ -6,6 +6,18 @@ local resty_md5 = require("resty.md5")
 
 local _M = {}
 
+function _M.get_nodes(endpoints)
+  local nodes = {}
+  local weight = 1
+
+  for _, endpoint in pairs(endpoints) do
+    local endpoint_string = endpoint.address .. ":" .. endpoint.port
+    nodes[endpoint_string] = weight
+  end
+
+  return nodes
+end
+
 local function hash_digest(hash_factory, message)
   local hash = hash_factory:new()
   if not hash then

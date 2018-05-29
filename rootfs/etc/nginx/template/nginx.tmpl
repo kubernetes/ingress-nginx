@@ -396,7 +396,7 @@ http {
         server 0.0.0.1; # placeholder
 
         balancer_by_lua_block {
-          balancer.call()
+          balancer.balance()
         }
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
@@ -840,6 +840,11 @@ stream {
 
         location {{ $path }} {
             {{ if not $all.DisableLua }}
+            rewrite_by_lua_block {
+                {{ if $all.DynamicConfigurationEnabled}}
+                balancer.rewrite()
+                {{ end }}
+            }
             {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
             access_by_lua_block {
                 local lua_resty_waf = require("resty.waf")
@@ -887,7 +892,7 @@ stream {
                 waf:exec()
                 {{ end }}
                 {{ if $all.DynamicConfigurationEnabled}}
-                balancer.call()
+                balancer.log()
                 monitor.call()
                 {{ end }}
             }
