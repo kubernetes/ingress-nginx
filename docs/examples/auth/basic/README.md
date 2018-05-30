@@ -1,6 +1,7 @@
 # Basic Authentication
 
 This example shows how to add authentication in a Ingress rule using a secret that contains a file generated with `htpasswd`.
+It's important the file generated is named `auth` (actually - that the secret has a key `data.auth`), otherwise the ingress-controller returns a 503.
 
 ```console
 $ htpasswd -c auth foo
