@@ -135,18 +135,17 @@ function _M.balance()
     return
   end
 
-  local host, port = balancer:balance()
-  if not (host and port) then
-    ngx.log(ngx.WARN,
-      string.format("host or port is missing, balancer: %s, host: %s, port: %s", balancer.name, host, port))
+  local peer = balancer:balance()
+  if not peer then
+    ngx.log(ngx.WARN, "no peer was returned, balancer: " .. balancer.name)
     return
   end
 
   ngx_balancer.set_more_tries(1)
 
-  local ok, err = ngx_balancer.set_current_peer(host, port)
+  local ok, err = ngx_balancer.set_current_peer(peer)
   if not ok then
-    ngx.log(ngx.ERR, "error while setting current upstream peer to " .. tostring(err))
+    ngx.log(ngx.ERR, "error while setting current upstream peer: " .. tostring(err))
   end
 end
 
