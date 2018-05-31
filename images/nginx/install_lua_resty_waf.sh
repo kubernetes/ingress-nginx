@@ -59,6 +59,7 @@ if [[ ${ARCH} != "x86_64" ]]; then
   luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_LIBDIR}
 else
   luarocks install lrexlib-pcre 2.7.2-1
+  luarocks install lua-cjson
 fi
 
 # and do the rest of what "make instal" does
