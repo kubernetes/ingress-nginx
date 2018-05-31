@@ -76,13 +76,6 @@ http {
         end
     }
 
-    log_by_lua_block {
-        ok, res = pcall(metric_emitter.call)
-            if not ok then
-            ngx.log(ngx.ERR, "request_id failed: " .. tostring(res))
-        end
-    }
-
     {{ if $all.DynamicConfigurationEnabled }}
     init_worker_by_lua_block {
         balancer.init_worker()
@@ -901,6 +894,11 @@ stream {
                 {{ if $all.DynamicConfigurationEnabled}}
                 balancer.log()
                 {{ end }}
+
+                ok, res = pcall(metric_emitter.call)
+                    if not ok then
+                    ngx.log(ngx.ERR, "request_id failed: " .. tostring(res))
+                end                
             }
             {{ end }}
 
