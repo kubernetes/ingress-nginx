@@ -30,6 +30,7 @@ if [[ ${ARCH} != "x86_64" ]]; then
   sed -i 's/CFLAGS = -msse2 -msse3 -msse4.1 -O3/CFLAGS = -O3/' lua-aho-corasick/Makefile
   # export PCRE lib directory
   export PCRE_LIBDIR=$(find /usr/lib -name libpcre*.so* | head -1 | xargs dirname)
+  luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_LIBDIR}
 fi
 
 make
@@ -54,12 +55,6 @@ install lib/resty/logger/*.lua "$LUA_LIB_DIR/resty/logger/"
 git clone -b master --single-branch https://github.com/bungle/lua-resty-random.git "$BUILD_PATH/lua-resty-random"
 cd "$BUILD_PATH/lua-resty-cookie"
 make install
-
-if [[ ${ARCH} != "x86_64" ]]; then
-  luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_LIBDIR}
-else
-  luarocks install lrexlib-pcre 2.7.2-1
-fi
 
 # and do the rest of what "make instal" does
 cd "$BUILD_PATH/lua-resty-waf"
