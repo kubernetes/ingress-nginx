@@ -1,5 +1,6 @@
 local socket = require('socket')
 local cjson = require('cjson')
+local assert = assert
 
 local _M = {}
 
@@ -8,8 +9,8 @@ function _M.call()
   if current_phase == "log" then
 
     -- Initialize UDP Socket --
-    udp = assert(socket.udp())
-    asssert(udp:setpeername("127.0.0.1", 8000))
+    local udp = assert(socket.udp())
+    assert(udp:setpeername("127.0.0.1", 8000))
 
     -- Create JSON Metrics Payload  --
     local json = cjson.encode({
@@ -26,10 +27,10 @@ function _M.call()
       requestLength        = ngx.var.request_length,
       duration             = ngx.var.request_time,
       upstreamName         = ngx.var.upstream,
-      upstreamIP           = ngx.var.ngx.var.upstream_addr,
+      upstreamIP           = ngx.var.upstream_addr,
       upstreamResponseTime = ngx.var.upstream_response_time,
       upstreamStatus       = ngx.var.upstream_status,
-      namespace__          = ngx.var.namespace,
+      namespace            = ngx.var.namespace,
       ingress              = ngx.var.ingress_name,
       service              = ngx.var.service_name
     })
