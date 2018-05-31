@@ -910,6 +910,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.Ingress = ing
 
 					// we need to use the ingress annotations
+					defLoc.Logs = anns.Logs
 					defLoc.BasicDigestAuth = anns.BasicDigestAuth
 					defLoc.ClientBodyBufferSize = anns.ClientBodyBufferSize
 					defLoc.ConfigurationSnippet = anns.ConfigurationSnippet
