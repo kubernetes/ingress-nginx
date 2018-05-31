@@ -135,7 +135,9 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			Expect(log).ToNot(BeEmpty())
 
 			By("POSTing new backends to Lua endpoint")
-			Expect(restOfLogs).To(ContainSubstring("a client request body is buffered to a temporary file"))
+			// NOTE(elvinefendi) now that we disabled access log for this endpoint we have to find a different way to assert this
+			// or maybe delete this test completely and just rely on unit testing of Lua middleware?
+			//Expect(restOfLogs).To(ContainSubstring("a client request body is buffered to a temporary file"))
 			Expect(restOfLogs).ToNot(ContainSubstring("dynamic-configuration: unable to read valid request body"))
 		})
 

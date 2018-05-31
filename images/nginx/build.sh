@@ -85,7 +85,6 @@ clean-install \
   libcurl4-openssl-dev \
   procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
-  lua-cjson \
   python \
   luarocks \
   || exit 1
@@ -190,7 +189,7 @@ get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \ 
+get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \
         "https://github.com/openresty/luajit2/archive/v2.1-20180420.tar.gz"
 
 get_src 3926d41fb23fc2f4e54773f3c847153f6f17195a03677f9624e740605c49a771 \
@@ -203,6 +202,13 @@ CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
 export MAKEFLAGS=-j${CORES}
 export CTEST_BUILD_FLAGS=${MAKEFLAGS}
 export HUNTER_JOBS_NUMBER=${CORES}
+
+# Installing luarocks packages
+if [[ ${ARCH} == "x86_64" ]]; then
+  luarocks install lrexlib-pcre 2.7.2-1
+fi
+
+luarocks install lua-cjson 2.1.0.6-1
 
 # luajit is not available on ppc64le and s390x
 if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
@@ -244,7 +250,6 @@ if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
 
   # build and install lua-resty-waf with dependencies
   /install_lua_resty_waf.sh
-
 fi
 
 # build opentracing lib
