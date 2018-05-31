@@ -37,7 +37,7 @@ var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 )
 
-// Config contains the AuthSSLCert used for muthual autentication
+// Config contains the AuthSSLCert used for mutual authentication
 // and the configured ValidationDepth
 type Config struct {
 	resolver.AuthSSLCert
