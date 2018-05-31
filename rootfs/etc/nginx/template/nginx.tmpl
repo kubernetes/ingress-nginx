@@ -541,6 +541,7 @@ http {
 
         {{ if $all.DynamicConfigurationEnabled }}
         location /configuration {
+            access_log off;
             {{ if $cfg.EnableOpentracing }}
             opentracing off;
             {{ end }}
