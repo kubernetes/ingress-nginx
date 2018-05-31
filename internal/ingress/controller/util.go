@@ -18,6 +18,7 @@ package controller
 
 import (
 	"os"
+	"os/exec"
 	"syscall"
 
 	"github.com/golang/glog"
@@ -69,14 +70,27 @@ func sysctlFSFileMax() int {
 	return int(rLimit.Max)
 }
 
-const defBinary = "/usr/sbin/nginx"
+const (
+	defBinary = "/usr/sbin/nginx"
+	cfgPath   = "/etc/nginx/nginx.conf"
+)
 
-// GetNGINXBinary returns the path to the NGINX binary
-func GetNGINXBinary() string {
+func nginxExecCommand(args ...string) *exec.Cmd {
 	ngx := os.Getenv("NGINX_BINARY")
-	if ngx != "" {
-		return ngx
+	if ngx == "" {
+		ngx = defBinary
 	}
 
-	return defBinary
+	cmdArgs := []string{"-c", cfgPath}
+	cmdArgs = append(cmdArgs, args...)
+	return exec.Command(ngx, cmdArgs...)
+}
+
+func nginxTestCommand(cfg string) *exec.Cmd {
+	ngx := os.Getenv("NGINX_BINARY")
+	if ngx == "" {
+		ngx = defBinary
+	}
+
+	return exec.Command(ngx, "-c", cfg, "-t")
 }

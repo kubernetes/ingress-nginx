@@ -69,7 +69,6 @@ const (
 
 var (
 	tmplPath = "/etc/nginx/template/nginx.tmpl"
-	cfgPath  = "/etc/nginx/nginx.conf"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
@@ -266,7 +265,7 @@ func (n *NGINXController) Start() {
 		go n.syncStatus.Run()
 	}
 
-	cmd := exec.Command(GetNGINXBinary(), "-c", cfgPath)
+	cmd := nginxExecCommand()
 
 	// put nginx in another process group to prevent it
 	// to receive signals meant for the controller
@@ -303,7 +302,7 @@ func (n *NGINXController) Start() {
 				// release command resources
 				cmd.Process.Release()
 				// start a new nginx master process if the controller is not being stopped
-				cmd = exec.Command(GetNGINXBinary(), "-c", cfgPath)
+				cmd = nginxExecCommand()
 				cmd.SysProcAttr = &syscall.SysProcAttr{
 					Setpgid: true,
 					Pgid:    0,
@@ -351,7 +350,7 @@ func (n *NGINXController) Stop() error {
 
 	// Send stop signal to Nginx
 	glog.Info("stopping NGINX process...")
-	cmd := exec.Command(GetNGINXBinary(), "-c", cfgPath, "-s", "quit")
+	cmd := nginxExecCommand("-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -410,7 +409,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if err != nil {
 		return err
 	}
-	out, err := exec.Command(GetNGINXBinary(), "-t", "-c", tmpfile.Name()).CombinedOutput()
+	out, err := nginxTestCommand(tmpfile.Name()).CombinedOutput()
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
@@ -647,7 +646,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	o, err := exec.Command(GetNGINXBinary(), "-s", "reload", "-c", cfgPath).CombinedOutput()
+	o, err := nginxExecCommand("-s", "reload").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
 	}
