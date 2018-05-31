@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"os"
 	"syscall"
 
 	"github.com/golang/glog"
@@ -66,4 +67,16 @@ func sysctlFSFileMax() int {
 	}
 	glog.V(2).Infof("rlimit.max=%v", rLimit.Max)
 	return int(rLimit.Max)
+}
+
+const defBinary = "/usr/sbin/nginx"
+
+// GetNGINXBinary returns the path to the NGINX binary
+func GetNGINXBinary() string {
+	ngx := os.Getenv("NGINX_BINARY")
+	if ngx != "" {
+		return ngx
+	}
+
+	return defBinary
 }

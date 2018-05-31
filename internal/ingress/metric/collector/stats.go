@@ -17,6 +17,7 @@ limitations under the License.
 package collector
 
 import (
+	"net"
 	"reflect"
 	"time"
 
@@ -84,9 +85,13 @@ type statsCollector struct {
 	port int
 
 	promData *data
+
+	listener *net.UDPConn
 }
 
-func (sc *statsCollector) HandleMessage(msg []byte) {
+func (sc *statsCollector) handleMessage(msg []byte) {
+	glog.Infof("msg: %v", string(msg))
+
 	/*
 		reflectMetrics(&nginxMetrics.Connections, p.data.connections, ch, p.ingressClass, p.namespace)
 
@@ -153,19 +158,24 @@ func reflectMetrics(value interface{}, desc *prometheus.Desc, ch chan<- promethe
 	}
 }
 
-func NewInstance(ns, class, binary string, port int) (*statsCollector, error) {
+func NewInstance(ns, class string, port int) (*statsCollector, error) {
 	glog.Infof("starting new nginx stats collector for Ingress controller running in namespace %v (class %v)", ns, class)
 	glog.Infof("collector extracting information from port %v", port)
 	pc, err := newNamedProcess(true, BinaryNameMatcher{
-		Name:   "nginx",
-		Binary: binary,
+		Name: "nginx",
 	})
 	if err != nil {
-		glog.Fatalf("unexpected error registering nginx collector: %v", err)
+		return nil, err
 	}
+
 	err = prometheus.Register(pc)
 	if err != nil {
-		glog.Fatalf("unexpected error registering nginx collector: %v", err)
+		return nil, err
+	}
+
+	listener, err := newUDPListener(port)
+	if err != nil {
+		return nil, err
 	}
 
 	promData := &data{
@@ -261,14 +271,12 @@ func NewInstance(ns, class, binary string, port int) (*statsCollector, error) {
 		process:    pc,
 		port:       port,
 		promData:   promData,
+		listener:   listener,
 	}
-
-	listener, err := newUDPListener(port)
-	if err != nil {
-		return nil, err
-	}
-
-	go handleMessages(listener, sc.HandleMessage)
 
 	return sc, nil
+}
+
+func (sc *statsCollector) Run() {
+	handleMessages(sc.listener, sc.handleMessage)
 }

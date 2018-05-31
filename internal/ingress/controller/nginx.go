@@ -53,15 +53,12 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
-	"k8s.io/ingress-nginx/internal/ingress/metric/collector"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
-
-	logcollector "k8s.io/ingress-nginx/internal/ingress/metric/server"
 )
 
 type statusModule string
@@ -71,20 +68,14 @@ const (
 )
 
 var (
-	tmplPath    = "/etc/nginx/template/nginx.tmpl"
-	cfgPath     = "/etc/nginx/nginx.conf"
-	nginxBinary = "/usr/sbin/nginx"
+	tmplPath = "/etc/nginx/template/nginx.tmpl"
+	cfgPath  = "/etc/nginx/nginx.conf"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
 // If the environment variable NGINX_BINARY exists it will be used
 // as source for nginx commands
 func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXController {
-	ngx := os.Getenv("NGINX_BINARY")
-	if ngx == "" {
-		ngx = nginxBinary
-	}
-
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
@@ -97,8 +88,6 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 	}
 
 	n := &NGINXController{
-		binary: ngx,
-
 		isIPV6Enabled: ing_net.IsIPv6Enabled(),
 
 		resolver:        h,
@@ -133,8 +122,6 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		config.Client,
 		fs,
 		n.updateCh)
-
-	collector.NewInstance(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -255,10 +242,7 @@ type NGINXController struct {
 
 	t *ngx_template.Template
 
-	binary   string
 	resolver []net.IP
-
-	logCollector *logcollector.UDPLogListener
 
 	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
@@ -278,13 +262,11 @@ func (n *NGINXController) Start() {
 
 	n.store.Run(n.stopCh)
 
-	go n.logCollector.Run(n.stopCh)
-
 	if n.syncStatus != nil {
 		go n.syncStatus.Run()
 	}
 
-	cmd := exec.Command(n.binary, "-c", cfgPath)
+	cmd := exec.Command(GetNGINXBinary(), "-c", cfgPath)
 
 	// put nginx in another process group to prevent it
 	// to receive signals meant for the controller
@@ -321,7 +303,7 @@ func (n *NGINXController) Start() {
 				// release command resources
 				cmd.Process.Release()
 				// start a new nginx master process if the controller is not being stopped
-				cmd = exec.Command(n.binary, "-c", cfgPath)
+				cmd = exec.Command(GetNGINXBinary(), "-c", cfgPath)
 				cmd.SysProcAttr = &syscall.SysProcAttr{
 					Setpgid: true,
 					Pgid:    0,
@@ -369,7 +351,7 @@ func (n *NGINXController) Stop() error {
 
 	// Send stop signal to Nginx
 	glog.Info("stopping NGINX process...")
-	cmd := exec.Command(n.binary, "-c", cfgPath, "-s", "quit")
+	cmd := exec.Command(GetNGINXBinary(), "-c", cfgPath, "-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -428,7 +410,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if err != nil {
 		return err
 	}
-	out, err := exec.Command(n.binary, "-t", "-c", tmpfile.Name()).CombinedOutput()
+	out, err := exec.Command(GetNGINXBinary(), "-t", "-c", tmpfile.Name()).CombinedOutput()
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
@@ -665,7 +647,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	o, err := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
+	o, err := exec.Command(GetNGINXBinary(), "-s", "reload", "-c", cfgPath).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
 	}
