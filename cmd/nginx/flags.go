@@ -101,8 +101,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		ingress controller should update the Ingress status IP/hostname when the controller
 		is being stopped. Default is true`)
 
-		sortBackends = flags.Bool("sort-backends", false,
-			`Defines if backends and its endpoints should be sorted`)
+		sortBackends = flags.Bool("sort-backends", false, `Defines if servers inside NGINX upstream should be sorted`)
 
 		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", false,
 			`Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address`)
