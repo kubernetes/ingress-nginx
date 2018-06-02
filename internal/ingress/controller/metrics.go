@@ -44,7 +44,7 @@ var (
 	configSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: ns,
 		Name:      "config_last_reload_successfull",
-		Help: `Whether the last configuration reload attemp was successfull.
+		Help: `Whether the last configuration reload attemp was successful.
 		Prometheus alert example:
 		alert: IngressControllerFailedReload 
 		expr: ingress_controller_config_last_reload_successfull == 0
@@ -53,7 +53,7 @@ var (
 	configSuccessTime = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: ns,
 		Name:      "config_last_reload_successfull_timestamp_seconds",
-		Help:      "Timestamp of the last successfull configuration reload.",
+		Help:      "Timestamp of the last successful configuration reload.",
 	})
 	// TODO depreciate this metrics in favor of ingress_controller_config_last_reload_successfull_timestamp_seconds
 	reloadOperation = prometheus.NewCounterVec(
