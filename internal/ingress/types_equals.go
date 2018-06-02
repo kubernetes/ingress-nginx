@@ -129,9 +129,6 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		if b1.Service.GetName() != b2.Service.GetName() {
 			return false
 		}
-		if b1.Service.GetResourceVersion() != b2.Service.GetResourceVersion() {
-			return false
-		}
 	}
 
 	if b1.Port != b2.Port {
@@ -326,9 +323,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		if l1.Service.GetName() != l2.Service.GetName() {
 			return false
 		}
-		if l1.Service.GetResourceVersion() != l2.Service.GetResourceVersion() {
-			return false
-		}
 	}
 
 	if l1.Port.StrVal != l2.Port.StrVal {
@@ -422,9 +416,6 @@ func (ptb1 *SSLPassthroughBackend) Equal(ptb2 *SSLPassthroughBackend) bool {
 			return false
 		}
 		if ptb1.Service.GetName() != ptb2.Service.GetName() {
-			return false
-		}
-		if ptb1.Service.GetResourceVersion() != ptb2.Service.GetResourceVersion() {
 			return false
 		}
 	}

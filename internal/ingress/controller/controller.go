@@ -572,12 +572,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 		aUpstreams = append(aUpstreams, upstream)
 	}
 
-	if n.cfg.SortBackends {
-		sort.SliceStable(aUpstreams, func(a, b int) bool {
-			return aUpstreams[a].Name < aUpstreams[b].Name
-		})
-	}
-
 	aServers := make([]*ingress.Server, 0, len(servers))
 	for _, value := range servers {
 		sort.SliceStable(value.Locations, func(i, j int) bool {
@@ -585,6 +579,10 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 		})
 		aServers = append(aServers, value)
 	}
+
+	sort.SliceStable(aUpstreams, func(a, b int) bool {
+		return aUpstreams[a].Name < aUpstreams[b].Name
+	})
 
 	sort.SliceStable(aServers, func(i, j int) bool {
 		return aServers[i].Hostname < aServers[j].Hostname
