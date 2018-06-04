@@ -85,19 +85,40 @@ clean-install \
   libcurl4-openssl-dev \
   procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
+  lua-cjson \
   python \
   luarocks \
   || exit 1
 
-ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
+if [[ ${ARCH} == "x86_64" ]]; then
+  ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
+  ln -s /usr/lib/x86_64-linux-gnu /usr/lib/lua-platform-path     
+fi
 
-mkdir -p /etc/nginx
+if [[ ${ARCH} == "armv7l" ]]; then
+  ln -s /usr/lib/arm-linux-gnueabihf/liblua5.1.so /usr/lib/liblua.so
+  ln -s /usr/lib/arm-linux-gnueabihf /usr/lib/lua-platform-path     
+fi
+
+if [[ ${ARCH} == "aarch64" ]]; then
+  ln -s /usr/lib/aarch64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
+  ln -s /usr/lib/aarch64-linux-gnu /usr/lib/lua-platform-path   
+fi
+
+if [[ ${ARCH} == "ppc64le" ]]; then
+  ln -s /usr/lib/powerpc64le-linux-gnu/liblua5.1.so /usr/lib/liblua.so
+  ln -s /usr/lib/powerpc64le-linux-gnu /usr/lib/lua-platform-path
+fi
 
 if [[ ${ARCH} == "s390x" ]]; then
+  ln -s /usr/lib/s390x-linux-gnu/liblua5.1.so /usr/lib/liblua.so
+  ln -s /usr/lib/s390x-linux-gnu /usr/lib/lua-platform-path
   # avoid error:
   # git: ../nptl/pthread_mutex_lock.c:81: __pthread_mutex_lock: Assertion `mutex->__data.__owner == 0' failed.
   git config --global pack.threads "1"
 fi
+
+mkdir -p /etc/nginx
 
 # Get the GeoIP data
 GEOIP_FOLDER=/etc/nginx/geoip
@@ -207,8 +228,6 @@ export HUNTER_JOBS_NUMBER=${CORES}
 if [[ ${ARCH} == "x86_64" ]]; then
   luarocks install lrexlib-pcre 2.7.2-1
 fi
-
-luarocks install lua-cjson 2.1.0.6-1
 
 # luajit is not available on ppc64le and s390x
 if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
