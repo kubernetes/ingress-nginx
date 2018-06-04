@@ -18,263 +18,150 @@ package collector
 
 import (
 	"net"
-	"reflect"
 	"time"
-
+	"encoding/json"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 const ns = "nginx"
 
-type stat struct {
-	Host   string `json:"host"`
-	Status int    `json:"status"`
-
-	Time time.Duration `json:"time"`
-
-	RemoteAddress string `json:"remoteAddr"`
-	RemoteUser    string `json:"remoteUser"`
-
-	BytesSent int64 `json:"bytesSent"`
-
-	Protocol string `json:"protocol"`
-	Method   string `json:"method"`
-	Path     string `json:"path"`
-
-	RequestTime   string `json:"requestTime"`
-	RequestLength string `json:"requestLength"`
-	Duration      int    `json:"duration"`
-
-	UpstreamName         string `json:"upstreamName"`
-	UpstreamIP           string `json:"upstreamIP"`
-	UpstreamResponseTime string `json:"upstreamResponseTime"`
-	UpstreamStatus       string `json:"upstreamStatus"`
-
-	Namespace string `json:"namespace"`
-	Ingress   string `json:"ingress"`
-	Service   string `json:"service"`
-}
-
 type data struct {
-	bytes                *prometheus.Desc
-	cache                *prometheus.Desc
-	connections          *prometheus.Desc
-	responses            *prometheus.Desc
-	requests             *prometheus.Desc
-	filterZoneBytes      *prometheus.Desc
-	filterZoneResponses  *prometheus.Desc
-	filterZoneCache      *prometheus.Desc
-	upstreamBackup       *prometheus.Desc
-	upstreamBytes        *prometheus.Desc
-	upstreamDown         *prometheus.Desc
-	upstreamFailTimeout  *prometheus.Desc
-	upstreamMaxFails     *prometheus.Desc
-	upstreamResponses    *prometheus.Desc
-	upstreamRequests     *prometheus.Desc
-	upstreamResponseMsec *prometheus.Desc
-	upstreamWeight       *prometheus.Desc
+	Host   string `json:"host"`   // Label
+	Status int    `json:"status"` // Label
+
+	Time time.Duration `json:"time"` // Metric
+
+	RemoteAddress string `json:"remoteAddr"` // Label
+	RemoteUser    string `json:"remoteUser"` // Label
+
+	BytesSent int64 `json:"bytesSent"` // Metric
+
+	Protocol string `json:"protocol"` // Label
+	Method   string `json:"method"`   // Label
+	Path     string `json:"path"`     // Label
+
+	RequestTime   string `json:"requestTime"`   // Metric
+	RequestLength string `json:"requestLength"` // Metric
+	Duration      int    `json:"duration"`      // Metric DONE
+
+	UpstreamName         string `json:"upstreamName"`         // Label
+	UpstreamIP           string `json:"upstreamIP"`           // Label
+	UpstreamResponseTime string `json:"upstreamResponseTime"` // Metric DONE
+	UpstreamStatus       string `json:"upstreamStatus"`       // Label
+
+	Namespace string `json:"namespace"` // Label
+	Ingress   string `json:"ingress"`   // Label
+	Service   string `json:"service"`   // Label
 }
 
 type statsCollector struct {
-	process prometheus.Collector
-
-	namespace  string
-	watchClass string
-
-	port int
-
-	promData *data
-
+	upstreamResponseTime prometheus.*HistogramVec
+	requestDuration prometheus.*HistogramVec
+	requestLength prometheus.*HistogramVec
+	bytesSent prometheus.*HistogramVec
 	listener *net.UDPConn
+	ns string
+	watchClass string
+	port int
+}
+
+func NewInstance(ns string, class string, port int) {
+	sc := statsCollector{}
+
+	listener, err := newUDPListener(port)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sc.listener := listener
+	sc.ns := ns
+	sc.watchClass := class
+	sc.port := port
+
+	tags := []string{"host", "status", "remote_address", "remote_user", "protocol", "method", "path", "upstream_name", "upstream_ip", "upstream_response_time", "upstream_status", "namespace", "ingress", "service"}
+
+	sc.upstreamResponseTime := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "upstream_response_time_seconds",
+			Help:    "The time spent on receiving the response from the upstream server",
+			Namespace: ns,
+			Buckets: prometheus.LinearBuckets(0.1, 0.1, 10), // 10 buckets, each 0.1 seconds wide.
+		},
+		tags
+	)
+
+	sc.requestDuration := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "request_duration_seconds",
+			Help:    "The request processing time in seconds",
+			Namespace: ns,
+			Buckets: prometheus.LinearBuckets(0.5, 0.5, 20), // 20 buckets, each 0.5 seconds wide.
+		},
+		tags
+	)
+
+	sc.requestLength := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "request_length_bytes",
+			Help:    "The request length (including request line, header, and request body)",
+			Namespace: ns,
+			Buckets: prometheus.LinearBuckets(20, 20, 20), // 20 buckets, each 20 bytes wide.
+		},
+		tags
+	)
+
+	sc.bytesSent := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "bytes_sent",
+			Help:    "The the number of bytes sent to a client",
+			Namespace: ns,
+			Buckets: prometheus.LinearBuckets(100, 100, 20), // 20 buckets, each 100 bytes wide.
+		},
+		tags
+	)
+
+	prometheus.MustRegister(upstreamResponseTime)
+	prometheus.MustRegister(requestDuration)
+	prometheus.MustRegister(requestLength)
+	prometheus.MustRegister(bytesSent)
+	return &sc
 }
 
 func (sc *statsCollector) handleMessage(msg []byte) {
 	glog.Infof("msg: %v", string(msg))
 
-	/*
-		reflectMetrics(&nginxMetrics.Connections, p.data.connections, ch, p.ingressClass, p.namespace)
-
-		for name, zones := range nginxMetrics.UpstreamZones {
-			for pos, value := range zones {
-				reflectMetrics(&zones[pos].Responses, p.data.upstreamResponses, ch, p.ingressClass, p.namespace, name, value.Server)
-
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamRequests,
-					prometheus.CounterValue, zones[pos].RequestCounter, p.ingressClass, p.namespace, name, value.Server)
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamDown,
-					prometheus.CounterValue, float64(zones[pos].Down), p.ingressClass, p.namespace, name, value.Server)
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamWeight,
-					prometheus.CounterValue, zones[pos].Weight, p.ingressClass, p.namespace, name, value.Server)
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamResponseMsec,
-					prometheus.CounterValue, zones[pos].ResponseMsec, p.ingressClass, p.namespace, name, value.Server)
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamBackup,
-					prometheus.CounterValue, float64(zones[pos].Backup), p.ingressClass, p.namespace, name, value.Server)
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamFailTimeout,
-					prometheus.CounterValue, zones[pos].FailTimeout, p.ingressClass, p.namespace, name, value.Server)
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamMaxFails,
-					prometheus.CounterValue, zones[pos].MaxFails, p.ingressClass, p.namespace, name, value.Server)
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamBytes,
-					prometheus.CounterValue, zones[pos].InBytes, p.ingressClass, p.namespace, name, value.Server, "in")
-				ch <- prometheus.MustNewConstMetric(p.data.upstreamBytes,
-					prometheus.CounterValue, zones[pos].OutBytes, p.ingressClass, p.namespace, name, value.Server, "out")
-			}
-		}
-
-		for name, zone := range nginxMetrics.ServerZones {
-			reflectMetrics(&zone.Responses, p.data.responses, ch, p.ingressClass, p.namespace, name)
-			reflectMetrics(&zone.Cache, p.data.cache, ch, p.ingressClass, p.namespace, name)
-
-			ch <- prometheus.MustNewConstMetric(p.data.requests,
-				prometheus.CounterValue, zone.RequestCounter, p.ingressClass, p.namespace, name)
-			ch <- prometheus.MustNewConstMetric(p.data.bytes,
-				prometheus.CounterValue, zone.InBytes, p.ingressClass, p.namespace, name, "in")
-			ch <- prometheus.MustNewConstMetric(p.data.bytes,
-				prometheus.CounterValue, zone.OutBytes, p.ingressClass, p.namespace, name, "out")
-		}
-
-		for serverZone, keys := range nginxMetrics.FilterZones {
-			for name, zone := range keys {
-				reflectMetrics(&zone.Responses, p.data.filterZoneResponses, ch, p.ingressClass, p.namespace, serverZone, name)
-				reflectMetrics(&zone.Cache, p.data.filterZoneCache, ch, p.ingressClass, p.namespace, serverZone, name)
-
-				ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
-					prometheus.CounterValue, zone.InBytes, p.ingressClass, p.namespace, serverZone, name, "in")
-				ch <- prometheus.MustNewConstMetric(p.data.filterZoneBytes,
-					prometheus.CounterValue, zone.OutBytes, p.ingressClass, p.namespace, serverZone, name, "out")
-			}
-		}
-	*/
-}
-
-func reflectMetrics(value interface{}, desc *prometheus.Desc, ch chan<- prometheus.Metric, labels ...string) {
-	val := reflect.ValueOf(value).Elem()
-
-	for i := 0; i < val.NumField(); i++ {
-		tag := val.Type().Field(i).Tag
-		l := append(labels, tag.Get("json"))
-		ch <- prometheus.MustNewConstMetric(desc,
-			prometheus.CounterValue, val.Field(i).Interface().(float64),
-			l...)
-	}
-}
-
-func NewInstance(ns, class string, port int) (*statsCollector, error) {
-	glog.Infof("starting new nginx stats collector for Ingress controller running in namespace %v (class %v)", ns, class)
-	glog.Infof("collector extracting information from port %v", port)
-	pc, err := newNamedProcess(true, BinaryNameMatcher{
-		Name: "nginx",
-	})
+	// Unmarshall bytes
+	var stats data
+	err := json.Unmarshall(msg, &stats)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	err = prometheus.Register(pc)
-	if err != nil {
-		return nil, err
+	// Create Labels Map
+	labels := prometheus.Labels{
+		"host": stats.Host,
+		"status": stats.Status,
+		"remote_address": stats.RemoteAddress,
+		"remote_user": stats.RemoteUser,
+		"protocol": stats.Protocol,
+		"method": stats.Method,
+		"path": stats.Path,
+		"upstream_name": stats.UpstreamName,
+		"upstream_ip": stats.UpstreamIP,
+		"upstream_status": stats.UpstreamStatus,
+		"namespace": status.Namespace,
+		"ingress": status.Ingress,
+		"service": status.Service
 	}
 
-	listener, err := newUDPListener(port)
-	if err != nil {
-		return nil, err
-	}
+	// Emit metrics
+	sc.upstreamResponseTime.GetMetricWith(labels).Observe(stats.UpstreamResponseTime)
+	sc.requestDuration.GetMetricWith(labels).Observe(stats.UpstreamResponseTime)
+	sc.requestLength.GetMetricWith(labels).Observe(stats.RequestLength)
+	sc.bytesSent.GetMetricWith(labels).Observe(stats.BytesSent)
 
-	promData := &data{
-		bytes: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "bytes_total"),
-			"Nginx bytes count",
-			[]string{"ingress_class", "namespace", "server_zone", "direction"}, nil),
-
-		cache: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "cache_total"),
-			"Nginx cache count",
-			[]string{"ingress_class", "namespace", "server_zone", "type"}, nil),
-
-		connections: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "connections_total"),
-			"Nginx connections count",
-			[]string{"ingress_class", "namespace", "type"}, nil),
-
-		responses: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "responses_total"),
-			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-			[]string{"ingress_class", "namespace", "server_zone", "status_code"}, nil),
-
-		requests: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "requests_total"),
-			"The total number of requested client connections.",
-			[]string{"ingress_class", "namespace", "server_zone"}, nil),
-
-		filterZoneBytes: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "filterzone_bytes_total"),
-			"Nginx bytes count",
-			[]string{"ingress_class", "namespace", "server_zone", "key", "direction"}, nil),
-
-		filterZoneResponses: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "filterzone_responses_total"),
-			"The number of responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-			[]string{"ingress_class", "namespace", "server_zone", "key", "status_code"}, nil),
-
-		filterZoneCache: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "filterzone_cache_total"),
-			"Nginx cache count",
-			[]string{"ingress_class", "namespace", "server_zone", "key", "type"}, nil),
-
-		upstreamBackup: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "upstream_backup"),
-			"Current backup setting of the server.",
-			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
-
-		upstreamBytes: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "upstream_bytes_total"),
-			"The total number of bytes sent to this server.",
-			[]string{"ingress_class", "namespace", "upstream", "server", "direction"}, nil),
-
-		upstreamDown: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "vts_upstream_down_total"),
-			"Current down setting of the server.",
-			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
-
-		upstreamFailTimeout: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "upstream_fail_timeout"),
-			"Current fail_timeout setting of the server.",
-			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
-
-		upstreamMaxFails: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "upstream_maxfails"),
-			"Current max_fails setting of the server.",
-			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
-
-		upstreamResponses: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "upstream_responses_total"),
-			"The number of upstream responses with status codes 1xx, 2xx, 3xx, 4xx, and 5xx.",
-			[]string{"ingress_class", "namespace", "upstream", "server", "status_code"}, nil),
-
-		upstreamRequests: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "upstream_requests_total"),
-			"The total number of client connections forwarded to this server.",
-			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
-
-		upstreamResponseMsec: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "upstream_response_msecs_avg"),
-			"The average of only upstream response processing times in milliseconds.",
-			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
-
-		upstreamWeight: prometheus.NewDesc(
-			prometheus.BuildFQName(ns, "", "upstream_weight"),
-			"Current upstream weight setting of the server.",
-			[]string{"ingress_class", "namespace", "upstream", "server"}, nil),
-	}
-
-	sc := &statsCollector{
-		namespace:  ns,
-		watchClass: class,
-		process:    pc,
-		port:       port,
-		promData:   promData,
-		listener:   listener,
-	}
-
-	return sc, nil
 }
 
 func (sc *statsCollector) Run() {

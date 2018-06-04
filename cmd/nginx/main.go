@@ -119,10 +119,7 @@ func main() {
 	mux := http.NewServeMux()
 	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux)
 
-	lc, err := collector.NewInstance(conf.Namespace, class.IngressClass, 8000)
-	if err != nil {
-		glog.Fatalf("Unexpected error registering nginx collector: %v", err)
-	}
+	lc := collector.NewInstance(conf.Namespace, class.IngressClass, 8000)
 	go lc.Run()
 
 	ngx.Start()
