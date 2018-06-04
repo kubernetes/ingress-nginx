@@ -55,7 +55,7 @@ Please make sure to read the [Issue Reporting Checklist](https://github.com/kube
 
 ## Changelog
 
-Detailed changes for each release are documented in the [CHANGELOG.md](CHANGELOG.md)
+Detailed changes for each release are documented in the [Changelog.md](Changelog.md)
 
 
 ## Contribution
