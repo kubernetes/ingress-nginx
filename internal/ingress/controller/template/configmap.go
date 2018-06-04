@@ -21,6 +21,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -42,6 +43,7 @@ const (
 	hideHeaders              = "hide-headers"
 	nginxStatusIpv4Whitelist = "nginx-status-ipv4-whitelist"
 	nginxStatusIpv6Whitelist = "nginx-status-ipv6-whitelist"
+	proxyHeaderTimeout       = "proxy-protocol-header-timeout"
 )
 
 var (
@@ -122,6 +124,17 @@ func ReadConfig(src map[string]string) config.Configuration {
 			} else {
 				glog.Warningf("The code %v is not a valid as HTTP redirect code. Using the default.", val)
 			}
+		}
+	}
+
+	// Verify that the configured timeout is parsable as a duration. if not, set the default value
+	if val, ok := conf[proxyHeaderTimeout]; ok {
+		delete(conf, proxyHeaderTimeout)
+		duration, err := time.ParseDuration(val)
+		if err != nil {
+			glog.Warningf("proxy-protocol-header-timeout of %v encounted an error while being parsed %v. Switching to use default value instead.", val, err)
+		} else {
+			to.ProxyProtocolHeaderTimeout = duration
 		}
 	}
 
