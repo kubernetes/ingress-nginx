@@ -662,7 +662,7 @@ current_waiting_connections_total       -> nginx_connections{state="waiting"}
 - [X] [#1434](https://github.com/kubernetes/ingress/pull/1434) Fix exec of readSecrets
 - [X] [#1435](https://github.com/kubernetes/ingress/pull/1435) Add header to upstream server for external authentication
 - [X] [#1438](https://github.com/kubernetes/ingress/pull/1438) Do not intercept errors from the custom error service
-- [X] [#1439](https://github.com/kubernetes/ingress/pull/1439) Nginx master process killed thus no futher reloads
+- [X] [#1439](https://github.com/kubernetes/ingress/pull/1439) Nginx master process killed thus no further reloads
 - [X] [#1440](https://github.com/kubernetes/ingress/pull/1440) Kill worker processes to allow the restart of nginx
 - [X] [#1445](https://github.com/kubernetes/ingress/pull/1445) Updated godeps
 - [X] [#1450](https://github.com/kubernetes/ingress/pull/1450) Fix links
@@ -775,7 +775,7 @@ current_waiting_connections_total       -> nginx_connections{state="waiting"}
 - [X] [#1130](https://github.com/kubernetes/ingress/pull/1130) Update nginx.go
 - [X] [#1134](https://github.com/kubernetes/ingress/pull/1134) replace deprecated interface with versioned ones
 - [X] [#1136](https://github.com/kubernetes/ingress/pull/1136) Fix status update - changed in #1074
-- [X] [#1138](https://github.com/kubernetes/ingress/pull/1138) update nginx.go: preformance improve
+- [X] [#1138](https://github.com/kubernetes/ingress/pull/1138) update nginx.go: performance improve
 - [X] [#1139](https://github.com/kubernetes/ingress/pull/1139) Fix Todo:convert sequence to table
 - [X] [#1162](https://github.com/kubernetes/ingress/pull/1162) Optimize CI build time
 - [X] [#1164](https://github.com/kubernetes/ingress/pull/1164) Use variable request_uri as redirect after auth
