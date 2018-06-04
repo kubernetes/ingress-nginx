@@ -16,7 +16,6 @@ local function send_response_data(upstream_state, client_state)
         status_class = string.sub(status, 0, 1) .. "xx"
       end
 
-      ngx.log(ngx.INFO, upstream_state.addr[i] )
       statsd.increment('ingress.nginx.upstream.response', 1, {
         status=status,
         status_class=status_class,
