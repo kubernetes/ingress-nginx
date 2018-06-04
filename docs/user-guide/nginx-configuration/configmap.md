@@ -84,6 +84,7 @@ The following table shows a configuration option's name, type, and the default v
 |[ssl-session-timeout](#ssl-session-timeout)|string|"10m"|
 |[ssl-buffer-size](#ssl-buffer-size)|string|"4k"|
 |[use-proxy-protocol](#use-proxy-protocol)|bool|"false"|
+|[proxy-protocol-header-timeout](#proxy-protocol-header-timeout)|string|"5s"|
 |[use-gzip](#use-gzip)|bool|"true"|
 |[use-geoip](#use-geoip)|bool|"true"|
 |[enable-brotli](#enable-brotli)|bool|"true"|
@@ -478,6 +479,11 @@ _References:_
 ## use-proxy-protocol
 
 Enables or disables the [PROXY protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol/) to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAProxy and Amazon Elastic Load Balancer (ELB).
+
+## proxy-protocol-header-timeout
+
+Sets the timeout value for receiving the proxy-protocol headers. The default of 5 seconds prevents the TLS passthrough handler from waiting indefinetly on a dropped connection.
+_**default:**_ 5s
 
 ## use-gzip
 

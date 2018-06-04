@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"runtime"
 	"strconv"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -346,6 +347,11 @@ type Configuration struct {
 	// https://www.nginx.com/resources/admin-guide/proxy-protocol/
 	UseProxyProtocol bool `json:"use-proxy-protocol,omitempty"`
 
+	// When use-proxy-protocol is enabled, sets the maximum time the connection handler will wait
+	// to receive proxy headers.
+	// Example '60s'
+	ProxyProtocolHeaderTimeout time.Duration `json:"proxy-protocol-header-timeout,omitempty"`
+
 	// Enables or disables the use of the nginx module that compresses responses using the "gzip" method
 	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
 	UseGzip bool `json:"use-gzip,omitempty"`
@@ -528,6 +534,7 @@ func NewDefault() Configuration {
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
+	defProxyDeadlineDuration := time.Duration(5) * time.Second
 
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
@@ -566,6 +573,7 @@ func NewDefault() Configuration {
 		NginxStatusIpv4Whitelist:   defNginxStatusIpv4Whitelist,
 		NginxStatusIpv6Whitelist:   defNginxStatusIpv6Whitelist,
 		ProxyRealIPCIDR:            defIPCIDR,
+		ProxyProtocolHeaderTimeout: defProxyDeadlineDuration,
 		ServerNameHashMaxSize:      1024,
 		ProxyHeadersHashMaxSize:    512,
 		ProxyHeadersHashBucketSize: 64,
