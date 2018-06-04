@@ -1,0 +1,19 @@
+
+language: go
+
+go: 1.8.3
+
+install:
+  - make setup
+  - gem install fpm
+
+script:
+  - make all
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+  - test -n "$TRAVIS_TAG" && curl -sL https://git.io/goreleaser | bash 
+
+notifications:
+  email: false
+

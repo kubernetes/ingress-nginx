@@ -1,0 +1,41 @@
+# OSX
+._*
+.DS_Store
+
+# intellij files
+.idea/*
+
+# Eclipse files
+.classpath
+.project
+.settings/**
+
+# visual studio code
+.vscode/*
+
+# Emacs save files
+*~
+\#*\#
+.\#*
+
+# Vim-related files
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+
+# coverage artifacts
+.coverprofile
+/gover.coverprofile
+
+e2e-tests
+
+coverage.txt
+test/e2e/e2e\.test
+
+# mkdocs
+site
+
+# temporal github pages
+gh-pages

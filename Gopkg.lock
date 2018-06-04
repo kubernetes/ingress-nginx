@@ -15,7 +15,8 @@
     "autorest/azure",
     "autorest/date"
   ]
-  revision = "d4e6b95c12a08b4de2d48b45d5b4d594e5d32fab"
+  revision = "4de44cd533576f3c7b44dcb08dc03754d217144d"
+  version = "v10.9.2"
 
 [[projects]]
   branch = "master"
@@ -89,6 +90,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/gofortune/gofortune"
+  packages = ["lib"]
+  revision = "036ecbdf9de92598483a89db52f6f79e063f60b5"
+  version = "v0.0.1-snapshot"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -115,6 +122,7 @@
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
+    "protoc-gen-go/descriptor",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
@@ -151,7 +159,7 @@
     "openstack/utils",
     "pagination"
   ]
-  revision = "282f25e4025de0a42015d2e2b5faef1d920aad3c"
+  revision = "7112fcd50da4ea27e8d4d499b30f04eea143bec2"
 
 [[projects]]
   branch = "master"
@@ -187,6 +195,12 @@
   version = "v1.1.1"
 
 [[projects]]
+  name = "github.com/kubernetes/ingress-nginx"
+  packages = ["images/grpc-fortune-teller/proto/fortune"]
+  revision = "df61bd756505275baaa5fdc2a3dc4648e62dae95"
+  version = "nginx-0.15.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/kylelemons/godebug"
   packages = [
@@ -198,8 +212,8 @@
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
-  revision = "3247c84500bff8d9fb6d579d800f20b3e091582c"
-  version = "v1.0.0"
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
@@ -349,7 +363,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "8b1c2da0d56deffdbb9e48d4414b4e674bd8083e"
+  revision = "94663424ae5ae9856b40a9f170762b4197024661"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -367,6 +381,12 @@
   version = "v1.0.1"
 
 [[projects]]
+  name = "github.com/vromero/gofortune"
+  packages = ["lib/fortune"]
+  revision = "036ecbdf9de92598483a89db52f6f79e063f60b5"
+  version = "v0.0.1-snapshot"
+
+[[projects]]
   name = "github.com/zakjan/cert-chain-resolver"
   packages = ["certUtil"]
   revision = "c222fb53d84f5c835aab8027b5d422d4089f9d29"
@@ -380,7 +400,7 @@
     "ed25519/internal/edwards25519",
     "ssh/terminal"
   ]
-  revision = "a3beeb748656e13e54256fd2cde19e058f41f60f"
+  revision = "df8d4716b3472e4a531c33cedbe537dae921a1a9"
 
 [[projects]]
   branch = "master"
@@ -399,7 +419,7 @@
     "publicsuffix",
     "trace"
   ]
-  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
+  revision = "1e491301e022f8f977054da4c2d852decd59571f"
 
 [[projects]]
   branch = "master"
@@ -411,7 +431,7 @@
     "jws",
     "jwt"
   ]
-  revision = "770e5ebd4ab27c4d70b0983674d138217f5e2c72"
+  revision = "1e0a3fa8ba9a5c9eb35c271780101fdaf1b205d7"
 
 [[projects]]
   branch = "master"
@@ -482,7 +502,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "694d95ba50e67b2e363f3483057db5d4910c18f9"
+  revision = "81158efcc9f219c511e4d3c0d61a0e6e49c01a24"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -504,6 +524,8 @@
     "metadata",
     "naming",
     "peer",
+    "reflection",
+    "reflection/grpc_reflection_v1alpha",
     "resolver",
     "resolver/dns",
     "resolver/passthrough",
@@ -840,7 +862,7 @@
   branch = "master"
   name = "k8s.io/kube-openapi"
   packages = ["pkg/util/proto"]
-  revision = "41e43949ca69d04b66104069ed3ffd619b289b3d"
+  revision = "8a9b82f00b3a86eac24681da3f9fe6c34c01cea2"
 
 [[projects]]
   name = "k8s.io/kubernetes"
@@ -900,6 +922,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5feeef324f0cbac72e0234d5f649fc7c4233f4e2bb4477e454e047b5461d7569"
+  inputs-digest = "abe9b631b7e6039a0aa55568bfb406849143acf8ff9d53ef8340a900e3e70478"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,0 +1,80 @@
+project_name: gofortune
+
+release:
+  github:
+    owner: gofortune
+    name: gofortune
+
+builds:
+- goos:
+    - linux
+    - darwin
+    - freebsd
+    - windows
+    - netbsd
+    - openbsd
+    - dragonfly
+  goarch:
+    - amd64
+    - 386
+    - arm
+    - arm64
+  goarm:
+    - "6"
+  main: .
+  ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+  binary: gofortune
+  ignore:
+    - goos: darwin
+      goarch: 386
+    - goos: openbsd
+      goarch: arm
+      goarm: 6
+    - goos: linux
+      goarch: arm
+      goarm: 7
+    - goos: openbsd
+      goarch: arm
+  hooks:
+    post: ./.goreleaser-hooks.sh
+
+
+
+archive:
+  name_template: '{{ .Binary }}_{{.Version}}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{.Arm }}{{ end }}'
+  format: tar.gz
+  format_overrides:
+    - goos: windows
+      format: zip
+  files:
+    - LICENSE*
+    - README*
+  replacements:
+    amd64: 64bit
+    386: 32bit
+    arm: ARM
+    arm64: ARM64
+    darwin: macOS
+    linux: Linux
+    windows: Windows
+    openbsd: OpenBSD
+    netbsd: NetBSD
+    freebsd: FreeBSD
+    dragonfly: DragonFlyBSD
+
+brew:
+  github:
+    owner: gofortune
+    name: homebrew-tap
+  folder: Formula
+  homepage: "https://gofortune.github.io"
+  description: "Implementation in the fortune unix tools: fortune and strfile."
+  install: |
+    bin.install "gofortune"
+    bin.install "fortune"
+    bin.install "strfile"
+
+snapshot:
+  name_template: SNAPSHOT-{{ .Commit }}
+
+

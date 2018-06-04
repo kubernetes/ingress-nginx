@@ -1,19 +1,30 @@
-local socket = require('socket')
+local socket = ngx.socket.udp
 local cjson = require('cjson')
 local assert = assert
 
-local _M = {}
+local _M = {
+  queue = {}
+}
+
+local function flush_queue()
+  ngx.log(ngx.INFO, "******** Flushing queue: " .. ngx.get_phase())
+  socket = assert(socket())
+  assert(socket:setpeername("127.0.0.1", 8000))
+  for _, v in ipairs(_M.queue) do 
+    assert(socket:send(v))
+  end
+  assert(socket:close())
+
+end
 
 function _M.call()
+  ngx.log(ngx.INFO, "******** Reaches call ")
   local current_phase = ngx.get_phase()
   if current_phase == "log" then
-
-    -- Initialize UDP Socket --
-    local udp = assert(socket.udp())
-    assert(udp:setpeername("127.0.0.1", 8000))
+    ngx.log(ngx.INFO, "******** Reaches log phase ")
 
     -- Create JSON Metrics Payload  --
-    local json = cjson.encode({
+    local rjson = cjson.encode({
       host                 = ngx.var.host,
       status               = ngx.var.status,
       time                 = ngx.localtime(),
@@ -35,10 +46,16 @@ function _M.call()
       service              = ngx.var.service_name
     })
 
-    assert(udp:send(json))
+    ngx.log(ngx.INFO, "******** JSON structure " .. rjson)
+    table.insert(_M.queue, rjson)
 
-    -- Close UDP Socket --
-    assert(udp:close())
+    local ok, err = ngx.timer.at(0, flush_queue)
+    if not ok then
+      ngx.log(ngx.ERR, "failed to create timer: ", err)
+      return
+    end
+    ngx.log(ngx.INFO, "******** Sent to queue ")
+
   end
 
 end

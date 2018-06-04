@@ -17,57 +17,57 @@ limitations under the License.
 package collector
 
 import (
-	"net"
-	"time"
 	"encoding/json"
+	"net"
+
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 const ns = "nginx"
 
-type data struct {
+type Data struct {
 	Host   string `json:"host"`   // Label
-	Status int    `json:"status"` // Label
+	Status string `json:"status"` // Label
 
-	Time time.Duration `json:"time"` // Metric
+	Time string `json:"time"` // Metric
 
 	RemoteAddress string `json:"remoteAddr"` // Label
 	RemoteUser    string `json:"remoteUser"` // Label
 
-	BytesSent int64 `json:"bytesSent"` // Metric
+	BytesSent float64 `json:"bytesSent,string"` // Metric
 
 	Protocol string `json:"protocol"` // Label
 	Method   string `json:"method"`   // Label
 	Path     string `json:"path"`     // Label
 
-	RequestTime   string `json:"requestTime"`   // Metric
-	RequestLength string `json:"requestLength"` // Metric
-	Duration      int    `json:"duration"`      // Metric DONE
+	RequestTime   string  `json:"requestTime"`          // Metric
+	RequestLength float64 `json:"requestLength,string"` // Metric
+	Duration      float64 `json:"duration,string"`      // Metric DONE
 
-	UpstreamName         string `json:"upstreamName"`         // Label
-	UpstreamIP           string `json:"upstreamIP"`           // Label
-	UpstreamResponseTime string `json:"upstreamResponseTime"` // Metric DONE
-	UpstreamStatus       string `json:"upstreamStatus"`       // Label
+	UpstreamName         string  `json:"upstreamName"`                // Label
+	UpstreamIP           string  `json:"upstreamIP"`                  // Label
+	UpstreamResponseTime float64 `json:"upstreamResponseTime,string"` // Metric DONE
+	UpstreamStatus       string  `json:"upstreamStatus"`              // Label
 
 	Namespace string `json:"namespace"` // Label
 	Ingress   string `json:"ingress"`   // Label
 	Service   string `json:"service"`   // Label
 }
 
-type statsCollector struct {
-	upstreamResponseTime prometheus.*HistogramVec
-	requestDuration prometheus.*HistogramVec
-	requestLength prometheus.*HistogramVec
-	bytesSent prometheus.*HistogramVec
-	listener *net.UDPConn
-	ns string
-	watchClass string
-	port int
+type StatsCollector struct {
+	upstreamResponseTime *prometheus.HistogramVec
+	requestDuration      *prometheus.HistogramVec
+	requestLength        *prometheus.HistogramVec
+	bytesSent            *prometheus.HistogramVec
+	listener             *net.UDPConn
+	ns                   string
+	watchClass           string
+	port                 int
 }
 
-func NewInstance(ns string, class string, port int) {
-	sc := statsCollector{}
+func NewInstance(ns string, class string, port int) (*StatsCollector, error) {
+	sc := StatsCollector{}
 
 	listener, err := newUDPListener(port)
 
@@ -75,95 +75,114 @@ func NewInstance(ns string, class string, port int) {
 		return nil, err
 	}
 
-	sc.listener := listener
-	sc.ns := ns
-	sc.watchClass := class
-	sc.port := port
+	sc.listener = listener
+	sc.ns = ns
+	sc.watchClass = class
+	sc.port = port
 
-	tags := []string{"host", "status", "remote_address", "remote_user", "protocol", "method", "path", "upstream_name", "upstream_ip", "upstream_response_time", "upstream_status", "namespace", "ingress", "service"}
+	tags := []string{"host", "status", "remote_address", "remote_user", "protocol", "method", "path", "upstream_name", "upstream_ip", "upstream_status", "namespace", "ingress", "service"}
 
-	sc.upstreamResponseTime := prometheus.NewHistogramVec(
+	sc.upstreamResponseTime = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "upstream_response_time_seconds",
-			Help:    "The time spent on receiving the response from the upstream server",
+			Name:      "upstream_response_time_seconds",
+			Help:      "The time spent on receiving the response from the upstream server",
 			Namespace: ns,
-			Buckets: prometheus.LinearBuckets(0.1, 0.1, 10), // 10 buckets, each 0.1 seconds wide.
+			Buckets:   prometheus.LinearBuckets(0.1, 0.1, 10), // 10 buckets, each 0.1 seconds wide.
 		},
-		tags
+		tags,
 	)
 
-	sc.requestDuration := prometheus.NewHistogramVec(
+	sc.requestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "request_duration_seconds",
-			Help:    "The request processing time in seconds",
+			Name:      "request_duration_seconds",
+			Help:      "The request processing time in seconds",
 			Namespace: ns,
-			Buckets: prometheus.LinearBuckets(0.5, 0.5, 20), // 20 buckets, each 0.5 seconds wide.
+			Buckets:   prometheus.LinearBuckets(0.5, 0.5, 20), // 20 buckets, each 0.5 seconds wide.
 		},
-		tags
+		tags,
 	)
 
-	sc.requestLength := prometheus.NewHistogramVec(
+	sc.requestLength = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "request_length_bytes",
-			Help:    "The request length (including request line, header, and request body)",
+			Name:      "request_length_bytes",
+			Help:      "The request length (including request line, header, and request body)",
 			Namespace: ns,
-			Buckets: prometheus.LinearBuckets(20, 20, 20), // 20 buckets, each 20 bytes wide.
+			Buckets:   prometheus.LinearBuckets(20, 20, 20), // 20 buckets, each 20 bytes wide.
 		},
-		tags
+		tags,
 	)
 
-	sc.bytesSent := prometheus.NewHistogramVec(
+	sc.bytesSent = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "bytes_sent",
-			Help:    "The the number of bytes sent to a client",
+			Name:      "bytes_sent",
+			Help:      "The the number of bytes sent to a client",
 			Namespace: ns,
-			Buckets: prometheus.LinearBuckets(100, 100, 20), // 20 buckets, each 100 bytes wide.
+			Buckets:   prometheus.LinearBuckets(100, 100, 20), // 20 buckets, each 100 bytes wide.
 		},
-		tags
+		tags,
 	)
 
-	prometheus.MustRegister(upstreamResponseTime)
-	prometheus.MustRegister(requestDuration)
-	prometheus.MustRegister(requestLength)
-	prometheus.MustRegister(bytesSent)
-	return &sc
+	prometheus.MustRegister(sc.upstreamResponseTime)
+	prometheus.MustRegister(sc.requestDuration)
+	prometheus.MustRegister(sc.requestLength)
+	prometheus.MustRegister(sc.bytesSent)
+	return &sc, nil
 }
 
-func (sc *statsCollector) handleMessage(msg []byte) {
+func (sc *StatsCollector) handleMessage(msg []byte) {
 	glog.Infof("msg: %v", string(msg))
 
 	// Unmarshall bytes
-	var stats data
-	err := json.Unmarshall(msg, &stats)
+	var stats Data
+	err := json.Unmarshal(msg, &stats)
 	if err != nil {
 		panic(err)
 	}
 
 	// Create Labels Map
 	labels := prometheus.Labels{
-		"host": stats.Host,
-		"status": stats.Status,
-		"remote_address": stats.RemoteAddress,
-		"remote_user": stats.RemoteUser,
-		"protocol": stats.Protocol,
-		"method": stats.Method,
-		"path": stats.Path,
-		"upstream_name": stats.UpstreamName,
-		"upstream_ip": stats.UpstreamIP,
+		"host":            stats.Host,
+		"status":          stats.Status,
+		"remote_address":  stats.RemoteAddress,
+		"remote_user":     stats.RemoteUser,
+		"protocol":        stats.Protocol,
+		"method":          stats.Method,
+		"path":            stats.Path,
+		"upstream_name":   stats.UpstreamName,
+		"upstream_ip":     stats.UpstreamIP,
 		"upstream_status": stats.UpstreamStatus,
-		"namespace": status.Namespace,
-		"ingress": status.Ingress,
-		"service": status.Service
+		"namespace":       stats.Namespace,
+		"ingress":         stats.Ingress,
+		"service":         stats.Service,
 	}
 
 	// Emit metrics
-	sc.upstreamResponseTime.GetMetricWith(labels).Observe(stats.UpstreamResponseTime)
-	sc.requestDuration.GetMetricWith(labels).Observe(stats.UpstreamResponseTime)
-	sc.requestLength.GetMetricWith(labels).Observe(stats.RequestLength)
-	sc.bytesSent.GetMetricWith(labels).Observe(stats.BytesSent)
+	urtMetric, err := sc.upstreamResponseTime.GetMetricWith(labels)
+	if err != nil {
+		glog.Error("****Error fetching upstream response time metric: %v", err)
+	}
+	urtMetric.Observe(stats.UpstreamResponseTime)
+
+	rdMetric, err := sc.requestDuration.GetMetricWith(labels)
+	if err != nil {
+		glog.Error("****Error fetching request duration metric: %v", err)
+	}
+	rdMetric.Observe(stats.Duration)
+
+	rlMetric, err := sc.requestLength.GetMetricWith(labels)
+	if err != nil {
+		glog.Error("****Error fetching request length metric: %v", err)
+	}
+	rlMetric.Observe(stats.RequestLength)
+
+	bsMetric, err := sc.bytesSent.GetMetricWith(labels)
+	if err != nil {
+		glog.Error("****Error fetching bytes sent metric: %v", err)
+	}
+	bsMetric.Observe(stats.BytesSent)
 
 }
 
-func (sc *statsCollector) Run() {
+func (sc *StatsCollector) Run() {
 	handleMessages(sc.listener, sc.handleMessage)
 }
