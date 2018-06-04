@@ -96,6 +96,8 @@ type Configuration struct {
 	DynamicConfigurationEnabled bool
 
 	DisableLua bool
+
+	DynamicCertificatesEnabled bool
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -197,7 +199,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 				// it takes time for NGINX to start listening on the configured ports
 				time.Sleep(1 * time.Second)
 			}
-			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status)
+			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
 			if err == nil {
 				glog.Infof("Dynamic reconfiguration succeeded.")
 			} else {
@@ -1069,6 +1071,12 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 						secrKey, host, err)
 					continue
 				}
+			}
+
+			if n.cfg.DynamicCertificatesEnabled {
+				// useless placeholders: just to shut up NGINX configuration loader errors:
+				cert.PemFileName = defaultPemFileName
+				cert.PemSHA = defaultPemSHA
 			}
 
 			servers[host].SSLCert = *cert

@@ -17,6 +17,7 @@ limitations under the License.
 package ssl
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -182,6 +183,86 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte,
 		PemSHA:      file.SHA1(pemFileName),
 		CN:          cn.List(),
 		ExpireTime:  pemCert.NotAfter,
+	}
+
+	return s, nil
+}
+
+// CreateSSLCert creates an SSLCert and avoids writing on disk
+func CreateSSLCert(name string, cert, key, ca []byte) (*ingress.SSLCert, error) {
+	var pemCertBuffer bytes.Buffer
+
+	pemCertBuffer.Write(cert)
+	pemCertBuffer.Write([]byte("\n"))
+	pemCertBuffer.Write(key)
+
+	pemBlock, _ := pem.Decode(pemCertBuffer.Bytes())
+	if pemBlock == nil {
+		return nil, fmt.Errorf("no valid PEM formatted block found")
+	}
+
+	// If the file does not start with 'BEGIN CERTIFICATE' it's invalid and must not be used.
+	if pemBlock.Type != "CERTIFICATE" {
+		return nil, fmt.Errorf("certificate %v contains invalid data, and must be created with 'kubectl create secret tls'", name)
+	}
+
+	pemCert, err := x509.ParseCertificate(pemBlock.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	//Ensure that certificate and private key have a matching public key
+	if _, err := tls.X509KeyPair(cert, key); err != nil {
+		return nil, err
+	}
+
+	cn := sets.NewString(pemCert.Subject.CommonName)
+	for _, dns := range pemCert.DNSNames {
+		if !cn.Has(dns) {
+			cn.Insert(dns)
+		}
+	}
+
+	if len(pemCert.Extensions) > 0 {
+		glog.V(3).Info("parsing ssl certificate extensions")
+		for _, ext := range getExtension(pemCert, oidExtensionSubjectAltName) {
+			dns, _, _, err := parseSANExtension(ext.Value)
+			if err != nil {
+				glog.Warningf("unexpected error parsing certificate extensions: %v", err)
+				continue
+			}
+
+			for _, dns := range dns {
+				if !cn.Has(dns) {
+					cn.Insert(dns)
+				}
+			}
+		}
+	}
+
+	if len(ca) > 0 {
+		bundle := x509.NewCertPool()
+		bundle.AppendCertsFromPEM(ca)
+		opts := x509.VerifyOptions{
+			Roots: bundle,
+		}
+
+		_, err := pemCert.Verify(opts)
+		if err != nil {
+			oe := fmt.Sprintf("failed to verify certificate chain: \n\t%s\n", err)
+			return nil, errors.New(oe)
+		}
+
+		pemCertBuffer.Write([]byte("\n"))
+		pemCertBuffer.Write(ca)
+		pemCertBuffer.Write([]byte("\n"))
+	}
+
+	s := &ingress.SSLCert{
+		Certificate: pemCert,
+		CN:          cn.List(),
+		ExpireTime:  pemCert.NotAfter,
+		PemCertKey:  pemCertBuffer.String(),
 	}
 
 	return s, nil
