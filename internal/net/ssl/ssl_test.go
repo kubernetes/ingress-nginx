@@ -17,6 +17,7 @@ limitations under the License.
 package ssl
 
 import (
+	"bytes"
 	"crypto/x509"
 	"fmt"
 	"testing"
@@ -146,4 +147,38 @@ func newFS(t *testing.T) file.Filesystem {
 		t.Fatalf("unexpected error creating filesystem: %v", err)
 	}
 	return fs
+}
+
+func TestCreateSSLCert(t *testing.T) {
+	cert, _, err := generateRSACerts("echoheaders")
+	if err != nil {
+		t.Fatalf("unexpected error creating SSL certificate: %v", err)
+	}
+
+	name := fmt.Sprintf("test-%v", time.Now().UnixNano())
+
+	c := certutil.EncodeCertPEM(cert.Cert)
+	k := certutil.EncodePrivateKeyPEM(cert.Key)
+
+	ngxCert, err := CreateSSLCert(name, c, k, []byte{})
+	if err != nil {
+		t.Fatalf("unexpected error checking SSL certificate: %v", err)
+	}
+
+	var certKeyBuf bytes.Buffer
+	certKeyBuf.Write(c)
+	certKeyBuf.Write([]byte("\n"))
+	certKeyBuf.Write(k)
+
+	if ngxCert.PemCertKey != certKeyBuf.String() {
+		t.Fatalf("expected concatenated PEM cert and key but returned %v", ngxCert.PemCertKey)
+	}
+
+	if len(ngxCert.CN) == 0 {
+		t.Fatalf("expected at least one cname but none returned")
+	}
+
+	if ngxCert.CN[0] != "echoheaders" {
+		t.Fatalf("expected cname echoheaders but %v returned", ngxCert.CN[0])
+	}
 }

@@ -98,11 +98,18 @@ func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error)
 			return nil, fmt.Errorf("key 'tls.key' missing from Secret %q", secretName)
 		}
 
-		// If 'ca.crt' is also present, it will allow this secret to be used in the
-		// 'nginx.ingress.kubernetes.io/auth-tls-secret' annotation
-		sslCert, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca, s.filesystem)
-		if err != nil {
-			return nil, err
+		if s.isDynamicCertificatesEnabled {
+			sslCert, err = ssl.CreateSSLCert(nsSecName, cert, key, ca)
+			if err != nil {
+				return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
+			}
+		} else {
+			// If 'ca.crt' is also present, it will allow this secret to be used in the
+			// 'nginx.ingress.kubernetes.io/auth-tls-secret' annotation
+			sslCert, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca, s.filesystem)
+			if err != nil {
+				return nil, fmt.Errorf("unexpected error creating pem file: %v", err)
+			}
 		}
 
 		msg := fmt.Sprintf("Configuring Secret %q for TLS encryption (CN: %v)", secretName, sslCert.CN)

@@ -505,6 +505,9 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if s1.FullChainPemFileName != s2.FullChainPemFileName {
 		return false
 	}
+	if s1.PemCertKey != s2.PemCertKey {
+		return false
+	}
 
 	for _, cn1 := range s1.CN {
 		found := false
