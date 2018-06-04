@@ -19,6 +19,7 @@ package template
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/kylelemons/godebug/pretty"
 
@@ -29,6 +30,22 @@ func TestFilterErrors(t *testing.T) {
 	e := filterErrors([]int{200, 300, 345, 500, 555, 999})
 	if len(e) != 4 {
 		t.Errorf("expected 4 elements but %v returned", len(e))
+	}
+}
+
+func TestProxytTimeoutParsing(t *testing.T) {
+	testCases := map[string]struct {
+		input  string
+		expect time.Duration // duration in seconds
+	}{
+		"valid duration":   {"35s", time.Duration(35) * time.Second},
+		"invalid duration": {"3zxs", time.Duration(5) * time.Second},
+	}
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"proxy-protocol-header-timeout": tc.input})
+		if cfg.ProxyProtocolHeaderTimeout.Seconds() != tc.expect.Seconds() {
+			t.Errorf("Testing %v. Expected %v seconds but got %v seconds", n, tc.expect, cfg.ProxyProtocolHeaderTimeout)
+		}
 	}
 }
 
