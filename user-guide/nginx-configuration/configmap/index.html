@@ -260,6 +260,8 @@
       
         
       
+        
+      
     </ul>
   </div>
 </nav>
@@ -863,6 +865,13 @@
         <li class="md-nav__item">
   <a href="#use-proxy-protocol" title="use-proxy-protocol" class="md-nav__link">
     use-proxy-protocol
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-protocol-header-timeout" title="proxy-protocol-header-timeout" class="md-nav__link">
+    proxy-protocol-header-timeout
   </a>
   
 </li>
@@ -1814,6 +1823,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../how-it-works/" title="How it works" class="md-nav__link">
+      How it works
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="../../../ingress-controller-catalog/" title="Ingress Controller Catalog" class="md-nav__link">
       Ingress Controller Catalog
     </a>
@@ -2240,6 +2261,13 @@
         <li class="md-nav__item">
   <a href="#use-proxy-protocol" title="use-proxy-protocol" class="md-nav__link">
     use-proxy-protocol
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-protocol-header-timeout" title="proxy-protocol-header-timeout" class="md-nav__link">
+    proxy-protocol-header-timeout
   </a>
   
 </li>
@@ -2971,6 +2999,11 @@ Same for numbers, like "100".</p>
 <td align="left">"false"</td>
 </tr>
 <tr>
+<td align="left"><a href="#proxy-protocol-header-timeout">proxy-protocol-header-timeout</a></td>
+<td align="left">string</td>
+<td align="left">"5s"</td>
+</tr>
+<tr>
 <td align="left"><a href="#use-gzip">use-gzip</a></td>
 <td align="left">bool</td>
 <td align="left">"true"</td>
@@ -3443,6 +3476,9 @@ Example for json output:</p>
 <a href="https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/">https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/</a></p>
 <h2 id="use-proxy-protocol">use-proxy-protocol<a class="headerlink" href="#use-proxy-protocol" title="Permanent link">&para;</a></h2>
 <p>Enables or disables the <a href="https://www.nginx.com/resources/admin-guide/proxy-protocol/">PROXY protocol</a> to receive client connection (real IP address) information passed through proxy servers and load balancers such as HAProxy and Amazon Elastic Load Balancer (ELB).</p>
+<h2 id="proxy-protocol-header-timeout">proxy-protocol-header-timeout<a class="headerlink" href="#proxy-protocol-header-timeout" title="Permanent link">&para;</a></h2>
+<p>Sets the timeout value for receiving the proxy-protocol headers. The default of 5 seconds prevents the TLS passthrough handler from waiting indefinetly on a dropped connection.
+<em><strong>default:</strong></em> 5s</p>
 <h2 id="use-gzip">use-gzip<a class="headerlink" href="#use-gzip" title="Permanent link">&para;</a></h2>
 <p>Enables or disables compression of HTTP responses using the <a href="http://nginx.org/en/docs/http/ngx_http_gzip_module.html">"gzip" module</a>.
 The default mime type list to compress is: <code class="codehilite">application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>.</p>
