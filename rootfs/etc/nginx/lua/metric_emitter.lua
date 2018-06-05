@@ -7,7 +7,6 @@ local _M = {
 }
 
 local function flush_queue()
-  ngx.log(ngx.INFO, "******** Flushing queue: " .. ngx.get_phase())
   socket = assert(socket())
   assert(socket:setpeername("127.0.0.1", 8000))
   for _, v in ipairs(_M.queue) do 
@@ -18,13 +17,11 @@ local function flush_queue()
 end
 
 function _M.call()
-  ngx.log(ngx.INFO, "******** Reaches call ")
   local current_phase = ngx.get_phase()
   if current_phase == "log" then
-    ngx.log(ngx.INFO, "******** Reaches log phase ")
 
     -- Create JSON Metrics Payload  --
-    local rjson = cjson.encode({
+    local jsonPayload = cjson.encode({
       host                 = ngx.var.host,
       status               = ngx.var.status,
       time                 = ngx.localtime(),
@@ -46,15 +43,13 @@ function _M.call()
       service              = ngx.var.service_name
     })
 
-    ngx.log(ngx.INFO, "******** JSON structure " .. rjson)
-    table.insert(_M.queue, rjson)
+    table.insert(_M.queue, jsonPayload)
 
     local ok, err = ngx.timer.at(0, flush_queue)
     if not ok then
       ngx.log(ngx.ERR, "failed to create timer: ", err)
       return
     end
-    ngx.log(ngx.INFO, "******** Sent to queue ")
 
   end
 

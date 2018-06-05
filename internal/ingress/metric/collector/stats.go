@@ -24,9 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const ns = "nginx"
-
-type Data struct {
+type udpData struct {
 	Host   string `json:"host"`   // Label
 	Status string `json:"status"` // Label
 
@@ -43,11 +41,11 @@ type Data struct {
 
 	RequestTime   string  `json:"requestTime"`          // Metric
 	RequestLength float64 `json:"requestLength,string"` // Metric
-	Duration      float64 `json:"duration,string"`      // Metric DONE
+	Duration      float64 `json:"duration,string"`      // Metric
 
 	UpstreamName         string  `json:"upstreamName"`                // Label
 	UpstreamIP           string  `json:"upstreamIP"`                  // Label
-	UpstreamResponseTime float64 `json:"upstreamResponseTime,string"` // Metric DONE
+	UpstreamResponseTime float64 `json:"upstreamResponseTime,string"` // Metric
 	UpstreamStatus       string  `json:"upstreamStatus"`              // Label
 
 	Namespace string `json:"namespace"` // Label
@@ -133,7 +131,7 @@ func (sc *StatsCollector) handleMessage(msg []byte) {
 	glog.Infof("msg: %v", string(msg))
 
 	// Unmarshall bytes
-	var stats Data
+	var stats udpData
 	err := json.Unmarshal(msg, &stats)
 	if err != nil {
 		panic(err)
@@ -157,29 +155,29 @@ func (sc *StatsCollector) handleMessage(msg []byte) {
 	}
 
 	// Emit metrics
-	urtMetric, err := sc.upstreamResponseTime.GetMetricWith(labels)
+	upstreamResponseTimeMetric, err := sc.upstreamResponseTime.GetMetricWith(labels)
 	if err != nil {
-		glog.Error("****Error fetching upstream response time metric: %v", err)
+		glog.Errorf("Error fetching upstream response time metric: %v", err)
 	}
-	urtMetric.Observe(stats.UpstreamResponseTime)
+	upstreamResponseTimeMetric.Observe(stats.UpstreamResponseTime)
 
-	rdMetric, err := sc.requestDuration.GetMetricWith(labels)
+	requestDurationMetric, err := sc.requestDuration.GetMetricWith(labels)
 	if err != nil {
-		glog.Error("****Error fetching request duration metric: %v", err)
+		glog.Errorf("Error fetching request duration metric: %v", err)
 	}
-	rdMetric.Observe(stats.Duration)
+	requestDurationMetric.Observe(stats.Duration)
 
-	rlMetric, err := sc.requestLength.GetMetricWith(labels)
+	requestLengthMetric, err := sc.requestLength.GetMetricWith(labels)
 	if err != nil {
-		glog.Error("****Error fetching request length metric: %v", err)
+		glog.Errorf("Error fetching request length metric: %v", err)
 	}
-	rlMetric.Observe(stats.RequestLength)
+	requestLengthMetric.Observe(stats.RequestLength)
 
-	bsMetric, err := sc.bytesSent.GetMetricWith(labels)
+	bytesSentMetric, err := sc.bytesSent.GetMetricWith(labels)
 	if err != nil {
-		glog.Error("****Error fetching bytes sent metric: %v", err)
+		glog.Errorf("Error fetching bytes sent metric: %v", err)
 	}
-	bsMetric.Observe(stats.BytesSent)
+	bytesSentMetric.Observe(stats.BytesSent)
 
 }
 
