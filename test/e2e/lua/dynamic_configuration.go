@@ -41,7 +41,7 @@ const (
 	logBackendReloadSuccess = "Backend successfully reloaded"
 	logSkipBackendReload    = "Changes handled by the dynamic configuration, skipping backend reload"
 	logInitialConfigSync    = "Initial synchronization of the NGINX configuration"
-	waitForLuaSync          = 2 * time.Second
+	waitForLuaSync          = 5 * time.Second
 )
 
 var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
