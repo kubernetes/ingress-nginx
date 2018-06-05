@@ -67,6 +67,13 @@ http {
           balancer = res
         end
         {{ end }}
+
+        ok, res = pcall(require, "metric_emitter")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          metric_emitter = res
+        end
     }
 
     {{ if $all.DynamicConfigurationEnabled }}
@@ -888,6 +895,11 @@ stream {
                 {{ if $all.DynamicConfigurationEnabled}}
                 balancer.log()
                 {{ end }}
+
+                ok, res = pcall(metric_emitter.call)
+                    if not ok then
+                    ngx.log(ngx.ERR, "request_id failed: " .. tostring(res))
+                end                
             }
             {{ end }}
 

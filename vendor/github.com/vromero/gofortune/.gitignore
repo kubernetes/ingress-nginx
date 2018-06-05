@@ -1,0 +1,5 @@
+dist/
+vendor
+coverage.txt
+.idea/
+gofortune

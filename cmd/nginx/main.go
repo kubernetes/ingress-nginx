@@ -39,7 +39,9 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"k8s.io/ingress-nginx/internal/file"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
+	"k8s.io/ingress-nginx/internal/ingress/metric/collector"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/version"
@@ -116,6 +118,14 @@ func main() {
 
 	mux := http.NewServeMux()
 	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux)
+
+	lc, err := collector.NewInstance(conf.Namespace, class.IngressClass, 8000)
+
+	if err != nil {
+		glog.Fatalf("Error generating metric collector:  %v", err)
+	}
+
+	go lc.Run()
 
 	ngx.Start()
 }
