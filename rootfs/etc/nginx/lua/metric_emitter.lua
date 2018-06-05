@@ -7,13 +7,12 @@ local _M = {
 }
 
 local function flush_queue()
-  socket = assert(socket())
-  assert(socket:setpeername("127.0.0.1", 8000))
+  s = assert(socket())
+  assert(s:setpeername("127.0.0.1", 8000))
   for _, v in ipairs(_M.queue) do 
-    assert(socket:send(v))
+    assert(s:send(v))
   end
-  assert(socket:close())
-
+  assert(s:close())
 end
 
 function _M.call()
@@ -31,9 +30,8 @@ function _M.call()
       protocol             = ngx.var.server_protocol,
       method               = ngx.var.request_method,
       path                 = ngx.var.uri,
-      requestTime          = ngx.var.request_time,
       requestLength        = ngx.var.request_length,
-      duration             = ngx.var.request_time,
+      requestDuration      = ngx.var.request_time,
       upstreamName         = ngx.var.upstream,
       upstreamIP           = ngx.var.upstream_addr,
       upstreamResponseTime = ngx.var.upstream_response_time,

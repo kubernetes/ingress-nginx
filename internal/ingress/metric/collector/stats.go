@@ -28,7 +28,7 @@ type udpData struct {
 	Host   string `json:"host"`   // Label
 	Status string `json:"status"` // Label
 
-	Time string `json:"time"` // Metric
+	Time string `json:"time"` // Label
 
 	RemoteAddress string `json:"remoteAddr"` // Label
 	RemoteUser    string `json:"remoteUser"` // Label
@@ -39,9 +39,8 @@ type udpData struct {
 	Method   string `json:"method"`   // Label
 	Path     string `json:"path"`     // Label
 
-	RequestTime   string  `json:"requestTime"`          // Metric
-	RequestLength float64 `json:"requestLength,string"` // Metric
-	Duration      float64 `json:"duration,string"`      // Metric
+	RequestLength   float64 `json:"requestLength,string"`   // Metric
+	RequestDuration float64 `json:"requestDuration,string"` // Metric
 
 	UpstreamName         string  `json:"upstreamName"`                // Label
 	UpstreamIP           string  `json:"upstreamIP"`                  // Label
@@ -78,14 +77,13 @@ func NewInstance(ns string, class string, port int) (*StatsCollector, error) {
 	sc.watchClass = class
 	sc.port = port
 
-	tags := []string{"host", "status", "remote_address", "remote_user", "protocol", "method", "path", "upstream_name", "upstream_ip", "upstream_status", "namespace", "ingress", "service"}
+	tags := []string{"host", "status", "time", "remote_address", "remote_user", "protocol", "method", "path", "upstream_name", "upstream_ip", "upstream_status", "namespace", "ingress", "service"}
 
 	sc.upstreamResponseTime = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:      "upstream_response_time_seconds",
 			Help:      "The time spent on receiving the response from the upstream server",
 			Namespace: ns,
-			Buckets:   prometheus.LinearBuckets(0.1, 0.1, 10), // 10 buckets, each 0.1 seconds wide.
 		},
 		tags,
 	)
@@ -95,7 +93,6 @@ func NewInstance(ns string, class string, port int) (*StatsCollector, error) {
 			Name:      "request_duration_seconds",
 			Help:      "The request processing time in seconds",
 			Namespace: ns,
-			Buckets:   prometheus.LinearBuckets(0.5, 0.5, 20), // 20 buckets, each 0.5 seconds wide.
 		},
 		tags,
 	)
@@ -105,7 +102,7 @@ func NewInstance(ns string, class string, port int) (*StatsCollector, error) {
 			Name:      "request_length_bytes",
 			Help:      "The request length (including request line, header, and request body)",
 			Namespace: ns,
-			Buckets:   prometheus.LinearBuckets(20, 20, 20), // 20 buckets, each 20 bytes wide.
+			Buckets:   prometheus.LinearBuckets(10, 10, 10), // 10 buckets, each 10 bytes wide.
 		},
 		tags,
 	)
@@ -115,7 +112,7 @@ func NewInstance(ns string, class string, port int) (*StatsCollector, error) {
 			Name:      "bytes_sent",
 			Help:      "The the number of bytes sent to a client",
 			Namespace: ns,
-			Buckets:   prometheus.LinearBuckets(100, 100, 20), // 20 buckets, each 100 bytes wide.
+			Buckets:   prometheus.LinearBuckets(50, 25, 10), // 10 buckets, each 50 bytes wide.
 		},
 		tags,
 	)
@@ -141,6 +138,7 @@ func (sc *StatsCollector) handleMessage(msg []byte) {
 	labels := prometheus.Labels{
 		"host":            stats.Host,
 		"status":          stats.Status,
+		"time":            stats.Time,
 		"remote_address":  stats.RemoteAddress,
 		"remote_user":     stats.RemoteUser,
 		"protocol":        stats.Protocol,
@@ -165,7 +163,7 @@ func (sc *StatsCollector) handleMessage(msg []byte) {
 	if err != nil {
 		glog.Errorf("Error fetching request duration metric: %v", err)
 	}
-	requestDurationMetric.Observe(stats.Duration)
+	requestDurationMetric.Observe(stats.RequestDuration)
 
 	requestLengthMetric, err := sc.requestLength.GetMetricWith(labels)
 	if err != nil {
