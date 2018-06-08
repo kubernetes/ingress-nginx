@@ -36,6 +36,7 @@ export LUA_NGX_VERSION=0.10.13
 export LUA_UPSTREAM_VERSION=0.07
 export COOKIE_FLAG_VERSION=1.1.0
 export NGINX_INFLUXDB_VERSION=f8732268d44aea706ecf8d9c6036e9b6dacc99b2
+export GEOIP2_VERSION=2.0
 
 export BUILD_PATH=/tmp/build
 
@@ -88,21 +89,22 @@ clean-install \
   lua-cjson \
   python \
   luarocks \
+  libmaxminddb-dev \
   || exit 1
 
 if [[ ${ARCH} == "x86_64" ]]; then
   ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
-  ln -s /usr/lib/x86_64-linux-gnu /usr/lib/lua-platform-path     
+  ln -s /usr/lib/x86_64-linux-gnu /usr/lib/lua-platform-path
 fi
 
 if [[ ${ARCH} == "armv7l" ]]; then
   ln -s /usr/lib/arm-linux-gnueabihf/liblua5.1.so /usr/lib/liblua.so
-  ln -s /usr/lib/arm-linux-gnueabihf /usr/lib/lua-platform-path     
+  ln -s /usr/lib/arm-linux-gnueabihf /usr/lib/lua-platform-path
 fi
 
 if [[ ${ARCH} == "aarch64" ]]; then
   ln -s /usr/lib/aarch64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
-  ln -s /usr/lib/aarch64-linux-gnu /usr/lib/lua-platform-path   
+  ln -s /usr/lib/aarch64-linux-gnu /usr/lib/lua-platform-path
 fi
 
 if [[ ${ARCH} == "ppc64le" ]]; then
@@ -130,6 +132,8 @@ function geoip_get {
 geoip_get "GeoIP.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
 geoip_get "GeoLiteCity.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
 geoip_get "GeoIPASNum.dat.gz" "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz"
+geoip_get "GeoLite2-City.mmdb.gz" "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz"
+geoip_get "GeoLite2-ASN.mmdb.gz" "http://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz"
 
 mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
@@ -215,6 +219,9 @@ get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \
 
 get_src e41589bd88953276c16c4817ab9b4faba1aca21d9bb70a8c1714505176c16ae4 \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
+
+get_src ebb4652c4f9a2e1ee31fddefc4c93ff78e651a4b2727d3453d026bccbd708d99 \
+        "https://github.com/leev/ngx_http_geoip2_module/archive/${GEOIP2_VERSION}.tar.gz"
 
 
 # improve compilation times
@@ -418,6 +425,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/jaeger \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/zipkin \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
+  --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
   --add-module=$BUILD_PATH/ngx_brotli"
 
 ./configure \
