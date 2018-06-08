@@ -523,6 +523,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 				if upstream.Name == location.Backend {
 					if len(upstream.Endpoints) == 0 {
 						glog.V(3).Infof("Upstream %q does not have any active endpoints.", upstream.Name)
+						location.Backend = "" // for nginx.tmpl checking
 
 						// check if the location contains endpoints and a custom default backend
 						if location.DefaultBackend != nil {
