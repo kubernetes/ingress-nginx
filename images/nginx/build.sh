@@ -19,9 +19,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.13.12
+export NGINX_VERSION=1.15.0
 export NDK_VERSION=0.3.0
-export VTS_VERSION=0.1.16
 export SETMISC_VERSION=0.31
 export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.33
@@ -139,7 +138,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src fb92f5602cdb8d3ab1ad47dbeca151b185d62eedb67d347bbe9d79c1438c85de \
+get_src b0b58c9a3fd73aa8b89edf5cfadc6641a352e0e6d3071db1eb3215d72b7fb516 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
@@ -147,9 +146,6 @@ get_src 88e05a99a8a7419066f5ae75966fb1efc409bad4522d14986da074554ae61619 \
 
 get_src 97946a68937b50ab8637e1a90a13198fe376d801dc3e7447052e43c28e9ee7de \
         "https://github.com/openresty/set-misc-nginx-module/archive/v$SETMISC_VERSION.tar.gz"
-
-get_src c668d0ed38afbba12f0224cb8cf5d70dcb9388723766dfb40d00539f887186fa \
-        "https://github.com/vozlt/nginx-module-vts/archive/v$VTS_VERSION.tar.gz"
 
 get_src a3dcbab117a9c103bc1ea5200fc00a7b7d2af97ff7fd525f16f8ac2632e30fbf \
         "https://github.com/openresty/headers-more-nginx-module/archive/v$MORE_HEADERS_VERSION.tar.gz"
@@ -412,7 +408,6 @@ fi
 
 WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/set-misc-nginx-module-$SETMISC_VERSION \
-  --add-module=$BUILD_PATH/nginx-module-vts-$VTS_VERSION \
   --add-module=$BUILD_PATH/headers-more-nginx-module-$MORE_HEADERS_VERSION \
   --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
