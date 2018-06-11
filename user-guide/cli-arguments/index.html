@@ -1069,8 +1069,8 @@
                 
                 
                 <h1 id="command-line-arguments">Command line arguments<a class="headerlink" href="#command-line-arguments" title="Permanent link">&para;</a></h1>
-<p>The following command line arguments are accepted by the main controller executable.</p>
-<p>They are set in the container spec of the <code class="codehilite">nginx-ingress-controller</code> Deployment object (see <code class="codehilite">deploy/with-rbac.yaml</code> or <code class="codehilite">deploy/without-rbac.yaml</code>).</p>
+<p>The following command line arguments are accepted by the Ingress controller executable.</p>
+<p>They are set in the container spec of the <code class="codehilite">nginx-ingress-controller</code> Deployment manifest (see <code class="codehilite">deploy/with-rbac.yaml</code> or <code class="codehilite">deploy/without-rbac.yaml</code>).</p>
 <table>
 <thead>
 <tr>
@@ -1080,160 +1080,160 @@
 </thead>
 <tbody>
 <tr>
-<td><code class="codehilite">--alsologtostderr</code></td>
+<td>--alsologtostderr</td>
 <td>log to standard error as well as files</td>
 </tr>
 <tr>
-<td><code class="codehilite">--annotations-prefix string</code></td>
-<td>Prefix of the ingress annotations. (default "nginx.ingress.kubernetes.io")</td>
+<td>--annotations-prefix string</td>
+<td>Prefix of the Ingress annotations specific to the NGINX controller. (default "nginx.ingress.kubernetes.io")</td>
 </tr>
 <tr>
-<td><code class="codehilite">--apiserver-host string</code></td>
-<td>The address of the Kubernetes Apiserver to connect to in the format of protocol://address:port, e.g., http://localhost:8080. If not specified, the assumption is that the binary runs inside a Kubernetes cluster and local discovery is attempted.</td>
+<td>--apiserver-host string</td>
+<td>Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--configmap string</code></td>
-<td>Name of the ConfigMap that contains the custom configuration to use</td>
+<td>--configmap string</td>
+<td>Name of the ConfigMap containing custom global configurations for the controller.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--default-backend-service string</code></td>
-<td>Service used to serve a 404 page for the default backend. Takes the form namespace/name. The controller uses the first node port of this Service for the default backend.</td>
+<td>--default-backend-service string</td>
+<td>Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--default-server-port int</code></td>
-<td>Default port to use for exposing the default server (catch all) (default 8181)</td>
+<td>--default-server-port int</td>
+<td>Port to use for exposing the default server (catch-all). (default 8181)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--default-ssl-certificate string</code></td>
-<td>Name of the secret that contains a SSL certificate to be used as default for a HTTPS catch-all server. Takes the form <namespace>/<secret name>.</td>
+<td>--default-ssl-certificate string</td>
+<td>Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name".</td>
 </tr>
 <tr>
-<td><code class="codehilite">--election-id string</code></td>
-<td>Election id to use for status update. (default "ingress-controller-leader")</td>
+<td>--election-id string</td>
+<td>Election id to use for Ingress status updates. (default "ingress-controller-leader")</td>
 </tr>
 <tr>
-<td><code class="codehilite">--enable-dynamic-configuration</code></td>
-<td>When enabled controller will try to avoid Nginx reloads as much as possible by using Lua. Disabled by default.</td>
+<td>--enable-dynamic-configuration</td>
+<td>Dynamically refresh backends on topology changes instead of reloading NGINX. Feature backed by OpenResty Lua libraries.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--enable-ssl-chain-completion</code></td>
-<td>Defines if the nginx ingress controller should check the secrets for missing intermediate CA certificates. If the certificate contain issues chain issues is not possible to enable OCSP. Default is true. (default true)</td>
+<td>--enable-ssl-chain-completion</td>
+<td>Autocomplete SSL certificate chains with missing intermediate CA certificates. A valid certificate chain is required to enable OCSP stapling. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--enable-ssl-passthrough</code></td>
-<td>Enable SSL passthrough feature. Default is disabled</td>
+<td>--enable-ssl-passthrough</td>
+<td>Enable SSL Passthrough.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--force-namespace-isolation</code></td>
-<td>Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace.</td>
+<td>--force-namespace-isolation</td>
+<td>Force namespace isolation. Prevents Ingress objects from referencing Secrets and ConfigMaps located in a different namespace than their own. May be used together with watch-namespace.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--health-check-path string</code></td>
-<td>Defines the URL to be used as health check inside in the default server in NGINX. (default "/healthz")</td>
+<td>--health-check-path string</td>
+<td>URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz")</td>
 </tr>
 <tr>
-<td><code class="codehilite">--healthz-port int</code></td>
-<td>port for healthz endpoint. (default 10254)</td>
+<td>--healthz-port int</td>
+<td>Port to use for the healthz endpoint. (default 10254)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--http-port int</code></td>
-<td>Indicates the port to use for HTTP traffic (default 80)</td>
+<td>--http-port int</td>
+<td>Port to use for servicing HTTP traffic. (default 80)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--https-port int</code></td>
-<td>Indicates the port to use for HTTPS traffic (default 443)</td>
+<td>--https-port int</td>
+<td>Port to use for servicing HTTPS traffic. (default 443)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--ingress-class string</code></td>
-<td>Name of the ingress class to route through this controller.</td>
+<td>--ingress-class string</td>
+<td>Name of the ingress class this controller satisfies. The class of an Ingress object is set using the annotation "kubernetes.io/ingress.class". All ingress classes are satisfied if this parameter is left empty.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--kubeconfig string</code></td>
-<td>Path to kubeconfig file with authorization and master location information.</td>
+<td>--kubeconfig string</td>
+<td>Path to a kubeconfig file containing authorization and API server information.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--log_backtrace_at traceLocation</code></td>
+<td>--log_backtrace_at traceLocation</td>
 <td>when logging hits line file:N, emit a stack trace (default :0)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--log_dir string</code></td>
+<td>--log_dir string</td>
 <td>If non-empty, write log files in this directory</td>
 </tr>
 <tr>
-<td><code class="codehilite">--logtostderr</code></td>
+<td>--logtostderr</td>
 <td>log to standard error instead of files (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--profiling</code></td>
+<td>--profiling</td>
 <td>Enable profiling via web interface host:port/debug/pprof/ (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--publish-service string</code></td>
-<td>Service fronting the ingress controllers. Takes the form namespace/name. The controller will set the endpoint records on the ingress objects to reflect those on the service.</td>
+<td>--publish-service string</td>
+<td>Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--publish-status-address string</code></td>
-<td>User customized address to be set in the status of ingress resources. The controller will set the endpoint records on the ingress using this address.</td>
+<td>--publish-status-address string</td>
+<td>Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--report-node-internal-ip-address</code></td>
-<td>Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address</td>
+<td>--report-node-internal-ip-address</td>
+<td>Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--sort-backends</code></td>
-<td>Defines if backends and its endpoints should be sorted</td>
+<td>--sort-backends</td>
+<td>Sort servers inside NGINX upstreams.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--ssl-passtrough-proxy-port int</code></td>
-<td>Default port to use internally for SSL when SSL Passthgough is enabled (default 442)</td>
+<td>--ssl-passtrough-proxy-port int</td>
+<td>Port to use internally for SSL Passthgough. (default 442)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--status-port int</code></td>
-<td>Indicates the TCP port to use for exposing the nginx status page (default 18080)</td>
+<td>--status-port int</td>
+<td>Port to use for exposing NGINX status pages. (default 18080)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--stderrthreshold severity</code></td>
+<td>--stderrthreshold severity</td>
 <td>logs at or above this threshold go to stderr (default 2)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--sync-period duration</code></td>
-<td>Relist and confirm cloud resources this often. Default is 10 minutes (default 10m0s)</td>
+<td>--sync-period duration</td>
+<td>Period at which the controller forces the repopulation of its local object stores. (default 10m0s)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--sync-rate-limit float32</code></td>
+<td>--sync-rate-limit float32</td>
 <td>Define the sync frequency upper limit (default 0.3)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--tcp-services-configmap string</code></td>
-<td>Name of the ConfigMap that contains the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is the name of the service with the format namespace/serviceName and the port of the service could be a number of the name of the port. The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend</td>
+<td>--tcp-services-configmap string</td>
+<td>Name of the ConfigMap containing the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port number or name. TCP ports 80 and 443 are reserved by the controller for servicing HTTP traffic.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--udp-services-configmap string</code></td>
-<td>Name of the ConfigMap that contains the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is the name of the service with the format namespace/serviceName and the port of the service could be a number of the name of the port.</td>
+<td>--udp-services-configmap string</td>
+<td>Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--update-status</code></td>
-<td>Indicates if the ingress controller should update the Ingress status IP/hostname. Default is true (default true)</td>
+<td>--update-status</td>
+<td>Update the load-balancer status of Ingress objects this controller satisfies. Requires setting the publish-service parameter to a valid Service reference. (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--update-status-on-shutdown</code></td>
-<td>Indicates if the ingress controller should update the Ingress status IP/hostname when the controller is being stopped. Default is true (default true)</td>
+<td>--update-status-on-shutdown</td>
+<td>Update the load-balancer status of Ingress objects when the controller shuts down. Requires the update-status parameter. (default true)</td>
 </tr>
 <tr>
-<td><code class="codehilite">-v</code>, <code class="codehilite">--v Level</code></td>
+<td>--v Level</td>
 <td>log level for V logs</td>
 </tr>
 <tr>
-<td><code class="codehilite">--version</code></td>
-<td>Shows release information about the NGINX Ingress controller</td>
+<td>--version</td>
+<td>Show release information about the NGINX Ingress controller and exit.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--vmodule moduleSpec</code></td>
+<td>--vmodule moduleSpec</td>
 <td>comma-separated list of pattern=N settings for file-filtered logging</td>
 </tr>
 <tr>
-<td><code class="codehilite">--watch-namespace string</code></td>
-<td>Namespace to watch for Ingress. Default is to watch all namespaces</td>
+<td>--watch-namespace string</td>
+<td>Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty.</td>
 </tr>
 </tbody>
 </table>
