@@ -39,101 +39,121 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	var (
 		flags = pflag.NewFlagSet("", pflag.ExitOnError)
 
-		apiserverHost = flags.String("apiserver-host", "", "The address of the Kubernetes Apiserver "+
-			"to connect to in the format of protocol://address:port, e.g., "+
-			"http://localhost:8080. If not specified, the assumption is that the binary runs inside a "+
-			"Kubernetes cluster and local discovery is attempted.")
-		kubeConfigFile = flags.String("kubeconfig", "", "Path to kubeconfig file with authorization and master location information.")
+		apiserverHost = flags.String("apiserver-host", "",
+			`Address of the Kubernetes API server.
+Takes the form "protocol://address:port". If not specified, it is assumed the
+program runs inside a Kubernetes cluster and local discovery is attempted.`)
+
+		kubeConfigFile = flags.String("kubeconfig", "",
+			`Path to a kubeconfig file containing authorization and API server information.`)
 
 		defaultSvc = flags.String("default-backend-service", "",
-			`Service used to serve a 404 page for the default backend. Takes the form
-		namespace/name. The controller uses the first node port of this Service for
-		the default backend.`)
+			`Service used to serve HTTP requests not matching any known server name (catch-all).
+Takes the form "namespace/name". The controller configures NGINX to forward
+requests to the first port of this Service.`)
 
 		ingressClass = flags.String("ingress-class", "",
-			`Name of the ingress class to route through this controller.`)
+			`Name of the ingress class this controller satisfies.
+The class of an Ingress object is set using the annotation "kubernetes.io/ingress.class".
+All ingress classes are satisfied if this parameter is left empty.`)
 
 		configMap = flags.String("configmap", "",
-			`Name of the ConfigMap that contains the custom configuration to use`)
+			`Name of the ConfigMap containing custom global configurations for the controller.`)
 
 		publishSvc = flags.String("publish-service", "",
-			`Service fronting the ingress controllers. Takes the form namespace/name.
-		The controller will set the endpoint records on the ingress objects to reflect those on the service.`)
+			`Service fronting the Ingress controller.
+Takes the form "namespace/name". When used together with update-status, the
+controller mirrors the address of this service's endpoints to the load-balancer
+status of all Ingress objects it satisfies.`)
 
 		tcpConfigMapName = flags.String("tcp-services-configmap", "",
-			`Name of the ConfigMap that contains the definition of the TCP services to expose.
-		The key in the map indicates the external port to be used. The value is the name of the
-		service with the format namespace/serviceName and the port of the service could be a
-		number of the name of the port.
-		The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend`)
+			`Name of the ConfigMap containing the definition of the TCP services to expose.
+The key in the map indicates the external port to be used. The value is a
+reference to a Service in the form "namespace/name:port", where "port" can
+either be a port number or name. TCP ports 80 and 443 are reserved by the
+controller for servicing HTTP traffic.`)
 
 		udpConfigMapName = flags.String("udp-services-configmap", "",
-			`Name of the ConfigMap that contains the definition of the UDP services to expose.
-		The key in the map indicates the external port to be used. The value is the name of the
-		service with the format namespace/serviceName and the port of the service could be a
-		number of the name of the port.`)
+			`Name of the ConfigMap containing the definition of the UDP services to expose.
+The key in the map indicates the external port to be used. The value is a
+reference to a Service in the form "namespace/name:port", where "port" can
+either be a port name or number.`)
 
 		resyncPeriod = flags.Duration("sync-period", 600*time.Second,
-			`Relist and confirm cloud resources this often. Default is 10 minutes`)
+			`Period at which the controller forces the repopulation of its local object stores.`)
 
 		watchNamespace = flags.String("watch-namespace", apiv1.NamespaceAll,
-			`Namespace to watch for Ingress. Default is to watch all namespaces`)
+			`Namespace the controller watches for updates to Kubernetes objects.
+This includes Ingresses, Services and all configuration resources. All
+namespaces are watched if this parameter is left empty.`)
 
-		profiling = flags.Bool("profiling", true, `Enable profiling via web interface host:port/debug/pprof/`)
+		profiling = flags.Bool("profiling", true,
+			`Enable profiling via web interface host:port/debug/pprof/`)
 
-		defSSLCertificate = flags.String("default-ssl-certificate", "", `Name of the secret
-		that contains a SSL certificate to be used as default for a HTTPS catch-all server.
-		Takes the form <namespace>/<secret name>.`)
+		defSSLCertificate = flags.String("default-ssl-certificate", "",
+			`Secret containing a SSL certificate to be used by the default HTTPS server (catch-all).
+Takes the form "namespace/name".`)
 
-		defHealthzURL = flags.String("health-check-path", "/healthz", `Defines
-		the URL to be used as health check inside in the default server in NGINX.`)
+		defHealthzURL = flags.String("health-check-path", "/healthz",
+			`URL path of the health check endpoint.
+Configured inside the NGINX status server. All requests received on the port
+defined by the healthz-port parameter are forwarded internally to this path.`)
 
-		updateStatus = flags.Bool("update-status", true, `Indicates if the
-		ingress controller should update the Ingress status IP/hostname. Default is true`)
+		updateStatus = flags.Bool("update-status", true,
+			`Update the load-balancer status of Ingress objects this controller satisfies.
+Requires setting the publish-service parameter to a valid Service reference.`)
 
-		electionID = flags.String("election-id", "ingress-controller-leader", `Election id to use for status update.`)
+		electionID = flags.String("election-id", "ingress-controller-leader",
+			`Election id to use for Ingress status updates.`)
 
 		forceIsolation = flags.Bool("force-namespace-isolation", false,
-			`Force namespace isolation. This flag is required to avoid the reference of secrets or
-		configmaps located in a different namespace than the specified in the flag --watch-namespace.`)
+			`Force namespace isolation.
+Prevents Ingress objects from referencing Secrets and ConfigMaps located in a
+different namespace than their own. May be used together with watch-namespace.`)
 
-		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true, `Indicates if the
-		ingress controller should update the Ingress status IP/hostname when the controller
-		is being stopped. Default is true`)
+		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true,
+			`Update the load-balancer status of Ingress objects when the controller shuts down.
+Requires the update-status parameter.`)
 
-		sortBackends = flags.Bool("sort-backends", false, `Defines if servers inside NGINX upstream should be sorted`)
+		sortBackends = flags.Bool("sort-backends", false,
+			`Sort servers inside NGINX upstreams.`)
 
 		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", false,
-			`Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address`)
+			`Set the load-balancer status of Ingress objects to internal Node addresses instead of external.
+Requires the update-status parameter.`)
 
 		showVersion = flags.Bool("version", false,
-			`Shows release information about the NGINX Ingress controller`)
+			`Show release information about the NGINX Ingress controller and exit.`)
 
-		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false, `Enable SSL passthrough feature. Default is disabled`)
+		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false,
+			`Enable SSL Passthrough.`)
 
-		httpPort      = flags.Int("http-port", 80, `Indicates the port to use for HTTP traffic`)
-		httpsPort     = flags.Int("https-port", 443, `Indicates the port to use for HTTPS traffic`)
-		statusPort    = flags.Int("status-port", 18080, `Indicates the TCP port to use for exposing the nginx status page`)
-		sslProxyPort  = flags.Int("ssl-passtrough-proxy-port", 442, `Default port to use internally for SSL when SSL Passthgough is enabled`)
-		defServerPort = flags.Int("default-server-port", 8181, `Default port to use for exposing the default server (catch all)`)
-		healthzPort   = flags.Int("healthz-port", 10254, "port for healthz endpoint.")
-
-		annotationsPrefix = flags.String("annotations-prefix", "nginx.ingress.kubernetes.io", `Prefix of the ingress annotations.`)
+		annotationsPrefix = flags.String("annotations-prefix", "nginx.ingress.kubernetes.io",
+			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", true,
-			`Defines if the nginx ingress controller should check the secrets for missing intermediate CA certificates.
-		If the certificate contain issues chain issues is not possible to enable OCSP.
-		Default is true.`)
+			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
+A valid certificate chain is required to enable OCSP stapling. Certificates
+uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
+extension for this to succeed.`)
 
 		syncRateLimit = flags.Float32("sync-rate-limit", 0.3,
 			`Define the sync frequency upper limit`)
 
 		publishStatusAddress = flags.String("publish-status-address", "",
-			`User customized address to be set in the status of ingress resources. The controller will set the
-		endpoint records on the ingress using this address.`)
+			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
+Requires the update-status parameter.`)
 
 		dynamicConfigurationEnabled = flags.Bool("enable-dynamic-configuration", false,
-			`When enabled controller will try to avoid Nginx reloads as much as possible by using Lua. Disabled by default.`)
+			`Dynamically refresh backends on topology changes instead of reloading NGINX.
+Feature backed by OpenResty Lua libraries.`)
+
+		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
+		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
+		statusPort    = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
+		sslProxyPort  = flags.Int("ssl-passtrough-proxy-port", 442, `Port to use internally for SSL Passthgough.`)
+		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
+		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
 	)
 
 	flag.Set("logtostderr", "true")
@@ -158,10 +178,10 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	}
 
 	if *ingressClass != "" {
-		glog.Infof("Watching for ingress class: %s", *ingressClass)
+		glog.Infof("Watching for Ingress class: %s", *ingressClass)
 
 		if *ingressClass != class.DefaultClass {
-			glog.Warningf("only Ingress with class \"%v\" will be processed by this ingress controller", *ingressClass)
+			glog.Warningf("Only Ingresses with class %q will be processed by this ingress controller", *ingressClass)
 		}
 
 		class.IngressClass = *ingressClass
@@ -191,7 +211,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 	}
 
 	if !*enableSSLChainCompletion {
-		glog.Warningf("Check of SSL certificate chain is disabled (--enable-ssl-chain-completion=false)")
+		glog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}
 
 	// LuaJIT is not available on arch s390x and ppc64le
@@ -200,7 +220,7 @@ func parseFlags() (bool, *controller.Configuration, error) {
 		disableLua = true
 		if *dynamicConfigurationEnabled {
 			*dynamicConfigurationEnabled = false
-			glog.Warningf("Disabling dynamic configuration feature (LuaJIT is not available in s390x and ppc64le)")
+			glog.Warningf("LuaJIT is not available on s390x and ppc64le architectures: disabling dynamic configuration feature.")
 		}
 	}
 

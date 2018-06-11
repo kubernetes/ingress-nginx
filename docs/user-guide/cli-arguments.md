@@ -1,48 +1,48 @@
 # Command line arguments
 
-The following command line arguments are accepted by the main controller executable.
+The following command line arguments are accepted by the Ingress controller executable.
 
-They are set in the container spec of the `nginx-ingress-controller` Deployment object (see `deploy/with-rbac.yaml` or `deploy/without-rbac.yaml`).
+They are set in the container spec of the `nginx-ingress-controller` Deployment manifest (see `deploy/with-rbac.yaml` or `deploy/without-rbac.yaml`).
 
 
 | Argument | Description |
 |----------|-------------|
-| `--alsologtostderr` | log to standard error as well as files |
-| `--annotations-prefix string` | Prefix of the ingress annotations. (default "nginx.ingress.kubernetes.io") |
-| `--apiserver-host string` | The address of the Kubernetes Apiserver to connect to in the format of protocol://address:port, e.g., http://localhost:8080. If not specified, the assumption is that the binary runs inside a Kubernetes cluster and local discovery is attempted. |
-| `--configmap string` | Name of the ConfigMap that contains the custom configuration to use |
-| `--default-backend-service string` | Service used to serve a 404 page for the default backend. Takes the form namespace/name. The controller uses the first node port of this Service for the default backend. |
-| `--default-server-port int` | Default port to use for exposing the default server (catch all) (default 8181) |
-| `--default-ssl-certificate string` | Name of the secret that contains a SSL certificate to be used as default for a HTTPS catch-all server. Takes the form <namespace>/<secret name>. |
-| `--election-id string` | Election id to use for status update. (default "ingress-controller-leader") |
-| `--enable-dynamic-configuration` | When enabled controller will try to avoid Nginx reloads as much as possible by using Lua. Disabled by default. |
-| `--enable-ssl-chain-completion` | Defines if the nginx ingress controller should check the secrets for missing intermediate CA certificates. If the certificate contain issues chain issues is not possible to enable OCSP. Default is true. (default true) |
-| `--enable-ssl-passthrough` | Enable SSL passthrough feature. Default is disabled |
-| `--force-namespace-isolation` | Force namespace isolation. This flag is required to avoid the reference of secrets or configmaps located in a different namespace than the specified in the flag --watch-namespace. |
-| `--health-check-path string` | Defines the URL to be used as health check inside in the default server in NGINX. (default "/healthz") |
-| `--healthz-port int` | port for healthz endpoint. (default 10254) |
-| `--http-port int` | Indicates the port to use for HTTP traffic (default 80) |
-| `--https-port int` | Indicates the port to use for HTTPS traffic (default 443) |
-| `--ingress-class string` | Name of the ingress class to route through this controller. |
-| `--kubeconfig string` | Path to kubeconfig file with authorization and master location information. |
-| `--log_backtrace_at traceLocation` | when logging hits line file:N, emit a stack trace (default :0) |
-| `--log_dir string` | If non-empty, write log files in this directory |
-| `--logtostderr` | log to standard error instead of files (default true) |
-| `--profiling` | Enable profiling via web interface host:port/debug/pprof/ (default true) |
-| `--publish-service string` | Service fronting the ingress controllers. Takes the form namespace/name. The controller will set the endpoint records on the ingress objects to reflect those on the service. |
-| `--publish-status-address string` | User customized address to be set in the status of ingress resources. The controller will set the endpoint records on the ingress using this address. |
-| `--report-node-internal-ip-address` | Defines if the nodes IP address to be returned in the ingress status should be the internal instead of the external IP address |
-| `--sort-backends` | Defines if backends and its endpoints should be sorted |
-| `--ssl-passtrough-proxy-port int` | Default port to use internally for SSL when SSL Passthgough is enabled (default 442) |
-| `--status-port int` | Indicates the TCP port to use for exposing the nginx status page (default 18080) |
-| `--stderrthreshold severity` | logs at or above this threshold go to stderr (default 2) |
-| `--sync-period duration` | Relist and confirm cloud resources this often. Default is 10 minutes (default 10m0s) |
-| `--sync-rate-limit float32` | Define the sync frequency upper limit (default 0.3) |
-| `--tcp-services-configmap string` | Name of the ConfigMap that contains the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is the name of the service with the format namespace/serviceName and the port of the service could be a number of the name of the port. The ports 80 and 443 are not allowed as external ports. This ports are reserved for the backend |
-| `--udp-services-configmap string` | Name of the ConfigMap that contains the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is the name of the service with the format namespace/serviceName and the port of the service could be a number of the name of the port. |
-| `--update-status` | Indicates if the ingress controller should update the Ingress status IP/hostname. Default is true (default true) |
-| `--update-status-on-shutdown` | Indicates if the ingress controller should update the Ingress status IP/hostname when the controller is being stopped. Default is true (default true) |
-| `-v`, `--v Level` | log level for V logs |
-| `--version` | Shows release information about the NGINX Ingress controller |
-| `--vmodule moduleSpec` | comma-separated list of pattern=N settings for file-filtered logging |
-| `--watch-namespace string` | Namespace to watch for Ingress. Default is to watch all namespaces |
+| --alsologtostderr                 | log to standard error as well as files |
+| --annotations-prefix string       | Prefix of the Ingress annotations specific to the NGINX controller. (default "nginx.ingress.kubernetes.io") |
+| --apiserver-host string           | Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted. |
+| --configmap string                | Name of the ConfigMap containing custom global configurations for the controller. |
+| --default-backend-service string  | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
+| --default-server-port int         | Port to use for exposing the default server (catch-all). (default 8181) |
+| --default-ssl-certificate string  | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
+| --election-id string              | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
+| --enable-dynamic-configuration    | Dynamically refresh backends on topology changes instead of reloading NGINX. Feature backed by OpenResty Lua libraries. |
+| --enable-ssl-chain-completion     | Autocomplete SSL certificate chains with missing intermediate CA certificates. A valid certificate chain is required to enable OCSP stapling. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default true) |
+| --enable-ssl-passthrough          | Enable SSL Passthrough. |
+| --force-namespace-isolation       | Force namespace isolation. Prevents Ingress objects from referencing Secrets and ConfigMaps located in a different namespace than their own. May be used together with watch-namespace. |
+| --health-check-path string        | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
+| --healthz-port int                | Port to use for the healthz endpoint. (default 10254) |
+| --http-port int                   | Port to use for servicing HTTP traffic. (default 80) |
+| --https-port int                  | Port to use for servicing HTTPS traffic. (default 443) |
+| --ingress-class string            | Name of the ingress class this controller satisfies. The class of an Ingress object is set using the annotation "kubernetes.io/ingress.class". All ingress classes are satisfied if this parameter is left empty. |
+| --kubeconfig string               | Path to a kubeconfig file containing authorization and API server information. |
+| --log_backtrace_at traceLocation  | when logging hits line file:N, emit a stack trace (default :0) |
+| --log_dir string                  | If non-empty, write log files in this directory |
+| --logtostderr                     | log to standard error instead of files (default true) |
+| --profiling                       | Enable profiling via web interface host:port/debug/pprof/ (default true) |
+| --publish-service string          | Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies. |
+| --publish-status-address string   | Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
+| --report-node-internal-ip-address | Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter. |
+| --sort-backends                   | Sort servers inside NGINX upstreams. |
+| --ssl-passtrough-proxy-port int   | Port to use internally for SSL Passthgough. (default 442) |
+| --status-port int                 | Port to use for exposing NGINX status pages. (default 18080) |
+| --stderrthreshold severity        | logs at or above this threshold go to stderr (default 2) |
+| --sync-period duration            | Period at which the controller forces the repopulation of its local object stores. (default 10m0s) |
+| --sync-rate-limit float32         | Define the sync frequency upper limit (default 0.3) |
+| --tcp-services-configmap string   | Name of the ConfigMap containing the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port number or name. TCP ports 80 and 443 are reserved by the controller for servicing HTTP traffic. |
+| --udp-services-configmap string   | Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number.
+| --update-status                   | Update the load-balancer status of Ingress objects this controller satisfies. Requires setting the publish-service parameter to a valid Service reference. (default true) |
+| --update-status-on-shutdown       | Update the load-balancer status of Ingress objects when the controller shuts down. Requires the update-status parameter. (default true) |
+| --v Level                         | log level for V logs |
+| --version                         | Show release information about the NGINX Ingress controller and exit. |
+| --vmodule moduleSpec              | comma-separated list of pattern=N settings for file-filtered logging |
+| --watch-namespace string          | Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty. |
