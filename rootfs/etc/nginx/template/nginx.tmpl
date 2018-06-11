@@ -341,7 +341,7 @@ http {
     {{ end }}
 
     {{ range $errCode := $cfg.CustomHTTPErrors }}
-    error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
+    error_page {{ $errCode }} @custom_{{ $errCode }};{{ end }}
 
     proxy_ssl_session_reuse on;
 
