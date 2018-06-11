@@ -60,8 +60,8 @@ func TestNginxCheck(t *testing.T) {
 	})
 
 	// create pid file
-	fs.MkdirAll("/run", 0655)
-	pidFile, err := fs.Create("/run/nginx.pid")
+	fs.MkdirAll("/tmp", 0655)
+	pidFile, err := fs.Create(nginxPID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

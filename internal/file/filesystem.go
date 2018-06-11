@@ -35,7 +35,7 @@ func NewLocalFS() (Filesystem, error) {
 	fs := filesystem.DefaultFs{}
 
 	for _, directory := range directories {
-		err := fs.MkdirAll(directory, 0655)
+		err := fs.MkdirAll(directory, 0777)
 		if err != nil {
 			return nil, err
 		}
@@ -96,13 +96,6 @@ func NewFakeFS() (Filesystem, error) {
 			return nil, err
 		}
 	}
-
-	fakeFs.MkdirAll("/run", 0655)
-	fakeFs.MkdirAll("/proc", 0655)
-	fakeFs.MkdirAll("/etc/nginx/template", 0655)
-
-	fakeFs.MkdirAll(DefaultSSLDirectory, 0655)
-	fakeFs.MkdirAll(AuthDirectory, 0655)
 
 	return fakeFs, nil
 }
