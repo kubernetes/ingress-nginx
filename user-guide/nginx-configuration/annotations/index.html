@@ -681,6 +681,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-buffer-size" title="Proxy buffer size" class="md-nav__link">
+    Proxy buffer size
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ssl-ciphers" title="SSL ciphers" class="md-nav__link">
     SSL ciphers
   </a>
@@ -1562,6 +1569,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-buffer-size" title="Proxy buffer size" class="md-nav__link">
+    Proxy buffer size
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ssl-ciphers" title="SSL ciphers" class="md-nav__link">
     SSL ciphers
   </a>
@@ -1870,6 +1884,10 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#proxy-buffering">nginx.ingress.kubernetes.io/proxy-buffering</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#proxy-buffer-size">nginx.ingress.kubernetes.io/proxy-buffer-size</a></td>
 <td>string</td>
 </tr>
 <tr>
@@ -2252,6 +2270,14 @@ By default proxy buffering is disabled in the NGINX config.</p>
 <p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-buffering</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.
 To use custom values in an Ingress rule define these annotation:</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/proxy-buffering</span><span class="p p-Indicator">:</span> <span class="s">&quot;on&quot;</span>
+</pre></div>
+
+
+<h3 id="proxy-buffer-size">Proxy buffer size<a class="headerlink" href="#proxy-buffer-size" title="Permanent link">&para;</a></h3>
+<p>Sets the size of the buffer <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code class="codehilite">proxy_buffer_size</code></a> used for reading the first part of the response received from the proxied server.
+By default proxy buffer size is set as "4k"</p>
+<p>To configure this setting globally, set <code class="codehilite">proxy-buffer-size</code> in <a href="../configmap/">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/proxy-buffer-size</span><span class="p p-Indicator">:</span> <span class="s">&quot;8k&quot;</span>
 </pre></div>
 
 
