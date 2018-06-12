@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -5,27 +6,30 @@ metadata:
   labels:
     app: nginx-errors
 spec:
-  ports:
-  - port: 80
-    targetPort: 80
-    protocol: TCP
-    name: http
   selector:
     app: nginx-errors
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
 ---
-apiVersion: v1
-kind: ReplicationController
+apiVersion: apps/v1beta2
+kind: Deployment
+apiVersion: apps/v1beta2
 metadata:
   name: nginx-errors
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-errors
   template:
     metadata:
       labels:
         app: nginx-errors
     spec:
       containers:
-      - name: nginx-errors
-        image: aledbf/nginx-error-server:0.1
+      - name: nginx-error-server
+        image: quay.io/kubernetes-ingress-controller/custom-error-pages-amd64:0.2
         ports:
-        - containerPort: 80
+        - containerPort: 8080
