@@ -13,7 +13,7 @@ Auth | [OAuth external auth](auth/oauth-external-auth/README.md) | TODO | TODO
 Customization | [Configuration snippets](customization/configuration-snippets/README.md) | customize nginx location configuration using annotations | Advanced
 Customization | [Custom configuration](customization/custom-configuration/README.md) | TODO | TODO
 Customization | [Custom DH parameters for perfect forward secrecy](customization/ssl-dh-param/README.md) | TODO | TODO
-Customization | [Custom errors](customization/custom-errors/README.md) | TODO | TODO
+Customization | [Custom errors](customization/custom-errors/README.md) | serve custom error pages from the default backend | Intermediate
 Customization | [Custom headers](customization/custom-headers/README.md) | set custom headers before sending traffic to backends  | Advanced
 Customization | [Custom upstream check](customization/custom-upstream-check/README.md) | TODO | TODO
 Customization | [Custom VTS metrics with Prometheus](customization/custom-vts-metrics-prometheus/README.md) | TODO | TODO
