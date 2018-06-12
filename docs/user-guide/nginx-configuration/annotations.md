@@ -70,6 +70,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
+|[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
@@ -150,7 +151,7 @@ nginx.ingress.kubernetes.io/auth-realm: "realm string"
 NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enable the configuration of each server in the upstream. The Ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` and `upstream-fail-timeout` in the NGINX ConfigMap or in a particular Ingress rule. `upstream-max-fails` defaults to 0. This means NGINX will respect the container's `readinessProbe` if it is defined. If there is no probe and no values for `upstream-max-fails` NGINX will continue to send traffic to the container.
 
 
-!!! tip 
+!!! tip
 	With the default configuration NGINX will not health check your backends. Whenever the endpoints controller notices a readiness probe failure, that pod's IP will be removed from the list of endpoints. This will trigger the NGINX controller to also remove it from the upstreams.**
 
 To use custom values in an Ingress rule define these annotations:
@@ -208,9 +209,9 @@ The annotations are:
 
 !!! attention
     TLS with Client Authentication is **not** possible in Cloudflare and might result in unexpected behavior.
-  
+
     Cloudflare only allows Authenticated Origin Pulls and is required to use their own certificate: [https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/](https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/)
-  
+
     Only Authenticated Origin Pulls are allowed and can be configured by following their tutorial: [https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls](https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls)
 
 
@@ -476,6 +477,16 @@ To use custom values in an Ingress rule define these annotation:
 nginx.ingress.kubernetes.io/proxy-buffering: "on"
 ```
 
+### Proxy buffer size
+
+Sets the size of the buffer [`proxy_buffer_size`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) used for reading the first part of the response received from the proxied server.
+By default proxy buffer size is set as "4k"
+
+To configure this setting globally, set `proxy-buffer-size` in [NGINX ConfigMap][configmap]. To use custom values in an Ingress rule, define this annotation:
+```yaml
+nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+```
+
 ### SSL ciphers
 
 Specifies the [enabled ciphers](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers).
@@ -579,4 +590,3 @@ To use the module in the Kubernetes Nginx ingress controller, you have two optio
 - Use an InfluxDB server configured to enable the [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/).
 - Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
 anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs)
-
