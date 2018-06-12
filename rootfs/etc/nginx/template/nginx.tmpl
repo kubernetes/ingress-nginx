@@ -7,6 +7,9 @@
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
 
+# setup custom paths that do not require root access
+pid /tmp/nginx.pid;
+
 {{ if $cfg.EnableModsecurity }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
@@ -20,7 +23,6 @@ worker_processes {{ $cfg.WorkerProcesses }};
 worker_cpu_affinity {{ $cfg.WorkerCpuAffinity }};
 {{ end }}
 
-pid /run/nginx.pid;
 {{ if ne .MaxOpenFiles 0 }}
 worker_rlimit_nofile {{ .MaxOpenFiles }};
 {{ end }}
@@ -114,6 +116,10 @@ http {
 
     keepalive_timeout  {{ $cfg.KeepAlive }}s;
     keepalive_requests {{ $cfg.KeepAliveRequests }};
+
+    client_body_temp_path           /tmp/client-body;
+    fastcgi_temp_path               /tmp/fastcgi-temp;
+    proxy_temp_path                 /tmp/proxy-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
