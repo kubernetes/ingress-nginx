@@ -423,7 +423,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 		return err
 	}
 	defer tmpfile.Close()
-	err = ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
+	err = ioutil.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
@@ -647,7 +647,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				return err
 			}
 			defer tmpfile.Close()
-			err = ioutil.WriteFile(tmpfile.Name(), content, 0644)
+			err = ioutil.WriteFile(tmpfile.Name(), content, file.ReadWriteByUser)
 			if err != nil {
 				return err
 			}
@@ -666,7 +666,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 	}
 
-	err = ioutil.WriteFile(cfgPath, content, 0644)
+	err = ioutil.WriteFile(cfgPath, content, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
