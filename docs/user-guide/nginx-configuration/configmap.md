@@ -103,6 +103,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-stream-timeout](#proxy-stream-timeout)|string|"600s"|
 |[proxy-stream-responses](#proxy-stream-responses)|int|1|
 |[bind-address](#bind-address)|[]string|""|
+|[use-forwarded-headers](#use-forwarded-headers)|bool|"true"|
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"true"|
@@ -545,7 +546,7 @@ The value can either be:
 - round_robin: to use the default round robin loadbalancer
 - least_conn: to use the least connected method
 - ip_hash: to use a hash of the server for routing.
-- ewma: to use the peak ewma method for routing (only available with `enable-dynamic-configuration` flag) 
+- ewma: to use the peak ewma method for routing (only available with `enable-dynamic-configuration` flag)
 
 The default is least_conn.
 
@@ -596,6 +597,12 @@ _References:_
 
 Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
 
+## use-forwarded-headers
+
+If true, nginx passes the incoming `X-Forwarded-*` headers to upstreams. Use this option when nginx is behind another L7 proxy / load balancer that is setting these headers.
+
+If false, nginx ignores incoming `X-Forwarded-*` headers, filling them with the request information it sees. Use this option if nginx is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.
+
 ## forwarded-for-header
 
 Sets the header field for identifying the originating IP address of a client. _**default:**_ X-Forwarded-For
@@ -608,7 +615,7 @@ Append the remote address to the X-Forwarded-For header instead of replacing it.
 
 Adds an X-Original-Uri header with the original request URI to the backend request
 
-## generate-request-id 
+## generate-request-id
 
 Ensures that X-Request-ID is defaulted to a random value, if no X-Request-ID is present in the request
 
