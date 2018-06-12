@@ -150,7 +150,7 @@ Feature backed by OpenResty Lua libraries.`)
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
 		statusPort    = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
-		sslProxyPort  = flags.Int("ssl-passtrough-proxy-port", 442, `Port to use internally for SSL Passthgough.`)
+		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
 	)
@@ -180,7 +180,7 @@ Feature backed by OpenResty Lua libraries.`)
 		glog.Infof("Watching for Ingress class: %s", *ingressClass)
 
 		if *ingressClass != class.DefaultClass {
-			glog.Warningf("Only Ingresses with class %q will be processed by this ingress controller", *ingressClass)
+			glog.Warningf("Only Ingresses with class %q will be processed by this Ingress controller", *ingressClass)
 		}
 
 		class.IngressClass = *ingressClass

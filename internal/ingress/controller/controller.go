@@ -206,10 +206,10 @@ func (n *NGINXController) syncIngress(interface{}) error {
 }
 
 func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Protocol) []ingress.L4Service {
-	glog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
 	if configmapName == "" {
 		return []ingress.L4Service{}
 	}
+	glog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
 
 	_, _, err := k8s.ParseNameNS(configmapName)
 	if err != nil {
@@ -1019,7 +1019,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			err = cert.Certificate.VerifyHostname(host)
 			if err != nil {
 				glog.Warningf("Unexpected error validating SSL certificate %q for server %q: %v", key, host, err)
-				glog.Warningf("Validating certificate against DNS names. This will be deprecated in a future version.")
+				glog.Warning("Validating certificate against DNS names. This will be deprecated in a future version.")
 				// check the Common Name field
 				// https://github.com/golang/go/issues/22922
 				err := verifyHostname(host, cert.Certificate)
@@ -1032,14 +1032,14 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			servers[host].SSLCert = *cert
 
 			if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
-				glog.Warningf("SSL certificate for server %q is about to expire (%v)", cert.ExpireTime)
+				glog.Warningf("SSL certificate for server %q is about to expire (%v)", host, cert.ExpireTime)
 			}
 		}
 	}
 
 	for alias, host := range aliases {
 		if _, ok := servers[alias]; ok {
-			glog.Warningf("Conflicting hostname (%v) and alias (%v) in server %q. Removing alias to avoid conflicts.", alias, host)
+			glog.Warningf("Conflicting hostname (%v) and alias (%v). Removing alias to avoid conflicts.", host, alias)
 			servers[host].Alias = ""
 		}
 	}
