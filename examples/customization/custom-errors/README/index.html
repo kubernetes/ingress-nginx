@@ -831,9 +831,52 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="toc">
+        Custom Errors
+      </label>
+    
     <a href="./" title="Custom Errors" class="md-nav__link md-nav__link--active">
       Custom Errors
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#customized-default-backend" title="Customized default backend" class="md-nav__link">
+    Customized default backend
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ingress-controller-configuration" title="Ingress controller configuration" class="md-nav__link">
+    Ingress controller configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-error-pages" title="Testing error pages" class="md-nav__link">
+    Testing error pages
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -1057,6 +1100,36 @@
     
   
   
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#customized-default-backend" title="Customized default backend" class="md-nav__link">
+    Customized default backend
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ingress-controller-configuration" title="Ingress controller configuration" class="md-nav__link">
+    Ingress controller configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-error-pages" title="Testing error pages" class="md-nav__link">
+    Testing error pages
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1071,79 +1144,77 @@
                 
                 
                 <h1 id="custom-errors">Custom Errors<a class="headerlink" href="#custom-errors" title="Permanent link">&para;</a></h1>
-<p>This example shows how is possible to use a custom backend to render custom error pages. The code of this example is located here <a href="https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-errors">custom-error-pages</a></p>
-<p>The idea is to use the headers <code class="codehilite">X-Code</code> and <code class="codehilite">X-Format</code> that NGINX pass to the backend in case of an error to find out the best existent representation of the response to be returned. i.e. if the request contains an <code class="codehilite">Accept</code> header of type <code class="codehilite">json</code> the error should be in that format and not in <code class="codehilite">html</code> (the default in NGINX).</p>
-<p>First create the custom backend to use in the Ingress controller</p>
+<p>This example demonstrates how to use a custom backend to render custom error pages.</p>
+<h2 id="customized-default-backend">Customized default backend<a class="headerlink" href="#customized-default-backend" title="Permanent link">&para;</a></h2>
+<p>First, create the custom <code class="codehilite">default-backend</code>. It will be used by the Ingress controller later on.</p>
 <div class="codehilite"><pre><span></span>$ kubectl create -f custom-default-backend.yaml
 service <span class="s2">&quot;nginx-errors&quot;</span> created
-replicationcontroller <span class="s2">&quot;nginx-errors&quot;</span> created
+deployment.apps <span class="s2">&quot;nginx-errors&quot;</span> created
 </pre></div>
 
 
-<div class="codehilite"><pre><span></span>$ kubectl get svc
-NAME                    CLUSTER-IP   EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>         AGE
-echoheaders             <span class="m">10</span>.3.0.7     nodes         <span class="m">80</span>/TCP          23d
-kubernetes              <span class="m">10</span>.3.0.1     &lt;none&gt;        <span class="m">443</span>/TCP         34d
-nginx-errors            <span class="m">10</span>.3.0.102   &lt;none&gt;        <span class="m">80</span>/TCP          11s
+<p>This should have created a Deployment and a Service with the name <code class="codehilite">nginx-errors</code>.</p>
+<div class="codehilite"><pre><span></span>$ kubectl get deploy,svc
+NAME                           DESIRED   CURRENT   READY     AGE
+deployment.apps/nginx-errors   <span class="m">1</span>         <span class="m">1</span>         <span class="m">1</span>         10s
+
+NAME                   TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>   AGE
+service/nginx-errors   ClusterIP   <span class="m">10</span>.0.0.12   &lt;none&gt;        <span class="m">80</span>/TCP    10s
 </pre></div>
 
 
-<div class="codehilite"><pre><span></span>$ kubectl get rc
-CONTROLLER             REPLICAS   AGE
-echoheaders            <span class="m">1</span>          19d
-nginx-errors           <span class="m">1</span>          19s
+<h2 id="ingress-controller-configuration">Ingress controller configuration<a class="headerlink" href="#ingress-controller-configuration" title="Permanent link">&para;</a></h2>
+<p>If you do not already have an instance of the the NGINX Ingress controller running, deploy it according to the
+<a href="../../../../deploy/">deployment guide</a>, then follow these steps:</p>
+<ol>
+<li>
+<p>Edit the <code class="codehilite">nginx-ingress-controller</code> Deployment and set the value of the <code class="codehilite">--default-backend</code> flag to the name of the
+   newly created error backend.</p>
+</li>
+<li>
+<p>Edit the <code class="codehilite">nginx-configuration</code> ConfigMap and create the key <code class="codehilite">custom-http-errors</code> with a value of <code class="codehilite">404,503</code>.</p>
+</li>
+<li>
+<p>Take note of the IP address assigned to the NGINX Ingress controller Service.
+    <code class="codehilite">$ kubectl get svc ingress-nginxNAME            TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>          AGEingress-nginx   ClusterIP   <span class="m">10</span>.0.0.13   &lt;none&gt;        <span class="m">80</span>/TCP,443/TCP   10m</code></p>
+</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="codehilite">ingress-nginx</code> Service is of type <code class="codehilite">ClusterIP</code> in this example. This may vary depending on your environment.
+Make sure you can use the Service to reach NGINX before proceeding with the rest of this example.</p>
+</div>
+<h2 id="testing-error-pages">Testing error pages<a class="headerlink" href="#testing-error-pages" title="Permanent link">&para;</a></h2>
+<p>Let us send a couple of HTTP requests using cURL and validate everything is working as expected.</p>
+<p>A request to the default backend returns a 404 error with a custom message:</p>
+<div class="codehilite"><pre><span></span>$ curl -D- http://10.0.0.13/
+HTTP/1.1 404 Not Found
+Server: nginx/1.13.12
+Date: Tue, 12 Jun 2018 19:11:24 GMT
+Content-Type: */*
+Transfer-Encoding: chunked
+Connection: keep-alive
+
+<span class="nt">&lt;span&gt;</span>The page you&#39;re looking for could not be found.<span class="nt">&lt;/span&gt;</span>
 </pre></div>
 
 
-<p>Next create the Ingress controller executing</p>
-<div class="codehilite"><pre><span></span>$ kubectl create -f rc-custom-errors.yaml
-</pre></div>
+<p>A request with a custom <code class="codehilite">Accept</code> header returns the corresponding document type (JSON):</p>
+<div class="codehilite"><pre><span></span>$ curl -D- -H <span class="s1">&#39;Accept: application/json&#39;</span> http://10.0.0.13/
+HTTP/1.1 <span class="m">404</span> Not Found
+Server: nginx/1.13.12
+Date: Tue, <span class="m">12</span> Jun <span class="m">2018</span> <span class="m">19</span>:12:36 GMT
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+Vary: Accept-Encoding
 
-
-<p>Now to check if this is working we use curl:</p>
-<div class="codehilite"><pre><span></span>$ curl -v http://172.17.4.99/
-*   Trying 172.17.4.99...
-* Connected to 172.17.4.99 (172.17.4.99) port 80 (#0)
-&gt; GET / HTTP/1.1
-&gt; Host: 172.17.4.99
-&gt; User-Agent: curl/7.43.0
-&gt; Accept: */*
-&gt;
-<span class="nt">&lt; HTTP</span><span class="err">/1.1</span> <span class="err">404</span> <span class="err">Not</span> <span class="err">Found</span>
-<span class="err">&lt;</span> <span class="err">Server:</span> <span class="err">nginx/1.10.0</span>
-<span class="err">&lt;</span> <span class="err">Date:</span> <span class="err">Wed,</span> <span class="err">04</span> <span class="err">May</span> <span class="err">2016</span> <span class="err">02:53:45</span> <span class="err">GMT</span>
-<span class="err">&lt;</span> <span class="err">Content-Type:</span> <span class="err">text/html</span>
-<span class="err">&lt;</span> <span class="err">Transfer-Encoding:</span> <span class="err">chunked</span>
-<span class="err">&lt;</span> <span class="err">Connection:</span> <span class="err">keep-alive</span>
-<span class="err">&lt;</span> <span class="err">Vary:</span> <span class="err">Accept-Encoding</span>
-<span class="err">&lt;</span>
-<span class="err">&lt;span</span><span class="nt">&gt;</span>The page you&#39;re looking for could not be found.<span class="nt">&lt;/span&gt;</span>
-
-* Connection #0 to host 172.17.4.99 left intact
-</pre></div>
-
-
-<p>Specifying json as expected format:</p>
-<div class="codehilite"><pre><span></span>$ curl -v http://172.17.4.99/ -H <span class="s1">&#39;Accept: application/json&#39;</span>
-*   Trying <span class="m">172</span>.17.4.99...
-* Connected to <span class="m">172</span>.17.4.99 <span class="o">(</span><span class="m">172</span>.17.4.99<span class="o">)</span> port <span class="m">80</span> <span class="o">(</span><span class="c1">#0)</span>
-&gt; GET / HTTP/1.1
-&gt; Host: <span class="m">172</span>.17.4.99
-&gt; User-Agent: curl/7.43.0
-&gt; Accept: application/json
-&gt;
-&lt; HTTP/1.1 <span class="m">404</span> Not Found
-&lt; Server: nginx/1.10.0
-&lt; Date: Wed, <span class="m">04</span> May <span class="m">2016</span> <span class="m">02</span>:54:00 GMT
-&lt; Content-Type: text/html
-&lt; Transfer-Encoding: chunked
-&lt; Connection: keep-alive
-&lt; Vary: Accept-Encoding
-&lt;
 <span class="o">{</span> <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;The page you&#39;re looking for could not be found&quot;</span> <span class="o">}</span>
-
-* Connection <span class="c1">#0 to host 172.17.4.99 left intact</span>
 </pre></div>
+
+
+<p>To go further with this example, feel free to deploy your own applications and Ingress objects, and validate that the
+responses are still in the correct format when a backend returns 503 (eg. if you scale a Deployment down to 0 replica).</p>
                 
                   
                 

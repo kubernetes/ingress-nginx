@@ -1069,24 +1069,56 @@
                 
                 
                 <h1 id="custom-errors">Custom errors<a class="headerlink" href="#custom-errors" title="Permanent link">&para;</a></h1>
-<p>In case of an error in a request the body of the response is obtained from the <code class="codehilite">default backend</code>.
-Each request to the default backend includes two headers:</p>
-<ul>
-<li><code class="codehilite">X-Code</code> indicates the HTTP code to be returned to the client.</li>
-<li><code class="codehilite">X-Format</code> the value of the <code class="codehilite">Accept</code> header.</li>
-</ul>
+<p>When the <a href="../nginx-configuration/configmap/#custom-http-errors"><code class="codehilite">custom-http-errors</code></a> option is enabled, the Ingress controller configures NGINX so
+that it passes several HTTP headers down to its <code class="codehilite">default-backend</code> in case of error:</p>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="codehilite">X-Code</code></td>
+<td>HTTP status code retuned by the request</td>
+</tr>
+<tr>
+<td><code class="codehilite">X-Format</code></td>
+<td>Value of the <code class="codehilite">Accept</code> header sent by the client</td>
+</tr>
+<tr>
+<td><code class="codehilite">X-Original-URI</code></td>
+<td>URI that caused the error</td>
+</tr>
+<tr>
+<td><code class="codehilite">X-Namespace</code></td>
+<td>Namespace where the backend Service is located</td>
+</tr>
+<tr>
+<td><code class="codehilite">X-Ingress-Name</code></td>
+<td>Name of the Ingress where the backend is defined</td>
+</tr>
+<tr>
+<td><code class="codehilite">X-Service-Name</code></td>
+<td>Name of the Service backing the backend</td>
+</tr>
+<tr>
+<td><code class="codehilite">X-Service-Port</code></td>
+<td>Port number of the Service backing the backend</td>
+</tr>
+</tbody>
+</table>
+<p>A custom error backend can use this information to return the best possible representation of an error page. For
+example, if the value of the <code class="codehilite">Accept</code> header send by the client was <code class="codehilite">application/json</code>, a carefully crafted backend
+could decide to return the error payload as a JSON document instead of HTML.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>The custom backend must return the correct HTTP status code to be returned. NGINX does not change the response from the custom default backend.</p>
+<p>The custom backend is expected to return the correct HTTP status code instead of <code class="codehilite">200</code>. NGINX does not change
+the response from the custom default backend.</p>
 </div>
-<p>Using these two headers it's possible to use a custom backend service like <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages">this one</a> that inspects each request and returns a custom error page with the format expected by the client. Please check the example <a href="https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-errors">custom-errors</a>.</p>
-<p>NGINX sends additional headers that can be used to build custom response:</p>
-<ul>
-<li>X-Original-URI</li>
-<li>X-Namespace</li>
-<li>X-Ingress-Name</li>
-<li>X-Service-Name</li>
-</ul>
+<p>An example of such custom backend is available inside the source repository at <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages">images/custom-error-pages</a>.</p>
+<p>See also the <a href="../../examples/customization/custom-errors">Custom errors</a> example.</p>
                 
                   
                 
