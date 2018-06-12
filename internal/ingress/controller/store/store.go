@@ -699,7 +699,7 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 			glog.Warningf("unexpected error decoding key ssl-session-ticket-key: %v", err)
 			s.backendConfig.SSLSessionTicketKey = ""
 		}
-		ioutil.WriteFile("/etc/nginx/tickets.key", d, 0644)
+		ioutil.WriteFile("/etc/nginx/tickets.key", d, file.ReadWriteByUser)
 	}
 }
 

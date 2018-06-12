@@ -20,7 +20,8 @@ WORKDIR  /etc/nginx
 
 RUN clean-install \
   diffutils \
-  dumb-init
+  dumb-init \
+  libcap2-bin 
 
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector
 # This only works if nginx is started with CMD or ENTRYPOINT
@@ -29,6 +30,14 @@ RUN mkdir -p /var/log/nginx \
   && ln -sf /dev/stderr /var/log/nginx/error.log
 
 COPY . /
+
+RUN setcap cap_net_bind_service=+ep /usr/sbin/nginx \
+  && setcap cap_net_bind_service=+ep /nginx-ingress-controller
+
+RUN mkdir -p /etc/ingress-controller/ssl /etc/ingress-controller/auth \
+  && chown -R www-data.www-data /etc/nginx /etc/ingress-controller
+
+USER www-data
 
 ENTRYPOINT ["/usr/bin/dumb-init"]
 
