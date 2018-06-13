@@ -599,9 +599,9 @@ Sets the addresses on which the server will accept requests instead of *. It sho
 
 ## use-forwarded-headers
 
-If true, nginx passes the incoming `X-Forwarded-*` headers to upstreams. Use this option when nginx is behind another L7 proxy / load balancer that is setting these headers.
+If true, NGINX passes the incoming `X-Forwarded-*` headers to upstreams. Use this option when NGINX is behind another L7 proxy / load balancer that is setting these headers.
 
-If false, nginx ignores incoming `X-Forwarded-*` headers, filling them with the request information it sees. Use this option if nginx is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.
+If false, NGINX ignores incoming `X-Forwarded-*` headers, filling them with the request information it sees. Use this option if NGINX is exposed directly to the internet, or it's behind a L3/packet-based load balancer that doesn't alter the source IP in the packets.
 
 ## forwarded-for-header
 
