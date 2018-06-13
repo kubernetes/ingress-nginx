@@ -18,12 +18,12 @@ package settings
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net"
+	"net/http"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/parnurzeal/gorequest"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -60,20 +60,17 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 
-		ip, err := f.GetNginxIP()
-		Expect(err).NotTo(HaveOccurred())
-		port, err := f.GetNginxPort("http")
-		Expect(err).NotTo(HaveOccurred())
+		resp, body, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Set("Host", host).
+			Set("X-Forwarded-Port", "1234").
+			Set("X-Forwarded-Proto", "myproto").
+			Set("X-Forwarded-For", "1.2.3.4").
+			Set("X-Forwarded-Host", "myhost").
+			End()
 
-		conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", ip, port))
-		Expect(err).NotTo(HaveOccurred())
-		defer conn.Close()
-
-		conn.Write([]byte("GET / HTTP/1.1\r\nHost: forwarded-headers\r\nX-Forwarded-Port: 1234\r\nX-Forwarded-Proto: myproto\r\nX-Forwarded-For: 1.2.3.4\r\nX-Forwarded-Host: myhost\r\n\r\n"))
-
-		data, err := ioutil.ReadAll(conn)
-		Expect(err).NotTo(HaveOccurred())
-		body := string(data)
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=myhost")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-host=myhost")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-proto=myproto")))
@@ -96,20 +93,17 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 
-		ip, err := f.GetNginxIP()
-		Expect(err).NotTo(HaveOccurred())
-		port, err := f.GetNginxPort("http")
-		Expect(err).NotTo(HaveOccurred())
+		resp, body, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Set("Host", host).
+			Set("X-Forwarded-Port", "1234").
+			Set("X-Forwarded-Proto", "myproto").
+			Set("X-Forwarded-For", "1.2.3.4").
+			Set("X-Forwarded-Host", "myhost").
+			End()
 
-		conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", ip, port))
-		Expect(err).NotTo(HaveOccurred())
-		defer conn.Close()
-
-		conn.Write([]byte("GET / HTTP/1.1\r\nHost: forwarded-headers\r\nX-Forwarded-Port: 1234\r\nX-Forwarded-Proto: myproto\r\nX-Forwarded-For: 1.2.3.4\r\nX-Forwarded-Host: myhost\r\n\r\n"))
-
-		data, err := ioutil.ReadAll(conn)
-		Expect(err).NotTo(HaveOccurred())
-		body := string(data)
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=forwarded-headers")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=80")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-proto=http")))
