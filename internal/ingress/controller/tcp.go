@@ -26,7 +26,7 @@ import (
 	"github.com/paultag/sniff/parser"
 )
 
-// TCPServer describes a server that works in passthrough mode
+// TCPServer describes a server that works in passthrough mode.
 type TCPServer struct {
 	Hostname      string
 	IP            string
@@ -34,13 +34,13 @@ type TCPServer struct {
 	ProxyProtocol bool
 }
 
-// TCPProxy describes the passthrough servers and a default as catch all
+// TCPProxy describes the passthrough servers and a default as catch all.
 type TCPProxy struct {
 	ServerList []*TCPServer
 	Default    *TCPServer
 }
 
-// Get returns the TCPServer to use
+// Get returns the TCPServer to use for a given host.
 func (p *TCPProxy) Get(host string) *TCPServer {
 	if p.ServerList == nil {
 		return p.Default
@@ -63,19 +63,19 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 
 	length, err := conn.Read(data)
 	if err != nil {
-		glog.V(4).Infof("error reading the first 4k of the connection: %s", err)
+		glog.V(4).Infof("Error reading the first 4k of the connection: %s", err)
 		return
 	}
 
 	proxy := p.Default
 	hostname, err := parser.GetHostname(data[:])
 	if err == nil {
-		glog.V(4).Infof("parsed hostname from TLS Client Hello: %s", hostname)
+		glog.V(4).Infof("Parsed hostname from TLS Client Hello: %s", hostname)
 		proxy = p.Get(hostname)
 	}
 
 	if proxy == nil {
-		glog.V(4).Infof("there is no configured proxy for SSL connections")
+		glog.V(4).Infof("There is no configured proxy for SSL connections.")
 		return
 	}
 
@@ -86,7 +86,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	defer clientConn.Close()
 
 	if proxy.ProxyProtocol {
-		//Write out the proxy-protocol header
+		// write out the Proxy Protocol header
 		localAddr := conn.LocalAddr().(*net.TCPAddr)
 		remoteAddr := conn.RemoteAddr().(*net.TCPAddr)
 		protocol := "UNKNOWN"
@@ -96,16 +96,16 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 			protocol = "TCP6"
 		}
 		proxyProtocolHeader := fmt.Sprintf("PROXY %s %s %s %d %d\r\n", protocol, remoteAddr.IP.String(), localAddr.IP.String(), remoteAddr.Port, localAddr.Port)
-		glog.V(4).Infof("Writing proxy protocol header - %s", proxyProtocolHeader)
+		glog.V(4).Infof("Writing Proxy Protocol header: %s", proxyProtocolHeader)
 		_, err = fmt.Fprintf(clientConn, proxyProtocolHeader)
 	}
 	if err != nil {
-		glog.Errorf("unexpected error writing proxy-protocol header: %s", err)
+		glog.Errorf("Error writing Proxy Protocol header: %s", err)
 		clientConn.Close()
 	} else {
 		_, err = clientConn.Write(data[:length])
 		if err != nil {
-			glog.Errorf("unexpected error writing first 4k of proxy data: %s", err)
+			glog.Errorf("Error writing the first 4k of proxy data: %s", err)
 			clientConn.Close()
 		}
 	}
