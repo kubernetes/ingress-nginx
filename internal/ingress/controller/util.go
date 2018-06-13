@@ -41,27 +41,26 @@ func newUpstream(name string) *ingress.Backend {
 	}
 }
 
-// sysctlSomaxconn returns the value of net.core.somaxconn, i.e.
-// maximum number of connections that can be queued for acceptance
+// sysctlSomaxconn returns the maximum number of connections that can be queued
+// for acceptance (value of net.core.somaxconn)
 // http://nginx.org/en/docs/http/ngx_http_core_module.html#listen
 func sysctlSomaxconn() int {
 	maxConns, err := sysctl.New().GetSysctl("net/core/somaxconn")
 	if err != nil || maxConns < 512 {
-		glog.V(3).Infof("system net.core.somaxconn=%v (using system default)", maxConns)
+		glog.V(3).Infof("net.core.somaxconn=%v (using system default)", maxConns)
 		return 511
 	}
 
 	return maxConns
 }
 
-// sysctlFSFileMax returns the value of fs.file-max, i.e.
-// maximum number of open file descriptors
+// sysctlFSFileMax returns the maximum number of open file descriptors (value
+// of fs.file-max) or 0 in case of error.
 func sysctlFSFileMax() int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		glog.Errorf("unexpected error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
-		// returning 0 means don't render the value
+		glog.Errorf("Error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
 		return 0
 	}
 	glog.V(2).Infof("rlimit.max=%v", rLimit.Max)
