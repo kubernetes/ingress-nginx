@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"time"
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
@@ -79,8 +78,8 @@ The key in the map indicates the external port to be used. The value is a
 reference to a Service in the form "namespace/name:port", where "port" can
 either be a port name or number.`)
 
-		resyncPeriod = flags.Duration("sync-period", 600*time.Second,
-			`Period at which the controller forces the repopulation of its local object stores.`)
+		resyncPeriod = flags.Duration("sync-period", 0,
+			`Period at which the controller forces the repopulation of its local object stores. Disabled by default.`)
 
 		watchNamespace = flags.String("watch-namespace", apiv1.NamespaceAll,
 			`Namespace the controller watches for updates to Kubernetes objects.
