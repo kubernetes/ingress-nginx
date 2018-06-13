@@ -40,7 +40,12 @@ jobs:
     script:
     - sudo luarocks install luacheck
     - make luacheck
-    - go get golang.org/x/lint/golint
+    - |
+      go get -d golang.org/x/lint/golint
+      cd $GOPATH/src/golang.org/x/tools
+      git checkout release-branch.go1.10
+      go install golang.org/x/lint/golint
+      cd -
     - make verify-all
   - stage: Lua Unit Test
     before_script:
