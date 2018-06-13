@@ -104,11 +104,6 @@ func main() {
 		}
 	}
 
-	minResyncPeriod := 10 * time.Second
-	if conf.ResyncPeriod < minResyncPeriod {
-		glog.Fatalf("Resync period should be at least %v (current: %v)", minResyncPeriod, conf.ResyncPeriod)
-	}
-
 	// create the default SSL certificate (dummy)
 	defCert, defKey := ssl.GetFakeSSLCert()
 	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{}, fs)
