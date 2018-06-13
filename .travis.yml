@@ -40,10 +40,7 @@ jobs:
     script:
     - sudo luarocks install luacheck
     - make luacheck
-    - mkdir --parents $GOPATH/src/golang.org/x
-      && git clone --depth=1 https://go.googlesource.com/lint $GOPATH/src/golang.org/x/lint
-      && go get golang.org/x/lint/golint
-    - go get github.com/vbatts/git-validation
+    - go get golang.org/x/lint/golint
     - make verify-all
   - stage: Lua Unit Test
     before_script:
