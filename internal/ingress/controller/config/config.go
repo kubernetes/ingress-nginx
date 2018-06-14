@@ -161,31 +161,6 @@ type Configuration struct {
 	// By default this is enabled
 	IgnoreInvalidHeaders bool `json:"ignore-invalid-headers"`
 
-	// EnableVtsStatus allows the replacement of the default status page with a third party module named
-	// nginx-module-vts - https://github.com/vozlt/nginx-module-vts
-	// By default this is disabled
-	EnableVtsStatus bool `json:"enable-vts-status,omitempty"`
-
-	// Vts config on http level
-	// Description: Sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processe
-	// https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone
-	// Default value is 10m
-	VtsStatusZoneSize string `json:"vts-status-zone-size,omitempty"`
-
-	// Vts config on http level
-	// Description: Enables the keys by user defined variable. The key is a key string to calculate traffic.
-	// The name is a group string to calculate traffic. The key and name can contain variables such as $host,
-	// $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones
-	// if not specified second argument name. The example with geoip module is as follows:
-	// https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key
-	// Default value is $geoip_country_code country::*
-	VtsDefaultFilterKey string `json:"vts-default-filter-key,omitempty"`
-
-	// Description: Sets sum key used by vts json output, and the sum label in prometheus output.
-	// These indicate metrics values for all server zones combined, rather than for a specific one.
-	// Default value is *
-	VtsSumKey string `json:"vts-sum-key,omitempty"`
-
 	// RetryNonIdempotent since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH)
 	// in case of an error. The previous behavior can be restored using the value true
 	RetryNonIdempotent bool `json:"retry-non-idempotent"`
@@ -603,9 +578,6 @@ func NewDefault() Configuration {
 		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:      "10s",
 		LoadBalanceAlgorithm:       defaultLoadBalancerAlgorithm,
-		VtsStatusZoneSize:          "10m",
-		VtsDefaultFilterKey:        "$geoip_country_code country::*",
-		VtsSumKey:                  "*",
 		VariablesHashBucketSize:    128,
 		VariablesHashMaxSize:       2048,
 		UseHTTP2:                   true,

@@ -42,6 +42,3 @@ $ kubectl exec nginx-ingress-controller-v1ppm cat /etc/nginx/nginx.conf
     }
 ....
 ```
-
-
-![nginx-module-vts](custom-upstream.png "screenshot with custom configuration")

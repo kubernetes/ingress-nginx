@@ -44,10 +44,6 @@ The following table shows a configuration option's name, type, and the default v
 |[disable-ipv6-dns](#disable-ipv6-dns)|bool|false|
 |[enable-underscores-in-headers](#enable-underscores-in-headers)|bool|false|
 |[ignore-invalid-headers](#ignore-invalid-headers)|bool|true|
-|[enable-vts-status](#enable-vts-status)|bool|false|
-|[vts-status-zone-size](#vts-status-zone-size)|string|"10m"|
-|[vts-sum-key](#vts-sum-key)|string|"*"|
-|[vts-default-filter-key](#vts-default-filter-key)|string|"$geoip_country_code country::*"|
 |[retry-non-idempotent](#retry-non-idempotent)|bool|"false"|
 |[error-log-level](#error-log-level)|string|"notice"|
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
@@ -239,32 +235,6 @@ Enables underscores in header names. _**default:**_ is disabled
 
 Set if header fields with invalid names should be ignored.
 _**default:**_ is enabled
-
-## enable-vts-status
-
-Allows the replacement of the default status page with a third party module named [nginx-module-vts](https://github.com/vozlt/nginx-module-vts).
-_**default:**_ is disabled
-
-## vts-status-zone-size
-
-Vts config on http level sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processes. _**default:**_ 10m
-
-_References:_
-[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone)
-
-## vts-default-filter-key
-
-Vts config on http level enables the keys by user defined variable. The key is a key string to calculate traffic. The name is a group string to calculate traffic. The key and name can contain variables such as $host, $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones if not specified second argument name. _**default:**_ $geoip_country_code country::*
-
-_References:_
-[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key)
-
-## vts-sum-key
-
-For metrics keyed (or when using Prometheus, labeled) by server zone, this value is used to indicate metrics for all server zones combined. _**default:**_ *
-
-_References:_
-[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key)
 
 ## retry-non-idempotent
 
