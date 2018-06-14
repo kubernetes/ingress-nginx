@@ -376,6 +376,7 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTE
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
 WITH_FLAGS="--with-debug \
+  --with-compat \
   --with-pcre-jit \
   --with-http_ssl_module \
   --with-http_stub_status_module \
