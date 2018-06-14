@@ -69,6 +69,13 @@ http {
           balancer = res
         end
         {{ end }}
+
+        ok, res = pcall(require, "monitor")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          monitor = res
+        end
     }
 
     {{ if $all.DynamicConfigurationEnabled }}
@@ -903,6 +910,11 @@ stream {
                 {{ if $all.DynamicConfigurationEnabled}}
                 balancer.log()
                 {{ end }}
+
+                ok, res = pcall(monitor.call)
+                    if not ok then
+                    ngx.log(ngx.ERR, "request_id failed: " .. tostring(res))
+                end
             }
             {{ end }}
 
