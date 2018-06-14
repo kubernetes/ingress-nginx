@@ -65,24 +65,14 @@ type statusModule string
 
 const (
 	ngxHealthPath = "/healthz"
-
-	defaultStatusModule statusModule = "default"
-	vtsStatusModule     statusModule = "vts"
 )
 
 var (
-	tmplPath    = "/etc/nginx/template/nginx.tmpl"
-	cfgPath     = "/etc/nginx/nginx.conf"
-	nginxBinary = "/usr/sbin/nginx"
+	tmplPath = "/etc/nginx/template/nginx.tmpl"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
 func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXController {
-	ngx := os.Getenv("NGINX_BINARY")
-	if ngx == "" {
-		ngx = nginxBinary
-	}
-
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
@@ -95,8 +85,6 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 	}
 
 	n := &NGINXController{
-		binary: ngx,
-
 		isIPV6Enabled: ing_net.IsIPv6Enabled(),
 
 		resolver:        h,
@@ -130,8 +118,6 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		config.Client,
 		fs,
 		n.updateCh)
-
-	n.stats = newStatsCollector(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -252,12 +238,9 @@ type NGINXController struct {
 
 	t *ngx_template.Template
 
-	binary   string
 	resolver []net.IP
 
-	stats        *statsCollector
-	statusModule statusModule
-
+	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
 
 	isShuttingDown bool
@@ -279,7 +262,7 @@ func (n *NGINXController) Start() {
 		go n.syncStatus.Run()
 	}
 
-	cmd := exec.Command(n.binary, "-c", cfgPath)
+	cmd := nginxExecCommand()
 
 	// put NGINX in another process group to prevent it
 	// to receive signals meant for the controller
@@ -316,7 +299,7 @@ func (n *NGINXController) Start() {
 				// release command resources
 				cmd.Process.Release()
 				// start a new nginx master process if the controller is not being stopped
-				cmd = exec.Command(n.binary, "-c", cfgPath)
+				cmd = nginxExecCommand()
 				cmd.SysProcAttr = &syscall.SysProcAttr{
 					Setpgid: true,
 					Pgid:    0,
@@ -361,9 +344,9 @@ func (n *NGINXController) Stop() error {
 		n.syncStatus.Shutdown()
 	}
 
-	// send stop signal to NGINX
-	glog.Info("Stopping NGINX process")
-	cmd := exec.Command(n.binary, "-c", cfgPath, "-s", "quit")
+	// Send stop signal to Nginx
+	glog.Info("stopping NGINX process...")
+	cmd := nginxExecCommand("-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -422,7 +405,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if err != nil {
 		return err
 	}
-	out, err := exec.Command(n.binary, "-t", "-c", tmpfile.Name()).CombinedOutput()
+	out, err := nginxTestCommand(tmpfile.Name()).CombinedOutput()
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
@@ -483,17 +466,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		n.Proxy.ServerList = servers
 	}
 
-	// we need to check if the status module configuration changed
-	if cfg.EnableVtsStatus {
-		n.setupMonitor(vtsStatusModule)
-	} else {
-		n.setupMonitor(defaultStatusModule)
-	}
-
-	// NGINX cannot resize the hash tables used to store server names. For
-	// this reason we check if the current size is correct for the host
-	// names defined in the Ingress rules and adjust the value if
-	// necessary.
+	// NGINX cannot resize the hash tables used to store server names.
+	// For this reason we check if the defined size defined is correct
+	// for the FQDN defined in the ingress rules adjusting the value
+	// if is required.
 	// https://trac.nginx.org/nginx/ticket/352
 	// https://trac.nginx.org/nginx/ticket/631
 	var longestName int
@@ -659,7 +635,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	o, err := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
+	o, err := nginxExecCommand("-s", "reload").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
 	}
