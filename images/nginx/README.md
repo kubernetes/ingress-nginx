@@ -6,7 +6,6 @@ nginx [engine x] is an HTTP and reverse proxy server, a mail proxy server, and a
 This custom nginx image contains:
 
 - [stream](http://nginx.org/en/docs/stream/ngx_stream_core_module.html) tcp support for upstreams
-- nginx stats [nginx-module-vts](https://github.com/vozlt/nginx-module-vts)
 - [Dynamic TLS record sizing](https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/)
 - [ngx_devel_kit](https://github.com/simpl/ngx_devel_kit)
 - [set-misc-nginx-module](https://github.com/openresty/set-misc-nginx-module)

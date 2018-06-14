@@ -21,7 +21,6 @@
 		"bodySize": "1m",
 		"enableDynamicTlsRecords": true,
 		"enableSpdy": false,
-		"enableVtsStatus": true,
 		"errorLogLevel": "notice",
 		"gzipTypes": "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component",
 		"hsts": true,
@@ -46,7 +45,6 @@
 		"useGzip": true,
 		"useHttp2": true,
 		"proxyStreamTimeout": "600s",
-		"vtsStatusZoneSize": "10m",
 		"workerProcesses": 1,
 		"limitConnZoneVariable": "$the_real_ip"
 	},
@@ -117,9 +115,7 @@
 				"keyFilename": "",
 				"caFilename": "",
 				"pemSha": ""
-			},
-			"vtsDefaultFilterKey": "$uri $server_name"
-
+			}
 		}, {
 			"path": "/",
 			"isDefBackend": true,

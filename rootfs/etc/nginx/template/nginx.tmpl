@@ -106,11 +106,6 @@ http {
     geoip_proxy_recursive on;
     {{ end }}
 
-    {{ if $cfg.EnableVtsStatus }}
-    vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.VtsStatusZoneSize }};
-    vhost_traffic_status_filter_by_set_key {{ $cfg.VtsDefaultFilterKey }};
-    {{ end }}
-
     aio                 threads;
     aio_write           on;
 
@@ -543,14 +538,8 @@ http {
             opentracing off;
             {{ end }}
 
-            {{ if $cfg.EnableVtsStatus }}
-            vhost_traffic_status_display;
-            vhost_traffic_status_display_format html;
-            vhost_traffic_status_display_sum_key {{ $cfg.VtsSumKey }};
-            {{ else }}
             access_log off;
             stub_status on;
-            {{ end }}
         }
 
         {{ if $all.DynamicConfigurationEnabled }}
@@ -934,8 +923,6 @@ stream {
             {{ end }}
 
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
-
-            {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
 
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}";
 
