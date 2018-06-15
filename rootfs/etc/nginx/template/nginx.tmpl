@@ -996,7 +996,6 @@ stream {
             auth_digest "{{ $location.BasicDigestAuth.Realm }}";
             auth_digest_user_file {{ $location.BasicDigestAuth.File }};
             {{ end }}
-            proxy_set_header Authorization "";
             {{ end }}
             {{ end }}
 
