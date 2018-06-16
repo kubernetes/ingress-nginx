@@ -130,13 +130,12 @@ func main() {
 	err = collector.InitNGINXStatusCollector(conf.Namespace, class.IngressClass, conf.ListenPorts.Status)
 
 	if err != nil {
-		glog.Fatalf("Error generating metric collector:  %v", err)
+		glog.Fatalf("Error creating metric collector:  %v", err)
 	}
 
-	err = collector.InitUDPCollector(conf.Namespace, class.IngressClass, 8000)
-
+	err = collector.NewInstance(conf.Namespace, class.IngressClass)
 	if err != nil {
-		glog.Fatalf("Error generating UDP collector:  %v", err)
+		glog.Fatalf("Error creating unix socket server:  %v", err)
 	}
 
 	ngx.Start()
