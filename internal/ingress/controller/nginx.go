@@ -163,44 +163,42 @@ Error loading new template: %v
 
 	n.t = ngxTpl
 
-	// TODO: refactor
 	if _, ok := fs.(filesystem.DefaultFs); !ok {
-		watch.NewDummyFileWatcher(tmplPath, onTemplateChange)
-	} else {
+		// do not setup watchers on tests
+		return n
+	}
 
-		_, err = watch.NewFileWatcher(tmplPath, onTemplateChange)
+	_, err = watch.NewFileWatcher(tmplPath, onTemplateChange)
+	if err != nil {
+		glog.Fatalf("Error creating file watcher for %v: %v", tmplPath, err)
+	}
+
+	filesToWatch := []string{}
+	err = filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			glog.Fatalf("Error creating file watcher for %v: %v", tmplPath, err)
+			return err
 		}
 
-		filesToWatch := []string{}
-		err := filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			filesToWatch = append(filesToWatch, path)
+		if info.IsDir() {
 			return nil
+		}
+
+		filesToWatch = append(filesToWatch, path)
+		return nil
+	})
+
+	if err != nil {
+		glog.Fatalf("Error creating file watchers: %v", err)
+	}
+
+	for _, f := range filesToWatch {
+		_, err = watch.NewFileWatcher(f, func() {
+			glog.Info("File %v changed. Reloading NGINX", f)
+			n.SetForceReload(true)
 		})
-
 		if err != nil {
-			glog.Fatalf("Error creating file watchers: %v", err)
+			glog.Fatalf("Error creating file watcher for %v: %v", f, err)
 		}
-
-		for _, f := range filesToWatch {
-			_, err = watch.NewFileWatcher(f, func() {
-				glog.Info("File %v changed. Reloading NGINX", f)
-				n.SetForceReload(true)
-			})
-			if err != nil {
-				glog.Fatalf("Error creating file watcher for %v: %v", f, err)
-			}
-		}
-
 	}
 
 	return n
