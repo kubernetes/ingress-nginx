@@ -34,7 +34,7 @@ export MODSECURITY_VERSION=1.0.0
 export LUA_NGX_VERSION=0.10.13
 export LUA_UPSTREAM_VERSION=0.07
 export COOKIE_FLAG_VERSION=1.1.0
-export NGINX_INFLUXDB_VERSION=f8732268d44aea706ecf8d9c6036e9b6dacc99b2
+export NGINX_INFLUXDB_VERSION=f20cfb2458c338f162132f5a21eb021e2cbe6383
 export GEOIP2_VERSION=2.0
 
 export BUILD_PATH=/tmp/build
@@ -213,7 +213,7 @@ get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
 get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \
         "https://github.com/openresty/luajit2/archive/v2.1-20180420.tar.gz"
 
-get_src e41589bd88953276c16c4817ab9b4faba1aca21d9bb70a8c1714505176c16ae4 \
+get_src 1897d7677d99c1cedeb95b2eb00652a4a7e8e604304c3053a93bd3ba7dd82884 \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
 
 get_src ebb4652c4f9a2e1ee31fddefc4c93ff78e651a4b2727d3453d026bccbd708d99 \
