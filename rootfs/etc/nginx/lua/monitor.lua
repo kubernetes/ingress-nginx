@@ -1,4 +1,4 @@
-local socket = ngx.socket.udp
+local socket = ngx.socket.tcp
 local cjson = require('cjson')
 local defer = require('defer')
 local assert = assert
@@ -7,7 +7,7 @@ local _M = {}
 
 local function send_data(jsonData)
   local s = assert(socket())
-  assert(s:setpeername("127.0.0.1", 8000))
+  assert(s:connect('unix:/tmp/prometheus-nginx.socket'))
   assert(s:send(jsonData))
   assert(s:close())
 end
