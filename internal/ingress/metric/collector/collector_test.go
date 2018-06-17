@@ -25,8 +25,6 @@ import (
 )
 
 func TestNewUDPLogListener(t *testing.T) {
-	port := freeUDPPort()
-
 	var count uint64
 
 	fn := func(message []byte) {
@@ -34,19 +32,30 @@ func TestNewUDPLogListener(t *testing.T) {
 		atomic.AddUint64(&count, 1)
 	}
 
-	t.Logf("UDP Port: %v", port)
+	tmpFile := fmt.Sprintf("/tmp/test-socket-%v", time.Now().Nanosecond())
 
-	l, err := newUDPListener(port)
+	l, err := net.Listen("unix", tmpFile)
 	if err != nil {
-		t.Errorf("unexpected error creating UDP listener: %v", err)
+		t.Fatalf("unexpected error creating unix socket: %v", err)
 	}
 	if l == nil {
-		t.Errorf("expected a listener but none returned")
+		t.Fatalf("expected a listener but none returned")
 	}
 
-	go handleMessages(l, fn)
+	defer l.Close()
 
-	conn, _ := net.Dial("udp", fmt.Sprintf(":%v", port))
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				continue
+			}
+
+			go handleMessages(conn, fn)
+		}
+	}()
+
+	conn, _ := net.Dial("unix", tmpFile)
 	conn.Write([]byte("message"))
 	conn.Close()
 
@@ -54,17 +63,4 @@ func TestNewUDPLogListener(t *testing.T) {
 	if count != 1 {
 		t.Errorf("expected only one message from the UDP listern but %v returned", count)
 	}
-}
-
-func freeUDPPort() int {
-	l, err := net.ListenUDP("udp", &net.UDPAddr{})
-	if err != nil {
-		return 0
-	}
-
-	if err := l.Close(); err != nil {
-		return 0
-	}
-
-	return l.LocalAddr().(*net.UDPAddr).Port
 }
