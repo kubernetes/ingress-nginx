@@ -40,6 +40,21 @@ const (
 	// ContentType name of the header that defines the format of the reply
 	ContentType = "Content-Type"
 
+	// OriginalURI name of the header with the original URL from NGINX
+	OriginalURI = "X-Original-URI"
+
+	// Namespace name of the header that contains information about the Ingress namespace
+	Namespace = "X-Namespace"
+
+	// IngressName name of the header that contains the matched Ingress
+	IngressName = "X-Ingress-Name"
+
+	// ServiceName name of the header that contains the matched Service in the Ingress
+	ServiceName = "X-Service-Name"
+
+	// ServicePort name of the header that contains the matched Service port in the Ingress
+	ServicePort = "X-Service-Port"
+
 	// ErrFilesPathVar is the name of the environment variable indicating
 	// the location on disk of files served by the handler.
 	ErrFilesPathVar = "ERROR_FILES_PATH"
@@ -66,6 +81,17 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		ext := "html"
+
+		if os.Getenv("DEBUG") != "" {
+			w.Header().Set(FormatHeader, r.Header.Get(FormatHeader))
+			w.Header().Set(CodeHeader, r.Header.Get(CodeHeader))
+			w.Header().Set(ContentType, r.Header.Get(ContentType))
+			w.Header().Set(OriginalURI, r.Header.Get(OriginalURI))
+			w.Header().Set(Namespace, r.Header.Get(Namespace))
+			w.Header().Set(IngressName, r.Header.Get(IngressName))
+			w.Header().Set(ServiceName, r.Header.Get(ServiceName))
+			w.Header().Set(ServicePort, r.Header.Get(ServicePort))
+		}
 
 		format := r.Header.Get(FormatHeader)
 		if format == "" {
