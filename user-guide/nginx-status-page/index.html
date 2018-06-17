@@ -866,18 +866,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/customization/custom-vts-metrics-prometheus/README/" title="Custom VTS metrics with Prometheus" class="md-nav__link">
-      Custom VTS metrics with Prometheus
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../examples/customization/external-auth-headers/README/" title="External authentication, authentication service response headers propagation" class="md-nav__link">
       External authentication, authentication service response headers propagation
     </a>
@@ -1071,10 +1059,6 @@
                 <h1 id="nginx-status-page">NGINX status page<a class="headerlink" href="#nginx-status-page" title="Permanent link">&para;</a></h1>
 <p>The <a href="http://nginx.org/en/docs/http/ngx_http_stub_status_module.html">ngx_http_stub_status_module</a> module provides access to basic status information.
 This is the default module active in the url <code class="codehilite">/nginx_status</code> in the status port (default is 18080).</p>
-<p>This controller provides an alternative to this module using the <a href="https://github.com/vozlt/nginx-module-vts">nginx-module-vts</a> module.
-To use this module just set in the configuration configmap <code class="codehilite">enable-vts-status: &quot;true&quot;</code>.</p>
-<p><img alt="nginx-module-vts screenshot" src="https://cloud.githubusercontent.com/assets/3648408/10876811/77a67b70-8183-11e5-9924-6a6d0c5dc73a.png" title="screenshot with filter" /></p>
-<p>To extract the information in JSON format the module provides a custom URL: <code class="codehilite">/nginx_status/format/json</code></p>
                 
                   
                 

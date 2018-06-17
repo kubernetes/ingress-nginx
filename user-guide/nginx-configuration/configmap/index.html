@@ -604,34 +604,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-vts-status" title="enable-vts-status" class="md-nav__link">
-    enable-vts-status
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vts-status-zone-size" title="vts-status-zone-size" class="md-nav__link">
-    vts-status-zone-size
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vts-default-filter-key" title="vts-default-filter-key" class="md-nav__link">
-    vts-default-filter-key
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vts-sum-key" title="vts-sum-key" class="md-nav__link">
-    vts-sum-key
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#retry-non-idempotent" title="retry-non-idempotent" class="md-nav__link">
     retry-non-idempotent
   </a>
@@ -1681,18 +1653,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../examples/customization/custom-vts-metrics-prometheus/README/" title="Custom VTS metrics with Prometheus" class="md-nav__link">
-      Custom VTS metrics with Prometheus
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../../examples/customization/external-auth-headers/README/" title="External authentication, authentication service response headers propagation" class="md-nav__link">
       External authentication, authentication service response headers propagation
     </a>
@@ -1995,34 +1955,6 @@
         <li class="md-nav__item">
   <a href="#ignore-invalid-headers" title="ignore-invalid-headers" class="md-nav__link">
     ignore-invalid-headers
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#enable-vts-status" title="enable-vts-status" class="md-nav__link">
-    enable-vts-status
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vts-status-zone-size" title="vts-status-zone-size" class="md-nav__link">
-    vts-status-zone-size
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vts-default-filter-key" title="vts-default-filter-key" class="md-nav__link">
-    vts-default-filter-key
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vts-sum-key" title="vts-sum-key" class="md-nav__link">
-    vts-sum-key
   </a>
   
 </li>
@@ -2799,26 +2731,6 @@ Same for numbers, like "100".</p>
 <td align="left">true</td>
 </tr>
 <tr>
-<td align="left"><a href="#enable-vts-status">enable-vts-status</a></td>
-<td align="left">bool</td>
-<td align="left">false</td>
-</tr>
-<tr>
-<td align="left"><a href="#vts-status-zone-size">vts-status-zone-size</a></td>
-<td align="left">string</td>
-<td align="left">"10m"</td>
-</tr>
-<tr>
-<td align="left"><a href="#vts-sum-key">vts-sum-key</a></td>
-<td align="left">string</td>
-<td align="left">"*"</td>
-</tr>
-<tr>
-<td align="left"><a href="#vts-default-filter-key">vts-default-filter-key</a></td>
-<td align="left">string</td>
-<td align="left">"$geoip_country_code country::*"</td>
-</tr>
-<tr>
 <td align="left"><a href="#retry-non-idempotent">retry-non-idempotent</a></td>
 <td align="left">bool</td>
 <td align="left">"false"</td>
@@ -3339,21 +3251,6 @@ Same for numbers, like "100".</p>
 <h2 id="ignore-invalid-headers">ignore-invalid-headers<a class="headerlink" href="#ignore-invalid-headers" title="Permanent link">&para;</a></h2>
 <p>Set if header fields with invalid names should be ignored.
 <em><strong>default:</strong></em> is enabled</p>
-<h2 id="enable-vts-status">enable-vts-status<a class="headerlink" href="#enable-vts-status" title="Permanent link">&para;</a></h2>
-<p>Allows the replacement of the default status page with a third party module named <a href="https://github.com/vozlt/nginx-module-vts">nginx-module-vts</a>.
-<em><strong>default:</strong></em> is disabled</p>
-<h2 id="vts-status-zone-size">vts-status-zone-size<a class="headerlink" href="#vts-status-zone-size" title="Permanent link">&para;</a></h2>
-<p>Vts config on http level sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processes. <em><strong>default:</strong></em> 10m</p>
-<p><em>References:</em>
-<a href="https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone">https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone</a></p>
-<h2 id="vts-default-filter-key">vts-default-filter-key<a class="headerlink" href="#vts-default-filter-key" title="Permanent link">&para;</a></h2>
-<p>Vts config on http level enables the keys by user defined variable. The key is a key string to calculate traffic. The name is a group string to calculate traffic. The key and name can contain variables such as $host, $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones if not specified second argument name. <em><strong>default:</strong></em> $geoip_country_code country::*</p>
-<p><em>References:</em>
-<a href="https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key">https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key</a></p>
-<h2 id="vts-sum-key">vts-sum-key<a class="headerlink" href="#vts-sum-key" title="Permanent link">&para;</a></h2>
-<p>For metrics keyed (or when using Prometheus, labeled) by server zone, this value is used to indicate metrics for all server zones combined. <em><strong>default:</strong></em> *</p>
-<p><em>References:</em>
-<a href="https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key">https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key</a></p>
 <h2 id="retry-non-idempotent">retry-non-idempotent<a class="headerlink" href="#retry-non-idempotent" title="Permanent link">&para;</a></h2>
 <p>Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error in the upstream server. The previous behavior can be restored using the value "true".</p>
 <h2 id="error-log-level">error-log-level<a class="headerlink" href="#error-log-level" title="Permanent link">&para;</a></h2>
