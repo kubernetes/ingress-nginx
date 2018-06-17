@@ -30,6 +30,11 @@ spec:
     spec:
       containers:
       - name: nginx-error-server
-        image: quay.io/kubernetes-ingress-controller/custom-error-pages-amd64:0.2
+        image: quay.io/kubernetes-ingress-controller/custom-error-pages-amd64:0.3
         ports:
         - containerPort: 8080
+        # Setting the environment variable DEBUG we can see the headers sent 
+        # by the ingress controller to the backend in the client response.
+        # env:
+        # - name: DEBUG
+        #   value: "true"
