@@ -494,6 +494,13 @@ func New(checkOCSP bool,
 	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
 	store.informers.Service.AddEventHandler(cache.ResourceEventHandlerFuncs{})
 
+	// do not wait for informers to read the configmap configuration
+	cm, err := client.CoreV1().ConfigMaps(namespace).Get(configmap, metav1.GetOptions{})
+	if err != nil {
+		glog.Warningf("Unexpected error reading configuration configmap: %v", err)
+	}
+	store.setConfig(cm)
+
 	return store
 }
 
