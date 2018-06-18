@@ -67,11 +67,11 @@ http {
           balancer = res
         end
 
-        ok, res = pcall(require, "monitor")
+        ok, res = pcall(require, "statsd_monitor")
         if not ok then
-            error("require(monitor) failed: " .. tostring(res))
+            error("require(statsd_monitor) failed: " .. tostring(res))
         else
-            monitor = res
+            statsd_monitor = res
         end
         {{ end }}
     }
@@ -894,7 +894,7 @@ stream {
                 {{ end }}
                 {{ if $all.DynamicConfigurationEnabled}}
                 balancer.log()
-                monitor.call()
+                statsd_monitor.call()
                 {{ end }}
             }
             {{ end }}
