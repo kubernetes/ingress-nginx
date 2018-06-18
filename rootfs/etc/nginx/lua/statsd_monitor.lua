@@ -1,77 +1,83 @@
-local statsd = require('statsd')
-local defer_to_timer = require("defer_to_timer")
-local split = require("util.split")
+local socket = ngx.socket.tcp
+local cjson = require('cjson')
+local assert = assert
+
+local metrics_batch = {}
+-- if an Nginx worker processes more than (MAX_BATCH_SIZE/FLUSH_INTERVAL) RPS then it will start dropping metrics
+local MAX_BATCH_SIZE = 10000
+local FLUSH_INTERVAL = 1 -- second
 
 local _M = {}
 
-local function send_response_data(upstream_state, client_state)
-  local status_class
-  if upstream_state.status then
-    for i, status in ipairs(upstream_state.status) do
-      -- TODO: link this with the zones when we use openresty-upstream
-      if status == '-' then
-        status = 'ngx_error'
-        status_class = 'ngx_error'
-      else
-        status_class = string.sub(status, 0, 1) .. "xx"
-      end
+local function send(payload)
+  local s = assert(socket())
+  assert(s:connect("unix:/tmp/prometheus-nginx.socket"))
+  assert(s:send(payload))
+  assert(s:close())
+end
 
-      statsd.increment('ingress.nginx.upstream.response', 1, {
-        status=status,
-        status_class=status_class,
-        upstream_name=client_state.upstream_name
-      })
+local function metrics()
+  return {
+    host = ngx.var.host or "-",
+    namespace = ngx.var.namespace or "-",
+    ingress = ngx.var.ingress_name or "-",
+    service = ngx.var.service_name or "-",
+    path = ngx.var.location_path or "-",
 
-      statsd.histogram('ingress.nginx.upstream.response_time',
-        upstream_state.response_time[i], {
-          upstream_name=client_state.upstream_name
-      })
-    end
+    method = ngx.var.request_method or "-",
+    status = ngx.var.status or "-",
+    requestLength = tonumber(ngx.var.request_length) or -1,
+    requestTime = tonumber(ngx.var.request_time) or -1,
+    responseLength = tonumber(ngx.var.bytes_sent) or -1,
+
+    endpoint = ngx.var.upstream_addr or "-",
+    upstreamLatency = tonumber(ngx.var.upstream_connect_time) or -1,
+    upstreamResponseTime = tonumber(ngx.var.upstream_response_time) or -1,
+    upstreamResponseLength = tonumber(ngx.var.upstream_response_length) or -1,
+    upstreamStatus = ngx.var.upstream_status or "-",
+  }
+end
+
+local function flush(premature)
+  if premature then
+    return
   end
 
-  status_class = string.sub(client_state.status, 0, 1) .. "xx"
-  statsd.increment('ingress.nginx.client.response', 1, {
-    status=client_state.status,
-    status_class=status_class,
-    upstream_name=client_state.upstream_name
-  })
+  if #metrics_batch == 0 then
+    return
+  end
 
-  statsd.histogram('ingress.nginx.client.request_time', client_state.request_time, {
-    upstream_name=client_state.upstream_name
-  })
+  local current_metrics_batch = metrics_batch
+  metrics_batch = {}
+
+  local ok, payload = pcall(cjson.encode, current_metrics_batch)
+  if not ok then
+    ngx.log(ngx.ERR, "error while encoding metrics: " .. tostring(payload))
+    return
+  end
+
+  send(payload)
+end
+
+function _M.init_worker()
+  local _, err = ngx.timer.every(FLUSH_INTERVAL, flush)
+  if err then
+    ngx.log(ngx.ERR, string.format("error when setting up timer.every: %s", tostring(err)))
+  end
 end
 
 function _M.call()
-  local status, status_err = split.split_upstream_var(ngx.var.upstream_status)
-  if status_err then
-    return nil, status_err
+  if #metrics_batch >= MAX_BATCH_SIZE then
+    ngx.log(ngx.WARN, "omitting metrics for the request, current batch is full")
+    return
   end
 
-  local addrs, addrs_err = split.split_upstream_addr(ngx.var.upstream_addr)
-  if addrs_err then
-    return nil, addrs_err
-  end
+  table.insert(metrics_batch, metrics())
+end
 
-  local response_time, rt_err = split.split_upstream_var(ngx.var.upstream_response_time)
-  if rt_err then
-    return nil, rt_err
-  end
-
-  local err = defer_to_timer.enqueue(send_response_data, {
-      status=status,
-      addr=addrs,
-      response_time=response_time
-    }, {
-      status=ngx.var.status,
-      request_time=ngx.var.request_time,
-      upstream_name=ngx.var.proxy_upstream_name
-    })
-
-  if err then
-    local msg = "failed to send response data: " .. tostring(err)
-    ngx.log(ngx.ERR,  msg)
-    return nil, msg
-  end
+if _TEST then
+  _M.flush = flush
+  _M.get_metrics_batch = function() return metrics_batch end
 end
 
 return _M
