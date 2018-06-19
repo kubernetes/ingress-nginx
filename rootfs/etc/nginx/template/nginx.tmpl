@@ -900,10 +900,7 @@ stream {
                 balancer.log()
                 {{ end }}
 
-                ok, res = pcall(monitor.call)
-                    if not ok then
-                    ngx.log(ngx.ERR, "request_id failed: " .. tostring(res))
-                end
+                monitor.call()
             }
             {{ end }}
 
