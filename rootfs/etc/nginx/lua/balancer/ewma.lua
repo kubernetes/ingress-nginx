@@ -131,7 +131,7 @@ function _M.balance(self)
   return endpoint.address, endpoint.port
 end
 
-function _M.after_balance()
+function _M.after_balance(_)
   local response_time = tonumber(split.get_first_value(ngx.var.upstream_response_time)) or 0
   local connect_time = tonumber(split.get_first_value(ngx.var.upstream_connect_time)) or 0
   local rtt = connect_time + response_time
