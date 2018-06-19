@@ -25,6 +25,12 @@ import (
 	"k8s.io/kubernetes/pkg/util/filesystem"
 )
 
+// ReadWriteByUser defines linux permission to read and write files for the owner user
+const ReadWriteByUser = 0660
+
+// ReadByUserGroup defines linux permission to read files by the user and group owner/s
+const ReadByUserGroup = 0640
+
 // Filesystem is an interface that we can use to mock various filesystem operations
 type Filesystem interface {
 	filesystem.Filesystem
@@ -35,7 +41,7 @@ func NewLocalFS() (Filesystem, error) {
 	fs := filesystem.DefaultFs{}
 
 	for _, directory := range directories {
-		err := fs.MkdirAll(directory, 0655)
+		err := fs.MkdirAll(directory, ReadWriteByUser)
 		if err != nil {
 			return nil, err
 		}
@@ -96,13 +102,6 @@ func NewFakeFS() (Filesystem, error) {
 			return nil, err
 		}
 	}
-
-	fakeFs.MkdirAll("/run", 0655)
-	fakeFs.MkdirAll("/proc", 0655)
-	fakeFs.MkdirAll("/etc/nginx/template", 0655)
-
-	fakeFs.MkdirAll(DefaultSSLDirectory, 0655)
-	fakeFs.MkdirAll(AuthDirectory, 0655)
 
 	return fakeFs, nil
 }

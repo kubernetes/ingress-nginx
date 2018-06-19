@@ -33,15 +33,15 @@ func TestCreateApiserverClient(t *testing.T) {
 
 	cli, err := createApiserverClient("", kubeConfigFile)
 	if err != nil {
-		t.Fatalf("unexpected error creating api server client: %v", err)
+		t.Fatalf("Unexpected error creating Kubernetes REST client: %v", err)
 	}
 	if cli == nil {
-		t.Fatalf("expected a kubernetes client but none returned")
+		t.Fatal("Expected a REST client but none returned.")
 	}
 
 	_, err = createApiserverClient("", "")
 	if err == nil {
-		t.Fatalf("expected an error creating api server client without an api server URL or kubeconfig file")
+		t.Fatal("Expected an error creating REST client without an API server URL or kubeconfig file.")
 	}
 }
 
@@ -51,7 +51,7 @@ func TestHandleSigterm(t *testing.T) {
 
 	cli, err := createApiserverClient("", kubeConfigFile)
 	if err != nil {
-		t.Fatalf("unexpected error creating api server client: %v", err)
+		t.Fatalf("Unexpected error creating Kubernetes REST client: %v", err)
 	}
 
 	resetForTesting(func() { t.Fatal("bad parse") })
@@ -67,20 +67,20 @@ func TestHandleSigterm(t *testing.T) {
 
 	_, conf, err := parseFlags()
 	if err != nil {
-		t.Errorf("unexpected error creating NGINX controller: %v", err)
+		t.Errorf("Unexpected error creating NGINX controller: %v", err)
 	}
 	conf.Client = cli
 
 	fs, err := file.NewFakeFS()
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("Unexpected error: %v", err)
 	}
 
 	ngx := controller.NewNGINXController(conf, fs)
 
 	go handleSigterm(ngx, func(code int) {
 		if code != 1 {
-			t.Errorf("expected exit code 1 but %v received", code)
+			t.Errorf("Expected exit code 1 but %d received", code)
 		}
 
 		return
@@ -88,12 +88,13 @@ func TestHandleSigterm(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	t.Logf("sending SIGTERM to process PID %v", syscall.Getpid())
+	t.Logf("Sending SIGTERM to PID %d", syscall.Getpid())
 	err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 	if err != nil {
-		t.Errorf("unexpected error sending SIGTERM signal")
+		t.Error("Unexpected error sending SIGTERM signal.")
 	}
 }
 
 func TestRegisterHandlers(t *testing.T) {
+	// TODO
 }

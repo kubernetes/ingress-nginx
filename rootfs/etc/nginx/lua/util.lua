@@ -77,15 +77,6 @@ function _M.is_blank(str)
   return str == nil or string_len(str) == 0
 end
 
--- statsd helpers
-function _M.tablelength(T)
-  local count = 0
-  for _ in pairs(T) do
-      count = count + 1
-  end
-  return count
-end
-
 -- this implementation is taken from:
 -- https://github.com/luafun/luafun/blob/master/fun.lua#L33
 -- SHA: 04c99f9c393e54a604adde4b25b794f48104e0d0
@@ -103,5 +94,14 @@ local function deepcopy(orig)
   return copy
 end
 _M.deepcopy = deepcopy
+
+local function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do
+      count = count + 1
+  end
+  return count
+end
+_M.tablelength = tablelength
 
 return _M

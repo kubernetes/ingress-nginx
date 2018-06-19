@@ -19,8 +19,6 @@ package auth
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -86,17 +84,6 @@ type auth struct {
 
 // NewParser creates a new authentication annotation parser
 func NewParser(authDirectory string, r resolver.Resolver) parser.IngressAnnotation {
-	os.MkdirAll(authDirectory, 0755)
-
-	currPath := authDirectory
-	for currPath != "/" {
-		currPath = path.Dir(currPath)
-		err := os.Chmod(currPath, 0755)
-		if err != nil {
-			break
-		}
-	}
-
 	return auth{r, authDirectory}
 }
 
@@ -157,8 +144,7 @@ func dumpSecret(filename string, secret *api.Secret) error {
 		}
 	}
 
-	// TODO: check permissions required
-	err := ioutil.WriteFile(filename, val, 0777)
+	err := ioutil.WriteFile(filename, val, file.ReadWriteByUser)
 	if err != nil {
 		return ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "unexpected error creating password file"),
