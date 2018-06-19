@@ -78,7 +78,7 @@ ifeq ($(ARCH),s390x)
     QEMUARCH=s390x
 endif
 
-TEMP_DIR := $(shell mktemp -d)
+TEMP_DIR ?= $(shell mktemp -d)
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
 
