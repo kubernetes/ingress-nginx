@@ -1,6 +1,6 @@
 local socket = ngx.socket.tcp
 local cjson = require('cjson')
-local defer = require('defer')
+local defer = require('util.defer')
 local assert = assert
 
 local _M = {}

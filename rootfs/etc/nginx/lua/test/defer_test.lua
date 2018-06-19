@@ -1,6 +1,6 @@
 package.path = "./rootfs/etc/nginx/lua/?.lua;./rootfs/etc/nginx/lua/test/mocks/?.lua;" .. package.path
 _G._TEST = true
-local defer = require('defer')
+local defer = require('util.defer')
 
 local _ngx = {
     shared = {},
