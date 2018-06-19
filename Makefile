@@ -80,7 +80,7 @@ ifeq ($(ARCH),s390x)
 	QEMUARCH=s390x
 endif
 
-TEMP_DIR := $(shell mktemp -d)
+TEMP_DIR ?= $(shell mktemp -d)
 
 DEF_VARS:=ARCH=$(ARCH)           \
 	TAG=$(TAG)               \
