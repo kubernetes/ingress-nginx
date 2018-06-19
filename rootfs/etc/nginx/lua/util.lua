@@ -104,4 +104,13 @@ local function deepcopy(orig)
 end
 _M.deepcopy = deepcopy
 
+local function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do
+      count = count + 1
+  end
+  return count
+end
+_M.tablelength = tablelength
+
 return _M

@@ -7,6 +7,9 @@
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
 
+# setup custom paths that do not require root access
+pid /tmp/nginx.pid;
+
 {{ if $cfg.EnableModsecurity }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
@@ -20,7 +23,6 @@ worker_processes {{ $cfg.WorkerProcesses }};
 worker_cpu_affinity {{ $cfg.WorkerCpuAffinity }};
 {{ end }}
 
-pid /run/nginx.pid;
 {{ if ne .MaxOpenFiles 0 }}
 worker_rlimit_nofile {{ .MaxOpenFiles }};
 {{ end }}
@@ -37,7 +39,7 @@ events {
 
 http {
     {{ if not $all.DisableLua }}
-    lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;;";
+    lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;";
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
 
     {{ buildLuaSharedDictionaries $servers $all.DynamicConfigurationEnabled $all.Cfg.DisableLuaRestyWAF }}
@@ -74,6 +76,13 @@ http {
             statsd_monitor = res
         end
         {{ end }}
+
+        ok, res = pcall(require, "monitor")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          monitor = res
+        end
     }
 
     {{ if $all.DynamicConfigurationEnabled }}
@@ -104,11 +113,6 @@ http {
     geoip_proxy_recursive on;
     {{ end }}
 
-    {{ if $cfg.EnableVtsStatus }}
-    vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.VtsStatusZoneSize }};
-    vhost_traffic_status_filter_by_set_key {{ $cfg.VtsDefaultFilterKey }};
-    {{ end }}
-
     aio                 threads;
     aio_write           on;
 
@@ -121,6 +125,10 @@ http {
 
     keepalive_timeout  {{ $cfg.KeepAlive }}s;
     keepalive_requests {{ $cfg.KeepAliveRequests }};
+
+    client_body_temp_path           /tmp/client-body;
+    fastcgi_temp_path               /tmp/fastcgi-temp;
+    proxy_temp_path                 /tmp/proxy-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
@@ -189,6 +197,7 @@ http {
     # $namespace
     # $ingress_name
     # $service_name
+    # $service_port
     log_format upstreaminfo {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ buildLogFormatUpstream $cfg }}';
 
     {{/* map urls that should not appear in access.log */}}
@@ -367,7 +376,7 @@ http {
     {{ range $name, $upstream := $backends }}
     {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
     upstream sticky-{{ $upstream.Name }} {
-        sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}  httponly;
+        sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}{{if eq (len $upstream.SessionAffinity.CookieSessionAffinity.Locations) 1 }}{{ range $locationName, $locationPaths := $upstream.SessionAffinity.CookieSessionAffinity.Locations }}{{ if eq (len $locationPaths) 1 }} path={{ index $locationPaths 0 }}{{ end }}{{ end }}{{ end }} httponly;
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
@@ -536,14 +545,8 @@ http {
             opentracing off;
             {{ end }}
 
-            {{ if $cfg.EnableVtsStatus }}
-            vhost_traffic_status_display;
-            vhost_traffic_status_display_format html;
-            vhost_traffic_status_display_sum_key {{ $cfg.VtsSumKey }};
-            {{ else }}
             access_log off;
             stub_status on;
-            {{ end }}
         }
 
         {{ if $all.DynamicConfigurationEnabled }}
@@ -600,7 +603,7 @@ stream {
     {{ range $i, $tcpServer := .TCPBackends }}
     upstream tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
     {{ range $j, $endpoint := $tcpServer.Endpoints }}
-        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+        server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
     {{ end }}
     }
     server {
@@ -629,7 +632,7 @@ stream {
     {{ range $i, $udpServer := .UDPBackends }}
     upstream udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
     {{ range $j, $endpoint := $udpServer.Endpoints }}
-        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+        server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
     {{ end }}
     }
 
@@ -670,6 +673,7 @@ stream {
             proxy_set_header       X-Namespace        $namespace;
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
+            proxy_set_header       X-Service-Port     $service_port;
 
             rewrite                (.*) / break;
 
@@ -840,6 +844,13 @@ stream {
         {{ end }}
 
         location {{ $path }} {
+            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
+            set $namespace      "{{ $ing.Namespace }}";
+            set $ingress_name   "{{ $ing.Rule }}";
+            set $service_name   "{{ $ing.Service }}";
+            set $service_port   "{{ $location.Port }}";
+            set $location_path  "{{ $location.Path }}";
+
             {{ if not $all.DisableLua }}
             rewrite_by_lua_block {
                 {{ if $all.DynamicConfigurationEnabled}}
@@ -896,6 +907,11 @@ stream {
                 balancer.log()
                 statsd_monitor.call()
                 {{ end }}
+
+                ok, res = pcall(monitor.call)
+                    if not ok then
+                    ngx.log(ngx.ERR, "request_id failed: " .. tostring(res))
+                end
             }
             {{ end }}
 
@@ -916,15 +932,7 @@ stream {
 
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
-            {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
-
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}";
-
-            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
-            {{/* $ing.Metadata contains the Ingress metadata */}}
-            set $namespace      "{{ $ing.Namespace }}";
-            set $ingress_name   "{{ $ing.Rule }}";
-            set $service_name   "{{ $ing.Service }}";
 
             {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
@@ -1099,6 +1107,7 @@ stream {
             proxy_set_header       X-Namespace        $namespace;
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
+            proxy_set_header       X-Service-Port     $service_port;
             {{ end }}
 
             {{ if not (empty $location.Backend) }}

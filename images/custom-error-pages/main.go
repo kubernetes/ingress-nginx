@@ -39,15 +39,34 @@ const (
 
 	// ContentType name of the header that defines the format of the reply
 	ContentType = "Content-Type"
+
+	// OriginalURI name of the header with the original URL from NGINX
+	OriginalURI = "X-Original-URI"
+
+	// Namespace name of the header that contains information about the Ingress namespace
+	Namespace = "X-Namespace"
+
+	// IngressName name of the header that contains the matched Ingress
+	IngressName = "X-Ingress-Name"
+
+	// ServiceName name of the header that contains the matched Service in the Ingress
+	ServiceName = "X-Service-Name"
+
+	// ServicePort name of the header that contains the matched Service port in the Ingress
+	ServicePort = "X-Service-Port"
+
+	// ErrFilesPathVar is the name of the environment variable indicating
+	// the location on disk of files served by the handler.
+	ErrFilesPathVar = "ERROR_FILES_PATH"
 )
 
 func main() {
-	path := "/www"
-	if os.Getenv("PATH") != "" {
-		path = os.Getenv("PATH")
+	errFilesPath := "/www"
+	if os.Getenv(ErrFilesPathVar) != "" {
+		errFilesPath = os.Getenv(ErrFilesPathVar)
 	}
 
-	http.HandleFunc("/", errorHandler(path))
+	http.HandleFunc("/", errorHandler(errFilesPath))
 
 	http.Handle("/metrics", promhttp.Handler())
 
@@ -63,18 +82,28 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		start := time.Now()
 		ext := "html"
 
+		if os.Getenv("DEBUG") != "" {
+			w.Header().Set(FormatHeader, r.Header.Get(FormatHeader))
+			w.Header().Set(CodeHeader, r.Header.Get(CodeHeader))
+			w.Header().Set(ContentType, r.Header.Get(ContentType))
+			w.Header().Set(OriginalURI, r.Header.Get(OriginalURI))
+			w.Header().Set(Namespace, r.Header.Get(Namespace))
+			w.Header().Set(IngressName, r.Header.Get(IngressName))
+			w.Header().Set(ServiceName, r.Header.Get(ServiceName))
+			w.Header().Set(ServicePort, r.Header.Get(ServicePort))
+		}
+
 		format := r.Header.Get(FormatHeader)
 		if format == "" {
 			format = "text/html"
-			log.Printf("forma not specified. Using %v\n", format)
+			log.Printf("format not specified. Using %v", format)
 		}
 
-		mediaType, _, _ := mime.ParseMediaType(format)
-		cext, err := mime.ExtensionsByType(mediaType)
+		cext, err := mime.ExtensionsByType(format)
 		if err != nil {
-			log.Printf("unexpected error reading media type extension: %v. Using %v\n", err, ext)
+			log.Printf("unexpected error reading media type extension: %v. Using %v", err, ext)
 		} else if len(cext) == 0 {
-			log.Printf("couldn't get media type extension. Using %v\n", ext)
+			log.Printf("couldn't get media type extension. Using %v", ext)
 		} else {
 			ext = cext[0]
 		}
@@ -84,7 +113,7 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		code, err := strconv.Atoi(errCode)
 		if err != nil {
 			code = 404
-			log.Printf("unexpected error reading return code: %v. Using %v\n", err, code)
+			log.Printf("unexpected error reading return code: %v. Using %v", err, code)
 		}
 		w.WriteHeader(code)
 
@@ -94,22 +123,22 @@ func errorHandler(path string) func(http.ResponseWriter, *http.Request) {
 		file := fmt.Sprintf("%v/%v%v", path, code, ext)
 		f, err := os.Open(file)
 		if err != nil {
-			log.Printf("unexpected error opening file: %v\n", err)
+			log.Printf("unexpected error opening file: %v", err)
 			scode := strconv.Itoa(code)
 			file := fmt.Sprintf("%v/%cxx%v", path, scode[0], ext)
 			f, err := os.Open(file)
 			if err != nil {
-				log.Printf("unexpected error opening file: %v\n", err)
+				log.Printf("unexpected error opening file: %v", err)
 				http.NotFound(w, r)
 				return
 			}
 			defer f.Close()
-			log.Printf("serving custom error response for code %v and format %v from file %v\n", code, format, file)
+			log.Printf("serving custom error response for code %v and format %v from file %v", code, format, file)
 			io.Copy(w, f)
 			return
 		}
 		defer f.Close()
-		log.Printf("serving custom error response for code %v and format %v from file %v\n", code, format, file)
+		log.Printf("serving custom error response for code %v and format %v from file %v", code, format, file)
 		io.Copy(w, f)
 
 		duration := time.Now().Sub(start).Seconds()

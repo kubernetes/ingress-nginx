@@ -36,6 +36,15 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const (
+	logDynamicConfigSuccess = "Dynamic reconfiguration succeeded"
+	logDynamicConfigFailure = "Dynamic reconfiguration failed"
+	logRequireBackendReload = "Configuration changes detected, backend reload required"
+	logBackendReloadSuccess = "Backend successfully reloaded"
+	logSkipBackendReload    = "Changes handled by the dynamic configuration, skipping backend reload"
+	logInitialConfigSync    = "Initial synchronization of the NGINX configuration"
+)
+
 var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	f := framework.NewDefaultFramework("dynamic-configuration")
 
@@ -69,8 +78,8 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 		log, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(log).ToNot(ContainSubstring("could not dynamically reconfigure"))
-		Expect(log).To(ContainSubstring("first sync of Nginx configuration"))
+		Expect(log).ToNot(ContainSubstring(logDynamicConfigFailure))
+		Expect(log).To(ContainSubstring(logDynamicConfigSuccess))
 	})
 
 	Context("when only backends change", func() {
@@ -94,14 +103,14 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			restOfLogs := log[index:]
 
 			By("POSTing new backends to Lua endpoint")
-			Expect(restOfLogs).To(ContainSubstring("dynamic reconfiguration succeeded"))
-			Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
+			Expect(restOfLogs).To(ContainSubstring(logDynamicConfigSuccess))
+			Expect(restOfLogs).ToNot(ContainSubstring(logDynamicConfigFailure))
 
 			By("skipping Nginx reload")
-			Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
-			Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
-			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
-			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
+			Expect(restOfLogs).ToNot(ContainSubstring(logRequireBackendReload))
+			Expect(restOfLogs).ToNot(ContainSubstring(logBackendReloadSuccess))
+			Expect(restOfLogs).To(ContainSubstring(logSkipBackendReload))
+			Expect(restOfLogs).ToNot(ContainSubstring(logInitialConfigSync))
 		})
 
 		It("should be able to update endpoints even when the update POST size(request body) > size(client_body_buffer_size)", func() {
@@ -164,14 +173,14 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			restOfLogs := log[index:]
 
 			By("POSTing new backends to Lua endpoint")
-			Expect(restOfLogs).To(ContainSubstring("dynamic reconfiguration succeeded"))
-			Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
+			Expect(restOfLogs).To(ContainSubstring(logDynamicConfigSuccess))
+			Expect(restOfLogs).ToNot(ContainSubstring(logDynamicConfigFailure))
 
 			By("skipping Nginx reload")
-			Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
-			Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
-			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
-			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
+			Expect(restOfLogs).ToNot(ContainSubstring(logRequireBackendReload))
+			Expect(restOfLogs).ToNot(ContainSubstring(logBackendReloadSuccess))
+			Expect(restOfLogs).To(ContainSubstring(logSkipBackendReload))
+			Expect(restOfLogs).ToNot(ContainSubstring(logInitialConfigSync))
 		})
 	})
 
@@ -208,10 +217,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(log).ToNot(BeEmpty())
 
 		By("reloading Nginx")
-		Expect(log).To(ContainSubstring("ingress backend successfully reloaded"))
+		Expect(log).To(ContainSubstring(logBackendReloadSuccess))
 
 		By("POSTing new backends to Lua endpoint")
-		Expect(log).To(ContainSubstring("dynamic reconfiguration succeeded"))
+		Expect(log).To(ContainSubstring(logDynamicConfigSuccess))
 
 		By("still be proxying requests through Lua balancer")
 		err = f.WaitForNginxServer("foo.com",
