@@ -65,6 +65,9 @@ type Configuration struct {
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
 	PassthroughBackends []*SSLPassthroughBackend `json:"passthroughBackends,omitempty"`
+
+	// ConfigurationChecksum contains the particular checksum of a Configuration object
+	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service

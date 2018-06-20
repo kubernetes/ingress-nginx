@@ -7,6 +7,8 @@
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
 
+# Configuration checksum: {{ $all.Cfg.Checksum }}
+
 # setup custom paths that do not require root access
 pid /tmp/nginx.pid;
 

@@ -22,7 +22,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/golang/glog"
@@ -155,14 +154,16 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		TCPEndpoints:        n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
 		UDPEndpoints:        n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
 		PassthroughBackends: passUpstreams,
+
+		ConfigurationChecksum: n.store.GetBackendConfiguration().Checksum,
 	}
 
-	if !n.isForceReload() && n.runningConfig.Equal(&pcfg) {
+	if n.runningConfig.Equal(&pcfg) {
 		glog.V(3).Infof("No configuration change detected, skipping backend reload.")
 		return nil
 	}
 
-	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(&pcfg) && !n.isForceReload() {
+	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(&pcfg) {
 		glog.Infof("Changes handled by the dynamic configuration, skipping backend reload.")
 	} else {
 		glog.Infof("Configuration changes detected, backend reload required.")
@@ -200,7 +201,6 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	n.runningConfig = &pcfg
-	n.SetForceReload(false)
 
 	return nil
 }
@@ -1046,21 +1046,6 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	}
 
 	return servers
-}
-
-func (n *NGINXController) isForceReload() bool {
-	return atomic.LoadInt32(&n.forceReload) != 0
-}
-
-// SetForceReload sets whether the backend should be reloaded regardless of
-// configuration changes.
-func (n *NGINXController) SetForceReload(shouldReload bool) {
-	if shouldReload {
-		atomic.StoreInt32(&n.forceReload, 1)
-		n.syncQueue.Enqueue(&extensions.Ingress{})
-	} else {
-		atomic.StoreInt32(&n.forceReload, 0)
-	}
 }
 
 // extractTLSSecretName returns the name of the Secret containing a SSL

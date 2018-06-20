@@ -104,6 +104,10 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
+	if c1.ConfigurationChecksum != c2.ConfigurationChecksum {
+		return false
+	}
+
 	return true
 }
 
