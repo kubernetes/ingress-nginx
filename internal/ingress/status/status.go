@@ -32,7 +32,6 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/leaderelection"
@@ -183,11 +182,6 @@ func NewStatusSyncer(config Config) Sync {
 		OnStartedLeading: func(stop <-chan struct{}) {
 			glog.V(2).Infof("I am the new status update leader")
 			go st.syncQueue.Run(time.Second, stop)
-			wait.PollUntil(updateInterval, func() (bool, error) {
-				// send a dummy object to the queue to force a sync
-				st.syncQueue.Enqueue("sync status")
-				return false, nil
-			}, stop)
 		},
 		OnStoppedLeading: func() {
 			glog.V(2).Infof("I am not status update leader anymore")
