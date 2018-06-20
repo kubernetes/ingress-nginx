@@ -147,6 +147,7 @@ http {
     ignore_invalid_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }};
 
     limit_req_status                {{ $cfg.LimitReqStatusCode }};
+    limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
     {{ if $cfg.EnableOpentracing }}
     opentracing on;
