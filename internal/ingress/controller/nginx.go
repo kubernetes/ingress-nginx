@@ -38,7 +38,6 @@ import (
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -153,7 +152,7 @@ Error loading new template: %v
 
 		n.t = template
 		glog.Info("New NGINX configuration template loaded.")
-		n.SetForceReload(true)
+		n.syncQueue.EnqueueTask(task.GetDummyObject("template-change"))
 	}
 
 	ngxTpl, err := ngx_template.NewTemplate(tmplPath, fs)
@@ -194,7 +193,7 @@ Error loading new template: %v
 	for _, f := range filesToWatch {
 		_, err = watch.NewFileWatcher(f, func() {
 			glog.Info("File %v changed. Reloading NGINX", f)
-			n.SetForceReload(true)
+			n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
 		})
 		if err != nil {
 			glog.Fatalf("Error creating file watcher for %v: %v", f, err)
@@ -231,8 +230,6 @@ type NGINXController struct {
 
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
-
-	forceReload int32
 
 	t *ngx_template.Template
 
@@ -278,7 +275,7 @@ func (n *NGINXController) Start() {
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
-	n.syncQueue.Enqueue(&extensions.Ingress{})
+	n.syncQueue.EnqueueTask(task.GetDummyObject("initial-sync"))
 
 	for {
 		select {
@@ -311,10 +308,12 @@ func (n *NGINXController) Start() {
 			if evt, ok := event.(store.Event); ok {
 				glog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
 				if evt.Type == store.ConfigurationEvent {
-					n.SetForceReload(true)
+					// TODO: is this necessary? Consider removing this special case
+					n.syncQueue.EnqueueTask(task.GetDummyObject("configmap-change"))
+					continue
 				}
 
-				n.syncQueue.Enqueue(evt.Obj)
+				n.syncQueue.EnqueueSkippableTask(evt.Obj)
 			} else {
 				glog.Warningf("Unexpected event type received %T", event)
 			}
