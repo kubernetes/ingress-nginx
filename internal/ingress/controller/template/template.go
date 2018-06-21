@@ -151,7 +151,6 @@ var (
 		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
 		"buildForwardedFor":           buildForwardedFor,
 		"buildAuthSignURL":            buildAuthSignURL,
-		"buildOpentracingLoad":        buildOpentracingLoad,
 		"buildOpentracing":            buildOpentracing,
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
@@ -841,31 +840,6 @@ func randomString() string {
 	return string(b)
 }
 
-func buildOpentracingLoad(input interface{}) string {
-	cfg, ok := input.(config.Configuration)
-	if !ok {
-		glog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
-		return ""
-	}
-
-	if !cfg.EnableOpentracing {
-		return ""
-	}
-
-	buf := bytes.NewBufferString("load_module /etc/nginx/modules/ngx_http_opentracing_module.so;")
-	buf.WriteString("\r\n")
-
-	if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString("load_module /etc/nginx/modules/ngx_http_zipkin_module.so;")
-	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("load_module /etc/nginx/modules/ngx_http_jaeger_module.so;")
-	}
-
-	buf.WriteString("\r\n")
-
-	return buf.String()
-}
-
 func buildOpentracing(input interface{}) string {
 	cfg, ok := input.(config.Configuration)
 	if !ok {
@@ -878,24 +852,14 @@ func buildOpentracing(input interface{}) string {
 	}
 
 	buf := bytes.NewBufferString("")
-
 	if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString(fmt.Sprintf("zipkin_collector_host                   %v;", cfg.ZipkinCollectorHost))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("zipkin_collector_port                   %v;", cfg.ZipkinCollectorPort))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("zipkin_service_name                     %v;", cfg.ZipkinServiceName))
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString(fmt.Sprintf("jaeger_reporter_local_agent_host_port   %v:%v;", cfg.JaegerCollectorHost, cfg.JaegerCollectorPort))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("jaeger_service_name                     %v;", cfg.JaegerServiceName))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("jaeger_sampler_type                     %v;", cfg.JaegerSamplerType))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("jaeger_sampler_param                    %v;", cfg.JaegerSamplerParam))
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing.so 	 /etc/nginx/opentracing.json;")
 	}
 
 	buf.WriteString("\r\n")
+
 	return buf.String()
 }
 
