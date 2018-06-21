@@ -54,7 +54,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamhashby"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamvhost"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/vtsfilterkey"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/xforwardedprefix"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -90,7 +89,6 @@ type Ingress struct {
 	UpstreamHashBy       string
 	LoadBalancing        string
 	UpstreamVhost        string
-	VtsFilterKey         string
 	Whitelist            ipwhitelist.SourceRange
 	XForwardedPrefix     bool
 	SSLCiphers           string
@@ -132,7 +130,6 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"UpstreamHashBy":       upstreamhashby.NewParser(cfg),
 			"LoadBalancing":        loadbalancing.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
-			"VtsFilterKey":         vtsfilterkey.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),

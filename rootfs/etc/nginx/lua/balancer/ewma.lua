@@ -7,6 +7,7 @@
 
 local resty_lock = require("resty.lock")
 local util = require("util")
+local split = require("util.split")
 
 local DECAY_TIME = 10 -- this value is in seconds
 local LOCK_KEY = ":ewma_key"
@@ -131,10 +132,10 @@ function _M.balance(self)
 end
 
 function _M.after_balance(_)
-  local response_time = tonumber(util.get_first_value(ngx.var.upstream_response_time)) or 0
-  local connect_time = tonumber(util.get_first_value(ngx.var.upstream_connect_time)) or 0
+  local response_time = tonumber(split.get_first_value(ngx.var.upstream_response_time)) or 0
+  local connect_time = tonumber(split.get_first_value(ngx.var.upstream_connect_time)) or 0
   local rtt = connect_time + response_time
-  local upstream = util.get_first_value(ngx.var.upstream_addr)
+  local upstream = split.get_first_value(ngx.var.upstream_addr)
 
   if util.is_blank(upstream) then
     return

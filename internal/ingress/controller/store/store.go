@@ -479,6 +479,18 @@ func New(checkOCSP bool,
 					if key == configmap {
 						store.setConfig(cm)
 					}
+
+					ings := store.listers.IngressAnnotation.List()
+					for _, ingKey := range ings {
+						key := k8s.MetaNamespaceKey(ingKey)
+						ing, err := store.GetIngress(key)
+						if err != nil {
+							glog.Errorf("could not find Ingress %v in local store: %v", key, err)
+							continue
+						}
+						store.extractAnnotations(ing)
+					}
+
 					updateCh.In() <- Event{
 						Type: ConfigurationEvent,
 						Obj:  cur,
@@ -493,6 +505,13 @@ func New(checkOCSP bool,
 	store.informers.Secret.AddEventHandler(secrEventHandler)
 	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
 	store.informers.Service.AddEventHandler(cache.ResourceEventHandlerFuncs{})
+
+	// do not wait for informers to read the configmap configuration
+	cm, err := client.CoreV1().ConfigMaps(namespace).Get(configmap, metav1.GetOptions{})
+	if err != nil {
+		glog.Warningf("Unexpected error reading configuration configmap: %v", err)
+	}
+	store.setConfig(cm)
 
 	return store
 }
@@ -699,7 +718,7 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 			glog.Warningf("unexpected error decoding key ssl-session-ticket-key: %v", err)
 			s.backendConfig.SSLSessionTicketKey = ""
 		}
-		ioutil.WriteFile("/etc/nginx/tickets.key", d, 0644)
+		ioutil.WriteFile("/etc/nginx/tickets.key", d, file.ReadWriteByUser)
 	}
 }
 

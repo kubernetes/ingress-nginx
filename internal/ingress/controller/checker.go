@@ -26,6 +26,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const nginxPID = "/tmp/nginx.pid"
+
 // Name returns the healthcheck name
 func (n NGINXController) Name() string {
 	return "nginx-ingress-controller"
@@ -58,13 +60,13 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	if err != nil {
 		return errors.Wrap(err, "unexpected error reading /proc directory")
 	}
-	f, err := n.fileSystem.ReadFile("/run/nginx.pid")
+	f, err := n.fileSystem.ReadFile(nginxPID)
 	if err != nil {
-		return errors.Wrap(err, "unexpected error reading /run/nginx.pid")
+		return errors.Wrapf(err, "unexpected error reading %v", nginxPID)
 	}
 	pid, err := strconv.Atoi(strings.TrimRight(string(f), "\r\n"))
 	if err != nil {
-		return errors.Wrap(err, "unexpected error reading the PID from /run/nginx.pid")
+		return errors.Wrapf(err, "unexpected error reading the nginx PID from %v", nginxPID)
 	}
 	_, err = fs.NewProc(pid)
 
