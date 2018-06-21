@@ -18,7 +18,7 @@ all: all-container
 BUILDTAGS=
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.15.0
+TAG?=0.16.0
 REGISTRY?=quay.io/kubernetes-ingress-controller
 GOOS?=linux
 DOCKER?=docker
