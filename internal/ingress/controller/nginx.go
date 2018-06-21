@@ -31,6 +31,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"text/template"
 	"time"
 
 	"github.com/golang/glog"
@@ -593,9 +594,15 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	content, err := n.t.Write(tc)
-
 	if err != nil {
 		return err
+	}
+
+	if cfg.EnableOpentracing {
+		err := createOpentracingCfg(cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = n.testTemplate(content)
@@ -778,4 +785,48 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 	}
 
 	return nil
+}
+
+const zipkinTmpl = `{
+  "service_name": "{{ .ZipkinServiceName }}",
+  "collector_host": "{{ .ZipkinCollectorHost }}",
+  "collector_port": {{ .ZipkinCollectorPort }}
+}`
+
+const jaegerTmpl = `{
+  "service_name": "{{ .JaegerServiceName }}",
+  "sampler": {
+	"type": "{{ .JaegerSamplerType }}",
+	"param": {{ .JaegerSamplerParam }}
+  },
+  "reporter": {
+	"localAgentHostPort": "{{ .JaegerCollectorHost }}:{{ .JaegerCollectorPort }}"
+  }
+}`
+
+func createOpentracingCfg(cfg ngx_config.Configuration) error {
+	var tmpl *template.Template
+	var err error
+
+	if cfg.ZipkinCollectorHost != "" {
+		tmpl, err = template.New("zipkin").Parse(zipkinTmpl)
+		if err != nil {
+			return err
+		}
+	} else if cfg.JaegerCollectorHost != "" {
+		tmpl, err = template.New("jarger").Parse(jaegerTmpl)
+		if err != nil {
+			return err
+		}
+	} else {
+		tmpl, _ = template.New("empty").Parse("{}")
+	}
+
+	tmplBuf := bytes.NewBuffer(make([]byte, 0))
+	err = tmpl.Execute(tmplBuf, cfg)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile("/etc/nginx/opentracing.json", tmplBuf.Bytes(), file.ReadWriteByUser)
 }

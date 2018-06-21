@@ -16,7 +16,9 @@ pid /tmp/nginx.pid;
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
-{{ buildOpentracingLoad $cfg }}
+{{ if $cfg.EnableOpentracing }}
+load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
+{{ end }}
 
 daemon off;
 
@@ -845,6 +847,10 @@ stream {
             set $service_name   "{{ $ing.Service }}";
             set $service_port   "{{ $location.Port }}";
             set $location_path  "{{ $location.Path }}";
+
+            {{ if $all.Cfg.EnableOpentracing }}
+            opentracing_propagate_context;
+            {{ end }}
 
             {{ if not $all.DisableLua }}
             rewrite_by_lua_block {
