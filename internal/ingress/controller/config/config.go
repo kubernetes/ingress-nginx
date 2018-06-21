@@ -506,6 +506,9 @@ type Configuration struct {
 	// http://github.com/influxdata/nginx-influxdb-module/
 	// By default this is disabled
 	EnableInfluxDB bool `json:"enable-influxdb"`
+
+	// Checksum contains a checksum of the configmap configuration
+	Checksum string `json:"-"`
 }
 
 // NewDefault returns the default nginx configuration
