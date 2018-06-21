@@ -89,6 +89,7 @@ clean-install \
   python \
   luarocks \
   libmaxminddb-dev \
+  libcap2-bin \
   || exit 1
 
 if [[ ${ARCH} == "x86_64" ]]; then
@@ -451,6 +452,11 @@ echo "Cleaning..."
 
 cd /
 
+mv /usr/share/nginx/sbin/nginx /usr/sbin
+
+# allow binding to a port less than 1024 to non-root users
+setcap cap_net_bind_service=+ep /usr/sbin/nginx
+
 apt-mark unmarkauto \
   bash \
   curl ca-certificates \
@@ -476,13 +482,10 @@ apt-get remove -y --purge \
   linux-libc-dev \
   cmake \
   wget \
+  libcap2-bin \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y
-
-mkdir -p /var/lib/nginx/body /usr/share/nginx/html
-
-mv /usr/share/nginx/sbin/nginx /usr/sbin
 
 rm -rf "$BUILD_PATH"
 rm -Rf /usr/share/man /usr/share/doc
@@ -505,6 +508,8 @@ writeDirs=( \
   /etc/ingress-controller/auth \
   /var/log \
   /var/log/nginx \
+  /var/lib/nginx/body \
+  /usr/share/nginx/html \
   /opt/modsecurity/var/log \
   /opt/modsecurity/var/upload \
   /opt/modsecurity/var/audit \
