@@ -479,6 +479,18 @@ func New(checkOCSP bool,
 					if key == configmap {
 						store.setConfig(cm)
 					}
+
+					ings := store.listers.IngressAnnotation.List()
+					for _, ingKey := range ings {
+						key := k8s.MetaNamespaceKey(ingKey)
+						ing, err := store.GetIngress(key)
+						if err != nil {
+							glog.Errorf("could not find Ingress %v in local store: %v", key, err)
+							continue
+						}
+						store.extractAnnotations(ing)
+					}
+
 					updateCh.In() <- Event{
 						Type: ConfigurationEvent,
 						Obj:  cur,
