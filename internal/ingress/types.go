@@ -63,6 +63,9 @@ type Configuration struct {
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
 	PassthroughBackends []*SSLPassthroughBackend `json:"passthroughBackends,omitempty"`
+
+	// ConfigurationChecksum contains the particular checksum of a Configuration object
+	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -230,10 +233,6 @@ type Location struct {
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"usePortInRedirects"`
-	// VtsFilterKey contains the vts filter key on the location level
-	// https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key
-	// +optional
-	VtsFilterKey string `json:"vtsFilterKey,omitempty"`
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
 	ConfigurationSnippet string `json:"configurationSnippet"`

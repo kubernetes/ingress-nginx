@@ -21,6 +21,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"k8s.io/ingress-nginx/internal/file"
 )
 
 func prepareTimeout() chan bool {
@@ -33,15 +35,15 @@ func prepareTimeout() chan bool {
 }
 
 func TestFileWatcher(t *testing.T) {
-	file, err := ioutil.TempFile("", "fw")
+	f, err := ioutil.TempFile("", "fw")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	defer file.Close()
-	defer os.Remove(file.Name())
+	defer f.Close()
+	defer os.Remove(f.Name())
 	count := 0
 	events := make(chan bool, 10)
-	fw, err := NewFileWatcher(file.Name(), func() {
+	fw, err := NewFileWatcher(f.Name(), func() {
 		count++
 		if count != 1 {
 			t.Fatalf("expected 1 but returned %v", count)
@@ -58,7 +60,7 @@ func TestFileWatcher(t *testing.T) {
 		t.Fatalf("expected no events before writing a file")
 	case <-timeoutChan:
 	}
-	ioutil.WriteFile(file.Name(), []byte{}, 0644)
+	ioutil.WriteFile(f.Name(), []byte{}, file.ReadWriteByUser)
 	select {
 	case <-events:
 	case <-timeoutChan:
