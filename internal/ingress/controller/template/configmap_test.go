@@ -17,11 +17,13 @@ limitations under the License.
 package template
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/mitchellh/hashstructure"
 
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 )
@@ -88,6 +90,14 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
 	def.ProxyAddOriginalUriHeader = false
 
+	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
+		TagName: "json",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error obtaining hash: %v", err)
+	}
+	def.Checksum = fmt.Sprintf("%v", hash)
+
 	to := ReadConfig(conf)
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
@@ -107,6 +117,14 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	}
 
 	def = config.NewDefault()
+	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
+		TagName: "json",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error obtaining hash: %v", err)
+	}
+	def.Checksum = fmt.Sprintf("%v", hash)
+
 	to = ReadConfig(map[string]string{})
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
@@ -114,6 +132,15 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 
 	def = config.NewDefault()
 	def.WhitelistSourceRange = []string{"1.1.1.1/32"}
+
+	hash, err = hashstructure.Hash(def, &hashstructure.HashOptions{
+		TagName: "json",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error obtaining hash: %v", err)
+	}
+	def.Checksum = fmt.Sprintf("%v", hash)
+
 	to = ReadConfig(map[string]string{
 		"whitelist-source-range": "1.1.1.1/32",
 	})
