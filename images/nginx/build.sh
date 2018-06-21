@@ -497,3 +497,20 @@ rm -rf /etc/nginx/owasp-modsecurity-crs/.git
 rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
 rm -rf $HOME/.hunter
+
+# update image permissions
+writeDirs=( \
+  /etc/nginx \
+  /etc/ingress-controller/ssl \
+  /etc/ingress-controller/auth \
+  /var/log \
+  /var/log/nginx \
+  /opt/modsecurity/var/log \
+  /opt/modsecurity/var/upload \
+  /opt/modsecurity/var/audit \
+);
+
+for dir in "${writeDirs[@]}"; do
+  mkdir -p ${dir};
+  chown -R www-data.www-data ${dir};
+done
