@@ -858,9 +858,11 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	// initialize default server and root location
 	servers[defServerName] = &ingress.Server{
-		Hostname:       defServerName,
-		SSLCertificate: defaultPemFileName,
-		SSLPemChecksum: defaultPemSHA,
+		Hostname: defServerName,
+		SSLCert: ingress.SSLCert{
+			PemFileName: defaultPemFileName,
+			PemSHA:      defaultPemSHA,
+		},
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
@@ -989,7 +991,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			}
 
 			// only add a certificate if the server does not have one previously configured
-			if servers[host].SSLCertificate != "" {
+			if servers[host].SSLCert.PemFileName != "" {
 				continue
 			}
 
@@ -1002,8 +1004,8 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 			if tlsSecretName == "" {
 				glog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
-				servers[host].SSLCertificate = defaultPemFileName
-				servers[host].SSLPemChecksum = defaultPemSHA
+				servers[host].SSLCert.PemFileName = defaultPemFileName
+				servers[host].SSLCert.PemSHA = defaultPemSHA
 				continue
 			}
 
@@ -1027,10 +1029,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				}
 			}
 
-			servers[host].SSLCertificate = cert.PemFileName
-			servers[host].SSLFullChainCertificate = cert.FullChainPemFileName
-			servers[host].SSLPemChecksum = cert.PemSHA
-			servers[host].SSLExpireTime = cert.ExpireTime
+			servers[host].SSLCert = *cert
 
 			if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
 				glog.Warningf("SSL certificate for server %q is about to expire (%v)", cert.ExpireTime)
