@@ -10,6 +10,7 @@
 [![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/stargazers)
 [![GitHub stars](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx?ref=badge_shield)
 
 
 
@@ -75,3 +76,6 @@ By participating in this project you agree to abide by its terms.
 
 [Apache License 2.0](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
 
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx?ref=badge_large)
