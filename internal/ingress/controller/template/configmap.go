@@ -133,7 +133,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, proxyHeaderTimeout)
 		duration, err := time.ParseDuration(val)
 		if err != nil {
-			glog.Warningf("proxy-protocol-header-timeout of %v encounted an error while being parsed %v. Switching to use default value instead.", val, err)
+			glog.Warningf("proxy-protocol-header-timeout of %v encountered an error while being parsed %v. Switching to use default value instead.", val, err)
 		} else {
 			to.ProxyProtocolHeaderTimeout = duration
 		}
