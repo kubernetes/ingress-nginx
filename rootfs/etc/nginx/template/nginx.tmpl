@@ -184,7 +184,7 @@ http {
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
     {{ if not $cfg.ShowServerTokens }}
-    more_set_headers "Server: ";
+    more_clear_headers Server;
     {{ end }}
 
     # disable warnings
