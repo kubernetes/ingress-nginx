@@ -51,7 +51,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		err = f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "server_tokens off") &&
-					strings.Contains(cfg, "more_set_headers \"Server: \"")
+					strings.Contains(cfg, "more_clear_headers Server;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
