@@ -1,8 +1,43 @@
 # Changelog
 
+### 0.16.1
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.1`
+
+*Breaking changes:*
+
+Running as user requires an update in the deployment manifest.
+
+```yaml
+  securityContext:
+    capabilities:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE
+    # www-data -> 33
+    runAsUser: 33
+```
+
+Note: the deploy [guide](https://kubernetes.github.io/ingress-nginx/deploy/#mandatory-command) contains this change
+
+*New Features:*
+
+- Run as user dropping root privileges
+- New prometheus metric implementation (VTS module was removed)
+- [InfluxDB integration](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#influxdb)
+- [Module GeoIP2](https://github.com/leev/ngx_http_geoip2_module)
+
+*Changes:*
+
+- [X] [#2692](https://github.com/kubernetes/ingress-nginx/pull/2692) Fix initial read of configuration configmap
+- [X] [#2693](https://github.com/kubernetes/ingress-nginx/pull/2693) Revert #2669
+- [X] [#2694](https://github.com/kubernetes/ingress-nginx/pull/2694) Add note about status update
+
+
 ### 0.16.0
 
-**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.0`
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.1`
 
 *Breaking changes:*
 
