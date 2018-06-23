@@ -4,6 +4,23 @@
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.0`
 
+*Breaking changes:*
+
+Running as user requires an update in the deployment manifest.
+
+```yaml
+  securityContext:
+    capabilities:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE
+    # www-data -> 33
+    runAsUser: 33
+```
+
+Note: the deploy [guide](https://kubernetes.github.io/ingress-nginx/deploy/#mandatory-command) contains this change
+
 *New Features:*
 
 - Run as user dropping root privileges
