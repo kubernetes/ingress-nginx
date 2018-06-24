@@ -639,9 +639,65 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="toc">
+        OpenTracing
+      </label>
+    
     <a href="./" title="OpenTracing" class="md-nav__link md-nav__link--active">
       OpenTracing
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage" title="Usage" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" title="Examples" class="md-nav__link">
+    Examples
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#zipkin" title="Zipkin" class="md-nav__link">
+    Zipkin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jaeger" title="Jaeger" class="md-nav__link">
+    Jaeger
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -1045,6 +1101,49 @@
     
   
   
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage" title="Usage" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" title="Examples" class="md-nav__link">
+    Examples
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#zipkin" title="Zipkin" class="md-nav__link">
+    Zipkin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jaeger" title="Jaeger" class="md-nav__link">
+    Jaeger
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1059,9 +1158,50 @@
                 
                 
                 <h1 id="opentracing">OpenTracing<a class="headerlink" href="#opentracing" title="Permanent link">&para;</a></h1>
+<p>Enables requests served by nginx for distributed tracing via The OpenTracing Project.</p>
 <p>Using the third party module <a href="https://github.com/opentracing-contrib/nginx-opentracing">opentracing-contrib/nginx-opentracing</a> the NGINX ingress controller can configure NGINX to enable <a href="http://opentracing.io">OpenTracing</a> instrumentation.
 By default this feature is disabled.</p>
-<p>To enable the instrumentation we just need to enable the instrumentation in the configuration configmap and set the host where we should send the traces.</p>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<p>To enable the instrumentation we must enable opentracing in the configuration configmap:</p>
+<div class="codehilite"><pre><span></span><span class="n">data</span><span class="o">:</span>
+  <span class="n">enable</span><span class="o">-</span><span class="n">opentracing</span><span class="o">:</span> <span class="s2">&quot;true&quot;</span>
+</pre></div>
+
+
+<p>We must also set the host to use when uploading traces:</p>
+<div class="codehilite"><pre><span></span>zipkin-collector-host: zipkin.default.svc.cluster.local
+jaeger-collector-host: jaeger-collector.default.svc.cluster.local
+</pre></div>
+
+
+<p>Next you will need to deploy a distributed tracing system which uses OpenTracing. Both <a href="https://github.com/openzipkin/zipkin">Zipkin</a> and
+<a href="https://github.com/jaegertracing/jaeger">Jaeger</a> have been tested.</p>
+<p>Other optional configuration options:</p>
+<div class="codehilite"><pre><span></span># specifies the port to use when uploading traces
+zipkin-collector-port
+
+# specifies the service name to use for any traces created, Default: nginx
+zipkin-service-name
+
+# specifies the port to use when uploading traces
+jaeger-collector-port
+
+# specifies the service name to use for any traces created, Default: nginx
+jaeger-service-name
+
+# specifies the sampler to be used when sampling traces.
+# The available samplers are: const, probabilistic, ratelimiting, remote, Default: const
+jaeger-sampler-type
+
+# specifies the argument to be passed to the sampler constructor, Default: 1
+jaeger-sampler-param
+</pre></div>
+
+
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
+<p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed
+using Minikube.</p>
+<h3 id="zipkin">Zipkin<a class="headerlink" href="#zipkin" title="Permanent link">&para;</a></h3>
 <p>In the <a href="https://github.com/rnburn/zipkin-date-server">rnburn/zipkin-date-server</a>
 github repository is an example of a dockerized date service. To install the example and zipkin collector run:</p>
 <div class="codehilite"><pre><span></span>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
@@ -1077,22 +1217,98 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
 <span class="s1">  enable-opentracing: &quot;true&quot;</span>
 <span class="s1">  zipkin-collector-host: zipkin.default.svc.cluster.local</span>
 <span class="s1">metadata:</span>
-<span class="s1">  name: nginx-configuration</span>
-<span class="s1">  namespace: ingress-nginx</span>
-<span class="s1">  labels:</span>
-<span class="s1">    app: ingress-nginx</span>
+<span class="s1">  name: nginx-load-balancer-conf</span>
+<span class="s1">  namespace: kube-system</span>
 <span class="s1">&#39;</span> <span class="p">|</span> kubectl replace -f -
 </pre></div>
 
 
-<p>Using curl we can generate some traces:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -v http://<span class="k">$(</span>minikube ip<span class="k">)</span>
-<span class="gp">$</span> curl -v http://<span class="k">$(</span>minikube ip<span class="k">)</span>
-</pre></div>
-
-
-<p>In the zipkin interface we can see the details:</p>
-<p><img alt="zipkin screenshot" src="../../../images/zipkin-demo.png" title="zipkin collector screenshot" /></p>
+<p>In the zipkin interface we can see the details:
+<img alt="zipkin screenshot" src="../../../images/zipkin-demo.png" title="zipkin collector screenshot" /></p>
+<h3 id="jaeger">Jaeger<a class="headerlink" href="#jaeger" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>Enable Ingress addon in minikube:
+    <code class="codehilite">$ minikube addons <span class="nb">enable</span> ingress</code></p>
+</li>
+<li>
+<p>Add minikube IP to /etc/hosts:
+    <code class="codehilite">$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="k">$(</span>minikube ip<span class="k">)</span><span class="s2"> example.com&quot;</span> <span class="p">|</span> sudo tee -a /etc/hosts</code></p>
+</li>
+<li>
+<p>Apply a Basic Service and Ingress Resource:
+    ```
+    # Create Echoheaders Deployment
+    $ kubectl run echoheaders --image=k8s.gcr.io/echoserver:1.4 --replicas=1 --port=8080</p>
+<h1 id="expose-as-a-cluster-ip">Expose as a Cluster-IP<a class="headerlink" href="#expose-as-a-cluster-ip" title="Permanent link">&para;</a></h1>
+<p>$ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x</p>
+<h1 id="apply-the-ingress-resource">Apply the Ingress Resource<a class="headerlink" href="#apply-the-ingress-resource" title="Permanent link">&para;</a></h1>
+<p>$ echo '
+  apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    name: echo-ingress
+  spec:
+    rules:
+    - host: example.com
+      http:
+        paths:
+        - backend:
+            serviceName: echoheaders-x
+            servicePort: 80
+          path: /echo
+  ' | kubectl apply -f -
+```</p>
+</li>
+<li>
+<p>Enable OpenTracing and set the zipkin-collector-host:
+    <code class="codehilite">$ <span class="nb">echo</span> <span class="s1">&#39;</span><span class="s1">      apiVersion: v1</span><span class="s1">      kind: ConfigMap</span><span class="s1">      data:</span><span class="s1">        enable-opentracing: &quot;true&quot;</span><span class="s1">        zipkin-collector-host: zipkin.default.svc.cluster.local</span><span class="s1">        jaeger-collector-host: jaeger-collector.default.svc.cluster.local</span><span class="s1">      metadata:</span><span class="s1">        name: nginx-load-balancer-conf</span><span class="s1">        namespace: kube-system</span><span class="s1">      &#39;</span> <span class="p">|</span> kubectl replace -f -</code></p>
+</li>
+<li>
+<p>Apply the Jaeger All-In-One Template:
+    <code class="codehilite">$ kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml</code></p>
+</li>
+<li>
+<p>Make a few requests to the Service:
+    ```
+    $ curl example.com/echo -d "meow"</p>
+<p>CLIENT VALUES:
+client_address=172.17.0.5
+command=POST
+real path=/echo
+query=nil
+request_version=1.1
+request_uri=http://example.com:8080/echo</p>
+<p>SERVER VALUES:
+server_version=nginx: 1.10.0 - lua: 10001</p>
+<p>HEADERS RECEIVED:
+accept=<em>/</em>
+connection=close
+content-length=4
+content-type=application/x-www-form-urlencoded
+host=example.com
+user-agent=curl/7.54.0
+x-forwarded-for=192.168.99.1
+x-forwarded-host=example.com
+x-forwarded-port=80
+x-forwarded-proto=http
+x-original-uri=/echo
+x-real-ip=192.168.99.1
+x-scheme=http
+BODY:
+meow
+```</p>
+</li>
+<li>
+<p>View the Jaeger UI:
+    ```
+    $ minikube service jaeger-query --url</p>
+<p>http://192.168.99.100:30183
+```</p>
+<p>In the jaeger interface we can see the details:
+<img alt="jaeger screenshot" src="../../../images/jaeger-demo.png" title="jaeger collector screenshot" /></p>
+</li>
+</ol>
                 
                   
                 
