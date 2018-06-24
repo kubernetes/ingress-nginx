@@ -17,6 +17,9 @@ limitations under the License.
 package controller
 
 import (
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
 	"testing"
 
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -25,13 +28,13 @@ import (
 )
 
 func TestExtractTLSSecretName(t *testing.T) {
-	tests := []struct {
+	testCases := map[string]struct {
 		host    string
 		ingress *extensions.Ingress
 		fn      func(string) (*ingress.SSLCert, error)
 		expName string
 	}{
-		{
+		"nil ingress": {
 			"foo.bar",
 			nil,
 			func(string) (*ingress.SSLCert, error) {
@@ -39,7 +42,7 @@ func TestExtractTLSSecretName(t *testing.T) {
 			},
 			"",
 		},
-		{
+		"empty ingress": {
 			"foo.bar",
 			&extensions.Ingress{},
 			func(string) (*ingress.SSLCert, error) {
@@ -47,7 +50,7 @@ func TestExtractTLSSecretName(t *testing.T) {
 			},
 			"",
 		},
-		{
+		"ingress tls, nil secret": {
 			"foo.bar",
 			&extensions.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
@@ -69,7 +72,7 @@ func TestExtractTLSSecretName(t *testing.T) {
 			},
 			"",
 		},
-		{
+		"ingress tls, no host, matching cert cn": {
 			"foo.bar",
 			&extensions.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
@@ -88,12 +91,38 @@ func TestExtractTLSSecretName(t *testing.T) {
 			},
 			func(string) (*ingress.SSLCert, error) {
 				return &ingress.SSLCert{
-					CN: []string{"foo.bar", "example.com"},
+					Certificate: fakeX509Cert([]string{"foo.bar", "example.com"}),
 				}, nil
 			},
 			"demo",
 		},
-		{
+		"ingress tls, no host, wildcard cert with matching cn": {
+			"foo.bar",
+			&extensions.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test",
+				},
+				Spec: extensions.IngressSpec{
+					TLS: []extensions.IngressTLS{
+						{
+							SecretName: "demo",
+						},
+					},
+					Rules: []extensions.IngressRule{
+						{
+							Host: "test.foo.bar",
+						},
+					},
+				},
+			},
+			func(string) (*ingress.SSLCert, error) {
+				return &ingress.SSLCert{
+					Certificate: fakeX509Cert([]string{"*.foo.bar", "foo.bar"}),
+				}, nil
+			},
+			"demo",
+		},
+		"ingress tls, hosts, matching cert cn": {
 			"foo.bar",
 			&extensions.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
@@ -114,18 +143,29 @@ func TestExtractTLSSecretName(t *testing.T) {
 				},
 			},
 			func(string) (*ingress.SSLCert, error) {
-				return &ingress.SSLCert{
-					CN: []string{"foo.bar", "example.com"},
-				}, nil
+				return nil, nil
 			},
 			"demo",
 		},
 	}
 
-	for _, testCase := range tests {
-		name := extractTLSSecretName(testCase.host, testCase.ingress, testCase.fn)
-		if name != testCase.expName {
-			t.Errorf("expected %v as the name of the secret but got %v", testCase.expName, name)
-		}
+	for title, tc := range testCases {
+		t.Run(title, func(t *testing.T) {
+			name := extractTLSSecretName(tc.host, tc.ingress, tc.fn)
+			if name != tc.expName {
+				t.Errorf("Expected Secret name %q (got %q)", tc.expName, name)
+			}
+		})
+	}
+}
+
+var oidExtensionSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
+
+func fakeX509Cert(dnsNames []string) *x509.Certificate {
+	return &x509.Certificate{
+		DNSNames: dnsNames,
+		Extensions: []pkix.Extension{
+			{Id: oidExtensionSubjectAltName},
+		},
 	}
 }
