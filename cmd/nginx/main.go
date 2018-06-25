@@ -133,7 +133,7 @@ func main() {
 		glog.Fatalf("Error creating metric collector:  %v", err)
 	}
 
-	err = collector.NewInstance(conf.Namespace, class.IngressClass)
+	err = collector.NewInstance(conf.Namespace, class.IngressClass, conf.ExcludeRequestMetricTags)
 	if err != nil {
 		glog.Fatalf("Error creating unix socket server:  %v", err)
 	}

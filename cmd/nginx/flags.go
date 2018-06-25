@@ -147,6 +147,11 @@ Requires the update-status parameter.`)
 			`Dynamically refresh backends on topology changes instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries.`)
 
+		excludeRequestMetricTags = flags.StringArray("exclude-request-metric-tags",
+			[]string{"remote_address", "real_ip_address", "remote_user", "uri"},
+			`Tags to exclude from HTTP request metrics.
+Use this to moderate the number of contexts created on your TSDB.`)
+
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
 		statusPort    = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
@@ -248,6 +253,7 @@ Feature backed by OpenResty Lua libraries.`)
 		SyncRateLimit:               *syncRateLimit,
 		DynamicConfigurationEnabled: *dynamicConfigurationEnabled,
 		DisableLua:                  disableLua,
+		ExcludeRequestMetricTags:    *excludeRequestMetricTags,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,

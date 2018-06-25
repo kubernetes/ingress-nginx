@@ -55,20 +55,21 @@ type socketData struct {
 
 // SocketCollector stores prometheus metrics and ingress meta-data
 type SocketCollector struct {
-	upstreamResponseTime *prometheus.HistogramVec
-	requestTime          *prometheus.HistogramVec
-	requestLength        *prometheus.HistogramVec
-	bytesSent            *prometheus.HistogramVec
-	collectorSuccess     *prometheus.GaugeVec
-	collectorSuccessTime *prometheus.GaugeVec
-	requests             *prometheus.CounterVec
-	listener             net.Listener
-	ns                   string
-	ingressClass         string
+	upstreamResponseTime      *prometheus.HistogramVec
+	requestTime               *prometheus.HistogramVec
+	requestLength             *prometheus.HistogramVec
+	bytesSent                 *prometheus.HistogramVec
+	collectorSuccess          *prometheus.GaugeVec
+	collectorSuccessTime      *prometheus.GaugeVec
+	requests                  *prometheus.CounterVec
+	listener                  net.Listener
+	ns                        string
+	ingressClass              string
+	excludedRequestMetricTags map[string]struct{}
 }
 
 // NewInstance creates a new SocketCollector instance
-func NewInstance(ns string, class string) error {
+func NewInstance(ns string, class string, excludeRequestMetricTags []string) error {
 	sc := SocketCollector{}
 
 	ns = strings.Replace(ns, "-", "_", -1)
@@ -85,13 +86,26 @@ func NewInstance(ns string, class string) error {
 	requestTags := []string{"host", "status", "remote_address", "real_ip_address", "remote_user", "protocol", "method", "uri", "upstream_name", "upstream_ip", "upstream_status", "namespace", "ingress", "service"}
 	collectorTags := []string{"namespace", "ingress_class"}
 
+	sc.excludedRequestMetricTags = map[string]struct{}{}
+	for _, requestTag := range excludeRequestMetricTags {
+		sc.excludedRequestMetricTags[requestTag] = struct{}{}
+	}
+
+	realRequestTags := []string{}
+	for _, requestTag := range requestTags {
+		if _, ok := sc.excludedRequestMetricTags[requestTag]; ok {
+			continue
+		}
+		realRequestTags = append(realRequestTags, requestTag)
+	}
+
 	sc.upstreamResponseTime = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:      "upstream_response_time_seconds",
 			Help:      "The time spent on receiving the response from the upstream server",
 			Namespace: ns,
 		},
-		requestTags,
+		realRequestTags,
 	)
 
 	sc.requestTime = prometheus.NewHistogramVec(
@@ -100,7 +114,7 @@ func NewInstance(ns string, class string) error {
 			Help:      "The request processing time in seconds",
 			Namespace: ns,
 		},
-		requestTags,
+		realRequestTags,
 	)
 
 	sc.requestLength = prometheus.NewHistogramVec(
@@ -110,7 +124,7 @@ func NewInstance(ns string, class string) error {
 			Namespace: ns,
 			Buckets:   prometheus.LinearBuckets(10, 10, 10), // 10 buckets, each 10 bytes wide.
 		},
-		requestTags,
+		realRequestTags,
 	)
 
 	sc.requests = prometheus.NewCounterVec(
@@ -129,7 +143,7 @@ func NewInstance(ns string, class string) error {
 			Namespace: ns,
 			Buckets:   prometheus.ExponentialBuckets(10, 10, 7), // 7 buckets, exponential factor of 10.
 		},
-		requestTags,
+		realRequestTags,
 	)
 
 	sc.collectorSuccess = prometheus.NewGaugeVec(
@@ -193,6 +207,10 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		"namespace":       stats.Namespace,
 		"ingress":         stats.Ingress,
 		"service":         stats.Service,
+	}
+
+	for key := range sc.excludedRequestMetricTags {
+		delete(requestLabels, key)
 	}
 
 	// Create Collector Labels Map
