@@ -38,7 +38,6 @@ type socketData struct {
 
 	Protocol string `json:"protocol"` // Label
 	Method   string `json:"method"`   // Label
-	URI      string `json:"uri"`      // Label
 
 	RequestLength float64 `json:"requestLength"` // Metric
 	RequestTime   float64 `json:"requestTime"`   // Metric
@@ -51,6 +50,7 @@ type socketData struct {
 	Namespace string `json:"namespace"` // Label
 	Ingress   string `json:"ingress"`   // Label
 	Service   string `json:"service"`   // Label
+	Path      string `json:"path"`      // Label
 }
 
 // SocketCollector stores prometheus metrics and ingress meta-data
@@ -82,7 +82,7 @@ func NewInstance(ns string, class string) error {
 	sc.ns = ns
 	sc.ingressClass = class
 
-	requestTags := []string{"host", "status", "remote_address", "real_ip_address", "remote_user", "protocol", "method", "uri", "upstream_name", "upstream_ip", "upstream_status", "namespace", "ingress", "service"}
+	requestTags := []string{"host", "status", "remote_address", "real_ip_address", "remote_user", "protocol", "method", "path", "upstream_name", "upstream_ip", "upstream_status", "namespace", "ingress", "service"}
 	collectorTags := []string{"namespace", "ingress_class"}
 
 	sc.upstreamResponseTime = prometheus.NewHistogramVec(
@@ -186,7 +186,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		"remote_user":     stats.RemoteUser,
 		"protocol":        stats.Protocol,
 		"method":          stats.Method,
-		"uri":             stats.URI,
+		"path":            stats.Path,
 		"upstream_name":   stats.UpstreamName,
 		"upstream_ip":     stats.UpstreamIP,
 		"upstream_status": stats.UpstreamStatus,
