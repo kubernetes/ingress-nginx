@@ -1,5 +1,40 @@
 # Changelog
 
+### 0.16.2
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.2`
+
+*Breaking changes:*
+
+Running as user requires an update in the deployment manifest.
+
+```yaml
+  securityContext:
+    capabilities:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE
+    # www-data -> 33
+    runAsUser: 33
+```
+
+Note: the deploy [guide](https://kubernetes.github.io/ingress-nginx/deploy/#mandatory-command) contains this change
+
+*Changes:*
+
+- [X] [#2678](https://github.com/kubernetes/ingress-nginx/pull/2678) Refactor server type to include SSLCert
+- [X] [#2685](https://github.com/kubernetes/ingress-nginx/pull/2685) Fix qemu docker build
+- [X] [#2696](https://github.com/kubernetes/ingress-nginx/pull/2696) If server_tokens is disabled completely remove the Server header
+- [X] [#2698](https://github.com/kubernetes/ingress-nginx/pull/2698) Improve best-cert guessing with empty tls.hosts
+- [X] [#2701](https://github.com/kubernetes/ingress-nginx/pull/2701) Remove prometheus labels with high cardinality
+
+*Documentation:*
+
+- [X] [#2368](https://github.com/kubernetes/ingress-nginx/pull/2368) [aggregate] Fix typos across codebase
+- [X] [#2681](https://github.com/kubernetes/ingress-nginx/pull/2681) Typo fix in error message: encounted->encountered
+- [X] [#2697](https://github.com/kubernetes/ingress-nginx/pull/2697) Enhance Distributed Tracing Documentation
+
 ### 0.16.1
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.1`
