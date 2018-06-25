@@ -22,7 +22,7 @@ function _M.encode_nginx_stats()
     bytesSent = tonumber(ngx.var.bytes_sent) or -1,
     protocol = ngx.var.server_protocol or "-",
     method = ngx.var.request_method or "-",
-    uri = ngx.var.uri or "-",
+    path = ngx.var.location_path or "-",
     requestLength = tonumber(ngx.var.request_length) or -1,
     requestTime = tonumber(ngx.var.request_time) or -1,
     upstreamName = ngx.var.proxy_upstream_name or "-",
