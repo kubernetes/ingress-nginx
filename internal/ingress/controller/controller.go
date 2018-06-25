@@ -95,6 +95,8 @@ type Configuration struct {
 	DynamicConfigurationEnabled bool
 
 	DisableLua bool
+
+	ExcludeRequestMetricTags []string
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
