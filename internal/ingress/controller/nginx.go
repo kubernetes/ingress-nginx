@@ -61,8 +61,6 @@ import (
 	"k8s.io/ingress-nginx/internal/watch"
 )
 
-type statusModule string
-
 const (
 	ngxHealthPath = "/healthz"
 )
@@ -236,7 +234,6 @@ type NGINXController struct {
 
 	resolver []net.IP
 
-	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
 
 	isShuttingDown bool
@@ -342,8 +339,8 @@ func (n *NGINXController) Stop() error {
 		n.syncStatus.Shutdown()
 	}
 
-	// Send stop signal to Nginx
-	glog.Info("stopping NGINX process...")
+	// send stop signal to NGINX
+	glog.Info("Stopping NGINX process")
 	cmd := nginxExecCommand("-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -464,10 +461,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		n.Proxy.ServerList = servers
 	}
 
-	// NGINX cannot resize the hash tables used to store server names.
-	// For this reason we check if the defined size defined is correct
-	// for the FQDN defined in the ingress rules adjusting the value
-	// if is required.
+	// NGINX cannot resize the hash tables used to store server names. For
+	// this reason we check if the current size is correct for the host
+	// names defined in the Ingress rules and adjust the value if
+	// necessary.
 	// https://trac.nginx.org/nginx/ticket/352
 	// https://trac.nginx.org/nginx/ticket/631
 	var longestName int

@@ -17,15 +17,19 @@ limitations under the License.
 package servicebackend
 
 import (
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	"github.com/parnurzeal/gorequest"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
-	"strings"
 )
 
 var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
