@@ -1063,7 +1063,7 @@ func extractTLSSecretName(host string, ing *extensions.Ingress,
 		}
 	}
 
-	// no TLS host matching host name, try each TLS host for matching CN
+	// no TLS host matching host name, try each TLS host for matching SAN or CN
 	for _, tls := range ing.Spec.TLS {
 		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
 		cert, err := getLocalSSLCert(key)
@@ -1072,13 +1072,16 @@ func extractTLSSecretName(host string, ing *extensions.Ingress,
 			continue
 		}
 
-		if cert == nil {
+		if cert == nil { // for tests
 			continue
 		}
 
-		if sets.NewString(cert.CN...).Has(host) {
-			return tls.SecretName
+		err = cert.Certificate.VerifyHostname(host)
+		if err != nil {
+			continue
 		}
+		glog.V(3).Infof("Found SSL certificate matching host %q: %q", host, key)
+		return tls.SecretName
 	}
 
 	return ""
