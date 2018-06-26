@@ -840,8 +840,14 @@ stream {
         }
         {{ end }}
 
+        {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
+        {{ if (eq (index $ing.Annotations "location-regex") "~*") }}
+        location ~* {{ $path }} {
+        {{ else if (eq (index $ing.Annotations "location-regex") "~") }}
+        location ~ {{ $path }} {
+        {{ else }}
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
+        {{ end }}
             set $namespace      "{{ $ing.Namespace }}";
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
