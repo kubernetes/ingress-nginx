@@ -4,6 +4,8 @@ approvers:
   - sig-network-leads
   - ingress-nginx-admins
   - ingress-nginx-maintainers
+  - ElvinEfendi
+  - antoineco
 
 reviewers:
   - aledbf

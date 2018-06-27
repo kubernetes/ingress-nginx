@@ -25,6 +25,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"github.com/mitchellh/hashstructure"
 	"github.com/mitchellh/mapstructure"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -132,7 +133,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, proxyHeaderTimeout)
 		duration, err := time.ParseDuration(val)
 		if err != nil {
-			glog.Warningf("proxy-protocol-header-timeout of %v encounted an error while being parsed %v. Switching to use default value instead.", val, err)
+			glog.Warningf("proxy-protocol-header-timeout of %v encountered an error while being parsed %v. Switching to use default value instead.", val, err)
 		} else {
 			to.ProxyProtocolHeaderTimeout = duration
 		}
@@ -190,6 +191,15 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if err != nil {
 		glog.Warningf("unexpected error merging defaults: %v", err)
 	}
+
+	hash, err := hashstructure.Hash(to, &hashstructure.HashOptions{
+		TagName: "json",
+	})
+	if err != nil {
+		glog.Warningf("unexpected error obtaining hash: %v", err)
+	}
+
+	to.Checksum = fmt.Sprintf("%v", hash)
 
 	return to
 }

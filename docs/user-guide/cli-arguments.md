@@ -33,7 +33,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | --publish-status-address string   | Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
 | --report-node-internal-ip-address | Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter. |
 | --sort-backends                   | Sort servers inside NGINX upstreams. |
-| --ssl-passtrough-proxy-port int   | Port to use internally for SSL Passthgough. (default 442) |
+| --ssl-passthrough-proxy-port int  | Port to use internally for SSL Passthrough. (default 442) |
 | --status-port int                 | Port to use for exposing NGINX status pages. (default 18080) |
 | --stderrthreshold severity        | logs at or above this threshold go to stderr (default 2) |
 | --sync-period duration            | Period at which the controller forces the repopulation of its local object stores. (default 10m0s) |

@@ -17,8 +17,6 @@ limitations under the License.
 package ingress
 
 import (
-	"time"
-
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -65,6 +63,9 @@ type Configuration struct {
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
 	PassthroughBackends []*SSLPassthroughBackend `json:"passthroughBackends,omitempty"`
+
+	// ConfigurationChecksum contains the particular checksum of a Configuration object
+	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -140,18 +141,8 @@ type Server struct {
 	// SSLPassthrough indicates if the TLS termination is realized in
 	// the server or in the remote endpoint
 	SSLPassthrough bool `json:"sslPassthrough"`
-	// SSLCertificate path to the SSL certificate on disk
-	SSLCertificate string `json:"sslCertificate"`
-	// SSLFullChainCertificate path to the SSL certificate on disk
-	// This certificate contains the full chain (ca + intermediates + cert)
-	SSLFullChainCertificate string `json:"sslFullChainCertificate"`
-	// SSLExpireTime has the expire date of this certificate
-	SSLExpireTime time.Time `json:"sslExpireTime"`
-	// SSLPemChecksum returns the checksum of the certificate file on disk.
-	// There is no restriction in the hash generator. This checksum can be
-	// used to  determine if the secret changed without the use of file
-	// system notifications
-	SSLPemChecksum string `json:"sslPemChecksum"`
+	// SSLCert describes the certificate that will be used on the server
+	SSLCert SSLCert `json:"sslCert"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
 	// Alias return the alias of the server name

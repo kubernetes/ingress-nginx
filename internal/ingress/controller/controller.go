@@ -22,7 +22,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/golang/glog"
@@ -155,14 +154,16 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		TCPEndpoints:        n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
 		UDPEndpoints:        n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
 		PassthroughBackends: passUpstreams,
+
+		ConfigurationChecksum: n.store.GetBackendConfiguration().Checksum,
 	}
 
-	if !n.isForceReload() && n.runningConfig.Equal(&pcfg) {
+	if n.runningConfig.Equal(&pcfg) {
 		glog.V(3).Infof("No configuration change detected, skipping backend reload.")
 		return nil
 	}
 
-	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(&pcfg) && !n.isForceReload() {
+	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(&pcfg) {
 		glog.Infof("Changes handled by the dynamic configuration, skipping backend reload.")
 	} else {
 		glog.Infof("Configuration changes detected, backend reload required.")
@@ -200,16 +201,15 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	n.runningConfig = &pcfg
-	n.SetForceReload(false)
 
 	return nil
 }
 
 func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Protocol) []ingress.L4Service {
-	glog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
 	if configmapName == "" {
 		return []ingress.L4Service{}
 	}
+	glog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
 
 	_, _, err := k8s.ParseNameNS(configmapName)
 	if err != nil {
@@ -858,9 +858,11 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	// initialize default server and root location
 	servers[defServerName] = &ingress.Server{
-		Hostname:       defServerName,
-		SSLCertificate: defaultPemFileName,
-		SSLPemChecksum: defaultPemSHA,
+		Hostname: defServerName,
+		SSLCert: ingress.SSLCert{
+			PemFileName: defaultPemFileName,
+			PemSHA:      defaultPemSHA,
+		},
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
@@ -989,7 +991,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			}
 
 			// only add a certificate if the server does not have one previously configured
-			if servers[host].SSLCertificate != "" {
+			if servers[host].SSLCert.PemFileName != "" {
 				continue
 			}
 
@@ -1002,8 +1004,8 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 			if tlsSecretName == "" {
 				glog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
-				servers[host].SSLCertificate = defaultPemFileName
-				servers[host].SSLPemChecksum = defaultPemSHA
+				servers[host].SSLCert.PemFileName = defaultPemFileName
+				servers[host].SSLCert.PemSHA = defaultPemSHA
 				continue
 			}
 
@@ -1017,7 +1019,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			err = cert.Certificate.VerifyHostname(host)
 			if err != nil {
 				glog.Warningf("Unexpected error validating SSL certificate %q for server %q: %v", key, host, err)
-				glog.Warningf("Validating certificate against DNS names. This will be deprecated in a future version.")
+				glog.Warning("Validating certificate against DNS names. This will be deprecated in a future version.")
 				// check the Common Name field
 				// https://github.com/golang/go/issues/22922
 				err := verifyHostname(host, cert.Certificate)
@@ -1027,40 +1029,22 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				}
 			}
 
-			servers[host].SSLCertificate = cert.PemFileName
-			servers[host].SSLFullChainCertificate = cert.FullChainPemFileName
-			servers[host].SSLPemChecksum = cert.PemSHA
-			servers[host].SSLExpireTime = cert.ExpireTime
+			servers[host].SSLCert = *cert
 
 			if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
-				glog.Warningf("SSL certificate for server %q is about to expire (%v)", cert.ExpireTime)
+				glog.Warningf("SSL certificate for server %q is about to expire (%v)", host, cert.ExpireTime)
 			}
 		}
 	}
 
 	for alias, host := range aliases {
 		if _, ok := servers[alias]; ok {
-			glog.Warningf("Conflicting hostname (%v) and alias (%v) in server %q. Removing alias to avoid conflicts.", alias, host)
+			glog.Warningf("Conflicting hostname (%v) and alias (%v). Removing alias to avoid conflicts.", host, alias)
 			servers[host].Alias = ""
 		}
 	}
 
 	return servers
-}
-
-func (n *NGINXController) isForceReload() bool {
-	return atomic.LoadInt32(&n.forceReload) != 0
-}
-
-// SetForceReload sets whether the backend should be reloaded regardless of
-// configuration changes.
-func (n *NGINXController) SetForceReload(shouldReload bool) {
-	if shouldReload {
-		atomic.StoreInt32(&n.forceReload, 1)
-		n.syncQueue.Enqueue(&extensions.Ingress{})
-	} else {
-		atomic.StoreInt32(&n.forceReload, 0)
-	}
 }
 
 // extractTLSSecretName returns the name of the Secret containing a SSL
@@ -1079,7 +1063,7 @@ func extractTLSSecretName(host string, ing *extensions.Ingress,
 		}
 	}
 
-	// no TLS host matching host name, try each TLS host for matching CN
+	// no TLS host matching host name, try each TLS host for matching SAN or CN
 	for _, tls := range ing.Spec.TLS {
 		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
 		cert, err := getLocalSSLCert(key)
@@ -1088,13 +1072,16 @@ func extractTLSSecretName(host string, ing *extensions.Ingress,
 			continue
 		}
 
-		if cert == nil {
+		if cert == nil { // for tests
 			continue
 		}
 
-		if sets.NewString(cert.CN...).Has(host) {
-			return tls.SecretName
+		err = cert.Certificate.VerifyHostname(host)
+		if err != nil {
+			continue
 		}
+		glog.V(3).Infof("Found SSL certificate matching host %q: %q", host, key)
+		return tls.SecretName
 	}
 
 	return ""

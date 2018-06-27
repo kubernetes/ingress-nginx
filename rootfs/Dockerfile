@@ -20,22 +20,35 @@ WORKDIR  /etc/nginx
 
 RUN clean-install \
   diffutils \
-  dumb-init \
-  libcap2-bin 
-
-# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
-# This only works if nginx is started with CMD or ENTRYPOINT
-RUN mkdir -p /var/log/nginx \
-  && ln -sf /dev/stdout /var/log/nginx/access.log \
-  && ln -sf /dev/stderr /var/log/nginx/error.log
+  libcap2-bin \
+  dumb-init
 
 COPY . /
 
-RUN setcap cap_net_bind_service=+ep /usr/sbin/nginx \
-  && setcap cap_net_bind_service=+ep /nginx-ingress-controller
+RUN setcap cap_net_bind_service=+ep /nginx-ingress-controller
 
-RUN mkdir -p /etc/ingress-controller/ssl /etc/ingress-controller/auth \
-  && chown -R www-data.www-data /etc/nginx /etc/ingress-controller
+# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
+# This only works if nginx is started with CMD or ENTRYPOINT
+# Required because clean-install removes /var/log content
+# We cannot chown /etc/nginx recursively because that adds 100MB to the image
+RUN  mkdir -p /var/log/nginx \
+  && ln -sf /dev/stdout /var/log/nginx/access.log \
+  && ln -sf /dev/stderr /var/log/nginx/error.log \
+  && bash -eux -c ' \
+    writeDirs=( \
+      /etc/nginx/template \
+      /etc/ingress-controller/ssl \
+      /etc/ingress-controller/auth \
+      /var/log \
+      /var/log/nginx \
+    ); \
+    for dir in "${writeDirs[@]}"; do \
+      mkdir -p ${dir}; \
+      chown -R www-data.www-data ${dir}; \
+    done \
+    ' \
+  && chown www-data.www-data /etc/nginx/nginx.conf \
+  && chown www-data.www-data /etc/nginx/opentracing.json
 
 USER www-data
 

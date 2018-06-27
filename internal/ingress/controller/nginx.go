@@ -31,6 +31,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"text/template"
 	"time"
 
 	"github.com/golang/glog"
@@ -38,7 +39,6 @@ import (
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -60,8 +60,6 @@ import (
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
 )
-
-type statusModule string
 
 const (
 	ngxHealthPath = "/healthz"
@@ -153,7 +151,7 @@ Error loading new template: %v
 
 		n.t = template
 		glog.Info("New NGINX configuration template loaded.")
-		n.SetForceReload(true)
+		n.syncQueue.EnqueueTask(task.GetDummyObject("template-change"))
 	}
 
 	ngxTpl, err := ngx_template.NewTemplate(tmplPath, fs)
@@ -194,7 +192,7 @@ Error loading new template: %v
 	for _, f := range filesToWatch {
 		_, err = watch.NewFileWatcher(f, func() {
 			glog.Info("File %v changed. Reloading NGINX", f)
-			n.SetForceReload(true)
+			n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
 		})
 		if err != nil {
 			glog.Fatalf("Error creating file watcher for %v: %v", f, err)
@@ -232,13 +230,10 @@ type NGINXController struct {
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
-	forceReload int32
-
 	t *ngx_template.Template
 
 	resolver []net.IP
 
-	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
 
 	isShuttingDown bool
@@ -278,7 +273,7 @@ func (n *NGINXController) Start() {
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
-	n.syncQueue.Enqueue(&extensions.Ingress{})
+	n.syncQueue.EnqueueTask(task.GetDummyObject("initial-sync"))
 
 	for {
 		select {
@@ -311,10 +306,12 @@ func (n *NGINXController) Start() {
 			if evt, ok := event.(store.Event); ok {
 				glog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
 				if evt.Type == store.ConfigurationEvent {
-					n.SetForceReload(true)
+					// TODO: is this necessary? Consider removing this special case
+					n.syncQueue.EnqueueTask(task.GetDummyObject("configmap-change"))
+					continue
 				}
 
-				n.syncQueue.Enqueue(evt.Obj)
+				n.syncQueue.EnqueueSkippableTask(evt.Obj)
 			} else {
 				glog.Warningf("Unexpected event type received %T", event)
 			}
@@ -342,8 +339,8 @@ func (n *NGINXController) Stop() error {
 		n.syncStatus.Shutdown()
 	}
 
-	// Send stop signal to Nginx
-	glog.Info("stopping NGINX process...")
+	// send stop signal to NGINX
+	glog.Info("Stopping NGINX process")
 	cmd := nginxExecCommand("-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -464,10 +461,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		n.Proxy.ServerList = servers
 	}
 
-	// NGINX cannot resize the hash tables used to store server names.
-	// For this reason we check if the defined size defined is correct
-	// for the FQDN defined in the ingress rules adjusting the value
-	// if is required.
+	// NGINX cannot resize the hash tables used to store server names. For
+	// this reason we check if the current size is correct for the host
+	// names defined in the Ingress rules and adjust the value if
+	// necessary.
 	// https://trac.nginx.org/nginx/ticket/352
 	// https://trac.nginx.org/nginx/ticket/631
 	var longestName int
@@ -594,9 +591,15 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	content, err := n.t.Write(tc)
-
 	if err != nil {
 		return err
+	}
+
+	if cfg.EnableOpentracing {
+		err := createOpentracingCfg(cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = n.testTemplate(content)
@@ -779,4 +782,48 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 	}
 
 	return nil
+}
+
+const zipkinTmpl = `{
+  "service_name": "{{ .ZipkinServiceName }}",
+  "collector_host": "{{ .ZipkinCollectorHost }}",
+  "collector_port": {{ .ZipkinCollectorPort }}
+}`
+
+const jaegerTmpl = `{
+  "service_name": "{{ .JaegerServiceName }}",
+  "sampler": {
+	"type": "{{ .JaegerSamplerType }}",
+	"param": {{ .JaegerSamplerParam }}
+  },
+  "reporter": {
+	"localAgentHostPort": "{{ .JaegerCollectorHost }}:{{ .JaegerCollectorPort }}"
+  }
+}`
+
+func createOpentracingCfg(cfg ngx_config.Configuration) error {
+	var tmpl *template.Template
+	var err error
+
+	if cfg.ZipkinCollectorHost != "" {
+		tmpl, err = template.New("zipkin").Parse(zipkinTmpl)
+		if err != nil {
+			return err
+		}
+	} else if cfg.JaegerCollectorHost != "" {
+		tmpl, err = template.New("jarger").Parse(jaegerTmpl)
+		if err != nil {
+			return err
+		}
+	} else {
+		tmpl, _ = template.New("empty").Parse("{}")
+	}
+
+	tmplBuf := bytes.NewBuffer(make([]byte, 0))
+	err = tmpl.Execute(tmplBuf, cfg)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile("/etc/nginx/opentracing.json", tmplBuf.Bytes(), file.ReadWriteByUser)
 }

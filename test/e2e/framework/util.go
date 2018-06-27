@@ -226,7 +226,7 @@ func fileInFS(file string, fs file.Filesystem) wait.ConditionFunc {
 		}
 
 		if stat == nil {
-			return false, fmt.Errorf("file %v does not exists", file)
+			return false, fmt.Errorf("file %v does not exist", file)
 		}
 
 		if stat.Size() > 0 {
