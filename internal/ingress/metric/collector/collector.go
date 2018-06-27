@@ -17,8 +17,11 @@ limitations under the License.
 package collector
 
 import (
+	"bytes"
 	"encoding/json"
 	"net"
+	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -61,6 +64,8 @@ type SocketCollector struct {
 	listener             net.Listener
 	ns                   string
 	ingressClass         string
+
+	metricMapping map[string]*prometheus.HistogramVec
 }
 
 // NewInstance creates a new SocketCollector instance
@@ -155,6 +160,13 @@ func NewInstance(ns string, class string) (*SocketCollector, error) {
 	prometheus.MustRegister(sc.collectorSuccessTime)
 
 	go sc.Run()
+
+	sc.metricMapping = map[string]*prometheus.HistogramVec{
+		"upstream_response_time_seconds_bucket": sc.upstreamResponseTime,
+		"request_duration_seconds_bucket":       sc.requestLength,
+		"request_length_bytes_bucket":           sc.requestLength,
+		"bytes_sent_bucket":                     sc.bytesSent,
+	}
 
 	return sc, nil
 }
@@ -275,30 +287,20 @@ func (sc *SocketCollector) Run() {
 
 // RemoveMetrics cleans up any metrics that do not have a respective value
 // associated with the label anymore.
-func (sc *SocketCollector) RemoveMetrics(label string, values []string) {
-	for _, val := range values {
-		glog.Infof("Removing prometheus metric %v=%v", label, val)
-		l := prometheus.Labels{}
-		l[label] = val
+func (sc *SocketCollector) RemoveMetrics(metrics string, endpoints []string) {
+	for _, endpoint := range endpoints {
+		for metricName, promHistogram := range sc.metricMapping {
+			glog.Infof("Removing prometheus metric from histogram %v for endpoint %v", metricName, endpoint)
 
-		removed := sc.upstreamResponseTime.Delete(l)
-		if !removed {
-			glog.Warningf("prometheus histogram upstream response time does not contain metrics for label %v=%v", label, val)
-		}
+			em := extractMetrics(endpoint, metricName, metrics)
+			for _, metric := range em {
+				l := parseLabels(metric)
+				if len(l) == 0 {
+					continue
+				}
 
-		removed = sc.requestTime.Delete(l)
-		if !removed {
-			glog.Warningf("prometheus histogram request time does not contain metrics for label %v=%v", label, val)
-		}
-
-		removed = sc.requestLength.Delete(l)
-		if !removed {
-			glog.Warningf("prometheus histogram request length does not contain metrics for label %v=%v", label, val)
-		}
-
-		removed = sc.bytesSent.Delete(l)
-		if !removed {
-			glog.Warningf("prometheus histogram bytes sent does not contain metrics for label %v=%v", label, val)
+				promHistogram.DeleteLabelValues(l...)
+			}
 		}
 	}
 }
@@ -316,4 +318,52 @@ func handleMessages(conn net.Conn, fn func([]byte)) {
 	}
 
 	fn(msg[0:s])
+}
+
+func extractMetrics(endpoint, metricName, metrics string) []string {
+	out := bytes.NewBuffer(make([]byte, 1024))
+	cmd := exec.Command("/ingress-controller/extract-metrics.sh", endpoint, metricName)
+	cmd.Stdin = bytes.NewBufferString(metrics)
+	cmd.Stdout = out
+	if err := cmd.Run(); err != nil {
+		glog.Warningf("unexpected error extracting metrics: %v", err)
+		return nil
+	}
+
+	s := strings.SplitAfter(out.String(), "|")
+	glog.V(3).Infof("Extracted metrics (%v) for endpoint %v: %v", metricName, endpoint, s)
+	return s
+}
+
+// regex to parse a single label k=v
+var kvRegex = regexp.MustCompile(`(\w+)="(.*)"`)
+
+// parse a string containing a metric from the /metric
+// endpoint and return a prometheus label
+func parseLabels(input string) []string {
+	tokens := strings.Split(input, ",")
+
+	data := make(map[string]string, 11)
+	for _, pairs := range tokens {
+		kv := kvRegex.FindStringSubmatch(pairs)
+		if len(kv) != 3 {
+			continue
+		}
+
+		data[kv[1]] = kv[2]
+	}
+
+	return []string{
+		data["host"],
+		data["status"],
+		data["protocol"],
+		data["method"],
+		data["path"],
+		data["upstream_name"],
+		data["upstream_ip"],
+		data["upstream_status"],
+		data["namespace"],
+		data["ingress"],
+		data["service"],
+	}
 }

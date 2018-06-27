@@ -19,6 +19,7 @@ package collector
 import (
 	"fmt"
 	"net"
+	"reflect"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -62,5 +63,45 @@ func TestNewUDPLogListener(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 	if count != 1 {
 		t.Errorf("expected only one message from the UDP listern but %v returned", count)
+	}
+}
+
+const metricExample = `
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.005"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.01"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.025"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.05"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.1"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.25"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.5"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="1"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="2.5"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="5"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="10"} 2
+upstream_response_time_seconds_bucket{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="+Inf"} 2
+upstream_response_time_seconds_sum{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200"} 0.001
+upstream_response_time_seconds_count{host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200"} 2
+`
+
+func TestExtractMetrics(t *testing.T) {
+	m := extractMetrics("172.17.0.4:8080", "upstream_response_time_seconds_bucket", metricExample)
+
+	em := []string{
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.005"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.01"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.025"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.05"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.1"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.25"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="0.5"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="1"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="2.5"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="5"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="10"`,
+		`host="echoheaders",ingress="http-svc",method="GET",namespace="default",path="/",protocol="HTTP/1.1",service="http-svc",status="200",upstream_ip="172.17.0.4:8080",upstream_name="default-http-svc-80",upstream_status="200",le="+Inf"`,
+	}
+
+	if !reflect.DeepEqual(em, m) {
+		t.Errorf("unexpected metrics extracted \n%v\n%v\n", em, m)
 	}
 }

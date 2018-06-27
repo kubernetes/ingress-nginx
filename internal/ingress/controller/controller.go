@@ -18,7 +18,9 @@ package controller
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -202,7 +204,21 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	re := getRemovedEndpoints(n.runningConfig, &pcfg)
 	if len(re) > 0 {
-		go n.metricCollector.RemoveMetrics("upstream_ip", re)
+		glog.Infof("removing endpoints from prometheus metrics: %v", re)
+		res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v/metrics", n.cfg.ListenPorts.Health))
+		if err != nil {
+			return err
+		}
+
+		defer res.Body.Close()
+		if res.StatusCode == 200 {
+			bodyBytes, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				return err
+			}
+
+			go n.metricCollector.RemoveMetrics(string(bodyBytes), re)
+		}
 	}
 
 	n.runningConfig = &pcfg
