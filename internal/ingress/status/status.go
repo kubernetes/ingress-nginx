@@ -183,9 +183,10 @@ func NewStatusSyncer(config Config) Sync {
 		OnStartedLeading: func(stop <-chan struct{}) {
 			glog.V(2).Infof("I am the new status update leader")
 			go st.syncQueue.Run(time.Second, stop)
+			// when this instance is the leader we need to enqueue
+			// an item to trigger the update of the Ingress status.
 			wait.PollUntil(updateInterval, func() (bool, error) {
-				// send a dummy object to the queue to force a sync
-				st.syncQueue.Enqueue("sync status")
+				st.syncQueue.EnqueueTask(task.GetDummyObject("sync status"))
 				return false, nil
 			}, stop)
 		},

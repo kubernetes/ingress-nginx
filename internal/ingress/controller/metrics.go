@@ -114,7 +114,7 @@ func ConfigSuccessTime() {
 func setSSLExpireTime(servers []*ingress.Server) {
 	for _, s := range servers {
 		if s.Hostname != defServerName {
-			sslExpireTime.WithLabelValues(s.Hostname).Set(float64(s.SSLExpireTime.Unix()))
+			sslExpireTime.WithLabelValues(s.Hostname).Set(float64(s.SSLCert.ExpireTime.Unix()))
 		}
 	}
 }
