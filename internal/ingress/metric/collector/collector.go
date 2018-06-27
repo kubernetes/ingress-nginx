@@ -64,14 +64,14 @@ type SocketCollector struct {
 }
 
 // NewInstance creates a new SocketCollector instance
-func NewInstance(ns string, class string) error {
-	sc := SocketCollector{}
+func NewInstance(ns string, class string) (*SocketCollector, error) {
+	sc := &SocketCollector{}
 
 	ns = strings.Replace(ns, "-", "_", -1)
 
 	listener, err := net.Listen("unix", "/tmp/prometheus-nginx.socket")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sc.listener = listener
@@ -156,7 +156,7 @@ func NewInstance(ns string, class string) error {
 
 	go sc.Run()
 
-	return nil
+	return sc, nil
 }
 
 func (sc *SocketCollector) handleMessage(msg []byte) {
@@ -270,6 +270,36 @@ func (sc *SocketCollector) Run() {
 		}
 
 		go handleMessages(conn, sc.handleMessage)
+	}
+}
+
+// RemoveMetrics cleans up any metrics that do not have a respective value
+// associated with the label anymore.
+func (sc *SocketCollector) RemoveMetrics(label string, values []string) {
+	for _, val := range values {
+		glog.Infof("Removing prometheus metric %v=%v", label, val)
+		l := prometheus.Labels{}
+		l[label] = val
+
+		removed := sc.upstreamResponseTime.Delete(l)
+		if !removed {
+			glog.Warningf("prometheus histogram upstream response time does not contain metrics for label %v=%v", label, val)
+		}
+
+		removed = sc.requestTime.Delete(l)
+		if !removed {
+			glog.Warningf("prometheus histogram request time does not contain metrics for label %v=%v", label, val)
+		}
+
+		removed = sc.requestLength.Delete(l)
+		if !removed {
+			glog.Warningf("prometheus histogram request length does not contain metrics for label %v=%v", label, val)
+		}
+
+		removed = sc.bytesSent.Delete(l)
+		if !removed {
+			glog.Warningf("prometheus histogram bytes sent does not contain metrics for label %v=%v", label, val)
+		}
 	}
 }
 

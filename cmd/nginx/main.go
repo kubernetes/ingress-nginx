@@ -118,25 +118,23 @@ func main() {
 
 	conf.Client = kubeClient
 
-	ngx := controller.NewNGINXController(conf, fs)
+	err = collector.InitNGINXStatusCollector(conf.Namespace, class.IngressClass, conf.ListenPorts.Status)
+	if err != nil {
+		glog.Fatalf("Error creating metric collector:  %v", err)
+	}
 
+	mc, err := collector.NewInstance(conf.Namespace, class.IngressClass)
+	if err != nil {
+		glog.Fatalf("Error creating unix socket server:  %v", err)
+	}
+
+	ngx := controller.NewNGINXController(conf, mc, fs)
 	go handleSigterm(ngx, func(code int) {
 		os.Exit(code)
 	})
 
 	mux := http.NewServeMux()
 	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux)
-
-	err = collector.InitNGINXStatusCollector(conf.Namespace, class.IngressClass, conf.ListenPorts.Status)
-
-	if err != nil {
-		glog.Fatalf("Error creating metric collector:  %v", err)
-	}
-
-	err = collector.NewInstance(conf.Namespace, class.IngressClass)
-	if err != nil {
-		glog.Fatalf("Error creating unix socket server:  %v", err)
-	}
 
 	ngx.Start()
 }

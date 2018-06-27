@@ -53,6 +53,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
+	"k8s.io/ingress-nginx/internal/ingress/metric/collector"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
@@ -70,7 +71,7 @@ var (
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
-func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXController {
+func NewNGINXController(config *Configuration, mc *collector.SocketCollector, fs file.Filesystem) *NGINXController {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
@@ -103,6 +104,8 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		runningConfig: new(ingress.Configuration),
 
 		Proxy: &TCPProxy{},
+
+		metricCollector: mc,
 	}
 
 	n.store = store.New(
@@ -243,6 +246,8 @@ type NGINXController struct {
 	store store.Storer
 
 	fileSystem filesystem.Filesystem
+
+	metricCollector *collector.SocketCollector
 }
 
 // Start starts a new NGINX master process running in the foreground.
