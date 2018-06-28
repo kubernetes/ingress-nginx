@@ -433,6 +433,10 @@ type Configuration struct {
 	// Default: nginx
 	ZipkinServiceName string `json:"zipkin-service-name"`
 
+	// ZipkinSampleRate specifies sampling rate for traces
+	// Default: 1.0
+	ZipkinSampleRate float32 `json:"zipkin-sample-rate"`
+
 	// JaegerCollectorHost specifies the host to use when uploading traces
 	JaegerCollectorHost string `json:"jaeger-collector-host"`
 
@@ -612,6 +616,7 @@ func NewDefault() Configuration {
 		BindAddressIpv6:              defBindAddress,
 		ZipkinCollectorPort:          9411,
 		ZipkinServiceName:            "nginx",
+		ZipkinSampleRate:             1.0,
 		JaegerCollectorPort:          6831,
 		JaegerServiceName:            "nginx",
 		JaegerSamplerType:            "const",
