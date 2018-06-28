@@ -787,7 +787,8 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 const zipkinTmpl = `{
   "service_name": "{{ .ZipkinServiceName }}",
   "collector_host": "{{ .ZipkinCollectorHost }}",
-  "collector_port": {{ .ZipkinCollectorPort }}
+  "collector_port": {{ .ZipkinCollectorPort }},
+  "sample_rate": {{ .ZipkinSampleRate }}
 }`
 
 const jaegerTmpl = `{

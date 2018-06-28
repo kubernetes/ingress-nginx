@@ -107,6 +107,7 @@ The following table shows a configuration option's name, type, and the default v
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
 |[zipkin-collector-port](#zipkin-collector-port)|int|9411|
 |[zipkin-service-name](#zipkin-service-name)|string|"nginx"|
+|[zipkin-sample-rate](#zipkin-sample-rate)|float|1.0|
 |[jaeger-collector-host](#jaeger-collector-host)|string|""|
 |[jaeger-collector-port](#jaeger-collector-port)|int|6831|
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
@@ -600,6 +601,10 @@ Specifies the port to use when uploading traces. _**default:**_ 9411
 ## zipkin-service-name
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
+
+## zipkin-sample-rate
+
+Specifies sample rate for any traces created. _**default:**_ 1.0
 
 ## jaeger-collector-host
 
