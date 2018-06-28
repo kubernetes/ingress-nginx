@@ -285,8 +285,12 @@ func (sc *SocketCollector) Run() {
 	}
 }
 
-// RemoveMetrics cleans up any metrics that do not have a respective value
-// associated with the label anymore.
+// RemoveMetrics deletes prometheus metrics from prometheus for endpoints that
+// are not available anymore.
+// To remove prometheus metrics is necessary to pass all the labels present in the metric.
+// For this reason we use the current metric state to filter those metrics using the IP
+// address and port of the endpoint to be removed.
+// Ref: https://godoc.org/github.com/prometheus/client_golang/prometheus#CounterVec.DeleteLabelValues
 func (sc *SocketCollector) RemoveMetrics(metrics string, endpoints []string) {
 	for _, endpoint := range endpoints {
 		for metricName, promHistogram := range sc.metricMapping {
@@ -320,26 +324,37 @@ func handleMessages(conn net.Conn, fn func([]byte)) {
 	fn(msg[0:s])
 }
 
+var execCommand = exec.Command
+
+// extractMetrics filters the metrics using the endpoint information and the name
+// of the histogram from where we need to remove the metric.
+// Each item in the array contains a complete metric.
 func extractMetrics(endpoint, metricName, metrics string) []string {
-	out := bytes.NewBuffer(make([]byte, 1024))
-	cmd := exec.Command("/ingress-controller/extract-metrics.sh", endpoint, metricName)
+	cmd := execCommand("/ingress-controller/extract-metrics.sh", endpoint, metricName)
 	cmd.Stdin = bytes.NewBufferString(metrics)
-	cmd.Stdout = out
-	if err := cmd.Run(); err != nil {
+	out, err := cmd.CombinedOutput()
+	if err != nil {
 		glog.Warningf("unexpected error extracting metrics: %v", err)
 		return nil
 	}
 
-	s := strings.SplitAfter(out.String(), "|")
-	glog.V(3).Infof("Extracted metrics (%v) for endpoint %v: %v", metricName, endpoint, s)
-	return s
+	s := strings.SplitAfter(string(out), "|")
+	var r []string
+	for _, s := range s {
+		if s == "" || s == "\n" {
+			continue
+		}
+		r = append(r, strings.TrimSpace(s))
+	}
+	glog.V(3).Infof("Extracted metrics (%v) for endpoint %v: %v", metricName, endpoint, r)
+	return r
 }
 
 // regex to parse a single label k=v
 var kvRegex = regexp.MustCompile(`(\w+)="(.*)"`)
 
-// parse a string containing a metric from the /metric
-// endpoint and return a prometheus label
+// parse a string containing a prometheus metric returning an array
+// with the label values to be used in the delete operation
 func parseLabels(input string) []string {
 	tokens := strings.Split(input, ",")
 
