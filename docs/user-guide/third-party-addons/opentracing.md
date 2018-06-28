@@ -31,6 +31,9 @@ zipkin-collector-port
 # specifies the service name to use for any traces created, Default: nginx
 zipkin-service-name
 
+# specifies sample rate for any traces created. Default: 1.0
+zipkin-sample-rate
+
 # specifies the port to use when uploading traces
 jaeger-collector-port
 
