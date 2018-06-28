@@ -34,6 +34,7 @@ func TestNewUDPLogListener(t *testing.T) {
 	fn := func(message []byte) {
 		t.Logf("message: %v", string(message))
 		atomic.AddUint64(&count, 1)
+		time.Sleep(time.Millisecond)
 	}
 
 	tmpFile := fmt.Sprintf("/tmp/test-socket-%v", time.Now().Nanosecond())
@@ -64,8 +65,8 @@ func TestNewUDPLogListener(t *testing.T) {
 	conn.Close()
 
 	time.Sleep(1 * time.Millisecond)
-	if count != 1 {
-		t.Errorf("expected only one message from the UDP listern but %v returned", count)
+	if atomic.LoadUint64(&count) != 1 {
+		t.Errorf("expected only one message from the UDP listern but %v returned", atomic.LoadUint64(&count))
 	}
 }
 
