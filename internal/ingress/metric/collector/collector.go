@@ -17,8 +17,11 @@ limitations under the License.
 package collector
 
 import (
+	"bytes"
 	"encoding/json"
 	"net"
+	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -61,17 +64,19 @@ type SocketCollector struct {
 	listener             net.Listener
 	ns                   string
 	ingressClass         string
+
+	metricMapping map[string]*prometheus.HistogramVec
 }
 
 // NewInstance creates a new SocketCollector instance
-func NewInstance(ns string, class string) error {
-	sc := SocketCollector{}
+func NewInstance(ns string, class string) (*SocketCollector, error) {
+	sc := &SocketCollector{}
 
 	ns = strings.Replace(ns, "-", "_", -1)
 
 	listener, err := net.Listen("unix", "/tmp/prometheus-nginx.socket")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sc.listener = listener
@@ -156,7 +161,14 @@ func NewInstance(ns string, class string) error {
 
 	go sc.Run()
 
-	return nil
+	sc.metricMapping = map[string]*prometheus.HistogramVec{
+		"upstream_response_time_seconds_bucket": sc.upstreamResponseTime,
+		"request_duration_seconds_bucket":       sc.requestLength,
+		"request_length_bytes_bucket":           sc.requestLength,
+		"bytes_sent_bucket":                     sc.bytesSent,
+	}
+
+	return sc, nil
 }
 
 func (sc *SocketCollector) handleMessage(msg []byte) {
@@ -273,6 +285,30 @@ func (sc *SocketCollector) Run() {
 	}
 }
 
+// RemoveMetrics deletes prometheus metrics from prometheus for endpoints that
+// are not available anymore.
+// To remove prometheus metrics is necessary to pass all the labels present in the metric.
+// For this reason we use the current metric state to filter those metrics using the IP
+// address and port of the endpoint to be removed.
+// Ref: https://godoc.org/github.com/prometheus/client_golang/prometheus#CounterVec.DeleteLabelValues
+func (sc *SocketCollector) RemoveMetrics(metrics string, endpoints []string) {
+	for _, endpoint := range endpoints {
+		for metricName, promHistogram := range sc.metricMapping {
+			glog.Infof("Removing prometheus metric from histogram %v for endpoint %v", metricName, endpoint)
+
+			em := extractMetrics(endpoint, metricName, metrics)
+			for _, metric := range em {
+				l := parseLabels(metric)
+				if len(l) == 0 {
+					continue
+				}
+
+				promHistogram.DeleteLabelValues(l...)
+			}
+		}
+	}
+}
+
 const packetSize = 1024 * 65
 
 // handleMessages process the content received in a network connection
@@ -286,4 +322,63 @@ func handleMessages(conn net.Conn, fn func([]byte)) {
 	}
 
 	fn(msg[0:s])
+}
+
+var execCommand = exec.Command
+
+// extractMetrics filters the metrics using the endpoint information and the name
+// of the histogram from where we need to remove the metric.
+// Each item in the array contains a complete metric.
+func extractMetrics(endpoint, metricName, metrics string) []string {
+	cmd := execCommand("/ingress-controller/extract-metrics.sh", endpoint, metricName)
+	cmd.Stdin = bytes.NewBufferString(metrics)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		glog.Warningf("unexpected error extracting metrics: %v", err)
+		return nil
+	}
+
+	s := strings.SplitAfter(string(out), "|")
+	var r []string
+	for _, s := range s {
+		if s == "" || s == "\n" {
+			continue
+		}
+		r = append(r, strings.TrimSpace(s))
+	}
+	glog.V(3).Infof("Extracted metrics (%v) for endpoint %v: %v", metricName, endpoint, r)
+	return r
+}
+
+// regex to parse a single label k=v
+var kvRegex = regexp.MustCompile(`(\w+)="(.*)"`)
+
+// parse a string containing a prometheus metric returning an array
+// with the label values to be used in the delete operation
+func parseLabels(input string) []string {
+	tokens := strings.Split(input, ",")
+
+	data := make(map[string]string, 11)
+	for _, pairs := range tokens {
+		kv := kvRegex.FindStringSubmatch(pairs)
+		if len(kv) != 3 {
+			continue
+		}
+
+		data[kv[1]] = kv[2]
+	}
+
+	return []string{
+		data["host"],
+		data["status"],
+		data["protocol"],
+		data["method"],
+		data["path"],
+		data["upstream_name"],
+		data["upstream_ip"],
+		data["upstream_status"],
+		data["namespace"],
+		data["ingress"],
+		data["service"],
+	}
 }

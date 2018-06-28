@@ -18,7 +18,9 @@ package controller
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -198,6 +200,25 @@ func (n *NGINXController) syncIngress(interface{}) error {
 				glog.Warningf("Dynamic reconfiguration failed: %v", err)
 			}
 		}(isFirstSync)
+	}
+
+	re := getRemovedEndpoints(n.runningConfig, &pcfg)
+	if len(re) > 0 {
+		glog.Infof("removing endpoints from prometheus metrics: %v", re)
+		res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v/metrics", n.cfg.ListenPorts.Health))
+		if err != nil {
+			return err
+		}
+
+		defer res.Body.Close()
+		if res.StatusCode == 200 {
+			bodyBytes, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				return err
+			}
+
+			go n.metricCollector.RemoveMetrics(string(bodyBytes), re)
+		}
 	}
 
 	n.runningConfig = &pcfg
@@ -1085,4 +1106,31 @@ func extractTLSSecretName(host string, ing *extensions.Ingress,
 	}
 
 	return ""
+}
+
+// getRemovedEndpoints returns a list of the endpoints (IP address)
+// that are not associated anymore to the NGINX configuration.
+func getRemovedEndpoints(rucfg, newcfg *ingress.Configuration) []string {
+	oldEps := sets.NewString()
+	newEps := sets.NewString()
+
+	for _, b := range rucfg.Backends {
+		for _, ep := range b.Endpoints {
+			ea := fmt.Sprintf("%v:%v", ep.Address, ep.Port)
+			if !oldEps.Has(ea) {
+				oldEps.Insert(ea)
+			}
+		}
+	}
+
+	for _, b := range newcfg.Backends {
+		for _, ep := range b.Endpoints {
+			ea := fmt.Sprintf("%v:%v", ep.Address, ep.Port)
+			if !newEps.Has(ea) {
+				newEps.Insert(ea)
+			}
+		}
+	}
+
+	return oldEps.Difference(newEps).List()
 }
