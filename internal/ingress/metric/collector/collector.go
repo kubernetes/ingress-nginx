@@ -63,9 +63,16 @@ type SocketCollector struct {
 	ingressClass         string
 }
 
-// NewInstance creates a new SocketCollector instance
-func NewInstance(ns string, class string) error {
-	sc := SocketCollector{}
+// Our program-wide socketCollector instance
+var currentSocketCollector *SocketCollector
+
+// InitSocketCollector launches the lua socket metric collector
+func InitSocketCollector(ns string, class string) error {
+	if currentSocketCollector != nil {
+		return nil
+	}
+
+	currentSocketCollector = &SocketCollector{}
 
 	ns = strings.Replace(ns, "-", "_", -1)
 
@@ -74,87 +81,14 @@ func NewInstance(ns string, class string) error {
 		return err
 	}
 
-	sc.listener = listener
-	sc.ns = ns
-	sc.ingressClass = class
+	currentSocketCollector.listener = listener
+	currentSocketCollector.ns = ns
+	currentSocketCollector.ingressClass = class
 
-	requestTags := []string{"host", "status", "protocol", "method", "path", "upstream_name", "upstream_ip", "upstream_status", "namespace", "ingress", "service"}
-	collectorTags := []string{"namespace", "ingress_class"}
+	currentSocketCollector.initRequestMetricStore()
+	currentSocketCollector.initCollectorMetricStore()
 
-	sc.upstreamResponseTime = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:      "upstream_response_time_seconds",
-			Help:      "The time spent on receiving the response from the upstream server",
-			Namespace: ns,
-		},
-		requestTags,
-	)
-
-	sc.requestTime = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:      "request_duration_seconds",
-			Help:      "The request processing time in seconds",
-			Namespace: ns,
-		},
-		requestTags,
-	)
-
-	sc.requestLength = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:      "request_length_bytes",
-			Help:      "The request length (including request line, header, and request body)",
-			Namespace: ns,
-			Buckets:   prometheus.LinearBuckets(10, 10, 10), // 10 buckets, each 10 bytes wide.
-		},
-		requestTags,
-	)
-
-	sc.requests = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name:      "requests",
-			Help:      "The total number of client requests.",
-			Namespace: ns,
-		},
-		collectorTags,
-	)
-
-	sc.bytesSent = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:      "bytes_sent",
-			Help:      "The the number of bytes sent to a client",
-			Namespace: ns,
-			Buckets:   prometheus.ExponentialBuckets(10, 10, 7), // 7 buckets, exponential factor of 10.
-		},
-		requestTags,
-	)
-
-	sc.collectorSuccess = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name:      "collector_last_run_successful",
-			Help:      "Whether the last collector run was successful (success = 1, failure = 0).",
-			Namespace: ns,
-		},
-		collectorTags,
-	)
-
-	sc.collectorSuccessTime = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name:      "collector_last_run_successful_timestamp_seconds",
-			Help:      "Timestamp of the last successful collector run",
-			Namespace: ns,
-		},
-		collectorTags,
-	)
-
-	prometheus.MustRegister(sc.upstreamResponseTime)
-	prometheus.MustRegister(sc.requestTime)
-	prometheus.MustRegister(sc.requestLength)
-	prometheus.MustRegister(sc.requests)
-	prometheus.MustRegister(sc.bytesSent)
-	prometheus.MustRegister(sc.collectorSuccess)
-	prometheus.MustRegister(sc.collectorSuccessTime)
-
-	go sc.Run()
+	go currentSocketCollector.Run()
 
 	return nil
 }
@@ -271,6 +205,106 @@ func (sc *SocketCollector) Run() {
 
 		go handleMessages(conn, sc.handleMessage)
 	}
+}
+
+// CleanOldBackendMetrics resets the server metrics cache: request metrics increase the cardinality
+// of the "upstream_ip" tag on every scale up/down operation, rolling-upgrades, etc. We need to
+// flush the Prometheus client "tag" cache to avoid a memory leak and prevent Prometheus from
+// storing "constant" metrics for upstreams that don't exist any more.
+func CleanOldBackendMetrics() {
+	currentSocketCollector.initRequestMetricStore()
+}
+
+func (sc *SocketCollector) initRequestMetricStore() {
+	if sc.upstreamResponseTime != nil {
+		prometheus.Unregister(sc.upstreamResponseTime)
+	}
+	if sc.requestTime != nil {
+		prometheus.Unregister(sc.requestTime)
+	}
+	if sc.requestLength != nil {
+		prometheus.Unregister(sc.requestLength)
+	}
+	if sc.bytesSent != nil {
+		prometheus.Unregister(sc.bytesSent)
+	}
+
+	requestTags := []string{"host", "status", "protocol", "method", "path", "upstream_name", "upstream_ip", "upstream_status", "namespace", "ingress", "service"}
+
+	sc.upstreamResponseTime = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:      "upstream_response_time_seconds",
+			Help:      "The time spent on receiving the response from the upstream server",
+			Namespace: sc.ns,
+		},
+		requestTags,
+	)
+
+	sc.requestTime = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:      "request_duration_seconds",
+			Help:      "The request processing time in seconds",
+			Namespace: sc.ns,
+		},
+		requestTags,
+	)
+
+	sc.requestLength = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:      "request_length_bytes",
+			Help:      "The request length (including request line, header, and request body)",
+			Namespace: sc.ns,
+			Buckets:   prometheus.LinearBuckets(10, 10, 10), // 10 buckets, each 10 bytes wide.
+		},
+		requestTags,
+	)
+
+	sc.bytesSent = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:      "bytes_sent",
+			Help:      "The the number of bytes sent to a client",
+			Namespace: sc.ns,
+			Buckets:   prometheus.ExponentialBuckets(10, 10, 7), // 7 buckets, exponential factor of 10.
+		},
+		requestTags,
+	)
+
+	prometheus.MustRegister(sc.upstreamResponseTime, sc.requestTime, sc.requestLength, sc.bytesSent)
+}
+
+func (sc *SocketCollector) initCollectorMetricStore() {
+	collectorTags := []string{"namespace", "ingress_class"}
+
+	sc.requests = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name:      "requests",
+			Help:      "The total number of client requests.",
+			Namespace: sc.ns,
+		},
+		collectorTags,
+	)
+
+	sc.collectorSuccess = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name:      "collector_last_run_successful",
+			Help:      "Whether the last collector run was successful (success = 1, failure = 0).",
+			Namespace: sc.ns,
+		},
+		collectorTags,
+	)
+
+	sc.collectorSuccessTime = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name:      "collector_last_run_successful_timestamp_seconds",
+			Help:      "Timestamp of the last successful collector run",
+			Namespace: sc.ns,
+		},
+		collectorTags,
+	)
+
+	prometheus.MustRegister(sc.requests)
+	prometheus.MustRegister(sc.collectorSuccess)
+	prometheus.MustRegister(sc.collectorSuccessTime)
 }
 
 const packetSize = 1024 * 65

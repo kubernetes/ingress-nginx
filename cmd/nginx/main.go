@@ -41,7 +41,7 @@ import (
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
-	"k8s.io/ingress-nginx/internal/ingress/metric/collector"
+	metricCollector "k8s.io/ingress-nginx/internal/ingress/metric/collector"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/version"
@@ -127,13 +127,13 @@ func main() {
 	mux := http.NewServeMux()
 	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux)
 
-	err = collector.InitNGINXStatusCollector(conf.Namespace, class.IngressClass, conf.ListenPorts.Status)
+	err = metricCollector.InitNGINXStatusCollector(conf.Namespace, class.IngressClass, conf.ListenPorts.Status)
 
 	if err != nil {
 		glog.Fatalf("Error creating metric collector:  %v", err)
 	}
 
-	err = collector.NewInstance(conf.Namespace, class.IngressClass)
+	err = metricCollector.InitSocketCollector(conf.Namespace, class.IngressClass)
 	if err != nil {
 		glog.Fatalf("Error creating unix socket server:  %v", err)
 	}
