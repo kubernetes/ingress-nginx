@@ -18,9 +18,22 @@ package store
 
 import (
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 )
 
 // IngressAnnotationsLister makes a Store that lists annotations in Ingress rules.
 type IngressAnnotationsLister struct {
 	cache.Store
+}
+
+// ByKey returns the Ingress annotations matching key in the local Ingress annotations Store.
+func (il IngressAnnotationsLister) ByKey(key string) (*annotations.Ingress, error) {
+	i, exists, err := il.GetByKey(key)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, NotExistsError(key)
+	}
+	return i.(*annotations.Ingress), nil
 }
