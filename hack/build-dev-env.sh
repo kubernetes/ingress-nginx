@@ -13,9 +13,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -eu
 
 : "${NAMESPACE:=ingress-nginx}"
 echo "NAMESPACE is set to ${NAMESPACE}"
+
 
 test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start
 eval $(minikube docker-env)
