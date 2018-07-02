@@ -18,7 +18,6 @@ set -eu
 : "${NAMESPACE:=ingress-nginx}"
 echo "NAMESPACE is set to ${NAMESPACE}"
 
-
 test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start
 eval $(minikube docker-env)
 
