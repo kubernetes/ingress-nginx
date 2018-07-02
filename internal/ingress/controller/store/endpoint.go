@@ -17,8 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
-
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 )
@@ -28,15 +26,14 @@ type EndpointLister struct {
 	cache.Store
 }
 
-// GetServiceEndpoints returns the endpoints of a service, matched on service name.
-func (s *EndpointLister) GetServiceEndpoints(svc *apiv1.Service) (*apiv1.Endpoints, error) {
-	key := fmt.Sprintf("%v/%v", svc.Namespace, svc.Name)
+// ByKey returns the Endpoints of the Service matching key in the local Endpoint Store.
+func (s *EndpointLister) ByKey(key string) (*apiv1.Endpoints, error) {
 	eps, exists, err := s.GetByKey(key)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
-		return nil, fmt.Errorf("could not find endpoints for service %v", key)
+		return nil, NotExistsError(key)
 	}
 	return eps.(*apiv1.Endpoints), nil
 }
