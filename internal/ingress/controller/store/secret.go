@@ -17,8 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
-
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 )
@@ -28,14 +26,14 @@ type SecretLister struct {
 	cache.Store
 }
 
-// ByKey searches for a secret in the local secrets Store
+// ByKey returns the Secret matching key in the local Secret Store.
 func (sl *SecretLister) ByKey(key string) (*apiv1.Secret, error) {
 	s, exists, err := sl.GetByKey(key)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
-		return nil, fmt.Errorf("secret %v was not found", key)
+		return nil, NotExistsError(key)
 	}
 	return s.(*apiv1.Secret), nil
 }
