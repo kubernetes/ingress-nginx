@@ -36,6 +36,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	metricCollector "k8s.io/ingress-nginx/internal/ingress/metric/collector"
 	"k8s.io/ingress-nginx/internal/k8s"
 )
 
@@ -175,6 +176,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			glog.Errorf("Unexpected failure reloading the backend:\n%v", err)
 			return err
 		}
+
+		metricCollector.CleanOldBackendMetrics()
 
 		glog.Infof("Backend successfully reloaded.")
 		ConfigSuccess(true)
