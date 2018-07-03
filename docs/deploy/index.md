@@ -136,7 +136,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 ## Using Helm
 
-NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart [stable/nginx](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress) from the official charts repository. 
+NGINX Ingress controller can be installed via [Helm](https://helm.sh/) using the chart [stable/nginx-ingress](https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress) from the official charts repository. 
 To install the chart with the release name `my-nginx`:
 
 ```console
