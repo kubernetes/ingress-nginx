@@ -1031,6 +1031,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#zipkin-sample-rate" title="zipkin-sample-rate" class="md-nav__link">
+    zipkin-sample-rate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#jaeger-collector-host" title="jaeger-collector-host" class="md-nav__link">
     jaeger-collector-host
   </a>
@@ -2387,6 +2394,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#zipkin-sample-rate" title="zipkin-sample-rate" class="md-nav__link">
+    zipkin-sample-rate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#jaeger-collector-host" title="jaeger-collector-host" class="md-nav__link">
     jaeger-collector-host
   </a>
@@ -3046,6 +3060,11 @@ Same for numbers, like "100".</p>
 <td align="left">"nginx"</td>
 </tr>
 <tr>
+<td align="left"><a href="#zipkin-sample-rate">zipkin-sample-rate</a></td>
+<td align="left">float</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
 <td align="left"><a href="#jaeger-collector-host">jaeger-collector-host</a></td>
 <td align="left">string</td>
 <td align="left">""</td>
@@ -3465,6 +3484,8 @@ number is exceeded, the least recently used connections are closed. <em><strong>
 <p>Specifies the port to use when uploading traces. <em><strong>default:</strong></em> 9411</p>
 <h2 id="zipkin-service-name">zipkin-service-name<a class="headerlink" href="#zipkin-service-name" title="Permanent link">&para;</a></h2>
 <p>Specifies the service name to use for any traces created. <em><strong>default:</strong></em> nginx</p>
+<h2 id="zipkin-sample-rate">zipkin-sample-rate<a class="headerlink" href="#zipkin-sample-rate" title="Permanent link">&para;</a></h2>
+<p>Specifies sample rate for any traces created. <em><strong>default:</strong></em> 1.0</p>
 <h2 id="jaeger-collector-host">jaeger-collector-host<a class="headerlink" href="#jaeger-collector-host" title="Permanent link">&para;</a></h2>
 <p>Specifies the host to use when uploading traces. It must be a valid URL.</p>
 <h2 id="jaeger-collector-port">jaeger-collector-port<a class="headerlink" href="#jaeger-collector-port" title="Permanent link">&para;</a></h2>
