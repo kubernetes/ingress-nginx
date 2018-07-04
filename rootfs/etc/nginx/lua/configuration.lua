@@ -63,4 +63,8 @@ function _M.call()
   ngx.status = ngx.HTTP_CREATED
 end
 
+if _TEST then
+  _M.fetch_request_body = fetch_request_body
+end
+
 return _M

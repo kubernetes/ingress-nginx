@@ -40,17 +40,17 @@ if ! [ -x "$(command -v jq)" ]; then
   sudo apt-get install -y jq
 fi
 
-if [ "$TRAVIS_REPO_SLUG" != "kubernetes/ingress-nginx" ];
+if [ "$TRAVIS_REPO_SLUG" != "Shopify/ingress" ];
 then
-  echo "Only builds from kubernetes/ingress-nginx repository is allowed.";
+  echo "Only builds from Shopify/ingress repository is allowed.";
   exit 0;
 fi
 
-SKIP_MESSAGE="Publication of docker image to quay.io registry skipped."
+SKIP_MESSAGE="Publication of docker image to docker hub registry skipped."
 
-if [ "$TRAVIS_EVENT_TYPE" != "api" ];
+if [ "$TRAVIS_EVENT_TYPE" != "push" ];
 then
-  echo "Only builds triggered from travis-ci API is allowed. $SKIP_MESSAGE";
+  echo "Only builds triggered from push events are allowed. $SKIP_MESSAGE";
   exit 0;
 fi
 
@@ -66,25 +66,28 @@ then
   exit 0;
 fi
 
-# variables QUAY_USERNAME and QUAY_PASSWORD are required to push docker images
-if [ "$QUAY_USERNAME" == "" ];
+# variables DOCKER_USERNAME and DOCKER_PASSWORD are required to push docker images
+if [ "$DOCKER_USERNAME" == "" ];
 then
-  echo "Environment variable QUAY_USERNAME is missing.";
+  echo "Environment variable DOCKER_USERNAME is missing.";
   exit 0;
 fi
 
-if [ "$QUAY_PASSWORD" == "" ];
+if [ "$DOCKER_PASSWORD" == "" ];
 then
-  echo "Environment variable QUAY_PASSWORD is missing.";
+  echo "Environment variable DOCKER_PASSWORD is missing.";
   exit 0;
 fi
 
 function docker_tag_exists() {
     TAG=${2//\"/}
-    IMAGES=$(curl -s -H "Authorization: Bearer ${QUAY_PASSWORD}" https://quay.io/api/v1/repository/$1-$3/image/ | jq '.images | sort_by(.sort_index) | .[] .tags | select(.[] !=null) | .[0]' | sed s/\"//g)
-    if echo "$IMAGES" | grep -q -P "(^|\s)$TAG(?=\s|$)" ; then
-        return 0
+    TOKEN=$( curl -sSLd "username=${DOCKER_USERNAME}&password=${DOCKER_PASSWORD}" https://hub.docker.com/v2/users/login | jq -r ".token" )
+    RES=$(curl -sH "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/shopify/$1-$3/tags/$TAG/" | jq .detail)
+
+    if [ "$RES" == "\"Not found\"" ];
+    then
+        return 1
     fi
 
-    return 1
+    return 0
 }
