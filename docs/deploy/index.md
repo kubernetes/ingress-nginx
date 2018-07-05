@@ -2,17 +2,18 @@
 
 ## Contents
 
-- [Mandatory command](#mandatory-command)
-- [Custom Provider](#custom-provider)
-  - [Docker for Mac](#docker-for-mac)
-  - [minikube](#minikube)
-  - [AWS](#aws)
-  - [GCE - GKE](#gce---gke)
-  - [Azure](#azure)
-  - [Baremetal](#baremetal)
+- [Generic Deployment](#generic-deployment)
+  - [Mandatory command](#mandatory-command)
+  - [Provider Specific Steps](#provider-specific-steps)
+    - [Docker for Mac](#docker-for-mac)
+    - [minikube](#minikube)
+    - [AWS](#aws)
+    - [GCE - GKE](#gce---gke)
+    - [Azure](#azure)
+    - [Baremetal](#baremetal)
+  - [Verify installation](#verify-installation)
+  - [Detect installed version](#detect-installed-version)
 - [Using Helm](#using-helm)
-- [Verify installation](#verify-installation)
-- [Detect installed version](#detect-installed-version)
 
 ## Generic Deployment 
 
@@ -24,11 +25,11 @@ The following resources are required for a generic deployment.
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
 ```
 
-## Custom Service Provider Deployment
+### Provider Specific Steps
 
 There are cloud provider specific yaml files.
 
-### Docker for Mac
+#### Docker for Mac
 
 Kubernetes is available for Docker for Mac's Edge channel. Switch to the [Edge
 channel][edge] and [enable Kubernetes][enable].
@@ -42,7 +43,7 @@ Create a service
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
 ```
 
-### minikube
+#### minikube
 
 For standard usage:
 
@@ -68,13 +69,13 @@ default-http-backend-66b447d9cf-rrlf9      1/1       Running   0          12s
 nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
 ```
 
-### AWS
+#### AWS
 
 In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
 Since Kubernetes v1.9.0 it is possible to use a classic load balancer (ELB) or network load balancer (NLB)
 Please check the [elastic load balancing AWS details page](https://aws.amazon.com/es/elasticloadbalancing/details/)
 
-#### Elastic Load Balancer - ELB
+##### Elastic Load Balancer - ELB
 
 This setup requires to choose in which layer (L4 or L7) we want to configure the ELB:
 
@@ -102,7 +103,7 @@ This example creates an ELB with just two listeners, one in port 80 and another 
 
 ![Listeners](../images/elb-l7-listener.png)
 
-#### Network Load Balancer (NLB)
+##### Network Load Balancer (NLB)
 
 This type of load balancer is supported since v1.10.0 as an ALPHA feature.
 
@@ -110,7 +111,7 @@ This type of load balancer is supported since v1.10.0 as an ALPHA feature.
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml
 ```
 
-### GCE - GKE
+#### GCE - GKE
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
@@ -118,7 +119,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 **Important Note:** proxy protocol is not supported in GCE/GKE
 
-### Azure
+#### Azure
 
 
 ```console
@@ -126,12 +127,33 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 ```
 
 
-### Baremetal
+#### Baremetal
 
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml
+```
+
+### Verify installation
+
+To check if the ingress controller pods have started, run the following command:
+
+```console
+kubectl get pods --all-namespaces -l app=ingress-nginx --watch
+```
+
+Once the operator pods are running, you can cancel the above command by typing `Ctrl+C`.
+Now, you are ready to create your first ingress.
+
+### Detect installed version
+
+To detect which version of the ingress controller is running, exec into the pod and run `nginx-ingress-controller version` command.
+
+```console
+POD_NAMESPACE=ingress-nginx
+POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app=ingress-nginx -o jsonpath={.items[0].metadata.name})
+kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
 ```
 
 ## Using Helm
@@ -149,23 +171,10 @@ If the kubernetes cluster has RBAC enabled, then run:
 helm install stable/nginx-ingress --name my-nginx --set rbac.create=true
 ```
 
-## Verify installation
-
-To check if the ingress controller pods have started, run the following command:
+Detect installed version:
 
 ```console
-kubectl get pods --all-namespaces -l app=ingress-nginx --watch
+POD_NAME=$(kubectl get pods -l app=nginx-ingress -o jsonpath={.items[0].metadata.name})
+kubectl exec -it $POD_NAME -- /nginx-ingress-controller --version
 ```
 
-Once the operator pods are running, you can cancel the above command by typing `Ctrl+C`.
-Now, you are ready to create your first ingress.
-
-## Detect installed version
-
-To detect which version of the ingress controller is running, exec into the pod and run `nginx-ingress-controller version` command.
-
-```console
-POD_NAMESPACE=ingress-nginx
-POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app=ingress-nginx -o jsonpath={.items[0].metadata.name})
-kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
-```
