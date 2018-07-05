@@ -1176,8 +1176,8 @@ same endpoint.</p>
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">application</span>
   <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="s">&quot;nginx.ingress.kubernetes.io/auth-url&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;https://$host/oauth2/auth&quot;</span>
-    <span class="s">&quot;nginx.ingress.kubernetes.io/auth-signin&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;https://$host/oauth2/sign_in&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-url</span><span class="p p-Indicator">:</span> <span class="s">&quot;https://$host/oauth2/auth&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-signin</span><span class="p p-Indicator">:</span> <span class="s">&quot;https://$host/oauth2/start?rd=$request_uri&quot;</span>
 <span class="nn">...</span>
 </pre></div>
 
