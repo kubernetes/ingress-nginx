@@ -283,14 +283,22 @@ cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
 make
 make install
 
-# build zipkin lib
+# build jaeger lib
 cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
 sed -i 's/-Werror//' CMakeLists.txt
 mkdir .build
 cd .build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DBUILD_TESTING=OFF -DJAEGERTRACING_WITH_YAML_CPP=OFF -DJAEGERTRACING_BUILD_EXAMPLES=OFF ..
+# Taken from https://github.com/jaegertracing/jaeger-client-cpp/blob/v0.4.1/scripts/build-plugin.sh
+cat <<EOF > export.map
+{
+    global:
+        OpenTracingMakeTracerFactory;
+    local: *;
+};
+EOF
+cmake -DCMAKE_BUILD_TYPE=Release -DJAEGERTRACING_PLUGIN=ON -DBUILD_TESTING=OFF -DJAEGERTRACING_BUILD_EXAMPLES=OFF -DHUNTER_CONFIGURATION_TYPES=Release ..
 make
-make install
+mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
 
 export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir)
 echo "HUNTER_INSTALL_DIR: ${HUNTER_INSTALL_DIR}"
