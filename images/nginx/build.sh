@@ -300,11 +300,6 @@ cmake -DCMAKE_BUILD_TYPE=Release -DJAEGERTRACING_PLUGIN=ON -DBUILD_TESTING=OFF -
 make
 mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
 
-export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir)
-echo "HUNTER_INSTALL_DIR: ${HUNTER_INSTALL_DIR}"
-cp $HUNTER_INSTALL_DIR/lib/libthrift* /usr/local/lib
-rm /usr/local/lib/libthrift*.a
-
 # build zipkin lib
 cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
 mkdir .build
