@@ -394,14 +394,9 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#custom-service-provider-deployment" title="Custom Service Provider Deployment" class="md-nav__link">
-    Custom Service Provider Deployment
+          <li class="md-nav__item">
+  <a href="#provider-specific-steps" title="Provider Specific Steps" class="md-nav__link">
+    Provider Specific Steps
   </a>
   
     <nav class="md-nav">
@@ -473,24 +468,29 @@
     </nav>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#using-helm" title="Using Helm" class="md-nav__link">
-    Using Helm
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#verify-installation" title="Verify installation" class="md-nav__link">
     Verify installation
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#detect-installed-version" title="Detect installed version" class="md-nav__link">
     Detect installed version
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-helm" title="Using Helm" class="md-nav__link">
+    Using Helm
   </a>
   
 </li>
@@ -1213,14 +1213,9 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#custom-service-provider-deployment" title="Custom Service Provider Deployment" class="md-nav__link">
-    Custom Service Provider Deployment
+          <li class="md-nav__item">
+  <a href="#provider-specific-steps" title="Provider Specific Steps" class="md-nav__link">
+    Provider Specific Steps
   </a>
   
     <nav class="md-nav">
@@ -1292,24 +1287,29 @@
     </nav>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#using-helm" title="Using Helm" class="md-nav__link">
-    Using Helm
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#verify-installation" title="Verify installation" class="md-nav__link">
     Verify installation
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#detect-installed-version" title="Detect installed version" class="md-nav__link">
     Detect installed version
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-helm" title="Using Helm" class="md-nav__link">
+    Using Helm
   </a>
   
 </li>
@@ -1336,17 +1336,20 @@
                 <h1 id="installation-guide">Installation Guide<a class="headerlink" href="#installation-guide" title="Permanent link">&para;</a></h1>
 <h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link">&para;</a></h2>
 <ul>
+<li><a href="#generic-deployment">Generic Deployment</a></li>
 <li><a href="#mandatory-command">Mandatory command</a></li>
-<li><a href="#custom-provider">Custom Provider</a></li>
+<li><a href="#provider-specific-steps">Provider Specific Steps</a><ul>
 <li><a href="#docker-for-mac">Docker for Mac</a></li>
 <li><a href="#minikube">minikube</a></li>
 <li><a href="#aws">AWS</a></li>
 <li><a href="#gce---gke">GCE - GKE</a></li>
 <li><a href="#azure">Azure</a></li>
 <li><a href="#baremetal">Baremetal</a></li>
-<li><a href="#using-helm">Using Helm</a></li>
+</ul>
+</li>
 <li><a href="#verify-installation">Verify installation</a></li>
 <li><a href="#detect-installed-version">Detect installed version</a></li>
+<li><a href="#using-helm">Using Helm</a></li>
 </ul>
 <h2 id="generic-deployment">Generic Deployment<a class="headerlink" href="#generic-deployment" title="Permanent link">&para;</a></h2>
 <p>The following resources are required for a generic deployment.</p>
@@ -1355,9 +1358,9 @@
 </pre></div>
 
 
-<h2 id="custom-service-provider-deployment">Custom Service Provider Deployment<a class="headerlink" href="#custom-service-provider-deployment" title="Permanent link">&para;</a></h2>
+<h3 id="provider-specific-steps">Provider Specific Steps<a class="headerlink" href="#provider-specific-steps" title="Permanent link">&para;</a></h3>
 <p>There are cloud provider specific yaml files.</p>
-<h3 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link">&para;</a></h3>
+<h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link">&para;</a></h4>
 <p>Kubernetes is available for Docker for Mac's Edge channel. Switch to the <a href="https://docs.docker.com/docker-for-mac/install/">Edge
 channel</a> and <a href="https://docs.docker.com/docker-for-mac/#kubernetes">enable Kubernetes</a>.</p>
 <p>Create a service</p>
@@ -1365,7 +1368,7 @@ channel</a> and <a href="https://docs.docker.com/docker-for-mac/#kubernetes">ena
 </pre></div>
 
 
-<h3 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link">&para;</a></h3>
+<h4 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link">&para;</a></h4>
 <p>For standard usage:</p>
 <div class="codehilite"><pre><span></span><span class="go">minikube addons enable ingress</span>
 </pre></div>
@@ -1390,11 +1393,11 @@ channel</a> and <a href="https://docs.docker.com/docker-for-mac/#kubernetes">ena
 </pre></div>
 
 
-<h3 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link">&para;</a></h3>
+<h4 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link">&para;</a></h4>
 <p>In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of <code class="codehilite">Type=LoadBalancer</code>.
 Since Kubernetes v1.9.0 it is possible to use a classic load balancer (ELB) or network load balancer (NLB)
 Please check the <a href="https://aws.amazon.com/es/elasticloadbalancing/details/">elastic load balancing AWS details page</a></p>
-<h4 id="elastic-load-balancer-elb">Elastic Load Balancer - ELB<a class="headerlink" href="#elastic-load-balancer-elb" title="Permanent link">&para;</a></h4>
+<h5 id="elastic-load-balancer-elb">Elastic Load Balancer - ELB<a class="headerlink" href="#elastic-load-balancer-elb" title="Permanent link">&para;</a></h5>
 <p>This setup requires to choose in which layer (L4 or L7) we want to configure the ELB:</p>
 <ul>
 <li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_Layer">Layer 4</a>: use TCP as the listener protocol for ports 80 and 443.</li>
@@ -1416,26 +1419,42 @@ Then execute:</p>
 
 <p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
 <p><img alt="Listeners" src="./../images/elb-l7-listener.png" /></p>
-<h4 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link">&para;</a></h4>
+<h5 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link">&para;</a></h5>
 <p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml</span>
 </pre></div>
 
 
-<h3 id="gce-gke">GCE - GKE<a class="headerlink" href="#gce-gke" title="Permanent link">&para;</a></h3>
+<h4 id="gce-gke">GCE - GKE<a class="headerlink" href="#gce-gke" title="Permanent link">&para;</a></h4>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
 </pre></div>
 
 
 <p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
-<h3 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link">&para;</a></h3>
+<h4 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link">&para;</a></h4>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
 </pre></div>
 
 
-<h3 id="baremetal">Baremetal<a class="headerlink" href="#baremetal" title="Permanent link">&para;</a></h3>
+<h4 id="baremetal">Baremetal<a class="headerlink" href="#baremetal" title="Permanent link">&para;</a></h4>
 <p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml</span>
+</pre></div>
+
+
+<h3 id="verify-installation">Verify installation<a class="headerlink" href="#verify-installation" title="Permanent link">&para;</a></h3>
+<p>To check if the ingress controller pods have started, run the following command:</p>
+<div class="codehilite"><pre><span></span><span class="go">kubectl get pods --all-namespaces -l app=ingress-nginx --watch</span>
+</pre></div>
+
+
+<p>Once the operator pods are running, you can cancel the above command by typing <code class="codehilite">Ctrl+C</code>.
+Now, you are ready to create your first ingress.</p>
+<h3 id="detect-installed-version">Detect installed version<a class="headerlink" href="#detect-installed-version" title="Permanent link">&para;</a></h3>
+<p>To detect which version of the ingress controller is running, exec into the pod and run <code class="codehilite">nginx-ingress-controller version</code> command.</p>
+<div class="codehilite"><pre><span></span><span class="go">POD_NAMESPACE=ingress-nginx</span>
+<span class="go">POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app=ingress-nginx -o jsonpath={.items[0].metadata.name})</span>
+<span class="go">kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version</span>
 </pre></div>
 
 
@@ -1451,19 +1470,9 @@ To install the chart with the release name <code class="codehilite">my-nginx</co
 </pre></div>
 
 
-<h2 id="verify-installation">Verify installation<a class="headerlink" href="#verify-installation" title="Permanent link">&para;</a></h2>
-<p>To check if the ingress controller pods have started, run the following command:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl get pods --all-namespaces -l app=ingress-nginx --watch</span>
-</pre></div>
-
-
-<p>Once the operator pods are running, you can cancel the above command by typing <code class="codehilite">Ctrl+C</code>.
-Now, you are ready to create your first ingress.</p>
-<h2 id="detect-installed-version">Detect installed version<a class="headerlink" href="#detect-installed-version" title="Permanent link">&para;</a></h2>
-<p>To detect which version of the ingress controller is running, exec into the pod and run <code class="codehilite">nginx-ingress-controller version</code> command.</p>
-<div class="codehilite"><pre><span></span><span class="go">POD_NAMESPACE=ingress-nginx</span>
-<span class="go">POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app=ingress-nginx -o jsonpath={.items[0].metadata.name})</span>
-<span class="go">kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version</span>
+<p>Detect installed version:</p>
+<div class="codehilite"><pre><span></span><span class="go">POD_NAME=$(kubectl get pods -l app=nginx-ingress -o jsonpath={.items[0].metadata.name})</span>
+<span class="go">kubectl exec -it $POD_NAME -- /nginx-ingress-controller --version</span>
 </pre></div>
                 
                   
