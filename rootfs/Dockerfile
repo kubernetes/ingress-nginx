@@ -25,8 +25,6 @@ RUN clean-install \
 
 COPY . /
 
-RUN setcap cap_net_bind_service=+ep /nginx-ingress-controller
-
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector
 # This only works if nginx is started with CMD or ENTRYPOINT
 # Required because clean-install removes /var/log content
@@ -50,8 +48,12 @@ RUN  mkdir -p /var/log/nginx \
   && chown www-data.www-data /etc/nginx/nginx.conf \
   && chown www-data.www-data /etc/nginx/opentracing.json
 
+RUN  setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
+  && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller
+
 USER www-data
 
 ENTRYPOINT ["/usr/bin/dumb-init"]
 
 CMD ["/nginx-ingress-controller"]
+

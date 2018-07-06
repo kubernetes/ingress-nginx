@@ -36,11 +36,15 @@ touch $HOME/.kube/config
 
 export KUBECONFIG=$HOME/.kube/config
 
+# workaround to avoid breaking the execution
+set +o errexit
+set +o pipefail
+
 # --vm-driver=none, use host docker (avoid docker-in-docker)
 # --bootstrapper=localkube, works around https://github.com/kubernetes/minikube/issues/2704
 sudo -E minikube start \
-    --bootstrapper=localkube \
     --vm-driver=none \
+    --bootstrapper=localkube \
     --kubernetes-version=$KUBERNETES_VERSION \
     --extra-config=kubelet.sync-frequency=1s \
     --extra-config=apiserver.authorization-mode=RBAC
