@@ -27,10 +27,10 @@ export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.5.0
-export OPENTRACING_CPP_VERSION=1.4.0
+export OPENTRACING_CPP_VERSION=1.5.0
 export ZIPKIN_CPP_VERSION=0.3.1
 export JAEGER_VERSION=0.4.1
-export MODSECURITY_VERSION=1.0.0
+export MODSECURITY_VERSION=37b76e88df4bce8a9846345c27271d7e6ce1acfb
 export LUA_NGX_VERSION=0.10.13
 export LUA_UPSTREAM_VERSION=0.07
 export COOKIE_FLAG_VERSION=1.1.0
@@ -163,14 +163,14 @@ get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
 get_src ad6c813cb8baa4a178417bfa316ab3535d950fe02c67dc3a4af96ef6a1f655d6 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
-get_src 2eb0a4a7dc62bc8cbf12872080197b41d53b4c04966c860774a6b11fd59fad55 \
+get_src 4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5 \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
 get_src f16a6f1eed494ca3c2607d7ad671cb134bd7eb320c5969c8281c10922a146589 \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src 8deee6d6f7128f58bd6ba2893bd69c1fdbc8a3ad2797ba45ef94b977255d181c \
-        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
+get_src fe7d3188e097d68f1942d46c4adba262d9ddcf433409ebc15bb5355bfb001a4a \
+        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
 get_src 35b5a96ceb0aec68abdf25cdb9fe43cce09b2ab7bf52fb32d77038f21fef75ac \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
@@ -319,8 +319,9 @@ git submodule update
 cd "$BUILD_PATH"
 git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
-# checkout v3.0.2
-git checkout 8d0f51beda5c031e38741c27f29b67f0266352bb
+# TODO: use a tag once 3.0.3 is released
+# checkout v3.0.3
+# git checkout 
 git submodule init
 git submodule update
 sh build.sh
@@ -404,8 +405,8 @@ fi
 
 # "Combining -flto with -g is currently experimental and expected to produce unexpected results."
 # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
-CC_OPT="-g -Og -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
-LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
+CC_OPT="-g -Og -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC"
+LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now"
 
 if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=native'
