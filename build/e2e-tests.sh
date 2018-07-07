@@ -30,6 +30,10 @@ if [ -z "${E2E_NODES}" ]; then
     echo "E2E_NODES must be set"
     exit 1
 fi
+if [ -z "${NODE_IP}" ]; then
+    echo "NODE_IP must be set"
+    exit 1
+fi
 
 SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
 
@@ -44,13 +48,6 @@ if ! [ -x "$(command -v kubectl)" ]; then
     curl -sSLo ${TEST_BINARIES}/kubectl \
         https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/linux/amd64/kubectl
     chmod +x ${TEST_BINARIES}/kubectl
-fi
-
-if ! [ -x "$(command -v minikube)" ]; then
-    echo "downloading minikube..."
-    curl -sSLo ${TEST_BINARIES}/minikube \
-        https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-    chmod +x ${TEST_BINARIES}/minikube
 fi
 
 ginkgo build ./test/e2e

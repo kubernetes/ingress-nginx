@@ -76,7 +76,7 @@ func TestHandleSigterm(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	ngx := controller.NewNGINXController(conf, fs)
+	ngx := controller.NewNGINXController(conf, nil, fs)
 
 	go handleSigterm(ngx, func(code int) {
 		if code != 1 {

@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,9 +40,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"k8s.io/ingress-nginx/internal/file"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/controller"
-	"k8s.io/ingress-nginx/internal/ingress/metric/collector"
+	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/version"
@@ -118,25 +118,20 @@ func main() {
 
 	conf.Client = kubeClient
 
-	ngx := controller.NewNGINXController(conf, fs)
+	reg := prometheus.NewRegistry()
+	mc, err := metric.NewCollector(conf.ListenPorts.Status, reg)
+	if err != nil {
+		glog.Fatalf("Error creating prometheus collectos:  %v", err)
+	}
+	mc.Start()
 
+	ngx := controller.NewNGINXController(conf, mc, fs)
 	go handleSigterm(ngx, func(code int) {
 		os.Exit(code)
 	})
 
 	mux := http.NewServeMux()
-	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux)
-
-	err = collector.InitNGINXStatusCollector(conf.Namespace, class.IngressClass, conf.ListenPorts.Status)
-
-	if err != nil {
-		glog.Fatalf("Error creating metric collector:  %v", err)
-	}
-
-	err = collector.NewInstance(conf.Namespace, class.IngressClass)
-	if err != nil {
-		glog.Fatalf("Error creating unix socket server:  %v", err)
-	}
+	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux, reg)
 
 	ngx.Start()
 }
@@ -240,14 +235,20 @@ func handleFatalInitError(err error) {
 		err)
 }
 
-func registerHandlers(enableProfiling bool, port int, ic *controller.NGINXController, mux *http.ServeMux) {
+func registerHandlers(
+	enableProfiling bool,
+	port int,
+	ic *controller.NGINXController,
+	mux *http.ServeMux,
+	reg *prometheus.Registry) {
+
 	// expose health check endpoint (/healthz)
 	healthz.InstallHandler(mux,
 		healthz.PingHealthz,
 		ic,
 	)
 
-	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 
 	mux.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
