@@ -62,6 +62,7 @@ GOARCH=${GOARCH}
 PWD=${PWD}
 BUSTED_ARGS=${BUSTED_ARGS:-""}
 REPO_INFO=${REPO_INFO:-local}
+NODE_IP=${NODE_IP:-127.0.0.1}
 EOF
 
 docker run                                       \
