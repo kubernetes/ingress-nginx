@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-
-# Copyright 2018 The Kubernetes Authors.
+# Copyright 2018 The Kubernetes Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-install()
-{
-  package="$1"
-  version="$2"
+FROM golang:1.10.3-stretch
 
-  if luarocks list --porcelain $package $version | grep -q "installed"; then
-    echo $package already installed, skipping ;
-  else
-    sudo luarocks install $package $version;
-  fi
-}
+RUN apt update \
+  && apt install -y --no-install-recommends \
+    luarocks \
+  && apt-get clean -y \
+  && rm -rf \
+    /var/cache/debconf/* \
+    /var/lib/apt/lists/* \
+    /var/log/* \
+    /tmp/* \
+    /var/tmp/*
 
-install busted 2.0.rc12
-install lua-cjson 2.1.0-1
+RUN luarocks install luacheck \
+  && luarocks install busted 2.0.rc12 \
+  && luarocks install lua-cjson 2.1.0-1
+
+RUN go get github.com/onsi/ginkgo/ginkgo \
+  && go get golang.org/x/lint/golint

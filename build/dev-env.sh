@@ -14,17 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-: "${NAMESPACE:=ingress-nginx}"
+set -o errexit
+set -o nounset
+set -o pipefail
+
+SKIP_MINIKUBE_START=${SKIP_MINIKUBE_START:-}
+NAMESPACE="${NAMESPACE:-ingress-nginx}"
 echo "NAMESPACE is set to ${NAMESPACE}"
 
-test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start
-eval $(minikube docker-env)
-
 export TAG=dev
-export REGISTRY=ingress-controller
+export ARCH=amd64
+export REGISTRY=${REGISTRY:-ingress-controller}
+
+DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
 echo "[dev-env] building container"
-ARCH=amd64 make build container
+make build container
+
+if [ -z "${SKIP_MINIKUBE_START}" ]; then
+    test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
+        --extra-config=kubelet.sync-frequency=1s \
+        --extra-config=apiserver.authorization-mode=RBAC
+fi
+
+docker save "${DEV_IMAGE}" | (eval $(minikube docker-env) && docker load) || true
 
 echo "[dev-env] installing kubectl"
 kubectl version || brew install kubectl
@@ -38,4 +51,4 @@ kubectl set image \
     deployments \
     --namespace ingress-nginx \
     --selector app=ingress-nginx \
-    nginx-ingress-controller=${REGISTRY}/nginx-ingress-controller:${TAG}
+    nginx-ingress-controller=${DEV_IMAGE}
