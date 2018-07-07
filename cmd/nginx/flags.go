@@ -147,6 +147,7 @@ Requires the update-status parameter.`)
 			`Dynamically refresh backends on topology changes instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries.`)
 
+		skipPortCheck = flags.Bool("skip-port-check", false, `Skip all port availability checks at startup.`)
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
 		statusPort    = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
@@ -188,27 +189,32 @@ Feature backed by OpenResty Lua libraries.`)
 
 	parser.AnnotationsPrefix = *annotationsPrefix
 
-	// check port collisions
-	if !ing_net.IsPortAvailable(*httpPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --http-port", *httpPort)
-	}
+	if *skipPortCheck {
+		glog.Warning("Skipping port availability checks, might enter crash loop if they are busy. " +
+			"Ensure that bind-address:port pairs are free. " +
+			"Only ports for http, https, and ssl proxy are bounded to bind-address.")
+	} else {
+		// check port collisions
+		if !ing_net.IsPortAvailable(*httpPort) {
+			return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --http-port", *httpPort)
+		}
 
-	if !ing_net.IsPortAvailable(*httpsPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --https-port", *httpsPort)
-	}
+		if !ing_net.IsPortAvailable(*httpsPort) {
+			return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --https-port", *httpsPort)
+		}
 
-	if !ing_net.IsPortAvailable(*statusPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --status-port", *statusPort)
-	}
+		if !ing_net.IsPortAvailable(*statusPort) {
+			return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --status-port", *statusPort)
+		}
 
-	if !ing_net.IsPortAvailable(*defServerPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --default-server-port", *defServerPort)
-	}
+		if !ing_net.IsPortAvailable(*defServerPort) {
+			return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --default-server-port", *defServerPort)
+		}
 
-	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --ssl-passtrough-proxy-port", *sslProxyPort)
+		if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
+			return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --ssl-passtrough-proxy-port", *sslProxyPort)
+		}
 	}
-
 	if !*enableSSLChainCompletion {
 		glog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}

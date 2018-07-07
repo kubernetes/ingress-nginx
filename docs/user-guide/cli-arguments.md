@@ -32,6 +32,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | --publish-service string          | Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies. |
 | --publish-status-address string   | Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
 | --report-node-internal-ip-address | Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter. |
+| --skip-port-check                 | Skip all port availability checks at startup. (default false) |
 | --sort-backends                   | Sort servers inside NGINX upstreams. |
 | --ssl-passthrough-proxy-port int  | Port to use internally for SSL Passthrough. (default 442) |
 | --status-port int                 | Port to use for exposing NGINX status pages. (default 18080) |
