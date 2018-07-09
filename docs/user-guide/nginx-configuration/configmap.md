@@ -87,6 +87,7 @@ The following table shows a configuration option's name, type, and the default v
 |[brotli-level](#brotli-level)|int|4|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
+|[gzip-level](#gzip-level)|int|5|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
@@ -485,6 +486,10 @@ _**default:**_ `application/xml+rss application/atom+xml application/javascript 
 ## use-http2
 
 Enables or disables [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
+
+## gzip-level
+
+Sets the gzip Compression Level that will be used. _**default:**_ 5
 
 ## gzip-types
 
