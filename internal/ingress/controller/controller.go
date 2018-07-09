@@ -402,6 +402,11 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 					server.Hostname, ingKey)
 			}
 
+			if rule.HTTP == nil {
+				glog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
+				continue
+			}
+
 			for _, path := range rule.HTTP.Paths {
 				upsName := fmt.Sprintf("%v-%v-%v",
 					ing.Namespace,
