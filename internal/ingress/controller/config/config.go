@@ -350,6 +350,9 @@ type Configuration struct {
 	// Default: true
 	UseHTTP2 bool `json:"use-http2,omitempty"`
 
+	// gzip Compression Level that will be used
+	GzipLevel int `json:"gzip-level,omitempty"`
+
 	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
 	// Responses with the “text/html” type are always compressed if UseGzip is enabled
 	GzipTypes string `json:"gzip-types,omitempty"`
@@ -553,6 +556,7 @@ func NewDefault() Configuration {
 		HSTSMaxAge:                 hstsMaxAge,
 		HSTSPreload:                false,
 		IgnoreInvalidHeaders:       true,
+		GzipLevel:                  5,
 		GzipTypes:                  gzipTypes,
 		KeepAlive:                  75,
 		KeepAliveRequests:          100,
