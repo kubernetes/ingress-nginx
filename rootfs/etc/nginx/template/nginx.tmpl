@@ -24,8 +24,6 @@ load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
 
-{{ buildOpentracingLoad $cfg }}
-
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
