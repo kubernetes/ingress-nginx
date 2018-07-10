@@ -734,7 +734,7 @@ _References:_
 ## http-redirect-code
 
 Sets the HTTP status code to be used in redirects.
-Supported codes are [301](https://developer.mozilla.org/es/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/es/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/es/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/es/docs/Web/HTTP/Status/308)
+Supported codes are [301](https://developer.mozilla.org/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/docs/Web/HTTP/Status/308)
 _**default:**_ 308
 
 > __Why the default code is 308?__
