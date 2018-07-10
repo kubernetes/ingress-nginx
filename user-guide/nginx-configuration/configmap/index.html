@@ -891,6 +891,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#gzip-level" title="gzip-level" class="md-nav__link">
+    gzip-level
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#gzip-types" title="gzip-types" class="md-nav__link">
     gzip-types
   </a>
@@ -2254,6 +2261,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#gzip-level" title="gzip-level" class="md-nav__link">
+    gzip-level
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#gzip-types" title="gzip-types" class="md-nav__link">
     gzip-types
   </a>
@@ -2960,6 +2974,11 @@ Same for numbers, like "100".</p>
 <td align="left">"true"</td>
 </tr>
 <tr>
+<td align="left"><a href="#gzip-level">gzip-level</a></td>
+<td align="left">int</td>
+<td align="left">5</td>
+</tr>
+<tr>
 <td align="left"><a href="#gzip-types">gzip-types</a></td>
 <td align="left">string</td>
 <td align="left">"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"</td>
@@ -3414,6 +3433,8 @@ The default mime type list to compress is: <code class="codehilite">application/
 <em><strong>default:</strong></em> <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code></p>
 <h2 id="use-http2">use-http2<a class="headerlink" href="#use-http2" title="Permanent link">&para;</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_v2_module.html">HTTP/2</a> support in secure connections.</p>
+<h2 id="gzip-level">gzip-level<a class="headerlink" href="#gzip-level" title="Permanent link">&para;</a></h2>
+<p>Sets the gzip Compression Level that will be used. <em><strong>default:</strong></em> 5</p>
 <h2 id="gzip-types">gzip-types<a class="headerlink" href="#gzip-types" title="Permanent link">&para;</a></h2>
 <p>Sets the MIME types in addition to "text/html" to compress. The special value "*" matches any MIME type. Responses with the "text/html" type are always compressed if <code class="codehilite">use-gzip</code> is enabled.</p>
 <h2 id="worker-processes">worker-processes<a class="headerlink" href="#worker-processes" title="Permanent link">&para;</a></h2>
@@ -3553,7 +3574,7 @@ See <a href="http://nginx.org/en/docs/http/ngx_http_access_module.html">ngx_http
 <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after">http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after</a></p>
 <h2 id="http-redirect-code">http-redirect-code<a class="headerlink" href="#http-redirect-code" title="Permanent link">&para;</a></h2>
 <p>Sets the HTTP status code to be used in redirects.
-Supported codes are <a href="https://developer.mozilla.org/es/docs/Web/HTTP/Status/301">301</a>,<a href="https://developer.mozilla.org/es/docs/Web/HTTP/Status/302">302</a>,<a href="https://developer.mozilla.org/es/docs/Web/HTTP/Status/307">307</a> and <a href="https://developer.mozilla.org/es/docs/Web/HTTP/Status/308">308</a>
+Supported codes are <a href="https://developer.mozilla.org/docs/Web/HTTP/Status/301">301</a>,<a href="https://developer.mozilla.org/docs/Web/HTTP/Status/302">302</a>,<a href="https://developer.mozilla.org/docs/Web/HTTP/Status/307">307</a> and <a href="https://developer.mozilla.org/docs/Web/HTTP/Status/308">308</a>
 <em><strong>default:</strong></em> 308</p>
 <blockquote>
 <p><strong>Why the default code is 308?</strong></p>
