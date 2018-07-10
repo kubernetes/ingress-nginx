@@ -667,7 +667,12 @@ func (s k8sStore) ListIngresses() []*extensions.Ingress {
 
 // GetIngressAnnotations returns the parsed annotations of an Ingress matching key.
 func (s k8sStore) GetIngressAnnotations(key string) (*annotations.Ingress, error) {
-	return s.listers.IngressAnnotation.ByKey(key)
+	ia, err := s.listers.IngressAnnotation.ByKey(key)
+	if err != nil {
+		return &annotations.Ingress{}, err
+	}
+
+	return ia, nil
 }
 
 // GetLocalSSLCert returns the local copy of a SSLCert
