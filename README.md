@@ -10,18 +10,16 @@
 [![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/stargazers)
 [![GitHub stars](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md)
-
-
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkubernetes%2Fingress-nginx?ref=badge_shield)
 
 # Get Involved
 
-* **Contributing**: Pull requests are welcome!
-  * Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and check out [help-wanted](https://github.com/kubernetes/ingress-nginx/labels/help%20wanted) issues
-  * Submit github issues for any feature enhancements, bugs or documentation problems
-* **Support**: Join to [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions to get support from the maintainers and other developers
-  * Questions/comments can also be posted as [github issues](https://github.com/kubernetes/ingress-nginx/issues)
-* **Discuss**: Tweet using the `#IngressNginx` hashtag
-
+- **Contributing**: Pull requests are welcome!
+  - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and check out [help-wanted](https://github.com/kubernetes/ingress-nginx/labels/help%20wanted) issues
+  - Submit github issues for any feature enhancements, bugs or documentation problems
+- **Support**: Join to [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions to get support from the maintainers and other developers
+  - Questions/comments can also be posted as [github issues](https://github.com/kubernetes/ingress-nginx/issues)
+- **Discuss**: Tweet using the `#IngressNginx` hashtag
 
 ## Description
 
@@ -37,26 +35,21 @@ The Ingress resource embodies this idea, and an Ingress controller is meant to h
 
 An Ingress Controller is a daemon, deployed as a Kubernetes Pod, that watches the apiserver's `/ingresses` endpoint for updates to the [Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/). Its job is to satisfy requests for Ingresses.
 
-
 ## Documentation
 
 To check out [Live Docs](https://kubernetes.github.io/ingress-nginx/)
-
 
 ## Questions
 
 For questions and support please use the [#ingress-nginx](https://kubernetes.slack.com/messages/CANQGM8BA/) channel in the [Kubernetes Slack](http://slack.kubernetes.io/) or [kubernetes-users](https://groups.google.com/forum/#!forum/kubernetes-users) mailing list. The issue list of this repo is **exclusively** for bug reports and feature requests.
 
-
 ## Issues
 
 Please make sure to read the [Issue Reporting Checklist](https://github.com/kubernetes/ingress-nginx/blob/master/CONTRIBUTING.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines may be closed immediately.
 
-
 ## Changelog
 
 Detailed changes for each release are documented in the [Changelog.md](Changelog.md)
-
 
 ## Contribution
 
@@ -64,14 +57,11 @@ Please make sure to read the [Contributing Guide](CONTRIBUTING.md) before making
 
 Thank you to all the people who already contributed to NGINX Ingress Controller!
 
-
 ## Code of Conduct
 
 This project adheres to the [Kubernetes Community Code of Conduct](https://git.k8s.io/community/code-of-conduct.md).
 By participating in this project you agree to abide by its terms.
 
-
 ## License
 
 [Apache License 2.0](https://github.com/kubernetes/ingress-nginx/blob/master/LICENSE)
-
