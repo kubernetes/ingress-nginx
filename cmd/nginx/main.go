@@ -166,7 +166,7 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 // the URL of the API server in the format protocol://address:port/pathPrefix,
 // kubeConfig is the location of a kubeconfig file. If defined, the kubeconfig
 // file is loaded first, the URL of the API server read from the file is then
-// optionally overriden by the value of apiserverHost.
+// optionally overridden by the value of apiserverHost.
 // If neither apiserverHost nor kubeConfig are passed in, we assume the
 // controller runs inside Kubernetes and fallback to the in-cluster config. If
 // the in-cluster config is missing or fails, we fallback to the default config.
