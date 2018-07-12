@@ -78,7 +78,7 @@
 
 [[constraint]]
   name = "github.com/prometheus/client_golang"
-  version = "0.8.0"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/spf13/pflag"
@@ -98,24 +98,24 @@
 
 [[constraint]]
   name = "k8s.io/kubernetes"
-  revision = "v1.10.3"
+  revision = "v1.11.0"
 
 [[constraint]]
   name = "k8s.io/api"
-  revision = "kubernetes-1.10.3"
+  revision = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  revision = "kubernetes-1.10.3"
+  revision = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  revision = "kubernetes-1.10.3"
+  revision = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/apiextensions-apiserver"
-  revision = "kubernetes-1.10.3"
+  revision = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/apiserver"
-  revision = "kubernetes-1.10.3"
+  revision = "kubernetes-1.11.0"
