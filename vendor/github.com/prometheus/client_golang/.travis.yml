@@ -2,8 +2,10 @@ sudo: false
 language: go
 
 go:
- - 1.5.4
- - 1.6.2
+  - 1.7.x # See README.md for current minimum version.
+  - 1.8.x
+  - 1.9.x
+  - 1.10.x
 
 script:
- - go test -short ./... 
+  - go test -short ./...
