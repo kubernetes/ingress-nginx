@@ -119,6 +119,10 @@ func main() {
 	conf.Client = kubeClient
 
 	reg := prometheus.NewRegistry()
+
+	reg.MustRegister(prometheus.NewGoCollector())
+	reg.MustRegister(prometheus.NewProcessCollector(os.Getpid(), ""))
+
 	mc, err := metric.NewCollector(conf.ListenPorts.Status, reg)
 	if err != nil {
 		glog.Fatalf("Error creating prometheus collectos:  %v", err)
@@ -131,7 +135,16 @@ func main() {
 	})
 
 	mux := http.NewServeMux()
-	go registerHandlers(conf.EnableProfiling, conf.ListenPorts.Health, ngx, mux, reg)
+
+	if conf.EnableProfiling {
+		registerProfiler(mux)
+	}
+
+	registerHealthz(ngx, mux)
+	registerMetrics(reg, mux)
+	registerHandlers(mux)
+
+	go startHTTPServer(conf.ListenPorts.Health, mux)
 
 	ngx.Start()
 }
@@ -235,21 +248,7 @@ func handleFatalInitError(err error) {
 		err)
 }
 
-func registerHandlers(
-	enableProfiling bool,
-	port int,
-	ic *controller.NGINXController,
-	mux *http.ServeMux,
-	reg *prometheus.Registry) {
-
-	// expose health check endpoint (/healthz)
-	healthz.InstallHandler(mux,
-		healthz.PingHealthz,
-		ic,
-	)
-
-	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
-
+func registerHandlers(mux *http.ServeMux) {
 	mux.HandleFunc("/build", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		b, _ := json.Marshal(version.String())
@@ -262,20 +261,42 @@ func registerHandlers(
 			glog.Errorf("Unexpected error: %v", err)
 		}
 	})
+}
 
-	if enableProfiling {
-		mux.HandleFunc("/debug/pprof/", pprof.Index)
-		mux.HandleFunc("/debug/pprof/heap", pprof.Index)
-		mux.HandleFunc("/debug/pprof/mutex", pprof.Index)
-		mux.HandleFunc("/debug/pprof/goroutine", pprof.Index)
-		mux.HandleFunc("/debug/pprof/threadcreate", pprof.Index)
-		mux.HandleFunc("/debug/pprof/block", pprof.Index)
-		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	}
+func registerHealthz(ic *controller.NGINXController, mux *http.ServeMux) {
+	// expose health check endpoint (/healthz)
+	healthz.InstallHandler(mux,
+		healthz.PingHealthz,
+		ic,
+	)
+}
 
+func registerMetrics(reg *prometheus.Registry, mux *http.ServeMux) {
+
+	mux.Handle(
+		"/metrics",
+		promhttp.InstrumentMetricHandler(
+			reg,
+			promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
+		),
+	)
+
+}
+
+func registerProfiler(mux *http.ServeMux) {
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/heap", pprof.Index)
+	mux.HandleFunc("/debug/pprof/mutex", pprof.Index)
+	mux.HandleFunc("/debug/pprof/goroutine", pprof.Index)
+	mux.HandleFunc("/debug/pprof/threadcreate", pprof.Index)
+	mux.HandleFunc("/debug/pprof/block", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+}
+
+func startHTTPServer(port int, mux *http.ServeMux) {
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%v", port),
 		Handler:           mux,
