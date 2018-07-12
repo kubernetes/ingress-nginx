@@ -138,7 +138,11 @@ type ErrDefault503 struct {
 }
 
 func (e ErrDefault400) Error() string {
-	return "Invalid request due to incorrect syntax or missing required parameters."
+	e.DefaultErrString = fmt.Sprintf(
+		"Bad request with: [%s %s], error message: %s",
+		e.Method, e.URL, e.Body,
+	)
+	return e.choseErrString()
 }
 func (e ErrDefault401) Error() string {
 	return "Authentication failed"
