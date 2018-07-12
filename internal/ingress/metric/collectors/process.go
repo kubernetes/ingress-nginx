@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package collector
+package collectors
 
 import (
 	"path/filepath"
@@ -71,60 +71,84 @@ type namedProcess struct {
 	data       namedProcessData
 }
 
-// newNamedProcess returns a new prometheus collector for the nginx process
-func newNamedProcess(children bool, mn common.MatchNamer) (prometheus.Collector, error) {
+const subSystem = "nginx_process"
+
+// NGINXProcessCollector defines a process collector interface
+type NGINXProcessCollector interface {
+	prometheus.Collector
+
+	Start()
+	Stop()
+}
+
+var name = "nginx"
+var binary = "/usr/bin/nginx"
+
+// NewNGINXProcess returns a new prometheus collector for the nginx process
+func NewNGINXProcess(pod, namespace, ingressClass string) (NGINXProcessCollector, error) {
 	fs, err := proc.NewFS("/proc")
 	if err != nil {
 		return nil, err
 	}
+
+	nm := BinaryNameMatcher{
+		Name:   name,
+		Binary: binary,
+	}
+
 	p := namedProcess{
 		scrapeChan: make(chan scrapeRequest),
-		Grouper:    proc.NewGrouper(children, mn),
+		Grouper:    proc.NewGrouper(true, nm),
 		fs:         fs,
 	}
+
 	_, err = p.Update(p.fs.AllProcs())
 	if err != nil {
 		return nil, err
 	}
 
-	p.data = namedProcessData{
-		numProcs: prometheus.NewDesc(
-			"num_procs",
-			"number of processes",
-			nil, nil),
-
-		cpuSecs: prometheus.NewDesc(
-			"cpu_seconds_total",
-			"Cpu usage in seconds",
-			nil, nil),
-
-		readBytes: prometheus.NewDesc(
-			"read_bytes_total",
-			"number of bytes read",
-			nil, nil),
-
-		writeBytes: prometheus.NewDesc(
-			"write_bytes_total",
-			"number of bytes written",
-			nil, nil),
-
-		memResidentbytes: prometheus.NewDesc(
-			"resident_memory_bytes",
-			"number of bytes of memory in use",
-			nil, nil),
-
-		memVirtualbytes: prometheus.NewDesc(
-			"virtual_memory_bytes",
-			"number of bytes of memory in use",
-			nil, nil),
-
-		startTime: prometheus.NewDesc(
-			"oldest_start_time_seconds",
-			"start time in seconds since 1970/01/01",
-			nil, nil),
+	constLabels := prometheus.Labels{
+		"controller_namespace": namespace,
+		"controller_class":     ingressClass,
+		"controller_pod":       pod,
 	}
 
-	go p.start()
+	p.data = namedProcessData{
+		numProcs: prometheus.NewDesc(
+			prometheus.BuildFQName(PrometheusNamespace, subSystem, "num_procs"),
+			"number of processes",
+			nil, constLabels),
+
+		cpuSecs: prometheus.NewDesc(
+			prometheus.BuildFQName(PrometheusNamespace, subSystem, "cpu_seconds_total"),
+			"Cpu usage in seconds",
+			nil, constLabels),
+
+		readBytes: prometheus.NewDesc(
+			prometheus.BuildFQName(PrometheusNamespace, subSystem, "read_bytes_total"),
+			"number of bytes read",
+			nil, constLabels),
+
+		writeBytes: prometheus.NewDesc(
+			prometheus.BuildFQName(PrometheusNamespace, subSystem, "write_bytes_total"),
+			"number of bytes written",
+			nil, constLabels),
+
+		memResidentbytes: prometheus.NewDesc(
+			prometheus.BuildFQName(PrometheusNamespace, subSystem, "resident_memory_bytes"),
+			"number of bytes of memory in use",
+			nil, constLabels),
+
+		memVirtualbytes: prometheus.NewDesc(
+			prometheus.BuildFQName(PrometheusNamespace, subSystem, "virtual_memory_bytes"),
+			"number of bytes of memory in use",
+			nil, constLabels),
+
+		startTime: prometheus.NewDesc(
+			prometheus.BuildFQName(PrometheusNamespace, subSystem, "oldest_start_time_seconds"),
+			"start time in seconds since 1970/01/01",
+			nil, constLabels),
+	}
 
 	return p, nil
 }
@@ -147,7 +171,7 @@ func (p namedProcess) Collect(ch chan<- prometheus.Metric) {
 	<-req.done
 }
 
-func (p namedProcess) start() {
+func (p namedProcess) Start() {
 	for req := range p.scrapeChan {
 		ch := req.results
 		p.scrape(ch)

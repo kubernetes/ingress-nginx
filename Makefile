@@ -28,6 +28,8 @@ FOCUS ?= .*
 # number of parallel test
 E2E_NODES ?= 3
 
+NODE_IP ?= $(shell minikube ip)
+
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
@@ -165,6 +167,7 @@ static-check:
 .PHONY: test
 test:
 	@$(DEF_VARS)                 \
+	NODE_IP=$(NODE_IP)           \
 	DOCKER_OPTS="--net=host"     \
 	build/go-in-docker.sh build/test.sh
 
@@ -180,6 +183,7 @@ e2e-test:
 	FOCUS=$(FOCUS)               \
 	E2E_NODES=$(E2E_NODES)       \
 	DOCKER_OPTS="--net=host"     \
+	NODE_IP=$(NODE_IP)           \
 	build/go-in-docker.sh build/e2e-tests.sh
 
 .PHONY: cover

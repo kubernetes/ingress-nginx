@@ -64,6 +64,9 @@ type Configuration struct {
 	// +optional
 	PassthroughBackends []*SSLPassthroughBackend `json:"passthroughBackends,omitempty"`
 
+	// BackendConfigChecksum contains the particular checksum of a Configuration object
+	BackendConfigChecksum string `json:"BackendConfigChecksum,omitempty"`
+
 	// ConfigurationChecksum contains the particular checksum of a Configuration object
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 }
