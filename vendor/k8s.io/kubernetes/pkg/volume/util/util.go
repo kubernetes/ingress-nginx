@@ -50,6 +50,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	utypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/volume/util/types"
+	"k8s.io/kubernetes/pkg/volume/util/volumepathhandler"
 )
 
 const (
@@ -267,37 +268,7 @@ func GetClassForVolume(kubeClient clientset.Interface, pv *v1.PersistentVolume) 
 // CheckNodeAffinity looks at the PV node affinity, and checks if the node has the same corresponding labels
 // This ensures that we don't mount a volume that doesn't belong to this node
 func CheckNodeAffinity(pv *v1.PersistentVolume, nodeLabels map[string]string) error {
-	if err := checkAlphaNodeAffinity(pv, nodeLabels); err != nil {
-		return err
-	}
 	return checkVolumeNodeAffinity(pv, nodeLabels)
-}
-
-func checkAlphaNodeAffinity(pv *v1.PersistentVolume, nodeLabels map[string]string) error {
-	affinity, err := v1helper.GetStorageNodeAffinityFromAnnotation(pv.Annotations)
-	if err != nil {
-		return fmt.Errorf("Error getting storage node affinity: %v", err)
-	}
-	if affinity == nil {
-		return nil
-	}
-
-	if affinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-		terms := affinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
-		glog.V(10).Infof("Match for RequiredDuringSchedulingIgnoredDuringExecution node selector terms %+v", terms)
-		for _, term := range terms {
-			selector, err := v1helper.NodeSelectorRequirementsAsSelector(term.MatchExpressions)
-			if err != nil {
-				return fmt.Errorf("Failed to parse MatchExpressions: %v", err)
-			}
-			if selector.Matches(labels.Set(nodeLabels)) {
-				// Terms are ORed, so only one needs to match
-				return nil
-			}
-		}
-		return fmt.Errorf("No matching NodeSelectorTerms")
-	}
-	return nil
 }
 
 func checkVolumeNodeAffinity(pv *v1.PersistentVolume, nodeLabels map[string]string) error {
@@ -308,18 +279,11 @@ func checkVolumeNodeAffinity(pv *v1.PersistentVolume, nodeLabels map[string]stri
 	if pv.Spec.NodeAffinity.Required != nil {
 		terms := pv.Spec.NodeAffinity.Required.NodeSelectorTerms
 		glog.V(10).Infof("Match for Required node selector terms %+v", terms)
-		for _, term := range terms {
-			selector, err := v1helper.NodeSelectorRequirementsAsSelector(term.MatchExpressions)
-			if err != nil {
-				return fmt.Errorf("Failed to parse MatchExpressions: %v", err)
-			}
-			if selector.Matches(labels.Set(nodeLabels)) {
-				// Terms are ORed, so only one needs to match
-				return nil
-			}
+		if !v1helper.MatchNodeSelectorTerms(terms, labels.Set(nodeLabels), nil) {
+			return fmt.Errorf("No matching NodeSelectorTerms")
 		}
-		return fmt.Errorf("No matching NodeSelectorTerms")
 	}
+
 	return nil
 }
 
@@ -755,6 +719,12 @@ func CheckVolumeModeFilesystem(volumeSpec *volume.Spec) (bool, error) {
 	return true, nil
 }
 
+// CheckPersistentVolumeClaimModeBlock checks VolumeMode.
+// If the mode is Block, return true otherwise return false.
+func CheckPersistentVolumeClaimModeBlock(pvc *v1.PersistentVolumeClaim) bool {
+	return utilfeature.DefaultFeatureGate.Enabled(features.BlockVolume) && pvc.Spec.VolumeMode != nil && *pvc.Spec.VolumeMode == v1.PersistentVolumeBlock
+}
+
 // MakeAbsolutePath convert path to absolute path according to GOOS
 func MakeAbsolutePath(goos, path string) string {
 	if goos != "windows" {
@@ -771,4 +741,31 @@ func MakeAbsolutePath(goos, path string) string {
 	}
 	// Otherwise, add 'c:\'
 	return "c:\\" + path
+}
+
+// MapBlockVolume is a utility function to provide a common way of mounting
+// block device path for a specified volume and pod.  This function should be
+// called by volume plugins that implements volume.BlockVolumeMapper.Map() method.
+func MapBlockVolume(
+	devicePath,
+	globalMapPath,
+	podVolumeMapPath,
+	volumeMapName string,
+	podUID utypes.UID,
+) error {
+	blkUtil := volumepathhandler.NewBlockVolumePathHandler()
+
+	// map devicePath to global node path
+	mapErr := blkUtil.MapDevice(devicePath, globalMapPath, string(podUID))
+	if mapErr != nil {
+		return mapErr
+	}
+
+	// map devicePath to pod volume path
+	mapErr = blkUtil.MapDevice(devicePath, podVolumeMapPath, volumeMapName)
+	if mapErr != nil {
+		return mapErr
+	}
+
+	return nil
 }

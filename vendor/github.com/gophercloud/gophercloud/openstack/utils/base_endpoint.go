@@ -18,11 +18,12 @@ func BaseEndpoint(endpoint string) (string, error) {
 
 	u.RawQuery, u.Fragment = "", ""
 
+	base = u.String()
 	versionRe := regexp.MustCompile("v[0-9.]+/?")
-	if version := versionRe.FindString(u.Path); version != "" {
-		base = strings.Replace(u.String(), version, "", -1)
-	} else {
-		base = u.String()
+
+	if version := versionRe.FindString(base); version != "" {
+		versionIndex := strings.Index(base, version)
+		base = base[:versionIndex]
 	}
 
 	return base, nil
