@@ -104,7 +104,7 @@ func main() {
 	app := cli.NewApp()
 	app.Usage = "SSL certificate chain resolver"
 	app.ArgsUsage = "[INPUT_FILE]"
-	app.Version = "1.0.1"
+	app.Version = "1.0.2"
 	app.HideHelp = true
 	app.Flags = []cli.Flag{
 		cli.StringFlag{

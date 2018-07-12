@@ -249,6 +249,13 @@ type RawSockaddrL2 struct {
 	_           [1]byte
 }
 
+type RawSockaddrRFCOMM struct {
+	Family  uint16
+	Bdaddr  [6]uint8
+	Channel uint8
+	_       [1]byte
+}
+
 type RawSockaddrCAN struct {
 	Family  uint16
 	_       [2]byte
@@ -402,6 +409,7 @@ const (
 	SizeofSockaddrNetlink   = 0xc
 	SizeofSockaddrHCI       = 0x6
 	SizeofSockaddrL2        = 0xe
+	SizeofSockaddrRFCOMM    = 0xa
 	SizeofSockaddrCAN       = 0x10
 	SizeofSockaddrALG       = 0x58
 	SizeofSockaddrVM        = 0x10
@@ -697,6 +705,8 @@ const (
 
 	AT_SYMLINK_FOLLOW   = 0x400
 	AT_SYMLINK_NOFOLLOW = 0x100
+
+	AT_EACCESS = 0x200
 )
 
 type PollFd struct {
@@ -1807,3 +1817,32 @@ const (
 	NFT_NG_INCREMENTAL                = 0x0
 	NFT_NG_RANDOM                     = 0x1
 )
+
+type RTCTime struct {
+	Sec   int32
+	Min   int32
+	Hour  int32
+	Mday  int32
+	Mon   int32
+	Year  int32
+	Wday  int32
+	Yday  int32
+	Isdst int32
+}
+
+type RTCWkAlrm struct {
+	Enabled uint8
+	Pending uint8
+	_       [2]byte
+	Time    RTCTime
+}
+
+type RTCPLLInfo struct {
+	Ctrl    int32
+	Value   int32
+	Max     int32
+	Min     int32
+	Posmult int32
+	Negmult int32
+	Clock   int32
+}
