@@ -81,11 +81,6 @@
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/nginx-status-page/</loc>
-     <lastmod>2018-07-13</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
      <loc>/user-guide/tls/</loc>
      <lastmod>2018-07-13</lastmod>
      <changefreq>daily</changefreq>
@@ -212,11 +207,6 @@
     </url>
     <url>
      <loc>/how-it-works/</loc>
-     <lastmod>2018-07-13</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
-     <loc>/ingress-controller-catalog/</loc>
      <lastmod>2018-07-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
