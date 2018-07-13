@@ -98,6 +98,11 @@ type Backend struct {
 	LoadBalancing string `json:"load-balance,omitempty"`
 }
 
+// HashInclude defines if a field should be used or not to calculate the hash
+func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
+	return (field != "Endpoints"), nil
+}
+
 // SessionAffinityConfig describes different affinity configurations for new sessions.
 // Once a session is mapped to a backend based on some affinity setting, it
 // retains that mapping till the backend goes down, or the ingress controller
