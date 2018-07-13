@@ -223,8 +223,10 @@ dev-env:
 
 .PHONY: live-docs
 live-docs:
-	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs aledbf/mkdocs:0.1
+	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
 
 .PHONY: build-docs
 build-docs:
-	@docker run --rm -it -v ${PWD}:/docs aledbf/mkdocs:0.1 build
+	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker run --rm -it -v ${PWD}:/docs ingress-nginx/mkdocs build
