@@ -979,9 +979,19 @@ func proxySetHeader(loc interface{}) string {
 	return "proxy_set_header"
 }
 
-func includes(xs []string, s string) bool {
-	for _, x := range xs {
-		if x == s {
+func includes(xs interface{}, x interface{}) bool {
+	list, ok := xs.([]string)
+	if !ok {
+		glog.Errorf("expected a '[]string' type but %T was returned", xs)
+		return false
+	}
+	s, ok := x.(string)
+	if !ok {
+		glog.Errorf("expected a 'string' type but %T was returned", x)
+		return false
+	}
+	for _, v := range list {
+		if v == s {
 			return true
 		}
 	}
