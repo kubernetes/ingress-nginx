@@ -18,7 +18,6 @@ package template
 
 import (
 	"fmt"
-	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -38,7 +37,6 @@ const (
 	skipAccessLogUrls        = "skip-access-log-urls"
 	whitelistSourceRange     = "whitelist-source-range"
 	proxyRealIPCIDR          = "proxy-real-ip-cidr"
-	bindAddress              = "bind-address"
 	httpRedirectCode         = "http-redirect-code"
 	proxyStreamResponses     = "proxy-stream-responses"
 	hideHeaders              = "hide-headers"
@@ -65,9 +63,6 @@ func ReadConfig(src map[string]string) config.Configuration {
 	whiteList := make([]string, 0)
 	proxyList := make([]string, 0)
 	hideHeadersList := make([]string, 0)
-
-	bindAddressIpv4List := make([]string, 0)
-	bindAddressIpv6List := make([]string, 0)
 
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
@@ -97,21 +92,6 @@ func ReadConfig(src map[string]string) config.Configuration {
 		proxyList = append(proxyList, strings.Split(val, ",")...)
 	} else {
 		proxyList = append(proxyList, "0.0.0.0/0")
-	}
-	if val, ok := conf[bindAddress]; ok {
-		delete(conf, bindAddress)
-		for _, i := range strings.Split(val, ",") {
-			ns := net.ParseIP(i)
-			if ns != nil {
-				if ing_net.IsIPV6(ns) {
-					bindAddressIpv6List = append(bindAddressIpv6List, fmt.Sprintf("[%v]", ns))
-				} else {
-					bindAddressIpv4List = append(bindAddressIpv4List, fmt.Sprintf("%v", ns))
-				}
-			} else {
-				glog.Warningf("%v is not a valid textual representation of an IP address", i)
-			}
-		}
 	}
 
 	if val, ok := conf[httpRedirectCode]; ok {
@@ -170,8 +150,6 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.SkipAccessLogURLs = skipUrls
 	to.WhitelistSourceRange = whiteList
 	to.ProxyRealIPCIDR = proxyList
-	to.BindAddressIpv4 = bindAddressIpv4List
-	to.BindAddressIpv6 = bindAddressIpv6List
 	to.HideHeaders = hideHeadersList
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()

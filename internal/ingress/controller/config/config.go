@@ -399,12 +399,6 @@ type Configuration struct {
 	// Default: 1
 	ProxyStreamResponses int `json:"proxy-stream-responses,omitempty"`
 
-	// Sets the ipv4 addresses on which the server will accept requests.
-	BindAddressIpv4 []string `json:"bind-address-ipv4,omitempty"`
-
-	// Sets the ipv6 addresses on which the server will accept requests.
-	BindAddressIpv6 []string `json:"bind-address-ipv6,omitempty"`
-
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
@@ -521,7 +515,6 @@ type Configuration struct {
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	defIPCIDR := make([]string, 0)
-	defBindAddress := make([]string, 0)
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
 
@@ -616,8 +609,6 @@ func NewDefault() Configuration {
 		},
 		UpstreamKeepaliveConnections: 32,
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
-		BindAddressIpv4:              defBindAddress,
-		BindAddressIpv6:              defBindAddress,
 		ZipkinCollectorPort:          9411,
 		ZipkinServiceName:            "nginx",
 		ZipkinSampleRate:             1.0,
@@ -674,13 +665,14 @@ type TemplateConfig struct {
 	DisableLua                  bool
 }
 
-// ListenPorts describe the ports required to run the
+// ListenPorts describe the ip addresses and ports that are required to run the
 // NGINX Ingress controller
 type ListenPorts struct {
-	HTTP     int
-	HTTPS    int
-	Status   int
-	Health   int
-	Default  int
-	SSLProxy int
+	Addresses []string
+	Default   int
+	HTTP      int
+	HTTPS     int
+	Health    int
+	SSLProxy  int
+	Status    int
 }

@@ -10,6 +10,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | --alsologtostderr                 | log to standard error as well as files |
 | --annotations-prefix string       | Prefix of the Ingress annotations specific to the NGINX controller. (default "nginx.ingress.kubernetes.io") |
 | --apiserver-host string           | Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted. |
+| --bind-addresses string           | Comma separated list of IPv4/IPV6 address to bind to. Defaults to 0.0.0.0,[::] |
 | --configmap string                | Name of the ConfigMap containing custom global configurations for the controller. |
 | --default-backend-service string  | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
 | --default-server-port int         | Port to use for exposing the default server (catch-all). (default 8181) |
@@ -32,7 +33,6 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | --publish-service string          | Service fronting the Ingress controller. Takes the form "namespace/name". When used together with update-status, the controller mirrors the address of this service's endpoints to the load-balancer status of all Ingress objects it satisfies. |
 | --publish-status-address string   | Customized address to set as the load-balancer status of Ingress objects this controller satisfies. Requires the update-status parameter. |
 | --report-node-internal-ip-address | Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter. |
-| --skip-port-check                 | Skip all port availability checks at startup. (default false) |
 | --sort-backends                   | Sort servers inside NGINX upstreams. |
 | --ssl-passthrough-proxy-port int  | Port to use internally for SSL Passthrough. (default 442) |
 | --status-port int                 | Port to use for exposing NGINX status pages. (default 18080) |
