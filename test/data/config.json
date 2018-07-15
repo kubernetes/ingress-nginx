@@ -1,10 +1,11 @@
 {
 	"backlogSize": 32768,
 	"isIPV6Enabled": true,
+  "ListenPorts": {
+		"Addresses": "2.2.2.2,[2001:db8:a0b:12f0::1],[3731:54:65fe:2::a7]"
+	},
 	"cfg": {
 		"disable-ipv6": false,
-		"bind-address-ipv4": [ "1.1.1.1" , "2.2.2.2"],
-		"bind-address-ipv6": [ "[2001:db8:a0b:12f0::1]" ,"[3731:54:65fe:2::a7]" ,"[33:33:33::33::33]" ],
 		"backend": {
 			"custom-http-errors": [404],
 			"proxy-buffer-size": "4k",
