@@ -521,8 +521,8 @@ func New(checkOCSP bool,
 	if err != nil {
 		glog.Warningf("Unexpected error reading configuration configmap: %v", err)
 	}
-	store.setConfig(cm)
 
+	store.setConfig(cm)
 	return store
 }
 
@@ -708,6 +708,34 @@ func (s k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error)
 	}, nil
 }
 
+func (s k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName string) {
+	ticketString := ngx_template.ReadConfig(cmap.Data).SSLSessionTicketKey
+	s.backendConfig.SSLSessionTicketKey = ""
+
+	if ticketString != "" {
+		ticketBytes := base64.StdEncoding.WithPadding(base64.StdPadding).DecodedLen(len(ticketString))
+
+		// 81 used instead of 80 because of padding
+		if !(ticketBytes == 48 || ticketBytes == 81) {
+			glog.Warningf("ssl-session-ticket-key must contain either 48 or 80 bytes")
+		}
+
+		decodedTicket, err := base64.StdEncoding.DecodeString(ticketString)
+		if err != nil {
+			glog.Errorf("unexpected error decoding ssl-session-ticket-key: %v", err)
+			return
+		}
+
+		err = ioutil.WriteFile(fileName, decodedTicket, file.ReadWriteByUser)
+		if err != nil {
+			glog.Errorf("unexpected error writing ssl-session-ticket-key to %s: %v", fileName, err)
+			return
+		}
+
+		s.backendConfig.SSLSessionTicketKey = ticketString
+	}
+}
+
 // GetDefaultBackend returns the default backend
 func (s k8sStore) GetDefaultBackend() defaults.Backend {
 	return s.backendConfig.Backend
@@ -719,16 +747,7 @@ func (s k8sStore) GetBackendConfiguration() ngx_config.Configuration {
 
 func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
-
-	// TODO: this should not be done here
-	if s.backendConfig.SSLSessionTicketKey != "" {
-		d, err := base64.StdEncoding.DecodeString(s.backendConfig.SSLSessionTicketKey)
-		if err != nil {
-			glog.Warningf("unexpected error decoding key ssl-session-ticket-key: %v", err)
-			s.backendConfig.SSLSessionTicketKey = ""
-		}
-		ioutil.WriteFile("/etc/nginx/tickets.key", d, file.ReadWriteByUser)
-	}
+	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }
 
 // Run initiates the synchronization of the informers and the initial

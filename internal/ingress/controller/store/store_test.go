@@ -33,6 +33,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
+	"encoding/base64"
+	"io/ioutil"
+	"k8s.io/api/core/v1"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -826,5 +829,41 @@ func TestListIngresses(t *testing.T) {
 	ingresses := s.ListIngresses()
 	if s := len(ingresses); s != 3 {
 		t.Errorf("Expected 3 Ingresses but got %v", s)
+	}
+}
+
+func TestWriteSSLSessionTicketKey(t *testing.T) {
+	tests := []string{
+		"9DyULjtYWz520d1rnTLbc4BOmN2nLAVfd3MES/P3IxWuwXkz9Fby0lnOZZUdNEMV",
+		"9SvN1C9AB5DvNde5fMKoJwAwICpqdjiMyxR+cv6NpAWv22rFd3gKt4wMyGxCm7l9Wh6BQPG0+csyBZSHHr2NOWj52Wx8xCegXf4NsSMBUqA=",
+	}
+
+	for _, test := range tests {
+		s := newStore(t)
+
+		cmap := &v1.ConfigMap{
+			Data: map[string]string{
+				"ssl-session-ticket-key": test,
+			},
+		}
+
+		f, err := ioutil.TempFile("", "ssl-session-ticket-test")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		s.writeSSLSessionTicketKey(cmap, f.Name())
+
+		content, err := ioutil.ReadFile(f.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		encodedContent := base64.StdEncoding.EncodeToString(content)
+
+		f.Close()
+
+		if test != encodedContent {
+			t.Fatalf("expected %v but returned %s", test, encodedContent)
+		}
 	}
 }
