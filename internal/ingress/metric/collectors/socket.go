@@ -111,7 +111,7 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 
 		responseTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:        "response_duration_milliseconds",
+				Name:        "response_duration_seconds",
 				Help:        "The time spent on receiving the response from the upstream server",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
@@ -130,7 +130,7 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 
 		requestTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:        "request_duration_milliseconds",
+				Name:        "request_duration_seconds",
 				Help:        "The request processing time in milliseconds",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
@@ -171,7 +171,7 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 
 		upstreamLatency: prometheus.NewSummaryVec(
 			prometheus.SummaryOpts{
-				Name:        "ingress_upstream_latency_milliseconds",
+				Name:        "ingress_upstream_latency_seconds",
 				Help:        "Upstream service latency per Ingress",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
@@ -181,15 +181,15 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 	}
 
 	sc.metricMapping = map[string]interface{}{
-		prometheus.BuildFQName(PrometheusNamespace, "", "request_duration_milliseconds"): sc.requestTime,
-		prometheus.BuildFQName(PrometheusNamespace, "", "request_size"):                  sc.requestLength,
+		prometheus.BuildFQName(PrometheusNamespace, "", "request_duration_seconds"): sc.requestTime,
+		prometheus.BuildFQName(PrometheusNamespace, "", "request_size"):             sc.requestLength,
 
-		prometheus.BuildFQName(PrometheusNamespace, "", "response_duration_milliseconds"): sc.responseTime,
-		prometheus.BuildFQName(PrometheusNamespace, "", "response_size"):                  sc.responseLength,
+		prometheus.BuildFQName(PrometheusNamespace, "", "response_duration_seconds"): sc.responseTime,
+		prometheus.BuildFQName(PrometheusNamespace, "", "response_size"):             sc.responseLength,
 
 		prometheus.BuildFQName(PrometheusNamespace, "", "bytes_sent"): sc.bytesSent,
 
-		prometheus.BuildFQName(PrometheusNamespace, "", "ingress_upstream_latency_milliseconds"): sc.upstreamLatency,
+		prometheus.BuildFQName(PrometheusNamespace, "", "ingress_upstream_latency_seconds"): sc.upstreamLatency,
 	}
 
 	return sc, nil
