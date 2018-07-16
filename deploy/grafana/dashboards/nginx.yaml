@@ -971,7 +971,7 @@
       ],
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(nginx_ingress_controller_request_duration_milliseconds_bucket{ingress!=\"\",controller_class=~\"$controller_class\",namespace=~\"$namespace\"}[1m])) by (le, ingress))",
+          "expr": "histogram_quantile(0.50, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress!=\"\",controller_class=~\"$controller_class\",namespace=~\"$namespace\"}[1m])) by (le, ingress))",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -980,7 +980,7 @@
           "refId": "C"
         },
         {
-          "expr": "histogram_quantile(0.90, sum(rate(nginx_ingress_controller_request_duration_milliseconds_bucket{ingress!=\"\",controller_class=~\"$controller_class\",namespace=~\"$namespace\"}[1m])) by (le, ingress))",
+          "expr": "histogram_quantile(0.90, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress!=\"\",controller_class=~\"$controller_class\",namespace=~\"$namespace\"}[1m])) by (le, ingress))",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -989,7 +989,7 @@
           "refId": "D"
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(nginx_ingress_controller_request_duration_milliseconds_bucket{ingress!=\"\",controller_class=~\"$controller_class\",namespace=~\"$namespace\"}[1m])) by (le, ingress))",
+          "expr": "histogram_quantile(0.99, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress!=\"\",controller_class=~\"$controller_class\",namespace=~\"$namespace\"}[1m])) by (le, ingress))",
           "format": "table",
           "hide": false,
           "instant": true,
