@@ -149,8 +149,8 @@ Requires the update-status parameter.`)
 			`Dynamically refresh backends on topology changes instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries.`)
 
-		bindAddresses = flags.String("bind-addresses", "0.0.0.0,[::]",
-			`Comma separated list of IPv4/IPv6 address to bind to. Default 0.0.0.0,[::]`)
+		bindAddresses = flags.String("bind-addresses", "0.0.0.0,::",
+			`Comma separated list of IPv4/IPv6 address to bind to.`)
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
 		statusPort    = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
@@ -194,43 +194,43 @@ Feature backed by OpenResty Lua libraries.`)
 
 	bindIpAddresses := make([]string, 0)
 	for _, ipAddressStr := range strings.Split(*bindAddresses, ",") {
-		ipAddressSanitized := strings.Replace(strings.Replace(ipAddressStr, "]", "", -1),
-			"[", "", -1)
-
-		ip := net.ParseIP(ipAddressSanitized)
+		ip := net.ParseIP(ipAddressStr)
 		if ip == nil {
 			return false, nil, fmt.Errorf("string %v is not an ip address", ipAddressStr)
 		}
 		if !ing_net.IsIPv6Enabled() && ing_net.IsIPV6(ip) {
 			glog.Warningf("IPv6 is disabled, skipping IPv6 address: %s", ipAddressStr)
 		} else {
+			if ing_net.IsIPV6(ip){
+				ipAddressStr = fmt.Sprintf("[%v]", ipAddressStr)
+			}
 			bindIpAddresses = append(bindIpAddresses, ipAddressStr)
 		}
 	}
-	// check port collisions
+	// check port availability
 	for _, ipAddress := range bindIpAddresses {
 		if !ing_net.IsPortAvailable(ipAddress, *httpPort) {
-			return false, nil, fmt.Errorf("port %v:%v is already in use. Please check the flag --http-port",
+			return false, nil, fmt.Errorf("Port %s:%d is already in use. Please check the flag --http-port",
 				ipAddress, *httpPort)
 		}
 
 		if !ing_net.IsPortAvailable(ipAddress, *httpsPort) {
-			return false, nil, fmt.Errorf("port %v:%v is already in use. Please check the flag --https-port",
+			return false, nil, fmt.Errorf("Port %s:%d is already in use. Please check the flag --https-port",
 				ipAddress, *httpsPort)
 		}
 
 		if !ing_net.IsPortAvailable(ipAddress, *statusPort) {
-			return false, nil, fmt.Errorf("port %v:%v is already in use. Please check the flag --status-port",
+			return false, nil, fmt.Errorf("Port %s:%d is already in use. Please check the flag --status-port",
 				ipAddress, *statusPort)
 		}
 
 		if !ing_net.IsPortAvailable(ipAddress, *defServerPort) {
-			return false, nil, fmt.Errorf("port %v:%v is already in use. Please check the flag --default-server-port",
+			return false, nil, fmt.Errorf("Port %s:%d is already in use. Please check the flag --default-server-port",
 				ipAddress, *defServerPort)
 		}
 
 		if *enableSSLPassthrough && !ing_net.IsPortAvailable(ipAddress, *sslProxyPort) {
-			return false, nil, fmt.Errorf("port %v:%v is already in use. Please check the flag --ssl-passtrough-proxy-port",
+			return false, nil, fmt.Errorf("Port %s:%d is already in use. Please check the flag --ssl-passtrough-proxy-port",
 				ipAddress, *sslProxyPort)
 		}
 	}
