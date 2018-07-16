@@ -150,7 +150,7 @@ Requires the update-status parameter.`)
 Feature backed by OpenResty Lua libraries.`)
 
 		bindAddresses = flags.String("bind-addresses", "0.0.0.0,::",
-			`Comma separated list of IPv4/IPv6 address to bind to.`)
+			`Comma separated list of IPv4/IPv6 addresses to bind to.`)
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
 		statusPort    = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)

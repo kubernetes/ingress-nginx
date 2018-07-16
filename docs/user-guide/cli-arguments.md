@@ -10,7 +10,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | --alsologtostderr                 | log to standard error as well as files |
 | --annotations-prefix string       | Prefix of the Ingress annotations specific to the NGINX controller. (default "nginx.ingress.kubernetes.io") |
 | --apiserver-host string           | Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted. |
-| --bind-addresses string           | Comma separated list of IPv4/IPV6 address to bind to. Defaults to 0.0.0.0,[::] |
+| --bind-addresses string           | Comma separated list of IPv4/IPv6 addresses to bind to. Defaults to "0.0.0.0,::" |
 | --configmap string                | Name of the ConfigMap containing custom global configurations for the controller. |
 | --default-backend-service string  | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
 | --default-server-port int         | Port to use for exposing the default server (catch-all). (default 8181) |
