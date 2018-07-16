@@ -434,8 +434,9 @@ Enables or disables session resumption through [TLS session tickets](http://ngin
 ## ssl-session-ticket-key
 
 Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
+To create a ticket: `openssl rand 80 | openssl enc -A -base64`
 
-[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used. To create a ticket: `openssl rand 80 | base64 -w0`
+[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used. 
 
 ## ssl-session-timeout
 
