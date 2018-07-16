@@ -303,7 +303,7 @@ type Configuration struct {
 	// Sets the secret key used to encrypt and decrypt TLS session tickets.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
 	// By default, a randomly generated key is used.
-	// Example: openssl rand 80 | base64 -w0
+	// Example: openssl rand 80 | openssl enc -A -base64
 	SSLSessionTicketKey string `json:"ssl-session-ticket-key,omitempty"`
 
 	// Time during which a client may reuse the session parameters stored in a cache.
