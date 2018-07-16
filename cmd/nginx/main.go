@@ -272,7 +272,6 @@ func registerHealthz(ic *controller.NGINXController, mux *http.ServeMux) {
 }
 
 func registerMetrics(reg *prometheus.Registry, mux *http.ServeMux) {
-
 	mux.Handle(
 		"/metrics",
 		promhttp.InstrumentMetricHandler(
