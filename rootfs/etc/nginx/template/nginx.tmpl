@@ -179,7 +179,7 @@ http {
 
     # Custom headers for response
     {{ range $k, $v := $addHeaders }}
-    add_header {{ $k }}            "{{ $v }}";
+    add_header {{ $k }}            "{{ $v }}" always;
     {{ end }}
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
