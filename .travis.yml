@@ -33,9 +33,6 @@ jobs:
     script:
     - make lua-test
   - stage: Coverage
-    before_script:
-    # start minikube
-    - test/e2e/up.sh
     script:
     - make cover
   - stage: e2e
