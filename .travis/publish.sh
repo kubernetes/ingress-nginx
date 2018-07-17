@@ -28,8 +28,8 @@ fi
 
 source $DIR/common.sh
 
-echo "Login to quay.io..."
-docker login --username=$QUAY_USERNAME --password=$QUAY_PASSWORD quay.io >/dev/null 2>&1
+echo "Login to Docker Hub..."
+docker login --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD >/dev/null 2>&1
 
 case "$COMPONENT" in
 "ingress-controller")
