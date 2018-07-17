@@ -28,14 +28,16 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
-echo "[dev-env] building container"
-make build container
-
 if [ -z "${SKIP_MINIKUBE_START}" ]; then
     test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
         --extra-config=kubelet.sync-frequency=1s \
         --extra-config=apiserver.authorization-mode=RBAC
+
+    eval $(minikube docker-env)
 fi
+
+echo "[dev-env] building container"
+make build container
 
 docker save "${DEV_IMAGE}" | (eval $(minikube docker-env) && docker load) || true
 
