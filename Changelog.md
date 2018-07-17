@@ -1,5 +1,18 @@
 # Changelog
 
+### 0.17.1
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.17.1`
+
+*Changes:*
+
+- [X] [#2782](https://github.com/kubernetes/ingress-nginx/pull/2782) Add Better Error Handling for SSLSessionTicketKey
+- [X] [#2790](https://github.com/kubernetes/ingress-nginx/pull/2790) Update prometheus labels
+
+*Documentation:*
+
+- [X] [#2770](https://github.com/kubernetes/ingress-nginx/pull/2770) Basic-Auth doc misleading: fix double quotes leading to nginx config error
+
 ### 0.17.0
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.17.0`
