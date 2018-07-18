@@ -130,6 +130,7 @@ var (
 		"filterRateLimits":           filterRateLimits,
 		"buildRateLimitZones":        buildRateLimitZones,
 		"buildRateLimit":             buildRateLimit,
+		"buildResolversForLua":       buildResolversForLua,
 		"buildResolvers":             buildResolvers,
 		"buildUpstreamName":          buildUpstreamName,
 		"isLocationInLocationList":   isLocationInLocationList,
@@ -218,6 +219,33 @@ func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool,
 		return ""
 	}
 	return strings.Join(out, ";\n\r") + ";"
+}
+
+func buildResolversForLua(res interface{}, disableIpv6 interface{}) string {
+	nss, ok := res.([]net.IP)
+	if !ok {
+		glog.Errorf("expected a '[]net.IP' type but %T was returned", res)
+		return ""
+	}
+	no6, ok := disableIpv6.(bool)
+	if !ok {
+		glog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
+		return ""
+	}
+
+	if len(nss) == 0 {
+		return ""
+	}
+
+	r := []string{}
+	for _, ns := range nss {
+		if ing_net.IsIPV6(ns) && no6 {
+			continue
+		}
+		r = append(r, fmt.Sprintf("\"%v\"", ns))
+	}
+
+	return strings.Join(r, ", ")
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
