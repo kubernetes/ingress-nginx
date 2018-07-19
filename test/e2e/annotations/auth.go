@@ -19,6 +19,7 @@ package annotations
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"os/exec"
 	"time"
 
@@ -27,7 +28,9 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -264,6 +267,77 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+	})
+
+	Context("when external authentication is configured", func() {
+		host := "auth"
+
+		BeforeEach(func() {
+			err := f.NewHttpbinDeployment()
+			Expect(err).NotTo(HaveOccurred())
+
+			var httpbinIP string
+			err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+				e, err := f.KubeClientSet.CoreV1().Endpoints(f.IngressController.Namespace).Get("httpbin", metav1.GetOptions{})
+				if errors.IsNotFound(err) {
+					return false, nil
+				}
+				if err != nil {
+					return false, err
+				}
+				if len(e.Subsets) < 1 || len(e.Subsets[0].Addresses) < 1 {
+					return false, nil
+				}
+				httpbinIP = e.Subsets[0].Addresses[0].IP
+				return true, nil
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{
+				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
+				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
+			}))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bi).NotTo(BeNil())
+
+			err = f.WaitForNginxServer(host, func(server string) bool {
+				return Expect(server).ShouldNot(ContainSubstring("return 503"))
+			})
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should return status code 200 when signed in", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", host).
+				SetBasicAuth("user", "password").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		})
+
+		It("should redirect to signin url when not signed in", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", host).
+				RedirectPolicy(func(req gorequest.Request, via []gorequest.Request) error {
+					return http.ErrUseLastResponse
+				}).
+				Param("a", "b").
+				Param("c", "d").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusFound))
+			Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d"))))
+		})
 	})
 })
 
