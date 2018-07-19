@@ -25,6 +25,13 @@ echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
 sed "s@\${NAMESPACE}@${NAMESPACE}@" $DIR/../manifests/ingress-controller/mandatory.yaml | kubectl apply --namespace=$NAMESPACE -f -
 cat $DIR/../manifests/ingress-controller/service-nodeport.yaml | kubectl apply --namespace=$NAMESPACE -f -
 
+echo "***************************** Printing kubectl namespaces *********************"
+kubectl get namespaces
+echo "-------------------------------------------------------------------------------------"
+
+echo "************************ Printing kubectl pods ***********************"
+kubectl get pods --all-namespaces
+
 # wait for the deployment and fail if there is an error before starting the execution of any test
 kubectl rollout status \
     --request-timeout=3m \
