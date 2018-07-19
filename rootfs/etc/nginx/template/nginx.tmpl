@@ -977,6 +977,7 @@ stream {
             {{ end }}
 
             {{ if $location.ExternalAuth.SigninURL }}
+            set_escape_uri $escaped_request_uri $request_uri;
             error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
             {{ end }}
 

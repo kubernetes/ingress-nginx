@@ -697,8 +697,8 @@ func TestBuildAuthSignURL(t *testing.T) {
 	cases := map[string]struct {
 		Input, Output string
 	}{
-		"default url":       {"http://google.com", "http://google.com?rd=$pass_access_scheme://$http_host$request_uri"},
-		"with random field": {"http://google.com?cat=0", "http://google.com?cat=0&rd=$pass_access_scheme://$http_host$request_uri"},
+		"default url":       {"http://google.com", "http://google.com?rd=$pass_access_scheme://$http_host$escaped_request_uri"},
+		"with random field": {"http://google.com?cat=0", "http://google.com?cat=0&rd=$pass_access_scheme://$http_host$escaped_request_uri"},
 		"with rd field":     {"http://google.com?cat&rd=$request", "http://google.com?cat&rd=$request"},
 	}
 	for k, tc := range cases {
