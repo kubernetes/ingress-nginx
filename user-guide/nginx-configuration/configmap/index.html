@@ -3380,8 +3380,9 @@ Example for json output:</p>
 <h2 id="ssl-session-tickets">ssl-session-tickets<a class="headerlink" href="#ssl-session-tickets" title="Permanent link">&para;</a></h2>
 <p>Enables or disables session resumption through <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session tickets</a>.</p>
 <h2 id="ssl-session-ticket-key">ssl-session-ticket-key<a class="headerlink" href="#ssl-session-ticket-key" title="Permanent link">&para;</a></h2>
-<p>Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.</p>
-<p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session ticket-key</a>, by default, a randomly generated key is used. To create a ticket: <code class="codehilite">openssl rand 80 | base64 -w0</code></p>
+<p>Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
+To create a ticket: <code class="codehilite">openssl rand 80 | openssl enc -A -base64</code></p>
+<p><a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets">TLS session ticket-key</a>, by default, a randomly generated key is used. </p>
 <h2 id="ssl-session-timeout">ssl-session-timeout<a class="headerlink" href="#ssl-session-timeout" title="Permanent link">&para;</a></h2>
 <p>Sets the time during which a client may <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout">reuse the session</a> parameters stored in a cache.</p>
 <h2 id="ssl-buffer-size">ssl-buffer-size<a class="headerlink" href="#ssl-buffer-size" title="Permanent link">&para;</a></h2>
