@@ -201,7 +201,7 @@ Feature backed by OpenResty Lua libraries.`)
 		if !ing_net.IsIPv6Enabled() && ing_net.IsIPV6(ip) {
 			glog.Warningf("IPv6 is disabled, skipping IPv6 address: %s", ipAddressStr)
 		} else {
-			if ing_net.IsIPV6(ip){
+			if ing_net.IsIPV6(ip) {
 				ipAddressStr = fmt.Sprintf("[%v]", ipAddressStr)
 			}
 			bindIpAddresses = append(bindIpAddresses, ipAddressStr)
