@@ -52,6 +52,7 @@ fi
 
 ginkgo build ./test/e2e
 
+exec --                 \
 ginkgo                  \
     -randomizeSuites    \
     -randomizeAllSpecs  \
