@@ -40,4 +40,8 @@ site
 # temporal github pages
 gh-pages
 
-test/binaries
+# Docker-based builds
+/test/binaries
+/.env
+/.gocache/
+/bin/
