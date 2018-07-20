@@ -18,45 +18,36 @@ package store
 
 import (
 	"fmt"
-	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/eapache/channels"
-	"k8s.io/api/extensions/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
+	"encoding/base64"
+	"io/ioutil"
+	"k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 func TestStore(t *testing.T) {
-	// TODO: find a way to avoid the need to use a real api server
-	home := os.Getenv("HOME")
-	kubeConfigFile := fmt.Sprintf("%v/.kube/config", home)
-	kubeContext := ""
-
-	kubeConfig, err := framework.LoadConfig(kubeConfigFile, kubeContext)
-	if err != nil {
-		t.Errorf("unexpected error loading kubeconfig file: %v", err)
-	}
-
-	clientSet, err := kubernetes.NewForConfig(kubeConfig)
-	if err != nil {
-		t.Errorf("unexpected error creating ingress client: %v", err)
-	}
+	clientSet := fake.NewSimpleClientset()
 
 	t.Run("should return an error searching for non existing objects", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
+		cm := createConfigMap(clientSet, ns, t)
+		defer deleteConfigMap(cm, ns, clientSet, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -118,6 +109,8 @@ func TestStore(t *testing.T) {
 	t.Run("should return one event for add, update and delete of ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
+		cm := createConfigMap(clientSet, ns, t)
+		defer deleteConfigMap(cm, ns, clientSet, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -138,8 +131,9 @@ func TestStore(t *testing.T) {
 					continue
 				}
 				if _, ok := e.Obj.(*extensions.Ingress); !ok {
-					t.Errorf("expected an Ingress type but %T returned", e.Obj)
+					continue
 				}
+
 				switch e.Type {
 				case CreateEvent:
 					atomic.AddUint64(&add, 1)
@@ -165,21 +159,22 @@ func TestStore(t *testing.T) {
 
 		storer.Run(stopCh)
 
-		ing, err := ensureIngress(&v1beta1.Ingress{
+		ing := ensureIngress(&extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
 				Namespace: ns,
+				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/dummy", ns),
 			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
+			Spec: extensions.IngressSpec{
+				Rules: []extensions.IngressRule{
 					{
 						Host: "dummy",
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
+						IngressRuleValue: extensions.IngressRuleValue{
+							HTTP: &extensions.HTTPIngressRuleValue{
+								Paths: []extensions.HTTPIngressPath{
 									{
 										Path: "/",
-										Backend: v1beta1.IngressBackend{
+										Backend: extensions.IngressBackend{
 											ServiceName: "http-svc",
 											ServicePort: intstr.FromInt(80),
 										},
@@ -190,30 +185,34 @@ func TestStore(t *testing.T) {
 					},
 				},
 			},
-		}, clientSet)
+		}, clientSet, t)
+
+		err := framework.WaitForIngressInNamespace(clientSet, ns, ing.Name)
 		if err != nil {
-			t.Errorf("unexpected error creating ingress: %v", err)
+			t.Errorf("error waiting for secret: %v", err)
 		}
+		time.Sleep(1 * time.Second)
 
 		// create an invalid ingress (different class)
-		_, err = ensureIngress(&v1beta1.Ingress{
+		invalidIngress := ensureIngress(&extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "custom-class",
+				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/custom-class", ns),
 				Namespace: ns,
 				Annotations: map[string]string{
 					"kubernetes.io/ingress.class": "something",
 				},
 			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
+			Spec: extensions.IngressSpec{
+				Rules: []extensions.IngressRule{
 					{
 						Host: "dummy",
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
+						IngressRuleValue: extensions.IngressRuleValue{
+							HTTP: &extensions.HTTPIngressRuleValue{
+								Paths: []extensions.HTTPIngressPath{
 									{
 										Path: "/",
-										Backend: v1beta1.IngressBackend{
+										Backend: extensions.IngressBackend{
 											ServiceName: "http-svc",
 											ServicePort: intstr.FromInt(80),
 										},
@@ -224,26 +223,28 @@ func TestStore(t *testing.T) {
 					},
 				},
 			},
-		}, clientSet)
-		if err != nil {
-			t.Errorf("unexpected error creating ingress: %v", err)
-		}
+		}, clientSet, t)
+		defer deleteIngress(invalidIngress, clientSet, t)
 
 		ni := ing.DeepCopy()
 		ni.Spec.Rules[0].Host = "update-dummy"
-		_, err = ensureIngress(ni, clientSet)
+		_ = ensureIngress(ni, clientSet, t)
 		if err != nil {
-			t.Errorf("unexpected error creating ingress: %v", err)
+			t.Errorf("error creating ingress: %v", err)
+		}
+		// Secret takes a bit to update
+		time.Sleep(3 * time.Second)
+
+		err = clientSet.Extensions().Ingresses(ni.Namespace).Delete(ni.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			t.Errorf("error creating ingress: %v", err)
 		}
 
-		err = clientSet.ExtensionsV1beta1().
-			Ingresses(ni.Namespace).
-			Delete(ni.Name, &metav1.DeleteOptions{})
+		err = framework.WaitForNoIngressInNamespace(clientSet, ni.Namespace, ni.Name)
 		if err != nil {
-			t.Errorf("unexpected error creating ingress: %v", err)
+			t.Errorf("error waiting for secret: %v", err)
 		}
-
-		framework.WaitForNoIngressInNamespace(clientSet, ni.Namespace, ni.Name)
+		time.Sleep(1 * time.Second)
 
 		if atomic.LoadUint64(&add) != 1 {
 			t.Errorf("expected 1 event of type Create but %v occurred", add)
@@ -259,6 +260,8 @@ func TestStore(t *testing.T) {
 	t.Run("should not receive events from secret not referenced from ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
+		cm := createConfigMap(clientSet, ns, t)
+		defer deleteConfigMap(cm, ns, clientSet, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -304,14 +307,14 @@ func TestStore(t *testing.T) {
 		storer.Run(stopCh)
 
 		secretName := "not-referenced"
-		_, err = framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns)
+		_, err := framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns)
 		if err != nil {
-			t.Errorf("unexpected error creating secret: %v", err)
+			t.Errorf("error creating secret: %v", err)
 		}
 
 		err = framework.WaitForSecretInNamespace(clientSet, ns, secretName)
 		if err != nil {
-			t.Errorf("unexpected error waiting for secret: %v", err)
+			t.Errorf("error waiting for secret: %v", err)
 		}
 
 		if atomic.LoadUint64(&add) != 0 {
@@ -326,7 +329,7 @@ func TestStore(t *testing.T) {
 
 		err = clientSet.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{})
 		if err != nil {
-			t.Errorf("unexpected error deleting secret: %v", err)
+			t.Errorf("error deleting secret: %v", err)
 		}
 
 		time.Sleep(1 * time.Second)
@@ -345,6 +348,8 @@ func TestStore(t *testing.T) {
 	t.Run("should receive events from secret referenced from ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
+		cm := createConfigMap(clientSet, ns, t)
+		defer deleteConfigMap(cm, ns, clientSet, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -392,40 +397,39 @@ func TestStore(t *testing.T) {
 		ingressName := "ingress-with-secret"
 		secretName := "referenced"
 
-		_, err := ensureIngress(&v1beta1.Ingress{
+		ing := ensureIngress(&extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      ingressName,
 				Namespace: ns,
+				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/%s", ns, ingressName),
 			},
-			Spec: v1beta1.IngressSpec{
-				TLS: []v1beta1.IngressTLS{
+			Spec: extensions.IngressSpec{
+				TLS: []extensions.IngressTLS{
 					{
 						SecretName: secretName,
 					},
 				},
-				Backend: &v1beta1.IngressBackend{
+				Backend: &extensions.IngressBackend{
 					ServiceName: "http-svc",
 					ServicePort: intstr.FromInt(80),
 				},
 			},
-		}, clientSet)
-		if err != nil {
-			t.Errorf("unexpected error creating ingress: %v", err)
-		}
+		}, clientSet, t)
+		defer deleteIngress(ing, clientSet, t)
 
-		err = framework.WaitForIngressInNamespace(clientSet, ns, ingressName)
+		err := framework.WaitForIngressInNamespace(clientSet, ns, ingressName)
 		if err != nil {
-			t.Errorf("unexpected error waiting for secret: %v", err)
+			t.Errorf("error waiting for secret: %v", err)
 		}
 
 		_, err = framework.CreateIngressTLSSecret(clientSet, []string{"foo"}, secretName, ns)
 		if err != nil {
-			t.Errorf("unexpected error creating secret: %v", err)
+			t.Errorf("error creating secret: %v", err)
 		}
 
 		err = framework.WaitForSecretInNamespace(clientSet, ns, secretName)
 		if err != nil {
-			t.Errorf("unexpected error waiting for secret: %v", err)
+			t.Errorf("error waiting for secret: %v", err)
 		}
 
 		// take into account secret sync
@@ -441,7 +445,7 @@ func TestStore(t *testing.T) {
 
 		err = clientSet.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{})
 		if err != nil {
-			t.Errorf("unexpected error deleting secret: %v", err)
+			t.Errorf("error deleting secret: %v", err)
 		}
 
 		time.Sleep(1 * time.Second)
@@ -449,11 +453,14 @@ func TestStore(t *testing.T) {
 		if atomic.LoadUint64(&del) != 1 {
 			t.Errorf("expected 1 events of type Delete but %v occurred", del)
 		}
+
 	})
 
 	t.Run("should create an ingress with a secret which does not exist", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
+		cm := createConfigMap(clientSet, ns, t)
+		defer deleteConfigMap(cm, ns, clientSet, t)
 
 		stopCh := make(chan struct{})
 		updateCh := channels.NewRingChannel(1024)
@@ -501,27 +508,28 @@ func TestStore(t *testing.T) {
 		name := "ingress-with-secret"
 		secretHosts := []string{name}
 
-		_, err := ensureIngress(&v1beta1.Ingress{
+		ing := ensureIngress(&extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: ns,
+				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/%s", ns, name),
 			},
-			Spec: v1beta1.IngressSpec{
-				TLS: []v1beta1.IngressTLS{
+			Spec: extensions.IngressSpec{
+				TLS: []extensions.IngressTLS{
 					{
 						Hosts:      secretHosts,
 						SecretName: name,
 					},
 				},
-				Rules: []v1beta1.IngressRule{
+				Rules: []extensions.IngressRule{
 					{
 						Host: name,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
+						IngressRuleValue: extensions.IngressRuleValue{
+							HTTP: &extensions.HTTPIngressRuleValue{
+								Paths: []extensions.HTTPIngressPath{
 									{
 										Path: "/",
-										Backend: v1beta1.IngressBackend{
+										Backend: extensions.IngressBackend{
 											ServiceName: "http-svc",
 											ServicePort: intstr.FromInt(80),
 										},
@@ -532,14 +540,12 @@ func TestStore(t *testing.T) {
 					},
 				},
 			},
-		}, clientSet)
-		if err != nil {
-			t.Errorf("unexpected error creating ingress: %v", err)
-		}
+		}, clientSet, t)
+		defer deleteIngress(ing, clientSet, t)
 
-		err = framework.WaitForIngressInNamespace(clientSet, ns, name)
+		err := framework.WaitForIngressInNamespace(clientSet, ns, name)
 		if err != nil {
-			t.Errorf("unexpected error waiting for ingress: %v", err)
+			t.Errorf("error waiting for ingress: %v", err)
 		}
 
 		// take into account delay caused by:
@@ -560,13 +566,13 @@ func TestStore(t *testing.T) {
 
 		_, err = framework.CreateIngressTLSSecret(clientSet, secretHosts, name, ns)
 		if err != nil {
-			t.Errorf("unexpected error creating secret: %v", err)
+			t.Errorf("error creating secret: %v", err)
 		}
 
 		t.Run("should exists a secret in the local store and filesystem", func(t *testing.T) {
 			err := framework.WaitForSecretInNamespace(clientSet, ns, name)
 			if err != nil {
-				t.Errorf("unexpected error waiting for secret: %v", err)
+				t.Errorf("error waiting for secret: %v", err)
 			}
 
 			time.Sleep(5 * time.Second)
@@ -574,13 +580,13 @@ func TestStore(t *testing.T) {
 			pemFile := fmt.Sprintf("%v/%v-%v.pem", file.DefaultSSLDirectory, ns, name)
 			err = framework.WaitForFileInFS(pemFile, fs)
 			if err != nil {
-				t.Errorf("unexpected error waiting for file to exist on the file system: %v", err)
+				t.Errorf("error waiting for file to exist on the file system: %v", err)
 			}
 
 			secretName := fmt.Sprintf("%v/%v", ns, name)
 			sslCert, err := storer.GetLocalSSLCert(secretName)
 			if err != nil {
-				t.Errorf("unexpected error reading local secret %v: %v", secretName, err)
+				t.Errorf("error reading local secret %v: %v", secretName, err)
 			}
 
 			if sslCert == nil {
@@ -602,41 +608,107 @@ func TestStore(t *testing.T) {
 	// check invalid secret (missing ca)
 }
 
-func createNamespace(clientSet *kubernetes.Clientset, t *testing.T) string {
-	t.Log("creating temporal namespace")
-	ns, err := framework.CreateKubeNamespace("store-test", clientSet)
-	if err != nil {
-		t.Errorf("unexpected error creating ingress client: %v", err)
-	}
-	t.Logf("temporal namespace %v created", ns)
+func createNamespace(clientSet kubernetes.Interface, t *testing.T) string {
+	t.Helper()
+	t.Log("Creating temporal namespace")
 
-	return ns
+	namespace := &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "store-test",
+		},
+	}
+
+	ns, err := clientSet.CoreV1().Namespaces().Create(namespace)
+	if err != nil {
+		t.Errorf("error creating the namespace: %v", err)
+	}
+	t.Logf("Temporal namespace %v created", ns)
+
+	return ns.Name
 }
 
-func deleteNamespace(ns string, clientSet *kubernetes.Clientset, t *testing.T) {
-	t.Logf("deleting temporal namespace %v created", ns)
-	err := framework.DeleteKubeNamespace(clientSet, ns)
+func deleteNamespace(ns string, clientSet kubernetes.Interface, t *testing.T) {
+	t.Helper()
+	t.Logf("Deleting temporal namespace %v", ns)
+
+	err := clientSet.CoreV1().Namespaces().Delete(ns, &metav1.DeleteOptions{})
 	if err != nil {
-		t.Errorf("unexpected error creating ingress client: %v", err)
+		t.Errorf("error deleting the namespace: %v", err)
 	}
-	t.Logf("temporal namespace %v deleted", ns)
+	t.Logf("Temporal namespace %v deleted", ns)
 }
 
-func ensureIngress(ingress *extensions.Ingress, clientSet *kubernetes.Clientset) (*extensions.Ingress, error) {
-	s, err := clientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(ingress)
+func createConfigMap(clientSet kubernetes.Interface, ns string, t *testing.T) string {
+	t.Helper()
+	t.Log("Creating temporal config map")
+
+	configMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:     "config",
+			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
+		},
+	}
+
+	cm, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
+	if err != nil {
+		t.Errorf("error creating the configuration map: %v", err)
+	}
+	t.Logf("Temporal configmap %v created", cm)
+
+	return cm.Name
+}
+
+func deleteConfigMap(cm, ns string, clientSet kubernetes.Interface, t *testing.T) {
+	t.Helper()
+	t.Logf("Deleting temporal configmap %v", cm)
+
+	err := clientSet.CoreV1().ConfigMaps(ns).Delete(cm, &metav1.DeleteOptions{})
+	if err != nil {
+		t.Errorf("error deleting the configmap: %v", err)
+	}
+	t.Logf("Temporal configmap %v deleted", cm)
+}
+
+func ensureIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, t *testing.T) *extensions.Ingress {
+	t.Helper()
+	ing, err := clientSet.Extensions().Ingresses(ingress.Namespace).Update(ingress)
+
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
-			return clientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress)
+			t.Logf("Ingress %v not found, creating", ingress)
+
+			ing, err = clientSet.Extensions().Ingresses(ingress.Namespace).Create(ingress)
+			if err != nil {
+				t.Fatalf("error creating ingress %+v: %v", ingress, err)
+			}
+
+			t.Logf("Ingress %+v created", ingress)
+			return ing
 		}
-		return nil, err
+
+		t.Fatalf("error updating ingress %+v: %v", ingress, err)
 	}
-	return s, nil
+
+	t.Logf("Ingress %+v updated", ingress)
+
+	return ing
+}
+
+func deleteIngress(ingress *extensions.Ingress, clientSet kubernetes.Interface, t *testing.T) {
+	t.Helper()
+	err := clientSet.Extensions().Ingresses(ingress.Namespace).Delete(ingress.Name, &metav1.DeleteOptions{})
+
+	if err != nil {
+		t.Errorf("failed to delete ingress %+v: %v", ingress, err)
+	}
+
+	t.Logf("Ingress %+v deleted", ingress)
 }
 
 func newFS(t *testing.T) file.Filesystem {
 	fs, err := file.NewFakeFS()
 	if err != nil {
-		t.Fatalf("unexpected error creating filesystem: %v", err)
+		t.Fatalf("error creating filesystem: %v", err)
 	}
 	return fs
 }
@@ -646,7 +718,7 @@ func newFS(t *testing.T) file.Filesystem {
 func newStore(t *testing.T) *k8sStore {
 	fs, err := file.NewFakeFS()
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("error: %v", err)
 	}
 
 	return &k8sStore{
@@ -665,7 +737,7 @@ func newStore(t *testing.T) *k8sStore {
 func TestUpdateSecretIngressMap(t *testing.T) {
 	s := newStore(t)
 
-	ingTpl := &v1beta1.Ingress{
+	ingTpl := &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "testns",
@@ -675,8 +747,8 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 
 	t.Run("with TLS secret", func(t *testing.T) {
 		ing := ingTpl.DeepCopy()
-		ing.Spec = v1beta1.IngressSpec{
-			TLS: []v1beta1.IngressTLS{{SecretName: "tls"}},
+		ing.Spec = extensions.IngressSpec{
+			TLS: []extensions.IngressTLS{{SecretName: "tls"}},
 		}
 		s.listers.Ingress.Update(ing)
 		s.updateSecretIngressMap(ing)
@@ -729,17 +801,17 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 func TestListIngresses(t *testing.T) {
 	s := newStore(t)
 
-	ingEmptyClass := &v1beta1.Ingress{
+	ingEmptyClass := &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-1",
 			Namespace: "testns",
 		},
-		Spec: v1beta1.IngressSpec{
-			Backend: &v1beta1.IngressBackend{
+		Spec: extensions.IngressSpec{
+			Backend: &extensions.IngressBackend{
 				ServiceName: "demo",
 				ServicePort: intstr.FromInt(80),
 			},
-			Rules: []v1beta1.IngressRule{
+			Rules: []extensions.IngressRule{
 				{
 					Host: "foo.bar",
 				},
@@ -748,7 +820,7 @@ func TestListIngresses(t *testing.T) {
 	}
 	s.listers.Ingress.Add(ingEmptyClass)
 
-	ingressToIgnore := &v1beta1.Ingress{
+	ingressToIgnore := &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-2",
 			Namespace: "testns",
@@ -756,8 +828,8 @@ func TestListIngresses(t *testing.T) {
 				"kubernetes.io/ingress.class": "something",
 			},
 		},
-		Spec: v1beta1.IngressSpec{
-			Backend: &v1beta1.IngressBackend{
+		Spec: extensions.IngressSpec{
+			Backend: &extensions.IngressBackend{
 				ServiceName: "demo",
 				ServicePort: intstr.FromInt(80),
 			},
@@ -765,20 +837,20 @@ func TestListIngresses(t *testing.T) {
 	}
 	s.listers.Ingress.Add(ingressToIgnore)
 
-	ingressWithoutPath := &v1beta1.Ingress{
+	ingressWithoutPath := &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-3",
 			Namespace: "testns",
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: extensions.IngressSpec{
+			Rules: []extensions.IngressRule{
 				{
 					Host: "foo.bar",
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
 								{
-									Backend: v1beta1.IngressBackend{
+									Backend: extensions.IngressBackend{
 										ServiceName: "demo",
 										ServicePort: intstr.FromInt(80),
 									},
@@ -792,7 +864,7 @@ func TestListIngresses(t *testing.T) {
 	}
 	s.listers.Ingress.Add(ingressWithoutPath)
 
-	ingressWithNginxClass := &v1beta1.Ingress{
+	ingressWithNginxClass := &extensions.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-4",
 			Namespace: "testns",
@@ -800,16 +872,16 @@ func TestListIngresses(t *testing.T) {
 				"kubernetes.io/ingress.class": "nginx",
 			},
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: extensions.IngressSpec{
+			Rules: []extensions.IngressRule{
 				{
 					Host: "foo.bar",
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: extensions.IngressRuleValue{
+						HTTP: &extensions.HTTPIngressRuleValue{
+							Paths: []extensions.HTTPIngressPath{
 								{
 									Path: "/demo",
-									Backend: v1beta1.IngressBackend{
+									Backend: extensions.IngressBackend{
 										ServiceName: "demo",
 										ServicePort: intstr.FromInt(80),
 									},
@@ -826,5 +898,41 @@ func TestListIngresses(t *testing.T) {
 	ingresses := s.ListIngresses()
 	if s := len(ingresses); s != 3 {
 		t.Errorf("Expected 3 Ingresses but got %v", s)
+	}
+}
+
+func TestWriteSSLSessionTicketKey(t *testing.T) {
+	tests := []string{
+		"9DyULjtYWz520d1rnTLbc4BOmN2nLAVfd3MES/P3IxWuwXkz9Fby0lnOZZUdNEMV",
+		"9SvN1C9AB5DvNde5fMKoJwAwICpqdjiMyxR+cv6NpAWv22rFd3gKt4wMyGxCm7l9Wh6BQPG0+csyBZSHHr2NOWj52Wx8xCegXf4NsSMBUqA=",
+	}
+
+	for _, test := range tests {
+		s := newStore(t)
+
+		cmap := &v1.ConfigMap{
+			Data: map[string]string{
+				"ssl-session-ticket-key": test,
+			},
+		}
+
+		f, err := ioutil.TempFile("", "ssl-session-ticket-test")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		s.writeSSLSessionTicketKey(cmap, f.Name())
+
+		content, err := ioutil.ReadFile(f.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		encodedContent := base64.StdEncoding.EncodeToString(content)
+
+		f.Close()
+
+		if test != encodedContent {
+			t.Fatalf("expected %v but returned %s", test, encodedContent)
+		}
 	}
 }

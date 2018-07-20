@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,11 @@
 Package cloud is the root of the packages used to access Google Cloud
 Services. See https://godoc.org/cloud.google.com/go for a full list
 of sub-packages.
+
+Client Options
+
+All clients in sub-packages are configurable via client options. These options are
+described here: https://godoc.org/google.golang.org/api/option.
 
 
 Authentication and Authorization

@@ -303,7 +303,7 @@ type Configuration struct {
 	// Sets the secret key used to encrypt and decrypt TLS session tickets.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
 	// By default, a randomly generated key is used.
-	// Example: openssl rand 80 | base64 -w0
+	// Example: openssl rand 80 | openssl enc -A -base64
 	SSLSessionTicketKey string `json:"ssl-session-ticket-key,omitempty"`
 
 	// Time during which a client may reuse the session parameters stored in a cache.
@@ -349,6 +349,9 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html
 	// Default: true
 	UseHTTP2 bool `json:"use-http2,omitempty"`
+
+	// gzip Compression Level that will be used
+	GzipLevel int `json:"gzip-level,omitempty"`
 
 	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
 	// Responses with the “text/html” type are always compressed if UseGzip is enabled
@@ -432,6 +435,10 @@ type Configuration struct {
 	// ZipkinServiceName specifies the service name to use for any traces created
 	// Default: nginx
 	ZipkinServiceName string `json:"zipkin-service-name"`
+
+	// ZipkinSampleRate specifies sampling rate for traces
+	// Default: 1.0
+	ZipkinSampleRate float32 `json:"zipkin-sample-rate"`
 
 	// JaegerCollectorHost specifies the host to use when uploading traces
 	JaegerCollectorHost string `json:"jaeger-collector-host"`
@@ -549,6 +556,7 @@ func NewDefault() Configuration {
 		HSTSMaxAge:                 hstsMaxAge,
 		HSTSPreload:                false,
 		IgnoreInvalidHeaders:       true,
+		GzipLevel:                  5,
 		GzipTypes:                  gzipTypes,
 		KeepAlive:                  75,
 		KeepAliveRequests:          100,
@@ -612,6 +620,7 @@ func NewDefault() Configuration {
 		BindAddressIpv6:              defBindAddress,
 		ZipkinCollectorPort:          9411,
 		ZipkinServiceName:            "nginx",
+		ZipkinSampleRate:             1.0,
 		JaegerCollectorPort:          6831,
 		JaegerServiceName:            "nginx",
 		JaegerSamplerType:            "const",

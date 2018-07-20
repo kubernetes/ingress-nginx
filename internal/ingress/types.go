@@ -64,6 +64,9 @@ type Configuration struct {
 	// +optional
 	PassthroughBackends []*SSLPassthroughBackend `json:"passthroughBackends,omitempty"`
 
+	// BackendConfigChecksum contains the particular checksum of a Configuration object
+	BackendConfigChecksum string `json:"BackendConfigChecksum,omitempty"`
+
 	// ConfigurationChecksum contains the particular checksum of a Configuration object
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 }
@@ -93,6 +96,11 @@ type Backend struct {
 	UpstreamHashBy string `json:"upstream-hash-by,omitempty"`
 	// LB algorithm configuration per ingress
 	LoadBalancing string `json:"load-balance,omitempty"`
+}
+
+// HashInclude defines if a field should be used or not to calculate the hash
+func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
+	return (field != "Endpoints"), nil
 }
 
 // SessionAffinityConfig describes different affinity configurations for new sessions.

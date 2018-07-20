@@ -1,8 +1,8 @@
 # Upgrading
 
 !!! important
-    No matter the method you use for upgrading, *if you use template overrides,
-    make sure your templates are compatible with the new version of ingress-nginx*.
+No matter the method you use for upgrading, _if you use template overrides,
+make sure your templates are compatible with the new version of ingress-nginx_.
 
 ## Without Helm
 
@@ -33,11 +33,10 @@ The easiest way to do this is e.g. (do note you may need to change the name para
 
 ```
 kubectl set image deployment/nginx-ingress-controller \
-  nginx-ingress-controller=nginx:quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.2
+  nginx-ingress-controller=nginx:quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.17.1
 ```
 
 For interactive editing, use `kubectl edit deployment nginx-ingress-controller`.
-
 
 ## With Helm
 
@@ -47,4 +46,3 @@ you should be able to upgrade using
 ```shell
 helm upgrade --reuse-values ngx-ingress stable/nginx-ingress
 ```
-

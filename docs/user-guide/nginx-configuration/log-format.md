@@ -31,6 +31,15 @@ log_format upstreaminfo
 | `$upstream_response_time` | time spent on receiving the response from the upstream server as seconds with millisecond resolution |
 | `$upstream_status` | status code of the response obtained from the upstream server |
 
+Additional available variables:
+
+| Placeholder | Description |
+|-------------|-------------|
+| `$namespace` |  namespace of the ingress |
+| `$ingress_name` | name of the ingress |
+| `$service_name` | name of the service |
+| `$service_port` | port of the service |
+
 
 Sources:
 

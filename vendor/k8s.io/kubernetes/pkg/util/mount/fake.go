@@ -17,6 +17,7 @@ limitations under the License.
 package mount
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -200,8 +201,8 @@ func (f *FakeMounter) MakeFile(pathname string) error {
 	return nil
 }
 
-func (f *FakeMounter) ExistsPath(pathname string) bool {
-	return false
+func (f *FakeMounter) ExistsPath(pathname string) (bool, error) {
+	return false, errors.New("not implemented")
 }
 
 func (f *FakeMounter) PrepareSafeSubpath(subPath Subpath) (newHostPath string, cleanupAction func(), err error) {
@@ -213,4 +214,25 @@ func (f *FakeMounter) CleanSubPaths(podDir string, volumeName string) error {
 }
 func (mounter *FakeMounter) SafeMakeDir(pathname string, base string, perm os.FileMode) error {
 	return nil
+}
+
+func (f *FakeMounter) GetMountRefs(pathname string) ([]string, error) {
+	realpath, err := filepath.EvalSymlinks(pathname)
+	if err != nil {
+		// Ignore error in FakeMounter, because we actually didn't create files.
+		realpath = pathname
+	}
+	return getMountRefsByDev(f, realpath)
+}
+
+func (f *FakeMounter) GetFSGroup(pathname string) (int64, error) {
+	return -1, errors.New("GetFSGroup not implemented")
+}
+
+func (f *FakeMounter) GetSELinuxSupport(pathname string) (bool, error) {
+	return false, errors.New("GetSELinuxSupport not implemented")
+}
+
+func (f *FakeMounter) GetMode(pathname string) (os.FileMode, error) {
+	return 0, errors.New("not implemented")
 }

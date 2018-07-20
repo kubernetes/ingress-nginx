@@ -57,6 +57,13 @@ Some packages require additional environment variables to be set:
 - profiler
   - **GCLOUD_TESTS_GOLANG_ZONE**: Compute Engine zone.
 
+Some packages can record the RPCs during integration tests to a file for
+subsequent replay. To record, pass the `-record` flag to `go test`. The
+recording will be saved to the _package_`.replay` file. To replay integration
+tests from a saved recording, the replay file must be present, the `-short` flag
+must be passed to `go test`, and the **GCLOUD_TESTS_GOLANG_ENABLE_REPLAY**
+environment variable must have a non-empty value.
+
 Install the [gcloud command-line tool][gcloudcli] to your machine and use it
 to create some resources used in integration tests.
 
