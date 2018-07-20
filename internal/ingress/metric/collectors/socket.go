@@ -90,6 +90,13 @@ var (
 		"ingress",
 		"service",
 	}
+
+	RequestDurationBucketsSeconds = append(append(append(append(
+		prometheus.LinearBuckets(0.01, 0.01, 5),
+		prometheus.LinearBuckets(0.1, 0.1, 5)...),
+		prometheus.LinearBuckets(1, 1, 5)...),
+		prometheus.LinearBuckets(10, 10, 5)...),
+	)
 )
 
 // NewSocketCollector creates a new SocketCollector instance using
@@ -133,6 +140,7 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 				Name:        "request_duration_seconds",
 				Help:        "The request processing time in milliseconds",
 				Namespace:   PrometheusNamespace,
+				Buckets:     RequestDurationBucketsSeconds,
 				ConstLabels: constLabels,
 			},
 			requestTags,
