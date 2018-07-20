@@ -586,7 +586,7 @@ http {
 }
 
 stream {
-    log_format log_stream {{ $cfg.LogFormatStream }};
+    log_format log_stream {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}{{ $cfg.LogFormatStream }};
 
     {{ if $cfg.DisableAccessLog }}
     access_log off;
