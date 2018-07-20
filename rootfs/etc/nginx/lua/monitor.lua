@@ -1,6 +1,6 @@
 local socket = ngx.socket.tcp
 local cjson = require('cjson')
-local defer = require('util.defer')
+local defer_to_timer = require("defer_to_timer")
 local assert = assert
 
 local _M = {}
@@ -40,10 +40,9 @@ function _M.encode_nginx_stats()
 end
 
 function _M.call()
-  local ok, err = defer.to_timer_phase(send_data, _M.encode_nginx_stats())
-  if not ok then
+  local err = defer_to_timer.enqueue(send_data, _M.encode_nginx_stats())
+  if err then
     ngx.log(ngx.ERR, "failed to defer send_data to timer phase: ", err)
-    return
   end
 end
 

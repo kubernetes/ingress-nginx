@@ -4,7 +4,7 @@ local string_len = string.len
 local udp = ngx.socket.udp
 
 local util = require("util")
-local defer = require("util.defer")
+local defer_to_timer = require("defer_to_timer")
 
 local util_tablelength = util.tablelength
 
@@ -118,8 +118,8 @@ end
 
 -- to avoid logging everywhere in #metric
 local function log_metric(...)
-  local ok, err = defer.to_timer_phase(send_metrics, ...)
-  if not ok then
+  local err = defer_to_timer.enqueue(send_metrics, ...)
+  if err then
     local msg = "failed to log metric: " .. tostring(err)
     ngx.log(ngx.ERR,  msg)
     return nil, msg
