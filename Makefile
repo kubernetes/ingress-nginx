@@ -168,7 +168,7 @@ static-check:
 test:
 	@$(DEF_VARS)                 \
 	NODE_IP=$(NODE_IP)           \
-	DOCKER_OPTS="--net=host"     \
+	DOCKER_OPTS="-i --net=host"  \
 	build/go-in-docker.sh build/test.sh
 
 .PHONY: lua-test
@@ -182,14 +182,14 @@ e2e-test:
 	@$(DEF_VARS)                 \
 	FOCUS=$(FOCUS)               \
 	E2E_NODES=$(E2E_NODES)       \
-	DOCKER_OPTS="--net=host"     \
+	DOCKER_OPTS="-i --net=host"  \
 	NODE_IP=$(NODE_IP)           \
 	build/go-in-docker.sh build/e2e-tests.sh
 
 .PHONY: cover
 cover:
 	@$(DEF_VARS)                 \
-	DOCKER_OPTS="--net=host"     \
+	DOCKER_OPTS="-i --net=host"  \
 	build/go-in-docker.sh build/cover.sh
 
 	echo "Uploading coverage results..."
