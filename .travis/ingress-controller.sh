@@ -20,7 +20,7 @@ source $DIR/common.sh
 
 IMAGE=$(make -s -C $DIR/../ image-info)
 
-if docker_tag_exists "nginx-ingress-controller" $(echo $IMAGE | jq .tag) "$ARCH"; then
+if docker_tag_exists "shopify/nginx-ingress-controller" $(echo $IMAGE | jq .tag) "$ARCH"; then
     echo "Image already published"
     exit 0
 fi
