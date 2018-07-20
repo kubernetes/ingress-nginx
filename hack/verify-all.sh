@@ -22,7 +22,6 @@ KUBE_ROOT=$(dirname "${BASH_SOURCE}")/..
 source "${KUBE_ROOT}/hack/kube-env.sh"
 
 SILENT=true
-OUT=/dev/stdout
 
 function is-excluded {
   for e in $EXCLUDE; do
@@ -40,7 +39,6 @@ while getopts ":v" opt; do
   case $opt in
     v)
       SILENT=false
-      OUT=/dev/stderr
       ;;
     \?)
       echo "Invalid flag: -$OPTARG" >&2
@@ -62,12 +60,16 @@ do
     echo "Skipping $t"
     continue
   fi
-  echo -e "Verifying $t"
-  if bash "$t" &> $OUT; then
-    echo -e "${color_green}SUCCESS${color_norm}"
+  if $SILENT ; then
+    echo -e "Verifying $t"
+    if bash "$t" &> /dev/null; then
+      echo -e "${color_green}SUCCESS${color_norm}"
+    else
+      echo -e "${color_red}FAILED${color_norm}"
+      ret=1
+    fi
   else
-    echo -e "${color_red}FAILED${color_norm}"
-    ret=1
+    bash "$t" || ret=1
   fi
 done
 
