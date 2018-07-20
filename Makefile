@@ -15,22 +15,20 @@
 .PHONY: all
 all: all-container
 
-BUILDTAGS=
-
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG?=0.16.2
-REGISTRY?=quay.io/kubernetes-ingress-controller
-GOOS?=linux
-DOCKER?=docker
-SED_I?=sed -i
+TAG ?= 0.17.1
+REGISTRY ?= quay.io/kubernetes-ingress-controller
+DOCKER ?= docker
+SED_I ?= sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
 # e2e settings
 # Allow limiting the scope of the e2e tests. By default run everything
-FOCUS?=.*
+FOCUS ?= .*
 # number of parallel test
-E2E_NODES?=3
+E2E_NODES ?= 3
 
+NODE_IP ?= $(shell minikube ip)
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -38,11 +36,11 @@ endif
 
 REPO_INFO=$(shell git config --get remote.origin.url)
 
-ifndef COMMIT
-  COMMIT := git-$(shell git rev-parse --short HEAD)
+ifndef GIT_COMMIT
+  GIT_COMMIT := git-$(shell git rev-parse --short HEAD)
 endif
 
-PKG=k8s.io/ingress-nginx
+PKG = k8s.io/ingress-nginx
 
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
@@ -50,16 +48,16 @@ DUMB_ARCH = ${ARCH}
 
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
-QEMUVERSION=v2.12.0
+QEMUVERSION = v2.12.0
 
-BUSTED_ARGS=-v --pattern=_test
+BUSTED_ARGS =-v --pattern=_test
 
 IMGNAME = nginx-ingress-controller
 IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.53
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.54
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
@@ -67,7 +65,7 @@ ifeq ($(ARCH),arm)
 	DUMB_ARCH=armhf
 endif
 ifeq ($(ARCH),arm64)
-    QEMUARCH=aarch64
+	QEMUARCH=aarch64
 endif
 ifeq ($(ARCH),ppc64le)
 	QEMUARCH=ppc64le
@@ -75,10 +73,18 @@ ifeq ($(ARCH),ppc64le)
 	DUMB_ARCH=ppc64el
 endif
 ifeq ($(ARCH),s390x)
-    QEMUARCH=s390x
+	QEMUARCH=s390x
 endif
 
 TEMP_DIR := $(shell mktemp -d)
+
+DEF_VARS:=ARCH=$(ARCH)       \
+	TAG=$(TAG)               \
+	PKG=$(PKG)               \
+	GOARCH=$(GOARCH)         \
+	GIT_COMMIT=$(GIT_COMMIT) \
+	REPO_INFO=$(REPO_INFO)   \
+	PWD=$(PWD)
 
 DOCKERFILE := $(TEMP_DIR)/rootfs/Dockerfile
 
@@ -119,7 +125,7 @@ else
 	$(SED_I) "s/CROSS_BUILD_//g" $(DOCKERFILE)
 endif
 
-	$(DOCKER) build -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
+	$(DOCKER) build --no-cache --pull -t $(MULTI_ARCH_IMG):$(TAG) $(TEMP_DIR)/rootfs
 
 ifeq ($(ARCH), amd64)
 	# This is for maintaining backward compatibility
@@ -147,72 +153,62 @@ clean:
 
 .PHONY: build
 build: clean
-	CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -a -installsuffix cgo \
-		-ldflags "-s -w -X ${PKG}/version.RELEASE=${TAG} -X ${PKG}/version.COMMIT=${COMMIT} -X ${PKG}/version.REPO=${REPO_INFO}" \
-		-o ${TEMP_DIR}/rootfs/nginx-ingress-controller ${PKG}/cmd/nginx	
+	@$(DEF_VARS) \
+	build/go-in-docker.sh build/build.sh
 
-.PHONY: verify-all
-verify-all:
-	@./hack/verify-all.sh
+	mkdir -p $(TEMP_DIR)/rootfs
+	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
+
+.PHONY: static-check
+static-check:
+	@$(DEF_VARS) \
+	build/go-in-docker.sh build/static-check.sh
 
 .PHONY: test
 test:
-	@go test -v -race -tags "$(BUILDTAGS) cgo" $(shell go list ${PKG}/... | grep -v vendor | grep -v '/test/e2e')
+	@$(DEF_VARS)                 \
+	NODE_IP=$(NODE_IP)           \
+	DOCKER_OPTS="--net=host"     \
+	build/go-in-docker.sh build/test.sh
 
 .PHONY: lua-test
 lua-test:
-	@busted $(BUSTED_ARGS) ./rootfs/etc/nginx/lua/test;
+	@$(DEF_VARS)                 \
+	BUSTED_ARGS="$(BUSTED_ARGS)" \
+	build/go-in-docker.sh build/test-lua.sh
 
 .PHONY: e2e-test
 e2e-test:
-	@ginkgo version || go get -u github.com/onsi/ginkgo/ginkgo
-	@ginkgo build ./test/e2e
-	@KUBECONFIG=${HOME}/.kube/config ginkgo \
-		-randomizeSuites \
-		-randomizeAllSpecs \
-		-flakeAttempts=2 \
-		--focus=$(FOCUS) \
-		-p \
-		-trace \
-		-nodes=$(E2E_NODES) \
-		./test/e2e/e2e.test
+	@$(DEF_VARS)                 \
+	FOCUS=$(FOCUS)               \
+	E2E_NODES=$(E2E_NODES)       \
+	DOCKER_OPTS="--net=host"     \
+	NODE_IP=$(NODE_IP)           \
+	build/go-in-docker.sh build/e2e-tests.sh
 
 .PHONY: cover
 cover:
-	@rm -rf coverage.txt
-	@for d in `go list ./... | grep -v vendor | grep -v '/test/e2e' | grep -v 'images/grpc-fortune-teller'`; do \
-		t=$$(date +%s); \
-		go test -coverprofile=cover.out -covermode=atomic $$d || exit 1; \
-		echo "Coverage test $$d took $$(($$(date +%s)-t)) seconds"; \
-		if [ -f cover.out ]; then \
-			cat cover.out >> coverage.txt; \
-			rm cover.out; \
-		fi; \
-	done
-	@echo "Uploading coverage results..."
+	@$(DEF_VARS)                 \
+	DOCKER_OPTS="--net=host"     \
+	build/go-in-docker.sh build/cover.sh
+
+	echo "Uploading coverage results..."
 	@curl -s https://codecov.io/bash | bash
 
 .PHONY: vet
 vet:
 	@go vet $(shell go list ${PKG}/... | grep -v vendor)
 
-.PHONY: luacheck
-luacheck:
-	luacheck -q ./rootfs/etc/nginx/lua/
-
 .PHONY: release
 release: all-container all-push
 	echo "done"
 
-.PHONY: docker-build
-docker-build: all-container
-
-.PHONY: docker-push
-docker-push: all-push
-
 .PHONY: check_dead_links
 check_dead_links:
-	docker run -t -v $$PWD:/tmp aledbf/awesome_bot:0.1 --allow-dupe --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
+	docker run -t \
+	  -v $$PWD:/tmp aledbf/awesome_bot:0.1 \
+	  --allow-dupe \
+	  --allow-redirect $(shell find $$PWD -mindepth 1 -name "*.md" -printf '%P\n' | grep -v vendor | grep -v Changelog.md)
 
 .PHONY: dep-ensure
 dep-ensure:
@@ -223,12 +219,14 @@ dep-ensure:
 
 .PHONY: dev-env
 dev-env:
-	@./hack/build-dev-env.sh
+	@build/dev-env.sh
 
 .PHONY: live-docs
 live-docs:
-	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs aledbf/mkdocs:0.1
+	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker run --rm -it -p 3000:3000 -v ${PWD}:/docs ingress-nginx/mkdocs
 
 .PHONY: build-docs
 build-docs:
-	@docker run --rm -it -v ${PWD}:/docs aledbf/mkdocs:0.1 build
+	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
+	@docker run --rm -it -v ${PWD}:/docs ingress-nginx/mkdocs build

@@ -1,5 +1,54 @@
 # Changelog
 
+### 0.17.1
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.17.1`
+
+*Changes:*
+
+- [X] [#2782](https://github.com/kubernetes/ingress-nginx/pull/2782) Add Better Error Handling for SSLSessionTicketKey
+- [X] [#2790](https://github.com/kubernetes/ingress-nginx/pull/2790) Update prometheus labels
+
+*Documentation:*
+
+- [X] [#2770](https://github.com/kubernetes/ingress-nginx/pull/2770) Basic-Auth doc misleading: fix double quotes leading to nginx config error
+
+### 0.17.0
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.17.0`
+
+*New Features:*
+
+- [Grafana dashboards](https://github.com/kubernetes/ingress-nginx/tree/master/deploy/grafana/dashboards)
+
+*Changes:*
+
+- [X] [#2705](https://github.com/kubernetes/ingress-nginx/pull/2705) Remove duplicated securityContext
+- [X] [#2719](https://github.com/kubernetes/ingress-nginx/pull/2719) Sample rate configmap option for zipkin in nginx-opentracing
+- [X] [#2726](https://github.com/kubernetes/ingress-nginx/pull/2726) Cleanup prometheus metrics after a reload
+- [X] [#2727](https://github.com/kubernetes/ingress-nginx/pull/2727) Add e2e tests for Client-Body-Buffer-Size
+- [X] [#2732](https://github.com/kubernetes/ingress-nginx/pull/2732) Improve logging
+- [X] [#2741](https://github.com/kubernetes/ingress-nginx/pull/2741) Add redirect uri for oauth2 login
+- [X] [#2744](https://github.com/kubernetes/ingress-nginx/pull/2744) fix: Use the correct opentracing plugin for Jaeger
+- [X] [#2747](https://github.com/kubernetes/ingress-nginx/pull/2747) Update opentracing-cpp and modsecurity
+- [X] [#2748](https://github.com/kubernetes/ingress-nginx/pull/2748) Update nginx image to 0.54
+- [X] [#2749](https://github.com/kubernetes/ingress-nginx/pull/2749) Use docker to build go binaries
+- [X] [#2754](https://github.com/kubernetes/ingress-nginx/pull/2754) Allow gzip compression level to be controlled via ConfigMap
+- [X] [#2760](https://github.com/kubernetes/ingress-nginx/pull/2760) Fix ingress rule parsing error
+- [X] [#2767](https://github.com/kubernetes/ingress-nginx/pull/2767) Fix regression introduced in #2732
+- [X] [#2771](https://github.com/kubernetes/ingress-nginx/pull/2771) Grafana Dashboard
+- [X] [#2775](https://github.com/kubernetes/ingress-nginx/pull/2775) Simplify handler registration and updates prometheus
+- [X] [#2776](https://github.com/kubernetes/ingress-nginx/pull/2776) Fix configuration hash calculation
+
+*Documentation:*
+
+- [X] [#2717](https://github.com/kubernetes/ingress-nginx/pull/2717) GCE/GKE proxy mentioned for Azure
+- [X] [#2743](https://github.com/kubernetes/ingress-nginx/pull/2743) Clarify Installation Document by Separating Helm Steps
+- [X] [#2761](https://github.com/kubernetes/ingress-nginx/pull/2761) Fix spelling mistake
+- [X] [#2764](https://github.com/kubernetes/ingress-nginx/pull/2764) Use language neutral links to MDN
+- [X] [#2765](https://github.com/kubernetes/ingress-nginx/pull/2765) Add FOSSA status badge
+- [X] [#2777](https://github.com/kubernetes/ingress-nginx/pull/2777) Build docs using local docker image [ci skip]
+
 ### 0.16.2
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.2`

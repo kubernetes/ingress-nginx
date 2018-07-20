@@ -87,6 +87,7 @@ The following table shows a configuration option's name, type, and the default v
 |[brotli-level](#brotli-level)|int|4|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
+|[gzip-level](#gzip-level)|int|5|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
@@ -107,6 +108,7 @@ The following table shows a configuration option's name, type, and the default v
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
 |[zipkin-collector-port](#zipkin-collector-port)|int|9411|
 |[zipkin-service-name](#zipkin-service-name)|string|"nginx"|
+|[zipkin-sample-rate](#zipkin-sample-rate)|float|1.0|
 |[jaeger-collector-host](#jaeger-collector-host)|string|""|
 |[jaeger-collector-port](#jaeger-collector-port)|int|6831|
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
@@ -432,8 +434,9 @@ Enables or disables session resumption through [TLS session tickets](http://ngin
 ## ssl-session-ticket-key
 
 Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
+To create a ticket: `openssl rand 80 | openssl enc -A -base64`
 
-[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used. To create a ticket: `openssl rand 80 | base64 -w0`
+[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used. 
 
 ## ssl-session-timeout
 
@@ -484,6 +487,10 @@ _**default:**_ `application/xml+rss application/atom+xml application/javascript 
 ## use-http2
 
 Enables or disables [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
+
+## gzip-level
+
+Sets the gzip Compression Level that will be used. _**default:**_ 5
 
 ## gzip-types
 
@@ -600,6 +607,10 @@ Specifies the port to use when uploading traces. _**default:**_ 9411
 ## zipkin-service-name
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
+
+## zipkin-sample-rate
+
+Specifies sample rate for any traces created. _**default:**_ 1.0
 
 ## jaeger-collector-host
 
@@ -724,7 +735,7 @@ _References:_
 ## http-redirect-code
 
 Sets the HTTP status code to be used in redirects.
-Supported codes are [301](https://developer.mozilla.org/es/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/es/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/es/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/es/docs/Web/HTTP/Status/308)
+Supported codes are [301](https://developer.mozilla.org/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/docs/Web/HTTP/Status/308)
 _**default:**_ 308
 
 > __Why the default code is 308?__

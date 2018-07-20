@@ -15,7 +15,7 @@ package framework
 
 import (
 	"fmt"
-	"os/exec"
+	"os"
 	"strings"
 	"time"
 
@@ -112,13 +112,11 @@ func (f *Framework) BeforeEach() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	By("Building NGINX HTTP URL")
 	HTTPURL, err := f.GetNginxURL(HTTP)
 	Expect(err).NotTo(HaveOccurred())
 
 	f.IngressController.HTTPURL = HTTPURL
 
-	By("Building NGINX HTTPS URL")
 	HTTPSURL, err := f.GetNginxURL(HTTPS)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -145,11 +143,7 @@ func IngressNginxDescribe(text string, body func()) bool {
 // GetNginxIP returns the IP address of the minikube cluster
 // where the NGINX ingress controller is running
 func (f *Framework) GetNginxIP() (string, error) {
-	out, err := exec.Command("minikube", "ip").Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), nil
+	return os.Getenv("NODE_IP"), nil
 }
 
 // GetNginxPort returns the number of TCP port where NGINX is running

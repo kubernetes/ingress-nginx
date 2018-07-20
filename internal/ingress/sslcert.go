@@ -48,3 +48,8 @@ type SSLCert struct {
 func (s SSLCert) GetObjectKind() schema.ObjectKind {
 	return schema.EmptyObjectKind
 }
+
+// HashInclude defines if a field should be used or not to calculate the hash
+func (s SSLCert) HashInclude(field string, v interface{}) (bool, error) {
+	return (field != "PemSHA" && field != "ExpireTime"), nil
+}

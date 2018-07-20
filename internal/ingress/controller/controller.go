@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/mitchellh/hashstructure"
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -148,38 +149,43 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		}
 	}
 
-	pcfg := ingress.Configuration{
-		Backends:            upstreams,
-		Servers:             servers,
-		TCPEndpoints:        n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
-		UDPEndpoints:        n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
-		PassthroughBackends: passUpstreams,
-
-		ConfigurationChecksum: n.store.GetBackendConfiguration().Checksum,
+	pcfg := &ingress.Configuration{
+		Backends:              upstreams,
+		Servers:               servers,
+		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
+		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
+		PassthroughBackends:   passUpstreams,
+		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
 	}
 
-	if n.runningConfig.Equal(&pcfg) {
+	if n.runningConfig.Equal(pcfg) {
 		glog.V(3).Infof("No configuration change detected, skipping backend reload.")
 		return nil
 	}
 
-	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(&pcfg) {
+	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(pcfg) {
 		glog.Infof("Changes handled by the dynamic configuration, skipping backend reload.")
 	} else {
 		glog.Infof("Configuration changes detected, backend reload required.")
 
-		err := n.OnUpdate(pcfg)
+		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
+			TagName: "json",
+		})
+
+		pcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
+
+		err := n.OnUpdate(*pcfg)
 		if err != nil {
-			IncReloadErrorCount()
-			ConfigSuccess(false)
+			n.metricCollector.IncReloadErrorCount()
+			n.metricCollector.ConfigSuccess(hash, false)
 			glog.Errorf("Unexpected failure reloading the backend:\n%v", err)
 			return err
 		}
 
 		glog.Infof("Backend successfully reloaded.")
-		ConfigSuccess(true)
-		IncReloadCount()
-		setSSLExpireTime(servers)
+		n.metricCollector.ConfigSuccess(hash, true)
+		n.metricCollector.IncReloadCount()
+		n.metricCollector.SetSSLExpireTime(servers)
 	}
 
 	if n.cfg.DynamicConfigurationEnabled {
@@ -191,7 +197,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 				// it takes time for NGINX to start listening on the configured ports
 				time.Sleep(1 * time.Second)
 			}
-			err := configureDynamically(&pcfg, n.cfg.ListenPorts.Status)
+			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status)
 			if err == nil {
 				glog.Infof("Dynamic reconfiguration succeeded.")
 			} else {
@@ -200,7 +206,11 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		}(isFirstSync)
 	}
 
-	n.runningConfig = &pcfg
+	ri := getRemovedIngresses(n.runningConfig, pcfg)
+	re := getRemovedHosts(n.runningConfig, pcfg)
+	n.metricCollector.RemoveMetrics(ri, re)
+
+	n.runningConfig = pcfg
 
 	return nil
 }
@@ -219,7 +229,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 
 	configmap, err := n.store.GetConfigMap(configmapName)
 	if err != nil {
-		glog.Errorf("Error reading ConfigMap %q: %v", configmapName, err)
+		glog.Errorf("Error getting ConfigMap %q: %v", configmapName, err)
 		return []ingress.L4Service{}
 	}
 
@@ -236,7 +246,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 	}
 	reserverdPorts := sets.NewInt(rp...)
 
-	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<(bool)decode>:<(bool)encode>]
+	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
 	for port, svcRef := range configmap.Data {
 		externalPort, err := strconv.Atoi(port)
 		if err != nil {
@@ -278,7 +288,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 
 		svc, err := n.store.GetService(nsName)
 		if err != nil {
-			glog.Warningf("Error getting Service %q from local store: %v", nsName, err)
+			glog.Warningf("Error getting Service %q: %v", nsName, err)
 			continue
 		}
 
@@ -339,7 +349,7 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 	svcKey := n.cfg.DefaultService
 	svc, err := n.store.GetService(svcKey)
 	if err != nil {
-		glog.Warningf("Unexpected error getting default backend %q from local store: %v", n.cfg.DefaultService, err)
+		glog.Warningf("Error getting default backend %q: %v", svcKey, err)
 		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
 		return upstream
 	}
@@ -364,9 +374,11 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 	servers := n.createServers(ingresses, upstreams, du)
 
 	for _, ing := range ingresses {
-		anns, err := n.store.GetIngressAnnotations(ing)
+		ingKey := k8s.MetaNamespaceKey(ing)
+
+		anns, err := n.store.GetIngressAnnotations(ingKey)
 		if err != nil {
-			glog.Errorf("Unexpected error reading annotations for Ingress %q from local store: %v", ing.Name, err)
+			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
 		}
 
 		for _, rule := range ing.Spec.Rules {
@@ -381,7 +393,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 
 			if rule.HTTP == nil &&
 				host != defServerName {
-				glog.V(3).Infof("Ingress \"%v/%v\" does not contain any HTTP rule, using default backend.", ing.Namespace, ing.Name)
+				glog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
 				continue
 			}
 
@@ -392,10 +404,17 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 			if server.CertificateAuth.CAFileName == "" {
 				server.CertificateAuth = anns.CertificateAuth
 				if server.CertificateAuth.Secret != "" && server.CertificateAuth.CAFileName == "" {
-					glog.V(3).Infof("Secret %q does not contain 'ca.crt' key, mutual authentication disabled for Ingress \"%v/%v\"", server.CertificateAuth.Secret, ing.Namespace, ing.Name)
+					glog.V(3).Infof("Secret %q has no 'ca.crt' key, mutual authentication disabled for Ingress %q",
+						server.CertificateAuth.Secret, ingKey)
 				}
 			} else {
-				glog.V(3).Infof("Server %v is already configured for mutual authentication (Ingress \"%v/%v\")", server.Hostname, ing.Namespace, ing.Name)
+				glog.V(3).Infof("Server %q is already configured for mutual authentication (Ingress %q)",
+					server.Hostname, ingKey)
+			}
+
+			if rule.HTTP == nil {
+				glog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
+				continue
 			}
 
 			for _, path := range rule.HTTP.Paths {
@@ -417,11 +436,14 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						addLoc = false
 
 						if !loc.IsDefBackend {
-							glog.V(3).Infof("Location %q already configured for server %q with upstream %q (Ingress \"%v/%v\")", loc.Path, server.Hostname, loc.Backend, ing.Namespace, ing.Name)
+							glog.V(3).Infof("Location %q already configured for server %q with upstream %q (Ingress %q)",
+								loc.Path, server.Hostname, loc.Backend, ingKey)
 							break
 						}
 
-						glog.V(3).Infof("Replacing location %q for server %q with upstream %q to use upstream %q (Ingress \"%v/%v\")", loc.Path, server.Hostname, loc.Backend, ups.Name, ing.Namespace, ing.Name)
+						glog.V(3).Infof("Replacing location %q for server %q with upstream %q to use upstream %q (Ingress %q)",
+							loc.Path, server.Hostname, loc.Backend, ups.Name, ingKey)
+
 						loc.Backend = ups.Name
 						loc.IsDefBackend = false
 						loc.Port = ups.Port
@@ -457,7 +479,9 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 
 				// new location
 				if addLoc {
-					glog.V(3).Infof("Adding location %q for server %q with upstream %q (Ingress \"%v/%v\")", nginxPath, server.Hostname, ups.Name, ing.Namespace, ing.Name)
+					glog.V(3).Infof("Adding location %q for server %q with upstream %q (Ingress %q)",
+						nginxPath, server.Hostname, ups.Name, ingKey)
+
 					loc := &ingress.Location{
 						Path:                 nginxPath,
 						Backend:              ups.Name,
@@ -520,7 +544,8 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 			for _, location := range server.Locations {
 				if upstream.Name == location.Backend {
 					if len(upstream.Endpoints) == 0 {
-						glog.V(3).Infof("Upstream %q does not have any active endpoints.", upstream.Name)
+						glog.V(3).Infof("Upstream %q has no active Endpoint", upstream.Name)
+
 						location.Backend = "" // for nginx.tmpl checking
 
 						// check if the location contains endpoints and a custom default backend
@@ -530,6 +555,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 							if len(endps) > 0 {
 								glog.V(3).Infof("Using custom default backend for location %q in server %q (Service \"%v/%v\")",
 									location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+
 								nb := upstream.DeepCopy()
 								name := fmt.Sprintf("custom-default-backend-%v", upstream.Name)
 								nb.Name = name
@@ -592,9 +618,11 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 	upstreams[defUpstreamName] = du
 
 	for _, ing := range data {
-		anns, err := n.store.GetIngressAnnotations(ing)
+		ingKey := k8s.MetaNamespaceKey(ing)
+
+		anns, err := n.store.GetIngressAnnotations(ingKey)
 		if err != nil {
-			glog.Errorf("Error reading Ingress annotations: %v", err)
+			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
 		}
 
 		var defBackend string
@@ -736,7 +764,7 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *exte
 			}
 		}
 		if port == -1 {
-			return endpoint, fmt.Errorf("service %q does not have a port named %q", svc.Name, backend.ServicePort)
+			return endpoint, fmt.Errorf("Service %q does not have a port named %q", svc.Name, backend.ServicePort)
 		}
 		endpoint.Port = fmt.Sprintf("%d", port)
 	} else {
@@ -754,7 +782,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
 
 	var upstreams []ingress.Endpoint
 	if err != nil {
-		return upstreams, fmt.Errorf("error getting Service %q from local store: %v", svcKey, err)
+		return upstreams, err
 	}
 
 	glog.V(3).Infof("Obtaining ports information for Service %q", svcKey)
@@ -875,9 +903,11 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	// initialize all other servers
 	for _, ing := range data {
-		anns, err := n.store.GetIngressAnnotations(ing)
+		ingKey := k8s.MetaNamespaceKey(ing)
+
+		anns, err := n.store.GetIngressAnnotations(ingKey)
 		if err != nil {
-			glog.Errorf("Error reading Ingress %q annotations from local store: %v", ing.Name, err)
+			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
 		}
 
 		// default upstream name
@@ -893,7 +923,8 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
-					glog.Infof("Ingress \"%v/%v\" defines a backend but no rule. Using it to configure the catch-all server %q", ing.Namespace, ing.Name, defServerName)
+					glog.Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q",
+						ingKey, defServerName)
 
 					defLoc.IsDefBackend = false
 					defLoc.Backend = backendUpstream.Name
@@ -919,7 +950,8 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.LuaRestyWAF = anns.LuaRestyWAF
 					defLoc.InfluxDB = anns.InfluxDB
 				} else {
-					glog.V(3).Infof("Ingress \"%v/%v\" defines both a backend and rules. Using its backend as default upstream for all its rules.", ing.Namespace, ing.Name)
+					glog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
+						ingKey)
 				}
 			}
 		}
@@ -953,9 +985,11 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	// configure default location, alias, and SSL
 	for _, ing := range data {
-		anns, err := n.store.GetIngressAnnotations(ing)
+		ingKey := k8s.MetaNamespaceKey(ing)
+
+		anns, err := n.store.GetIngressAnnotations(ingKey)
 		if err != nil {
-			glog.Errorf("Error reading Ingress %q annotations from local store: %v", ing.Name, err)
+			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
 		}
 
 		for _, rule := range ing.Spec.Rules {
@@ -971,8 +1005,8 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 						aliases["Alias"] = host
 					}
 				} else {
-					glog.Warningf("Aliases already configured for server %q, skipping (Ingress \"%v/%v\")",
-						host, ing.Namespace, ing.Name)
+					glog.Warningf("Aliases already configured for server %q, skipping (Ingress %q)",
+						host, ingKey)
 				}
 			}
 
@@ -980,8 +1014,8 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				if servers[host].ServerSnippet == "" {
 					servers[host].ServerSnippet = anns.ServerSnippet
 				} else {
-					glog.Warningf("Server snippet already configured for server %q, skipping (Ingress \"%v/%v\")",
-						host, ing.Namespace, ing.Name)
+					glog.Warningf("Server snippet already configured for server %q, skipping (Ingress %q)",
+						host, ingKey)
 				}
 			}
 
@@ -996,7 +1030,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			}
 
 			if len(ing.Spec.TLS) == 0 {
-				glog.V(3).Infof("Ingress \"%v/%v\" does not contains a TLS section.", ing.Namespace, ing.Name)
+				glog.V(3).Infof("Ingress %q does not contains a TLS section.", ingKey)
 				continue
 			}
 
@@ -1009,22 +1043,23 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				continue
 			}
 
-			key := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
-			cert, err := n.store.GetLocalSSLCert(key)
+			secrKey := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
+			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
-				glog.Warningf("SSL certificate %q does not exist in local store.", key)
+				glog.Warningf("Error getting SSL certificate %q: %v", secrKey, err)
 				continue
 			}
 
 			err = cert.Certificate.VerifyHostname(host)
 			if err != nil {
-				glog.Warningf("Unexpected error validating SSL certificate %q for server %q: %v", key, host, err)
+				glog.Warningf("Unexpected error validating SSL certificate %q for server %q: %v", secrKey, host, err)
 				glog.Warning("Validating certificate against DNS names. This will be deprecated in a future version.")
 				// check the Common Name field
 				// https://github.com/golang/go/issues/22922
 				err := verifyHostname(host, cert.Certificate)
 				if err != nil {
-					glog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v", key, host, err)
+					glog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
+						secrKey, host, err)
 					continue
 				}
 			}
@@ -1065,10 +1100,11 @@ func extractTLSSecretName(host string, ing *extensions.Ingress,
 
 	// no TLS host matching host name, try each TLS host for matching SAN or CN
 	for _, tls := range ing.Spec.TLS {
-		key := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
-		cert, err := getLocalSSLCert(key)
+		secrKey := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
+
+		cert, err := getLocalSSLCert(secrKey)
 		if err != nil {
-			glog.Warningf("SSL certificate %q does not exist in local store.", key)
+			glog.Warningf("Error getting SSL certificate %q: %v", secrKey, err)
 			continue
 		}
 
@@ -1080,9 +1116,63 @@ func extractTLSSecretName(host string, ing *extensions.Ingress,
 		if err != nil {
 			continue
 		}
-		glog.V(3).Infof("Found SSL certificate matching host %q: %q", host, key)
+		glog.V(3).Infof("Found SSL certificate matching host %q: %q", host, secrKey)
 		return tls.SecretName
 	}
 
 	return ""
+}
+
+// getRemovedHosts returns a list of the hostsnames
+// that are not associated anymore to the NGINX configuration.
+func getRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
+	old := sets.NewString()
+	new := sets.NewString()
+
+	for _, s := range rucfg.Servers {
+		if !old.Has(s.Hostname) {
+			old.Insert(s.Hostname)
+		}
+	}
+
+	for _, s := range newcfg.Servers {
+		if !new.Has(s.Hostname) {
+			new.Insert(s.Hostname)
+		}
+	}
+
+	return old.Difference(new).List()
+}
+
+func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
+	oldIngresses := sets.NewString()
+	newIngresses := sets.NewString()
+
+	for _, server := range rucfg.Servers {
+		for _, location := range server.Locations {
+			if location.Ingress == nil {
+				continue
+			}
+
+			ingKey := k8s.MetaNamespaceKey(location.Ingress)
+			if !oldIngresses.Has(ingKey) {
+				oldIngresses.Insert(ingKey)
+			}
+		}
+	}
+
+	for _, server := range newcfg.Servers {
+		for _, location := range server.Locations {
+			if location.Ingress == nil {
+				continue
+			}
+
+			ingKey := k8s.MetaNamespaceKey(location.Ingress)
+			if !newIngresses.Has(ingKey) {
+				newIngresses.Insert(ingKey)
+			}
+		}
+	}
+
+	return oldIngresses.Difference(newIngresses).List()
 }

@@ -58,25 +58,26 @@ type Storer interface {
 	// GetBackendConfiguration returns the nginx configuration stored in a configmap
 	GetBackendConfiguration() ngx_config.Configuration
 
-	// GetConfigMap returns a ConfigmMap using the namespace and name as key
+	// GetConfigMap returns the ConfigMap matching key.
 	GetConfigMap(key string) (*corev1.ConfigMap, error)
 
-	// GetSecret returns a Secret using the namespace and name as key
+	// GetSecret returns the Secret matching key.
 	GetSecret(key string) (*corev1.Secret, error)
 
-	// GetService returns a Service using the namespace and name as key
+	// GetService returns the Service matching key.
 	GetService(key string) (*corev1.Service, error)
 
-	GetServiceEndpoints(svc *corev1.Service) (*corev1.Endpoints, error)
+	// GetServiceEndpoints returns the Endpoints of a Service matching key.
+	GetServiceEndpoints(key string) (*corev1.Endpoints, error)
 
-	// GetSecret returns an Ingress using the namespace and name as key
+	// GetIngress returns the Ingress matching key.
 	GetIngress(key string) (*extensions.Ingress, error)
 
-	// ListIngresses returns the list of Ingresses
+	// ListIngresses returns a list of all Ingresses in the store.
 	ListIngresses() []*extensions.Ingress
 
-	// GetIngressAnnotations returns the annotations associated to an Ingress
-	GetIngressAnnotations(ing *extensions.Ingress) (*annotations.Ingress, error)
+	// GetIngressAnnotations returns the parsed annotations of an Ingress matching key.
+	GetIngressAnnotations(key string) (*annotations.Ingress, error)
 
 	// GetLocalSSLCert returns the local copy of a SSLCert
 	GetLocalSSLCert(name string) (*ingress.SSLCert, error)
@@ -110,7 +111,7 @@ const (
 	ConfigurationEvent EventType = "CONFIGURATION"
 )
 
-// Event holds the context of an event
+// Event holds the context of an event.
 type Event struct {
 	Type EventType
 	Obj  interface{}
@@ -125,7 +126,7 @@ type Informer struct {
 	ConfigMap cache.SharedIndexInformer
 }
 
-// Lister returns the stores for ingresses, services, endpoints, secrets and configmaps.
+// Lister contains object listers (stores).
 type Lister struct {
 	Ingress           IngressLister
 	Service           ServiceLister
@@ -133,6 +134,14 @@ type Lister struct {
 	Secret            SecretLister
 	ConfigMap         ConfigMapLister
 	IngressAnnotation IngressAnnotationsLister
+}
+
+// NotExistsError is returned when an object does not exist in a local store.
+type NotExistsError string
+
+// Error implements the error interface.
+func (e NotExistsError) Error() string {
+	return fmt.Sprintf("no object matching key %q in local store", string(e))
 }
 
 // Run initiates the synchronization of the informers against the API server.
@@ -512,8 +521,8 @@ func New(checkOCSP bool,
 	if err != nil {
 		glog.Warningf("Unexpected error reading configuration configmap: %v", err)
 	}
-	store.setConfig(cm)
 
+	store.setConfig(cm)
 	return store
 }
 
@@ -601,7 +610,7 @@ func (s k8sStore) syncSecrets(ing *extensions.Ingress) {
 	}
 }
 
-// GetSecret returns a Secret using the namespace and name as key
+// GetSecret returns the Secret matching key.
 func (s k8sStore) GetSecret(key string) (*corev1.Secret, error) {
 	return s.listers.Secret.ByKey(key)
 }
@@ -618,12 +627,12 @@ func (s k8sStore) ListLocalSSLCerts() []*ingress.SSLCert {
 	return certs
 }
 
-// GetService returns a Service using the namespace and name as key
+// GetService returns the Service matching key.
 func (s k8sStore) GetService(key string) (*corev1.Service, error) {
 	return s.listers.Service.ByKey(key)
 }
 
-// GetIngress returns an Ingress using the namespace and name as key
+// GetIngress returns the Ingress matching key.
 func (s k8sStore) GetIngress(key string) (*extensions.Ingress, error) {
 	return s.listers.Ingress.ByKey(key)
 }
@@ -656,17 +665,14 @@ func (s k8sStore) ListIngresses() []*extensions.Ingress {
 	return ingresses
 }
 
-// GetIngressAnnotations returns the annotations associated to an Ingress
-func (s k8sStore) GetIngressAnnotations(ing *extensions.Ingress) (*annotations.Ingress, error) {
-	key := k8s.MetaNamespaceKey(ing)
-	item, exists, err := s.listers.IngressAnnotation.GetByKey(key)
+// GetIngressAnnotations returns the parsed annotations of an Ingress matching key.
+func (s k8sStore) GetIngressAnnotations(key string) (*annotations.Ingress, error) {
+	ia, err := s.listers.IngressAnnotation.ByKey(key)
 	if err != nil {
-		return &annotations.Ingress{}, fmt.Errorf("unexpected error getting ingress annotation %v: %v", key, err)
+		return &annotations.Ingress{}, err
 	}
-	if !exists {
-		return &annotations.Ingress{}, fmt.Errorf("ingress annotations %v was not found", key)
-	}
-	return item.(*annotations.Ingress), nil
+
+	return ia, nil
 }
 
 // GetLocalSSLCert returns the local copy of a SSLCert
@@ -674,12 +680,14 @@ func (s k8sStore) GetLocalSSLCert(key string) (*ingress.SSLCert, error) {
 	return s.sslStore.ByKey(key)
 }
 
+// GetConfigMap returns the ConfigMap matching key.
 func (s k8sStore) GetConfigMap(key string) (*corev1.ConfigMap, error) {
 	return s.listers.ConfigMap.ByKey(key)
 }
 
-func (s k8sStore) GetServiceEndpoints(svc *corev1.Service) (*corev1.Endpoints, error) {
-	return s.listers.Endpoint.GetServiceEndpoints(svc)
+// GetServiceEndpoints returns the Endpoints of a Service matching key.
+func (s k8sStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
+	return s.listers.Endpoint.ByKey(key)
 }
 
 // GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
@@ -700,6 +708,34 @@ func (s k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error)
 	}, nil
 }
 
+func (s k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName string) {
+	ticketString := ngx_template.ReadConfig(cmap.Data).SSLSessionTicketKey
+	s.backendConfig.SSLSessionTicketKey = ""
+
+	if ticketString != "" {
+		ticketBytes := base64.StdEncoding.WithPadding(base64.StdPadding).DecodedLen(len(ticketString))
+
+		// 81 used instead of 80 because of padding
+		if !(ticketBytes == 48 || ticketBytes == 81) {
+			glog.Warningf("ssl-session-ticket-key must contain either 48 or 80 bytes")
+		}
+
+		decodedTicket, err := base64.StdEncoding.DecodeString(ticketString)
+		if err != nil {
+			glog.Errorf("unexpected error decoding ssl-session-ticket-key: %v", err)
+			return
+		}
+
+		err = ioutil.WriteFile(fileName, decodedTicket, file.ReadWriteByUser)
+		if err != nil {
+			glog.Errorf("unexpected error writing ssl-session-ticket-key to %s: %v", fileName, err)
+			return
+		}
+
+		s.backendConfig.SSLSessionTicketKey = ticketString
+	}
+}
+
 // GetDefaultBackend returns the default backend
 func (s k8sStore) GetDefaultBackend() defaults.Backend {
 	return s.backendConfig.Backend
@@ -711,16 +747,7 @@ func (s k8sStore) GetBackendConfiguration() ngx_config.Configuration {
 
 func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
-
-	// TODO: this should not be done here
-	if s.backendConfig.SSLSessionTicketKey != "" {
-		d, err := base64.StdEncoding.DecodeString(s.backendConfig.SSLSessionTicketKey)
-		if err != nil {
-			glog.Warningf("unexpected error decoding key ssl-session-ticket-key: %v", err)
-			s.backendConfig.SSLSessionTicketKey = ""
-		}
-		ioutil.WriteFile("/etc/nginx/tickets.key", d, file.ReadWriteByUser)
-	}
+	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }
 
 // Run initiates the synchronization of the informers and the initial

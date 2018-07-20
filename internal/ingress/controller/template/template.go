@@ -259,7 +259,7 @@ func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 }
 
 // buildLocation produces the location string, if the ingress has redirects
-// (specified through the nginx.ingress.kubernetes.io/rewrite-to annotation)
+// (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
 func buildLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -358,7 +358,7 @@ func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) strin
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
-// (specified through the nginx.ingress.kubernetes.io/rewrite-to annotation)
+// (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
 // If the annotation nginx.ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
 func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigurationEnabled bool) string {
@@ -855,7 +855,7 @@ func buildOpentracing(input interface{}) string {
 	if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing.so 	 /etc/nginx/opentracing.json;")
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so 	 /etc/nginx/opentracing.json;")
 	}
 
 	buf.WriteString("\r\n")

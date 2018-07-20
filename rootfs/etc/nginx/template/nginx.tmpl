@@ -176,7 +176,7 @@ http {
 
     {{ if $cfg.UseGzip }}
     gzip on;
-    gzip_comp_level 5;
+    gzip_comp_level {{ $cfg.GzipLevel }};
     gzip_http_version 1.1;
     gzip_min_length 256;
     gzip_types {{ $cfg.GzipTypes }};
@@ -377,7 +377,7 @@ http {
     {{ end }}
 
     {{ if not $all.DynamicConfigurationEnabled }}
-    {{ range $name, $upstream := $backends }}
+    {{ range  $upstream := $backends }}
     {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
     upstream sticky-{{ $upstream.Name }} {
         sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}{{if eq (len $upstream.SessionAffinity.CookieSessionAffinity.Locations) 1 }}{{ range $locationName, $locationPaths := $upstream.SessionAffinity.CookieSessionAffinity.Locations }}{{ if eq (len $locationPaths) 1 }} path={{ index $locationPaths 0 }}{{ end }}{{ end }}{{ end }} httponly;
@@ -419,7 +419,7 @@ http {
     {{ end }}
 
     {{/* build the maps that will be use to validate the Whitelist */}}
-    {{ range $index, $server := $servers }}
+    {{ range $server := $servers }}
     {{ range $location := $server.Locations }}
     {{ $path := buildLocation $location }}
 
@@ -489,7 +489,7 @@ http {
     }
     {{ end }}
 
-    {{ range $index, $server := $servers }}
+    {{ range $server := $servers }}
 
     ## start server {{ $server.Hostname }}
     server {
@@ -604,9 +604,9 @@ stream {
     error_log  {{ $cfg.ErrorLogPath }};
 
     # TCP services
-    {{ range $i, $tcpServer := .TCPBackends }}
+    {{ range $tcpServer := .TCPBackends }}
     upstream tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
-    {{ range $j, $endpoint := $tcpServer.Endpoints }}
+    {{ range $endpoint := $tcpServer.Endpoints }}
         server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
     {{ end }}
     }
@@ -633,9 +633,9 @@ stream {
     {{ end }}
 
     # UDP services
-    {{ range $i, $udpServer := .UDPBackends }}
+    {{ range $udpServer := .UDPBackends }}
     upstream udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
-    {{ range $j, $endpoint := $udpServer.Endpoints }}
+    {{ range $endpoint := $udpServer.Endpoints }}
         server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
     {{ end }}
     }
@@ -979,7 +979,7 @@ stream {
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $idx, $line := buildAuthResponseHeaders $location }}
+            {{- range $line := buildAuthResponseHeaders $location }}
             {{ $line }}
             {{- end }}
             {{ end }}

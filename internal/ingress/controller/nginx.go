@@ -53,6 +53,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
+	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
@@ -70,7 +71,7 @@ var (
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
-func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXController {
+func NewNGINXController(config *Configuration, mc metric.Collector, fs file.Filesystem) *NGINXController {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
@@ -103,6 +104,8 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		runningConfig: new(ingress.Configuration),
 
 		Proxy: &TCPProxy{},
+
+		metricCollector: mc,
 	}
 
 	n.store = store.New(
@@ -243,6 +246,8 @@ type NGINXController struct {
 	store store.Storer
 
 	fileSystem filesystem.Filesystem
+
+	metricCollector metric.Collector
 }
 
 // Start starts a new NGINX master process running in the foreground.
@@ -590,6 +595,8 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		DisableLua:                  n.cfg.DisableLua,
 	}
 
+	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
+
 	content, err := n.t.Write(tc)
 	if err != nil {
 		return err
@@ -787,7 +794,8 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 const zipkinTmpl = `{
   "service_name": "{{ .ZipkinServiceName }}",
   "collector_host": "{{ .ZipkinCollectorHost }}",
-  "collector_port": {{ .ZipkinCollectorPort }}
+  "collector_port": {{ .ZipkinCollectorPort }},
+  "sample_rate": {{ .ZipkinSampleRate }}
 }`
 
 const jaegerTmpl = `{

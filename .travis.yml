@@ -5,22 +5,12 @@ sudo: required
 services:
   - docker
 
-language: go
-
-addons:
-  apt:
-    packages:
-    - luarocks
+language: generic
 
 notifications:
   email:
     on_failure: always
     on_success: never
-
-go:
-  - 1.10.3
-
-go_import_path: k8s.io/ingress-nginx
 
 # New secure variables can be added using travis encrypt -r kubernetes/ingress-nginx --add K=V
 env:
@@ -34,31 +24,17 @@ jobs:
   include:
   - stage: Static Check
     script:
-    - sudo luarocks install luacheck
-    - make luacheck
-    - |
-      go get -d golang.org/x/lint/golint
-      cd $GOPATH/src/golang.org/x/tools
-      git checkout release-branch.go1.10
-      go install golang.org/x/lint/golint
-      cd -
-    - make verify-all
+    - make static-check
   - stage: Lua Unit Test
-    before_script:
-    - rootfs/etc/nginx/lua/test/up.sh
     script:
     - make lua-test
   - stage: Coverage
-    before_script:
-    # start minikube
-    - test/e2e/up.sh
     script:
     - make cover
   - stage: e2e
     before_script:
-    - go get github.com/onsi/ginkgo/ginkgo
     - test/e2e/up.sh
-    - make dev-env
+    - SKIP_MINIKUBE_START=true make dev-env
     script:
     - make e2e-test
   # split builds to avoid job timeouts
