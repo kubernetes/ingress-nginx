@@ -37,35 +37,45 @@ func (f *Framework) NewEchoDeployment() error {
 // NewEchoDeploymentWithReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
 // replicas is configurable
 func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
+	return f.NewDeployment("http-svc", "gcr.io/google_containers/echoserver:1.10", 8080, replicas)
+}
+
+// NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
+func (f *Framework) NewHttpbinDeployment() error {
+	return f.NewDeployment("httpbin", "kennethreitz/httpbin", 80, 1)
+}
+
+// NewDeployment creates a new deployment in a particular namespace.
+func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) error {
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "http-svc",
+			Name:      name,
 			Namespace: f.IngressController.Namespace,
 		},
 		Spec: extensions.DeploymentSpec{
 			Replicas: NewInt32(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "http-svc",
+					"app": name,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "http-svc",
+						"app": name,
 					},
 				},
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: NewInt64(0),
 					Containers: []corev1.Container{
 						{
-							Name:  "http-svc",
-							Image: "gcr.io/google_containers/echoserver:1.10",
+							Name:  name,
+							Image: image,
 							Env:   []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "http",
-									ContainerPort: 8080,
+									ContainerPort: port,
 								},
 							},
 						},
@@ -81,7 +91,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 	}
 
 	if d == nil {
-		return fmt.Errorf("unexpected error creating deployement for echoserver")
+		return fmt.Errorf("unexpected error creating deployement %s", name)
 	}
 
 	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, int(replicas), f.IngressController.Namespace, metav1.ListOptions{
@@ -93,7 +103,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "http-svc",
+			Name:      name,
 			Namespace: f.IngressController.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
@@ -101,12 +111,12 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 				{
 					Name:       "http",
 					Port:       80,
-					TargetPort: intstr.FromInt(8080),
+					TargetPort: intstr.FromInt(int(port)),
 					Protocol:   "TCP",
 				},
 			},
 			Selector: map[string]string{
-				"app": "http-svc",
+				"app": name,
 			},
 		},
 	}
@@ -117,7 +127,7 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
 	}
 
 	if s == nil {
-		return fmt.Errorf("unexpected error creating service for echoserver deployment")
+		return fmt.Errorf("unexpected error creating service %s", name)
 	}
 
 	return nil
