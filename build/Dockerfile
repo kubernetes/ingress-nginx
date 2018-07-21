@@ -44,6 +44,17 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 WORKDIR $GOPATH
 
+ENV RESTY_CLI_VERSION 0.22rc2
+ENV RESTY_CLI_SHA     1ec64d204469a04da553c95eaafb2e5601a03acb8f26cc10ae16b15525228c12
+RUN set -eux; \
+  url="https://github.com/openresty/resty-cli/archive/v${RESTY_CLI_VERSION}.tar.gz"; \
+  wget -O resty_cli.tgz "$url"; \
+  echo "${RESTY_CLI_SHA} *resty_cli.tgz" | sha256sum -c -; \
+  tar -C /tmp -xzf resty_cli.tgz; \
+  rm resty_cli.tgz; \
+  mv /tmp/resty-cli-${RESTY_CLI_VERSION}/bin/* /usr/local/bin/; \
+  resty -V
+
 RUN  luarocks install luacheck \
   && luarocks install busted 2.0.rc12
 
