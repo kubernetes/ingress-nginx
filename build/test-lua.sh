@@ -18,4 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-busted ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test;
+export LUA_PATH="/usr/local/lib/lua/?.lua;;"
+export LUA_CPATH="/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;"
+
+resty ./build/busted ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test;

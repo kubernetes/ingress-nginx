@@ -1,0 +1,3 @@
+#!/usr/bin/env resty
+
+require "busted.runner"({ standalone = false })
