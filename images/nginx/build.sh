@@ -19,19 +19,19 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.13.12
+export NGINX_VERSION=1.15.1
 export NDK_VERSION=0.3.1rc1
-export SETMISC_VERSION=0.31
+export SETMISC_VERSION=0.32
 export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.5.0
-export OPENTRACING_CPP_VERSION=1.5.0
+export OPENTRACING_CPP_VERSION=1.4.0
 export ZIPKIN_CPP_VERSION=0.3.1
 export JAEGER_VERSION=0.4.1
 export MODSECURITY_VERSION=37b76e88df4bce8a9846345c27271d7e6ce1acfb
-export LUA_NGX_VERSION=0.10.13
+export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
 export LUA_UPSTREAM_VERSION=0.07
 export COOKIE_FLAG_VERSION=1.1.0
 export NGINX_INFLUXDB_VERSION=f20cfb2458c338f162132f5a21eb021e2cbe6383
@@ -83,13 +83,15 @@ clean-install \
   libjemalloc1 libjemalloc-dev \
   wget \
   libcurl4-openssl-dev \
+  libprotobuf-dev protobuf-compiler \
+  libz-dev \
   procps \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libtool dh-autoreconf libxml2 libpcre++-dev libxml2-dev \
   lua-cjson \
   python \
   luarocks \
   libmaxminddb-dev \
-  libcap2-bin \
+  libatomic-ops-dev \
   || exit 1
 
 if [[ ${ARCH} == "x86_64" ]]; then
@@ -139,13 +141,13 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src fb92f5602cdb8d3ab1ad47dbeca151b185d62eedb67d347bbe9d79c1438c85de \
+get_src c7206858d7f832b8ef73a45c9b8f8e436bcb1ee88db2bc85b8e438ecec9d5460 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
         "https://github.com/simpl/ngx_devel_kit/archive/v$NDK_VERSION.tar.gz"
 
-get_src 97946a68937b50ab8637e1a90a13198fe376d801dc3e7447052e43c28e9ee7de \
+get_src f1ad2459c4ee6a61771aa84f77871f4bfe42943a4aa4c30c62ba3f981f52c201 \
         "https://github.com/openresty/set-misc-nginx-module/archive/v$SETMISC_VERSION.tar.gz"
 
 get_src a3dcbab117a9c103bc1ea5200fc00a7b7d2af97ff7fd525f16f8ac2632e30fbf \
@@ -163,7 +165,7 @@ get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
 get_src ad6c813cb8baa4a178417bfa316ab3535d950fe02c67dc3a4af96ef6a1f655d6 \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
-get_src 4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5 \
+get_src 2eb0a4a7dc62bc8cbf12872080197b41d53b4c04966c860774a6b11fd59fad55 \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
 get_src f16a6f1eed494ca3c2607d7ad671cb134bd7eb320c5969c8281c10922a146589 \
@@ -178,8 +180,8 @@ get_src 35b5a96ceb0aec68abdf25cdb9fe43cce09b2ab7bf52fb32d77038f21fef75ac \
 get_src 9915ad1cf0734cc5b357b0d9ea92fec94764b4bf22f4dce185cbd65feda30ec1 \
         "https://github.com/AirisX/nginx_cookie_flag_module/archive/v$COOKIE_FLAG_VERSION.tar.gz"
 
-get_src ecea8c3d7f69dd48c6132498ddefb5d83ba9f387fa3d4da14e2abeacdfc8a3ee \
-        "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
+get_src 027a1f1ddb35164c720451869fc5ea9095abaf70af02a1b17f59e0772c0cfec0 \
+        "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
@@ -279,32 +281,62 @@ fi
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
 mkdir .build
 cd .build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
+
+cmake   -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTING=OFF ..
+
 make
 make install
 
 # build jaeger lib
 cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
-sed -i 's/-Werror//' CMakeLists.txt
+
+cat <<EOF > export.map 
+{ 
+    global: 
+        OpenTracingMakeTracerFactory; 
+    local: *; 
+}; 
+EOF
+
 mkdir .build
 cd .build
-# Taken from https://github.com/jaegertracing/jaeger-client-cpp/blob/v0.4.1/scripts/build-plugin.sh
-cat <<EOF > export.map
-{
-    global:
-        OpenTracingMakeTracerFactory;
-    local: *;
-};
-EOF
-cmake -DCMAKE_BUILD_TYPE=Release -DJAEGERTRACING_PLUGIN=ON -DBUILD_TESTING=OFF -DJAEGERTRACING_BUILD_EXAMPLES=OFF -DHUNTER_CONFIGURATION_TYPES=Release ..
+
+cmake   -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTING=OFF \
+        -DJAEGERTRACING_BUILD_EXAMPLES=OFF \
+        -DJAEGERTRACING_BUILD_CROSSDOCK=OFF \
+        -DJAEGERTRACING_COVERAGE=OFF \
+        -DJAEGERTRACING_PLUGIN=ON \
+        -DHUNTER_CONFIGURATION_TYPES=Release \
+        -DJAEGERTRACING_WITH_YAML_CPP=ON ..
+
 make
+make install
+
+export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir) \
+
 mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
 
 # build zipkin lib
 cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
+
+cat <<EOF > export.map 
+{ 
+    global: 
+        OpenTracingMakeTracerFactory; 
+    local: *; 
+}; 
+EOF
+
 mkdir .build
 cd .build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DBUILD_TESTING=OFF ..
+
+cmake   -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=ON \
+        -DBUILD_PLUGIN=ON \
+        -DBUILD_TESTING=OFF ..
+
 make
 make install
 
@@ -321,7 +353,7 @@ git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
 # TODO: use a tag once 3.0.3 is released
 # checkout v3.0.3
-# git checkout 
+# git checkout
 git submodule init
 git submodule update
 sh build.sh
@@ -405,8 +437,8 @@ fi
 
 # "Combining -flto with -g is currently experimental and expected to produce unexpected results."
 # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
-CC_OPT="-g -Og -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC"
-LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now"
+CC_OPT="-g -Og -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
+LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
 
 if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=native'
@@ -448,18 +480,24 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --without-http_scgi_module \
   --with-cc-opt="${CC_OPT}" \
   --with-ld-opt="${LD_OPT}" \
+  --with-libatomic \
   ${WITH_MODULES} \
   && make || exit 1 \
   && make install || exit 1
+
+# install su-exec to switch user and group id and exec
+cd "$BUILD_PATH"
+curl -sSL https://github.com/ncopa/su-exec/archive/master.tar.gz | tar zxpv
+cd su-exec-master
+make
+
+cp su-exec /usr/local/bin
 
 echo "Cleaning..."
 
 cd /
 
 mv /usr/share/nginx/sbin/nginx /usr/sbin
-
-# allow binding to a port less than 1024 to non-root users
-setcap cap_net_bind_service=+ep /usr/sbin/nginx
 
 apt-mark unmarkauto \
   bash \
@@ -476,8 +514,8 @@ apt-mark unmarkauto \
 
 apt-get remove -y --purge \
   build-essential \
-  gcc-6 \
-  cpp-6 \
+  gcc-7 gcc-7-base \
+  cpp-7 \
   libgeoip-dev \
   libpcre3-dev \
   libssl-dev \
@@ -486,7 +524,6 @@ apt-get remove -y --purge \
   linux-libc-dev \
   cmake \
   wget \
-  libcap2-bin \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y
