@@ -12,22 +12,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.10.3-stretch
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.54
 
-RUN apt update \
-  && apt install -y --no-install-recommends \
-    luarocks \
-  && apt-get clean -y \
-  && rm -rf \
-    /var/cache/debconf/* \
-    /var/lib/apt/lists/* \
-    /var/log/* \
-    /tmp/* \
-    /var/tmp/*
+RUN clean-install \
+  g++ \
+  gcc \
+  git \
+  libc6-dev \
+  make \
+  wget \
+  luarocks \
+  pkg-config
 
-RUN luarocks install luacheck \
-  && luarocks install busted 2.0.rc12 \
-  && luarocks install lua-cjson 2.1.0-1
+ENV GOLANG_VERSION 1.10.3
+ENV GO_ARCH        linux-amd64
+ENV GOLANG_SHA     fa1b0e45d3b647c252f51f5e1204aba049cde4af177ef9f2181f43004f901035
 
-RUN go get github.com/onsi/ginkgo/ginkgo \
+RUN set -eux; \
+  url="https://golang.org/dl/go${GOLANG_VERSION}.${GO_ARCH}.tar.gz"; \
+  wget -O go.tgz "$url"; \
+  echo "${GOLANG_SHA} *go.tgz" | sha256sum -c -; \
+  tar -C /usr/local -xzf go.tgz; \
+  rm go.tgz; \
+  export PATH="/usr/local/go/bin:$PATH"; \
+  go version
+
+ENV GOPATH /go
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+
+RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+
+WORKDIR $GOPATH
+
+RUN  luarocks install luacheck \
+  && luarocks install busted 2.0.rc12
+
+RUN  go get github.com/onsi/ginkgo/ginkgo \
   && go get golang.org/x/lint/golint
