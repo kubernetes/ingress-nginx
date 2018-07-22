@@ -1,25 +1,5 @@
-package.path = "./rootfs/etc/nginx/lua/?.lua;./rootfs/etc/nginx/lua/test/mocks/?.lua;" .. package.path
 _G._TEST = true
-local cjson = require('cjson')
-
-local function udp_mock()
-    return {
-        setpeername = function(...) return true end,
-        send = function(payload) return payload end,
-        close = function(...) return true end
-    }
-end
-
-local _ngx = {
-    shared = {},
-    log = function(...) end,
-    socket = {
-        udp = udp_mock
-    },
-    get_phase = function() return "timer" end,
-    var = {}
-}
-_G.ngx = _ngx
+local cjson = require("cjson")
 
 describe("Monitor", function()
     local monitor = require("monitor")
