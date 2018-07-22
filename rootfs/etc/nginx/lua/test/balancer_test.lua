@@ -1,11 +1,4 @@
-package.path = "./rootfs/etc/nginx/lua/?.lua;./rootfs/etc/nginx/lua/test/mocks/?.lua;" .. package.path
 _G._TEST = true
-
-local _ngx = {
-  shared = {},
-  log = function(...) end,
-}
-_G.ngx = _ngx
 
 local balancer, expected_implementations, backends
 
@@ -92,10 +85,10 @@ describe("Balancer", function()
 
       local s_old = spy.on(implementation, "new")
       local s = spy.on(new_implementation, "new")
-      local s_ngx_log = spy.on(_G.ngx, "log")
+      local s_ngx_log = spy.on(ngx, "log")
 
       assert.has_no.errors(function() balancer.sync_backend(backend) end)
-      assert.spy(s_ngx_log).was_called_with(ngx.ERR,
+      assert.spy(s_ngx_log).was_called_with(ngx.INFO,
       "LB algorithm changed from round_robin to ewma, resetting the instance")
       -- TODO(elvinefendi) figure out why
       -- assert.spy(s).was_called_with(new_implementation, backend) does not work here
