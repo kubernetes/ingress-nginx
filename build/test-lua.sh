@@ -18,7 +18,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export LUA_PATH="/usr/local/lib/lua/?.lua;;"
-export LUA_CPATH="/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;"
-
-resty ./build/busted ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test;
+resty \
+  -I ./rootfs/etc/nginx/lua \
+  -I /usr/local/lib/lua \
+  -I /usr/lib/lua-platform-path/lua/5.1 \
+  --shdict "configuration_data 5M" \
+  --shdict "balancer_ewma 1M" \
+  --shdict "balancer_ewma_last_touched_at 1M" \
+  ./build/busted ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test/
