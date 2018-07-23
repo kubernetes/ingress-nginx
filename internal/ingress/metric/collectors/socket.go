@@ -77,12 +77,9 @@ type SocketCollector struct {
 
 var (
 	requestTags = []string{
-		"host",
-
 		"status",
 
 		"method",
-		"path",
 
 		//		"endpoint",
 
