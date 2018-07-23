@@ -28,6 +28,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const defaultPermanentRedirectCode = http.StatusMovedPermanently
+
 // Config returns the redirect configuration for an Ingress rule
 type Config struct {
 	URL       string `json:"url"`
@@ -73,6 +75,15 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
+	prc, err := parser.GetIntAnnotation("permanent-redirect-code", ing)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		return nil, err
+	}
+
+	if prc < http.StatusMultipleChoices || prc > http.StatusPermanentRedirect {
+		prc = defaultPermanentRedirectCode
+	}
+
 	if pr != "" {
 		if err := isValidURL(pr); err != nil {
 			return nil, err
@@ -80,7 +91,7 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 		return &Config{
 			URL:       pr,
-			Code:      http.StatusMovedPermanently,
+			Code:      prc,
 			FromToWWW: r3w,
 		}, nil
 	}
