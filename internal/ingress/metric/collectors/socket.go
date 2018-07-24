@@ -236,11 +236,13 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		requestsMetric.Inc()
 	}
 
-	latencyMetric, err := sc.upstreamLatency.GetMetricWith(latencyLabels)
-	if err != nil {
-		glog.Errorf("Error fetching latency metric: %v", err)
-	} else {
-		latencyMetric.Observe(stats.Latency)
+	if stats.Latency != -1 {
+		latencyMetric, err := sc.upstreamLatency.GetMetricWith(latencyLabels)
+		if err != nil {
+			glog.Errorf("Error fetching latency metric: %v", err)
+		} else {
+			latencyMetric.Observe(stats.Latency)
+		}
 	}
 
 	if stats.RequestTime != -1 {
