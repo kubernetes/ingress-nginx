@@ -36,7 +36,6 @@ type upstream struct {
 }
 
 type socketData struct {
-	Host   string `json:"host"`
 	Status string `json:"status"`
 
 	ResponseLength float64 `json:"responseLength"`
@@ -51,7 +50,6 @@ type socketData struct {
 	Namespace string `json:"namespace"`
 	Ingress   string `json:"ingress"`
 	Service   string `json:"service"`
-	Path      string `json:"path"`
 }
 
 // SocketCollector stores prometheus metrics and ingress meta-data
@@ -204,10 +202,8 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 	}
 
 	requestLabels := prometheus.Labels{
-		"host":   stats.Host,
 		"status": stats.Status,
 		"method": stats.Method,
-		"path":   stats.Path,
 		//"endpoint":  stats.Endpoint,
 		"namespace": stats.Namespace,
 		"ingress":   stats.Ingress,
