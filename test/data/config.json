@@ -1,8 +1,8 @@
 {
 	"backlogSize": 32768,
 	"isIPV6Enabled": true,
-	"ListenPorts": {
-		"Addresses": [
+	"listenPorts": {
+		"addresses": [
 			"2.2.2.2",
 			"[2001:db8:a0b:12f0::1]",
 			"[3731:54:65fe:2::a7]"
