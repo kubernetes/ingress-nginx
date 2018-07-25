@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 
+	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -54,6 +55,16 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 		err = f.NewEchoDeploymentWithReplicas(1)
 		Expect(err).NotTo(HaveOccurred())
+
+		err = f.WaitForNginxConfiguration(func(cfg string) bool {
+			servers, err := dns.GetSystemNameServers()
+			Expect(err).NotTo(HaveOccurred())
+			ips := []string{}
+			for _, server := range servers {
+				ips = append(ips, fmt.Sprintf("\"%v\"", server))
+			}
+			return strings.Contains(cfg, "configuration.nameservers = { "+strings.Join(ips, ", ")+" }")
+		})
 
 		host := "foo.com"
 		ing, err := ensureIngress(f, host)
