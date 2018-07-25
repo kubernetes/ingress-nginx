@@ -1,7 +1,9 @@
 -- this is the Lua representation of Configuration struct in internal/ingress/types.go
 local configuration_data = ngx.shared.configuration_data
 
-local _M = {}
+local _M = {
+  nameservers = {}
+}
 
 function _M.get_backends_data()
   return configuration_data:get("backends")
