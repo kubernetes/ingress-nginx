@@ -741,6 +741,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 	backends := make([]*ingress.Backend, len(pcfg.Backends))
 
 	for i, backend := range pcfg.Backends {
+		service := &apiv1.Service{Spec: backend.Service.Spec}
 		luaBackend := &ingress.Backend{
 			Name:            backend.Name,
 			Port:            backend.Port,
@@ -749,6 +750,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 			SessionAffinity: backend.SessionAffinity,
 			UpstreamHashBy:  backend.UpstreamHashBy,
 			LoadBalancing:   backend.LoadBalancing,
+			Service:         service,
 		}
 
 		var endpoints []ingress.Endpoint

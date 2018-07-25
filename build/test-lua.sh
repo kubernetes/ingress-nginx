@@ -25,4 +25,4 @@ resty \
   --shdict "configuration_data 5M" \
   --shdict "balancer_ewma 1M" \
   --shdict "balancer_ewma_last_touched_at 1M" \
-  ./build/busted ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test/
+  ./rootfs/etc/nginx/lua/test/run.lua ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test/
