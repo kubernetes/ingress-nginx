@@ -673,6 +673,8 @@ stream {
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
 
+            set $proxy_upstream_name "upstream-default-backend";
+
             rewrite                (.*) / break;
 
             {{ if $dynamicConfig }}
