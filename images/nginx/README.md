@@ -25,7 +25,7 @@ This image provides a default configuration file with no backend servers.
 *Using docker*
 
 ```console
-docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro quay.io/kubernetes-ingress-controller/nginx:0.55
+docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro quay.io/kubernetes-ingress-controller/nginx:0.56
 ```
 
 *Creating a replication controller*
