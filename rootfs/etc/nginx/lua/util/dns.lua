@@ -31,11 +31,15 @@ end
 function _M.resolve(host)
   local cached_addresses = cache:get(host)
   if cached_addresses then
-    ngx.log(ngx.INFO, string.format("addresses %s for host %s was resolved from cache", table.concat(cached_addresses, ", "), host))
+    local message = string.format(
+      "addresses %s for host %s was resolved from cache",
+      table.concat(cached_addresses, ", "), host)
+    ngx.log(ngx.INFO, message)
     return cached_addresses
   end
 
-  local r, err = resolver:new{
+  local r
+  r, err = resolver:new{
     nameservers = util.deepcopy(configuration.nameservers),
     retrans = 5,
     timeout = 2000,  -- 2 sec
@@ -46,7 +50,8 @@ function _M.resolve(host)
     return { host }
   end
 
-  local answers, err, _tries = r:query(host, { qtype = r.TYPE_A }, {})
+  local answers
+  answers, err = r:query(host, { qtype = r.TYPE_A }, {})
   if not answers then
     ngx.log(ngx.ERR, "failed to query the DNS server: " .. tostring(err))
     return { host }
