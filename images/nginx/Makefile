@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?= 0.54
+TAG ?= 0.55
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 ARCH ?= $(shell go env GOARCH)
 DOCKER ?= docker
@@ -33,7 +33,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=gcr.io/google-containers/debian-base-$(ARCH):0.3
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/debian-base-$(ARCH):0.1
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm

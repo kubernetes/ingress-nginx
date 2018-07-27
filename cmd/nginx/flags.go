@@ -143,7 +143,7 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicConfigurationEnabled = flags.Bool("enable-dynamic-configuration", false,
+		dynamicConfigurationEnabled = flags.Bool("enable-dynamic-configuration", true,
 			`Dynamically refresh backends on topology changes instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries.`)
 

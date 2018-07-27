@@ -130,6 +130,7 @@ var (
 		"filterRateLimits":           filterRateLimits,
 		"buildRateLimitZones":        buildRateLimitZones,
 		"buildRateLimit":             buildRateLimit,
+		"buildResolversForLua":       buildResolversForLua,
 		"buildResolvers":             buildResolvers,
 		"buildUpstreamName":          buildUpstreamName,
 		"isLocationInLocationList":   isLocationInLocationList,
@@ -218,6 +219,33 @@ func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool,
 		return ""
 	}
 	return strings.Join(out, ";\n\r") + ";"
+}
+
+func buildResolversForLua(res interface{}, disableIpv6 interface{}) string {
+	nss, ok := res.([]net.IP)
+	if !ok {
+		glog.Errorf("expected a '[]net.IP' type but %T was returned", res)
+		return ""
+	}
+	no6, ok := disableIpv6.(bool)
+	if !ok {
+		glog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
+		return ""
+	}
+
+	if len(nss) == 0 {
+		return ""
+	}
+
+	r := []string{}
+	for _, ns := range nss {
+		if ing_net.IsIPV6(ns) && no6 {
+			continue
+		}
+		r = append(r, fmt.Sprintf("\"%v\"", ns))
+	}
+
+	return strings.Join(r, ", ")
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
@@ -350,7 +378,7 @@ func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) strin
 		return fmt.Sprintf("%s;", backend.LoadBalancing)
 	}
 
-	if fallbackLoadBalancing == "round_robin" {
+	if fallbackLoadBalancing == "round_robin" || fallbackLoadBalancing == "" {
 		return ""
 	}
 
@@ -815,14 +843,14 @@ func buildAuthSignURL(input interface{}) string {
 	u, _ := url.Parse(s)
 	q := u.Query()
 	if len(q) == 0 {
-		return fmt.Sprintf("%v?rd=$pass_access_scheme://$http_host$request_uri", s)
+		return fmt.Sprintf("%v?rd=$pass_access_scheme://$http_host$escaped_request_uri", s)
 	}
 
 	if q.Get("rd") != "" {
 		return s
 	}
 
-	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$request_uri", s)
+	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$escaped_request_uri", s)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

@@ -1,5 +1,5 @@
 
-nginx 1.13.x base image using [debian-base](https://github.com/kubernetes/kubernetes/tree/master/build/debian-base)
+nginx 1.15.x base image using [debian-base](https://github.com/kubernetes/kubernetes/tree/master/build/debian-base)
 
 nginx [engine x] is an HTTP and reverse proxy server, a mail proxy server, and a generic TCP proxy server.
 
@@ -25,7 +25,7 @@ This image provides a default configuration file with no backend servers.
 *Using docker*
 
 ```console
-docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro quay.io/kubernetes-ingress-controller/nginx:0.30
+docker run -v /some/nginx.con:/etc/nginx/nginx.conf:ro quay.io/kubernetes-ingress-controller/nginx:0.55
 ```
 
 *Creating a replication controller*

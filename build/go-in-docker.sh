@@ -72,6 +72,7 @@ docker run                                       \
     -v ${HOME}/.kube:/${HOME}/.kube              \
     -v ${HOME}/.minikube:${HOME}/.minikube       \
     -v ${PWD}:/go/src/${PKG}                     \
+    -v ${PWD}/.gocache:${HOME}/.cache/go-build   \
     -v ${PWD}/bin/${ARCH}:/go/bin/linux_${ARCH}  \
     -w /go/src/${PKG}                            \
     --env-file .env                              \

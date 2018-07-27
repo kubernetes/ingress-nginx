@@ -251,14 +251,6 @@ spec:
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
             - --watch-namespace=${NAMESPACE}
-          securityContext:
-            capabilities:
-                drop:
-                - ALL
-                add:
-                - NET_BIND_SERVICE
-            # www-data -> 33
-            runAsUser: 33
           env:
             - name: POD_NAME
               valueFrom:
