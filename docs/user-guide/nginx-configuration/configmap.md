@@ -92,7 +92,7 @@ The following table shows a configuration option's name, type, and the default v
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
 |[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"10s"|
-|[load-balance](#load-balance)|string|"least_conn"|
+|[load-balance](#load-balance)|string|"round_robin"|
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128|
 |[variables-hash-max-size](#variables-hash-max-size)|int|2048|
 |[upstream-keepalive-connections](#upstream-keepalive-connections)|int|32|
@@ -520,11 +520,11 @@ Sets the algorithm to use for load balancing.
 The value can either be:
 
 - round_robin: to use the default round robin loadbalancer
-- least_conn: to use the least connected method
-- ip_hash: to use a hash of the server for routing.
-- ewma: to use the peak ewma method for routing (only available with `enable-dynamic-configuration` flag) 
+- least_conn: to use the least connected method (_note_ that this is available only in non-dynamic mode: `--enable-dynamic-configuration=false`)
+- ip_hash: to use a hash of the server for routing (_note_ that this is available only in non-dynamic mode: `--enable-dynamic-configuration=false`, but alternatively you can consider using `nginx.ingress.kubernetes.io/upstream-hash-by`)
+- ewma: to use the Peak EWMA method for routing ([implementation](https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/balancer/ewma.lua))
 
-The default is least_conn.
+The default is `round_robin`.
 
 _References:_
 [http://nginx.org/en/docs/http/load_balancing.html](http://nginx.org/en/docs/http/load_balancing.html)

@@ -27,11 +27,9 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/kubernetes"
 
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -50,10 +48,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	f := framework.NewDefaultFramework("dynamic-configuration")
 
 	BeforeEach(func() {
-		err := enableDynamicConfiguration(f.IngressController.Namespace, f.KubeClientSet)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.NewEchoDeploymentWithReplicas(1)
+		err := f.NewEchoDeploymentWithReplicas(1)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = f.WaitForNginxConfiguration(func(cfg string) bool {
@@ -368,21 +363,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		})
 	})
 })
-
-func enableDynamicConfiguration(namespace string, kubeClientSet kubernetes.Interface) error {
-	return framework.UpdateDeployment(kubeClientSet, namespace, "nginx-ingress-controller", 1,
-		func(deployment *appsv1beta1.Deployment) error {
-			args := deployment.Spec.Template.Spec.Containers[0].Args
-			args = append(args, "--enable-dynamic-configuration")
-			deployment.Spec.Template.Spec.Containers[0].Args = args
-			_, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Update(deployment)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
-}
 
 func ensureIngress(f *framework.Framework, host string) (*extensions.Ingress, error) {
 	return f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{
