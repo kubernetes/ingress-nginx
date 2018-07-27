@@ -18,10 +18,12 @@ package annotations
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/parnurzeal/gorequest"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -49,10 +51,23 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 
 			err = f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host))) &&
-						Expect(server).Should(ContainSubstring("proxy_pass http://custom-default-backend"))
+					return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host)))
 				})
 			Expect(err).NotTo(HaveOccurred())
+
+			uri := "/alma/armud"
+			resp, body, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL+uri).
+				Set("Host", host).
+				End()
+
+			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			Expect(body).To(ContainSubstring("x-code=503"))
+			Expect(body).To(ContainSubstring(fmt.Sprintf("x-ingress-name=%s", host)))
+			Expect(body).To(ContainSubstring("x-service-name=invalid"))
+			Expect(body).To(ContainSubstring(fmt.Sprintf("x-original-uri=%s", uri)))
 		})
 	})
 })
