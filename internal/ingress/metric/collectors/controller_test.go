@@ -54,7 +54,7 @@ func TestControllerCounters(t *testing.T) {
 			},
 			want: metadata + `
 				nginx_ingress_controller_config_last_reload_successful{controller_class="nginx",controller_namespace="default",controller_pod="pod"} 1
-				nginx_ingress_controller_success{class="nginx",namespace="default"} 1
+				nginx_ingress_controller_success{controller_class="nginx",controller_namespace="default",controller_pod="pod"} 1
 			`,
 			metrics: []string{"nginx_ingress_controller_config_last_reload_successful", "nginx_ingress_controller_success"},
 		},
@@ -66,7 +66,7 @@ func TestControllerCounters(t *testing.T) {
 			want: `
 				# HELP nginx_ingress_controller_errors Cumulative number of Ingress controller errors during reload operations
 				# TYPE nginx_ingress_controller_errors counter
-				nginx_ingress_controller_errors{class="nginx",namespace="default"} 1
+				nginx_ingress_controller_errors{controller_class="nginx",controller_namespace="default",controller_pod="pod"} 1
 			`,
 			metrics: []string{"nginx_ingress_controller_errors"},
 		},
@@ -119,4 +119,40 @@ func TestControllerCounters(t *testing.T) {
 			reg.Unregister(cm)
 		})
 	}
+}
+
+func TestRemoveMetrics(t *testing.T) {
+	cm := NewController("pod", "default", "nginx")
+	reg := prometheus.NewPedanticRegistry()
+	if err := reg.Register(cm); err != nil {
+		t.Errorf("registering collector failed: %s", err)
+	}
+
+	t1, _ := time.Parse(
+		time.RFC3339,
+		"2012-11-01T22:08:41+00:00")
+
+	servers := []*ingress.Server{
+		{
+			Hostname: "demo",
+			SSLCert: ingress.SSLCert{
+				ExpireTime: t1,
+			},
+		},
+		{
+			Hostname: "invalid",
+			SSLCert: ingress.SSLCert{
+				ExpireTime: time.Unix(0, 0),
+			},
+		},
+	}
+	cm.SetSSLExpireTime(servers)
+
+	cm.RemoveMetrics([]string{"demo"}, reg)
+
+	if err := GatherAndCompare(cm, "", []string{"nginx_ingress_controller_ssl_expire_time_seconds"}, reg); err != nil {
+		t.Errorf("unexpected collecting result:\n%s", err)
+	}
+
+	reg.Unregister(cm)
 }
