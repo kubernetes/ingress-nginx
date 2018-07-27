@@ -378,7 +378,7 @@ func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) strin
 		return fmt.Sprintf("%s;", backend.LoadBalancing)
 	}
 
-	if fallbackLoadBalancing == "round_robin" {
+	if fallbackLoadBalancing == "round_robin" || fallbackLoadBalancing == "" {
 		return ""
 	}
 
