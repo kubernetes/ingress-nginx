@@ -32,11 +32,15 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+// TODO(elvinefendi) merge this with Affinity tests in test/e2e/lua/dynamic_configuration.go
 var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 	f := framework.NewDefaultFramework("affinity")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
+		err := f.DisableDynamicConfiguration()
+		Expect(err).NotTo(HaveOccurred())
+
+		err = f.NewEchoDeploymentWithReplicas(2)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
