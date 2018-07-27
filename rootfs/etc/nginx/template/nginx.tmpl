@@ -64,6 +64,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           configuration = res
+          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "balancer")
@@ -679,6 +680,8 @@ stream {
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
 
+            set $proxy_upstream_name "upstream-default-backend";
+
             rewrite                (.*) / break;
 
             {{ if $dynamicConfig }}
@@ -985,6 +988,7 @@ stream {
             {{ end }}
 
             {{ if $location.ExternalAuth.SigninURL }}
+            set_escape_uri $escaped_request_uri $request_uri;
             error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
             {{ end }}
 

@@ -28,10 +28,10 @@ spec:
     metadata:
       labels:
         app: nginx
-        name: frontend
     spec:
       containers:
       - name: nginx
-        image: quay.io/kubernetes-ingress-controller/nginx:0.30
+        image: quay.io/kubernetes-ingress-controller/nginx:0.55
         ports:
         - containerPort: 80
+        - containerPort: 443

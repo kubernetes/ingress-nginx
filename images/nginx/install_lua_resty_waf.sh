@@ -33,6 +33,9 @@ if [[ ${ARCH} != "x86_64" ]]; then
   luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_LIBDIR}
 fi
 
+curl -o 96b0a04ce62dd01b6c6c8a8c97df7ce9916d173e.patch -sSL https://github.com/p0pr0ck5/lua-resty-waf/commit/96b0a04ce62dd01b6c6c8a8c97df7ce9916d173e.patch
+patch -p1 < 96b0a04ce62dd01b6c6c8a8c97df7ce9916d173e.patch
+
 make
 make install-check
 

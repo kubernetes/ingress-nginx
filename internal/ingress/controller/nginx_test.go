@@ -148,8 +148,8 @@ func TestConfigureDynamically(t *testing.T) {
 			t.Errorf("unexpected target reference in JSON content: %v", body)
 		}
 
-		if strings.Contains(body, "service") {
-			t.Errorf("unexpected service reference in JSON content: %v", body)
+		if !strings.Contains(body, "service") {
+			t.Errorf("service reference should be present in JSON content: %v", body)
 		}
 
 	}))

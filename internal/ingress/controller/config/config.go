@@ -77,7 +77,7 @@ const (
 	sslSessionCacheSize = "10m"
 
 	// Default setting for load balancer algorithm
-	defaultLoadBalancerAlgorithm = "least_conn"
+	defaultLoadBalancerAlgorithm = ""
 
 	// Parameters for a shared memory zone that will keep states for various keys.
 	// http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone

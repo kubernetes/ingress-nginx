@@ -18,4 +18,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-busted ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test;
+resty \
+  -I ./rootfs/etc/nginx/lua \
+  -I /usr/local/lib/lua \
+  -I /usr/lib/lua-platform-path/lua/5.1 \
+  --shdict "configuration_data 5M" \
+  --shdict "balancer_ewma 1M" \
+  --shdict "balancer_ewma_last_touched_at 1M" \
+  ./rootfs/etc/nginx/lua/test/run.lua ${BUSTED_ARGS} ./rootfs/etc/nginx/lua/test/
