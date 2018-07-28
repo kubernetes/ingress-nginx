@@ -40,9 +40,9 @@ if [ "$missing" = true ];then
   exit 1
 fi
 
-DOCKER_OPTS=${DOCKER_OPTS:-""}
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v07282018-45ba1672c
 
-docker build -t ingress-nginx:build build
+DOCKER_OPTS=${DOCKER_OPTS:-""}
 
 FLAGS=$@
 
@@ -74,6 +74,6 @@ docker run                                       \
     -v ${PWD}/bin/${ARCH}:/go/bin/linux_${ARCH}  \
     -w /go/src/${PKG}                            \
     --env-file .env                              \
-    ingress-nginx:build ${FLAGS}
+    ${E2E_IMAGE} ${FLAGS}
 
 rm .env
