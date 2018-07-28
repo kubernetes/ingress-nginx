@@ -31,7 +31,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -42,6 +41,7 @@ const (
 	logBackendReloadSuccess = "Backend successfully reloaded"
 	logSkipBackendReload    = "Changes handled by the dynamic configuration, skipping backend reload"
 	logInitialConfigSync    = "Initial synchronization of the NGINX configuration"
+	waitForLuaSync          = 2 * time.Second
 )
 
 var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
@@ -50,16 +50,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	BeforeEach(func() {
 		err := f.NewEchoDeploymentWithReplicas(1)
 		Expect(err).NotTo(HaveOccurred())
-
-		err = f.WaitForNginxConfiguration(func(cfg string) bool {
-			servers, err := dns.GetSystemNameServers()
-			Expect(err).NotTo(HaveOccurred())
-			ips := []string{}
-			for _, server := range servers {
-				ips = append(ips, fmt.Sprintf("\"%v\"", server))
-			}
-			return strings.Contains(cfg, "configuration.nameservers = { "+strings.Join(ips, ", ")+" }")
-		})
 
 		host := "foo.com"
 		ing, err := ensureIngress(f, host)
@@ -72,8 +62,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 
-		// give some time for Lua to sync the backend
-		time.Sleep(5 * time.Second)
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -88,6 +77,14 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(log).To(ContainSubstring(logDynamicConfigSuccess))
 	})
 
+	It("should set nameservers for Lua", func() {
+		err := f.WaitForNginxConfiguration(func(cfg string) bool {
+			r := regexp.MustCompile(`configuration.nameservers = { [".,0-9a-zA-Z]+ }`)
+			return r.MatchString(cfg)
+		})
+		Expect(err).NotTo(HaveOccurred())
+	})
+
 	Context("when only backends change", func() {
 		It("should handle endpoints only changes", func() {
 			resp, _, errs := gorequest.New().
@@ -100,7 +97,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			replicas := 2
 			err := framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			log, err := f.NginxLogs()
 			Expect(err).ToNot(HaveOccurred())
@@ -131,7 +128,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			replicas = 4
 			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			resp, _, errs := gorequest.New().
 				Get(f.IngressController.HTTPURL).
@@ -170,7 +167,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
 			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 			Expect(err).ToNot(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			log, err := f.NginxLogs()
 			Expect(err).ToNot(HaveOccurred())
@@ -246,7 +243,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", 2, nil)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(10 * time.Second)
+		time.Sleep(waitForLuaSync)
 
 		resp, body, errs := gorequest.New().
 			Get(fmt.Sprintf("%s?a-unique-request-uri", f.IngressController.HTTPURL)).
@@ -290,7 +287,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			By("Increasing the number of service replicas")
 			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", 2, nil)
 			Expect(err).NotTo(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			By("Making a first request")
 			host := "foo.com"
@@ -346,7 +343,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			}
 			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 			Expect(err).ToNot(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			By("Making a request")
 			host := "foo.com"
