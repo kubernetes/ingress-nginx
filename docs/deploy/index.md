@@ -31,10 +31,8 @@ There are cloud provider specific yaml files.
 
 #### Docker for Mac
 
-Kubernetes is available for Docker for Mac's Edge channel. Switch to the [Edge
-channel][edge] and [enable Kubernetes][enable].
+Kubernetes is available for Docker for Mac (from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018))
 
-[edge]: https://docs.docker.com/docker-for-mac/install/
 [enable]: https://docs.docker.com/docker-for-mac/#kubernetes
 
 Create a service
