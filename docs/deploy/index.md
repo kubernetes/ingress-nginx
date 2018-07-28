@@ -31,7 +31,7 @@ There are cloud provider specific yaml files.
 
 #### Docker for Mac
 
-Kubernetes is available for Docker for Mac (from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018))
+Kubernetes is available in Docker for Mac (from [version 18.06.0-ce](https://docs.docker.com/docker-for-mac/release-notes/#stable-releases-of-2018))
 
 [enable]: https://docs.docker.com/docker-for-mac/#kubernetes
 
