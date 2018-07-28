@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,107 +21,81 @@ import (
 	"strconv"
 	"testing"
 
-	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 const (
-	defRedirect = "http://some-site.com"
-	defCode     = http.StatusMovedPermanently
+	defRedirectURL = "http://some-site.com"
 )
 
-func buildIngress() *extensions.Ingress {
-	defaultBackend := extensions.IngressBackend{
-		ServiceName: "default-backend",
-		ServicePort: intstr.FromInt(80),
-	}
-
-	return &extensions.Ingress{
-		ObjectMeta: meta_v1.ObjectMeta{
-			Name:      "foo",
-			Namespace: api.NamespaceDefault,
-		},
-		Spec: extensions.IngressSpec{
-			Backend: &extensions.IngressBackend{
-				ServiceName: "default-backend",
-				ServicePort: intstr.FromInt(80),
-			},
-			Rules: []extensions.IngressRule{
-				{
-					Host: "foo.bar.com",
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
-								{
-									Path:    "/foo",
-									Backend: defaultBackend,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-type mockBackend struct {
-	resolver.Mock
-	redirect bool
-}
-
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{SSLRedirect: m.redirect}
-}
 func TestPermanentRedirectWithDefaultCode(t *testing.T) {
-	ing := buildIngress()
+	rp := NewParser(resolver.Mock{})
+	if rp == nil {
+		t.Fatalf("Expected a parser.IngressAnnotation but returned nil")
+	}
 
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirect
+	ing := new(extensions.Ingress)
+
+	data := make(map[string]string, 1)
+	data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirectURL
 	ing.SetAnnotations(data)
 
-	i, err := NewParser(mockBackend{}).Parse(ing)
+	i, err := rp.Parse(ing)
 	if err != nil {
 		t.Errorf("Unexpected error with ingress: %v", err)
 	}
 	redirect, ok := i.(*Config)
 	if !ok {
-		t.Errorf("expected a Redirect type")
+		t.Errorf("Expected a Redirect type")
 	}
-	if redirect.URL != defRedirect {
-		t.Errorf("Expected %v as redirect but returned %s", defRedirect, redirect.URL)
+	if redirect.URL != defRedirectURL {
+		t.Errorf("Expected %v as redirect but returned %s", defRedirectURL, redirect.URL)
 	}
-	if redirect.Code != defCode {
-		t.Errorf("Expected %v as redirect to have a code %s but had %s", defRedirect, strconv.Itoa(defCode), strconv.Itoa(redirect.Code))
+	if redirect.Code != defaultPermanentRedirectCode {
+		t.Errorf("Expected %v as redirect to have a code %d but had %d", defRedirectURL, defaultPermanentRedirectCode, redirect.Code)
 	}
 }
 
 func TestPermanentRedirectWithCustomCode(t *testing.T) {
-	ing := buildIngress()
+	rp := NewParser(resolver.Mock{})
+	if rp == nil {
+		t.Fatalf("Expected a parser.IngressAnnotation but returned nil")
+	}
 
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirect
-	data[parser.GetAnnotationWithPrefix("permanent-redirect-code")] = "308"
-	ing.SetAnnotations(data)
+	testCases := map[string]struct {
+		input        int
+		expectOutput int
+	}{
+		"valid code":   {http.StatusPermanentRedirect, http.StatusPermanentRedirect},
+		"invalid code": {http.StatusTeapot, defaultPermanentRedirectCode},
+	}
 
-	i, err := NewParser(mockBackend{}).Parse(ing)
-	if err != nil {
-		t.Errorf("Unexpected error with ingress: %v", err)
-	}
-	redirect, ok := i.(*Config)
-	if !ok {
-		t.Errorf("expected a Redirect type")
-	}
-	if redirect.URL != defRedirect {
-		t.Errorf("Expected %v as redirect but returned %s", defRedirect, redirect.URL)
-	}
-	if redirect.Code != http.StatusPermanentRedirect {
-		t.Errorf("Expected %v as redirect to have a code %s but had %s", defRedirect, strconv.Itoa(http.StatusPermanentRedirect), strconv.Itoa(redirect.Code))
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			ing := new(extensions.Ingress)
+
+			data := make(map[string]string, 2)
+			data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirectURL
+			data[parser.GetAnnotationWithPrefix("permanent-redirect-code")] = strconv.Itoa(tc.input)
+			ing.SetAnnotations(data)
+
+			i, err := rp.Parse(ing)
+			if err != nil {
+				t.Errorf("Unexpected error with ingress: %v", err)
+			}
+			redirect, ok := i.(*Config)
+			if !ok {
+				t.Errorf("Expected a redirect Config type")
+			}
+			if redirect.URL != defRedirectURL {
+				t.Errorf("Expected %v as redirect but returned %s", defRedirectURL, redirect.URL)
+			}
+			if redirect.Code != tc.expectOutput {
+				t.Errorf("Expected %v as redirect to have a code %d but had %d", defRedirectURL, tc.expectOutput, redirect.Code)
+			}
+		})
 	}
 }
