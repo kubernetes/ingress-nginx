@@ -18,29 +18,26 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${PKG}" ]; then
-    echo "PKG must be set"
-    exit 1
-fi
-if [ -z "${ARCH}" ]; then
-    echo "ARCH must be set"
-    exit 1
-fi
-if [ -z "${GIT_COMMIT}" ]; then
-    echo "GIT_COMMIT must be set"
-    exit 1
-fi
-if [ -z "${REPO_INFO}" ]; then
-    echo "REPO_INFO must be set"
-    exit 1
-fi
-if [ -z "${TAG}" ]; then
-    echo "TAG must be set"
-    exit 1
-fi
-if [ -z "${HOME}" ]; then
-    echo "HOME must be set"
-    exit 1
+declare -a mandatory
+mandatory=(
+  PKG
+  ARCH
+  GIT_COMMIT
+  REPO_INFO
+  TAG
+  HOME
+)
+
+missing=false
+for var in ${mandatory[@]}; do
+  if [[ -z "${!var+x}" ]]; then
+    echo "Environment variable $var must be set"
+    missing=true
+  fi
+done
+
+if [ "$missing" = true ];then
+  exit 1
 fi
 
 DOCKER_OPTS=${DOCKER_OPTS:-""}
@@ -53,7 +50,7 @@ tee .env << EOF
 PKG=${PKG:-""}
 ARCH=${ARCH:-""}
 GIT_COMMIT=${GIT_COMMIT:-""}
-E2E_NODES=${E2E_NODES:-3}
+E2E_NODES=${E2E_NODES:-4}
 FOCUS=${FOCUS:-.*}
 TAG=${TAG:-"0.0"}
 HOME=${HOME:-/root}
@@ -63,6 +60,7 @@ PWD=${PWD}
 BUSTED_ARGS=${BUSTED_ARGS:-""}
 REPO_INFO=${REPO_INFO:-local}
 NODE_IP=${NODE_IP:-127.0.0.1}
+SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD:-40}
 EOF
 
 docker run                                       \
