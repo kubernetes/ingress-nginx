@@ -50,7 +50,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to create a redirect in the paths defined in the rule.
 // If the Ingress contains both annotations the execution order is
 // temporal and then permanent
-func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
+func (r redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 	r3w, _ := parser.GetBoolAnnotation("from-to-www-redirect", ing)
 
 	tr, err := parser.GetStringAnnotation("temporal-redirect", ing)
@@ -84,20 +84,10 @@ func (a redirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 		prc = defaultPermanentRedirectCode
 	}
 
-	if pr != "" {
-		if err := isValidURL(pr); err != nil {
-			return nil, err
-		}
-
+	if pr != "" || r3w {
 		return &Config{
 			URL:       pr,
 			Code:      prc,
-			FromToWWW: r3w,
-		}, nil
-	}
-
-	if r3w {
-		return &Config{
 			FromToWWW: r3w,
 		}, nil
 	}
