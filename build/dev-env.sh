@@ -32,8 +32,6 @@ if [ -z "${SKIP_MINIKUBE_START}" ]; then
     test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
         --extra-config=kubelet.sync-frequency=1s \
         --extra-config=apiserver.authorization-mode=RBAC
-
-    eval $(minikube docker-env)
 fi
 
 echo "[dev-env] building container"
