@@ -18,29 +18,25 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${PKG}" ]; then
-    echo "PKG must be set"
-    exit 1
-fi
-if [ -z "${ARCH}" ]; then
-    echo "ARCH must be set"
-    exit 1
-fi
-if [ -z "${GIT_COMMIT}" ]; then
-    echo "GIT_COMMIT must be set"
-    exit 1
-fi
-if [ -z "${REPO_INFO}" ]; then
-    echo "REPO_INFO must be set"
-    exit 1
-fi
-if [ -z "${TAG}" ]; then
-    echo "TAG must be set"
-    exit 1
-fi
-if [ -z "${TAG}" ]; then
-    echo "TAG must be set"
-    exit 1
+declare -a mandatory
+mandatory=(
+  PKG
+  ARCH
+  GIT_COMMIT
+  REPO_INFO
+  TAG
+)
+
+missing=false
+for var in ${mandatory[@]}; do
+  if [[ -z "${!var+x}" ]]; then
+    echo "Environment variable $var must be set"
+    missing=true
+  fi
+done
+
+if [ "$missing" = true ];then
+  exit 1
 fi
 
 export CGO_ENABLED=0
