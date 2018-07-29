@@ -6,6 +6,7 @@
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
+{{ $listenPorts := .ListenPorts }}
 
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
@@ -264,14 +265,14 @@ http {
     }
 
     {{ if $all.IsSSLPassthroughEnabled }}
-    # map port {{ $all.ListenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
+    # map port {{ $listenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
     map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.SSLProxy }}              443;
+        {{ $listenPorts.SSLProxy }}              443;
         default          $pass_server_port;
     }
     {{ else }}
     map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.HTTPS }}              443;
+        {{ $listenPorts.HTTPS }}              443;
         default          $pass_server_port;
     }
     {{ end }}
@@ -456,26 +457,15 @@ http {
     {{/* Build server redirects (from/to www) */}}
     {{ range $hostname, $to := .RedirectServers }}
     server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
-        {{ else }}
-        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
+        {{ range $address := $listenPorts.Addresses }}
+            listen {{ $address }}:{{ $listenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
+            listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $listenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $listenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} ssl;
         {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
-        {{ else }}
-        listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
-        listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
-        {{ end }}
-        {{ end }}
+
         server_name {{ $hostname }};
 
-        {{ if ne $all.ListenPorts.HTTPS 443 }}
-        {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
+        {{ if ne $listenPorts.HTTPS 443 }}
+        {{ $redirect_port := (printf ":%v" $listenPorts.HTTPS) }}
         return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $to }}{{ $redirect_port }}$request_uri;
         {{ else }}
         return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $to }}$request_uri;
@@ -503,11 +493,12 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        # Use the port {{ $all.ListenPorts.Status }} (random value just to avoid known ports) as default port for nginx.
+        # Use the port {{ $listenPorts.Status }} (random value just to avoid known ports) as default port for nginx.
         # Changing this value requires a change in:
         # https://github.com/kubernetes/ingress-nginx/blob/master/controllers/nginx/pkg/cmd/controller/nginx.go
-        listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
+        {{ range $address := $listenPorts.Addresses }}
+            listen {{ $address }}:{{ $listenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
+        {{ end }}
         set $proxy_upstream_name "-";
 
         location {{ $healthzURI }} {
@@ -605,17 +596,8 @@ stream {
     {{ end }}
     }
     server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ else }}
-        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ else }}
-        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ end }}
+        {{ range $address := $listenPorts.Addresses }}
+            listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
         {{ end }}
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
         proxy_pass              tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
@@ -635,17 +617,8 @@ stream {
     }
 
     server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
-        {{ else }}
-        listen                  {{ $udpServer.Port }} udp;
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
-        {{ else }}
-        listen                  [::]:{{ $udpServer.Port }} udp;
-        {{ end }}
+        {{ range $address := $listenPorts.Addresses }}
+            listen                  {{ $address }}:{{ $udpServer.Port }} udp;
         {{ end }}
         proxy_responses         {{ $cfg.ProxyStreamResponses }};
         proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
@@ -711,35 +684,19 @@ stream {
 {{/* definition of server-template to avoid repetitions with server-alias */}}
 {{ define "SERVER" }}
         {{ $all := .First }}
+        {{ $listenPorts := .First.ListenPorts }}
         {{ $server := .Second }}
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}};
-        {{ else }}
-        listen {{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}};
+        {{ range $address := $listenPorts.Addresses }}
+            listen {{ $address }}:{{ $listenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}};
         {{ end }}
-        {{ if $all.IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{ end }};
-        {{ else }}
-        listen [::]:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{ end }};
-        {{ end }}
-        {{ end }}
+
         set $proxy_upstream_name "-";
 
-        {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
+        {{/* Listen on {{ $listenPorts.SSLProxy }} because port {{ $listenPorts.HTTPS }} is used in the TLS sni server */}}
         {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
         {{ if not (empty $server.SSLCert.PemFileName) }}
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ else }}
-        listen {{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ end }}
-        {{ if $all.IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        {{ if not (empty $server.SSLCert.PemFileName) }}listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ else }}
-        {{ if not (empty $server.SSLCert.PemFileName) }}listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
-        {{ end }}
+        {{ range $address := $listenPorts.Addresses }}
+            listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $listenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $listenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
         {{ end }}
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
         # PEM sha: {{ $server.SSLCert.PemSHA }}
@@ -941,7 +898,7 @@ stream {
             if ($redirect_to_https) {
                 {{ if $location.UsePortInRedirects }}
                 # using custom ports require a different rewrite directive
-                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
+                {{ $redirect_port := (printf ":%v" $listenPorts.HTTPS) }}
                 error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$host{{ $redirect_port }}$request_uri;
 
                 return 497;
@@ -1131,7 +1088,7 @@ stream {
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}
-        # health checks in cloud providers require the use of port {{ $all.ListenPorts.HTTP }}
+        # health checks in cloud providers require the use of port {{ $listenPorts.HTTP }}
         location {{ $all.HealthzURI }} {
             {{ if $all.Cfg.EnableOpentracing }}
             opentracing off;
