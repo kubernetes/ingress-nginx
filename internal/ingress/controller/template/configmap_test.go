@@ -18,7 +18,6 @@ package template
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
 
@@ -66,7 +65,6 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"gzip-level":                    "9",
 		"gzip-types":                    "text/html",
 		"proxy-real-ip-cidr":            "1.1.1.1/8,2.2.2.2/24",
-		"bind-address":                  "1.1.1.1,2.2.2.2,3.3.3,2001:db8:a0b:12f0::1,3731:54:65fe:2::a7,33:33:33::33::33",
 		"worker-shutdown-timeout":       "99s",
 		"nginx-status-ipv4-whitelist":   "127.0.0.1,10.0.0.0/24",
 		"nginx-status-ipv6-whitelist":   "::1,2001::/16",
@@ -85,8 +83,6 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.GzipLevel = 9
 	def.GzipTypes = "text/html"
 	def.ProxyRealIPCIDR = []string{"1.1.1.1/8", "2.2.2.2/24"}
-	def.BindAddressIpv4 = []string{"1.1.1.1", "2.2.2.2"}
-	def.BindAddressIpv6 = []string{"[2001:db8:a0b:12f0::1]", "[3731:54:65fe:2::a7]"}
 	def.WorkerShutdownTimeout = "99s"
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
@@ -103,19 +99,6 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	to := ReadConfig(conf)
 	if diff := pretty.Compare(to, def); diff != "" {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
-	}
-
-	to = ReadConfig(conf)
-	def.BindAddressIpv4 = []string{}
-	def.BindAddressIpv6 = []string{}
-
-	if !reflect.DeepEqual(to.BindAddressIpv4, []string{"1.1.1.1", "2.2.2.2"}) {
-		t.Errorf("unexpected bindAddressIpv4")
-	}
-
-	if !reflect.DeepEqual(to.BindAddressIpv6, []string{"[2001:db8:a0b:12f0::1]", "[3731:54:65fe:2::a7]"}) {
-		t.Logf("%v", to.BindAddressIpv6)
-		t.Errorf("unexpected bindAddressIpv6")
 	}
 
 	def = config.NewDefault()

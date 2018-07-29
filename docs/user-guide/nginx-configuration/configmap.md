@@ -99,7 +99,6 @@ The following table shows a configuration option's name, type, and the default v
 |[limit-conn-zone-variable](#limit-conn-zone-variable)|string|"$binary_remote_addr"|
 |[proxy-stream-timeout](#proxy-stream-timeout)|string|"600s"|
 |[proxy-stream-responses](#proxy-stream-responses)|int|1|
-|[bind-address](#bind-address)|[]string|""|
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"true"|
@@ -568,10 +567,6 @@ Sets the number of datagrams expected from the proxied server in response to the
 
 _References:_
 [http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses)
-
-## bind-address
-
-Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
 
 ## forwarded-for-header
 

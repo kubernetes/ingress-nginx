@@ -28,8 +28,8 @@ func IsIPV6(ip _net.IP) bool {
 }
 
 // IsPortAvailable checks if a TCP port is available or not
-func IsPortAvailable(p int) bool {
-	ln, err := _net.Listen("tcp", fmt.Sprintf(":%v", p))
+func IsPortAvailable(address string, p int) bool {
+	ln, err := _net.Listen("tcp", fmt.Sprintf("%v:%v", address, p))
 	if err != nil {
 		return false
 	}

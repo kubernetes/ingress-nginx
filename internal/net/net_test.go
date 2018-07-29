@@ -43,7 +43,7 @@ func TestIsIPV6(t *testing.T) {
 }
 
 func TestIsPortAvailable(t *testing.T) {
-	if !IsPortAvailable(0) {
+	if !IsPortAvailable("0.0.0.0", 0) {
 		t.Fatal("expected port 0 to be available (random port) but returned false")
 	}
 
@@ -54,7 +54,7 @@ func TestIsPortAvailable(t *testing.T) {
 	defer ln.Close()
 
 	p := ln.Addr().(*net.TCPAddr).Port
-	if IsPortAvailable(p) {
+	if IsPortAvailable("0.0.0.0", p) {
 		t.Fatalf("expected port %v to not be available", p)
 	}
 }
