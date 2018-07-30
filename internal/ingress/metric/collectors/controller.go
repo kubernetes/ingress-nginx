@@ -17,6 +17,7 @@ limitations under the License.
 package collectors
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang/glog"
@@ -27,7 +28,7 @@ import (
 )
 
 var (
-	operation    = []string{"namespace", "class"}
+	operation    = []string{"controller_namespace", "controller_class", "controller_pod"}
 	sslLabelHost = []string{"namespace", "class", "host"}
 )
 
@@ -43,7 +44,8 @@ type Controller struct {
 	reloadOperationErrors *prometheus.CounterVec
 	sslExpireTime         *prometheus.GaugeVec
 
-	labels prometheus.Labels
+	constLabels prometheus.Labels
+	labels      prometheus.Labels
 }
 
 // NewController creates a new prometheus collector for the
@@ -56,6 +58,8 @@ func NewController(pod, namespace, class string) *Controller {
 	}
 
 	cm := &Controller{
+		constLabels: constLabels,
+
 		labels: prometheus.Labels{
 			"namespace": namespace,
 			"class":     class,
@@ -115,12 +119,12 @@ func NewController(pod, namespace, class string) *Controller {
 
 // IncReloadCount increment the reload counter
 func (cm *Controller) IncReloadCount() {
-	cm.reloadOperation.With(cm.labels).Inc()
+	cm.reloadOperation.With(cm.constLabels).Inc()
 }
 
 // IncReloadErrorCount increment the reload error counter
 func (cm *Controller) IncReloadErrorCount() {
-	cm.reloadOperationErrors.With(cm.labels).Inc()
+	cm.reloadOperationErrors.With(cm.constLabels).Inc()
 }
 
 // ConfigSuccess set a boolean flag according to the output of the controller configuration reload
@@ -186,7 +190,7 @@ func (cm *Controller) RemoveMetrics(hosts []string, registry prometheus.Gatherer
 
 	for _, mf := range mfs {
 		metricName := mf.GetName()
-		if "ssl_expire_time_seconds" != metricName {
+		if fmt.Sprintf("%v_ssl_expire_time_seconds", PrometheusNamespace) != metricName {
 			continue
 		}
 
