@@ -1,5 +1,5 @@
 local statsd = require('statsd')
-local defer = require("util.defer")
+local defer_to_timer = require("defer_to_timer")
 local split = require("util.split")
 
 local _M = {}
@@ -57,7 +57,7 @@ function _M.call()
     return nil, rt_err
   end
 
-  local ok, err = defer.to_timer_phase(send_response_data, {
+  local err = defer_to_timer.enqueue(send_response_data, {
       status=status,
       addr=addrs,
       response_time=response_time
@@ -67,7 +67,7 @@ function _M.call()
       upstream_name=ngx.var.proxy_upstream_name
     })
 
-  if not ok then
+  if err then
     local msg = "failed to send response data: " .. tostring(err)
     ngx.log(ngx.ERR,  msg)
     return nil, msg

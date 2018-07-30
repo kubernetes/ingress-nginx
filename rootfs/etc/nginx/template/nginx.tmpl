@@ -55,6 +55,13 @@ http {
         local lua_resty_waf = require("resty.waf")
         lua_resty_waf.init()
 
+        ok, res = pcall(require, "defer_to_timer")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          defer_to_timer = res
+        end
+
         {{ if $all.DynamicConfigurationEnabled }}
         -- init modules
         local ok, res
@@ -90,11 +97,12 @@ http {
         end
     }
 
-    {{ if $all.DynamicConfigurationEnabled }}
     init_worker_by_lua_block {
+        defer_to_timer.init_worker()
+        {{ if $all.DynamicConfigurationEnabled }}
         balancer.init_worker()
+        {{ end }}
     }
-    {{ end }}
     {{ end }}
     {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
     {{ if $cfg.UseProxyProtocol }}
