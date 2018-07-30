@@ -151,7 +151,6 @@ NUM_NODES=${NUM_NODES:-2}
 EXTRA_PORTS="${EXTRA_PORTS:-}"
 LOCAL_KUBECTL_VERSION=${LOCAL_KUBECTL_VERSION:-}
 KUBECTL_DIR="${KUBECTL_DIR:-${HOME}/.kubeadm-dind-cluster}"
-DASHBOARD_URL="${DASHBOARD_URL:-https://rawgit.com/kubernetes/dashboard/bfab10151f012d1acc5dfb1979f3172e2400aa3c/src/deploy/kubernetes-dashboard.yaml}"
 SKIP_SNAPSHOT="${SKIP_SNAPSHOT:-}"
 E2E_REPORT_DIR="${E2E_REPORT_DIR:-}"
 DIND_NO_PARALLEL_E2E="${DIND_NO_PARALLEL_E2E:-}"
@@ -170,6 +169,8 @@ DIND_INSECURE_REGISTRIES="${DIND_INSECURE_REGISTRIES:-}"  # json list format
 FEATURE_GATES="${FEATURE_GATES:-MountPropagation=true}"
 # you can set special value 'none' not to set any kubelet's feature gates.
 KUBELET_FEATURE_GATES="${KUBELET_FEATURE_GATES:-MountPropagation=true,DynamicKubeletConfig=true}"
+
+KUBELET_EXTRA_ARGS="--sync-frequency=30s"
 
 if [[ ! ${LOCAL_KUBECTL_VERSION:-} && ${DIND_IMAGE:-} =~ :(v[0-9]+\.[0-9]+)$ ]]; then
   LOCAL_KUBECTL_VERSION="${BASH_REMATCH[1]}"
@@ -643,6 +644,8 @@ function dind::run {
     exit 1
   fi
 
+  args+=("systemd.setenv=KUBELET_EXTRA_ARGS=\"${KUBELET_EXTRA_ARGS:-}\"")
+
   # remove any previously created containers with the same name
   docker rm -vf "${container_name}" >&/dev/null || true
 
@@ -764,27 +767,6 @@ function dind::set-master-opts {
   if [[ ${MASTER_EXTRA_OPTS:-} ]]; then
     master_opts+=( ${MASTER_EXTRA_OPTS} )
   fi
-}
-
-function dind::ensure-dashboard-clusterrolebinding {
-  local ctx
-  ctx="$(dind::context-name)"
-  # 'create' may cause etcd timeout, yet create the clusterrolebinding.
-  # So use 'apply' to actually create it
-  "${kubectl}" --context "$ctx" create clusterrolebinding add-on-cluster-admin \
-               --clusterrole=cluster-admin \
-               --serviceaccount=kube-system:default \
-               -o json --dry-run |
-    docker exec -i "$(dind::master-name)" jq '.apiVersion="rbac.authorization.k8s.io/v1beta1"|.kind|="ClusterRoleBinding"' |
-    "${kubectl}" --context "$ctx" apply -f -
-}
-
-function dind::deploy-dashboard {
-  dind::step "Deploying k8s dashboard"
-  dind::retry "${kubectl}" --context "$(dind::context-name)" apply -f "${DASHBOARD_URL}"
-  # https://kubernetes-io-vnext-staging.netlify.com/docs/admin/authorization/rbac/#service-account-permissions
-  # Thanks @liggitt for the hint
-  dind::retry dind::ensure-dashboard-clusterrolebinding
 }
 
 function dind::kubeadm-version {
@@ -1093,15 +1075,14 @@ function dind::wait-for-ready {
     sleep 1
   done
 
-  dind::step "Bringing up ${DNS_SERVICE} and kubernetes-dashboard"
+  dind::step "Bringing up ${DNS_SERVICE}"
   # on Travis 'scale' sometimes fails with 'error: Scaling the resource failed with: etcdserver: request timed out; Current resource version 442' here
   dind::retry "${kubectl}" --context "$ctx" scale deployment --replicas=1 -n kube-system ${DNS_SERVICE}
-  dind::retry "${kubectl}" --context "$ctx" scale deployment --replicas=1 -n kube-system kubernetes-dashboard
 
   ntries=200
-  while ! dind::component-ready k8s-app=kube-dns || ! dind::component-ready app=kubernetes-dashboard; do
+  while ! dind::component-ready k8s-app=kube-dns; do
     if ((--ntries == 0)); then
-      echo "Error bringing up ${DNS_SERVICE} and kubernetes-dashboard" >&2
+      echo "Error bringing up ${DNS_SERVICE}" >&2
       exit 1
     fi
     echo -n "." >&2
@@ -1115,7 +1096,6 @@ function dind::wait-for-ready {
   if [[ ${IP_MODE} = "ipv6" ]]; then
       local_host="[::1]"
   fi
-  dind::step "Access dashboard at:" "http://${local_host}:${APISERVER_PORT}/api/v1/namespaces/kube-system/services/kubernetes-dashboard:/proxy"
 }
 
 function dind::up {
@@ -1188,7 +1168,6 @@ function dind::up {
       echo "Unsupported CNI plugin '${CNI_PLUGIN}'" >&2
       ;;
   esac
-  dind::deploy-dashboard
   dind::accelerate-kube-dns
   if [[ ${CNI_PLUGIN} != bridge || ${SKIP_SNAPSHOT} ]]; then
     # This is especially important in case of Calico -
