@@ -15,9 +15,10 @@ notifications:
 # New secure variables can be added using travis encrypt -r kubernetes/ingress-nginx --add K=V
 env:
   global:
-  - CHANGE_MINIKUBE_NONE_USER=true
-  - KUBERNETES_VERSION=v1.10.0
   - DOCKER=docker
+  - SKIP_SNAPSHOT=true
+  - NODE_IP=10.192.0.3
+  - E2E_NODES=6
   - GH_REF=github.com/kubernetes/ingress-nginx
 
 jobs:
@@ -34,7 +35,6 @@ jobs:
   - stage: e2e
     before_script:
     - test/e2e/up.sh
-    - SKIP_MINIKUBE_START=true make dev-env
     script:
     - make e2e-test
   # split builds to avoid job timeouts

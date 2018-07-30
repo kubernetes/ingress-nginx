@@ -18,6 +18,7 @@ package metric
 
 import (
 	"os"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -113,7 +114,12 @@ func (c *collector) Start() {
 	c.registry.MustRegister(c.ingressController)
 	c.registry.MustRegister(c.socket)
 
-	go c.nginxStatus.Start()
+	// the default nginx.conf does not contains
+	// a server section with the status port
+	go func() {
+		time.Sleep(5 * time.Second)
+		c.nginxStatus.Start()
+	}()
 	go c.nginxProcess.Start()
 	go c.socket.Start()
 }

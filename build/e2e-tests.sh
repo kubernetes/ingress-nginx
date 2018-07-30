@@ -18,21 +18,25 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${PKG}" ]; then
-    echo "PKG must be set"
-    exit 1
-fi
-if [ -z "${FOCUS}" ]; then
-    echo "FOCUS must be set"
-    exit 1
-fi
-if [ -z "${E2E_NODES}" ]; then
-    echo "E2E_NODES must be set"
-    exit 1
-fi
-if [ -z "${NODE_IP}" ]; then
-    echo "NODE_IP must be set"
-    exit 1
+declare -a mandatory
+mandatory=(
+  NODE_IP
+  SLOW_E2E_THRESHOLD
+  PKG
+  FOCUS
+  E2E_NODES
+)
+
+missing=false
+for var in ${mandatory[@]}; do
+  if [[ -z "${!var+x}" ]]; then
+    echo "Environment variable $var must be set"
+    missing=true
+  fi
+done
+
+if [ "$missing" = true ];then
+  exit 1
 fi
 
 SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
@@ -52,13 +56,14 @@ fi
 
 ginkgo build ./test/e2e
 
-exec --                 \
-ginkgo                  \
-    -randomizeSuites    \
-    -randomizeAllSpecs  \
-    -flakeAttempts=2    \
-    --focus=${FOCUS}    \
-    -p                  \
-    -trace              \
-    -nodes=${E2E_NODES} \
+exec --                                      \
+ginkgo                                       \
+    -randomizeSuites                         \
+    -randomizeAllSpecs                       \
+    -flakeAttempts=2                         \
+    --focus=${FOCUS}                         \
+    -p                                       \
+    -trace                                   \
+    -nodes=${E2E_NODES}                      \
+    -slowSpecThreshold=${SLOW_E2E_THRESHOLD} \
     test/e2e/e2e.test
