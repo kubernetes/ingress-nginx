@@ -18,7 +18,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if test -e kubectl; then
+if kubectl version --client; then
   echo "skipping download of kubectl"
 else
   echo "downloading kubectl..."

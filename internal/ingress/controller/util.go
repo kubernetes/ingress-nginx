@@ -80,9 +80,9 @@ func nginxExecCommand(args ...string) *exec.Cmd {
 		ngx = defBinary
 	}
 
-	cmdArgs := []string{"-c", cfgPath}
+	cmdArgs := []string{ngx, cfgPath}
 	cmdArgs = append(cmdArgs, args...)
-	return exec.Command(ngx, cmdArgs...)
+	return exec.Command("/ingress-controller/nginx-command.sh", cmdArgs...)
 }
 
 func nginxTestCommand(cfg string) *exec.Cmd {

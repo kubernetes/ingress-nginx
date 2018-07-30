@@ -82,7 +82,7 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 					newChecksum = match[1]
 				}
 
-				return strings.ContainsAny(cfg, "error_log  /var/log/nginx/error.log debug;")
+				return strings.ContainsAny(cfg, "error_log  /var/lib/nginx/error.log debug;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 

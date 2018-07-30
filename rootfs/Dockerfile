@@ -20,7 +20,7 @@ WORKDIR  /etc/nginx
 
 RUN clean-install \
   diffutils \
-  libcap2-bin \
+  authbind netcat \
   dumb-init
 
 COPY . /
@@ -32,7 +32,7 @@ RUN bash -eux -c ' \
     /etc/nginx/template \
     /etc/ingress-controller/ssl \
     /etc/ingress-controller/auth \
-    /var/log \
+    /var/lib/nginx \
     /var/log/nginx \
     /tmp \
   ); \
@@ -40,10 +40,17 @@ RUN bash -eux -c ' \
     mkdir -p ${dir}; \
     chown -R www-data.www-data ${dir}; \
   done' \
-  && chown www-data.www-data /etc/nginx/nginx.conf \
-  && chown www-data.www-data /etc/nginx/opentracing.json \
-  && chown www-data.www-data /etc/nginx
+  && chmod 755 /etc/authbind/byuid/33 \
+  && chown www-data /etc/authbind/byuid/33 \
+  && chmod 755 /etc/authbind/byport/* \
+  && chown www-data /etc/authbind/byport/* \
+  && chown www-data /etc/nginx/opentracing.json
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
+# This only works if nginx is started with CMD or ENTRYPOINT
+RUN ln -sf /dev/stdout /var/lib/nginx/access.log
+RUN ln -sf /dev/stderr /var/lib/nginx/error.log
+
+ENTRYPOINT ["/usr/bin/dumb-init"]
 
 CMD ["/nginx-ingress-controller"]

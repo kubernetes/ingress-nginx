@@ -28,6 +28,9 @@ import (
 // ReadWriteByUser defines linux permission to read and write files for the owner user
 const ReadWriteByUser = 0660
 
+// ReadByOther defines read permission to any user
+const ReadByOther = 4
+
 // ReadByUserGroup defines linux permission to read files by the user and group owner/s
 const ReadByUserGroup = 0640
 

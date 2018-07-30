@@ -144,7 +144,7 @@ func dumpSecret(filename string, secret *api.Secret) error {
 		}
 	}
 
-	err := ioutil.WriteFile(filename, val, file.ReadWriteByUser)
+	err := ioutil.WriteFile(filename, val, file.ReadWriteByUser+file.ReadByOther)
 	if err != nil {
 		return ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "unexpected error creating password file"),
