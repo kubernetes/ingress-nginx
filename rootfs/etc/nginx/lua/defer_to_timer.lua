@@ -26,8 +26,6 @@ function _M.enqueue(func, ...)
   end
 
   table.insert(queue, { func = func, args = {...} })
-
-  return nil
 end
 
 if _TEST then
