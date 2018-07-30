@@ -25,6 +25,25 @@ RUN clean-install \
 
 COPY . /
 
+# Fix permission during the build to avoid issues at runtime
+# with volumes (custom templates)
+RUN bash -eux -c ' \
+  writeDirs=( \
+    /etc/nginx/template \
+    /etc/ingress-controller/ssl \
+    /etc/ingress-controller/auth \
+    /var/log \
+    /var/log/nginx \
+    /tmp \
+  ); \
+  for dir in "${writeDirs[@]}"; do \
+    mkdir -p ${dir}; \
+    chown -R www-data.www-data ${dir}; \
+  done' \
+  && chown www-data.www-data /etc/nginx/nginx.conf \
+  && chown www-data.www-data /etc/nginx/opentracing.json \
+  && chown www-data.www-data /etc/nginx
+
 ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["/nginx-ingress-controller"]
