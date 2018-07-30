@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: quay.io/kubernetes-ingress-controller/nginx:0.55
+        image: quay.io/kubernetes-ingress-controller/nginx:0.56
         ports:
         - containerPort: 80
         - containerPort: 443
