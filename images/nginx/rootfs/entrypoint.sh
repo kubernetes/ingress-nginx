@@ -1,4 +1,6 @@
-# Copyright 2015 The Kubernetes Authors. All rights reserved.
+#!/usr/bin/dumb-init /bin/bash
+
+# Copyright 2018 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
 
-FROM BASEIMAGE
-
-CROSS_BUILD_COPY qemu-ARCH-static /usr/bin/
-
-COPY build.sh install_lua_resty_waf.sh /
-
-RUN clean-install bash
-
-RUN /build.sh
-
-# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
-# This only works if nginx is started with CMD or ENTRYPOINT
-RUN ln -sf /dev/stdout /var/log/nginx/access.log
-RUN ln -sf /dev/stderr /var/log/nginx/error.log
-
-EXPOSE 80 443
-
-CMD ["nginx", "-g", "daemon off;"]
+authbind --deep $@
