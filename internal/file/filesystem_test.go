@@ -30,7 +30,7 @@ func TestNewFakeFS(t *testing.T) {
 		t.Fatal("expected a filesystem but none returned")
 	}
 
-	_, err = fs.Stat("/etc/nginx/nginx.conf")
+	_, err = fs.Stat("/var/lib/shared/nginx/nginx.conf")
 	if err != nil {
 		t.Fatalf("unexpected error reading default nginx.conf file: %v", err)
 	}

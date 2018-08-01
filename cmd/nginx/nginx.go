@@ -23,6 +23,9 @@ import (
 	"github.com/golang/glog"
 )
 
+// /version?
+// /version?verbose=true
+
 func nginxVersion() {
 	flag := "-v"
 

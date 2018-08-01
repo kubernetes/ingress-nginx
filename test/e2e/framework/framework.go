@@ -225,9 +225,9 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 
 		var cmd string
 		if name == "" {
-			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf")
+			cmd = fmt.Sprintf("cat /var/lib/shared/nginx/nginx.conf")
 		} else {
-			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
+			cmd = fmt.Sprintf("cat /var/lib/shared/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
 		}
 
 		var pod *v1.Pod

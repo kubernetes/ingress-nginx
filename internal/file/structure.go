@@ -19,13 +19,13 @@ package file
 const (
 	// AuthDirectory default directory used to store files
 	// to authenticate request
-	AuthDirectory = "/etc/ingress-controller/auth"
+	AuthDirectory = "/var/lib/shared/ingress-controller/auth"
 
 	// DefaultSSLDirectory defines the location where the SSL certificates will be generated
 	// This directory contains all the SSL certificates that are specified in Ingress rules.
 	// The name of each file is <namespace>-<secret name>.pem. The content is the concatenated
 	// certificate and key.
-	DefaultSSLDirectory = "/etc/ingress-controller/ssl"
+	DefaultSSLDirectory = "/var/lib/shared/ingress-controller/ssl"
 )
 
 var (

@@ -20,36 +20,9 @@ WORKDIR  /etc/nginx
 
 RUN clean-install \
   diffutils \
-  authbind netcat \
   dumb-init
 
 COPY . /
-
-# Fix permission during the build to avoid issues at runtime
-# with volumes (custom templates)
-RUN bash -eux -c ' \
-  writeDirs=( \
-    /etc/nginx/template \
-    /etc/ingress-controller/ssl \
-    /etc/ingress-controller/auth \
-    /var/lib/nginx \
-    /var/log/nginx \
-    /tmp \
-  ); \
-  for dir in "${writeDirs[@]}"; do \
-    mkdir -p ${dir}; \
-    chown -R www-data.www-data ${dir}; \
-  done' \
-  && chmod 755 /etc/authbind/byuid/33 \
-  && chown www-data /etc/authbind/byuid/33 \
-  && chmod 755 /etc/authbind/byport/* \
-  && chown www-data /etc/authbind/byport/* \
-  && chown www-data /etc/nginx/opentracing.json
-
-# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
-# This only works if nginx is started with CMD or ENTRYPOINT
-RUN ln -sf /dev/stdout /var/lib/nginx/access.log
-RUN ln -sf /dev/stderr /var/lib/nginx/error.log
 
 ENTRYPOINT ["/usr/bin/dumb-init"]
 

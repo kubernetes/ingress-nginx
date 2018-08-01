@@ -30,7 +30,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"text/template"
 	"time"
 
@@ -50,7 +49,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
-	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
@@ -67,7 +65,7 @@ const (
 )
 
 var (
-	tmplPath = "/etc/nginx/template/nginx.tmpl"
+	tmplPath = "/var/lib/shared/nginx/template/nginx.tmpl"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
@@ -175,7 +173,7 @@ Error loading new template: %v
 	}
 
 	filesToWatch := []string{}
-	err = filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk("/var/lib/shared/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -260,21 +258,9 @@ func (n *NGINXController) Start() {
 		go n.syncStatus.Run()
 	}
 
-	cmd := nginxExecCommand()
-
-	// put NGINX in another process group to prevent it
-	// to receive signals meant for the controller
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-		Pgid:    0,
-	}
-
 	if n.cfg.EnableSSLPassthrough {
 		n.setupSSLProxy()
 	}
-
-	glog.Info("Starting NGINX process")
-	n.start(cmd)
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
@@ -282,28 +268,6 @@ func (n *NGINXController) Start() {
 
 	for {
 		select {
-		case err := <-n.ngxErrCh:
-			if n.isShuttingDown {
-				break
-			}
-
-			// if the nginx master process dies the workers continue to process requests,
-			// passing checks but in case of updates in ingress no updates will be
-			// reflected in the nginx configuration which can lead to confusion and report
-			// issues because of this behavior.
-			// To avoid this issue we restart nginx in case of errors.
-			if process.IsRespawnIfRequired(err) {
-				process.WaitUntilPortIsAvailable(n.cfg.ListenPorts.HTTP)
-				// release command resources
-				cmd.Process.Release()
-				// start a new nginx master process if the controller is not being stopped
-				cmd = nginxExecCommand()
-				cmd.SysProcAttr = &syscall.SysProcAttr{
-					Setpgid: true,
-					Pgid:    0,
-				}
-				n.start(cmd)
-			}
 		case event := <-n.updateCh.Out():
 			if n.isShuttingDown {
 				break
@@ -344,41 +308,9 @@ func (n *NGINXController) Stop() error {
 		n.syncStatus.Shutdown()
 	}
 
-	// send stop signal to NGINX
-	glog.Info("Stopping NGINX process")
-	cmd := nginxExecCommand("-s", "quit")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
-
-	// wait for the NGINX process to terminate
-	timer := time.NewTicker(time.Second * 1)
-	for range timer.C {
-		if !process.IsNginxRunning() {
-			glog.Info("NGINX process has stopped")
-			timer.Stop()
-			break
-		}
-	}
+	//TODO: wait until /healthz is not available
 
 	return nil
-}
-
-func (n *NGINXController) start(cmd *exec.Cmd) {
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
-		glog.Fatalf("NGINX error: %v", err)
-		n.ngxErrCh <- err
-		return
-	}
-
-	go func() {
-		n.ngxErrCh <- cmd.Wait()
-	}()
 }
 
 // DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
@@ -405,8 +337,9 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if err != nil {
 		return err
 	}
-	out, err := nginxTestCommand(tmpfile.Name()).CombinedOutput()
-	if err != nil {
+
+	out, valid := nginxTestCommand(tmpfile.Name())
+	if !valid {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
 -------------------------------------------------------------------------------
@@ -643,10 +576,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	o, err := nginxExecCommand("-s", "reload").CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v\n%v", err, string(o))
-	}
+	//TODO: trigger reload in nginxx using lua
 
 	return nil
 }
@@ -835,5 +765,5 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 		return err
 	}
 
-	return ioutil.WriteFile("/etc/nginx/opentracing.json", tmplBuf.Bytes(), file.ReadWriteByUser)
+	return ioutil.WriteFile("/var/lib/shared/nginx/opentracing.json", tmplBuf.Bytes(), file.ReadWriteByUser)
 }

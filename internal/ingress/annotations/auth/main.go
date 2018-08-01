@@ -35,7 +35,7 @@ var (
 	authTypeRegex = regexp.MustCompile(`basic|digest`)
 	// AuthDirectory default directory used to store files
 	// to authenticate request
-	AuthDirectory = "/etc/ingress-controller/auth"
+	AuthDirectory = "/var/lib/shared/ingress-controller/auth"
 )
 
 // Config returns authentication configuration for an Ingress rule
