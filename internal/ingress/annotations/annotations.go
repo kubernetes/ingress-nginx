@@ -55,6 +55,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamhashby"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamvhost"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/xforwardedprefix"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/trustxforwardedfor"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -91,6 +92,7 @@ type Ingress struct {
 	UpstreamVhost        string
 	Whitelist            ipwhitelist.SourceRange
 	XForwardedPrefix     bool
+	TrustXForwardedFor   string
 	SSLCiphers           string
 	Logs                 log.Config
 	GRPC                 bool
@@ -132,6 +134,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
+			"TrustXForwardedFor":   trustxforwardedfor.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),
 			"GRPC":                 grpc.NewParser(cfg),

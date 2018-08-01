@@ -165,6 +165,10 @@ type Server struct {
 	ServerSnippet string `json:"serverSnippet"`
 	// SSLCiphers returns list of ciphers to be enabled
 	SSLCiphers string `json:"sslCiphers,omitempty"`
+	// TrustXForwardedFor allows to trust X-Forwarded-For header as the_real_ip
+	// for whitelisting
+	// +optional
+	TrustXForwardedFor string `json:"trustXForwardedFor,omitempty"`
 	// AuthTLSError contains the reason why the access to a server should be denied
 	AuthTLSError string `json:"authTLSError,omitempty"`
 }

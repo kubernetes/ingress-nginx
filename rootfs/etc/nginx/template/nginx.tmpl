@@ -236,12 +236,14 @@ http {
         ''               close;
     }
 
-    map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
+    map $trusted_x_forwarded_for $the_real_ip {
     {{ if $cfg.UseProxyProtocol }}
         # Get IP address from Proxy Protocol
-        default          $proxy_protocol_addr;
+        default     $trusted_x_forwarded_for;
+        ''          $proxy_protocol_addr;
     {{ else }}
-        default          $remote_addr;
+        default     $trusted_x_forwarded_for;
+        ''          $remote_addr;
     {{ end }}
     }
 
@@ -769,6 +771,18 @@ stream {
 
         {{ if not (empty $server.SSLCiphers) }}
         ssl_ciphers                             {{ $server.SSLCiphers }};
+        {{ end }}
+
+        set $trusted_x_forwarded_for "";
+        {{ if eq $server.TrustXForwardedFor "first" }}
+        if ( {{ buildForwardedFor $all.Cfg.ForwardedForHeader }} ~ "^(\d+\.\d+\.\d+\.\d+)" ) {
+            set $trusted_x_forwarded_for $1;
+        }
+        {{ end }}
+        {{ if eq $server.TrustXForwardedFor "last" }}
+        if ( {{ buildForwardedFor $all.Cfg.ForwardedForHeader }} ~ "(\d+\.\d+\.\d+\.\d+)$" ) {
+            set $trusted_x_forwarded_for $1;
+        }
         {{ end }}
 
         {{ if not (empty $server.ServerSnippet) }}
