@@ -19,14 +19,14 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.1
+export NGINX_VERSION=1.15.2
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=0.5.0
+export NGINX_OPENTRACING_VERSION=0.6.0
 export OPENTRACING_CPP_VERSION=1.4.0
 export ZIPKIN_CPP_VERSION=0.3.1
 export JAEGER_VERSION=0.4.1
@@ -131,17 +131,18 @@ function geoip_get {
   wget -O $GEOIP_FOLDER/$1 $2 || { echo "Could not download $1, exiting." ; exit 1; }
   gunzip $GEOIP_FOLDER/$1
 }
-geoip_get "GeoIP.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
-geoip_get "GeoLiteCity.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
-geoip_get "GeoIPASNum.dat.gz" "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz"
+
+geoip_get "GeoIPASNum.dat.gz"     "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz"
+geoip_get "GeoIP.dat.gz"          "https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
 geoip_get "GeoLite2-City.mmdb.gz" "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz"
-geoip_get "GeoLite2-ASN.mmdb.gz" "http://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz"
+geoip_get "GeoLite2-ASN.mmdb.gz"  "http://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz"
+geoip_get "GeoLiteCity.dat.gz"    "https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
 
 mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src c7206858d7f832b8ef73a45c9b8f8e436bcb1ee88db2bc85b8e438ecec9d5460 \
+get_src eeba09aecfbe8277ac33a5a2486ec2d6731739f3c1c701b42a0c3784af67ad90 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -162,7 +163,7 @@ get_src ede0ad490cb9dd69da348bdea2a60a4c45284c9777b2f13fa48394b6b8e7671c \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src ad6c813cb8baa4a178417bfa316ab3535d950fe02c67dc3a4af96ef6a1f655d6 \
+get_src b6a6eecb0b18b15398b7d6ed0a2db4cfd7a9015c1e26f9da4160acc588b82b6f \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
 get_src 2eb0a4a7dc62bc8cbf12872080197b41d53b4c04966c860774a6b11fd59fad55 \
@@ -220,8 +221,7 @@ get_src 1897d7677d99c1cedeb95b2eb00652a4a7e8e604304c3053a93bd3ba7dd82884 \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
 
 get_src ebb4652c4f9a2e1ee31fddefc4c93ff78e651a4b2727d3453d026bccbd708d99 \
-        "https://github.com/leev/ngx_http_geoip2_module/archive/${GEOIP2_VERSION}.tar.gz"
-
+        "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
@@ -236,7 +236,7 @@ if [[ ${ARCH} == "x86_64" ]]; then
 fi
 
 # luajit is not available on ppc64le and s390x
-if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
+if [[ (${ARCH} != "s390x") ]]; then
   cd "$BUILD_PATH/luajit2-2.1-20180420"
   make
   make install
@@ -290,13 +290,14 @@ make install
 
 # build jaeger lib
 cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
+sed -i 's/-Werror/-Wno-psabi/' CMakeLists.txt
 
-cat <<EOF > export.map 
-{ 
-    global: 
-        OpenTracingMakeTracerFactory; 
-    local: *; 
-}; 
+cat <<EOF > export.map
+{
+    global:
+        OpenTracingMakeTracerFactory;
+    local: *;
+};
 EOF
 
 mkdir .build
@@ -321,12 +322,12 @@ mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
 # build zipkin lib
 cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
 
-cat <<EOF > export.map 
-{ 
-    global: 
-        OpenTracingMakeTracerFactory; 
-    local: *; 
-}; 
+cat <<EOF > export.map
+{
+    global:
+        OpenTracingMakeTracerFactory;
+    local: *;
+};
 EOF
 
 mkdir .build
@@ -437,7 +438,19 @@ fi
 
 # "Combining -flto with -g is currently experimental and expected to produce unexpected results."
 # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
-CC_OPT="-g -Og -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wno-deprecated-declarations --param=ssp-buffer-size=4 -DTCP_FASTOPEN=23 -Wno-error=strict-aliasing -fPIC -I$HUNTER_INSTALL_DIR/include"
+CC_OPT="-g -Og -fPIE -fstack-protector-strong \
+  -Wformat \
+  -Werror=format-security \
+  -Wno-deprecated-declarations \
+  -fno-strict-aliasing \
+  -Wdate-time \
+  -D_FORTIFY_SOURCE=2 \
+  --param=ssp-buffer-size=4 \
+  -DTCP_FASTOPEN=23 \
+  -fPIC \
+  -I$HUNTER_INSTALL_DIR/include \
+  -Wno-cast-function-type"
+
 LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
 
 if [[ ${ARCH} == "x86_64" ]]; then
@@ -514,8 +527,6 @@ apt-mark unmarkauto \
 
 apt-get remove -y --purge \
   build-essential \
-  gcc-7 gcc-7-base \
-  cpp-7 \
   libgeoip-dev \
   libpcre3-dev \
   libssl-dev \
@@ -524,6 +535,8 @@ apt-get remove -y --purge \
   linux-libc-dev \
   cmake \
   wget \
+  patch \
+  protobuf-compiler \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y
@@ -537,6 +550,8 @@ rm -rf /usr/local/modsecurity/bin
 rm -rf /usr/local/modsecurity/include
 rm -rf /usr/local/modsecurity/lib/libmodsecurity.a
 
+rm -rf /root/.cache
+
 rm -rf /etc/nginx/owasp-modsecurity-crs/.git
 rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
@@ -549,7 +564,7 @@ writeDirs=( \
   /etc/ingress-controller/auth \
   /var/log \
   /var/log/nginx \
-  /var/lib/nginx/body \
+  /var/lib/nginx \
   /usr/share/nginx/html \
   /opt/modsecurity/var/log \
   /opt/modsecurity/var/upload \
