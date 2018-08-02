@@ -72,7 +72,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
+      "datasource": "prometheus",
       "format": "ops",
       "gauge": {
         "maxValue": 100,
@@ -154,7 +154,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
+      "datasource": "prometheus",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -237,7 +237,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
+      "datasource": "prometheus",
       "format": "percentunit",
       "gauge": {
         "maxValue": 100,
@@ -319,7 +319,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
+      "datasource": "prometheus",
       "decimals": 0,
       "format": "none",
       "gauge": {
@@ -403,7 +403,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
+      "datasource": "prometheus",
       "decimals": 0,
       "format": "none",
       "gauge": {
@@ -483,7 +483,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "prometheus",
       "decimals": 2,
       "editable": true,
       "error": false,
@@ -599,7 +599,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "prometheus",
       "decimals": 2,
       "editable": false,
       "error": false,
@@ -701,7 +701,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "prometheus",
       "decimals": 3,
       "editable": false,
       "error": false,
@@ -804,7 +804,7 @@
     },
     {
       "columns": [],
-      "datasource": null,
+      "datasource": "prometheus",
       "fontSize": "100%",
       "gridPos": {
         "h": 8,
@@ -1029,7 +1029,7 @@
           "value": "current"
         }
       ],
-      "datasource": null,
+      "datasource": "prometheus",
       "fontSize": "100%",
       "gridPos": {
         "h": 8,
