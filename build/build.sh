@@ -28,20 +28,21 @@ mandatory=(
 )
 
 missing=false
-for var in ${mandatory[@]}; do
-  if [[ -z "${!var+x}" ]]; then
+for var in "${mandatory[@]}"; do
+  if [[ -z "${!var:-}" ]]; then
     echo "Environment variable $var must be set"
     missing=true
   fi
 done
 
-if [ "$missing" = true ];then
+if [ "$missing" = true ]; then
   exit 1
 fi
 
 export CGO_ENABLED=0
 
-go build -a -installsuffix cgo 	\
+go build \
+    ${GOBUILD_FLAGS} \
     -ldflags "-s -w \
         -X ${PKG}/version.RELEASE=${TAG} \
         -X ${PKG}/version.COMMIT=${GIT_COMMIT} \
