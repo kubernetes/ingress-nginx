@@ -459,6 +459,9 @@ type Configuration struct {
 	// Default: 1
 	JaegerSamplerParam string `json:"jaeger-sampler-param"`
 
+	// MainSnippet adds custom configuration to the main section of the nginx configuration
+	MainSnippet string `json:"main-snippet"`
+
 	// HTTPSnippet adds custom configuration to the http section of the nginx configuration
 	HTTPSnippet string `json:"http-snippet"`
 
