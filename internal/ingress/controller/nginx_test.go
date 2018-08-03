@@ -114,6 +114,9 @@ func TestConfigureDynamically(t *testing.T) {
 				Target:  target,
 			},
 		},
+	}, {
+		Name:      "fakenamespace-myapp-80",
+		Endpoints: []ingress.Endpoint{},
 	}}
 
 	servers := []*ingress.Server{{
