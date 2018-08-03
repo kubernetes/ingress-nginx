@@ -41,6 +41,10 @@ events {
     use                 epoll;
 }
 
+{{ if not (empty $cfg.MainSnippet) }}
+{{ $cfg.MainSnippet }}
+{{ end }}
+
 http {
     {{ if not $all.DisableLua }}
     lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;";
