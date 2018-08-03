@@ -80,9 +80,9 @@ func nginxExecCommand(args ...string) *exec.Cmd {
 		ngx = defBinary
 	}
 
-	cmdArgs := []string{"-c", cfgPath}
+	cmdArgs := []string{"--deep", ngx, "-c", cfgPath}
 	cmdArgs = append(cmdArgs, args...)
-	return exec.Command(ngx, cmdArgs...)
+	return exec.Command("authbind", cmdArgs...)
 }
 
 func nginxTestCommand(cfg string) *exec.Cmd {
@@ -91,5 +91,5 @@ func nginxTestCommand(cfg string) *exec.Cmd {
 		ngx = defBinary
 	}
 
-	return exec.Command(ngx, "-c", cfg, "-t")
+	return exec.Command("authbind", "--deep", ngx, "-c", cfg, "-t")
 }
