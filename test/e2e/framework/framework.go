@@ -133,6 +133,13 @@ func (f *Framework) AfterEach() {
 	By("Waiting for test namespace to no longer exist")
 	err := DeleteKubeNamespace(f.KubeClientSet, f.IngressController.Namespace)
 	Expect(err).NotTo(HaveOccurred())
+
+	if CurrentGinkgoTestDescription().Failed {
+		log, err := f.NginxLogs()
+		Expect(err).ToNot(HaveOccurred())
+		By("Dumping NGINX logs after a failure running a test")
+		Logf("%v", log)
+	}
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.

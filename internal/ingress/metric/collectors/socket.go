@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -95,7 +96,13 @@ var (
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingresss watch namespace and class used by the controller
 func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) {
-	listener, err := net.Listen("unix", "/tmp/prometheus-nginx.socket")
+	socket := "/tmp/prometheus-nginx.socket"
+	listener, err := net.Listen("unix", socket)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Chmod(socket, 0777)
 	if err != nil {
 		return nil, err
 	}

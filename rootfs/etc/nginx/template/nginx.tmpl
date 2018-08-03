@@ -131,6 +131,7 @@ http {
     client_body_temp_path           /tmp/client-body;
     fastcgi_temp_path               /tmp/fastcgi-temp;
     proxy_temp_path                 /tmp/proxy-temp;
+    ajp_temp_path                   /tmp/ajp-temp; 
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
