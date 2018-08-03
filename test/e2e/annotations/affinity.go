@@ -109,7 +109,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 				Annotations: map[string]string{
 					"nginx.ingress.kubernetes.io/affinity":            "cookie",
 					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-					"nginx.ingress.kubernetes.io/rewrite-target":      "/something",
 				},
 			},
 			Spec: v1beta1.IngressSpec{
@@ -150,7 +149,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("request_uri=http://%v:8080/something/", host)))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("request_uri=http://%v:8080/", host)))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
 	})
 
