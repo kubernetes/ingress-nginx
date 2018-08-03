@@ -114,6 +114,7 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
 |[jaeger-sampler-type](#jaeger-sampler-type)|string|"const"|
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
+|[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
 |[location-snippet](#location-snippet)|string|""|
@@ -633,20 +634,21 @@ Specifies the sampler to be used when sampling traces. The available samplers ar
 Specifies the argument to be passed to the sampler constructor. Must be a number.
 For const this should be 0 to never sample and 1 to always sample. _**default:**_ 1
 
+## main-snippet
+
+Adds custom configuration to the main section of the nginx configuration.
+
 ## http-snippet
 
 Adds custom configuration to the http section of the nginx configuration.
-_**default:**_ ""
 
 ## server-snippet
 
 Adds custom configuration to all the servers in the nginx configuration.
-_**default:**_ ""
 
 ## location-snippet
 
 Adds custom configuration to all the locations in the nginx configuration.
-_**default:**_ ""
 
 ## custom-http-errors
 
