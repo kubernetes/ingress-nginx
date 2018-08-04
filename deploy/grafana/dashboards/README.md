@@ -13,3 +13,7 @@ This folder contains a dashboard that you can import:
   - Ingress P50, P95 and P99 percentile response times with IN/OUT throughput
   - SSL certificate expiry 
   - Annotational overlays to show when config reloads happened
+
+## Requirements
+
+  - **Grafana v5.2.0** (or newer)
