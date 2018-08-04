@@ -35,7 +35,7 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n *NGINXController) Check(_ *http.Request) error {
-	res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath))
+	res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath))
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	}
 
 	if n.cfg.DynamicConfigurationEnabled {
-		res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v/is-dynamic-lb-initialized", n.cfg.ListenPorts.Status))
+		res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%v/is-dynamic-lb-initialized", n.cfg.ListenPorts.Status))
 		if err != nil {
 			return err
 		}
