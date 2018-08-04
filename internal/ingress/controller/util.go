@@ -17,8 +17,6 @@ limitations under the License.
 package controller
 
 import (
-	"os"
-	"os/exec"
 	"syscall"
 
 	"github.com/golang/glog"
@@ -70,26 +68,9 @@ func sysctlFSFileMax() int {
 }
 
 const (
-	defBinary = "/usr/sbin/nginx"
-	cfgPath   = "/etc/nginx/nginx.conf"
+	cfgPath = "/var/lib/shared/nginx/nginx.conf"
 )
 
-func nginxExecCommand(args ...string) *exec.Cmd {
-	ngx := os.Getenv("NGINX_BINARY")
-	if ngx == "" {
-		ngx = defBinary
-	}
-
-	cmdArgs := []string{"-c", cfgPath}
-	cmdArgs = append(cmdArgs, args...)
-	return exec.Command(ngx, cmdArgs...)
-}
-
-func nginxTestCommand(cfg string) *exec.Cmd {
-	ngx := os.Getenv("NGINX_BINARY")
-	if ngx == "" {
-		ngx = defBinary
-	}
-
-	return exec.Command(ngx, "-c", cfg, "-t")
+func nginxTestCommand(cfg string) ([]byte, bool) {
+	return nil, false
 }

@@ -747,7 +747,7 @@ func (s k8sStore) GetBackendConfiguration() ngx_config.Configuration {
 
 func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
-	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
+	s.writeSSLSessionTicketKey(cmap, "/var/lib/shared/nginx/tickets.key")
 }
 
 // Run initiates the synchronization of the informers and the initial

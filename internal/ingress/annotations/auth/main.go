@@ -35,7 +35,7 @@ var (
 	authTypeRegex = regexp.MustCompile(`basic|digest`)
 	// AuthDirectory default directory used to store files
 	// to authenticate request
-	AuthDirectory = "/etc/ingress-controller/auth"
+	AuthDirectory = "/var/lib/shared/ingress-controller/auth"
 )
 
 // Config returns authentication configuration for an Ingress rule
@@ -144,7 +144,7 @@ func dumpSecret(filename string, secret *api.Secret) error {
 		}
 	}
 
-	err := ioutil.WriteFile(filename, val, file.ReadWriteByUser)
+	err := ioutil.WriteFile(filename, val, file.ReadWriteByUser+file.ReadByOther)
 	if err != nil {
 		return ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "unexpected error creating password file"),

@@ -9,8 +9,10 @@
 
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
+user www-data;
+
 # setup custom paths that do not require root access
-pid /tmp/nginx.pid;
+pid /var/lib/shared/nginx.pid;
 
 {{ if $cfg.EnableModsecurity }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
@@ -128,9 +130,9 @@ http {
     keepalive_timeout  {{ $cfg.KeepAlive }}s;
     keepalive_requests {{ $cfg.KeepAliveRequests }};
 
-    client_body_temp_path           /tmp/client-body;
-    fastcgi_temp_path               /tmp/fastcgi-temp;
-    proxy_temp_path                 /tmp/proxy-temp;
+    client_body_temp_path           /var/lib/shared/client-body;
+    fastcgi_temp_path               /var/lib/shared/fastcgi-temp;
+    proxy_temp_path                 /var/lib/shared/proxy-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;

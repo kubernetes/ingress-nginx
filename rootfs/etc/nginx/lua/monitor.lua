@@ -7,7 +7,7 @@ local _M = {}
 
 local function send_data(jsonData)
   local s = assert(socket())
-  assert(s:connect('unix:/tmp/prometheus-nginx.socket'))
+  assert(s:connect('unix:/var/lib/nginx/prometheus-nginx.socket'))
   assert(s:send(jsonData))
   assert(s:close())
 end

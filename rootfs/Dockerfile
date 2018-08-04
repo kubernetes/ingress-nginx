@@ -20,30 +20,10 @@ WORKDIR  /etc/nginx
 
 RUN clean-install \
   diffutils \
-  libcap2-bin \
   dumb-init
 
 COPY . /
 
-# Fix permission during the build to avoid issues at runtime
-# with volumes (custom templates)
-RUN bash -eux -c ' \
-  writeDirs=( \
-    /etc/nginx/template \
-    /etc/ingress-controller/ssl \
-    /etc/ingress-controller/auth \
-    /var/log \
-    /var/log/nginx \
-    /tmp \
-  ); \
-  for dir in "${writeDirs[@]}"; do \
-    mkdir -p ${dir}; \
-    chown -R www-data.www-data ${dir}; \
-  done' \
-  && chown www-data.www-data /etc/nginx/nginx.conf \
-  && chown www-data.www-data /etc/nginx/opentracing.json \
-  && chown www-data.www-data /etc/nginx
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/dumb-init"]
 
 CMD ["/nginx-ingress-controller"]

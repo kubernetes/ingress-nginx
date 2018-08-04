@@ -239,10 +239,69 @@ spec:
           sysctl -w fs.suid_dumpable=2
         securityContext:
           privileged: true
+      #-----
+      initContainers:
+      - image: quay.io/kubernetes-ingress-controller/nginx-amd64:0.56
+        name: mount-permission-fix
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -x
+
+          mkdir -p /var/lib/shared/etc
+          cp -R /etc/nginx  /var/lib/shared/etc
+          chown -R www-data /var/lib/shared
+        volumeMounts:
+        - mountPath: /var/lib/shared
+          name: shared-volume
+      #-----
       containers:
-        - name: nginx-ingress-controller
-          image: ingress-controller/nginx-ingress-controller:dev
+        - name: nginx
+          image: quay.io/kubernetes-ingress-controller/nginx-amd64:0.56
           args:
+            - /usr/sbin/nginx
+            - -c
+            - /var/lib/shared/etc/nginx/nginx.conf
+          securityContext:
+            capabilities:
+                drop:
+                - ALL
+                add:
+                - NET_BIND_SERVICE
+            # www-data -> 33
+            runAsUser: 33 
+          ports:
+          - name: http
+            containerPort: 80
+          - name: https
+            containerPort: 443
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 18080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 18080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+          - mountPath: /var/lib/shared
+            name: shared-volume
+        #-----
+        - name: ingress-controller
+          image: ingress-controller/nginx-ingress-controller:dev
+          command:
             - /nginx-ingress-controller
             - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
             - --configmap=$(POD_NAMESPACE)/nginx-configuration
@@ -260,11 +319,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          ports:
-          - name: http
-            containerPort: 80
-          - name: https
-            containerPort: 443
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -284,3 +338,11 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
+          volumeMounts:
+          - mountPath: /var/lib/shared
+            name: shared-volume
+        #-----
+        volumes:
+          - name: shared-volume
+            emptyDir:
+              readOnly: false

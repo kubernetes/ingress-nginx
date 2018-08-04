@@ -26,7 +26,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const nginxPID = "/tmp/nginx.pid"
+const nginxPID = "/var/lib/nginx/nginx.pid"
 
 // Name returns the healthcheck name
 func (n NGINXController) Name() string {

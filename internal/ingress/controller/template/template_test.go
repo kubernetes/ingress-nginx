@@ -478,7 +478,7 @@ func TestTemplateWithData(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	ngxTpl, err := NewTemplate("/etc/nginx/template/nginx.tmpl", fs)
+	ngxTpl, err := NewTemplate("/var/lib/shared/nginx/template/nginx.tmpl", fs)
 	if err != nil {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
@@ -522,7 +522,7 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		b.Fatalf("unexpected error: %v", err)
 	}
 
-	ngxTpl, err := NewTemplate("/etc/nginx/template/nginx.tmpl", fs)
+	ngxTpl, err := NewTemplate("/var/lib/shared/nginx/template/nginx.tmpl", fs)
 	if err != nil {
 		b.Errorf("invalid NGINX template: %v", err)
 	}
