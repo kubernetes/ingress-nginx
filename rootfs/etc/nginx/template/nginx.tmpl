@@ -36,7 +36,7 @@ worker_rlimit_nofile {{ .MaxOpenFiles }};
 worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
 
 events {
-    multi_accept        on;
+    multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
     worker_connections  {{ $cfg.MaxWorkerConnections }};
     use                 epoll;
 }
