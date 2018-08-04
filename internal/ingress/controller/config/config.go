@@ -222,6 +222,12 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
 	LogFormatStream string `json:"log-format-stream,omitempty"`
 
+	// If disabled, a worker process will accept one new connection at a time.
+	// Otherwise, a worker process will accept all new connections at a time.
+	// http://nginx.org/en/docs/ngx_core_module.html#multi_accept
+	// Default: true
+	EnableMultiAccept bool `json:"enable-multi-accept,omitempty"`
+
 	// Maximum number of simultaneous connections that can be opened by each worker process
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
 	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
@@ -567,6 +573,7 @@ func NewDefault() Configuration {
 		LogFormatEscapeJSON:        false,
 		LogFormatStream:            logFormatStream,
 		LogFormatUpstream:          logFormatUpstream,
+		EnableMultiAccept:          true,
 		MaxWorkerConnections:       16384,
 		MapHashBucketSize:          64,
 		NginxStatusIpv4Whitelist:   defNginxStatusIpv4Whitelist,
