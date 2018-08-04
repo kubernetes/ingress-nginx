@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-0.17.5, mkdocs-material-2.9.2">
+      <meta name="generator" content="mkdocs-0.17.5, mkdocs-material-2.9.4">
     
     
       
@@ -40,9 +40,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.ba0fd1a6.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/application.451f80e5.css">
       
-        <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.6079476c.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.22915126.css">
       
       
         
@@ -278,11 +278,11 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <span class="md-nav__button md-logo">
+    <a href="../../.." title="NGINX Ingress Controller" class="md-nav__button md-logo">
       
         <i class="md-icon">public</i>
       
-    </span>
+    </a>
     NGINX Ingress Controller
   </label>
   
@@ -705,6 +705,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-multi-accept" title="enable-multi-accept" class="md-nav__link">
+    enable-multi-accept
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#max-worker-connections" title="max-worker-connections" class="md-nav__link">
     max-worker-connections
   </a>
@@ -1078,6 +1085,13 @@
         <li class="md-nav__item">
   <a href="#jaeger-sampler-param" title="jaeger-sampler-param" class="md-nav__link">
     jaeger-sampler-param
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-snippet" title="main-snippet" class="md-nav__link">
+    main-snippet
   </a>
   
 </li>
@@ -2051,6 +2065,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-multi-accept" title="enable-multi-accept" class="md-nav__link">
+    enable-multi-accept
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#max-worker-connections" title="max-worker-connections" class="md-nav__link">
     max-worker-connections
   </a>
@@ -2424,6 +2445,13 @@
         <li class="md-nav__item">
   <a href="#jaeger-sampler-param" title="jaeger-sampler-param" class="md-nav__link">
     jaeger-sampler-param
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-snippet" title="main-snippet" class="md-nav__link">
+    main-snippet
   </a>
   
 </li>
@@ -2808,6 +2836,11 @@ Same for numbers, like "100".</p>
 <td align="left"><code class="codehilite">[$time_local] $protocol $status $bytes_sent $bytes_received $session_time</code></td>
 </tr>
 <tr>
+<td align="left"><a href="#enable-multi-accept">enable-multi-accept</a></td>
+<td align="left">bool</td>
+<td align="left">"true"</td>
+</tr>
+<tr>
 <td align="left"><a href="#max-worker-connections">max-worker-connections</a></td>
 <td align="left">int</td>
 <td align="left">16384</td>
@@ -3088,6 +3121,11 @@ Same for numbers, like "100".</p>
 <td align="left">"1"</td>
 </tr>
 <tr>
+<td align="left"><a href="#main-snippet">main-snippet</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
 <td align="left"><a href="#http-snippet">http-snippet</a></td>
 <td align="left">string</td>
 <td align="left">""</td>
@@ -3317,6 +3355,11 @@ Example for json output:</p>
 <p>Please check the <a href="../log-format/">log-format</a> for definition of each field.</p>
 <h2 id="log-format-stream">log-format-stream<a class="headerlink" href="#log-format-stream" title="Permanent link">&para;</a></h2>
 <p>Sets the nginx <a href="https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format">stream format</a>.</p>
+<h2 id="enable-multi-accept">enable-multi-accept<a class="headerlink" href="#enable-multi-accept" title="Permanent link">&para;</a></h2>
+<p>If disabled, a worker process will accept one new connection at a time. Otherwise, a worker process will accept all new connections at a time.
+<em><strong>default:</strong></em> true</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/ngx_core_module.html#multi_accept">http://nginx.org/en/docs/ngx_core_module.html#multi_accept</a></p>
 <h2 id="max-worker-connections">max-worker-connections<a class="headerlink" href="#max-worker-connections" title="Permanent link">&para;</a></h2>
 <p>Sets the maximum number of simultaneous connections that can be opened by each <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_connections">worker process</a></p>
 <h2 id="map-hash-bucket-size">map-hash-bucket-size<a class="headerlink" href="#map-hash-bucket-size" title="Permanent link">&para;</a></h2>
@@ -3498,15 +3541,14 @@ number is exceeded, the least recently used connections are closed. <em><strong>
 <h2 id="jaeger-sampler-param">jaeger-sampler-param<a class="headerlink" href="#jaeger-sampler-param" title="Permanent link">&para;</a></h2>
 <p>Specifies the argument to be passed to the sampler constructor. Must be a number.
 For const this should be 0 to never sample and 1 to always sample. <em><strong>default:</strong></em> 1</p>
+<h2 id="main-snippet">main-snippet<a class="headerlink" href="#main-snippet" title="Permanent link">&para;</a></h2>
+<p>Adds custom configuration to the main section of the nginx configuration.</p>
 <h2 id="http-snippet">http-snippet<a class="headerlink" href="#http-snippet" title="Permanent link">&para;</a></h2>
-<p>Adds custom configuration to the http section of the nginx configuration.
-<em><strong>default:</strong></em> ""</p>
+<p>Adds custom configuration to the http section of the nginx configuration.</p>
 <h2 id="server-snippet">server-snippet<a class="headerlink" href="#server-snippet" title="Permanent link">&para;</a></h2>
-<p>Adds custom configuration to all the servers in the nginx configuration.
-<em><strong>default:</strong></em> ""</p>
+<p>Adds custom configuration to all the servers in the nginx configuration.</p>
 <h2 id="location-snippet">location-snippet<a class="headerlink" href="#location-snippet" title="Permanent link">&para;</a></h2>
-<p>Adds custom configuration to all the locations in the nginx configuration.
-<em><strong>default:</strong></em> ""</p>
+<p>Adds custom configuration to all the locations in the nginx configuration.</p>
 <h2 id="custom-http-errors">custom-http-errors<a class="headerlink" href="#custom-http-errors" title="Permanent link">&para;</a></h2>
 <p>Enables which HTTP codes should be passed for processing with the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page">error_page directive</a></p>
 <p>Setting at least one code also enables <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors">proxy_intercept_errors</a> which are required to process error_page.</p>
@@ -3641,7 +3683,7 @@ Supported codes are <a href="https://developer.mozilla.org/docs/Web/HTTP/Status/
       
     </div>
     
-      <script src="../../../assets/javascripts/application.a59e2a89.js"></script>
+      <script src="../../../assets/javascripts/application.30f6b8b1.js"></script>
       
       <script>app.initialize({version:"0.17.5",url:{base:"../../.."}})</script>
       

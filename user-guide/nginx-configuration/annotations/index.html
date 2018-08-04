@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-0.17.5, mkdocs-material-2.9.2">
+      <meta name="generator" content="mkdocs-0.17.5, mkdocs-material-2.9.4">
     
     
       
@@ -40,9 +40,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/application.ba0fd1a6.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/application.451f80e5.css">
       
-        <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.6079476c.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/application-palette.22915126.css">
       
       
         
@@ -278,11 +278,11 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <span class="md-nav__button md-logo">
+    <a href="../../.." title="NGINX Ingress Controller" class="md-nav__button md-logo">
       
         <i class="md-icon">public</i>
       
-    </span>
+    </a>
     NGINX Ingress Controller
   </label>
   
@@ -596,6 +596,13 @@
         <li class="md-nav__item">
   <a href="#permanent-redirect" title="Permanent Redirect" class="md-nav__link">
     Permanent Redirect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permanent-redirect-code" title="Permanent Redirect Code" class="md-nav__link">
+    Permanent Redirect Code
   </a>
   
 </li>
@@ -1460,6 +1467,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#permanent-redirect-code" title="Permanent Redirect Code" class="md-nav__link">
+    Permanent Redirect Code
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ssl-passthrough" title="SSL Passthrough" class="md-nav__link">
     SSL Passthrough
   </a>
@@ -1758,6 +1772,10 @@ table below.</p>
 <tr>
 <td><a href="#permanent-redirect">nginx.ingress.kubernetes.io/permanent-redirect</a></td>
 <td>string</td>
+</tr>
+<tr>
+<td><a href="#permanent-redirect-code">nginx.ingress.kubernetes.io/permanent-redirect-code</a></td>
+<td>number</td>
 </tr>
 <tr>
 <td><a href="#custom-max-body-size">nginx.ingress.kubernetes.io/proxy-body-size</a></td>
@@ -2171,6 +2189,8 @@ This can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos
 <p>To configure this setting globally for all Ingress rules, the <code class="codehilite">limit-rate-after</code> and <code class="codehilite">limit-rate</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>. if you set the value in ingress annotation will cover global setting.</p>
 <h3 id="permanent-redirect">Permanent Redirect<a class="headerlink" href="#permanent-redirect" title="Permanent link">&para;</a></h3>
 <p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
+<h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link">&para;</a></h3>
+<p>This annotation allows you to modify the status code used for permanent redirects.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect-code: &#39;308&#39;</code> would return your permanet-redirect with a 308.</p>
 <h3 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h3>
 <p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> allows to configure TLS termination in the pod and not in NGINX.</p>
 <div class="admonition attention">
@@ -2419,7 +2439,7 @@ anyone of the <a href="https://github.com/influxdata/telegraf/tree/release-1.6/p
       
     </div>
     
-      <script src="../../../assets/javascripts/application.a59e2a89.js"></script>
+      <script src="../../../assets/javascripts/application.30f6b8b1.js"></script>
       
       <script>app.initialize({version:"0.17.5",url:{base:"../../.."}})</script>
       

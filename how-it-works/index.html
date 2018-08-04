@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-0.17.5, mkdocs-material-2.9.2">
+      <meta name="generator" content="mkdocs-0.17.5, mkdocs-material-2.9.4">
     
     
       
@@ -40,9 +40,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.ba0fd1a6.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application.451f80e5.css">
       
-        <link rel="stylesheet" href="../assets/stylesheets/application-palette.6079476c.css">
+        <link rel="stylesheet" href="../assets/stylesheets/application-palette.22915126.css">
       
       
         
@@ -276,11 +276,11 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <span class="md-nav__button md-logo">
+    <a href=".." title="NGINX Ingress Controller" class="md-nav__button md-logo">
       
         <i class="md-icon">public</i>
       
-    </span>
+    </a>
     NGINX Ingress Controller
   </label>
   
@@ -1033,6 +1033,19 @@
     Avoiding reloads
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#avoiding-reloads-on-endpoints-changes" title="Avoiding reloads on Endpoints changes" class="md-nav__link">
+    Avoiding reloads on Endpoints changes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
       
@@ -1111,6 +1124,19 @@
     Avoiding reloads
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#avoiding-reloads-on-endpoints-changes" title="Avoiding reloads on Endpoints changes" class="md-nav__link">
+    Avoiding reloads on Endpoints changes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
       
@@ -1133,12 +1159,12 @@
                 
                 
                 <h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h1>
-<p>The objective of this document explains how the NGINX Ingress controller works, in particular how the NGINX model is built and why we need a one.</p>
+<p>The objective of this document is to explain how the NGINX Ingress controller works, in particular how the NGINX model is built and why we need a one.</p>
 <h2 id="nginx-configuration">NGINX configuration<a class="headerlink" href="#nginx-configuration" title="Permanent link">&para;</a></h2>
-<p>The goal of this Ingress controller is the assembly of a configuration file (nginx.conf). The main implication of this requirement is the need to reload NGINX after any change in the configuration file.</p>
+<p>The goal of this Ingress controller is the assembly of a configuration file (nginx.conf). The main implication of this requirement is the need to reload NGINX after any change in the configuration file. <em>Though it is important to note that we don't reload Nginx on changes that impact only an <code class="codehilite">upstream</code> configuration (i.e Endpoints change when you deploy your app)</em>. We use https://github.com/openresty/lua-nginx-module to achieve this. Check <a href="#avoiding-reloads-on-endpoints-changes">below</a> to learn more about how it's done.</p>
 <h2 id="nginx-model">NGINX model<a class="headerlink" href="#nginx-model" title="Permanent link">&para;</a></h2>
 <p>Usually, a Kubernetes Controller utilizes the <a href="../1">synchronization loop pattern</a> to check if the desired state in the controller is updated or a change is required. To this purpose, we need to build a model using different objects from the cluster, in particular (in no special order) Ingresses, Services, Endpoints, Secrets, and Configmaps to generate a point in time configuration file that reflects the state of the cluster.</p>
-<p>To get this object from the cluster, we use <a href="../2">Kubernetes Informers</a>, in particular, <code class="codehilite">FilteredSharedInformer</code>. This informers allows reacting to changes in using <a href="../3">callbacks</a> to individual changes when a new object is added, modified or removed. Unfortunately, there is no way to know if a particular change is going to affect the final configuration file. Therefore on every change, we have to rebuild a new model from scratch based on the state of cluster and compare it to the current model. If the new model equals to the current one, then we avoid generating a new NGINX configuration and <a href="../7">trigger a reload</a>. Otherwise, we create a new NGINX configuration based on the new model, replace the current model and <a href="../7">trigger a reload</a>.</p>
+<p>To get this object from the cluster, we use <a href="../2">Kubernetes Informers</a>, in particular, <code class="codehilite">FilteredSharedInformer</code>. This informers allows reacting to changes in using <a href="../3">callbacks</a> to individual changes when a new object is added, modified or removed. Unfortunately, there is no way to know if a particular change is going to affect the final configuration file. Therefore on every change, we have to rebuild a new model from scratch based on the state of cluster and compare it to the current model. If the new model equals to the current one, then we avoid generating a new NGINX configuration and triggering a reload. Otherwise, we check if the difference is only about Endpoints. If so we then send the new list of Endpoints to a Lua handler running inside Nginx using HTTP POST request and again avoid generating a new NGINX configuration and triggering a reload. If the difference between running and new model is about more than just Endpoints we create a new NGINX configuration based on the new model, replace the current model and trigger a reload.</p>
 <p>One of the uses of the model is to avoid unnecessary reloads when there's no change in the state and to detect conflicts in definitions.</p>
 <p>The final representation of the NGINX configuration is generated from a <a href="../6">Go template</a> using the new model as input for the variables required by the template.</p>
 <h2 id="building-the-nginx-model">Building the NGINX model<a class="headerlink" href="#building-the-nginx-model" title="Permanent link">&para;</a></h2>
@@ -1164,14 +1190,17 @@
 <ul>
 <li>New Ingress Resource Created.</li>
 <li>TLS section is added to existing Ingress.</li>
-<li>Change in Ingress annotations.</li>
+<li>Change in Ingress annotations that impacts more than just upstream configuration. For instance <code class="codehilite">load-balance</code> annotation does not require a reload.</li>
 <li>A path is added/removed from an Ingress.</li>
 <li>An Ingress, Service, Secret is removed.</li>
-<li>Some missing referenced object from the Ingress is available, like a Service, Secret or Endpoint.</li>
+<li>Some missing referenced object from the Ingress is available, like a Service or Secret.</li>
 <li>A Secret is updated.</li>
 </ul>
 <h2 id="avoiding-reloads">Avoiding reloads<a class="headerlink" href="#avoiding-reloads" title="Permanent link">&para;</a></h2>
 <p>In some cases, it is possible to avoid reloads, in particular when there is a change in the endpoints, i.e., a pod is started or replaced. It is out of the scope of this Ingress controller to remove reloads completely. This would require an incredible amount of work and at some point makes no sense. This can change only if NGINX changes the way new configurations are read, basically, new changes do not replace worker processes.</p>
+<h3 id="avoiding-reloads-on-endpoints-changes">Avoiding reloads on Endpoints changes<a class="headerlink" href="#avoiding-reloads-on-endpoints-changes" title="Permanent link">&para;</a></h3>
+<p>On every endpoint change the controller fetches endpoints from all the services it sees and generates corresponding Backend objects. It then sends these objects to a Lua handler running inside Nginx. The Lua code in turn stores those backends in a shared memory zone. Then for every request Lua code running in <a href="https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md"><code class="codehilite">balancer_by_lua</code></a> context detects what endpoints it should choose upstream peer from and applies the configured load balancing algorithm to choose the peer. Then Nginx takes care of the rest. This way we avoid reloading Nginx on endpoint changes. <em>Note</em> that this includes annotation changes that affects only <code class="codehilite">upstream</code> configuration in Nginx as well.</p>
+<p>In a relatively big clusters with frequently deploying apps this feature saves significant number of Nginx reloads which can otherwise affect response latency, load balancing quality (after every reload Nginx resets the state of load balancing) and so on.</p>
                 
                   
                 
@@ -1243,7 +1272,7 @@
       
     </div>
     
-      <script src="../assets/javascripts/application.a59e2a89.js"></script>
+      <script src="../assets/javascripts/application.30f6b8b1.js"></script>
       
       <script>app.initialize({version:"0.17.5",url:{base:".."}})</script>
       
