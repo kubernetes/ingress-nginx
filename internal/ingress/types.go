@@ -74,7 +74,7 @@ type Configuration struct {
 // Backend describes one or more remote server/s (endpoints) associated with a service
 // +k8s:deepcopy-gen=true
 type Backend struct {
-	// Name represents an unique apiv1.Service name formatted as <namespace>-<ingress-name><service-name>-<port>
+	// Name represents an unique apiv1.Service name formatted as <namespace>-<ingress-name>-<service-name>-<port>
 	Name    string             `json:"name"`
 	Service *apiv1.Service     `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
