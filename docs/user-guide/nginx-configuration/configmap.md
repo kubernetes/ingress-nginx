@@ -69,6 +69,7 @@ The following table shows a configuration option's name, type, and the default v
 |[server-name-hash-bucket-size](#server-name-hash-bucket-size)|int|`<size of the processor’s cache line>`
 |[proxy-headers-hash-max-size](#proxy-headers-hash-max-size)|int|512|
 |[proxy-headers-hash-bucket-size](#proxy-headers-hash-bucket-size)|int|64|
+|[reuse-port](#reuse-port)|bool|"true"|
 |[server-tokens](#server-tokens)|bool|"true"|
 |[ssl-ciphers](#ssl-ciphers)|string|"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"|
 |[ssl-ecdh-curve](#ssl-ecdh-curve)|string|"auto"|
@@ -382,7 +383,12 @@ _References:_
 - [http://nginx.org/en/docs/hash.html](http://nginx.org/en/docs/hash.html)
 - [https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size)
 
-## proxy-headers-hash-bucket-size
+## reuse-port
+
+Instructs NGINX to create an individual listening socket for each worker process (using the SO_REUSEPORT socket option), allowing a kernel to distribute incoming connections between worker processes
+_**default:**_ true
+
+## proxy-headers-hash-bucket-size 
 
 Sets the size of the bucket for the proxy headers hash tables.
 
