@@ -27,6 +27,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
 |[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
@@ -382,7 +383,9 @@ The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure
 !!! attention
     The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled).
 
-### Secure backends
+### Secure backends DEPRECATED (since 0.18.0)
+
+Please use `nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"`
 
 By default NGINX uses plain HTTP to reach the services.
 Adding the annotation `nginx.ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to HTTPS.
@@ -569,7 +572,9 @@ nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules: '[=[ { "access": [ { "act
 
 For details on how to write WAF rules, please refer to [https://github.com/p0pr0ck5/lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf).
 
-### gRPC backend
+### gRPC backend DEPRECATED (since 0.18.0)
+
+Please use `nginx.ingress.kubernetes.io/backend-protocol: "GRPC"` or `nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"`
 
 Since NGINX 1.13.10 it is possible to expose [gRPC services natively](http://nginx.org/en/docs/http/ngx_http_grpc_module.html)
 
@@ -602,3 +607,16 @@ To use the module in the Kubernetes Nginx ingress controller, you have two optio
 - Use an InfluxDB server configured to enable the [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/).
 - Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
 anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs)
+
+### Backend Protocol
+
+Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service.
+Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP
+
+By default NGINX uses `HTTP`.
+
+Example:
+
+```yaml
+nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+```
