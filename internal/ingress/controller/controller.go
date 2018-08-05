@@ -677,7 +677,7 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				name := fmt.Sprintf("%v-%v,%v-%v",
+				name := fmt.Sprintf("%v-%v-%v-%v",
 					ing.Namespace,
 					ing.Name,
 					path.Backend.ServiceName,
