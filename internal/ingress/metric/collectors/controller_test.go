@@ -26,7 +26,7 @@ import (
 
 func TestControllerCounters(t *testing.T) {
 	const metadata = `
-		# HELP nginx_ingress_controller_config_last_reload_successful Whether the last configuration reload attemp was successful
+		# HELP nginx_ingress_controller_config_last_reload_successful Whether the last configuration reload attempt was successful
 		# TYPE nginx_ingress_controller_config_last_reload_successful gauge
 		# HELP nginx_ingress_controller_success Cumulative number of Ingress controller reload operations
 		# TYPE nginx_ingress_controller_success counter
