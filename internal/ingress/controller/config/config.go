@@ -485,8 +485,7 @@ type Configuration struct {
 	// ReusePort instructs NGINX to create an individual listening socket for
 	// each worker process (using the SO_REUSEPORT socket option), allowing a
 	// kernel to distribute incoming connections between worker processes
-	// Default: false
-	// Reason for the default: https://trac.nginx.org/nginx/ticket/1300
+	// Default: true
 	ReusePort bool `json:"reuse-port"`
 
 	// HideHeaders sets additional header that will not be passed from the upstream
@@ -584,6 +583,7 @@ func NewDefault() Configuration {
 		ProxyHeadersHashMaxSize:    512,
 		ProxyHeadersHashBucketSize: 64,
 		ProxyStreamResponses:       1,
+		ReusePort:                  true,
 		ShowServerTokens:           true,
 		SSLBufferSize:              sslBufferSize,
 		SSLCiphers:                 sslCiphers,
