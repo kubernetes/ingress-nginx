@@ -49,10 +49,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 	It("should set sticky cookie SERVERID", func() {
 		host := "sticky.foo.com"
+		ingName := host
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
+				Name:      ingName,
 				Namespace: f.IngressController.Namespace,
 				Annotations: map[string]string{
 					"nginx.ingress.kubernetes.io/affinity":            "cookie",
@@ -85,7 +86,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-"+ingName+"-http-svc-80;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -101,10 +102,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 	It("should redirect to '/something' with enabled affinity", func() {
 		host := "example.com"
+		ingName := host
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
+				Name:      ingName,
 				Namespace: f.IngressController.Namespace,
 				Annotations: map[string]string{
 					"nginx.ingress.kubernetes.io/affinity":            "cookie",
@@ -138,7 +140,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-"+ingName+"-http-svc-80;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -155,10 +157,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 	It("should set the path to /something on the generated cookie", func() {
 		host := "example.com"
+		ingName := host
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
+				Name:      ingName,
 				Namespace: f.IngressController.Namespace,
 				Annotations: map[string]string{
 					"nginx.ingress.kubernetes.io/affinity":            "cookie",
@@ -192,7 +195,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-"+ingName+"-http-svc-80;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -208,10 +211,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 	It("should set the path to / on the generated cookie if there's more than one rule referring to the same backend", func() {
 		host := "example.com"
+		ingName := host
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
+				Name:      ingName,
 				Namespace: f.IngressController.Namespace,
 				Annotations: map[string]string{
 					"nginx.ingress.kubernetes.io/affinity":            "cookie",
@@ -252,7 +256,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-"+ingName+"-http-svc-80;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
