@@ -1159,7 +1159,7 @@
                 
                 
                 <h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h1>
-<p>The objective of this document is to explain how the NGINX Ingress controller works, in particular how the NGINX model is built and why we need a one.</p>
+<p>The objective of this document is to explain how the NGINX Ingress controller works, in particular how the NGINX model is built and why we need one.</p>
 <h2 id="nginx-configuration">NGINX configuration<a class="headerlink" href="#nginx-configuration" title="Permanent link">&para;</a></h2>
 <p>The goal of this Ingress controller is the assembly of a configuration file (nginx.conf). The main implication of this requirement is the need to reload NGINX after any change in the configuration file. <em>Though it is important to note that we don't reload Nginx on changes that impact only an <code class="codehilite">upstream</code> configuration (i.e Endpoints change when you deploy your app)</em>. We use https://github.com/openresty/lua-nginx-module to achieve this. Check <a href="#avoiding-reloads-on-endpoints-changes">below</a> to learn more about how it's done.</p>
 <h2 id="nginx-model">NGINX model<a class="headerlink" href="#nginx-model" title="Permanent link">&para;</a></h2>
