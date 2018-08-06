@@ -761,6 +761,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reuse-port" title="reuse-port" class="md-nav__link">
+    reuse-port
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-headers-hash-bucket-size" title="proxy-headers-hash-bucket-size" class="md-nav__link">
     proxy-headers-hash-bucket-size
   </a>
@@ -2121,6 +2128,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reuse-port" title="reuse-port" class="md-nav__link">
+    reuse-port
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-headers-hash-bucket-size" title="proxy-headers-hash-bucket-size" class="md-nav__link">
     proxy-headers-hash-bucket-size
   </a>
@@ -2891,6 +2905,11 @@ Same for numbers, like "100".</p>
 <td align="left">64</td>
 </tr>
 <tr>
+<td align="left"><a href="#reuse-port">reuse-port</a></td>
+<td align="left">bool</td>
+<td align="left">"true"</td>
+</tr>
+<tr>
 <td align="left"><a href="#server-tokens">server-tokens</a></td>
 <td align="left">bool</td>
 <td align="left">"true"</td>
@@ -3142,7 +3161,7 @@ Same for numbers, like "100".</p>
 </tr>
 <tr>
 <td align="left"><a href="#custom-http-errors">custom-http-errors</a></td>
-<td align="left">[]int]</td>
+<td align="left">[]int</td>
 <td align="left">[]int{}</td>
 </tr>
 <tr>
@@ -3386,6 +3405,9 @@ Example for json output:</p>
 <li><a href="http://nginx.org/en/docs/hash.html">http://nginx.org/en/docs/hash.html</a></li>
 <li><a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size">https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size</a></li>
 </ul>
+<h2 id="reuse-port">reuse-port<a class="headerlink" href="#reuse-port" title="Permanent link">&para;</a></h2>
+<p>Instructs NGINX to create an individual listening socket for each worker process (using the SO_REUSEPORT socket option), allowing a kernel to distribute incoming connections between worker processes
+<em><strong>default:</strong></em> true</p>
 <h2 id="proxy-headers-hash-bucket-size">proxy-headers-hash-bucket-size<a class="headerlink" href="#proxy-headers-hash-bucket-size" title="Permanent link">&para;</a></h2>
 <p>Sets the size of the bucket for the proxy headers hash tables.</p>
 <p><em>References:</em></p>
