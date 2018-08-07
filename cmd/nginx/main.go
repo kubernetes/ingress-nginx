@@ -125,7 +125,7 @@ func main() {
 
 	mc, err := metric.NewCollector(conf.ListenPorts.Status, reg)
 	if err != nil {
-		glog.Fatalf("Error creating prometheus collectos:  %v", err)
+		glog.Fatalf("Error creating prometheus collector:  %v", err)
 	}
 	mc.Start()
 

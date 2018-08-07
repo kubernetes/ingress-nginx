@@ -58,3 +58,10 @@ func TestIsPortAvailable(t *testing.T) {
 		t.Fatalf("expected port %v to not be available", p)
 	}
 }
+
+func TestIsIPv6Enabled(t *testing.T) {
+	isEnabled := IsIPv6Enabled()
+	if !isEnabled {
+		t.Fatalf("expected IPV6 be enabled")
+	}
+}

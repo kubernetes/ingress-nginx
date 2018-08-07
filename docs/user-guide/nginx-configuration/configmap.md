@@ -58,6 +58,7 @@ The following table shows a configuration option's name, type, and the default v
 |[log-format-escape-json](#log-format-escape-json)|bool|"false"|
 |[log-format-upstream](#log-format-upstream)|string|`%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status`|
 |[log-format-stream](#log-format-stream)|string|`[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
+|[enable-multi-accept](#enable-multi-accept)|bool|"true"|
 |[max-worker-connections](#max-worker-connections)|int|16384|
 |[map-hash-bucket-size](#max-worker-connections)|int|64|
 |[nginx-status-ipv4-whitelist](#nginx-status-ipv4-whitelist)|[]string|"127.0.0.1"|
@@ -68,6 +69,7 @@ The following table shows a configuration option's name, type, and the default v
 |[server-name-hash-bucket-size](#server-name-hash-bucket-size)|int|`<size of the processor’s cache line>`
 |[proxy-headers-hash-max-size](#proxy-headers-hash-max-size)|int|512|
 |[proxy-headers-hash-bucket-size](#proxy-headers-hash-bucket-size)|int|64|
+|[reuse-port](#reuse-port)|bool|"true"|
 |[server-tokens](#server-tokens)|bool|"true"|
 |[ssl-ciphers](#ssl-ciphers)|string|"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"|
 |[ssl-ecdh-curve](#ssl-ecdh-curve)|string|"auto"|
@@ -114,10 +116,11 @@ The following table shows a configuration option's name, type, and the default v
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
 |[jaeger-sampler-type](#jaeger-sampler-type)|string|"const"|
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
+|[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
 |[location-snippet](#location-snippet)|string|""|
-|[custom-http-errors](#custom-http-errors)|[]int]|[]int{}|
+|[custom-http-errors](#custom-http-errors)|[]int|[]int{}|
 |[proxy-body-size](#proxy-body-size)|string|"1m"|
 |[proxy-connect-timeout](#proxy-connect-timeout)|int|5|
 |[proxy-read-timeout](#proxy-read-timeout)|int|60|
@@ -331,6 +334,14 @@ Please check the [log-format](log-format.md) for definition of each field.
 
 Sets the nginx [stream format](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format).
 
+## enable-multi-accept
+
+If disabled, a worker process will accept one new connection at a time. Otherwise, a worker process will accept all new connections at a time.
+_**default:**_ true
+
+_References:_
+[http://nginx.org/en/docs/ngx_core_module.html#multi_accept](http://nginx.org/en/docs/ngx_core_module.html#multi_accept)
+
 ## max-worker-connections
 
 Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections)
@@ -372,7 +383,12 @@ _References:_
 - [http://nginx.org/en/docs/hash.html](http://nginx.org/en/docs/hash.html)
 - [https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size)
 
-## proxy-headers-hash-bucket-size
+## reuse-port
+
+Instructs NGINX to create an individual listening socket for each worker process (using the SO_REUSEPORT socket option), allowing a kernel to distribute incoming connections between worker processes
+_**default:**_ true
+
+## proxy-headers-hash-bucket-size 
 
 Sets the size of the bucket for the proxy headers hash tables.
 
@@ -633,20 +649,21 @@ Specifies the sampler to be used when sampling traces. The available samplers ar
 Specifies the argument to be passed to the sampler constructor. Must be a number.
 For const this should be 0 to never sample and 1 to always sample. _**default:**_ 1
 
+## main-snippet
+
+Adds custom configuration to the main section of the nginx configuration.
+
 ## http-snippet
 
 Adds custom configuration to the http section of the nginx configuration.
-_**default:**_ ""
 
 ## server-snippet
 
 Adds custom configuration to all the servers in the nginx configuration.
-_**default:**_ ""
 
 ## location-snippet
 
 Adds custom configuration to all the locations in the nginx configuration.
-_**default:**_ ""
 
 ## custom-http-errors
 

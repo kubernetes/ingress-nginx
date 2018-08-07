@@ -77,7 +77,7 @@ func NewController(pod, namespace, class string) *Controller {
 			prometheus.GaugeOpts{
 				Namespace:   PrometheusNamespace,
 				Name:        "config_last_reload_successful",
-				Help:        "Whether the last configuration reload attemp was successful",
+				Help:        "Whether the last configuration reload attempt was successful",
 				ConstLabels: constLabels,
 			}),
 		configSuccessTime: prometheus.NewGauge(

@@ -474,14 +474,14 @@ subs_filter '%v' '$1<base href="%v://$http_host%v">' ro;
 			// special case redirect to /
 			// ie /something to /
 			return fmt.Sprintf(`
-rewrite %s(.*) /$1 break;
-rewrite %s / break;
+rewrite (?i)%s(.*) /$1 break;
+rewrite (?i)%s / break;
 %v%v %s://%s;
 %v`, path, location.Path, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
-rewrite %s(.*) %s/$1 break;
+rewrite (?i)%s(.*) %s/$1 break;
 %v%v %s://%s;
 %v`, path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 	}

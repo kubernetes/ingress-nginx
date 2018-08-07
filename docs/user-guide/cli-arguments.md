@@ -36,7 +36,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | --ssl-passthrough-proxy-port int  | Port to use internally for SSL Passthrough. (default 442) |
 | --status-port int                 | Port to use for exposing NGINX status pages. (default 18080) |
 | --stderrthreshold severity        | logs at or above this threshold go to stderr (default 2) |
-| --sync-period duration            | Period at which the controller forces the repopulation of its local object stores. (default 10m0s) |
+| --sync-period duration            | Period at which the controller forces the repopulation of its local object stores. (default is 0) |
 | --sync-rate-limit float32         | Define the sync frequency upper limit (default 0.3) |
 | --tcp-services-configmap string   | Name of the ConfigMap containing the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port number or name. TCP ports 80 and 443 are reserved by the controller for servicing HTTP traffic. |
 | --udp-services-configmap string   | Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number.
