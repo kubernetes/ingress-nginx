@@ -38,7 +38,7 @@ var _ = framework.IngressNginxDescribe("Annotations - grpc", func() {
 			host := "grpc"
 
 			annotations := map[string]string{
-				"nginx.ingress.kubernetes.io/grpc-backend": "true",
+				"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 			}
 			ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "fortune-teller", 50051, &annotations))
 			Expect(err).NotTo(HaveOccurred())
