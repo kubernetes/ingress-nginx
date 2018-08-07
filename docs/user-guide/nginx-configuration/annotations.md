@@ -65,6 +65,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/trust-x-forwarded-for](#trust-x-forwarded-for)|"first" or "last"|
 |[nginx.ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
 |[nginx.ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
@@ -381,6 +382,17 @@ The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure
 
 !!! attention
     The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled).
+
+### Trust X-Forwarded-For
+
+This annotation sets as trusted the IP address from X-Forwarded-For header (or `forwarded-for-header` from [NGINX ConfigMap][configmap]). This way you can then whitelist the IP address using the `nginx.ingress.kubernetes.io/whitelist-source-range` annotation.
+
+You can specify either `first` or `last`, being first the IP closer to the original request and last the one set by the latest proxy.
+
+!!! attention
+
+    HTTP headers can be forged, so only set this up if you really can trust the
+    value of the header because of sanitization via previous proxies.
 
 ### Secure backends
 

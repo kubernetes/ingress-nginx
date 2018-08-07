@@ -977,8 +977,9 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 						Service:      &apiv1.Service{},
 					},
 				},
-				SSLPassthrough: anns.SSLPassthrough,
-				SSLCiphers:     anns.SSLCiphers,
+				SSLPassthrough:     anns.SSLPassthrough,
+				SSLCiphers:         anns.SSLCiphers,
+				TrustXForwardedFor: anns.TrustXForwardedFor,
 			}
 		}
 	}
@@ -1022,6 +1023,11 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			// only add SSL ciphers if the server does not have them previously configured
 			if servers[host].SSLCiphers == "" && anns.SSLCiphers != "" {
 				servers[host].SSLCiphers = anns.SSLCiphers
+			}
+
+			// only add trustxforwardedfor if the server does not have one previously configured
+			if servers[host].TrustXForwardedFor == "" && anns.TrustXForwardedFor != "" {
+				servers[host].TrustXForwardedFor = anns.TrustXForwardedFor
 			}
 
 			// only add a certificate if the server does not have one previously configured
