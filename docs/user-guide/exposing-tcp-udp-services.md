@@ -12,7 +12,8 @@ The next example shows how to expose the service `example-go` running in the nam
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: tcp-configmap-example
+  name: tcp-services
+  namespace: ingress-nginx
 data:
   9000: "default/example-go:8080"
 ```
@@ -24,7 +25,8 @@ The next example shows how to expose the service `kube-dns` running in the names
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: udp-configmap-example
+  name: udp-services
+  namespace: ingress-nginx
 data:
   53: "kube-system/kube-dns:53"
 ```

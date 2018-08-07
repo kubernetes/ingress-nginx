@@ -36,6 +36,7 @@ export LUA_UPSTREAM_VERSION=0.07
 export COOKIE_FLAG_VERSION=1.1.0
 export NGINX_INFLUXDB_VERSION=f20cfb2458c338f162132f5a21eb021e2cbe6383
 export GEOIP2_VERSION=2.0
+export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 
 export BUILD_PATH=/tmp/build
 
@@ -92,6 +93,8 @@ clean-install \
   luarocks \
   libmaxminddb-dev \
   libatomic-ops-dev \
+  authbind \
+  dumb-init \
   || exit 1
 
 if [[ ${ARCH} == "x86_64" ]]; then
@@ -223,6 +226,9 @@ get_src 1897d7677d99c1cedeb95b2eb00652a4a7e8e604304c3053a93bd3ba7dd82884 \
 get_src ebb4652c4f9a2e1ee31fddefc4c93ff78e651a4b2727d3453d026bccbd708d99 \
         "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
 
+get_src 5f629a50ba22347c441421091da70fdc2ac14586619934534e5a0f8a1390a950 \
+        "https://github.com/yaoweibin/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
+
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
 
@@ -236,7 +242,7 @@ if [[ ${ARCH} == "x86_64" ]]; then
 fi
 
 # luajit is not available on ppc64le and s390x
-if [[ (${ARCH} != "s390x") ]]; then
+if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   cd "$BUILD_PATH/luajit2-2.1-20180420"
   make
   make install
@@ -470,6 +476,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
+  --add-module=$BUILD_PATH/nginx_ajp_module-${NGINX_AJP_VERSION} \
   --add-module=$BUILD_PATH/ngx_brotli"
 
 ./configure \
@@ -494,17 +501,12 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --with-cc-opt="${CC_OPT}" \
   --with-ld-opt="${LD_OPT}" \
   --with-libatomic \
-  ${WITH_MODULES} \
-  && make || exit 1 \
-  && make install || exit 1
-
-# install su-exec to switch user and group id and exec
-cd "$BUILD_PATH"
-curl -sSL https://github.com/ncopa/su-exec/archive/master.tar.gz | tar zxpv
-cd su-exec-master
-make
-
-cp su-exec /usr/local/bin
+  --user=www-data \
+  --group=www-data \
+  ${WITH_MODULES}
+  
+make || exit 1
+make install || exit 1
 
 echo "Cleaning..."
 
@@ -560,12 +562,8 @@ rm -rf $HOME/.hunter
 # update image permissions
 writeDirs=( \
   /etc/nginx \
-  /etc/ingress-controller/ssl \
-  /etc/ingress-controller/auth \
-  /var/log \
-  /var/log/nginx \
   /var/lib/nginx \
-  /usr/share/nginx/html \
+  /var/log/nginx \
   /opt/modsecurity/var/log \
   /opt/modsecurity/var/upload \
   /opt/modsecurity/var/audit \
@@ -575,3 +573,8 @@ for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};
   chown -R www-data.www-data ${dir};
 done
+
+chmod 755 /etc/authbind/byuid/33
+chown www-data /etc/authbind/byuid/33
+chmod 755 /etc/authbind/byport/*
+chown www-data /etc/authbind/byport/*

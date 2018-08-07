@@ -40,7 +40,7 @@ if [ "$missing" = true ];then
   exit 1
 fi
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v07282018-45ba1672c
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v08042018-e2f5d90
 
 DOCKER_OPTS=${DOCKER_OPTS:-""}
 
@@ -56,6 +56,7 @@ TAG=${TAG:-"0.0"}
 HOME=${HOME:-/root}
 KUBECONFIG=${HOME}/.kube/config
 GOARCH=${GOARCH}
+GOBUILD_FLAGS=${GOBUILD_FLAGS:-"-v"}
 PWD=${PWD}
 BUSTED_ARGS=${BUSTED_ARGS:-""}
 REPO_INFO=${REPO_INFO:-local}
@@ -74,6 +75,7 @@ docker run                                       \
     -v ${PWD}/bin/${ARCH}:/go/bin/linux_${ARCH}  \
     -w /go/src/${PKG}                            \
     --env-file .env                              \
-    ${E2E_IMAGE} ${FLAGS}
+    --entrypoint ${FLAGS}                        \
+    ${E2E_IMAGE}
 
 rm .env

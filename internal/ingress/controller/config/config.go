@@ -222,6 +222,12 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
 	LogFormatStream string `json:"log-format-stream,omitempty"`
 
+	// If disabled, a worker process will accept one new connection at a time.
+	// Otherwise, a worker process will accept all new connections at a time.
+	// http://nginx.org/en/docs/ngx_core_module.html#multi_accept
+	// Default: true
+	EnableMultiAccept bool `json:"enable-multi-accept,omitempty"`
+
 	// Maximum number of simultaneous connections that can be opened by each worker process
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
 	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
@@ -459,6 +465,9 @@ type Configuration struct {
 	// Default: 1
 	JaegerSamplerParam string `json:"jaeger-sampler-param"`
 
+	// MainSnippet adds custom configuration to the main section of the nginx configuration
+	MainSnippet string `json:"main-snippet"`
+
 	// HTTPSnippet adds custom configuration to the http section of the nginx configuration
 	HTTPSnippet string `json:"http-snippet"`
 
@@ -476,8 +485,7 @@ type Configuration struct {
 	// ReusePort instructs NGINX to create an individual listening socket for
 	// each worker process (using the SO_REUSEPORT socket option), allowing a
 	// kernel to distribute incoming connections between worker processes
-	// Default: false
-	// Reason for the default: https://trac.nginx.org/nginx/ticket/1300
+	// Default: true
 	ReusePort bool `json:"reuse-port"`
 
 	// HideHeaders sets additional header that will not be passed from the upstream
@@ -564,6 +572,7 @@ func NewDefault() Configuration {
 		LogFormatEscapeJSON:        false,
 		LogFormatStream:            logFormatStream,
 		LogFormatUpstream:          logFormatUpstream,
+		EnableMultiAccept:          true,
 		MaxWorkerConnections:       16384,
 		MapHashBucketSize:          64,
 		NginxStatusIpv4Whitelist:   defNginxStatusIpv4Whitelist,
@@ -574,6 +583,7 @@ func NewDefault() Configuration {
 		ProxyHeadersHashMaxSize:    512,
 		ProxyHeadersHashBucketSize: 64,
 		ProxyStreamResponses:       1,
+		ReusePort:                  true,
 		ShowServerTokens:           true,
 		SSLBufferSize:              sslBufferSize,
 		SSLCiphers:                 sslCiphers,

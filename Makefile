@@ -48,6 +48,8 @@ ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
 
+GOBUILD_FLAGS :=
+
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
 QEMUVERSION = v2.12.0
@@ -59,7 +61,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.55
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.57
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
@@ -80,7 +82,7 @@ endif
 
 TEMP_DIR := $(shell mktemp -d)
 
-DEF_VARS:=ARCH=$(ARCH)       \
+DEF_VARS:=ARCH=$(ARCH)           \
 	TAG=$(TAG)               \
 	PKG=$(PKG)               \
 	GOARCH=$(GOARCH)         \
@@ -109,10 +111,15 @@ all-container: $(addprefix sub-container-,$(ALL_ARCH))
 all-push: $(addprefix sub-push-,$(ALL_ARCH))
 
 .PHONY: container
-container: .container-$(ARCH)
+container: clean-container .container-$(ARCH)
 
 .PHONY: .container-$(ARCH)
 .container-$(ARCH):
+	@echo "+ Copying artifact to temporary directory"
+	mkdir -p $(TEMP_DIR)/rootfs
+	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
+
+	@echo "+ Building container image $(MULTI_ARCH_IMG):$(TAG)"
 	cp -RP ./* $(TEMP_DIR)
 	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
 	$(SED_I) "s|QEMUARCH|$(QEMUARCH)|g" $(DOCKERFILE)
@@ -134,6 +141,11 @@ ifeq ($(ARCH), amd64)
 	$(DOCKER) tag $(MULTI_ARCH_IMG):$(TAG) $(IMAGE):$(TAG)
 endif
 
+.PHONY: clean-container
+clean-container:
+	@echo "+ Deleting container image $(MULTI_ARCH_IMG):$(TAG)"
+	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
+
 .PHONY: register-qemu
 register-qemu:
 	# Register /usr/bin/qemu-ARCH-static as the handler for binaries in multiple platforms
@@ -149,17 +161,16 @@ ifeq ($(ARCH), amd64)
 	$(DOCKER) push $(IMAGE):$(TAG)
 endif
 
-.PHONY: clean
-clean:
-	$(DOCKER) rmi -f $(MULTI_ARCH_IMG):$(TAG) || true
-
 .PHONY: build
-build: clean
+build:
+	@echo "+ Building bin/$(ARCH)/nginx-ingress-controller"
 	@$(DEF_VARS) \
+	GOBUILD_FLAGS="$(GOBUILD_FLAGS)" \
 	build/go-in-docker.sh build/build.sh
 
-	mkdir -p $(TEMP_DIR)/rootfs
-	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
+.PHONY: clean
+clean:
+	rm -rf bin/ .gocache/ .env
 
 .PHONY: static-check
 static-check:
