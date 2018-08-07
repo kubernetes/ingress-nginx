@@ -469,6 +469,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.LuaRestyWAF = anns.LuaRestyWAF
 						loc.InfluxDB = anns.InfluxDB
 						loc.DefaultBackend = anns.DefaultBackend
+						loc.BackendProtocol = anns.BackendProtocol
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -509,6 +510,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						LuaRestyWAF:          anns.LuaRestyWAF,
 						InfluxDB:             anns.InfluxDB,
 						DefaultBackend:       anns.DefaultBackend,
+						BackendProtocol:      anns.BackendProtocol,
 					}
 
 					if loc.Redirect.FromToWWW {
