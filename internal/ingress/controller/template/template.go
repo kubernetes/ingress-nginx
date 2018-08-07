@@ -403,12 +403,28 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	}
 
 	path := location.Path
-	proto := "http"
+	proto := "http://"
 
 	proxyPass := "proxy_pass"
+
+	switch location.BackendProtocol {
+	case "HTTPS":
+		proto = "https://"
+	case "GRPC":
+		proto = "grpc://"
+		proxyPass = "grpc_pass"
+	case "GRPCS":
+		proto = "grpcs://"
+		proxyPass = "grpc_pass"
+	case "AJP":
+		proto = ""
+		proxyPass = "ajp_pass"
+	}
+
+	// TODO: Remove after the deprecation of grpc-backend annotation
 	if location.GRPC {
 		proxyPass = "grpc_pass"
-		proto = "grpc"
+		proto = "grpc://"
 	}
 
 	upstreamName := "upstream_balancer"
@@ -420,9 +436,11 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
 			if backend.Secure || backend.SSLPassthrough {
-				proto = "https"
+				// TODO: Remove after the deprecation of secure-backend annotation
+				proto = "https://"
+				// TODO: Remove after the deprecation of grpc-backend annotation
 				if location.GRPC {
-					proto = "grpcs"
+					proto = "grpcs://"
 				}
 			}
 
@@ -435,7 +453,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	}
 
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
-	defProxyPass := fmt.Sprintf("%v %s://%s;", proxyPass, proto, upstreamName)
+	defProxyPass := fmt.Sprintf("%v %s%s;", proxyPass, proto, upstreamName)
 
 	// if the path in the ingress rule is equals to the target: no special rewrite
 	if path == location.Rewrite.Target {
@@ -476,13 +494,13 @@ subs_filter '%v' '$1<base href="%v://$http_host%v">' ro;
 			return fmt.Sprintf(`
 rewrite (?i)%s(.*) /$1 break;
 rewrite (?i)%s / break;
-%v%v %s://%s;
+%v%v %s%s;
 %v`, path, location.Path, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
 rewrite (?i)%s(.*) %s/$1 break;
-%v%v %s://%s;
+%v%v %s%s;
 %v`, path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 	}
 
@@ -752,8 +770,8 @@ func isValidClientBodyBufferSize(input interface{}) bool {
 	if err != nil {
 		sLowercase := strings.ToLower(s)
 
-		kCheck := strings.TrimSuffix(sLowercase, "k")
-		_, err := strconv.Atoi(kCheck)
+		check := strings.TrimSuffix(sLowercase, "k")
+		_, err := strconv.Atoi(check)
 		if err == nil {
 			return true
 		}
@@ -921,7 +939,7 @@ func proxySetHeader(loc interface{}) string {
 		return "proxy_set_header"
 	}
 
-	if location.GRPC {
+	if location.GRPC || location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
 		return "grpc_set_header"
 	}
 

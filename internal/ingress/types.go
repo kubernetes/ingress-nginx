@@ -270,6 +270,9 @@ type Location struct {
 	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database
 	// +optional
 	InfluxDB influxdb.Config `json:"influxDB,omitempty"`
+	// BackendProtocol indicates which protocol should be used to communicate with the service
+	// By default this is HTTP
+	BackendProtocol string `json:"backend-protocol"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
