@@ -508,9 +508,8 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        # Use the port {{ $all.ListenPorts.Status }} (random value just to avoid known ports) as default port for nginx.
-        listen 127.0.0.1:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::1]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
+        listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
+        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
         set $proxy_upstream_name "-";
 
         location {{ $healthzURI }} {
