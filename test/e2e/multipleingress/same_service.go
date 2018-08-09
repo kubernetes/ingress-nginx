@@ -33,8 +33,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
-	f := framework.NewDefaultFramework("service-backend")
+var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func() {
+	f := framework.NewDefaultFramework("multiple-ingress")
 
 	BeforeEach(func() {
 	})
@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 	AfterEach(func() {
 	})
 
-	It("should return 503 when backend service does not exist", func() {
+	It("should work for both the ingress", func() {
 		//create a new service
 		service := buildService("some-service-name", "some-namespace", 80, 443)
 		svc, err := f.EnsureService(service)
@@ -85,13 +85,13 @@ func buildService(name, namespace string, port1, port2 int32) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{Ports: []corev1.ServicePort{
 			{
-				Name:       fmt.Sprintf("%s", port1),
+				Name:       fmt.Sprintf("%d", port1),
 				Port:       port1,
 				TargetPort: intstr.FromInt(int(port1)),
 				Protocol:   "TCP",
 			},
 			{
-				Name:       fmt.Sprintf("%s", port2),
+				Name:       fmt.Sprintf("%d", port2),
 				Port:       port2,
 				TargetPort: intstr.FromInt(int(port2)),
 				Protocol:   "TCP",
