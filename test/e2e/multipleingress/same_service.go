@@ -56,7 +56,9 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 
 		ingress2spec := buildIngress("ingress-2.example.com", f.IngressController.Namespace, "/", "some-service-name", 443)
 		//add secure-backend annotation to 2nd ingress
-		ingress2spec.Annotations["nginx.ingress.kubernetes.io/secure-backends"] = "true"
+		ingress2spec.Annotations = map[string]string{
+			"nginx.ingress.kubernetes.io/secure-backends": "true",
+		}
 
 		ingress2, err := f.EnsureIngress(ingress2spec)
 		Expect(err).NotTo(HaveOccurred())
@@ -64,7 +66,8 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 
 		err = f.WaitForNginxServer("ingress-1.example.com",
 			func(server string) bool {
-				return strings.Contains(server, "return 503;")
+				fmt.Println(server)
+				return strings.Contains(server, "proxy_pass http://nginx-ingress-feature-echoserver-corp-tc4-8080")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
