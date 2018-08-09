@@ -418,9 +418,8 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				upsName := fmt.Sprintf("%v-%v-%v-%v",
+				upsName := fmt.Sprintf("%v-%v-%v",
 					ing.Namespace,
-					ing.Name,
 					path.Backend.ServiceName,
 					path.Backend.ServicePort.String())
 
@@ -628,9 +627,8 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
-			defBackend = fmt.Sprintf("%v-%v-%v-%v",
+			defBackend = fmt.Sprintf("%v-%v-%v",
 				ing.Namespace,
-				ing.Name,
 				ing.Spec.Backend.ServiceName,
 				ing.Spec.Backend.ServicePort.String())
 
@@ -677,9 +675,8 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				name := fmt.Sprintf("%v-%v-%v-%v",
+				name := fmt.Sprintf("%v-%v-%v",
 					ing.Namespace,
-					ing.Name,
 					path.Backend.ServiceName,
 					path.Backend.ServicePort.String())
 
@@ -917,7 +914,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 		un := du.Name
 
 		if ing.Spec.Backend != nil {
-			defUpstream := fmt.Sprintf("%v-%v-%v-%v", ing.Namespace, ing.Name, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
+			defUpstream := fmt.Sprintf("%v-%v-%v", ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
 
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
 				// use backend specified in Ingress as the default backend for all its rules
