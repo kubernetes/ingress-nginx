@@ -18,6 +18,7 @@ package multipleingress
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -49,10 +50,12 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ingress1).NotTo(BeNil())
 
-		ingress2spec := buildIngress("ingress-2.example.com", f.IngressController.Namespace, "/", "http-svc", 80)
-		//add secure-backend annotation to 2nd ingress
+		//add permanent redirect annotation to 2nd ingress
+		redirectPath := "/something"
+		redirectURL := "http://redirect.example.com"
+		ingress2spec := buildIngress("ingress-2.example.com", f.IngressController.Namespace, redirectPath, "http-svc", 80)
 		ingress2spec.Annotations = map[string]string{
-			"nginx.ingress.kubernetes.io/secure-backends": "true",
+			"nginx.ingress.kubernetes.io/permanent-redirect": redirectURL,
 		}
 
 		ingress2, err := f.EnsureIngress(ingress2spec)
@@ -71,7 +74,7 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 			func(server string) bool {
 				fmt.Println(server)
 				fmt.Println("")
-				return strings.Contains(server, "proxy_pass https://upstream_balancer")
+				return strings.Contains(server, fmt.Sprintf("return 301 %s;", redirectURL))
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -80,9 +83,24 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 			Set("Host", "ingress-1.example.com").
 			End()
 		Expect(len(errs)).Should(BeNumerically("==", 0))
-		Expect(resp.StatusCode).Should(Equal(503))
+		Expect(resp.StatusCode).Should(Equal(200))
+
+		resp, _, errs = gorequest.New().
+			Get(f.IngressController.HTTPURL+redirectPath).
+			Set("Host", "ingress-2.example.com").
+			RedirectPolicy(noRedirectPolicyFunc).
+			End()
+
+		Expect(errs).To(BeNil())
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(BeNumerically("==", http.StatusMovedPermanently))
+		Expect(resp.Header.Get("Location")).Should(Equal(redirectURL))
 	})
 })
+
+func noRedirectPolicyFunc(gorequest.Request, []gorequest.Request) error {
+	return http.ErrUseLastResponse
+}
 
 func buildIngress(host, namespace, path, backendService string, port int) *v1beta1.Ingress {
 	return &v1beta1.Ingress{
