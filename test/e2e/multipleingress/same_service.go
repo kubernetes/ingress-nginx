@@ -67,6 +67,7 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 		err = f.WaitForNginxServer("ingress-1.example.com",
 			func(server string) bool {
 				fmt.Println(server)
+				fmt.Println("")
 				return strings.Contains(server, "proxy_pass http://nginx-ingress-feature-echoserver-corp-tc4-8080")
 			})
 		Expect(err).NotTo(HaveOccurred())
