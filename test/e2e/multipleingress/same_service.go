@@ -26,6 +26,7 @@ import (
 
 	"github.com/parnurzeal/gorequest"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -45,7 +46,12 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 	})
 
 	It("should add server entry for both the ingress", func() {
-		ingress1spec := buildIngress("ingress-1.example.com", f.IngressController.Namespace, "/", "http-svc", 80)
+		service := buildService("some-service-name", f.IngressController.Namespace, 80, 443)
+		svc, err := f.EnsureService(service)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(svc).NotTo(BeNil())
+
+		ingress1spec := buildIngress("ingress-1.example.com", f.IngressController.Namespace, "/", "some-service-name", 80)
 		ingress1, err := f.EnsureIngress(ingress1spec)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ingress1).NotTo(BeNil())
@@ -53,7 +59,7 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 		//add permanent redirect annotation to 2nd ingress
 		redirectPath := "/something"
 		redirectURL := "http://redirect.example.com"
-		ingress2spec := buildIngress("ingress-2.example.com", f.IngressController.Namespace, redirectPath, "http-svc", 80)
+		ingress2spec := buildIngress("ingress-2.example.com", f.IngressController.Namespace, redirectPath, "some-service-name", 443)
 		ingress2spec.Annotations = map[string]string{
 			"nginx.ingress.kubernetes.io/permanent-redirect": redirectURL,
 		}
@@ -100,6 +106,33 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 
 func noRedirectPolicyFunc(gorequest.Request, []gorequest.Request) error {
 	return http.ErrUseLastResponse
+}
+
+func buildService(name, namespace string, port1, port2 int32) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: corev1.ServiceSpec{Ports: []corev1.ServicePort{
+			{
+				Name:       fmt.Sprintf("%d", port1),
+				Port:       port1,
+				TargetPort: intstr.FromInt(80),
+				Protocol:   "TCP",
+			},
+			{
+				Name:       fmt.Sprintf("%d", port2),
+				Port:       port2,
+				TargetPort: intstr.FromInt(80),
+				Protocol:   "TCP",
+			},
+		},
+			Selector: map[string]string{
+				"app": name,
+			},
+		},
+	}
 }
 
 func buildIngress(host, namespace, path, backendService string, port int) *v1beta1.Ingress {
