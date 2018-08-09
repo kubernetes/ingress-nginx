@@ -126,7 +126,7 @@ func buildEndpoints(name, namespace string, port1, port2 int32) *corev1.Endpoint
 			{
 				Addresses: []corev1.EndpointAddress{
 					{
-						IP: "127.0.0.1",
+						IP: "192.168.0.1",
 					},
 				},
 				Ports: []corev1.EndpointPort{
