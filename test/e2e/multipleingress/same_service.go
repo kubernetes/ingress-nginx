@@ -49,6 +49,11 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(svc).NotTo(BeNil())
 
+		endpointspec := buildEndpoints("service-endpoints", f.IngressController.Namespace, 80, 443)
+		endpoint, err := f.EnsureEndpoints(endpointspec)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(endpoint).NotTo(BeNil())
+
 		ingress1spec := buildIngress("ingress-1.example.com", f.IngressController.Namespace, "/", "some-service-name", 80)
 		ingress1, err := f.EnsureIngress(ingress1spec)
 		Expect(err).NotTo(HaveOccurred())
@@ -103,6 +108,37 @@ func buildService(name, namespace string, port1, port2 int32) *corev1.Service {
 		},
 			Selector: map[string]string{
 				"app": name,
+			},
+		},
+	}
+}
+
+func buildEndpoints(name, namespace string, port1, port2 int32) *corev1.Endpoints {
+	return &corev1.Endpoints{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app": name,
+			},
+		},
+		Subsets: []corev1.EndpointSubset{
+			{
+				Addresses: []corev1.EndpointAddress{
+					{
+						IP: "127.0.0.1",
+					},
+				},
+				Ports: []corev1.EndpointPort{
+					{
+						Port:     port1,
+						Protocol: "TCP",
+					},
+					{
+						Port:     port2,
+						Protocol: "TCP",
+					},
+				},
 			},
 		},
 	}

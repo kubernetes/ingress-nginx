@@ -87,6 +87,18 @@ func (f *Framework) EnsureService(service *core.Service) (*core.Service, error) 
 	return s, nil
 }
 
+// EnsureEndpoints creates a endpoint object or returns it if it already exists.
+func (f *Framework) EnsureEndpoints(endpoint *core.Endpoints) (*core.Endpoints, error) {
+	s, err := f.KubeClientSet.CoreV1().Endpoints(endpoint.Namespace).Update(endpoint)
+	if err != nil {
+		if k8sErrors.IsNotFound(err) {
+			return f.KubeClientSet.CoreV1().Endpoints(endpoint.Namespace).Create(endpoint)
+		}
+		return nil, err
+	}
+	return s, nil
+}
+
 // EnsureDeployment creates a Deployment object or returns it if it already exists.
 func (f *Framework) EnsureDeployment(deployment *extensions.Deployment) (*extensions.Deployment, error) {
 	d, err := f.KubeClientSet.Extensions().Deployments(deployment.Namespace).Update(deployment)
