@@ -25,7 +25,6 @@ import (
 
 	"github.com/parnurzeal/gorequest"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -37,29 +36,20 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 	f := framework.NewDefaultFramework("multiple-ingress")
 
 	BeforeEach(func() {
+		err := f.NewEchoDeployment()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
 	})
 
 	It("should work for both the ingress", func() {
-		//create a new service
-		service := buildService("some-service-name", f.IngressController.Namespace, 80, 443)
-		svc, err := f.EnsureService(service)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(svc).NotTo(BeNil())
-
-		endpointspec := buildEndpoints("service-endpoints", f.IngressController.Namespace, 80, 443)
-		endpoint, err := f.EnsureEndpoints(endpointspec)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(endpoint).NotTo(BeNil())
-
-		ingress1spec := buildIngress("ingress-1.example.com", f.IngressController.Namespace, "/", "some-service-name", 80)
+		ingress1spec := buildIngress("ingress-1.example.com", f.IngressController.Namespace, "/", "http-svc", 80)
 		ingress1, err := f.EnsureIngress(ingress1spec)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ingress1).NotTo(BeNil())
 
-		ingress2spec := buildIngress("ingress-2.example.com", f.IngressController.Namespace, "/", "some-service-name", 443)
+		ingress2spec := buildIngress("ingress-2.example.com", f.IngressController.Namespace, "/", "http-svc", 80)
 		//add secure-backend annotation to 2nd ingress
 		ingress2spec.Annotations = map[string]string{
 			"nginx.ingress.kubernetes.io/secure-backends": "true",
@@ -85,66 +75,6 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 		Expect(resp.StatusCode).Should(Equal(503))
 	})
 })
-
-func buildService(name, namespace string, port1, port2 int32) *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: corev1.ServiceSpec{Ports: []corev1.ServicePort{
-			{
-				Name:       fmt.Sprintf("%d", port1),
-				Port:       port1,
-				TargetPort: intstr.FromInt(int(port1)),
-				Protocol:   "TCP",
-			},
-			{
-				Name:       fmt.Sprintf("%d", port2),
-				Port:       port2,
-				TargetPort: intstr.FromInt(int(port2)),
-				Protocol:   "TCP",
-			},
-		},
-			Selector: map[string]string{
-				"app": name,
-			},
-		},
-	}
-}
-
-func buildEndpoints(name, namespace string, port1, port2 int32) *corev1.Endpoints {
-	return &corev1.Endpoints{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Labels: map[string]string{
-				"app": name,
-			},
-		},
-		Subsets: []corev1.EndpointSubset{
-			{
-				Addresses: []corev1.EndpointAddress{
-					{
-						IP: "192.168.0.1",
-					},
-				},
-				Ports: []corev1.EndpointPort{
-					{
-						Name:     fmt.Sprintf("%d", port1),
-						Port:     port1,
-						Protocol: "TCP",
-					},
-					{
-						Name:     fmt.Sprintf("%d", port2),
-						Port:     port2,
-						Protocol: "TCP",
-					},
-				},
-			},
-		},
-	}
-}
 
 func buildIngress(host, namespace, path, backendService string, port int) *v1beta1.Ingress {
 	return &v1beta1.Ingress{
