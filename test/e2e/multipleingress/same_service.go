@@ -131,10 +131,12 @@ func buildEndpoints(name, namespace string, port1, port2 int32) *corev1.Endpoint
 				},
 				Ports: []corev1.EndpointPort{
 					{
+						Name:     fmt.Sprintf("%d", port1),
 						Port:     port1,
 						Protocol: "TCP",
 					},
 					{
+						Name:     fmt.Sprintf("%d", port2),
 						Port:     port2,
 						Protocol: "TCP",
 					},
