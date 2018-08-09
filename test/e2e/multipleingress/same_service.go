@@ -72,6 +72,8 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 
 		err = f.WaitForNginxServer("ingress-2.example.com",
 			func(server string) bool {
+				fmt.Println(server)
+				fmt.Println("")
 				return strings.Contains(server, fmt.Sprintf("return 301 %s;", redirectURL))
 			})
 		Expect(err).NotTo(HaveOccurred())
