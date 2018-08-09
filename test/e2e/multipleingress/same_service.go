@@ -43,7 +43,7 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 	AfterEach(func() {
 	})
 
-	It("should work for both the ingress", func() {
+	It("should add server entry for both the ingress", func() {
 		ingress1spec := buildIngress("ingress-1.example.com", f.IngressController.Namespace, "/", "http-svc", 80)
 		ingress1, err := f.EnsureIngress(ingress1spec)
 		Expect(err).NotTo(HaveOccurred())
@@ -63,7 +63,15 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 			func(server string) bool {
 				fmt.Println(server)
 				fmt.Println("")
-				return strings.Contains(server, "proxy_pass http://nginx-ingress-feature-echoserver-corp-tc4-8080")
+				return strings.Contains(server, "proxy_pass http://upstream_balancer")
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		err = f.WaitForNginxServer("ingress-2.example.com",
+			func(server string) bool {
+				fmt.Println(server)
+				fmt.Println("")
+				return strings.Contains(server, "proxy_pass https://upstream_balancer")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
