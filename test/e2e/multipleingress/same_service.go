@@ -44,17 +44,17 @@ var _ = framework.IngressNginxDescribe("Multiple Ingress - Same Service", func()
 
 	It("should work for both the ingress", func() {
 		//create a new service
-		service := buildService("some-service-name", "some-namespace", 80, 443)
+		service := buildService("some-service-name", f.IngressController.Namespace, 80, 443)
 		svc, err := f.EnsureService(service)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(svc).NotTo(BeNil())
 
-		ingress1spec := buildIngress("ingress-1.example.com", "some-namespace", "/", "some-service-name", 80)
+		ingress1spec := buildIngress("ingress-1.example.com", f.IngressController.Namespace, "/", "some-service-name", 80)
 		ingress1, err := f.EnsureIngress(ingress1spec)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ingress1).NotTo(BeNil())
 
-		ingress2spec := buildIngress("ingress-2.example.com", "some-namespace", "/", "some-service-name", 443)
+		ingress2spec := buildIngress("ingress-2.example.com", f.IngressController.Namespace, "/", "some-service-name", 443)
 		//add secure-backend annotation to 2nd ingress
 		ingress2spec.Annotations["nginx.ingress.kubernetes.io/secure-backends"] = "true"
 
