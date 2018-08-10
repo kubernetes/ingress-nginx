@@ -37,7 +37,7 @@ func (f *Framework) NewEchoDeployment() error {
 // NewEchoDeploymentWithReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
 // replicas is configurable
 func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
-	return f.NewDeployment("http-svc", "gcr.io/google_containers/echoserver:1.10", 8080, replicas)
+	return f.NewDeployment("http-svc", "gcr.io/kubernetes-e2e-test-images/echoserver:2.1", 8080, replicas)
 }
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
