@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: http-svc
-        image: gcr.io/google_containers/echoserver:1.8
+        image: gcr.io/kubernetes-e2e-test-images/echoserver:2.1
         ports:
         - containerPort: 8080
         env:
