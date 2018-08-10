@@ -337,6 +337,11 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		})
 	}
 
+	// Keep upstream order sorted to reduce unnecessary nginx config reloads.
+	sort.SliceStable(svcs, func(i, j int) bool {
+		return svcs[i].Port < svcs[j].Port
+	})
+
 	return svcs
 }
 
