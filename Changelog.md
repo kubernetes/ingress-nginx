@@ -1,5 +1,65 @@
 # Changelog
 
+### 0.18.0
+
+**Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.18.0`
+
+*New Features:*
+
+- NGINX 1.15.2
+- Dynamic configuration is enabled by default
+- Support for AJP protocol
+- Use of authbind to bind privileged ports
+- Replace minikube with [kubeadm-dind-cluster](https://github.com/kubernetes-sigs/kubeadm-dind-cluster) to run e2e tests
+
+*Changes:*
+
+- [X] [#2789](https://github.com/kubernetes/ingress-nginx/pull/2789) Remove KubeConfig Dependency for Store Tests
+- [X] [#2794](https://github.com/kubernetes/ingress-nginx/pull/2794) enable dynamic backend configuration by default
+- [X] [#2795](https://github.com/kubernetes/ingress-nginx/pull/2795) start minikube before trying to build the image
+- [X] [#2804](https://github.com/kubernetes/ingress-nginx/pull/2804) add support for ExternalName service type in dynamic mode
+- [X] [#2808](https://github.com/kubernetes/ingress-nginx/pull/2808) fix the bug #2799, add prefix (?i) in rewrite statement.
+- [X] [#2811](https://github.com/kubernetes/ingress-nginx/pull/2811) Escape $request_uri for external auth
+- [X] [#2812](https://github.com/kubernetes/ingress-nginx/pull/2812) modified annotation name "rewrite-to" to "rewrite-target" in comments
+- [X] [#2819](https://github.com/kubernetes/ingress-nginx/pull/2819) Catch errors waiting for controller deployment
+- [X] [#2823](https://github.com/kubernetes/ingress-nginx/pull/2823) Multiple optimizations to build targets
+- [X] [#2825](https://github.com/kubernetes/ingress-nginx/pull/2825) Refactoring of how we run as user
+- [X] [#2826](https://github.com/kubernetes/ingress-nginx/pull/2826) Remove setcap from image and update nginx to 0.15.1
+- [X] [#2827](https://github.com/kubernetes/ingress-nginx/pull/2827) Use nginx image as base and install go on top
+- [X] [#2829](https://github.com/kubernetes/ingress-nginx/pull/2829) use resty-cli for running lua unit tests
+- [X] [#2830](https://github.com/kubernetes/ingress-nginx/pull/2830) Remove lua mocks
+- [X] [#2834](https://github.com/kubernetes/ingress-nginx/pull/2834) Added permanent-redirect-code
+- [X] [#2844](https://github.com/kubernetes/ingress-nginx/pull/2844) Do not allow invalid latency values in metrics
+- [X] [#2852](https://github.com/kubernetes/ingress-nginx/pull/2852) fix custom-error-pages functionality in dynamic mode
+- [X] [#2853](https://github.com/kubernetes/ingress-nginx/pull/2853) improve annotations/default_backend e2e test
+- [X] [#2858](https://github.com/kubernetes/ingress-nginx/pull/2858) Update build image
+- [X] [#2859](https://github.com/kubernetes/ingress-nginx/pull/2859) Fix inconsistent metric labels
+- [X] [#2863](https://github.com/kubernetes/ingress-nginx/pull/2863) Replace minikube for e2e tests
+- [X] [#2867](https://github.com/kubernetes/ingress-nginx/pull/2867) fix bug with lua e2e test suite
+- [X] [#2868](https://github.com/kubernetes/ingress-nginx/pull/2868) Use an existing e2e image
+- [X] [#2869](https://github.com/kubernetes/ingress-nginx/pull/2869) describe under what circumstances and how we avoid Nginx reload
+- [X] [#2871](https://github.com/kubernetes/ingress-nginx/pull/2871) Add support for AJP protocol
+- [X] [#2872](https://github.com/kubernetes/ingress-nginx/pull/2872) Update nginx to 1.15.2
+- [X] [#2874](https://github.com/kubernetes/ingress-nginx/pull/2874) Delay initial prometheus status metric
+- [X] [#2876](https://github.com/kubernetes/ingress-nginx/pull/2876) Remove dashboard an tune sync-frequency
+- [X] [#2877](https://github.com/kubernetes/ingress-nginx/pull/2877) Refactor entrypoint to avoid issues with volumes
+- [X] [#2885](https://github.com/kubernetes/ingress-nginx/pull/2885) fix: Sort TCP/UDP upstream order
+- [X] [#2888](https://github.com/kubernetes/ingress-nginx/pull/2888) Fix grafana datasources
+- [X] [#2890](https://github.com/kubernetes/ingress-nginx/pull/2890) Usability improvements to build steps
+- [X] [#2893](https://github.com/kubernetes/ingress-nginx/pull/2893) Update nginx image
+- [X] [#2894](https://github.com/kubernetes/ingress-nginx/pull/2894) Use authbind to bind privileged ports
+- [X] [#2895](https://github.com/kubernetes/ingress-nginx/pull/2895) support custom configuration to main context of nginx config
+- [X] [#2896](https://github.com/kubernetes/ingress-nginx/pull/2896) support configuring multi_accept directive via configmap
+- [X] [#2897](https://github.com/kubernetes/ingress-nginx/pull/2897) Enable reuse-port by default
+- [X] [#2905](https://github.com/kubernetes/ingress-nginx/pull/2905) Fix IPV6 detection
+
+*Documentation:*
+
+- [X] [#2816](https://github.com/kubernetes/ingress-nginx/pull/2816) doc log-format: add variables about ingress
+- [X] [#2866](https://github.com/kubernetes/ingress-nginx/pull/2866) Update index.md
+- [X] [#2898](https://github.com/kubernetes/ingress-nginx/pull/2898) Fix default sync-period doc
+- [X] [#2903](https://github.com/kubernetes/ingress-nginx/pull/2903) Very minor grammar fix
+
 ### 0.17.1
 
 **Image:**  `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.17.1`
