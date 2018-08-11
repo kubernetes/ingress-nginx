@@ -687,6 +687,8 @@ type TemplateConfig struct {
 	DynamicConfigurationEnabled bool
 	DynamicCertificatesEnabled  bool
 	DisableLua                  bool
+	Mappers                     []*ingress.Mapper
+	SplitClients                []*ingress.SplitClient
 }
 
 // ListenPorts describe the ports required to run the

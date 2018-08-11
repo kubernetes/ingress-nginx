@@ -17,7 +17,9 @@ limitations under the License.
 package controller
 
 import (
+	"crypto/md5"
 	"fmt"
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -41,9 +43,10 @@ import (
 )
 
 const (
-	defUpstreamName = "upstream-default-backend"
-	defServerName   = "_"
-	rootLocation    = "/"
+	defUpstreamName    = "upstream-default-backend"
+	defServerName      = "_"
+	rootLocation       = "/"
+	randomDateGmtSplit = "$date_gmt"
 )
 
 // Configuration contains all the settings required by an Ingress controller
@@ -151,6 +154,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		}
 	}
 
+	mappers, splits := n.getBackendConfig(upstreams, servers, n.cfg.DynamicConfigurationEnabled)
 	pcfg := &ingress.Configuration{
 		Backends:              upstreams,
 		Servers:               servers,
@@ -158,6 +162,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
 		PassthroughBackends:   passUpstreams,
 		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
+		Mappers:               mappers,
+		SplitClients:          splits,
 	}
 
 	if n.runningConfig.Equal(pcfg) {
@@ -477,6 +483,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.InfluxDB = anns.InfluxDB
 						loc.DefaultBackend = anns.DefaultBackend
 						loc.BackendProtocol = anns.BackendProtocol
+						loc.BackendGroup = n.getBackendGroup(anns, ing, path, rule.HTTP.Paths, host)
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -489,6 +496,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 				if addLoc {
 					glog.V(3).Infof("Adding location %q for server %q with upstream %q (Ingress %q)",
 						nginxPath, server.Hostname, ups.Name, ingKey)
+					backendGroup := n.getBackendGroup(anns, ing, path, rule.HTTP.Paths, host)
 
 					loc := &ingress.Location{
 						Path:                 nginxPath,
@@ -518,6 +526,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						InfluxDB:             anns.InfluxDB,
 						DefaultBackend:       anns.DefaultBackend,
 						BackendProtocol:      anns.BackendProtocol,
+						BackendGroup:         backendGroup,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -1190,4 +1199,286 @@ func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 	}
 
 	return oldIngresses.Difference(newIngresses).List()
+}
+
+type backendMapper struct {
+	backend string
+	mapper  *ingress.Mapper
+}
+
+type backendSplitClients struct {
+	backend      string
+	splitClients *ingress.SplitClient
+}
+
+func (n *NGINXController) getBackendGroup(anns *annotations.Ingress, ing *extensions.Ingress,
+	path extensions.HTTPIngressPath, paths []extensions.HTTPIngressPath, host string) *ingress.BackendGroup {
+	mappers := make(map[string]*ingress.Mapper)
+	splits := make(map[string]*ingress.SplitClient)
+
+	backendWeight := make(map[string]int)
+	backendFilter := make(map[string]bool)
+	backends := make([]string, 0)
+	backendNames := make(map[string]bool)
+
+	for _, p := range paths {
+		svc := p.Backend.ServiceName
+		if _, ok := backendNames[svc]; !ok {
+			backendNames[svc] = true
+		}
+	}
+
+	for svcName, svcWeight := range anns.ServiceWeight.ServiceWeight {
+		if _, ok := backendNames[svcName]; !ok {
+			continue
+		}
+
+		upstreamName := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(), svcName,
+			path.Backend.ServicePort.String())
+
+		weight, err := strconv.Atoi(svcWeight)
+		if err == nil {
+			backendWeight[upstreamName] = weight
+		} else {
+			glog.Errorf("parse service weight error: %v", err)
+		}
+	}
+
+	for _, p := range paths {
+		if path.Path == p.Path && path.Backend.ServiceName != p.Backend.ServiceName {
+			upstreamName := fmt.Sprintf("%v-%v-%v", ing.GetNamespace(),
+				p.Backend.ServiceName, path.Backend.ServicePort.String())
+			if _, ok := backendFilter[upstreamName]; !ok {
+				backends = append(backends, upstreamName)
+				backendFilter[upstreamName] = true
+			}
+		}
+	}
+
+	hostPath := fmt.Sprintf("%s%s", host, path.Path)
+	return &ingress.BackendGroup{
+		HostPath:      hostPath,
+		Backends:      backends,
+		BackendWeight: backendWeight,
+		Mappers:       mappers,
+		SplitClients:  splits,
+	}
+}
+func (n *NGINXController) getBackendConfig(backends []*ingress.Backend, servers []*ingress.Server,
+	dynamicConfigurationEnabled bool) ([]*ingress.Mapper, []*ingress.SplitClient) {
+	mappers := make([]*ingress.Mapper, 0)
+	splits := make([]*ingress.SplitClient, 0)
+	if servers == nil || len(servers) == 0 {
+		return mappers, splits
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			group := location.BackendGroup
+			if group == nil || group.Backends == nil || len(group.Backends) == 0 {
+				continue
+			}
+
+			for _, backend := range group.Backends {
+				mapper, split := processBackendGroupConfig(backend, group, location, backends,
+					dynamicConfigurationEnabled, server.Hostname)
+				if mapper != nil && mapper.mapper != nil {
+					mappers = append(mappers, mapper.mapper)
+					group.Mappers[mapper.backend] = mapper.mapper
+				}
+				if split != nil && split.splitClients != nil {
+					splits = append(splits, split.splitClients)
+					group.SplitClients[split.backend] = split.splitClients
+				}
+			}
+		}
+	}
+	return mappers, splits
+}
+
+func processBackendGroupConfig(groupBackend string, group *ingress.BackendGroup, location *ingress.Location,
+	backends []*ingress.Backend, dynamicConfigurationEnabled bool, hostname string) (
+	*backendMapper, *backendSplitClients) {
+	if group == nil || group.Backends == nil || len(group.Backends) == 0 {
+		return nil, nil
+	}
+
+	currentBackend := location.Backend
+	// not found service endpoints
+	if currentBackend == "" {
+		glog.Warningf("not found endpoints for %v", group.HostPath)
+		return nil, nil
+	}
+
+	var mapper *ingress.Mapper
+	var splits *ingress.SplitClient
+	currentBackendEndpointNum := 0
+	groupBackendEndpointNum := 0
+	backendWeightOk := false
+	sessionSticky := false
+	weightBackend := ""
+
+	if _, ok := group.BackendWeight[groupBackend]; ok {
+		backendWeightOk = true
+		weightBackend = groupBackend
+	} else if _, ok := group.BackendWeight[currentBackend]; ok {
+		backendWeightOk = true
+		weightBackend = currentBackend
+	}
+
+	for _, backend := range backends {
+		if backend.Name == currentBackend {
+			currentBackendEndpointNum = len(backend.Endpoints)
+			if !dynamicConfigurationEnabled && isSticky(hostname, location,
+				backend.SessionAffinity.CookieSessionAffinity.Locations) {
+				sessionSticky = true
+			}
+		} else if backend.Name == groupBackend {
+			groupBackendEndpointNum = len(backend.Endpoints)
+		}
+	}
+
+	cookie := fmt.Sprintf("%x", md5.Sum([]byte(group.HostPath)))
+	suffix := cookie
+	if len(cookie) > 4 {
+		suffix = cookie[:4]
+	}
+
+	if !backendWeightOk { // weight are not found
+		totalBackendWeight := currentBackendEndpointNum + groupBackendEndpointNum
+
+		if totalBackendWeight > 0 { // found backend endpoints
+			currentBackendPercent := 100 * currentBackendEndpointNum / totalBackendWeight
+			groupBackendPercent := 100 * groupBackendEndpointNum / totalBackendWeight
+			deltaWeightPercent := 100 - currentBackendPercent - groupBackendPercent
+			if deltaWeightPercent > 0 {
+				groupBackendPercent = groupBackendPercent + deltaWeightPercent
+			}
+
+			elements := make(map[string]string)
+			if currentBackendPercent > 0 {
+				elements[withStickyPrefix(currentBackend, sessionSticky)] =
+					fmt.Sprintf("%d%%", currentBackendPercent)
+			}
+
+			if groupBackendPercent > 0 {
+				elements[withStickyPrefix(groupBackend, sessionSticky)] =
+					fmt.Sprintf("%d%%", groupBackendPercent)
+			}
+
+			splits = &ingress.SplitClient{
+				Source: randomDateGmtSplit,
+				Target: getTargetVariable(
+					withStickyPrefix(currentBackend, sessionSticky),
+					withStickyPrefix(groupBackend, sessionSticky),
+					suffix),
+				Elements: elements,
+			}
+		} else {
+			glog.Warningf("not found endpoints for %v", group.HostPath)
+		}
+	} else { // weight found
+		currentBackendWeight, ok1 := group.BackendWeight[currentBackend]
+		if !ok1 {
+			currentBackendWeight = 100
+		} else if currentBackendWeight < 0 {
+			currentBackendWeight = 0
+		}
+
+		groupBackendWeight, ok2 := group.BackendWeight[groupBackend]
+		if !ok2 {
+			groupBackendWeight = 100
+		} else if groupBackendWeight < 0 {
+			groupBackendWeight = 0
+		}
+
+		totalBackendWeight := currentBackendWeight + groupBackendWeight
+		if totalBackendWeight == 0 {
+			currentBackendWeight = 100
+			groupBackendWeight = 100
+			totalBackendWeight = currentBackendWeight + groupBackendWeight
+		}
+
+		currentBackendPercent := 100 * currentBackendWeight / totalBackendWeight
+		groupBackendPercent := 100 * groupBackendWeight / totalBackendWeight
+		deltaWeightPercent := 100 - currentBackendPercent - groupBackendPercent
+		if deltaWeightPercent > 0 {
+			groupBackendPercent = groupBackendPercent + deltaWeightPercent
+		}
+
+		backendEndpointNum := currentBackendEndpointNum + groupBackendEndpointNum
+		if backendEndpointNum > 0 { // found backend endpoints
+			if currentBackendEndpointNum == 0 {
+				currentBackendPercent = 0
+				groupBackendPercent = 100
+			} else if groupBackendEndpointNum == 0 {
+				currentBackendPercent = 100
+				groupBackendPercent = 0
+			}
+
+			elements := make(map[string]string)
+			if currentBackendPercent > 0 {
+				elements[withStickyPrefix(currentBackend, sessionSticky)] =
+					fmt.Sprintf("%d%%", currentBackendPercent)
+			}
+
+			if groupBackendPercent > 0 {
+				elements[withStickyPrefix(groupBackend, sessionSticky)] =
+					fmt.Sprintf("%d%%", groupBackendPercent)
+			}
+
+			splits = &ingress.SplitClient{
+				Source: randomDateGmtSplit,
+				Target: getTargetVariable(
+					withStickyPrefix(currentBackend, sessionSticky),
+					withStickyPrefix(groupBackend, sessionSticky),
+					suffix),
+				Elements: elements,
+			}
+		} else {
+			glog.Warningf("not found endpoints for %v", group.HostPath)
+		}
+	}
+
+	if splits != nil {
+		target := strings.Replace(splits.Target, "$", "", -1)
+
+		elements := make(map[string]string)
+		elements["default"] = splits.Target
+		for name := range splits.Elements {
+			elements[name] = name
+		}
+
+		mapper = &ingress.Mapper{
+			Source:   fmt.Sprintf("$cookie_%s", cookie),
+			Target:   fmt.Sprintf("$sticky_%s", target),
+			Elements: elements,
+		}
+	}
+
+	return &backendMapper{backend: weightBackend, mapper: mapper},
+		&backendSplitClients{backend: weightBackend, splitClients: splits}
+}
+
+func getTargetVariable(s1 string, s2 string, suffix string) string {
+	s := fmt.Sprintf("$%s_%s_%s", s1, s2, suffix)
+	return strings.Replace(s, "-", "_", -1)
+}
+
+func withStickyPrefix(str string, sticky bool) string {
+	if sticky {
+		return fmt.Sprintf("sticky-%s", str)
+	}
+	return str
+}
+
+func isSticky(host string, loc *ingress.Location, stickyLocations map[string][]string) bool {
+	if _, ok := stickyLocations[host]; ok {
+		for _, sl := range stickyLocations[host] {
+			if sl == loc.Path {
+				return true
+			}
+		}
+	}
+	return false
 }

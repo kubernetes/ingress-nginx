@@ -69,6 +69,12 @@ type Configuration struct {
 
 	// ConfigurationChecksum contains the particular checksum of a Configuration object
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
+	// Mappers contains the generated map primitive
+	// +optional
+	Mappers []*Mapper `json:"mappers,omitempty"`
+	// SplitClients contains the generated split_clients primitive
+	// +optional
+	SplitClients []*SplitClient `json:"splitClients,omitempty"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -197,6 +203,8 @@ type Location struct {
 	Ingress *extensions.Ingress `json:"ingress"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
+	// BackendGroup describes extra backends for the same host and path
+	BackendGroup *BackendGroup `json:"backendGroup"`
 	// Service describes the referenced services from the ingress
 	Service *apiv1.Service `json:"service,omitempty"`
 	// Port describes to which port from the service
@@ -312,4 +320,27 @@ type L4Backend struct {
 type ProxyProtocol struct {
 	Decode bool `json:"decode"`
 	Encode bool `json:"encode"`
+}
+
+// Mapper describes the map configuration
+type Mapper struct {
+	Source   string            `json:"source"`
+	Target   string            `json:"target"`
+	Elements map[string]string `json:"elements"`
+}
+
+// SplitClient describe the split client configuration
+type SplitClient struct {
+	Source   string            `json:"source"`
+	Target   string            `json:"target"`
+	Elements map[string]string `json:"elements"`
+}
+
+// BackendGroup describes a group of same host and path backend
+type BackendGroup struct {
+	HostPath      string                  `json:"hostPath"`
+	Backends      []string                `json:"backends"`
+	BackendWeight map[string]int          `json:"backendWeight,omitempty"`
+	Mappers       map[string]*Mapper      `json:"mappers,omitempty"`
+	SplitClients  map[string]*SplitClient `json:"splitClients,omitempty"`
 }

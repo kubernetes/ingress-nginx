@@ -18,6 +18,7 @@ package template
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -155,6 +156,7 @@ var (
 		"buildOpentracing":            buildOpentracing,
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
+		"buildUpstreamCookie":         buildUpstreamCookie,
 	}
 )
 
@@ -451,6 +453,11 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 
 			break
 		}
+	}
+
+	if !dynamicConfigurationEnabled {
+		// refactorUpstreamName returns the valid upstream name
+		upstreamName = refactorUpstreamName(location, upstreamName)
 	}
 
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
@@ -945,4 +952,89 @@ func proxySetHeader(loc interface{}) string {
 	}
 
 	return "proxy_set_header"
+}
+
+func buildUpstreamCookie(loc interface{}) string {
+	location, ok := loc.(*ingress.Location)
+	if !ok {
+		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		return ""
+	}
+
+	if location == nil || location.BackendGroup == nil || len(location.BackendGroup.Backends) == 0 {
+		return ""
+	}
+
+	var mapper *ingress.Mapper
+	var split *ingress.SplitClient
+
+	group := location.BackendGroup
+	// just support the only one new backend
+	groupBackend := group.Backends[0]
+	currentBackend := location.Backend
+
+	if m, ok := group.Mappers[groupBackend]; ok {
+		mapper = m
+	} else if m, ok := group.Mappers[currentBackend]; ok {
+		mapper = m
+	} else if len(group.Mappers) > 0 {
+		for _, m := range group.Mappers {
+			mapper = m
+			break
+		}
+	}
+
+	if s, ok := group.SplitClients[groupBackend]; ok {
+		split = s
+	} else if s, ok := group.SplitClients[currentBackend]; ok {
+		split = s
+	} else if len(group.SplitClients) > 0 {
+		for _, s := range group.SplitClients {
+			split = s
+			break
+		}
+	}
+
+	if mapper != nil && split != nil {
+		cookieName := fmt.Sprintf("%x", md5.Sum([]byte(group.HostPath)))
+		cookieValue := mapper.Target
+		return fmt.Sprintf("add_header Set-Cookie \"%s=%s;Path=%s;Max-Age=%d;\";",
+			cookieName, cookieValue, location.Path, 28800)
+	}
+
+	return ""
+}
+
+func refactorUpstreamName(location *ingress.Location, upstreamName string) string {
+	if location == nil {
+		glog.Warningf("location is nil when build proxy_pass group")
+		return upstreamName
+	}
+
+	if location.BackendGroup == nil || location.BackendGroup.Backends == nil ||
+		len(location.BackendGroup.Backends) == 0 { // only one backend
+		return upstreamName
+	}
+
+	group := location.BackendGroup
+	// just support the only one new backend
+	groupBackend := group.Backends[0]
+	currentBackend := location.Backend
+	weightBackend := ""
+
+	if _, ok := group.BackendWeight[groupBackend]; ok {
+		weightBackend = groupBackend
+	} else if _, ok := group.BackendWeight[currentBackend]; ok {
+		weightBackend = currentBackend
+	}
+
+	mapper, _ := group.Mappers[weightBackend]
+	split, _ := group.SplitClients[weightBackend]
+
+	if mapper != nil {
+		return mapper.Target
+	} else if split != nil {
+		return split.Target
+	}
+	return upstreamName
 }

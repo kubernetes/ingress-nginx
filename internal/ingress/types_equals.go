@@ -108,6 +108,40 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		return false
 	}
 
+	if len(c1.Mappers) != len(c2.Mappers) {
+		return false
+	}
+
+	for _, m1 := range c1.Mappers {
+		found := false
+		for _, m2 := range c2.Mappers {
+			if m1.Equal(m2) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	if len(c1.SplitClients) != len(c2.SplitClients) {
+		return false
+	}
+
+	for _, s1 := range c1.SplitClients {
+		found := false
+		for _, s2 := range c2.SplitClients {
+			if s1.Equal(s2) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -391,6 +425,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if !(l1.BackendGroup.Equal(l2.BackendGroup)) {
+		return false
+	}
+
 	return true
 }
 
@@ -518,6 +556,113 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 			}
 		}
 		if !found {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Equal tests for equality between two Mapper types
+func (m1 *Mapper) Equal(m2 *Mapper) bool {
+	if m1 == m2 {
+		return true
+	}
+
+	if m1 == nil || m2 == nil {
+		return false
+	}
+
+	if m1.Source != m2.Source {
+		return false
+	}
+
+	if m1.Target != m2.Target {
+		return false
+	}
+
+	if len(m1.Elements) != len(m2.Elements) {
+		return false
+	}
+
+	for k1, v1 := range m1.Elements {
+		if v2, ok := m2.Elements[k1]; !ok || v1 != v2 {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Equal tests for equality between two SplitClient types
+func (s1 *SplitClient) Equal(s2 *SplitClient) bool {
+	if s1 == s2 {
+		return true
+	}
+
+	if s1 == nil || s2 == nil {
+		return false
+	}
+
+	if s1.Source != s2.Source {
+		return false
+	}
+
+	if s1.Target != s2.Target {
+		return false
+	}
+
+	if len(s1.Elements) != len(s2.Elements) {
+		return false
+	}
+
+	for k1, v1 := range s1.Elements {
+		if v2, ok := s2.Elements[k1]; !ok || v1 != v2 {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Equal tests for equality between two BackendGroup types
+func (bg1 *BackendGroup) Equal(bg2 *BackendGroup) bool {
+	if bg1 == bg2 {
+		return true
+	}
+
+	if bg1 == nil || bg2 == nil {
+		return false
+	}
+
+	if bg1.HostPath != bg2.HostPath {
+		return false
+	}
+
+	if len(bg1.Backends) != len(bg2.Backends) {
+		return false
+	}
+
+	for _, b1 := range bg1.Backends {
+		found := false
+		for _, b2 := range bg2.Backends {
+			if b1 == b2 {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return false
+		}
+	}
+
+	if len(bg1.BackendWeight) != len(bg2.BackendWeight) {
+		return false
+	}
+
+	for k1, v1 := range bg1.BackendWeight {
+		if v2, ok := bg2.BackendWeight[k1]; !ok || v1 != v2 {
 			return false
 		}
 	}

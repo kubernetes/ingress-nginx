@@ -595,6 +595,8 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		DynamicConfigurationEnabled: n.cfg.DynamicConfigurationEnabled,
 		DynamicCertificatesEnabled:  n.cfg.DynamicCertificatesEnabled,
 		DisableLua:                  n.cfg.DisableLua,
+		Mappers:                     ingressCfg.Mappers,
+		SplitClients:                ingressCfg.SplitClients,
 	}
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum

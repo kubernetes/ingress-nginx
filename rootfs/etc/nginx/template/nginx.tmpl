@@ -6,6 +6,8 @@
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
+{{ $mappers := .Mappers}}
+{{ $splitClients := .SplitClients }}
 
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
@@ -315,6 +317,28 @@ http {
     }
     {{ end }}
 
+    # Obtain best http host
+    map $http_host $this_host {
+        default          $http_host;
+        ''               $host;
+    }
+
+    map $http_x_forwarded_host $best_http_host {
+        default          $http_x_forwarded_host;
+        ''               $this_host;
+    }
+
+    {{ if not $all.DynamicConfigurationEnabled }}
+    # Custom map primitive
+    {{ range $mapper := $mappers }}
+    map {{ $mapper.Source }} {{ $mapper.Target }} {
+        {{ range $k, $v := $mapper.Elements }}
+        {{ $k }}    {{ $v }};
+        {{ end }}
+    }
+    {{ end }}
+    {{ end }}
+
     # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
     # If no such header is provided, it can provide a random value.
     map $http_x_request_id $req_id {
@@ -424,6 +448,16 @@ http {
         {{ end }}
     }
     {{ end }}
+
+    # Custom split_clients primitive
+    {{ range $split := $splitClients }}
+    split_clients "{{ $split.Source }}" {{ $split.Target }} {
+        {{ range $ups, $weight := $split.Elements }}
+        {{ $weight }}    {{ $ups }};
+        {{ end }}
+    }
+    {{ end }}
+
     {{ end }}
 
     {{ if $all.DynamicConfigurationEnabled }}
@@ -1134,6 +1168,11 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            {{ end }}
+
+            {{ if not $all.DynamicConfigurationEnabled }}
+            {{/* Add upstream session sticky configuration */}}
+            {{ buildUpstreamCookie $location }}
             {{ end }}
 
             {{ if not (empty $location.Backend) }}
