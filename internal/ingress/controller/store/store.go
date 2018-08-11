@@ -244,7 +244,7 @@ func New(checkOCSP bool,
 		Component: "nginx-ingress-controller",
 	})
 
-	// k8sStore fulfils resolver.Resolver interface
+	// k8sStore fulfills resolver.Resolver interface
 	store.annotations = annotations.NewAnnotationExtractor(store)
 
 	store.listers.IngressAnnotation.Store = cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)

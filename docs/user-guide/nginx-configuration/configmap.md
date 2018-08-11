@@ -471,7 +471,7 @@ Enables or disables the [PROXY protocol](https://www.nginx.com/resources/admin-g
 
 ## proxy-protocol-header-timeout
 
-Sets the timeout value for receiving the proxy-protocol headers. The default of 5 seconds prevents the TLS passthrough handler from waiting indefinetly on a dropped connection.
+Sets the timeout value for receiving the proxy-protocol headers. The default of 5 seconds prevents the TLS passthrough handler from waiting indefinitely on a dropped connection.
 _**default:**_ 5s
 
 ## use-gzip
