@@ -370,7 +370,7 @@ This annotation allows to return a permanent redirect instead of sending data to
 
 ### Permanent Redirect Code
 
-This annotation allows you to modify the status code used for permanent redirects.  For example `nginx.ingress.kubernetes.io/permanent-redirect-code: '308'` would return your permanet-redirect with a 308.
+This annotation allows you to modify the status code used for permanent redirects.  For example `nginx.ingress.kubernetes.io/permanent-redirect-code: '308'` would return your permanent-redirect with a 308.
 
 ### SSL Passthrough
 
