@@ -244,3 +244,11 @@ live-docs:
 build-docs:
 	@docker build --pull -t ingress-nginx/mkdocs build/mkdocs
 	@docker run --rm -it -v ${PWD}:/docs ingress-nginx/mkdocs build
+
+.PHONY: misspell
+misspell:
+	@go get github.com/client9/misspell/cmd/misspell
+	misspell \
+		-locale US \
+		-error \
+		cmd/* internal/* deploy/* docs/* design/* test/* README.md
