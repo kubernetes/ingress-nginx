@@ -17,7 +17,6 @@ limitations under the License.
 package secureupstream
 
 import (
-	"fmt"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -64,59 +63,14 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
-type mockCfg struct {
-	resolver.Mock
-	certs map[string]resolver.AuthSSLCert
-}
-
-func (cfg mockCfg) GetAuthCertificate(secret string) (*resolver.AuthSSLCert, error) {
-	if cert, ok := cfg.certs[secret]; ok {
-		return &cert, nil
-	}
-	return nil, fmt.Errorf("secret not found: %v", secret)
-}
-
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix("secure-backends")] = "true"
-	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
 	ing.SetAnnotations(data)
 
-	_, err := NewParser(mockCfg{
-		certs: map[string]resolver.AuthSSLCert{
-			"default/secure-verify-ca": {},
-		},
-	}).Parse(ing)
+	_, err := NewParser(&resolver.Mock{}).Parse(ing)
 	if err != nil {
 		t.Errorf("Unexpected error on ingress: %v", err)
-	}
-}
-
-func TestSecretNotFound(t *testing.T) {
-	ing := buildIngress()
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("secure-backends")] = "true"
-	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
-	ing.SetAnnotations(data)
-	_, err := NewParser(mockCfg{}).Parse(ing)
-	if err == nil {
-		t.Error("Expected secret not found error on ingress")
-	}
-}
-
-func TestSecretOnNonSecure(t *testing.T) {
-	ing := buildIngress()
-	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("secure-backends")] = "false"
-	data[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "secure-verify-ca"
-	ing.SetAnnotations(data)
-	_, err := NewParser(mockCfg{
-		certs: map[string]resolver.AuthSSLCert{
-			"default/secure-verify-ca": {},
-		},
-	}).Parse(ing)
-	if err == nil {
-		t.Error("Expected CA secret on non secure backend error on ingress")
 	}
 }
