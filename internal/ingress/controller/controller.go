@@ -644,9 +644,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 			if !upstreams[defBackend].Secure {
 				upstreams[defBackend].Secure = anns.SecureUpstream.Secure
 			}
-			if upstreams[defBackend].SecureCACert.Secret == "" {
-				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
-			}
 			if upstreams[defBackend].UpstreamHashBy == "" {
 				upstreams[defBackend].UpstreamHashBy = anns.UpstreamHashBy
 			}
@@ -697,10 +694,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 
 				if !upstreams[name].Secure {
 					upstreams[name].Secure = anns.SecureUpstream.Secure
-				}
-
-				if upstreams[name].SecureCACert.Secret == "" {
-					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
 				}
 
 				if upstreams[name].UpstreamHashBy == "" {

@@ -31,7 +31,6 @@ import (
 
 var (
 	annotationSecureUpstream       = parser.GetAnnotationWithPrefix("secure-backends")
-	annotationSecureVerifyCACert   = parser.GetAnnotationWithPrefix("secure-verify-ca-secret")
 	annotationUpsMaxFails          = parser.GetAnnotationWithPrefix("upstream-max-fails")
 	annotationUpsFailTimeout       = parser.GetAnnotationWithPrefix("upstream-fail-timeout")
 	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
@@ -131,41 +130,6 @@ func TestSecureUpstream(t *testing.T) {
 		r := ec.Extract(ing).SecureUpstream
 		if r.Secure != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
-		}
-	}
-}
-
-func TestSecureVerifyCACert(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{
-		MockSecrets: map[string]*apiv1.Secret{
-			"default/secure-verify-ca": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "secure-verify-ca",
-				},
-			},
-		},
-	})
-
-	anns := []struct {
-		it          int
-		annotations map[string]string
-		exists      bool
-	}{
-		{1, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert: "not"}, false},
-		{2, map[string]string{annotationSecureUpstream: "false", annotationSecureVerifyCACert: "secure-verify-ca"}, false},
-		{3, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert: "secure-verify-ca"}, true},
-		{4, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert + "_not": "secure-verify-ca"}, false},
-		{5, map[string]string{annotationSecureUpstream: "true"}, false},
-		{6, map[string]string{}, false},
-		{7, nil, false},
-	}
-
-	for _, ann := range anns {
-		ing := buildIngress()
-		ing.SetAnnotations(ann.annotations)
-		su := ec.Extract(ing).SecureUpstream
-		if (su.CACert.CAFileName != "") != ann.exists {
-			t.Errorf("Expected exists was %v on iteration %v", ann.exists, ann.it)
 		}
 	}
 }

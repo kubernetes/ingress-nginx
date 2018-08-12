@@ -28,8 +28,7 @@ import (
 
 // Config describes SSL backend configuration
 type Config struct {
-	Secure bool                 `json:"secure"`
-	CACert resolver.AuthSSLCert `json:"caCert"`
+	Secure bool `json:"secure"`
 }
 
 type su struct {
@@ -45,27 +44,8 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to indicate if the upstream servers should use SSL
 func (a su) Parse(ing *extensions.Ingress) (interface{}, error) {
 	s, _ := parser.GetBoolAnnotation("secure-backends", ing)
-	ca, _ := parser.GetStringAnnotation("secure-verify-ca-secret", ing)
-	secure := &Config{
-		Secure: s,
-		CACert: resolver.AuthSSLCert{},
-	}
-	if !s && ca != "" {
-		return secure,
-			errors.Errorf("trying to use CA from secret %v/%v on a non secure backend", ing.Namespace, ca)
-	}
-	if ca == "" {
-		return secure, nil
-	}
-	caCert, err := a.r.GetAuthCertificate(fmt.Sprintf("%v/%v", ing.Namespace, ca))
-	if err != nil {
-		return secure, errors.Wrap(err, "error obtaining certificate")
-	}
-	if caCert == nil {
-		return secure, nil
-	}
+
 	return &Config{
 		Secure: s,
-		CACert: *caCert,
 	}, nil
 }

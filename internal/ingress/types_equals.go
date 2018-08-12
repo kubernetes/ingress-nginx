@@ -141,12 +141,6 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	if b1.Secure != b2.Secure {
 		return false
 	}
-	if !(&b1.SecureCACert).Equal(&b2.SecureCACert) {
-		return false
-	}
-	if b1.SSLPassthrough != b2.SSLPassthrough {
-		return false
-	}
 	if !(&b1.SessionAffinity).Equal(&b2.SessionAffinity) {
 		return false
 	}
