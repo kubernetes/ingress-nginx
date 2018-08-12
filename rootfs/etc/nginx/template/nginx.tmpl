@@ -347,10 +347,6 @@ http {
     ssl_dhparam {{ $cfg.SSLDHParam }};
     {{ end }}
 
-    {{ if not $cfg.EnableDynamicTLSRecords }}
-    ssl_dyn_rec_size_lo 0;
-    {{ end }}
-
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
 
     {{ if .CustomErrors }}
