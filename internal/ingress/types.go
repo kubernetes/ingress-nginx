@@ -34,7 +34,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 var (

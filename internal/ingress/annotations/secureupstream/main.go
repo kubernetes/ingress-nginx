@@ -17,9 +17,6 @@ limitations under the License.
 package secureupstream
 
 import (
-	"fmt"
-
-	"github.com/pkg/errors"
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
