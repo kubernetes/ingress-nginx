@@ -615,8 +615,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#secure-backends" title="Secure backends" class="md-nav__link">
-    Secure backends
+  <a href="#secure-backends-deprecated-since-0180" title="Secure backends DEPRECATED (since 0.18.0)" class="md-nav__link">
+    Secure backends DEPRECATED (since 0.18.0)
   </a>
   
 </li>
@@ -740,8 +740,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#grpc-backend" title="gRPC backend" class="md-nav__link">
-    gRPC backend
+  <a href="#grpc-backend-deprecated-since-0180" title="gRPC backend DEPRECATED (since 0.18.0)" class="md-nav__link">
+    gRPC backend DEPRECATED (since 0.18.0)
   </a>
   
 </li>
@@ -749,6 +749,13 @@
         <li class="md-nav__item">
   <a href="#influxdb" title="InfluxDB" class="md-nav__link">
     InfluxDB
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backend-protocol" title="Backend Protocol" class="md-nav__link">
+    Backend Protocol
   </a>
   
 </li>
@@ -1481,8 +1488,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#secure-backends" title="Secure backends" class="md-nav__link">
-    Secure backends
+  <a href="#secure-backends-deprecated-since-0180" title="Secure backends DEPRECATED (since 0.18.0)" class="md-nav__link">
+    Secure backends DEPRECATED (since 0.18.0)
   </a>
   
 </li>
@@ -1606,8 +1613,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#grpc-backend" title="gRPC backend" class="md-nav__link">
-    gRPC backend
+  <a href="#grpc-backend-deprecated-since-0180" title="gRPC backend DEPRECATED (since 0.18.0)" class="md-nav__link">
+    gRPC backend DEPRECATED (since 0.18.0)
   </a>
   
 </li>
@@ -1615,6 +1622,13 @@
         <li class="md-nav__item">
   <a href="#influxdb" title="InfluxDB" class="md-nav__link">
     InfluxDB
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backend-protocol" title="Backend Protocol" class="md-nav__link">
+    Backend Protocol
   </a>
   
 </li>
@@ -1707,6 +1721,10 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#external-authentication">nginx.ingress.kubernetes.io/auth-url</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#backend-protocol">nginx.ingress.kubernetes.io/backend-protocol</a></td>
 <td>string</td>
 </tr>
 <tr>
@@ -2190,7 +2208,7 @@ This can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos
 <h3 id="permanent-redirect">Permanent Redirect<a class="headerlink" href="#permanent-redirect" title="Permanent link">&para;</a></h3>
 <p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
 <h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link">&para;</a></h3>
-<p>This annotation allows you to modify the status code used for permanent redirects.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect-code: &#39;308&#39;</code> would return your permanet-redirect with a 308.</p>
+<p>This annotation allows you to modify the status code used for permanent redirects.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect-code: &#39;308&#39;</code> would return your permanent-redirect with a 308.</p>
 <h3 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h3>
 <p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> allows to configure TLS termination in the pod and not in NGINX.</p>
 <div class="admonition attention">
@@ -2202,7 +2220,8 @@ This is because SSL Passthrough works on level 4 of the OSI stack (TCP), not on 
 <p class="admonition-title">Attention</p>
 <p>The use of this annotation requires the flag <code class="codehilite">--enable-ssl-passthrough</code> (By default it is disabled).</p>
 </div>
-<h3 id="secure-backends">Secure backends<a class="headerlink" href="#secure-backends" title="Permanent link">&para;</a></h3>
+<h3 id="secure-backends-deprecated-since-0180">Secure backends DEPRECATED (since 0.18.0)<a class="headerlink" href="#secure-backends-deprecated-since-0180" title="Permanent link">&para;</a></h3>
+<p>Please use <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;HTTPS&quot;</code></p>
 <p>By default NGINX uses plain HTTP to reach the services.
 Adding the annotation <code class="codehilite">nginx.ingress.kubernetes.io/secure-backends: &quot;true&quot;</code> in the Ingress rule changes the protocol to HTTPS.
 If you want to validate the upstream against a specific certificate, you can create a secret with it and reference the secret with the annotation <code class="codehilite">nginx.ingress.kubernetes.io/secure-verify-ca-secret</code>.</p>
@@ -2341,7 +2360,8 @@ You can use <code class="codehilite">nginx.ingress.kubernetes.io/lua-resty-waf-i
 
 
 <p>For details on how to write WAF rules, please refer to <a href="https://github.com/p0pr0ck5/lua-resty-waf">https://github.com/p0pr0ck5/lua-resty-waf</a>.</p>
-<h3 id="grpc-backend">gRPC backend<a class="headerlink" href="#grpc-backend" title="Permanent link">&para;</a></h3>
+<h3 id="grpc-backend-deprecated-since-0180">gRPC backend DEPRECATED (since 0.18.0)<a class="headerlink" href="#grpc-backend-deprecated-since-0180" title="Permanent link">&para;</a></h3>
+<p>Please use <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;GRPC&quot;</code> or <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;GRPCS&quot;</code></p>
 <p>Since NGINX 1.13.10 it is possible to expose <a href="http://nginx.org/en/docs/http/ngx_http_grpc_module.html">gRPC services natively</a></p>
 <p>You only need to add the annotation <code class="codehilite">nginx.ingress.kubernetes.io/grpc-backend: &quot;true&quot;</code> to enable this feature.
 Additionally, if the gRPC service requires TLS, add <code class="codehilite">nginx.ingress.kubernetes.io/secure-backends: &quot;true&quot;</code>.</p>
@@ -2356,18 +2376,27 @@ using the <a href="https://github.com/influxdata/nginx-influxdb-module/">nginx-i
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-influxdb</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
 <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-measurement</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx-reqs&quot;</span>
 <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-port</span><span class="p p-Indicator">:</span> <span class="s">&quot;8089&quot;</span>
-<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-host</span><span class="p p-Indicator">:</span> <span class="s">&quot;influxdb&quot;</span>
+<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-host</span><span class="p p-Indicator">:</span> <span class="s">&quot;127.0.0.1&quot;</span>
 <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-server-name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx-ingress&quot;</span>
 </pre></div>
 
 
 <p>For the <code class="codehilite">influxdb-host</code> parameter you have two options:</p>
-<p>To use the module in the Kubernetes Nginx ingress controller, you have two options:</p>
 <ul>
-<li>Use an InfluxDB server configured to enable the <a href="https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/">UDP protocol</a>.</li>
+<li>Use an InfluxDB server configured with the  <a href="https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/">UDP protocol</a> enabled. </li>
 <li>Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the <a href="https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener">socket listener input</a> and to write using
-anyone of the <a href="https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs">outputs plugins</a></li>
+anyone of the <a href="https://github.com/influxdata/telegraf/tree/release-1.7/plugins/outputs">outputs plugins</a> like InfluxDB, Apache Kafka,
+Prometheus, etc.. (recommended)</li>
 </ul>
+<p>It's important to remember that there's no DNS resolver at this stage so you will have to configure
+an ip address to <code class="codehilite">nginx.ingress.kubernetes.io/influxdb-host</code>. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use <code class="codehilite">127.0.0.1</code>.</p>
+<h3 id="backend-protocol">Backend Protocol<a class="headerlink" href="#backend-protocol" title="Permanent link">&para;</a></h3>
+<p>Using <code class="codehilite">backend-protocol</code> annotations is possible to indicate how NGINX should communicate with the backend service.
+Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
+<p>By default NGINX uses <code class="codehilite">HTTP</code>.</p>
+<p>Example:</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/backend-protocol</span><span class="p p-Indicator">:</span> <span class="s">&quot;HTTPS&quot;</span>
+</pre></div>
                 
                   
                 
