@@ -748,8 +748,6 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 		luaBackend := &ingress.Backend{
 			Name:            backend.Name,
 			Port:            backend.Port,
-			Secure:          backend.Secure,
-			SSLPassthrough:  backend.SSLPassthrough,
 			SessionAffinity: backend.SessionAffinity,
 			UpstreamHashBy:  backend.UpstreamHashBy,
 			LoadBalancing:   backend.LoadBalancing,
