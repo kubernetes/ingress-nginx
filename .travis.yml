@@ -46,7 +46,7 @@ jobs:
     - make e2e-test
   # split builds to avoid job timeouts
   - stage: publish amd64
-    if: type = push AND branch = master AND repo = Shopify/ingress
+    if: type = push AND branch = releases AND repo = Shopify/ingress
     script:
     - .travis/publish.sh amd64
   - stage: publish arm
