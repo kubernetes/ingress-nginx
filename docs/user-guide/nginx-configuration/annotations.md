@@ -370,7 +370,7 @@ This annotation allows to return a permanent redirect instead of sending data to
 
 ### Permanent Redirect Code
 
-This annotation allows you to modify the status code used for permanent redirects.  For example `nginx.ingress.kubernetes.io/permanent-redirect-code: '308'` would return your permanet-redirect with a 308.
+This annotation allows you to modify the status code used for permanent redirects.  For example `nginx.ingress.kubernetes.io/permanent-redirect-code: '308'` would return your permanent-redirect with a 308.
 
 ### SSL Passthrough
 
@@ -596,17 +596,19 @@ using the [nginx-influxdb-module](https://github.com/influxdata/nginx-influxdb-m
 nginx.ingress.kubernetes.io/enable-influxdb: "true"
 nginx.ingress.kubernetes.io/influxdb-measurement: "nginx-reqs"
 nginx.ingress.kubernetes.io/influxdb-port: "8089"
-nginx.ingress.kubernetes.io/influxdb-host: "influxdb"
+nginx.ingress.kubernetes.io/influxdb-host: "127.0.0.1"
 nginx.ingress.kubernetes.io/influxdb-server-name: "nginx-ingress"
 ```
 
 For the `influxdb-host` parameter you have two options:
 
-To use the module in the Kubernetes Nginx ingress controller, you have two options:
-
-- Use an InfluxDB server configured to enable the [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/).
+- Use an InfluxDB server configured with the  [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/) enabled. 
 - Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
-anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs)
+anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.7/plugins/outputs) like InfluxDB, Apache Kafka,
+Prometheus, etc.. (recommended)
+
+It's important to remember that there's no DNS resolver at this stage so you will have to configure
+an ip address to `nginx.ingress.kubernetes.io/influxdb-host`. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use `127.0.0.1`.
 
 ### Backend Protocol
 
