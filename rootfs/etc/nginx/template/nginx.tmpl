@@ -822,7 +822,7 @@ stream {
             proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
             proxy_request_buffering                 "{{ $location.Proxy.RequestBuffering }}";
 
-            proxy_http_version          1.1;
+            proxy_http_version          {{ $location.Proxy.ProxyHttpVersion }};
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
             client_max_body_size        "{{ $location.Proxy.BodySize }}";
@@ -1081,7 +1081,7 @@ stream {
             proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
             proxy_request_buffering                 "{{ $location.Proxy.RequestBuffering }}";
 
-            proxy_http_version                      1.1;
+            proxy_http_version                      {{ $location.Proxy.ProxyHttpVersion }};
 
             proxy_cookie_domain                     {{ $location.Proxy.CookieDomain }};
             proxy_cookie_path                       {{ $location.Proxy.CookiePath }};
