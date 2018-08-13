@@ -206,7 +206,7 @@ Feature backed by OpenResty Lua libraries.`)
 	}
 
 	if *enableSSLPassthrough && !ing_net.IsPortAvailable(*sslProxyPort) {
-		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --ssl-passtrough-proxy-port", *sslProxyPort)
+		return false, nil, fmt.Errorf("Port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)
 	}
 
 	if !*enableSSLChainCompletion {
