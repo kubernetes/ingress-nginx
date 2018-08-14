@@ -93,6 +93,7 @@ clean-install \
   libmaxminddb-dev \
   authbind \
   dumb-init \
+  gdb \
   || exit 1
 
 if [[ ${ARCH} == "x86_64" ]]; then
@@ -520,7 +521,7 @@ apt-mark unmarkauto \
   libpcre3 \
   zlib1g \
   libaio1 \
-  xz-utils \
+  gdb \
   geoip-bin \
   libyajl2 liblmdb0 libxml2 libpcre++ \
   gzip \
