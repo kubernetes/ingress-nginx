@@ -27,9 +27,9 @@ export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.6.0
-export OPENTRACING_CPP_VERSION=1.4.0
-export ZIPKIN_CPP_VERSION=0.3.1
-export JAEGER_VERSION=0.4.1
+export OPENTRACING_CPP_VERSION=1.5.0
+export ZIPKIN_CPP_VERSION=0.5.1
+export JAEGER_VERSION=ba0fa3fa6dbb01995d996f988a897e272100bf95
 export MODSECURITY_VERSION=37b76e88df4bce8a9846345c27271d7e6ce1acfb
 export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
 export LUA_UPSTREAM_VERSION=0.07
@@ -81,7 +81,6 @@ clean-install \
   util-linux \
   lua5.1 liblua5.1-0 liblua5.1-dev \
   lmdb-utils \
-  libjemalloc1 libjemalloc-dev \
   wget \
   libcurl4-openssl-dev \
   libprotobuf-dev protobuf-compiler \
@@ -92,9 +91,9 @@ clean-install \
   python \
   luarocks \
   libmaxminddb-dev \
-  libatomic-ops-dev \
   authbind \
   dumb-init \
+  gdb \
   || exit 1
 
 if [[ ${ARCH} == "x86_64" ]]; then
@@ -169,17 +168,17 @@ get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
 get_src b6a6eecb0b18b15398b7d6ed0a2db4cfd7a9015c1e26f9da4160acc588b82b6f \
         "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
-get_src 2eb0a4a7dc62bc8cbf12872080197b41d53b4c04966c860774a6b11fd59fad55 \
+get_src 4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5 \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
-get_src f16a6f1eed494ca3c2607d7ad671cb134bd7eb320c5969c8281c10922a146589 \
+get_src f65cbb1de638f5b7bb4a7a3e0b4a6ecef7870e119f85652e3bd5fe4ea2f15d3f \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
 get_src fe7d3188e097d68f1942d46c4adba262d9ddcf433409ebc15bb5355bfb001a4a \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
-get_src 35b5a96ceb0aec68abdf25cdb9fe43cce09b2ab7bf52fb32d77038f21fef75ac \
-        "https://github.com/jaegertracing/jaeger-client-cpp/archive/v$JAEGER_VERSION.tar.gz"
+get_src b68286966f292fb552511b71bd8bc11af8f12c8aa760372d1437ac8760cb2f25 \
+        "https://github.com/jaegertracing/jaeger-client-cpp/archive/$JAEGER_VERSION.tar.gz"
 
 get_src 9915ad1cf0734cc5b357b0d9ea92fec94764b4bf22f4dce185cbd65feda30ec1 \
         "https://github.com/AirisX/nginx_cookie_flag_module/archive/v$COOKIE_FLAG_VERSION.tar.gz"
@@ -289,7 +288,10 @@ mkdir .build
 cd .build
 
 cmake   -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_TESTING=OFF ..
+        -DCMAKE_CXX_FLAGS="-fPIC" \
+        -DBUILD_TESTING=OFF \
+        -DBUILD_MOCKTRACER=OFF \
+        ..
 
 make
 make install
@@ -449,7 +451,6 @@ CC_OPT="-g -Og -fPIE -fstack-protector-strong \
   -Werror=format-security \
   -Wno-deprecated-declarations \
   -fno-strict-aliasing \
-  -Wdate-time \
   -D_FORTIFY_SOURCE=2 \
   --param=ssp-buffer-size=4 \
   -DTCP_FASTOPEN=23 \
@@ -457,7 +458,7 @@ CC_OPT="-g -Og -fPIE -fstack-protector-strong \
   -I$HUNTER_INSTALL_DIR/include \
   -Wno-cast-function-type"
 
-LD_OPT="-ljemalloc -fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
+LD_OPT="-fPIE -fPIC -pie -Wl,-z,relro -Wl,-z,now -L$HUNTER_INSTALL_DIR/lib"
 
 if [[ ${ARCH} == "x86_64" ]]; then
   CC_OPT+=' -m64 -mtune=native'
@@ -500,7 +501,6 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --without-http_scgi_module \
   --with-cc-opt="${CC_OPT}" \
   --with-ld-opt="${LD_OPT}" \
-  --with-libatomic \
   --user=www-data \
   --group=www-data \
   ${WITH_MODULES}
@@ -521,7 +521,7 @@ apt-mark unmarkauto \
   libpcre3 \
   zlib1g \
   libaio1 \
-  xz-utils \
+  gdb \
   geoip-bin \
   libyajl2 liblmdb0 libxml2 libpcre++ \
   gzip \
@@ -539,6 +539,8 @@ apt-get remove -y --purge \
   wget \
   patch \
   protobuf-compiler \
+  python \
+  xz-utils \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y
