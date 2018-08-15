@@ -1089,7 +1089,7 @@
       ],
       "targets": [
         {
-          "expr": "avg(nginx_ingress_controller_ssl_expire_time_seconds{kubernetes_pod_name=~\"$controller\"}) by (host) - time()",
+          "expr": "avg(nginx_ingress_controller_ssl_expire_time_seconds{kubernetes_pod_name=~\"$controller\",namespace=~\"$namespace\"}) by (host) - time()",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{ host }}",
