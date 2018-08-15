@@ -30,7 +30,7 @@ BASEIMAGE?=alpine:3.7
 
 ALL_ARCH = amd64 arm arm64 ppc64le
 
-QEMUVERSION=v2.12.0
+QEMUVERSION=v2.12.0-1
 
 IMGNAME = custom-error-pages
 IMAGE = $(REGISTRY)/$(IMGNAME)
