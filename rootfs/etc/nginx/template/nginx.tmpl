@@ -93,7 +93,10 @@ http {
     }
     {{ end }}
     {{ end }}
-    {{/* we use the value of the header X-Forwarded-For to be able to use the geo_ip module */}}
+
+    {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
+    {{/* we use the value of the real IP for the geo_ip module */}}
+    {{ if or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol }}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
     {{ else }}
@@ -103,6 +106,7 @@ http {
     real_ip_recursive   on;
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
     set_real_ip_from    {{ $trusted_ip }};
+    {{ end }}
     {{ end }}
 
     {{ if $cfg.UseGeoIP }}
@@ -241,7 +245,9 @@ http {
         ''               close;
     }
 
-    map {{ buildForwardedFor $cfg.ForwardedForHeader }} $the_real_ip {
+    # The following is a sneaky way to do "set $the_real_ip $remote_addr"
+    # Needed because using set is not allowed outside server blocks.
+    map '' $the_real_ip {
     {{ if $cfg.UseProxyProtocol }}
         # Get IP address from Proxy Protocol
         default          $proxy_protocol_addr;
@@ -250,22 +256,49 @@ http {
     {{ end }}
     }
 
+    {{ if $cfg.UseForwardedHeaders }}
     # trust http_x_forwarded_proto headers correctly indicate ssl offloading
     map $http_x_forwarded_proto $pass_access_scheme {
         default          $http_x_forwarded_proto;
         ''               $scheme;
     }
 
+    map $http_x_forwarded_port $pass_server_port {
+        default           $http_x_forwarded_port;
+        ''                $server_port;
+    }
+
+    # Obtain best http host
+    map $http_host $this_host {
+        default          $http_host;
+        ''               $host;
+    }
+
+    map $http_x_forwarded_host $best_http_host {
+        default          $http_x_forwarded_host;
+        ''               $this_host;
+    }
+    {{ else }}
+    map '' $pass_access_scheme {
+        default          $scheme;
+    }
+
+    map '' $pass_server_port {
+        default          $server_port;
+    }
+
+    # Obtain best http host
+    map $http_host $best_http_host {
+        default          $http_host;
+        ''               $host;
+    }
+    {{ end }}
+
     # validate $pass_access_scheme and $scheme are http to force a redirect
     map "$scheme:$pass_access_scheme" $redirect_to_https {
         default          0;
         "http:http"      1;
         "https:http"     1;
-    }
-
-    map $http_x_forwarded_port $pass_server_port {
-        default           $http_x_forwarded_port;
-        ''                $server_port;
     }
 
     {{ if $all.IsSSLPassthroughEnabled }}
@@ -281,17 +314,6 @@ http {
     }
     {{ end }}
 
-    # Obtain best http host
-    map $http_host $this_host {
-        default          $http_host;
-        ''               $host;
-    }
-
-    map $http_x_forwarded_host $best_http_host {
-        default          $http_x_forwarded_host;
-        ''               $this_host;
-    }
-
     # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
     # If no such header is provided, it can provide a random value.
     map $http_x_request_id $req_id {
@@ -301,7 +323,7 @@ http {
         {{ end }}
     }
 
-    {{ if $cfg.ComputeFullForwardedFor }}
+    {{ if and $cfg.UseForwardedHeaders $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
     map $http_x_forwarded_for $full_x_forwarded_for {
@@ -1047,7 +1069,7 @@ stream {
 
             {{ $proxySetHeader }} X-Request-ID           $req_id;
             {{ $proxySetHeader }} X-Real-IP              $the_real_ip;
-            {{ if $all.Cfg.ComputeFullForwardedFor }}
+            {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
             {{ $proxySetHeader }} X-Forwarded-For        $full_x_forwarded_for;
             {{ else }}
             {{ $proxySetHeader }} X-Forwarded-For        $the_real_ip;
