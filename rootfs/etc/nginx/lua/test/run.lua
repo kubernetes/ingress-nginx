@@ -29,4 +29,7 @@ ngx.socket.tcp = function(...)
   return socket
 end
 
+ngx.log = function(...) end
+ngx.print = function(...) end
+
 require "busted.runner"({ standalone = false })

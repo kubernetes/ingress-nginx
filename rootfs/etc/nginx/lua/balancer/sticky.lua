@@ -1,7 +1,6 @@
 local balancer_resty = require("balancer.resty")
 local resty_chash = require("resty.chash")
 local util = require("util")
-local split = require("util.split")
 local ck = require("resty.cookie")
 
 local _M = balancer_resty:new({ factory = resty_chash, name = "sticky" })
@@ -56,7 +55,7 @@ local function pick_random(instance)
   return instance:next(index)
 end
 
-local function sticky_endpoint_string(self)
+function _M.balance(self)
   local cookie, err = ck:new()
   if not cookie then
     ngx.log(ngx.ERR, err)
@@ -71,11 +70,6 @@ local function sticky_endpoint_string(self)
   end
 
   return self.instance:find(key)
-end
-
-function _M.balance(self)
-  local endpoint_string = sticky_endpoint_string(self)
-  return split.split_pair(endpoint_string, ":")
 end
 
 return _M
