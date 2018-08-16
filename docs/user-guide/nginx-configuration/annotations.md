@@ -27,6 +27,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
 |[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
@@ -43,7 +44,9 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
+|[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
+|[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
 |[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
@@ -70,6 +73,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
+|[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
@@ -150,7 +154,7 @@ nginx.ingress.kubernetes.io/auth-realm: "realm string"
 NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enable the configuration of each server in the upstream. The Ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` and `upstream-fail-timeout` in the NGINX ConfigMap or in a particular Ingress rule. `upstream-max-fails` defaults to 0. This means NGINX will respect the container's `readinessProbe` if it is defined. If there is no probe and no values for `upstream-max-fails` NGINX will continue to send traffic to the container.
 
 
-!!! tip 
+!!! tip
 	With the default configuration NGINX will not health check your backends. Whenever the endpoints controller notices a readiness probe failure, that pod's IP will be removed from the list of endpoints. This will trigger the NGINX controller to also remove it from the upstreams.**
 
 To use custom values in an Ingress rule define these annotations:
@@ -208,9 +212,9 @@ The annotations are:
 
 !!! attention
     TLS with Client Authentication is **not** possible in Cloudflare and might result in unexpected behavior.
-  
+
     Cloudflare only allows Authenticated Origin Pulls and is required to use their own certificate: [https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/](https://blog.cloudflare.com/protecting-the-origin-with-tls-authenticated-origin-pulls/)
-  
+
     Only Authenticated Origin Pulls are allowed and can be configured by following their tutorial: [https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls](https://support.cloudflare.com/hc/en-us/articles/204494148-Setting-up-NGINX-to-use-TLS-Authenticated-Origin-Pulls)
 
 
@@ -364,6 +368,10 @@ To configure this setting globally for all Ingress rules, the `limit-rate-after`
 
 This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example `nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com` would redirect everything to Google.
 
+### Permanent Redirect Code
+
+This annotation allows you to modify the status code used for permanent redirects.  For example `nginx.ingress.kubernetes.io/permanent-redirect-code: '308'` would return your permanent-redirect with a 308.
+
 ### SSL Passthrough
 
 The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure TLS termination in the pod and not in NGINX.
@@ -375,7 +383,9 @@ The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure
 !!! attention
     The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled).
 
-### Secure backends
+### Secure backends DEPRECATED (since 0.18.0)
+
+Please use `nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"`
 
 By default NGINX uses plain HTTP to reach the services.
 Adding the annotation `nginx.ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to HTTPS.
@@ -464,6 +474,12 @@ To use custom values in an Ingress rule define these annotation:
 nginx.ingress.kubernetes.io/proxy-body-size: 8m
 ```
 
+### Proxy cookie domain
+
+Sets a text that [should be changed in the domain attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the "Set-Cookie" header fields of a proxied server response.
+
+To configure this setting globally for all Ingress rules, the `proxy-cookie-domain` value may be set in the [NGINX ConfigMap][configmap].
+
 ### Proxy buffering
 
 Enable or disable proxy buffering [`proxy_buffering`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering).
@@ -474,6 +490,16 @@ To use custom values in an Ingress rule define these annotation:
 
 ```yaml
 nginx.ingress.kubernetes.io/proxy-buffering: "on"
+```
+
+### Proxy buffer size
+
+Sets the size of the buffer [`proxy_buffer_size`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) used for reading the first part of the response received from the proxied server.
+By default proxy buffer size is set as "4k"
+
+To configure this setting globally, set `proxy-buffer-size` in [NGINX ConfigMap][configmap]. To use custom values in an Ingress rule, define this annotation:
+```yaml
+nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
 ```
 
 ### SSL ciphers
@@ -546,7 +572,9 @@ nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules: '[=[ { "access": [ { "act
 
 For details on how to write WAF rules, please refer to [https://github.com/p0pr0ck5/lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf).
 
-### gRPC backend
+### gRPC backend DEPRECATED (since 0.18.0)
+
+Please use `nginx.ingress.kubernetes.io/backend-protocol: "GRPC"` or `nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"`
 
 Since NGINX 1.13.10 it is possible to expose [gRPC services natively](http://nginx.org/en/docs/http/ngx_http_grpc_module.html)
 
@@ -568,15 +596,29 @@ using the [nginx-influxdb-module](https://github.com/influxdata/nginx-influxdb-m
 nginx.ingress.kubernetes.io/enable-influxdb: "true"
 nginx.ingress.kubernetes.io/influxdb-measurement: "nginx-reqs"
 nginx.ingress.kubernetes.io/influxdb-port: "8089"
-nginx.ingress.kubernetes.io/influxdb-host: "influxdb"
+nginx.ingress.kubernetes.io/influxdb-host: "127.0.0.1"
 nginx.ingress.kubernetes.io/influxdb-server-name: "nginx-ingress"
 ```
 
 For the `influxdb-host` parameter you have two options:
 
-To use the module in the Kubernetes Nginx ingress controller, you have two options:
-
-- Use an InfluxDB server configured to enable the [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/).
+- Use an InfluxDB server configured with the  [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/) enabled. 
 - Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
-anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/outputs)
+anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.7/plugins/outputs) like InfluxDB, Apache Kafka,
+Prometheus, etc.. (recommended)
 
+It's important to remember that there's no DNS resolver at this stage so you will have to configure
+an ip address to `nginx.ingress.kubernetes.io/influxdb-host`. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use `127.0.0.1`.
+
+### Backend Protocol
+
+Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service.
+Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP
+
+By default NGINX uses `HTTP`.
+
+Example:
+
+```yaml
+nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+```

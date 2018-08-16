@@ -149,6 +149,10 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte,
 		}
 
 		caFile, err := fs.Create(pemFileName)
+		if err != nil {
+			return nil, fmt.Errorf("could not create CA cert file %v: %v", pemFileName, err)
+		}
+
 		_, err = caFile.Write(caData)
 		if err != nil {
 			return nil, fmt.Errorf("could not append CA to cert file %v: %v", pemFileName, err)

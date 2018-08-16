@@ -1,6 +1,7 @@
 local balancer_resty = require("balancer.resty")
 local resty_chash = require("resty.chash")
 local util = require("util")
+local split = require("util.split")
 
 local _M = balancer_resty:new({ factory = resty_chash, name = "chash" })
 
@@ -15,7 +16,7 @@ end
 function _M.balance(self)
   local key = util.lua_ngx_var(self.hash_by)
   local endpoint_string = self.instance:find(key)
-  return util.split_pair(endpoint_string, ":")
+  return split.split_pair(endpoint_string, ":")
 end
 
 return _M

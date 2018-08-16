@@ -22,14 +22,29 @@ RUN clean-install \
   diffutils \
   dumb-init
 
-# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
-# This only works if nginx is started with CMD or ENTRYPOINT
-RUN mkdir -p /var/log/nginx \
-  && ln -sf /dev/stdout /var/log/nginx/access.log \
-  && ln -sf /dev/stderr /var/log/nginx/error.log
-
 COPY . /
 
-ENTRYPOINT ["/usr/bin/dumb-init"]
+# Fix permission during the build to avoid issues at runtime
+# with volumes (custom templates)
+RUN bash -eu -c ' \
+  writeDirs=( \
+    /etc/nginx/template \
+    /etc/ingress-controller/ssl \
+    /etc/ingress-controller/auth \
+    /var/log \
+    /var/log/nginx \
+    /tmp \
+  ); \
+  for dir in "${writeDirs[@]}"; do \
+    mkdir -p ${dir}; \
+    chown -R www-data.www-data ${dir}; \
+  done' \
+  && chown www-data.www-data /etc/nginx/nginx.conf \
+  && chown www-data.www-data /etc/nginx/opentracing.json
+
+# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
+# This only works if nginx is started with CMD or ENTRYPOINT
+RUN ln -sf /dev/stdout /var/log/nginx/access.log
+RUN ln -sf /dev/stderr /var/log/nginx/error.log
 
 CMD ["/nginx-ingress-controller"]

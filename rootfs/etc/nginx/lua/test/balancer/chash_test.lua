@@ -1,5 +1,3 @@
-package.path = "./rootfs/etc/nginx/lua/?.lua;./rootfs/etc/nginx/lua/test/mocks/?.lua;" .. package.path
-
 describe("Balancer chash", function()
   local balancer_chash = require("balancer.chash")
 

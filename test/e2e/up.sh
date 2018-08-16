@@ -14,41 +14,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
+set -e
 
-echo "downloading kubectl..."
-curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
-    chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo "downloading minikube..."
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
-    chmod +x minikube && \
-    sudo mv minikube /usr/local/bin/
+if test -e kubectl; then
+  echo "skipping download of kubectl"
+else
+  echo "downloading kubectl..."
+  curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/linux/amd64/kubectl && \
+      chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+fi
 
-echo "starting minikube..."
-# Using a lower value for sync-frequency to speed up the tests (during the cleanup of resources inside a namespace)
+mkdir -p ${HOME}/.kube
+touch ${HOME}/.kube/config
+export KUBECONFIG=${HOME}/.kube/config
 
-export MINIKUBE_WANTUPDATENOTIFICATION=false
-export MINIKUBE_WANTREPORTERRORPROMPT=false
-export MINIKUBE_HOME=$HOME
-mkdir $HOME/.kube || true
-touch $HOME/.kube/config
+echo "starting Kubernetes cluster..."
+$DIR/dind-cluster-v1.11.sh up
 
-export KUBECONFIG=$HOME/.kube/config
+kubectl config use-context dind
 
-# --vm-driver=none, use host docker (avoid docker-in-docker)
-# --bootstrapper=localkube, works around https://github.com/kubernetes/minikube/issues/2704
-sudo -E minikube start \
-    --bootstrapper=localkube \
-    --vm-driver=none \
-    --kubernetes-version=$KUBERNETES_VERSION \
-    --extra-config=kubelet.sync-frequency=1s \
-    --extra-config=apiserver.authorization-mode=RBAC
+echo "Kubernetes cluster:"
+kubectl get nodes -o wide
 
-minikube update-context
+export TAG=dev
+export ARCH=amd64
+export REGISTRY=${REGISTRY:-ingress-controller}
 
-echo "waiting for kubernetes cluster"
-until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True";
-do
-    sleep 1;
-done
+echo "building container..."
+make -C ${DIR}/../../ build container
+
+echo "copying docker image to cluster..."
+DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
+${DIR}/dind-cluster-v1.11.sh copy-image ${DEV_IMAGE}

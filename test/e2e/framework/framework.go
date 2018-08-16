@@ -15,7 +15,7 @@ package framework
 
 import (
 	"fmt"
-	"os/exec"
+	"os"
 	"strings"
 	"time"
 
@@ -112,13 +112,11 @@ func (f *Framework) BeforeEach() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	By("Building NGINX HTTP URL")
 	HTTPURL, err := f.GetNginxURL(HTTP)
 	Expect(err).NotTo(HaveOccurred())
 
 	f.IngressController.HTTPURL = HTTPURL
 
-	By("Building NGINX HTTPS URL")
 	HTTPSURL, err := f.GetNginxURL(HTTPS)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -135,6 +133,13 @@ func (f *Framework) AfterEach() {
 	By("Waiting for test namespace to no longer exist")
 	err := DeleteKubeNamespace(f.KubeClientSet, f.IngressController.Namespace)
 	Expect(err).NotTo(HaveOccurred())
+
+	if CurrentGinkgoTestDescription().Failed {
+		log, err := f.NginxLogs()
+		Expect(err).ToNot(HaveOccurred())
+		By("Dumping NGINX logs after a failure running a test")
+		Logf("%v", log)
+	}
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.
@@ -145,11 +150,7 @@ func IngressNginxDescribe(text string, body func()) bool {
 // GetNginxIP returns the IP address of the minikube cluster
 // where the NGINX ingress controller is running
 func (f *Framework) GetNginxIP() (string, error) {
-	out, err := exec.Command("minikube", "ip").Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), nil
+	return os.Getenv("NODE_IP"), nil
 }
 
 // GetNginxPort returns the number of TCP port where NGINX is running
@@ -425,4 +426,20 @@ func NewSingleIngress(name, path, host, ns, service string, port int, annotation
 	}
 
 	return ing
+}
+
+// DisableDynamicConfiguration disables dynamic configuration
+func (f *Framework) DisableDynamicConfiguration() error {
+	return UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 1,
+		func(deployment *appsv1beta1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--enable-dynamic-configuration=false")
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.IngressController.Namespace).Update(deployment)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
 }

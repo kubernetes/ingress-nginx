@@ -1,5 +1,7 @@
 local ngx_balancer = require("ngx.balancer")
 local json = require("cjson")
+local util = require("util")
+local dns_util = require("util.dns")
 local configuration = require("configuration")
 local round_robin = require("balancer.round_robin")
 local chash = require("balancer.chash")
@@ -40,6 +42,19 @@ local function get_implementation(backend)
   return implementation
 end
 
+local function resolve_external_names(original_backend)
+  local backend = util.deepcopy(original_backend)
+  local endpoints = {}
+  for _, endpoint in ipairs(backend.endpoints) do
+    local ips = dns_util.resolve(endpoint.address)
+    for _, ip in ipairs(ips) do
+      table.insert(endpoints, { address = ip, port = endpoint.port })
+    end
+  end
+  backend.endpoints = endpoints
+  return backend
+end
+
 local function sync_backend(backend)
   local implementation = get_implementation(backend)
   local balancer = balancers[backend.name]
@@ -57,6 +72,11 @@ local function sync_backend(backend)
       string.format("LB algorithm changed from %s to %s, resetting the instance", balancer.name, implementation.name))
     balancers[backend.name] = implementation:new(backend)
     return
+  end
+
+  local service_type = backend.service and backend.service.spec and backend.service.spec["type"]
+  if service_type == "ExternalName" then
+    backend = resolve_external_names(backend)
   end
 
   balancer:sync(backend)

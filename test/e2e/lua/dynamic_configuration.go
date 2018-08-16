@@ -27,23 +27,28 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/kubernetes"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
+)
+
+const (
+	logDynamicConfigSuccess = "Dynamic reconfiguration succeeded"
+	logDynamicConfigFailure = "Dynamic reconfiguration failed"
+	logRequireBackendReload = "Configuration changes detected, backend reload required"
+	logBackendReloadSuccess = "Backend successfully reloaded"
+	logSkipBackendReload    = "Changes handled by the dynamic configuration, skipping backend reload"
+	logInitialConfigSync    = "Initial synchronization of the NGINX configuration"
+	waitForLuaSync          = 2 * time.Second
 )
 
 var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	f := framework.NewDefaultFramework("dynamic-configuration")
 
 	BeforeEach(func() {
-		err := enableDynamicConfiguration(f.IngressController.Namespace, f.KubeClientSet)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.NewEchoDeploymentWithReplicas(1)
+		err := f.NewEchoDeploymentWithReplicas(1)
 		Expect(err).NotTo(HaveOccurred())
 
 		host := "foo.com"
@@ -57,8 +62,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 
-		// give some time for Lua to sync the backend
-		time.Sleep(5 * time.Second)
+		time.Sleep(waitForLuaSync)
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -69,8 +73,16 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 		log, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(log).ToNot(ContainSubstring("could not dynamically reconfigure"))
-		Expect(log).To(ContainSubstring("first sync of Nginx configuration"))
+		Expect(log).ToNot(ContainSubstring(logDynamicConfigFailure))
+		Expect(log).To(ContainSubstring(logDynamicConfigSuccess))
+	})
+
+	It("should set nameservers for Lua", func() {
+		err := f.WaitForNginxConfiguration(func(cfg string) bool {
+			r := regexp.MustCompile(`configuration.nameservers = { [".,0-9a-zA-Z]+ }`)
+			return r.MatchString(cfg)
+		})
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Context("when only backends change", func() {
@@ -85,7 +97,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			replicas := 2
 			err := framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			log, err := f.NginxLogs()
 			Expect(err).ToNot(HaveOccurred())
@@ -94,14 +106,14 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			restOfLogs := log[index:]
 
 			By("POSTing new backends to Lua endpoint")
-			Expect(restOfLogs).To(ContainSubstring("dynamic reconfiguration succeeded"))
-			Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
+			Expect(restOfLogs).To(ContainSubstring(logDynamicConfigSuccess))
+			Expect(restOfLogs).ToNot(ContainSubstring(logDynamicConfigFailure))
 
 			By("skipping Nginx reload")
-			Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
-			Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
-			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
-			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
+			Expect(restOfLogs).ToNot(ContainSubstring(logRequireBackendReload))
+			Expect(restOfLogs).ToNot(ContainSubstring(logBackendReloadSuccess))
+			Expect(restOfLogs).To(ContainSubstring(logSkipBackendReload))
+			Expect(restOfLogs).ToNot(ContainSubstring(logInitialConfigSync))
 		})
 
 		It("should be able to update endpoints even when the update POST size(request body) > size(client_body_buffer_size)", func() {
@@ -116,7 +128,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			replicas = 4
 			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			resp, _, errs := gorequest.New().
 				Get(f.IngressController.HTTPURL).
@@ -155,7 +167,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/load-balance"] = "round_robin"
 			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 			Expect(err).ToNot(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			log, err := f.NginxLogs()
 			Expect(err).ToNot(HaveOccurred())
@@ -164,14 +176,14 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			restOfLogs := log[index:]
 
 			By("POSTing new backends to Lua endpoint")
-			Expect(restOfLogs).To(ContainSubstring("dynamic reconfiguration succeeded"))
-			Expect(restOfLogs).ToNot(ContainSubstring("could not dynamically reconfigure"))
+			Expect(restOfLogs).To(ContainSubstring(logDynamicConfigSuccess))
+			Expect(restOfLogs).ToNot(ContainSubstring(logDynamicConfigFailure))
 
 			By("skipping Nginx reload")
-			Expect(restOfLogs).ToNot(ContainSubstring("backend reload required"))
-			Expect(restOfLogs).ToNot(ContainSubstring("ingress backend successfully reloaded"))
-			Expect(restOfLogs).To(ContainSubstring("skipping reload"))
-			Expect(restOfLogs).ToNot(ContainSubstring("first sync of Nginx configuration"))
+			Expect(restOfLogs).ToNot(ContainSubstring(logRequireBackendReload))
+			Expect(restOfLogs).ToNot(ContainSubstring(logBackendReloadSuccess))
+			Expect(restOfLogs).To(ContainSubstring(logSkipBackendReload))
+			Expect(restOfLogs).ToNot(ContainSubstring(logInitialConfigSync))
 		})
 	})
 
@@ -208,10 +220,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(log).ToNot(BeEmpty())
 
 		By("reloading Nginx")
-		Expect(log).To(ContainSubstring("ingress backend successfully reloaded"))
+		Expect(log).To(ContainSubstring(logBackendReloadSuccess))
 
 		By("POSTing new backends to Lua endpoint")
-		Expect(log).To(ContainSubstring("dynamic reconfiguration succeeded"))
+		Expect(log).To(ContainSubstring(logDynamicConfigSuccess))
 
 		By("still be proxying requests through Lua balancer")
 		err = f.WaitForNginxServer("foo.com",
@@ -231,7 +243,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", 2, nil)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(10 * time.Second)
+		time.Sleep(waitForLuaSync)
 
 		resp, body, errs := gorequest.New().
 			Get(fmt.Sprintf("%s?a-unique-request-uri", f.IngressController.HTTPURL)).
@@ -275,7 +287,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			By("Increasing the number of service replicas")
 			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", 2, nil)
 			Expect(err).NotTo(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			By("Making a first request")
 			host := "foo.com"
@@ -331,7 +343,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			}
 			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Update(ingress)
 			Expect(err).ToNot(HaveOccurred())
-			time.Sleep(5 * time.Second)
+			time.Sleep(waitForLuaSync)
 
 			By("Making a request")
 			host := "foo.com"
@@ -348,21 +360,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		})
 	})
 })
-
-func enableDynamicConfiguration(namespace string, kubeClientSet kubernetes.Interface) error {
-	return framework.UpdateDeployment(kubeClientSet, namespace, "nginx-ingress-controller", 1,
-		func(deployment *appsv1beta1.Deployment) error {
-			args := deployment.Spec.Template.Spec.Containers[0].Args
-			args = append(args, "--enable-dynamic-configuration")
-			deployment.Spec.Template.Spec.Containers[0].Args = args
-			_, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Update(deployment)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
-}
 
 func ensureIngress(f *framework.Framework, host string) (*extensions.Ingress, error) {
 	return f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{

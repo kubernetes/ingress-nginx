@@ -1,82 +1,83 @@
 # Custom Errors
 
-This example shows how is possible to use a custom backend to render custom error pages. The code of this example is located here [custom-error-pages](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/customization/custom-errors)
+This example demonstrates how to use a custom backend to render custom error pages.
 
+## Customized default backend
 
-The idea is to use the headers `X-Code` and `X-Format` that NGINX pass to the backend in case of an error to find out the best existent representation of the response to be returned. i.e. if the request contains an `Accept` header of type `json` the error should be in that format and not in `html` (the default in NGINX).
-
-First create the custom backend to use in the Ingress controller
+First, create the custom `default-backend`. It will be used by the Ingress controller later on.
 
 ```
 $ kubectl create -f custom-default-backend.yaml
 service "nginx-errors" created
-replicationcontroller "nginx-errors" created
+deployment.apps "nginx-errors" created
 ```
 
-```
-$ kubectl get svc
-NAME                    CLUSTER-IP   EXTERNAL-IP   PORT(S)         AGE
-echoheaders             10.3.0.7     nodes         80/TCP          23d
-kubernetes              10.3.0.1     <none>        443/TCP         34d
-nginx-errors            10.3.0.102   <none>        80/TCP          11s
-```
+This should have created a Deployment and a Service with the name `nginx-errors`.
 
 ```
-$ kubectl get rc
-CONTROLLER             REPLICAS   AGE
-echoheaders            1          19d
-nginx-errors           1          19s
+$ kubectl get deploy,svc
+NAME                           DESIRED   CURRENT   READY     AGE
+deployment.apps/nginx-errors   1         1         1         10s
+
+NAME                   TYPE        CLUSTER-IP  EXTERNAL-IP   PORT(S)   AGE
+service/nginx-errors   ClusterIP   10.0.0.12   <none>        80/TCP    10s
 ```
 
-Next create the Ingress controller executing
-```
-$ kubectl create -f rc-custom-errors.yaml
-```
+## Ingress controller configuration
 
-Now to check if this is working we use curl:
+If you do not already have an instance of the the NGINX Ingress controller running, deploy it according to the
+[deployment guide][deploy], then follow these steps:
+
+1. Edit the `nginx-ingress-controller` Deployment and set the value of the `--default-backend` flag to the name of the
+   newly created error backend.
+
+2. Edit the `nginx-configuration` ConfigMap and create the key `custom-http-errors` with a value of `404,503`.
+
+3. Take note of the IP address assigned to the NGINX Ingress controller Service.
+    ```
+    $ kubectl get svc ingress-nginx
+    NAME            TYPE        CLUSTER-IP  EXTERNAL-IP   PORT(S)          AGE
+    ingress-nginx   ClusterIP   10.0.0.13   <none>        80/TCP,443/TCP   10m
+    ```
+
+!!! Note
+    The `ingress-nginx` Service is of type `ClusterIP` in this example. This may vary depending on your environment.
+    Make sure you can use the Service to reach NGINX before proceeding with the rest of this example.
+
+[deploy]: ../../../deploy/
+
+## Testing error pages
+
+Let us send a couple of HTTP requests using cURL and validate everything is working as expected.
+
+A request to the default backend returns a 404 error with a custom message:
 
 ```
-$ curl -v http://172.17.4.99/
-*   Trying 172.17.4.99...
-* Connected to 172.17.4.99 (172.17.4.99) port 80 (#0)
-> GET / HTTP/1.1
-> Host: 172.17.4.99
-> User-Agent: curl/7.43.0
-> Accept: */*
->
-< HTTP/1.1 404 Not Found
-< Server: nginx/1.10.0
-< Date: Wed, 04 May 2016 02:53:45 GMT
-< Content-Type: text/html
-< Transfer-Encoding: chunked
-< Connection: keep-alive
-< Vary: Accept-Encoding
-<
+$ curl -D- http://10.0.0.13/
+HTTP/1.1 404 Not Found
+Server: nginx/1.13.12
+Date: Tue, 12 Jun 2018 19:11:24 GMT
+Content-Type: */*
+Transfer-Encoding: chunked
+Connection: keep-alive
+
 <span>The page you're looking for could not be found.</span>
-
-* Connection #0 to host 172.17.4.99 left intact
 ```
 
-Specifying json as expected format:
+A request with a custom `Accept` header returns the corresponding document type (JSON):
 
 ```
-$ curl -v http://172.17.4.99/ -H 'Accept: application/json'
-*   Trying 172.17.4.99...
-* Connected to 172.17.4.99 (172.17.4.99) port 80 (#0)
-> GET / HTTP/1.1
-> Host: 172.17.4.99
-> User-Agent: curl/7.43.0
-> Accept: application/json
->
-< HTTP/1.1 404 Not Found
-< Server: nginx/1.10.0
-< Date: Wed, 04 May 2016 02:54:00 GMT
-< Content-Type: text/html
-< Transfer-Encoding: chunked
-< Connection: keep-alive
-< Vary: Accept-Encoding
-<
+$ curl -D- -H 'Accept: application/json' http://10.0.0.13/
+HTTP/1.1 404 Not Found
+Server: nginx/1.13.12
+Date: Tue, 12 Jun 2018 19:12:36 GMT
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+Vary: Accept-Encoding
+
 { "message": "The page you're looking for could not be found" }
-
-* Connection #0 to host 172.17.4.99 left intact
 ```
+
+To go further with this example, feel free to deploy your own applications and Ingress objects, and validate that the
+responses are still in the correct format when a backend returns 503 (eg. if you scale a Deployment down to 0 replica).

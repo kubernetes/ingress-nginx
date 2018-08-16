@@ -17,8 +17,6 @@ limitations under the License.
 package store
 
 import (
-	"fmt"
-
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 )
@@ -28,14 +26,14 @@ type ConfigMapLister struct {
 	cache.Store
 }
 
-// ByKey searches for a configmap in the local configmaps Store
+// ByKey returns the ConfigMap matching key in the local ConfigMap Store.
 func (cml *ConfigMapLister) ByKey(key string) (*apiv1.ConfigMap, error) {
 	s, exists, err := cml.GetByKey(key)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
-		return nil, fmt.Errorf("configmap %v was not found", key)
+		return nil, NotExistsError(key)
 	}
 	return s.(*apiv1.ConfigMap), nil
 }

@@ -40,7 +40,7 @@ metadata:
     # name of the secret that contains the user/password definitions
     nginx.ingress.kubernetes.io/auth-secret: basic-auth
     # message to display with an appropriate context why the authentication is required
-    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - foo"
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - foo'
 spec:
   rules:
   - host: foo.bar.com

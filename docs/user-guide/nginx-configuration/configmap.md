@@ -44,10 +44,6 @@ The following table shows a configuration option's name, type, and the default v
 |[disable-ipv6-dns](#disable-ipv6-dns)|bool|false|
 |[enable-underscores-in-headers](#enable-underscores-in-headers)|bool|false|
 |[ignore-invalid-headers](#ignore-invalid-headers)|bool|true|
-|[enable-vts-status](#enable-vts-status)|bool|false|
-|[vts-status-zone-size](#vts-status-zone-size)|string|"10m"|
-|[vts-sum-key](#vts-sum-key)|string|"*"|
-|[vts-default-filter-key](#vts-default-filter-key)|string|"$geoip_country_code country::*"|
 |[retry-non-idempotent](#retry-non-idempotent)|bool|"false"|
 |[error-log-level](#error-log-level)|string|"notice"|
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
@@ -62,6 +58,7 @@ The following table shows a configuration option's name, type, and the default v
 |[log-format-escape-json](#log-format-escape-json)|bool|"false"|
 |[log-format-upstream](#log-format-upstream)|string|`%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status`|
 |[log-format-stream](#log-format-stream)|string|`[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
+|[enable-multi-accept](#enable-multi-accept)|bool|"true"|
 |[max-worker-connections](#max-worker-connections)|int|16384|
 |[map-hash-bucket-size](#max-worker-connections)|int|64|
 |[nginx-status-ipv4-whitelist](#nginx-status-ipv4-whitelist)|[]string|"127.0.0.1"|
@@ -72,6 +69,7 @@ The following table shows a configuration option's name, type, and the default v
 |[server-name-hash-bucket-size](#server-name-hash-bucket-size)|int|`<size of the processor’s cache line>`
 |[proxy-headers-hash-max-size](#proxy-headers-hash-max-size)|int|512|
 |[proxy-headers-hash-bucket-size](#proxy-headers-hash-bucket-size)|int|64|
+|[reuse-port](#reuse-port)|bool|"true"|
 |[server-tokens](#server-tokens)|bool|"true"|
 |[ssl-ciphers](#ssl-ciphers)|string|"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"|
 |[ssl-ecdh-curve](#ssl-ecdh-curve)|string|"auto"|
@@ -91,11 +89,12 @@ The following table shows a configuration option's name, type, and the default v
 |[brotli-level](#brotli-level)|int|4|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
+|[gzip-level](#gzip-level)|int|5|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
 |[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"10s"|
-|[load-balance](#load-balance)|string|"least_conn"|
+|[load-balance](#load-balance)|string|"round_robin"|
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128|
 |[variables-hash-max-size](#variables-hash-max-size)|int|2048|
 |[upstream-keepalive-connections](#upstream-keepalive-connections)|int|32|
@@ -112,15 +111,17 @@ The following table shows a configuration option's name, type, and the default v
 |[zipkin-collector-host](#zipkin-collector-host)|string|""|
 |[zipkin-collector-port](#zipkin-collector-port)|int|9411|
 |[zipkin-service-name](#zipkin-service-name)|string|"nginx"|
+|[zipkin-sample-rate](#zipkin-sample-rate)|float|1.0|
 |[jaeger-collector-host](#jaeger-collector-host)|string|""|
 |[jaeger-collector-port](#jaeger-collector-port)|int|6831|
 |[jaeger-service-name](#jaeger-service-name)|string|"nginx"|
 |[jaeger-sampler-type](#jaeger-sampler-type)|string|"const"|
 |[jaeger-sampler-param](#jaeger-sampler-param)|string|"1"|
+|[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
 |[location-snippet](#location-snippet)|string|""|
-|[custom-http-errors](#custom-http-errors)|[]int]|[]int{}|
+|[custom-http-errors](#custom-http-errors)|[]int|[]int{}|
 |[proxy-body-size](#proxy-body-size)|string|"1m"|
 |[proxy-connect-timeout](#proxy-connect-timeout)|int|5|
 |[proxy-read-timeout](#proxy-read-timeout)|int|60|
@@ -241,32 +242,6 @@ Enables underscores in header names. _**default:**_ is disabled
 Set if header fields with invalid names should be ignored.
 _**default:**_ is enabled
 
-## enable-vts-status
-
-Allows the replacement of the default status page with a third party module named [nginx-module-vts](https://github.com/vozlt/nginx-module-vts).
-_**default:**_ is disabled
-
-## vts-status-zone-size
-
-Vts config on http level sets parameters for a shared memory zone that will keep states for various keys. The cache is shared between all worker processes. _**default:**_ 10m
-
-_References:_
-[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone)
-
-## vts-default-filter-key
-
-Vts config on http level enables the keys by user defined variable. The key is a key string to calculate traffic. The name is a group string to calculate traffic. The key and name can contain variables such as $host, $server_name. The name's group belongs to filterZones if specified. The key's group belongs to serverZones if not specified second argument name. _**default:**_ $geoip_country_code country::*
-
-_References:_
-[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key)
-
-## vts-sum-key
-
-For metrics keyed (or when using Prometheus, labeled) by server zone, this value is used to indicate metrics for all server zones combined. _**default:**_ *
-
-_References:_
-[https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_display_sum_key)
-
 ## retry-non-idempotent
 
 Since 1.9.13 NGINX will not retry non-idempotent requests (POST, LOCK, PATCH) in case of an error in the upstream server. The previous behavior can be restored using the value "true".
@@ -360,6 +335,14 @@ Please check the [log-format](log-format.md) for definition of each field.
 
 Sets the nginx [stream format](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format).
 
+## enable-multi-accept
+
+If disabled, a worker process will accept one new connection at a time. Otherwise, a worker process will accept all new connections at a time.
+_**default:**_ true
+
+_References:_
+[http://nginx.org/en/docs/ngx_core_module.html#multi_accept](http://nginx.org/en/docs/ngx_core_module.html#multi_accept)
+
 ## max-worker-connections
 
 Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections)
@@ -401,7 +384,12 @@ _References:_
 - [http://nginx.org/en/docs/hash.html](http://nginx.org/en/docs/hash.html)
 - [https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size)
 
-## proxy-headers-hash-bucket-size
+## reuse-port
+
+Instructs NGINX to create an individual listening socket for each worker process (using the SO_REUSEPORT socket option), allowing a kernel to distribute incoming connections between worker processes
+_**default:**_ true
+
+## proxy-headers-hash-bucket-size 
 
 Sets the size of the bucket for the proxy headers hash tables.
 
@@ -463,8 +451,9 @@ Enables or disables session resumption through [TLS session tickets](http://ngin
 ## ssl-session-ticket-key
 
 Sets the secret key used to encrypt and decrypt TLS session tickets. The value must be a valid base64 string.
+To create a ticket: `openssl rand 80 | openssl enc -A -base64`
 
-[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used. To create a ticket: `openssl rand 80 | base64 -w0`
+[TLS session ticket-key](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets), by default, a randomly generated key is used. 
 
 ## ssl-session-timeout
 
@@ -483,7 +472,7 @@ Enables or disables the [PROXY protocol](https://www.nginx.com/resources/admin-g
 
 ## proxy-protocol-header-timeout
 
-Sets the timeout value for receiving the proxy-protocol headers. The default of 5 seconds prevents the TLS passthrough handler from waiting indefinetly on a dropped connection.
+Sets the timeout value for receiving the proxy-protocol headers. The default of 5 seconds prevents the TLS passthrough handler from waiting indefinitely on a dropped connection.
 _**default:**_ 5s
 
 ## use-gzip
@@ -516,6 +505,10 @@ _**default:**_ `application/xml+rss application/atom+xml application/javascript 
 
 Enables or disables [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
 
+## gzip-level
+
+Sets the gzip Compression Level that will be used. _**default:**_ 5
+
 ## gzip-types
 
 Sets the MIME types in addition to "text/html" to compress. The special value "\*" matches any MIME type. Responses with the "text/html" type are always compressed if `use-gzip` is enabled.
@@ -544,11 +537,11 @@ Sets the algorithm to use for load balancing.
 The value can either be:
 
 - round_robin: to use the default round robin loadbalancer
-- least_conn: to use the least connected method
-- ip_hash: to use a hash of the server for routing.
-- ewma: to use the peak ewma method for routing (only available with `enable-dynamic-configuration` flag)
+- least_conn: to use the least connected method (_note_ that this is available only in non-dynamic mode: `--enable-dynamic-configuration=false`)
+- ip_hash: to use a hash of the server for routing (_note_ that this is available only in non-dynamic mode: `--enable-dynamic-configuration=false`, but alternatively you can consider using `nginx.ingress.kubernetes.io/upstream-hash-by`)
+- ewma: to use the Peak EWMA method for routing ([implementation](https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/balancer/ewma.lua))
 
-The default is least_conn.
+The default is `round_robin`.
 
 _References:_
 [http://nginx.org/en/docs/http/load_balancing.html](http://nginx.org/en/docs/http/load_balancing.html)
@@ -638,6 +631,10 @@ Specifies the port to use when uploading traces. _**default:**_ 9411
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
 
+## zipkin-sample-rate
+
+Specifies sample rate for any traces created. _**default:**_ 1.0
+
 ## jaeger-collector-host
 
 Specifies the host to use when uploading traces. It must be a valid URL.
@@ -659,20 +656,21 @@ Specifies the sampler to be used when sampling traces. The available samplers ar
 Specifies the argument to be passed to the sampler constructor. Must be a number.
 For const this should be 0 to never sample and 1 to always sample. _**default:**_ 1
 
+## main-snippet
+
+Adds custom configuration to the main section of the nginx configuration.
+
 ## http-snippet
 
 Adds custom configuration to the http section of the nginx configuration.
-_**default:**_ ""
 
 ## server-snippet
 
 Adds custom configuration to all the servers in the nginx configuration.
-_**default:**_ ""
 
 ## location-snippet
 
 Adds custom configuration to all the locations in the nginx configuration.
-_**default:**_ ""
 
 ## custom-http-errors
 
@@ -761,7 +759,7 @@ _References:_
 ## http-redirect-code
 
 Sets the HTTP status code to be used in redirects.
-Supported codes are [301](https://developer.mozilla.org/es/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/es/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/es/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/es/docs/Web/HTTP/Status/308)
+Supported codes are [301](https://developer.mozilla.org/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/docs/Web/HTTP/Status/308)
 _**default:**_ 308
 
 > __Why the default code is 308?__

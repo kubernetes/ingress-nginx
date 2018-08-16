@@ -8,7 +8,7 @@ Go packages for [Google Cloud Platform](https://cloud.google.com) services.
 import "cloud.google.com/go"
 ```
 
-To install the packages on your system,
+To install the packages on your system, *do not clone the repo*. Instead use
 
 ```
 $ go get -u cloud.google.com/go/...
@@ -32,6 +32,41 @@ make backwards-incompatible changes.
 
 
 ## News
+
+_July 11, 2018_
+
+*v0.25.0*
+
+- Added [Code of Conduct](https://github.com/GoogleCloudPlatform/google-cloud-go/blob/master/CODE_OF_CONDUCT.md)
+- bigtable:
+  - cbt: Support a GC policy of "never".
+- errorreporting:
+  - Support User.
+  - Close now calls Flush.
+  - Use OnError (previously ignored).
+  - Pass through the RPC error as-is to OnError.
+- httpreplay: A tool for recording and replaying HTTP requests
+  (for the bigquery and storage clients in this repo).
+- kms: v1 client added
+- logging: add SourceLocation to Entry.
+- storage: improve CRC checking on read.
+
+
+_June 18, 2018_
+
+*v0.24.0*
+
+- bigquery: Support for the NUMERIC type.
+- bigtable:
+  - cbt: Optionally specify columns for read/lookup
+  - Support instance-level administration.
+- oslogin: New client for the OS Login API.
+- pubsub:
+  - The package is now stable. There will be no further breaking changes.
+  - Internal changes to improve Subscription.Receive behavior.
+- storage: Support updating bucket lifecycle config.
+- spanner: Support struct-typed parameter bindings.
+- texttospeech: New client for the Text-to-Speech API.
 
 _May 18, 2018_
 
@@ -147,109 +182,6 @@ _March 22, 2018_
 
 - storage: Add OpenCensus tracing.
 
-
-_February 26, 2018_
-
-*v0.19.0*
-
-- bigquery:
-  - Support customer-managed encryption keys.
-
-- bigtable:
-  - Improved emulator support.
-  - Support GetCluster.
-
-- datastore:
-  - Add general mutations.
-  - Support pointer struct fields.
-  - Support transaction options.
-
-- firestore:
-  - Add Transaction.GetAll.
-  - Support document cursors.
-
-- logging:
-  - Support concurrent RPCs to the service.
-  - Support per-entry resources.
-
-- profiler:
-  - Add config options to disable heap and thread profiling.
-  - Read the project ID from $GOOGLE_CLOUD_PROJECT when it's set.
-
-- pubsub:
-  - BEHAVIOR CHANGE: Release flow control after ack/nack (instead of after the
-    callback returns).
-  - Add SubscriptionInProject.
-  - Add OpenCensus instrumentation for streaming pull.
-
-- storage:
-  - Support CORS.
-
-
-_January 18, 2018_
-
-*v0.18.0*
-
-- bigquery:
-  - Marked stable.
-  - Schema inference of nullable fields supported.
-  - Added TimePartitioning to QueryConfig.
-
-- firestore: Data provided to DocumentRef.Set with a Merge option can contain
-  Delete sentinels.
-
-- logging: Clients can accept parent resources other than projects.
-
-- pubsub:
-  - pubsub/pstest: A lighweight fake for pubsub. Experimental; feedback welcome.
-  - Support updating more subscription metadata: AckDeadline,
-    RetainAckedMessages and RetentionDuration.
-
-- oslogin/apiv1beta: New client for the Cloud OS Login API.
-
-- rpcreplay: A package for recording and replaying gRPC traffic.
-
-- spanner:
-  - Add a ReadWithOptions that supports a row limit, as well as an index.
-  - Support query plan and execution statistics.
-  - Added [OpenCensus](http://opencensus.io) support.
-
-- storage: Clarify checksum validation for gzipped files (it is not validated
-  when the file is served uncompressed).
-
-
-_December 11, 2017_
-
-*v0.17.0*
-
-- firestore BREAKING CHANGES:
-  - Remove UpdateMap and UpdateStruct; rename UpdatePaths to Update.
-    Change
-        `docref.UpdateMap(ctx, map[string]interface{}{"a.b", 1})`
-    to
-        `docref.Update(ctx, []firestore.Update{{Path: "a.b", Value: 1}})`
-
-    Change
-        `docref.UpdateStruct(ctx, []string{"Field"}, aStruct)`
-    to
-        `docref.Update(ctx, []firestore.Update{{Path: "Field", Value: aStruct.Field}})`
-  - Rename MergePaths to Merge; require args to be FieldPaths
-  - A value stored as an integer can be read into a floating-point field, and vice versa.
-- bigtable/cmd/cbt:
-  - Support deleting a column.
-  - Add regex option for row read.
-- spanner: Mark stable.
-- storage:
-  - Add Reader.ContentEncoding method.
-  - Fix handling of SignedURL headers.
-- bigquery:
-  - If Uploader.Put is called with no rows, it returns nil without making a
-    call.
-  - Schema inference supports the "nullable" option in struct tags for
-    non-required fields.
-  - TimePartitioning supports "Field".
-
-
 [Older news](https://github.com/GoogleCloudPlatform/google-cloud-go/blob/master/old-news.md)
 
 ## Supported APIs
@@ -268,7 +200,7 @@ Google API                       | Status       | Package
 [Logging][cloud-logging]         | stable       | [`cloud.google.com/go/logging`][cloud-logging-ref]
 [Monitoring][cloud-monitoring]   | beta         | [`cloud.google.com/go/monitoring/apiv3`][cloud-monitoring-ref]
 [OS Login][cloud-oslogin]        | alpha        | [`cloud.google.com/compute/docs/oslogin/rest`][cloud-oslogin-ref]
-[Pub/Sub][cloud-pubsub]          | beta         | [`cloud.google.com/go/pubsub`][cloud-pubsub-ref]
+[Pub/Sub][cloud-pubsub]          | stable       | [`cloud.google.com/go/pubsub`][cloud-pubsub-ref]
 [Spanner][cloud-spanner]         | stable       | [`cloud.google.com/go/spanner`][cloud-spanner-ref]
 [Speech][cloud-speech]           | stable       | [`cloud.google.com/go/speech/apiv1`][cloud-speech-ref]
 [Storage][cloud-storage]         | stable       | [`cloud.google.com/go/storage`][cloud-storage-ref]
