@@ -115,6 +115,31 @@ describe("Balancer", function()
       assert.stub(mock_instance.sync).was_called_with(mock_instance, expected_backend)
     end)
 
+    it("wraps IPv6 addresses into square brackets", function()
+      local backend = {
+        name = "exmaple-com",
+        endpoints = {
+          { address = "::1", port = "8080", maxFails = 0, failTimeout = 0 },
+          { address = "192.168.1.1", port = "8080", maxFails = 0, failTimeout = 0 },
+        }
+      }
+      local expected_backend = {
+        name = "exmaple-com",
+        endpoints = {
+          { address = "[::1]", port = "8080", maxFails = 0, failTimeout = 0 },
+          { address = "192.168.1.1", port = "8080", maxFails = 0, failTimeout = 0 },
+        }
+      }
+
+      local mock_instance = { sync = function(backend) end }
+      setmetatable(mock_instance, implementation)
+      implementation.new = function(self, backend) return mock_instance end
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      stub(mock_instance, "sync")
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.stub(mock_instance.sync).was_called_with(mock_instance, expected_backend)
+    end)
+
     it("replaces the existing balancer when load balancing config changes for backend", function()
       assert.has_no.errors(function() balancer.sync_backend(backend) end)
 

@@ -21,9 +21,8 @@ describe("Balancer chash", function()
       }
       local instance = balancer_chash:new(backend)
 
-      local host, port = instance:balance()
-      assert.equal("10.184.7.40", host)
-      assert.equal("8080", port)
+      local peer = instance:balance()
+      assert.equal("10.184.7.40:8080", peer)
     end)
   end)
 end)
