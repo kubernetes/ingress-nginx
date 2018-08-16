@@ -25,6 +25,7 @@ import (
 
 // Config returns the proxy timeout to use in the upstream server/s
 type Config struct {
+	ProxyHttpVersion  string `json:"proxyHttpVersion"`
 	BodySize          string `json:"bodySize"`
 	ConnectTimeout    int    `json:"connectTimeout"`
 	SendTimeout       int    `json:"sendTimeout"`
@@ -135,6 +136,11 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		cd = defBackend.ProxyCookieDomain
 	}
 
+	hv, err := parser.GetStringAnnotation("proxy-http-version", ing)
+	if err != nil || hv == "" {
+		hv = defBackend.ProxyHttpVersion
+	}
+
 	bs, err := parser.GetStringAnnotation("proxy-body-size", ing)
 	if err != nil || bs == "" {
 		bs = defBackend.ProxyBodySize
@@ -170,5 +176,5 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 		pb = defBackend.ProxyBuffering
 	}
 
-	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, nut, prf, prt, rb, pb}, nil
+	return &Config{hv, bs, ct, st, rt, bufs, cd, cp, nu, nut, prf, prt, rb, pb}, nil
 }

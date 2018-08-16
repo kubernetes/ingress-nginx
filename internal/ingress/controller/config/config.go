@@ -604,6 +604,7 @@ func NewDefault() Configuration {
 		UseHTTP2:                   true,
 		ProxyStreamTimeout:         "600s",
 		Backend: defaults.Backend{
+			ProxyHttpVersion:       "1.1",
 			ProxyBodySize:          bodySize,
 			ProxyConnectTimeout:    5,
 			ProxyReadTimeout:       60,

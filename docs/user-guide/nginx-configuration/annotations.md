@@ -48,6 +48,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
 |[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
+|[nginx.ingress.kubernetes.io/proxy-http-version](#proxy-http-version)|string|
 |[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
@@ -500,6 +501,15 @@ By default proxy buffer size is set as "4k"
 To configure this setting globally, set `proxy-buffer-size` in [NGINX ConfigMap][configmap]. To use custom values in an Ingress rule, define this annotation:
 ```yaml
 nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+```
+
+### Proxy HTTP version
+
+Sets the HTTP protocol version for proxying (`proxy_http_version`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version). Use either "1.0" or "1.1". By default proxy_http_version is set to "1.1"
+
+To configure this setting globally, set `http-proxy-version` in [NGINX ConfigMap][configmap]. To use custom values in an Ingress rule, define this annotation:
+```yaml
+nginx.ingress.kubernetes.io/proxy-http-version: "1.0"
 ```
 
 ### SSL ciphers

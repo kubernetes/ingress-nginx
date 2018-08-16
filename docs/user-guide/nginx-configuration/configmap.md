@@ -123,6 +123,7 @@ The following table shows a configuration option's name, type, and the default v
 |[custom-http-errors](#custom-http-errors)|[]int|[]int{}|
 |[proxy-body-size](#proxy-body-size)|string|"1m"|
 |[proxy-connect-timeout](#proxy-connect-timeout)|int|5|
+|[proxy-http-version](#proxy-http-version)|string|"1.1"|
 |[proxy-read-timeout](#proxy-read-timeout)|int|60|
 |[proxy-send-timeout](#proxy-send-timeout)|int|60|
 |[proxy-buffer-size](#proxy-buffer-size)|string|"4k"|
@@ -681,6 +682,11 @@ See NGINX [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_mod
 ## proxy-connect-timeout
 
 Sets the timeout for [establishing a connection with a proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
+
+## proxy-http-version
+
+Sets the HTTP protocol version for proxying.
+See NGINX [proxy_http_version](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version).
 
 ## proxy-read-timeout
 

@@ -866,6 +866,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 
 	bdef := n.store.GetDefaultBackend()
 	ngxProxy := proxy.Config{
+		ProxyHttpVersion:  bdef.ProxyHttpVersion,
 		BodySize:          bdef.ProxyBodySize,
 		ConnectTimeout:    bdef.ProxyConnectTimeout,
 		SendTimeout:       bdef.ProxySendTimeout,
