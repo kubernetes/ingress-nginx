@@ -14,11 +14,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export NAMESPACE=$1
 
 echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
 
+function on_exit {
+    local error_code="$?"
+
+    test $error_code == 0 && return;
+
+    echo "Obtaining ingress controller pod logs..."
+    kubectl logs -l app=ingress-nginx -n $NAMESPACE
+}
+trap on_exit EXIT
+
 sed "s@\${NAMESPACE}@${NAMESPACE}@" $DIR/../manifests/ingress-controller/mandatory.yaml | kubectl apply --namespace=$NAMESPACE -f -
 cat $DIR/../manifests/ingress-controller/service-nodeport.yaml | kubectl apply --namespace=$NAMESPACE -f -
+
+# wait for the deployment and fail if there is an error before starting the execution of any test
+kubectl rollout status \
+    --request-timeout=3m \
+    --namespace $NAMESPACE \
+    deployment nginx-ingress-controller

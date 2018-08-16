@@ -2,8 +2,8 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   annotations:
-    nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start
-    nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+    nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
   name: external-auth-oauth2
   namespace: kube-system
 spec:

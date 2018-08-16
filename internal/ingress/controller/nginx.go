@@ -31,6 +31,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"text/template"
 	"time"
 
 	"github.com/golang/glog"
@@ -38,7 +39,6 @@ import (
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -53,6 +53,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
+	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
@@ -61,30 +62,16 @@ import (
 	"k8s.io/ingress-nginx/internal/watch"
 )
 
-type statusModule string
-
 const (
 	ngxHealthPath = "/healthz"
-
-	defaultStatusModule statusModule = "default"
-	vtsStatusModule     statusModule = "vts"
 )
 
 var (
-	tmplPath    = "/etc/nginx/template/nginx.tmpl"
-	cfgPath     = "/etc/nginx/nginx.conf"
-	nginxBinary = "/usr/sbin/nginx"
+	tmplPath = "/etc/nginx/template/nginx.tmpl"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
-// If the environment variable NGINX_BINARY exists it will be used
-// as source for nginx commands
-func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXController {
-	ngx := os.Getenv("NGINX_BINARY")
-	if ngx == "" {
-		ngx = nginxBinary
-	}
-
+func NewNGINXController(config *Configuration, mc metric.Collector, fs file.Filesystem) *NGINXController {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
@@ -93,12 +80,10 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 
 	h, err := dns.GetSystemNameServers()
 	if err != nil {
-		glog.Warningf("unexpected error reading system nameservers: %v", err)
+		glog.Warningf("Error reading system nameservers: %v", err)
 	}
 
 	n := &NGINXController{
-		binary: ngx,
-
 		isIPV6Enabled: ing_net.IsIPv6Enabled(),
 
 		resolver:        h,
@@ -116,10 +101,11 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 
 		fileSystem: fs,
 
-		// create an empty configuration.
-		runningConfig: &ingress.Configuration{},
+		runningConfig: new(ingress.Configuration),
 
 		Proxy: &TCPProxy{},
+
+		metricCollector: mc,
 	}
 
 	n.store = store.New(
@@ -133,8 +119,6 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 		config.Client,
 		fs,
 		n.updateCh)
-
-	n.stats = newStatsCollector(config.Namespace, class.IngressClass, n.binary, n.cfg.ListenPorts.Status)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -153,7 +137,7 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 			UseNodeInternalIP:      config.UseNodeInternalIP,
 		})
 	} else {
-		glog.Warning("Update of ingress status is disabled (flag --update-status=false was specified)")
+		glog.Warning("Update of Ingress status is disabled (flag --update-status)")
 	}
 
 	onTemplateChange := func() {
@@ -162,68 +146,66 @@ func NewNGINXController(config *Configuration, fs file.Filesystem) *NGINXControl
 			// this error is different from the rest because it must be clear why nginx is not working
 			glog.Errorf(`
 -------------------------------------------------------------------------------
-Error loading new template : %v
+Error loading new template: %v
 -------------------------------------------------------------------------------
 `, err)
 			return
 		}
 
 		n.t = template
-		glog.Info("new NGINX template loaded")
-		n.SetForceReload(true)
+		glog.Info("New NGINX configuration template loaded.")
+		n.syncQueue.EnqueueTask(task.GetDummyObject("template-change"))
 	}
 
 	ngxTpl, err := ngx_template.NewTemplate(tmplPath, fs)
 	if err != nil {
-		glog.Fatalf("invalid NGINX template: %v", err)
+		glog.Fatalf("Invalid NGINX configuration template: %v", err)
 	}
 
 	n.t = ngxTpl
 
-	// TODO: refactor
 	if _, ok := fs.(filesystem.DefaultFs); !ok {
-		watch.NewDummyFileWatcher(tmplPath, onTemplateChange)
-	} else {
+		// do not setup watchers on tests
+		return n
+	}
 
-		_, err = watch.NewFileWatcher(tmplPath, onTemplateChange)
+	_, err = watch.NewFileWatcher(tmplPath, onTemplateChange)
+	if err != nil {
+		glog.Fatalf("Error creating file watcher for %v: %v", tmplPath, err)
+	}
+
+	filesToWatch := []string{}
+	err = filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			glog.Fatalf("unexpected error creating file watcher: %v", err)
+			return err
 		}
 
-		filesToWatch := []string{}
-		err := filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			filesToWatch = append(filesToWatch, path)
+		if info.IsDir() {
 			return nil
+		}
+
+		filesToWatch = append(filesToWatch, path)
+		return nil
+	})
+
+	if err != nil {
+		glog.Fatalf("Error creating file watchers: %v", err)
+	}
+
+	for _, f := range filesToWatch {
+		_, err = watch.NewFileWatcher(f, func() {
+			glog.Info("File %v changed. Reloading NGINX", f)
+			n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
 		})
-
 		if err != nil {
-			glog.Fatalf("unexpected error creating file watcher: %v", err)
+			glog.Fatalf("Error creating file watcher for %v: %v", f, err)
 		}
-
-		for _, f := range filesToWatch {
-			_, err = watch.NewFileWatcher(f, func() {
-				glog.Info("file %v changed. Reloading NGINX", f)
-				n.SetForceReload(true)
-			})
-			if err != nil {
-				glog.Fatalf("unexpected error creating file watcher: %v", err)
-			}
-		}
-
 	}
 
 	return n
 }
 
-// NGINXController ...
+// NGINXController describes a NGINX Ingress controller.
 type NGINXController struct {
 	cfg *Configuration
 
@@ -237,31 +219,24 @@ type NGINXController struct {
 
 	syncRateLimiter flowcontrol.RateLimiter
 
-	// stopLock is used to enforce only a single call to Stop is active.
-	// Needed because we allow stopping through an http endpoint and
+	// stopLock is used to enforce that only a single call to Stop send at
+	// a given time. We allow stopping through an HTTP endpoint and
 	// allowing concurrent stoppers leads to stack traces.
 	stopLock *sync.Mutex
 
 	stopCh   chan struct{}
 	updateCh *channels.RingChannel
 
-	// ngxErrCh channel used to detect errors with the nginx processes
+	// ngxErrCh is used to detect errors with the NGINX processes
 	ngxErrCh chan error
 
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
-	forceReload int32
-
 	t *ngx_template.Template
 
-	binary   string
 	resolver []net.IP
 
-	stats        *statsCollector
-	statusModule statusModule
-
-	// returns true if IPV6 is enabled in the pod
 	isIPV6Enabled bool
 
 	isShuttingDown bool
@@ -271,11 +246,13 @@ type NGINXController struct {
 	store store.Storer
 
 	fileSystem filesystem.Filesystem
+
+	metricCollector metric.Collector
 }
 
-// Start start a new NGINX master process running in foreground.
+// Start starts a new NGINX master process running in the foreground.
 func (n *NGINXController) Start() {
-	glog.Infof("starting Ingress controller")
+	glog.Infof("Starting NGINX Ingress controller")
 
 	n.store.Run(n.stopCh)
 
@@ -283,9 +260,9 @@ func (n *NGINXController) Start() {
 		go n.syncStatus.Run()
 	}
 
-	cmd := exec.Command(n.binary, "-c", cfgPath)
+	cmd := nginxExecCommand()
 
-	// put nginx in another process group to prevent it
+	// put NGINX in another process group to prevent it
 	// to receive signals meant for the controller
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
@@ -296,12 +273,12 @@ func (n *NGINXController) Start() {
 		n.setupSSLProxy()
 	}
 
-	glog.Info("starting NGINX process...")
+	glog.Info("Starting NGINX process")
 	n.start(cmd)
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
-	n.syncQueue.Enqueue(&extensions.Ingress{})
+	n.syncQueue.EnqueueTask(task.GetDummyObject("initial-sync"))
 
 	for {
 		select {
@@ -320,7 +297,7 @@ func (n *NGINXController) Start() {
 				// release command resources
 				cmd.Process.Release()
 				// start a new nginx master process if the controller is not being stopped
-				cmd = exec.Command(n.binary, "-c", cfgPath)
+				cmd = nginxExecCommand()
 				cmd.SysProcAttr = &syscall.SysProcAttr{
 					Setpgid: true,
 					Pgid:    0,
@@ -334,12 +311,14 @@ func (n *NGINXController) Start() {
 			if evt, ok := event.(store.Event); ok {
 				glog.V(3).Infof("Event %v received - object %v", evt.Type, evt.Obj)
 				if evt.Type == store.ConfigurationEvent {
-					n.SetForceReload(true)
+					// TODO: is this necessary? Consider removing this special case
+					n.syncQueue.EnqueueTask(task.GetDummyObject("configmap-change"))
+					continue
 				}
 
-				n.syncQueue.Enqueue(evt.Obj)
+				n.syncQueue.EnqueueSkippableTask(evt.Obj)
 			} else {
-				glog.Warningf("unexpected event type received %T", event)
+				glog.Warningf("Unexpected event type received %T", event)
 			}
 		case <-n.stopCh:
 			break
@@ -354,21 +333,20 @@ func (n *NGINXController) Stop() error {
 	n.stopLock.Lock()
 	defer n.stopLock.Unlock()
 
-	// Only try draining the workqueue if we haven't already.
 	if n.syncQueue.IsShuttingDown() {
 		return fmt.Errorf("shutdown already in progress")
 	}
 
-	glog.Infof("shutting down controller queues")
+	glog.Infof("Shutting down controller queues")
 	close(n.stopCh)
 	go n.syncQueue.Shutdown()
 	if n.syncStatus != nil {
 		n.syncStatus.Shutdown()
 	}
 
-	// Send stop signal to Nginx
-	glog.Info("stopping NGINX process...")
-	cmd := exec.Command(n.binary, "-c", cfgPath, "-s", "quit")
+	// send stop signal to NGINX
+	glog.Info("Stopping NGINX process")
+	cmd := nginxExecCommand("-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -376,7 +354,7 @@ func (n *NGINXController) Stop() error {
 		return err
 	}
 
-	// Wait for the Nginx process disappear
+	// wait for the NGINX process to terminate
 	timer := time.NewTicker(time.Second * 1)
 	for range timer.C {
 		if !process.IsNginxRunning() {
@@ -393,7 +371,7 @@ func (n *NGINXController) start(cmd *exec.Cmd) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
-		glog.Fatalf("nginx error: %v", err)
+		glog.Fatalf("NGINX error: %v", err)
 		n.ngxErrCh <- err
 		return
 	}
@@ -416,18 +394,18 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 // running the command "nginx -t" using a temporal file.
 func (n NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
-		return fmt.Errorf("invalid nginx configuration (empty)")
+		return fmt.Errorf("Invalid NGINX configuration (empty)")
 	}
 	tmpfile, err := ioutil.TempFile("", "nginx-cfg")
 	if err != nil {
 		return err
 	}
 	defer tmpfile.Close()
-	err = ioutil.WriteFile(tmpfile.Name(), cfg, 0644)
+	err = ioutil.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
-	out, err := exec.Command(n.binary, "-t", "-c", tmpfile.Name()).CombinedOutput()
+	out, err := nginxTestCommand(tmpfile.Name()).CombinedOutput()
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
@@ -443,14 +421,10 @@ Error: %v
 	return nil
 }
 
-// OnUpdate is called periodically by syncQueue to keep the configuration in sync.
-//
-// 1. converts configmap configuration to custom configuration object
-// 2. write the custom template (the complexity depends on the implementation)
-// 3. write the configuration file
-//
-// returning nil implies the backend will be reloaded.
-// if an error is returned means requeue the update
+// OnUpdate is called by the synchronization loop whenever configuration
+// changes were detected. The received backend Configuration is merged with the
+// configuration ConfigMap before generating the final configuration file.
+// Returns nil in case the backend was successfully reloaded.
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
@@ -460,7 +434,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		for _, pb := range ingressCfg.PassthroughBackends {
 			svc := pb.Service
 			if svc == nil {
-				glog.Warningf("missing service for PassthroughBackends %v", pb.Backend)
+				glog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
 				continue
 			}
 			port, err := strconv.Atoi(pb.Port.String())
@@ -480,7 +454,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				}
 			}
 
-			//TODO: Allow PassthroughBackends to specify they support proxy-protocol
+			// TODO: Allow PassthroughBackends to specify they support proxy-protocol
 			servers = append(servers, &TCPServer{
 				Hostname:      pb.Hostname,
 				IP:            svc.Spec.ClusterIP,
@@ -492,17 +466,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		n.Proxy.ServerList = servers
 	}
 
-	// we need to check if the status module configuration changed
-	if cfg.EnableVtsStatus {
-		n.setupMonitor(vtsStatusModule)
-	} else {
-		n.setupMonitor(defaultStatusModule)
-	}
-
-	// NGINX cannot resize the hash tables used to store server names.
-	// For this reason we check if the defined size defined is correct
-	// for the FQDN defined in the ingress rules adjusting the value
-	// if is required.
+	// NGINX cannot resize the hash tables used to store server names. For
+	// this reason we check if the current size is correct for the host
+	// names defined in the Ingress rules and adjust the value if
+	// necessary.
 	// https://trac.nginx.org/nginx/ticket/352
 	// https://trac.nginx.org/nginx/ticket/631
 	var longestName int
@@ -520,7 +487,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 			} else {
 				n = fmt.Sprintf("www.%v", srv.Hostname)
 			}
-			glog.V(3).Infof("creating redirect from %v to %v", srv.Hostname, n)
+			glog.V(3).Infof("Creating redirect from %q to %q", srv.Hostname, n)
 			if _, ok := redirectServers[n]; !ok {
 				found := false
 				for _, esrv := range ingressCfg.Servers {
@@ -537,24 +504,24 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 	if cfg.ServerNameHashBucketSize == 0 {
 		nameHashBucketSize := nginxHashBucketSize(longestName)
-		glog.V(3).Infof("adjusting ServerNameHashBucketSize variable to %v", nameHashBucketSize)
+		glog.V(3).Infof("Adjusting ServerNameHashBucketSize variable to %q", nameHashBucketSize)
 		cfg.ServerNameHashBucketSize = nameHashBucketSize
 	}
 	serverNameHashMaxSize := nextPowerOf2(serverNameBytes)
 	if cfg.ServerNameHashMaxSize < serverNameHashMaxSize {
-		glog.V(3).Infof("adjusting ServerNameHashMaxSize variable to %v", serverNameHashMaxSize)
+		glog.V(3).Infof("Adjusting ServerNameHashMaxSize variable to %q", serverNameHashMaxSize)
 		cfg.ServerNameHashMaxSize = serverNameHashMaxSize
 	}
 
 	// the limit of open files is per worker process
 	// and we leave some room to avoid consuming all the FDs available
 	wp, err := strconv.Atoi(cfg.WorkerProcesses)
-	glog.V(3).Infof("number of worker processes: %v", wp)
+	glog.V(3).Infof("Number of worker processes: %d", wp)
 	if err != nil {
 		wp = 1
 	}
 	maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
-	glog.V(2).Infof("maximum number of open file descriptors : %v", maxOpenFiles)
+	glog.V(2).Infof("Maximum number of open file descriptors: %d", maxOpenFiles)
 	if maxOpenFiles < 1024 {
 		// this means the value of RLIMIT_NOFILE is too low.
 		maxOpenFiles = 1024
@@ -564,7 +531,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	if cfg.ProxySetHeaders != "" {
 		cmap, err := n.store.GetConfigMap(cfg.ProxySetHeaders)
 		if err != nil {
-			glog.Warningf("unexpected error reading configmap %v: %v", cfg.ProxySetHeaders, err)
+			glog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.ProxySetHeaders, err)
 		}
 
 		setHeaders = cmap.Data
@@ -574,7 +541,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	if cfg.AddHeaders != "" {
 		cmap, err := n.store.GetConfigMap(cfg.AddHeaders)
 		if err != nil {
-			glog.Warningf("unexpected error reading configmap %v: %v", cfg.AddHeaders, err)
+			glog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.AddHeaders, err)
 		}
 
 		addHeaders = cmap.Data
@@ -586,7 +553,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 		secret, err := n.store.GetSecret(secretName)
 		if err != nil {
-			glog.Warningf("unexpected error reading secret %v: %v", secretName, err)
+			glog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
 		}
 
 		nsSecName := strings.Replace(secretName, "/", "-", -1)
@@ -595,7 +562,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		if ok {
 			pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh, n.fileSystem)
 			if err != nil {
-				glog.Warningf("unexpected error adding or updating dhparam %v file: %v", nsSecName, err)
+				glog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
 			} else {
 				sslDHParam = pemFileName
 			}
@@ -628,10 +595,18 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		DisableLua:                  n.cfg.DisableLua,
 	}
 
-	content, err := n.t.Write(tc)
+	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
 
+	content, err := n.t.Write(tc)
 	if err != nil {
 		return err
+	}
+
+	if cfg.EnableOpentracing {
+		err := createOpentracingCfg(cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = n.testTemplate(content)
@@ -647,31 +622,28 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				return err
 			}
 			defer tmpfile.Close()
-			err = ioutil.WriteFile(tmpfile.Name(), content, 0644)
+			err = ioutil.WriteFile(tmpfile.Name(), content, file.ReadWriteByUser)
 			if err != nil {
 				return err
 			}
 
-			// executing diff can return exit code != 0
+			// TODO: executing diff can return exit code != 0
 			diffOutput, _ := exec.Command("diff", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
 
-			glog.Infof("NGINX configuration diff\n")
-			glog.Infof("%v\n", string(diffOutput))
+			glog.Infof("NGINX configuration diff:\n%v", string(diffOutput))
 
-			// Do not use defer to remove the temporal file.
-			// This is helpful when there is an error in the
-			// temporal configuration (we can manually inspect the file).
-			// Only remove the file when no error occurred.
+			// we do not defer the deletion of temp files in order
+			// to keep them around for inspection in case of error
 			os.Remove(tmpfile.Name())
 		}
 	}
 
-	err = ioutil.WriteFile(cfgPath, content, 0644)
+	err = ioutil.WriteFile(cfgPath, content, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
 
-	o, err := exec.Command(n.binary, "-s", "reload", "-c", cfgPath).CombinedOutput()
+	o, err := nginxExecCommand("-s", "reload").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
 	}
@@ -679,9 +651,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	return nil
 }
 
-// nginxHashBucketSize computes the correct nginx hash_bucket_size for a hash with the given longest key
+// nginxHashBucketSize computes the correct NGINX hash_bucket_size for a hash
+// with the given longest key.
 func nginxHashBucketSize(longestString int) int {
-	// See https://github.com/kubernetes/ingress-nginxs/issues/623 for an explanation
+	// see https://github.com/kubernetes/ingress-nginxs/issues/623 for an explanation
 	wordSize := 8 // Assume 64 bit CPU
 	n := longestString + 2
 	aligned := (n + wordSize - 1) & ^(wordSize - 1)
@@ -708,7 +681,7 @@ func (n *NGINXController) setupSSLProxy() {
 	sslPort := n.cfg.ListenPorts.HTTPS
 	proxyPort := n.cfg.ListenPorts.SSLProxy
 
-	glog.Info("starting TLS proxy for SSL passthrough")
+	glog.Info("Starting TLS proxy for SSL Passthrough")
 	n.Proxy = &TCPProxy{
 		Default: &TCPServer{
 			Hostname:      "localhost",
@@ -725,32 +698,33 @@ func (n *NGINXController) setupSSLProxy() {
 
 	proxyList := &proxyproto.Listener{Listener: listener, ProxyHeaderTimeout: cfg.ProxyProtocolHeaderTimeout}
 
-	// start goroutine that accepts tcp connections in port 443
+	// accept TCP connections on the configured HTTPS port
 	go func() {
 		for {
 			var conn net.Conn
 			var err error
 
 			if n.store.GetBackendConfiguration().UseProxyProtocol {
-				// we need to wrap the listener in order to decode
-				// proxy protocol before handling the connection
+				// wrap the listener in order to decode Proxy
+				// Protocol before handling the connection
 				conn, err = proxyList.Accept()
 			} else {
 				conn, err = listener.Accept()
 			}
 
 			if err != nil {
-				glog.Warningf("unexpected error accepting tcp connection: %v", err)
+				glog.Warningf("Error accepting TCP connection: %v", err)
 				continue
 			}
 
-			glog.V(3).Infof("remote address %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
+			glog.V(3).Infof("Handling connection from remote address %s to local %s", conn.RemoteAddr(), conn.LocalAddr())
 			go n.Proxy.Handle(conn)
 		}
 	}()
 }
 
-// IsDynamicConfigurationEnough decides if the new configuration changes can be dynamically applied without reloading
+// IsDynamicConfigurationEnough returns whether a Configuration can be
+// dynamically applied, without reloading the backend.
 func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configuration) bool {
 	copyOfRunningConfig := *n.runningConfig
 	copyOfPcfg := *pcfg
@@ -761,12 +735,16 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 	return copyOfRunningConfig.Equal(&copyOfPcfg)
 }
 
-// configureDynamically JSON encodes new Backends and POSTs it to an internal HTTP endpoint
-// that is handled by Lua
+// configureDynamically encodes new Backends in JSON format and POSTs the
+// payload to an internal HTTP endpoint handled by Lua.
 func configureDynamically(pcfg *ingress.Configuration, port int) error {
 	backends := make([]*ingress.Backend, len(pcfg.Backends))
 
 	for i, backend := range pcfg.Backends {
+		var service *apiv1.Service
+		if backend.Service != nil {
+			service = &apiv1.Service{Spec: backend.Service.Spec}
+		}
 		luaBackend := &ingress.Backend{
 			Name:            backend.Name,
 			Port:            backend.Port,
@@ -775,6 +753,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 			SessionAffinity: backend.SessionAffinity,
 			UpstreamHashBy:  backend.UpstreamHashBy,
 			LoadBalancing:   backend.LoadBalancing,
+			Service:         service,
 		}
 
 		var endpoints []ingress.Endpoint
@@ -796,7 +775,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 		return err
 	}
 
-	glog.V(2).Infof("posting backends configuration: %s", buf)
+	glog.V(2).Infof("Posting backends configuration: %s", buf)
 
 	url := fmt.Sprintf("http://localhost:%d/configuration/backends", port)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(buf))
@@ -806,7 +785,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			glog.Warningf("error while closing response body: \n%v", err)
+			glog.Warningf("Error while closing response body:\n%v", err)
 		}
 	}()
 
@@ -815,4 +794,49 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 	}
 
 	return nil
+}
+
+const zipkinTmpl = `{
+  "service_name": "{{ .ZipkinServiceName }}",
+  "collector_host": "{{ .ZipkinCollectorHost }}",
+  "collector_port": {{ .ZipkinCollectorPort }},
+  "sample_rate": {{ .ZipkinSampleRate }}
+}`
+
+const jaegerTmpl = `{
+  "service_name": "{{ .JaegerServiceName }}",
+  "sampler": {
+	"type": "{{ .JaegerSamplerType }}",
+	"param": {{ .JaegerSamplerParam }}
+  },
+  "reporter": {
+	"localAgentHostPort": "{{ .JaegerCollectorHost }}:{{ .JaegerCollectorPort }}"
+  }
+}`
+
+func createOpentracingCfg(cfg ngx_config.Configuration) error {
+	var tmpl *template.Template
+	var err error
+
+	if cfg.ZipkinCollectorHost != "" {
+		tmpl, err = template.New("zipkin").Parse(zipkinTmpl)
+		if err != nil {
+			return err
+		}
+	} else if cfg.JaegerCollectorHost != "" {
+		tmpl, err = template.New("jarger").Parse(jaegerTmpl)
+		if err != nil {
+			return err
+		}
+	} else {
+		tmpl, _ = template.New("empty").Parse("{}")
+	}
+
+	tmplBuf := bytes.NewBuffer(make([]byte, 0))
+	err = tmpl.Execute(tmplBuf, cfg)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile("/etc/nginx/opentracing.json", tmplBuf.Bytes(), file.ReadWriteByUser)
 }

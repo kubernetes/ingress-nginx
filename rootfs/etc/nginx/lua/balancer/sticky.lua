@@ -1,6 +1,7 @@
 local balancer_resty = require("balancer.resty")
 local resty_chash = require("resty.chash")
 local util = require("util")
+local split = require("util.split")
 local ck = require("resty.cookie")
 
 local _M = balancer_resty:new({ factory = resty_chash, name = "sticky" })
@@ -74,7 +75,7 @@ end
 
 function _M.balance(self)
   local endpoint_string = sticky_endpoint_string(self)
-  return util.split_pair(endpoint_string, ":")
+  return split.split_pair(endpoint_string, ":")
 end
 
 return _M

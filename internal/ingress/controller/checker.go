@@ -26,6 +26,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const nginxPID = "/tmp/nginx.pid"
+
 // Name returns the healthcheck name
 func (n NGINXController) Name() string {
 	return "nginx-ingress-controller"
@@ -33,7 +35,7 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n *NGINXController) Check(_ *http.Request) error {
-	res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath))
+	res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath))
 	if err != nil {
 		return err
 	}
@@ -43,7 +45,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	}
 
 	if n.cfg.DynamicConfigurationEnabled {
-		res, err := http.Get(fmt.Sprintf("http://0.0.0.0:%v/is-dynamic-lb-initialized", n.cfg.ListenPorts.Status))
+		res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%v/is-dynamic-lb-initialized", n.cfg.ListenPorts.Status))
 		if err != nil {
 			return err
 		}
@@ -58,13 +60,13 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	if err != nil {
 		return errors.Wrap(err, "unexpected error reading /proc directory")
 	}
-	f, err := n.fileSystem.ReadFile("/run/nginx.pid")
+	f, err := n.fileSystem.ReadFile(nginxPID)
 	if err != nil {
-		return errors.Wrap(err, "unexpected error reading /run/nginx.pid")
+		return errors.Wrapf(err, "unexpected error reading %v", nginxPID)
 	}
 	pid, err := strconv.Atoi(strings.TrimRight(string(f), "\r\n"))
 	if err != nil {
-		return errors.Wrap(err, "unexpected error reading the PID from /run/nginx.pid")
+		return errors.Wrapf(err, "unexpected error reading the nginx PID from %v", nginxPID)
 	}
 	_, err = fs.NewProc(pid)
 

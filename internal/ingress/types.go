@@ -17,8 +17,6 @@ limitations under the License.
 package ingress
 
 import (
-	"time"
-
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -65,6 +63,12 @@ type Configuration struct {
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
 	PassthroughBackends []*SSLPassthroughBackend `json:"passthroughBackends,omitempty"`
+
+	// BackendConfigChecksum contains the particular checksum of a Configuration object
+	BackendConfigChecksum string `json:"BackendConfigChecksum,omitempty"`
+
+	// ConfigurationChecksum contains the particular checksum of a Configuration object
+	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -92,6 +96,11 @@ type Backend struct {
 	UpstreamHashBy string `json:"upstream-hash-by,omitempty"`
 	// LB algorithm configuration per ingress
 	LoadBalancing string `json:"load-balance,omitempty"`
+}
+
+// HashInclude defines if a field should be used or not to calculate the hash
+func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
+	return (field != "Endpoints"), nil
 }
 
 // SessionAffinityConfig describes different affinity configurations for new sessions.
@@ -140,18 +149,8 @@ type Server struct {
 	// SSLPassthrough indicates if the TLS termination is realized in
 	// the server or in the remote endpoint
 	SSLPassthrough bool `json:"sslPassthrough"`
-	// SSLCertificate path to the SSL certificate on disk
-	SSLCertificate string `json:"sslCertificate"`
-	// SSLFullChainCertificate path to the SSL certificate on disk
-	// This certificate contains the full chain (ca + intermediates + cert)
-	SSLFullChainCertificate string `json:"sslFullChainCertificate"`
-	// SSLExpireTime has the expire date of this certificate
-	SSLExpireTime time.Time `json:"sslExpireTime"`
-	// SSLPemChecksum returns the checksum of the certificate file on disk.
-	// There is no restriction in the hash generator. This checksum can be
-	// used to  determine if the secret changed without the use of file
-	// system notifications
-	SSLPemChecksum string `json:"sslPemChecksum"`
+	// SSLCert describes the certificate that will be used on the server
+	SSLCert SSLCert `json:"sslCert"`
 	// Locations list of URIs configured in the server.
 	Locations []*Location `json:"locations,omitempty"`
 	// Alias return the alias of the server name
@@ -242,10 +241,6 @@ type Location struct {
 	// UsePortInRedirects indicates if redirects must specify the port
 	// +optional
 	UsePortInRedirects bool `json:"usePortInRedirects"`
-	// VtsFilterKey contains the vts filter key on the location level
-	// https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_filter_by_set_key
-	// +optional
-	VtsFilterKey string `json:"vtsFilterKey,omitempty"`
 	// ConfigurationSnippet contains additional configuration for the backend
 	// to be considered in the configuration of the location
 	ConfigurationSnippet string `json:"configurationSnippet"`
@@ -275,6 +270,9 @@ type Location struct {
 	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database
 	// +optional
 	InfluxDB influxdb.Config `json:"influxDB,omitempty"`
+	// BackendProtocol indicates which protocol should be used to communicate with the service
+	// By default this is HTTP
+	BackendProtocol string `json:"backend-protocol"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

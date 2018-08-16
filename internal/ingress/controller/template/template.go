@@ -130,6 +130,7 @@ var (
 		"filterRateLimits":           filterRateLimits,
 		"buildRateLimitZones":        buildRateLimitZones,
 		"buildRateLimit":             buildRateLimit,
+		"buildResolversForLua":       buildResolversForLua,
 		"buildResolvers":             buildResolvers,
 		"buildUpstreamName":          buildUpstreamName,
 		"isLocationInLocationList":   isLocationInLocationList,
@@ -151,7 +152,6 @@ var (
 		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
 		"buildForwardedFor":           buildForwardedFor,
 		"buildAuthSignURL":            buildAuthSignURL,
-		"buildOpentracingLoad":        buildOpentracingLoad,
 		"buildOpentracing":            buildOpentracing,
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
@@ -192,6 +192,7 @@ func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool,
 	if dynamicConfigurationEnabled {
 		out = append(out,
 			"lua_shared_dict configuration_data 5M",
+			"lua_shared_dict certificate_data 16M",
 			"lua_shared_dict locks 512k",
 			"lua_shared_dict balancer_ewma 1M",
 			"lua_shared_dict balancer_ewma_last_touched_at 1M",
@@ -219,6 +220,33 @@ func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool,
 		return ""
 	}
 	return strings.Join(out, ";\n\r") + ";"
+}
+
+func buildResolversForLua(res interface{}, disableIpv6 interface{}) string {
+	nss, ok := res.([]net.IP)
+	if !ok {
+		glog.Errorf("expected a '[]net.IP' type but %T was returned", res)
+		return ""
+	}
+	no6, ok := disableIpv6.(bool)
+	if !ok {
+		glog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
+		return ""
+	}
+
+	if len(nss) == 0 {
+		return ""
+	}
+
+	r := []string{}
+	for _, ns := range nss {
+		if ing_net.IsIPV6(ns) && no6 {
+			continue
+		}
+		r = append(r, fmt.Sprintf("\"%v\"", ns))
+	}
+
+	return strings.Join(r, ", ")
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
@@ -260,7 +288,7 @@ func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 }
 
 // buildLocation produces the location string, if the ingress has redirects
-// (specified through the nginx.ingress.kubernetes.io/rewrite-to annotation)
+// (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
 func buildLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -351,7 +379,7 @@ func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) strin
 		return fmt.Sprintf("%s;", backend.LoadBalancing)
 	}
 
-	if fallbackLoadBalancing == "round_robin" {
+	if fallbackLoadBalancing == "round_robin" || fallbackLoadBalancing == "" {
 		return ""
 	}
 
@@ -359,7 +387,7 @@ func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) strin
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
-// (specified through the nginx.ingress.kubernetes.io/rewrite-to annotation)
+// (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
 // If the annotation nginx.ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
 func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigurationEnabled bool) string {
@@ -376,12 +404,28 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	}
 
 	path := location.Path
-	proto := "http"
+	proto := "http://"
 
 	proxyPass := "proxy_pass"
+
+	switch location.BackendProtocol {
+	case "HTTPS":
+		proto = "https://"
+	case "GRPC":
+		proto = "grpc://"
+		proxyPass = "grpc_pass"
+	case "GRPCS":
+		proto = "grpcs://"
+		proxyPass = "grpc_pass"
+	case "AJP":
+		proto = ""
+		proxyPass = "ajp_pass"
+	}
+
+	// TODO: Remove after the deprecation of grpc-backend annotation
 	if location.GRPC {
 		proxyPass = "grpc_pass"
-		proto = "grpc"
+		proto = "grpc://"
 	}
 
 	upstreamName := "upstream_balancer"
@@ -393,9 +437,11 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
 			if backend.Secure || backend.SSLPassthrough {
-				proto = "https"
+				// TODO: Remove after the deprecation of secure-backend annotation
+				proto = "https://"
+				// TODO: Remove after the deprecation of grpc-backend annotation
 				if location.GRPC {
-					proto = "grpcs"
+					proto = "grpcs://"
 				}
 			}
 
@@ -408,7 +454,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 	}
 
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
-	defProxyPass := fmt.Sprintf("%v %s://%s;", proxyPass, proto, upstreamName)
+	defProxyPass := fmt.Sprintf("%v %s%s;", proxyPass, proto, upstreamName)
 
 	// if the path in the ingress rule is equals to the target: no special rewrite
 	if path == location.Rewrite.Target {
@@ -447,15 +493,15 @@ subs_filter '%v' '$1<base href="%v://$http_host%v">' ro;
 			// special case redirect to /
 			// ie /something to /
 			return fmt.Sprintf(`
-rewrite %s(.*) /$1 break;
-rewrite %s / break;
-%v%v %s://%s;
+rewrite (?i)%s(.*) /$1 break;
+rewrite (?i)%s / break;
+%v%v %s%s;
 %v`, path, location.Path, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
-rewrite %s(.*) %s/$1 break;
-%v%v %s://%s;
+rewrite (?i)%s(.*) %s/$1 break;
+%v%v %s%s;
 %v`, path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 	}
 
@@ -725,8 +771,8 @@ func isValidClientBodyBufferSize(input interface{}) bool {
 	if err != nil {
 		sLowercase := strings.ToLower(s)
 
-		kCheck := strings.TrimSuffix(sLowercase, "k")
-		_, err := strconv.Atoi(kCheck)
+		check := strings.TrimSuffix(sLowercase, "k")
+		_, err := strconv.Atoi(check)
 		if err == nil {
 			return true
 		}
@@ -816,14 +862,14 @@ func buildAuthSignURL(input interface{}) string {
 	u, _ := url.Parse(s)
 	q := u.Query()
 	if len(q) == 0 {
-		return fmt.Sprintf("%v?rd=$pass_access_scheme://$http_host$request_uri", s)
+		return fmt.Sprintf("%v?rd=$pass_access_scheme://$http_host$escaped_request_uri", s)
 	}
 
 	if q.Get("rd") != "" {
 		return s
 	}
 
-	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$request_uri", s)
+	return fmt.Sprintf("%v&rd=$pass_access_scheme://$http_host$escaped_request_uri", s)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -841,31 +887,6 @@ func randomString() string {
 	return string(b)
 }
 
-func buildOpentracingLoad(input interface{}) string {
-	cfg, ok := input.(config.Configuration)
-	if !ok {
-		glog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
-		return ""
-	}
-
-	if !cfg.EnableOpentracing {
-		return ""
-	}
-
-	buf := bytes.NewBufferString("load_module /etc/nginx/modules/ngx_http_opentracing_module.so;")
-	buf.WriteString("\r\n")
-
-	if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString("load_module /etc/nginx/modules/ngx_http_zipkin_module.so;")
-	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("load_module /etc/nginx/modules/ngx_http_jaeger_module.so;")
-	}
-
-	buf.WriteString("\r\n")
-
-	return buf.String()
-}
-
 func buildOpentracing(input interface{}) string {
 	cfg, ok := input.(config.Configuration)
 	if !ok {
@@ -878,24 +899,14 @@ func buildOpentracing(input interface{}) string {
 	}
 
 	buf := bytes.NewBufferString("")
-
 	if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString(fmt.Sprintf("zipkin_collector_host                   %v;", cfg.ZipkinCollectorHost))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("zipkin_collector_port                   %v;", cfg.ZipkinCollectorPort))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("zipkin_service_name                     %v;", cfg.ZipkinServiceName))
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString(fmt.Sprintf("jaeger_reporter_local_agent_host_port   %v:%v;", cfg.JaegerCollectorHost, cfg.JaegerCollectorPort))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("jaeger_service_name                     %v;", cfg.JaegerServiceName))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("jaeger_sampler_type                     %v;", cfg.JaegerSamplerType))
-		buf.WriteString("\r\n")
-		buf.WriteString(fmt.Sprintf("jaeger_sampler_param                    %v;", cfg.JaegerSamplerParam))
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so 	 /etc/nginx/opentracing.json;")
 	}
 
 	buf.WriteString("\r\n")
+
 	return buf.String()
 }
 
@@ -929,7 +940,7 @@ func proxySetHeader(loc interface{}) string {
 		return "proxy_set_header"
 	}
 
-	if location.GRPC {
+	if location.GRPC || location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
 		return "grpc_set_header"
 	}
 

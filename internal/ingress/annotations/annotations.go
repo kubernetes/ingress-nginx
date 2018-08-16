@@ -29,6 +29,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/backendprotocol"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/clientbodybuffersize"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
@@ -54,7 +55,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamhashby"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamvhost"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/vtsfilterkey"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/xforwardedprefix"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -66,6 +66,7 @@ const DeniedKeyName = "Denied"
 // Ingress defines the valid annotations present in one NGINX Ingress rule
 type Ingress struct {
 	metav1.ObjectMeta
+	BackendProtocol      string
 	Alias                string
 	BasicDigestAuth      auth.Config
 	CertificateAuth      authtls.Config
@@ -90,7 +91,6 @@ type Ingress struct {
 	UpstreamHashBy       string
 	LoadBalancing        string
 	UpstreamVhost        string
-	VtsFilterKey         string
 	Whitelist            ipwhitelist.SourceRange
 	XForwardedPrefix     bool
 	SSLCiphers           string
@@ -132,7 +132,6 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"UpstreamHashBy":       upstreamhashby.NewParser(cfg),
 			"LoadBalancing":        loadbalancing.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
-			"VtsFilterKey":         vtsfilterkey.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),
@@ -140,6 +139,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"GRPC":                 grpc.NewParser(cfg),
 			"LuaRestyWAF":          luarestywaf.NewParser(cfg),
 			"InfluxDB":             influxdb.NewParser(cfg),
+			"BackendProtocol":      backendprotocol.NewParser(cfg),
 		},
 	}
 }

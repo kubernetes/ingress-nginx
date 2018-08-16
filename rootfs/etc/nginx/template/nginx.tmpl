@@ -7,11 +7,18 @@
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
 
+# Configuration checksum: {{ $all.Cfg.Checksum }}
+
+# setup custom paths that do not require root access
+pid /tmp/nginx.pid;
+
 {{ if $cfg.EnableModsecurity }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
-{{ buildOpentracingLoad $cfg }}
+{{ if $cfg.EnableOpentracing }}
+load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
+{{ end }}
 
 daemon off;
 
@@ -20,7 +27,6 @@ worker_processes {{ $cfg.WorkerProcesses }};
 worker_cpu_affinity {{ $cfg.WorkerCpuAffinity }};
 {{ end }}
 
-pid /run/nginx.pid;
 {{ if ne .MaxOpenFiles 0 }}
 worker_rlimit_nofile {{ .MaxOpenFiles }};
 {{ end }}
@@ -30,10 +36,14 @@ worker_rlimit_nofile {{ .MaxOpenFiles }};
 worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
 
 events {
-    multi_accept        on;
+    multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
     worker_connections  {{ $cfg.MaxWorkerConnections }};
     use                 epoll;
 }
+
+{{ if not (empty $cfg.MainSnippet) }}
+{{ $cfg.MainSnippet }}
+{{ end }}
 
 http {
     {{ if not $all.DisableLua }}
@@ -58,6 +68,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           configuration = res
+          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "balancer")
@@ -67,6 +78,13 @@ http {
           balancer = res
         end
         {{ end }}
+
+        ok, res = pcall(require, "monitor")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          monitor = res
+        end
     }
 
     {{ if $all.DynamicConfigurationEnabled }}
@@ -101,11 +119,6 @@ http {
     geoip_proxy_recursive on;
     {{ end }}
 
-    {{ if $cfg.EnableVtsStatus }}
-    vhost_traffic_status_zone shared:vhost_traffic_status:{{ $cfg.VtsStatusZoneSize }};
-    vhost_traffic_status_filter_by_set_key {{ $cfg.VtsDefaultFilterKey }};
-    {{ end }}
-
     aio                 threads;
     aio_write           on;
 
@@ -118,6 +131,11 @@ http {
 
     keepalive_timeout  {{ $cfg.KeepAlive }}s;
     keepalive_requests {{ $cfg.KeepAliveRequests }};
+
+    client_body_temp_path           /tmp/client-body;
+    fastcgi_temp_path               /tmp/fastcgi-temp;
+    proxy_temp_path                 /tmp/proxy-temp;
+    ajp_temp_path                   /tmp/ajp-temp; 
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
@@ -161,7 +179,7 @@ http {
 
     {{ if $cfg.UseGzip }}
     gzip on;
-    gzip_comp_level 5;
+    gzip_comp_level {{ $cfg.GzipLevel }};
     gzip_http_version 1.1;
     gzip_min_length 256;
     gzip_types {{ $cfg.GzipTypes }};
@@ -176,7 +194,7 @@ http {
 
     server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
     {{ if not $cfg.ShowServerTokens }}
-    more_set_headers "Server: ";
+    more_clear_headers Server;
     {{ end }}
 
     # disable warnings
@@ -186,6 +204,7 @@ http {
     # $namespace
     # $ingress_name
     # $service_name
+    # $service_port
     log_format upstreaminfo {{ if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ buildLogFormatUpstream $cfg }}';
 
     {{/* map urls that should not appear in access.log */}}
@@ -379,10 +398,10 @@ http {
     {{ end }}
 
     {{ if not $all.DynamicConfigurationEnabled }}
-    {{ range $name, $upstream := $backends }}
+    {{ range  $upstream := $backends }}
     {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
     upstream sticky-{{ $upstream.Name }} {
-        sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}  httponly;
+        sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}{{if eq (len $upstream.SessionAffinity.CookieSessionAffinity.Locations) 1 }}{{ range $locationName, $locationPaths := $upstream.SessionAffinity.CookieSessionAffinity.Locations }}{{ if eq (len $locationPaths) 1 }} path={{ index $locationPaths 0 }}{{ end }}{{ end }}{{ end }} httponly;
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
@@ -421,7 +440,7 @@ http {
     {{ end }}
 
     {{/* build the maps that will be use to validate the Whitelist */}}
-    {{ range $index, $server := $servers }}
+    {{ range $server := $servers }}
     {{ range $location := $server.Locations }}
     {{ $path := buildLocation $location }}
 
@@ -491,7 +510,7 @@ http {
     }
     {{ end }}
 
-    {{ range $index, $server := $servers }}
+    {{ range $server := $servers }}
 
     ## start server {{ $server.Hostname }}
     server {
@@ -511,9 +530,6 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        # Use the port {{ $all.ListenPorts.Status }} (random value just to avoid known ports) as default port for nginx.
-        # Changing this value requires a change in:
-        # https://github.com/kubernetes/ingress-nginx/blob/master/controllers/nginx/pkg/cmd/controller/nginx.go
         listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
         {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
         set $proxy_upstream_name "-";
@@ -551,14 +567,8 @@ http {
             opentracing off;
             {{ end }}
 
-            {{ if $cfg.EnableVtsStatus }}
-            vhost_traffic_status_display;
-            vhost_traffic_status_display_format html;
-            vhost_traffic_status_display_sum_key {{ $cfg.VtsSumKey }};
-            {{ else }}
             access_log off;
             stub_status on;
-            {{ end }}
         }
 
         {{ if $all.DynamicConfigurationEnabled }}
@@ -612,10 +622,10 @@ stream {
     error_log  {{ $cfg.ErrorLogPath }};
 
     # TCP services
-    {{ range $i, $tcpServer := .TCPBackends }}
+    {{ range $tcpServer := .TCPBackends }}
     upstream tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
-    {{ range $j, $endpoint := $tcpServer.Endpoints }}
-        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+    {{ range $endpoint := $tcpServer.Endpoints }}
+        server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
     {{ end }}
     }
     server {
@@ -641,10 +651,10 @@ stream {
     {{ end }}
 
     # UDP services
-    {{ range $i, $udpServer := .UDPBackends }}
+    {{ range $udpServer := .UDPBackends }}
     upstream udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
-    {{ range $j, $endpoint := $udpServer.Endpoints }}
-        server                  {{ $endpoint.Address }}:{{ $endpoint.Port }};
+    {{ range $endpoint := $udpServer.Endpoints }}
+        server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
     {{ end }}
     }
 
@@ -685,6 +695,9 @@ stream {
             proxy_set_header       X-Namespace        $namespace;
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
+            proxy_set_header       X-Service-Port     $service_port;
+
+            set $proxy_upstream_name "upstream-default-backend";
 
             rewrite                (.*) / break;
 
@@ -739,7 +752,7 @@ stream {
 
         {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
         {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
-        {{ if not (empty $server.SSLCertificate) }}
+        {{ if not (empty $server.SSLCert.PemFileName) }}
         {{ range $address := $all.Cfg.BindAddressIpv4 }}
         listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol {{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
         {{ else }}
@@ -747,17 +760,17 @@ stream {
         {{ end }}
         {{ if $all.IsIPV6Enabled }}
         {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        {{ if not (empty $server.SSLCertificate) }}listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
+        {{ if not (empty $server.SSLCert.PemFileName) }}listen {{ $address }}:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
         {{ else }}
-        {{ if not (empty $server.SSLCertificate) }}listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
+        {{ if not (empty $server.SSLCert.PemFileName) }}listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }}{{ end }} {{ if eq $server.Hostname "_"}} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }}{{end}} ssl {{ if $all.Cfg.UseHTTP2 }}http2{{ end }};
         {{ end }}
         {{ end }}
         {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
-        # PEM sha: {{ $server.SSLPemChecksum }}
-        ssl_certificate                         {{ $server.SSLCertificate }};
-        ssl_certificate_key                     {{ $server.SSLCertificate }};
-        {{ if not (empty $server.SSLFullChainCertificate)}}
-        ssl_trusted_certificate                 {{ $server.SSLFullChainCertificate }};
+        # PEM sha: {{ $server.SSLCert.PemSHA }}
+        ssl_certificate                         {{ $server.SSLCert.PemFileName }};
+        ssl_certificate_key                     {{ $server.SSLCert.PemFileName }};
+        {{ if not (empty $server.SSLCert.FullChainPemFileName)}}
+        ssl_trusted_certificate                 {{ $server.SSLCert.FullChainPemFileName }};
         ssl_stapling                            on;
         ssl_stapling_verify                     on;
         {{ end }}
@@ -855,6 +868,17 @@ stream {
         {{ end }}
 
         location {{ $path }} {
+            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
+            set $namespace      "{{ $ing.Namespace }}";
+            set $ingress_name   "{{ $ing.Rule }}";
+            set $service_name   "{{ $ing.Service }}";
+            set $service_port   "{{ $location.Port }}";
+            set $location_path  "{{ $location.Path }}";
+
+            {{ if $all.Cfg.EnableOpentracing }}
+            opentracing_propagate_context;
+            {{ end }}
+
             {{ if not $all.DisableLua }}
             rewrite_by_lua_block {
                 {{ if $all.DynamicConfigurationEnabled}}
@@ -910,10 +934,12 @@ stream {
                 {{ if $all.DynamicConfigurationEnabled}}
                 balancer.log()
                 {{ end }}
+
+                monitor.call()
             }
             {{ end }}
 
-            {{ if (and (not (empty $server.SSLCertificate)) $all.Cfg.HSTS) }}
+            {{ if (and (not (empty $server.SSLCert.PemFileName)) $all.Cfg.HSTS) }}
             if ($scheme = https) {
             more_set_headers                        "Strict-Transport-Security: max-age={{ $all.Cfg.HSTSMaxAge }}{{ if $all.Cfg.HSTSIncludeSubdomains }}; includeSubDomains{{ end }}{{ if $all.Cfg.HSTSPreload }}; preload{{ end }}";
             }
@@ -930,18 +956,10 @@ stream {
 
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
-            {{ if $all.Cfg.EnableVtsStatus }}{{ if $location.VtsFilterKey }} vhost_traffic_status_filter_by_set_key {{ $location.VtsFilterKey }};{{ end }}{{ end }}
-
             set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}";
 
-            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
-            {{/* $ing.Metadata contains the Ingress metadata */}}
-            set $namespace      "{{ $ing.Namespace }}";
-            set $ingress_name   "{{ $ing.Rule }}";
-            set $service_name   "{{ $ing.Service }}";
-
             {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
-            {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCertificate)) $location.Rewrite.SSLRedirect)) }}
+            {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCert.PemFileName)) $location.Rewrite.SSLRedirect)) }}
             {{ if not (isLocationInLocationList $location $all.Cfg.NoTLSRedirectLocations) }}
             # enforce ssl on server side
             if ($redirect_to_https) {
@@ -980,12 +998,13 @@ stream {
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
             add_header          Set-Cookie $auth_cookie;
-            {{- range $idx, $line := buildAuthResponseHeaders $location }}
+            {{- range $line := buildAuthResponseHeaders $location }}
             {{ $line }}
             {{- end }}
             {{ end }}
 
             {{ if $location.ExternalAuth.SigninURL }}
+            set_escape_uri $escaped_request_uri $request_uri;
             error_page 401 = {{ buildAuthSignURL $location.ExternalAuth.SigninURL }};
             {{ end }}
 
@@ -1113,6 +1132,7 @@ stream {
             proxy_set_header       X-Namespace        $namespace;
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
+            proxy_set_header       X-Service-Port     $service_port;
             {{ end }}
 
             {{ if not (empty $location.Backend) }}
