@@ -55,6 +55,18 @@ local function resolve_external_names(original_backend)
   return backend
 end
 
+local function format_ipv6_endpoints(endpoints)
+  local formatted_endpoints = {}
+  for _, endpoint in ipairs(endpoints) do
+    local formatted_endpoint = endpoint
+    if not endpoint.address:match("^%d+.%d+.%d+.%d+$") then
+      formatted_endpoint.address = string.format("[%s]", endpoint.address)
+    end
+    table.insert(formatted_endpoints, formatted_endpoint)
+  end
+  return formatted_endpoints
+end
+
 local function sync_backend(backend)
   local implementation = get_implementation(backend)
   local balancer = balancers[backend.name]
@@ -78,6 +90,8 @@ local function sync_backend(backend)
   if service_type == "ExternalName" then
     backend = resolve_external_names(backend)
   end
+
+  backend.endpoints = format_ipv6_endpoints(backend.endpoints)
 
   balancer:sync(backend)
 end
@@ -145,7 +159,7 @@ function _M.balance()
 
   local ok, err = ngx_balancer.set_current_peer(peer)
   if not ok then
-    ngx.log(ngx.ERR, "error while setting current upstream peer: " .. tostring(err))
+    ngx.log(ngx.ERR, string.format("error while setting current upstream peer %s: %s", peer, err))
   end
 end
 
