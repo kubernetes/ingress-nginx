@@ -685,6 +685,7 @@ type TemplateConfig struct {
 	ListenPorts                 *ListenPorts
 	PublishService              *apiv1.Service
 	DynamicConfigurationEnabled bool
+	DynamicCertificatesEnabled  bool
 	DisableLua                  bool
 }
 

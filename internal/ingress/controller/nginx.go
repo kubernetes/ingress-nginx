@@ -118,7 +118,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.ResyncPeriod,
 		config.Client,
 		fs,
-		n.updateCh)
+		n.updateCh,
+		config.DynamicCertificatesEnabled)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -592,6 +593,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		ListenPorts:                 n.cfg.ListenPorts,
 		PublishService:              n.GetPublishService(),
 		DynamicConfigurationEnabled: n.cfg.DynamicConfigurationEnabled,
+		DynamicCertificatesEnabled:  n.cfg.DynamicCertificatesEnabled,
 		DisableLua:                  n.cfg.DisableLua,
 	}
 
@@ -723,6 +725,18 @@ func (n *NGINXController) setupSSLProxy() {
 	}()
 }
 
+// Helper function to clear Certificates from the ingress configuration since they should be ignored when
+// checking if the new configuration changes can be applied dynamically if dynamic certificates is on
+func clearCertificates(config *ingress.Configuration) {
+	var clearedServers []*ingress.Server
+	for _, server := range config.Servers {
+		copyOfServer := *server
+		copyOfServer.SSLCert = ingress.SSLCert{}
+		clearedServers = append(clearedServers, &copyOfServer)
+	}
+	config.Servers = clearedServers
+}
+
 // IsDynamicConfigurationEnough returns whether a Configuration can be
 // dynamically applied, without reloading the backend.
 func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configuration) bool {
@@ -732,12 +746,17 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 	copyOfRunningConfig.Backends = []*ingress.Backend{}
 	copyOfPcfg.Backends = []*ingress.Backend{}
 
+	if n.cfg.DynamicCertificatesEnabled {
+		clearCertificates(&copyOfRunningConfig)
+		clearCertificates(&copyOfPcfg)
+	}
+
 	return copyOfRunningConfig.Equal(&copyOfPcfg)
 }
 
 // configureDynamically encodes new Backends in JSON format and POSTs the
 // payload to an internal HTTP endpoint handled by Lua.
-func configureDynamically(pcfg *ingress.Configuration, port int) error {
+func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertificatesEnabled bool) error {
 	backends := make([]*ingress.Backend, len(pcfg.Backends))
 
 	for i, backend := range pcfg.Backends {
@@ -770,14 +789,53 @@ func configureDynamically(pcfg *ingress.Configuration, port int) error {
 		backends[i] = luaBackend
 	}
 
-	buf, err := json.Marshal(backends)
+	url := fmt.Sprintf("http://localhost:%d/configuration/backends", port)
+	err := post(url, backends)
 	if err != nil {
 		return err
 	}
 
-	glog.V(2).Infof("Posting backends configuration: %s", buf)
+	if isDynamicCertificatesEnabled {
+		err = configureCertificates(pcfg, port)
+		if err != nil {
+			return err
+		}
+	}
 
-	url := fmt.Sprintf("http://localhost:%d/configuration/backends", port)
+	return nil
+}
+
+// configureCertificates JSON encodes certificates and POSTs it to an internal HTTP endpoint
+// that is handled by Lua
+func configureCertificates(pcfg *ingress.Configuration, port int) error {
+	var servers []*ingress.Server
+
+	for _, server := range pcfg.Servers {
+		servers = append(servers, &ingress.Server{
+			Hostname: server.Hostname,
+			SSLCert: ingress.SSLCert{
+				PemCertKey: server.SSLCert.PemCertKey,
+			},
+		})
+	}
+
+	url := fmt.Sprintf("http://localhost:%d/configuration/servers", port)
+	err := post(url, servers)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func post(url string, data interface{}) error {
+	buf, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	glog.V(2).Infof("Posting to %s: %s", url, buf)
+
 	resp, err := http.Post(url, "application/json", bytes.NewReader(buf))
 	if err != nil {
 		return err
