@@ -68,7 +68,8 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			fs,
-			updateCh)
+			updateCh,
+			false)
 
 		storer.Run(stopCh)
 
@@ -155,7 +156,8 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			fs,
-			updateCh)
+			updateCh,
+			false)
 
 		storer.Run(stopCh)
 
@@ -302,7 +304,8 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			fs,
-			updateCh)
+			updateCh,
+			false)
 
 		storer.Run(stopCh)
 
@@ -390,7 +393,8 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			fs,
-			updateCh)
+			updateCh,
+			false)
 
 		storer.Run(stopCh)
 
@@ -501,7 +505,8 @@ func TestStore(t *testing.T) {
 			10*time.Minute,
 			clientSet,
 			fs,
-			updateCh)
+			updateCh,
+			false)
 
 		storer.Run(stopCh)
 
