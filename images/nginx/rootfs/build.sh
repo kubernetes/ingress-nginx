@@ -28,7 +28,7 @@ export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
 export NGINX_OPENTRACING_VERSION=0.6.0
 export OPENTRACING_CPP_VERSION=1.5.0
-export ZIPKIN_CPP_VERSION=0.5.1
+export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=ba0fa3fa6dbb01995d996f988a897e272100bf95
 export MODSECURITY_VERSION=37b76e88df4bce8a9846345c27271d7e6ce1acfb
 export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
@@ -171,7 +171,7 @@ get_src b6a6eecb0b18b15398b7d6ed0a2db4cfd7a9015c1e26f9da4160acc588b82b6f \
 get_src 4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5 \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
-get_src f65cbb1de638f5b7bb4a7a3e0b4a6ecef7870e119f85652e3bd5fe4ea2f15d3f \
+get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
 get_src fe7d3188e097d68f1942d46c4adba262d9ddcf433409ebc15bb5355bfb001a4a \
@@ -541,6 +541,7 @@ apt-get remove -y --purge \
   protobuf-compiler \
   python \
   xz-utils \
+  libpython3.6-stdlib \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y
