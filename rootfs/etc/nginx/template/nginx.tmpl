@@ -90,6 +90,7 @@ http {
     {{ if $all.DynamicConfigurationEnabled }}
     init_worker_by_lua_block {
         balancer.init_worker()
+        monitor.init_worker()
     }
     {{ end }}
     {{ end }}
