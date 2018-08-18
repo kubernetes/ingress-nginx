@@ -82,7 +82,7 @@ type ConfigurationSpec struct {
 	// +optional
 	Opentracing *Opentracing `json:"opentracing,omitempty"`
 	// +optional
-	Snippets *Snippet `json:"snippets,omitempty"`
+	Snippets *Snippets `json:"snippets,omitempty"`
 	// +optional
 	SSL *SSL `json:"ssl,omitempty"`
 	// +optional
@@ -469,8 +469,8 @@ type SyslogConfiguration struct {
 	Port int `json:"port"`
 }
 
-// Snippet ...
-type Snippet struct {
+// Snippets ...
+type Snippets struct {
 	// Main adds custom configuration to the main section of the nginx configuration
 	// +optional
 	Main string `json:"main,omitempty"`
