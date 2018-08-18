@@ -5,11 +5,19 @@ local assert = assert
 
 local _M = {}
 
+local function close_socket(socket)
+  local _, err = socket:setkeepalive(0, 100)
+
+  if err then
+    ngx.log(ngx.ERR, string.format("error closing socket:\"%s\"", err))
+  end
+end
+
 local function send_data(jsonData)
   local s = assert(socket())
   assert(s:connect('unix:/tmp/prometheus-nginx.socket'))
   assert(s:send(jsonData))
-  assert(s:close())
+  close_socket(socket)
 end
 
 function _M.encode_nginx_stats()
