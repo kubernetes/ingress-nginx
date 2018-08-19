@@ -56,7 +56,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "rewrite (?i)/something/(.*) /$1 break;") &&
-					strings.Contains(server, "rewrite (?i)/something / break;")
+					strings.Contains(server, "rewrite (?i)/something$ / break;")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -114,7 +114,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		logs, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(logs).To(ContainSubstring(`"(?i)/something" matches "/something", client:`))
+		Expect(logs).To(ContainSubstring(`"(?i)/something$" matches "/something", client:`))
 		Expect(logs).To(ContainSubstring(`rewritten data: "/", args: "",`))
 	})
 })
