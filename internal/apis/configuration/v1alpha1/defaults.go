@@ -36,24 +36,29 @@ const (
 func NewDefaultConfiguration() ConfigurationSpec {
 
 	defIPCIDR := make([]net.IPAddr, 0)
-	defBindAddress := make([]net.IPAddr, 0)
+
 	localhost := net.IPAddr{IP: net.ParseIP("127.0.0.1")}
+	localhostIPV6 := net.IPAddr{IP: net.ParseIP("::1")}
+
 	defNginxStatusIpv4Whitelist := []net.IPAddr{localhost}
+	defNginxStatusIpv6Whitelist := []net.IPAddr{localhostIPV6}
 
 	loadBalancer := LoadBalanceAlgorithm(RoundRobin)
 	jaegerSamplerType := JaegerSamplerType(ConstJaegerSampler)
 
 	global := &Global{
-		BindAddressIpv4:            defBindAddress,
-		BindAddressIpv6:            defBindAddress,
-		CustomHTTPErrors:           []int{},
-		EnableBrotli:               false,
-		BrotliLevel:                4,
-		BrotliTypes:                brotliTypes,
-		EnableGeoIP:                true,
-		EnableGzip:                 true,
-		GzipLevel:                  5,
-		GzipTypes:                  gzipTypes,
+		CustomHTTPErrors: []int{},
+
+		EnableBrotli: false,
+		BrotliLevel:  4,
+		BrotliTypes:  brotliTypes,
+
+		EnableGeoIP: true,
+
+		EnableGzip: true,
+		GzipLevel:  5,
+		GzipTypes:  gzipTypes,
+
 		EnableInfluxDB:             false,
 		EnableIPV6:                 true,
 		EnableIPV6DNS:              true,
@@ -62,41 +67,41 @@ func NewDefaultConfiguration() ConfigurationSpec {
 		EnableRequestID:            true,
 		EnableReusePort:            true,
 		EnableUnderscoresInHeaders: false,
-		IgnoreInvalidHeaders:       true,
-		WorkerCPUAffinity:          "",
-		KeepAlive:                  75,
-		KeepAliveRequests:          100,
-		LimitConnZoneVariable:      "$binary_remote_addr",
-		LimitRequestStatusCode:     429,
-		LoadBalanceAlgorithm:       &loadBalancer,
+
+		IgnoreInvalidHeaders: true,
+
+		KeepAlive:         75,
+		KeepAliveRequests: 100,
+
+		LimitConnZoneVariable:  "$binary_remote_addr",
+		LimitRequestStatusCode: 429,
+
+		LoadBalanceAlgorithm: &loadBalancer,
+
 		MapHashBucketSize:          64,
 		MaxWorkerConnections:       16384,
-		ProxyHeadersHashBucketSize: 64,
-		ProxyHeadersHashMaxSize:    512,
 		ProxyProtocolHeaderTimeout: time.Duration(5) * time.Second,
 		ProxyRealIPCIDR:            defIPCIDR,
-		//Resolver: ,
-		RetryNonIdempotent: false,
-		//ServerNameHashBucketSize: ,
-		ServerNameHashMaxSize: 1024,
-		ShowServerTokens:      true,
-		StatusIPV4Whitelist:   defNginxStatusIpv4Whitelist,
-		//StatusIPV6Whitelist: defNginxStatusIpv6Whitelist,
-		WorkerProcesses:       runtime.NumCPU(),
-		WorkerShutdownTimeout: time.Duration(10) * time.Second,
-		//VariablesHashBucketSize: ,
-		VariablesHashMaxSize:    2048,
-		ForwardedForHeader:      "X-Forwarded-For",
-		ComputeFullForwardedFor: false,
-		HTTPRedirectCode:        308,
-		NoAuthLocations:         "",
-		PortInRedirects:         false,
-		//WhitelistSourceRange: ,
+		RetryNonIdempotent:         false,
+		ServerNameHashMaxSize:      1024,
+		ShowServerTokens:           true,
+		StatusIPV4Whitelist:        defNginxStatusIpv4Whitelist,
+		StatusIPV6Whitelist:        defNginxStatusIpv6Whitelist,
+
+		WorkerProcesses: runtime.NumCPU(),
+
+		WorkerShutdownTimeout: 10,
+
+		VariablesHashMaxSize: 2048,
+		HTTPRedirectCode:     308,
+		NoAuthLocations:      []string{"/.well-known/acme-challenge"},
 	}
 
 	client := &Client{
 		BodyBufferSize:           "8k",
 		BodyTimeout:              60,
+		ComputeFullForwardedFor:  false,
+		ForwardedForHeader:       "X-Forwarded-For",
 		HeaderBufferSize:         "1k",
 		HeaderTimeout:            60,
 		LargeClientHeaderBuffers: "4 8k",
@@ -151,20 +156,20 @@ func NewDefaultConfiguration() ConfigurationSpec {
 	}
 
 	ssl := &SSL{
-		HSTS:        hsts,
+		HSTS: hsts,
+
 		SSLRedirect: true,
-		//ForceSSLRedirect: ,
-		//NoTLSRedirectLocations:,
+
 		Ciphers:   sslCiphers,
 		ECDHCurve: "auto",
-		//DHParam: ,
-		Protocols:        "TLSv1.2",
+		Protocols: "TLSv1.2",
+
 		SessionCache:     true,
 		SessionCacheSize: "10m",
 		SessionTickets:   true,
-		//SessionTicketKey: ,
-		SessionTimeout: "10m",
-		BufferSize:     "4k",
+		SessionTimeout:   "10m",
+
+		BufferSize: "4k",
 	}
 
 	jaeger := &JaegerConfiguration{
@@ -189,27 +194,31 @@ func NewDefaultConfiguration() ConfigurationSpec {
 	}
 
 	upstream := &Upstream{
-		AddOriginalURIHeader:          true,
-		SetHeaders:                    make(map[string]string),
-		HideHeaders:                   []string{},
-		EnableServerHeaderFromBackend: false,
+		AddOriginalURIHeader: true,
+
+		SetHeaders:  make(map[string]string),
+		HideHeaders: []string{},
+
 		BodySize:                      "1m",
 		Buffering:                     "off",
 		BufferSize:                    "4k",
 		CookieDomain:                  "off",
 		CookiePath:                    "off",
 		ConnectTimeout:                5,
+		EnableServerHeaderFromBackend: false,
 		FailTimeout:                   0,
-		//HashBy: "",
-		KeepaliveConnections: 32,
-		MaxFails:             0,
-		NextUpstream:         "error timeout",
-		NextUpstreamTries:    3,
-		ReadTimeout:          60,
-		RedirectFrom:         "off",
-		RedirectTo:           "off",
-		RequestBuffering:     "on",
-		SendTimeout:          60,
+		HeadersHashBucketSize:         64,
+		HeadersHashMaxSize:            512,
+		HashBy:                        "",
+		KeepaliveConnections:          32,
+		MaxFails:                      0,
+		NextUpstream:                  "error timeout",
+		NextUpstreamTries:             3,
+		ReadTimeout:                   60,
+		RedirectFrom:                  "off",
+		RedirectTo:                    "off",
+		RequestBuffering:              "on",
+		SendTimeout:                   60,
 	}
 
 	waf := &WAF{

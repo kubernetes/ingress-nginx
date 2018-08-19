@@ -24,6 +24,7 @@ import (
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // +genclient
@@ -86,21 +87,31 @@ type ConfigurationSpec struct {
 	// +optional
 	SSL *SSL `json:"ssl,omitempty"`
 	// +optional
+	Stream Stream `json:"stream,omitempty"`
+	// +optional
 	Upstream *Upstream `json:"upstream,omitempty"`
 	// +optional
 	WAF *WAF `json:"waf,omitempty"`
 }
 
+// LoadBalanceAlgorithm load balancing method to use
 type LoadBalanceAlgorithm string
 
 var (
+	// RoundRobin default load balancing method
 	RoundRobin LoadBalanceAlgorithm = "round-robin"
-	LeastConn  LoadBalanceAlgorithm = "least_conn"
-	IPHash     LoadBalanceAlgorithm = "ip_hash"
-	EWMA       LoadBalanceAlgorithm = "ewma"
+	// LeastConn http://nginx.org/en/docs/http/ngx_http_upstream_module.html#least_conn
+	LeastConn LoadBalanceAlgorithm = "least_conn"
+	// IPHash http://nginx.org/en/docs/http/ngx_http_upstream_module.html#ip_hash
+	IPHash LoadBalanceAlgorithm = "ip_hash"
+	// EWMA (exponential weighted moving average) load balancing algorithm.
+	// This is available only in dynamic configuration mode
+	EWMA LoadBalanceAlgorithm = "ewma"
 )
 
+// Client ...
 type Client struct {
+
 	// Sets buffer size for reading client request body
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
 	// +optional
@@ -110,6 +121,16 @@ type Client struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout
 	// +optional
 	BodyTimeout int `json:"body-timeout,omitempty"`
+
+	// Sets the header field for identifying the originating IP address of a client
+	// Default is X-Forwarded-For
+	// +optional
+	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
+
+	// Append the remote address to the X-Forwarded-For header instead of replacing it
+	// Default: false
+	// +optional
+	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
 
 	// ClientHeaderBufferSize allows to configure a custom buffer
 	// size for reading client request header
@@ -130,6 +151,7 @@ type Client struct {
 	LargeClientHeaderBuffers string `json:"large-client-header-buffers,omitempty"`
 }
 
+// HTTP2 define attributes to configure HTTP2 protocol in NGINX
 type HTTP2 struct {
 	// Enables or disables the HTTP/2 support in secure connections
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html
@@ -148,6 +170,7 @@ type HTTP2 struct {
 	MaxHeaderSize string `json:"max-header-size,omitempty"`
 }
 
+// Global defines attributes used in NGINX
 type Global struct {
 
 	// Sets the ipv4 addresses on which the server will accept requests.
@@ -244,12 +267,6 @@ type Global struct {
 	// +optional
 	IgnoreInvalidHeaders bool `json:"ignore-invalid-headers,omitempty"`
 
-	// WorkerCPUAffinity bind nginx worker processes to CPUs this will improve response latency
-	// http://nginx.org/en/docs/ngx_core_module.html#worker_cpu_affinity
-	// By default this is disabled
-	// +optional
-	WorkerCPUAffinity string `json:"worker-cpu-affinity,omitempty"`
-
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
@@ -286,17 +303,21 @@ type Global struct {
 	// +optional
 	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
 
-	// Maximum size of the bucket for the proxy headers hash tables
-	// http://nginx.org/en/docs/hash.html
-	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size
+	// HTTPRedirectCode sets the HTTP status code to be used in redirects.
+	// Supported codes are 301,302,307 and 308
+	// Default: 308
 	// +optional
-	ProxyHeadersHashBucketSize int `json:"proxy-headers-hash-bucket-size,omitempty"`
+	HTTPRedirectCode int `json:"http-redirect-code,omitempty"`
 
-	// Size of the bucket for the proxy headers hash tables
-	// http://nginx.org/en/docs/hash.html
-	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size
+	// NoAuthLocations is a comma-separated list of locations that
+	// should not get authenticated
 	// +optional
-	ProxyHeadersHashMaxSize int `json:"proxy-headers-hash-max-size,omitempty"`
+	NoAuthLocations []string `json:"no-auth-locations,omitempty"`
+
+	// Enables or disables the specification of port in redirects
+	// Default: false
+	// +optional
+	PortInRedirects bool `json:"port-in-redirects,omitempty"`
 
 	// When use-proxy-protocol is enabled, sets the maximum time the connection handler will wait
 	// to receive proxy headers.
@@ -345,15 +366,19 @@ type Global struct {
 	// +optional
 	StatusIPV6Whitelist []net.IPAddr `json:"status-ipv6-whitelist,omitempty"`
 
+	// WorkerCPUAffinity bind nginx worker processes to CPUs this will improve response latency
+	// http://nginx.org/en/docs/ngx_core_module.html#worker_cpu_affinity
+	// By default this is disabled
+	// +optional
+	WorkerCPUAffinity string `json:"worker-cpu-affinity,omitempty"`
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	// +optional
 	WorkerProcesses int `json:"worker-processes,omitempty"`
-
-	// Defines a timeout for a graceful shutdown of worker processes
+	// Defines a timeout, in seconds, for a graceful shutdown of worker processes
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
 	// +optional
-	WorkerShutdownTimeout time.Duration `json:"worker-shutdown-timeout"`
+	WorkerShutdownTimeout int `json:"worker-shutdown-timeout"`
 
 	// Sets the bucket size for the variables hash table.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size
@@ -364,32 +389,6 @@ type Global struct {
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
 	// +optional
 	VariablesHashMaxSize int `json:"variables-hash-max-size"`
-
-	// Sets the header field for identifying the originating IP address of a client
-	// Default is X-Forwarded-For
-	// +optional
-	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
-
-	// Append the remote address to the X-Forwarded-For header instead of replacing it
-	// Default: false
-	// +optional
-	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
-
-	// HTTPRedirectCode sets the HTTP status code to be used in redirects.
-	// Supported codes are 301,302,307 and 308
-	// Default: 308
-	// +optional
-	HTTPRedirectCode int `json:"http-redirect-code,omitempty"`
-
-	// NoAuthLocations is a comma-separated list of locations that
-	// should not get authenticated
-	// +optional
-	NoAuthLocations string `json:"no-auth-locations,omitempty"`
-
-	// Enables or disables the specification of port in redirects
-	// Default: false
-	// +optional
-	PortInRedirects bool `json:"port-in-redirects,omitempty"`
 
 	// WhitelistSourceRange allows limiting access to certain client addresses
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
@@ -444,18 +443,13 @@ type LogFileConfiguration struct {
 	ErrorLogPath string `json:"error-log-path"`
 }
 
-/*
-Latency = []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10}
-ResponseLength = []float64{100, 1000, 10000, 100000, 1000000}
-RequestLength = []float64{1000, 10000, 100000, 1000000, 10000000}
-*/
-
+// Metrics ...
 type Metrics struct {
 	Enabled bool
 
 	Latency        []float64 `json:"latency"`
-	ResponseLength []float64 `json:"response-length"`
 	RequestLength  []float64 `json:"request-length"`
+	ResponseLength []float64 `json:"response-length"`
 }
 
 // SyslogConfiguration ...
@@ -500,6 +494,7 @@ type Opentracing struct {
 	Zipkin *ZipkinConfiguration `json:"zipkin,omitempty"`
 }
 
+// JaegerSamplerType sampler types for Jaeger
 type JaegerSamplerType string
 
 var (
@@ -567,6 +562,7 @@ type WAF struct {
 	EnableLuaRestyWAF bool `json:"enable-lua-resty-waf"`
 }
 
+// HSTS ...
 type HSTS struct {
 	// Enables or disables the header HSTS in servers running SSL
 	Enabled bool `json:"enabled,omitempty"`
@@ -650,6 +646,7 @@ type SSL struct {
 	BufferSize string `json:"buffer-size,omitempty"`
 }
 
+// Upstream ...
 type Upstream struct {
 
 	// Adds an X-Original-Uri header with the original request URI to the backend request
@@ -710,6 +707,18 @@ type Upstream struct {
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash
 	HashBy string `json:"hash-by,omitempty"`
 
+	// Maximum size of the bucket for the proxy headers hash tables
+	// http://nginx.org/en/docs/hash.html
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size
+	// +optional
+	HeadersHashBucketSize int `json:"headers-hash-bucket-size,omitempty"`
+
+	// Size of the bucket for the proxy headers hash tables
+	// http://nginx.org/en/docs/hash.html
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size
+	// +optional
+	HeadersHashMaxSize int `json:"headers-hash-max-size,omitempty"`
+
 	// Activates the cache for connections to upstream servers.
 	// The connections parameter sets the maximum number of idle keepalive connections to
 	// upstream servers that are preserved in the cache of each worker process. When this
@@ -754,4 +763,25 @@ type Upstream struct {
 	// two successive write operations, not for the transmission of the whole request.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout
 	SendTimeout int `json:"send-timeout,omitempty"`
+}
+
+// Stream defines the TCP and UDP services to be exposed using the NGINX Stream feature
+type Stream struct {
+	TCP []L4Backend `json:"decode"`
+	UDP []L4Backend `json:"decode"`
+}
+
+// L4Backend describes the kubernetes service behind L4 Ingress service
+type L4Backend struct {
+	Port      intstr.IntOrString `json:"port"`
+	Name      string             `json:"name"`
+	Namespace string             `json:"namespace"`
+	// +optional
+	ProxyProtocol StreamProxyProtocol `json:"proxyProtocol"`
+}
+
+// StreamProxyProtocol describes the proxy protocol configuration
+type StreamProxyProtocol struct {
+	Decode bool `json:"decode"`
+	Encode bool `json:"encode"`
 }
