@@ -46,6 +46,10 @@ end
 -- it returns value of ngx.var[request_uri]
 function _M.lua_ngx_var(ngx_var)
   local var_name = string_sub(ngx_var, 2)
+  if var_name:match("^%d+$") then
+    var_name = tonumber(var_name)
+  end
+
   return ngx.var[var_name]
 end
 
