@@ -4,10 +4,11 @@ metadata:
   name: ingress-nginx
   namespace: ingress-nginx
   labels:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
   annotations:
     # replace with the correct value of the generated certificate in the AWS console
-    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX" 
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"
     # the backend instances are HTTP
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
     # Map port 443
@@ -17,7 +18,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
   ports:
   - name: http
     port: 80

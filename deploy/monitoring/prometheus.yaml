@@ -3,9 +3,12 @@ kind: Role
 metadata:
   name: prometheus-server
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: ingress-nginx
 rules:
 - apiGroups: [""]
-  resources: 
+  resources:
   - services
   - endpoints
   - pods
@@ -18,6 +21,9 @@ kind: ServiceAccount
 metadata:
   name: prometheus-server
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: ingress-nginx
 
 ---
 
@@ -26,6 +32,10 @@ kind: RoleBinding
 metadata:
   name: prometheus-server
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: ingress-nginx
+
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -42,15 +52,21 @@ kind: Deployment
 metadata:
   name: prometheus-server
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: ingress-nginx
+
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prometheus-server
+      app.kubernetes.io/name: prometheus
+      app.kubernetes.io/part-of: ingress-nginx
   template:
     metadata:
       labels:
-        app: prometheus-server
+        app.kubernetes.io/name: prometheus
+        app.kubernetes.io/part-of: ingress-nginx
     spec:
       serviceAccountName: prometheus-server
       containers:
@@ -80,9 +96,14 @@ kind: Service
 metadata:
   name: prometheus-service
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: ingress-nginx
+
 spec:
   selector:
-    app: prometheus-server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: ingress-nginx
   type: NodePort
   ports:
     - port: 9090
