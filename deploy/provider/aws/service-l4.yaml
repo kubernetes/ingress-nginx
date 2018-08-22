@@ -4,7 +4,8 @@ metadata:
   name: ingress-nginx
   namespace: ingress-nginx
   labels:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
   annotations:
     # Enable PROXY protocol
     service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
@@ -13,7 +14,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
   ports:
   - name: http
     port: 80

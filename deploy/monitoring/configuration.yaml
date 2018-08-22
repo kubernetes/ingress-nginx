@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: prometheus-configuration
   labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: ingress-nginx
     name: prometheus-configuration
   namespace: ingress-nginx
 data:
@@ -38,4 +40,3 @@ data:
       - source_labels: [__meta_kubernetes_service_name]
         regex: prometheus-service
         action: drop
- 
