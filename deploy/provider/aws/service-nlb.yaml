@@ -4,7 +4,8 @@ metadata:
   name: ingress-nginx
   namespace: ingress-nginx
   labels:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
   annotations:
     # by default the type is elb (classic load balancer).
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
@@ -13,7 +14,7 @@ spec:
   externalTrafficPolicy: Local
   type: LoadBalancer
   selector:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
   ports:
   - name: http
     port: 80
