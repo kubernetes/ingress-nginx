@@ -2,10 +2,16 @@ local sticky = require("balancer.sticky")
 local cookie = require("resty.cookie")
 local util = require("util")
 
+local original_ngx = ngx
+
 function mock_ngx(mock)
   local _ngx = mock
   setmetatable(_ngx, {__index = _G.ngx})
   _G.ngx = _ngx
+end
+
+local function reset_ngx()
+  _G.ngx = original_ngx
 end
 
 function get_mocked_cookie_new()
@@ -17,7 +23,6 @@ function get_mocked_cookie_new()
   end
 end
 
-mock_ngx({ var = {} })
 cookie.new = get_mocked_cookie_new()
 
 local function get_test_backend()
@@ -34,6 +39,14 @@ local function get_test_backend()
 end
 
 describe("Sticky", function()
+  before_each(function()
+    mock_ngx({ var = {} })
+  end)
+
+  after_each(function()
+    reset_ngx()
+  end)
+  
   local test_backend = get_test_backend()
   local test_backend_endpoint= test_backend.endpoints[1].address .. ":" .. test_backend.endpoints[1].port
 
