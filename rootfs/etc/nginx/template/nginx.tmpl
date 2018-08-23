@@ -833,6 +833,7 @@ stream {
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Original-Method       $request_method;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
+            proxy_set_header            X-Forwarded-For         $the_real_ip;
 
             {{ if $location.ExternalAuth.RequestRedirect }}
             proxy_set_header            X-Auth-Request-Redirect {{ $location.ExternalAuth.RequestRedirect }};
