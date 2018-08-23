@@ -501,6 +501,11 @@ type Configuration struct {
 	// Default: 503
 	LimitReqStatusCode int `json:"limit-req-status-code"`
 
+	// LimitConnStatusCode Sets the status code to return in response to rejected requests.
+	// http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status
+	// Default: 503
+	LimitConnStatusCode int `json:"limit-conn-status-code"`
+
 	// EnableSyslog enables the configuration for remote logging in NGINX
 	EnableSyslog bool `json:"enable-syslog"`
 	// SyslogHost FQDN or IP address where the logs should be sent
@@ -640,6 +645,7 @@ func NewDefault() Configuration {
 		JaegerSamplerType:            "const",
 		JaegerSamplerParam:           "1",
 		LimitReqStatusCode:           503,
+		LimitConnStatusCode:          503,
 		SyslogPort:                   514,
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",

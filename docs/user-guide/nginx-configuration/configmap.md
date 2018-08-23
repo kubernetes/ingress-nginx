@@ -141,6 +141,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http-redirect-code](#http-redirect-code)|int|308|
 |[proxy-buffering](#proxy-buffering)|string|"off"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
+|[limit-conn-status-code](#limit-conn-status-code)|int|503|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
 
@@ -773,6 +774,10 @@ Enables or disables [buffering of responses from the proxied server](http://ngin
 ## limit-req-status-code
 
 Sets the [status code to return in response to rejected requests](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status). _**default:**_ 503
+
+## limit-conn-status-code
+
+Sets the [status code to return in response to rejected requests](https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status). _**default:**_ 503
 
 ## no-tls-redirect-locations
 
