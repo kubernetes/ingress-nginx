@@ -150,6 +150,8 @@ func createIngress(f *framework.Framework, host, service string, port int, annot
 		})
 	Expect(err).NotTo(HaveOccurred())
 
+	time.Sleep(1 * time.Second)
+
 	resp, body, errs := gorequest.New().
 		Get(f.IngressController.HTTPURL).
 		Set("Host", host).
