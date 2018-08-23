@@ -54,7 +54,7 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		ing, err := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 		Expect(err).ToNot(HaveOccurred())
 		Expect(ing).ToNot(BeNil())
 

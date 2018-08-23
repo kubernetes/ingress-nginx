@@ -385,8 +385,17 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 	return nil
 }
 
+// NewSingleIngressWithTLS creates a simple ingress rule with TLS spec included
+func NewSingleIngressWithTLS(name, path, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
+	return newSingleIngress(name, path, host, ns, service, port, annotations, true)
+}
+
 // NewSingleIngress creates a simple ingress rule
 func NewSingleIngress(name, path, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
+	return newSingleIngress(name, path, host, ns, service, port, annotations, false)
+}
+
+func newSingleIngress(name, path, host, ns, service string, port int, annotations *map[string]string, withTLS bool) *extensions.Ingress {
 	if annotations == nil {
 		annotations = &map[string]string{}
 	}
@@ -398,12 +407,6 @@ func NewSingleIngress(name, path, host, ns, service string, port int, annotation
 			Annotations: *annotations,
 		},
 		Spec: extensions.IngressSpec{
-			TLS: []extensions.IngressTLS{
-				{
-					Hosts:      []string{host},
-					SecretName: host,
-				},
-			},
 			Rules: []extensions.IngressRule{
 				{
 					Host: host,
@@ -423,6 +426,14 @@ func NewSingleIngress(name, path, host, ns, service string, port int, annotation
 				},
 			},
 		},
+	}
+	if withTLS {
+		ing.Spec.TLS = []extensions.IngressTLS{
+			{
+				Hosts:      []string{host},
+				SecretName: host,
+			},
+		}
 	}
 
 	return ing

@@ -1055,7 +1055,9 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			secrKey := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
-				glog.Warningf("Error getting SSL certificate %q: %v", secrKey, err)
+				glog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
+				servers[host].SSLCert.PemFileName = defaultPemFileName
+				servers[host].SSLCert.PemSHA = defaultPemSHA
 				continue
 			}
 
@@ -1069,6 +1071,9 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				if err != nil {
 					glog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
 						secrKey, host, err)
+					glog.Warningf("Using default certificate")
+					servers[host].SSLCert.PemFileName = defaultPemFileName
+					servers[host].SSLCert.PemSHA = defaultPemSHA
 					continue
 				}
 			}
