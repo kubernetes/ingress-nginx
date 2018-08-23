@@ -136,7 +136,7 @@ http {
     client_body_temp_path           /tmp/client-body;
     fastcgi_temp_path               /tmp/fastcgi-temp;
     proxy_temp_path                 /tmp/proxy-temp;
-    ajp_temp_path                   /tmp/ajp-temp; 
+    ajp_temp_path                   /tmp/ajp-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
@@ -833,6 +833,12 @@ stream {
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Original-Method       $request_method;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
+            proxy_set_header            X-Real-IP               $the_real_ip;
+            {{ if and $all.Cfg.UseForwardedHeaders $all.Cfg.ComputeFullForwardedFor }}
+            proxy_set_header            X-Forwarded-For        $full_x_forwarded_for;
+            {{ else }}
+            proxy_set_header            X-Forwarded-For        $the_real_ip;
+            {{ end }}
 
             {{ if $location.ExternalAuth.RequestRedirect }}
             proxy_set_header            X-Auth-Request-Redirect {{ $location.ExternalAuth.RequestRedirect }};
