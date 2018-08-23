@@ -71,6 +71,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"nginx-status-ipv4-whitelist":   "127.0.0.1,10.0.0.0/24",
 		"nginx-status-ipv6-whitelist":   "::1,2001::/16",
 		"proxy-add-original-uri-header": "false",
+		"enable-geoip2":                 "true",
 	}
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
@@ -91,6 +92,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
 	def.ProxyAddOriginalUriHeader = false
+	def.EnableGeoIp2 = true
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",

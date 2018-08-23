@@ -34,6 +34,7 @@ The following table shows a configuration option's name, type, and the default v
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
 |[enable-dynamic-tls-records](#enable-dynamic-tls-records)|bool|"true"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
+|[enable-geoip2](#enable-geoip2)|bool|"false"|
 |[enable-owasp-modsecurity-crs](#enable-owasp-modsecurity-crs)|bool|"false"|
 |[client-header-buffer-size](#client-header-buffer-size)|string|"1k"|
 |[client-header-timeout](#client-header-timeout)|int|60|
@@ -185,6 +186,13 @@ _References:_
 ## enable-modsecurity
 
 Enables the modsecurity module for NGINX. _**default:**_ is disabled
+
+## enable-geoip2
+
+Enables the geoip2 module for NGINX. By default this is disabled.
+
+_References:_
+- https://github.com/leev/ngx_http_geoip2_module
 
 ## enable-owasp-modsecurity-crs
 
