@@ -85,6 +85,15 @@ http {
         else
           monitor = res
         end
+
+        {{ if $all.DynamicCertificatesEnabled }}
+        ok, res = pcall(require, "certificate")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          certificate = res
+        end
+        {{ end }}
     }
 
     {{ if $all.DynamicConfigurationEnabled }}
@@ -774,6 +783,12 @@ stream {
         ssl_trusted_certificate                 {{ $server.SSLCert.FullChainPemFileName }};
         ssl_stapling                            on;
         ssl_stapling_verify                     on;
+        {{ end }}
+
+        {{ if and (not $all.DisableLua) $all.DynamicCertificatesEnabled}}
+        ssl_certificate_by_lua_block {
+            certificate.call()
+        }
         {{ end }}
         {{ end }}
 
