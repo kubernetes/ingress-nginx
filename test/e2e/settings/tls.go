@@ -177,7 +177,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 })
 
 func tlsEndpoint(f *framework.Framework, host string) (*tls.Config, error) {
-	ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+	ing, err := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 	if err != nil {
 		return nil, err
 	}

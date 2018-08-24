@@ -1,7 +1,6 @@
 local balancer_resty = require("balancer.resty")
 local resty_roundrobin = require("resty.roundrobin")
 local util = require("util")
-local split = require("util.split")
 
 local _M = balancer_resty:new({ factory = resty_roundrobin, name = "round_robin" })
 
@@ -14,8 +13,7 @@ function _M.new(self, backend)
 end
 
 function _M.balance(self)
-  local endpoint_string = self.instance:find()
-  return split.split_pair(endpoint_string, ":")
+  return self.instance:find()
 end
 
 return _M
