@@ -128,7 +128,8 @@ function _M.balance(self)
     endpoint = pick_and_score(peer_copy, k)
   end
 
-  return endpoint.address, endpoint.port
+  -- TODO(elvinefendi) move this processing to _M.sync
+  return endpoint.address .. ":" .. endpoint.port
 end
 
 function _M.after_balance(_)

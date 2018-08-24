@@ -96,6 +96,8 @@ type Configuration struct {
 	DynamicConfigurationEnabled bool
 
 	DisableLua bool
+
+	DynamicCertificatesEnabled bool
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -197,7 +199,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 				// it takes time for NGINX to start listening on the configured ports
 				time.Sleep(1 * time.Second)
 			}
-			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status)
+			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
 			if err == nil {
 				glog.Infof("Dynamic reconfiguration succeeded.")
 			} else {
@@ -1053,7 +1055,9 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 			secrKey := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
-				glog.Warningf("Error getting SSL certificate %q: %v", secrKey, err)
+				glog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
+				servers[host].SSLCert.PemFileName = defaultPemFileName
+				servers[host].SSLCert.PemSHA = defaultPemSHA
 				continue
 			}
 
@@ -1067,8 +1071,17 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 				if err != nil {
 					glog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
 						secrKey, host, err)
+					glog.Warningf("Using default certificate")
+					servers[host].SSLCert.PemFileName = defaultPemFileName
+					servers[host].SSLCert.PemSHA = defaultPemSHA
 					continue
 				}
+			}
+
+			if n.cfg.DynamicCertificatesEnabled {
+				// useless placeholders: just to shut up NGINX configuration loader errors:
+				cert.PemFileName = defaultPemFileName
+				cert.PemSHA = defaultPemSHA
 			}
 
 			servers[host].SSLCert = *cert

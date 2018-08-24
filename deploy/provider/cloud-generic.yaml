@@ -4,12 +4,13 @@ metadata:
   name: ingress-nginx
   namespace: ingress-nginx
   labels:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   externalTrafficPolicy: Local
   type: LoadBalancer
   selector:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
   ports:
   - name: http
     port: 80

@@ -212,6 +212,8 @@ type k8sStore struct {
 	mu *sync.Mutex
 
 	defaultSSLCertificate string
+
+	isDynamicCertificatesEnabled bool
 }
 
 // New creates a new object store to be used in the ingress controller
@@ -220,19 +222,21 @@ func New(checkOCSP bool,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	fs file.Filesystem,
-	updateCh *channels.RingChannel) Storer {
+	updateCh *channels.RingChannel,
+	isDynamicCertificatesEnabled bool) Storer {
 
 	store := &k8sStore{
-		isOCSPCheckEnabled:    checkOCSP,
-		informers:             &Informer{},
-		listers:               &Lister{},
-		sslStore:              NewSSLCertTracker(),
-		filesystem:            fs,
-		updateCh:              updateCh,
-		backendConfig:         ngx_config.NewDefault(),
-		mu:                    &sync.Mutex{},
-		secretIngressMap:      NewObjectRefMap(),
-		defaultSSLCertificate: defaultSSLCertificate,
+		isOCSPCheckEnabled:           checkOCSP,
+		informers:                    &Informer{},
+		listers:                      &Lister{},
+		sslStore:                     NewSSLCertTracker(),
+		filesystem:                   fs,
+		updateCh:                     updateCh,
+		backendConfig:                ngx_config.NewDefault(),
+		mu:                           &sync.Mutex{},
+		secretIngressMap:             NewObjectRefMap(),
+		defaultSSLCertificate:        defaultSSLCertificate,
+		isDynamicCertificatesEnabled: isDynamicCertificatesEnabled,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()

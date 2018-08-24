@@ -2,13 +2,16 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    name: grafana
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: ingress-nginx
+
   name: grafana
   namespace: ingress-nginx
 spec:
   selector:
     matchLabels:
-      app: grafana
+      app.kubernetes.io/name: grafana
+      app.kubernetes.io/part-of: ingress-nginx
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -17,7 +20,8 @@ spec:
   template:
     metadata:
       labels:
-        app: grafana
+        app.kubernetes.io/name: grafana
+        app.kubernetes.io/part-of: ingress-nginx
     spec:
       containers:
       - image: grafana/grafana
@@ -47,11 +51,16 @@ kind: Service
 metadata:
   name: grafana
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: ingress-nginx
+
 spec:
   ports:
   - port: 3000
     protocol: TCP
     targetPort: 3000
   selector:
-    app: grafana
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: ingress-nginx
   type: NodePort
