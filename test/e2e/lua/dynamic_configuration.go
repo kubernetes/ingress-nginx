@@ -17,6 +17,7 @@ limitations under the License.
 package lua
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -168,6 +169,21 @@ func ensureRequest(f *framework.Framework, host string) {
 		End()
 	Expect(errs).Should(BeEmpty())
 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+}
+
+func ensureHTTPSRequest(url string, host string, expectedDNSName string) {
+	resp, _, errs := gorequest.New().
+		Get(url).
+		Set("Host", host).
+		TLSClientConfig(&tls.Config{
+			InsecureSkipVerify: true,
+			ServerName:         host,
+		}).
+		End()
+	Expect(errs).Should(BeEmpty())
+	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+	Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
+	Expect(resp.TLS.PeerCertificates[0].DNSNames[0]).Should(Equal(expectedDNSName))
 }
 
 func getCookie(name string, cookies []*http.Cookie) (*http.Cookie, error) {
