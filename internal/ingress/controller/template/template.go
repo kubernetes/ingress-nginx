@@ -141,6 +141,7 @@ var (
 		"contains":                   strings.Contains,
 		"hasPrefix":                  strings.HasPrefix,
 		"hasSuffix":                  strings.HasSuffix,
+		"trimSpace":                  strings.TrimSpace,
 		"toUpper":                    strings.ToUpper,
 		"toLower":                    strings.ToLower,
 		"formatIP":                   formatIP,
