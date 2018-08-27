@@ -41,6 +41,9 @@ const (
 	proxyRealIPCIDR          = "proxy-real-ip-cidr"
 	bindAddress              = "bind-address"
 	httpRedirectCode         = "http-redirect-code"
+	blockCIDRs               = "block-cidrs"
+	blockUserAgents          = "block-user-agents"
+	blockReferers            = "block-referers"
 	proxyStreamResponses     = "proxy-stream-responses"
 	hideHeaders              = "hide-headers"
 	nginxStatusIpv4Whitelist = "nginx-status-ipv4-whitelist"
@@ -70,6 +73,10 @@ func ReadConfig(src map[string]string) config.Configuration {
 
 	bindAddressIpv4List := make([]string, 0)
 	bindAddressIpv6List := make([]string, 0)
+
+	blockCIDRList := make([]string, 0)
+	blockUserAgentList := make([]string, 0)
+	blockRefererList := make([]string, 0)
 
 	if val, ok := conf[customHTTPErrors]; ok {
 		delete(conf, customHTTPErrors)
@@ -114,6 +121,19 @@ func ReadConfig(src map[string]string) config.Configuration {
 				glog.Warningf("%v is not a valid textual representation of an IP address", i)
 			}
 		}
+	}
+
+	if val, ok := conf[blockCIDRs]; ok {
+		delete(conf, blockCIDRs)
+		blockCIDRList = strings.Split(val, ",")
+	}
+	if val, ok := conf[blockUserAgents]; ok {
+		delete(conf, blockUserAgents)
+		blockUserAgentList = strings.Split(val, ",")
+	}
+	if val, ok := conf[blockReferers]; ok {
+		delete(conf, blockReferers)
+		blockRefererList = strings.Split(val, ",")
 	}
 
 	if val, ok := conf[httpRedirectCode]; ok {
@@ -184,6 +204,9 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.ProxyRealIPCIDR = proxyList
 	to.BindAddressIpv4 = bindAddressIpv4List
 	to.BindAddressIpv6 = bindAddressIpv6List
+	to.BlockCIDRs = blockCIDRList
+	to.BlockUserAgents = blockUserAgentList
+	to.BlockReferers = blockRefererList
 	to.HideHeaders = hideHeadersList
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
