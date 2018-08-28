@@ -138,7 +138,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 To check if the ingress controller pods have started, run the following command:
 
 ```console
-kubectl get pods --all-namespaces -l app=ingress-nginx --watch
+kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch
 ```
 
 Once the operator pods are running, you can cancel the above command by typing `Ctrl+C`.
@@ -150,7 +150,7 @@ To detect which version of the ingress controller is running, exec into the pod 
 
 ```console
 POD_NAMESPACE=ingress-nginx
-POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
+POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
 ```
 
