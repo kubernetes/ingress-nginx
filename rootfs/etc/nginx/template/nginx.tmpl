@@ -115,8 +115,8 @@ http {
         {{ if $all.DynamicConfigurationEnabled }}
         balancer.init_worker()
         monitor.init_worker()
+        {{ end }}
     }
-    {{ end }}
     {{ end }}
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
