@@ -25,9 +25,9 @@ RUN clean-install \
   python \
   pkg-config
 
-ENV GOLANG_VERSION 1.10.3
+ENV GOLANG_VERSION 1.11
 ENV GO_ARCH        linux-amd64
-ENV GOLANG_SHA     fa1b0e45d3b647c252f51f5e1204aba049cde4af177ef9f2181f43004f901035
+ENV GOLANG_SHA     b3fcf280ff86558e0559e185b601c9eade0fd24c900b4c63cd14d1d38613e499
 
 RUN set -eux; \
   url="https://golang.org/dl/go${GOLANG_VERSION}.${GO_ARCH}.tar.gz"; \

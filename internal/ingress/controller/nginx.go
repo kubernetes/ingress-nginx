@@ -195,7 +195,7 @@ Error loading new template: %v
 
 	for _, f := range filesToWatch {
 		_, err = watch.NewFileWatcher(f, func() {
-			glog.Info("File %v changed. Reloading NGINX", f)
+			glog.Infof("File %v changed. Reloading NGINX", f)
 			n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
 		})
 		if err != nil {
