@@ -421,6 +421,9 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTE
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
+# apply Nginx patches
+patch -p1 < /patches/openresty-ssl_cert_cb_yield.patch
+
 WITH_FLAGS="--with-debug \
   --with-compat \
   --with-pcre-jit \
