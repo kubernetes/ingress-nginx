@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
+	"k8s.io/ingress-nginx/internal/runtime"
 )
 
 const (
@@ -45,6 +46,7 @@ const (
 	nginxStatusIpv4Whitelist = "nginx-status-ipv4-whitelist"
 	nginxStatusIpv6Whitelist = "nginx-status-ipv6-whitelist"
 	proxyHeaderTimeout       = "proxy-protocol-header-timeout"
+	workerProcesses          = "worker-processes"
 )
 
 var (
@@ -164,6 +166,16 @@ func ReadConfig(src map[string]string) config.Configuration {
 		to.NginxStatusIpv6Whitelist = whitelist
 
 		delete(conf, nginxStatusIpv6Whitelist)
+	}
+
+	if val, ok := conf[workerProcesses]; ok {
+		to.WorkerProcesses = val
+
+		if val == "auto" {
+			to.WorkerProcesses = strconv.Itoa(runtime.NumCPU())
+		}
+
+		delete(conf, workerProcesses)
 	}
 
 	to.CustomHTTPErrors = filterErrors(errors)
