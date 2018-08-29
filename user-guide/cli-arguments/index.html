@@ -1011,8 +1011,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../troubleshooting/" title="Debug & Troubleshooting" class="md-nav__link">
-      Debug & Troubleshooting
+    <a href="../../troubleshooting/" title="Troubleshooting" class="md-nav__link">
+      Troubleshooting
     </a>
   </li>
 
@@ -1093,6 +1093,10 @@
 <tr>
 <td>--enable-dynamic-configuration</td>
 <td>Dynamically refresh backends on topology changes instead of reloading NGINX. Feature backed by OpenResty Lua libraries. (enabled by default)</td>
+</tr>
+<tr>
+<td>--enable-dynamic-certificates</td>
+<td>Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off. Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. This is an experiemental feature that currently is not ready for production use. Feature backed by OpenResty Lua libraries. (disabled by default)</td>
 </tr>
 <tr>
 <td>--enable-ssl-chain-completion</td>
