@@ -541,7 +541,6 @@ apt-get remove -y --purge \
   protobuf-compiler \
   python \
   xz-utils \
-  libpython3.6-stdlib \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y
