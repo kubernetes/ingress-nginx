@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.2
+export NGINX_VERSION=1.15.3
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export STICKY_SESSIONS_VERSION=08a395c66e42
@@ -35,7 +35,7 @@ export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
 export LUA_UPSTREAM_VERSION=0.07
 export COOKIE_FLAG_VERSION=1.1.0
 export NGINX_INFLUXDB_VERSION=f20cfb2458c338f162132f5a21eb021e2cbe6383
-export GEOIP2_VERSION=2.0
+export GEOIP2_VERSION=3.0
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 
 export BUILD_PATH=/tmp/build
@@ -144,7 +144,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src eeba09aecfbe8277ac33a5a2486ec2d6731739f3c1c701b42a0c3784af67ad90 \
+get_src 9391fb91c3e2ebd040a4e3ac2b2f0893deb6232edc30a8e16fcc9c3fa9d6be85 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -222,7 +222,7 @@ get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \
 get_src 1897d7677d99c1cedeb95b2eb00652a4a7e8e604304c3053a93bd3ba7dd82884 \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
 
-get_src ebb4652c4f9a2e1ee31fddefc4c93ff78e651a4b2727d3453d026bccbd708d99 \
+get_src 65a191688348a05d8d92b2e7ce9c6eb8cb8322205c34637da582a1205864133d \
         "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
 
 get_src 5f629a50ba22347c441421091da70fdc2ac14586619934534e5a0f8a1390a950 \
