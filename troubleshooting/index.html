@@ -36,7 +36,7 @@
     
     
       
-        <title>How it works - NGINX Ingress Controller</title>
+        <title>Troubleshooting - NGINX Ingress Controller</title>
       
     
     
@@ -100,7 +100,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#how-it-works" tabindex="1" class="md-skip">
+      <a href="#troubleshooting" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -126,7 +126,7 @@
                 NGINX Ingress Controller
               </span>
               <span class="md-header-nav__topic">
-                How it works
+                Troubleshooting
               </span>
             
           
@@ -984,6 +984,18 @@
       
       
 
+
+  <li class="md-nav__item">
+    <a href="../how-it-works/" title="How it works" class="md-nav__link">
+      How it works
+    </a>
+  </li>
+
+    
+      
+      
+      
+
   
 
 
@@ -995,11 +1007,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        How it works
+        Troubleshooting
       </label>
     
-    <a href="./" title="How it works" class="md-nav__link md-nav__link--active">
-      How it works
+    <a href="./" title="Troubleshooting" class="md-nav__link md-nav__link--active">
+      Troubleshooting
     </a>
     
       
@@ -1013,50 +1025,50 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#nginx-configuration" title="NGINX configuration" class="md-nav__link">
-    NGINX configuration
+  <a href="#ingress-controller-logs-and-events" title="Ingress-Controller Logs and Events" class="md-nav__link">
+    Ingress-Controller Logs and Events
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#nginx-model" title="NGINX model" class="md-nav__link">
-    NGINX model
+  <a href="#debug-logging" title="Debug Logging" class="md-nav__link">
+    Debug Logging
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#building-the-nginx-model" title="Building the NGINX model" class="md-nav__link">
-    Building the NGINX model
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-a-reload-is-required" title="When a reload is required" class="md-nav__link">
-    When a reload is required
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#avoiding-reloads" title="Avoiding reloads" class="md-nav__link">
-    Avoiding reloads
+  <a href="#authentication-to-the-kubernetes-api-server" title="Authentication to the Kubernetes API Server" class="md-nav__link">
+    Authentication to the Kubernetes API Server
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#avoiding-reloads-on-endpoints-changes" title="Avoiding reloads on Endpoints changes" class="md-nav__link">
-    Avoiding reloads on Endpoints changes
+  <a href="#service-account" title="Service Account" class="md-nav__link">
+    Service Account
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kube-config" title="Kube-Config" class="md-nav__link">
+    Kube-Config
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-gdb-with-nginx" title="Using GDB with Nginx" class="md-nav__link">
+    Using GDB with Nginx
+  </a>
   
 </li>
       
@@ -1068,18 +1080,6 @@
   
 </nav>
     
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../troubleshooting/" title="Troubleshooting" class="md-nav__link">
-      Troubleshooting
-    </a>
   </li>
 
     
@@ -1104,50 +1104,50 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#nginx-configuration" title="NGINX configuration" class="md-nav__link">
-    NGINX configuration
+  <a href="#ingress-controller-logs-and-events" title="Ingress-Controller Logs and Events" class="md-nav__link">
+    Ingress-Controller Logs and Events
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#nginx-model" title="NGINX model" class="md-nav__link">
-    NGINX model
+  <a href="#debug-logging" title="Debug Logging" class="md-nav__link">
+    Debug Logging
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#building-the-nginx-model" title="Building the NGINX model" class="md-nav__link">
-    Building the NGINX model
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-a-reload-is-required" title="When a reload is required" class="md-nav__link">
-    When a reload is required
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#avoiding-reloads" title="Avoiding reloads" class="md-nav__link">
-    Avoiding reloads
+  <a href="#authentication-to-the-kubernetes-api-server" title="Authentication to the Kubernetes API Server" class="md-nav__link">
+    Authentication to the Kubernetes API Server
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#avoiding-reloads-on-endpoints-changes" title="Avoiding reloads on Endpoints changes" class="md-nav__link">
-    Avoiding reloads on Endpoints changes
+  <a href="#service-account" title="Service Account" class="md-nav__link">
+    Service Account
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kube-config" title="Kube-Config" class="md-nav__link">
+    Kube-Config
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-gdb-with-nginx" title="Using GDB with Nginx" class="md-nav__link">
+    Using GDB with Nginx
+  </a>
   
 </li>
       
@@ -1167,52 +1167,346 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/how-it-works.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/troubleshooting.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h1>
-<p>The objective of this document is to explain how the NGINX Ingress controller works, in particular how the NGINX model is built and why we need one.</p>
-<h2 id="nginx-configuration">NGINX configuration<a class="headerlink" href="#nginx-configuration" title="Permanent link">&para;</a></h2>
-<p>The goal of this Ingress controller is the assembly of a configuration file (nginx.conf). The main implication of this requirement is the need to reload NGINX after any change in the configuration file. <em>Though it is important to note that we don't reload Nginx on changes that impact only an <code class="codehilite">upstream</code> configuration (i.e Endpoints change when you deploy your app)</em>. We use https://github.com/openresty/lua-nginx-module to achieve this. Check <a href="#avoiding-reloads-on-endpoints-changes">below</a> to learn more about how it's done.</p>
-<h2 id="nginx-model">NGINX model<a class="headerlink" href="#nginx-model" title="Permanent link">&para;</a></h2>
-<p>Usually, a Kubernetes Controller utilizes the <a href="../1">synchronization loop pattern</a> to check if the desired state in the controller is updated or a change is required. To this purpose, we need to build a model using different objects from the cluster, in particular (in no special order) Ingresses, Services, Endpoints, Secrets, and Configmaps to generate a point in time configuration file that reflects the state of the cluster.</p>
-<p>To get this object from the cluster, we use <a href="../2">Kubernetes Informers</a>, in particular, <code class="codehilite">FilteredSharedInformer</code>. This informers allows reacting to changes in using <a href="../3">callbacks</a> to individual changes when a new object is added, modified or removed. Unfortunately, there is no way to know if a particular change is going to affect the final configuration file. Therefore on every change, we have to rebuild a new model from scratch based on the state of cluster and compare it to the current model. If the new model equals to the current one, then we avoid generating a new NGINX configuration and triggering a reload. Otherwise, we check if the difference is only about Endpoints. If so we then send the new list of Endpoints to a Lua handler running inside Nginx using HTTP POST request and again avoid generating a new NGINX configuration and triggering a reload. If the difference between running and new model is about more than just Endpoints we create a new NGINX configuration based on the new model, replace the current model and trigger a reload.</p>
-<p>One of the uses of the model is to avoid unnecessary reloads when there's no change in the state and to detect conflicts in definitions.</p>
-<p>The final representation of the NGINX configuration is generated from a <a href="../6">Go template</a> using the new model as input for the variables required by the template.</p>
-<h2 id="building-the-nginx-model">Building the NGINX model<a class="headerlink" href="#building-the-nginx-model" title="Permanent link">&para;</a></h2>
-<p>Building a model is an expensive operation, for this reason, the use of the synchronization loop is a must. By using a <a href="../4">work queue</a> it is possible to not lose changes and remove the use of <a href="../5">sync.Mutex</a> to force a single execution of the sync loop and additionally it is possible to create a time window between the start and end of the sync loop that allows us to discard unnecessary updates. It is important to understand that any change in the cluster could generate events that the informer will send to the controller and one of the reasons for the <a href="../4">work queue</a>.</p>
-<p>Operations to build the model:</p>
+                <!--
+-----------------NOTICE------------------------
+This file is referenced in code as
+https://github.com/kubernetes/ingress-nginx/blob/master/docs/troubleshooting.md
+Do not move it without providing redirects.
+-----------------------------------------------
+-->
+
+<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
+<h2 id="ingress-controller-logs-and-events">Ingress-Controller Logs and Events<a class="headerlink" href="#ingress-controller-logs-and-events" title="Permanent link">&para;</a></h2>
+<p>There are many ways to troubleshoot the ingress-controller. The following are basic troubleshooting
+methods to obtain more information.</p>
+<p>Check the Ingress Resource Events</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get ing -n &lt;namespace-of-ingress-resource&gt;
+<span class="go">NAME           HOSTS      ADDRESS     PORTS     AGE</span>
+<span class="go">cafe-ingress   cafe.com   10.0.2.15   80        25s</span>
+
+<span class="gp">$</span> kubectl describe ing &lt;ingress-resource-name&gt; -n &lt;namespace-of-ingress-resource&gt;
+<span class="go">Name:             cafe-ingress</span>
+<span class="go">Namespace:        default</span>
+<span class="go">Address:          10.0.2.15</span>
+<span class="go">Default backend:  default-http-backend:80 (172.17.0.5:8080)</span>
+<span class="go">Rules:</span>
+<span class="go">  Host      Path  Backends</span>
+<span class="go">  ----      ----  --------</span>
+<span class="go">  cafe.com</span>
+<span class="go">            /tea      tea-svc:80 (&lt;none&gt;)</span>
+<span class="go">            /coffee   coffee-svc:80 (&lt;none&gt;)</span>
+<span class="go">Annotations:</span>
+<span class="go">  kubectl.kubernetes.io/last-applied-configuration:  {&quot;apiVersion&quot;:&quot;extensions/v1beta1&quot;,&quot;kind&quot;:&quot;Ingress&quot;,&quot;metadata&quot;:{&quot;annotations&quot;:{},&quot;name&quot;:&quot;cafe-ingress&quot;,&quot;namespace&quot;:&quot;default&quot;,&quot;selfLink&quot;:&quot;/apis/extensions/v1beta1/namespaces/default/ingresses/cafe-ingress&quot;},&quot;spec&quot;:{&quot;rules&quot;:[{&quot;host&quot;:&quot;cafe.com&quot;,&quot;http&quot;:{&quot;paths&quot;:[{&quot;backend&quot;:{&quot;serviceName&quot;:&quot;tea-svc&quot;,&quot;servicePort&quot;:80},&quot;path&quot;:&quot;/tea&quot;},{&quot;backend&quot;:{&quot;serviceName&quot;:&quot;coffee-svc&quot;,&quot;servicePort&quot;:80},&quot;path&quot;:&quot;/coffee&quot;}]}}]},&quot;status&quot;:{&quot;loadBalancer&quot;:{&quot;ingress&quot;:[{&quot;ip&quot;:&quot;169.48.142.110&quot;}]}}}</span>
+
+<span class="go">Events:</span>
+<span class="go">  Type    Reason  Age   From                      Message</span>
+<span class="go">  ----    ------  ----  ----                      -------</span>
+<span class="go">  Normal  CREATE  1m    nginx-ingress-controller  Ingress default/cafe-ingress</span>
+<span class="go">  Normal  UPDATE  58s   nginx-ingress-controller  Ingress default/cafe-ingress</span>
+</pre></div>
+
+
+<p>Check the Ingress Controller Logs</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n &lt;namespace-of-ingress-controller&gt;
+<span class="go">NAME                                        READY     STATUS    RESTARTS   AGE</span>
+<span class="go">nginx-ingress-controller-67956bf89d-fv58j   1/1       Running   0          1m</span>
+
+<span class="gp">$</span> kubectl logs -n &lt;namespace&gt; nginx-ingress-controller-67956bf89d-fv58j
+<span class="go">-------------------------------------------------------------------------------</span>
+<span class="go">NGINX Ingress controller</span>
+<span class="go">  Release:    0.14.0</span>
+<span class="go">  Build:      git-734361d</span>
+<span class="go">  Repository: https://github.com/kubernetes/ingress-nginx</span>
+<span class="go">-------------------------------------------------------------------------------</span>
+<span class="go">....</span>
+</pre></div>
+
+
+<p>Check the Nginx Configuration</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n &lt;namespace-of-ingress-controller&gt;
+<span class="go">NAME                                        READY     STATUS    RESTARTS   AGE</span>
+<span class="go">nginx-ingress-controller-67956bf89d-fv58j   1/1       Running   0          1m</span>
+
+<span class="gp">$</span> kubectl <span class="nb">exec</span> -it -n &lt;namespace-of-ingress-controller&gt; nginx-ingress-controller-67956bf89d-fv58j cat /etc/nginx/nginx.conf
+<span class="go">daemon off;</span>
+<span class="go">worker_processes 2;</span>
+<span class="go">pid /run/nginx.pid;</span>
+<span class="go">worker_rlimit_nofile 523264;</span>
+<span class="go">worker_shutdown_timeout 10s;</span>
+<span class="go">events {</span>
+<span class="go">    multi_accept        on;</span>
+<span class="go">    worker_connections  16384;</span>
+<span class="go">    use                 epoll;</span>
+<span class="go">}</span>
+<span class="go">http {</span>
+<span class="go">....</span>
+</pre></div>
+
+
+<p>Check if used Services Exist</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get svc --all-namespaces
+<span class="go">NAMESPACE     NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE</span>
+<span class="go">default       coffee-svc             ClusterIP   10.106.154.35    &lt;none&gt;        80/TCP          18m</span>
+<span class="go">default       kubernetes             ClusterIP   10.96.0.1        &lt;none&gt;        443/TCP         30m</span>
+<span class="go">default       tea-svc                ClusterIP   10.104.172.12    &lt;none&gt;        80/TCP          18m</span>
+<span class="go">kube-system   default-http-backend   NodePort    10.108.189.236   &lt;none&gt;        80:30001/TCP    30m</span>
+<span class="go">kube-system   kube-dns               ClusterIP   10.96.0.10       &lt;none&gt;        53/UDP,53/TCP   30m</span>
+<span class="go">kube-system   kubernetes-dashboard   NodePort    10.103.128.17    &lt;none&gt;        80:30000/TCP    30m</span>
+</pre></div>
+
+
+<h2 id="debug-logging">Debug Logging<a class="headerlink" href="#debug-logging" title="Permanent link">&para;</a></h2>
+<p>Using the flag <code class="codehilite">--v=XX</code> it is possible to increase the level of logging. This is performed by editing
+the deployment.</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get deploy -n &lt;namespace-of-ingress-controller&gt;
+<span class="go">NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE</span>
+<span class="go">default-http-backend       1         1         1            1           35m</span>
+<span class="go">nginx-ingress-controller   1         1         1            1           35m</span>
+
+<span class="gp">$</span> kubectl edit deploy -n &lt;namespace-of-ingress-controller&gt; nginx-ingress-controller
+<span class="gp">#</span> Add --v<span class="o">=</span>X to <span class="s2">&quot;- args&quot;</span>, where X is an integer
+</pre></div>
+
+
 <ul>
-<li>Order Ingress rules by <code class="codehilite">ResourceVersion</code> field, i.e., old rules first.</li>
-<li>If the same path for the same host is defined in more than one Ingress, the oldest rule wins.</li>
-<li>If more than one Ingress contains a TLS section for the same host, the oldest rule wins.</li>
+<li><code class="codehilite">--v=2</code> shows details using <code class="codehilite">diff</code> about the changes in the configuration in nginx</li>
+<li><code class="codehilite">--v=3</code> shows details about the service, Ingress rule, endpoint changes and it dumps the nginx configuration in JSON format</li>
+<li><code class="codehilite">--v=5</code> configures NGINX in <a href="http://nginx.org/en/docs/debugging_log.html">debug mode</a></li>
+</ul>
+<h2 id="authentication-to-the-kubernetes-api-server">Authentication to the Kubernetes API Server<a class="headerlink" href="#authentication-to-the-kubernetes-api-server" title="Permanent link">&para;</a></h2>
+<p>A number of components are involved in the authentication process and the first step is to narrow
+down the source of the problem, namely whether it is a problem with service authentication or
+with the kubeconfig file.</p>
+<p>Both authentications must work:</p>
+<div class="codehilite"><pre><span></span>+-------------+   service          +------------+
+|             |   authentication   |            |
++  apiserver  +&lt;-------------------+  ingress   |
+|             |                    | controller |
++-------------+                    +------------+
+</pre></div>
+
+
+<p><strong>Service authentication</strong></p>
+<p>The Ingress controller needs information from apiserver. Therefore, authentication is required, which can be achieved in two different ways:</p>
+<ol>
 <li>
-<p>If multiple Ingresses define an annotation that affects the configuration of the Server block, the oldest rule wins.</p>
+<p><em>Service Account:</em> This is recommended, because nothing has to be configured. The Ingress controller will use information provided by the system to communicate with the API server. See 'Service Account' section for details.</p>
 </li>
 <li>
-<p>Create a list of NGINX Servers (per hostname)</p>
+<p><em>Kubeconfig file:</em> In some Kubernetes environments service accounts are not available. In this case a manual configuration is required. The Ingress controller binary can be started with the <code class="codehilite">--kubeconfig</code> flag. The value of the flag is a path to a file specifying how to connect to the API server. Using the <code class="codehilite">--kubeconfig</code> does not requires the flag <code class="codehilite">--apiserver-host</code>.
+   The format of the file is identical to <code class="codehilite">~/.kube/config</code> which is used by kubectl to connect to the API server. See 'kubeconfig' section for details.</p>
 </li>
-<li>Create a list of NGINX Upstreams</li>
-<li>If multiple Ingresses define different paths for the same host, the ingress controller will merge the definitions.</li>
-<li>Annotations are applied to all the paths in the Ingress.</li>
-<li>Multiple Ingresses can define different annotations. These definitions are not shared between Ingresses.</li>
-</ul>
-<h2 id="when-a-reload-is-required">When a reload is required<a class="headerlink" href="#when-a-reload-is-required" title="Permanent link">&para;</a></h2>
-<p>The next list describes the scenarios when a reload is required:</p>
+<li>
+<p><em>Using the flag <code class="codehilite">--apiserver-host</code>:</em> Using this flag <code class="codehilite">--apiserver-host=http://localhost:8080</code> it is possible to specify an unsecured API server or reach a remote kubernetes cluster using <a href="https://kubernetes.io/docs/user-guide/kubectl/kubectl_proxy/">kubectl proxy</a>.
+   Please do not use this approach in production.</p>
+</li>
+</ol>
+<p>In the diagram below you can see the full authentication flow with all options, starting with the browser
+on the lower left hand side.</p>
+<div class="codehilite"><pre><span></span>Kubernetes                                                  Workstation
++---------------------------------------------------+     +------------------+
+|                                                   |     |                  |
+|  +-----------+   apiserver        +------------+  |     |  +------------+  |
+|  |           |   proxy            |            |  |     |  |            |  |
+|  | apiserver |                    |  ingress   |  |     |  |  ingress   |  |
+|  |           |                    | controller |  |     |  | controller |  |
+|  |           |                    |            |  |     |  |            |  |
+|  |           |                    |            |  |     |  |            |  |
+|  |           |  service account/  |            |  |     |  |            |  |
+|  |           |  kubeconfig        |            |  |     |  |            |  |
+|  |           +&lt;-------------------+            |  |     |  |            |  |
+|  |           |                    |            |  |     |  |            |  |
+|  +------+----+      kubeconfig    +------+-----+  |     |  +------+-----+  |
+|         |&lt;--------------------------------------------------------|        |
+|                                                   |     |                  |
++---------------------------------------------------+     +------------------+
+</pre></div>
+
+
+<h3 id="service-account">Service Account<a class="headerlink" href="#service-account" title="Permanent link">&para;</a></h3>
+<p>If using a service account to connect to the API server, Dashboard expects the file
+<code class="codehilite">/var/run/secrets/kubernetes.io/serviceaccount/token</code> to be present. It provides a secret
+token that is required to authenticate with the API server.</p>
+<p>Verify with the following commands:</p>
+<div class="codehilite"><pre><span></span><span class="gp">#</span> start a container that contains curl
+<span class="gp">$</span> kubectl run <span class="nb">test</span> --image<span class="o">=</span>tutum/curl -- sleep <span class="m">10000</span>
+
+<span class="gp">#</span> check that container is running
+<span class="gp">$</span> kubectl get pods
+<span class="go">NAME                   READY     STATUS    RESTARTS   AGE</span>
+<span class="go">test-701078429-s5kca   1/1       Running   0          16s</span>
+
+<span class="gp">#</span> check <span class="k">if</span> secret exists
+<span class="gp">$</span> kubectl <span class="nb">exec</span> test-701078429-s5kca ls /var/run/secrets/kubernetes.io/serviceaccount/
+<span class="go">ca.crt</span>
+<span class="go">namespace</span>
+<span class="go">token</span>
+
+<span class="gp">#</span> get service IP of master
+<span class="gp">$</span> kubectl get services
+<span class="go">NAME         CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE</span>
+<span class="go">kubernetes   10.0.0.1     &lt;none&gt;        443/TCP   1d</span>
+
+<span class="gp">#</span> check base connectivity from cluster inside
+<span class="gp">$</span> kubectl <span class="nb">exec</span> test-701078429-s5kca -- curl -k https://10.0.0.1
+<span class="go">Unauthorized</span>
+
+<span class="gp">#</span> connect using tokens
+<span class="gp">$</span> <span class="nv">TOKEN_VALUE</span><span class="o">=</span><span class="k">$(</span>kubectl <span class="nb">exec</span> test-701078429-s5kca -- cat /var/run/secrets/kubernetes.io/serviceaccount/token<span class="k">)</span>
+<span class="gp">$</span> <span class="nb">echo</span> <span class="nv">$TOKEN_VALUE</span>
+<span class="go">eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi....9A</span>
+<span class="gp">$</span> kubectl <span class="nb">exec</span> test-701078429-s5kca -- curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H  <span class="s2">&quot;Authorization: Bearer </span><span class="nv">$TOKEN_VALUE</span><span class="s2">&quot;</span> https://10.0.0.1
+<span class="go">{</span>
+<span class="go">  &quot;paths&quot;: [</span>
+<span class="go">    &quot;/api&quot;,</span>
+<span class="go">    &quot;/api/v1&quot;,</span>
+<span class="go">    &quot;/apis&quot;,</span>
+<span class="go">    &quot;/apis/apps&quot;,</span>
+<span class="go">    &quot;/apis/apps/v1alpha1&quot;,</span>
+<span class="go">    &quot;/apis/authentication.k8s.io&quot;,</span>
+<span class="go">    &quot;/apis/authentication.k8s.io/v1beta1&quot;,</span>
+<span class="go">    &quot;/apis/authorization.k8s.io&quot;,</span>
+<span class="go">    &quot;/apis/authorization.k8s.io/v1beta1&quot;,</span>
+<span class="go">    &quot;/apis/autoscaling&quot;,</span>
+<span class="go">    &quot;/apis/autoscaling/v1&quot;,</span>
+<span class="go">    &quot;/apis/batch&quot;,</span>
+<span class="go">    &quot;/apis/batch/v1&quot;,</span>
+<span class="go">    &quot;/apis/batch/v2alpha1&quot;,</span>
+<span class="go">    &quot;/apis/certificates.k8s.io&quot;,</span>
+<span class="go">    &quot;/apis/certificates.k8s.io/v1alpha1&quot;,</span>
+<span class="go">    &quot;/apis/extensions&quot;,</span>
+<span class="go">    &quot;/apis/extensions/v1beta1&quot;,</span>
+<span class="go">    &quot;/apis/policy&quot;,</span>
+<span class="go">    &quot;/apis/policy/v1alpha1&quot;,</span>
+<span class="go">    &quot;/apis/rbac.authorization.k8s.io&quot;,</span>
+<span class="go">    &quot;/apis/rbac.authorization.k8s.io/v1alpha1&quot;,</span>
+<span class="go">    &quot;/apis/storage.k8s.io&quot;,</span>
+<span class="go">    &quot;/apis/storage.k8s.io/v1beta1&quot;,</span>
+<span class="go">    &quot;/healthz&quot;,</span>
+<span class="go">    &quot;/healthz/ping&quot;,</span>
+<span class="go">    &quot;/logs&quot;,</span>
+<span class="go">    &quot;/metrics&quot;,</span>
+<span class="go">    &quot;/swaggerapi/&quot;,</span>
+<span class="go">    &quot;/ui/&quot;,</span>
+<span class="go">    &quot;/version&quot;</span>
+<span class="go">  ]</span>
+<span class="go">}</span>
+</pre></div>
+
+
+<p>If it is not working, there are two possible reasons:</p>
+<ol>
+<li>
+<p>The contents of the tokens are invalid. Find the secret name with <code class="codehilite">kubectl get secrets | grep service-account</code> and
+   delete it with <code class="codehilite">kubectl delete secret &lt;name&gt;</code>. It will automatically be recreated.</p>
+</li>
+<li>
+<p>You have a non-standard Kubernetes installation and the file containing the token may not be present.
+   The API server will mount a volume containing this file, but only if the API server is configured to use
+   the ServiceAccount admission controller.
+   If you experience this error, verify that your API server is using the ServiceAccount admission controller.
+   If you are configuring the API server by hand, you can set this with the <code class="codehilite">--admission-control</code> parameter.</p>
+<blockquote>
+<p>Note that you should use other admission controllers as well. Before configuring this option, you should read about admission controllers.</p>
+</blockquote>
+</li>
+</ol>
+<p>More information:</p>
 <ul>
-<li>New Ingress Resource Created.</li>
-<li>TLS section is added to existing Ingress.</li>
-<li>Change in Ingress annotations that impacts more than just upstream configuration. For instance <code class="codehilite">load-balance</code> annotation does not require a reload.</li>
-<li>A path is added/removed from an Ingress.</li>
-<li>An Ingress, Service, Secret is removed.</li>
-<li>Some missing referenced object from the Ingress is available, like a Service or Secret.</li>
-<li>A Secret is updated.</li>
+<li><a href="http://kubernetes.io/docs/user-guide/service-accounts/">User Guide: Service Accounts</a></li>
+<li><a href="http://kubernetes.io/docs/admin/service-accounts-admin/">Cluster Administrator Guide: Managing Service Accounts</a></li>
 </ul>
-<h2 id="avoiding-reloads">Avoiding reloads<a class="headerlink" href="#avoiding-reloads" title="Permanent link">&para;</a></h2>
-<p>In some cases, it is possible to avoid reloads, in particular when there is a change in the endpoints, i.e., a pod is started or replaced. It is out of the scope of this Ingress controller to remove reloads completely. This would require an incredible amount of work and at some point makes no sense. This can change only if NGINX changes the way new configurations are read, basically, new changes do not replace worker processes.</p>
-<h3 id="avoiding-reloads-on-endpoints-changes">Avoiding reloads on Endpoints changes<a class="headerlink" href="#avoiding-reloads-on-endpoints-changes" title="Permanent link">&para;</a></h3>
-<p>On every endpoint change the controller fetches endpoints from all the services it sees and generates corresponding Backend objects. It then sends these objects to a Lua handler running inside Nginx. The Lua code in turn stores those backends in a shared memory zone. Then for every request Lua code running in <a href="https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md"><code class="codehilite">balancer_by_lua</code></a> context detects what endpoints it should choose upstream peer from and applies the configured load balancing algorithm to choose the peer. Then Nginx takes care of the rest. This way we avoid reloading Nginx on endpoint changes. <em>Note</em> that this includes annotation changes that affects only <code class="codehilite">upstream</code> configuration in Nginx as well.</p>
-<p>In a relatively big clusters with frequently deploying apps this feature saves significant number of Nginx reloads which can otherwise affect response latency, load balancing quality (after every reload Nginx resets the state of load balancing) and so on.</p>
+<h2 id="kube-config">Kube-Config<a class="headerlink" href="#kube-config" title="Permanent link">&para;</a></h2>
+<p>If you want to use a kubeconfig file for authentication, follow the <a href="../deploy/">deploy procedure</a> and
+add the flag <code class="codehilite">--kubeconfig=/etc/kubernetes/kubeconfig.yaml</code> to the args section of the deployment.</p>
+<h2 id="using-gdb-with-nginx">Using GDB with Nginx<a class="headerlink" href="#using-gdb-with-nginx" title="Permanent link">&para;</a></h2>
+<p><a href="https://www.gnu.org/software/gdb/">Gdb</a> can be used to with nginx to perform a configuration
+dump. This allows us to see which configuration is being used, as well as older configurations.</p>
+<p>Note: The below is based on the nginx <a href="https://docs.nginx.com/nginx/admin-guide/monitoring/debugging/#dumping-nginx-configuration-from-a-running-process">documentation</a>.</p>
+<ol>
+<li>SSH into the worker</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> ssh user@workerIP
+</pre></div>
+
+
+<ol>
+<li>Obtain the Docker Container Running nginx</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> docker ps <span class="p">|</span> grep nginx-ingress-controller
+<span class="go">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</span>
+<span class="go">d9e1d243156a        quay.io/kubernetes-ingress-controller/nginx-ingress-controller   &quot;/usr/bin/dumb-init …&quot;   19 minutes ago      Up 19 minutes                                                                            k8s_nginx-ingress-controller_nginx-ingress-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0</span>
+</pre></div>
+
+
+<ol>
+<li>Exec into the container</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> docker <span class="nb">exec</span> -it --user<span class="o">=</span><span class="m">0</span> --privileged d9e1d243156a bash
+</pre></div>
+
+
+<ol>
+<li>Make sure nginx is running in <code class="codehilite">--with-debug</code></li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> nginx -V <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> grep -- <span class="s1">&#39;--with-debug&#39;</span>
+</pre></div>
+
+
+<ol>
+<li>Get list of processes running on container</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> ps -ef
+<span class="go">UID        PID  PPID  C STIME TTY          TIME CMD</span>
+<span class="go">root         1     0  0 20:23 ?        00:00:00 /usr/bin/dumb-init /nginx-ingres</span>
+<span class="go">root         5     1  0 20:23 ?        00:00:05 /nginx-ingress-controller --defa</span>
+<span class="go">root        21     5  0 20:23 ?        00:00:00 nginx: master process /usr/sbin/</span>
+<span class="go">nobody     106    21  0 20:23 ?        00:00:00 nginx: worker process</span>
+<span class="go">nobody     107    21  0 20:23 ?        00:00:00 nginx: worker process</span>
+<span class="go">root       172     0  0 20:43 pts/0    00:00:00 bash</span>
+</pre></div>
+
+
+<ol>
+<li>Attach gdb to the nginx master process</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> gdb -p <span class="m">21</span>
+<span class="go">....</span>
+<span class="go">Attaching to process 21</span>
+<span class="go">Reading symbols from /usr/sbin/nginx...done.</span>
+<span class="go">....</span>
+<span class="go">(gdb)</span>
+</pre></div>
+
+
+<ol>
+<li>Copy and paste the following:</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="go">set $cd = ngx_cycle-&gt;config_dump</span>
+<span class="go">set $nelts = $cd.nelts</span>
+<span class="go">set $elts = (ngx_conf_dump_t*)($cd.elts)</span>
+<span class="go">while ($nelts-- &gt; 0)</span>
+<span class="go">set $name = $elts[$nelts]-&gt;name.data</span>
+<span class="go">printf &quot;Dumping %s to nginx_conf.txt\n&quot;, $name</span>
+<span class="go">append memory nginx_conf.txt \</span>
+<span class="gp">        $</span>elts<span class="o">[</span><span class="nv">$nelts</span><span class="o">]</span>-&gt;buffer.start <span class="nv">$elts</span><span class="o">[</span><span class="nv">$nelts</span><span class="o">]</span>-&gt;buffer.end
+<span class="go">end</span>
+</pre></div>
+
+
+<ol>
+<li>
+<p>Quit GDB by pressing CTRL+D</p>
+</li>
+<li>
+<p>Open nginx_conf.txt</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="go">cat nginx_conf.txt</span>
+</pre></div>
                 
                   
                 
@@ -1233,7 +1527,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../development/" title="Developing for NGINX Ingress Controller" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../how-it-works/" title="How it works" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1242,25 +1536,11 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Developing for NGINX Ingress Controller
+                How it works
               </span>
             </div>
           </a>
         
-        
-          <a href="../troubleshooting/" title="Troubleshooting" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Troubleshooting
-              </span>
-            </div>
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
-            </div>
-          </a>
         
       </nav>
     </div>

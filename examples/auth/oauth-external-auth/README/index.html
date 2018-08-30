@@ -36,7 +36,7 @@
     
     
       
-        <title>External Authentication - NGINX Ingress Controller</title>
+        <title>External OAUTH Authentication - NGINX Ingress Controller</title>
       
     
     
@@ -100,7 +100,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#external-authentication" tabindex="1" class="md-skip">
+      <a href="#external-oauth-authentication" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -126,7 +126,7 @@
                 NGINX Ingress Controller
               </span>
               <span class="md-header-nav__topic">
-                External Authentication
+                External OAUTH Authentication
               </span>
             
           
@@ -754,8 +754,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../external-auth/README/" title="External authentication" class="md-nav__link">
-      External authentication
+    <a href="../../external-auth/README/" title="External Basic Authentication" class="md-nav__link">
+      External Basic Authentication
     </a>
   </li>
 
@@ -775,11 +775,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        External Authentication
+        External OAUTH Authentication
       </label>
     
-    <a href="./" title="External Authentication" class="md-nav__link md-nav__link--active">
-      External Authentication
+    <a href="./" title="External OAUTH Authentication" class="md-nav__link md-nav__link--active">
+      External OAUTH Authentication
     </a>
     
       
@@ -1148,13 +1148,13 @@
                   <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/auth/oauth-external-auth/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="external-authentication">External Authentication<a class="headerlink" href="#external-authentication" title="Permanent link">&para;</a></h1>
+                <h1 id="external-oauth-authentication">External OAUTH Authentication<a class="headerlink" href="#external-oauth-authentication" title="Permanent link">&para;</a></h1>
 <h3 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h3>
 <p>The <code class="codehilite">auth-url</code> and <code class="codehilite">auth-signin</code> annotations allow you to use an external
 authentication provider to protect your Ingress resources.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>this annotation requires <code class="codehilite">nginx-ingress-controller v0.9.0</code> or greater.)</p>
+<p>This annotation requires <code class="codehilite">nginx-ingress-controller v0.9.0</code> or greater.)</p>
 </div>
 <h3 id="key-detail">Key Detail<a class="headerlink" href="#key-detail" title="Permanent link">&para;</a></h3>
 <p>This functionality is enabled by deploying multiple Ingress objects for a single host.
@@ -1240,7 +1240,7 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using g
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../../external-auth/README/" title="External authentication" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../external-auth/README/" title="External Basic Authentication" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1249,7 +1249,7 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using g
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                External authentication
+                External Basic Authentication
               </span>
             </div>
           </a>

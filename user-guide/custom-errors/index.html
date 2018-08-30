@@ -761,8 +761,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/auth/external-auth/README/" title="External authentication" class="md-nav__link">
-      External authentication
+    <a href="../../examples/auth/external-auth/README/" title="External Basic Authentication" class="md-nav__link">
+      External Basic Authentication
     </a>
   </li>
 
@@ -773,8 +773,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/auth/oauth-external-auth/README/" title="External Authentication" class="md-nav__link">
-      External Authentication
+    <a href="../../examples/auth/oauth-external-auth/README/" title="External OAUTH Authentication" class="md-nav__link">
+      External OAUTH Authentication
     </a>
   </li>
 
@@ -1093,8 +1093,8 @@ example, if the value of the <code class="codehilite">Accept</code> header send 
 could decide to return the error payload as a JSON document instead of HTML.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>The custom backend is expected to return the correct HTTP status code instead of <code class="codehilite">200</code>. NGINX does not change
-the response from the custom default backend.</p>
+<p>The custom backend is expected to return the correct HTTP status code instead of <code class="codehilite">200</code>.
+NGINX does not change the response from the custom default backend.</p>
 </div>
 <p>An example of such custom backend is available inside the source repository at <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages">images/custom-error-pages</a>.</p>
 <p>See also the <a href="../../examples/customization/custom-errors">Custom errors</a> example.</p>

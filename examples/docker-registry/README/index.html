@@ -752,8 +752,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../auth/external-auth/README/" title="External authentication" class="md-nav__link">
-      External authentication
+    <a href="../../auth/external-auth/README/" title="External Basic Authentication" class="md-nav__link">
+      External Basic Authentication
     </a>
   </li>
 
@@ -764,8 +764,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../auth/oauth-external-auth/README/" title="External Authentication" class="md-nav__link">
-      External Authentication
+    <a href="../../auth/oauth-external-auth/README/" title="External OAUTH Authentication" class="md-nav__link">
+      External OAUTH Authentication
     </a>
   </li>
 
@@ -1168,9 +1168,9 @@
 
 <div class="admonition important">
 <p class="admonition-title">Important</p>
+</div>
 <p>Running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.</p>
 <p>Please check <a href="https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry">deploy a plain http registry</a></p>
-</div>
 <h3 id="with-tls">With TLS<a class="headerlink" href="#with-tls" title="Permanent link">&para;</a></h3>
 <p>Download and edit the yaml deployment replacing <code class="codehilite">registry.&lt;your domain&gt;</code> with a valid DNS name pointing to the ingress controller:</p>
 <div class="codehilite"><pre><span></span><span class="go">wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-with-tls.yaml</span>

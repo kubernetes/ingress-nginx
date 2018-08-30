@@ -610,13 +610,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#important" title="!!! important" class="md-nav__link">
-    !!! important
-  </a>
-  
-</li>
-      
       
       
       
@@ -797,8 +790,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/auth/external-auth/README/" title="External authentication" class="md-nav__link">
-      External authentication
+    <a href="../../examples/auth/external-auth/README/" title="External Basic Authentication" class="md-nav__link">
+      External Basic Authentication
     </a>
   </li>
 
@@ -809,8 +802,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/auth/oauth-external-auth/README/" title="External Authentication" class="md-nav__link">
-      External Authentication
+    <a href="../../examples/auth/oauth-external-auth/README/" title="External OAUTH Authentication" class="md-nav__link">
+      External OAUTH Authentication
     </a>
   </li>
 
@@ -1080,13 +1073,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#important" title="!!! important" class="md-nav__link">
-    !!! important
-  </a>
-  
-</li>
-      
       
       
       
@@ -1147,11 +1133,13 @@ Here is a partial example:</p>
 </pre></div>
 
 
-<h2 id="important">!!! important<a class="headerlink" href="#important" title="Permanent link">&para;</a></h2>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
 <p>Deploying multiple Ingress controllers, of different types (e.g., <code class="codehilite">ingress-nginx</code> &amp; <code class="codehilite">gce</code>), and not specifying a class annotation will
 result in both or all controllers fighting to satisfy the Ingress, and all of them racing to update Ingress status field in confusing ways.</p>
 <p>When running multiple ingress-nginx controllers, it will only process an unset class annotation if one of the controllers uses the default
- <code class="codehilite">--ingress-class</code> value (see <code class="codehilite">IsValid</code> method in <code class="codehilite">internal/ingress/annotations/class/main.go</code>), otherwise the class annotation become required.</p>
+<code class="codehilite">--ingress-class</code> value (see <code class="codehilite">IsValid</code> method in <code class="codehilite">internal/ingress/annotations/class/main.go</code>), otherwise the class annotation become required.</p>
+</div>
                 
                   
                 

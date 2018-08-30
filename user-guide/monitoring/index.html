@@ -817,8 +817,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/auth/external-auth/README/" title="External authentication" class="md-nav__link">
-      External authentication
+    <a href="../../examples/auth/external-auth/README/" title="External Basic Authentication" class="md-nav__link">
+      External Basic Authentication
     </a>
   </li>
 
@@ -829,8 +829,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/auth/oauth-external-auth/README/" title="External Authentication" class="md-nav__link">
-      External Authentication
+    <a href="../../examples/auth/oauth-external-auth/README/" title="External OAUTH Authentication" class="md-nav__link">
+      External OAUTH Authentication
     </a>
   </li>
 
@@ -1148,7 +1148,10 @@
                 
                 <h1 id="prometheus-and-grafana-installation">Prometheus and Grafana installation<a class="headerlink" href="#prometheus-and-grafana-installation" title="Permanent link">&para;</a></h1>
 <p>This tutorial will show you how to install <a href="https://prometheus.io/">Prometheus</a> and <a href="https://grafana.com/">Grafana</a> for scraping the metrics of the NGINX Ingress controller.</p>
-<p>!!! Important: this example uses <code class="codehilite">emptyDir</code> volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This example uses <code class="codehilite">emptyDir</code> volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.</p>
+</div>
 <h2 id="before-you-begin">Before You Begin<a class="headerlink" href="#before-you-begin" title="Permanent link">&para;</a></h2>
 <p>The NGINX Ingress controller should already be deployed according to the deployment instructions <a href="../../deploy/">here</a>.</p>
 <p>Note that the yaml files used in this tutorial are stored in the <a href="https://github.com/kubernetes/ingress-nginx/tree/master/deploy/monitoring">deploy/monitoring</a> folder of the GitHub repository <a href="https://github.com/kubernetes/ingress-nginx">kubernetes/ingress-nginx</a>.</p>
