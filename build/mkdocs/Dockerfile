@@ -15,6 +15,7 @@
 FROM alpine:3.7
 
 RUN apk update && apk add --no-cache \
+  bash \
   git \
   git-fast-import \
   openssh \
@@ -34,6 +35,6 @@ WORKDIR /docs
 
 EXPOSE 3000
 
-ENTRYPOINT ["mkdocs"]
+COPY entrypoint.sh /
 
-CMD ["serve", "--dev-addr=0.0.0.0:3000", "--livereload"]
+ENTRYPOINT ["/entrypoint.sh"]
