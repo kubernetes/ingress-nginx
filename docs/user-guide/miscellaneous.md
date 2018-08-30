@@ -27,7 +27,7 @@ The default value of this settings is `60 seconds`.
 A more adequate value to support websockets is a value higher than one hour (`3600`).
 
 !!! Important
-	If the NGINX ingress controller is exposed with a service `type=LoadBalancer` make sure the protocol between the loadbalancer and NGINX is TCP.
+    If the NGINX ingress controller is exposed with a service `type=LoadBalancer` make sure the protocol between the loadbalancer and NGINX is TCP.
 
 ## Optimizing TLS Time To First Byte (TTTFB)
 

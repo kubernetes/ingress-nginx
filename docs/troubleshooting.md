@@ -256,7 +256,7 @@ More information:
 
 ## Kube-Config
 
-If you want to use a kubeconfig file for authentication, follow the [deploy procedure](../docs/deploy/index.md) and
+If you want to use a kubeconfig file for authentication, follow the [deploy procedure](deploy/index.md) and
 add the flag `--kubeconfig=/etc/kubernetes/kubeconfig.yaml` to the args section of the deployment.
 
 ## Using GDB with Nginx

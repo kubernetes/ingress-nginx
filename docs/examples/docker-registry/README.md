@@ -11,9 +11,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 ```
 
 !!! Important
-	**DO NOT RUN THIS IN PRODUCTION**
+    **DO NOT RUN THIS IN PRODUCTION**
 
-	This deployment uses `emptyDir` in the `volumeMount` which means the contents of the registry will be deleted when the pod dies.
+    This deployment uses `emptyDir` in the `volumeMount` which means the contents of the registry will be deleted when the pod dies.
 
 The next required step is creation of the ingress rules. To do this we have two options: with and without TLS
 
@@ -26,9 +26,9 @@ wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/exam
 ```
 
 !!! Important
-	Running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.
+  Running a docker registry without TLS requires we configure our local docker daemon with the insecure registry flag.
 
-	Please check [deploy a plain http registry](https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry)
+  Please check [deploy a plain http registry](https://docs.docker.com/registry/insecure/#deploy-a-plain-http-registry)
 
 ### With TLS
 
