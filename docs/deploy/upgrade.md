@@ -1,8 +1,8 @@
 # Upgrading
 
 !!! important
-No matter the method you use for upgrading, _if you use template overrides,
-make sure your templates are compatible with the new version of ingress-nginx_.
+    No matter the method you use for upgrading, _if you use template overrides,
+    make sure your templates are compatible with the new version of ingress-nginx_.
 
 ## Without Helm
 

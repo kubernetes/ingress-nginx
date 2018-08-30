@@ -15,11 +15,11 @@ data:
 ```
 
 !!! Important
-	The key and values in a ConfigMap can only be strings.
-	This means that we want a value with boolean values we need to quote the values, like "true" or "false".
-	Same for numbers, like "100".
+    The key and values in a ConfigMap can only be strings.
+    This means that we want a value with boolean values we need to quote the values, like "true" or "false".
+    Same for numbers, like "100".
 
-	"Slice" types (defined below as `[]string` or `[]int` can be provided as a comma-delimited string.
+    "Slice" types (defined below as `[]string` or `[]int` can be provided as a comma-delimited string.
 
 ## Configuration options
 
