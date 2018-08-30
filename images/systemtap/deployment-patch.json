@@ -1,0 +1,32 @@
+{
+  "spec": {
+    "template": {
+      "spec": {
+        "volumes": [{
+          "name": "modules-volume",
+          "hostPath": {
+            "path": "/lib/modules"
+          }
+        }, {
+          "name": "usr-src-volume",
+          "hostPath": {
+            "path": "/usr/src"
+          }
+        }],
+        "containers": [{
+          "name": "nginx-ingress-controller",
+          "image": "quay.io/kubernetes-ingress-controller/systemtap:v08302018-8ac788b23",
+          "volumeMounts": [{
+            "mountPath": "/lib/modules",
+            "name": "modules-volume",
+            "readOnly": true
+          }, {
+            "mountPath": "/usr/src",
+            "name": "usr-src-volume",
+            "readOnly": true
+          }]
+        }]
+      }
+    }
+  }
+}
