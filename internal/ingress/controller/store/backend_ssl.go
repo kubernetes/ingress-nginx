@@ -134,7 +134,7 @@ func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error)
 			return nil, ErrSecretForAuth
 		}
 
-		return nil, fmt.Errorf("Secret %q contains no keypair or CA certificate", secretName)
+		return nil, fmt.Errorf("secret %q contains no keypair or CA certificate", secretName)
 	}
 
 	sslCert.Name = secret.Name
@@ -209,7 +209,7 @@ func (s *k8sStore) sendDummyEvent() {
 }
 
 // ErrSecretForAuth error to indicate a secret is used for authentication
-var ErrSecretForAuth = fmt.Errorf("Secret is used for authentication")
+var ErrSecretForAuth = fmt.Errorf("secret is used for authentication")
 
 func isErrSecretForAuth(e error) bool {
 	return e == ErrSecretForAuth
