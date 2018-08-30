@@ -19,6 +19,7 @@ package file
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"github.com/golang/glog"
 	"io/ioutil"
 )
 
@@ -27,6 +28,7 @@ func SHA1(filename string) string {
 	hasher := sha1.New()
 	s, err := ioutil.ReadFile(filename)
 	if err != nil {
+		glog.Errorf("Error reading file %v", err)
 		return ""
 	}
 
