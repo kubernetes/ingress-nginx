@@ -1,4 +1,4 @@
-# External authentication
+# External Basic Authentication
 
 ### Example 1:
 

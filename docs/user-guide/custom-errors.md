@@ -18,8 +18,8 @@ example, if the value of the `Accept` header send by the client was `application
 could decide to return the error payload as a JSON document instead of HTML.
 
 !!! Important
-    The custom backend is expected to return the correct HTTP status code instead of `200`. NGINX does not change
-    the response from the custom default backend.
+    The custom backend is expected to return the correct HTTP status code instead of `200`.
+    NGINX does not change the response from the custom default backend.
 
 An example of such custom backend is available inside the source repository at [images/custom-error-pages][img-custom-error-pages].
 
