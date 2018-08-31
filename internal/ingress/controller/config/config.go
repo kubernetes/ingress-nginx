@@ -18,7 +18,6 @@ package config
 
 import (
 	"fmt"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/runtime"
 )
 
 const (
