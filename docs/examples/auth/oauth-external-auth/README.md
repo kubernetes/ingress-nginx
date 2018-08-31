@@ -1,4 +1,4 @@
-# External Authentication
+# External OAUTH Authentication
 
 ### Overview
 
@@ -6,7 +6,7 @@ The `auth-url` and `auth-signin` annotations allow you to use an external
 authentication provider to protect your Ingress resources.
 
 !!! Important
-	this annotation requires `nginx-ingress-controller v0.9.0` or greater.)
+    This annotation requires `nginx-ingress-controller v0.9.0` or greater.)
 
 ### Key Detail
 

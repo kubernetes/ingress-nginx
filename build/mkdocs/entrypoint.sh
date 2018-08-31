@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# Copyright 2017 The Kubernetes Authors.
+# Copyright 2018 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+set -o errexit
+set -o pipefail
 
-source $DIR/common.sh
+CMD=$1
 
-IMAGE=$(make -s -C $DIR/../images/nginx image-info)
-
-if docker_tag_exists "shopify/nginx" $(echo $IMAGE | jq .tag) "$ARCH"; then
-    echo "Image already published"
-    exit 0
+if [ "$CMD" == "build" ];
+then
+  mkdocs build
+  exit 0;
 fi
 
-echo "building nginx-$ARCH image..."
-make -C $DIR/../images/nginx sub-container-$ARCH
-make -C $DIR/../images/nginx sub-push-$ARCH
+mkdocs serve --dev-addr=0.0.0.0:3000 --livereload
