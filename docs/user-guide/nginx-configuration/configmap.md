@@ -48,6 +48,7 @@ The following table shows a configuration option's name, type, and the default v
 |[error-log-level](#error-log-level)|string|"notice"|
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
 |[http2-max-header-size](#http2-max-header-size)|string|"16k"|
+|[http2-max-requests](#http2-max-requests)|int|1000|
 |[hsts](#hsts)|bool|"true"|
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"|
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
@@ -266,6 +267,13 @@ Limits the maximum size of the entire request header list after HPACK decompress
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size](https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size)
+
+## http2-max-requests
+
+Sets the maximum number of requests (including push requests) that can be served through one HTTP/2 connection, after which the next client request will lead to connection closing and the need of establishing a new connection.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests)
 
 ## hsts
 
