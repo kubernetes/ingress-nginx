@@ -52,5 +52,5 @@ echo "updating image..."
 kubectl set image \
     deployments \
     --namespace ingress-nginx \
-    --selector app=ingress-nginx \
+    --selector app.kubernetes.io/name=ingress-nginx \
     nginx-ingress-controller=${DEV_IMAGE}
