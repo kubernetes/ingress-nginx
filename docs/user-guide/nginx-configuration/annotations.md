@@ -270,7 +270,7 @@ CORS can be controlled with the following annotations:
   Example: `nginx.ingress.kubernetes.io/cors-max-age: 600`
 
 !!! note
-    For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html) as well as this [example](../../examples/cors/README.md).
+    For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html) 
 
 ### Server Alias
 
