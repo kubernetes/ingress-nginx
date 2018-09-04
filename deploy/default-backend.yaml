@@ -13,10 +13,12 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: default-http-backend
+      app.kubernetes.io/part-of: ingress-nginx
   template:
     metadata:
       labels:
         app.kubernetes.io/name: default-http-backend
+        app.kubernetes.io/part-of: ingress-nginx
     spec:
       terminationGracePeriodSeconds: 60
       containers:
@@ -57,3 +59,4 @@ spec:
     targetPort: 8080
   selector:
     app.kubernetes.io/name: default-http-backend
+    app.kubernetes.io/part-of: ingress-nginx

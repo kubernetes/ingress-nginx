@@ -3,7 +3,8 @@ kind: Service
 metadata:
   name: nginxsvc
   labels:
-    app: nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   type: NodePort
   ports:
@@ -14,20 +15,26 @@ spec:
     protocol: TCP
     name: https
   selector:
-    app: nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 ---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   replicas: 1
   selector:
-    app: nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
   template:
     metadata:
       labels:
-        app: nginx
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/part-of: ingress-nginx
     spec:
       containers:
       - name: nginx
