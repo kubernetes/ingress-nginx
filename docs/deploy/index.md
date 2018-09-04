@@ -10,7 +10,7 @@
     - [AWS](#aws)
     - [GCE - GKE](#gce-gke)
     - [Azure](#azure)
-    - [Baremetal](#baremetal)
+    - [Bare-metal](#bare-metal)
   - [Verify installation](#verify-installation)
   - [Detect installed version](#detect-installed-version)
 - [Using Helm](#using-helm)
@@ -125,13 +125,16 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 ```
 
 
-#### Baremetal
+#### Bare-metal
 
 Using [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport):
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml
 ```
+
+!!! tip
+    For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal/).
 
 ### Verify installation
 
