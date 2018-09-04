@@ -357,6 +357,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1208,7 +1220,6 @@ methods to obtain more information.</p>
 <span class="go">  Normal  UPDATE  58s   nginx-ingress-controller  Ingress default/cafe-ingress</span>
 </pre></div>
 
-
 <p>Check the Ingress Controller Logs</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n &lt;namespace-of-ingress-controller&gt;
 <span class="go">NAME                                        READY     STATUS    RESTARTS   AGE</span>
@@ -1223,7 +1234,6 @@ methods to obtain more information.</p>
 <span class="go">-------------------------------------------------------------------------------</span>
 <span class="go">....</span>
 </pre></div>
-
 
 <p>Check the Nginx Configuration</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n &lt;namespace-of-ingress-controller&gt;
@@ -1245,7 +1255,6 @@ methods to obtain more information.</p>
 <span class="go">....</span>
 </pre></div>
 
-
 <p>Check if used Services Exist</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get svc --all-namespaces
 <span class="go">NAMESPACE     NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE</span>
@@ -1256,7 +1265,6 @@ methods to obtain more information.</p>
 <span class="go">kube-system   kube-dns               ClusterIP   10.96.0.10       &lt;none&gt;        53/UDP,53/TCP   30m</span>
 <span class="go">kube-system   kubernetes-dashboard   NodePort    10.103.128.17    &lt;none&gt;        80:30000/TCP    30m</span>
 </pre></div>
-
 
 <h2 id="debug-logging">Debug Logging<a class="headerlink" href="#debug-logging" title="Permanent link">&para;</a></h2>
 <p>Using the flag <code class="codehilite">--v=XX</code> it is possible to increase the level of logging. This is performed by editing
@@ -1269,7 +1277,6 @@ the deployment.</p>
 <span class="gp">$</span> kubectl edit deploy -n &lt;namespace-of-ingress-controller&gt; nginx-ingress-controller
 <span class="gp">#</span> Add --v<span class="o">=</span>X to <span class="s2">&quot;- args&quot;</span>, where X is an integer
 </pre></div>
-
 
 <ul>
 <li><code class="codehilite">--v=2</code> shows details using <code class="codehilite">diff</code> about the changes in the configuration in nginx</li>
@@ -1287,7 +1294,6 @@ with the kubeconfig file.</p>
 |             |                    | controller |
 +-------------+                    +------------+
 </pre></div>
-
 
 <p><strong>Service authentication</strong></p>
 <p>The Ingress controller needs information from apiserver. Therefore, authentication is required, which can be achieved in two different ways:</p>
@@ -1324,7 +1330,6 @@ on the lower left hand side.</p>
 |                                                   |     |                  |
 +---------------------------------------------------+     +------------------+
 </pre></div>
-
 
 <h3 id="service-account">Service Account<a class="headerlink" href="#service-account" title="Permanent link">&para;</a></h3>
 <p>If using a service account to connect to the API server, Dashboard expects the file
@@ -1396,7 +1401,6 @@ token that is required to authenticate with the API server.</p>
 <span class="go">}</span>
 </pre></div>
 
-
 <p>If it is not working, there are two possible reasons:</p>
 <ol>
 <li>
@@ -1432,7 +1436,6 @@ dump. This allows us to see which configuration is being used, as well as older 
 <div class="codehilite"><pre><span></span><span class="gp">$</span> ssh user@workerIP
 </pre></div>
 
-
 <ol>
 <li>Obtain the Docker Container Running nginx</li>
 </ol>
@@ -1441,20 +1444,17 @@ dump. This allows us to see which configuration is being used, as well as older 
 <span class="go">d9e1d243156a        quay.io/kubernetes-ingress-controller/nginx-ingress-controller   &quot;/usr/bin/dumb-init …&quot;   19 minutes ago      Up 19 minutes                                                                            k8s_nginx-ingress-controller_nginx-ingress-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0</span>
 </pre></div>
 
-
 <ol>
 <li>Exec into the container</li>
 </ol>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> docker <span class="nb">exec</span> -it --user<span class="o">=</span><span class="m">0</span> --privileged d9e1d243156a bash
 </pre></div>
 
-
 <ol>
 <li>Make sure nginx is running in <code class="codehilite">--with-debug</code></li>
 </ol>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> nginx -V <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> grep -- <span class="s1">&#39;--with-debug&#39;</span>
 </pre></div>
-
 
 <ol>
 <li>Get list of processes running on container</li>
@@ -1469,7 +1469,6 @@ dump. This allows us to see which configuration is being used, as well as older 
 <span class="go">root       172     0  0 20:43 pts/0    00:00:00 bash</span>
 </pre></div>
 
-
 <ol>
 <li>Attach gdb to the nginx master process</li>
 </ol>
@@ -1480,7 +1479,6 @@ dump. This allows us to see which configuration is being used, as well as older 
 <span class="go">....</span>
 <span class="go">(gdb)</span>
 </pre></div>
-
 
 <ol>
 <li>Copy and paste the following:</li>
@@ -1495,7 +1493,6 @@ dump. This allows us to see which configuration is being used, as well as older 
 <span class="gp">        $</span>elts<span class="o">[</span><span class="nv">$nelts</span><span class="o">]</span>-&gt;buffer.start <span class="nv">$elts</span><span class="o">[</span><span class="nv">$nelts</span><span class="o">]</span>-&gt;buffer.end
 <span class="go">end</span>
 </pre></div>
-
 
 <ol>
 <li>

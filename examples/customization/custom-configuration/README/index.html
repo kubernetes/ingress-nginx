@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1063,11 +1075,9 @@ metadata:
   name: nginx-load-balancer-conf
 </pre></div>
 
-
 <div class="codehilite"><pre><span></span>curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-configuration/configmap.yaml \
     | kubectl apply -f -
 </pre></div>
-
 
 <p>If the Configmap it is updated, NGINX will be reloaded with the new configuration.</p>
                 

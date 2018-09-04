@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1059,11 +1071,9 @@ It's important the file generated is named <code class="codehilite">auth</code> 
 <span class="go">Adding password for user foo</span>
 </pre></div>
 
-
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create secret generic basic-auth --from-file<span class="o">=</span>auth
 <span class="go">secret &quot;basic-auth&quot; created</span>
 </pre></div>
-
 
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get secret basic-auth -o yaml
 <span class="go">apiVersion: v1</span>
@@ -1075,7 +1085,6 @@ It's important the file generated is named <code class="codehilite">auth</code> 
 <span class="go">  namespace: default</span>
 <span class="go">type: Opaque</span>
 </pre></div>
-
 
 <div class="codehilite"><pre><span></span><span class="go">echo &quot;</span>
 <span class="go">apiVersion: extensions/v1beta1</span>
@@ -1100,7 +1109,6 @@ It's important the file generated is named <code class="codehilite">auth</code> 
 <span class="go">          servicePort: 80</span>
 <span class="go">&quot; | kubectl create -f -</span>
 </pre></div>
-
 
 <div class="codehilite"><pre><span></span>$ curl -v http://10.2.29.4/ -H &#39;Host: foo.bar.com&#39;
 *   Trying 10.2.29.4...
@@ -1127,7 +1135,6 @@ It's important the file generated is named <code class="codehilite">auth</code> 
 <span class="nt">&lt;/html&gt;</span>
 * Connection #0 to host 10.2.29.4 left intact
 </pre></div>
-
 
 <div class="codehilite"><pre><span></span>$ curl -v http://10.2.29.4/ -H <span class="s1">&#39;Host: foo.bar.com&#39;</span> -u <span class="s1">&#39;foo:bar&#39;</span>
 *   Trying <span class="m">10</span>.2.29.4...

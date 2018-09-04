@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1113,7 +1125,6 @@
 <p>The Ingress in this example adds a custom header to Nginx configuration that only applies to that specific Ingress. If you want to add headers that apply globally to all Ingresses, please have a look at <a href="../../../../examples/customization/custom-headers/README">this example</a>.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl apply -f ingress.yaml
 </pre></div>
-
 
 <h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link">&para;</a></h2>
 <p>Check if the contents of the annotation are present in the nginx.conf file using:

@@ -461,8 +461,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#baremetal" title="Baremetal" class="md-nav__link">
-    Baremetal
+  <a href="#bare-metal" title="Bare-metal" class="md-nav__link">
+    Bare-metal
   </a>
   
 </li>
@@ -506,6 +506,18 @@
   
 </nav>
     
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
   </li>
 
         
@@ -1268,8 +1280,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#baremetal" title="Baremetal" class="md-nav__link">
-    Baremetal
+  <a href="#bare-metal" title="Bare-metal" class="md-nav__link">
+    Bare-metal
   </a>
   
 </li>
@@ -1335,7 +1347,7 @@
 <li><a href="#aws">AWS</a></li>
 <li><a href="#gce-gke">GCE - GKE</a></li>
 <li><a href="#azure">Azure</a></li>
-<li><a href="#baremetal">Baremetal</a></li>
+<li><a href="#bare-metal">Bare-metal</a></li>
 </ul>
 </li>
 <li><a href="#verify-installation">Verify installation</a></li>
@@ -1348,7 +1360,6 @@
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml</span>
 </pre></div>
 
-
 <h3 id="provider-specific-steps">Provider Specific Steps<a class="headerlink" href="#provider-specific-steps" title="Permanent link">&para;</a></h3>
 <p>There are cloud provider specific yaml files.</p>
 <h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link">&para;</a></h4>
@@ -1357,12 +1368,10 @@
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
 </pre></div>
 
-
 <h4 id="minikube">minikube<a class="headerlink" href="#minikube" title="Permanent link">&para;</a></h4>
 <p>For standard usage:</p>
 <div class="codehilite"><pre><span></span><span class="go">minikube addons enable ingress</span>
 </pre></div>
-
 
 <p>For development:</p>
 <ol>
@@ -1370,7 +1379,6 @@
 </ol>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> minikube addons disable ingress
 </pre></div>
-
 
 <ol>
 <li>Execute <code class="codehilite">make dev-env</code></li>
@@ -1381,7 +1389,6 @@
 <span class="go">default-http-backend-66b447d9cf-rrlf9      1/1       Running   0          12s</span>
 <span class="go">nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s</span>
 </pre></div>
-
 
 <h4 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link">&para;</a></h4>
 <p>In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of <code class="codehilite">Type=LoadBalancer</code>.
@@ -1398,14 +1405,12 @@ Please check the <a href="https://aws.amazon.com/es/elasticloadbalancing/details
 <span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml</span>
 </pre></div>
 
-
 <p>For L7:</p>
 <p>Change line of the file <code class="codehilite">provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code class="codehilite">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</code>
 Then execute:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l7.yaml</span>
 <span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l7.yaml</span>
 </pre></div>
-
 
 <p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
 <p><img alt="Listeners" src="./../images/elb-l7-listener.png" /></p>
@@ -1414,29 +1419,28 @@ Then execute:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml</span>
 </pre></div>
 
-
 <h4 id="gce-gke">GCE - GKE<a class="headerlink" href="#gce-gke" title="Permanent link">&para;</a></h4>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
 </pre></div>
-
 
 <p><strong>Important Note:</strong> proxy protocol is not supported in GCE/GKE</p>
 <h4 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link">&para;</a></h4>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml</span>
 </pre></div>
 
-
-<h4 id="baremetal">Baremetal<a class="headerlink" href="#baremetal" title="Permanent link">&para;</a></h4>
+<h4 id="bare-metal">Bare-metal<a class="headerlink" href="#bare-metal" title="Permanent link">&para;</a></h4>
 <p>Using <a href="https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport">NodePort</a>:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml</span>
 </pre></div>
 
-
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>For extended notes regarding deployments on bare-metal, see <a href="./baremetal/">Bare-metal considerations</a>.</p>
+</div>
 <h3 id="verify-installation">Verify installation<a class="headerlink" href="#verify-installation" title="Permanent link">&para;</a></h3>
 <p>To check if the ingress controller pods have started, run the following command:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl get pods --all-namespaces -l app=ingress-nginx --watch</span>
 </pre></div>
-
 
 <p>Once the operator pods are running, you can cancel the above command by typing <code class="codehilite">Ctrl+C</code>.
 Now, you are ready to create your first ingress.</p>
@@ -1447,18 +1451,15 @@ Now, you are ready to create your first ingress.</p>
 <span class="go">kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version</span>
 </pre></div>
 
-
 <h2 id="using-helm">Using Helm<a class="headerlink" href="#using-helm" title="Permanent link">&para;</a></h2>
 <p>NGINX Ingress controller can be installed via <a href="https://helm.sh/">Helm</a> using the chart <a href="https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress">stable/nginx-ingress</a> from the official charts repository. 
 To install the chart with the release name <code class="codehilite">my-nginx</code>:</p>
 <div class="codehilite"><pre><span></span><span class="go">helm install stable/nginx-ingress --name my-nginx</span>
 </pre></div>
 
-
 <p>If the kubernetes cluster has RBAC enabled, then run:</p>
 <div class="codehilite"><pre><span></span><span class="go">helm install stable/nginx-ingress --name my-nginx --set rbac.create=true</span>
 </pre></div>
-
 
 <p>Detect installed version:</p>
 <div class="codehilite"><pre><span></span><span class="go">POD_NAME=$(kubectl get pods -l app=nginx-ingress -o jsonpath=&#39;{.items[0].metadata.name}&#39;)</span>
@@ -1499,13 +1500,13 @@ To install the chart with the release name <code class="codehilite">my-nginx</co
           </a>
         
         
-          <a href="rbac/" title="Role Based Access Control (RBAC)" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="baremetal/" title="Bare-metal considerations" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Role Based Access Control (RBAC)
+                Bare-metal considerations
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">

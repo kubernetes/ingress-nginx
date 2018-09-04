@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1190,7 +1202,6 @@ key/cert pair with an arbitrarily chosen hostname, created as follows</p>
 <span class="go">secret &quot;tls-secret&quot; created</span>
 </pre></div>
 
-
 <h2 id="ca-authentication">CA Authentication<a class="headerlink" href="#ca-authentication" title="Permanent link">&para;</a></h2>
 <p>You can act as your very own CA, or use an existing one. As an exercise / learning, we're going to generate our
 own CA, and also generate a client certificate.</p>
@@ -1210,12 +1221,10 @@ In real production world, you may face CAs with intermediate certificates, as th
 <span class="go">   i:/C=US/O=Equifax/OU=Equifax Secure Certificate Authority</span>
 </pre></div>
 
-
 <p>To generate our CA Certificate, we've to run the following commands:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> openssl genrsa -out ca.key <span class="m">2048</span>
 <span class="gp">$</span> openssl req -x509 -new -nodes -key ca.key -days <span class="m">10000</span> -out ca.crt -subj <span class="s2">&quot;/CN=example-ca&quot;</span>
 </pre></div>
-
 
 <p>This will generate two files: A private key (ca.key) and a public key (ca.crt). This CA is valid for 10000 days.
 The ca.crt can be used later in the step of creation of CA authentication secret.</p>
@@ -1232,18 +1241,15 @@ used to authenticate in a tls-auth configured ingress.</p>
 <span class="go">keyUsage = nonRepudiation, digitalSignature, keyEncipherment</span>
 </pre></div>
 
-
 <p>Then, a user generates his very own private key (that he needs to keep secret)
 and a CSR (Certificate Signing Request) that will be sent to the CA to sign and generate a certificate.</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> openssl genrsa -out client1.key <span class="m">2048</span>
 <span class="gp">$</span> openssl req -new -key client1.key -out client1.csr -subj <span class="s2">&quot;/CN=client1&quot;</span> -config openssl.cnf
 </pre></div>
 
-
 <p>As the CA receives the generated 'client1.csr' file, it signs it and generates a client.crt certificate:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> openssl x509 -req -in client1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client1.crt -days <span class="m">365</span> -extensions v3_req -extfile openssl.cnf
 </pre></div>
-
 
 <p>Then, you'll have 3 files: the client.key (user's private key), client.crt (user's public key) and client.csr (disposable CSR).</p>
 <h3 id="creating-the-ca-authentication-secret">Creating the CA Authentication secret<a class="headerlink" href="#creating-the-ca-authentication-secret" title="Permanent link">&para;</a></h3>
@@ -1254,29 +1260,23 @@ all the authorized CAs. You must download them from your CA site in PEM format (
 -----END CERTIFICATE-----
 </pre></div>
 
-
 <p>You can have as many certificates as you want. If they're in the binary DER format, 
 you can convert them as the following:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
 </pre></div>
 
-
 <p>Then, you've to concatenate them all in only one file, named 'ca.crt' as the following:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> cat certificate1.crt certificate2.crt certificate3.crt &gt;&gt; ca.crt
 </pre></div>
-
 
 <p>The final step is to create a secret with the content of this file. This secret is going to be used in 
 the TLS Auth directive:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create secret generic caingress --namespace<span class="o">=</span>default --from-file<span class="o">=</span>ca.crt<span class="o">=</span>&lt;ca.crt&gt;
 </pre></div>
 
-
-<p><strong>Note:</strong> You can also generate the CA Authentication Secret along with the TLS Secret by using:</p>
+<p><strong>Note:</strong> You can also generate the CA Authentication Secret along with the TLS Secret by using:
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create secret generic caingress --namespace<span class="o">=</span>default --from-file<span class="o">=</span>ca.crt<span class="o">=</span>&lt;ca.crt&gt; --from-file<span class="o">=</span>tls.crt<span class="o">=</span>&lt;tls.crt&gt; --from-file<span class="o">=</span>tls.key<span class="o">=</span>&lt;tls.key&gt;
-</pre></div>
-
-
+</pre></div></p>
 <h2 id="test-http-service">Test HTTP Service<a class="headerlink" href="#test-http-service" title="Permanent link">&para;</a></h2>
 <p>All examples that require a test HTTP Service use the standard http-svc pod,
 which you can deploy as follows</p>
@@ -1292,7 +1292,6 @@ which you can deploy as follows</p>
 <span class="go">NAME             CLUSTER-IP     EXTERNAL-IP   PORT(S)            AGE</span>
 <span class="go">http-svc         10.0.122.116   &lt;pending&gt;     80:30301/TCP       1d</span>
 </pre></div>
-
 
 <p>You can test that the HTTP Service works by exposing it temporarily</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl patch svc http-svc -p <span class="s1">&#39;{&quot;spec&quot;:{&quot;type&quot;: &quot;LoadBalancer&quot;}}&#39;</span>

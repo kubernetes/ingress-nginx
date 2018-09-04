@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1171,14 +1183,12 @@ behind a Service of <code class="codehilite">Type=LoadBalancer</code>.</p>
 <span class="go">nginx-ingress-lb   10.0.138.113   104.154.109.191   80:31457/TCP,443:32240/TCP   15m</span>
 </pre></div>
 
-
 <p>then, update the ingress controller so it adopts the static IP of the Service
 by passing the <code class="codehilite">--publish-service</code> flag (the example yaml used in the next step
 already has it set to "nginx-ingress-lb").</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f nginx-ingress-controller.yaml
 <span class="go">deployment &quot;nginx-ingress-controller&quot; created</span>
 </pre></div>
-
 
 <h2 id="assigning-the-ip-to-an-ingress">Assigning the IP to an Ingress<a class="headerlink" href="#assigning-the-ip-to-an-ingress" title="Permanent link">&para;</a></h2>
 <p>From here on every Ingress created with the <code class="codehilite">ingress.class</code> annotation set to
@@ -1201,7 +1211,6 @@ already has it set to "nginx-ingress-lb").</p>
 <span class="go">...</span>
 </pre></div>
 
-
 <h2 id="retaining-the-ip">Retaining the IP<a class="headerlink" href="#retaining-the-ip" title="Permanent link">&para;</a></h2>
 <p>You can test retention by deleting the Ingress</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl delete ing nginx-ingress
@@ -1215,7 +1224,6 @@ already has it set to "nginx-ingress-lb").</p>
 <span class="go">nginx-ingress   *         104.154.109.191   80, 443   13m</span>
 </pre></div>
 
-
 <blockquote>
 <p>Note that unlike the GCE Ingress, the same loadbalancer IP is shared amongst all
 Ingresses, because all requests are proxied through the same set of nginx
@@ -1227,10 +1235,9 @@ controllers.</p>
 <span class="go">&quot;nginx-ingress-lb&quot; patched</span>
 </pre></div>
 
-
 <p>and promote the IP to static (promotion works differently for cloudproviders,
 provided example is for GKE/GCE)
-`</p>
+`
 <div class="codehilite"><pre><span></span><span class="gp">$</span> gcloud compute addresses create nginx-ingress-lb --addresses <span class="m">104</span>.154.109.191 --region us-central1
 <span class="go">Created [https://www.googleapis.com/compute/v1/projects/kubernetesdev/regions/us-central1/addresses/nginx-ingress-lb].</span>
 <span class="go">---</span>
@@ -1245,9 +1252,7 @@ provided example is for GKE/GCE)
 <span class="go">status: IN_USE</span>
 <span class="go">users:</span>
 <span class="go">- us-central1/forwardingRules/a09f6913ae80e11e6a8c542010af0000</span>
-</pre></div>
-
-
+</pre></div></p>
 <p>Now even if the Service is deleted, the IP will persist, so you can recreate the
 Service with <code class="codehilite">spec.loadBalancerIP</code> set to <code class="codehilite">104.154.109.191</code>.</p>
                 

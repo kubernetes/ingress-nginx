@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1085,7 +1097,6 @@ follows:</p>
 <span class="go">secure-demo-echo-service   secure-demo-echo-service.kube.local             80        1m</span>
 </pre></div>
 
-
 <p>Test 1: public service with no auth header</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: public-demo-echo-service.kube.local&#39;</span> -v <span class="m">192</span>.168.99.100
 <span class="go">* Rebuilt URL to: 192.168.99.100/</span>
@@ -1106,7 +1117,6 @@ follows:</p>
 <span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
 <span class="go">UserID: , UserRole:</span>
 </pre></div>
-
 
 <p>Test 2: secure service with no auth header</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: secure-demo-echo-service.kube.local&#39;</span> -v <span class="m">192</span>.168.99.100
@@ -1135,7 +1145,6 @@ follows:</p>
 <span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
 </pre></div>
 
-
 <p>Test 3: public service with valid auth header</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: public-demo-echo-service.kube.local&#39;</span> -H <span class="s1">&#39;User:internal&#39;</span> -v <span class="m">192</span>.168.99.100
 <span class="go">* Rebuilt URL to: 192.168.99.100/</span>
@@ -1157,7 +1166,6 @@ follows:</p>
 <span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
 <span class="go">UserID: 1443635317331776148, UserRole: admin</span>
 </pre></div>
-
 
 <p>Test 4: public service with valid auth header</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: secure-demo-echo-service.kube.local&#39;</span> -H <span class="s1">&#39;User:internal&#39;</span> -v <span class="m">192</span>.168.99.100

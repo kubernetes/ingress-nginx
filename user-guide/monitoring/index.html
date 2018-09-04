@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1163,7 +1175,6 @@
 <span class="go">configmap &quot;prometheus-configuration&quot; created</span>
 </pre></div>
 
-
 <p>Running the following command deploys prometheus in Kubernetes:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/monitoring/prometheus.yaml</span>
 <span class="go">clusterrole &quot;prometheus-server&quot; created</span>
@@ -1172,7 +1183,6 @@
 <span class="go">deployment &quot;prometheus-server&quot; created</span>
 <span class="go">service &quot;prometheus-service&quot; created</span>
 </pre></div>
-
 
 <h3 id="prometheus-dashboard">Prometheus Dashboard<a class="headerlink" href="#prometheus-dashboard" title="Permanent link">&para;</a></h3>
 <p>Open Prometheus dashboard in a web browser:</p>
@@ -1183,17 +1193,14 @@
 <span class="go">prometheus             NodePort    10.98.233.86    &lt;none&gt;        9090:32630/TCP                               1m</span>
 </pre></div>
 
-
 <p>Obtain the IP address of the nodes in the running cluster:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl get nodes -o wide</span>
 </pre></div>
-
 
 <p>In some cases where the node only have internal IP adresses we need to execute:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl get nodes --selector=kubernetes.io/role!=master -o jsonpath={.items[*].status.addresses[?\(@.type==\&quot;InternalIP\&quot;\)].address}</span>
 <span class="go">10.192.0.2 10.192.0.3 10.192.0.4</span>
 </pre></div>
-
 
 <p>Open your browser and visit the following URL: <em>http://{node IP address}:{prometheus-svc-nodeport}</em> to load the Prometheus Dashboard.</p>
 <p>According to the above example, this URL will be http://10.192.0.3:32630</p>
@@ -1202,7 +1209,6 @@
 <div class="codehilite"><pre><span></span><span class="go">kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/monitoring/grafana.yaml</span>
 </pre></div>
 
-
 <div class="codehilite"><pre><span></span><span class="go">kubectl get svc -n ingress-nginx</span>
 <span class="go">NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE</span>
 <span class="go">default-http-backend   ClusterIP   10.103.59.201   &lt;none&gt;        80/TCP                                       3d</span>
@@ -1210,7 +1216,6 @@
 <span class="go">prometheus             NodePort    10.98.233.86    &lt;none&gt;        9090:32630/TCP                               10m</span>
 <span class="go">grafana                NodePort    10.98.233.86    &lt;none&gt;        9090:31086/TCP                               10m</span>
 </pre></div>
-
 
 <p>Open your browser and visit the following URL: <em>http://{node IP address}:{grafana-svc-nodeport}</em> to load the Grafana Dashboard.
 According to the above example, this URL will be http://10.192.0.3:31086</p>

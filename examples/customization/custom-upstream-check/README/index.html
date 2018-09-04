@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1070,16 +1082,12 @@ spec:
 &quot; | kubectl create -f -
 </pre></div>
 
-
-<p>Check the annotation is present in the Ingress rule:</p>
+<p>Check the annotation is present in the Ingress rule:
 <div class="codehilite"><pre><span></span>kubectl get ingress http-svc -o yaml
-</pre></div>
-
-
+</pre></div></p>
 <p>Check the NGINX configuration is updated using kubectl or the status page:</p>
 <div class="codehilite"><pre><span></span>$ kubectl <span class="nb">exec</span> nginx-ingress-controller-v1ppm cat /etc/nginx/nginx.conf
 </pre></div>
-
 
 <div class="codehilite"><pre><span></span><span class="o">....</span>
     <span class="nt">upstream</span> <span class="nt">default-http-svc-x-80</span> <span class="p">{</span>

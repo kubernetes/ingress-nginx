@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1131,7 +1143,6 @@ service <span class="s2">&quot;nginx-errors&quot;</span> created
 deployment.apps <span class="s2">&quot;nginx-errors&quot;</span> created
 </pre></div>
 
-
 <p>This should have created a Deployment and a Service with the name <code class="codehilite">nginx-errors</code>.</p>
 <div class="codehilite"><pre><span></span>$ kubectl get deploy,svc
 NAME                           DESIRED   CURRENT   READY     AGE
@@ -1140,7 +1151,6 @@ deployment.apps/nginx-errors   <span class="m">1</span>         <span class="m">
 NAME                   TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>   AGE
 service/nginx-errors   ClusterIP   <span class="m">10</span>.0.0.12   &lt;none&gt;        <span class="m">80</span>/TCP    10s
 </pre></div>
-
 
 <h2 id="ingress-controller-configuration">Ingress controller configuration<a class="headerlink" href="#ingress-controller-configuration" title="Permanent link">&para;</a></h2>
 <p>If you do not already have an instance of the the NGINX Ingress controller running, deploy it according to the
@@ -1155,7 +1165,10 @@ service/nginx-errors   ClusterIP   <span class="m">10</span>.0.0.12   &lt;none&g
 </li>
 <li>
 <p>Take note of the IP address assigned to the NGINX Ingress controller Service.
-    <code class="codehilite">$ kubectl get svc ingress-nginxNAME            TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>          AGEingress-nginx   ClusterIP   <span class="m">10</span>.0.0.13   &lt;none&gt;        <span class="m">80</span>/TCP,443/TCP   10m</code></p>
+    <div class="codehilite"><pre><span></span>$ kubectl get svc ingress-nginx
+NAME            TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>          AGE
+ingress-nginx   ClusterIP   <span class="m">10</span>.0.0.13   &lt;none&gt;        <span class="m">80</span>/TCP,443/TCP   10m
+</pre></div></p>
 </li>
 </ol>
 <div class="admonition note">
@@ -1177,7 +1190,6 @@ Connection: keep-alive
 <span class="nt">&lt;span&gt;</span>The page you&#39;re looking for could not be found.<span class="nt">&lt;/span&gt;</span>
 </pre></div>
 
-
 <p>A request with a custom <code class="codehilite">Accept</code> header returns the corresponding document type (JSON):</p>
 <div class="codehilite"><pre><span></span>$ curl -D- -H <span class="s1">&#39;Accept: application/json&#39;</span> http://10.0.0.13/
 HTTP/1.1 <span class="m">404</span> Not Found
@@ -1190,7 +1202,6 @@ Vary: Accept-Encoding
 
 <span class="o">{</span> <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;The page you&#39;re looking for could not be found&quot;</span> <span class="o">}</span>
 </pre></div>
-
 
 <p>To go further with this example, feel free to deploy your own applications and Ingress objects, and validate that the
 responses are still in the correct format when a backend returns 503 (eg. if you scale a Deployment down to 0 replica).</p>

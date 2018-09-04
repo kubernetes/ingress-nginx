@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1102,14 +1114,12 @@ you need to specify the annotation <code class="codehilite">kubernetes.io/ingres
     <span class="l l-Scalar l-Scalar-Plain">kubernetes.io/ingress.class</span><span class="p p-Indicator">:</span> <span class="s">&quot;gce&quot;</span>
 </pre></div>
 
-
 <p>will target the GCE controller, forcing the nginx controller to ignore it, while an annotation like</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
   <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
     <span class="l l-Scalar l-Scalar-Plain">kubernetes.io/ingress.class</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx&quot;</span>
 </pre></div>
-
 
 <p>will target the nginx controller, forcing the GCE controller to ignore it.</p>
 <p>To reiterate, setting the annotation to any value which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.
@@ -1131,7 +1141,6 @@ Here is a partial example:</p>
              <span class="p p-Indicator">-</span> <span class="s">&#39;--ingress-class=nginx-internal&#39;</span>
              <span class="p p-Indicator">-</span> <span class="s">&#39;--configmap=ingress/nginx-ingress-internal-controller&#39;</span>
 </pre></div>
-
 
 <div class="admonition important">
 <p class="admonition-title">Important</p>

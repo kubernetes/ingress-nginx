@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1140,10 +1152,9 @@
 <div class="codehilite"><pre><span></span><span class="go">kubectl create -f ingress.yaml</span>
 </pre></div>
 
-
 <h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
 <p>You can confirm that the Ingress works.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe ing nginx-test
+<p><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe ing nginx-test
 <span class="go">Name:           nginx-test</span>
 <span class="go">Namespace:      default</span>
 <span class="go">Address:        </span>
@@ -1175,9 +1186,7 @@
 <span class="go">ETag: &quot;58875e6b-264&quot;</span>
 <span class="go">Accept-Ranges: bytes</span>
 </pre></div>
-
-
-<p>In the example above, you can see a line containing the 'Set-Cookie: INGRESSCOOKIE' setting the right defined stickiness cookie.
+In the example above, you can see a line containing the 'Set-Cookie: INGRESSCOOKIE' setting the right defined stickiness cookie.
 This cookie is created by NGINX containing the hash of the used upstream in that request. 
 If the user changes this cookie, NGINX creates a new one and redirect the user to another upstream.</p>
 <p>If the backend pool grows up NGINX will keep sending the requests through the same server of the first request, even if it's overloaded.</p>

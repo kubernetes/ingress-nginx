@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1209,11 +1221,9 @@
 <div class="codehilite"><pre><span></span>$ openssl req -x509 -nodes -days <span class="m">365</span> -newkey rsa:2048 -keyout <span class="si">${</span><span class="nv">KEY_FILE</span><span class="si">}</span> -out <span class="si">${</span><span class="nv">CERT_FILE</span><span class="si">}</span> -subj <span class="s2">&quot;/CN=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">/O=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">&quot;</span><span class="sb">`</span>
 </pre></div>
 
-
 <p>Then create the secret in the cluster via:</p>
 <div class="codehilite"><pre><span></span>kubectl create secret tls <span class="si">${</span><span class="nv">CERT_NAME</span><span class="si">}</span> --key <span class="si">${</span><span class="nv">KEY_FILE</span><span class="si">}</span> --cert <span class="si">${</span><span class="nv">CERT_FILE</span><span class="si">}</span>
 </pre></div>
-
 
 <p>The resulting secret will be of type <code class="codehilite">kubernetes.io/tls</code>.</p>
 <h2 id="default-ssl-certificate">Default SSL Certificate<a class="headerlink" href="#default-ssl-certificate" title="Permanent link">&para;</a></h2>
@@ -1264,7 +1274,6 @@ by monitoring ingress resources and their referenced secrets.</p>
 <p>To enable this for an ingress resource you have to add an annotation:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl annotate ing ingress-demo kubernetes.io/tls-acme=&quot;true&quot;</span>
 </pre></div>
-
 
 <p>To setup Kube-Lego you can take a look at this <a href="https://github.com/jetstack/kube-lego/tree/master/examples">full example</a>.
 The first version to fully support Kube-Lego is Nginx Ingress controller 0.8.</p>

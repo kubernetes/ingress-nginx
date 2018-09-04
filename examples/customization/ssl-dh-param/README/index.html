@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1139,16 +1151,13 @@ use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 <span class="go">    app: ingress-nginx</span>
 </pre></div>
 
-
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f configmap.yaml
 </pre></div>
-
 
 <h2 id="custom-dh-parameters-secret">Custom DH parameters secret<a class="headerlink" href="#custom-dh-parameters-secret" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="gp">$</span>&gt; openssl dhparam <span class="m">1024</span> <span class="m">2</span>&gt; /dev/null <span class="p">|</span> base64
 <span class="go">LS0tLS1CRUdJTiBESCBQQVJBTUVURVJ...</span>
 </pre></div>
-
 
 <div class="codehilite"><pre><span></span><span class="gp">$</span> cat ssl-dh-param.yaml
 <span class="go">apiVersion: v1</span>
@@ -1162,10 +1171,8 @@ use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 <span class="go">    app: ingress-nginx</span>
 </pre></div>
 
-
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f ssl-dh-param.yaml
 </pre></div>
-
 
 <h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link">&para;</a></h2>
 <p>Check the contents of the configmap is present in the nginx.conf file using:

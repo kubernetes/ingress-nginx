@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1232,7 +1244,6 @@ and that you have an ingress controller <a href="../../../deploy">running</a> in
 <span class="go">&quot; | kubectl create -f -</span>
 </pre></div>
 
-
 <p>Check the rewrite is working</p>
 <div class="codehilite"><pre><span></span>$ curl -v http://172.17.4.99/something -H <span class="s1">&#39;Host: rewrite.bar.com&#39;</span>
 *   Trying <span class="m">172</span>.17.4.99...
@@ -1275,9 +1286,8 @@ BODY:
 -no body in request-
 </pre></div>
 
-
 <h3 id="app-root">App Root<a class="headerlink" href="#app-root" title="Permanent link">&para;</a></h3>
-<p>Create an Ingress rule with a app-root annotation:</p>
+<p>Create an Ingress rule with a app-root annotation:
 <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span>
 <span class="s2">apiVersion: extensions/v1beta1</span>
 <span class="s2">kind: Ingress</span>
@@ -1296,9 +1306,7 @@ BODY:
 <span class="s2">          servicePort: 80</span>
 <span class="s2">        path: /</span>
 <span class="s2">&quot;</span> <span class="p">|</span> kubectl create -f -
-</pre></div>
-
-
+</pre></div></p>
 <p>Check the rewrite is working</p>
 <div class="codehilite"><pre><span></span>$ curl -I -k http://approot.bar.com/
 HTTP/1.1 <span class="m">302</span> Moved Temporarily

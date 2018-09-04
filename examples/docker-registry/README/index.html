@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1153,7 +1165,6 @@
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/deployment.yaml</span>
 </pre></div>
 
-
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p><strong>DO NOT RUN THIS IN PRODUCTION</strong></p>
@@ -1165,7 +1176,6 @@
 <div class="codehilite"><pre><span></span><span class="go">wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-without-tls.yaml</span>
 </pre></div>
 
-
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 </div>
@@ -1176,7 +1186,6 @@
 <div class="codehilite"><pre><span></span><span class="go">wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-with-tls.yaml</span>
 </pre></div>
 
-
 <p>Deploy <a href="https://github.com/jetstack/kube-lego">kube lego</a> use <a href="https://letsencrypt.org/">Let's Encrypt</a> certificates or edit the ingress rule to use a secret with an existing SSL certificate.</p>
 <h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h3>
 <p>To test the registry is working correctly we download a known image from <a href="https://hub.docker.com">docker hub</a>, create a tag pointing to the new registry and upload the image:</p>
@@ -1184,7 +1193,6 @@
 <span class="go">docker tag ubuntu:16.04 `registry.&lt;your domain&gt;/ubuntu:16.04`</span>
 <span class="go">docker push `registry.&lt;your domain&gt;/ubuntu:16.04`</span>
 </pre></div>
-
 
 <p>Please replace <code class="codehilite">registry.&lt;your domain&gt;</code> with your domain.</p>
                 

@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -630,6 +642,13 @@
         <li class="md-nav__item">
   <a href="#http2-max-header-size" title="http2-max-header-size" class="md-nav__link">
     http2-max-header-size
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http2-max-requests" title="http2-max-requests" class="md-nav__link">
+    http2-max-requests
   </a>
   
 </li>
@@ -2021,6 +2040,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#http2-max-requests" title="http2-max-requests" class="md-nav__link">
+    http2-max-requests
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#hsts" title="hsts" class="md-nav__link">
     hsts
   </a>
@@ -2701,7 +2727,6 @@ you can add key-value pairs to the data section of the config-map. For Example:<
   <span class="l l-Scalar l-Scalar-Plain">ssl-protocols</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">SSLv2</span>
 </pre></div>
 
-
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The key and values in a ConfigMap can only be strings.
@@ -2824,6 +2849,11 @@ Same for numbers, like "100".</p>
 <td align="left"><a href="#http2-max-header-size">http2-max-header-size</a></td>
 <td align="left">string</td>
 <td align="left">"16k"</td>
+</tr>
+<tr>
+<td align="left"><a href="#http2-max-requests">http2-max-requests</a></td>
+<td align="left">int</td>
+<td align="left">1000</td>
 </tr>
 <tr>
 <td align="left"><a href="#hsts">hsts</a></td>
@@ -3370,6 +3400,10 @@ Same for numbers, like "100".</p>
 <p>Limits the maximum size of the entire request header list after HPACK decompression.</p>
 <p><em>References:</em>
 <a href="https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size">https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size</a></p>
+<h2 id="http2-max-requests">http2-max-requests<a class="headerlink" href="#http2-max-requests" title="Permanent link">&para;</a></h2>
+<p>Sets the maximum number of requests (including push requests) that can be served through one HTTP/2 connection, after which the next client request will lead to connection closing and the need of establishing a new connection.</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests">http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests</a></p>
 <h2 id="hsts">hsts<a class="headerlink" href="#hsts" title="Permanent link">&para;</a></h2>
 <p>Enables or disables the header HSTS in servers running SSL.
 HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header) that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP. It provides protection against protocol downgrade attacks and cookie theft.</p>

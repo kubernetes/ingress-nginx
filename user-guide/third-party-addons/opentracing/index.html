@@ -359,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+      Bare-metal considerations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
@@ -1153,21 +1165,18 @@
 <p>Using the third party module <a href="https://github.com/opentracing-contrib/nginx-opentracing">opentracing-contrib/nginx-opentracing</a> the NGINX ingress controller can configure NGINX to enable <a href="http://opentracing.io">OpenTracing</a> instrumentation.
 By default this feature is disabled.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<p>To enable the instrumentation we must enable opentracing in the configuration configmap:</p>
+<p>To enable the instrumentation we must enable opentracing in the configuration configmap:
 <div class="codehilite"><pre><span></span><span class="n">data</span><span class="o">:</span>
   <span class="n">enable</span><span class="o">-</span><span class="n">opentracing</span><span class="o">:</span> <span class="s2">&quot;true&quot;</span>
-</pre></div>
-
-
+</pre></div></p>
 <p>We must also set the host to use when uploading traces:</p>
 <div class="codehilite"><pre><span></span>zipkin-collector-host: zipkin.default.svc.cluster.local
 jaeger-collector-host: jaeger-collector.default.svc.cluster.local
 </pre></div>
 
-
 <p>Next you will need to deploy a distributed tracing system which uses OpenTracing. Both <a href="https://github.com/openzipkin/zipkin">Zipkin</a> and
 <a href="https://github.com/jaegertracing/jaeger">Jaeger</a> have been tested.</p>
-<p>Other optional configuration options:</p>
+<p>Other optional configuration options:
 <div class="codehilite"><pre><span></span># specifies the port to use when uploading traces
 zipkin-collector-port
 
@@ -1189,9 +1198,7 @@ jaeger-sampler-type
 
 # specifies the argument to be passed to the sampler constructor, Default: 1
 jaeger-sampler-param
-</pre></div>
-
-
+</pre></div></p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed
 using Minikube.</p>
@@ -1201,7 +1208,6 @@ github repository is an example of a dockerized date service. To install the exa
 <div class="codehilite"><pre><span></span>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
 kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml
 </pre></div>
-
 
 <p>Also we need to configure the NGINX controller configmap with the required values:</p>
 <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
@@ -1216,28 +1222,30 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
 <span class="s1">&#39;</span> <span class="p">|</span> kubectl replace -f -
 </pre></div>
 
-
 <p>In the zipkin interface we can see the details:
 <img alt="zipkin screenshot" src="../../../images/zipkin-demo.png" title="zipkin collector screenshot" /></p>
 <h3 id="jaeger">Jaeger<a class="headerlink" href="#jaeger" title="Permanent link">&para;</a></h3>
 <ol>
 <li>
 <p>Enable Ingress addon in minikube:
-    <code class="codehilite">$ minikube addons <span class="nb">enable</span> ingress</code></p>
+    <div class="codehilite"><pre><span></span>$ minikube addons <span class="nb">enable</span> ingress
+</pre></div></p>
 </li>
 <li>
 <p>Add minikube IP to /etc/hosts:
-    <code class="codehilite">$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="k">$(</span>minikube ip<span class="k">)</span><span class="s2"> example.com&quot;</span> <span class="p">|</span> sudo tee -a /etc/hosts</code></p>
+    <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="k">$(</span>minikube ip<span class="k">)</span><span class="s2"> example.com&quot;</span> <span class="p">|</span> sudo tee -a /etc/hosts
+</pre></div></p>
 </li>
 <li>
 <p>Apply a Basic Service and Ingress Resource:
-    ```
-    # Create Echoheaders Deployment
-    $ kubectl run echoheaders --image=k8s.gcr.io/echoserver:1.4 --replicas=1 --port=8080</p>
-<h1 id="expose-as-a-cluster-ip">Expose as a Cluster-IP<a class="headerlink" href="#expose-as-a-cluster-ip" title="Permanent link">&para;</a></h1>
-<p>$ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x</p>
-<h1 id="apply-the-ingress-resource">Apply the Ingress Resource<a class="headerlink" href="#apply-the-ingress-resource" title="Permanent link">&para;</a></h1>
-<p>$ echo '
+    <div class="codehilite"><pre><span></span># Create Echoheaders Deployment
+$ kubectl run echoheaders --image=k8s.gcr.io/echoserver:1.4 --replicas=1 --port=8080
+
+# Expose as a Cluster-IP
+$ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
+
+# Apply the Ingress Resource
+$ echo &#39;
   apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:
@@ -1251,54 +1259,68 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
             serviceName: echoheaders-x
             servicePort: 80
           path: /echo
-  ' | kubectl apply -f -
-```</p>
+  &#39; | kubectl apply -f -
+</pre></div></p>
 </li>
 <li>
 <p>Enable OpenTracing and set the zipkin-collector-host:
-    <code class="codehilite">$ <span class="nb">echo</span> <span class="s1">&#39;</span><span class="s1">      apiVersion: v1</span><span class="s1">      kind: ConfigMap</span><span class="s1">      data:</span><span class="s1">        enable-opentracing: &quot;true&quot;</span><span class="s1">        zipkin-collector-host: zipkin.default.svc.cluster.local</span><span class="s1">        jaeger-collector-host: jaeger-collector.default.svc.cluster.local</span><span class="s1">      metadata:</span><span class="s1">        name: nginx-load-balancer-conf</span><span class="s1">        namespace: kube-system</span><span class="s1">      &#39;</span> <span class="p">|</span> kubectl replace -f -</code></p>
+    <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
+<span class="s1">  apiVersion: v1</span>
+<span class="s1">  kind: ConfigMap</span>
+<span class="s1">  data:</span>
+<span class="s1">    enable-opentracing: &quot;true&quot;</span>
+<span class="s1">    zipkin-collector-host: zipkin.default.svc.cluster.local</span>
+<span class="s1">    jaeger-collector-host: jaeger-collector.default.svc.cluster.local</span>
+<span class="s1">  metadata:</span>
+<span class="s1">    name: nginx-load-balancer-conf</span>
+<span class="s1">    namespace: kube-system</span>
+<span class="s1">  &#39;</span> <span class="p">|</span> kubectl replace -f -
+</pre></div></p>
 </li>
 <li>
 <p>Apply the Jaeger All-In-One Template:
-    <code class="codehilite">$ kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml</code></p>
+    <div class="codehilite"><pre><span></span>$ kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml
+</pre></div></p>
 </li>
 <li>
 <p>Make a few requests to the Service:
-    ```
-    $ curl example.com/echo -d "meow"</p>
-<p>CLIENT VALUES:
-client_address=172.17.0.5
-command=POST
-real path=/echo
-query=nil
-request_version=1.1
-request_uri=http://example.com:8080/echo</p>
-<p>SERVER VALUES:
-server_version=nginx: 1.10.0 - lua: 10001</p>
-<p>HEADERS RECEIVED:
-accept=<em>/</em>
-connection=close
-content-length=4
-content-type=application/x-www-form-urlencoded
-host=example.com
-user-agent=curl/7.54.0
-x-forwarded-for=192.168.99.1
-x-forwarded-host=example.com
-x-forwarded-port=80
-x-forwarded-proto=http
-x-original-uri=/echo
-x-real-ip=192.168.99.1
-x-scheme=http
+    <div class="codehilite"><pre><span></span>$ curl example.com/echo -d <span class="s2">&quot;meow&quot;</span>
+
+CLIENT VALUES:
+<span class="nv">client_address</span><span class="o">=</span><span class="m">172</span>.17.0.5
+<span class="nv">command</span><span class="o">=</span>POST
+real <span class="nv">path</span><span class="o">=</span>/echo
+<span class="nv">query</span><span class="o">=</span>nil
+<span class="nv">request_version</span><span class="o">=</span><span class="m">1</span>.1
+<span class="nv">request_uri</span><span class="o">=</span>http://example.com:8080/echo
+
+SERVER VALUES:
+<span class="nv">server_version</span><span class="o">=</span>nginx: <span class="m">1</span>.10.0 - lua: <span class="m">10001</span>
+
+HEADERS RECEIVED:
+<span class="nv">accept</span><span class="o">=</span>*/*
+<span class="nv">connection</span><span class="o">=</span>close
+content-length<span class="o">=</span><span class="m">4</span>
+content-type<span class="o">=</span>application/x-www-form-urlencoded
+<span class="nv">host</span><span class="o">=</span>example.com
+user-agent<span class="o">=</span>curl/7.54.0
+x-forwarded-for<span class="o">=</span><span class="m">192</span>.168.99.1
+x-forwarded-host<span class="o">=</span>example.com
+x-forwarded-port<span class="o">=</span><span class="m">80</span>
+x-forwarded-proto<span class="o">=</span>http
+x-original-uri<span class="o">=</span>/echo
+x-real-ip<span class="o">=</span><span class="m">192</span>.168.99.1
+x-scheme<span class="o">=</span>http
 BODY:
 meow
-```</p>
+</pre></div></p>
 </li>
 <li>
 <p>View the Jaeger UI:
-    ```
-    $ minikube service jaeger-query --url</p>
-<p>http://192.168.99.100:30183
-```</p>
+    <div class="codehilite"><pre><span></span>$ minikube service jaeger-query --url
+
+http://192.168.99.100:30183
+</pre></div></p>
 <p>In the jaeger interface we can see the details:
 <img alt="jaeger screenshot" src="../../../images/jaeger-demo.png" title="jaeger collector screenshot" /></p>
 </li>
