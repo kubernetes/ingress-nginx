@@ -4,10 +4,12 @@ kind: Service
 metadata:
   name: nginx-errors
   labels:
-    app: nginx-errors
+    app.kubernetes.io/name: nginx-errors
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   selector:
-    app: nginx-errors
+    app.kubernetes.io/name: nginx-errors
+    app.kubernetes.io/part-of: ingress-nginx
   ports:
   - port: 80
     targetPort: 8080
@@ -18,15 +20,20 @@ kind: Deployment
 apiVersion: apps/v1beta2
 metadata:
   name: nginx-errors
+  labels:
+    app.kubernetes.io/name: nginx-errors
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nginx-errors
+      app.kubernetes.io/name: nginx-errors
+      app.kubernetes.io/part-of: ingress-nginx
   template:
     metadata:
       labels:
-        app: nginx-errors
+        app.kubernetes.io/name: nginx-errors
+        app.kubernetes.io/part-of: ingress-nginx
     spec:
       containers:
       - name: nginx-error-server

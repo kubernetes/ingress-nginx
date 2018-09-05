@@ -108,7 +108,7 @@ func (f *Framework) BeforeEach() {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, 1, f.IngressController.Namespace, metav1.ListOptions{
-		LabelSelector: "app=ingress-nginx",
+		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	Expect(err).NotTo(HaveOccurred())
 
@@ -200,7 +200,7 @@ func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) err
 // NginxLogs returns the logs of the nginx ingress controller pod running
 func (f *Framework) NginxLogs() (string, error) {
 	l, err := f.KubeClientSet.CoreV1().Pods(f.IngressController.Namespace).List(metav1.ListOptions{
-		LabelSelector: "app=ingress-nginx",
+		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	if err != nil {
 		return "", err
@@ -220,7 +220,7 @@ func (f *Framework) NginxLogs() (string, error) {
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
 		l, err := f.KubeClientSet.CoreV1().Pods(f.IngressController.Namespace).List(metav1.ListOptions{
-			LabelSelector: "app=ingress-nginx",
+			LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 		})
 		if err != nil {
 			return false, err
