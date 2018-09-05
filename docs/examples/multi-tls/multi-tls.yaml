@@ -3,7 +3,8 @@ kind: Service
 metadata:
   name: nginx
   labels:
-    app: nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   ports:
   - port: 80
@@ -11,18 +12,23 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 ---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: nginx
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/part-of: ingress-nginx
     spec:
       containers:
       - name: nginx
@@ -35,7 +41,8 @@ kind: Service
 metadata:
   name: http-svc
   labels:
-    app: http-svc
+    app.kubernetes.io/name: http-svc
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   ports:
   - port: 80
@@ -43,18 +50,23 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: http-svc
+    app.kubernetes.io/name: http-svc
+    app.kubernetes.io/part-of: ingress-nginx
 ---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: http-svc
+  labels:
+    app.kubernetes.io/name: http-svc
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: http-svc
+        app.kubernetes.io/name: http-svc
+        app.kubernetes.io/part-of: ingress-nginx
     spec:
       containers:
       - name: http-svc

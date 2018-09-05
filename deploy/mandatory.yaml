@@ -19,6 +19,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: default-http-backend
+      app.kubernetes.io/part-of: ingress-nginx
   template:
     metadata:
       labels:
@@ -64,6 +65,7 @@ spec:
     targetPort: 8080
   selector:
     app.kubernetes.io/name: default-http-backend
+    app.kubernetes.io/part-of: ingress-nginx
 ---
 
 kind: ConfigMap
@@ -259,10 +261,12 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/part-of: ingress-nginx
   template:
     metadata:
       labels:
         app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/part-of: ingress-nginx
       annotations:
         prometheus.io/port: '10254'
         prometheus.io/scrape: 'true'
