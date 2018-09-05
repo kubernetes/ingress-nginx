@@ -773,7 +773,7 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *exte
 			}
 		}
 		if port == -1 {
-			return endpoint, fmt.Errorf("Service %q does not have a port named %q", svc.Name, backend.ServicePort)
+			return endpoint, fmt.Errorf("service %q does not have a port named %q", svc.Name, backend.ServicePort)
 		}
 		endpoint.Port = fmt.Sprintf("%d", port)
 	} else {
