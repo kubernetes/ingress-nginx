@@ -1148,7 +1148,8 @@ use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 <span class="go">  name: nginx-configuration</span>
 <span class="go">  namespace: ingress-nginx</span>
 <span class="go">  labels:</span>
-<span class="go">    app: ingress-nginx</span>
+<span class="go">    app.kubernetes.io/name: ingress-nginx</span>
+<span class="go">    app.kubernetes.io/part-of: ingress-nginx</span>
 </pre></div>
 
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f configmap.yaml
@@ -1168,7 +1169,8 @@ use a ConfigMap to configure custom Diffie-Hellman parameters file to help with
 <span class="go">  name: nginx-configuration</span>
 <span class="go">  namespace: ingress-nginx</span>
 <span class="go">  labels:</span>
-<span class="go">    app: ingress-nginx</span>
+<span class="go">    app.kubernetes.io/name: ingress-nginx</span>
+<span class="go">    app.kubernetes.io/part-of: ingress-nginx</span>
 </pre></div>
 
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f ssl-dh-param.yaml
