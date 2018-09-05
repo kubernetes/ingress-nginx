@@ -420,6 +420,9 @@ type Configuration struct {
 	// Sets whether to use incoming X-Forwarded headers.
 	UseForwardedHeaders bool `json:"use-forwarded-headers"`
 
+	// Sets whether to use the incoming X-Forwarded-Host header.
+	UseForwardedHostHeader bool `json:"use-forwarded-host-header"`
+
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
@@ -562,6 +565,7 @@ func NewDefault() Configuration {
 		EnableUnderscoresInHeaders: false,
 		ErrorLogLevel:              errorLevel,
 		UseForwardedHeaders:        true,
+		UseForwardedHostHeader:     true,
 		ForwardedForHeader:         "X-Forwarded-For",
 		ComputeFullForwardedFor:    false,
 		ProxyAddOriginalUriHeader:  true,

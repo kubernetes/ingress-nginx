@@ -31,13 +31,14 @@ import (
 var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 	f := framework.NewDefaultFramework("forwarded-headers")
 
-	setting := "use-forwarded-headers"
+	forwardedHeadersSetting := "use-forwarded-headers"
+	forwardedHostSetting := "use-forwarded-host-header"
 
 	BeforeEach(func() {
 		err := f.NewEchoDeployment()
 		Expect(err).NotTo(HaveOccurred())
 
-		err = f.UpdateNginxConfigMapData(setting, "false")
+		err = f.UpdateNginxConfigMapData(forwardedHeadersSetting, "false")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -47,7 +48,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 	It("should trust X-Forwarded headers when setting is true", func() {
 		host := "forwarded-headers"
 
-		err := f.UpdateNginxConfigMapData(setting, "true")
+		err := f.UpdateNginxConfigMapData(forwardedHeadersSetting, "true")
 		Expect(err).NotTo(HaveOccurred())
 
 		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
@@ -77,10 +78,45 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=1234")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-for=1.2.3.4")))
 	})
+	It("should ignore X-Forwarded-Host when use-forwarded-host-header is false", func() {
+		host := "forwarded-headers"
+
+		err := f.UpdateNginxConfigMapData(forwardedHeadersSetting, "true")
+		Expect(err).NotTo(HaveOccurred())
+		err = f.UpdateNginxConfigMapData(forwardedHostSetting, "false")
+		Expect(err).NotTo(HaveOccurred())
+
+		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ing).NotTo(BeNil())
+
+		err = f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "server_name forwarded-headers")
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		resp, body, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Set("Host", host).
+			Set("X-Forwarded-Port", "1234").
+			Set("X-Forwarded-Proto", "myproto").
+			Set("X-Forwarded-For", "1.2.3.4").
+			Set("X-Forwarded-Host", "myhost").
+			End()
+
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-host=myhost")))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-proto=myproto")))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=1234")))
+		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-for=1.2.3.4")))
+	})
 	It("should not trust X-Forwarded headers when setting is false", func() {
 		host := "forwarded-headers"
 
-		err := f.UpdateNginxConfigMapData(setting, "false")
+		err := f.UpdateNginxConfigMapData(forwardedHeadersSetting, "false")
 		Expect(err).NotTo(HaveOccurred())
 
 		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))

@@ -285,10 +285,17 @@ http {
         ''               $host;
     }
 
+    {{ if $cfg.UseForwardedHostHeader }}
     map $http_x_forwarded_host $best_http_host {
         default          $http_x_forwarded_host;
         ''               $this_host;
     }
+    {{ else }}
+    map '' $best_http_host {
+        default          $this_host;
+    }
+    {{ end }}
+
     {{ else }}
     map '' $pass_access_scheme {
         default          $scheme;
@@ -1097,7 +1104,11 @@ stream {
             {{ else }}
             {{ $proxySetHeader }} X-Forwarded-For        $the_real_ip;
             {{ end }}
+            {{ if and $all.Cfg.UseForwardedHeaders (not $all.Cfg.UseForwardedHostHeader) }}
+            {{ $proxySetHeader }} X-Forwarded-Host       $http_x_forwarded_host;
+            {{ else }}
             {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
+            {{end}}
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
             {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
             {{ if $all.Cfg.ProxyAddOriginalUriHeader }}
