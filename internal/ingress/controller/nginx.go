@@ -395,7 +395,7 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 // running the command "nginx -t" using a temporal file.
 func (n NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
-		return fmt.Errorf("Invalid NGINX configuration (empty)")
+		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
 	tmpfile, err := ioutil.TempFile("", "nginx-cfg")
 	if err != nil {
@@ -848,7 +848,7 @@ func post(url string, data interface{}) error {
 	}()
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("Unexpected error code: %d", resp.StatusCode)
+		return fmt.Errorf("unexpected error code: %d", resp.StatusCode)
 	}
 
 	return nil
