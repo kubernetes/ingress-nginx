@@ -435,6 +435,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#elb-idle-timeouts" title="ELB Idle Timeouts" class="md-nav__link">
+    ELB Idle Timeouts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#network-load-balancer-nlb" title="Network Load Balancer (NLB)" class="md-nav__link">
     Network Load Balancer (NLB)
   </a>
@@ -1254,6 +1261,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#elb-idle-timeouts" title="ELB Idle Timeouts" class="md-nav__link">
+    ELB Idle Timeouts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#network-load-balancer-nlb" title="Network Load Balancer (NLB)" class="md-nav__link">
     Network Load Balancer (NLB)
   </a>
@@ -1401,19 +1415,27 @@ Please check the <a href="https://aws.amazon.com/es/elasticloadbalancing/details
 <li><a href="https://en.wikipedia.org/wiki/OSI_model#Layer_7:_Application_Layer">Layer 7</a>: use HTTP as the listener protocol for port 80 and terminate TLS in the ELB</li>
 </ul>
 <p>For L4:</p>
+<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code class="codehilite">provider/aws/service-l4.yaml</code></p>
+<p>Then execute:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l4.yaml</span>
 <span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml</span>
 </pre></div>
 
 <p>For L7:</p>
-<p>Change line of the file <code class="codehilite">provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code class="codehilite">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</code>
-Then execute:</p>
+<p>Change line of the file <code class="codehilite">provider/aws/service-l7.yaml</code> replacing the dummy id with a valid one <code class="codehilite">&quot;arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX&quot;</code></p>
+<p>Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the <a href="#elb-idle-timeouts">ELB Idle Timeouts section</a> for additional information. If a change is required, users will need to update the value of <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> in <code class="codehilite">provider/aws/service-l7.yaml</code></p>
+<p>Then execute:</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l7.yaml</span>
 <span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l7.yaml</span>
 </pre></div>
 
 <p>This example creates an ELB with just two listeners, one in port 80 and another in port 443</p>
 <p><img alt="Listeners" src="./../images/elb-l7-listener.png" /></p>
+<h5 id="elb-idle-timeouts">ELB Idle Timeouts<a class="headerlink" href="#elb-idle-timeouts" title="Permanent link">&para;</a></h5>
+<p>In some scenarios users will need to modify the value of the ELB idle timeout. Users need to ensure the idle timeout is less than the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> that is configured for NGINX. By default NGINX <code class="codehilite">keepalive_timeout</code> is set to <code class="codehilite">75s</code>.</p>
+<p>The default ELB idle timeout will work for most scenarios, unless the NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout">keepalive_timeout</a> has been modified, in which case <code class="codehilite">service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout</code> will need to be modified to ensure it is less than the <code class="codehilite">keepalive_timeout</code> the user has configured.</p>
+<p><em>Please Note: An idle timeout of <code class="codehilite">3600s</code> is recommended when using WebSockets.</em></p>
+<p>More information with regards to idle timeouts for your Load Balancer can be found in the <a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/config-idle-timeout.html">official AWS documentation</a>.</p>
 <h5 id="network-load-balancer-nlb">Network Load Balancer (NLB)<a class="headerlink" href="#network-load-balancer-nlb" title="Permanent link">&para;</a></h5>
 <p>This type of load balancer is supported since v1.10.0 as an ALPHA feature.</p>
 <div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml</span>
