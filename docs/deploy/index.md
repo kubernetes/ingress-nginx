@@ -82,6 +82,10 @@ This setup requires to choose in which layer (L4 or L7) we want to configure the
 
 For L4:
 
+Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the [ELB Idle Timeouts section](#elb-idle-timeouts) for additional information. If a change is required, users will need to update the value of `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` in `provider/aws/service-l4.yaml`
+
+Then execute:
+
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l4.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml
@@ -90,6 +94,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 For L7:
 
 Change line of the file `provider/aws/service-l7.yaml` replacing the dummy id with a valid one `"arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX"`
+
+Check that no change is necessary with regards to the ELB idle timeout. In some scenarios, users may want to modify the ELB idle timeout, so please check the [ELB Idle Timeouts section](#elb-idle-timeouts) for additional information. If a change is required, users will need to update the value of `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` in `provider/aws/service-l7.yaml`
+
 Then execute:
 
 ```console
@@ -100,6 +107,15 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 This example creates an ELB with just two listeners, one in port 80 and another in port 443
 
 ![Listeners](../images/elb-l7-listener.png)
+
+##### ELB Idle Timeouts
+In some scenarios users will need to modify the value of the ELB idle timeout. Users need to ensure the idle timeout is less than the [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) that is configured for NGINX. By default NGINX `keepalive_timeout` is set to `75s`.
+
+The default ELB idle timeout will work for most scenarios, unless the NGINX [keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) has been modified, in which case `service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout` will need to be modified to ensure it is less than the `keepalive_timeout` the user has configured.
+
+_Please Note: An idle timeout of `3600s` is recommended when using WebSockets._
+
+More information with regards to idle timeouts for your Load Balancer can be found in the [official AWS documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/config-idle-timeout.html).
 
 ##### Network Load Balancer (NLB)
 
