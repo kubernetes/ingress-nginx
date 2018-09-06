@@ -1120,6 +1120,12 @@ func extractTLSSecretName(host string, ing *extensions.Ingress,
 
 	// no TLS host matching host name, try each TLS host for matching SAN or CN
 	for _, tls := range ing.Spec.TLS {
+
+		if tls.SecretName == "" {
+			// There's no secretName specified, so it will never be available
+			continue
+		}
+
 		secrKey := fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)
 
 		cert, err := getLocalSSLCert(secrKey)
