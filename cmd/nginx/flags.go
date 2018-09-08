@@ -218,7 +218,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 	}
 
 	if (*enableSSLChainCompletion || !*dynamicConfigurationEnabled) && *dynamicCertificatesEnabled {
-		return false, nil, fmt.Errorf(`SSL certificate chain completion cannot be enabled and dynamic configration cannot be disabled when 
+		return false, nil, fmt.Errorf(`SSL certificate chain completion cannot be enabled and dynamic configuration cannot be disabled when 
 dynamic certificates functionality is enabled. Please check the flags --enable-ssl-chain-completion and --enable-dynamic-configuration`)
 	}
 
