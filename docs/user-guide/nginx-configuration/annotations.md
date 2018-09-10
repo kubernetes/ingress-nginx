@@ -379,14 +379,17 @@ This annotation allows you to modify the status code used for permanent redirect
 
 ### SSL Passthrough
 
-The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` allows to configure TLS termination in the pod and not in NGINX.
+The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` instructs the controller to send TLS connections directly
+to the backend instead of letting NGINX decrypt the communication. See also [TLS/HTTPS](../tls/#ssl-passthrough) in
+the User guide.
+
+!!! note
+    SSL Passthrough is **disabled by default** and requires starting the controller with the
+    [`--enable-ssl-passthrough`](../cli-arguments/) flag.
 
 !!! attention
-    Using the annotation `nginx.ingress.kubernetes.io/ssl-passthrough` invalidates all the other available annotations.
-    This is because SSL Passthrough works on level 4 of the OSI stack (TCP), not on the HTTP/HTTPS level.
-
-!!! attention
-    The use of this annotation requires the flag `--enable-ssl-passthrough` (By default it is disabled).
+    Because SSL Passthrough works on layer 4 of the OSI model (TCP) and not on the layer 7 (HTTP), using SSL Passthrough
+    invalidates all the other annotations set on an Ingress object.
 
 ### Secure backends DEPRECATED (since 0.18.0)
 
