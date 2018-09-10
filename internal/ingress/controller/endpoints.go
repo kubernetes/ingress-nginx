@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"strconv"
 
 	"github.com/golang/glog"
 
@@ -100,7 +101,7 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 			}
 
 			for _, epAddress := range ss.Addresses {
-				ep := fmt.Sprintf("%v:%v", epAddress.IP, targetPort)
+				ep := net.JoinHostPort(epAddress.IP, strconv.Itoa(int(targetPort)))
 				if _, exists := processedUpstreamServers[ep]; exists {
 					continue
 				}
