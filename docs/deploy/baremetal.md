@@ -11,6 +11,90 @@ different setup to offer the same kind of access to external consumers.
 The rest of this document describes a few recommended approaches to deploying the NGINX Ingress controller inside a
 Kubernetes cluster running on bare-metal.
 
+## A pure software solution: MetalLB
+
+[MetalLB][metallb] provides a network load-balancer implementation for Kubernetes clusters that do not run on a
+supported cloud provider, effectively allowing the usage of LoadBalancer Services within any cluster.
+
+This section demonstrates how to use the [Layer 2 configuration mode][metallb-l2] of MetalLB together with the NGINX
+Ingress controller in a Kubernetes cluster that has **publicly accessible nodes**. In this mode, one node attracts all
+the traffic for the `ingress-nginx` Service IP. See [Traffic policies][metallb-trafficpolicies] for more details.
+
+![MetalLB in L2 mode](/images/baremetal/metallb.jpg)
+
+!!! note
+    The description of other supported configuration modes is off-scope for this document.
+
+!!! warning
+    MetalLB is currently in *beta*. Read about the [Project maturity][metallb-maturity] and make sure you inform
+    yourself by reading the official documentation thoroughly.
+
+MetalLB can be deployed either with a simple Kubernetes manifest or with Helm. The rest of this example assumes MetalLB
+was deployed following the [Installation][metallb-install] instructions.
+
+MetalLB requires a pool of IP addresses in order to be able to take ownership of the `ingress-nginx` Service. This pool
+can be defined in a ConfigMap named `config` located in the same namespace as the MetalLB controller. In the simplest
+possible scenario, the pool is composed of the IP addresses of Kubernetes nodes, but IP addresses can also be handed out
+by a DHCP server.
+
+!!! example
+    Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
+    environments this value is <None\>)
+
+    ```console
+    $ kubectl describe node
+    NAME     STATUS   ROLES    EXTERNAL-IP
+    host-1   Ready    master   203.0.113.1
+    host-2   Ready    node     203.0.113.2
+    host-3   Ready    node     203.0.113.3
+    ```
+
+    After creating the following ConfigMap, MetalLB takes ownership of one of the IP addresses in the pool and updates
+    the *loadBalancer* IP field of the `ingress-nginx` Service accordingly.
+
+    ```yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      namespace: metallb-system
+      name: config
+    data:
+      config: |
+        address-pools:
+        - name: default
+          protocol: layer2
+          addresses:
+          - 203.0.113.2-203.0.113.3
+    ```
+
+    ```console
+    $ kubectl -n ingress-nginx get svc
+    NAME                   TYPE          CLUSTER-IP     EXTERNAL-IP  PORT(S)
+    default-http-backend   ClusterIP     10.0.64.249    <none>       80/TCP
+    ingress-nginx          LoadBalancer  10.0.220.217   203.0.113.3  80:30100/TCP,443:30101/TCP
+    ```
+
+As soon as MetalLB sets the external IP address of the `ingress-nginx` LoadBalancer Service, the corresponding entries
+are created in the iptables NAT table and the node with the selected IP address starts responding to HTTP requests on
+the ports configured in the LoadBalancer Service:
+
+```console
+$ curl -D- http://203.0.113.3 -H 'Host: myapp.example.com'
+HTTP/1.1 200 OK
+Server: nginx/1.15.2
+```
+
+!!! tip
+    In order to preserve the source IP address in HTTP requests sent to NGINX, it is necessary to use the `Local`
+    traffic policy. Traffic policies are described in more details in [Traffic policies][metallb-trafficpolicies] as
+    well as in the next section.
+
+[metallb]: https://metallb.universe.tf/
+[metallb-maturity]: https://metallb.universe.tf/concepts/maturity/
+[metallb-l2]: https://metallb.universe.tf/tutorial/layer2/
+[metallb-install]: https://metallb.universe.tf/installation/
+[metallb-trafficpolicies]: https://metallb.universe.tf/usage/#traffic-policies
+
 ## Over a NodePort Service
 
 Due to its simplicity, this is the setup a user will deploy by default when following the steps described in the
@@ -42,7 +126,7 @@ requests.
     bare-metal environments this value is <None\>)
 
     ```console
-    $ kubectl describe node 
+    $ kubectl describe node
     NAME     STATUS   ROLES    EXTERNAL-IP
     host-1   Ready    master   203.0.113.1
     host-2   Ready    node     203.0.113.2
@@ -81,7 +165,7 @@ field of the `ingress-nginx` Service spec to `Local` ([example][preserve-ip]).
     this value is <None\>)
 
     ```console
-    $ kubectl describe node 
+    $ kubectl describe node
     NAME     STATUS   ROLES    EXTERNAL-IP
     host-1   Ready    master   203.0.113.1
     host-2   Ready    node     203.0.113.2
@@ -116,12 +200,17 @@ Despite the fact there is no load balancer providing a public IP address to the 
 to force the status update of all managed Ingress objects by setting the `externalIPs` field of the `ingress-nginx`
 Service.
 
+!!! warning
+    There is more to setting `externalIPs` than just enabling the NGINX Ingress controller to update the status of
+    Ingress objects. Please read about this option in the [Services][external-ips] page of official Kubernetes
+    documentation as well as the section about [External IPs](#external-ips) in this document for more information.
+
 !!! example
     Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
     environments this value is <None\>)
 
     ```console
-    $ kubectl describe node 
+    $ kubectl describe node
     NAME     STATUS   ROLES    EXTERNAL-IP
     host-1   Ready    master   203.0.113.1
     host-2   Ready    node     203.0.113.2
@@ -156,7 +245,7 @@ for generating redirect URLs that take into account the URL used by external cli
     NodePort:
 
     ```console
-    $ curl http://myapp.example.com:30100`
+    $ curl -D- http://myapp.example.com:30100`
     HTTP/1.1 308 Permanent Redirect
     Server: nginx/1.15.2
     Location: https://myapp.example.com/  #-> missing NodePort in HTTPS redirect
@@ -202,7 +291,7 @@ template:
     nginx-ingress-controller-5b4cf5fc6-7lg6c   1/1     Running   203.0.113.3   host-3
     nginx-ingress-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2
     ```
-    
+
 One major limitation of this deployment approach is that only **a single NGINX Ingress controller Pod** may be scheduled
 on each cluster node, because binding the same port multiple times on the same network interface is technically
 impossible. Pods that are unschedulable due to such situation fail with the following event:
@@ -296,4 +385,58 @@ on the target nodes as shown in the diagram below:
 
 ![User edge](/images/baremetal/user_edge.jpg)
 
-<!-- TODO: document LB-less alternatives like metallb -->
+## External IPs
+
+!!! danger "Source IP address"
+    This method does not allow preserving the source IP of HTTP requests in any manner, it is therefore **not
+    recommended** to use it despite its apparent simplicity.
+
+The `externalIPs` Service option was previously mentioned in the [NodePort](#over-a-nodeport-service) section.
+
+As per the [Services][external-ips] page of the official Kubernetes documentation, the `externalIPs` option causes
+`kube-proxy` to route traffic sent to arbitrary IP addresses **and on the Service ports** to the endpoints of that
+Service. These IP addresses **must belong to the target node**.
+
+!!! example
+    Given the following 3-node Kubernetes cluster (the external IP is added as an example, in most bare-metal
+    environments this value is <None\>)
+
+    ```console
+    $ kubectl describe node
+    NAME     STATUS   ROLES    EXTERNAL-IP
+    host-1   Ready    master   203.0.113.1
+    host-2   Ready    node     203.0.113.2
+    host-3   Ready    node     203.0.113.3
+    ```
+
+    and the following `ingress-nginx` NodePort Service
+
+    ```console
+    $ kubectl -n ingress-nginx get svc
+    NAME                   TYPE        CLUSTER-IP     PORT(S)
+    ingress-nginx          NodePort    10.0.220.217   80:30100/TCP,443:30101/TCP
+    ```
+
+    One could set the following external IPs in the Service spec, and NGINX would become available on both the NodePort
+    and the Service port:
+
+    ```yaml
+    spec:
+      externalIPs:
+      - 203.0.113.2
+      - 203.0.113.3
+    ```
+
+    ```console
+    $ curl -D- http://myapp.example.com:30100
+    HTTP/1.1 200 OK
+    Server: nginx/1.15.2
+
+    $ curl -D- http://myapp.example.com
+    HTTP/1.1 200 OK
+    Server: nginx/1.15.2
+    ```
+
+    We assume the myapp.example.com subdomain above resolves to both 203.0.113.2 and 203.0.113.3 IP addresses.
+
+[external-ips]: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
