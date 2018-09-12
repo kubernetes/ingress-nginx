@@ -1239,10 +1239,23 @@ If this flag is not provided NGINX will use a self-signed certificate.</p>
 <p>For instance, if you have a TLS secret <code class="codehilite">foo-tls</code> in the <code class="codehilite">default</code> namespace,
 add <code class="codehilite">--default-ssl-certificate=default/foo-tls</code> in the <code class="codehilite">nginx-controller</code> deployment.</p>
 <h2 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h2>
-<p>The flag <code class="codehilite">--enable-ssl-passthrough</code> enables the SSL passthrough feature.
-By default this feature is disabled.</p>
-<p>This is required to enable passthrough backends in Ingress configurations.</p>
-<p>TODO: Improve this documentation.</p>
+<p>The <a href="../cli-arguments/"><code class="codehilite">--enable-ssl-passthrough</code></a> flag enables the SSL Passthrough feature, which is disabled by
+default. This is required to enable passthrough backends in Ingress objects.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This feature is implemented by intercepting <strong>all traffic</strong> on the configured HTTPS port (default: 443) and handing
+it over to a local TCP proxy. This bypasses NGINX completely and introduces a non-negligible performance penalty.</p>
+</div>
+<p>SSL Passthrough leverages <a href="https://en.wikipedia.org/wiki/Server_Name_Indication">SNI</a> and reads the virtual domain from the TLS negotiation, which requires compatible
+clients. After a connection has been accepted by the TLS listener, it is handled by the controller itself and piped back
+and forth between the backend and the client.</p>
+<p>If there is no hostname matching the requested host name, the request is handed over to NGINX on the configured
+passthrough proxy port (default: 442), which proxies the request to the default backend.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unlike HTTP backends, traffic to Passthrough backends is sent to the <em>clusterIP</em> of the backing Service instead of
+individual Endpoints.</p>
+</div>
 <h2 id="http-strict-transport-security">HTTP Strict Transport Security<a class="headerlink" href="#http-strict-transport-security" title="Permanent link">&para;</a></h2>
 <p>HTTP Strict Transport Security (HSTS) is an opt-in security enhancement specified
 through the use of a special response header. Once a supported browser receives

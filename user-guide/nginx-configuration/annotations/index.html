@@ -2238,15 +2238,18 @@ This can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos
 <h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link">&para;</a></h3>
 <p>This annotation allows you to modify the status code used for permanent redirects.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect-code: &#39;308&#39;</code> would return your permanent-redirect with a 308.</p>
 <h3 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h3>
-<p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> allows to configure TLS termination in the pod and not in NGINX.</p>
-<div class="admonition attention">
-<p class="admonition-title">Attention</p>
-<p>Using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> invalidates all the other available annotations.
-This is because SSL Passthrough works on level 4 of the OSI stack (TCP), not on the HTTP/HTTPS level.</p>
+<p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> instructs the controller to send TLS connections directly
+to the backend instead of letting NGINX decrypt the communication. See also <a href="../../tls/#ssl-passthrough">TLS/HTTPS</a> in
+the User guide.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>SSL Passthrough is <strong>disabled by default</strong> and requires starting the controller with the
+<a href="../../cli-arguments/"><code class="codehilite">--enable-ssl-passthrough</code></a> flag.</p>
 </div>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
-<p>The use of this annotation requires the flag <code class="codehilite">--enable-ssl-passthrough</code> (By default it is disabled).</p>
+<p>Because SSL Passthrough works on layer 4 of the OSI model (TCP) and not on the layer 7 (HTTP), using SSL Passthrough
+invalidates all the other annotations set on an Ingress object.</p>
 </div>
 <h3 id="secure-backends-deprecated-since-0180">Secure backends DEPRECATED (since 0.18.0)<a class="headerlink" href="#secure-backends-deprecated-since-0180" title="Permanent link">&para;</a></h3>
 <p>Please use <code class="codehilite">nginx.ingress.kubernetes.io/backend-protocol: &quot;HTTPS&quot;</code></p>
