@@ -243,7 +243,7 @@ fi
 # luajit is not available on ppc64le and s390x
 if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   cd "$BUILD_PATH/luajit2-2.1-20180420"
-  make
+  make CCDEBUG=-g
   make install
 
   export LUAJIT_LIB=/usr/local/lib
