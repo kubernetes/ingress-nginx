@@ -39,6 +39,8 @@ const (
 	// one isn't supplied and affinity is set to "cookie".
 	annotationAffinityCookieHash = "session-cookie-hash"
 	defaultAffinityCookieHash    = "md5"
+
+	annotationAffinityCookieExpires = "session-cookie-expires"
 )
 
 var (
@@ -58,6 +60,8 @@ type Cookie struct {
 	Name string `json:"name"`
 	// The hash that will be used to encode the cookie in case of cookie affinity type
 	Hash string `json:"hash"`
+	// The time that will be used in case of cookie expire.
+	Expires string `json:"expires"`
 }
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
@@ -77,9 +81,12 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 		sh = defaultAffinityCookieHash
 	}
 
+	se, err := parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)
+
 	return &Cookie{
-		Name: sn,
-		Hash: sh,
+		Name:    sn,
+		Hash:    sh,
+		Expires: se,
 	}
 }
 

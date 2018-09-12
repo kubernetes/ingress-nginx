@@ -33,7 +33,7 @@ local function get_test_backend()
     },
     sessionAffinityConfig = {
       name = "cookie",
-      cookieSessionAffinity = { name = "test_name", hash = "sha1" }
+      cookieSessionAffinity = { name = "test_name", hash = "sha1", expires = "1h" }
     },
   }
 end
