@@ -117,4 +117,57 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 		Expect(logs).To(ContainSubstring(`"(?i)/something$" matches "/something", client:`))
 		Expect(logs).To(ContainSubstring(`rewritten data: "/", args: "",`))
 	})
+
+	It("should use correct longest path match", func() {
+		host := "rewrite.bar.com"
+		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:8080/.well-known/acme/challenge", host)
+		annotations := map[string]string{}
+		rewriteAnnotations := map[string]string{
+			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
+		}
+
+		By("creating a regular ingress definition")
+		ing := framework.NewSingleIngress("kube-lego", "/.well-known/acme/challenge", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ing).NotTo(BeNil())
+
+		err = f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "/.well-known/acme/challenge")
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		By("making a request to the non-rewritten location")
+		resp, body, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL+"/.well-known/acme/challenge").
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(Equal(0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+
+		By(`creating an ingress definition with the rewrite-target annotation set on the "/" location`)
+		rewriteIng := framework.NewSingleIngress("rewrite-index", "/", host, f.IngressController.Namespace, "http-svc", 80, &rewriteAnnotations)
+		_, err = f.EnsureIngress(rewriteIng)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(rewriteIng).NotTo(BeNil())
+
+		err = f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "location ~* / {")
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		By("making a second request to the non-rewritten location")
+		resp, body, errs = gorequest.New().
+			Get(f.IngressController.HTTPURL+"/.well-known/acme/challenge").
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(Equal(0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+	})
 })
