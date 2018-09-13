@@ -28,12 +28,12 @@ extra_css: [extra.css]
 
 google_analytics: ["UA-118407822-1", "kubernetes.github.io"]
 
-pages:
+nav:
   - Welcome:
-    - Welcome: "index.md"
-    - How it works: 'how-it-works.md'
-    - Troubleshooting: 'troubleshooting.md'
-    - Development: 'development.md'
+      - Welcome: "index.md"
+      - How it works: "how-it-works.md"
+      - Troubleshooting: "troubleshooting.md"
+      - Development: "development.md"
   - Deployment:
       - Installation Guide: "deploy/index.md"
       - Bare-metal considerations: "deploy/baremetal.md"
