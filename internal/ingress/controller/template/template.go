@@ -155,6 +155,7 @@ var (
 		"buildOpentracing":            buildOpentracing,
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
+		"atLeastOneNeedsRewrite":      atLeastOneNeedsRewrite,
 	}
 )
 
@@ -287,9 +288,32 @@ func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 	return strings.Join(r, " ") + ";"
 }
 
+func needsRewrite(location *ingress.Location) bool {
+	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != location.Path {
+		return true
+	}
+	return false
+}
+
+// atLeastOneNeedsRewrite checks if the nginx.ingress.kubernetes.io/rewrite-target annotation is used on the '/' path
+func atLeastOneNeedsRewrite(input interface{}) bool {
+	locations, ok := input.([]*ingress.Location)
+	if !ok {
+		glog.Errorf("expected an '[]*ingress.Location' type but %T was returned", input)
+		return false
+	}
+
+	for _, location := range locations {
+		if needsRewrite(location) {
+			return true
+		}
+	}
+	return false
+}
+
 // buildLocation produces the location string, if the ingress has redirects
 // (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
-func buildLocation(input interface{}) string {
+func buildLocation(input interface{}, rewrite bool) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
@@ -297,7 +321,7 @@ func buildLocation(input interface{}) string {
 	}
 
 	path := location.Path
-	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != path {
+	if needsRewrite(location) {
 		if path == slash {
 			return fmt.Sprintf("~* %s", path)
 		}
@@ -310,6 +334,12 @@ func buildLocation(input interface{}) string {
 		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
 	}
 
+	if rewrite == true {
+		if path == slash {
+			return path
+		}
+		return fmt.Sprintf(`^~ %s`, path)
+	}
 	return path
 }
 

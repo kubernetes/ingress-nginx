@@ -382,7 +382,7 @@ func TestBuildLocation(t *testing.T) {
 			Rewrite: rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
 
-		newLoc := buildLocation(loc)
+		newLoc := buildLocation(loc, tc.Path != tc.Target)
 		if tc.Location != newLoc {
 			t.Errorf("%s: expected '%v' but returned %v", k, tc.Location, newLoc)
 		}
