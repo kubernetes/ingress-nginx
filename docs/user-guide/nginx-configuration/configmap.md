@@ -3,7 +3,7 @@
 ConfigMaps allow you to decouple configuration artifacts from image content to keep containerized applications portable.
 
 The ConfigMap API resource stores configuration data as key-value pairs. The data provides the configurations for system
-components for the nginx-controller. Before you can begin using a config-map it must be [deployed](../../deploy/README.md/#deploying-the-config-map).
+components for the nginx-controller.
 
 In order to overwrite nginx-controller configuration values as seen in [config.go](https://github.com/kubernetes/ingress-nginx/blob/master/internal/ingress/controller/config/config.go),
 you can add key-value pairs to the data section of the config-map. For Example:
