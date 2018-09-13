@@ -31,18 +31,18 @@
       
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
-      <link rel="shortcut icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-0.17.5, mkdocs-material-2.9.4">
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-3.0.4">
     
     
       
-        <title>External authentication, authentication service response headers propagation - NGINX Ingress Controller</title>
+        <title>Rewrite - NGINX Ingress Controller</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/application.451f80e5.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.451f80e5.css">
       
-        <link rel="stylesheet" href="../../../../assets/stylesheets/application-palette.22915126.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.22915126.css">
       
       
         
@@ -51,18 +51,18 @@
       
     
     
-      <script src="../../../../assets/javascripts/modernizr.1aa3b519.js"></script>
+      <script src="../../assets/javascripts/modernizr.1aa3b519.js"></script>
     
     
-      <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
       
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
-    <link rel="stylesheet" href="../../../../assets/fonts/material-icons.css">
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
-      <link rel="stylesheet" href="../../../../extra.css">
+      <link rel="stylesheet" href="../../extra.css">
     
     
   </head>
@@ -100,7 +100,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#external-authentication-authentication-service-response-headers-propagation" tabindex="1" class="md-skip">
+      <a href="../../#rewrite" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -109,7 +109,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../../../.." title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
+        <a href="../.." title="NGINX Ingress Controller" class="md-header-nav__button md-logo">
           
             <i class="md-icon">public</i>
           
@@ -126,7 +126,7 @@
                 NGINX Ingress Controller
               </span>
               <span class="md-header-nav__topic">
-                External authentication, authentication service response headers propagation
+                Rewrite
               </span>
             
           
@@ -205,13 +205,16 @@
     <ul class="md-tabs__list">
       
         
-  <li class="md-tabs__item">
-    
-      <a href="../../../.." title="Welcome" class="md-tabs__link">
-        Welcome
-      </a>
-    
-  </li>
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../.." title="Welcome" class="md-tabs__link">
+          Welcome
+        </a>
+      
+    </li>
+  
 
       
         
@@ -219,7 +222,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../../deploy/" title="Deployment" class="md-tabs__link">
+        <a href="../../deploy/" title="Deployment" class="md-tabs__link">
           Deployment
         </a>
       
@@ -236,7 +239,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../../user-guide/nginx-configuration/" title="User guide" class="md-tabs__link">
+        <a href="../../user-guide/nginx-configuration/" title="User guide" class="md-tabs__link">
           User guide
         </a>
       
@@ -251,19 +254,13 @@
   
     <li class="md-tabs__item">
       
-        <a href="../../../" title="Examples" class="md-tabs__link md-tabs__link--active">
+        <a href="../" title="Examples" class="md-tabs__link md-tabs__link--active">
           Examples
         </a>
       
     </li>
   
 
-      
-        
-      
-        
-      
-        
       
     </ul>
   </div>
@@ -278,7 +275,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../../../.." title="NGINX Ingress Controller" class="md-nav__button md-logo">
+    <a href="../.." title="NGINX Ingress Controller" class="md-nav__button md-logo">
       
         <i class="md-icon">public</i>
       
@@ -315,10 +312,70 @@
       
 
 
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1">
+    
+    <label class="md-nav__link" for="nav-1">
+      Welcome
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-1">
+        Welcome
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
   <li class="md-nav__item">
-    <a href="../../../.." title="Welcome" class="md-nav__link">
+    <a href="../.." title="Welcome" class="md-nav__link">
       Welcome
     </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../how-it-works/" title="How it works" class="md-nav__link">
+      How it works
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../troubleshooting/" title="Troubleshooting" class="md-nav__link">
+      Troubleshooting
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../development/" title="Development" class="md-nav__link">
+      Development
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -347,7 +404,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../deploy/" title="Installation Guide" class="md-nav__link">
+    <a href="../../deploy/" title="Installation Guide" class="md-nav__link">
       Installation Guide
     </a>
   </li>
@@ -359,7 +416,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
+    <a href="../../deploy/baremetal/" title="Bare-metal considerations" class="md-nav__link">
       Bare-metal considerations
     </a>
   </li>
@@ -371,7 +428,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
+    <a href="../../deploy/rbac/" title="Role Based Access Control (RBAC)" class="md-nav__link">
       Role Based Access Control (RBAC)
     </a>
   </li>
@@ -383,8 +440,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../deploy/upgrade/" title="Upgrading" class="md-nav__link">
-      Upgrading
+    <a href="../../deploy/upgrade/" title="Upgrade" class="md-nav__link">
+      Upgrade
     </a>
   </li>
 
@@ -438,8 +495,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/nginx-configuration/" title="NGINX Configuration" class="md-nav__link">
-      NGINX Configuration
+    <a href="../../user-guide/nginx-configuration/" title="Introduction" class="md-nav__link">
+      Introduction
     </a>
   </li>
 
@@ -450,7 +507,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/nginx-configuration/annotations/" title="Annotations" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/annotations/" title="Annotations" class="md-nav__link">
       Annotations
     </a>
   </li>
@@ -462,8 +519,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/nginx-configuration/configmap/" title="ConfigMaps" class="md-nav__link">
-      ConfigMaps
+    <a href="../../user-guide/nginx-configuration/configmap/" title="ConfigMap" class="md-nav__link">
+      ConfigMap
     </a>
   </li>
 
@@ -474,7 +531,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/nginx-configuration/custom-template/" title="Custom NGINX template" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/custom-template/" title="Custom NGINX template" class="md-nav__link">
       Custom NGINX template
     </a>
   </li>
@@ -486,7 +543,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/nginx-configuration/log-format/" title="Log format" class="md-nav__link">
+    <a href="../../user-guide/nginx-configuration/log-format/" title="Log format" class="md-nav__link">
       Log format
     </a>
   </li>
@@ -503,7 +560,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/cli-arguments/" title="Command line arguments" class="md-nav__link">
+    <a href="../../user-guide/cli-arguments/" title="Command line arguments" class="md-nav__link">
       Command line arguments
     </a>
   </li>
@@ -515,7 +572,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/custom-errors/" title="Custom errors" class="md-nav__link">
+    <a href="../../user-guide/custom-errors/" title="Custom errors" class="md-nav__link">
       Custom errors
     </a>
   </li>
@@ -527,7 +584,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/default-backend/" title="Default backend" class="md-nav__link">
+    <a href="../../user-guide/default-backend/" title="Default backend" class="md-nav__link">
       Default backend
     </a>
   </li>
@@ -539,7 +596,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
+    <a href="../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
       Exposing TCP and UDP services
     </a>
   </li>
@@ -551,7 +608,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/external-articles/" title="External Articles" class="md-nav__link">
+    <a href="../../user-guide/external-articles/" title="External Articles" class="md-nav__link">
       External Articles
     </a>
   </li>
@@ -563,7 +620,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/miscellaneous/" title="Miscellaneous" class="md-nav__link">
+    <a href="../../user-guide/miscellaneous/" title="Miscellaneous" class="md-nav__link">
       Miscellaneous
     </a>
   </li>
@@ -575,7 +632,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/monitoring/" title="Prometheus and Grafana installation" class="md-nav__link">
+    <a href="../../user-guide/monitoring/" title="Prometheus and Grafana installation" class="md-nav__link">
       Prometheus and Grafana installation
     </a>
   </li>
@@ -587,7 +644,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/multiple-ingress/" title="Multiple Ingress controllers" class="md-nav__link">
+    <a href="../../user-guide/multiple-ingress/" title="Multiple Ingress controllers" class="md-nav__link">
       Multiple Ingress controllers
     </a>
   </li>
@@ -599,7 +656,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/tls/" title="TLS/HTTPS" class="md-nav__link">
+    <a href="../../user-guide/tls/" title="TLS/HTTPS" class="md-nav__link">
       TLS/HTTPS
     </a>
   </li>
@@ -630,7 +687,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/third-party-addons/modsecurity/" title="ModSecurity Web Application Firewall" class="md-nav__link">
+    <a href="../../user-guide/third-party-addons/modsecurity/" title="ModSecurity Web Application Firewall" class="md-nav__link">
       ModSecurity Web Application Firewall
     </a>
   </li>
@@ -642,7 +699,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../../user-guide/third-party-addons/opentracing/" title="OpenTracing" class="md-nav__link">
+    <a href="../../user-guide/third-party-addons/opentracing/" title="OpenTracing" class="md-nav__link">
       OpenTracing
     </a>
   </li>
@@ -685,8 +742,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../" title="Ingress examples" class="md-nav__link">
-      Ingress examples
+    <a href="../" title="Introduction" class="md-nav__link">
+      Introduction
     </a>
   </li>
 
@@ -697,7 +754,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../PREREQUISITES/" title="Prerequisites" class="md-nav__link">
+    <a href="../PREREQUISITES/" title="Prerequisites" class="md-nav__link">
       Prerequisites
     </a>
   </li>
@@ -709,8 +766,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../affinity/cookie/README/" title="Sticky Session" class="md-nav__link">
-      Sticky Session
+    <a href="../affinity/cookie/" title="Sticky Sessions" class="md-nav__link">
+      Sticky Sessions
     </a>
   </li>
 
@@ -740,7 +797,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../auth/basic/README/" title="Basic Authentication" class="md-nav__link">
+    <a href="../auth/basic/" title="Basic Authentication" class="md-nav__link">
       Basic Authentication
     </a>
   </li>
@@ -752,7 +809,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../auth/client-certs/README/" title="Client Certificate Authentication" class="md-nav__link">
+    <a href="../auth/client-certs/" title="Client Certificate Authentication" class="md-nav__link">
       Client Certificate Authentication
     </a>
   </li>
@@ -764,7 +821,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../auth/external-auth/README/" title="External Basic Authentication" class="md-nav__link">
+    <a href="../auth/external-auth/" title="External Basic Authentication" class="md-nav__link">
       External Basic Authentication
     </a>
   </li>
@@ -776,7 +833,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../auth/oauth-external-auth/README/" title="External OAUTH Authentication" class="md-nav__link">
+    <a href="../auth/oauth-external-auth/" title="External OAUTH Authentication" class="md-nav__link">
       External OAUTH Authentication
     </a>
   </li>
@@ -791,12 +848,10 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5" checked>
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4-5" type="checkbox" id="nav-4-5">
     
     <label class="md-nav__link" for="nav-4-5">
       Customization
@@ -814,7 +869,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../configuration-snippets/README/" title="Configuration Snippets" class="md-nav__link">
+    <a href="../customization/configuration-snippets/" title="Configuration Snippets" class="md-nav__link">
       Configuration Snippets
     </a>
   </li>
@@ -826,7 +881,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../custom-configuration/README/" title="Custom Configuration" class="md-nav__link">
+    <a href="../customization/custom-configuration/" title="Custom Configuration" class="md-nav__link">
       Custom Configuration
     </a>
   </li>
@@ -838,7 +893,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../custom-errors/README/" title="Custom Errors" class="md-nav__link">
+    <a href="../customization/custom-errors/" title="Custom Errors" class="md-nav__link">
       Custom Errors
     </a>
   </li>
@@ -850,7 +905,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../custom-headers/README/" title="Custom Headers" class="md-nav__link">
+    <a href="../customization/custom-headers/" title="Custom Headers" class="md-nav__link">
       Custom Headers
     </a>
   </li>
@@ -862,8 +917,85 @@
 
 
   <li class="md-nav__item">
-    <a href="../../custom-upstream-check/README/" title="Custom Upstream server checks" class="md-nav__link">
+    <a href="../customization/custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
       Custom Upstream server checks
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../customization/external-auth-headers/" title="External authentication" class="md-nav__link">
+      External authentication
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../customization/ssl-dh-param/" title="Custom DH parameters for perfect forward secrecy" class="md-nav__link">
+      Custom DH parameters for perfect forward secrecy
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../customization/sysctl/" title="Sysctl tuning" class="md-nav__link">
+      Sysctl tuning
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../docker-registry/" title="Docker registry" class="md-nav__link">
+      Docker registry
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../grpc/" title="gRPC" class="md-nav__link">
+      gRPC
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../multi-tls/" title="Multi TLS certificate termination" class="md-nav__link">
+      Multi TLS certificate termination
     </a>
   </li>
 
@@ -882,9 +1014,72 @@
       
     
     
-    <a href="./" title="External authentication, authentication service response headers propagation" class="md-nav__link md-nav__link--active">
-      External authentication, authentication service response headers propagation
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Rewrite
+      </label>
+    
+    <a href="./" title="Rewrite" class="md-nav__link md-nav__link--active">
+      Rewrite
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" title="Prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" title="Deployment" class="md-nav__link">
+    Deployment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation" title="Validation" class="md-nav__link">
+    Validation
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rewrite-target" title="Rewrite Target" class="md-nav__link">
+    Rewrite Target
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#app-root" title="App Root" class="md-nav__link">
+    App Root
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -895,84 +1090,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../ssl-dh-param/README/" title="Custom DH parameters for perfect forward secrecy" class="md-nav__link">
-      Custom DH parameters for perfect forward secrecy
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../sysctl/README/" title="Sysctl tuning" class="md-nav__link">
-      Sysctl tuning
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../../docker-registry/README/" title="Docker registry" class="md-nav__link">
-      Docker registry
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../../grpc/README/" title="gRPC" class="md-nav__link">
-      gRPC
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../../multi-tls/README/" title="Multi TLS certificate termination" class="md-nav__link">
-      Multi TLS certificate termination
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../../rewrite/README/" title="Rewrite" class="md-nav__link">
-      Rewrite
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../../static-ip/README/" title="Static IPs" class="md-nav__link">
+    <a href="../static-ip/" title="Static IPs" class="md-nav__link">
       Static IPs
     </a>
   </li>
@@ -984,7 +1102,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../tls-termination/README/" title="TLS termination" class="md-nav__link">
+    <a href="../tls-termination/" title="TLS termination" class="md-nav__link">
       TLS termination
     </a>
   </li>
@@ -992,42 +1110,6 @@
         
       </ul>
     </nav>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../../../../development/" title="Developing for NGINX Ingress Controller" class="md-nav__link">
-      Developing for NGINX Ingress Controller
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../../../../how-it-works/" title="How it works" class="md-nav__link">
-      How it works
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../../../../troubleshooting/" title="Troubleshooting" class="md-nav__link">
-      Troubleshooting
-    </a>
   </li>
 
     
@@ -1048,6 +1130,56 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" title="Prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" title="Deployment" class="md-nav__link">
+    Deployment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation" title="Validation" class="md-nav__link">
+    Validation
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rewrite-target" title="Rewrite Target" class="md-nav__link">
+    Rewrite Target
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#app-root" title="App Root" class="md-nav__link">
+    App Root
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1058,135 +1190,153 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/customization/external-auth-headers/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/kubernetes/ingress-nginx/edit/master/docs/examples/rewrite/README.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="external-authentication-authentication-service-response-headers-propagation">External authentication, authentication service response headers propagation<a class="headerlink" href="#external-authentication-authentication-service-response-headers-propagation" title="Permanent link">&para;</a></h1>
-<p>This example demonstrates propagation of selected authentication service response headers
-to backend service.</p>
-<p>Sample configuration includes:</p>
-<ul>
-<li>Sample authentication service producing several response headers</li>
-<li>Authentication logic is based on HTTP header: requests with header <code class="codehilite">User</code> containing string <code class="codehilite">internal</code> are considered authenticated</li>
-<li>After successful authentication service generates response headers <code class="codehilite">UserID</code> and <code class="codehilite">UserRole</code></li>
-<li>Sample echo service displaying header information</li>
-<li>Two ingress objects pointing to echo service</li>
-<li>Public, which allows access from unauthenticated users</li>
-<li>Private, which allows access from authenticated users only</li>
-</ul>
-<p>You can deploy the controller as
-follows:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f deploy/
-<span class="go">deployment &quot;demo-auth-service&quot; created</span>
-<span class="go">service &quot;demo-auth-service&quot; created</span>
-<span class="go">ingress &quot;demo-auth-service&quot; created</span>
-<span class="go">deployment &quot;demo-echo-service&quot; created</span>
-<span class="go">service &quot;demo-echo-service&quot; created</span>
-<span class="go">ingress &quot;public-demo-echo-service&quot; created</span>
-<span class="go">ingress &quot;secure-demo-echo-service&quot; created</span>
-
-<span class="gp">$</span> kubectl get po
-<span class="go">NAME                                        READY     STATUS    RESTARTS   AGE</span>
-<span class="go">NAME                                        READY     STATUS    RESTARTS   AGE</span>
-<span class="go">demo-auth-service-2769076528-7g9mh          1/1       Running            0          30s</span>
-<span class="go">demo-echo-service-3636052215-3vw8c          1/1       Running            0          29s</span>
-
-<span class="go">kubectl get ing</span>
-<span class="go">NAME                       HOSTS                                 ADDRESS   PORTS     AGE</span>
-<span class="go">public-demo-echo-service   public-demo-echo-service.kube.local             80        1m</span>
-<span class="go">secure-demo-echo-service   secure-demo-echo-service.kube.local             80        1m</span>
+                <h1 id="rewrite">Rewrite<a class="headerlink" href="#rewrite" title="Permanent link">&para;</a></h1>
+<p>This example demonstrates how to use the Rewrite annotations</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<p>You will need to make sure your Ingress targets exactly one Ingress
+controller by specifying the <a href="../../user-guide/multiple-ingress/">ingress.class annotation</a>,
+and that you have an ingress controller <a href="../../deploy">running</a> in your cluster.</p>
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+<p>Rewriting can be controlled using the following annotations:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nginx.ingress.kubernetes.io/rewrite-target</td>
+<td>Target URI where the traffic must be redirected</td>
+<td>string</td>
+</tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/add-base-url</td>
+<td>indicates if is required to add a base tag in the head of the responses from the upstream servers</td>
+<td>bool</td>
+</tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/base-url-scheme</td>
+<td>Override for the scheme passed to the base tag</td>
+<td>string</td>
+</tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/ssl-redirect</td>
+<td>Indicates if the location section is accessible SSL only (defaults to True when Ingress contains a Certificate)</td>
+<td>bool</td>
+</tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/force-ssl-redirect</td>
+<td>Forces the redirection to HTTPS even if the Ingress is not TLS Enabled</td>
+<td>bool</td>
+</tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/app-root</td>
+<td>Defines the Application Root that the Controller must redirect if it's in '/' context</td>
+<td>string</td>
+</tr>
+</tbody>
+</table>
+<h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
+<h3 id="rewrite-target">Rewrite Target<a class="headerlink" href="#rewrite-target" title="Permanent link">&para;</a></h3>
+<p>Create an Ingress rule with a rewrite annotation:</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;</span>
+<span class="go">apiVersion: extensions/v1beta1</span>
+<span class="go">kind: Ingress</span>
+<span class="go">metadata:</span>
+<span class="go">  annotations:</span>
+<span class="go">    nginx.ingress.kubernetes.io/rewrite-target: /</span>
+<span class="go">  name: rewrite</span>
+<span class="go">  namespace: default</span>
+<span class="go">spec:</span>
+<span class="go">  rules:</span>
+<span class="go">  - host: rewrite.bar.com</span>
+<span class="go">    http:</span>
+<span class="go">      paths:</span>
+<span class="go">      - backend:</span>
+<span class="go">          serviceName: http-svc</span>
+<span class="go">          servicePort: 80</span>
+<span class="go">        path: /something</span>
+<span class="go">&quot; | kubectl create -f -</span>
 </pre></div>
 
-<p>Test 1: public service with no auth header</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: public-demo-echo-service.kube.local&#39;</span> -v <span class="m">192</span>.168.99.100
-<span class="go">* Rebuilt URL to: 192.168.99.100/</span>
-<span class="go">*   Trying 192.168.99.100...</span>
-<span class="go">* Connected to 192.168.99.100 (192.168.99.100) port 80 (#0)</span>
-<span class="gp">&gt;</span> GET / HTTP/1.1
-<span class="gp">&gt;</span> Host: public-demo-echo-service.kube.local
-<span class="gp">&gt;</span> User-Agent: curl/7.43.0
-<span class="gp">&gt;</span> Accept: */*
-<span class="gp">&gt;</span>
-<span class="go">&lt; HTTP/1.1 200 OK</span>
-<span class="go">&lt; Server: nginx/1.11.10</span>
-<span class="go">&lt; Date: Mon, 13 Mar 2017 20:19:21 GMT</span>
-<span class="go">&lt; Content-Type: text/plain; charset=utf-8</span>
-<span class="go">&lt; Content-Length: 20</span>
-<span class="go">&lt; Connection: keep-alive</span>
-<span class="go">&lt;</span>
-<span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
-<span class="go">UserID: , UserRole:</span>
+<p>Check the rewrite is working</p>
+<div class="codehilite"><pre><span></span>$ curl -v http://172.17.4.99/something -H <span class="s1">&#39;Host: rewrite.bar.com&#39;</span>
+*   Trying <span class="m">172</span>.17.4.99...
+* Connected to <span class="m">172</span>.17.4.99 <span class="o">(</span><span class="m">172</span>.17.4.99<span class="o">)</span> port <span class="m">80</span> <span class="o">(</span><span class="c1">#0)</span>
+&gt; GET /something HTTP/1.1
+&gt; Host: rewrite.bar.com
+&gt; User-Agent: curl/7.43.0
+&gt; Accept: */*
+&gt;
+&lt; HTTP/1.1 <span class="m">200</span> OK
+&lt; Server: nginx/1.11.0
+&lt; Date: Tue, <span class="m">31</span> May <span class="m">2016</span> <span class="m">16</span>:07:31 GMT
+&lt; Content-Type: text/plain
+&lt; Transfer-Encoding: chunked
+&lt; Connection: keep-alive
+&lt;
+CLIENT VALUES:
+<span class="nv">client_address</span><span class="o">=</span><span class="m">10</span>.2.56.9
+<span class="nv">command</span><span class="o">=</span>GET
+real <span class="nv">path</span><span class="o">=</span>/
+<span class="nv">query</span><span class="o">=</span>nil
+<span class="nv">request_version</span><span class="o">=</span><span class="m">1</span>.1
+<span class="nv">request_uri</span><span class="o">=</span>http://rewrite.bar.com:8080/
+
+SERVER VALUES:
+<span class="nv">server_version</span><span class="o">=</span>nginx: <span class="m">1</span>.9.11 - lua: <span class="m">10001</span>
+
+HEADERS RECEIVED:
+<span class="nv">accept</span><span class="o">=</span>*/*
+<span class="nv">connection</span><span class="o">=</span>close
+<span class="nv">host</span><span class="o">=</span>rewrite.bar.com
+user-agent<span class="o">=</span>curl/7.43.0
+x-forwarded-for<span class="o">=</span><span class="m">10</span>.2.56.1
+x-forwarded-host<span class="o">=</span>rewrite.bar.com
+x-forwarded-port<span class="o">=</span><span class="m">80</span>
+x-forwarded-proto<span class="o">=</span>http
+x-real-ip<span class="o">=</span><span class="m">10</span>.2.56.1
+BODY:
+* Connection <span class="c1">#0 to host 172.17.4.99 left intact</span>
+-no body in request-
 </pre></div>
 
-<p>Test 2: secure service with no auth header</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: secure-demo-echo-service.kube.local&#39;</span> -v <span class="m">192</span>.168.99.100
-<span class="go">* Rebuilt URL to: 192.168.99.100/</span>
-<span class="go">*   Trying 192.168.99.100...</span>
-<span class="go">* Connected to 192.168.99.100 (192.168.99.100) port 80 (#0)</span>
-<span class="gp">&gt;</span> GET / HTTP/1.1
-<span class="gp">&gt;</span> Host: secure-demo-echo-service.kube.local
-<span class="gp">&gt;</span> User-Agent: curl/7.43.0
-<span class="gp">&gt;</span> Accept: */*
-<span class="gp">&gt;</span>
-<span class="go">&lt; HTTP/1.1 403 Forbidden</span>
-<span class="go">&lt; Server: nginx/1.11.10</span>
-<span class="go">&lt; Date: Mon, 13 Mar 2017 20:18:48 GMT</span>
-<span class="go">&lt; Content-Type: text/html</span>
-<span class="go">&lt; Content-Length: 170</span>
-<span class="go">&lt; Connection: keep-alive</span>
-<span class="go">&lt;</span>
-<span class="go">&lt;html&gt;</span>
-<span class="go">&lt;head&gt;&lt;title&gt;403 Forbidden&lt;/title&gt;&lt;/head&gt;</span>
-<span class="go">&lt;body bgcolor=&quot;white&quot;&gt;</span>
-<span class="go">&lt;center&gt;&lt;h1&gt;403 Forbidden&lt;/h1&gt;&lt;/center&gt;</span>
-<span class="go">&lt;hr&gt;&lt;center&gt;nginx/1.11.10&lt;/center&gt;</span>
-<span class="go">&lt;/body&gt;</span>
-<span class="go">&lt;/html&gt;</span>
-<span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
-</pre></div>
-
-<p>Test 3: public service with valid auth header</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: public-demo-echo-service.kube.local&#39;</span> -H <span class="s1">&#39;User:internal&#39;</span> -v <span class="m">192</span>.168.99.100
-<span class="go">* Rebuilt URL to: 192.168.99.100/</span>
-<span class="go">*   Trying 192.168.99.100...</span>
-<span class="go">* Connected to 192.168.99.100 (192.168.99.100) port 80 (#0)</span>
-<span class="gp">&gt;</span> GET / HTTP/1.1
-<span class="gp">&gt;</span> Host: public-demo-echo-service.kube.local
-<span class="gp">&gt;</span> User-Agent: curl/7.43.0
-<span class="gp">&gt;</span> Accept: */*
-<span class="gp">&gt;</span> User:internal
-<span class="gp">&gt;</span>
-<span class="go">&lt; HTTP/1.1 200 OK</span>
-<span class="go">&lt; Server: nginx/1.11.10</span>
-<span class="go">&lt; Date: Mon, 13 Mar 2017 20:19:59 GMT</span>
-<span class="go">&lt; Content-Type: text/plain; charset=utf-8</span>
-<span class="go">&lt; Content-Length: 44</span>
-<span class="go">&lt; Connection: keep-alive</span>
-<span class="go">&lt;</span>
-<span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
-<span class="go">UserID: 1443635317331776148, UserRole: admin</span>
-</pre></div>
-
-<p>Test 4: public service with valid auth header</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: secure-demo-echo-service.kube.local&#39;</span> -H <span class="s1">&#39;User:internal&#39;</span> -v <span class="m">192</span>.168.99.100
-<span class="go">* Rebuilt URL to: 192.168.99.100/</span>
-<span class="go">*   Trying 192.168.99.100...</span>
-<span class="go">* Connected to 192.168.99.100 (192.168.99.100) port 80 (#0)</span>
-<span class="gp">&gt;</span> GET / HTTP/1.1
-<span class="gp">&gt;</span> Host: secure-demo-echo-service.kube.local
-<span class="gp">&gt;</span> User-Agent: curl/7.43.0
-<span class="gp">&gt;</span> Accept: */*
-<span class="gp">&gt;</span> User:internal
-<span class="gp">&gt;</span>
-<span class="go">&lt; HTTP/1.1 200 OK</span>
-<span class="go">&lt; Server: nginx/1.11.10</span>
-<span class="go">&lt; Date: Mon, 13 Mar 2017 20:17:23 GMT</span>
-<span class="go">&lt; Content-Type: text/plain; charset=utf-8</span>
-<span class="go">&lt; Content-Length: 43</span>
-<span class="go">&lt; Connection: keep-alive</span>
-<span class="go">&lt;</span>
-<span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
-<span class="go">UserID: 605394647632969758, UserRole: admin</span>
+<h3 id="app-root">App Root<a class="headerlink" href="#app-root" title="Permanent link">&para;</a></h3>
+<p>Create an Ingress rule with a app-root annotation:
+<div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span>
+<span class="s2">apiVersion: extensions/v1beta1</span>
+<span class="s2">kind: Ingress</span>
+<span class="s2">metadata:</span>
+<span class="s2">  annotations:</span>
+<span class="s2">    nginx.ingress.kubernetes.io/app-root: /app1</span>
+<span class="s2">  name: approot</span>
+<span class="s2">  namespace: default</span>
+<span class="s2">spec:</span>
+<span class="s2">  rules:</span>
+<span class="s2">  - host: approot.bar.com</span>
+<span class="s2">    http:</span>
+<span class="s2">      paths:</span>
+<span class="s2">      - backend:</span>
+<span class="s2">          serviceName: http-svc</span>
+<span class="s2">          servicePort: 80</span>
+<span class="s2">        path: /</span>
+<span class="s2">&quot;</span> <span class="p">|</span> kubectl create -f -
+</pre></div></p>
+<p>Check the rewrite is working</p>
+<div class="codehilite"><pre><span></span>$ curl -I -k http://approot.bar.com/
+HTTP/1.1 <span class="m">302</span> Moved Temporarily
+Server: nginx/1.11.10
+Date: Mon, <span class="m">13</span> Mar <span class="m">2017</span> <span class="m">14</span>:57:15 GMT
+Content-Type: text/html
+Content-Length: <span class="m">162</span>
+Location: http://stickyingress.example.com/app1
+Connection: keep-alive
 </pre></div>
                 
                   
@@ -1208,7 +1358,7 @@ follows:</p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../../custom-upstream-check/README/" title="Custom Upstream server checks" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../multi-tls/" title="Multi TLS certificate termination" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1217,19 +1367,19 @@ follows:</p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Custom Upstream server checks
+                Multi TLS certificate termination
               </span>
             </div>
           </a>
         
         
-          <a href="../../ssl-dh-param/README/" title="Custom DH parameters for perfect forward secrecy" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../static-ip/" title="Static IPs" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Custom DH parameters for perfect forward secrecy
+                Static IPs
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
@@ -1259,9 +1409,9 @@ follows:</p>
       
     </div>
     
-      <script src="../../../../assets/javascripts/application.30f6b8b1.js"></script>
+      <script src="../../assets/javascripts/application.583bbe55.js"></script>
       
-      <script>app.initialize({version:"0.17.5",url:{base:"../../../.."}})</script>
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
       
     
     

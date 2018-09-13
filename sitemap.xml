@@ -1,227 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-     <loc>/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/deploy/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/deploy/baremetal/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/deploy/rbac/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/deploy/upgrade/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/nginx-configuration/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/nginx-configuration/annotations/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/nginx-configuration/configmap/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/nginx-configuration/custom-template/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/nginx-configuration/log-format/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/cli-arguments/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/custom-errors/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/default-backend/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/exposing-tcp-udp-services/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/external-articles/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/miscellaneous/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/monitoring/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/multiple-ingress/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/tls/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/third-party-addons/modsecurity/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user-guide/third-party-addons/opentracing/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/PREREQUISITES/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/affinity/cookie/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/auth/basic/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/auth/client-certs/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/auth/external-auth/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/auth/oauth-external-auth/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/customization/configuration-snippets/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/customization/custom-configuration/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/customization/custom-errors/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/customization/custom-headers/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/customization/custom-upstream-check/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/customization/external-auth-headers/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/customization/ssl-dh-param/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/customization/sysctl/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/docker-registry/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/grpc/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/multi-tls/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/rewrite/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/static-ip/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/examples/tls-termination/README/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/development/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/how-it-works/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/troubleshooting/</loc>
+     <loc>None</loc>
      <lastmod>2018-09-13</lastmod>
      <changefreq>daily</changefreq>
     </url>
