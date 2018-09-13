@@ -44,7 +44,7 @@ jobs:
     script:
     - make cover
   - stage: e2e
-    if: env(COMPONENT) != "docs"
+    if: (branch = master AND env(COMPONENT) != "docs") OR (type = pull_request AND commit_message !~ /(skip-e2e)/)
     before_script:
     - test/e2e/up.sh
     script:
