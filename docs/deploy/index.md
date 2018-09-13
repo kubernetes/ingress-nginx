@@ -25,6 +25,13 @@ The following resources are required for a generic deployment.
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
 ```
 
+!!! attention
+    The default configuration watches Ingress object from all the namespaces.
+    To change this behavior use the flag `--watch-namespace` to limit the scope to a particular namespace.
+
+!!! warning
+    If multiple Ingresses define different paths for the same host, the ingress controller will merge the definitions.
+
 ### Provider Specific Steps
 
 There are cloud provider specific yaml files.
