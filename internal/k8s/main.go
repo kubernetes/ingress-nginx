@@ -42,6 +42,7 @@ func ParseNameNS(input string) (string, string, error) {
 func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP bool) string {
 	node, err := kubeClient.CoreV1().Nodes().Get(name, metav1.GetOptions{})
 	if err != nil {
+		glog.Errorf("Error getting node %v: %v", name, err)
 		return ""
 	}
 

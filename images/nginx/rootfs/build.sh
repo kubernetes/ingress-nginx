@@ -243,7 +243,7 @@ fi
 # luajit is not available on ppc64le and s390x
 if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   cd "$BUILD_PATH/luajit2-2.1-20180420"
-  make
+  make CCDEBUG=-g
   make install
 
   export LUAJIT_LIB=/usr/local/lib
@@ -281,6 +281,22 @@ if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
   # build and install lua-resty-waf with dependencies
   /install_lua_resty_waf.sh
 fi
+
+# install openresty-gdb-utils
+cd /
+git clone --depth=1 https://github.com/openresty/openresty-gdb-utils.git
+cat > ~/.gdbinit << EOF
+directory /openresty-gdb-utils
+
+py import sys
+py sys.path.append("/openresty-gdb-utils")
+
+source luajit20.gdb
+source ngx-lua.gdb
+source luajit21.py
+source ngx-raw-req.py
+set python print-stack full
+EOF
 
 # build opentracing lib
 cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"

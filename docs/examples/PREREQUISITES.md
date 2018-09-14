@@ -172,7 +172,7 @@ Events:
   1m		1m		1	{service-controller }			Normal		CreatingLoadBalancer	Creating load balancer
   16s		16s		1	{service-controller }			Normal		CreatedLoadBalancer	Created load balancer
 
-$ curl 108.59.87.126
+$ curl 108.59.87.136
 CLIENT VALUES:
 client_address=10.240.0.3
 command=GET

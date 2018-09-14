@@ -20,6 +20,7 @@ WORKDIR  /etc/nginx
 
 RUN clean-install \
   diffutils \
+  valgrind \
   dumb-init
 
 COPY . /

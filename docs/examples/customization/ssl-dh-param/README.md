@@ -16,7 +16,8 @@ metadata:
   name: nginx-configuration
   namespace: ingress-nginx
   labels:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 ```
 
 ```console
@@ -40,7 +41,8 @@ metadata:
   name: nginx-configuration
   namespace: ingress-nginx
   labels:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 ```
 
 ```console

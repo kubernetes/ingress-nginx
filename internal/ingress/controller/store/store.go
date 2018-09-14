@@ -254,7 +254,9 @@ func New(checkOCSP bool,
 	store.listers.IngressAnnotation.Store = cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)
 
 	// create informers factory, enable and assign required informers
-	infFactory := informers.NewFilteredSharedInformerFactory(client, resyncPeriod, namespace, func(*metav1.ListOptions) {})
+	infFactory := informers.NewSharedInformerFactoryWithOptions(client, resyncPeriod,
+		informers.WithNamespace(namespace),
+		informers.WithTweakListOptions(func(*metav1.ListOptions) {}))
 
 	store.informers.Ingress = infFactory.Extensions().V1beta1().Ingresses().Informer()
 	store.listers.Ingress.Store = store.informers.Ingress.GetStore()
