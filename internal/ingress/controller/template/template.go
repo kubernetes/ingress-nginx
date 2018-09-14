@@ -334,7 +334,7 @@ func buildLocation(input interface{}, rewrite bool) string {
 		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
 	}
 
-	if rewrite == true {
+	if rewrite {
 		if path == slash {
 			return path
 		}
