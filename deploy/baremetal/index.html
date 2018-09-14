@@ -1186,8 +1186,8 @@
 suffices to provide a single point of contact to the NGINX Ingress controller to external clients and, indirectly, to
 any application running inside the cluster. <em>Bare-metal</em> environments lack this commodity, requiring a slightly
 different setup to offer the same kind of access to external consumers.</p>
-<p><img alt="Cloud environment" src="/images/baremetal/cloud_overview.jpg" />
-<img alt="Bare-metal environment" src="/images/baremetal/baremetal_overview.jpg" /></p>
+<p><img alt="Cloud environment" src="../../images/baremetal/cloud_overview.jpg" />
+<img alt="Bare-metal environment" src="../../images/baremetal/baremetal_overview.jpg" /></p>
 <p>The rest of this document describes a few recommended approaches to deploying the NGINX Ingress controller inside a
 Kubernetes cluster running on bare-metal.</p>
 <h2 id="a-pure-software-solution-metallb">A pure software solution: MetalLB<a class="headerlink" href="#a-pure-software-solution-metallb" title="Permanent link">&para;</a></h2>
@@ -1196,7 +1196,7 @@ supported cloud provider, effectively allowing the usage of LoadBalancer Service
 <p>This section demonstrates how to use the <a href="https://metallb.universe.tf/tutorial/layer2/">Layer 2 configuration mode</a> of MetalLB together with the NGINX
 Ingress controller in a Kubernetes cluster that has <strong>publicly accessible nodes</strong>. In this mode, one node attracts all
 the traffic for the <code class="codehilite">ingress-nginx</code> Service IP. See <a href="https://metallb.universe.tf/usage/#traffic-policies">Traffic policies</a> for more details.</p>
-<p><img alt="MetalLB in L2 mode" src="/images/baremetal/metallb.jpg" /></p>
+<p><img alt="MetalLB in L2 mode" src="../../images/baremetal/metallb.jpg" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The description of other supported configuration modes is off-scope for this document.</p>
@@ -1273,7 +1273,7 @@ any port, including the standard HTTP ports 80 and 443. However, due to the cont
 located outside the cluster network (e.g. on the public internet) is not able to access Ingress hosts directly on ports
 80 and 443. Instead, the external client must append the NodePort allocated to the <code class="codehilite">ingress-nginx</code> Service to HTTP
 requests.</p>
-<p><img alt="NodePort request flow" src="/images/baremetal/nodeport.jpg" /></p>
+<p><img alt="NodePort request flow" src="../../images/baremetal/nodeport.jpg" /></p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Given the NodePort <code class="codehilite">30100</code> allocated to the <code class="codehilite">ingress-nginx</code> Service</p>
@@ -1454,7 +1454,7 @@ of a traditional Deployment.</p>
 </div>
 <p>Because most properties of DaemonSet objects are identical to Deployment objects, this documentation page leaves the
 configuration of the corresponding manifest at the user's discretion.</p>
-<p><img alt="DaemonSet with hostNetwork flow" src="/images/baremetal/hostnetwork.jpg" /></p>
+<p><img alt="DaemonSet with hostNetwork flow" src="../../images/baremetal/hostnetwork.jpg" /></p>
 <p>Like with NodePorts, this approach has a few quirks it is important to be aware of.</p>
 <ul>
 <li><strong>DNS resolution</strong></li>
@@ -1508,7 +1508,7 @@ This is particularly suitable for private Kubernetes clusters where none of the 
 <p>On the edge side, the only prerequisite is to dedicate a public IP address that forwards all HTTP traffic to Kubernetes
 nodes and/or masters. Incoming traffic on TCP ports 80 and 443 is forwarded to the corresponding HTTP and HTTPS NodePort
 on the target nodes as shown in the diagram below:</p>
-<p><img alt="User edge" src="/images/baremetal/user_edge.jpg" /></p>
+<p><img alt="User edge" src="../../images/baremetal/user_edge.jpg" /></p>
 <h2 id="external-ips">External IPs<a class="headerlink" href="#external-ips" title="Permanent link">&para;</a></h2>
 <div class="admonition danger">
 <p class="admonition-title">Source IP address</p>
