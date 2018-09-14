@@ -5,8 +5,8 @@ suffices to provide a single point of contact to the NGINX Ingress controller to
 any application running inside the cluster. *Bare-metal* environments lack this commodity, requiring a slightly
 different setup to offer the same kind of access to external consumers.
 
-![Cloud environment](/images/baremetal/cloud_overview.jpg)
-![Bare-metal environment](/images/baremetal/baremetal_overview.jpg)
+![Cloud environment](../images/baremetal/cloud_overview.jpg)
+![Bare-metal environment](../images/baremetal/baremetal_overview.jpg)
 
 The rest of this document describes a few recommended approaches to deploying the NGINX Ingress controller inside a
 Kubernetes cluster running on bare-metal.
@@ -20,7 +20,7 @@ This section demonstrates how to use the [Layer 2 configuration mode][metallb-l2
 Ingress controller in a Kubernetes cluster that has **publicly accessible nodes**. In this mode, one node attracts all
 the traffic for the `ingress-nginx` Service IP. See [Traffic policies][metallb-trafficpolicies] for more details.
 
-![MetalLB in L2 mode](/images/baremetal/metallb.jpg)
+![MetalLB in L2 mode](../images/baremetal/metallb.jpg)
 
 !!! note
     The description of other supported configuration modes is off-scope for this document.
@@ -110,7 +110,7 @@ located outside the cluster network (e.g. on the public internet) is not able to
 80 and 443. Instead, the external client must append the NodePort allocated to the `ingress-nginx` Service to HTTP
 requests.
 
-![NodePort request flow](/images/baremetal/nodeport.jpg)
+![NodePort request flow](../images/baremetal/nodeport.jpg)
 
 !!! example
     Given the NodePort `30100` allocated to the `ingress-nginx` Service
@@ -315,7 +315,7 @@ of a traditional Deployment.
 Because most properties of DaemonSet objects are identical to Deployment objects, this documentation page leaves the
 configuration of the corresponding manifest at the user's discretion.
 
-![DaemonSet with hostNetwork flow](/images/baremetal/hostnetwork.jpg)
+![DaemonSet with hostNetwork flow](../images/baremetal/hostnetwork.jpg)
 
 Like with NodePorts, this approach has a few quirks it is important to be aware of.
 
@@ -383,7 +383,7 @@ On the edge side, the only prerequisite is to dedicate a public IP address that 
 nodes and/or masters. Incoming traffic on TCP ports 80 and 443 is forwarded to the corresponding HTTP and HTTPS NodePort
 on the target nodes as shown in the diagram below:
 
-![User edge](/images/baremetal/user_edge.jpg)
+![User edge](../images/baremetal/user_edge.jpg)
 
 ## External IPs
 
