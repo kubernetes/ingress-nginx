@@ -3,7 +3,7 @@
 ConfigMaps allow you to decouple configuration artifacts from image content to keep containerized applications portable.
 
 The ConfigMap API resource stores configuration data as key-value pairs. The data provides the configurations for system
-components for the nginx-controller. Before you can begin using a config-map it must be [deployed](../../deploy/README.md/#deploying-the-config-map).
+components for the nginx-controller.
 
 In order to overwrite nginx-controller configuration values as seen in [config.go](https://github.com/kubernetes/ingress-nginx/blob/master/internal/ingress/controller/config/config.go),
 you can add key-value pairs to the data section of the config-map. For Example:
@@ -48,6 +48,7 @@ The following table shows a configuration option's name, type, and the default v
 |[error-log-level](#error-log-level)|string|"notice"|
 |[http2-max-field-size](#http2-max-field-size)|string|"4k"|
 |[http2-max-header-size](#http2-max-header-size)|string|"16k"|
+|[http2-max-requests](#http2-max-requests)|int|1000|
 |[hsts](#hsts)|bool|"true"|
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"|
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
@@ -266,6 +267,13 @@ Limits the maximum size of the entire request header list after HPACK decompress
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size](https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size)
+
+## http2-max-requests
+
+Sets the maximum number of requests (including push requests) that can be served through one HTTP/2 connection, after which the next client request will lead to connection closing and the need of establishing a new connection.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests](http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests)
 
 ## hsts
 

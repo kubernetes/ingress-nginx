@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"strconv"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -66,7 +67,7 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		port, err := f.GetNginxPort("http")
 		Expect(err).NotTo(HaveOccurred())
 
-		conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", ip, port))
+		conn, err := net.Dial("tcp", net.JoinHostPort(ip, strconv.Itoa(port)))
 		Expect(err).NotTo(HaveOccurred())
 		defer conn.Close()
 
