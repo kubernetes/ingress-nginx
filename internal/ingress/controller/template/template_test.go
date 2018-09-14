@@ -50,6 +50,7 @@ var (
 		XForwardedPrefix            bool
 		DynamicConfigurationEnabled bool
 		SecureBackend               bool
+		atLeastOneNeedsRewrite      bool
 	}{
 		"when secure backend enabled": {
 			"/",
@@ -61,7 +62,8 @@ var (
 			false,
 			false,
 			false,
-			true},
+			true,
+			false},
 		"when secure backend and stickeness enabled": {
 			"/",
 			"/",
@@ -72,7 +74,8 @@ var (
 			true,
 			false,
 			false,
-			true},
+			true,
+			false},
 		"when secure backend and dynamic config enabled": {
 			"/",
 			"/",
@@ -83,7 +86,8 @@ var (
 			false,
 			false,
 			true,
-			true},
+			true,
+			false},
 		"when secure backend, stickeness and dynamic config enabled": {
 			"/",
 			"/",
@@ -94,7 +98,8 @@ var (
 			true,
 			false,
 			true,
-			true},
+			true,
+			false},
 		"invalid redirect / to / with dynamic config enabled": {
 			"/",
 			"/",
@@ -105,6 +110,7 @@ var (
 			false,
 			false,
 			true,
+			false,
 			false},
 		"invalid redirect / to /": {
 			"/",
@@ -113,6 +119,7 @@ var (
 			"proxy_pass http://upstream-name;",
 			false,
 			"",
+			false,
 			false,
 			false,
 			false,
@@ -131,7 +138,8 @@ proxy_pass http://upstream-name;
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect /something to /": {
 			"/something",
 			"/",
@@ -146,7 +154,8 @@ proxy_pass http://upstream-name;
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect /end-with-slash/ to /not-root": {
 			"/end-with-slash/",
 			"/not-root",
@@ -161,7 +170,8 @@ proxy_pass http://upstream-name;
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect /something-complex to /not-root": {
 			"/something-complex",
 			"/not-root",
@@ -176,7 +186,8 @@ proxy_pass http://upstream-name;
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect / to /jenkins and rewrite": {
 			"/",
 			"/jenkins",
@@ -194,7 +205,8 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect /something to / and rewrite": {
 			"/something",
 			"/",
@@ -212,7 +224,8 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect /end-with-slash/ to /not-root and rewrite": {
 			"/end-with-slash/",
 			"/not-root",
@@ -230,7 +243,8 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect /something-complex to /not-root and rewrite": {
 			"/something-complex",
 			"/not-root",
@@ -248,7 +262,8 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect /something to / and rewrite with specific scheme": {
 			"/something",
 			"/",
@@ -266,7 +281,8 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			false,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect / to /something with sticky enabled": {
 			"/",
 			"/something",
@@ -281,7 +297,8 @@ proxy_pass http://sticky-upstream-name;
 			true,
 			false,
 			false,
-			false},
+			false,
+			true},
 		"redirect / to /something with sticky and dynamic config enabled": {
 			"/",
 			"/something",
@@ -296,7 +313,8 @@ proxy_pass http://upstream_balancer;
 			true,
 			false,
 			true,
-			false},
+			false,
+			true},
 		"add the X-Forwarded-Prefix header": {
 			"/there",
 			"/something",
@@ -312,7 +330,32 @@ proxy_pass http://sticky-upstream-name;
 			true,
 			true,
 			false,
-			false},
+			false,
+			true},
+		"do not use ^~ location modifier on index when ingress does not use rewrite target but at least one other ingress does": {
+			"/",
+			"/",
+			"/",
+			"proxy_pass http://upstream-name;",
+			false,
+			"",
+			false,
+			false,
+			false,
+			false,
+			true},
+		"use ^~ location modifier when ingress does not use rewrite target but at least one other ingress does": {
+			"/something",
+			"/something",
+			"^~ /something",
+			"proxy_pass http://upstream-name;",
+			false,
+			"",
+			false,
+			false,
+			false,
+			false,
+			true},
 	}
 )
 
@@ -382,7 +425,7 @@ func TestBuildLocation(t *testing.T) {
 			Rewrite: rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
 
-		newLoc := buildLocation(loc)
+		newLoc := buildLocation(loc, tc.atLeastOneNeedsRewrite)
 		if tc.Location != newLoc {
 			t.Errorf("%s: expected '%v' but returned %v", k, tc.Location, newLoc)
 		}
