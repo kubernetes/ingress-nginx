@@ -30,3 +30,34 @@ metadata:
 data:
   53: "kube-system/kube-dns:53"
 ```
+
+If TCP/UDP proxy support is used, then those ports need to be exposed in the Service defined for the Ingress.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 443
+    protocol: TCP
+  - name: proxied-tcp-9000
+    port: 9000
+    targetPort: 9000
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+```
