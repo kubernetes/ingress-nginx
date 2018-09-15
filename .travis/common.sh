@@ -81,7 +81,7 @@ fi
 
 function docker_tag_exists() {
     TAG=${2//\"/}
-    TOKEN=$( curl -sSLd '{"username": "'${DOCKER_USERNAME}'", "password": "'${DOCKER_PASSWORD}'"}' https://hub.docker.com/v2/users/login | jq -r ".token" )
+    TOKEN=$( curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'${DOCKER_USERNAME}'", "password": "'${DOCKER_PASSWORD}'"}' https://hub.docker.com/v2/users/login | jq -r ".token" )
     RES=$(curl -sH "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/$1-$3/tags/$TAG/" | jq .detail)
 
     if [ "$RES" == "\"Not found\"" ];
