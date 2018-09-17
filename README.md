@@ -41,7 +41,7 @@ To check out [Live Docs](https://kubernetes.github.io/ingress-nginx/)
 
 ## Questions
 
-For questions and support please use the [#ingress-nginx](https://kubernetes.slack.com/messages/CANQGM8BA/) channel in the [Kubernetes Slack](http://slack.kubernetes.io/) or [kubernetes-users](https://groups.google.com/forum/#!forum/kubernetes-users) mailing list. The issue list of this repo is **exclusively** for bug reports and feature requests.
+For questions and support please use the [#ingress-nginx](https://kubernetes.slack.com/messages/CANQGM8BA/) channel in the [Kubernetes Slack](http://slack.kubernetes.io/) or post to the [Kubernetes Forum](https://discuss.kubernetes.io). The issue list of this repo is **exclusively** for bug reports and feature requests.
 
 ## Issues
 
