@@ -41,7 +41,7 @@ local function set_cookie(self, value)
   ok, err = cookie:set({
     key = self.cookie_name,
     value = value,
-    path = "/",
+    path = ngx.var.location_path,
     domain = ngx.var.host,
     httponly = true,
   })
