@@ -259,16 +259,15 @@ http {
 
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
-    {{/* Whenever nginx proxies a request without a "Connection" header, the "Connection" header is set to "close" */}}
-    {{/* when making the target request.  This means that you cannot simply use */}}
-    {{/* "proxy_set_header Connection $http_connection" for WebSocket support because in this case, the */}}
-    {{/* "Connection" header would be set to "" whenever the original request did not have a "Connection" header, */}}
-    {{/* which would mean no "Connection" header would be in the target request.  Since this would deviate from */}}
-    {{/* normal nginx behavior we have to use this approach. */}}
-    # Retain the default nginx handling of requests without a "Connection" header
+    # See https://www.nginx.com/blog/websocket-nginx
     map $http_upgrade $connection_upgrade {
         default          upgrade;
+        {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
+        # See http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
+        ''               '';
+        {{ else }}
         ''               close;
+        {{ end }}
     }
 
     # The following is a sneaky way to do "set $the_real_ip $remote_addr"
@@ -467,8 +466,9 @@ http {
 
     {{/* build the maps that will be use to validate the Whitelist */}}
     {{ range $server := $servers }}
+    {{ $usesRewrite := atLeastOneNeedsRewrite $server.Locations }}
     {{ range $location := $server.Locations }}
-    {{ $path := buildLocation $location }}
+    {{ $path := buildLocation $location $usesRewrite }}
 
     {{ if isLocationAllowed $location }}
     {{ if gt (len $location.Whitelist.CIDR) 0 }}
@@ -833,8 +833,9 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
+        {{ $usesRewrite := atLeastOneNeedsRewrite $server.Locations }}
         {{ range $location := $server.Locations }}
-        {{ $path := buildLocation $location }}
+        {{ $path := buildLocation $location $usesRewrite }}
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location }}
 
