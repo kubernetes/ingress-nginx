@@ -55,7 +55,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
-|[nginx.ingress.kubernetes.io/rewrite-log](#enable-rewrite-log)|URI|
+|[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
 |[nginx.ingress.kubernetes.io/secure-backends](#secure-backends)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
