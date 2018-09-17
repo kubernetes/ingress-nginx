@@ -40,13 +40,13 @@ end
 
 describe("Sticky", function()
   before_each(function()
-    mock_ngx({ var = {} })
+    mock_ngx({ var = { location_path = "/" } })
   end)
 
   after_each(function()
     reset_ngx()
   end)
-  
+
   local test_backend = get_test_backend()
   local test_backend_endpoint= test_backend.endpoints[1].address .. ":" .. test_backend.endpoints[1].port
 
@@ -68,7 +68,7 @@ describe("Sticky", function()
         assert.equal(sticky_balancer_instance.cookie_name, default_cookie_name)
       end)
     end)
-        
+
     context("when backend specifies hash function", function()
       it("returns an instance with the corresponding hash implementation", function()
         local sticky_balancer_instance = sticky:new(test_backend)
@@ -109,7 +109,7 @@ describe("Sticky", function()
         assert.equal(peer, test_backend_endpoint)
       end)
 
-      it("sets a cookie on the client", function() 
+      it("sets a cookie on the client", function()
         local s = {}
         cookie.new = function(self)
           local test_backend_hash_fn = test_backend.sessionAffinityConfig.cookieSessionAffinity.hash
@@ -117,10 +117,10 @@ describe("Sticky", function()
             set = function(self, payload)
               assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
               assert.equal(payload.value, util[test_backend_hash_fn .. "_digest"](test_backend_endpoint))
-              assert.equal(payload.path, "/")
+              assert.equal(payload.path, ngx.var.location_path)
               assert.equal(payload.domain, nil)
               assert.equal(payload.httponly, true)
-              return true, nil 
+              return true, nil
             end,
             get = function(k) return false end,
           }
@@ -136,7 +136,7 @@ describe("Sticky", function()
     context("when client has a cookie set", function()
       it("does not set a cookie", function()
         local s = {}
-        cookie.new = function(self) 
+        cookie.new = function(self)
           local return_obj = {
             set = function(v) return false, nil end,
             get = function(k) return test_backend_endpoint end,
