@@ -268,6 +268,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 			if host == "" {
 				host = defServerName
 			}
+
 			server := servers[host]
 			if server == nil {
 				server = servers[defServerName]
@@ -300,12 +301,14 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				upsName := fmt.Sprintf("%v-%v-%v",
-					ing.Namespace,
-					path.Backend.ServiceName,
-					path.Backend.ServicePort.String())
+				upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
 
 				ups := upstreams[upsName]
+
+				// Backend is not referenced to by a server
+				if ups.NoServer {
+					continue
+				}
 
 				nginxPath := rootLocation
 				if path.Path != "" {
@@ -416,6 +419,11 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 				}
 			}
 		}
+
+		if anns.Canary.Enabled {
+			glog.Infof("Canary ingress %v detected. Finding eligible backends to merge into.", ing.Name)
+			mergeAlternativeBackends(ing, upstreams, servers)
+		}
 	}
 
 	aUpstreams := make([]*ingress.Backend, 0, len(upstreams))
@@ -513,10 +521,7 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
-			defBackend = fmt.Sprintf("%v-%v-%v",
-				ing.Namespace,
-				ing.Spec.Backend.ServiceName,
-				ing.Spec.Backend.ServicePort.String())
+			defBackend = upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
 
 			glog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
@@ -542,6 +547,16 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				}
 			}
 
+			// configure traffic shaping for canary
+			if anns.Canary.Enabled {
+				upstreams[defBackend].NoServer = true
+				upstreams[defBackend].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
+					Weight: anns.Canary.Weight,
+					Header: anns.Canary.Header,
+					Cookie: anns.Canary.Cookie,
+				}
+			}
+
 			if len(upstreams[defBackend].Endpoints) == 0 {
 				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String())
 				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
@@ -558,10 +573,7 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 			}
 
 			for _, path := range rule.HTTP.Paths {
-				name := fmt.Sprintf("%v-%v-%v",
-					ing.Namespace,
-					path.Backend.ServiceName,
-					path.Backend.ServicePort.String())
+				name := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
 
 				if _, ok := upstreams[name]; ok {
 					continue
@@ -592,6 +604,16 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 						glog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)
 					} else {
 						upstreams[name].Endpoints = []ingress.Endpoint{endpoint}
+					}
+				}
+
+				// configure traffic shaping for canary
+				if anns.Canary.Enabled {
+					upstreams[name].NoServer = true
+					upstreams[name].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
+						Weight: anns.Canary.Weight,
+						Header: anns.Canary.Header,
+						Cookie: anns.Canary.Cookie,
 					}
 				}
 
@@ -968,6 +990,63 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	}
 
 	return servers
+}
+
+// Compares an Ingress of a potential alternative backend's rules with each existing server and finds matching host + path pairs.
+// If a match is found, we know that this server should back the alternative backend and add the alternative backend
+// to a backend's alternative list.
+// If no match is found, then the serverless backend is deleted.
+func mergeAlternativeBackends(ing *extensions.Ingress, upstreams map[string]*ingress.Backend,
+	servers map[string]*ingress.Server) {
+
+	// merge catch-all alternative backends
+	if ing.Spec.Backend != nil {
+		upsName := upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
+
+		ups := upstreams[upsName]
+
+		defLoc := servers[defServerName].Locations[0]
+
+		glog.Infof("matching backend %v found for alternative backend %v",
+			upstreams[defLoc.Backend].Name, ups.Name)
+
+		upstreams[defLoc.Backend].AlternativeBackends =
+			append(upstreams[defLoc.Backend].AlternativeBackends, ups.Name)
+	}
+
+	for _, rule := range ing.Spec.Rules {
+		for _, path := range rule.HTTP.Paths {
+			upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
+
+			ups := upstreams[upsName]
+
+			merged := false
+
+			server := servers[rule.Host]
+
+			// find matching paths
+			for _, location := range server.Locations {
+				if location.Backend == defUpstreamName {
+					continue
+				}
+
+				if location.Path == path.Path && !upstreams[location.Backend].NoServer {
+					glog.Infof("matching backend %v found for alternative backend %v",
+						upstreams[location.Backend].Name, ups.Name)
+
+					upstreams[location.Backend].AlternativeBackends =
+						append(upstreams[location.Backend].AlternativeBackends, ups.Name)
+
+					merged = true
+				}
+			}
+
+			if !merged {
+				glog.Warningf("unable to find real backend for alternative backend %v. Deleting.", ups.Name)
+				delete(upstreams, ups.Name)
+			}
+		}
+	}
 }
 
 // extractTLSSecretName returns the name of the Secret containing a SSL

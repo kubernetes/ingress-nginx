@@ -19,6 +19,7 @@ package annotations
 import (
 	"github.com/golang/glog"
 	"github.com/imdario/mergo"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -67,6 +68,7 @@ type Ingress struct {
 	BackendProtocol      string
 	Alias                string
 	BasicDigestAuth      auth.Config
+	Canary               canary.Config
 	CertificateAuth      authtls.Config
 	ClientBodyBufferSize string
 	ConfigurationSnippet string
@@ -107,6 +109,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 		map[string]parser.IngressAnnotation{
 			"Alias":                alias.NewParser(cfg),
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
+			"Canary":               canary.NewParser(cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),
 			"ClientBodyBufferSize": clientbodybuffersize.NewParser(cfg),
 			"ConfigurationSnippet": snippet.NewParser(cfg),
