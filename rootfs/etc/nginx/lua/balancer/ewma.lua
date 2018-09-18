@@ -102,6 +102,9 @@ function _M.after_balance(_)
 end
 
 function _M.sync(self, backend)
+  self.traffic_shaping_policy = backend.trafficShapingPolicy
+  self.alternative_backends = backend.alternativeBackends
+
   local changed = not util.deep_compare(self.peers, backend.endpoints)
   if not changed then
     return
@@ -115,7 +118,9 @@ function _M.sync(self, backend)
 end
 
 function _M.new(self, backend)
-  local o = { peers = backend.endpoints }
+  local o = {
+    peers = backend.endpoints,
+  }
   setmetatable(o, self)
   self.__index = self
   return o
