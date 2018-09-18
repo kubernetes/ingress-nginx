@@ -547,7 +547,7 @@ http {
 
         location {{ $healthzURI }} {
             {{ if $cfg.EnableOpentracing }}
-            opentracing off;
+            opentracing on;
             {{ end }}
             access_log off;
             return 200;
@@ -555,7 +555,7 @@ http {
         {{ if not $all.DisableLua }}
         location /is-dynamic-lb-initialized {
             {{ if $cfg.EnableOpentracing }}
-            opentracing off;
+            opentracing on;
             {{ end }}
             access_log off;
 
@@ -575,7 +575,7 @@ http {
         location /nginx_status {
             set $proxy_upstream_name "internal";
             {{ if $cfg.EnableOpentracing }}
-            opentracing off;
+            opentracing on;
             {{ end }}
 
             access_log off;
@@ -586,7 +586,7 @@ http {
         location /configuration {
             access_log off;
             {{ if $cfg.EnableOpentracing }}
-            opentracing off;
+            opentracing on;
             {{ end }}
 
             allow 127.0.0.1;
@@ -1184,7 +1184,7 @@ stream {
         # health checks in cloud providers require the use of port {{ $all.ListenPorts.HTTP }}
         location {{ $all.HealthzURI }} {
             {{ if $all.Cfg.EnableOpentracing }}
-            opentracing off;
+            opentracing on;
             {{ end }}
 
             access_log off;
@@ -1195,7 +1195,7 @@ stream {
         # with an external software (like sysdig)
         location /nginx_status {
             {{ if $all.Cfg.EnableOpentracing }}
-            opentracing off;
+            opentracing on;
             {{ end }}
 
             {{ range $v := $all.NginxStatusIpv4Whitelist }}
