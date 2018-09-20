@@ -1202,7 +1202,7 @@
 <span class="go">serviceaccount &quot;prometheus-server&quot; created</span>
 <span class="go">clusterrolebinding &quot;prometheus-server&quot; created</span>
 <span class="go">deployment &quot;prometheus-server&quot; created</span>
-<span class="go">service &quot;prometheus-service&quot; created</span>
+<span class="go">service &quot;prometheus-server&quot; created</span>
 </pre></div>
 
 <h3 id="prometheus-dashboard">Prometheus Dashboard<a class="headerlink" href="#prometheus-dashboard" title="Permanent link">&para;</a></h3>
@@ -1211,7 +1211,7 @@
 <span class="go">NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE</span>
 <span class="go">default-http-backend   ClusterIP   10.103.59.201   &lt;none&gt;        80/TCP                                       3d</span>
 <span class="go">ingress-nginx          NodePort    10.97.44.72     &lt;none&gt;        80:30100/TCP,443:30154/TCP,10254:32049/TCP   5h</span>
-<span class="go">prometheus             NodePort    10.98.233.86    &lt;none&gt;        9090:32630/TCP                               1m</span>
+<span class="go">prometheus-server      NodePort    10.98.233.86    &lt;none&gt;        9090:32630/TCP                               1m</span>
 </pre></div>
 
 <p>Obtain the IP address of the nodes in the running cluster:</p>
@@ -1234,8 +1234,8 @@
 <span class="go">NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE</span>
 <span class="go">default-http-backend   ClusterIP   10.103.59.201   &lt;none&gt;        80/TCP                                       3d</span>
 <span class="go">ingress-nginx          NodePort    10.97.44.72     &lt;none&gt;        80:30100/TCP,443:30154/TCP,10254:32049/TCP   5h</span>
-<span class="go">prometheus             NodePort    10.98.233.86    &lt;none&gt;        9090:32630/TCP                               10m</span>
-<span class="go">grafana                NodePort    10.98.233.86    &lt;none&gt;        9090:31086/TCP                               10m</span>
+<span class="go">prometheus-server      NodePort    10.98.233.86    &lt;none&gt;        9090:32630/TCP                               10m</span>
+<span class="go">grafana                NodePort    10.98.233.87    &lt;none&gt;        3000:31086/TCP                               10m</span>
 </pre></div>
 
 <p>Open your browser and visit the following URL: <em>http://{node IP address}:{grafana-svc-nodeport}</em> to load the Grafana Dashboard.
