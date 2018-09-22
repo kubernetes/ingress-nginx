@@ -17,7 +17,6 @@ limitations under the License.
 package collectors
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -25,6 +24,7 @@ import (
 	"os"
 
 	"github.com/golang/glog"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -75,6 +75,8 @@ type SocketCollector struct {
 	listener net.Listener
 
 	metricMapping map[string]interface{}
+
+	hosts sets.String
 }
 
 var (
@@ -208,13 +210,18 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 
 	// Unmarshall bytes
 	var statsBatch []socketData
-	err := json.Unmarshal(msg, &statsBatch)
+	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(msg, &statsBatch)
 	if err != nil {
 		glog.Errorf("Unexpected error deserializing JSON paylod: %v. Payload:\n%v", err, string(msg))
 		return
 	}
 
 	for _, stats := range statsBatch {
+		if !sc.hosts.Has(stats.Host) {
+			glog.V(3).Infof("skiping metric for host %v that is not being served", stats.Host)
+			continue
+		}
+
 		requestLabels := prometheus.Labels{
 			"host":   stats.Host,
 			"status": stats.Status,
@@ -409,6 +416,12 @@ func (sc SocketCollector) Collect(ch chan<- prometheus.Metric) {
 	sc.responseLength.Collect(ch)
 
 	sc.bytesSent.Collect(ch)
+}
+
+// SetHosts sets the hostnames that are being served by the ingress controller
+// This set of hostnames is used to filter the metrics to be exposed
+func (sc *SocketCollector) SetHosts(hosts sets.String) {
+	sc.hosts = hosts
 }
 
 // handleMessages process the content received in a network connection
