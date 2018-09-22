@@ -21,6 +21,7 @@ import (
 	mathrand "math/rand"
 	"net"
 	"net/http"
+	"net/textproto"
 	"sort"
 	"strconv"
 	"strings"
@@ -212,9 +213,10 @@ type clientStream struct {
 	done chan struct{} // closed when stream remove from cc.streams map; close calls guarded by cc.mu
 
 	// owned by clientConnReadLoop:
-	firstByte    bool // got the first response byte
-	pastHeaders  bool // got first MetaHeadersFrame (actual headers)
-	pastTrailers bool // got optional second MetaHeadersFrame (trailers)
+	firstByte    bool  // got the first response byte
+	pastHeaders  bool  // got first MetaHeadersFrame (actual headers)
+	pastTrailers bool  // got optional second MetaHeadersFrame (trailers)
+	num1xx       uint8 // number of 1xx responses seen
 
 	trailer    http.Header  // accumulated trailers
 	resTrailer *http.Header // client's Response.Trailer
@@ -236,6 +238,17 @@ func awaitRequestCancel(req *http.Request, done <-chan struct{}) error {
 	case <-done:
 		return nil
 	}
+}
+
+var got1xxFuncForTests func(int, textproto.MIMEHeader) error
+
+// get1xxTraceFunc returns the value of request's httptrace.ClientTrace.Got1xxResponse func,
+// if any. It returns nil if not set or if the Go version is too old.
+func (cs *clientStream) get1xxTraceFunc() func(int, textproto.MIMEHeader) error {
+	if fn := got1xxFuncForTests; fn != nil {
+		return fn
+	}
+	return traceGot1xxResponseFunc(cs.trace)
 }
 
 // awaitRequestCancel waits for the user to cancel a request, its context to
@@ -1734,8 +1747,7 @@ func (rl *clientConnReadLoop) processHeaders(f *MetaHeadersFrame) error {
 // is the detail.
 //
 // As a special case, handleResponse may return (nil, nil) to skip the
-// frame (currently only used for 100 expect continue). This special
-// case is going away after Issue 13851 is fixed.
+// frame (currently only used for 1xx responses).
 func (rl *clientConnReadLoop) handleResponse(cs *clientStream, f *MetaHeadersFrame) (*http.Response, error) {
 	if f.Truncated {
 		return nil, errResponseHeaderListSize
@@ -1748,15 +1760,6 @@ func (rl *clientConnReadLoop) handleResponse(cs *clientStream, f *MetaHeadersFra
 	statusCode, err := strconv.Atoi(status)
 	if err != nil {
 		return nil, errors.New("malformed response from server: malformed non-numeric status pseudo header")
-	}
-
-	if statusCode == 100 {
-		traceGot100Continue(cs.trace)
-		if cs.on100 != nil {
-			cs.on100() // forces any write delay timer to fire
-		}
-		cs.pastHeaders = false // do it all again
-		return nil, nil
 	}
 
 	header := make(http.Header)
@@ -1781,6 +1784,27 @@ func (rl *clientConnReadLoop) handleResponse(cs *clientStream, f *MetaHeadersFra
 		} else {
 			header[key] = append(header[key], hf.Value)
 		}
+	}
+
+	if statusCode >= 100 && statusCode <= 199 {
+		cs.num1xx++
+		const max1xxResponses = 5 // arbitrary bound on number of informational responses, same as net/http
+		if cs.num1xx > max1xxResponses {
+			return nil, errors.New("http2: too many 1xx informational responses")
+		}
+		if fn := cs.get1xxTraceFunc(); fn != nil {
+			if err := fn(statusCode, textproto.MIMEHeader(header)); err != nil {
+				return nil, err
+			}
+		}
+		if statusCode == 100 {
+			traceGot100Continue(cs.trace)
+			if cs.on100 != nil {
+				cs.on100() // forces any write delay timer to fire
+			}
+		}
+		cs.pastHeaders = false // do it all again
+		return nil, nil
 	}
 
 	streamEnded := f.StreamEnded()

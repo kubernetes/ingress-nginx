@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -tags netgo -ldflags '-w'
 
 # Final image.
 FROM prom/busybox
-LABEL maintainer "The Prometheus Authors <prometheus-developers@googlegroups.com>"
+LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 COPY --from=builder /go/src/github.com/prometheus/client_golang/examples/random \
     /go/src/github.com/prometheus/client_golang/examples/simple ./
 EXPOSE 8080

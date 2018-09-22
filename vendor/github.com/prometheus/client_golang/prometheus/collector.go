@@ -61,6 +61,39 @@ type Collector interface {
 	Collect(chan<- Metric)
 }
 
+// DescribeByCollect is a helper to implement the Describe method of a custom
+// Collector. It collects the metrics from the provided Collector and sends
+// their descriptors to the provided channel.
+//
+// If a Collector collects the same metrics throughout its lifetime, its
+// Describe method can simply be implemented as:
+//
+//   func (c customCollector) Describe(ch chan<- *Desc) {
+//   	DescribeByCollect(c, ch)
+//   }
+//
+// However, this will not work if the metrics collected change dynamically over
+// the lifetime of the Collector in a way that their combined set of descriptors
+// changes as well. The shortcut implementation will then violate the contract
+// of the Describe method. If a Collector sometimes collects no metrics at all
+// (for example vectors like CounterVec, GaugeVec, etc., which only collect
+// metrics after a metric with a fully specified label set has been accessed),
+// it might even get registered as an unchecked Collecter (cf. the Register
+// method of the Registerer interface). Hence, only use this shortcut
+// implementation of Describe if you are certain to fulfill the contract.
+//
+// The Collector example demonstrates a use of DescribeByCollect.
+func DescribeByCollect(c Collector, descs chan<- *Desc) {
+	metrics := make(chan Metric)
+	go func() {
+		c.Collect(metrics)
+		close(metrics)
+	}()
+	for m := range metrics {
+		descs <- m.Desc()
+	}
+}
+
 // selfCollector implements Collector for a single Metric so that the Metric
 // collects itself. Add it as an anonymous field to a struct that implements
 // Metric, and call init with the Metric itself as an argument.

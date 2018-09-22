@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/Azure/go-autorest/autorest/date"
+	"github.com/Azure/go-autorest/version"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -778,6 +779,7 @@ func (spt *ServicePrincipalToken) refreshInternal(ctx context.Context, resource 
 	if err != nil {
 		return fmt.Errorf("adal: Failed to build the refresh request. Error = '%v'", err)
 	}
+	req.Header.Add("User-Agent", version.UserAgent())
 	req = req.WithContext(ctx)
 	if !isIMDS(spt.inner.OauthConfig.TokenEndpoint) {
 		v := url.Values{}

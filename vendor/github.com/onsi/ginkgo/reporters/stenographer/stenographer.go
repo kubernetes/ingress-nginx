@@ -12,7 +12,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable"
 	"github.com/onsi/ginkgo/types"
 )
 
@@ -62,7 +61,7 @@ type Stenographer interface {
 	SummarizeFailures(summaries []*types.SpecSummary)
 }
 
-func New(color bool, enableFlakes bool) Stenographer {
+func New(color bool, enableFlakes bool, writer io.Writer) Stenographer {
 	denoter := "•"
 	if runtime.GOOS == "windows" {
 		denoter = "+"
@@ -72,7 +71,7 @@ func New(color bool, enableFlakes bool) Stenographer {
 		denoter:      denoter,
 		cursorState:  cursorStateTop,
 		enableFlakes: enableFlakes,
-		w:            colorable.NewColorableStdout(),
+		w:            writer,
 	}
 }
 
