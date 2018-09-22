@@ -18,12 +18,12 @@ package annotations
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os/exec"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
@@ -90,7 +90,7 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var results map[string][]map[string]interface{}
-			json.Unmarshal([]byte(measurements), &results)
+			jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(measurements), &results)
 
 			Expect(len(measurements)).ShouldNot(Equal(0))
 			for _, elem := range results["results"] {

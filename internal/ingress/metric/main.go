@@ -22,6 +22,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
@@ -37,6 +39,9 @@ type Collector interface {
 	RemoveMetrics(ingresses, endpoints []string)
 
 	SetSSLExpireTime([]*ingress.Server)
+
+	// SetHosts sets the hostnames that are being served by the ingress controller
+	SetHosts(sets.String)
 
 	Start()
 	Stop()
@@ -137,4 +142,8 @@ func (c *collector) Stop() {
 
 func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 	c.ingressController.SetSSLExpireTime(servers)
+}
+
+func (c *collector) SetHosts(hosts sets.String) {
+	c.socket.SetHosts(hosts)
 }

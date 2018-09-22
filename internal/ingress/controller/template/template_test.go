@@ -17,7 +17,6 @@ limitations under the License.
 package template
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net"
 	"os"
@@ -29,6 +28,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	jsoniter "github.com/json-iterator/go"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -518,7 +518,7 @@ func TestTemplateWithData(t *testing.T) {
 		t.Error("unexpected error reading json file: ", err)
 	}
 	var dat config.TemplateConfig
-	if err := json.Unmarshal(data, &dat); err != nil {
+	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(data, &dat); err != nil {
 		t.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 	if dat.ListenPorts == nil {
@@ -565,7 +565,7 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		b.Error("unexpected error reading json file: ", err)
 	}
 	var dat config.TemplateConfig
-	if err := json.Unmarshal(data, &dat); err != nil {
+	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(data, &dat); err != nil {
 		b.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 

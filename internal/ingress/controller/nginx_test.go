@@ -17,7 +17,6 @@ limitations under the License.
 package controller
 
 import (
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net"
@@ -26,7 +25,9 @@ import (
 	"strings"
 	"testing"
 
+	jsoniter "github.com/json-iterator/go"
 	apiv1 "k8s.io/api/core/v1"
+
 	"k8s.io/ingress-nginx/internal/ingress"
 )
 
@@ -241,7 +242,7 @@ func TestConfigureCertificates(t *testing.T) {
 			t.Fatal(err)
 		}
 		var postedServers []ingress.Server
-		err = json.Unmarshal(b, &postedServers)
+		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, &postedServers)
 		if err != nil {
 			t.Fatal(err)
 		}
