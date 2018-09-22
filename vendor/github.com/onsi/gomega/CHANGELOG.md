@@ -1,4 +1,23 @@
-## HEAD
+## 1.4.2
+
+### Fixes:
+
+- Add go.mod and go.sum files to define the gomega go module [f3de367, a085d30]
+- Work around go vet issue with Go v1.11 (#300) [40dd6ad]
+- Better output when using with go XUnit-style tests, fixes #255 (#297) [29a4b97]
+- Fix MatchJSON fail to parse json.RawMessage (#298) [ae19f1b]
+- show threshold in failure message of BeNumericallyMatcher (#293) [4bbecc8]
+
+## 1.4.1
+
+### Fixes:
+
+- Update documentation formatting and examples (#289) [9be8410]
+- allow 'Receive' matcher to be used with concrete types (#286) [41673fd]
+- Fix data race in ghttp server (#283) [7ac6b01]
+- Travis badge should only show master [cc102ab]
+
+## 1.4.0
 
 ### Features
 - Make string pretty diff user configurable (#273) [eb112ce, 649b44d]

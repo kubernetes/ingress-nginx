@@ -1,6 +1,6 @@
 ![Ginkgo: A Go BDD Testing Framework](http://onsi.github.io/ginkgo/images/ginkgo.png)
 
-[![Build Status](https://travis-ci.org/onsi/ginkgo.svg)](https://travis-ci.org/onsi/ginkgo)
+[![Build Status](https://travis-ci.org/onsi/ginkgo.svg?branch=master)](https://travis-ci.org/onsi/ginkgo)
 
 Jump to the [docs](http://onsi.github.io/ginkgo/) to learn more.  To start rolling your Ginkgo tests *now* [keep reading](#set-me-up)!
 
@@ -118,6 +118,4 @@ Ginkgo is MIT-Licensed
 
 ## Contributing
 
-Since Ginkgo tests also internal packages, when you fork, you'll have to replace imports with your repository.<br />
-Use `before_pr.sh` for that<br />
-After you finished your changes and before you push your pull request, use `after_pr.sh` to revert those changes
+See [CONTRIBUTING.md](CONTRIBUTING.md)
