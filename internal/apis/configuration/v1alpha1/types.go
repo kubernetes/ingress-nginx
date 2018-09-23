@@ -24,7 +24,6 @@ import (
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // +genclient
@@ -87,8 +86,6 @@ type ConfigurationSpec struct {
 	// +optional
 	SSL *SSL `json:"ssl,omitempty"`
 	// +optional
-	Stream Stream `json:"stream,omitempty"`
-	// +optional
 	Upstream *Upstream `json:"upstream,omitempty"`
 	// +optional
 	WAF *WAF `json:"waf,omitempty"`
@@ -96,6 +93,9 @@ type ConfigurationSpec struct {
 
 // LoadBalanceAlgorithm load balancing method to use
 type LoadBalanceAlgorithm string
+
+// OnOff indicates if a setting is enabled or not
+type OnOff bool
 
 var (
 	// RoundRobin default load balancing method
@@ -107,6 +107,11 @@ var (
 	// EWMA (exponential weighted moving average) load balancing algorithm.
 	// This is available only in dynamic configuration mode
 	EWMA LoadBalanceAlgorithm = "ewma"
+
+	// On indicates a setting is enabled in NGINX
+	On OnOff = true
+	// Off indicates a setting is disabled in NGINX
+	Off OnOff = false
 )
 
 // Client ...
@@ -196,7 +201,7 @@ type Global struct {
 	BrotliLevel int `json:"brotli-level,omitempty"`
 	// MIME Types that will be compressed on-the-fly using Brotli module
 	// +optional
-	BrotliTypes string `json:"brotli-types,omitempty"`
+	BrotliTypes []string `json:"brotli-types,omitempty"`
 
 	// Enables or disables the use of the nginx geoip module that creates variables with values depending on the client IP
 	// http://nginx.org/en/docs/http/ngx_http_geoip_module.html
@@ -213,7 +218,7 @@ type Global struct {
 	// MIME types in addition to "text/html" to compress. The special value “*” matches any MIME type.
 	// Responses with the “text/html” type are always compressed if UseGzip is enabled
 	// +optional
-	GzipTypes string `json:"gzip-types"`
+	GzipTypes []string `json:"gzip-types"`
 
 	// EnableInfluxDB enables the nginx InfluxDB extension
 	// http://github.com/influxdata/nginx-influxdb-module/
@@ -446,10 +451,6 @@ type LogFileConfiguration struct {
 // Metrics ...
 type Metrics struct {
 	Enabled bool
-
-	Latency        []float64 `json:"latency"`
-	RequestLength  []float64 `json:"request-length"`
-	ResponseLength []float64 `json:"response-length"`
 }
 
 // SyslogConfiguration ...
@@ -477,7 +478,8 @@ type Snippets struct {
 	// +optional
 	Server string `json:"server,omitempty"`
 
-	// Location adds custom configuration to all the locations in the nginx configuration
+	// Location adds custom configuration to all the locations in the nginx
+	// configuration.
 	// +optional
 	Location string `json:"location,omitempty"`
 }
@@ -557,29 +559,14 @@ type WAF struct {
 	// By default this is disabled
 	EnableOWASPCoreRules bool `json:"enable-owasp-modsecurity-crs"`
 
+	// CustomRules sets additional modsecurity rules
+	// Default: empty
+	// +optional
+	CustomRules []string `json:"custom-rules"`
+
 	// EnableLuaRestyWAF disables lua-resty-waf globally regardless
 	// of whether there's an ingress that has enabled the WAF using annotation
 	EnableLuaRestyWAF bool `json:"enable-lua-resty-waf"`
-}
-
-// HSTS ...
-type HSTS struct {
-	// Enables or disables the header HSTS in servers running SSL
-	Enabled bool `json:"enabled,omitempty"`
-
-	// Enables or disables the use of HSTS in all the subdomains of the servername
-	// Default: true
-	IncludeSubdomains bool `json:"include-subdomains,omitempty"`
-
-	// HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header)
-	// that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
-	// https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
-	// max-age is the time, in seconds, that the browser should remember that this site is only to be
-	// accessed using HTTPS.
-	MaxAge int64 `json:"max-age,omitempty"`
-
-	// Enables or disables the preload attribute in HSTS feature
-	Preload bool `json:"preload,omitempty"`
 }
 
 // SSL ...
@@ -601,7 +588,7 @@ type SSL struct {
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
 	// the OpenSSL library
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
-	Ciphers string `json:"ciphers,omitempty"`
+	Ciphers []string `json:"ciphers,omitempty"`
 
 	// Specifies a curve for ECDHE ciphers.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve
@@ -615,7 +602,7 @@ type SSL struct {
 
 	// SSL enabled protocols to use
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
-	Protocols string `json:"protocols,omitempty"`
+	Protocols []string `json:"protocols,omitempty"`
 
 	// Enables or disables the use of shared SSL cache among worker processes.
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
@@ -646,6 +633,26 @@ type SSL struct {
 	BufferSize string `json:"buffer-size,omitempty"`
 }
 
+// HSTS ...
+type HSTS struct {
+	// Enables or disables the header HSTS in servers running SSL
+	Enabled bool `json:"enabled,omitempty"`
+
+	// Enables or disables the use of HSTS in all the subdomains of the servername
+	// Default: true
+	IncludeSubdomains bool `json:"include-subdomains,omitempty"`
+
+	// HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature (HTTP header)
+	// that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
+	// https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
+	// max-age is the time, in seconds, that the browser should remember that this site is only to be
+	// accessed using HTTPS.
+	MaxAge int64 `json:"max-age,omitempty"`
+
+	// Enables or disables the preload attribute in HSTS feature
+	Preload bool `json:"preload,omitempty"`
+}
+
 // Upstream ...
 type Upstream struct {
 
@@ -656,7 +663,7 @@ type Upstream struct {
 	// Sets the additional headers to pass to the backend.
 	SetHeaders map[string]string `json:"set-headers,omitempty"`
 
-	// HideHeaders sets additional header that will not be passed from the upstream
+	// HideHeaders sets headers that should not be passed from the upstream
 	// server to the client response
 	// Default: empty
 	HideHeaders []string `json:"hide-headers,omitempty"`
@@ -673,7 +680,7 @@ type Upstream struct {
 
 	// Enables or disables buffering of responses from the proxied server.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering
-	Buffering string `json:"buffering,omitempty"`
+	Buffering OnOff `json:"buffering,omitempty"`
 
 	// Sets the size of the buffer used for reading the first part of the response received from the
 	// proxied server. This part usually contains a small response header.
@@ -735,7 +742,7 @@ type Upstream struct {
 
 	// Specifies in which cases a request should be passed to the next server.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
-	NextUpstream string `json:"next-upstream,omitempty"`
+	NextUpstream []string `json:"next-upstream,omitempty"`
 	// Limits the number of possible tries for passing a request to the next server.
 	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream_tries
 	NextUpstreamTries int `json:"next-upstream-tries,omitempty"`
@@ -748,40 +755,19 @@ type Upstream struct {
 	// Sets the original text that should be changed in the "Location" and "Refresh" header fields of a proxied server response.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect
 	// Default: off
-	RedirectFrom string `json:"redirect-from,omitempty"`
+	RedirectFrom OnOff `json:"redirect-from,omitempty"`
 
 	// Sets the replacement text that should be changed in the "Location" and "Refresh" header fields of a proxied server response.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect
 	// Default: ""
-	RedirectTo string `json:"redirect-to,omitempty"`
+	RedirectTo OnOff `json:"redirect-to,omitempty"`
 
 	// Enables or disables buffering of a client request body.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering
-	RequestBuffering string `json:"request-buffering,omitempty"`
+	RequestBuffering OnOff `json:"request-buffering,omitempty"`
 
 	// Timeout in seconds for transmitting a request to the proxied server. The timeout is set only between
 	// two successive write operations, not for the transmission of the whole request.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout
 	SendTimeout int `json:"send-timeout,omitempty"`
-}
-
-// Stream defines the TCP and UDP services to be exposed using the NGINX Stream feature
-type Stream struct {
-	TCP []L4Backend `json:"decode"`
-	UDP []L4Backend `json:"decode"`
-}
-
-// L4Backend describes the kubernetes service behind L4 Ingress service
-type L4Backend struct {
-	Port      intstr.IntOrString `json:"port"`
-	Name      string             `json:"name"`
-	Namespace string             `json:"namespace"`
-	// +optional
-	ProxyProtocol StreamProxyProtocol `json:"proxyProtocol"`
-}
-
-// StreamProxyProtocol describes the proxy protocol configuration
-type StreamProxyProtocol struct {
-	Decode bool `json:"decode"`
-	Encode bool `json:"encode"`
 }

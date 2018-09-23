@@ -23,13 +23,61 @@ import (
 )
 
 const (
-	gzipTypes         = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
-	brotliTypes       = "application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"
 	logFormatUpstream = `%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`
+)
+
+var (
+	gzipTypes = []string{
+		"application/atom+xml",
+		"application/javascript",
+		"application/x-javascript",
+		"application/json",
+		"application/rss+xml",
+		"application/vnd.ms-fontobject",
+		"application/x-font-ttf",
+		"application/x-web-app-manifest+json",
+		"application/xhtml+xml",
+		"application/xml",
+		"font/opentype image/svg+xml",
+		"image/x-icon text/css",
+		"text/plain",
+		"text/x-component",
+	}
+
+	brotliTypes = []string{
+		"application/xml+rss",
+		"application/atom+xml",
+		"application/javascript",
+		"application/x-javascript",
+		"application/json",
+		"application/rss+xml",
+		"application/vnd.ms-fontobject",
+		"application/x-font-ttf",
+		"application/x-web-app-manifest+json",
+		"application/xhtml+xml",
+		"application/xml",
+		"font/opentype",
+		"image/svg+xml",
+		"image/x-icon",
+		"text/css",
+		"text/plain",
+		"text/x-component",
+	}
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by the OpenSSL library
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
-	sslCiphers = "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
+	sslCiphers = []string{
+		"ECDHE-ECDSA-AES256-GCM-SHA384",
+		"ECDHE-RSA-AES256-GCM-SHA384",
+		"ECDHE-ECDSA-CHACHA20-POLY1305",
+		"ECDHE-RSA-CHACHA20-POLY1305",
+		"ECDHE-ECDSA-AES128-GCM-SHA256",
+		"ECDHE-RSA-AES128-GCM-SHA256",
+		"ECDHE-ECDSA-AES256-SHA384",
+		"ECDHE-RSA-AES256-SHA384",
+		"ECDHE-ECDSA-AES128-SHA256",
+		"ECDHE-RSA-AES128-SHA256",
+	}
 )
 
 // NewDefaultConfiguration returns the default nginx configuration
@@ -135,10 +183,10 @@ func NewDefaultConfiguration() ConfigurationSpec {
 	}
 
 	metrics := &Metrics{
-		Enabled:        false,
-		Latency:        []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
-		ResponseLength: []float64{100, 1000, 10000, 100000, 1000000},
-		RequestLength:  []float64{1000, 10000, 100000, 1000000, 10000000},
+		Enabled: false,
+		//Latency:        []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
+		//ResponseLength: []float64{100, 1000, 10000, 100000, 1000000},
+		//RequestLength:  []float64{1000, 10000, 100000, 1000000, 10000000},
 	}
 
 	snippets := &Snippets{
@@ -162,7 +210,7 @@ func NewDefaultConfiguration() ConfigurationSpec {
 
 		Ciphers:   sslCiphers,
 		ECDHCurve: "auto",
-		Protocols: "TLSv1.2",
+		Protocols: []string{"TLSv1.3", "TLSv1.2"},
 
 		SessionCache:     true,
 		SessionCacheSize: "10m",
@@ -200,7 +248,7 @@ func NewDefaultConfiguration() ConfigurationSpec {
 		HideHeaders: []string{},
 
 		BodySize:                      "1m",
-		Buffering:                     "off",
+		Buffering:                     Off,
 		BufferSize:                    "4k",
 		CookieDomain:                  "off",
 		CookiePath:                    "off",
@@ -212,12 +260,12 @@ func NewDefaultConfiguration() ConfigurationSpec {
 		HashBy:                        "",
 		KeepaliveConnections:          32,
 		MaxFails:                      0,
-		NextUpstream:                  "error timeout",
+		NextUpstream:                  []string{"error", "timeout"},
 		NextUpstreamTries:             3,
 		ReadTimeout:                   60,
-		RedirectFrom:                  "off",
-		RedirectTo:                    "off",
-		RequestBuffering:              "on",
+		RedirectFrom:                  Off,
+		RedirectTo:                    Off,
+		RequestBuffering:              On,
 		SendTimeout:                   60,
 	}
 
