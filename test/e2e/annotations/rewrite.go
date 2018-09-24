@@ -130,7 +130,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "/.well-known/acme/challenge")
+				return strings.Contains(server, "~* ^/.well-known/acme/challenge {")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -141,8 +141,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 			End()
 
 		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 		By(`creating an ingress definition with the rewrite-target annotation set on the "/" location`)
 		annotations := map[string]string{
@@ -155,7 +155,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "location ~* / {")
+				return strings.Contains(server, "location ~* ^/ {")
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -166,7 +166,30 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 			End()
 
 		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		By(`creating an ingress definition with the rewrite-target annotation set on the longest location path`)
+		rewriteIng = framework.NewSingleIngress("rewrite-index2", "/.well-known/acme/challenge/.*", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err = f.EnsureIngress(rewriteIng)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(rewriteIng).NotTo(BeNil())
+
+		err = f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, `location ~* ^/.well-known/acme/challenge/.*\/?(?<baseuri>.*) {`)
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		By("making a request to the rewritten location")
+		resp, body, errs = gorequest.New().
+			Get(f.IngressController.HTTPURL+"/.well-known/acme/challenge/foo").
+			Set("Host", host).
+			End()
+
+		expectBodyRequestURI = fmt.Sprintf("request_uri=http://%v:8080/new/backend", host)
+		Expect(len(errs)).Should(Equal(0))
+		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 })

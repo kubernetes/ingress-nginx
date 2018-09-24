@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	text_template "text/template"
@@ -155,7 +156,7 @@ var (
 		"buildOpentracing":            buildOpentracing,
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
-		"atLeastOneNeedsRewrite":      atLeastOneNeedsRewrite,
+		"orderLocations":              orderLocations,
 	}
 )
 
@@ -288,32 +289,27 @@ func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 	return strings.Join(r, " ") + ";"
 }
 
-func needsRewrite(location *ingress.Location) bool {
-	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != location.Path {
-		return true
-	}
-	return false
-}
+// ByPath implements sort.Interface based on the path feild
+type ByPath []*ingress.Location
 
-// atLeastOneNeedsRewrite checks if the nginx.ingress.kubernetes.io/rewrite-target annotation is used on the '/' path
-func atLeastOneNeedsRewrite(input interface{}) bool {
+func (p ByPath) Len() int           { return len(p) }
+func (p ByPath) Less(i, j int) bool { return len(p[i].Path) < len(p[j].Path) }
+func (p ByPath) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func orderLocations(input interface{}) []*ingress.Location {
 	locations, ok := input.([]*ingress.Location)
 	if !ok {
 		glog.Errorf("expected an '[]*ingress.Location' type but %T was returned", input)
-		return false
+		return locations
 	}
-
-	for _, location := range locations {
-		if needsRewrite(location) {
-			return true
-		}
-	}
-	return false
+	// Go sort runs in O(nlogn)
+	sort.Sort(sort.Reverse(ByPath(locations)))
+	return locations
 }
 
 // buildLocation produces the location string, if the ingress has redirects
 // (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
-func buildLocation(input interface{}, rewrite bool) string {
+func buildLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
@@ -321,9 +317,9 @@ func buildLocation(input interface{}, rewrite bool) string {
 	}
 
 	path := location.Path
-	if needsRewrite(location) {
+	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != path {
 		if path == slash {
-			return fmt.Sprintf("~* %s", path)
+			return fmt.Sprintf("~* ^%s", path)
 		}
 		// baseuri regex will parse basename from the given location
 		baseuri := `(?<baseuri>.*)`
@@ -334,13 +330,7 @@ func buildLocation(input interface{}, rewrite bool) string {
 		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
 	}
 
-	if rewrite {
-		if path == slash {
-			return path
-		}
-		return fmt.Sprintf(`^~ %s`, path)
-	}
-	return path
+	return fmt.Sprintf(`~* ^%s`, path)
 }
 
 func buildAuthLocation(input interface{}) string {
