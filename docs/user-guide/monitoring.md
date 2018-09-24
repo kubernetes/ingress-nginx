@@ -53,7 +53,7 @@ Obtain the IP address of the nodes in the running cluster:
 kubectl get nodes -o wide
 ```
 
-In some cases where the node only have internal IP adresses we need to execute:
+In some cases where the node only have internal IP addresses we need to execute:
 
 ```console
 kubectl get nodes --selector=kubernetes.io/role!=master -o jsonpath={.items[*].status.addresses[?\(@.type==\"InternalIP\"\)].address}
