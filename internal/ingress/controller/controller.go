@@ -131,7 +131,13 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	upstreams, servers := n.getBackendServers(ings)
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
+	hosts := sets.NewString()
+
 	for _, server := range servers {
+		if !hosts.Has(server.Hostname) {
+			hosts.Insert(server.Hostname)
+		}
+
 		if !server.SSLPassthrough {
 			continue
 		}
@@ -183,6 +189,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			glog.Errorf("Unexpected failure reloading the backend:\n%v", err)
 			return err
 		}
+
+		n.metricCollector.SetHosts(hosts)
 
 		glog.Infof("Backend successfully reloaded.")
 		n.metricCollector.ConfigSuccess(hash, true)

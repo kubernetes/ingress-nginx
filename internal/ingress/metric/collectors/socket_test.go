@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 func TestNewUDPLogListener(t *testing.T) {
@@ -295,6 +296,8 @@ func TestCollector(t *testing.T) {
 			if err := registry.Register(sc); err != nil {
 				t.Errorf("registering collector failed: %s", err)
 			}
+
+			sc.SetHosts(sets.NewString("testshop.com"))
 
 			for _, d := range c.data {
 				sc.handleMessage([]byte(d))

@@ -12,3 +12,7 @@ definitions.
  - The spec generator that is responsible for dynamically generate 
 the final OpenAPI spec using web service routes or combining other 
 OpenAPI/Json specs.
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute.
