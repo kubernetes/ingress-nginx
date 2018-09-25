@@ -144,6 +144,9 @@ The following table shows a configuration option's name, type, and the default v
 |[limit-req-status-code](#limit-req-status-code)|int|503|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
+|[block-cidrs](#block-cidrs)|[]string|""|
+|[block-user-agents](#block-user-agents)|[]string|""|
+|[block-referers](#block-referers)|[]string|""|
 
 ## add-headers
 
@@ -791,3 +794,26 @@ _**default:**_ "/.well-known/acme-challenge"
 
 A comma-separated list of locations that should not get authenticated.
 _**default:**_ "/.well-known/acme-challenge"
+
+## block-cidrs
+
+A comma-separated list of IP addresses (or subnets), requestst from which have to be blocked globally.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_access_module.html#deny](http://nginx.org/en/docs/http/ngx_http_access_module.html#deny)
+
+## block-user-agents
+
+A comma-separated list of User-Agent, requestst from which have to be blocked globally.
+It's possible to use here full strings and regular expressions. More details about valid patterns can be found at `map` Nginx directive documentation.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_map_module.html#map](http://nginx.org/en/docs/http/ngx_http_map_module.html#map)
+
+## block-referers
+
+A comma-separated list of Referers, requestst from which have to be blocked globally.
+It's possible to use here full strings and regular expressions. More details about valid patterns can be found at `map` Nginx directive documentation.
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_map_module.html#map](http://nginx.org/en/docs/http/ngx_http_map_module.html#map)
