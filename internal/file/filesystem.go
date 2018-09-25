@@ -31,6 +31,9 @@ const ReadWriteByUser = 0660
 // ReadByUserGroup defines linux permission to read files by the user and group owner/s
 const ReadByUserGroup = 0640
 
+//ReadByAny defines linux permission to anyone read the file
+const ReadByAny = 0644
+
 // Filesystem is an interface that we can use to mock various filesystem operations
 type Filesystem interface {
 	filesystem.Filesystem
