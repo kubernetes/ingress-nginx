@@ -1056,7 +1056,7 @@ stream {
             {{ buildInfluxDB $location.InfluxDB }}
 
             {{ if not (empty $location.Redirect.URL) }}
-            if ($uri ~* {{ $path }}) {
+            if ($uri {{ $path }}) {
                 return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
             }
             {{ end }}
