@@ -533,12 +533,22 @@ type Configuration struct {
 
 	// Checksum contains a checksum of the configmap configuration
 	Checksum string `json:"-"`
+
+	// Block all requests from given IPs
+	BlockCIDRs []string `json:"block-cidrs"`
+
+	// Block all requests with given User-Agent headers
+	BlockUserAgents []string `json:"block-user-agents"`
+
+	// Block all requests with given Referer headers
+	BlockReferers []string `json:"block-referers"`
 }
 
 // NewDefault returns the default nginx configuration
 func NewDefault() Configuration {
 	defIPCIDR := make([]string, 0)
 	defBindAddress := make([]string, 0)
+	defBlockEntity := make([]string, 0)
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
 
@@ -552,6 +562,9 @@ func NewDefault() Configuration {
 		AccessLogPath:              "/var/log/nginx/access.log",
 		WorkerCpuAffinity:          "",
 		ErrorLogPath:               "/var/log/nginx/error.log",
+		BlockCIDRs:                 defBlockEntity,
+		BlockUserAgents:            defBlockEntity,
+		BlockReferers:              defBlockEntity,
 		BrotliLevel:                4,
 		BrotliTypes:                brotliTypes,
 		ClientHeaderBufferSize:     "1k",
