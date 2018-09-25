@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.3
+export NGINX_VERSION=1.15.4
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export STICKY_SESSIONS_VERSION=08a395c66e42
@@ -94,6 +94,7 @@ clean-install \
   authbind \
   dumb-init \
   gdb \
+  valgrind \
   || exit 1
 
 if [[ ${ARCH} == "x86_64" ]]; then
@@ -144,7 +145,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 9391fb91c3e2ebd040a4e3ac2b2f0893deb6232edc30a8e16fcc9c3fa9d6be85 \
+get_src 3324776c800d974ceae8797ab9102ca26a8c3656f5c6fb3f31f2cb1e719458e7 \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -457,7 +458,8 @@ WITH_FLAGS="--with-debug \
   --with-stream_ssl_module \
   --with-stream_ssl_preread_module \
   --with-threads \
-  --with-http_secure_link_module"
+  --with-http_secure_link_module \
+  --with-http_gunzip_module"
 
 if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
@@ -595,7 +597,8 @@ for dir in "${writeDirs[@]}"; do
   chown -R www-data.www-data ${dir};
 done
 
-chmod 755 /etc/authbind/byuid/33
-chown www-data /etc/authbind/byuid/33
-chmod 755 /etc/authbind/byport/*
-chown www-data /etc/authbind/byport/*
+for value in {1..1023};do
+  touch /etc/authbind/byport/$value
+  chown www-data /etc/authbind/byport/$value
+  chmod 755 /etc/authbind/byport/$value
+done
