@@ -121,7 +121,10 @@ func main() {
 	reg := prometheus.NewRegistry()
 
 	reg.MustRegister(prometheus.NewGoCollector())
-	reg.MustRegister(prometheus.NewProcessCollector(os.Getpid(), ""))
+	reg.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{
+		PidFn:        func() (int, error) { return os.Getpid(), nil },
+		ReportErrors: true,
+	}))
 
 	mc, err := metric.NewCollector(conf.ListenPorts.Status, reg)
 	if err != nil {
