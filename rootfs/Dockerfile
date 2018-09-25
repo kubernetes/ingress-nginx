@@ -21,6 +21,7 @@ WORKDIR  /etc/nginx
 RUN clean-install \
   diffutils \
   valgrind \
+  libcap2-bin \
   dumb-init
 
 COPY . /
@@ -39,9 +40,17 @@ RUN bash -eu -c ' \
   for dir in "${writeDirs[@]}"; do \
     mkdir -p ${dir}; \
     chown -R www-data.www-data ${dir}; \
+  done \
+  && for value in {1..1023};do \
+    touch /etc/authbind/byport/$value; \
+    chown www-data /etc/authbind/byport/$value; \
+    chmod 755 /etc/authbind/byport/$value; \
   done' \
   && chown www-data.www-data /etc/nginx/nginx.conf \
   && chown www-data.www-data /etc/nginx/opentracing.json
+
+RUN  setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
+  && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller
 
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector
 # This only works if nginx is started with CMD or ENTRYPOINT
