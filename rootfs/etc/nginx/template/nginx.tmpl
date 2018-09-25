@@ -584,6 +584,17 @@ http {
 
     {{ end }}
 
+    # backend for when default-backend-service is not configured or it does not have endpoints
+    server {
+        listen {{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
+        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
+        set $proxy_upstream_name "-";
+
+        location / {
+          return 404;
+        }
+    }
+
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
         listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};

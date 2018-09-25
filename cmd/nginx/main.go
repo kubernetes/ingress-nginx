@@ -84,20 +84,22 @@ func main() {
 		handleFatalInitError(err)
 	}
 
-	defSvcNs, defSvcName, err := k8s.ParseNameNS(conf.DefaultService)
-	if err != nil {
-		glog.Fatal(err)
-	}
-
-	_, err = kubeClient.CoreV1().Services(defSvcNs).Get(defSvcName, metav1.GetOptions{})
-	if err != nil {
-		// TODO (antoineco): compare with error types from k8s.io/apimachinery/pkg/api/errors
-		if strings.Contains(err.Error(), "cannot get services in the namespace") {
-			glog.Fatalf("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
+	if len(conf.DefaultService) > 0 {
+		defSvcNs, defSvcName, err := k8s.ParseNameNS(conf.DefaultService)
+		if err != nil {
+			glog.Fatal(err)
 		}
-		glog.Fatalf("No service with name %v found: %v", conf.DefaultService, err)
+
+		_, err = kubeClient.CoreV1().Services(defSvcNs).Get(defSvcName, metav1.GetOptions{})
+		if err != nil {
+			// TODO (antoineco): compare with error types from k8s.io/apimachinery/pkg/api/errors
+			if strings.Contains(err.Error(), "cannot get services in the namespace") {
+				glog.Fatalf("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
+			}
+			glog.Fatalf("No service with name %v found: %v", conf.DefaultService, err)
+		}
+		glog.Infof("Validated %v as the default backend.", conf.DefaultService)
 	}
-	glog.Infof("Validated %v as the default backend.", conf.DefaultService)
 
 	if conf.Namespace != "" {
 		_, err = kubeClient.CoreV1().Namespaces().Get(conf.Namespace, metav1.GetOptions{})
