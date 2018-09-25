@@ -1229,7 +1229,7 @@ stream {
             return 503;
             {{ end }}
             {{ else }}
-            # Location denied. Reason: {{ $location.Denied }}
+            # Location denied. Reason: {{ $location.Denied | printf "%q" }}
             return 503;
             {{ end }}
         }
