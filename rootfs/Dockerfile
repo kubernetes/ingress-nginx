@@ -50,4 +50,6 @@ RUN  setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
 RUN ln -sf /dev/stdout /var/log/nginx/access.log
 RUN ln -sf /dev/stderr /var/log/nginx/error.log
 
+USER www-data
+
 CMD ["/nginx-ingress-controller"]
