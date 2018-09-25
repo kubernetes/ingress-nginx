@@ -803,23 +803,3 @@ func TestBuildUpstreamName(t *testing.T) {
 		}
 	}
 }
-
-func TestOrderLocations(t *testing.T) {
-	locations := []*ingress.Location{
-		{Path: "/"},
-		{Path: "/a"},
-		{Path: "/abc"},
-		{Path: "/abcd"},
-	}
-
-	ordered := orderLocations(locations)
-
-	prevLen := 6
-	for _, l := range ordered {
-		currLen := len(l.Path)
-		if prevLen < currLen {
-			t.Errorf("orderLocations did not sort location paths in descending order")
-		}
-		prevLen = currLen
-	}
-}

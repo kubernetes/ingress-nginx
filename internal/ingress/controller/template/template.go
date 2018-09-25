@@ -26,7 +26,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"sort"
 	"strconv"
 	"strings"
 	text_template "text/template"
@@ -156,7 +155,7 @@ var (
 		"buildOpentracing":            buildOpentracing,
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
-		"orderLocations":              orderLocations,
+		// "orderLocations":              orderLocations,
 	}
 )
 
@@ -287,24 +286,6 @@ func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 	}
 
 	return strings.Join(r, " ") + ";"
-}
-
-// ByPath implements sort.Interface based on the path feild
-type ByPath []*ingress.Location
-
-func (p ByPath) Len() int           { return len(p) }
-func (p ByPath) Less(i, j int) bool { return len(p[i].Path) < len(p[j].Path) }
-func (p ByPath) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
-func orderLocations(input interface{}) []*ingress.Location {
-	locations, ok := input.([]*ingress.Location)
-	if !ok {
-		glog.Errorf("expected an '[]*ingress.Location' type but %T was returned", input)
-		return locations
-	}
-	// Go sort runs in O(nlogn)
-	sort.Sort(sort.Reverse(ByPath(locations)))
-	return locations
 }
 
 // buildLocation produces the location string, if the ingress has redirects
