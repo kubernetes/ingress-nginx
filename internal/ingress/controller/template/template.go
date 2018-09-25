@@ -155,7 +155,6 @@ var (
 		"buildOpentracing":            buildOpentracing,
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
-		// "orderLocations":              orderLocations,
 	}
 )
 
