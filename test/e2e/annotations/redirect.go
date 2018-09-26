@@ -60,7 +60,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("if ($uri ~* %s) {", redirectPath)) &&
+				return strings.Contains(server, fmt.Sprintf("if ($uri ~* ^%s) {", redirectPath)) &&
 					strings.Contains(server, fmt.Sprintf("return 301 %s;", redirectURL))
 			})
 		Expect(err).NotTo(HaveOccurred())
@@ -100,7 +100,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("if ($uri ~* %s) {", redirectPath)) &&
+				return strings.Contains(server, fmt.Sprintf("if ($uri ~* ^%s) {", redirectPath)) &&
 					strings.Contains(server, fmt.Sprintf("return %d %s;", redirectCode, redirectURL))
 			})
 		Expect(err).NotTo(HaveOccurred())
