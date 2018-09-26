@@ -786,6 +786,11 @@ stream {
             {{ else }}
             proxy_pass            http://upstream-default-backend;
             {{ end }}
+            {{ if not .DisableLua }}
+            log_by_lua_block {
+                monitor.call()
+            }
+            {{ end }}
         }
         {{ end }}
 {{ end }}
