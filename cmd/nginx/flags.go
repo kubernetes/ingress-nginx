@@ -176,10 +176,6 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		return true, nil, nil
 	}
 
-	if *defaultSvc == "" {
-		return false, nil, fmt.Errorf("Please specify --default-backend-service")
-	}
-
 	if *ingressClass != "" {
 		glog.Infof("Watching for Ingress class: %s", *ingressClass)
 

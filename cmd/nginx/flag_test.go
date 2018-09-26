@@ -31,10 +31,10 @@ func resetForTesting(usage func()) {
 	flag.Usage = usage
 }
 
-func TestMandatoryFlag(t *testing.T) {
+func TestNoMandatoryFlag(t *testing.T) {
 	_, _, err := parseFlags()
-	if err == nil {
-		t.Fatalf("Expected an error about default backend service")
+	if err != nil {
+		t.Fatalf("Expected no error but got: %s", err)
 	}
 }
 

@@ -362,6 +362,12 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 		Name: defUpstreamName,
 	}
 	svcKey := n.cfg.DefaultService
+
+	if len(svcKey) == 0 {
+		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
+		return upstream
+	}
+
 	svc, err := n.store.GetService(svcKey)
 	if err != nil {
 		glog.Warningf("Error getting default backend %q: %v", svcKey, err)
