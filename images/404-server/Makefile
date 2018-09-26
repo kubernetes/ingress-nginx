@@ -20,7 +20,7 @@
 
 all: push
 
-TAG?=1.4
+TAG?=1.5
 PREFIX?=gcr.io/google_containers/defaultbackend
 ARCH?=amd64
 
