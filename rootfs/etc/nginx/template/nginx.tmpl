@@ -762,6 +762,7 @@ stream {
 {{ define "CUSTOM_ERRORS" }}
         {{ $dynamicConfig := .DynamicConfigurationEnabled}}
         {{ $proxySetHeaders := .ProxySetHeaders }}
+        {{ $isLuaDisabled := .DisableLua }}
         {{ range $errCode := .Cfg.CustomHTTPErrors }}
         location @custom_{{ $errCode }} {
             internal;
@@ -786,7 +787,7 @@ stream {
             {{ else }}
             proxy_pass            http://upstream-default-backend;
             {{ end }}
-            {{ if not .DisableLua }}
+            {{ if not $isLuaDisabled }}
             log_by_lua_block {
                 monitor.call()
             }
