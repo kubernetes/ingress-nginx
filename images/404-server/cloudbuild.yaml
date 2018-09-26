@@ -3,7 +3,7 @@ timeout: 10800s
 substitutions:
   { "_ARCH": "amd64",
     "_REGISTRY": "gcr.io/k8s-image-staging",
-    "_TAG": "1.4" }
+    "_TAG": "1.5" }
 
 steps:
 - name: gcr.io/cloud-builders/git
