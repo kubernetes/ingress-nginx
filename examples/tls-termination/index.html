@@ -1160,12 +1160,59 @@
 <h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
 <p>The following command instructs the controller to terminate traffic using the provided 
 TLS cert, and forward un-encrypted HTTP traffic to the test HTTP service.</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f ingress.yaml</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="go">kubectl apply -f ingress.yaml</span>
 </pre></div>
+</td></tr></table>
 
 <h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
 <p>You can confirm that the Ingress works.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe ing nginx-test
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl describe ing nginx-test
 <span class="go">Name:           nginx-test</span>
 <span class="go">Namespace:      default</span>
 <span class="go">Address:        104.198.183.6</span>
@@ -1213,6 +1260,7 @@ TLS cert, and forward un-encrypted HTTP traffic to the test HTTP service.</p>
 <span class="go">x-forwarded-proto=https</span>
 <span class="go">BODY:</span>
 </pre></div>
+</td></tr></table>
                 
                   
                 

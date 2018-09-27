@@ -1361,6 +1361,27 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#block-cidrs" title="block-cidrs" class="md-nav__link">
+    block-cidrs
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#block-user-agents" title="block-user-agents" class="md-nav__link">
+    block-user-agents
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#block-referers" title="block-referers" class="md-nav__link">
+    block-referers
+  </a>
+  
+</li>
+      
       
       
       
@@ -2718,6 +2739,27 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#block-cidrs" title="block-cidrs" class="md-nav__link">
+    block-cidrs
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#block-user-agents" title="block-user-agents" class="md-nav__link">
+    block-user-agents
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#block-referers" title="block-referers" class="md-nav__link">
+    block-referers
+  </a>
+  
+</li>
+      
       
       
       
@@ -2743,10 +2785,13 @@
 components for the nginx-controller.</p>
 <p>In order to overwrite nginx-controller configuration values as seen in <a href="https://github.com/kubernetes/ingress-nginx/blob/master/internal/ingress/controller/config/config.go">config.go</a>,
 you can add key-value pairs to the data section of the config-map. For Example:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">map-hash-bucket-size</span><span class="p p-Indicator">:</span> <span class="s">&quot;128&quot;</span>
   <span class="l l-Scalar l-Scalar-Plain">ssl-protocols</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">SSLv2</span>
 </pre></div>
+</td></tr></table>
 
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -3351,6 +3396,21 @@ Same for numbers, like "100".</p>
 <td align="left">string</td>
 <td align="left">"/.well-known/acme-challenge"</td>
 </tr>
+<tr>
+<td align="left"><a href="#block-cidrs">block-cidrs</a></td>
+<td align="left">[]string</td>
+<td align="left">""</td>
+</tr>
+<tr>
+<td align="left"><a href="#block-user-agents">block-user-agents</a></td>
+<td align="left">[]string</td>
+<td align="left">""</td>
+</tr>
+<tr>
+<td align="left"><a href="#block-referers">block-referers</a></td>
+<td align="left">[]string</td>
+<td align="left">""</td>
+</tr>
 </tbody>
 </table>
 <h2 id="add-headers">add-headers<a class="headerlink" href="#add-headers" title="Permanent link">&para;</a></h2>
@@ -3723,6 +3783,20 @@ Supported codes are <a href="https://developer.mozilla.org/docs/Web/HTTP/Status/
 <h2 id="no-auth-locations">no-auth-locations<a class="headerlink" href="#no-auth-locations" title="Permanent link">&para;</a></h2>
 <p>A comma-separated list of locations that should not get authenticated.
 <em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>
+<h2 id="block-cidrs">block-cidrs<a class="headerlink" href="#block-cidrs" title="Permanent link">&para;</a></h2>
+<p>A comma-separated list of IP addresses (or subnets), requestst from which have to be blocked globally.</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/http/ngx_http_access_module.html#deny">http://nginx.org/en/docs/http/ngx_http_access_module.html#deny</a></p>
+<h2 id="block-user-agents">block-user-agents<a class="headerlink" href="#block-user-agents" title="Permanent link">&para;</a></h2>
+<p>A comma-separated list of User-Agent, requestst from which have to be blocked globally.
+It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code class="codehilite">map</code> Nginx directive documentation.</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#map">http://nginx.org/en/docs/http/ngx_http_map_module.html#map</a></p>
+<h2 id="block-referers">block-referers<a class="headerlink" href="#block-referers" title="Permanent link">&para;</a></h2>
+<p>A comma-separated list of Referers, requestst from which have to be blocked globally.
+It's possible to use here full strings and regular expressions. More details about valid patterns can be found at <code class="codehilite">map</code> Nginx directive documentation.</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#map">http://nginx.org/en/docs/http/ngx_http_map_module.html#map</a></p>
                 
                   
                 

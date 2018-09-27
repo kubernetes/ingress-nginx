@@ -1131,12 +1131,17 @@
 <p>This example aims to demonstrate the deployment of an nginx ingress controller and
 use a ConfigMap to configure a custom list of headers to be passed to the upstream
 server</p>
-<div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-headers/configmap.yaml \</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-headers/configmap.yaml \</span>
 <span class="go">    | kubectl apply -f -</span>
 
 <span class="go">curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-headers/custom-headers.yaml \</span>
 <span class="go">    | kubectl apply -f -</span>
 </pre></div>
+</td></tr></table>
 
 <h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link">&para;</a></h2>
 <p>Check the contents of the configmap is present in the nginx.conf file using:

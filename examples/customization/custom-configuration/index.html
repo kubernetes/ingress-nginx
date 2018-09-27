@@ -1085,7 +1085,15 @@
                 <h1 id="custom-configuration">Custom Configuration<a class="headerlink" href="#custom-configuration" title="Permanent link">&para;</a></h1>
 <p>Using a <a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/">ConfigMap</a> is possible to customize the NGINX configuration</p>
 <p>For example, if we want to change the timeouts we need to create a ConfigMap:</p>
-<div class="codehilite"><pre><span></span>$ cat configmap.yaml
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ cat configmap.yaml
 apiVersion: v1
 data:
   proxy-connect-timeout: <span class="s2">&quot;10&quot;</span>
@@ -1095,10 +1103,13 @@ kind: ConfigMap
 metadata:
   name: nginx-load-balancer-conf
 </pre></div>
+</td></tr></table>
 
-<div class="codehilite"><pre><span></span>curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-configuration/configmap.yaml \
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-configuration/configmap.yaml \
     | kubectl apply -f -
 </pre></div>
+</td></tr></table>
 
 <p>If the Configmap it is updated, NGINX will be reloaded with the new configuration.</p>
                 

@@ -1228,21 +1228,28 @@ nginx controller.</p>
    application provided here as an example. </li>
 </ol>
 <h3 id="step-1-kubernetes-deployment">Step 1: kubernetes <code class="codehilite">Deployment</code><a class="headerlink" href="#step-1-kubernetes-deployment" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span>$ kubectl create -f app.yaml
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl create -f app.yaml
 </pre></div>
+</td></tr></table>
 
 <p>This is a standard kubernetes deployment object.  It is running a grpc service
 listening on port <code class="codehilite">50051</code>.</p>
 <p>The sample application
 <a href="https://github.com/kubernetes/ingress-nginx/images/grpc-fortune-teller">fortune-teller-app</a>
 is a grpc server implemented in go. Here's the stripped-down implementation:</p>
-<div class="codehilite"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">grpcServer</span> <span class="o">:=</span> <span class="nx">grpc</span><span class="p">.</span><span class="nx">NewServer</span><span class="p">()</span>
     <span class="nx">fortune</span><span class="p">.</span><span class="nx">RegisterFortuneTellerServer</span><span class="p">(</span><span class="nx">grpcServer</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">FortuneTeller</span><span class="p">{})</span>
     <span class="nx">lis</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Listen</span><span class="p">(</span><span class="s">&quot;tcp&quot;</span><span class="p">,</span> <span class="s">&quot;:50051&quot;</span><span class="p">)</span>
     <span class="nx">grpcServer</span><span class="p">.</span><span class="nx">Serve</span><span class="p">(</span><span class="nx">lis</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
+</td></tr></table>
 
 <p>The takeaway is that we are not doing any TLS configuration on the server (as we
 are terminating TLS at the ingress level, grpc traffic will travel unencrypted
@@ -1251,14 +1258,16 @@ inside the cluster and arrive "insecure").</p>
 forward encrypted traffic to your POD and terminate TLS at the gRPC server
 itself, add the ingress annotation <code class="codehilite">nginx.ingress.kubernetes.io/secure-backends:&quot;true&quot;</code>.</p>
 <h3 id="step-2-the-kubernetes-service">Step 2: the kubernetes <code class="codehilite">Service</code><a class="headerlink" href="#step-2-the-kubernetes-service" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span>$ kubectl create -f svc.yaml
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl create -f svc.yaml
 </pre></div>
+</td></tr></table>
 
 <p>Here we have a typical service. Nothing special, just routing traffic to the
 backend application on port <code class="codehilite">50051</code>.</p>
 <h3 id="step-3-the-kubernetes-ingress">Step 3: the kubernetes <code class="codehilite">Ingress</code><a class="headerlink" href="#step-3-the-kubernetes-ingress" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span>$ kubectl create -f ingress.yaml
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl create -f ingress.yaml
 </pre></div>
+</td></tr></table>
 
 <p>A few things to note:</p>
 <ol>
@@ -1275,11 +1284,15 @@ backend application on port <code class="codehilite">50051</code>.</p>
 <p>Once we've applied our configuration to kubernetes, it's time to test that we
 can actually talk to the backend.  To do this, we'll use the
 <a href="https://github.com/fullstorydev/grpcurl">grpcurl</a> utility:</p>
-<div class="codehilite"><pre><span></span>$ grpcurl fortune-teller.stack.build:443 build.stack.fortune.FortuneTeller/Predict
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ grpcurl fortune-teller.stack.build:443 build.stack.fortune.FortuneTeller/Predict
 <span class="o">{</span>
   <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;Let us endeavor so to live that when we come to die even the undertaker will be sorry.\n\t\t-- Mark Twain, \&quot;Pudd&#39;nhead Wilson&#39;s Calendar\&quot;&quot;</span>
 <span class="o">}</span>
 </pre></div>
+</td></tr></table>
 
 <h3 id="debugging-hints">Debugging Hints<a class="headerlink" href="#debugging-hints" title="Permanent link">&para;</a></h3>
 <ol>

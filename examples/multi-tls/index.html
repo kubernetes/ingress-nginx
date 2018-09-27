@@ -1085,10 +1085,51 @@
 <ol>
 <li>Deploy the controller by creating the rc in the parent dir</li>
 <li>Create tls secrets for foo.bar.com and bar.baz.com as indicated in the yaml</li>
-<li>Create multi-tls.yaml</li>
+<li>Create <a href="multi-tls.yaml">multi-tls.yaml</a></li>
 </ol>
 <p>This should generate a segment like:
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl <span class="nb">exec</span> -it nginx-ingress-controller-6vwd1 -- cat /etc/nginx/nginx.conf <span class="p">|</span> grep <span class="s2">&quot;foo.bar.com&quot;</span> -B <span class="m">7</span> -A <span class="m">35</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl <span class="nb">exec</span> -it nginx-ingress-controller-6vwd1 -- cat /etc/nginx/nginx.conf <span class="p">|</span> grep <span class="s2">&quot;foo.bar.com&quot;</span> -B <span class="m">7</span> -A <span class="m">35</span>
 <span class="go">    server {</span>
 <span class="go">        listen 80;</span>
 <span class="go">        listen 443 ssl http2;</span>
@@ -1130,9 +1171,46 @@
 
 <span class="go">            proxy_pass http://default-http-svc-80;</span>
 <span class="go">        }</span>
-</pre></div></p>
+</pre></div>
+</td></tr></table></p>
 <p>And you should be able to reach your nginx service or http-svc service using a hostname switch:
-<div class="codehilite"><pre><span></span><span class="gp">$</span>  kubectl get ing
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span>  kubectl get ing
 <span class="go">NAME      RULE          BACKEND   ADDRESS                         AGE</span>
 <span class="go">foo-tls   -                       104.154.30.67                   13m</span>
 <span class="go">          foo.bar.com</span>
@@ -1169,7 +1247,8 @@
 
 <span class="gp">$</span> curl <span class="m">104</span>.154.30.67
 <span class="go">default backend - 404</span>
-</pre></div></p>
+</pre></div>
+</td></tr></table></p>
                 
                   
                 

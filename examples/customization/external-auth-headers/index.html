@@ -1097,7 +1097,25 @@ to backend service.</p>
 </ul>
 <p>You can deploy the controller as
 follows:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f deploy/
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f deploy/
 <span class="go">deployment &quot;demo-auth-service&quot; created</span>
 <span class="go">service &quot;demo-auth-service&quot; created</span>
 <span class="go">ingress &quot;demo-auth-service&quot; created</span>
@@ -1117,9 +1135,27 @@ follows:</p>
 <span class="go">public-demo-echo-service   public-demo-echo-service.kube.local             80        1m</span>
 <span class="go">secure-demo-echo-service   secure-demo-echo-service.kube.local             80        1m</span>
 </pre></div>
+</td></tr></table>
 
 <p>Test 1: public service with no auth header</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: public-demo-echo-service.kube.local&#39;</span> -v <span class="m">192</span>.168.99.100
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: public-demo-echo-service.kube.local&#39;</span> -v <span class="m">192</span>.168.99.100
 <span class="go">* Rebuilt URL to: 192.168.99.100/</span>
 <span class="go">*   Trying 192.168.99.100...</span>
 <span class="go">* Connected to 192.168.99.100 (192.168.99.100) port 80 (#0)</span>
@@ -1138,9 +1174,33 @@ follows:</p>
 <span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
 <span class="go">UserID: , UserRole:</span>
 </pre></div>
+</td></tr></table>
 
 <p>Test 2: secure service with no auth header</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: secure-demo-echo-service.kube.local&#39;</span> -v <span class="m">192</span>.168.99.100
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: secure-demo-echo-service.kube.local&#39;</span> -v <span class="m">192</span>.168.99.100
 <span class="go">* Rebuilt URL to: 192.168.99.100/</span>
 <span class="go">*   Trying 192.168.99.100...</span>
 <span class="go">* Connected to 192.168.99.100 (192.168.99.100) port 80 (#0)</span>
@@ -1165,9 +1225,28 @@ follows:</p>
 <span class="go">&lt;/html&gt;</span>
 <span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
 </pre></div>
+</td></tr></table>
 
 <p>Test 3: public service with valid auth header</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: public-demo-echo-service.kube.local&#39;</span> -H <span class="s1">&#39;User:internal&#39;</span> -v <span class="m">192</span>.168.99.100
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: public-demo-echo-service.kube.local&#39;</span> -H <span class="s1">&#39;User:internal&#39;</span> -v <span class="m">192</span>.168.99.100
 <span class="go">* Rebuilt URL to: 192.168.99.100/</span>
 <span class="go">*   Trying 192.168.99.100...</span>
 <span class="go">* Connected to 192.168.99.100 (192.168.99.100) port 80 (#0)</span>
@@ -1187,9 +1266,28 @@ follows:</p>
 <span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
 <span class="go">UserID: 1443635317331776148, UserRole: admin</span>
 </pre></div>
+</td></tr></table>
 
 <p>Test 4: public service with valid auth header</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: secure-demo-echo-service.kube.local&#39;</span> -H <span class="s1">&#39;User:internal&#39;</span> -v <span class="m">192</span>.168.99.100
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> curl -H <span class="s1">&#39;Host: secure-demo-echo-service.kube.local&#39;</span> -H <span class="s1">&#39;User:internal&#39;</span> -v <span class="m">192</span>.168.99.100
 <span class="go">* Rebuilt URL to: 192.168.99.100/</span>
 <span class="go">*   Trying 192.168.99.100...</span>
 <span class="go">* Connected to 192.168.99.100 (192.168.99.100) port 80 (#0)</span>
@@ -1209,6 +1307,7 @@ follows:</p>
 <span class="go">* Connection #0 to host 192.168.99.100 left intact</span>
 <span class="go">UserID: 605394647632969758, UserRole: admin</span>
 </pre></div>
+</td></tr></table>
                 
                   
                 

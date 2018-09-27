@@ -1130,7 +1130,40 @@
                 <h1 id="external-basic-authentication">External Basic Authentication<a class="headerlink" href="#external-basic-authentication" title="Permanent link">&para;</a></h1>
 <h3 id="example-1">Example 1:<a class="headerlink" href="#example-1" title="Permanent link">&para;</a></h3>
 <p>Use an external service (Basic Auth) located in <code class="codehilite">https://httpbin.org</code> </p>
-<div class="codehilite"><pre><span></span>$ kubectl create -f ingress.yaml
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl create -f ingress.yaml
 ingress <span class="s2">&quot;external-auth&quot;</span> created
 
 $ kubectl get ing external-auth
@@ -1165,9 +1198,34 @@ status:
     - ip: <span class="m">172</span>.17.4.99
 $
 </pre></div>
+</td></tr></table>
 
 <p>Test 1: no username/password (expect code 401)</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> curl -k http://172.17.4.99 -v -H <span class="s1">&#39;Host: external-auth-01.sample.com&#39;</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> curl -k http://172.17.4.99 -v -H <span class="s1">&#39;Host: external-auth-01.sample.com&#39;</span>
 <span class="go">* Rebuilt URL to: http://172.17.4.99/</span>
 <span class="go">*   Trying 172.17.4.99...</span>
 <span class="go">* Connected to 172.17.4.99 (172.17.4.99) port 80 (#0)</span>
@@ -1193,9 +1251,52 @@ $
 <span class="go">&lt;/html&gt;</span>
 <span class="go">* Connection #0 to host 172.17.4.99 left intact</span>
 </pre></div>
+</td></tr></table>
 
 <p>Test 2: valid username/password (expect code 200)
-<div class="codehilite"><pre><span></span>$ curl -k http://172.17.4.99 -v -H <span class="s1">&#39;Host: external-auth-01.sample.com&#39;</span> -u <span class="s1">&#39;user:passwd&#39;</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ curl -k http://172.17.4.99 -v -H <span class="s1">&#39;Host: external-auth-01.sample.com&#39;</span> -u <span class="s1">&#39;user:passwd&#39;</span>
 * Rebuilt URL to: http://172.17.4.99/
 *   Trying <span class="m">172</span>.17.4.99...
 * Connected to <span class="m">172</span>.17.4.99 <span class="o">(</span><span class="m">172</span>.17.4.99<span class="o">)</span> port <span class="m">80</span> <span class="o">(</span><span class="c1">#0)</span>
@@ -1238,9 +1339,37 @@ x-real-ip<span class="o">=</span><span class="m">10</span>.2.60.1
 BODY:
 * Connection <span class="c1">#0 to host 172.17.4.99 left intact</span>
 -no body in request-
-</pre></div></p>
+</pre></div>
+</td></tr></table></p>
 <p>Test 3: invalid username/password (expect code 401)
-<div class="codehilite"><pre><span></span>curl -k http://172.17.4.99 -v -H &#39;Host: external-auth-01.sample.com&#39; -u &#39;user:user&#39;
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>curl -k http://172.17.4.99 -v -H &#39;Host: external-auth-01.sample.com&#39; -u &#39;user:user&#39;
 * Rebuilt URL to: http://172.17.4.99/
 *   Trying 172.17.4.99...
 * Connected to 172.17.4.99 (172.17.4.99) port 80 (#0)
@@ -1268,7 +1397,8 @@ BODY:
 <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
 * Connection #0 to host 172.17.4.99 left intact
-</pre></div></p>
+</pre></div>
+</td></tr></table></p>
                 
                   
                 

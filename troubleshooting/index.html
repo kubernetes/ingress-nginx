@@ -1220,7 +1220,29 @@ Do not move it without providing redirects.
 <p>There are many ways to troubleshoot the ingress-controller. The following are basic troubleshooting
 methods to obtain more information.</p>
 <p>Check the Ingress Resource Events</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get ing -n &lt;namespace-of-ingress-resource&gt;
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get ing -n &lt;namespace-of-ingress-resource&gt;
 <span class="go">NAME           HOSTS      ADDRESS     PORTS     AGE</span>
 <span class="go">cafe-ingress   cafe.com   10.0.2.15   80        25s</span>
 
@@ -1244,9 +1266,21 @@ methods to obtain more information.</p>
 <span class="go">  Normal  CREATE  1m    nginx-ingress-controller  Ingress default/cafe-ingress</span>
 <span class="go">  Normal  UPDATE  58s   nginx-ingress-controller  Ingress default/cafe-ingress</span>
 </pre></div>
+</td></tr></table>
 
 <p>Check the Ingress Controller Logs</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n &lt;namespace-of-ingress-controller&gt;
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n &lt;namespace-of-ingress-controller&gt;
 <span class="go">NAME                                        READY     STATUS    RESTARTS   AGE</span>
 <span class="go">nginx-ingress-controller-67956bf89d-fv58j   1/1       Running   0          1m</span>
 
@@ -1259,9 +1293,26 @@ methods to obtain more information.</p>
 <span class="go">-------------------------------------------------------------------------------</span>
 <span class="go">....</span>
 </pre></div>
+</td></tr></table>
 
 <p>Check the Nginx Configuration</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n &lt;namespace-of-ingress-controller&gt;
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get pods -n &lt;namespace-of-ingress-controller&gt;
 <span class="go">NAME                                        READY     STATUS    RESTARTS   AGE</span>
 <span class="go">nginx-ingress-controller-67956bf89d-fv58j   1/1       Running   0          1m</span>
 
@@ -1279,9 +1330,17 @@ methods to obtain more information.</p>
 <span class="go">http {</span>
 <span class="go">....</span>
 </pre></div>
+</td></tr></table>
 
 <p>Check if used Services Exist</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get svc --all-namespaces
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get svc --all-namespaces
 <span class="go">NAMESPACE     NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE</span>
 <span class="go">default       coffee-svc             ClusterIP   10.106.154.35    &lt;none&gt;        80/TCP          18m</span>
 <span class="go">default       kubernetes             ClusterIP   10.96.0.1        &lt;none&gt;        443/TCP         30m</span>
@@ -1290,11 +1349,18 @@ methods to obtain more information.</p>
 <span class="go">kube-system   kube-dns               ClusterIP   10.96.0.10       &lt;none&gt;        53/UDP,53/TCP   30m</span>
 <span class="go">kube-system   kubernetes-dashboard   NodePort    10.103.128.17    &lt;none&gt;        80:30000/TCP    30m</span>
 </pre></div>
+</td></tr></table>
 
 <h2 id="debug-logging">Debug Logging<a class="headerlink" href="#debug-logging" title="Permanent link">&para;</a></h2>
 <p>Using the flag <code class="codehilite">--v=XX</code> it is possible to increase the level of logging. This is performed by editing
 the deployment.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get deploy -n &lt;namespace-of-ingress-controller&gt;
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl get deploy -n &lt;namespace-of-ingress-controller&gt;
 <span class="go">NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE</span>
 <span class="go">default-http-backend       1         1         1            1           35m</span>
 <span class="go">nginx-ingress-controller   1         1         1            1           35m</span>
@@ -1302,6 +1368,7 @@ the deployment.</p>
 <span class="gp">$</span> kubectl edit deploy -n &lt;namespace-of-ingress-controller&gt; nginx-ingress-controller
 <span class="gp">#</span> Add --v<span class="o">=</span>X to <span class="s2">&quot;- args&quot;</span>, where X is an integer
 </pre></div>
+</td></tr></table>
 
 <ul>
 <li><code class="codehilite">--v=2</code> shows details using <code class="codehilite">diff</code> about the changes in the configuration in nginx</li>
@@ -1313,12 +1380,17 @@ the deployment.</p>
 down the source of the problem, namely whether it is a problem with service authentication or
 with the kubeconfig file.</p>
 <p>Both authentications must work:</p>
-<div class="codehilite"><pre><span></span>+-------------+   service          +------------+
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>+-------------+   service          +------------+
 |             |   authentication   |            |
 +  apiserver  +&lt;-------------------+  ingress   |
 |             |                    | controller |
 +-------------+                    +------------+
 </pre></div>
+</td></tr></table>
 
 <p><strong>Service authentication</strong></p>
 <p>The Ingress controller needs information from apiserver. Therefore, authentication is required, which can be achieved in two different ways:</p>
@@ -1337,7 +1409,23 @@ with the kubeconfig file.</p>
 </ol>
 <p>In the diagram below you can see the full authentication flow with all options, starting with the browser
 on the lower left hand side.</p>
-<div class="codehilite"><pre><span></span>Kubernetes                                                  Workstation
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>Kubernetes                                                  Workstation
 +---------------------------------------------------+     +------------------+
 |                                                   |     |                  |
 |  +-----------+   apiserver        +------------+  |     |  +------------+  |
@@ -1355,13 +1443,76 @@ on the lower left hand side.</p>
 |                                                   |     |                  |
 +---------------------------------------------------+     +------------------+
 </pre></div>
+</td></tr></table>
 
 <h3 id="service-account">Service Account<a class="headerlink" href="#service-account" title="Permanent link">&para;</a></h3>
 <p>If using a service account to connect to the API server, Dashboard expects the file
 <code class="codehilite">/var/run/secrets/kubernetes.io/serviceaccount/token</code> to be present. It provides a secret
 token that is required to authenticate with the API server.</p>
 <p>Verify with the following commands:</p>
-<div class="codehilite"><pre><span></span><span class="gp">#</span> start a container that contains curl
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">#</span> start a container that contains curl
 <span class="gp">$</span> kubectl run <span class="nb">test</span> --image<span class="o">=</span>tutum/curl -- sleep <span class="m">10000</span>
 
 <span class="gp">#</span> check that container is running
@@ -1425,6 +1576,7 @@ token that is required to authenticate with the API server.</p>
 <span class="go">  ]</span>
 <span class="go">}</span>
 </pre></div>
+</td></tr></table>
 
 <p>If it is not working, there are two possible reasons:</p>
 <ol>
@@ -1458,33 +1610,46 @@ dump. This allows us to see which configuration is being used, as well as older 
 <ol>
 <li>SSH into the worker</li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> ssh user@workerIP
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> ssh user@workerIP
 </pre></div>
+</td></tr></table>
 
 <ol>
 <li>Obtain the Docker Container Running nginx</li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> docker ps <span class="p">|</span> grep nginx-ingress-controller
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> docker ps <span class="p">|</span> grep nginx-ingress-controller
 <span class="go">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</span>
 <span class="go">d9e1d243156a        quay.io/kubernetes-ingress-controller/nginx-ingress-controller   &quot;/usr/bin/dumb-init …&quot;   19 minutes ago      Up 19 minutes                                                                            k8s_nginx-ingress-controller_nginx-ingress-controller-67956bf89d-mqxzt_kube-system_079f31ec-aa37-11e8-ad39-080027a227db_0</span>
 </pre></div>
+</td></tr></table>
 
 <ol>
 <li>Exec into the container</li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> docker <span class="nb">exec</span> -it --user<span class="o">=</span><span class="m">0</span> --privileged d9e1d243156a bash
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> docker <span class="nb">exec</span> -it --user<span class="o">=</span><span class="m">0</span> --privileged d9e1d243156a bash
 </pre></div>
+</td></tr></table>
 
 <ol>
 <li>Make sure nginx is running in <code class="codehilite">--with-debug</code></li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> nginx -V <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> grep -- <span class="s1">&#39;--with-debug&#39;</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> nginx -V <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> grep -- <span class="s1">&#39;--with-debug&#39;</span>
 </pre></div>
+</td></tr></table>
 
 <ol>
 <li>Get list of processes running on container</li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> ps -ef
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> ps -ef
 <span class="go">UID        PID  PPID  C STIME TTY          TIME CMD</span>
 <span class="go">root         1     0  0 20:23 ?        00:00:00 /usr/bin/dumb-init /nginx-ingres</span>
 <span class="go">root         5     1  0 20:23 ?        00:00:05 /nginx-ingress-controller --defa</span>
@@ -1493,22 +1658,37 @@ dump. This allows us to see which configuration is being used, as well as older 
 <span class="go">nobody     107    21  0 20:23 ?        00:00:00 nginx: worker process</span>
 <span class="go">root       172     0  0 20:43 pts/0    00:00:00 bash</span>
 </pre></div>
+</td></tr></table>
 
 <ol>
 <li>Attach gdb to the nginx master process</li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> gdb -p <span class="m">21</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> gdb -p <span class="m">21</span>
 <span class="go">....</span>
 <span class="go">Attaching to process 21</span>
 <span class="go">Reading symbols from /usr/sbin/nginx...done.</span>
 <span class="go">....</span>
 <span class="go">(gdb)</span>
 </pre></div>
+</td></tr></table>
 
 <ol>
 <li>Copy and paste the following:</li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="go">set $cd = ngx_cycle-&gt;config_dump</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="go">set $cd = ngx_cycle-&gt;config_dump</span>
 <span class="go">set $nelts = $cd.nelts</span>
 <span class="go">set $elts = (ngx_conf_dump_t*)($cd.elts)</span>
 <span class="go">while ($nelts-- &gt; 0)</span>
@@ -1518,6 +1698,7 @@ dump. This allows us to see which configuration is being used, as well as older 
 <span class="gp">        $</span>elts<span class="o">[</span><span class="nv">$nelts</span><span class="o">]</span>-&gt;buffer.start <span class="nv">$elts</span><span class="o">[</span><span class="nv">$nelts</span><span class="o">]</span>-&gt;buffer.end
 <span class="go">end</span>
 </pre></div>
+</td></tr></table>
 
 <ol>
 <li>
@@ -1527,8 +1708,9 @@ dump. This allows us to see which configuration is being used, as well as older 
 <p>Open nginx_conf.txt</p>
 </li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="go">cat nginx_conf.txt</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="go">cat nginx_conf.txt</span>
 </pre></div>
+</td></tr></table>
                 
                   
                 

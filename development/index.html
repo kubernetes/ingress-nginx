@@ -1281,12 +1281,17 @@ It includes how to build, test, and release ingress controllers.</p>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <h3 id="getting-the-code">Getting the code<a class="headerlink" href="#getting-the-code" title="Permanent link">&para;</a></h3>
 <p>The code must be checked out as a subdirectory of k8s.io, and not github.com.</p>
-<div class="codehilite"><pre><span></span>mkdir -p $GOPATH/src/k8s.io
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>mkdir -p $GOPATH/src/k8s.io
 cd $GOPATH/src/k8s.io
 # Replace &quot;$YOUR_GITHUB_USERNAME&quot; below with your github username
 git clone https://github.com/$YOUR_GITHUB_USERNAME/ingress-nginx.git
 cd ingress-nginx
 </pre></div>
+</td></tr></table>
 
 <h3 id="initial-developer-environment-build">Initial developer environment build<a class="headerlink" href="#initial-developer-environment-build" title="Permanent link">&para;</a></h3>
 <blockquote>
@@ -1294,24 +1299,35 @@ cd ingress-nginx
 See <a href="https://github.com/kubernetes/minikube/releases">releases</a> for installation instructions. </p>
 </blockquote>
 <p>If you are using <strong>MacOS</strong> and deploying to <strong>minikube</strong>, the following command will build the local nginx controller container image and deploy the ingress controller onto a minikube cluster with RBAC enabled in the namespace <code class="codehilite">ingress-nginx</code>:</p>
-<div class="codehilite"><pre><span></span>$ make dev-env
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ make dev-env
 </pre></div>
+</td></tr></table>
 
 <h3 id="updating-the-deployment">Updating the deployment<a class="headerlink" href="#updating-the-deployment" title="Permanent link">&para;</a></h3>
 <p>The nginx controller container image can be rebuilt using:
-<div class="codehilite"><pre><span></span>$ <span class="nv">ARCH</span><span class="o">=</span>amd64 <span class="nv">TAG</span><span class="o">=</span>dev <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make build container
-</pre></div></p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ <span class="nv">ARCH</span><span class="o">=</span>amd64 <span class="nv">TAG</span><span class="o">=</span>dev <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make build container
+</pre></div>
+</td></tr></table></p>
 <p>The image will only be used by pods created after the rebuild. To delete old pods which will cause new ones to spin up:
-<div class="codehilite"><pre><span></span>$ kubectl get pods -n ingress-nginx
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl get pods -n ingress-nginx
 $ kubectl delete pod -n ingress-nginx nginx-ingress-controller-&lt;unique-pod-id&gt;
-</pre></div></p>
+</pre></div>
+</td></tr></table></p>
 <h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
 <p>The build uses dependencies in the <code class="codehilite">vendor</code> directory, which
 must be installed before building a binary/image. Occasionally, you
 might need to update the dependencies.</p>
 <p>This guide requires you to install the <a href="https://github.com/golang/dep">dep</a> dependency tool.</p>
 <p>Check the version of <code class="codehilite">dep</code> you are using and make sure it is up to date.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> dep version
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> dep version
 <span class="go">dep:</span>
 <span class="go"> version     : devel</span>
 <span class="go"> build date  : </span>
@@ -1320,63 +1336,84 @@ might need to update the dependencies.</p>
 <span class="go"> go compiler : gc</span>
 <span class="go"> platform    : linux/amd64</span>
 </pre></div>
+</td></tr></table>
 
 <p>If you have an older version of <code class="codehilite">dep</code>, you can update it as follows:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> go get -u github.com/golang/dep
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> go get -u github.com/golang/dep
 </pre></div>
+</td></tr></table>
 
 <p>This will automatically save the dependencies to the <code class="codehilite">vendor/</code> directory.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
 <span class="gp">$</span> dep ensure
 <span class="gp">$</span> dep ensure -update
 <span class="gp">$</span> dep prune
 </pre></div>
+</td></tr></table>
 
 <h2 id="building">Building<a class="headerlink" href="#building" title="Permanent link">&para;</a></h2>
 <p>All ingress controllers are built through a Makefile. Depending on your
 requirements you can build a raw server binary, a local container image,
 or push an image to a remote repository.</p>
 <p>In order to use your local Docker, you may need to set the following environment variables:</p>
-<div class="codehilite"><pre><span></span><span class="gp">#</span> <span class="s2">&quot;gcloud docker&quot;</span> <span class="o">(</span>default<span class="o">)</span> or <span class="s2">&quot;docker&quot;</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">#</span> <span class="s2">&quot;gcloud docker&quot;</span> <span class="o">(</span>default<span class="o">)</span> or <span class="s2">&quot;docker&quot;</span>
 <span class="gp">$</span> <span class="nb">export</span> <span class="nv">DOCKER</span><span class="o">=</span>&lt;docker&gt;
 
 <span class="gp">#</span> <span class="s2">&quot;quay.io/kubernetes-ingress-controller&quot;</span> <span class="o">(</span>default<span class="o">)</span>, <span class="s2">&quot;index.docker.io&quot;</span>, or your own registry
 <span class="gp">$</span> <span class="nb">export</span> <span class="nv">REGISTRY</span><span class="o">=</span>&lt;your-docker-registry&gt;
 </pre></div>
+</td></tr></table>
 
 <p>To find the registry simply run: <code class="codehilite">docker system info | grep Registry</code></p>
 <h3 id="nginx-controller">Nginx Controller<a class="headerlink" href="#nginx-controller" title="Permanent link">&para;</a></h3>
 <p>Build a raw server binary
-<div class="codehilite"><pre><span></span><span class="gp">$</span> make build
-</pre></div></p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> make build
+</pre></div>
+</td></tr></table></p>
 <p><a href="https://github.com/kubernetes/ingress-nginx/issues/387">TODO</a>: add more specific instructions needed for raw server binary.</p>
 <p>Build a local container image</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make docker-build
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make docker-build
 </pre></div>
+</td></tr></table>
 
 <p>Push the container image to a remote repository</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make docker-push
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nv">TAG</span><span class="o">=</span>&lt;tag&gt; <span class="nv">REGISTRY</span><span class="o">=</span><span class="nv">$USER</span>/ingress-controller make docker-push
 </pre></div>
+</td></tr></table>
 
 <h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link">&para;</a></h2>
 <p>There are several ways to deploy the ingress controller onto a cluster.
 Please check the <a href="./deploy">deployment guide</a></p>
 <h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
 <p>To run unit-tests, just run</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
 <span class="gp">$</span> make <span class="nb">test</span>
 </pre></div>
+</td></tr></table>
 
 <p>If you have access to a Kubernetes cluster, you can also run e2e tests using ginkgo.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
 <span class="gp">$</span> make e2e-test
 </pre></div>
+</td></tr></table>
 
 <p>To run unit-tests for lua code locally, run:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/k8s.io/ingress-nginx
 <span class="gp">$</span> ./rootfs/etc/nginx/lua/test/up.sh
 <span class="gp">$</span> make lua-test
 </pre></div>
+</td></tr></table>
 
 <p>Lua tests are located in <code class="codehilite">$GOPATH/src/k8s.io/ingress-nginx/rootfs/etc/nginx/lua/test</code>. When creating a new test file it must follow the naming convention <code class="codehilite">&lt;mytest&gt;_test.lua</code> or it will be ignored. </p>
 <h2 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link">&para;</a></h2>
@@ -1385,8 +1422,9 @@ to a wider Kubernetes user base, push the image to a container registry, like
 <a href="https://cloud.google.com/container-registry/">gcr.io</a>. All release images are hosted under <code class="codehilite">gcr.io/google_containers</code> and
 tagged according to a <a href="http://semver.org/">semver</a> scheme.</p>
 <p>An example release might look like:
-<div class="codehilite"><pre><span></span>$ make release
-</pre></div></p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ make release
+</pre></div>
+</td></tr></table></p>
 <p>Please follow these guidelines to cut a release:</p>
 <ul>
 <li>Update the <a href="https://help.github.com/articles/creating-releases/">release</a>

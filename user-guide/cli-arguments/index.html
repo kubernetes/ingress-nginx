@@ -1109,11 +1109,11 @@
 </tr>
 <tr>
 <td><code class="codehilite">--default-backend-service string</code></td>
-<td>Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service.</td>
+<td>Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. If not specified, 404 page will be returned diretly from Nginx.</td>
 </tr>
 <tr>
 <td><code class="codehilite">--default-server-port int</code></td>
-<td>Port to use for exposing the default server (catch-all). (default 8181)</td>
+<td>When <code class="codehilite">default-backend-service</code> is not specified or specified service does not have any endpoint, a local endpoint with this port will be used to serve 404 page from inside Nginx.</td>
 </tr>
 <tr>
 <td><code class="codehilite">--default-ssl-certificate string</code></td>

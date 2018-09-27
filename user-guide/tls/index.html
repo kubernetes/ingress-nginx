@@ -1239,12 +1239,14 @@
 <h2 id="tls-secrets">TLS Secrets<a class="headerlink" href="#tls-secrets" title="Permanent link">&para;</a></h2>
 <p>Anytime we reference a TLS secret, we mean a PEM-encoded X.509, RSA (2048) secret.</p>
 <p>You can generate a self-signed certificate and private key with with:</p>
-<div class="codehilite"><pre><span></span>$ openssl req -x509 -nodes -days <span class="m">365</span> -newkey rsa:2048 -keyout <span class="si">${</span><span class="nv">KEY_FILE</span><span class="si">}</span> -out <span class="si">${</span><span class="nv">CERT_FILE</span><span class="si">}</span> -subj <span class="s2">&quot;/CN=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">/O=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">&quot;</span><span class="sb">`</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ openssl req -x509 -nodes -days <span class="m">365</span> -newkey rsa:2048 -keyout <span class="si">${</span><span class="nv">KEY_FILE</span><span class="si">}</span> -out <span class="si">${</span><span class="nv">CERT_FILE</span><span class="si">}</span> -subj <span class="s2">&quot;/CN=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">/O=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">&quot;</span><span class="sb">`</span>
 </pre></div>
+</td></tr></table>
 
 <p>Then create the secret in the cluster via:</p>
-<div class="codehilite"><pre><span></span>kubectl create secret tls <span class="si">${</span><span class="nv">CERT_NAME</span><span class="si">}</span> --key <span class="si">${</span><span class="nv">KEY_FILE</span><span class="si">}</span> --cert <span class="si">${</span><span class="nv">CERT_FILE</span><span class="si">}</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>kubectl create secret tls <span class="si">${</span><span class="nv">CERT_NAME</span><span class="si">}</span> --key <span class="si">${</span><span class="nv">KEY_FILE</span><span class="si">}</span> --cert <span class="si">${</span><span class="nv">CERT_FILE</span><span class="si">}</span>
 </pre></div>
+</td></tr></table>
 
 <p>The resulting secret will be of type <code class="codehilite">kubernetes.io/tls</code>.</p>
 <h2 id="default-ssl-certificate">Default SSL Certificate<a class="headerlink" href="#default-ssl-certificate" title="Permanent link">&para;</a></h2>
@@ -1306,8 +1308,9 @@ replaced by <a href="https://github.com/jetstack/cert-manager/">cert-manager</a>
 <p><a href="https://github.com/jetstack/kube-lego">Kube-Lego</a> automatically requests missing or expired certificates from <a href="https://letsencrypt.org">Let's Encrypt</a>
 by monitoring ingress resources and their referenced secrets.</p>
 <p>To enable this for an ingress resource you have to add an annotation:</p>
-<div class="codehilite"><pre><span></span><span class="go">kubectl annotate ing ingress-demo kubernetes.io/tls-acme=&quot;true&quot;</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="go">kubectl annotate ing ingress-demo kubernetes.io/tls-acme=&quot;true&quot;</span>
 </pre></div>
+</td></tr></table>
 
 <p>To setup Kube-Lego you can take a look at this <a href="https://github.com/jetstack/kube-lego/tree/master/examples">full example</a>.
 The first version to fully support Kube-Lego is Nginx Ingress controller 0.8.</p>
@@ -1321,7 +1324,13 @@ May 2018, <a href="https://developer.android.com/about/dashboards/#Platform">app
 are not compatible with nginx-ingress's default configuration.</p>
 <p>To change this default behavior, use a <a href="../nginx-configuration/configmap/">ConfigMap</a>.</p>
 <p>A sample ConfigMap fragment to allow these older clients to connect could look something like the following:</p>
-<div class="codehilite"><pre><span></span><span class="n">kind</span><span class="o">:</span> <span class="n">ConfigMap</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">kind</span><span class="o">:</span> <span class="n">ConfigMap</span>
 <span class="n">apiVersion</span><span class="o">:</span> <span class="n">v1</span>
 <span class="n">metadata</span><span class="o">:</span>
   <span class="n">name</span><span class="o">:</span> <span class="n">nginx</span><span class="o">-</span><span class="n">config</span>
@@ -1329,6 +1338,7 @@ are not compatible with nginx-ingress's default configuration.</p>
   <span class="n">ssl</span><span class="o">-</span><span class="n">ciphers</span><span class="o">:</span> <span class="s2">&quot;ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA&quot;</span>
   <span class="n">ssl</span><span class="o">-</span><span class="n">protocols</span><span class="o">:</span> <span class="s2">&quot;TLSv1 TLSv1.1 TLSv1.2&quot;</span>
 </pre></div>
+</td></tr></table>
                 
                   
                 

@@ -1084,7 +1084,23 @@
                 
                 <h1 id="custom-upstream-server-checks">Custom Upstream server checks<a class="headerlink" href="#custom-upstream-server-checks" title="Permanent link">&para;</a></h1>
 <p>This example shows how is possible to create a custom configuration for a particular upstream associated with an Ingress rule.</p>
-<div class="codehilite"><pre><span></span>echo &quot;
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>echo &quot;
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -1102,15 +1118,24 @@ spec:
           servicePort: 80
 &quot; | kubectl create -f -
 </pre></div>
+</td></tr></table>
 
 <p>Check the annotation is present in the Ingress rule:
-<div class="codehilite"><pre><span></span>kubectl get ingress http-svc -o yaml
-</pre></div></p>
-<p>Check the NGINX configuration is updated using kubectl or the status page:</p>
-<div class="codehilite"><pre><span></span>$ kubectl <span class="nb">exec</span> nginx-ingress-controller-v1ppm cat /etc/nginx/nginx.conf
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>kubectl get ingress http-svc -o yaml
 </pre></div>
+</td></tr></table></p>
+<p>Check the NGINX configuration is updated using kubectl or the status page:</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl <span class="nb">exec</span> nginx-ingress-controller-v1ppm cat /etc/nginx/nginx.conf
+</pre></div>
+</td></tr></table>
 
-<div class="codehilite"><pre><span></span><span class="o">....</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">....</span>
     <span class="nt">upstream</span> <span class="nt">default-http-svc-x-80</span> <span class="p">{</span>
         <span class="err">least_conn</span><span class="p">;</span>
         <span class="err">server</span> <span class="err">10.2.92.2:8080</span> <span class="err">max_fails=5</span> <span class="err">fail_timeout=30</span><span class="p">;</span>
@@ -1118,6 +1143,7 @@ spec:
     <span class="p">}</span>
 <span class="o">....</span>
 </pre></div>
+</td></tr></table>
                 
                   
                 

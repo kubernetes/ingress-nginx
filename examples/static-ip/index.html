@@ -1196,25 +1196,48 @@ nodes get static IPs, the IPs are not retained across upgrade.</p>
 <p>To acquire a static IP for the nginx ingress controller, simply put it
 behind a Service of <code class="codehilite">Type=LoadBalancer</code>.</p>
 <p>First, create a loadbalancer Service and wait for it to acquire an IP</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f static-ip-svc.yaml
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f static-ip-svc.yaml
 <span class="go">service &quot;nginx-ingress-lb&quot; created</span>
 
 <span class="gp">$</span> kubectl get svc nginx-ingress-lb
 <span class="go">NAME               CLUSTER-IP     EXTERNAL-IP       PORT(S)                      AGE</span>
 <span class="go">nginx-ingress-lb   10.0.138.113   104.154.109.191   80:31457/TCP,443:32240/TCP   15m</span>
 </pre></div>
+</td></tr></table>
 
 <p>then, update the ingress controller so it adopts the static IP of the Service
 by passing the <code class="codehilite">--publish-service</code> flag (the example yaml used in the next step
 already has it set to "nginx-ingress-lb").</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f nginx-ingress-controller.yaml
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f nginx-ingress-controller.yaml
 <span class="go">deployment &quot;nginx-ingress-controller&quot; created</span>
 </pre></div>
+</td></tr></table>
 
 <h2 id="assigning-the-ip-to-an-ingress">Assigning the IP to an Ingress<a class="headerlink" href="#assigning-the-ip-to-an-ingress" title="Permanent link">&para;</a></h2>
 <p>From here on every Ingress created with the <code class="codehilite">ingress.class</code> annotation set to
 <code class="codehilite">nginx</code> will get the IP allocated in the previous step</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f nginx-ingress.yaml
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create -f nginx-ingress.yaml
 <span class="go">ingress &quot;nginx-ingress&quot; created</span>
 
 <span class="gp">$</span> kubectl get ing nginx-ingress
@@ -1231,10 +1254,19 @@ already has it set to "nginx-ingress-lb").</p>
 <span class="go">request_uri=http://104.154.109.191:8080/</span>
 <span class="go">...</span>
 </pre></div>
+</td></tr></table>
 
 <h2 id="retaining-the-ip">Retaining the IP<a class="headerlink" href="#retaining-the-ip" title="Permanent link">&para;</a></h2>
 <p>You can test retention by deleting the Ingress</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl delete ing nginx-ingress
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl delete ing nginx-ingress
 <span class="go">ingress &quot;nginx-ingress&quot; deleted</span>
 
 <span class="gp">$</span> kubectl create -f nginx-ingress.yaml
@@ -1244,6 +1276,7 @@ already has it set to "nginx-ingress-lb").</p>
 <span class="go">NAME            HOSTS     ADDRESS           PORTS     AGE</span>
 <span class="go">nginx-ingress   *         104.154.109.191   80, 443   13m</span>
 </pre></div>
+</td></tr></table>
 
 <blockquote>
 <p>Note that unlike the GCE Ingress, the same loadbalancer IP is shared amongst all
@@ -1252,14 +1285,29 @@ controllers.</p>
 </blockquote>
 <h2 id="promote-ephemeral-to-static-ip">Promote ephemeral to static IP<a class="headerlink" href="#promote-ephemeral-to-static-ip" title="Permanent link">&para;</a></h2>
 <p>To promote the allocated IP to static, you can update the Service manifest</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl patch svc nginx-ingress-lb -p <span class="s1">&#39;{&quot;spec&quot;: {&quot;loadBalancerIP&quot;: &quot;104.154.109.191&quot;}}&#39;</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl patch svc nginx-ingress-lb -p <span class="s1">&#39;{&quot;spec&quot;: {&quot;loadBalancerIP&quot;: &quot;104.154.109.191&quot;}}&#39;</span>
 <span class="go">&quot;nginx-ingress-lb&quot; patched</span>
 </pre></div>
+</td></tr></table>
 
 <p>and promote the IP to static (promotion works differently for cloudproviders,
 provided example is for GKE/GCE)
 `
-<div class="codehilite"><pre><span></span><span class="gp">$</span> gcloud compute addresses create nginx-ingress-lb --addresses <span class="m">104</span>.154.109.191 --region us-central1
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> gcloud compute addresses create nginx-ingress-lb --addresses <span class="m">104</span>.154.109.191 --region us-central1
 <span class="go">Created [https://www.googleapis.com/compute/v1/projects/kubernetesdev/regions/us-central1/addresses/nginx-ingress-lb].</span>
 <span class="go">---</span>
 <span class="go">address: 104.154.109.191</span>
@@ -1273,7 +1321,8 @@ provided example is for GKE/GCE)
 <span class="go">status: IN_USE</span>
 <span class="go">users:</span>
 <span class="go">- us-central1/forwardingRules/a09f6913ae80e11e6a8c542010af0000</span>
-</pre></div></p>
+</pre></div>
+</td></tr></table></p>
 <p>Now even if the Service is deleted, the IP will persist, so you can recreate the
 Service with <code class="codehilite">spec.loadBalancerIP</code> set to <code class="codehilite">104.154.109.191</code>.</p>
                 

@@ -1084,13 +1084,19 @@
                 
                 <h1 id="log-format">Log format<a class="headerlink" href="#log-format" title="Permanent link">&para;</a></h1>
 <p>The default configuration uses a custom logging format to add additional information about upstreams, response time and status.</p>
-<div class="codehilite"><pre><span></span><span class="x">log_format upstreaminfo</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="x">log_format upstreaminfo</span>
 <span class="x">    &#39;</span><span class="cp">{{</span> <span class="k">if</span> <span class="err">$</span><span class="nv">cfg.useProxyProtocol</span> <span class="cp">}}</span><span class="x">$proxy_protocol_addr</span><span class="cp">{{</span> <span class="k">else</span> <span class="cp">}}</span><span class="x">$remote_addr</span><span class="cp">{{</span> <span class="nv">end</span> <span class="cp">}}</span><span class="x"> - &#39;</span>
 <span class="x">    &#39;[$the_real_ip] - $remote_user [$time_local] &quot;$request&quot; &#39;</span>
 <span class="x">    &#39;$status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;</span>
 <span class="x">    &#39;$request_length $request_time [$proxy_upstream_name] $upstream_addr &#39;</span>
 <span class="x">    &#39;$upstream_response_length $upstream_response_time $upstream_status&#39;;</span>
 </pre></div>
+</td></tr></table>
 
 <table>
 <thead>

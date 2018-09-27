@@ -1086,7 +1086,13 @@
 <p>It is also possible to use a number or the name of the port. The two last fields are optional.
 Adding <code class="codehilite">PROXY</code> in either or both of the two last fields we can use Proxy Protocol decoding (listen) and/or encoding (proxy_pass) in a TCP service (https://www.nginx.com/resources/admin-guide/proxy-protocol/).</p>
 <p>The next example shows how to expose the service <code class="codehilite">example-go</code> running in the namespace <code class="codehilite">default</code> in the port <code class="codehilite">8080</code> using the port <code class="codehilite">9000</code></p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tcp-services</span>
@@ -1094,10 +1100,17 @@ Adding <code class="codehilite">PROXY</code> in either or both of the two last f
 <span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">9000</span><span class="p p-Indicator">:</span> <span class="s">&quot;default/example-go:8080&quot;</span>
 </pre></div>
+</td></tr></table>
 
 <p>Since 1.9.13 NGINX provides <a href="https://www.nginx.com/blog/announcing-udp-load-balancing/">UDP Load Balancing</a>.
 The next example shows how to expose the service <code class="codehilite">kube-dns</code> running in the namespace <code class="codehilite">kube-system</code> in the port <code class="codehilite">53</code> using the port <code class="codehilite">53</code></p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">udp-services</span>
@@ -1105,9 +1118,35 @@ The next example shows how to expose the service <code class="codehilite">kube-d
 <span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
 <span class="err">  </span><span class="l l-Scalar l-Scalar-Plain">53</span><span class="p p-Indicator">:</span> <span class="s">&quot;kube-system/kube-dns:53&quot;</span>
 </pre></div>
+</td></tr></table>
 
 <p>If TCP/UDP proxy support is used, then those ports need to be exposed in the Service defined for the Ingress.</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Service</span>
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ingress-nginx</span>
@@ -1134,6 +1173,7 @@ The next example shows how to expose the service <code class="codehilite">kube-d
     <span class="l l-Scalar l-Scalar-Plain">app.kubernetes.io/name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ingress-nginx</span>
     <span class="l l-Scalar l-Scalar-Plain">app.kubernetes.io/part-of</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ingress-nginx</span>
 </pre></div>
+</td></tr></table>
                 
                   
                 
