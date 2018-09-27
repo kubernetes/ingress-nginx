@@ -17,6 +17,7 @@ limitations under the License.
 package status
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -50,7 +51,7 @@ const (
 
 // Sync ...
 type Sync interface {
-	Run()
+	Run(ctx context.Context)
 	Shutdown()
 }
 
@@ -98,8 +99,8 @@ type statusSync struct {
 }
 
 // Run starts the loop to keep the status in sync
-func (s statusSync) Run() {
-	s.elector.Run()
+func (s statusSync) Run(ctx context.Context) {
+	s.elector.Run(ctx)
 }
 
 // Shutdown stop the sync. In case the instance is the leader it will remove the current IP
@@ -179,19 +180,22 @@ func NewStatusSyncer(config Config) Sync {
 		electionID = fmt.Sprintf("%v-%v", config.ElectionID, config.IngressClass)
 	}
 
+	var stopCh chan struct{}
 	callbacks := leaderelection.LeaderCallbacks{
-		OnStartedLeading: func(stop <-chan struct{}) {
+		OnStartedLeading: func(ctx context.Context) {
 			glog.V(2).Infof("I am the new status update leader")
-			go st.syncQueue.Run(time.Second, stop)
+			stopCh = make(chan struct{})
+			go st.syncQueue.Run(time.Second, stopCh)
 			// when this instance is the leader we need to enqueue
 			// an item to trigger the update of the Ingress status.
 			wait.PollUntil(updateInterval, func() (bool, error) {
 				st.syncQueue.EnqueueTask(task.GetDummyObject("sync status"))
 				return false, nil
-			}, stop)
+			}, stopCh)
 		},
 		OnStoppedLeading: func() {
 			glog.V(2).Infof("I am not status update leader anymore")
+			close(stopCh)
 		},
 		OnNewLeader: func(identity string) {
 			glog.Infof("new leader elected: %v", identity)
