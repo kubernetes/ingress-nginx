@@ -4,9 +4,11 @@ repo_name: "kubernetes/ingress-nginx"
 repo_url: "https://github.com/kubernetes/ingress-nginx"
 markdown_extensions:
   - admonition
-  - codehilite
+  - codehilite:
+      linenums: true
   - pymdownx.inlinehilite
-  - pymdownx.tasklist(custom_checkbox=true)
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - pymdownx.superfences
   - toc:
       permalink: true
