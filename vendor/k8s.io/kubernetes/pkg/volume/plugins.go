@@ -32,8 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
+	csiclientset "k8s.io/csi-api/pkg/client/clientset/versioned"
 	"k8s.io/kubernetes/pkg/cloudprovider"
-	"k8s.io/kubernetes/pkg/util/io"
 	"k8s.io/kubernetes/pkg/util/mount"
 	"k8s.io/kubernetes/pkg/volume/util/recyclerclient"
 )
@@ -203,9 +203,17 @@ type ProvisionableVolumePlugin interface {
 // AttachableVolumePlugin is an extended interface of VolumePlugin and is used for volumes that require attachment
 // to a node before mounting.
 type AttachableVolumePlugin interface {
-	VolumePlugin
+	DeviceMountableVolumePlugin
 	NewAttacher() (Attacher, error)
 	NewDetacher() (Detacher, error)
+}
+
+// DeviceMountableVolumePlugin is an extended interface of VolumePlugin and is used
+// for volumes that requires mount device to a node before binding to volume to pod.
+type DeviceMountableVolumePlugin interface {
+	VolumePlugin
+	NewDeviceMounter() (DeviceMounter, error)
+	NewDeviceUnmounter() (DeviceUnmounter, error)
 	GetDeviceMountRefs(deviceMountPath string) ([]string, error)
 }
 
@@ -302,6 +310,9 @@ type VolumeHost interface {
 	// GetKubeClient returns a client interface
 	GetKubeClient() clientset.Interface
 
+	// GetCSIClient returns a client interface to csi.storage.k8s.io
+	GetCSIClient() csiclientset.Interface
+
 	// NewWrapperMounter finds an appropriate plugin with which to handle
 	// the provided spec.  This is used to implement volume plugins which
 	// "wrap" other plugins.  For example, the "secret" volume is
@@ -318,9 +329,6 @@ type VolumeHost interface {
 
 	// Get mounter interface.
 	GetMounter(pluginName string) mount.Interface
-
-	// Get writer interface for writing data to disk.
-	GetWriter() io.Writer
 
 	// Returns the hostname of the host kubelet is running on
 	GetHostName() string
@@ -605,7 +613,8 @@ func (pm *VolumePluginMgr) refreshProbedPlugins() {
 			}
 			pm.probedPlugins[event.Plugin.GetPluginName()] = event.Plugin
 		} else if event.Op == ProbeRemove {
-			delete(pm.probedPlugins, event.Plugin.GetPluginName())
+			// Plugin is not available on ProbeRemove event, only PluginName
+			delete(pm.probedPlugins, event.PluginName)
 		} else {
 			glog.Errorf("Unknown Operation on PluginName: %s.",
 				event.Plugin.GetPluginName())
@@ -756,6 +765,30 @@ func (pm *VolumePluginMgr) FindAttachablePluginByName(name string) (AttachableVo
 	}
 	if attachablePlugin, ok := volumePlugin.(AttachableVolumePlugin); ok {
 		return attachablePlugin, nil
+	}
+	return nil, nil
+}
+
+// FindDeviceMountablePluginBySpec fetches a persistent volume plugin by spec.
+func (pm *VolumePluginMgr) FindDeviceMountablePluginBySpec(spec *Spec) (DeviceMountableVolumePlugin, error) {
+	volumePlugin, err := pm.FindPluginBySpec(spec)
+	if err != nil {
+		return nil, err
+	}
+	if deviceMountableVolumePlugin, ok := volumePlugin.(DeviceMountableVolumePlugin); ok {
+		return deviceMountableVolumePlugin, nil
+	}
+	return nil, nil
+}
+
+// FindDeviceMountablePluginByName fetches a devicemountable volume plugin by name.
+func (pm *VolumePluginMgr) FindDeviceMountablePluginByName(name string) (DeviceMountableVolumePlugin, error) {
+	volumePlugin, err := pm.FindPluginByName(name)
+	if err != nil {
+		return nil, err
+	}
+	if deviceMountableVolumePlugin, ok := volumePlugin.(DeviceMountableVolumePlugin); ok {
+		return deviceMountableVolumePlugin, nil
 	}
 	return nil, nil
 }
