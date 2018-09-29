@@ -33,13 +33,13 @@ if [ -z "${SKIP_MINIKUBE_START}" ]; then
         --extra-config=kubelet.sync-frequency=1s \
         --extra-config=apiserver.authorization-mode=RBAC
 
-    eval $(minikube docker-env)
+    eval $(minikube docker-env --shell bash)
 fi
 
 echo "[dev-env] building container"
 make build container
 
-docker save "${DEV_IMAGE}" | (eval $(minikube docker-env) && docker load) || true
+docker save "${DEV_IMAGE}" | (eval $(minikube docker-env --shell bash) && docker load) || true
 
 echo "[dev-env] installing kubectl"
 kubectl version || brew install kubectl
