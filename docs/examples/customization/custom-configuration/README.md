@@ -13,7 +13,7 @@ data:
   proxy-send-timeout: "120"
 kind: ConfigMap
 metadata:
-  name: nginx-load-balancer-conf
+  name: nginx-configuration
 ```
 
 ```
