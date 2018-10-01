@@ -829,6 +829,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#use-regex" title="Use Regex" class="md-nav__link">
+    Use Regex
+  </a>
+  
+</li>
+      
       
       
       
@@ -1678,6 +1685,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#use-regex" title="Use Regex" class="md-nav__link">
+    Use Regex
+  </a>
+  
+</li>
+      
       
       
       
@@ -2003,6 +2017,10 @@ table below.</p>
 <tr>
 <td><a href="#influxdb">nginx.ingress.kubernetes.io/influxdb-server-name</a></td>
 <td>string</td>
+</tr>
+<tr>
+<td><a href="#use-regex">nginx.ingress.kubernetes.io/use-regex</a></td>
+<td>bool</td>
 </tr>
 </tbody>
 </table>
@@ -2473,6 +2491,20 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/backend-protocol</span><span class="p p-Indicator">:</span> <span class="s">&quot;HTTPS&quot;</span>
 </pre></div>
 </td></tr></table>
+
+<h3 id="use-regex">Use Regex<a class="headerlink" href="#use-regex" title="Permanent link">&para;</a></h3>
+<p>Using the <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is <code class="codehilite">false</code>.</p>
+<p>The following will indicate that regular expression paths are being used:
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+</pre></div>
+</td></tr></table></p>
+<p>The following will indicate that regular expression paths are <strong>not</strong> being used:
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;false&quot;</span>
+</pre></div>
+</td></tr></table></p>
+<p>When this annotation is set to <code class="codehilite">true</code>, the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.</p>
+<p>Additionally, if the <a href="#rewrite"><code class="codehilite">rewrite-target</code> annotation</a> is used on any Ingress for a given host, then the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.  </p>
+<p>Please read about <a href="../../ingress-path-matching/">ingress path matching</a> before using this modifier. </p>
                 
                   
                 
