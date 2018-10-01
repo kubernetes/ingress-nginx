@@ -86,6 +86,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
 
 ### Rewrite
 
@@ -630,3 +631,25 @@ Example:
 ```yaml
 nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 ```
+
+### Use Regex
+
+Using the `nginx.ingress.kubernetes.io/use-regex` annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is `false`.
+
+The following will indicate that regular expression paths are being used:
+```yaml
+nginx.ingress.kubernetes.io/use-regex: "true"
+```
+
+The following will indicate that regular expression paths are __not__ being used:
+```yaml
+nginx.ingress.kubernetes.io/use-regex: "false"
+```
+
+When this annotation is set to `true`, the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.
+
+Additionally, if the [`rewrite-target` annotation](#rewrite) is used on any Ingress for a given host, then the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.  
+
+Please read about [ingress path matching](../ingress-path-matching.md) before using this modifier. 
+
+

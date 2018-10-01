@@ -620,6 +620,10 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 		sort.SliceStable(value.Locations, func(i, j int) bool {
 			return value.Locations[i].Path > value.Locations[j].Path
 		})
+
+		sort.SliceStable(value.Locations, func(i, j int) bool {
+			return len(value.Locations[i].Path) > len(value.Locations[j].Path)
+		})
 		aServers = append(aServers, value)
 	}
 
