@@ -50,7 +50,7 @@ var (
 		XForwardedPrefix            bool
 		DynamicConfigurationEnabled bool
 		SecureBackend               bool
-		atLeastOneNeedsRewrite      bool
+		enforceRegex                bool
 	}{
 		"when secure backend enabled": {
 			"/",
@@ -127,7 +127,7 @@ var (
 		"redirect / to /jenkins": {
 			"/",
 			"/jenkins",
-			"~* /",
+			"~* ^/",
 			`
 rewrite (?i)/(.*) /jenkins/$1 break;
 rewrite (?i)/$ /jenkins/ break;
@@ -191,7 +191,7 @@ proxy_pass http://upstream-name;
 		"redirect / to /jenkins and rewrite": {
 			"/",
 			"/jenkins",
-			"~* /",
+			"~* ^/",
 			`
 rewrite (?i)/(.*) /jenkins/$1 break;
 rewrite (?i)/$ /jenkins/ break;
@@ -286,7 +286,7 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 		"redirect / to /something with sticky enabled": {
 			"/",
 			"/something",
-			`~* /`,
+			`~* ^/`,
 			`
 rewrite (?i)/(.*) /something/$1 break;
 rewrite (?i)/$ /something/ break;
@@ -302,7 +302,7 @@ proxy_pass http://sticky-upstream-name;
 		"redirect / to /something with sticky and dynamic config enabled": {
 			"/",
 			"/something",
-			`~* /`,
+			`~* ^/`,
 			`
 rewrite (?i)/(.*) /something/$1 break;
 rewrite (?i)/$ /something/ break;
@@ -332,22 +332,10 @@ proxy_pass http://sticky-upstream-name;
 			false,
 			false,
 			true},
-		"do not use ^~ location modifier on index when ingress does not use rewrite target but at least one other ingress does": {
-			"/",
-			"/",
-			"/",
-			"proxy_pass http://upstream-name;",
-			false,
-			"",
-			false,
-			false,
-			false,
-			false,
-			true},
-		"use ^~ location modifier when ingress does not use rewrite target but at least one other ingress does": {
+		"use ~* location modifier when ingress does not use rewrite/regex target but at least one other ingress does": {
 			"/something",
 			"/something",
-			"^~ /something",
+			"~* ^/something",
 			"proxy_pass http://upstream-name;",
 			false,
 			"",
@@ -425,7 +413,7 @@ func TestBuildLocation(t *testing.T) {
 			Rewrite: rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
 
-		newLoc := buildLocation(loc, tc.atLeastOneNeedsRewrite)
+		newLoc := buildLocation(loc, tc.enforceRegex)
 		if tc.Location != newLoc {
 			t.Errorf("%s: expected '%v' but returned %v", k, tc.Location, newLoc)
 		}

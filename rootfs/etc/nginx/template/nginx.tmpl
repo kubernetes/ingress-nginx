@@ -451,9 +451,9 @@ http {
 
     {{/* build the maps that will be use to validate the Whitelist */}}
     {{ range $server := $servers }}
-    {{ $usesRewrite := atLeastOneNeedsRewrite $server.Locations }}
+    {{ $enforceRegex := enforceRegexModifier $server.Locations }}
     {{ range $location := $server.Locations }}
-    {{ $path := buildLocation $location $usesRewrite }}
+    {{ $path := buildLocation $location $enforceRegex }}
 
     {{ if isLocationAllowed $location }}
     {{ if gt (len $location.Whitelist.CIDR) 0 }}
@@ -891,9 +891,9 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
-        {{ $usesRewrite := atLeastOneNeedsRewrite $server.Locations }}
+        {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
-        {{ $path := buildLocation $location $usesRewrite }}
+        {{ $path := buildLocation $location $enforceRegex }}
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location }}
 
@@ -1131,7 +1131,7 @@ stream {
             {{ buildInfluxDB $location.InfluxDB }}
 
             {{ if not (empty $location.Redirect.URL) }}
-            if ($uri ~* {{ $path }}) {
+            if ($uri ~* {{ stripLocationModifer $path }}) {
                 return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
             }
             {{ end }}
