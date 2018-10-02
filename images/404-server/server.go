@@ -32,8 +32,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var port = flag.Int("port", 8080, "Port number to serve default backend 404 page.")
-
 func init() {
 	// Register the summary and the histogram with Prometheus's default registry.
 	prometheus.MustRegister(requestCount)
@@ -41,8 +39,64 @@ func init() {
 }
 
 func main() {
+	// command line arguments
+	port := flag.Int("port", 8080, "Port number to serve default backend 404 page.")
+	healthPort := flag.Int("svc-port", 10254, "Port number to serve /healthz and /metrics.")
+
+	timeout := flag.Duration("timeout", 5*time.Second, "Time in seconds to wait before forcefully terminating the server.")
+
 	flag.Parse()
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+	notFound := newHTTPServer(fmt.Sprintf(":%d", *port), notFound())
+	metrics := newHTTPServer(fmt.Sprintf(":%d", *healthPort), metrics())
+
+	// start the the healthz and metrics http server
+	go func() {
+		err := metrics.ListenAndServe()
+		if err != http.ErrServerClosed {
+			fmt.Fprintf(os.Stderr, "could not start healthz/metrics http server: %s\n", err)
+			os.Exit(1)
+		}
+	}()
+
+	// start the main http server
+	go func() {
+		err := notFound.ListenAndServe()
+		if err != http.ErrServerClosed {
+			fmt.Fprintf(os.Stderr, "could not start http server: %s\n", err)
+			os.Exit(1)
+		}
+	}()
+
+	waitShutdown(notFound, *timeout)
+}
+
+type server struct {
+	mux *http.ServeMux
+}
+
+func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.mux.ServeHTTP(w, r)
+}
+
+func newHTTPServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadTimeout:       10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       10 * time.Second,
+	}
+}
+func notFound(options ...func(*server)) *server {
+	s := &server{mux: http.NewServeMux()}
+	// TODO: this handler exists only to avoid breaking existing deployments
+	s.mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "ok")
+	})
+	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprint(w, "default backend - 404")
@@ -55,32 +109,29 @@ func main() {
 		requestCount.WithLabelValues(proto).Inc()
 		requestDuration.WithLabelValues(proto).Observe(duration)
 	})
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	return s
+}
+
+func metrics() *server {
+	s := &server{mux: http.NewServeMux()}
+	s.mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, "ok")
 	})
-	http.Handle("/metrics", promhttp.Handler())
+	s.mux.Handle("/metrics", promhttp.Handler())
+	return s
+}
 
-	srv := &http.Server{
-		Addr: fmt.Sprintf(":%d", *port),
-	}
-
-	go func() {
-		err := srv.ListenAndServe()
-		if err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "could not start http server: %s\n", err)
-			os.Exit(1)
-		}
-	}()
-
+func waitShutdown(s *http.Server, timeout time.Duration) {
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGTERM)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	fmt.Fprintf(os.Stdout, "stopping http server...\n")
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	err := srv.Shutdown(ctx)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not graceful shutdown http server: %s\n", err)
+
+	if err := s.Shutdown(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "could not gracefully shutdown http server: %s\n", err)
 	}
 }

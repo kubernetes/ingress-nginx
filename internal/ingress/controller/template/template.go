@@ -141,6 +141,7 @@ var (
 		"contains":                   strings.Contains,
 		"hasPrefix":                  strings.HasPrefix,
 		"hasSuffix":                  strings.HasSuffix,
+		"trimSpace":                  strings.TrimSpace,
 		"toUpper":                    strings.ToUpper,
 		"toLower":                    strings.ToLower,
 		"formatIP":                   formatIP,
@@ -155,7 +156,8 @@ var (
 		"buildOpentracing":            buildOpentracing,
 		"proxySetHeader":              proxySetHeader,
 		"buildInfluxDB":               buildInfluxDB,
-		"atLeastOneNeedsRewrite":      atLeastOneNeedsRewrite,
+		"enforceRegexModifier":        enforceRegexModifier,
+		"stripLocationModifer":        stripLocationModifer,
 	}
 )
 
@@ -295,8 +297,13 @@ func needsRewrite(location *ingress.Location) bool {
 	return false
 }
 
-// atLeastOneNeedsRewrite checks if the nginx.ingress.kubernetes.io/rewrite-target annotation is used on the '/' path
-func atLeastOneNeedsRewrite(input interface{}) bool {
+func stripLocationModifer(path string) string {
+	return strings.TrimLeft(path, "~* ")
+}
+
+// enforceRegexModifier checks if the "rewrite-target" or "use-regex" annotation
+// is used on any location path within a server
+func enforceRegexModifier(input interface{}) bool {
 	locations, ok := input.([]*ingress.Location)
 	if !ok {
 		glog.Errorf("expected an '[]*ingress.Location' type but %T was returned", input)
@@ -304,7 +311,7 @@ func atLeastOneNeedsRewrite(input interface{}) bool {
 	}
 
 	for _, location := range locations {
-		if needsRewrite(location) {
+		if needsRewrite(location) || location.Rewrite.UseRegex {
 			return true
 		}
 	}
@@ -313,7 +320,9 @@ func atLeastOneNeedsRewrite(input interface{}) bool {
 
 // buildLocation produces the location string, if the ingress has redirects
 // (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
-func buildLocation(input interface{}, rewrite bool) string {
+// TODO: return quotes around returned location path to prevent regex from breaking under certain conditions, see:
+// https://github.com/kubernetes/ingress-nginx/issues/3155
+func buildLocation(input interface{}, enforceRegex bool) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
@@ -323,7 +332,7 @@ func buildLocation(input interface{}, rewrite bool) string {
 	path := location.Path
 	if needsRewrite(location) {
 		if path == slash {
-			return fmt.Sprintf("~* %s", path)
+			return fmt.Sprintf("~* ^%s", path)
 		}
 		// baseuri regex will parse basename from the given location
 		baseuri := `(?<baseuri>.*)`
@@ -334,11 +343,8 @@ func buildLocation(input interface{}, rewrite bool) string {
 		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
 	}
 
-	if rewrite {
-		if path == slash {
-			return path
-		}
-		return fmt.Sprintf(`^~ %s`, path)
+	if enforceRegex {
+		return fmt.Sprintf(`~* ^%s`, path)
 	}
 	return path
 }

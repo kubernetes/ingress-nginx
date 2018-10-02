@@ -1,3 +1,18 @@
+## 1.6.0
+
+### New Features
+- add --debug flag to emit node output to files (#499) [39febac]
+
+### Fixes
+- fix: for `go vet` to pass [69338ec]
+- docs: fix for contributing instructions [7004cb1]
+- consolidate and streamline contribution docs (#494) [d848015]
+- Make generated Junit file compatable with "Maven Surefire" (#488) [e51bee6]
+- all: gofmt [000d317]
+- Increase eventually timeout to 30s [c73579c]
+- Clarify asynchronous test behaviour [294d8f4]
+- Travis badge should only show master [26d2143]
+
 ## 1.5.0 5/10/2018
 
 ### New Features

@@ -32,7 +32,7 @@ clusterrole "prometheus-server" created
 serviceaccount "prometheus-server" created
 clusterrolebinding "prometheus-server" created
 deployment "prometheus-server" created
-service "prometheus-service" created
+service "prometheus-server" created
 ```
 
 ### Prometheus Dashboard
@@ -44,7 +44,7 @@ kubectl get svc -n ingress-nginx
 NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE
 default-http-backend   ClusterIP   10.103.59.201   <none>        80/TCP                                       3d
 ingress-nginx          NodePort    10.97.44.72     <none>        80:30100/TCP,443:30154/TCP,10254:32049/TCP   5h
-prometheus             NodePort    10.98.233.86    <none>        9090:32630/TCP                               1m
+prometheus-server      NodePort    10.98.233.86    <none>        9090:32630/TCP                               1m
 ```
 
 Obtain the IP address of the nodes in the running cluster:
@@ -53,7 +53,7 @@ Obtain the IP address of the nodes in the running cluster:
 kubectl get nodes -o wide
 ```
 
-In some cases where the node only have internal IP adresses we need to execute:
+In some cases where the node only have internal IP addresses we need to execute:
 
 ```console
 kubectl get nodes --selector=kubernetes.io/role!=master -o jsonpath={.items[*].status.addresses[?\(@.type==\"InternalIP\"\)].address}
@@ -77,8 +77,8 @@ kubectl get svc -n ingress-nginx
 NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE
 default-http-backend   ClusterIP   10.103.59.201   <none>        80/TCP                                       3d
 ingress-nginx          NodePort    10.97.44.72     <none>        80:30100/TCP,443:30154/TCP,10254:32049/TCP   5h
-prometheus             NodePort    10.98.233.86    <none>        9090:32630/TCP                               10m
-grafana                NodePort    10.98.233.86    <none>        9090:31086/TCP                               10m
+prometheus-server      NodePort    10.98.233.86    <none>        9090:32630/TCP                               10m
+grafana                NodePort    10.98.233.87    <none>        3000:31086/TCP                               10m
 ```
 
 Open your browser and visit the following URL: _http://{node IP address}:{grafana-svc-nodeport}_ to load the Grafana Dashboard.

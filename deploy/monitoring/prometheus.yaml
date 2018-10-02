@@ -7,15 +7,14 @@ metadata:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: ingress-nginx
 rules:
-- apiGroups: [""]
-  resources:
-  - services
-  - endpoints
-  - pods
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
 
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -26,7 +25,6 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -41,12 +39,11 @@ roleRef:
   kind: Role
   name: prometheus-server
 subjects:
-- kind: ServiceAccount
-  name: prometheus-server
-  namespace: ingress-nginx
+  - kind: ServiceAccount
+    name: prometheus-server
+    namespace: ingress-nginx
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -90,11 +87,10 @@ spec:
           emptyDir: {}
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-service
+  name: prometheus-server
   namespace: ingress-nginx
   labels:
     app.kubernetes.io/name: prometheus
@@ -108,3 +104,6 @@ spec:
   ports:
     - port: 9090
       targetPort: 9090
+
+---
+

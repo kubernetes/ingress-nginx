@@ -834,7 +834,7 @@ func post(url string, data interface{}) error {
 		return err
 	}
 
-	glog.V(2).Infof("Posting to %s: %s", url, buf)
+	glog.V(2).Infof("Posting to %s", url)
 
 	resp, err := http.Post(url, "application/json", bytes.NewReader(buf))
 	if err != nil {

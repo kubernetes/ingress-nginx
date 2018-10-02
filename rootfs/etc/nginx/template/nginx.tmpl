@@ -466,9 +466,9 @@ http {
 
     {{/* build the maps that will be use to validate the Whitelist */}}
     {{ range $server := $servers }}
-    {{ $usesRewrite := atLeastOneNeedsRewrite $server.Locations }}
+    {{ $enforceRegex := enforceRegexModifier $server.Locations }}
     {{ range $location := $server.Locations }}
-    {{ $path := buildLocation $location $usesRewrite }}
+    {{ $path := buildLocation $location $enforceRegex }}
 
     {{ if isLocationAllowed $location }}
     {{ if gt (len $location.Whitelist.CIDR) 0 }}
@@ -506,6 +506,28 @@ http {
     {{ $zone }}
     {{ end }}
 
+    # Global filters
+    {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
+    {{ end }}
+
+    {{ if gt (len $cfg.BlockUserAgents) 0 }}
+    map $http_user_agent $block_ua {
+        default 0;
+
+        {{ range $ua := $cfg.BlockUserAgents }}{{ trimSpace $ua }} 1;
+        {{ end }}
+    }
+    {{ end }}
+
+    {{ if gt (len $cfg.BlockReferers) 0 }}
+    map $http_referer $block_ref {
+        default 0;
+
+        {{ range $ref := $cfg.BlockReferers }}{{ trimSpace $ref }} 1;
+        {{ end }}
+    }
+    {{ end }}
+
     {{/* Build server redirects (from/to www) */}}
     {{ range $hostname, $to := .RedirectServers }}
     server {
@@ -527,6 +549,17 @@ http {
         {{ end }}
         server_name {{ $hostname }};
 
+        {{ if gt (len $cfg.BlockUserAgents) 0 }}
+        if ($block_ua) {
+           return 403;
+        }
+        {{ end }}
+        {{ if gt (len $cfg.BlockReferers) 0 }}
+        if ($block_ref) {
+           return 403;
+        }
+        {{ end }}
+
         {{ if ne $all.ListenPorts.HTTPS 443 }}
         {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
         return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $to }}{{ $redirect_port }}$request_uri;
@@ -541,6 +574,18 @@ http {
     ## start server {{ $server.Hostname }}
     server {
         server_name {{ $server.Hostname }} {{ $server.Alias }};
+
+        {{ if gt (len $cfg.BlockUserAgents) 0 }}
+        if ($block_ua) {
+           return 403;
+        }
+        {{ end }}
+        {{ if gt (len $cfg.BlockReferers) 0 }}
+        if ($block_ref) {
+           return 403;
+        }
+        {{ end }}
+
         {{ template "SERVER" serverConfig $all $server }}
 
         {{ if not (empty $cfg.ServerSnippet) }}
@@ -554,11 +599,33 @@ http {
 
     {{ end }}
 
+    # backend for when default-backend-service is not configured or it does not have endpoints
+    server {
+        listen {{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
+        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
+        set $proxy_upstream_name "-";
+
+        location / {
+          return 404;
+        }
+    }
+
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
         listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
         {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
         set $proxy_upstream_name "-";
+
+        {{ if gt (len $cfg.BlockUserAgents) 0 }}
+        if ($block_ua) {
+           return 403;
+        }
+        {{ end }}
+        {{ if gt (len $cfg.BlockReferers) 0 }}
+        if ($block_ref) {
+           return 403;
+        }
+        {{ end }}
 
         location {{ $healthzURI }} {
             {{ if $cfg.EnableOpentracing }}
@@ -710,6 +777,7 @@ stream {
 {{ define "CUSTOM_ERRORS" }}
         {{ $dynamicConfig := .DynamicConfigurationEnabled}}
         {{ $proxySetHeaders := .ProxySetHeaders }}
+        {{ $isLuaDisabled := .DisableLua }}
         {{ range $errCode := .Cfg.CustomHTTPErrors }}
         location @custom_{{ $errCode }} {
             internal;
@@ -733,6 +801,11 @@ stream {
             proxy_pass            http://upstream_balancer;
             {{ else }}
             proxy_pass            http://upstream-default-backend;
+            {{ end }}
+            {{ if not $isLuaDisabled }}
+            log_by_lua_block {
+                monitor.call()
+            }
             {{ end }}
         }
         {{ end }}
@@ -833,9 +906,9 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
-        {{ $usesRewrite := atLeastOneNeedsRewrite $server.Locations }}
+        {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
-        {{ $path := buildLocation $location $usesRewrite }}
+        {{ $path := buildLocation $location $enforceRegex }}
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location }}
 
@@ -1074,7 +1147,7 @@ stream {
             {{ buildInfluxDB $location.InfluxDB }}
 
             {{ if not (empty $location.Redirect.URL) }}
-            if ($uri ~* {{ $path }}) {
+            if ($uri ~* {{ stripLocationModifer $path }}) {
                 return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};
             }
             {{ end }}
@@ -1189,7 +1262,7 @@ stream {
             return 503;
             {{ end }}
             {{ else }}
-            # Location denied. Reason: {{ $location.Denied }}
+            # Location denied. Reason: {{ $location.Denied | printf "%q" }}
             return 503;
             {{ end }}
         }

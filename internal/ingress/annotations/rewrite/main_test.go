@@ -178,3 +178,20 @@ func TestAppRoot(t *testing.T) {
 		t.Errorf("Unexpected value got in AppRoot")
 	}
 }
+
+func TestUseRegex(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("use-regex")] = "true"
+	ing.SetAnnotations(data)
+
+	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
+	redirect, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected a App Context")
+	}
+	if redirect.UseRegex != true {
+		t.Errorf("Unexpected value got in UseRegex")
+	}
+}

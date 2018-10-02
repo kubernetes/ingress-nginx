@@ -344,9 +344,9 @@ func BeTemporally(comparator string, compareTo time.Time, threshold ...time.Dura
 
 //BeAssignableToTypeOf succeeds if actual is assignable to the type of expected.
 //It will return an error when one of the values is nil.
-//	  Expect(0).Should(BeAssignableToTypeOf(0))         // Same values
-//	  Expect(5).Should(BeAssignableToTypeOf(-1))        // different values same type
-//	  Expect("foo").Should(BeAssignableToTypeOf("bar")) // different values same type
+//    Expect(0).Should(BeAssignableToTypeOf(0))         // Same values
+//    Expect(5).Should(BeAssignableToTypeOf(-1))        // different values same type
+//    Expect("foo").Should(BeAssignableToTypeOf("bar")) // different values same type
 //    Expect(struct{ Foo string }{}).Should(BeAssignableToTypeOf(struct{ Foo string }{}))
 func BeAssignableToTypeOf(expected interface{}) types.GomegaMatcher {
 	return &matchers.AssignableToTypeOfMatcher{

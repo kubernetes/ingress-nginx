@@ -6,6 +6,7 @@ go:
 - 1.x
 
 install:
+  - go get -v -d google.golang.org/grpc
   - go get -v -d -t github.com/golang/protobuf/...
   - curl -L https://github.com/google/protobuf/releases/download/v3.5.1/protoc-3.5.1-linux-x86_64.zip -o /tmp/protoc.zip
   - unzip /tmp/protoc.zip -d "$HOME"/protoc

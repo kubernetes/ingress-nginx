@@ -98,7 +98,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
-		Expect(body).Should(ContainSubstring("default backend - 404"))
+		Expect(body).Should(ContainSubstring("404 Not Found"))
 	})
 
 	It("should return status code 200 for host 'foo' and 'bar'", func() {
