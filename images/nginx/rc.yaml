@@ -8,12 +8,12 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - port: 80
-    protocol: TCP
-    name: http
-  - port: 443
-    protocol: TCP
-    name: https
+    - port: 80
+      protocol: TCP
+      name: http
+    - port: 443
+      protocol: TCP
+      name: https
   selector:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
@@ -37,8 +37,8 @@ spec:
         app.kubernetes.io/part-of: ingress-nginx
     spec:
       containers:
-      - name: nginx
-        image: quay.io/kubernetes-ingress-controller/nginx:0.56
-        ports:
-        - containerPort: 80
-        - containerPort: 443
+        - name: nginx
+          image: quay.io/kubernetes-ingress-controller/nginx:0.63
+          ports:
+            - containerPort: 80
+            - containerPort: 443

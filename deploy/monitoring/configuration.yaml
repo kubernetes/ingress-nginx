@@ -38,5 +38,8 @@ data:
         replacement: $1:$2
 
       - source_labels: [__meta_kubernetes_service_name]
-        regex: prometheus-service
+        regex: prometheus-server
         action: drop
+
+---
+

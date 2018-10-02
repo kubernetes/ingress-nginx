@@ -43,7 +43,6 @@ spec:
          - name: nginx-ingress-internal-controller
            args:
              - /nginx-ingress-controller
-             - '--default-backend-service=ingress/nginx-ingress-default-backend'
              - '--election-id=ingress-controller-leader-internal'
              - '--ingress-class=nginx-internal'
              - '--configmap=ingress/nginx-ingress-internal-controller'

@@ -78,7 +78,7 @@ nginx-ingress-controller-fdcdcd6dd-vvpgs   1/1       Running   0          11s
 
 In AWS we use an Elastic Load Balancer (ELB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
 Since Kubernetes v1.9.0 it is possible to use a classic load balancer (ELB) or network load balancer (NLB)
-Please check the [elastic load balancing AWS details page](https://aws.amazon.com/es/elasticloadbalancing/details/)
+Please check the [elastic load balancing AWS details page](https://aws.amazon.com/elasticloadbalancing/details/)
 
 ##### Elastic Load Balancer - ELB
 

@@ -451,3 +451,10 @@ type ErrScopeEmpty struct{ BaseError }
 func (e ErrScopeEmpty) Error() string {
 	return "You must provide either a Project or Domain in a Scope"
 }
+
+// ErrAppCredMissingSecret indicates that no Application Credential Secret was provided with Application Credential ID or Name
+type ErrAppCredMissingSecret struct{ BaseError }
+
+func (e ErrAppCredMissingSecret) Error() string {
+	return "You must provide an Application Credential Secret"
+}

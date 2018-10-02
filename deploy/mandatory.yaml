@@ -1,9 +1,8 @@
----
-
 apiVersion: v1
 kind: Namespace
 metadata:
   name: ingress-nginx
+
 ---
 
 apiVersion: extensions/v1beta1
@@ -28,29 +27,29 @@ spec:
     spec:
       terminationGracePeriodSeconds: 60
       containers:
-      - name: default-http-backend
-        # Any image is permissible as long as:
-        # 1. It serves a 404 page at /
-        # 2. It serves 200 on a /healthz endpoint
-        image: gcr.io/google_containers/defaultbackend:1.4
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
-        ports:
-        - containerPort: 8080
-        resources:
-          limits:
-            cpu: 10m
-            memory: 20Mi
-          requests:
-            cpu: 10m
-            memory: 20Mi
----
+        - name: default-http-backend
+          # Any image is permissible as long as:
+          # 1. It serves a 404 page at /
+          # 2. It serves 200 on a /healthz endpoint
+          image: k8s.gcr.io/defaultbackend-amd64:1.5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: 10m
+              memory: 20Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
 
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -61,11 +60,12 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 spec:
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
   selector:
     app.kubernetes.io/name: default-http-backend
     app.kubernetes.io/part-of: ingress-nginx
+
 ---
 
 kind: ConfigMap
@@ -76,6 +76,7 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
+
 ---
 
 kind: ConfigMap
@@ -86,6 +87,7 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
+
 ---
 
 kind: ConfigMap
@@ -96,6 +98,7 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
+
 ---
 
 apiVersion: v1
@@ -108,7 +111,6 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -153,10 +155,10 @@ rules:
   - apiGroups:
       - ""
     resources:
-        - events
+      - events
     verbs:
-        - create
-        - patch
+      - create
+      - patch
   - apiGroups:
       - "extensions"
     resources:
@@ -165,7 +167,6 @@ rules:
       - update
 
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
 metadata:
@@ -211,7 +212,6 @@ rules:
       - get
 
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
@@ -230,7 +230,6 @@ subjects:
     namespace: ingress-nginx
 
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -246,6 +245,7 @@ subjects:
   - kind: ServiceAccount
     name: nginx-ingress-serviceaccount
     namespace: ingress-nginx
+
 ---
 
 apiVersion: extensions/v1beta1
@@ -268,8 +268,8 @@ spec:
         app.kubernetes.io/name: ingress-nginx
         app.kubernetes.io/part-of: ingress-nginx
       annotations:
-        prometheus.io/port: '10254'
-        prometheus.io/scrape: 'true'
+        prometheus.io/port: "10254"
+        prometheus.io/scrape: "true"
     spec:
       serviceAccountName: nginx-ingress-serviceaccount
       containers:
@@ -285,9 +285,9 @@ spec:
             - --annotations-prefix=nginx.ingress.kubernetes.io
           securityContext:
             capabilities:
-                drop:
+              drop:
                 - ALL
-                add:
+              add:
                 - NET_BIND_SERVICE
             # www-data -> 33
             runAsUser: 33
@@ -301,10 +301,10 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
           ports:
-          - name: http
-            containerPort: 80
-          - name: https
-            containerPort: 443
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -324,3 +324,5 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
+
+---

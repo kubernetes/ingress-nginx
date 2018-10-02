@@ -17,7 +17,6 @@ limitations under the License.
 package template
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net"
 	"os"
@@ -29,6 +28,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	jsoniter "github.com/json-iterator/go"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -50,7 +50,7 @@ var (
 		XForwardedPrefix            bool
 		DynamicConfigurationEnabled bool
 		SecureBackend               bool
-		atLeastOneNeedsRewrite      bool
+		enforceRegex                bool
 	}{
 		"when secure backend enabled": {
 			"/",
@@ -127,7 +127,7 @@ var (
 		"redirect / to /jenkins": {
 			"/",
 			"/jenkins",
-			"~* /",
+			"~* ^/",
 			`
 rewrite (?i)/(.*) /jenkins/$1 break;
 rewrite (?i)/$ /jenkins/ break;
@@ -191,7 +191,7 @@ proxy_pass http://upstream-name;
 		"redirect / to /jenkins and rewrite": {
 			"/",
 			"/jenkins",
-			"~* /",
+			"~* ^/",
 			`
 rewrite (?i)/(.*) /jenkins/$1 break;
 rewrite (?i)/$ /jenkins/ break;
@@ -286,7 +286,7 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 		"redirect / to /something with sticky enabled": {
 			"/",
 			"/something",
-			`~* /`,
+			`~* ^/`,
 			`
 rewrite (?i)/(.*) /something/$1 break;
 rewrite (?i)/$ /something/ break;
@@ -302,7 +302,7 @@ proxy_pass http://sticky-upstream-name;
 		"redirect / to /something with sticky and dynamic config enabled": {
 			"/",
 			"/something",
-			`~* /`,
+			`~* ^/`,
 			`
 rewrite (?i)/(.*) /something/$1 break;
 rewrite (?i)/$ /something/ break;
@@ -332,22 +332,10 @@ proxy_pass http://sticky-upstream-name;
 			false,
 			false,
 			true},
-		"do not use ^~ location modifier on index when ingress does not use rewrite target but at least one other ingress does": {
-			"/",
-			"/",
-			"/",
-			"proxy_pass http://upstream-name;",
-			false,
-			"",
-			false,
-			false,
-			false,
-			false,
-			true},
-		"use ^~ location modifier when ingress does not use rewrite target but at least one other ingress does": {
+		"use ~* location modifier when ingress does not use rewrite/regex target but at least one other ingress does": {
 			"/something",
 			"/something",
-			"^~ /something",
+			"~* ^/something",
 			"proxy_pass http://upstream-name;",
 			false,
 			"",
@@ -425,7 +413,7 @@ func TestBuildLocation(t *testing.T) {
 			Rewrite: rewrite.Config{Target: tc.Target, AddBaseURL: tc.AddBaseURL},
 		}
 
-		newLoc := buildLocation(loc, tc.atLeastOneNeedsRewrite)
+		newLoc := buildLocation(loc, tc.enforceRegex)
 		if tc.Location != newLoc {
 			t.Errorf("%s: expected '%v' but returned %v", k, tc.Location, newLoc)
 		}
@@ -518,7 +506,7 @@ func TestTemplateWithData(t *testing.T) {
 		t.Error("unexpected error reading json file: ", err)
 	}
 	var dat config.TemplateConfig
-	if err := json.Unmarshal(data, &dat); err != nil {
+	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(data, &dat); err != nil {
 		t.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 	if dat.ListenPorts == nil {
@@ -565,7 +553,7 @@ func BenchmarkTemplateWithData(b *testing.B) {
 		b.Error("unexpected error reading json file: ", err)
 	}
 	var dat config.TemplateConfig
-	if err := json.Unmarshal(data, &dat); err != nil {
+	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(data, &dat); err != nil {
 		b.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 

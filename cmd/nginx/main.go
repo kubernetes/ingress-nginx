@@ -84,20 +84,22 @@ func main() {
 		handleFatalInitError(err)
 	}
 
-	defSvcNs, defSvcName, err := k8s.ParseNameNS(conf.DefaultService)
-	if err != nil {
-		glog.Fatal(err)
-	}
-
-	_, err = kubeClient.CoreV1().Services(defSvcNs).Get(defSvcName, metav1.GetOptions{})
-	if err != nil {
-		// TODO (antoineco): compare with error types from k8s.io/apimachinery/pkg/api/errors
-		if strings.Contains(err.Error(), "cannot get services in the namespace") {
-			glog.Fatalf("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
+	if len(conf.DefaultService) > 0 {
+		defSvcNs, defSvcName, err := k8s.ParseNameNS(conf.DefaultService)
+		if err != nil {
+			glog.Fatal(err)
 		}
-		glog.Fatalf("No service with name %v found: %v", conf.DefaultService, err)
+
+		_, err = kubeClient.CoreV1().Services(defSvcNs).Get(defSvcName, metav1.GetOptions{})
+		if err != nil {
+			// TODO (antoineco): compare with error types from k8s.io/apimachinery/pkg/api/errors
+			if strings.Contains(err.Error(), "cannot get services in the namespace") {
+				glog.Fatalf("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
+			}
+			glog.Fatalf("No service with name %v found: %v", conf.DefaultService, err)
+		}
+		glog.Infof("Validated %v as the default backend.", conf.DefaultService)
 	}
-	glog.Infof("Validated %v as the default backend.", conf.DefaultService)
 
 	if conf.Namespace != "" {
 		_, err = kubeClient.CoreV1().Namespaces().Get(conf.Namespace, metav1.GetOptions{})
@@ -121,7 +123,10 @@ func main() {
 	reg := prometheus.NewRegistry()
 
 	reg.MustRegister(prometheus.NewGoCollector())
-	reg.MustRegister(prometheus.NewProcessCollector(os.Getpid(), ""))
+	reg.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{
+		PidFn:        func() (int, error) { return os.Getpid(), nil },
+		ReportErrors: true,
+	}))
 
 	mc, err := metric.NewCollector(conf.ListenPorts.Status, reg)
 	if err != nil {
@@ -175,7 +180,7 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 // kubeConfig is the location of a kubeconfig file. If defined, the kubeconfig
 // file is loaded first, the URL of the API server read from the file is then
 // optionally overridden by the value of apiserverHost.
-// If neither apiserverHost nor kubeConfig are passed in, we assume the
+// If neither apiserverHost nor kubeConfig is passed in, we assume the
 // controller runs inside Kubernetes and fallback to the in-cluster config. If
 // the in-cluster config is missing or fails, we fallback to the default config.
 func createApiserverClient(apiserverHost, kubeConfig string) (*kubernetes.Clientset, error) {

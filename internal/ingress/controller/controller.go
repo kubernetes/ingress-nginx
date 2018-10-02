@@ -131,7 +131,13 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	upstreams, servers := n.getBackendServers(ings)
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
+	hosts := sets.NewString()
+
 	for _, server := range servers {
+		if !hosts.Has(server.Hostname) {
+			hosts.Insert(server.Hostname)
+		}
+
 		if !server.SSLPassthrough {
 			continue
 		}
@@ -183,6 +189,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 			glog.Errorf("Unexpected failure reloading the backend:\n%v", err)
 			return err
 		}
+
+		n.metricCollector.SetHosts(hosts)
 
 		glog.Infof("Backend successfully reloaded.")
 		n.metricCollector.ConfigSuccess(hash, true)
@@ -354,6 +362,12 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 		Name: defUpstreamName,
 	}
 	svcKey := n.cfg.DefaultService
+
+	if len(svcKey) == 0 {
+		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
+		return upstream
+	}
+
 	svc, err := n.store.GetService(svcKey)
 	if err != nil {
 		glog.Warningf("Error getting default backend %q: %v", svcKey, err)
@@ -605,6 +619,10 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 	for _, value := range servers {
 		sort.SliceStable(value.Locations, func(i, j int) bool {
 			return value.Locations[i].Path > value.Locations[j].Path
+		})
+
+		sort.SliceStable(value.Locations, func(i, j int) bool {
+			return len(value.Locations[i].Path) > len(value.Locations[j].Path)
 		})
 		aServers = append(aServers, value)
 	}
