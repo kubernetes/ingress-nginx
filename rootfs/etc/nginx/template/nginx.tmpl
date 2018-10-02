@@ -35,15 +35,15 @@ worker_rlimit_nofile {{ .MaxOpenFiles }};
 {{/* avoid waiting too long during a reload */}}
 worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
 
+{{ if not (empty $cfg.MainSnippet) }}
+{{ $cfg.MainSnippet }}
+{{ end }}
+
 events {
     multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
     worker_connections  {{ $cfg.MaxWorkerConnections }};
     use                 epoll;
 }
-
-{{ if not (empty $cfg.MainSnippet) }}
-{{ $cfg.MainSnippet }}
-{{ end }}
 
 http {
     {{ if not $all.DisableLua }}
