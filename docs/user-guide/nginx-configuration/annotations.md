@@ -295,15 +295,15 @@ kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/server-snippet: |
-set $agentflag 0;
-
-if ($http_user_agent ~* "(Mobile)" ){
-  set $agentflag 1;
-}
-
-if ( $agentflag = 1 ) {
-  return 301 https://m.example.com;
-}
+        set $agentflag 0;
+        
+        if ($http_user_agent ~* "(Mobile)" ){
+          set $agentflag 1;
+        }
+        
+        if ( $agentflag = 1 ) {
+          return 301 https://m.example.com;
+        }
 ```
 
 !!! attention
