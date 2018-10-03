@@ -362,6 +362,12 @@ http {
     }
     {{ end }}
 
+    # Create a variable that contains the literal $ character.
+    # This works because the geo module will not resolve variables.
+    geo $literal_dollar {
+        default "$";
+    }
+
     server_name_in_redirect off;
     port_in_redirect        off;
 
@@ -928,7 +934,7 @@ stream {
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
             set $service_port   "{{ $location.Port }}";
-            set $location_path  "{{ $location.Path }}";
+            set $location_path  "{{ $location.Path | escapeLocationPathVar }}";
 
             {{ if $all.Cfg.EnableOpentracing }}
             opentracing_propagate_context;
