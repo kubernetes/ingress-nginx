@@ -834,3 +834,16 @@ func TestBuildUpstreamName(t *testing.T) {
 		}
 	}
 }
+
+func TestEscapeLocationPathVar(t *testing.T) {
+	escapedPath := escapeLocationPathVar("/$")
+	expected := "/${literal_dollar}"
+	if escapedPath != expected {
+		t.Errorf("Expected %s but got %s", expected, escapedPath)
+	}
+	escapedPath = escapeLocationPathVar(false)
+	expected = ""
+	if escapedPath != expected {
+		t.Errorf("Expected %s but got %s", expected, escapedPath)
+	}
+}
