@@ -2221,15 +2221,15 @@ the new server configuration will take place over the alias configuration.</p>
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
     <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/server-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
-<span class="l l-Scalar l-Scalar-Plain">set $agentflag 0;</span>
+        <span class="no">set $agentflag 0;</span>
 
-<span class="l l-Scalar l-Scalar-Plain">if ($http_user_agent ~* &quot;(Mobile)&quot; ){</span>
-  <span class="l l-Scalar l-Scalar-Plain">set $agentflag 1;</span>
-<span class="err">}</span>
+        <span class="no">if ($http_user_agent ~* &quot;(Mobile)&quot; ){</span>
+          <span class="no">set $agentflag 1;</span>
+        <span class="no">}</span>
 
-<span class="l l-Scalar l-Scalar-Plain">if ( $agentflag = 1 ) {</span>
-  <span class="l l-Scalar l-Scalar-Plain">return 301 https://m.example.com;</span>
-<span class="err">}</span>
+        <span class="no">if ( $agentflag = 1 ) {</span>
+          <span class="no">return 301 https://m.example.com;</span>
+        <span class="no">}</span>
 </pre></div>
 </td></tr></table>
 
