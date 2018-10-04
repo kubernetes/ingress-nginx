@@ -55,8 +55,8 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "rewrite (?i)/something/(.*) /$1 break;") &&
-					strings.Contains(server, "rewrite (?i)/something$ / break;")
+				return strings.Contains(server, `rewrite "(?i)/something/(.*)" /$1 break;`) &&
+					strings.Contains(server, `rewrite "(?i)/something$" / break;`)
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -154,7 +154,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "location ~* ^/ {") && strings.Contains(server, "location ~* ^/.well-known/acme/challenge {")
+				return strings.Contains(server, "location ~* ^/ {") && strings.Contains(server, `location ~* "^/.well-known/acme/challenge" {`)
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -195,7 +195,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "location ~* ^/foo {") && strings.Contains(server, `location ~* ^/foo.+\/?(?<baseuri>.*) {`)
+				return strings.Contains(server, `location ~* "^/foo" {`) && strings.Contains(server, `location ~* "^/foo.+\/?(?<baseuri>.*)" {`)
 			})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -234,14 +234,14 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 			"nginx.ingress.kubernetes.io/use-regex":      "true",
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
-		ing = framework.NewSingleIngress("regex", "/foo/bar/[a-z][a-z][a-z]", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing = framework.NewSingleIngress("regex", "/foo/bar/[a-z]{3}", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
 		_, err = f.EnsureIngress(ing)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "location ~* ^/foo/bar/bar {") && strings.Contains(server, `location ~* ^/foo/bar/[a-z][a-z][a-z]\/?(?<baseuri>.*) {`)
+				return strings.Contains(server, `location ~* "^/foo/bar/bar" {`) && strings.Contains(server, `location ~* "^/foo/bar/[a-z]{3}\/?(?<baseuri>.*)" {`)
 			})
 		Expect(err).NotTo(HaveOccurred())
 
