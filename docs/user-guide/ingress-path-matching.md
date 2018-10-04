@@ -2,7 +2,7 @@
 
 ## Regular Expression Support
 
-The ingress controller supports **case insensitive** regular expressions in the `spec.rules.http.paths.path` field. __Currently curly braces `{}` cannot be used in regular expressions due to a [known issue](https://github.com/kubernetes/ingress-nginx/issues/3155).__
+The ingress controller supports **case insensitive** regular expressions in the `spec.rules.http.paths.path` field.
 
 
 See the [description](./nginx-configuration/annotations.md#use-regex) of the `use-regex` annotation for more details. 

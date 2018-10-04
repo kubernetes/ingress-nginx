@@ -320,8 +320,6 @@ func enforceRegexModifier(input interface{}) bool {
 
 // buildLocation produces the location string, if the ingress has redirects
 // (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
-// TODO: return quotes around returned location path to prevent regex from breaking under certain conditions, see:
-// https://github.com/kubernetes/ingress-nginx/issues/3155
 func buildLocation(input interface{}, enforceRegex bool) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -340,11 +338,11 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 			// Not treat the slash after "location path" as a part of baseuri
 			baseuri = fmt.Sprintf(`\/?%s`, baseuri)
 		}
-		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
+		return fmt.Sprintf(`~* "^%s%s"`, path, baseuri)
 	}
 
 	if enforceRegex {
-		return fmt.Sprintf(`~* ^%s`, path)
+		return fmt.Sprintf(`~* "^%s"`, path)
 	}
 	return path
 }
@@ -528,15 +526,15 @@ subs_filter '%v' '$1<base href="%v://$http_host%v">' ro;
 			// special case redirect to /
 			// ie /something to /
 			return fmt.Sprintf(`
-rewrite (?i)%s(.*) /$1 break;
-rewrite (?i)%s$ / break;
+rewrite "(?i)%s(.*)" /$1 break;
+rewrite "(?i)%s$" / break;
 %v%v %s%s;
 %v`, path, location.Path, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 		}
 
 		return fmt.Sprintf(`
-rewrite (?i)%s(.*) %s/$1 break;
-rewrite (?i)%s$ %s/ break;
+rewrite "(?i)%s(.*)" %s/$1 break;
+rewrite "(?i)%s$" %s/ break;
 %v%v %s%s;
 %v`, path, location.Rewrite.Target, location.Path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
 	}
