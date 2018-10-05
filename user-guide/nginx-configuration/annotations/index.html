@@ -760,6 +760,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-cookie-path" title="Proxy cookie path" class="md-nav__link">
+    Proxy cookie path
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-buffering" title="Proxy buffering" class="md-nav__link">
     Proxy buffering
   </a>
@@ -1616,6 +1623,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-cookie-path" title="Proxy cookie path" class="md-nav__link">
+    Proxy cookie path
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-buffering" title="Proxy buffering" class="md-nav__link">
     Proxy buffering
   </a>
@@ -1860,6 +1874,10 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#proxy-cookie-domain">nginx.ingress.kubernetes.io/proxy-cookie-domain</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#proxy-cookie-path">nginx.ingress.kubernetes.io/proxy-cookie-path</a></td>
 <td>string</td>
 </tr>
 <tr>
@@ -2381,6 +2399,9 @@ To use custom values in an Ingress rule define these annotation:</p>
 <h3 id="proxy-cookie-domain">Proxy cookie domain<a class="headerlink" href="#proxy-cookie-domain" title="Permanent link">&para;</a></h3>
 <p>Sets a text that <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain">should be changed in the domain attribute</a> of the "Set-Cookie" header fields of a proxied server response.</p>
 <p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-cookie-domain</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.</p>
+<h3 id="proxy-cookie-path">Proxy cookie path<a class="headerlink" href="#proxy-cookie-path" title="Permanent link">&para;</a></h3>
+<p>Sets a text that <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path">should be changed in the path attribute</a> of the "Set-Cookie" header fields of a proxied server response.</p>
+<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-cookie-path</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.</p>
 <h3 id="proxy-buffering">Proxy buffering<a class="headerlink" href="#proxy-buffering" title="Permanent link">&para;</a></h3>
 <p>Enable or disable proxy buffering <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering"><code class="codehilite">proxy_buffering</code></a>.
 By default proxy buffering is disabled in the NGINX config.</p>
