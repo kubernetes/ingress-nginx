@@ -47,6 +47,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
+|[nginx.ingress.kubernetes.io/proxy-cookie-path](#proxy-cookie-path)|string|
 |[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
@@ -488,6 +489,12 @@ nginx.ingress.kubernetes.io/proxy-body-size: 8m
 Sets a text that [should be changed in the domain attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the "Set-Cookie" header fields of a proxied server response.
 
 To configure this setting globally for all Ingress rules, the `proxy-cookie-domain` value may be set in the [NGINX ConfigMap][configmap].
+
+### Proxy cookie path
+
+Sets a text that [should be changed in the path attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path) of the "Set-Cookie" header fields of a proxied server response.
+
+To configure this setting globally for all Ingress rules, the `proxy-cookie-path` value may be set in the [NGINX ConfigMap][configmap].
 
 ### Proxy buffering
 
