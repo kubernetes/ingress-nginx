@@ -648,7 +648,6 @@ http {
             access_log off;
             stub_status on;
         }
-
         {{ if $all.DynamicConfigurationEnabled }}
         location /configuration {
             access_log off;
@@ -663,7 +662,7 @@ http {
             deny all;
 
             # this should be equals to configuration_data dict
-            client_max_body_size                    "10m";
+            client_max_body_size                    10m;
             proxy_buffering                         off;
 
             content_by_lua_block {
@@ -671,7 +670,6 @@ http {
             }
         }
         {{ end }}
-
         location / {
             {{ if .CustomErrors }}
             proxy_set_header    X-Code 404;
@@ -938,15 +936,15 @@ stream {
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
 
-            proxy_buffering                         "{{ $location.Proxy.ProxyBuffering }}";
-            proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
-            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
-            proxy_request_buffering                 "{{ $location.Proxy.RequestBuffering }}";
+            proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
+            proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
-            client_max_body_size        "{{ $location.Proxy.BodySize }}";
+            client_max_body_size        {{ $location.Proxy.BodySize }};
             {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
             client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
             {{ end }}
@@ -1136,7 +1134,7 @@ stream {
             }
             {{ end }}
 
-            client_max_body_size                    "{{ $location.Proxy.BodySize }}";
+            client_max_body_size                    {{ $location.Proxy.BodySize }};
             {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
             client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
             {{ end }}
@@ -1197,10 +1195,10 @@ stream {
             proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;
             proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }}s;
 
-            proxy_buffering                         "{{ $location.Proxy.ProxyBuffering }}";
-            proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
-            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
-            proxy_request_buffering                 "{{ $location.Proxy.RequestBuffering }}";
+            proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
+            proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_http_version                      1.1;
 
