@@ -80,6 +80,9 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/lua-resty-waf-debug](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets](#lua-resty-waf)|string|
 |[nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules](#lua-resty-waf)|string|
+|[nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content](#lua-resty-waf)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/lua-resty-waf-score](#lua-resty-waf)|number|
+|[nginx.ingress.kubernetes.io/lua-resty-waf-disable-multipart-body](#lua-resty-waf)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-influxdb](#influxdb)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/influxdb-measurement](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
@@ -556,6 +559,43 @@ It is also possible to configure custom WAF rules per ingress using the `nginx.i
 
 ```yaml
 nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules: '[=[ { "access": [ { "actions": { "disrupt" : "DENY" }, "id": 10001, "msg": "my custom rule", "operator": "STR_CONTAINS", "pattern": "foo", "vars": [ { "parse": [ "values", 1 ], "type": "REQUEST_ARGS" } ] } ], "body_filter": [], "header_filter":[] } ]=]'
+```
+
+Since the default allowed contents were `"text/html", "text/json", "application/json"`
+We can enable the following annotation for allow all contents type:
+
+
+```yaml
+nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content: "true"
+```
+
+The default score of lua-resty-waf is 5, which usually triggered if hitting 2 default rules, you can modify the score threshold with following annotation:
+
+
+```yaml
+nginx.ingress.kubernetes.io/lua-resty-waf-score: "10"
+```
+
+When you enabled HTTPS in the endpoint and since resty-lua will return 500 error when processing "multipart" contents
+Reference for this [issue](https://github.com/p0pr0ck5/lua-resty-waf/issues/166)
+You may enable the following annotation for work around:
+
+```yaml
+nginx.ingress.kubernetes.io/lua-resty-waf-disable-multipart-body: "true"
+```
+
+For details on how to write WAF rules, please refer to [https://github.com/p0pr0ck5/lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf).
+
+
+```yaml
+nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content: "true"
+```
+
+The default score of lua-resty-waf is 5, which usually triggered if hitting 2 default rules, you can modify the score threshold with following annotation:
+
+
+```yaml
+nginx.ingress.kubernetes.io/lua-resty-waf-score: "10"
 ```
 
 For details on how to write WAF rules, please refer to [https://github.com/p0pr0ck5/lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf).
