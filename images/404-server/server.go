@@ -50,7 +50,7 @@ func main() {
 	notFound := newHTTPServer(fmt.Sprintf(":%d", *port), notFound())
 	metrics := newHTTPServer(fmt.Sprintf(":%d", *healthPort), metrics())
 
-	// start the the healthz and metrics http server
+	// start the healthz and metrics http server
 	go func() {
 		err := metrics.ListenAndServe()
 		if err != http.ErrServerClosed {
