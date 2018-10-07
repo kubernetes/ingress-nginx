@@ -81,7 +81,7 @@ _Documentation:_
 _New Features:_
 
 - NGINX 1.15.3
-- Serve SSL certificates synamically instead of reloading NGINX when they are created, updated, or deleted.
+- Serve SSL certificates dynamically instead of reloading NGINX when they are created, updated, or deleted.
   Feature behind the flag `--enable-dynamic-certificates`
 - GDB binary is included in the image to help [troubleshooting issues](https://github.com/kubernetes/ingress-nginx/pull/3002)
 - Adjust the number of CPUs when CGROUP limits are defined (`worker-processes=auto` uses all the availables)
