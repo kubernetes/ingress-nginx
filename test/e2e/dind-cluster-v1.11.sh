@@ -43,69 +43,355 @@ if ! docker info|grep -s '^Operating System: .*Docker for Windows' > /dev/null 2
     fi
 fi
 
-# In case of linux as the OS and docker running locally we will be using
-# localhost to access the apiserver nor do we need to add routes
-using_linuxdocker=
+# Determine when using Linux and docker daemon running locally
+using_local_linuxdocker=
 if [[ $(uname) == Linux && -z ${DOCKER_HOST:-} ]]; then
-    using_linuxdocker=1
+    using_local_linuxdocker=1
 fi
 
 EMBEDDED_CONFIG=y;DIND_IMAGE=mirantis/kubeadm-dind-cluster:v1.11
 
-IP_MODE="${IP_MODE:-ipv4}"  # ipv4, ipv6, (future) dualstack
+# dind::localhost provides the local host IP based on the address family used for service subnet.
+function dind::localhost() {
+  if [[ ${SERVICE_NET_MODE} = "ipv6" ]]; then
+    echo '[::1]'
+  else
+    echo '127.0.0.1'
+  fi
+}
+
+# dind::family-for indicates whether the CIDR or IP is for an IPv6 or IPv4 family.
+function dind::family-for {
+    local addr=$1
+    if [[ "$addr" = *":"* ]]; then
+	echo "ipv6"
+    else
+	echo "ipv4"
+    fi
+}
+
+# dind::cluster-suffix builds a suffix used for resources, based on the DIND_LABEL.
+function dind::cluster-suffix {
+  if [ "$DIND_LABEL" != "$DEFAULT_DIND_LABEL" ]; then
+    echo "-${DIND_LABEL}"
+  else
+    echo ''
+  fi
+}
+
+function dind::net-name {
+  echo "kubeadm-dind-net$( dind::cluster-suffix )"
+}
+
+# dind::add-cluster will inject the cluster ID to the IP address. For IPv4, it is
+# assumed that the IP is a /24 with the third part of the address available for cluster ID.
+# For IPv6, it is assumed that there is enough space for the cluster to be added, and the
+# cluster ID will be added to the 16 bits before the double colon. For example:
+#
+# 10.192.0.0/24 => 10.192.5.0/24
+# fd00:77:20::/64 => fd00:77:20:5::/64
+#
+# This function is intended to be used for management networks.
+#
+# TODO: Validate that there is enough space for cluster ID.
+# TODO: For IPv6 could get fancy and handle case where cluster ID is placed in upper 8 bits of hextet
+# TODO: Consider if want to do /16 for IPv4 management subnet.
+#
+function dind::add-cluster {
+  local cidr=$1
+  local ip_mode=$2
+
+  if [[ ${ip_mode} = "ipv4" ]]; then
+      echo ${cidr} | sed "s/^\([0-9]*\.[0-9]*\.\).*\/24$/\1${CLUSTER_ID}.0\/24/"
+  else  # IPv6
+      echo ${cidr} | sed "s/^\(.*\)\(\:\:\/[0-9]*\)$/\1:${CLUSTER_ID}\2/"
+  fi
+}
+
+# dind::get-and-validate-cidrs takes a list of CIDRs and validates them based on the ip
+# mode, returning them. For IPv4 only and IPv6 only modes, only one CIDR is expected. For
+# dual stack, two CIDRS are expected. It verifies that the CIDRs are the right family and
+# will use the provided defaults, when CIDRs are missing. For dual-stack, the IPv4 address
+# will be first.
+#
+# For the management network, the cluster ID will be injected into the CIDR. Also, if no
+# MGMT_CIDRS value is specified, but the legacy DIND_SUBNET/DIND_SUBNET_SIZE is provided,
+# that will be used for the (first) CIDR.
+#
+# NOTE: It is expected that the CIDR size is /24 for IPv4 management networks.
+#
+# TODO: Generalize so this can be used for pod network to support dual-stack.
+#
+function dind::get-and-validate-cidrs {
+  IFS=', ' read -r -a cidrs <<< "$1"
+  IFS=', ' read -r -a defaults <<< "$2"
+  case ${IP_MODE} in
+    ipv4)
+      case ${#cidrs[@]} in
+        0)
+	  cidrs[0]="${defaults[0]}"
+          ;;
+        1)
+          ;;
+        *)
+          echo "ERROR! More than one CIDR provided '$1'"
+          exit 1
+          ;;
+      esac
+      if [[ $( dind::family-for "${cidrs[0]}" ) != "ipv4" ]]; then
+	echo "ERROR! CIDR must be IPv4 value"
+	exit 1
+      fi
+      cidrs[0]="$( dind::add-cluster "${cidrs[0]}" "${IP_MODE}" )"
+      ;;
+
+    ipv6)
+      case ${#cidrs[@]} in
+        0)
+          cidrs[0]="${defaults[0]}"
+	  ;;
+        1)
+	  ;;
+        *)
+          echo "ERROR! More than one CIDR provided '$1'"
+          exit 1
+          ;;
+      esac
+      if [[ $( dind::family-for "${cidrs[0]}" ) != "ipv6" ]]; then
+	echo "ERROR! CIDR must be IPv6 value"
+	exit 1
+      fi
+      cidrs[0]="$( dind::add-cluster "${cidrs[0]}" "${IP_MODE}" )"
+      ;;
+
+    dual-stack)
+      case ${#cidrs[@]} in
+        0)
+          cidrs[0]="${defaults[0]}"
+          cidrs[1]="${defaults[1]}"
+          ;;
+        1)
+          if [[ $( dind::family-for "${cidrs[0]}" ) = "ipv6" ]]; then
+	    cidrs[1]=${cidrs[0]}
+	    cidrs[0]="${defaults[0]}"  # Assuming first default is a V4 address
+	  else
+	    cidrs[1]="${defaults[1]}"
+	  fi
+          ;;
+        2)
+	  # Force ordering to have V4 address first
+          if [[ $( dind::family-for "${cidrs[0]}" ) = "ipv6" ]]; then
+	    local temp=${cidrs[0]}
+	    cidrs[0]=${cidrs[1]}
+	    cidrs[1]=${temp}
+	  fi
+          ;;
+        *)
+          echo "ERROR! More than two CIDRs provided '$1'"
+          exit 1
+          ;;
+      esac
+      local have_v4=""
+      local have_v6=""
+      for cidr in ${cidrs[@]}; do
+        if [[ $( dind::family-for "${cidr}" ) = "ipv6" ]]; then
+	  have_v6=1
+	else
+	  have_v4=1
+	fi
+      done
+      if [[ -z ${have_v4} ]]; then
+        echo "ERROR! Missing IPv4 CIDR in '$1'"
+        exit 1
+      fi
+      if [[ -z ${have_v6} ]]; then
+        echo "ERROR! Missing IPv6 CIDR in '$1'"
+        exit 1
+      fi
+      cidrs[0]="$( dind::add-cluster "${cidrs[0]}" "${IP_MODE}" )"
+      cidrs[1]="$( dind::add-cluster "${cidrs[1]}" "${IP_MODE}" )"
+      ;;
+  esac
+  echo "${cidrs[@]}"
+}
+
+# dind::make-ip-from-cidr  strips off the slash and size, and appends the
+# interface part to the prefix to form an IP. For IPv4, it strips off the
+# fourth part of the prefix, so that it can be replaced. It assumes that the
+# resulting prefix will be of sufficient size. It also will use hex for the
+# appended part for IPv6, and decimal for IPv4.
+#
+# fd00:20::/64 -> fd00:20::a
+# 10.96.0.0/12 -> 10.96.0.10
+#
+function dind::make-ip-from-cidr {
+  prefix="$(echo $1 | sed 's,/.*,,')"
+  if [[ $( dind::family-for ${prefix} ) == "ipv4" ]]; then
+    printf "%s%d" $( echo ${prefix} | sed 's/0$//' ) $2
+  else
+    printf "%s%x" ${prefix} $2
+  fi
+}
+
+# dind::add-cluster-id-and-validate-nat64-prefix will modify the IPv4 mapping
+# subnet prefix, by adding the cluster ID (default 0) to the second octet.
+# It will produce an error, if the prefix is not in the 10.0.0.0/8 or
+# 172.16.0.0/12 private networks.
+function dind::add-cluster-id-and-validate-nat64-prefix {
+  local parts
+  IFS="." read -a parts <<<${NAT64_V4_SUBNET_PREFIX}
+  if [[ ${#parts[@]} -ne 2 ]]; then
+    echo "ERROR! NAT64_V4_SUBNET_PREFIX must be two octets (have '${NAT64_V4_SUBNET_PREFIX}')"
+    exit 1
+  fi
+  (( parts[1]+=${CLUSTER_ID} ))
+  NAT64_V4_SUBNET_PREFIX="${parts[0]}.${parts[1]}"
+  echo "Added cluster ID offset (${CLUSTER_ID}) to NAT64_V4_SUBNET_PREFIX giving prefix '${NAT64_V4_SUBNET_PREFIX}'"
+  if [[ ${parts[0]} -eq 10 ]]; then
+    if [[ ${parts[1]} > 253 ]]; then
+      echo "ERROR! NAT64_V4_SUBNET_PREFIX is too large for 10.0.0.0/8 private net"
+      exit 1
+    fi
+  elif [[ ${parts[0]} -eq 172 ]]; then
+    if [[ ${parts[1]} -lt 16 || ${parts[1]} -gt 31 ]]; then
+      echo "ERROR! NAT64_V4_SUBNET_PREFIX is outside of range for 172.16.0.0/12 private net"
+      exit 1
+    fi
+  else
+      echo "ERROR! NAT64_V4_SUBNET_PREFIX is not in 10.0.0.0/8 or 172.16.0.0/12 private networks"
+      exit 1
+  fi
+  echo "Using NAT64 V4 mapping network prefix: ${NAT64_V4_SUBNET_PREFIX}"
+}
+
+
+# START OF PROCESSING...
+
+IP_MODE="${IP_MODE:-ipv4}"  # ipv4, ipv6, dual-stack
 if [[ ! ${EMBEDDED_CONFIG:-} ]]; then
   source "${DIND_ROOT}/config.sh"
 fi
 
+# Multicluster support
+# Users can specify a cluster ID number from 1..254, represented as a string.
+# This will be used to form resource names "cluster-#", and will be used in the
+# management subnet to give unique networks for each cluster. If the cluster ID
+# is not specified, or zero, it will be considered a single cluster or the first
+# in the multi-cluster. This is the recommended usage.
+#
+# For legacy support, the user can specify DIND_LABEL, which will be used in the
+# resource names. If a cluster ID is specified (a hybrid case, where people are
+# using the new method, but want custom names), the resourse name will have the
+# suffix "-#" with the cluster ID. If no cluster ID is specified (for backward
+# compatibility), then the resource name will be just the DIND_LABEL, and a pseudo-
+# random number from 1..13 will be generated for the cluster ID to be used in
+# management network. The range is limited, because, in IPv6 mode, the cluster ID
+# is used in the NAT64 V4 subnet prefix, which must be in a private network.
+# The default is 172.18, so the cluster ID cannot be larger than 13 to guarantee
+# a valid value.
+#
+# To get around that limitation, you can set the cluster ID, in addition to the
+# DIND_LABEL, and optionally, change the NAT64_V4_SUBNET_PREFIX value.
+#
+DEFAULT_DIND_LABEL='mirantis.kubeadm_dind_cluster_runtime'
+if [[ -z ${DIND_LABEL+x} ]]; then  # No legacy DIND_LABEL set
+  if [[ -z ${CLUSTER_ID+x} ]]; then  # No cluster ID set
+    DIND_LABEL=${DEFAULT_DIND_LABEL}  # Single cluster mode
+    CLUSTER_ID="0"
+  else  # Have cluster ID
+    if [[ ${CLUSTER_ID} = "0" ]]; then
+      DIND_LABEL=${DEFAULT_DIND_LABEL}  # Single cluster mode or first cluster of multi-cluster
+    else
+      DIND_LABEL="cluster-${CLUSTER_ID}"  # Multi-cluster
+    fi
+  fi
+else  # Legacy DIND_LABEL set for multi-cluster
+  if [[ -z ${CLUSTER_ID+x} ]]; then  # No cluster ID set, make one from 1..13, but don't use in resource names
+    CLUSTER_ID="$(( ($RANDOM % 12) + 1 ))"
+  else
+    if [[ ${CLUSTER_ID} = "0" ]]; then
+      CLUSTER_ID="$(( ($RANDOM % 12) + 1 ))"  # Force a pseudo-random cluster for additional legacy cluster
+    else
+      DIND_LABEL="${DIND_LABEL}-${CLUSTER_ID}"
+    fi
+  fi
+fi
+
 CNI_PLUGIN="${CNI_PLUGIN:-bridge}"
-ETCD_HOST="${ETCD_HOST:-127.0.0.1}"
 GCE_HOSTED="${GCE_HOSTED:-}"
 DIND_ALLOW_AAAA_USE="${DIND_ALLOW_AAAA_USE:-}"  # Default is to use DNS64 always for IPv6 mode
-if [[ ${IP_MODE} = "ipv6" ]]; then
-    DIND_SUBNET="${DIND_SUBNET:-fd00:10::}"
-    dind_ip_base="${DIND_SUBNET}"
-    ETCD_HOST="::1"
-    KUBE_RSYNC_ADDR="${KUBE_RSYNC_ADDR:-::1}"
-    SERVICE_CIDR="${SERVICE_CIDR:-fd00:10:30::/110}"
-    DIND_SUBNET_SIZE="${DIND_SUBNET_SIZE:-64}"
-    REMOTE_DNS64_V4SERVER="${REMOTE_DNS64_V4SERVER:-8.8.8.8}"
-    LOCAL_NAT64_SERVER="${DIND_SUBNET}200"
-    NAT64_V4_SUBNET_PREFIX="${NAT64_V4_SUBNET_PREFIX:-172.18}"
-    DNS64_PREFIX="${DNS64_PREFIX:-fd00:10:64:ff9b::}"
-    DNS64_PREFIX_SIZE="${DNS64_PREFIX_SIZE:-96}"
-    DNS64_PREFIX_CIDR="${DNS64_PREFIX}/${DNS64_PREFIX_SIZE}"
-    dns_server="${dind_ip_base}100"
-    DEFAULT_POD_NETWORK_CIDR="fd00:10:20::/72"
-    USE_HAIRPIN="${USE_HAIRPIN:-true}"  # Default is to use hairpin for IPv6
-    if [[ ${DIND_ALLOW_AAAA_USE} && ${GCE_HOSTED} ]]; then
-	echo "ERROR! GCE does not support use of IPv6 for external addresses - aborting."
-	exit 1
-    fi
-else
-    DIND_SUBNET="${DIND_SUBNET:-10.192.0.0}"
-    dind_ip_base="$(echo "${DIND_SUBNET}" | sed 's/0$//')"
-    KUBE_RSYNC_ADDR="${KUBE_RSYNC_ADDR:-127.0.0.1}"
-    SERVICE_CIDR="${SERVICE_CIDR:-10.96.0.0/12}"
-    DIND_SUBNET_SIZE="${DIND_SUBNET_SIZE:-16}"
-    dns_server="${REMOTE_DNS64_V4SERVER:-8.8.8.8}"
-    DEFAULT_POD_NETWORK_CIDR="10.244.0.0/16"
-    USE_HAIRPIN="${USE_HAIRPIN:-false}"  # Disabled for IPv4, as issue with Virtlet networking
-    if [[ ${DIND_ALLOW_AAAA_USE} ]]; then
-	echo "WARNING! The DIND_ALLOW_AAAA_USE option is for IPv6 mode - ignoring setting."
-	DIND_ALLOW_AAAA_USE=
-    fi
-    if [[ ${CNI_PLUGIN} = "calico" || ${CNI_PLUGIN} = "calico-kdd" ]]; then
-	DEFAULT_POD_NETWORK_CIDR="192.168.0.0/16"
-    fi
+
+# Use legacy DIND_SUBNET/DIND_SUBNET_SIZE, only if MGMT_CIDRS is not set.
+legacy_mgmt_cidr=""
+if [[ ${DIND_SUBNET:-} && ${DIND_SUBNET_SIZE:-} ]]; then
+  legacy_mgmt_cidr="${DIND_SUBNET}/${DIND_SUBNET_SIZE}"
 fi
-dns_prefix="$(echo ${SERVICE_CIDR} | sed 's,/.*,,')"
-if [[ ${IP_MODE} != "ipv6" ]]; then
-    dns_prefix="$(echo ${dns_prefix} | sed 's/0$//')"
-    DNS_SVC_IP="${dns_prefix}10"
-else
-    DNS_SVC_IP="${dns_prefix}a"
+
+if [[ ${IP_MODE} = "dual-stack" ]]; then
+  mgmt_net_defaults="10.192.0.0/24, fd00:20::/64"
+
+  KUBE_RSYNC_ADDR="${KUBE_RSYNC_ADDR:-::1}"
+  SERVICE_CIDR="${SERVICE_CIDR:-fd00:30::/110}"  # Will default to IPv6 service net family
+
+  DEFAULT_POD_NETWORK_CIDR="fd00:40::/72"  # TODO: convert for dual-stack
+
+  USE_HAIRPIN="${USE_HAIRPIN:-true}"  # Default is to use hairpin for dual-stack
+  if [[ ${DIND_ALLOW_AAAA_USE} && ${GCE_HOSTED} ]]; then
+    echo "ERROR! GCE does not support use of IPv6 for external addresses - aborting."
+    exit 1
+  fi
+elif [[ ${IP_MODE} = "ipv6" ]]; then
+  mgmt_net_defaults="fd00:20::/64"
+
+  KUBE_RSYNC_ADDR="${KUBE_RSYNC_ADDR:-::1}"
+  SERVICE_CIDR="${SERVICE_CIDR:-fd00:30::/110}"
+
+  DEFAULT_POD_NETWORK_CIDR="fd00:40::/72"  # TODO: convert for dual-stack
+
+  USE_HAIRPIN="${USE_HAIRPIN:-true}"  # Default is to use hairpin for IPv6
+  if [[ ${DIND_ALLOW_AAAA_USE} && ${GCE_HOSTED} ]]; then
+    echo "ERROR! GCE does not support use of IPv6 for external addresses - aborting."
+    exit 1
+  fi
+else  # IPv4 mode
+  mgmt_net_defaults="10.192.0.0/24"
+
+  KUBE_RSYNC_ADDR="${KUBE_RSYNC_ADDR:-127.0.0.1}"
+  SERVICE_CIDR="${SERVICE_CIDR:-10.96.0.0/12}"
+
+  DEFAULT_POD_NETWORK_CIDR="10.244.0.0/16"  # TODO: convert for dual-stack
+
+  USE_HAIRPIN="${USE_HAIRPIN:-false}"  # Disabled for IPv4, as issue with Virtlet networking
+  if [[ ${DIND_ALLOW_AAAA_USE} ]]; then
+    echo "WARNING! The DIND_ALLOW_AAAA_USE option is for IPv6 mode - ignoring setting."
+    DIND_ALLOW_AAAA_USE=
+  fi
+  if [[ ${CNI_PLUGIN} = "calico" || ${CNI_PLUGIN} = "calico-kdd" ]]; then
+    DEFAULT_POD_NETWORK_CIDR="192.168.0.0/16"  # TODO: convert for dual-stack?
+  fi
 fi
-kube_master_ip="${dind_ip_base}2"
+
+IFS=' ' read -r -a mgmt_net_cidrs <<<$( dind::get-and-validate-cidrs "${MGMT_CIDRS:-${legacy_mgmt_cidr}}" "${mgmt_net_defaults[@]}" )
+
+REMOTE_DNS64_V4SERVER="${REMOTE_DNS64_V4SERVER:-8.8.8.8}"
+if [[ ${IP_MODE} == "ipv6" ]]; then
+  # Uses local DNS64 container
+  dns_server="$( dind::make-ip-from-cidr ${mgmt_net_cidrs[0]} 0x100 )"
+  DNS64_PREFIX="${DNS64_PREFIX:-fd00:10:64:ff9b::}"
+  DNS64_PREFIX_SIZE="${DNS64_PREFIX_SIZE:-96}"
+  DNS64_PREFIX_CIDR="${DNS64_PREFIX}/${DNS64_PREFIX_SIZE}"
+
+  LOCAL_NAT64_SERVER="$( dind::make-ip-from-cidr ${mgmt_net_cidrs[0]} 0x200 )"
+  NAT64_V4_SUBNET_PREFIX="${NAT64_V4_SUBNET_PREFIX:-172.18}"
+  dind::add-cluster-id-and-validate-nat64-prefix
+else
+  dns_server="${REMOTE_DNS64_V4SERVER}"
+fi
+
+SERVICE_NET_MODE="$( dind::family-for ${SERVICE_CIDR} )"
+DNS_SVC_IP="$( dind::make-ip-from-cidr ${SERVICE_CIDR} 10 )"
+
+ETCD_HOST="${ETCD_HOST:-$( dind::localhost )}"
 
 POD_NETWORK_CIDR="${POD_NETWORK_CIDR:-${DEFAULT_POD_NETWORK_CIDR}}"
 if [[ ${IP_MODE} = "ipv6" ]]; then
@@ -132,7 +418,7 @@ if [[ ${IP_MODE} = "ipv6" ]]; then
 	POD_NET_PREFIX+="0:"
         num_colons+=1
     done
-elif [[ ${CNI_PLUGIN} = "bridge" ]]; then # IPv4, bridge
+elif [[ ${CNI_PLUGIN} = "bridge" || ${CNI_PLUGIN} = "ptp" ]]; then # IPv4, bridge or ptp
     # For IPv4, will assume user specifies /16 CIDR and will use a /24 subnet
     # on each node.
     POD_NET_PREFIX="$(echo ${POD_NETWORK_CIDR} | sed 's/^\([0-9]*\.[0-9]*\.\).*/\1/')"
@@ -151,10 +437,12 @@ NUM_NODES=${NUM_NODES:-2}
 EXTRA_PORTS="${EXTRA_PORTS:-}"
 LOCAL_KUBECTL_VERSION=${LOCAL_KUBECTL_VERSION:-}
 KUBECTL_DIR="${KUBECTL_DIR:-${HOME}/.kubeadm-dind-cluster}"
+DASHBOARD_URL="${DASHBOARD_URL:-https://rawgit.com/kubernetes/dashboard/bfab10151f012d1acc5dfb1979f3172e2400aa3c/src/deploy/kubernetes-dashboard.yaml}"
 SKIP_SNAPSHOT="${SKIP_SNAPSHOT:-}"
 E2E_REPORT_DIR="${E2E_REPORT_DIR:-}"
 DIND_NO_PARALLEL_E2E="${DIND_NO_PARALLEL_E2E:-}"
 DNS_SERVICE="${DNS_SERVICE:-kube-dns}"
+DIND_STORAGE_DRIVER="${DIND_STORAGE_DRIVER:-overlay2}"
 
 DIND_CA_CERT_URL="${DIND_CA_CERT_URL:-}"
 DIND_PROPAGATE_HTTP_PROXY="${DIND_PROPAGATE_HTTP_PROXY:-}"
@@ -176,13 +464,16 @@ if [[ ! ${LOCAL_KUBECTL_VERSION:-} && ${DIND_IMAGE:-} =~ :(v[0-9]+\.[0-9]+)$ ]];
   LOCAL_KUBECTL_VERSION="${BASH_REMATCH[1]}"
 fi
 
-DEFAULT_DIND_LABEL='mirantis.kubeadm_dind_cluster_runtime'
-: "${DIND_LABEL:=${DEFAULT_DIND_LABEL}}"
-: "${APISERVER_PORT:=8080}"
+ENABLE_CEPH="${ENABLE_CEPH:-}"
+
+# TODO: Test multi-cluster for IPv6, before enabling
+if [[ "${DIND_LABEL}" != "${DEFAULT_DIND_LABEL}"  && "${IP_MODE}" == 'dual-stack' ]]; then
+    echo "Multiple parallel clusters currently not supported for dual-stack mode" >&2
+    exit 1
+fi
 
 # not configurable for now, would need to setup context for kubectl _inside_ the cluster
 readonly INTERNAL_APISERVER_PORT=8080
-
 
 function dind::need-source {
   if [[ ! -f cluster/kubectl.sh ]]; then
@@ -272,7 +563,7 @@ function dind::prepare-sys-mounts {
     return 0
   fi
   local dind_sys_vol_name
-  dind_sys_vol_name="kubeadm-dind-sys$( dind::clusterSuffix )"
+  dind_sys_vol_name="kubeadm-dind-sys$( dind::cluster-suffix )"
   if ! dind::volume-exists "$dind_sys_vol_name"; then
     dind::step "Saving a copy of docker host's /lib/modules"
     dind::create-volume "$dind_sys_vol_name"
@@ -491,14 +782,28 @@ function dind::ensure-binaries {
   return 0
 }
 
+# dind::ensure-network creates the management network for the cluster. For IPv4
+# only it will have the management network CIDR. For IPv6 only, it will have
+# the IPv6 management network CIDR and the NAT64 V4 mapping network CIDR. For
+# dual stack, it will have the IPv4 and IPv6 management CIDRs. Each of the
+# management networks (not the NAT64 network) will have a gateway specified.
+#
 function dind::ensure-network {
   if ! docker network inspect $(dind::net-name) >&/dev/null; then
-    local v6settings=""
-    if [[ ${IP_MODE} = "ipv6" ]]; then
-      # Need second network for NAT64
-      v6settings="--subnet=${NAT64_V4_SUBNET_PREFIX}.0.0/16 --ipv6"
-    fi
-    docker network create ${v6settings} --subnet="${DIND_SUBNET}/${DIND_SUBNET_SIZE}" --gateway="${dind_ip_base}1" $(dind::net-name) >/dev/null
+    local -a args
+    for cidr in "${mgmt_net_cidrs[@]}"; do
+      if [[ $( dind::family-for ${cidr} ) = "ipv6" ]]; then
+                args+=(--ipv6)
+        fi
+        args+=(--subnet="${cidr}")
+        local gw=$( dind::make-ip-from-cidr ${cidr} 1 )
+        args+=(--gateway="${gw}")
+      done
+        if [[ ${IP_MODE} = "ipv6" ]]; then
+            # Need second network for NAT64 V4 mapping network
+            args+=(--subnet=${NAT64_V4_SUBNET_PREFIX}.0.0/16)
+        fi
+        docker network create ${args[@]} $(dind::net-name) >/dev/null
   fi
 }
 
@@ -513,29 +818,24 @@ function dind::ensure-volume {
     if [[ ! ${reuse_volume} ]]; then
       docker volume rm "${name}" >/dev/null
     fi
-  elif [[ ${reuse_volume} ]]; then
-    echo "*** Failed to locate volume: ${name}" 1>&2
-    return 1
   fi
   dind::create-volume "${name}"
 }
 
 function dind::ensure-dns {
     if [[ ${IP_MODE} = "ipv6" ]]; then
-        if ! docker inspect bind9 >&/dev/null; then
-	    local bind9_path=/tmp/bind9
-	    rm -rf ${bind9_path}
-	    mkdir -p ${bind9_path}/conf ${bind9_path}/cache
-	    local force_dns64_for=""
-	    if [[ ! ${DIND_ALLOW_AAAA_USE} ]]; then
-		# Normally, if have an AAAA record, it is used. This clause tells
-		# bind9 to do ignore AAAA records for the specified networks
-		# and/or addresses and lookup A records and synthesize new AAAA
-		# records. In this case, we select "any" networks that have AAAA
-		# records meaning we ALWAYS use A records and do NAT64.
-	        force_dns64_for="exclude { any; };"
-	    fi
-	    cat >${bind9_path}/conf/named.conf <<BIND9_EOF
+	local dns64_name="bind9$( dind::cluster-suffix )"
+        if ! docker inspect ${dns64_name} >&/dev/null; then
+            local force_dns64_for=""
+            if [[ ! ${DIND_ALLOW_AAAA_USE} ]]; then
+                # Normally, if have an AAAA record, it is used. This clause tells
+                # bind9 to do ignore AAAA records for the specified networks
+                # and/or addresses and lookup A records and synthesize new AAAA
+                # records. In this case, we select "any" networks that have AAAA
+                # records meaning we ALWAYS use A records and do NAT64.
+                force_dns64_for="exclude { any; };"
+            fi
+            read -r -d '' bind9_conf <<BIND9_EOF
 options {
     directory "/var/bind";
     allow-query { any; };
@@ -549,29 +849,23 @@ options {
     };
 };
 BIND9_EOF
-	    if [[ ${GCE_HOSTED} ]]; then
-		# TODO: Have bind9 create config file, and pass in variables via Env vars.
-		docker-machine scp ${bind9_path}/conf/named.conf k8s-dind:bind9-named.conf
-		docker-machine ssh k8s-dind sudo rm -rf ${bind-path}
-		docker-machine ssh k8s-dind sudo mkdir -p ${bind9_path}/conf ${bind9_path}/cache
-		docker-machine ssh k8s-dind sudo cp /home/docker-user/bind9-named.conf ${bind9_path}/conf/named.conf
-	    fi
-	    docker run -d --name bind9 --hostname bind9 --net "$(dind::net-name)" --label "${DIND_LABEL}" \
-		   --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv6.conf.all.forwarding=1 \
-		   --privileged=true --ip6 ${dns_server} --dns ${dns_server} \
-		   -v ${bind9_path}/conf/named.conf:/etc/bind/named.conf \
-		   resystit/bind9:latest >/dev/null
-	    ipv4_addr="$(docker exec bind9 ip addr list eth0 | grep "inet" | awk '$1 == "inet" {print $2}')"
-	    docker exec bind9 ip addr del ${ipv4_addr} dev eth0
-	    docker exec bind9 ip -6 route add ${DNS64_PREFIX_CIDR} via ${LOCAL_NAT64_SERVER}
+            docker run -d --name ${dns64_name} --hostname ${dns64_name} --net "$(dind::net-name)" --label "dind-support$( dind::cluster-suffix )" \
+               --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv6.conf.all.forwarding=1 \
+               --privileged=true --ip6 ${dns_server} --dns ${dns_server} \
+               -e bind9_conf="${bind9_conf}" \
+               diverdane/bind9:latest /bin/sh -c 'echo "${bind9_conf}" >/named.conf && named -c /named.conf -g -u named' >/dev/null
+            ipv4_addr="$(docker exec ${dns64_name} ip addr list eth0 | grep "inet" | awk '$1 == "inet" {print $2}')"
+            docker exec ${dns64_name} ip addr del ${ipv4_addr} dev eth0
+            docker exec ${dns64_name} ip -6 route add ${DNS64_PREFIX_CIDR} via ${LOCAL_NAT64_SERVER}
         fi
     fi
 }
 
 function dind::ensure-nat {
     if [[  ${IP_MODE} = "ipv6" ]]; then
-        if ! docker ps | grep tayga >&/dev/null; then
-            docker run -d --name tayga --hostname tayga --net "$(dind::net-name)" --label "${DIND_LABEL}" \
+	local nat64_name="tayga$( dind::cluster-suffix )"
+        if ! docker ps | grep ${nat64_name} >&/dev/null; then
+            docker run -d --name ${nat64_name} --hostname ${nat64_name} --net "$(dind::net-name)" --label "dind-support$( dind::cluster-suffix )" \
 		   --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv6.conf.all.forwarding=1 \
 		   --privileged=true --ip ${NAT64_V4_SUBNET_PREFIX}.0.200 --ip6 ${LOCAL_NAT64_SERVER} --dns ${REMOTE_DNS64_V4SERVER} --dns ${dns_server} \
 		   -e TAYGA_CONF_PREFIX=${DNS64_PREFIX_CIDR} -e TAYGA_CONF_IPV4_ADDR=${NAT64_V4_SUBNET_PREFIX}.0.200 \
@@ -579,13 +873,7 @@ function dind::ensure-nat {
 	    # Need to check/create, as "clean" may remove route
 	    local route="$(ip route | egrep "^${NAT64_V4_SUBNET_PREFIX}.0.128/25")"
 	    if [[ -z "${route}" ]]; then
-		if [[ ${GCE_HOSTED} ]]; then
-		    docker-machine ssh k8s-dind sudo ip route add ${NAT64_V4_SUBNET_PREFIX}.0.128/25 via ${NAT64_V4_SUBNET_PREFIX}.0.200
-                elif [[ -z ${using_linuxdocker} ]]; then
-                    :
-		else
-		    docker run --net=host --rm --privileged ${busybox_image} ip route add ${NAT64_V4_SUBNET_PREFIX}.0.128/25 via ${NAT64_V4_SUBNET_PREFIX}.0.200
-		fi
+	        docker run --net=host --rm --privileged ${busybox_image} ip route add ${NAT64_V4_SUBNET_PREFIX}.0.128/25 via ${NAT64_V4_SUBNET_PREFIX}.0.200
 	    fi
 	fi
     fi
@@ -598,38 +886,48 @@ function dind::run {
     shift
   fi
   local container_name="${1:-}"
-  local ip="${2:-}"
-  local node_id="${3:-}"
-  local portforward="${4:-}"
-  if [[ $# -gt 4 ]]; then
-    shift 4
+  local node_id=${2:-0}
+  local portforward="${3:-}"
+  if [[ $# -gt 3 ]]; then
+    shift 3
   else
     shift $#
   fi
-  local ip_arg="--ip"
-  if [[ ${IP_MODE} = "ipv6" ]]; then
-      ip_arg="--ip6"
-  fi
-  local -a opts=("${ip_arg}" "${ip}" "$@")
+
+  local -a opts=("$@")
+  local ip_mode="--ip"
+  for cidr in "${mgmt_net_cidrs[@]}"; do
+    if [[ $( dind::family-for ${cidr} ) = "ipv6" ]]; then
+      ip_mode="--ip6"
+    fi
+    opts+=("${ip_mode}" "$( dind::make-ip-from-cidr ${cidr} $((${node_id}+1)) )")
+  done
+  opts+=("$@")
+  
   local -a args=("systemd.setenv=CNI_PLUGIN=${CNI_PLUGIN}")
   args+=("systemd.setenv=IP_MODE=${IP_MODE}")
-  if [[ ${IP_MODE} = "ipv6" ]]; then
-      opts+=(--sysctl net.ipv6.conf.all.disable_ipv6=0)
-      opts+=(--sysctl net.ipv6.conf.all.forwarding=1)
-      opts+=(--dns ${dns_server})
-      args+=("systemd.setenv=DNS64_PREFIX_CIDR=${DNS64_PREFIX_CIDR}")
-      args+=("systemd.setenv=LOCAL_NAT64_SERVER=${LOCAL_NAT64_SERVER}")
+  args+=("systemd.setenv=DIND_STORAGE_DRIVER=${DIND_STORAGE_DRIVER}")
 
-      # For prefix, if node ID will be in the upper byte, push it over
-      if [[ $((${POD_NET_SIZE} % 16)) -ne 0 ]]; then
-	  node_id=$(printf "%02x00\n" "${node_id}")
+  if [[ ${IP_MODE} != "ipv4" ]]; then
+    opts+=(--sysctl net.ipv6.conf.all.disable_ipv6=0)
+    opts+=(--sysctl net.ipv6.conf.all.forwarding=1)
+  fi
+
+  if [[ ${IP_MODE} = "ipv6" ]]; then
+    opts+=(--dns ${dns_server})
+    args+=("systemd.setenv=DNS64_PREFIX_CIDR=${DNS64_PREFIX_CIDR}")
+    args+=("systemd.setenv=LOCAL_NAT64_SERVER=${LOCAL_NAT64_SERVER}")
+
+    # For prefix, if node ID will be in the upper byte, push it over
+    if [[ $((${POD_NET_SIZE} % 16)) -ne 0 ]]; then
+      node_id=$(printf "%02x00\n" "${node_id}")
+    else
+      if [[ "${POD_NET_PREFIX: -1}" = ":" ]]; then
+	node_id=$(printf "%x\n" "${node_id}")
       else
-	  if [[ "${POD_NET_PREFIX: -1}" = ":" ]]; then
-	      node_id=$(printf "%x\n" "${node_id}")
-	  else
-	      node_id=$(printf "%02x\n" "${node_id}")  # In lower byte, so ensure two chars
-	  fi
+        node_id=$(printf "%02x\n" "${node_id}")  # In lower byte, so ensure two chars
       fi
+    fi
   fi
 
   if [[ ${POD_NET_PREFIX} ]]; then
@@ -643,8 +941,6 @@ function dind::run {
     echo >&2 "Must specify container name"
     exit 1
   fi
-
-  args+=("systemd.setenv=KUBELET_EXTRA_ARGS=\"${KUBELET_EXTRA_ARGS:-}\"")
 
   # remove any previously created containers with the same name
   docker rm -vf "${container_name}" >&/dev/null || true
@@ -662,6 +958,12 @@ function dind::run {
 
   if [[ ! ${using_linuxkit} ]]; then
     opts+=(-v /boot:/boot -v /lib/modules:/lib/modules)
+  fi
+
+  if [[ ${ENABLE_CEPH} ]]; then
+    opts+=(-v /dev:/dev
+           -v /sys/bus:/sys/bus
+           -v /var/run/docker.sock:/opt/outer-docker.sock)
   fi
 
   local volume_name="kubeadm-dind-${container_name}"
@@ -717,24 +1019,21 @@ function dind::kubeadm {
 
 function dind::configure-kubectl {
   dind::step "Setting cluster config"
-  local host="${dind_ip_base}2"
-  if [[ ${IP_MODE} = "ipv6" ]]; then
-      host="[${host}]"
-  fi
-  if [[ ${GCE_HOSTED} || ${DOCKER_HOST:-} =~ ^tcp: || ${using_linuxkit} || -n ${using_linuxdocker} ]]; then
-    if [[ "${IP_MODE}" = "ipv4" ]]; then
-      host="localhost"
-    else
-      host="[::1]"
-    fi
+  local host="$(dind::localhost)"
+  if [[ -z "$using_local_linuxdocker" ]]; then
+    host="127.0.0.1"
   fi
   local context_name cluster_name
   context_name="$(dind::context-name)"
   cluster_name="$(dind::context-name)"
   "${kubectl}" config set-cluster "$cluster_name" \
-    --server="http://${host}:${APISERVER_PORT}" \
+    --server="http://${host}:$(dind::apiserver-port)" \
     --insecure-skip-tls-verify=true
   "${kubectl}" config set-context "$context_name" --cluster="$cluster_name"
+  if [[ ${DIND_LABEL} = ${DEFAULT_DIND_LABEL} ]]; then
+      # Single cluster mode
+      "${kubectl}" config use-context "$context_name"
+  fi
 }
 
 force_make_binaries=
@@ -743,8 +1042,8 @@ function dind::set-master-opts {
   if [[ ${BUILD_KUBEADM} || ${BUILD_HYPERKUBE} ]]; then
     # share binaries pulled from the build container between nodes
     local dind_k8s_bin_vol_name
-    dind_k8s_bin_vol_name="dind-k8s-binaries$(dind::clusterSuffix)"
-    dind::ensure-volume "${dind_k8s_bin_vol_name}"
+    dind_k8s_bin_vol_name="dind-k8s-binaries$(dind::cluster-suffix)"
+    dind::ensure-volume -r "${dind_k8s_bin_vol_name}"
     dind::set-build-volume-args
     master_opts+=("${build_volume_args[@]}" -v "${dind_k8s_bin_vol_name}:/k8s")
     local -a bins
@@ -769,6 +1068,27 @@ function dind::set-master-opts {
   fi
 }
 
+function dind::ensure-dashboard-clusterrolebinding {
+  local ctx
+  ctx="$(dind::context-name)"
+  # 'create' may cause etcd timeout, yet create the clusterrolebinding.
+  # So use 'apply' to actually create it
+  "${kubectl}" --context "$ctx" create clusterrolebinding add-on-cluster-admin \
+               --clusterrole=cluster-admin \
+               --serviceaccount=kube-system:default \
+               -o json --dry-run |
+    docker exec -i "$(dind::master-name)" jq '.apiVersion="rbac.authorization.k8s.io/v1beta1"|.kind|="ClusterRoleBinding"' |
+    "${kubectl}" --context "$ctx" apply -f -
+}
+
+function dind::deploy-dashboard {
+  dind::step "Deploying k8s dashboard"
+  dind::retry "${kubectl}" --context "$(dind::context-name)" apply -f "${DASHBOARD_URL}"
+  # https://kubernetes-io-vnext-staging.netlify.com/docs/admin/authorization/rbac/#service-account-permissions
+  # Thanks @liggitt for the hint
+  dind::retry dind::ensure-dashboard-clusterrolebinding
+}
+
 function dind::kubeadm-version {
   if [[ ${use_k8s_source} ]]; then
     (cluster/kubectl.sh version --short 2>/dev/null || true) |
@@ -781,16 +1101,22 @@ function dind::kubeadm-version {
   fi
 }
 
+function dind::kubeadm-skip-checks-flag {
+  kubeadm_version="$(dind::kubeadm-version)"
+  if [[ ${kubeadm_version} =~ 1\.8\. ]]; then
+    echo -n "--skip-preflight-checks"
+  else
+    echo -n "--ignore-preflight-errors=all"
+  fi
+}
+
 function dind::init {
   local -a opts
   dind::set-master-opts
-  local local_host="127.0.0.1"
-  if [[ ${IP_MODE} = "ipv6" ]]; then
-      local_host="[::1]"
-  fi
-  local master_name container_id
+  local local_host master_name container_id
   master_name="$(dind::master-name)"
-  container_id=$(dind::run "${master_name}" "${kube_master_ip}" 1 ${local_host}:${APISERVER_PORT}:${INTERNAL_APISERVER_PORT} ${master_opts[@]+"${master_opts[@]}"})
+  local_host="$( dind::localhost )"
+  container_id=$(dind::run "${master_name}" 1 "${local_host}:$(dind::apiserver-port):${INTERNAL_APISERVER_PORT}" ${master_opts[@]+"${master_opts[@]}"})
   # FIXME: I tried using custom tokens with 'kubeadm ex token create' but join failed with:
   # 'failed to parse response as JWS object [square/go-jose: compact JWS format must have three parts]'
   # So we just pick the line from 'kubeadm init' output
@@ -799,7 +1125,7 @@ function dind::init {
   # customizations to template and then rebuild the image used (build/build-local.sh).
   local pod_subnet_disable="# "
   # TODO: May want to specify each of the plugins that require --pod-network-cidr
-  if [[ ${CNI_PLUGIN} != "bridge" ]]; then
+  if [[ ${CNI_PLUGIN} != "bridge" && ${CNI_PLUGIN} != "ptp" ]]; then
     pod_subnet_disable=""
   fi
   local bind_address="0.0.0.0"
@@ -850,13 +1176,26 @@ function dind::init {
   done
 
   kubeadm_version="$(dind::kubeadm-version)"
-  api_version="kubeadm.k8s.io/v1alpha2"
+  api_version="kubeadm.k8s.io/v1alpha3"
+  kind="ClusterConfiguration"
+  api_endpoint="apiEndpoint:"
   if [[ ${kubeadm_version} =~ 1\.(8|9|10)\. ]]; then
     api_version="kubeadm.k8s.io/v1alpha1"
+    kind="MasterConfiguration"
+    api_endpoint="api:"
+  elif [[ ${kubeadm_version} =~ 1\.(11|12)\. ]]; then
+    api_version="kubeadm.k8s.io/v1alpha2"
+    kind="MasterConfiguration"
+    api_endpoint="api:"
   fi
+  local mgmt_cidr=${mgmt_net_cidrs[0]}
+  if [[ ${IP_MODE} = "dual-stack" && $( dind::family-for ${SERVICE_CIDR} ) = "ipv6" ]]; then
+      mgmt_cidr=${mgmt_net_cidrs[1]}
+  fi
+  local master_ip=$( dind::make-ip-from-cidr ${mgmt_cidr} 2 )
   docker exec -i "$master_name" bash <<EOF
 sed -e "s|{{API_VERSION}}|${api_version}|" \
-    -e "s|{{ADV_ADDR}}|${kube_master_ip}|" \
+    -e "s|{{ADV_ADDR}}|${master_ip}|" \
     -e "s|{{POD_SUBNET_DISABLE}}|${pod_subnet_disable}|" \
     -e "s|{{POD_NETWORK_CIDR}}|${POD_NETWORK_CIDR}|" \
     -e "s|{{SVC_SUBNET}}|${SERVICE_CIDR}|" \
@@ -869,34 +1208,35 @@ sed -e "s|{{API_VERSION}}|${api_version}|" \
     -e "s|{{CONTROLLER_MANAGER_EXTRA_ARGS}}|${controller_manager_extra_args}|" \
     -e "s|{{SCHEDULER_EXTRA_ARGS}}|${scheduler_extra_args}|" \
     -e "s|{{KUBE_MASTER_NAME}}|${master_name}|" \
+    -e "s|{{KUBEADM_KIND}}|${kind}|" \
+    -e "s|{{API_ENDPOINT}}|${api_endpoint}|" \
     /etc/kubeadm.conf.tmpl > /etc/kubeadm.conf
 EOF
-  # TODO: --skip-preflight-checks needs to be replaced with
-  # --ignore-preflight-errors=all for k8s 1.10+
-  # (need to check k8s 1.9)
   init_args=(--config /etc/kubeadm.conf)
+  skip_preflight_arg="$(dind::kubeadm-skip-checks-flag)"
   # required when building from source
   if [[ ${BUILD_KUBEADM} || ${BUILD_HYPERKUBE} ]]; then
     docker exec "$master_name" mount --make-shared /k8s
   fi
-  kubeadm_join_flags="$(dind::kubeadm "${container_id}" init "${init_args[@]}" --skip-preflight-checks "$@" | grep '^ *kubeadm join' | sed 's/^ *kubeadm join //')"
+  kubeadm_join_flags="$(dind::kubeadm "${container_id}" init "${init_args[@]}" "${skip_preflight_arg}" "$@" | grep '^ *kubeadm join' | sed 's/^ *kubeadm join //')"
   dind::configure-kubectl
+  dind::start-port-forwarder
 }
 
 function dind::create-node-container {
-  local reuse_volume=
-  if [[ $1 = -r ]]; then
+  local reuse_volume next_node_index node_name
+  reuse_volume=''
+  if [[ ${1:-} = -r ]]; then
     reuse_volume="-r"
     shift
   fi
   # if there's just one node currently, it's master, thus we need to use
   # kube-node-1 hostname, if there are two nodes, we should pick
   # kube-node-2 and so on
-  local next_node_index=${1:-$(docker ps -q --filter=label="${DIND_LABEL}" | wc -l | sed 's/^ *//g')}
-  local node_ip="${dind_ip_base}$((next_node_index + 2))"
+  next_node_index=${1:-$(docker ps -q --filter=label="${DIND_LABEL}" | wc -l | sed 's/^ *//g')}
   local -a opts
   if [[ ${BUILD_KUBEADM} || ${BUILD_HYPERKUBE} ]]; then
-    opts+=(-v "dind-k8s-binaries$(dind::clusterSuffix)":/k8s)
+    opts+=(-v "dind-k8s-binaries$(dind::cluster-suffix)":/k8s)
     if [[ ${BUILD_KUBEADM} ]]; then
       opts+=(-e KUBEADM_SOURCE=build://)
     fi
@@ -904,9 +1244,8 @@ function dind::create-node-container {
       opts+=(-e HYPERKUBE_SOURCE=build://)
     fi
   fi
-  local node_name
   node_name="$(dind::node-name ${next_node_index})"
-  dind::run ${reuse_volume} "$node_name" ${node_ip} $((next_node_index + 1)) "${EXTRA_PORTS}" ${opts[@]+"${opts[@]}"}
+  dind::run ${reuse_volume} "$node_name" $((next_node_index + 1)) "${EXTRA_PORTS}" ${opts[@]+"${opts[@]}"}
 }
 
 function dind::join {
@@ -914,7 +1253,8 @@ function dind::join {
   shift
   dind::proxy "${container_id}"
   dind::custom-docker-opts "${container_id}"
-  dind::kubeadm "${container_id}" join --skip-preflight-checks "$@" >/dev/null
+  skip_preflight_arg="$(dind::kubeadm-skip-checks-flag)"
+  dind::kubeadm "${container_id}" join "${skip_preflight_arg}" "$@" >/dev/null
 }
 
 function dind::escape-e2e-name {
@@ -956,8 +1296,8 @@ function dind::kill-failed-pods {
   done
 }
 
-function dind::create-static-routes-for-bridge {
-  echo "Creating static routes for bridge plugin"
+function dind::create-static-routes {
+  echo "Creating static routes for bridge/PTP plugin"
   for ((i=0; i <= NUM_NODES; i++)); do
     if [[ ${i} -eq 0 ]]; then
       node="$(dind::master-name)"
@@ -986,7 +1326,7 @@ function dind::create-static-routes-for-bridge {
 	dest="${POD_NET_PREFIX}${instance}::/${POD_NET_SIZE}"
         gw=`docker exec ${dest_node} ip addr show eth0 | grep -w inet6 | grep -i global | head -1 | awk '{ print $2 }' | sed 's,/.*,,'`
       fi
-      docker exec ${node} ip route add ${dest} via ${gw}
+      docker exec "${node}" ip route add "${dest}" via "${gw}"
     done
   done
 }
@@ -1000,9 +1340,9 @@ function dind::setup_external_access_on_host {
   fi
   local main_if=`ip route | grep default | awk '{print $5}'`
   local bridge_if=`ip route | grep ${NAT64_V4_SUBNET_PREFIX}.0.0 | awk '{print $3}'`
-  docker run --entrypoint /sbin/ip6tables --net=host --rm --privileged ${DIND_IMAGE} -t nat -A POSTROUTING -o $main_if -j MASQUERADE
+  dind::ip6tables-on-hostnet -t nat -A POSTROUTING -o $main_if -j MASQUERADE
   if [[ -n "$bridge_if" ]]; then
-    docker run --entrypoint /sbin/ip6tables --net=host --rm --privileged ${DIND_IMAGE} -A FORWARD -i $bridge_if -j ACCEPT
+    dind::ip6tables-on-hostnet -A FORWARD -i $bridge_if -j ACCEPT
   else
     echo "WARNING! No $(dind::net-name) bridge - unable to setup forwarding/SNAT"
   fi
@@ -1017,22 +1357,27 @@ function dind::remove_external_access_on_host {
   local main_if="$(ip route | grep default | awk '{print $5}')"
   local bridge_if="$(ip route | grep ${NAT64_V4_SUBNET_PREFIX}.0.0 | awk '{print $3}')"
 
-  have_rule="$(docker run --entrypoint /sbin/ip6tables --net=host --rm --privileged ${DIND_IMAGE} -S -t nat | grep "\-o $main_if" || true)"
+  have_rule="$(dind::ip6tables-on-hostnet -S -t nat | grep "\-o $main_if" || true)"
   if [[ -n "$have_rule" ]]; then
-    docker run --entrypoint /sbin/ip6tables --net=host --rm --privileged ${DIND_IMAGE} -t nat -D POSTROUTING -o $main_if -j MASQUERADE
+    dind::ip6tables-on-hostnet -t nat -D POSTROUTING -o $main_if -j MASQUERADE
   else
     echo "Skipping delete of ip6tables rule for SNAT, as rule non-existent"
   fi
   if [[ -n "$bridge_if" ]]; then
-    have_rule="$(docker run --entrypoint /sbin/ip6tables --net=host --rm --privileged ${DIND_IMAGE} -S | grep "\-i $bridge_if" || true)"
+    have_rule="$(dind::ip6tables-on-hostnet -S | grep "\-i $bridge_if" || true)"
     if [[ -n "$have_rule" ]]; then
-      docker run --entrypoint /sbin/ip6tables --net=host --rm --privileged ${DIND_IMAGE} -D FORWARD -i $bridge_if -j ACCEPT
+      dind::ip6tables-on-hostnet -D FORWARD -i $bridge_if -j ACCEPT
     else
       echo "Skipping delete of ip6tables rule for forwarding, as rule non-existent"
     fi
   else
     echo "Skipping delete of ip6tables rule for forwarding, as no bridge interface"
   fi
+}
+
+function dind::ip6tables-on-hostnet {
+  local mod_path='/lib/modules'
+  docker run -v "${mod_path}:${mod_path}" --entrypoint /sbin/ip6tables --net=host --rm --privileged "${DIND_IMAGE}" "$@"
 }
 
 function dind::wait-for-ready {
@@ -1075,14 +1420,15 @@ function dind::wait-for-ready {
     sleep 1
   done
 
-  dind::step "Bringing up ${DNS_SERVICE}"
+  dind::step "Bringing up ${DNS_SERVICE} and kubernetes-dashboard"
   # on Travis 'scale' sometimes fails with 'error: Scaling the resource failed with: etcdserver: request timed out; Current resource version 442' here
   dind::retry "${kubectl}" --context "$ctx" scale deployment --replicas=1 -n kube-system ${DNS_SERVICE}
+  dind::retry "${kubectl}" --context "$ctx" scale deployment --replicas=1 -n kube-system kubernetes-dashboard
 
   ntries=200
-  while ! dind::component-ready k8s-app=kube-dns; do
+  while ! dind::component-ready k8s-app=kube-dns || ! dind::component-ready app=kubernetes-dashboard; do
     if ((--ntries == 0)); then
-      echo "Error bringing up ${DNS_SERVICE}" >&2
+      echo "Error bringing up ${DNS_SERVICE} and kubernetes-dashboard" >&2
       exit 1
     fi
     echo -n "." >&2
@@ -1092,10 +1438,10 @@ function dind::wait-for-ready {
   echo "[done]" >&2
 
   dind::retry "${kubectl}" --context "$ctx" get nodes >&2
-  local_host="localhost"
-  if [[ ${IP_MODE} = "ipv6" ]]; then
-      local_host="[::1]"
-  fi
+
+  local local_host
+  local_host="$( dind::localhost )"
+  dind::step "Access dashboard at:" "http://${local_host}:$(dind::apiserver-port)/api/v1/namespaces/kube-system/services/kubernetes-dashboard:/proxy"
 }
 
 function dind::up {
@@ -1141,8 +1487,8 @@ function dind::up {
     "${kubectl}" --context "$ctx" taint nodes $(dind::master-name) node-role.kubernetes.io/master- || true
   fi
   case "${CNI_PLUGIN}" in
-    bridge)
-      dind::create-static-routes-for-bridge
+    bridge | ptp)
+      dind::create-static-routes
       dind::setup_external_access_on_host
       ;;
     flannel)
@@ -1160,22 +1506,30 @@ function dind::up {
       dind::retry "${kubectl}" --context "$ctx" apply -f "https://github.com/weaveworks/weave/blob/master/prog/weave-kube/weave-daemonset-k8s-1.6.yaml?raw=true"
       ;;
     kube-router)
-      dind::retry "${kubectl}" apply -f "https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kubeadm-kuberouter-all-features.yaml"
-      dind::retry "${kubectl}" -n kube-system delete ds kube-proxy
+      dind::retry "${kubectl}" --context "$ctx" apply -f "https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kubeadm-kuberouter-all-features.yaml"
+      dind::retry "${kubectl}" --context "$ctx" -n kube-system delete ds kube-proxy
       docker run --privileged --net=host k8s.gcr.io/kube-proxy-amd64:v1.10.2 kube-proxy --cleanup
       ;;
     *)
       echo "Unsupported CNI plugin '${CNI_PLUGIN}'" >&2
       ;;
   esac
+  dind::deploy-dashboard
   dind::accelerate-kube-dns
-  if [[ ${CNI_PLUGIN} != bridge || ${SKIP_SNAPSHOT} ]]; then
+  if [[ (${CNI_PLUGIN} != "bridge" && ${CNI_PLUGIN} != "ptp") || ${SKIP_SNAPSHOT} ]]; then
     # This is especially important in case of Calico -
     # the cluster will not recover after snapshotting
     # (at least not after restarting from the snapshot)
     # if Calico installation is interrupted
     dind::wait-for-ready
   fi
+  dind::step "Cluster Info"
+  echo "Network Mode: ${IP_MODE}"
+  echo "Cluster context: $( dind::context-name )"
+  echo "Cluster ID: ${CLUSTER_ID}"
+  echo "Management CIDR(s): ${mgmt_net_cidrs[@]}"
+  echo "Service CIDR/mode: ${SERVICE_CIDR}/${SERVICE_NET_MODE}"
+  echo "Pod CIDR(s): ${POD_NETWORK_CIDR}"
 }
 
 function dind::fix-mounts {
@@ -1220,18 +1574,17 @@ function dind::restore_container {
 }
 
 function dind::restore {
+  local apiserver_port local_host pid pids
   dind::down
   dind::step "Restoring master container"
   dind::set-master-opts
+  local_host="$( dind::localhost )"
+  apiserver_port="$( dind::apiserver-port )"
   for ((n=0; n <= NUM_NODES; n++)); do
     (
       if [[ n -eq 0 ]]; then
         dind::step "Restoring master container"
-        local local_host="127.0.0.1"
-        if [[ ${IP_MODE} = "ipv6" ]]; then
-          local_host="[::1]"
-        fi
-        dind::restore_container "$(dind::run -r "$(dind::master-name)" "${kube_master_ip}" 1 ${local_host}:${APISERVER_PORT}:${INTERNAL_APISERVER_PORT} ${master_opts[@]+"${master_opts[@]}"})"
+        dind::restore_container "$(dind::run -r "$(dind::master-name)" 1 "${local_host}:${apiserver_port}:${INTERNAL_APISERVER_PORT}" ${master_opts[@]+"${master_opts[@]}"})"
         dind::step "Master container restored"
       else
         dind::step "Restoring node container:" ${n}
@@ -1249,68 +1602,113 @@ function dind::restore {
   for pid in ${pids[*]}; do
     wait ${pid}
   done
-  if [[ "${CNI_PLUGIN}" = "bridge" ]]; then
-    dind::create-static-routes-for-bridge
+  if [[ ${CNI_PLUGIN} = "bridge" || ${CNI_PLUGIN} = "ptp" ]]; then
+    dind::create-static-routes
     dind::setup_external_access_on_host
   fi
   dind::fix-mounts
   # Recheck kubectl config. It's possible that the cluster was started
   # on this docker from different host
   dind::configure-kubectl
+  dind::start-port-forwarder
   dind::wait-for-ready
 }
 
 function dind::down {
-  docker ps -a -q --filter=label="${DIND_LABEL}" | while read container_id; do
-    dind::step "Removing container:" "${container_id}"
-    docker rm -fv "${container_id}"
-  done
-  if [[ "${CNI_PLUGIN}" = "bridge" ]]; then
+  dind::remove-images "${DIND_LABEL}"
+  if [[ ${CNI_PLUGIN} = "bridge" || ${CNI_PLUGIN} = "ptp" ]]; then
     dind::remove_external_access_on_host
   elif [[ "${CNI_PLUGIN}" = "kube-router" ]]; then
     docker run --privileged --net=host cloudnativelabs/kube-router --cleanup-config
   fi
 }
 
+function dind::apiserver-port {
+  # APISERVER_PORT is explicitely set
+  if [ -n "${APISERVER_PORT:-}" ]
+  then
+    echo "$APISERVER_PORT"
+    return
+  fi
+
+  # Get the port from the master
+  local master port
+  master="$(dind::master-name)"
+  # 8080/tcp -> 127.0.0.1:8082  =>  8082
+  port="$( docker port "$master" 2>/dev/null | awk -F: "/^${INTERNAL_APISERVER_PORT}/{ print \$NF }" )"
+  if [ -n "$port" ]
+  then
+    APISERVER_PORT="$port"
+    echo "$APISERVER_PORT"
+    return
+  fi
+
+  # get a random free port
+  APISERVER_PORT=0
+  echo "$APISERVER_PORT"
+}
+
 function dind::master-name {
-  echo "kube-master$( dind::clusterSuffix )"
+  echo "kube-master$( dind::cluster-suffix )"
 }
 
 function dind::node-name {
   local nr="$1"
-  echo "kube-node-${nr}$( dind::clusterSuffix )"
-}
-
-function dind::clusterSuffix {
-  if [ "$DIND_LABEL" != "$DEFAULT_DIND_LABEL" ]; then
-    echo "-$( dind::sha1 "$DIND_LABEL" )"
-  else
-    echo ''
-  fi
+  echo "kube-node-${nr}$( dind::cluster-suffix )"
 }
 
 function dind::context-name {
-  echo "dind$( dind::clusterSuffix )"
-}
-
-function dind::net-name {
-  echo "kubeadm-dind-net$( dind::clusterSuffix )"
+  echo "dind$( dind::cluster-suffix )"
 }
 
 function dind::remove-volumes {
   # docker 1.13+: docker volume ls -q -f label="${DIND_LABEL}"
   local nameRE
-  nameRE="^kubeadm-dind-(sys|kube-master|kube-node-\\d+)$(dind::clusterSuffix)$"
+  nameRE="^kubeadm-dind-(sys|kube-master|kube-node-[0-9]+)$(dind::cluster-suffix)$"
   docker volume ls -q | (grep -E "$nameRE" || true) | while read -r volume_id; do
     dind::step "Removing volume:" "${volume_id}"
     docker volume rm "${volume_id}"
   done
 }
 
-function dind::sha1 {
-  # shellcheck disable=SC2046
-  set -- $( echo -n "$@" | sha1sum )
-  echo "$1"
+function dind::remove-images {
+  local which=$1
+  docker ps -a -q --filter=label="${which}" | while read container_id; do
+    dind::step "Removing container:" "${container_id}"
+    docker rm -fv "${container_id}"
+  done
+}
+
+function dind::remove-cluster {
+  cluster_name="dind$(dind::cluster-suffix)"
+  if ${kubectl} config get-clusters | grep -qE "^${cluster_name}$"; then
+    dind::step "Removing cluster from config:" "${cluster_name}"
+    ${kubectl} config delete-cluster ${cluster_name} 2>/dev/null || true
+  fi
+}
+
+function dind::remove-context {
+  context_name="$(dind::context-name)"
+  if ${kubectl} config get-contexts | grep -qE "${context_name}\\s"; then
+    dind::step "Removing context from config:" "${context_name}"
+    ${kubectl} config delete-context ${context_name} 2>/dev/null || true
+  fi
+}
+
+function dind::start-port-forwarder {
+  local fwdr port
+  fwdr="${DIND_PORT_FORWARDER:-}"
+
+  [ -n "$fwdr" ] || return 0
+
+  [ -x "$fwdr" ] || {
+    echo "'${fwdr}' is not executable." >&2
+    return 1
+  }
+
+  port="$( dind::apiserver-port )"
+  dind::step "+ Setting up port-forwarding for :${port}"
+  "$fwdr" "$port"
 }
 
 function dind::check-for-snapshot {
@@ -1328,21 +1726,15 @@ function dind::do-run-e2e {
   local parallel="${1:-}"
   local focus="${2:-}"
   local skip="${3:-}"
-  local host="${kube_master_ip}"
-  if [[ "${IP_MODE}" = "ipv6" ]]; then
-    host="[$host]"
-  fi
-  if [[ ${GCE_HOSTED} || ${DOCKER_HOST:-} =~ ^tcp: || -n ${using_linuxdocker} ]]; then
-    if [[ "${IP_MODE}" = "ipv4" ]]; then
-      host="localhost"
-    else
-      host="[::1]"
-    fi
-  fi
+  local host="$(dind::localhost)"
+  if [[ -z "$using_local_linuxdocker" ]]; then
+    host="127.0.0.1"
+  fi  
   dind::need-source
-  local test_args="--host=http://${host}:${INTERNAL_APISERVER_PORT}"
+  local kubeapi test_args term=
   local -a e2e_volume_opts=()
-  local term=
+  kubeapi="http://${host}:$(dind::apiserver-port)"
+  test_args="--host=${kubeapi}"
   if [[ ${focus} ]]; then
     test_args="--ginkgo.focus=${focus} ${test_args}"
   fi
@@ -1353,7 +1745,7 @@ function dind::do-run-e2e {
     test_args="--report-dir=/report ${test_args}"
     e2e_volume_opts=(-v "${E2E_REPORT_DIR}:/report")
   fi
-  dind::make-for-linux n cmd/kubectl test/e2e/e2e.test vendor/github.com/onsi/ginkgo/ginkgo
+  dind::make-for-linux n "cmd/kubectl test/e2e/e2e.test vendor/github.com/onsi/ginkgo/ginkgo"
   dind::step "Running e2e tests with args:" "${test_args}"
   dind::set-build-volume-args
   if [ -t 1 ] ; then
@@ -1365,14 +1757,14 @@ function dind::do-run-e2e {
          --net=host \
          "${build_volume_args[@]}" \
          -e KUBERNETES_PROVIDER=dind \
-         -e KUBE_MASTER_IP=http://${host}:${INTERNAL_APISERVER_PORT} \
+         -e KUBE_MASTER_IP="${kubeapi}" \
          -e KUBE_MASTER=local \
          -e KUBERNETES_CONFORMANCE_TEST=y \
          -e GINKGO_PARALLEL=${parallel} \
          ${e2e_volume_opts[@]+"${e2e_volume_opts[@]}"} \
          -w /go/src/k8s.io/kubernetes \
          "${e2e_base_image}" \
-         bash -c "cluster/kubectl.sh config set-cluster dind --server='http://${host}:${INTERNAL_APISERVER_PORT}' --insecure-skip-tls-verify=true &&
+         bash -c "cluster/kubectl.sh config set-cluster dind --server='${kubeapi}' --insecure-skip-tls-verify=true &&
          cluster/kubectl.sh config set-context dind --cluster=dind &&
          cluster/kubectl.sh config use-context dind &&
          go run hack/e2e.go -- --v 6 --test --check-version-skew=false --test_args='${test_args}'"
@@ -1380,13 +1772,15 @@ function dind::do-run-e2e {
 
 function dind::clean {
   dind::down
-  # dind::remove-images
+  dind::remove-images "dind-support$( dind::cluster-suffix )"
   dind::remove-volumes
   local net_name
   net_name="$(dind::net-name)"
   if docker network inspect "$net_name" >&/dev/null; then
     docker network rm "$net_name"
   fi
+  dind::remove-cluster
+  dind::remove-context
 }
 
 function dind::copy-image {
@@ -1537,7 +1931,7 @@ function dind::proxy {
 function dind::custom-docker-opts {
   local container_id="$1"
   local -a jq=()
-  if [ ! -f ${DIND_DAEMON_JSON_FILE} ] ; then
+  if [[ ! -f ${DIND_DAEMON_JSON_FILE} ]] ; then
     jq[0]="{}"
   else
     jq+=("$(cat ${DIND_DAEMON_JSON_FILE})")
@@ -1642,6 +2036,9 @@ case "${1:-}" in
     ;;
   split-dump64)
     dind::split-dump64
+    ;;
+  apiserver-port)
+    dind::apiserver-port
     ;;
   *)
     echo "usage:" >&2
