@@ -53,12 +53,6 @@ type Configuration struct {
 	Backends []*Backend `json:"backends,omitempty"`
 	// Servers
 	Servers []*Server `json:"servers,omitempty"`
-	// TCPEndpoints contain endpoints for tcp streams handled by this backend
-	// +optional
-	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
-	// UDPEndpoints contain endpoints for udp streams handled by this backend
-	// +optional
-	UDPEndpoints []L4Service `json:"udpEndpoints,omitempty"`
 	// PassthroughBackend contains the backends used for SSL passthrough.
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
