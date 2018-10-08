@@ -32,6 +32,7 @@ import (
 
 	"encoding/base64"
 	"io/ioutil"
+
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -62,8 +63,6 @@ func TestStore(t *testing.T) {
 		storer := New(true,
 			ns,
 			fmt.Sprintf("%v/config", ns),
-			fmt.Sprintf("%v/tcp", ns),
-			fmt.Sprintf("%v/udp", ns),
 			"",
 			10*time.Minute,
 			clientSet,
@@ -150,8 +149,6 @@ func TestStore(t *testing.T) {
 		storer := New(true,
 			ns,
 			fmt.Sprintf("%v/config", ns),
-			fmt.Sprintf("%v/tcp", ns),
-			fmt.Sprintf("%v/udp", ns),
 			"",
 			10*time.Minute,
 			clientSet,
@@ -298,8 +295,6 @@ func TestStore(t *testing.T) {
 		storer := New(true,
 			ns,
 			fmt.Sprintf("%v/config", ns),
-			fmt.Sprintf("%v/tcp", ns),
-			fmt.Sprintf("%v/udp", ns),
 			"",
 			10*time.Minute,
 			clientSet,
@@ -387,8 +382,6 @@ func TestStore(t *testing.T) {
 		storer := New(true,
 			ns,
 			fmt.Sprintf("%v/config", ns),
-			fmt.Sprintf("%v/tcp", ns),
-			fmt.Sprintf("%v/udp", ns),
 			"",
 			10*time.Minute,
 			clientSet,
@@ -499,8 +492,6 @@ func TestStore(t *testing.T) {
 		storer := New(true,
 			ns,
 			fmt.Sprintf("%v/config", ns),
-			fmt.Sprintf("%v/tcp", ns),
-			fmt.Sprintf("%v/udp", ns),
 			"",
 			10*time.Minute,
 			clientSet,
