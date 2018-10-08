@@ -40,7 +40,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/grpc-backend](#grpc-backend)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
@@ -58,7 +57,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
-|[nginx.ingress.kubernetes.io/secure-backends](#secure-backends)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
@@ -393,19 +391,6 @@ the User guide.
     Because SSL Passthrough works on layer 4 of the OSI model (TCP) and not on the layer 7 (HTTP), using SSL Passthrough
     invalidates all the other annotations set on an Ingress object.
 
-### Secure backends DEPRECATED (since 0.18.0)
-
-Please use `nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"`
-
-By default NGINX uses plain HTTP to reach the services.
-Adding the annotation `nginx.ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to HTTPS.
-If you want to validate the upstream against a specific certificate, you can create a secret with it and reference the secret with the annotation `nginx.ingress.kubernetes.io/secure-verify-ca-secret`.
-
-!!! attention
-
-    Note that if an invalid or non-existent secret is given,
-    the ingress controller will ignore the `secure-backends` annotation.
-
 ### Service Upstream
 
 By default the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
@@ -587,19 +572,6 @@ nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules: '[=[ { "access": [ { "act
 ```
 
 For details on how to write WAF rules, please refer to [https://github.com/p0pr0ck5/lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf).
-
-### gRPC backend DEPRECATED (since 0.18.0)
-
-Please use `nginx.ingress.kubernetes.io/backend-protocol: "GRPC"` or `nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"`
-
-Since NGINX 1.13.10 it is possible to expose [gRPC services natively](http://nginx.org/en/docs/http/ngx_http_grpc_module.html)
-
-You only need to add the annotation `nginx.ingress.kubernetes.io/grpc-backend: "true"` to enable this feature.
-Additionally, if the gRPC service requires TLS, add `nginx.ingress.kubernetes.io/secure-backends: "true"`.
-
-!!! attention
-    This feature requires HTTP2 to work which means we need to expose this service using HTTPS.
-    Exposing a gRPC service using HTTP is not supported.
 
 [configmap]: ./configmap.md
 

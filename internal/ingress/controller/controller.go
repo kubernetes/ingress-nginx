@@ -348,7 +348,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.UsePortInRedirects = anns.UsePortInRedirects
 						loc.Connection = anns.Connection
 						loc.Logs = anns.Logs
-						loc.GRPC = anns.GRPC
 						loc.LuaRestyWAF = anns.LuaRestyWAF
 						loc.InfluxDB = anns.InfluxDB
 						loc.DefaultBackend = anns.DefaultBackend
@@ -389,7 +388,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						UsePortInRedirects:   anns.UsePortInRedirects,
 						Connection:           anns.Connection,
 						Logs:                 anns.Logs,
-						GRPC:                 anns.GRPC,
 						LuaRestyWAF:          anns.LuaRestyWAF,
 						InfluxDB:             anns.InfluxDB,
 						DefaultBackend:       anns.DefaultBackend,
@@ -523,9 +521,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 
 			glog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
-			if !upstreams[defBackend].Secure {
-				upstreams[defBackend].Secure = anns.SecureUpstream.Secure
-			}
 			if upstreams[defBackend].SecureCACert.Secret == "" {
 				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
 			}
@@ -576,10 +571,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				glog.V(3).Infof("Creating upstream %q", name)
 				upstreams[name] = newUpstream(name)
 				upstreams[name].Port = path.Backend.ServicePort
-
-				if !upstreams[name].Secure {
-					upstreams[name].Secure = anns.SecureUpstream.Secure
-				}
 
 				if upstreams[name].SecureCACert.Secret == "" {
 					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
@@ -835,7 +826,6 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.UpstreamVhost = anns.UpstreamVhost
 					defLoc.Whitelist = anns.Whitelist
 					defLoc.Denied = anns.Denied
-					defLoc.GRPC = anns.GRPC
 					defLoc.LuaRestyWAF = anns.LuaRestyWAF
 					defLoc.InfluxDB = anns.InfluxDB
 				} else {

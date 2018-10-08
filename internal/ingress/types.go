@@ -72,11 +72,6 @@ type Backend struct {
 	Name    string             `json:"name"`
 	Service *apiv1.Service     `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
-	// This indicates if the communication protocol between the backend and the endpoint is HTTP or HTTPS
-	// Allowing the use of HTTPS
-	// The endpoint/s must provide a TLS connection.
-	// The certificate used in the endpoint cannot be a self signed certificate
-	Secure bool `json:"secure"`
 	// SecureCACert has the filename and SHA1 of the certificate authorities used to validate
 	// a secured connection to the backend
 	SecureCACert resolver.AuthSSLCert `json:"secureCACert"`
@@ -256,9 +251,6 @@ type Location struct {
 	// Logs allows to enable or disable the nginx logs
 	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`
-	// GRPC indicates if the kubernetes service exposes a gRPC interface
-	// By default this is false
-	GRPC bool `json:"grpc"`
 	// LuaRestyWAF contains parameters to configure lua-resty-waf
 	LuaRestyWAF luarestywaf.Config `json:"luaRestyWAF"`
 	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database
