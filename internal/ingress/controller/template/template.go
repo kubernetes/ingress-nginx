@@ -456,12 +456,6 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 		proxyPass = "ajp_pass"
 	}
 
-	// TODO: Remove after the deprecation of grpc-backend annotation
-	if location.GRPC {
-		proxyPass = "grpc_pass"
-		proto = "grpc://"
-	}
-
 	upstreamName := "upstream_balancer"
 
 	if !dynamicConfigurationEnabled {
@@ -470,11 +464,10 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
-			if backend.Secure || backend.SSLPassthrough {
-				// TODO: Remove after the deprecation of secure-backend annotation
+			if backend.SSLPassthrough {
 				proto = "https://"
-				// TODO: Remove after the deprecation of grpc-backend annotation
-				if location.GRPC {
+
+				if location.BackendProtocol == "GRPCS" {
 					proto = "grpcs://"
 				}
 			}
@@ -974,7 +967,7 @@ func proxySetHeader(loc interface{}) string {
 		return "proxy_set_header"
 	}
 
-	if location.GRPC || location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
+	if location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
 		return "grpc_set_header"
 	}
 
