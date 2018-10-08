@@ -50,6 +50,7 @@ func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
 
 // NewIngressController deploys a new NGINX Ingress controller in a namespace
 func (f *Framework) NewIngressController(namespace string) error {
+	// Creates an nginx deployment
 	cmd := exec.Command("./wait-for-nginx.sh", namespace)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
