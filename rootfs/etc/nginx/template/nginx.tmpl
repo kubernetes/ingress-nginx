@@ -697,63 +697,6 @@ stream {
     {{ end }}
 
     error_log  {{ $cfg.ErrorLogPath }};
-
-    # TCP services
-    {{ range $tcpServer := .TCPBackends }}
-    upstream tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
-    {{ range $endpoint := $tcpServer.Endpoints }}
-        server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
-    {{ end }}
-    }
-    server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ else }}
-        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ else }}
-        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ end }}
-        {{ end }}
-        proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
-        proxy_pass              tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
-        {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
-        proxy_protocol          on;
-        {{ end }}
-    }
-
-    {{ end }}
-
-    # UDP services
-    {{ range $udpServer := .UDPBackends }}
-    upstream udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
-    {{ range $endpoint := $udpServer.Endpoints }}
-        server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
-    {{ end }}
-    }
-
-    server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
-        {{ else }}
-        listen                  {{ $udpServer.Port }} udp;
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
-        {{ else }}
-        listen                  [::]:{{ $udpServer.Port }} udp;
-        {{ end }}
-        {{ end }}
-        proxy_responses         {{ $cfg.ProxyStreamResponses }};
-        proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
-        proxy_pass              udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
-    }
-
-    {{ end }}
 }
 
 {{/* definition of templates to avoid repetitions */}}
