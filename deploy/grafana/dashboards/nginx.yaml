@@ -372,7 +372,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(nginx_ingress_controller_success{kubernetes_pod_name=~\"$controller\",controller_class=~\"$controller_class\",namespace=~\"$namespace\"})",
+          "expr": "avg(nginx_ingress_controller_success{controller_pod=~\"$controller\",controller_class=~\"$controller_class\",controller_namespace=~\"$namespace\"})",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
