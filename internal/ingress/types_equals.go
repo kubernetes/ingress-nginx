@@ -186,12 +186,6 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 	if e1.Port != e2.Port {
 		return false
 	}
-	if e1.MaxFails != e2.MaxFails {
-		return false
-	}
-	if e1.FailTimeout != e2.FailTimeout {
-		return false
-	}
 
 	if e1.Target != e2.Target {
 		if e1.Target == nil || e2.Target == nil {
