@@ -25,7 +25,7 @@ service/nginx-errors   ClusterIP   10.0.0.12   <none>        80/TCP    10s
 
 ## Ingress controller configuration
 
-If you do not already have an instance of the the NGINX Ingress controller running, deploy it according to the
+If you do not already have an instance of the NGINX Ingress controller running, deploy it according to the
 [deployment guide][deploy], then follow these steps:
 
 1. Edit the `nginx-ingress-controller` Deployment and set the value of the `--default-backend` flag to the name of the

@@ -112,8 +112,6 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.EnableSSLChainCompletion,
 		config.Namespace,
 		config.ConfigMapName,
-		config.TCPConfigMapName,
-		config.UDPConfigMapName,
 		config.DefaultSSLCertificate,
 		config.ResyncPeriod,
 		config.Client,
@@ -580,8 +578,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		Backends:                    ingressCfg.Backends,
 		PassthroughBackends:         ingressCfg.PassthroughBackends,
 		Servers:                     ingressCfg.Servers,
-		TCPBackends:                 ingressCfg.TCPEndpoints,
-		UDPBackends:                 ingressCfg.UDPEndpoints,
 		HealthzURI:                  ngxHealthPath,
 		CustomErrors:                len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                         cfg,
@@ -767,7 +763,6 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 		luaBackend := &ingress.Backend{
 			Name:            backend.Name,
 			Port:            backend.Port,
-			Secure:          backend.Secure,
 			SSLPassthrough:  backend.SSLPassthrough,
 			SessionAffinity: backend.SessionAffinity,
 			UpstreamHashBy:  backend.UpstreamHashBy,
@@ -778,10 +773,8 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 		var endpoints []ingress.Endpoint
 		for _, endpoint := range backend.Endpoints {
 			endpoints = append(endpoints, ingress.Endpoint{
-				Address:     endpoint.Address,
-				FailTimeout: endpoint.FailTimeout,
-				MaxFails:    endpoint.MaxFails,
-				Port:        endpoint.Port,
+				Address: endpoint.Address,
+				Port:    endpoint.Port,
 			})
 		}
 

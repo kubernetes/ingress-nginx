@@ -34,8 +34,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/grpc"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
@@ -77,7 +75,6 @@ type Ingress struct {
 	DefaultBackend       *apiv1.Service
 	Denied               error
 	ExternalAuth         authreq.Config
-	HealthCheck          healthcheck.Config
 	Proxy                proxy.Config
 	RateLimit            ratelimit.Config
 	Redirect             redirect.Config
@@ -95,7 +92,6 @@ type Ingress struct {
 	XForwardedPrefix     bool
 	SSLCiphers           string
 	Logs                 log.Config
-	GRPC                 bool
 	LuaRestyWAF          luarestywaf.Config
 	InfluxDB             influxdb.Config
 }
@@ -118,7 +114,6 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"CorsConfig":           cors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
-			"HealthCheck":          healthcheck.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
@@ -136,7 +131,6 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCiphers":           sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),
-			"GRPC":                 grpc.NewParser(cfg),
 			"LuaRestyWAF":          luarestywaf.NewParser(cfg),
 			"InfluxDB":             influxdb.NewParser(cfg),
 			"BackendProtocol":      backendprotocol.NewParser(cfg),

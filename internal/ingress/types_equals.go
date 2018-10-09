@@ -53,44 +53,6 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
-	if len(c1.TCPEndpoints) != len(c2.TCPEndpoints) {
-		return false
-	}
-
-	for _, tcp1 := range c1.TCPEndpoints {
-		found := false
-		for _, tcp2 := range c2.TCPEndpoints {
-			if (&tcp1).Equal(&tcp2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-
-	if len(c1.UDPEndpoints) != len(c2.UDPEndpoints) {
-		return false
-	}
-
-	for _, udp1 := range c1.UDPEndpoints {
-		found := false
-		for _, udp2 := range c2.UDPEndpoints {
-			if (&udp1).Equal(&udp2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-
-	if len(c1.PassthroughBackends) != len(c2.PassthroughBackends) {
-		return false
-	}
-
 	for _, ptb1 := range c1.PassthroughBackends {
 		found := false
 		for _, ptb2 := range c2.PassthroughBackends {
@@ -136,9 +98,6 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	}
 
 	if b1.Port != b2.Port {
-		return false
-	}
-	if b1.Secure != b2.Secure {
 		return false
 	}
 	if !(&b1.SecureCACert).Equal(&b2.SecureCACert) {
@@ -225,12 +184,6 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 		return false
 	}
 	if e1.Port != e2.Port {
-		return false
-	}
-	if e1.MaxFails != e2.MaxFails {
-		return false
-	}
-	if e1.FailTimeout != e2.FailTimeout {
 		return false
 	}
 
@@ -378,9 +331,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 	if !(&l1.Logs).Equal(&l2.Logs) {
-		return false
-	}
-	if l1.GRPC != l2.GRPC {
 		return false
 	}
 	if !(&l1.LuaRestyWAF).Equal(&l2.LuaRestyWAF) {

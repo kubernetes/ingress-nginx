@@ -9,6 +9,4 @@ aliases:
     - bowei
     - aledbf
   ingress-nginx-maintainers:
-    - justinsb
     - aledbf
-    - nicksardo

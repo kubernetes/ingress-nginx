@@ -40,13 +40,13 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/grpc-backend](#grpc-backend)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
+|[nginx.ingress.kubernetes.io/proxy-cookie-path](#proxy-cookie-path)|string|
 |[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
@@ -57,7 +57,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
-|[nginx.ingress.kubernetes.io/secure-backends](#secure-backends)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
@@ -66,8 +65,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/upstream-max-fails](#custom-nginx-upstream-checks)|number|
-|[nginx.ingress.kubernetes.io/upstream-fail-timeout](#custom-nginx-upstream-checks)|number|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
 |[nginx.ingress.kubernetes.io/load-balance](#custom-nginx-load-balancing)|string|
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
@@ -149,29 +146,6 @@ nginx.ingress.kubernetes.io/auth-realm: "realm string"
 
 !!! example
     Please check the [auth](../../examples/auth/basic/README.md) example.
-
-### Custom NGINX upstream checks
-
-NGINX exposes some flags in the [upstream configuration](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream) that enable the configuration of each server in the upstream. The Ingress controller allows custom `max_fails` and `fail_timeout` parameters in a global context using `upstream-max-fails` and `upstream-fail-timeout` in the NGINX ConfigMap or in a particular Ingress rule. `upstream-max-fails` defaults to 0. This means NGINX will respect the container's `readinessProbe` if it is defined. If there is no probe and no values for `upstream-max-fails` NGINX will continue to send traffic to the container.
-
-
-!!! tip
-	With the default configuration NGINX will not health check your backends. Whenever the endpoints controller notices a readiness probe failure, that pod's IP will be removed from the list of endpoints. This will trigger the NGINX controller to also remove it from the upstreams.**
-
-To use custom values in an Ingress rule define these annotations:
-
-`nginx.ingress.kubernetes.io/upstream-max-fails`: number of unsuccessful attempts to communicate with the server that should occur in the duration set by the `upstream-fail-timeout` parameter to consider the server unavailable.
-
-`nginx.ingress.kubernetes.io/upstream-fail-timeout`: time in seconds during which the specified number of unsuccessful attempts to communicate with the server should occur to consider the server unavailable. This is also the period of time the server will be considered unavailable.
-
-In NGINX, backend server pools are called "[upstreams](http://nginx.org/en/docs/http/ngx_http_upstream_module.html)". Each upstream contains the endpoints for a service. An upstream is created for each service that has Ingress rules defined.
-
-!!! attention
-	All Ingress rules using the same service will use the same upstream.  
-    Only one of the Ingress rules should define annotations to configure the upstream servers.
-
-!!! example
-    Please check the [custom upstream check](../../examples/customization/custom-upstream-check/README.md) example.
 
 ### Custom NGINX upstream hashing
 
@@ -295,15 +269,15 @@ kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/server-snippet: |
-set $agentflag 0;
-
-if ($http_user_agent ~* "(Mobile)" ){
-  set $agentflag 1;
-}
-
-if ( $agentflag = 1 ) {
-  return 301 https://m.example.com;
-}
+        set $agentflag 0;
+        
+        if ($http_user_agent ~* "(Mobile)" ){
+          set $agentflag 1;
+        }
+        
+        if ( $agentflag = 1 ) {
+          return 301 https://m.example.com;
+        }
 ```
 
 !!! attention
@@ -392,19 +366,6 @@ the User guide.
     Because SSL Passthrough works on layer 4 of the OSI model (TCP) and not on the layer 7 (HTTP), using SSL Passthrough
     invalidates all the other annotations set on an Ingress object.
 
-### Secure backends DEPRECATED (since 0.18.0)
-
-Please use `nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"`
-
-By default NGINX uses plain HTTP to reach the services.
-Adding the annotation `nginx.ingress.kubernetes.io/secure-backends: "true"` in the Ingress rule changes the protocol to HTTPS.
-If you want to validate the upstream against a specific certificate, you can create a secret with it and reference the secret with the annotation `nginx.ingress.kubernetes.io/secure-verify-ca-secret`.
-
-!!! attention
-
-    Note that if an invalid or non-existent secret is given,
-    the ingress controller will ignore the `secure-backends` annotation.
-
 ### Service Upstream
 
 By default the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
@@ -488,6 +449,12 @@ nginx.ingress.kubernetes.io/proxy-body-size: 8m
 Sets a text that [should be changed in the domain attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the "Set-Cookie" header fields of a proxied server response.
 
 To configure this setting globally for all Ingress rules, the `proxy-cookie-domain` value may be set in the [NGINX ConfigMap][configmap].
+
+### Proxy cookie path
+
+Sets a text that [should be changed in the path attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path) of the "Set-Cookie" header fields of a proxied server response.
+
+To configure this setting globally for all Ingress rules, the `proxy-cookie-path` value may be set in the [NGINX ConfigMap][configmap].
 
 ### Proxy buffering
 
@@ -580,19 +547,6 @@ nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules: '[=[ { "access": [ { "act
 ```
 
 For details on how to write WAF rules, please refer to [https://github.com/p0pr0ck5/lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf).
-
-### gRPC backend DEPRECATED (since 0.18.0)
-
-Please use `nginx.ingress.kubernetes.io/backend-protocol: "GRPC"` or `nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"`
-
-Since NGINX 1.13.10 it is possible to expose [gRPC services natively](http://nginx.org/en/docs/http/ngx_http_grpc_module.html)
-
-You only need to add the annotation `nginx.ingress.kubernetes.io/grpc-backend: "true"` to enable this feature.
-Additionally, if the gRPC service requires TLS, add `nginx.ingress.kubernetes.io/secure-backends: "true"`.
-
-!!! attention
-    This feature requires HTTP2 to work which means we need to expose this service using HTTPS.
-    Exposing a gRPC service using HTTP is not supported.
 
 [configmap]: ./configmap.md
 

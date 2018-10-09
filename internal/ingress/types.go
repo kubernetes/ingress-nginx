@@ -53,12 +53,6 @@ type Configuration struct {
 	Backends []*Backend `json:"backends,omitempty"`
 	// Servers
 	Servers []*Server `json:"servers,omitempty"`
-	// TCPEndpoints contain endpoints for tcp streams handled by this backend
-	// +optional
-	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
-	// UDPEndpoints contain endpoints for udp streams handled by this backend
-	// +optional
-	UDPEndpoints []L4Service `json:"udpEndpoints,omitempty"`
 	// PassthroughBackend contains the backends used for SSL passthrough.
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
@@ -78,11 +72,6 @@ type Backend struct {
 	Name    string             `json:"name"`
 	Service *apiv1.Service     `json:"service,omitempty"`
 	Port    intstr.IntOrString `json:"port"`
-	// This indicates if the communication protocol between the backend and the endpoint is HTTP or HTTPS
-	// Allowing the use of HTTPS
-	// The endpoint/s must provide a TLS connection.
-	// The certificate used in the endpoint cannot be a self signed certificate
-	Secure bool `json:"secure"`
 	// SecureCACert has the filename and SHA1 of the certificate authorities used to validate
 	// a secured connection to the backend
 	SecureCACert resolver.AuthSSLCert `json:"secureCACert"`
@@ -130,14 +119,6 @@ type Endpoint struct {
 	Address string `json:"address"`
 	// Port number of the TCP port
 	Port string `json:"port"`
-	// MaxFails returns the number of unsuccessful attempts to communicate
-	// allowed before this should be considered down.
-	// Setting 0 indicates that the check is performed by a Kubernetes probe
-	MaxFails int `json:"maxFails"`
-	// FailTimeout returns the time in seconds during which the specified number
-	// of unsuccessful attempts to communicate with the server should happen
-	// to consider the endpoint unavailable
-	FailTimeout int `json:"failTimeout"`
 	// Target returns a reference to the object providing the endpoint
 	Target *apiv1.ObjectReference `json:"target,omitempty"`
 }
@@ -262,9 +243,6 @@ type Location struct {
 	// Logs allows to enable or disable the nginx logs
 	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`
-	// GRPC indicates if the kubernetes service exposes a gRPC interface
-	// By default this is false
-	GRPC bool `json:"grpc"`
 	// LuaRestyWAF contains parameters to configure lua-resty-waf
 	LuaRestyWAF luarestywaf.Config `json:"luaRestyWAF"`
 	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database

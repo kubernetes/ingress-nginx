@@ -21,7 +21,6 @@ import (
 	"math/rand"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/glog"
@@ -34,7 +33,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -60,11 +58,6 @@ type Configuration struct {
 	Namespace string
 
 	ForceNamespaceIsolation bool
-
-	// +optional
-	TCPConfigMapName string
-	// +optional
-	UDPConfigMapName string
 
 	DefaultHealthzURL     string
 	DefaultSSLCertificate string
@@ -160,8 +153,6 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	pcfg := &ingress.Configuration{
 		Backends:              upstreams,
 		Servers:               servers,
-		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
-		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
 		PassthroughBackends:   passUpstreams,
 		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
 	}
@@ -225,136 +216,6 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	return nil
 }
 
-func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Protocol) []ingress.L4Service {
-	if configmapName == "" {
-		return []ingress.L4Service{}
-	}
-	glog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
-
-	_, _, err := k8s.ParseNameNS(configmapName)
-	if err != nil {
-		glog.Errorf("Error parsing ConfigMap reference %q: %v", configmapName, err)
-		return []ingress.L4Service{}
-	}
-
-	configmap, err := n.store.GetConfigMap(configmapName)
-	if err != nil {
-		glog.Errorf("Error getting ConfigMap %q: %v", configmapName, err)
-		return []ingress.L4Service{}
-	}
-
-	var svcs []ingress.L4Service
-	var svcProxyProtocol ingress.ProxyProtocol
-
-	rp := []int{
-		n.cfg.ListenPorts.HTTP,
-		n.cfg.ListenPorts.HTTPS,
-		n.cfg.ListenPorts.SSLProxy,
-		n.cfg.ListenPorts.Status,
-		n.cfg.ListenPorts.Health,
-		n.cfg.ListenPorts.Default,
-	}
-	reserverdPorts := sets.NewInt(rp...)
-
-	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
-	for port, svcRef := range configmap.Data {
-		externalPort, err := strconv.Atoi(port)
-		if err != nil {
-			glog.Warningf("%q is not a valid %v port number", port, proto)
-			continue
-		}
-
-		if reserverdPorts.Has(externalPort) {
-			glog.Warningf("Port %d cannot be used for %v stream services. It is reserved for the Ingress controller.", externalPort, proto)
-			continue
-		}
-
-		nsSvcPort := strings.Split(svcRef, ":")
-		if len(nsSvcPort) < 2 {
-			glog.Warningf("Invalid Service reference %q for %v port %d", svcRef, proto, externalPort)
-			continue
-		}
-
-		nsName := nsSvcPort[0]
-		svcPort := nsSvcPort[1]
-		svcProxyProtocol.Decode = false
-		svcProxyProtocol.Encode = false
-
-		// Proxy Protocol is only compatible with TCP Services
-		if len(nsSvcPort) >= 3 && proto == apiv1.ProtocolTCP {
-			if len(nsSvcPort) >= 3 && strings.ToUpper(nsSvcPort[2]) == "PROXY" {
-				svcProxyProtocol.Decode = true
-			}
-			if len(nsSvcPort) == 4 && strings.ToUpper(nsSvcPort[3]) == "PROXY" {
-				svcProxyProtocol.Encode = true
-			}
-		}
-
-		svcNs, svcName, err := k8s.ParseNameNS(nsName)
-		if err != nil {
-			glog.Warningf("%v", err)
-			continue
-		}
-
-		svc, err := n.store.GetService(nsName)
-		if err != nil {
-			glog.Warningf("Error getting Service %q: %v", nsName, err)
-			continue
-		}
-
-		var endps []ingress.Endpoint
-		targetPort, err := strconv.Atoi(svcPort)
-		if err != nil {
-			// not a port number, fall back to using port name
-			glog.V(3).Infof("Searching Endpoints with %v port name %q for Service %q", proto, svcPort, nsName)
-			for _, sp := range svc.Spec.Ports {
-				if sp.Name == svcPort {
-					if sp.Protocol == proto {
-						endps = getEndpoints(svc, &sp, proto, &healthcheck.Config{}, n.store.GetServiceEndpoints)
-						break
-					}
-				}
-			}
-		} else {
-			glog.V(3).Infof("Searching Endpoints with %v port number %d for Service %q", proto, targetPort, nsName)
-			for _, sp := range svc.Spec.Ports {
-				if sp.Port == int32(targetPort) {
-					if sp.Protocol == proto {
-						endps = getEndpoints(svc, &sp, proto, &healthcheck.Config{}, n.store.GetServiceEndpoints)
-						break
-					}
-				}
-			}
-		}
-
-		// stream services cannot contain empty upstreams and there is
-		// no default backend equivalent
-		if len(endps) == 0 {
-			glog.Warningf("Service %q does not have any active Endpoint for %v port %v", nsName, proto, svcPort)
-			continue
-		}
-
-		svcs = append(svcs, ingress.L4Service{
-			Port: externalPort,
-			Backend: ingress.L4Backend{
-				Name:          svcName,
-				Namespace:     svcNs,
-				Port:          intstr.FromString(svcPort),
-				Protocol:      proto,
-				ProxyProtocol: svcProxyProtocol,
-			},
-			Endpoints: endps,
-		})
-	}
-
-	// Keep upstream order sorted to reduce unnecessary nginx config reloads.
-	sort.SliceStable(svcs, func(i, j int) bool {
-		return svcs[i].Port < svcs[j].Port
-	})
-
-	return svcs
-}
-
 // getDefaultUpstream returns the upstream associated with the default backend.
 // Configures the upstream to return HTTP code 503 in case of error.
 func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
@@ -375,7 +236,7 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 		return upstream
 	}
 
-	endps := getEndpoints(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, &healthcheck.Config{}, n.store.GetServiceEndpoints)
+	endps := getEndpoints(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 	if len(endps) == 0 {
 		glog.Warningf("Service %q does not have any active Endpoint", svcKey)
 		endps = []ingress.Endpoint{n.DefaultEndpoint()}
@@ -486,7 +347,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.UsePortInRedirects = anns.UsePortInRedirects
 						loc.Connection = anns.Connection
 						loc.Logs = anns.Logs
-						loc.GRPC = anns.GRPC
 						loc.LuaRestyWAF = anns.LuaRestyWAF
 						loc.InfluxDB = anns.InfluxDB
 						loc.DefaultBackend = anns.DefaultBackend
@@ -527,7 +387,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						UsePortInRedirects:   anns.UsePortInRedirects,
 						Connection:           anns.Connection,
 						Logs:                 anns.Logs,
-						GRPC:                 anns.GRPC,
 						LuaRestyWAF:          anns.LuaRestyWAF,
 						InfluxDB:             anns.InfluxDB,
 						DefaultBackend:       anns.DefaultBackend,
@@ -574,7 +433,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						// check if the location contains endpoints and a custom default backend
 						if location.DefaultBackend != nil {
 							sp := location.DefaultBackend.Spec.Ports[0]
-							endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, &healthcheck.Config{}, n.store.GetServiceEndpoints)
+							endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 							if len(endps) > 0 {
 								glog.V(3).Infof("Using custom default backend for location %q in server %q (Service \"%v/%v\")",
 									location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
@@ -661,9 +520,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 
 			glog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
-			if !upstreams[defBackend].Secure {
-				upstreams[defBackend].Secure = anns.SecureUpstream.Secure
-			}
 			if upstreams[defBackend].SecureCACert.Secret == "" {
 				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
 			}
@@ -687,7 +543,7 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
-				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String(), &anns.HealthCheck)
+				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String())
 				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
 				if err != nil {
 					glog.Warningf("Error creating upstream %q: %v", defBackend, err)
@@ -715,10 +571,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				upstreams[name] = newUpstream(name)
 				upstreams[name].Port = path.Backend.ServicePort
 
-				if !upstreams[name].Secure {
-					upstreams[name].Secure = anns.SecureUpstream.Secure
-				}
-
 				if upstreams[name].SecureCACert.Secret == "" {
 					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
 				}
@@ -744,7 +596,7 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
-					endp, err := n.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), &anns.HealthCheck)
+					endp, err := n.serviceEndpoints(svcKey, path.Backend.ServicePort.String())
 					if err != nil {
 						glog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 						continue
@@ -801,10 +653,8 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *exte
 	return endpoint, err
 }
 
-// serviceEndpoints returns the upstream servers (Endpoints) associated with a
-// Service.
-func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
-	hz *healthcheck.Config) ([]ingress.Endpoint, error) {
+// serviceEndpoints returns the upstream servers (Endpoints) associated with a Service.
+func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingress.Endpoint, error) {
 	svc, err := n.store.GetService(svcKey)
 
 	var upstreams []ingress.Endpoint
@@ -819,7 +669,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
 			servicePort.TargetPort.String() == backendPort ||
 			servicePort.Name == backendPort {
 
-			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz, n.store.GetServiceEndpoints)
+			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 			if len(endps) == 0 {
 				glog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			}
@@ -853,7 +703,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
 			Port:       int32(externalPort),
 			TargetPort: intstr.FromString(backendPort),
 		}
-		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz, n.store.GetServiceEndpoints)
+		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 		if len(endps) == 0 {
 			glog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			return upstreams, nil
@@ -973,7 +823,6 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.UpstreamVhost = anns.UpstreamVhost
 					defLoc.Whitelist = anns.Whitelist
 					defLoc.Denied = anns.Denied
-					defLoc.GRPC = anns.GRPC
 					defLoc.LuaRestyWAF = anns.LuaRestyWAF
 					defLoc.InfluxDB = anns.InfluxDB
 				} else {

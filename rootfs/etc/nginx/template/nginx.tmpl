@@ -35,15 +35,15 @@ worker_rlimit_nofile {{ .MaxOpenFiles }};
 {{/* avoid waiting too long during a reload */}}
 worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
 
+{{ if not (empty $cfg.MainSnippet) }}
+{{ $cfg.MainSnippet }}
+{{ end }}
+
 events {
     multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
     worker_connections  {{ $cfg.MaxWorkerConnections }};
     use                 epoll;
 }
-
-{{ if not (empty $cfg.MainSnippet) }}
-{{ $cfg.MainSnippet }}
-{{ end }}
 
 http {
     {{ if not $all.DisableLua }}
@@ -432,7 +432,7 @@ http {
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
         {{ end }}
 
-        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
+        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }};
         {{ end }}
     }
     {{ end }}
@@ -444,7 +444,7 @@ http {
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
         {{ end }}
 
-        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
+        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }};
         {{ end }}
     }
     {{ end }}
@@ -663,7 +663,6 @@ http {
             access_log off;
             stub_status on;
         }
-
         {{ if $all.DynamicConfigurationEnabled }}
         location /configuration {
             access_log off;
@@ -678,7 +677,7 @@ http {
             deny all;
 
             # this should be equals to configuration_data dict
-            client_max_body_size                    "10m";
+            client_max_body_size                    10m;
             proxy_buffering                         off;
 
             content_by_lua_block {
@@ -686,7 +685,6 @@ http {
             }
         }
         {{ end }}
-
         location / {
             {{ if .CustomErrors }}
             proxy_set_header    X-Code 404;
@@ -714,63 +712,6 @@ stream {
     {{ end }}
 
     error_log  {{ $cfg.ErrorLogPath }};
-
-    # TCP services
-    {{ range $tcpServer := .TCPBackends }}
-    upstream tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }} {
-    {{ range $endpoint := $tcpServer.Endpoints }}
-        server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
-    {{ end }}
-    }
-    server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ else }}
-        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ else }}
-        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
-        {{ end }}
-        {{ end }}
-        proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
-        proxy_pass              tcp-{{ $tcpServer.Port }}-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }};
-        {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
-        proxy_protocol          on;
-        {{ end }}
-    }
-
-    {{ end }}
-
-    # UDP services
-    {{ range $udpServer := .UDPBackends }}
-    upstream udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }} {
-    {{ range $endpoint := $udpServer.Endpoints }}
-        server                  {{ $endpoint.Address | formatIP }}:{{ $endpoint.Port }};
-    {{ end }}
-    }
-
-    server {
-        {{ range $address := $all.Cfg.BindAddressIpv4 }}
-        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
-        {{ else }}
-        listen                  {{ $udpServer.Port }} udp;
-        {{ end }}
-        {{ if $IsIPV6Enabled }}
-        {{ range $address := $all.Cfg.BindAddressIpv6 }}
-        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
-        {{ else }}
-        listen                  [::]:{{ $udpServer.Port }} udp;
-        {{ end }}
-        {{ end }}
-        proxy_responses         {{ $cfg.ProxyStreamResponses }};
-        proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
-        proxy_pass              udp-{{ $udpServer.Port }}-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }};
-    }
-
-    {{ end }}
 }
 
 {{/* definition of templates to avoid repetitions */}}
@@ -953,15 +894,15 @@ stream {
             proxy_set_header            X-Auth-Request-Redirect $request_uri;
             {{ end }}
 
-            proxy_buffering                         "{{ $location.Proxy.ProxyBuffering }}";
-            proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
-            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
-            proxy_request_buffering                 "{{ $location.Proxy.RequestBuffering }}";
+            proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
+            proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
-            client_max_body_size        "{{ $location.Proxy.BodySize }}";
+            client_max_body_size        {{ $location.Proxy.BodySize }};
             {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
             client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
             {{ end }}
@@ -1152,7 +1093,7 @@ stream {
             }
             {{ end }}
 
-            client_max_body_size                    "{{ $location.Proxy.BodySize }}";
+            client_max_body_size                    {{ $location.Proxy.BodySize }};
             {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
             client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
             {{ end }}
@@ -1213,10 +1154,10 @@ stream {
             proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;
             proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }}s;
 
-            proxy_buffering                         "{{ $location.Proxy.ProxyBuffering }}";
-            proxy_buffer_size                       "{{ $location.Proxy.BufferSize }}";
-            proxy_buffers                           4 "{{ $location.Proxy.BufferSize }}";
-            proxy_request_buffering                 "{{ $location.Proxy.RequestBuffering }}";
+            proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
+            proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_http_version                      1.1;
 

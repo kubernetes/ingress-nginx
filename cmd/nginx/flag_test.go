@@ -62,3 +62,16 @@ func TestDefaults(t *testing.T) {
 func TestSetupSSLProxy(t *testing.T) {
 	// TODO
 }
+
+func TestFlagConflict(t *testing.T) {
+	resetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--publish-status-address", "1.1.1.1"}
+
+	_, _, err := parseFlags()
+	if err == nil {
+		t.Fatalf("Expected an error parsing flags but none returned")
+	}
+}
