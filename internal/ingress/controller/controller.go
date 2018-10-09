@@ -424,7 +424,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 	aUpstreams := make([]*ingress.Backend, 0, len(upstreams))
 
 	for _, upstream := range upstreams {
-		isHTTPSfrom := []*ingress.Server{}
 		for _, server := range servers {
 			for _, location := range server.Locations {
 				if upstream.Name == location.Backend {
@@ -457,15 +456,11 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 								glog.Warningf("Server %q has no default backend, ignoring SSL Passthrough.", server.Hostname)
 								continue
 							}
-							isHTTPSfrom = append(isHTTPSfrom, server)
+							location.BackendProtocol = "HTTPS"
 						}
 					}
 				}
 			}
-		}
-
-		if len(isHTTPSfrom) > 0 {
-			upstream.SSLPassthrough = true
 		}
 	}
 
@@ -526,9 +521,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 			if !upstreams[defBackend].Secure {
 				upstreams[defBackend].Secure = anns.SecureUpstream.Secure
 			}
-			if upstreams[defBackend].SecureCACert.Secret == "" {
-				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
-			}
 			if upstreams[defBackend].UpstreamHashBy == "" {
 				upstreams[defBackend].UpstreamHashBy = anns.UpstreamHashBy
 			}
@@ -579,10 +571,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 
 				if !upstreams[name].Secure {
 					upstreams[name].Secure = anns.SecureUpstream.Secure
-				}
-
-				if upstreams[name].SecureCACert.Secret == "" {
-					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
 				}
 
 				if upstreams[name].UpstreamHashBy == "" {

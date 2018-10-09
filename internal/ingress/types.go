@@ -34,7 +34,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
-	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 var (
@@ -77,11 +76,6 @@ type Backend struct {
 	// The endpoint/s must provide a TLS connection.
 	// The certificate used in the endpoint cannot be a self signed certificate
 	Secure bool `json:"secure"`
-	// SecureCACert has the filename and SHA1 of the certificate authorities used to validate
-	// a secured connection to the backend
-	SecureCACert resolver.AuthSSLCert `json:"secureCACert"`
-	// SSLPassthrough indicates that Ingress controller will delegate TLS termination to the endpoints.
-	SSLPassthrough bool `json:"sslPassthrough"`
 	// Endpoints contains the list of endpoints currently running
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// StickySessionAffinitySession contains the StickyConfig object with stickyness configuration

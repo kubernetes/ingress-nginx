@@ -470,7 +470,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
-			if backend.Secure || backend.SSLPassthrough {
+			if backend.Secure {
 				// TODO: Remove after the deprecation of secure-backend annotation
 				proto = "https://"
 				// TODO: Remove after the deprecation of grpc-backend annotation
