@@ -119,14 +119,6 @@ type Endpoint struct {
 	Address string `json:"address"`
 	// Port number of the TCP port
 	Port string `json:"port"`
-	// MaxFails returns the number of unsuccessful attempts to communicate
-	// allowed before this should be considered down.
-	// Setting 0 indicates that the check is performed by a Kubernetes probe
-	MaxFails int `json:"maxFails"`
-	// FailTimeout returns the time in seconds during which the specified number
-	// of unsuccessful attempts to communicate with the server should happen
-	// to consider the endpoint unavailable
-	FailTimeout int `json:"failTimeout"`
 	// Target returns a reference to the object providing the endpoint
 	Target *apiv1.ObjectReference `json:"target,omitempty"`
 }

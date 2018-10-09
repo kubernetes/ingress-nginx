@@ -31,8 +31,6 @@ import (
 
 var (
 	annotationSecureVerifyCACert   = parser.GetAnnotationWithPrefix("secure-verify-ca-secret")
-	annotationUpsMaxFails          = parser.GetAnnotationWithPrefix("upstream-max-fails")
-	annotationUpsFailTimeout       = parser.GetAnnotationWithPrefix("upstream-fail-timeout")
 	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
 	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
 	annotationCorsEnabled          = parser.GetAnnotationWithPrefix("enable-cors")
@@ -142,36 +140,6 @@ func TestSecureVerifyCACert(t *testing.T) {
 		su := ec.Extract(ing).SecureUpstream
 		if (su.CACert.CAFileName != "") != ann.exists {
 			t.Errorf("Expected exists was %v on iteration %v", ann.exists, ann.it)
-		}
-	}
-}
-
-func TestHealthCheck(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
-	ing := buildIngress()
-
-	fooAnns := []struct {
-		annotations map[string]string
-		eumf        int
-		euft        int
-	}{
-		{map[string]string{annotationUpsMaxFails: "3", annotationUpsFailTimeout: "10"}, 3, 10},
-		{map[string]string{annotationUpsMaxFails: "3"}, 3, 0},
-		{map[string]string{annotationUpsFailTimeout: "10"}, 0, 10},
-		{map[string]string{}, 0, 0},
-		{nil, 0, 0},
-	}
-
-	for _, foo := range fooAnns {
-		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).HealthCheck
-
-		if r.FailTimeout != foo.euft {
-			t.Errorf("Returned %d but expected %d for FailTimeout", r.FailTimeout, foo.euft)
-		}
-
-		if r.MaxFails != foo.eumf {
-			t.Errorf("Returned %d but expected %d for MaxFails", r.MaxFails, foo.eumf)
 		}
 	}
 }

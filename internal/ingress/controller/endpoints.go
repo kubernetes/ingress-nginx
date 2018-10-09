@@ -27,12 +27,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/k8s"
 )
 
 // getEndpoints returns a list of Endpoint structs for a given service/target port combination.
-func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Protocol, hz *healthcheck.Config,
+func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Protocol,
 	getServiceEndpoints func(string) (*corev1.Endpoints, error)) []ingress.Endpoint {
 
 	upsServers := []ingress.Endpoint{}
@@ -66,10 +65,8 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 		}
 
 		return append(upsServers, ingress.Endpoint{
-			Address:     s.Spec.ExternalName,
-			Port:        fmt.Sprintf("%v", targetPort),
-			MaxFails:    hz.MaxFails,
-			FailTimeout: hz.FailTimeout,
+			Address: s.Spec.ExternalName,
+			Port:    fmt.Sprintf("%v", targetPort),
 		})
 	}
 
@@ -106,11 +103,9 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 					continue
 				}
 				ups := ingress.Endpoint{
-					Address:     epAddress.IP,
-					Port:        fmt.Sprintf("%v", targetPort),
-					MaxFails:    hz.MaxFails,
-					FailTimeout: hz.FailTimeout,
-					Target:      epAddress.TargetRef,
+					Address: epAddress.IP,
+					Port:    fmt.Sprintf("%v", targetPort),
+					Target:  epAddress.TargetRef,
 				}
 				upsServers = append(upsServers, ups)
 				processedUpstreamServers[ep] = struct{}{}

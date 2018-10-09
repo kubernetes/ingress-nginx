@@ -23,7 +23,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 )
 
 func TestGetEndpoints(t *testing.T) {
@@ -32,7 +31,6 @@ func TestGetEndpoints(t *testing.T) {
 		svc    *corev1.Service
 		port   *corev1.ServicePort
 		proto  corev1.Protocol
-		hz     *healthcheck.Config
 		fn     func(string) (*corev1.Endpoints, error)
 		result []ingress.Endpoint
 	}{
@@ -41,7 +39,6 @@ func TestGetEndpoints(t *testing.T) {
 			nil,
 			nil,
 			corev1.ProtocolTCP,
-			nil,
 			func(string) (*corev1.Endpoints, error) {
 				return nil, nil
 			},
@@ -52,7 +49,6 @@ func TestGetEndpoints(t *testing.T) {
 			&corev1.Service{},
 			nil,
 			corev1.ProtocolTCP,
-			nil,
 			func(string) (*corev1.Endpoints, error) {
 				return nil, nil
 			},
@@ -63,7 +59,6 @@ func TestGetEndpoints(t *testing.T) {
 			&corev1.Service{},
 			&corev1.ServicePort{Name: "default"},
 			corev1.ProtocolTCP,
-			nil,
 			func(string) (*corev1.Endpoints, error) {
 				return &corev1.Endpoints{}, nil
 			},
@@ -78,7 +73,6 @@ func TestGetEndpoints(t *testing.T) {
 			},
 			&corev1.ServicePort{Name: "default"},
 			corev1.ProtocolTCP,
-			nil,
 			func(string) (*corev1.Endpoints, error) {
 				return &corev1.Endpoints{}, nil
 			},
@@ -103,19 +97,13 @@ func TestGetEndpoints(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
-			&healthcheck.Config{
-				MaxFails:    0,
-				FailTimeout: 0,
-			},
 			func(string) (*corev1.Endpoints, error) {
 				return &corev1.Endpoints{}, nil
 			},
 			[]ingress.Endpoint{
 				{
-					Address:     "10.0.0.1.xip.io",
-					Port:        "80",
-					MaxFails:    0,
-					FailTimeout: 0,
+					Address: "10.0.0.1.xip.io",
+					Port:    "80",
 				},
 			},
 		},
@@ -138,10 +126,6 @@ func TestGetEndpoints(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
-			&healthcheck.Config{
-				MaxFails:    0,
-				FailTimeout: 0,
-			},
 			func(string) (*corev1.Endpoints, error) {
 				return &corev1.Endpoints{}, nil
 			},
@@ -166,10 +150,6 @@ func TestGetEndpoints(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
-			&healthcheck.Config{
-				MaxFails:    0,
-				FailTimeout: 0,
-			},
 			func(string) (*corev1.Endpoints, error) {
 				return nil, fmt.Errorf("unexpected error")
 			},
@@ -194,10 +174,6 @@ func TestGetEndpoints(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
-			&healthcheck.Config{
-				MaxFails:    0,
-				FailTimeout: 0,
-			},
 			func(string) (*corev1.Endpoints, error) {
 				nodeName := "dummy"
 				return &corev1.Endpoints{
@@ -239,10 +215,6 @@ func TestGetEndpoints(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
-			&healthcheck.Config{
-				MaxFails:    0,
-				FailTimeout: 0,
-			},
 			func(string) (*corev1.Endpoints, error) {
 				nodeName := "dummy"
 				return &corev1.Endpoints{
@@ -284,10 +256,6 @@ func TestGetEndpoints(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
-			&healthcheck.Config{
-				MaxFails:    0,
-				FailTimeout: 0,
-			},
 			func(string) (*corev1.Endpoints, error) {
 				nodeName := "dummy"
 				return &corev1.Endpoints{
@@ -331,10 +299,6 @@ func TestGetEndpoints(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
-			&healthcheck.Config{
-				MaxFails:    0,
-				FailTimeout: 0,
-			},
 			func(string) (*corev1.Endpoints, error) {
 				nodeName := "dummy"
 				return &corev1.Endpoints{
@@ -359,10 +323,8 @@ func TestGetEndpoints(t *testing.T) {
 			},
 			[]ingress.Endpoint{
 				{
-					Address:     "1.1.1.1",
-					Port:        "80",
-					MaxFails:    0,
-					FailTimeout: 0,
+					Address: "1.1.1.1",
+					Port:    "80",
 				},
 			},
 		},
@@ -385,10 +347,6 @@ func TestGetEndpoints(t *testing.T) {
 				TargetPort: intstr.FromString("port-1"),
 			},
 			corev1.ProtocolTCP,
-			&healthcheck.Config{
-				MaxFails:    0,
-				FailTimeout: 0,
-			},
 			func(string) (*corev1.Endpoints, error) {
 				nodeName := "dummy"
 				return &corev1.Endpoints{
@@ -418,10 +376,8 @@ func TestGetEndpoints(t *testing.T) {
 			},
 			[]ingress.Endpoint{
 				{
-					Address:     "1.1.1.1",
-					Port:        "80",
-					MaxFails:    0,
-					FailTimeout: 0,
+					Address: "1.1.1.1",
+					Port:    "80",
 				},
 			},
 		},
@@ -429,7 +385,7 @@ func TestGetEndpoints(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result := getEndpoints(testCase.svc, testCase.port, testCase.proto, testCase.hz, testCase.fn)
+			result := getEndpoints(testCase.svc, testCase.port, testCase.proto, testCase.fn)
 			if len(testCase.result) != len(result) {
 				t.Errorf("Expected %d Endpoints but got %d", len(testCase.result), len(result))
 			}

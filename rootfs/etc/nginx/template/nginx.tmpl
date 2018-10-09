@@ -417,7 +417,7 @@ http {
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
         {{ end }}
 
-        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
+        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }};
         {{ end }}
     }
     {{ end }}
@@ -429,7 +429,7 @@ http {
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
         {{ end }}
 
-        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }} max_fails={{ $server.MaxFails }} fail_timeout={{ $server.FailTimeout }};
+        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }};
         {{ end }}
     }
     {{ end }}
