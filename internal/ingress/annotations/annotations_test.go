@@ -30,7 +30,6 @@ import (
 )
 
 var (
-	annotationSecureUpstream       = parser.GetAnnotationWithPrefix("secure-backends")
 	annotationSecureVerifyCACert   = parser.GetAnnotationWithPrefix("secure-verify-ca-secret")
 	annotationUpsMaxFails          = parser.GetAnnotationWithPrefix("upstream-max-fails")
 	annotationUpsFailTimeout       = parser.GetAnnotationWithPrefix("upstream-fail-timeout")
@@ -40,6 +39,7 @@ var (
 	annotationCorsAllowMethods     = parser.GetAnnotationWithPrefix("cors-allow-methods")
 	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
 	annotationCorsAllowCredentials = parser.GetAnnotationWithPrefix("cors-allow-credentials")
+	backendProtocol                = parser.GetAnnotationWithPrefix("backend-protocol")
 	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
 	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
@@ -111,30 +111,6 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
-func TestSecureUpstream(t *testing.T) {
-	ec := NewAnnotationExtractor(mockCfg{})
-	ing := buildIngress()
-
-	fooAnns := []struct {
-		annotations map[string]string
-		er          bool
-	}{
-		{map[string]string{annotationSecureUpstream: "true"}, true},
-		{map[string]string{annotationSecureUpstream: "false"}, false},
-		{map[string]string{annotationSecureUpstream + "_no": "true"}, false},
-		{map[string]string{}, false},
-		{nil, false},
-	}
-
-	for _, foo := range fooAnns {
-		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).SecureUpstream
-		if r.Secure != foo.er {
-			t.Errorf("Returned %v but expected %v", r, foo.er)
-		}
-	}
-}
-
 func TestSecureVerifyCACert(t *testing.T) {
 	ec := NewAnnotationExtractor(mockCfg{
 		MockSecrets: map[string]*apiv1.Secret{
@@ -151,11 +127,11 @@ func TestSecureVerifyCACert(t *testing.T) {
 		annotations map[string]string
 		exists      bool
 	}{
-		{1, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert: "not"}, false},
-		{2, map[string]string{annotationSecureUpstream: "false", annotationSecureVerifyCACert: "secure-verify-ca"}, false},
-		{3, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert: "secure-verify-ca"}, true},
-		{4, map[string]string{annotationSecureUpstream: "true", annotationSecureVerifyCACert + "_not": "secure-verify-ca"}, false},
-		{5, map[string]string{annotationSecureUpstream: "true"}, false},
+		{1, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert: "not"}, false},
+		{2, map[string]string{backendProtocol: "HTTP", annotationSecureVerifyCACert: "secure-verify-ca"}, false},
+		{3, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert: "secure-verify-ca"}, true},
+		{4, map[string]string{backendProtocol: "HTTPS", annotationSecureVerifyCACert + "_not": "secure-verify-ca"}, false},
+		{5, map[string]string{backendProtocol: "HTTPS"}, false},
 		{6, map[string]string{}, false},
 		{7, nil, false},
 	}
