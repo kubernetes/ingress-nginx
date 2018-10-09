@@ -100,9 +100,6 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	if b1.Port != b2.Port {
 		return false
 	}
-	if b1.Secure != b2.Secure {
-		return false
-	}
 	if !(&b1.SecureCACert).Equal(&b2.SecureCACert) {
 		return false
 	}
@@ -340,9 +337,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 	if !(&l1.Logs).Equal(&l2.Logs) {
-		return false
-	}
-	if l1.GRPC != l2.GRPC {
 		return false
 	}
 	if !(&l1.LuaRestyWAF).Equal(&l2.LuaRestyWAF) {

@@ -763,7 +763,6 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 		luaBackend := &ingress.Backend{
 			Name:            backend.Name,
 			Port:            backend.Port,
-			Secure:          backend.Secure,
 			SSLPassthrough:  backend.SSLPassthrough,
 			SessionAffinity: backend.SessionAffinity,
 			UpstreamHashBy:  backend.UpstreamHashBy,
