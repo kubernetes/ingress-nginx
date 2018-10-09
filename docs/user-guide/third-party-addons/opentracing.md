@@ -73,7 +73,7 @@ data:
   enable-opentracing: "true"
   zipkin-collector-host: zipkin.default.svc.cluster.local
 metadata:
-  name: nginx-load-balancer-conf
+  name: nginx-configuration
   namespace: kube-system
 ' | kubectl replace -f -
 ```
