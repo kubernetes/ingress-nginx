@@ -40,39 +40,24 @@ import (
 var (
 	// TODO: add tests for SSLPassthrough
 	tmplFuncTestcases = map[string]struct {
-		Path                        string
-		Target                      string
-		Location                    string
-		ProxyPass                   string
-		AddBaseURL                  bool
-		BaseURLScheme               string
-		Sticky                      bool
-		XForwardedPrefix            bool
-		DynamicConfigurationEnabled bool
-		SecureBackend               bool
-		enforceRegex                bool
+		Path             string
+		Target           string
+		Location         string
+		ProxyPass        string
+		AddBaseURL       bool
+		BaseURLScheme    string
+		Sticky           bool
+		XForwardedPrefix bool
+		SecureBackend    bool
+		enforceRegex     bool
 	}{
 		"when secure backend enabled": {
 			"/",
 			"/",
 			"/",
-			"proxy_pass https://upstream-name;",
+			"proxy_pass https://upstream_balancer;",
 			false,
 			"",
-			false,
-			false,
-			false,
-			true,
-			false,
-		},
-		"when secure backend and stickeness enabled": {
-			"/",
-			"/",
-			"/",
-			"proxy_pass https://sticky-upstream-name;",
-			false,
-			"",
-			true,
 			false,
 			false,
 			true,
@@ -88,8 +73,8 @@ var (
 			false,
 			false,
 			true,
-			true,
-			false},
+			false,
+		},
 		"when secure backend, stickeness and dynamic config enabled": {
 			"/",
 			"/",
@@ -99,7 +84,6 @@ var (
 			"",
 			true,
 			false,
-			true,
 			true,
 			false,
 		},
@@ -112,7 +96,6 @@ var (
 			"",
 			false,
 			false,
-			true,
 			false,
 			false,
 		},
@@ -120,10 +103,9 @@ var (
 			"/",
 			"/",
 			"/",
-			"proxy_pass http://upstream-name;",
+			"proxy_pass http://upstream_balancer;",
 			false,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -136,11 +118,10 @@ var (
 			`
 rewrite "(?i)/(.*)" /jenkins/$1 break;
 rewrite "(?i)/$" /jenkins/ break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 `,
 			false,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -153,11 +134,10 @@ proxy_pass http://upstream-name;
 			`
 rewrite "(?i)/something/(.*)" /$1 break;
 rewrite "(?i)/something$" / break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 `,
 			false,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -170,11 +150,10 @@ proxy_pass http://upstream-name;
 			`
 rewrite "(?i)/end-with-slash/(.*)" /not-root/$1 break;
 rewrite "(?i)/end-with-slash/$" /not-root/ break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 `,
 			false,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -187,11 +166,10 @@ proxy_pass http://upstream-name;
 			`
 rewrite "(?i)/something-complex/(.*)" /not-root/$1 break;
 rewrite "(?i)/something-complex$" /not-root/ break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 `,
 			false,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -204,14 +182,13 @@ proxy_pass http://upstream-name;
 			`
 rewrite "(?i)/(.*)" /jenkins/$1 break;
 rewrite "(?i)/$" /jenkins/ break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 
 set_escape_uri $escaped_base_uri $baseuri;
 subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/$escaped_base_uri">' ro;
 `,
 			true,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -224,14 +201,13 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			`
 rewrite "(?i)/something/(.*)" /$1 break;
 rewrite "(?i)/something$" / break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 
 set_escape_uri $escaped_base_uri $baseuri;
 subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/something/$escaped_base_uri">' ro;
 `,
 			true,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -244,14 +220,13 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			`
 rewrite "(?i)/end-with-slash/(.*)" /not-root/$1 break;
 rewrite "(?i)/end-with-slash/$" /not-root/ break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 
 set_escape_uri $escaped_base_uri $baseuri;
 subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/end-with-slash/$escaped_base_uri">' ro;
 `,
 			true,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -264,14 +239,13 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			`
 rewrite "(?i)/something-complex/(.*)" /not-root/$1 break;
 rewrite "(?i)/something-complex$" /not-root/ break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 
 set_escape_uri $escaped_base_uri $baseuri;
 subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="$scheme://$http_host/something-complex/$escaped_base_uri">' ro;
 `,
 			true,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -284,14 +258,13 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			`
 rewrite "(?i)/something/(.*)" /$1 break;
 rewrite "(?i)/something$" / break;
-proxy_pass http://upstream-name;
+proxy_pass http://upstream_balancer;
 
 set_escape_uri $escaped_base_uri $baseuri;
 subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="http://$http_host/something/$escaped_base_uri">' ro;
 `,
 			true,
 			"http",
-			false,
 			false,
 			false,
 			false,
@@ -304,12 +277,11 @@ subs_filter '(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)' '$1<base href="
 			`
 rewrite "(?i)/(.*)" /something/$1 break;
 rewrite "(?i)/$" /something/ break;
-proxy_pass http://sticky-upstream-name;
+proxy_pass http://upstream_balancer;
 `,
 			false,
 			"http",
 			true,
-			false,
 			false,
 			false,
 			true,
@@ -327,7 +299,6 @@ proxy_pass http://upstream_balancer;
 			"http",
 			true,
 			false,
-			true,
 			false,
 			true,
 		},
@@ -339,13 +310,12 @@ proxy_pass http://upstream_balancer;
 rewrite "(?i)/there/(.*)" /something/$1 break;
 rewrite "(?i)/there$" /something/ break;
 proxy_set_header X-Forwarded-Prefix "/there/";
-proxy_pass http://sticky-upstream-name;
+proxy_pass http://upstream_balancer;
 `,
 			false,
 			"http",
 			true,
 			true,
-			false,
 			false,
 			true,
 		},
@@ -353,10 +323,9 @@ proxy_pass http://sticky-upstream-name;
 			"/something",
 			"/something",
 			`~* "^/something"`,
-			"proxy_pass http://upstream-name;",
+			"proxy_pass http://upstream_balancer;",
 			false,
 			"",
-			false,
 			false,
 			false,
 			false,
@@ -377,11 +346,7 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 		},
 	}
 
-	config := buildLuaSharedDictionaries(servers, false, false)
-	if config != "" {
-		t.Errorf("expected to not configure any lua shared dictionary, but generated %s", config)
-	}
-	config = buildLuaSharedDictionaries(servers, true, false)
+	config := buildLuaSharedDictionaries(servers, false)
 	if !strings.Contains(config, "lua_shared_dict configuration_data") {
 		t.Errorf("expected to include 'configuration_data' but got %s", config)
 	}
@@ -390,18 +355,9 @@ func TestBuildLuaSharedDictionaries(t *testing.T) {
 	}
 
 	servers[1].Locations[0].LuaRestyWAF = luarestywaf.Config{Mode: "ACTIVE"}
-	config = buildLuaSharedDictionaries(servers, false, false)
+	config = buildLuaSharedDictionaries(servers, false)
 	if !strings.Contains(config, "lua_shared_dict waf_storage") {
 		t.Errorf("expected to configure 'waf_storage', but got %s", config)
-	}
-	config = buildLuaSharedDictionaries(servers, true, false)
-	if !strings.Contains(config, "lua_shared_dict waf_storage") {
-		t.Errorf("expected to configure 'waf_storage', but got %s", config)
-	}
-
-	config = buildLuaSharedDictionaries(servers, false, true)
-	if config != "" {
-		t.Errorf("expected to not configure any lua shared dictionary, but generated %s", config)
 	}
 }
 
@@ -471,7 +427,7 @@ func TestBuildProxyPass(t *testing.T) {
 
 		backends := []*ingress.Backend{backend}
 
-		pp := buildProxyPass(defaultHost, backends, loc, tc.DynamicConfigurationEnabled)
+		pp := buildProxyPass(defaultHost, backends, loc)
 		if !strings.EqualFold(tc.ProxyPass, pp) {
 			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, tc.ProxyPass, pp)
 		}
@@ -836,10 +792,6 @@ func TestBuildUpstreamName(t *testing.T) {
 		expected := defaultBackend
 
 		if tc.Sticky {
-			if !tc.DynamicConfigurationEnabled {
-				expected = fmt.Sprintf("sticky-" + expected)
-			}
-
 			backend.SessionAffinity = ingress.SessionAffinityConfig{
 				AffinityType: "cookie",
 				CookieSessionAffinity: ingress.CookieSessionAffinity{
@@ -850,9 +802,7 @@ func TestBuildUpstreamName(t *testing.T) {
 			}
 		}
 
-		backends := []*ingress.Backend{backend}
-
-		pp := buildUpstreamName(defaultHost, backends, loc, tc.DynamicConfigurationEnabled)
+		pp := buildUpstreamName(loc)
 		if !strings.EqualFold(expected, pp) {
 			t.Errorf("%s: expected \n'%v'\nbut returned \n'%v'", k, expected, pp)
 		}

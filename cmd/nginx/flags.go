@@ -20,7 +20,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
@@ -130,10 +129,6 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicConfigurationEnabled = flags.Bool("enable-dynamic-configuration", true,
-			`Dynamically refresh backends on topology changes instead of reloading NGINX.
-Feature backed by OpenResty Lua libraries.`)
-
 		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", false,
 			`Dynamically update SSL certificates instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
@@ -200,7 +195,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		glog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}
 
-	if (*enableSSLChainCompletion || !*dynamicConfigurationEnabled) && *dynamicCertificatesEnabled {
+	if *enableSSLChainCompletion && *dynamicCertificatesEnabled {
 		return false, nil, fmt.Errorf(`SSL certificate chain completion cannot be enabled and dynamic configuration cannot be disabled when 
 dynamic certificates functionality is enabled. Please check the flags --enable-ssl-chain-completion and --enable-dynamic-configuration`)
 	}
@@ -209,40 +204,28 @@ dynamic certificates functionality is enabled. Please check the flags --enable-s
 		return false, nil, fmt.Errorf("Flags --publish-service and --publish-status-address are mutually exclusive")
 	}
 
-	// LuaJIT is not available on arch s390x and ppc64le
-	disableLua := false
-	if runtime.GOARCH == "s390x" || runtime.GOARCH == "ppc64le" {
-		disableLua = true
-		if *dynamicConfigurationEnabled {
-			*dynamicConfigurationEnabled = false
-			glog.Warningf("LuaJIT is not available on s390x and ppc64le architectures: disabling dynamic configuration feature.")
-		}
-	}
-
 	config := &controller.Configuration{
-		APIServerHost:               *apiserverHost,
-		KubeConfigFile:              *kubeConfigFile,
-		UpdateStatus:                *updateStatus,
-		ElectionID:                  *electionID,
-		EnableProfiling:             *profiling,
-		EnableSSLPassthrough:        *enableSSLPassthrough,
-		EnableSSLChainCompletion:    *enableSSLChainCompletion,
-		ResyncPeriod:                *resyncPeriod,
-		DefaultService:              *defaultSvc,
-		Namespace:                   *watchNamespace,
-		ConfigMapName:               *configMap,
-		DefaultSSLCertificate:       *defSSLCertificate,
-		DefaultHealthzURL:           *defHealthzURL,
-		PublishService:              *publishSvc,
-		PublishStatusAddress:        *publishStatusAddress,
-		ForceNamespaceIsolation:     *forceIsolation,
-		UpdateStatusOnShutdown:      *updateStatusOnShutdown,
-		SortBackends:                *sortBackends,
-		UseNodeInternalIP:           *useNodeInternalIP,
-		SyncRateLimit:               *syncRateLimit,
-		DynamicConfigurationEnabled: *dynamicConfigurationEnabled,
-		DisableLua:                  disableLua,
-		DynamicCertificatesEnabled:  *dynamicCertificatesEnabled,
+		APIServerHost:              *apiserverHost,
+		KubeConfigFile:             *kubeConfigFile,
+		UpdateStatus:               *updateStatus,
+		ElectionID:                 *electionID,
+		EnableProfiling:            *profiling,
+		EnableSSLPassthrough:       *enableSSLPassthrough,
+		EnableSSLChainCompletion:   *enableSSLChainCompletion,
+		ResyncPeriod:               *resyncPeriod,
+		DefaultService:             *defaultSvc,
+		Namespace:                  *watchNamespace,
+		ConfigMapName:              *configMap,
+		DefaultSSLCertificate:      *defSSLCertificate,
+		DefaultHealthzURL:          *defHealthzURL,
+		PublishService:             *publishSvc,
+		PublishStatusAddress:       *publishStatusAddress,
+		ForceNamespaceIsolation:    *forceIsolation,
+		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
+		SortBackends:               *sortBackends,
+		UseNodeInternalIP:          *useNodeInternalIP,
+		SyncRateLimit:              *syncRateLimit,
+		DynamicCertificatesEnabled: *dynamicCertificatesEnabled,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,

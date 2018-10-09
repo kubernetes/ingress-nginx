@@ -86,10 +86,6 @@ type Configuration struct {
 
 	SyncRateLimit float32
 
-	DynamicConfigurationEnabled bool
-
-	DisableLua bool
-
 	DynamicCertificatesEnabled bool
 }
 
@@ -162,9 +158,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return nil
 	}
 
-	if n.cfg.DynamicConfigurationEnabled && n.IsDynamicConfigurationEnough(pcfg) {
-		glog.Infof("Changes handled by the dynamic configuration, skipping backend reload.")
-	} else {
+	if !n.IsDynamicConfigurationEnough(pcfg) {
 		glog.Infof("Configuration changes detected, backend reload required.")
 
 		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
@@ -189,23 +183,21 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		n.metricCollector.SetSSLExpireTime(servers)
 	}
 
-	if n.cfg.DynamicConfigurationEnabled {
-		isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
-		go func(isFirstSync bool) {
-			if isFirstSync {
-				glog.Infof("Initial synchronization of the NGINX configuration.")
+	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
+	go func(isFirstSync bool) {
+		if isFirstSync {
+			glog.Infof("Initial synchronization of the NGINX configuration.")
 
-				// it takes time for NGINX to start listening on the configured ports
-				time.Sleep(1 * time.Second)
-			}
-			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
-			if err == nil {
-				glog.Infof("Dynamic reconfiguration succeeded.")
-			} else {
-				glog.Warningf("Dynamic reconfiguration failed: %v", err)
-			}
-		}(isFirstSync)
-	}
+			// it takes time for NGINX to start listening on the configured ports
+			time.Sleep(1 * time.Second)
+		}
+		err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
+		if err == nil {
+			glog.Infof("Dynamic reconfiguration succeeded.")
+		} else {
+			glog.Warningf("Dynamic reconfiguration failed: %v", err)
+		}
+	}(isFirstSync)
 
 	ri := getRemovedIngresses(n.runningConfig, pcfg)
 	re := getRemovedHosts(n.runningConfig, pcfg)
