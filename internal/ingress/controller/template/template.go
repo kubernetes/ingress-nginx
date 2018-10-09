@@ -183,24 +183,20 @@ func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
 	return false
 }
 
-func buildLuaSharedDictionaries(s interface{}, dynamicConfigurationEnabled bool, disableLuaRestyWAF bool) string {
+func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 	servers, ok := s.([]*ingress.Server)
 	if !ok {
 		glog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
 		return ""
 	}
 
-	out := []string{}
-
-	if dynamicConfigurationEnabled {
-		out = append(out,
-			"lua_shared_dict configuration_data 5M",
-			"lua_shared_dict certificate_data 16M",
-			"lua_shared_dict locks 512k",
-			"lua_shared_dict balancer_ewma 1M",
-			"lua_shared_dict balancer_ewma_last_touched_at 1M",
-			"lua_shared_dict sticky_sessions 1M",
-		)
+	out := []string{
+		"lua_shared_dict configuration_data 5M",
+		"lua_shared_dict certificate_data 16M",
+		"lua_shared_dict locks 512k",
+		"lua_shared_dict balancer_ewma 1M",
+		"lua_shared_dict balancer_ewma_last_touched_at 1M",
+		"lua_shared_dict sticky_sessions 1M",
 	}
 
 	if !disableLuaRestyWAF {
@@ -424,7 +420,7 @@ func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) strin
 // (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
 // If the annotation nginx.ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
-func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigurationEnabled bool) string {
+func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	backends, ok := b.([]*ingress.Backend)
 	if !ok {
 		glog.Errorf("expected an '[]*ingress.Backend' type but %T was returned", b)
@@ -458,10 +454,6 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 
 	upstreamName := "upstream_balancer"
 
-	if !dynamicConfigurationEnabled {
-		upstreamName = location.Backend
-	}
-
 	for _, backend := range backends {
 		if backend.Name == location.Backend {
 			if backend.SSLPassthrough {
@@ -470,10 +462,6 @@ func buildProxyPass(host string, b interface{}, loc interface{}, dynamicConfigur
 				if location.BackendProtocol == "GRPCS" {
 					proto = "grpcs://"
 				}
-			}
-
-			if !dynamicConfigurationEnabled && isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
-				upstreamName = fmt.Sprintf("sticky-%v", upstreamName)
 			}
 
 			break
@@ -709,14 +697,7 @@ func buildDenyVariable(a interface{}) string {
 	return fmt.Sprintf("$deny_%v", denyPathSlugMap[l])
 }
 
-func buildUpstreamName(host string, b interface{}, loc interface{}, dynamicConfigurationEnabled bool) string {
-
-	backends, ok := b.([]*ingress.Backend)
-	if !ok {
-		glog.Errorf("expected an '[]*ingress.Backend' type but %T was returned", b)
-		return ""
-	}
-
+func buildUpstreamName(loc interface{}) string {
 	location, ok := loc.(*ingress.Location)
 	if !ok {
 		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
@@ -724,19 +705,6 @@ func buildUpstreamName(host string, b interface{}, loc interface{}, dynamicConfi
 	}
 
 	upstreamName := location.Backend
-
-	if !dynamicConfigurationEnabled {
-		for _, backend := range backends {
-			if backend.Name == location.Backend {
-				if backend.SessionAffinity.AffinityType == "cookie" &&
-					isSticky(host, location, backend.SessionAffinity.CookieSessionAffinity.Locations) {
-					upstreamName = fmt.Sprintf("sticky-%v", upstreamName)
-				}
-
-				break
-			}
-		}
-	}
 
 	return upstreamName
 }

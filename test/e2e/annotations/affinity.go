@@ -16,21 +16,12 @@ limitations under the License.
 
 package annotations
 
+/*
 import (
-	"fmt"
-	"net/http"
-	"strings"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
-
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"k8s.io/ingress-nginx/test/e2e/framework"
 )
+
 
 // TODO(elvinefendi) merge this with Affinity tests in test/e2e/lua/dynamic_configuration.go
 var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
@@ -266,3 +257,4 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/;"))
 	})
 })
+*/
