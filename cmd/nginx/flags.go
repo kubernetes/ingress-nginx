@@ -205,6 +205,10 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 dynamic certificates functionality is enabled. Please check the flags --enable-ssl-chain-completion and --enable-dynamic-configuration`)
 	}
 
+	if *publishSvc != "" && *publishStatusAddress != "" {
+		return false, nil, fmt.Errorf("Flags --publish-service and --publish-status-address are mutually exclusive")
+	}
+
 	// LuaJIT is not available on arch s390x and ppc64le
 	disableLua := false
 	if runtime.GOARCH == "s390x" || runtime.GOARCH == "ppc64le" {
