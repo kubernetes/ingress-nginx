@@ -120,6 +120,7 @@ var (
 			}
 			return true
 		},
+		"escapeLiteralDollar":        escapeLiteralDollar,
 		"shouldConfigureLuaRestyWAF": shouldConfigureLuaRestyWAF,
 		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
 		"buildLocation":              buildLocation,
@@ -160,6 +161,20 @@ var (
 		"stripLocationModifer":        stripLocationModifer,
 	}
 )
+
+// escapeLiteralDollar will replace the $ character with ${literal_dollar}
+// which is made to work via the following configuration in the http section of
+// the template:
+// geo $literal_dollar {
+//     default "$";
+// }
+func escapeLiteralDollar(input interface{}) string {
+	inputStr, ok := input.(string)
+	if !ok {
+		return ""
+	}
+	return strings.Replace(inputStr, `$`, `${literal_dollar}`, -1)
+}
 
 // formatIP will wrap IPv6 addresses in [] and return IPv4 addresses
 // without modification. If the input cannot be parsed as an IP address
