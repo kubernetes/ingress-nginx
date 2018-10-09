@@ -858,3 +858,29 @@ func TestBuildUpstreamName(t *testing.T) {
 		}
 	}
 }
+
+func TestEscapeLiteralDollar(t *testing.T) {
+	escapedPath := escapeLiteralDollar("/$")
+	expected := "/${literal_dollar}"
+	if escapedPath != expected {
+		t.Errorf("Expected %v but returned %v", expected, escapedPath)
+	}
+
+	escapedPath = escapeLiteralDollar("/hello-$/world-$/")
+	expected = "/hello-${literal_dollar}/world-${literal_dollar}/"
+	if escapedPath != expected {
+		t.Errorf("Expected %v but returned %v", expected, escapedPath)
+	}
+
+	leaveUnchagned := "/leave-me/unchagned"
+	escapedPath = escapeLiteralDollar(leaveUnchagned)
+	if escapedPath != leaveUnchagned {
+		t.Errorf("Expected %v but returned %v", leaveUnchagned, escapedPath)
+	}
+
+	escapedPath = escapeLiteralDollar(false)
+	expected = ""
+	if escapedPath != expected {
+		t.Errorf("Expected %v but returned %v", expected, escapedPath)
+	}
+}
