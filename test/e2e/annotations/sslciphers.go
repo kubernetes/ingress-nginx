@@ -20,10 +20,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -40,36 +36,13 @@ var _ = framework.IngressNginxDescribe("Annotations - SSL CIPHERS", func() {
 
 	It("should change ssl ciphers", func() {
 		host := "ciphers.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/ssl-ciphers": "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/ssl-ciphers": "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 

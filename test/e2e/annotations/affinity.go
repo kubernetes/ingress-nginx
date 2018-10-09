@@ -49,37 +49,14 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 	It("should set sticky cookie SERVERID", func() {
 		host := "sticky.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":            "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/affinity":            "cookie",
-					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -101,37 +78,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 	It("should redirect to '/something' with enabled affinity", func() {
 		host := "example.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":            "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/affinity":            "cookie",
-					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
@@ -155,37 +108,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 	It("should set the path to /something on the generated cookie", func() {
 		host := "example.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":            "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/affinity":            "cookie",
-					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/something",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
@@ -208,15 +137,16 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 	It("should set the path to / on the generated cookie if there's more than one rule referring to the same backend", func() {
 		host := "example.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":            "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+		}
 
 		ing, err := f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/affinity":            "cookie",
-					"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-				},
+				Name:        host,
+				Namespace:   f.IngressController.Namespace,
+				Annotations: annotations,
 			},
 			Spec: v1beta1.IngressSpec{
 				Rules: []v1beta1.IngressRule{

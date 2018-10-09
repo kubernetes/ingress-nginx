@@ -24,10 +24,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -44,33 +40,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 	It("should return status code 200 for host 'foo' and 404 for 'bar'", func() {
 		host := "foo"
+		annotations := map[string]string{}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
@@ -103,35 +76,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 	It("should return status code 200 for host 'foo' and 'bar'", func() {
 		host := "foo"
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/server-alias": "bar",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/server-alias": "bar",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
