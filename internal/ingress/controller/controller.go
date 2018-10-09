@@ -33,7 +33,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/healthcheck"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -237,7 +236,7 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 		return upstream
 	}
 
-	endps := getEndpoints(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, &healthcheck.Config{}, n.store.GetServiceEndpoints)
+	endps := getEndpoints(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 	if len(endps) == 0 {
 		glog.Warningf("Service %q does not have any active Endpoint", svcKey)
 		endps = []ingress.Endpoint{n.DefaultEndpoint()}
@@ -348,7 +347,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.UsePortInRedirects = anns.UsePortInRedirects
 						loc.Connection = anns.Connection
 						loc.Logs = anns.Logs
-						loc.GRPC = anns.GRPC
 						loc.LuaRestyWAF = anns.LuaRestyWAF
 						loc.InfluxDB = anns.InfluxDB
 						loc.DefaultBackend = anns.DefaultBackend
@@ -389,7 +387,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						UsePortInRedirects:   anns.UsePortInRedirects,
 						Connection:           anns.Connection,
 						Logs:                 anns.Logs,
-						GRPC:                 anns.GRPC,
 						LuaRestyWAF:          anns.LuaRestyWAF,
 						InfluxDB:             anns.InfluxDB,
 						DefaultBackend:       anns.DefaultBackend,
@@ -436,7 +433,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						// check if the location contains endpoints and a custom default backend
 						if location.DefaultBackend != nil {
 							sp := location.DefaultBackend.Spec.Ports[0]
-							endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, &healthcheck.Config{}, n.store.GetServiceEndpoints)
+							endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 							if len(endps) > 0 {
 								glog.V(3).Infof("Using custom default backend for location %q in server %q (Service \"%v/%v\")",
 									location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
@@ -523,9 +520,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 
 			glog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
-			if !upstreams[defBackend].Secure {
-				upstreams[defBackend].Secure = anns.SecureUpstream.Secure
-			}
 			if upstreams[defBackend].SecureCACert.Secret == "" {
 				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
 			}
@@ -549,7 +543,7 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
-				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String(), &anns.HealthCheck)
+				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String())
 				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
 				if err != nil {
 					glog.Warningf("Error creating upstream %q: %v", defBackend, err)
@@ -577,10 +571,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				upstreams[name] = newUpstream(name)
 				upstreams[name].Port = path.Backend.ServicePort
 
-				if !upstreams[name].Secure {
-					upstreams[name].Secure = anns.SecureUpstream.Secure
-				}
-
 				if upstreams[name].SecureCACert.Secret == "" {
 					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
 				}
@@ -606,7 +596,7 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
-					endp, err := n.serviceEndpoints(svcKey, path.Backend.ServicePort.String(), &anns.HealthCheck)
+					endp, err := n.serviceEndpoints(svcKey, path.Backend.ServicePort.String())
 					if err != nil {
 						glog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 						continue
@@ -663,10 +653,8 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *exte
 	return endpoint, err
 }
 
-// serviceEndpoints returns the upstream servers (Endpoints) associated with a
-// Service.
-func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
-	hz *healthcheck.Config) ([]ingress.Endpoint, error) {
+// serviceEndpoints returns the upstream servers (Endpoints) associated with a Service.
+func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingress.Endpoint, error) {
 	svc, err := n.store.GetService(svcKey)
 
 	var upstreams []ingress.Endpoint
@@ -681,7 +669,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
 			servicePort.TargetPort.String() == backendPort ||
 			servicePort.Name == backendPort {
 
-			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz, n.store.GetServiceEndpoints)
+			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 			if len(endps) == 0 {
 				glog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			}
@@ -715,7 +703,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string,
 			Port:       int32(externalPort),
 			TargetPort: intstr.FromString(backendPort),
 		}
-		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, hz, n.store.GetServiceEndpoints)
+		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 		if len(endps) == 0 {
 			glog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			return upstreams, nil
@@ -835,7 +823,6 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.UpstreamVhost = anns.UpstreamVhost
 					defLoc.Whitelist = anns.Whitelist
 					defLoc.Denied = anns.Denied
-					defLoc.GRPC = anns.GRPC
 					defLoc.LuaRestyWAF = anns.LuaRestyWAF
 					defLoc.InfluxDB = anns.InfluxDB
 				} else {

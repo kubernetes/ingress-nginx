@@ -107,18 +107,6 @@ type Backend struct {
 	// Default: false
 	UsePortInRedirects bool `json:"use-port-in-redirects"`
 
-	// Number of unsuccessful attempts to communicate with the server that should happen in the
-	// duration set by the fail_timeout parameter to consider the server unavailable
-	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream
-	// Default: 0, ie use platform liveness probe
-	UpstreamMaxFails int `json:"upstream-max-fails"`
-
-	// Time during which the specified number of unsuccessful attempts to communicate with
-	// the server should happen to consider the server unavailable
-	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream
-	// Default: 0, ie use platform liveness probe
-	UpstreamFailTimeout int `json:"upstream-fail-timeout"`
-
 	// Enable stickiness by client-server mapping based on a NGINX variable, text or a combination of both.
 	// A consistent hashing method will be used which ensures only a few keys would be remapped to different
 	// servers on upstream group changes
