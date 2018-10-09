@@ -22,10 +22,6 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"net/http"
 
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -42,36 +38,13 @@ var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
 
 	It("should enable cors", func() {
 		host := "cors.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors": "true",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/enable-cors": "true",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -116,37 +89,14 @@ var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
 
 	It("should set cors methods to only allow POST, GET", func() {
 		host := "cors.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":        "true",
+			"nginx.ingress.kubernetes.io/cors-allow-methods": "POST, GET",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/enable-cors":        "true",
-					"nginx.ingress.kubernetes.io/cors-allow-methods": "POST, GET",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -159,37 +109,14 @@ var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
 
 	It("should set cors max-age", func() {
 		host := "cors.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":  "true",
+			"nginx.ingress.kubernetes.io/cors-max-age": "200",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/enable-cors":  "true",
-					"nginx.ingress.kubernetes.io/cors-max-age": "200",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -202,37 +129,14 @@ var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
 
 	It("should disable cors allow credentials", func() {
 		host := "cors.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":            "true",
+			"nginx.ingress.kubernetes.io/cors-allow-credentials": "false",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/enable-cors":            "true",
-					"nginx.ingress.kubernetes.io/cors-allow-credentials": "false",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -245,37 +149,14 @@ var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
 
 	It("should allow origin for cors", func() {
 		host := "cors.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin.cors.com:8080",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/enable-cors":       "true",
-					"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin.cors.com:8080",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -288,37 +169,14 @@ var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
 
 	It("should allow headers for cors", func() {
 		host := "cors.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":        "true",
+			"nginx.ingress.kubernetes.io/cors-allow-headers": "DNT, User-Agent",
+		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      host,
-				Namespace: f.IngressController.Namespace,
-				Annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/enable-cors":        "true",
-					"nginx.ingress.kubernetes.io/cors-allow-headers": "DNT, User-Agent",
-				},
-			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
-					{
-						Host: host,
-						IngressRuleValue: v1beta1.IngressRuleValue{
-							HTTP: &v1beta1.HTTPIngressRuleValue{
-								Paths: []v1beta1.HTTPIngressPath{
-									{
-										Path: "/",
-										Backend: v1beta1.IngressBackend{
-											ServiceName: "http-svc",
-											ServicePort: intstr.FromInt(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
