@@ -21,10 +21,6 @@ import (
 	. "github.com/onsi/gomega"
 	"strings"
 
-	"k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -46,7 +42,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -64,7 +62,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -82,7 +82,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -99,7 +101,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-body-size": "8m",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -116,7 +120,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-body-size": "15r",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -135,7 +141,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-read-timeout":    "20",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -154,7 +162,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-read-timeout":    "20k",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -172,7 +182,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-buffer-size": "8k",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -189,7 +201,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-request-buffering": "off",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -207,7 +221,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-next-upstream-tries": "5",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -225,7 +241,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-cookie-path":   "/one/ /",
 		}
 
-		ing, err := ensureIngress(f, host, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -237,35 +255,3 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 	})
 
 })
-
-func ensureIngress(f *framework.Framework, host string, annotations map[string]string) (*v1beta1.Ingress, error) {
-	ing, err := f.EnsureIngress(&v1beta1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        host,
-			Namespace:   f.IngressController.Namespace,
-			Annotations: annotations,
-		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
-				{
-					Host: host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
-								{
-									Path: "/",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: "http-svc",
-										ServicePort: intstr.FromInt(80),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	})
-
-	return ing, err
-}

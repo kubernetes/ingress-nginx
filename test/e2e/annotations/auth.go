@@ -49,9 +49,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 200 when no authentication is configured", func() {
 		host := "auth"
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		_, err := f.EnsureIngress(ing)
+
 		Expect(err).NotTo(HaveOccurred())
-		Expect(bi).NotTo(BeNil())
+		Expect(ing).NotTo(BeNil())
 
 		err = f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -73,16 +75,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 	It("should return status code 503 when authentication is configured with an invalid secret", func() {
 		host := "auth"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-type":   "basic",
+			"nginx.ingress.kubernetes.io/auth-secret": "something",
+			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
+		}
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(bi).NotTo(BeNil())
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err := f.EnsureIngress(ing)
 
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = "something"
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
-
-		ing, err := f.EnsureIngress(bi)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -112,15 +113,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(bi).NotTo(BeNil())
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-type":   "basic",
+			"nginx.ingress.kubernetes.io/auth-secret": s.Name,
+			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
+		}
 
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = s.Name
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err = f.EnsureIngress(ing)
 
-		ing, err := f.EnsureIngress(bi)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -150,15 +151,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(bi).NotTo(BeNil())
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-type":   "basic",
+			"nginx.ingress.kubernetes.io/auth-secret": s.Name,
+			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
+		}
 
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = s.Name
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err = f.EnsureIngress(ing)
 
-		ing, err := f.EnsureIngress(bi)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -189,15 +190,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(bi).NotTo(BeNil())
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-type":   "basic",
+			"nginx.ingress.kubernetes.io/auth-secret": s.Name,
+			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
+		}
 
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = s.Name
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err = f.EnsureIngress(ing)
 
-		ing, err := f.EnsureIngress(bi)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -239,15 +240,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		Expect(s).NotTo(BeNil())
 		Expect(s.ObjectMeta).NotTo(BeNil())
 
-		bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(bi).NotTo(BeNil())
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-type":   "basic",
+			"nginx.ingress.kubernetes.io/auth-secret": s.Name,
+			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
+		}
 
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-type"] = "basic"
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-secret"] = s.Name
-		bi.Annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		_, err = f.EnsureIngress(ing)
 
-		ing, err := f.EnsureIngress(bi)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ing).NotTo(BeNil())
 
@@ -293,12 +294,16 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			bi, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{
+			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
 				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
-			}))
+			}
+
+			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+			_, err = f.EnsureIngress(ing)
+
 			Expect(err).NotTo(HaveOccurred())
-			Expect(bi).NotTo(BeNil())
+			Expect(ing).NotTo(BeNil())
 
 			err = f.WaitForNginxServer(host, func(server string) bool {
 				return Expect(server).ShouldNot(ContainSubstring("return 503"))
