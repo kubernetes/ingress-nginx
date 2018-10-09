@@ -73,7 +73,7 @@ data:
   enable-opentracing: "true"
   zipkin-collector-host: zipkin.default.svc.cluster.local
 metadata:
-  name: nginx-load-balancer-conf
+  name: nginx-configuration
   namespace: kube-system
 ' | kubectl replace -f -
 ```
@@ -129,7 +129,7 @@ In the zipkin interface we can see the details:
         zipkin-collector-host: zipkin.default.svc.cluster.local
         jaeger-collector-host: jaeger-collector.default.svc.cluster.local
       metadata:
-        name: nginx-load-balancer-conf
+        name: nginx-configuration
         namespace: kube-system
       ' | kubectl replace -f -
     ```
