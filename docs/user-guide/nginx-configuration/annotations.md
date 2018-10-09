@@ -47,9 +47,9 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-path](#proxy-cookie-path)|string|
-|[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
-|[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
-|[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
+|[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|string|
+|[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|string|
+|[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|string|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream-tries](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
