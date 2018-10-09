@@ -120,7 +120,7 @@ var (
 			}
 			return true
 		},
-		"escapeLocationPathVar":      escapeLocationPathVar,
+		"escapeLiteralDollar":        escapeLiteralDollar,
 		"shouldConfigureLuaRestyWAF": shouldConfigureLuaRestyWAF,
 		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
 		"buildLocation":              buildLocation,
@@ -162,13 +162,13 @@ var (
 	}
 )
 
-// escapeLocationPathVar will replace the $ character with ${literal_dollar}
+// escapeLiteralDollar will replace the $ character with ${literal_dollar}
 // which is made to work via the following configuration in the http section of
 // the template:
 // geo $literal_dollar {
 //     default "$";
 // }
-func escapeLocationPathVar(input interface{}) string {
+func escapeLiteralDollar(input interface{}) string {
 	inputStr, ok := input.(string)
 	if !ok {
 		return ""
