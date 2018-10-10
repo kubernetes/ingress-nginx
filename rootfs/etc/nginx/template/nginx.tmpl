@@ -109,10 +109,8 @@ http {
 
     init_worker_by_lua_block {
         defer_to_timer.init_worker()
-        {{ if $all.DynamicConfigurationEnabled }}
         balancer.init_worker()
         monitor.init_worker()
-        {{ end }}
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
