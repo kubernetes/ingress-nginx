@@ -46,11 +46,10 @@ events {
 }
 
 http {
-    {{ if not $all.DisableLua }}
     lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;";
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
 
-    {{ buildLuaSharedDictionaries $servers $all.DynamicConfigurationEnabled $all.Cfg.DisableLuaRestyWAF }}
+    {{ buildLuaSharedDictionaries $servers $all.Cfg.DisableLuaRestyWAF }}
 
     init_by_lua_block {
         require("resty.core")
@@ -59,7 +58,6 @@ http {
         local lua_resty_waf = require("resty.waf")
         lua_resty_waf.init()
 
-        {{ if $all.DynamicConfigurationEnabled }}
         -- init modules
         local ok, res
 
@@ -77,7 +75,6 @@ http {
         else
           balancer = res
         end
-        {{ end }}
 
         ok, res = pcall(require, "monitor")
         if not ok then
@@ -96,13 +93,10 @@ http {
         {{ end }}
     }
 
-    {{ if $all.DynamicConfigurationEnabled }}
     init_worker_by_lua_block {
         balancer.init_worker()
         monitor.init_worker()
     }
-    {{ end }}
-    {{ end }}
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
@@ -413,35 +407,6 @@ http {
     {{ $cfg.HTTPSnippet }}
     {{ end }}
 
-    {{ if not $all.DynamicConfigurationEnabled }}
-    {{ range  $upstream := $backends }}
-    {{ if eq $upstream.SessionAffinity.AffinityType "cookie" }}
-    upstream sticky-{{ $upstream.Name }} {
-        sticky hash={{ $upstream.SessionAffinity.CookieSessionAffinity.Hash }} name={{ $upstream.SessionAffinity.CookieSessionAffinity.Name }}{{if eq (len $upstream.SessionAffinity.CookieSessionAffinity.Locations) 1 }}{{ range $locationName, $locationPaths := $upstream.SessionAffinity.CookieSessionAffinity.Locations }}{{ if eq (len $locationPaths) 1 }} path={{ index $locationPaths 0 }}{{ end }}{{ end }}{{ end }} httponly;
-
-        {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
-        keepalive {{ $cfg.UpstreamKeepaliveConnections }};
-        {{ end }}
-
-        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }};
-        {{ end }}
-    }
-    {{ end }}
-
-    upstream {{ $upstream.Name }} {
-        {{ buildLoadBalancingConfig $upstream $cfg.LoadBalanceAlgorithm }}
-
-        {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
-        keepalive {{ $cfg.UpstreamKeepaliveConnections }};
-        {{ end }}
-
-        {{ range $server := $upstream.Endpoints }}server {{ $server.Address | formatIP }}:{{ $server.Port }};
-        {{ end }}
-    }
-    {{ end }}
-    {{ end }}
-
-    {{ if $all.DynamicConfigurationEnabled }}
     upstream upstream_balancer {
         server 0.0.0.1; # placeholder
 
@@ -453,7 +418,6 @@ http {
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
         {{ end }}
     }
-    {{ end }}
 
     {{/* build the maps that will be use to validate the Whitelist */}}
     {{ range $server := $servers }}
@@ -625,7 +589,7 @@ http {
             access_log off;
             return 200;
         }
-        {{ if not $all.DisableLua }}
+
         location /is-dynamic-lb-initialized {
             {{ if $cfg.EnableOpentracing }}
             opentracing off;
@@ -644,7 +608,7 @@ http {
                 ngx.exit(ngx.HTTP_OK)
             }
         }
-        {{ end }}
+
         location /nginx_status {
             set $proxy_upstream_name "internal";
             {{ if $cfg.EnableOpentracing }}
@@ -654,7 +618,7 @@ http {
             access_log off;
             stub_status on;
         }
-        {{ if $all.DynamicConfigurationEnabled }}
+
         location /configuration {
             access_log off;
             {{ if $cfg.EnableOpentracing }}
@@ -675,18 +639,15 @@ http {
               configuration.call()
             }
         }
-        {{ end }}
+
         location / {
             {{ if .CustomErrors }}
             proxy_set_header    X-Code 404;
             {{ end }}
             set $proxy_upstream_name "upstream-default-backend";
             proxy_set_header    Host   $best_http_host;
-            {{ if $all.DynamicConfigurationEnabled }}
+
             proxy_pass          http://upstream_balancer;
-            {{ else }}
-            proxy_pass          http://upstream-default-backend;
-            {{ end }}
         }
 
         {{ template "CUSTOM_ERRORS" $all }}
@@ -707,9 +668,7 @@ stream {
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
-        {{ $dynamicConfig := .DynamicConfigurationEnabled}}
         {{ $proxySetHeaders := .ProxySetHeaders }}
-        {{ $isLuaDisabled := .DisableLua }}
         {{ range $errCode := .Cfg.CustomHTTPErrors }}
         location @custom_{{ $errCode }} {
             internal;
@@ -729,16 +688,10 @@ stream {
 
             rewrite                (.*) / break;
 
-            {{ if $dynamicConfig }}
             proxy_pass            http://upstream_balancer;
-            {{ else }}
-            proxy_pass            http://upstream-default-backend;
-            {{ end }}
-            {{ if not $isLuaDisabled }}
             log_by_lua_block {
                 monitor.call()
             }
-            {{ end }}
         }
         {{ end }}
 {{ end }}
@@ -808,7 +761,7 @@ stream {
         ssl_stapling_verify                     on;
         {{ end }}
 
-        {{ if and (not $all.DisableLua) $all.DynamicCertificatesEnabled}}
+        {{ if $all.DynamicCertificatesEnabled}}
         ssl_certificate_by_lua_block {
             certificate.call()
         }
@@ -857,7 +810,7 @@ stream {
             # ngx_auth_request module overrides variables in the parent request,
             # therefore we have to explicitly set this variable again so that when the parent request
             # resumes it has the correct value set for this variable so that Lua can pick backend correctly
-            set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}";
+            set $proxy_upstream_name "{{ buildUpstreamName $location }}";
 
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
@@ -925,11 +878,8 @@ stream {
             opentracing_propagate_context;
             {{ end }}
 
-            {{ if not $all.DisableLua }}
             rewrite_by_lua_block {
-                {{ if $all.DynamicConfigurationEnabled}}
                 balancer.rewrite()
-                {{ end }}
             }
             {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
             access_by_lua_block {
@@ -970,17 +920,14 @@ stream {
                 local waf = lua_resty_waf:new()
                 waf:exec()
             }
-            {{ end }}
+
             log_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require "resty.waf"
                 local waf = lua_resty_waf:new()
                 waf:exec()
                 {{ end }}
-                {{ if $all.DynamicConfigurationEnabled}}
                 balancer.log()
-                {{ end }}
-
                 monitor.call()
             }
             {{ end }}
@@ -1002,7 +949,7 @@ stream {
 
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
-            set $proxy_upstream_name "{{ buildUpstreamName $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}";
+            set $proxy_upstream_name "{{ buildUpstreamName $location }}";
 
             {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCert.PemFileName)) $location.Rewrite.SSLRedirect)) }}
@@ -1182,7 +1129,7 @@ stream {
             {{ end }}
 
             {{ if not (empty $location.Backend) }}
-            {{ buildProxyPass $server.Hostname $all.Backends $location $all.DynamicConfigurationEnabled }}
+            {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
             {{ else if not (eq $location.Proxy.ProxyRedirectTo "off") }}

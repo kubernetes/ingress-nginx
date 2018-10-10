@@ -110,7 +110,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 		By("skipping Nginx reload")
 		Expect(restOfLogs).ToNot(ContainSubstring(logRequireBackendReload))
 		Expect(restOfLogs).ToNot(ContainSubstring(logBackendReloadSuccess))
-		Expect(restOfLogs).To(ContainSubstring(logSkipBackendReload))
 	})
 
 	Context("given an ingress with TLS correctly configured", func() {
@@ -181,7 +180,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 			By("skipping Nginx reload")
 			Expect(restOfLogs).ToNot(ContainSubstring(logRequireBackendReload))
 			Expect(restOfLogs).ToNot(ContainSubstring(logBackendReloadSuccess))
-			Expect(restOfLogs).To(ContainSubstring(logSkipBackendReload))
 		})
 
 		It("falls back to using default certificate when secret gets deleted without reloading", func() {
@@ -217,7 +215,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 			By("skipping Nginx reload")
 			Expect(restOfLogs).ToNot(ContainSubstring(logRequireBackendReload))
 			Expect(restOfLogs).ToNot(ContainSubstring(logBackendReloadSuccess))
-			Expect(restOfLogs).To(ContainSubstring(logSkipBackendReload))
 		})
 
 		It("picks up a non-certificate only change", func() {
