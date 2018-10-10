@@ -22,7 +22,6 @@ set -o pipefail
 export NGINX_VERSION=1.15.5
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
-export STICKY_SESSIONS_VERSION=08a395c66e42
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
@@ -33,10 +32,10 @@ export JAEGER_VERSION=ba0fa3fa6dbb01995d996f988a897e272100bf95
 export MODSECURITY_VERSION=37b76e88df4bce8a9846345c27271d7e6ce1acfb
 export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
 export LUA_UPSTREAM_VERSION=0.07
-export COOKIE_FLAG_VERSION=1.1.0
 export NGINX_INFLUXDB_VERSION=f20cfb2458c338f162132f5a21eb021e2cbe6383
 export GEOIP2_VERSION=3.0
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
+export LUAJIT_VERSION=8e35a1932250b0313c06393061f332c760efdf40
 
 export BUILD_PATH=/tmp/build
 
@@ -117,14 +116,6 @@ if [[ ${ARCH} == "ppc64le" ]]; then
   ln -s /usr/lib/powerpc64le-linux-gnu /usr/lib/lua-platform-path
 fi
 
-if [[ ${ARCH} == "s390x" ]]; then
-  ln -s /usr/lib/s390x-linux-gnu/liblua5.1.so /usr/lib/liblua.so
-  ln -s /usr/lib/s390x-linux-gnu /usr/lib/lua-platform-path
-  # avoid error:
-  # git: ../nptl/pthread_mutex_lock.c:81: __pthread_mutex_lock: Assertion `mutex->__data.__owner == 0' failed.
-  git config --global pack.threads "1"
-fi
-
 mkdir -p /etc/nginx
 
 # Get the GeoIP data
@@ -157,9 +148,6 @@ get_src f1ad2459c4ee6a61771aa84f77871f4bfe42943a4aa4c30c62ba3f981f52c201 \
 get_src a3dcbab117a9c103bc1ea5200fc00a7b7d2af97ff7fd525f16f8ac2632e30fbf \
         "https://github.com/openresty/headers-more-nginx-module/archive/v$MORE_HEADERS_VERSION.tar.gz"
 
-get_src 53e440737ed1aff1f09fae150219a45f16add0c8d6e84546cb7d80f73ebffd90 \
-        "https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/get/$STICKY_SESSIONS_VERSION.tar.gz"
-
 get_src ede0ad490cb9dd69da348bdea2a60a4c45284c9777b2f13fa48394b6b8e7671c \
         "https://github.com/atomx/nginx-http-auth-digest/archive/$NGINX_DIGEST_AUTH.tar.gz"
 
@@ -180,9 +168,6 @@ get_src fe7d3188e097d68f1942d46c4adba262d9ddcf433409ebc15bb5355bfb001a4a \
 
 get_src b68286966f292fb552511b71bd8bc11af8f12c8aa760372d1437ac8760cb2f25 \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/$JAEGER_VERSION.tar.gz"
-
-get_src 9915ad1cf0734cc5b357b0d9ea92fec94764b4bf22f4dce185cbd65feda30ec1 \
-        "https://github.com/AirisX/nginx_cookie_flag_module/archive/v$COOKIE_FLAG_VERSION.tar.gz"
 
 get_src 027a1f1ddb35164c720451869fc5ea9095abaf70af02a1b17f59e0772c0cfec0 \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
@@ -217,8 +202,8 @@ get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 76d8638a350a0484b3d6658e329ba38bb831d407eaa6dce2a084a27a22063133 \
-        "https://github.com/openresty/luajit2/archive/v2.1-20180420.tar.gz"
+get_src 5a4485be0031d285f2bdf59afb1f7b8f3cef4c476595ed66f1258206e1b5c3ac \
+        "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 
 get_src 1897d7677d99c1cedeb95b2eb00652a4a7e8e604304c3053a93bd3ba7dd82884 \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
@@ -236,52 +221,53 @@ export MAKEFLAGS=-j${CORES}
 export CTEST_BUILD_FLAGS=${MAKEFLAGS}
 export HUNTER_JOBS_NUMBER=${CORES}
 
-# Installing luarocks packages
-if [[ ${ARCH} == "x86_64" ]]; then
-  luarocks install lrexlib-pcre 2.7.2-1
-fi
+export LUAJIT_LIB=/usr/local/lib
 
-# luajit is not available on ppc64le and s390x
-if [[ (${ARCH} != "ppc64le") && (${ARCH} != "s390x") ]]; then
-  cd "$BUILD_PATH/luajit2-2.1-20180420"
+# luajit is available only as deb package on ppc64le
+if [[ (${ARCH} == "ppc64le") ]]; then
+  clean-install luajit
+else
+  cd "$BUILD_PATH/luajit2-$LUAJIT_VERSION"
   make CCDEBUG=-g
   make install
 
-  export LUAJIT_LIB=/usr/local/lib
   export LUAJIT_INC=/usr/local/include/luajit-2.1
   export LUA_LIB_DIR="$LUAJIT_LIB/lua"
-
-  cd "$BUILD_PATH/lua-resty-core-0.1.15"
-  make install
-
-  cd "$BUILD_PATH/lua-resty-lrucache-0.08"
-  make install
-
-  cd "$BUILD_PATH/lua-resty-lock-0.07"
-  make install
-
-  cd "$BUILD_PATH/lua-resty-iputils-0.3.0"
-  make install
-
-  cd "$BUILD_PATH/lua-resty-upload-0.10"
-  make install
-
-  cd "$BUILD_PATH/lua-resty-dns-0.21"
-  make install
-
-  cd "$BUILD_PATH/lua-resty-string-0.11"
-  make install
-
-  cd "$BUILD_PATH/lua-resty-balancer-0.02rc4"
-  make all
-  make install
-
-  cd "$BUILD_PATH/lua-resty-cookie-0.1.0"
-  make install
-
-  # build and install lua-resty-waf with dependencies
-  /install_lua_resty_waf.sh
 fi
+
+# Installing luarocks packages
+luarocks install lrexlib-pcre 2.7.2-1
+
+cd "$BUILD_PATH/lua-resty-core-0.1.15"
+make install
+
+cd "$BUILD_PATH/lua-resty-lrucache-0.08"
+make install
+
+cd "$BUILD_PATH/lua-resty-lock-0.07"
+make install
+
+cd "$BUILD_PATH/lua-resty-iputils-0.3.0"
+make install
+
+cd "$BUILD_PATH/lua-resty-upload-0.10"
+make install
+
+cd "$BUILD_PATH/lua-resty-dns-0.21"
+make install
+
+cd "$BUILD_PATH/lua-resty-string-0.11"
+make install
+
+cd "$BUILD_PATH/lua-resty-balancer-0.02rc4"
+make all
+make install
+
+cd "$BUILD_PATH/lua-resty-cookie-0.1.0"
+make install
+
+# build and install lua-resty-waf with dependencies
+/install_lua_resty_waf.sh
 
 # install openresty-gdb-utils
 cd /
@@ -488,12 +474,10 @@ fi
 WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/set-misc-nginx-module-$SETMISC_VERSION \
   --add-module=$BUILD_PATH/headers-more-nginx-module-$MORE_HEADERS_VERSION \
-  --add-module=$BUILD_PATH/nginx-goodies-nginx-sticky-module-ng-$STICKY_SESSIONS_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
   --add-module=$BUILD_PATH/lua-nginx-module-$LUA_NGX_VERSION \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION \
-  --add-module=$BUILD_PATH/nginx_cookie_flag_module-$COOKIE_FLAG_VERSION \
   --add-module=$BUILD_PATH/nginx-influxdb-module-$NGINX_INFLUXDB_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
@@ -525,7 +509,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --user=www-data \
   --group=www-data \
   ${WITH_MODULES}
-  
+
 make || exit 1
 make install || exit 1
 
