@@ -39,7 +39,6 @@ const (
 	logDynamicConfigFailure = "Dynamic reconfiguration failed"
 	logRequireBackendReload = "Configuration changes detected, backend reload required"
 	logBackendReloadSuccess = "Backend successfully reloaded"
-	logSkipBackendReload    = "Changes handled by the dynamic configuration, skipping backend reload"
 	logInitialConfigSync    = "Initial synchronization of the NGINX configuration"
 	waitForLuaSync          = 5 * time.Second
 )
