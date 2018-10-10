@@ -25,16 +25,16 @@ Next you will need to deploy a distributed tracing system which uses OpenTracing
 
 Other optional configuration options:
 ```
-# specifies the port to use when uploading traces
+# specifies the port to use when uploading traces, Default: 9411
 zipkin-collector-port
 
 # specifies the service name to use for any traces created, Default: nginx
 zipkin-service-name
 
-# specifies sample rate for any traces created. Default: 1.0
+# specifies sample rate for any traces created, Default: 1.0
 zipkin-sample-rate
 
-# specifies the port to use when uploading traces
+# specifies the port to use when uploading traces, Default: 6831
 jaeger-collector-port
 
 # specifies the service name to use for any traces created, Default: nginx
@@ -97,10 +97,10 @@ In the zipkin interface we can see the details:
     ```
     # Create Echoheaders Deployment
     $ kubectl run echoheaders --image=k8s.gcr.io/echoserver:1.4 --replicas=1 --port=8080
-    
+
     # Expose as a Cluster-IP
     $ kubectl expose deployment echoheaders --port=80 --target-port=8080 --name=echoheaders-x
-    
+
     # Apply the Ingress Resource
     $ echo '
       apiVersion: extensions/v1beta1
@@ -119,14 +119,13 @@ In the zipkin interface we can see the details:
       ' | kubectl apply -f -
     ```
 
-4. Enable OpenTracing and set the zipkin-collector-host:
+4. Enable OpenTracing and set the jaeger-collector-host:
     ```
     $ echo '
       apiVersion: v1
       kind: ConfigMap
       data:
         enable-opentracing: "true"
-        zipkin-collector-host: zipkin.default.svc.cluster.local
         jaeger-collector-host: jaeger-collector.default.svc.cluster.local
       metadata:
         name: nginx-configuration
@@ -142,7 +141,7 @@ In the zipkin interface we can see the details:
 6. Make a few requests to the Service:
     ```
     $ curl example.com/echo -d "meow"
-    
+
     CLIENT VALUES:
     client_address=172.17.0.5
     command=POST
@@ -150,10 +149,10 @@ In the zipkin interface we can see the details:
     query=nil
     request_version=1.1
     request_uri=http://example.com:8080/echo
-    
+
     SERVER VALUES:
     server_version=nginx: 1.10.0 - lua: 10001
-    
+
     HEADERS RECEIVED:
     accept=*/*
     connection=close
@@ -175,9 +174,9 @@ In the zipkin interface we can see the details:
 7. View the Jaeger UI:
     ```
     $ minikube service jaeger-query --url
-    
+
     http://192.168.99.100:30183
     ```
-    
+
     In the jaeger interface we can see the details:
     ![jaeger screenshot](../../images/jaeger-demo.png "jaeger collector screenshot")
