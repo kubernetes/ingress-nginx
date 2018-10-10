@@ -437,7 +437,7 @@ type Configuration struct {
 	ProxyAddOriginalUriHeader bool `json:"proxy-add-original-uri-header"`
 
 	// EnableOpentracing enables the nginx Opentracing extension
-	// https://github.com/rnburn/nginx-opentracing
+	// https://github.com/opentracing-contrib/nginx-opentracing
 	// By default this is disabled
 	EnableOpentracing bool `json:"enable-opentracing"`
 
@@ -445,6 +445,7 @@ type Configuration struct {
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
 
 	// ZipkinCollectorPort specifies the port to use when uploading traces
+	// Default: 9411
 	ZipkinCollectorPort int `json:"zipkin-collector-port"`
 
 	// ZipkinServiceName specifies the service name to use for any traces created
@@ -459,6 +460,7 @@ type Configuration struct {
 	JaegerCollectorHost string `json:"jaeger-collector-host"`
 
 	// JaegerCollectorPort specifies the port to use when uploading traces
+	// Default: 6831
 	JaegerCollectorPort int `json:"jaeger-collector-port"`
 
 	// JaegerServiceName specifies the service name to use for any traces created
