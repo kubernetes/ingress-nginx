@@ -40,7 +40,7 @@ if [ "$missing" = true ];then
   exit 1
 fi
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v10042018-c8abff1
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v10102018-dcc6495
 
 DOCKER_OPTS=${DOCKER_OPTS:-""}
 
@@ -69,7 +69,6 @@ docker run                                       \
     --rm                                         \
     ${DOCKER_OPTS}                               \
     -v ${HOME}/.kube:/${HOME}/.kube              \
-    -v ${HOME}/.minikube:${HOME}/.minikube       \
     -v ${PWD}:/go/src/${PKG}                     \
     -v ${PWD}/.gocache:${HOME}/.cache/go-build   \
     -v ${PWD}/bin/${ARCH}:/go/bin/linux_${ARCH}  \
