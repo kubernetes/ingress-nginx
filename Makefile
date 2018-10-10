@@ -50,7 +50,7 @@ DUMB_ARCH = ${ARCH}
 
 GOBUILD_FLAGS :=
 
-ALL_ARCH = amd64 arm arm64 ppc64le s390x
+ALL_ARCH = amd64 arm arm64 ppc64le
 
 QEMUVERSION = v2.12.0-1
 
@@ -61,7 +61,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.64
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.65
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
