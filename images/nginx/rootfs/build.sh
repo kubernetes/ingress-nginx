@@ -236,6 +236,18 @@ else
 fi
 
 # Installing luarocks packages
+if [[ ${ARCH} == "armv7l" ]]; then
+  export PCRE_DIR=/usr/lib/armhf-linux-gnu
+fi
+
+if [[ ${ARCH} == "aarch64" ]]; then
+  export PCRE_DIR=/usr/lib/aarch64-linux-gnu
+fi
+
+if [[ ${ARCH} == "ppc64le" ]]; then
+  export PCRE_DIR=/usr/lib/powerpc64le-linux-gnu
+fi
+
 luarocks install lrexlib-pcre 2.7.2-1
 
 cd "$BUILD_PATH/lua-resty-core-0.1.15"
