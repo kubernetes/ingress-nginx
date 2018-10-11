@@ -23,6 +23,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	"k8s.io/kubernetes/pkg/features"
@@ -51,14 +52,17 @@ type schedulerCache struct {
 	period time.Duration
 
 	// This mutex guards all fields within this cache struct.
-	mu sync.Mutex
+	mu sync.RWMutex
 	// a set of assumed pod keys.
 	// The key could further be used to get an entry in podStates.
 	assumedPods map[string]bool
 	// a map from pod key to podState.
 	podStates map[string]*podState
 	nodes     map[string]*NodeInfo
+	nodeTree  *NodeTree
 	pdbs      map[string]*policy.PodDisruptionBudget
+	// A map from image name to its imageState.
+	imageStates map[string]*imageState
 }
 
 type podState struct {
@@ -69,6 +73,29 @@ type podState struct {
 	bindingFinished bool
 }
 
+type imageState struct {
+	// Size of the image
+	size int64
+	// A set of node names for nodes having this image present
+	nodes sets.String
+}
+
+// ImageStateSummary provides summarized information about the state of an image.
+type ImageStateSummary struct {
+	// Size of the image
+	Size int64
+	// Used to track how many nodes have this image
+	NumNodes int
+}
+
+// createImageStateSummary returns a summarizing snapshot of the given image's state.
+func (cache *schedulerCache) createImageStateSummary(state *imageState) *ImageStateSummary {
+	return &ImageStateSummary{
+		Size:     state.size,
+		NumNodes: len(state.nodes),
+	}
+}
+
 func newSchedulerCache(ttl, period time.Duration, stop <-chan struct{}) *schedulerCache {
 	return &schedulerCache{
 		ttl:    ttl,
@@ -76,17 +103,19 @@ func newSchedulerCache(ttl, period time.Duration, stop <-chan struct{}) *schedul
 		stop:   stop,
 
 		nodes:       make(map[string]*NodeInfo),
+		nodeTree:    newNodeTree(nil),
 		assumedPods: make(map[string]bool),
 		podStates:   make(map[string]*podState),
 		pdbs:        make(map[string]*policy.PodDisruptionBudget),
+		imageStates: make(map[string]*imageState),
 	}
 }
 
 // Snapshot takes a snapshot of the current schedulerCache. The method has performance impact,
 // and should be only used in non-critical path.
 func (cache *schedulerCache) Snapshot() *Snapshot {
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
 
 	nodes := make(map[string]*NodeInfo)
 	for k, v := range cache.nodes {
@@ -113,6 +142,7 @@ func (cache *schedulerCache) Snapshot() *Snapshot {
 func (cache *schedulerCache) UpdateNodeNameToInfoMap(nodeNameToInfo map[string]*NodeInfo) error {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
+
 	for name, info := range cache.nodes {
 		if utilfeature.DefaultFeatureGate.Enabled(features.BalanceAttachedNodeVolumes) && info.TransientInfo != nil {
 			// Transient scheduler info is reset here.
@@ -136,8 +166,8 @@ func (cache *schedulerCache) List(selector labels.Selector) ([]*v1.Pod, error) {
 }
 
 func (cache *schedulerCache) FilteredList(podFilter PodFilter, selector labels.Selector) ([]*v1.Pod, error) {
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
 	// podFilter is expected to return true for most or all of the pods. We
 	// can avoid expensive array growth without wasting too much memory by
 	// pre-allocating capacity.
@@ -188,8 +218,8 @@ func (cache *schedulerCache) finishBinding(pod *v1.Pod, now time.Time) error {
 		return err
 	}
 
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
 
 	glog.V(5).Infof("Finished binding for pod %v. Can be expired.", key)
 	currState, ok := cache.podStates[key]
@@ -317,6 +347,7 @@ func (cache *schedulerCache) UpdatePod(oldPod, newPod *v1.Pod) error {
 		if err := cache.updatePod(oldPod, newPod); err != nil {
 			return err
 		}
+		currState.pod = newPod
 	default:
 		return fmt.Errorf("pod %v is not added to scheduler cache, so cannot be updated", key)
 	}
@@ -358,8 +389,8 @@ func (cache *schedulerCache) IsAssumedPod(pod *v1.Pod) (bool, error) {
 		return false, err
 	}
 
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
 
 	b, found := cache.assumedPods[key]
 	if !found {
@@ -374,8 +405,8 @@ func (cache *schedulerCache) GetPod(pod *v1.Pod) (*v1.Pod, error) {
 		return nil, err
 	}
 
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
 
 	podState, ok := cache.podStates[key]
 	if !ok {
@@ -393,7 +424,12 @@ func (cache *schedulerCache) AddNode(node *v1.Node) error {
 	if !ok {
 		n = NewNodeInfo()
 		cache.nodes[node.Name] = n
+	} else {
+		cache.removeNodeImageStates(n.node)
 	}
+
+	cache.nodeTree.AddNode(node)
+	cache.addNodeImageStates(node, n)
 	return n.SetNode(node)
 }
 
@@ -405,7 +441,12 @@ func (cache *schedulerCache) UpdateNode(oldNode, newNode *v1.Node) error {
 	if !ok {
 		n = NewNodeInfo()
 		cache.nodes[newNode.Name] = n
+	} else {
+		cache.removeNodeImageStates(n.node)
 	}
+
+	cache.nodeTree.UpdateNode(oldNode, newNode)
+	cache.addNodeImageStates(newNode, n)
 	return n.SetNode(newNode)
 }
 
@@ -424,7 +465,61 @@ func (cache *schedulerCache) RemoveNode(node *v1.Node) error {
 	if len(n.pods) == 0 && n.node == nil {
 		delete(cache.nodes, node.Name)
 	}
+
+	cache.nodeTree.RemoveNode(node)
+	cache.removeNodeImageStates(node)
 	return nil
+}
+
+// addNodeImageStates adds states of the images on given node to the given nodeInfo and update the imageStates in
+// scheduler cache. This function assumes the lock to scheduler cache has been acquired.
+func (cache *schedulerCache) addNodeImageStates(node *v1.Node, nodeInfo *NodeInfo) {
+	newSum := make(map[string]*ImageStateSummary)
+
+	for _, image := range node.Status.Images {
+		for _, name := range image.Names {
+			// update the entry in imageStates
+			state, ok := cache.imageStates[name]
+			if !ok {
+				state = &imageState{
+					size:  image.SizeBytes,
+					nodes: sets.NewString(node.Name),
+				}
+				cache.imageStates[name] = state
+			} else {
+				state.nodes.Insert(node.Name)
+			}
+			// create the imageStateSummary for this image
+			if _, ok := newSum[name]; !ok {
+				newSum[name] = cache.createImageStateSummary(state)
+			}
+		}
+	}
+	nodeInfo.imageStates = newSum
+}
+
+// removeNodeImageStates removes the given node record from image entries having the node
+// in imageStates cache. After the removal, if any image becomes free, i.e., the image
+// is no longer available on any node, the image entry will be removed from imageStates.
+func (cache *schedulerCache) removeNodeImageStates(node *v1.Node) {
+	if node == nil {
+		return
+	}
+
+	for _, image := range node.Status.Images {
+		for _, name := range image.Names {
+			state, ok := cache.imageStates[name]
+			if ok {
+				state.nodes.Delete(node.Name)
+				if len(state.nodes) == 0 {
+					// Remove the unused image to make sure the length of
+					// imageStates represents the total number of different
+					// images on all nodes
+					delete(cache.imageStates, name)
+				}
+			}
+		}
+	}
 }
 
 func (cache *schedulerCache) AddPDB(pdb *policy.PodDisruptionBudget) error {
@@ -449,8 +544,8 @@ func (cache *schedulerCache) RemovePDB(pdb *policy.PodDisruptionBudget) error {
 }
 
 func (cache *schedulerCache) ListPDBs(selector labels.Selector) ([]*policy.PodDisruptionBudget, error) {
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
 	var pdbs []*policy.PodDisruptionBudget
 	for _, pdb := range cache.pdbs {
 		if selector.Matches(labels.Set(pdb.Labels)) {
@@ -461,8 +556,8 @@ func (cache *schedulerCache) ListPDBs(selector labels.Selector) ([]*policy.PodDi
 }
 
 func (cache *schedulerCache) IsUpToDate(n *NodeInfo) bool {
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
 	node, ok := cache.nodes[n.Node().Name]
 	return ok && n.generation == node.generation
 }
@@ -507,4 +602,8 @@ func (cache *schedulerCache) expirePod(key string, ps *podState) error {
 	delete(cache.assumedPods, key)
 	delete(cache.podStates, key)
 	return nil
+}
+
+func (cache *schedulerCache) NodeTree() *NodeTree {
+	return cache.nodeTree
 }

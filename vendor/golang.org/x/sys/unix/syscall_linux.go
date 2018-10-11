@@ -1300,6 +1300,7 @@ func Mount(source string, target string, fstype string, flags uintptr, data stri
 //sys	Adjtimex(buf *Timex) (state int, err error)
 //sys	Chdir(path string) (err error)
 //sys	Chroot(path string) (err error)
+//sys	ClockGetres(clockid int32, res *Timespec) (err error)
 //sys	ClockGettime(clockid int32, time *Timespec) (err error)
 //sys	Close(fd int) (err error)
 //sys	CopyFileRange(rfd int, roff *int64, wfd int, woff *int64, len int, flags int) (n int, err error)
@@ -1523,7 +1524,6 @@ func Faccessat(dirfd int, path string, mode uint32, flags int) (err error) {
 // Brk
 // Capget
 // Capset
-// ClockGetres
 // ClockNanosleep
 // ClockSettime
 // Clone

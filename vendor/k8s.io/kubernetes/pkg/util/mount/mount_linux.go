@@ -155,41 +155,6 @@ func (m *Mounter) doMount(mounterPath string, mountCmd string, source string, ta
 	return err
 }
 
-// GetMountRefs finds all other references to the device referenced
-// by mountPath; returns a list of paths.
-func GetMountRefs(mounter Interface, mountPath string) ([]string, error) {
-	mps, err := mounter.List()
-	if err != nil {
-		return nil, err
-	}
-	// Find the device name.
-	deviceName := ""
-	// If mountPath is symlink, need get its target path.
-	slTarget, err := filepath.EvalSymlinks(mountPath)
-	if err != nil {
-		slTarget = mountPath
-	}
-	for i := range mps {
-		if mps[i].Path == slTarget {
-			deviceName = mps[i].Device
-			break
-		}
-	}
-
-	// Find all references to the device.
-	var refs []string
-	if deviceName == "" {
-		glog.Warningf("could not determine device for path: %q", mountPath)
-	} else {
-		for i := range mps {
-			if mps[i].Device == deviceName && mps[i].Path != slTarget {
-				refs = append(refs, mps[i].Path)
-			}
-		}
-	}
-	return refs, nil
-}
-
 // detectSystemd returns true if OS runs with systemd as init. When not sure
 // (permission errors, ...), it returns false.
 // There may be different ways how to detect systemd, this one makes sure that
@@ -352,7 +317,7 @@ func (mounter *Mounter) GetDeviceNameFromMount(mountPath, pluginDir string) (str
 // the mount path reference should match the given plugin directory. In case no mount path reference
 // matches, returns the volume name taken from its given mountPath
 func getDeviceNameFromMount(mounter Interface, mountPath, pluginDir string) (string, error) {
-	refs, err := GetMountRefs(mounter, mountPath)
+	refs, err := mounter.GetMountRefs(mountPath)
 	if err != nil {
 		glog.V(4).Infof("GetMountRefs failed for mount path %q: %v", mountPath, err)
 		return "", err
@@ -452,6 +417,10 @@ func (mounter *Mounter) MakeFile(pathname string) error {
 
 func (mounter *Mounter) ExistsPath(pathname string) (bool, error) {
 	return utilfile.FileExists(pathname)
+}
+
+func (mounter *Mounter) EvalHostSymlinks(pathname string) (string, error) {
+	return filepath.EvalSymlinks(pathname)
 }
 
 // formatAndMount uses unix utils to format and mount the given disk
@@ -583,7 +552,7 @@ func (mounter *SafeFormatAndMount) GetDiskFormat(disk string) (string, error) {
 	}
 
 	if len(pttype) > 0 {
-		glog.V(4).Infof("Disk %s detected partition table type: %s", pttype)
+		glog.V(4).Infof("Disk %s detected partition table type: %s", disk, pttype)
 		// Returns a special non-empty string as filesystem type, then kubelet
 		// will not format it.
 		return "unknown data, probably partitions", nil
@@ -696,7 +665,7 @@ func findMountInfo(path, mountInfoPath string) (mountInfo, error) {
 	// point that is prefix of 'path' - that's the mount where path resides
 	var info *mountInfo
 	for i := len(infos) - 1; i >= 0; i-- {
-		if pathWithinBase(path, infos[i].mountPoint) {
+		if PathWithinBase(path, infos[i].mountPoint) {
 			info = &infos[i]
 			break
 		}
@@ -767,7 +736,7 @@ func (mounter *Mounter) PrepareSafeSubpath(subPath Subpath) (newHostPath string,
 
 // This implementation is shared between Linux and NsEnterMounter
 func safeOpenSubPath(mounter Interface, subpath Subpath) (int, error) {
-	if !pathWithinBase(subpath.Path, subpath.VolumePath) {
+	if !PathWithinBase(subpath.Path, subpath.VolumePath) {
 		return -1, fmt.Errorf("subpath %q not within volume path %q", subpath.Path, subpath.VolumePath)
 	}
 	fd, err := doSafeOpen(subpath.Path, subpath.VolumePath)
@@ -995,7 +964,7 @@ func cleanSubPath(mounter Interface, subpath Subpath) error {
 // removeEmptyDirs works backwards from endDir to baseDir and removes each directory
 // if it is empty.  It stops once it encounters a directory that has content
 func removeEmptyDirs(baseDir, endDir string) error {
-	if !pathWithinBase(endDir, baseDir) {
+	if !PathWithinBase(endDir, baseDir) {
 		return fmt.Errorf("endDir %q is not within baseDir %q", endDir, baseDir)
 	}
 
@@ -1036,6 +1005,11 @@ func (mounter *Mounter) SafeMakeDir(subdir string, base string, perm os.FileMode
 }
 
 func (mounter *Mounter) GetMountRefs(pathname string) ([]string, error) {
+	if _, err := os.Stat(pathname); os.IsNotExist(err) {
+		return []string{}, nil
+	} else if err != nil {
+		return nil, err
+	}
 	realpath, err := filepath.EvalSymlinks(pathname)
 	if err != nil {
 		return nil, err
@@ -1083,7 +1057,7 @@ func getMode(pathname string) (os.FileMode, error) {
 func doSafeMakeDir(pathname string, base string, perm os.FileMode) error {
 	glog.V(4).Infof("Creating directory %q within base %q", pathname, base)
 
-	if !pathWithinBase(pathname, base) {
+	if !PathWithinBase(pathname, base) {
 		return fmt.Errorf("path %s is outside of allowed base %s", pathname, base)
 	}
 
@@ -1110,7 +1084,7 @@ func doSafeMakeDir(pathname string, base string, perm os.FileMode) error {
 	if err != nil {
 		return fmt.Errorf("error opening directory %s: %s", existingPath, err)
 	}
-	if !pathWithinBase(fullExistingPath, base) {
+	if !PathWithinBase(fullExistingPath, base) {
 		return fmt.Errorf("path %s is outside of allowed base %s", fullExistingPath, err)
 	}
 
@@ -1272,7 +1246,7 @@ func doSafeOpen(pathname string, base string) (int, error) {
 	// sure the user cannot change already existing directories into symlinks.
 	for _, seg := range segments {
 		currentPath = filepath.Join(currentPath, seg)
-		if !pathWithinBase(currentPath, base) {
+		if !PathWithinBase(currentPath, base) {
 			return -1, fmt.Errorf("path %s is outside of allowed base %s", currentPath, base)
 		}
 
@@ -1329,7 +1303,7 @@ func searchMountPoints(hostSource, mountInfoPath string) ([]string, error) {
 	// We need search in backward order because it's possible for later mounts
 	// to overlap earlier mounts.
 	for i := len(mis) - 1; i >= 0; i-- {
-		if hostSource == mis[i].mountPoint || pathWithinBase(hostSource, mis[i].mountPoint) {
+		if hostSource == mis[i].mountPoint || PathWithinBase(hostSource, mis[i].mountPoint) {
 			// If it's a mount point or path under a mount point.
 			mountID = mis[i].id
 			rootPath = filepath.Join(mis[i].root, strings.TrimPrefix(hostSource, mis[i].mountPoint))
