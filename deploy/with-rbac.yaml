@@ -33,6 +33,8 @@ spec:
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
           securityContext:
+            # Required for authbind
+            allowPrivilegeEscalation: true
             capabilities:
               drop:
                 - ALL

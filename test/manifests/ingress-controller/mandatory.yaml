@@ -210,6 +210,8 @@ spec:
             - --annotations-prefix=nginx.ingress.kubernetes.io
             - --watch-namespace=${NAMESPACE}
           securityContext:
+            # Required for authbind
+            allowPrivilegeEscalation: true
             capabilities:
               drop:
                 - ALL
