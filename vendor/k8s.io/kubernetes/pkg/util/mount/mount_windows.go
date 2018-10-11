@@ -120,16 +120,6 @@ func (mounter *Mounter) Unmount(target string) error {
 	return nil
 }
 
-// GetMountRefs finds all other references to the device(drive) referenced
-// by mountPath; returns a list of paths.
-func GetMountRefs(mounter Interface, mountPath string) ([]string, error) {
-	refs, err := getAllParentLinks(normalizeWindowsPath(mountPath))
-	if err != nil {
-		return nil, err
-	}
-	return refs, nil
-}
-
 // List returns a list of all mounted filesystems. todo
 func (mounter *Mounter) List() ([]MountPoint, error) {
 	return []MountPoint{}, nil
@@ -176,7 +166,7 @@ func (mounter *Mounter) GetDeviceNameFromMount(mountPath, pluginDir string) (str
 // the mount path reference should match the given plugin directory. In case no mount path reference
 // matches, returns the volume name taken from its given mountPath
 func getDeviceNameFromMount(mounter Interface, mountPath, pluginDir string) (string, error) {
-	refs, err := GetMountRefs(mounter, mountPath)
+	refs, err := mounter.GetMountRefs(mountPath)
 	if err != nil {
 		glog.V(4).Infof("GetMountRefs failed for mount path %q: %v", mountPath, err)
 		return "", err
@@ -248,6 +238,11 @@ func (mounter *Mounter) ExistsPath(pathname string) (bool, error) {
 	return utilfile.FileExists(pathname)
 }
 
+// EvalHostSymlinks returns the path name after evaluating symlinks
+func (mounter *Mounter) EvalHostSymlinks(pathname string) (string, error) {
+	return filepath.EvalSymlinks(pathname)
+}
+
 // check whether hostPath is within volume path
 // this func will lock all intermediate subpath directories, need to close handle outside of this func after container started
 func lockAndCheckSubPath(volumePath, hostPath string) ([]uintptr, error) {
@@ -314,7 +309,7 @@ func lockAndCheckSubPathWithoutSymlink(volumePath, subPath string) ([]uintptr, e
 			break
 		}
 
-		if !pathWithinBase(currentFullPath, volumePath) {
+		if !PathWithinBase(currentFullPath, volumePath) {
 			errorResult = fmt.Errorf("SubPath %q not within volume path %q", currentFullPath, volumePath)
 			break
 		}
@@ -463,12 +458,14 @@ func getAllParentLinks(path string) ([]string, error) {
 	return links, nil
 }
 
+// GetMountRefs : empty implementation here since there is no place to query all mount points on Windows
 func (mounter *Mounter) GetMountRefs(pathname string) ([]string, error) {
-	realpath, err := filepath.EvalSymlinks(pathname)
-	if err != nil {
+	if _, err := os.Stat(normalizeWindowsPath(pathname)); os.IsNotExist(err) {
+		return []string{}, nil
+	} else if err != nil {
 		return nil, err
 	}
-	return getMountRefsByDev(mounter, realpath)
+	return []string{pathname}, nil
 }
 
 // Note that on windows, it always returns 0. We actually don't set FSGroup on
@@ -504,7 +501,7 @@ func (mounter *Mounter) SafeMakeDir(subdir string, base string, perm os.FileMode
 func doSafeMakeDir(pathname string, base string, perm os.FileMode) error {
 	glog.V(4).Infof("Creating directory %q within base %q", pathname, base)
 
-	if !pathWithinBase(pathname, base) {
+	if !PathWithinBase(pathname, base) {
 		return fmt.Errorf("path %s is outside of allowed base %s", pathname, base)
 	}
 
@@ -539,7 +536,7 @@ func doSafeMakeDir(pathname string, base string, perm os.FileMode) error {
 	if err != nil {
 		return fmt.Errorf("cannot read link %s: %s", base, err)
 	}
-	if !pathWithinBase(fullExistingPath, fullBasePath) {
+	if !PathWithinBase(fullExistingPath, fullBasePath) {
 		return fmt.Errorf("path %s is outside of allowed base %s", fullExistingPath, err)
 	}
 

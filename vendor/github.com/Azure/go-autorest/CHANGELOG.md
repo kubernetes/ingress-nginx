@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v10.15.5
+
+### Bug Fixes
+
+- In `DoRetryForStatusCodes`, if a request's context is cancelled return the last response.
+
 ## v10.15.4
 
 ### Bug Fixes

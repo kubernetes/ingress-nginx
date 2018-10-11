@@ -35,10 +35,12 @@ import (
 	authorizationapiv1beta1 "k8s.io/api/authorization/v1beta1"
 	autoscalingapiv1 "k8s.io/api/autoscaling/v1"
 	autoscalingapiv2beta1 "k8s.io/api/autoscaling/v2beta1"
+	autoscalingapiv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	batchapiv1 "k8s.io/api/batch/v1"
 	batchapiv1beta1 "k8s.io/api/batch/v1beta1"
 	batchapiv2alpha1 "k8s.io/api/batch/v2alpha1"
 	certificatesapiv1beta1 "k8s.io/api/certificates/v1beta1"
+	coordinationapiv1beta1 "k8s.io/api/coordination/v1beta1"
 	apiv1 "k8s.io/api/core/v1"
 	eventsv1beta1 "k8s.io/api/events/v1beta1"
 	extensionsapiv1beta1 "k8s.io/api/extensions/v1beta1"
@@ -65,11 +67,11 @@ import (
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	api "k8s.io/kubernetes/pkg/apis/core"
 	coreclient "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/internalversion"
+	internalinformers "k8s.io/kubernetes/pkg/client/informers/informers_generated/internalversion"
 	kubeoptions "k8s.io/kubernetes/pkg/kubeapiserver/options"
 	kubeletclient "k8s.io/kubernetes/pkg/kubelet/client"
 	"k8s.io/kubernetes/pkg/master/reconcilers"
 	"k8s.io/kubernetes/pkg/master/tunneler"
-	"k8s.io/kubernetes/pkg/registry/core/endpoint"
 	endpointsstorage "k8s.io/kubernetes/pkg/registry/core/endpoint/storage"
 	"k8s.io/kubernetes/pkg/routes"
 	"k8s.io/kubernetes/pkg/serviceaccount"
@@ -86,6 +88,7 @@ import (
 	autoscalingrest "k8s.io/kubernetes/pkg/registry/autoscaling/rest"
 	batchrest "k8s.io/kubernetes/pkg/registry/batch/rest"
 	certificatesrest "k8s.io/kubernetes/pkg/registry/certificates/rest"
+	coordinationrest "k8s.io/kubernetes/pkg/registry/coordination/rest"
 	corerest "k8s.io/kubernetes/pkg/registry/core/rest"
 	eventsrest "k8s.io/kubernetes/pkg/registry/events/rest"
 	extensionsrest "k8s.io/kubernetes/pkg/registry/extensions/rest"
@@ -163,8 +166,12 @@ type ExtraConfig struct {
 	// Selects which reconciler to use
 	EndpointReconcilerType reconcilers.Type
 
-	ServiceAccountIssuer       serviceaccount.TokenGenerator
-	ServiceAccountAPIAudiences []string
+	ServiceAccountIssuer        serviceaccount.TokenGenerator
+	ServiceAccountAPIAudiences  []string
+	ServiceAccountMaxExpiration time.Duration
+
+	VersionedInformers informers.SharedInformerFactory
+	InternalInformers  internalinformers.SharedInformerFactory
 }
 
 type Config struct {
@@ -225,9 +232,8 @@ func (c *Config) createLeaseReconciler() reconcilers.EndpointReconciler {
 		DeleteCollectionWorkers: 0,
 		ResourcePrefix:          c.ExtraConfig.StorageFactory.ResourcePrefix(api.Resource("endpoints")),
 	})
-	endpointRegistry := endpoint.NewRegistry(endpointsStorage)
 	masterLeases := reconcilers.NewLeases(leaseStorage, "/masterleases/", ttl)
-	return reconcilers.NewLeaseEndpointReconciler(endpointRegistry, masterLeases)
+	return reconcilers.NewLeaseEndpointReconciler(endpointsStorage.Store, masterLeases)
 }
 
 func (c *Config) createEndpointReconciler() reconcilers.EndpointReconciler {
@@ -247,9 +253,9 @@ func (c *Config) createEndpointReconciler() reconcilers.EndpointReconciler {
 }
 
 // Complete fills in any fields not set that are required to have valid data. It's mutating the receiver.
-func (cfg *Config) Complete(informers informers.SharedInformerFactory) CompletedConfig {
+func (cfg *Config) Complete() CompletedConfig {
 	c := completedConfig{
-		cfg.GenericConfig.Complete(informers),
+		cfg.GenericConfig.Complete(cfg.ExtraConfig.VersionedInformers),
 		&cfg.ExtraConfig,
 	}
 
@@ -318,15 +324,16 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 	// install legacy rest storage
 	if c.ExtraConfig.APIResourceConfigSource.VersionEnabled(apiv1.SchemeGroupVersion) {
 		legacyRESTStorageProvider := corerest.LegacyRESTStorageProvider{
-			StorageFactory:             c.ExtraConfig.StorageFactory,
-			ProxyTransport:             c.ExtraConfig.ProxyTransport,
-			KubeletClientConfig:        c.ExtraConfig.KubeletClientConfig,
-			EventTTL:                   c.ExtraConfig.EventTTL,
-			ServiceIPRange:             c.ExtraConfig.ServiceIPRange,
-			ServiceNodePortRange:       c.ExtraConfig.ServiceNodePortRange,
-			LoopbackClientConfig:       c.GenericConfig.LoopbackClientConfig,
-			ServiceAccountIssuer:       c.ExtraConfig.ServiceAccountIssuer,
-			ServiceAccountAPIAudiences: c.ExtraConfig.ServiceAccountAPIAudiences,
+			StorageFactory:              c.ExtraConfig.StorageFactory,
+			ProxyTransport:              c.ExtraConfig.ProxyTransport,
+			KubeletClientConfig:         c.ExtraConfig.KubeletClientConfig,
+			EventTTL:                    c.ExtraConfig.EventTTL,
+			ServiceIPRange:              c.ExtraConfig.ServiceIPRange,
+			ServiceNodePortRange:        c.ExtraConfig.ServiceNodePortRange,
+			LoopbackClientConfig:        c.GenericConfig.LoopbackClientConfig,
+			ServiceAccountIssuer:        c.ExtraConfig.ServiceAccountIssuer,
+			ServiceAccountAPIAudiences:  c.ExtraConfig.ServiceAccountAPIAudiences,
+			ServiceAccountMaxExpiration: c.ExtraConfig.ServiceAccountMaxExpiration,
 		}
 		m.InstallLegacyAPI(&c, c.GenericConfig.RESTOptionsGetter, legacyRESTStorageProvider)
 	}
@@ -344,6 +351,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		autoscalingrest.RESTStorageProvider{},
 		batchrest.RESTStorageProvider{},
 		certificatesrest.RESTStorageProvider{},
+		coordinationrest.RESTStorageProvider{},
 		extensionsrest.RESTStorageProvider{},
 		networkingrest.RESTStorageProvider{},
 		policyrest.RESTStorageProvider{},
@@ -364,6 +372,12 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 	}
 
 	m.GenericAPIServer.AddPostStartHookOrDie("ca-registration", c.ExtraConfig.ClientCARegistrationHook.PostStartHook)
+	m.GenericAPIServer.AddPostStartHookOrDie("start-kube-apiserver-informers", func(context genericapiserver.PostStartHookContext) error {
+		if c.ExtraConfig.InternalInformers != nil {
+			c.ExtraConfig.InternalInformers.Start(context.StopCh)
+		}
+		return nil
+	})
 
 	return m, nil
 }
@@ -474,9 +488,11 @@ func DefaultAPIResourceConfigSource() *serverstorage.ResourceConfig {
 		authorizationapiv1beta1.SchemeGroupVersion,
 		autoscalingapiv1.SchemeGroupVersion,
 		autoscalingapiv2beta1.SchemeGroupVersion,
+		autoscalingapiv2beta2.SchemeGroupVersion,
 		batchapiv1.SchemeGroupVersion,
 		batchapiv1beta1.SchemeGroupVersion,
 		certificatesapiv1beta1.SchemeGroupVersion,
+		coordinationapiv1beta1.SchemeGroupVersion,
 		eventsv1beta1.SchemeGroupVersion,
 		extensionsapiv1beta1.SchemeGroupVersion,
 		networkingapiv1.SchemeGroupVersion,

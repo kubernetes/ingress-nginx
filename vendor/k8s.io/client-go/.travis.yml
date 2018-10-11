@@ -3,6 +3,6 @@ language: go
 go_import_path: k8s.io/client-go
 
 go:
-  - 1.8.1
+  - 1.10.2
 
 script: go build ./...

@@ -1,9 +1,179 @@
 TODO: This document was manually maintained so might be incomplete. The
 automation effort is tracked in
-https://github.com/kubernetes/client-go/issues/234.
+https://github.com/kubernetes/test-infra/issues/5843.
 
 Changes in `k8s.io/api` and `k8s.io/apimachinery` are mentioned here
 because `k8s.io/client-go` depends on them.
+
+# v8.0.0
+
+**Breaking Changes:**
+
+* `KUBE_API_VERSIONS` has been removed.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63165](https://github.com/kubernetes/kubernetes/pull/63165)
+
+* The client-go/discovery `RESTMapper` has been moved to client-go/restmapper.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63507](https://github.com/kubernetes/kubernetes/pull/63507)
+
+* `CachedDiscoveryClient` has been moved from kubectl to client-go.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63550](https://github.com/kubernetes/kubernetes/pull/63550)
+
+* The `EventRecorder` interface is changed to include an `AnnotatedEventf` method, which can add annotations to an event.
+
+    * [https://github.com/kubernetes/kubernetes/pull/64213](https://github.com/kubernetes/kubernetes/pull/64213)
+
+* [k8s.io/apimachinery] The deprecated `RepairMalformedUpdates` flag has been removed.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61455](https://github.com/kubernetes/kubernetes/pull/61455)
+
+**New Features:**
+
+* A new easy-to-use dynamic client is added and the old dynamic client is now deprecated.
+
+    * [https://github.com/kubernetes/kubernetes/pull/62913](https://github.com/kubernetes/kubernetes/pull/62913)
+
+* client-go and kubectl now detect and report an error on duplicated name for user, cluster and context, while loading the kubeconfig.
+
+    * [https://github.com/kubernetes/kubernetes/pull/60464](https://github.com/kubernetes/kubernetes/pull/60464)
+
+* The informer code-generator now allows specifying a custom resync period for certain informer types and uses the default resync period if none is specified.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61400](https://github.com/kubernetes/kubernetes/pull/61400)
+
+* Exec authenticator plugin now supports TLS client certificates.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61803](https://github.com/kubernetes/kubernetes/pull/61803)
+
+* The discovery client now has a default request timeout of 32 seconds.
+
+    * [https://github.com/kubernetes/kubernetes/pull/62733](https://github.com/kubernetes/kubernetes/pull/62733)
+
+* The OpenStack auth config from is now read from the client config. If the client config is not available, it falls back to reading from the environment variables.
+
+    * [https://github.com/kubernetes/kubernetes/pull/60200](https://github.com/kubernetes/kubernetes/pull/60200)
+
+* The in-tree support for openstack credentials is now deprecated. Please use the `client-keystone-auth` from the cloud-provider-openstack repository. Details on how to use this new capability is documented [here](https://github.com/kubernetes/cloud-provider-openstack/blob/master/docs/using-client-keystone-auth.md)
+
+    * [https://github.com/kubernetes/kubernetes/pull/64346](https://github.com/kubernetes/kubernetes/pull/64346)
+
+**Bug fixes and Improvements:**
+
+* 406 mime-type errors are now tolerated while attempting to load new openapi schema. This improves compatibility with older servers when creating/updating API objects.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61949](https://github.com/kubernetes/kubernetes/pull/61949)
+
+* Removes the generated `DeleteCollection()` method for `Services` since the API does not support it.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63861](https://github.com/kubernetes/kubernetes/pull/63861)
+
+* Event object references with apiversion now report an apiversion, instead of just the group.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63913](https://github.com/kubernetes/kubernetes/pull/63913)
+
+    [https://github.com/kubernetes/kubernetes/pull/62462](https://github.com/kubernetes/kubernetes/pull/62462)
+
+* [k8s.io/apimachinery] `runtime.Unstructured.UnstructuredContent()` no longer mutates the source while returning the contents.
+
+    * [https://github.com/kubernetes/kubernetes/pull/62063](https://github.com/kubernetes/kubernetes/pull/62063)
+
+* [k8s.io/apimachinery] Incomplete support for `uint64` is now removed. This fixes a panic encountered while using `DeepCopyJSON` with `uint64`.
+
+    * [https://github.com/kubernetes/kubernetes/pull/62981](https://github.com/kubernetes/kubernetes/pull/62981)
+
+* [k8s.io/apimachinery] API server can now parse `propagationPolicy` when it sent as a query parameter sent with a delete request.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63414](https://github.com/kubernetes/kubernetes/pull/63414)
+
+* [k8s.io/apimachinery] APIServices with kube-like versions (e.g. v1, v2beta1, etc.) will be sorted appropriately within each group.
+
+    * [https://github.com/kubernetes/kubernetes/pull/64004](https://github.com/kubernetes/kubernetes/pull/64004)
+
+* [k8s.io/apimachinery] `int64` is the only allowed integer for printers.
+
+    * [https://github.com/kubernetes/kubernetes/pull/64639](https://github.com/kubernetes/kubernetes/pull/64639)
+
+## API changes
+
+**Breaking Changes:**
+
+* Support for `alpha.kubernetes.io/nvidia-gpu` resource which was deprecated in 1.10 is removed. Please use the resource exposed by `DevicePlugins` instead (`nvidia.com/gpu`).
+
+    * [https://github.com/kubernetes/kubernetes/pull/61498](https://github.com/kubernetes/kubernetes/pull/61498)
+
+* Alpha annotation for `PersistentVolume` node affinity has been removed. Update your `PersistentVolume`s to use the beta `PersistentVolume.nodeAffinity` field before upgrading.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61816](https://github.com/kubernetes/kubernetes/pull/61816)
+
+* `ObjectMeta ` `ListOptions` `DeleteOptions` are removed from the core api group. Please use the ones in `meta/v1` instead.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61809](https://github.com/kubernetes/kubernetes/pull/61809)
+
+* `ExternalID` in `NodeSpec` is deprecated. The externalID of the node is no longer set in the Node spec.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61877](https://github.com/kubernetes/kubernetes/pull/61877)
+
+* PSP-related types in the `extensions/v1beta1` API group are now deprecated. It is suggested to use the `policy/v1beta1` API group instead.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61777](https://github.com/kubernetes/kubernetes/pull/61777)
+
+**New Features:**
+
+* `PodSecurityPolicy` now supports restricting hostPath volume mounts to be readOnly and under specific path prefixes.
+
+    * [https://github.com/kubernetes/kubernetes/pull/58647](https://github.com/kubernetes/kubernetes/pull/58647)
+
+* `Node.Spec.ConfigSource.ConfigMap.KubeletConfigKey` must be specified when using dynamic Kubelet config to tell the Kubelet which key of the `ConfigMap` identifies its config file.
+
+    * [https://github.com/kubernetes/kubernetes/pull/59847](https://github.com/kubernetes/kubernetes/pull/59847)
+
+* `serverAddressByClientCIDRs` in `meta/v1` APIGroup is now optional.
+
+    * [https://github.com/kubernetes/kubernetes/pull/61963](https://github.com/kubernetes/kubernetes/pull/61963)
+
+* A new field `MatchFields` is added to `NodeSelectorTerm`. Currently, it only supports `metadata.name`.
+
+    * [https://github.com/kubernetes/kubernetes/pull/62002](https://github.com/kubernetes/kubernetes/pull/62002)
+
+* The `PriorityClass` API is promoted to `scheduling.k8s.io/v1beta1`.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63100](https://github.com/kubernetes/kubernetes/pull/63100)
+
+* The status of dynamic Kubelet config is now reported via `Node.Status.Config`, rather than the `KubeletConfigOk` node condition.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63314](https://github.com/kubernetes/kubernetes/pull/63314)
+
+* The `GitRepo` volume type is deprecated. To provision a container with a git repo, mount an `EmptyDir` into an `InitContainer` that clones the repo using git, then mount the `EmptyDir` into the Pod's container.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63445](https://github.com/kubernetes/kubernetes/pull/63445)
+
+* The Sysctls experimental feature has been promoted to beta (enabled by default via the `Sysctls` feature flag). `PodSecurityPolicy` and `Pod` objects now have fields for specifying and controlling sysctls. Alpha sysctl annotations will be ignored by 1.11+ kubelets. All alpha sysctl annotations in existing deployments must be converted to API fields to be effective.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63717](https://github.com/kubernetes/kubernetes/pull/63717)
+
+* The annotation `service.alpha.kubernetes.io/tolerate-unready-endpoints` is deprecated.  Users should use `Service.spec.publishNotReadyAddresses` instead.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63742](https://github.com/kubernetes/kubernetes/pull/63742)
+
+* `VerticalPodAutoscaler` has been added to `autoscaling/v1` API group.
+
+    * [https://github.com/kubernetes/kubernetes/pull/63797](https://github.com/kubernetes/kubernetes/pull/63797)
+
+* Alpha support is added for dynamic volume limits based on node type.
+
+    * [https://github.com/kubernetes/kubernetes/pull/64154](https://github.com/kubernetes/kubernetes/pull/64154)
+
+* `ContainersReady` condition is added to the Pod status.
+
+    * [https://github.com/kubernetes/kubernetes/pull/64646](https://github.com/kubernetes/kubernetes/pull/64646)
+
+**Bug fixes and Improvements:**
+
+* Default mount propagation has changed from `HostToContainer` (`rslave` in Linux terminology) to `None` (`private`) to match the behavior in 1.9 and earlier releases. `HostToContainer` as a default caused regressions in some pods.
+
+    * [https://github.com/kubernetes/kubernetes/pull/62462](https://github.com/kubernetes/kubernetes/pull/62462)
 
 # v7.0.0
 
