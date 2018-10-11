@@ -24,6 +24,7 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/paultag/sniff/parser"
+	"k8s.io/ingress-nginx/internal/ingress"
 )
 
 // TCPServer describes a server that works in passthrough mode.
@@ -57,9 +58,10 @@ func (p *TCPProxy) Get(host string) *TCPServer {
 
 // Handle reads enough information from the connection to extract the hostname
 // and open a connection to the passthrough server.
-func (p *TCPProxy) Handle(conn net.Conn) {
+func (p *TCPProxy) Handle(conn net.Conn, config *ingress.Configuration) {
 	defer conn.Close()
 	data := make([]byte, 4096)
+	remoteAddr := conn.RemoteAddr().(*net.TCPAddr)
 
 	length, err := conn.Read(data)
 	if err != nil {
@@ -79,6 +81,36 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 		return
 	}
 
+	for _, server := range config.Servers {
+		if server.Hostname != hostname {
+			continue
+		}
+
+		if !server.SSLPassthrough {
+			continue
+		}
+
+		check := false
+		for _, location := range server.Locations {
+			for _, CIDR := range location.Whitelist.CIDR {
+				_, network, err := net.ParseCIDR(CIDR)
+				if err != nil {
+					glog.Fatalf("%v", err)
+				}
+
+				if network.Contains(net.ParseIP(remoteAddr.IP.String())) {
+					check = true
+					break
+				}
+			}
+		}
+		if !check {
+			glog.V(4).Infof("Whitelisting is not allowing this connection.")
+			return
+		}
+		break
+	}
+
 	clientConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", proxy.IP, proxy.Port))
 	if err != nil {
 		return
@@ -88,7 +120,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	if proxy.ProxyProtocol {
 		// write out the Proxy Protocol header
 		localAddr := conn.LocalAddr().(*net.TCPAddr)
-		remoteAddr := conn.RemoteAddr().(*net.TCPAddr)
+
 		protocol := "UNKNOWN"
 		if remoteAddr.IP.To4() != nil {
 			protocol = "TCP4"

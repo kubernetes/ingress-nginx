@@ -251,10 +251,13 @@ http {
 
     # The following is a sneaky way to do "set $the_real_ip $remote_addr"
     # Needed because using set is not allowed outside server blocks.
-    map '' $the_real_ip {
+    map $scheme $the_real_ip {
     {{ if $cfg.UseProxyProtocol }}
         # Get IP address from Proxy Protocol
         default          $proxy_protocol_addr;
+    {{ else if $all.IsSSLPassthroughEnabled }}
+        https            $proxy_protocol_addr;
+        default          $remote_addr;
     {{ else }}
         default          $remote_addr;
     {{ end }}
