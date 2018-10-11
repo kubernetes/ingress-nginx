@@ -255,8 +255,10 @@ http {
     {{ if $cfg.UseProxyProtocol }}
         # Get IP address from Proxy Protocol
         default          $proxy_protocol_addr;
-    {{ else }}
+    {{ else if $all.IsSSLPassthroughEnabled }}
         https            $proxy_protocol_addr;
+        default          $remote_addr;
+    {{ else }}
         default          $remote_addr;
     {{ end }}
     }
