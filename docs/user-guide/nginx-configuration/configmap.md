@@ -142,7 +142,7 @@ The following table shows a configuration option's name, type, and the default v
 |[limit-rate](#limit-rate)|int|0|
 |[limit-rate-after](#limit-rate-after)|int|0|
 |[http-redirect-code](#http-redirect-code)|int|308|
-|[proxy-buffering](#proxy-buffering)|string|"off"|
+|[proxy-buffering](#proxy-buffering)|string|"on"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
