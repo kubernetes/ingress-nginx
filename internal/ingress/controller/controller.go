@@ -30,6 +30,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -185,18 +186,32 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
 	go func(isFirstSync bool) {
+		steps := 1
 		if isFirstSync {
-			glog.Infof("Initial synchronization of the NGINX configuration.")
-
-			// it takes time for NGINX to start listening on the configured ports
+			// For the initial sync it always takes some time for NGINX to
+			//  start listening on the configured port (default 18080)
+			//  For large configurations it might take a while so we loop
+			//  and back off
+			steps = 10
 			time.Sleep(1 * time.Second)
 		}
-		err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
-		if err == nil {
-			glog.Infof("Dynamic reconfiguration succeeded.")
-		} else {
-			glog.Warningf("Dynamic reconfiguration failed: %v", err)
+
+		retry := wait.Backoff{
+			Steps:    steps,
+			Duration: 1 * time.Second,
+			Factor:   1.5,
+			Jitter:   0.1,
 		}
+
+		wait.ExponentialBackoff(retry, func() (bool, error) {
+			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
+			if err == nil {
+				glog.Infof("Dynamic reconfiguration succeeded.")
+				return true, nil
+			}
+			glog.Warningf("Dynamic reconfiguration failed: %v", err)
+			return false, nil
+		})
 	}(isFirstSync)
 
 	ri := getRemovedIngresses(n.runningConfig, pcfg)
