@@ -1047,6 +1047,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#upstream-keepalive-timeout" title="upstream-keepalive-timeout" class="md-nav__link">
+    upstream-keepalive-timeout
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upstream-keepalive-requests" title="upstream-keepalive-requests" class="md-nav__link">
+    upstream-keepalive-requests
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#limit-conn-zone-variable" title="limit-conn-zone-variable" class="md-nav__link">
     limit-conn-zone-variable
   </a>
@@ -2413,6 +2427,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#upstream-keepalive-timeout" title="upstream-keepalive-timeout" class="md-nav__link">
+    upstream-keepalive-timeout
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upstream-keepalive-requests" title="upstream-keepalive-requests" class="md-nav__link">
+    upstream-keepalive-requests
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#limit-conn-zone-variable" title="limit-conn-zone-variable" class="md-nav__link">
     limit-conn-zone-variable
   </a>
@@ -3157,6 +3185,16 @@ Same for numbers, like "100".</p>
 <td align="left">32</td>
 </tr>
 <tr>
+<td align="left"><a href="#upstream-keepalive-timeout">upstream-keepalive-timeout</a></td>
+<td align="left">int</td>
+<td align="left">60</td>
+</tr>
+<tr>
+<td align="left"><a href="#upstream-keepalive-requests">upstream-keepalive-requests</a></td>
+<td align="left">int</td>
+<td align="left">100</td>
+</tr>
+<tr>
 <td align="left"><a href="#limit-conn-zone-variable">limit-conn-zone-variable</a></td>
 <td align="left">string</td>
 <td align="left">"$binary_remote_addr"</td>
@@ -3647,10 +3685,23 @@ The value can either be:</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size">http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size</a></p>
 <h2 id="upstream-keepalive-connections">upstream-keepalive-connections<a class="headerlink" href="#upstream-keepalive-connections" title="Permanent link">&para;</a></h2>
-<p>Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle keepalive connections to upstream servers that are preserved in the cache of each worker process. When this
-number is exceeded, the least recently used connections are closed. <em><strong>default:</strong></em> 32</p>
+<p>Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle
+keepalive connections to upstream servers that are preserved in the cache of each worker process. When this number is
+exceeded, the least recently used connections are closed. 
+<em><strong>default:</strong></em> 32</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive">http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive</a></p>
+<h2 id="upstream-keepalive-timeout">upstream-keepalive-timeout<a class="headerlink" href="#upstream-keepalive-timeout" title="Permanent link">&para;</a></h2>
+<p>Sets a timeout during which an idle keepalive connection to an upstream server will stay open.
+ <em><strong>default:</strong></em> 60</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout">http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout</a></p>
+<h2 id="upstream-keepalive-requests">upstream-keepalive-requests<a class="headerlink" href="#upstream-keepalive-requests" title="Permanent link">&para;</a></h2>
+<p>Sets the maximum number of requests that can be served through one keepalive connection. After the maximum number of
+requests is made, the connection is closed.
+<em><strong>default:</strong></em> 100</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests">http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests</a></p>
 <h2 id="limit-conn-zone-variable">limit-conn-zone-variable<a class="headerlink" href="#limit-conn-zone-variable" title="Permanent link">&para;</a></h2>
 <p>Sets parameters for a shared memory zone that will keep states for various keys of <a href="http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone">limit_conn_zone</a>. The default of "$binary_remote_addr" variable’s size is always 4 bytes for IPv4 addresses or 16 bytes for IPv6 addresses.</p>
 <h2 id="proxy-stream-timeout">proxy-stream-timeout<a class="headerlink" href="#proxy-stream-timeout" title="Permanent link">&para;</a></h2>
