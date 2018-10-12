@@ -643,8 +643,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -962,18 +962,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/customization/custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../examples/customization/external-auth-headers/" title="External authentication" class="md-nav__link">
       External authentication
     </a>
@@ -1149,20 +1137,7 @@ make sure your templates are compatible with the new version of ingress-nginx</e
 <p>To upgrade your ingress-nginx installation, it should be enough to change the version of the image
 in the controller Deployment.</p>
 <p>I.e. if your deployment resource looks like (partial example):</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Deployment</span>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Deployment</span>
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-ingress-controller</span>
   <span class="l l-Scalar l-Scalar-Plain">namespace</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ingress-nginx</span>
@@ -1177,23 +1152,19 @@ in the controller Deployment.</p>
           <span class="l l-Scalar l-Scalar-Plain">image</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0</span>
           <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
-</td></tr></table>
 
 <p>simply change the <code class="codehilite">0.9.0</code> tag to the version you wish to upgrade to.
 The easiest way to do this is e.g. (do note you may need to change the name parameter according to your installation):</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>kubectl set image deployment/nginx-ingress-controller \
+<div class="codehilite"><pre><span></span>kubectl set image deployment/nginx-ingress-controller \
   nginx-ingress-controller=nginx:quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.18.0
 </pre></div>
-</td></tr></table>
 
 <p>For interactive editing, use <code class="codehilite">kubectl edit deployment nginx-ingress-controller</code>.</p>
 <h2 id="with-helm">With Helm<a class="headerlink" href="#with-helm" title="Permanent link">&para;</a></h2>
 <p>If you installed ingress-nginx using the Helm command in the deployment docs so its name is <code class="codehilite">ngx-ingress</code>,
 you should be able to upgrade using</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>helm upgrade --reuse-values ngx-ingress stable/nginx-ingress
+<div class="codehilite"><pre><span></span>helm upgrade --reuse-values ngx-ingress stable/nginx-ingress
 </pre></div>
-</td></tr></table>
                 
                   
                 

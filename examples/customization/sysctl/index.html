@@ -596,8 +596,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -919,18 +919,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../external-auth-headers/" title="External authentication" class="md-nav__link">
       External authentication
     </a>
@@ -1085,9 +1073,8 @@
                 <h1 id="sysctl-tuning">Sysctl tuning<a class="headerlink" href="#sysctl-tuning" title="Permanent link">&para;</a></h1>
 <p>This example aims to demonstrate the use of an Init Container to adjust sysctl default values
 using <code class="codehilite">kubectl patch</code></p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --patch=&quot;$(cat patch.json)&quot;</span>
+<div class="codehilite"><pre><span></span><span class="go">kubectl patch deployment -n ingress-nginx nginx-ingress-controller --patch=&quot;$(cat patch.json)&quot;</span>
 </pre></div>
-</td></tr></table>
                 
                   
                 

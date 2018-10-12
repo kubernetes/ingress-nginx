@@ -598,8 +598,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -984,18 +984,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../examples/customization/custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../../examples/customization/external-auth-headers/" title="External authentication" class="md-nav__link">
       External authentication
     </a>
@@ -1187,51 +1175,27 @@
 By default this feature is disabled.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <p>To enable the instrumentation we must enable opentracing in the configuration configmap:
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">data</span><span class="o">:</span>
+<div class="codehilite"><pre><span></span><span class="n">data</span><span class="o">:</span>
   <span class="n">enable</span><span class="o">-</span><span class="n">opentracing</span><span class="o">:</span> <span class="s2">&quot;true&quot;</span>
-</pre></div>
-</td></tr></table></p>
+</pre></div></p>
 <p>We must also set the host to use when uploading traces:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>zipkin-collector-host: zipkin.default.svc.cluster.local
+<div class="codehilite"><pre><span></span>zipkin-collector-host: zipkin.default.svc.cluster.local
 jaeger-collector-host: jaeger-collector.default.svc.cluster.local
 </pre></div>
-</td></tr></table>
 
 <p>Next you will need to deploy a distributed tracing system which uses OpenTracing. Both <a href="https://github.com/openzipkin/zipkin">Zipkin</a> and
 <a href="https://github.com/jaegertracing/jaeger">Jaeger</a> have been tested.</p>
 <p>Other optional configuration options:
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21</pre></div></td><td class="code"><div class="codehilite"><pre><span></span># specifies the port to use when uploading traces
+<div class="codehilite"><pre><span></span># specifies the port to use when uploading traces, Default: 9411
 zipkin-collector-port
 
 # specifies the service name to use for any traces created, Default: nginx
 zipkin-service-name
 
-# specifies sample rate for any traces created. Default: 1.0
+# specifies sample rate for any traces created, Default: 1.0
 zipkin-sample-rate
 
-# specifies the port to use when uploading traces
+# specifies the port to use when uploading traces, Default: 6831
 jaeger-collector-port
 
 # specifies the service name to use for any traces created, Default: nginx
@@ -1243,42 +1207,29 @@ jaeger-sampler-type
 
 # specifies the argument to be passed to the sampler constructor, Default: 1
 jaeger-sampler-param
-</pre></div>
-</td></tr></table></p>
+</pre></div></p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>The following examples show how to deploy and test different distributed tracing systems. These example can be performed
 using Minikube.</p>
 <h3 id="zipkin">Zipkin<a class="headerlink" href="#zipkin" title="Permanent link">&para;</a></h3>
 <p>In the <a href="https://github.com/rnburn/zipkin-date-server">rnburn/zipkin-date-server</a>
 github repository is an example of a dockerized date service. To install the example and zipkin collector run:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
+<div class="codehilite"><pre><span></span>kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/zipkin.yaml
 kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/master/kubernetes/deployment.yaml
 </pre></div>
-</td></tr></table>
 
 <p>Also we need to configure the NGINX controller configmap with the required values:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
+<div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
 <span class="s1">apiVersion: v1</span>
 <span class="s1">kind: ConfigMap</span>
 <span class="s1">data:</span>
 <span class="s1">  enable-opentracing: &quot;true&quot;</span>
 <span class="s1">  zipkin-collector-host: zipkin.default.svc.cluster.local</span>
 <span class="s1">metadata:</span>
-<span class="s1">  name: nginx-load-balancer-conf</span>
+<span class="s1">  name: nginx-configuration</span>
 <span class="s1">  namespace: kube-system</span>
 <span class="s1">&#39;</span> <span class="p">|</span> kubectl replace -f -
 </pre></div>
-</td></tr></table>
 
 <p>In the zipkin interface we can see the details:
 <img alt="zipkin screenshot" src="../../../images/zipkin-demo.png" title="zipkin collector screenshot" /></p>
@@ -1286,40 +1237,17 @@ kubectl create -f https://raw.githubusercontent.com/rnburn/zipkin-date-server/ma
 <ol>
 <li>
 <p>Enable Ingress addon in minikube:
-    <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ minikube addons <span class="nb">enable</span> ingress
-</pre></div>
-</td></tr></table></p>
+    <div class="codehilite"><pre><span></span>$ minikube addons <span class="nb">enable</span> ingress
+</pre></div></p>
 </li>
 <li>
 <p>Add minikube IP to /etc/hosts:
-    <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="k">$(</span>minikube ip<span class="k">)</span><span class="s2"> example.com&quot;</span> <span class="p">|</span> sudo tee -a /etc/hosts
-</pre></div>
-</td></tr></table></p>
+    <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="k">$(</span>minikube ip<span class="k">)</span><span class="s2"> example.com&quot;</span> <span class="p">|</span> sudo tee -a /etc/hosts
+</pre></div></p>
 </li>
 <li>
 <p>Apply a Basic Service and Ingress Resource:
-    <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22</pre></div></td><td class="code"><div class="codehilite"><pre><span></span># Create Echoheaders Deployment
+    <div class="codehilite"><pre><span></span># Create Echoheaders Deployment
 $ kubectl run echoheaders --image=k8s.gcr.io/echoserver:1.4 --replicas=1 --port=8080
 
 # Expose as a Cluster-IP
@@ -1341,72 +1269,30 @@ $ echo &#39;
             servicePort: 80
           path: /echo
   &#39; | kubectl apply -f -
-</pre></div>
-</td></tr></table></p>
+</pre></div></p>
 </li>
 <li>
-<p>Enable OpenTracing and set the zipkin-collector-host:
-    <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
+<p>Enable OpenTracing and set the jaeger-collector-host:
+    <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
 <span class="s1">  apiVersion: v1</span>
 <span class="s1">  kind: ConfigMap</span>
 <span class="s1">  data:</span>
 <span class="s1">    enable-opentracing: &quot;true&quot;</span>
-<span class="s1">    zipkin-collector-host: zipkin.default.svc.cluster.local</span>
 <span class="s1">    jaeger-collector-host: jaeger-collector.default.svc.cluster.local</span>
 <span class="s1">  metadata:</span>
-<span class="s1">    name: nginx-load-balancer-conf</span>
+<span class="s1">    name: nginx-configuration</span>
 <span class="s1">    namespace: kube-system</span>
 <span class="s1">  &#39;</span> <span class="p">|</span> kubectl replace -f -
-</pre></div>
-</td></tr></table></p>
+</pre></div></p>
 </li>
 <li>
 <p>Apply the Jaeger All-In-One Template:
-    <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml
-</pre></div>
-</td></tr></table></p>
+    <div class="codehilite"><pre><span></span>$ kubectl apply -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml
+</pre></div></p>
 </li>
 <li>
 <p>Make a few requests to the Service:
-    <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ curl example.com/echo -d <span class="s2">&quot;meow&quot;</span>
+    <div class="codehilite"><pre><span></span>$ curl example.com/echo -d <span class="s2">&quot;meow&quot;</span>
 
 CLIENT VALUES:
 <span class="nv">client_address</span><span class="o">=</span><span class="m">172</span>.17.0.5
@@ -1435,18 +1321,14 @@ x-real-ip<span class="o">=</span><span class="m">192</span>.168.99.1
 x-scheme<span class="o">=</span>http
 BODY:
 meow
-</pre></div>
-</td></tr></table></p>
+</pre></div></p>
 </li>
 <li>
 <p>View the Jaeger UI:
-    <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ minikube service jaeger-query --url
+    <div class="codehilite"><pre><span></span>$ minikube service jaeger-query --url
 
 http://192.168.99.100:30183
-</pre></div>
-</td></tr></table></p>
+</pre></div></p>
 <p>In the jaeger interface we can see the details:
 <img alt="jaeger screenshot" src="../../../images/jaeger-demo.png" title="jaeger collector screenshot" /></p>
 </li>

@@ -596,8 +596,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -928,18 +928,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../external-auth-headers/" title="External authentication" class="md-nav__link">
       External authentication
     </a>
@@ -1085,15 +1073,7 @@
                 <h1 id="custom-configuration">Custom Configuration<a class="headerlink" href="#custom-configuration" title="Permanent link">&para;</a></h1>
 <p>Using a <a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/">ConfigMap</a> is possible to customize the NGINX configuration</p>
 <p>For example, if we want to change the timeouts we need to create a ConfigMap:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ cat configmap.yaml
+<div class="codehilite"><pre><span></span>$ cat configmap.yaml
 apiVersion: v1
 data:
   proxy-connect-timeout: <span class="s2">&quot;10&quot;</span>
@@ -1103,13 +1083,10 @@ kind: ConfigMap
 metadata:
   name: nginx-configuration
 </pre></div>
-</td></tr></table>
 
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-configuration/configmap.yaml \
+<div class="codehilite"><pre><span></span>curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/custom-configuration/configmap.yaml \
     | kubectl apply -f -
 </pre></div>
-</td></tr></table>
 
 <p>If the Configmap it is updated, NGINX will be reloaded with the new configuration.</p>
                 

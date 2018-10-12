@@ -609,8 +609,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -928,18 +928,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../examples/customization/custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../../examples/customization/external-auth-headers/" title="External authentication" class="md-nav__link">
       External authentication
     </a>
@@ -1086,17 +1074,7 @@
 <p>The NGINX template is located in the file <code class="codehilite">/etc/nginx/template/nginx.tmpl</code>.</p>
 <p>Using a <a href="https://kubernetes.io/docs/concepts/storage/volumes/">Volume</a> it is possible to use a custom template. 
 This includes using a <a href="https://kubernetes.io/docs/concepts/storage/volumes/#example-pod-with-a-secret-a-downward-api-and-a-configmap">Configmap</a> as source of the template</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>        <span class="l l-Scalar l-Scalar-Plain">volumeMounts</span><span class="p p-Indicator">:</span>
+<div class="codehilite"><pre><span></span>        <span class="l l-Scalar l-Scalar-Plain">volumeMounts</span><span class="p p-Indicator">:</span>
           <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">mountPath</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc/nginx/template</span>
             <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-template-volume</span>
             <span class="l l-Scalar l-Scalar-Plain">readOnly</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
@@ -1108,7 +1086,6 @@ This includes using a <a href="https://kubernetes.io/docs/concepts/storage/volum
             <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">key</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx.tmpl</span>
               <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx.tmpl</span>
 </pre></div>
-</td></tr></table>
 
 <p><strong>Please note the template is tied to the Go code. Do not change names in the variable <code class="codehilite">$cfg</code>.</strong></p>
 <p>For more information about the template syntax please check the <a href="https://golang.org/pkg/text/template/">Go template package</a>.

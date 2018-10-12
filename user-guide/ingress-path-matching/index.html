@@ -36,7 +36,7 @@
     
     
       
-        <title>Ingress Path Matching - NGINX Ingress Controller</title>
+        <title>Regular expressions in paths - NGINX Ingress Controller</title>
       
     
     
@@ -126,7 +126,7 @@
                 NGINX Ingress Controller
               </span>
               <span class="md-header-nav__topic">
-                Ingress Path Matching
+                Regular expressions in paths
               </span>
             
           
@@ -198,7 +198,9 @@
       
         
 
-<nav class="md-tabs" data-md-component="tabs">
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
       
@@ -453,10 +455,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
     
     <label class="md-nav__link" for="nav-3">
       User guide
@@ -592,11 +596,89 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="../exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Regular expressions in paths
+      </label>
+    
+    <a href="./" title="Regular expressions in paths" class="md-nav__link md-nav__link--active">
+      Regular expressions in paths
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#regular-expression-support" title="Regular Expression Support" class="md-nav__link">
+    Regular Expression Support
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#path-priority" title="Path Priority" class="md-nav__link">
+    Path Priority
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" title="Example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warning" title="Warning" class="md-nav__link">
+    Warning
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example_1" title="Example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -913,18 +995,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../../examples/customization/custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../../examples/customization/external-auth-headers/" title="External authentication" class="md-nav__link">
       External authentication
     </a>
@@ -1126,133 +1196,73 @@
                 <h1 id="ingress-path-matching">Ingress Path Matching<a class="headerlink" href="#ingress-path-matching" title="Permanent link">&para;</a></h1>
 <h2 id="regular-expression-support">Regular Expression Support<a class="headerlink" href="#regular-expression-support" title="Permanent link">&para;</a></h2>
 <p>The ingress controller supports <strong>case insensitive</strong> regular expressions in the <code class="codehilite">spec.rules.http.paths.path</code> field.</p>
-<p>See the <a href="../nginx-configuration/annotations/#use-regex">description</a> of the <code class="codehilite">use-regex</code> annotation for more details. </p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">apiVersion</span><span class="o">:</span> <span class="n">extensions</span><span class="o">/</span><span class="n">v1beta1</span>
-<span class="n">kind</span><span class="o">:</span> <span class="n">Ingress</span>
-<span class="n">metadata</span><span class="o">:</span>
-  <span class="n">name</span><span class="o">:</span> <span class="n">test</span><span class="o">-</span><span class="n">ingress</span>
-  <span class="n">annotations</span><span class="o">:</span>
-    <span class="n">nginx</span><span class="o">.</span><span class="na">ingress</span><span class="o">.</span><span class="na">kubernetes</span><span class="o">.</span><span class="na">io</span><span class="o">/</span><span class="n">use</span><span class="o">-</span><span class="n">regex</span><span class="o">:</span> <span class="kc">true</span>
-<span class="n">spec</span><span class="o">:</span>
-  <span class="n">host</span><span class="o">:</span> <span class="n">test</span><span class="o">.</span><span class="na">com</span>
-  <span class="n">rules</span><span class="o">:</span>
-  <span class="o">-</span> <span class="n">http</span><span class="o">:</span>
-      <span class="n">paths</span><span class="o">:</span>
-      <span class="o">-</span> <span class="n">path</span><span class="o">:</span> <span class="sr">/foo/</span><span class="o">.*</span>
-        <span class="n">backend</span><span class="o">:</span>
-          <span class="n">serviceName</span><span class="o">:</span> <span class="n">test</span>
-          <span class="n">servicePort</span><span class="o">:</span> <span class="mi">80</span>
+<p>See the <a href="../nginx-configuration/annotations/#use-regex">description</a> of the <code class="codehilite">use-regex</code> annotation for more details.</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
+<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress</span>
+  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
+  <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/.*</span>
+            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
-</td></tr></table>
 
 <p>The preceding ingress definition would translate to the following location block within the NGINX configuration for the <code class="codehilite">test.com</code> server:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>location ~* ^/foo/.* {
+<div class="codehilite"><pre><span></span>location ~* ^/foo/.* {
   ...
 }
 </pre></div>
-</td></tr></table>
 
 <h2 id="path-priority">Path Priority<a class="headerlink" href="#path-priority" title="Permanent link">&para;</a></h2>
-<p>In NGINX, regular expressions follow a <strong>first match</strong> policy. In order to enable more acurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks. </p>
+<p>In NGINX, regular expressions follow a <strong>first match</strong> policy. In order to enable more acurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.</p>
 <p><strong>Please read the <a href="#warning">warning</a> before using regular expressions in your ingress definitions.</strong></p>
 <h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
 <p>Let the following two ingress definitions be created:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">apiVersion</span><span class="o">:</span> <span class="n">extensions</span><span class="o">/</span><span class="n">v1beta1</span>
-<span class="n">kind</span><span class="o">:</span> <span class="n">Ingress</span>
-<span class="n">metadata</span><span class="o">:</span>
-  <span class="n">name</span><span class="o">:</span> <span class="n">test</span><span class="o">-</span><span class="n">ingress</span><span class="o">-</span><span class="mi">1</span>
-<span class="n">spec</span><span class="o">:</span>
-  <span class="n">host</span><span class="o">:</span> <span class="n">test</span><span class="o">.</span><span class="na">com</span>
-  <span class="n">rules</span><span class="o">:</span>
-  <span class="o">-</span> <span class="n">http</span><span class="o">:</span>
-      <span class="n">paths</span><span class="o">:</span>
-      <span class="o">-</span> <span class="n">path</span><span class="o">:</span> <span class="sr">/foo/</span><span class="n">bar</span>
-        <span class="n">backend</span><span class="o">:</span>
-          <span class="n">serviceName</span><span class="o">:</span> <span class="n">test</span>
-          <span class="n">servicePort</span><span class="o">:</span> <span class="mi">80</span>
-      <span class="o">-</span> <span class="n">path</span><span class="o">:</span> <span class="sr">/foo/bar/</span>
-        <span class="n">backend</span><span class="o">:</span>
-          <span class="n">serviceName</span><span class="o">:</span> <span class="n">test</span>
-          <span class="n">servicePort</span><span class="o">:</span> <span class="mi">80</span>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
+<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-1</span>
+<span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
+  <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar</span>
+            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/</span>
+            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
-</td></tr></table>
 
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">apiVersion</span><span class="o">:</span> <span class="n">extensions</span><span class="o">/</span><span class="n">v1beta1</span>
-<span class="n">kind</span><span class="o">:</span> <span class="n">Ingress</span>
-<span class="n">metadata</span><span class="o">:</span>
-  <span class="n">name</span><span class="o">:</span> <span class="n">test</span><span class="o">-</span><span class="n">ingress</span><span class="o">-</span><span class="mi">2</span>
-  <span class="n">annotations</span><span class="o">:</span>
-    <span class="n">nginx</span><span class="o">.</span><span class="na">ingress</span><span class="o">.</span><span class="na">kubernetes</span><span class="o">.</span><span class="na">io</span><span class="sr">/rewrite-target: /</span>
-<span class="n">spec</span><span class="o">:</span>
-  <span class="n">host</span><span class="o">:</span> <span class="n">test</span><span class="o">.</span><span class="na">com</span>
-  <span class="n">rules</span><span class="o">:</span>
-  <span class="o">-</span> <span class="n">http</span><span class="o">:</span>
-      <span class="n">paths</span><span class="o">:</span>
-      <span class="o">-</span> <span class="n">path</span><span class="o">:</span> <span class="sr">/foo/bar/</span><span class="o">.+</span>
-        <span class="n">backend</span><span class="o">:</span>
-          <span class="n">serviceName</span><span class="o">:</span> <span class="n">test</span>
-          <span class="n">servicePort</span><span class="o">:</span> <span class="mi">80</span>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
+<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-2</span>
+  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/rewrite-target</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/</span>
+<span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
+  <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/.+</span>
+            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
-</td></tr></table>
 
-<p>The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the <code class="codehilite">test.com</code> server: </p>
-<p><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>location ~* ^/foo/bar/.+\/?(?&lt;baseuri&gt;.*) {
+<p>The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the <code class="codehilite">test.com</code> server:</p>
+<div class="codehilite"><pre><span></span>location ~* ^/foo/bar/.+\/?(?&lt;baseuri&gt;.*) {
   ...
 }
 
@@ -1264,67 +1274,46 @@ location ~* ^/foo/bar {
   ...
 }
 </pre></div>
-</td></tr></table>
-The following request URI's would match the corresponding location blocks:
-- <code class="codehilite">test.com/foo/bar/1</code> matches <code class="codehilite">~* ^/foo/bar/.+\/?(?&lt;baseuri&gt;.*)</code>
-- <code class="codehilite">test.com/foo/bar/</code> matches <code class="codehilite">~* ^/foo/bar/</code>
-- <code class="codehilite">test.com/foo/bar</code> matches <code class="codehilite">~* ^/foo/bar</code></p>
-<p><strong>IMPORTANT NOTES</strong>: 
-- paths created under the <code class="codehilite">rewrite-ingress</code> are sorted before <code class="codehilite">\/?(?&lt;baseuri&gt;.*)</code> is appended. For example if the path defined within <code class="codehilite">test-ingress-2</code> was <code class="codehilite">/foo/.+</code> then the location block for <code class="codehilite">^/foo/.+\/?(?&lt;baseuri&gt;.*)</code> would be the LAST block listed.
-- If the <code class="codehilite">use-regex</code> OR <code class="codehilite">rewrite-target</code> annotation is used on any Ingress for a given host, then the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.  </p>
+
+<p>The following request URI's would match the corresponding location blocks:</p>
+<ul>
+<li><code class="codehilite">test.com/foo/bar/1</code> matches <code class="codehilite">~* ^/foo/bar/.+\/?(?&lt;baseuri&gt;.*)</code></li>
+<li><code class="codehilite">test.com/foo/bar/</code> matches <code class="codehilite">~* ^/foo/bar/</code></li>
+<li><code class="codehilite">test.com/foo/bar</code> matches <code class="codehilite">~* ^/foo/bar</code></li>
+</ul>
+<p><strong>IMPORTANT NOTES</strong>:</p>
+<ul>
+<li>paths created under the <code class="codehilite">rewrite-ingress</code> are sorted before <code class="codehilite">\/?(?&lt;baseuri&gt;.*)</code> is appended. For example if the path defined within <code class="codehilite">test-ingress-2</code> was <code class="codehilite">/foo/.+</code> then the location block for <code class="codehilite">^/foo/.+\/?(?&lt;baseuri&gt;.*)</code> would be the LAST block listed.</li>
+<li>If the <code class="codehilite">use-regex</code> OR <code class="codehilite">rewrite-target</code> annotation is used on any Ingress for a given host, then the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.</li>
+</ul>
 <h2 id="warning">Warning<a class="headerlink" href="#warning" title="Permanent link">&para;</a></h2>
-<p>The following example describes a case that may inflict unwanted path matching behaviour. </p>
-<p>This case is expected and a result of NGINX's a first match policy for paths that use the regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a>. For more information about how a path is chosen, please read the following article: <a href="https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms">"Understanding Nginx Server and Location Block Selection Algorithms"</a>. </p>
+<p>The following example describes a case that may inflict unwanted path matching behaviour.</p>
+<p>This case is expected and a result of NGINX's a first match policy for paths that use the regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a>. For more information about how a path is chosen, please read the following article: <a href="https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms">"Understanding Nginx Server and Location Block Selection Algorithms"</a>.</p>
 <h3 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h3>
 <p>Let the following ingress be defined:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">apiVersion</span><span class="o">:</span> <span class="n">extensions</span><span class="o">/</span><span class="n">v1beta1</span>
-<span class="n">kind</span><span class="o">:</span> <span class="n">Ingress</span>
-<span class="n">metadata</span><span class="o">:</span>
-  <span class="n">name</span><span class="o">:</span> <span class="n">test</span><span class="o">-</span><span class="n">ingress</span><span class="o">-</span><span class="mi">1</span>
-  <span class="n">annotations</span><span class="o">:</span>
-    <span class="n">nginx</span><span class="o">.</span><span class="na">ingress</span><span class="o">.</span><span class="na">kubernetes</span><span class="o">.</span><span class="na">io</span><span class="o">/</span><span class="n">use</span><span class="o">-</span><span class="n">regex</span><span class="o">:</span> <span class="kc">true</span>
-<span class="n">spec</span><span class="o">:</span>
-  <span class="n">host</span><span class="o">:</span> <span class="n">test</span><span class="o">.</span><span class="na">com</span>
-  <span class="n">rules</span><span class="o">:</span>
-  <span class="o">-</span> <span class="n">http</span><span class="o">:</span>
-      <span class="n">paths</span><span class="o">:</span>
-      <span class="o">-</span> <span class="n">path</span><span class="o">:</span> <span class="sr">/foo/bar/</span><span class="n">bar</span>
-        <span class="n">backend</span><span class="o">:</span>
-          <span class="n">serviceName</span><span class="o">:</span> <span class="n">test</span>
-          <span class="n">servicePort</span><span class="o">:</span> <span class="mi">80</span>
-      <span class="o">-</span> <span class="n">path</span><span class="o">:</span> <span class="sr">/foo/bar/</span><span class="o">[</span><span class="n">A</span><span class="o">-</span><span class="n">Z0</span><span class="o">-</span><span class="mi">9</span><span class="o">]{</span><span class="mi">3</span><span class="o">}</span>
-        <span class="n">backend</span><span class="o">:</span>
-          <span class="n">serviceName</span><span class="o">:</span> <span class="n">test</span>
-          <span class="n">servicePort</span><span class="o">:</span> <span class="mi">80</span>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
+<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-1</span>
+  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
+  <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/bar</span>
+            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/[A-Z0-9]{3}</span>
+            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
-</td></tr></table>
 
-<p>The ingress controller would define the following location blocks (in this order) within the NGINX template for the <code class="codehilite">test.com</code> server: </p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3
-4
-5
-6
-7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>location ~* ^/foo/bar/[A-Z0-9]{3} {
+<p>The ingress controller would define the following location blocks (in this order) within the NGINX template for the <code class="codehilite">test.com</code> server:</p>
+<div class="codehilite"><pre><span></span>location ~* ^/foo/bar/[A-Z0-9]{3} {
   ...
 }
 
@@ -1332,7 +1321,6 @@ location ~* ^/foo/bar/bar {
   ...
 }
 </pre></div>
-</td></tr></table>
 
 <p>A request to <code class="codehilite">test.com/foo/bar/bar</code> would match the <code class="codehilite">^/foo/[A-Z0-9]{3}</code> location block instead of the longest EXACT matching path.</p>
                 
@@ -1351,6 +1339,41 @@ location ~* ^/foo/bar/bar {
       
         
 <footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../default-backend/" title="Default backend" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Default backend
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../external-articles/" title="External Articles" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                External Articles
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">

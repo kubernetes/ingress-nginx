@@ -596,8 +596,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -838,8 +838,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#setup-instructions" title="Setup instructions" class="md-nav__link">
-    Setup instructions
+  <a href="#setup-instructions" title="Setup Instructions" class="md-nav__link">
+    Setup Instructions
   </a>
   
 </li>
@@ -947,18 +947,6 @@
   <li class="md-nav__item">
     <a href="../../customization/custom-headers/" title="Custom Headers" class="md-nav__link">
       Custom Headers
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../customization/custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
     </a>
   </li>
 
@@ -1102,8 +1090,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#setup-instructions" title="Setup instructions" class="md-nav__link">
-    Setup instructions
+  <a href="#setup-instructions" title="Setup Instructions" class="md-nav__link">
+    Setup Instructions
   </a>
   
 </li>
@@ -1128,18 +1116,19 @@
                 
                 
                 <h1 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link">&para;</a></h1>
-<p>It is possible to enable Client Certificate Authentication using additional annotations in the Ingress.</p>
-<h2 id="setup-instructions">Setup instructions<a class="headerlink" href="#setup-instructions" title="Permanent link">&para;</a></h2>
+<p>It is possible to enable Client Certificate Authentication using additional annotations in Ingress resources, created by you.</p>
+<h2 id="setup-instructions">Setup Instructions<a class="headerlink" href="#setup-instructions" title="Permanent link">&para;</a></h2>
 <ol>
 <li>
-<p>Create a file named <code class="codehilite">ca.crt</code> containing the trusted certificate authority chain (all ca certificates in PEM format) to verify client certificates. </p>
+<p>Create a file named <code class="codehilite">ca.crt</code> containing the trusted certificate authority chain to verify client certificates. All of the certificates must be in PEM format.<br />
+<em>NB:</em> The file containing the trusted certificates must be named <code class="codehilite">ca.crt</code> exactly - this is expected to be found in the secret.</p>
 </li>
 <li>
-<p>Create a secret from this file:
+<p>Create a secret from this file:<br />
 <code class="codehilite">kubectl create secret generic auth-tls-chain --from-file=ca.crt --namespace=default</code></p>
 </li>
 <li>
-<p>Add the annotations as provided in the <a href="ingress.yaml">ingress.yaml</a> example to your ingress object.</p>
+<p>Add the annotations as provided in the <a href="ingress.yaml">ingress.yaml</a> example to your own ingress resources as required.</p>
 </li>
 </ol>
                 

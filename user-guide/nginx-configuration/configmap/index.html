@@ -1464,8 +1464,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -1773,18 +1773,6 @@
   <li class="md-nav__item">
     <a href="../../../examples/customization/custom-headers/" title="Custom Headers" class="md-nav__link">
       Custom Headers
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../../../examples/customization/custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
     </a>
   </li>
 
@@ -2785,13 +2773,10 @@
 components for the nginx-controller.</p>
 <p>In order to overwrite nginx-controller configuration values as seen in <a href="https://github.com/kubernetes/ingress-nginx/blob/master/internal/ingress/controller/config/config.go">config.go</a>,
 you can add key-value pairs to the data section of the config-map. For Example:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">map-hash-bucket-size</span><span class="p p-Indicator">:</span> <span class="s">&quot;128&quot;</span>
   <span class="l l-Scalar l-Scalar-Plain">ssl-protocols</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">SSLv2</span>
 </pre></div>
-</td></tr></table>
 
 <div class="admonition important">
 <p class="admonition-title">Important</p>

@@ -596,8 +596,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -971,18 +971,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../external-auth-headers/" title="External authentication" class="md-nav__link">
       External authentication
     </a>
@@ -1159,28 +1147,19 @@
 <p>This example demonstrates how to use a custom backend to render custom error pages.</p>
 <h2 id="customized-default-backend">Customized default backend<a class="headerlink" href="#customized-default-backend" title="Permanent link">&para;</a></h2>
 <p>First, create the custom <code class="codehilite">default-backend</code>. It will be used by the Ingress controller later on.</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl create -f custom-default-backend.yaml
+<div class="codehilite"><pre><span></span>$ kubectl create -f custom-default-backend.yaml
 service <span class="s2">&quot;nginx-errors&quot;</span> created
 deployment.apps <span class="s2">&quot;nginx-errors&quot;</span> created
 </pre></div>
-</td></tr></table>
 
 <p>This should have created a Deployment and a Service with the name <code class="codehilite">nginx-errors</code>.</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3
-4
-5
-6</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl get deploy,svc
+<div class="codehilite"><pre><span></span>$ kubectl get deploy,svc
 NAME                           DESIRED   CURRENT   READY     AGE
 deployment.apps/nginx-errors   <span class="m">1</span>         <span class="m">1</span>         <span class="m">1</span>         10s
 
 NAME                   TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>   AGE
 service/nginx-errors   ClusterIP   <span class="m">10</span>.0.0.12   &lt;none&gt;        <span class="m">80</span>/TCP    10s
 </pre></div>
-</td></tr></table>
 
 <h2 id="ingress-controller-configuration">Ingress controller configuration<a class="headerlink" href="#ingress-controller-configuration" title="Permanent link">&para;</a></h2>
 <p>If you do not already have an instance of the NGINX Ingress controller running, deploy it according to the
@@ -1195,13 +1174,10 @@ service/nginx-errors   ClusterIP   <span class="m">10</span>.0.0.12   &lt;none&g
 </li>
 <li>
 <p>Take note of the IP address assigned to the NGINX Ingress controller Service.
-    <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ kubectl get svc ingress-nginx
+    <div class="codehilite"><pre><span></span>$ kubectl get svc ingress-nginx
 NAME            TYPE        CLUSTER-IP  EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>          AGE
 ingress-nginx   ClusterIP   <span class="m">10</span>.0.0.13   &lt;none&gt;        <span class="m">80</span>/TCP,443/TCP   10m
-</pre></div>
-</td></tr></table></p>
+</pre></div></p>
 </li>
 </ol>
 <div class="admonition note">
@@ -1212,15 +1188,7 @@ Make sure you can use the Service to reach NGINX before proceeding with the rest
 <h2 id="testing-error-pages">Testing error pages<a class="headerlink" href="#testing-error-pages" title="Permanent link">&para;</a></h2>
 <p>Let us send a couple of HTTP requests using cURL and validate everything is working as expected.</p>
 <p>A request to the default backend returns a 404 error with a custom message:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ curl -D- http://10.0.0.13/
+<div class="codehilite"><pre><span></span>$ curl -D- http://10.0.0.13/
 HTTP/1.1 404 Not Found
 Server: nginx/1.13.12
 Date: Tue, 12 Jun 2018 19:11:24 GMT
@@ -1230,19 +1198,9 @@ Connection: keep-alive
 
 <span class="nt">&lt;span&gt;</span>The page you&#39;re looking for could not be found.<span class="nt">&lt;/span&gt;</span>
 </pre></div>
-</td></tr></table>
 
 <p>A request with a custom <code class="codehilite">Accept</code> header returns the corresponding document type (JSON):</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ curl -D- -H <span class="s1">&#39;Accept: application/json&#39;</span> http://10.0.0.13/
+<div class="codehilite"><pre><span></span>$ curl -D- -H <span class="s1">&#39;Accept: application/json&#39;</span> http://10.0.0.13/
 HTTP/1.1 <span class="m">404</span> Not Found
 Server: nginx/1.13.12
 Date: Tue, <span class="m">12</span> Jun <span class="m">2018</span> <span class="m">19</span>:12:36 GMT
@@ -1253,7 +1211,6 @@ Vary: Accept-Encoding
 
 <span class="o">{</span> <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;The page you&#39;re looking for could not be found&quot;</span> <span class="o">}</span>
 </pre></div>
-</td></tr></table>
 
 <p>To go further with this example, feel free to deploy your own applications and Ingress objects, and validate that the
 responses are still in the correct format when a backend returns 503 (eg. if you scale a Deployment down to 0 replica).</p>

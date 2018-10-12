@@ -596,8 +596,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../user-guide/exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
-      Exposing TCP and UDP services
+    <a href="../../user-guide/ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
+      Regular expressions in paths
     </a>
   </li>
 
@@ -907,18 +907,6 @@
   <li class="md-nav__item">
     <a href="../customization/custom-headers/" title="Custom Headers" class="md-nav__link">
       Custom Headers
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../customization/custom-upstream-check/" title="Custom Upstream server checks" class="md-nav__link">
-      Custom Upstream server checks
     </a>
   </li>
 
@@ -1250,24 +1238,7 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
 <h3 id="rewrite-target">Rewrite Target<a class="headerlink" href="#rewrite-target" title="Permanent link">&para;</a></h3>
 <p>Create an Ingress rule with a rewrite annotation:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;</span>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;</span>
 <span class="go">apiVersion: extensions/v1beta1</span>
 <span class="go">kind: Ingress</span>
 <span class="go">metadata:</span>
@@ -1286,48 +1257,9 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <span class="go">        path: /something</span>
 <span class="go">&quot; | kubectl create -f -</span>
 </pre></div>
-</td></tr></table>
 
 <p>Check the rewrite is working</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ curl -v http://172.17.4.99/something -H <span class="s1">&#39;Host: rewrite.bar.com&#39;</span>
+<div class="codehilite"><pre><span></span>$ curl -v http://172.17.4.99/something -H <span class="s1">&#39;Host: rewrite.bar.com&#39;</span>
 *   Trying <span class="m">172</span>.17.4.99...
 * Connected to <span class="m">172</span>.17.4.99 <span class="o">(</span><span class="m">172</span>.17.4.99<span class="o">)</span> port <span class="m">80</span> <span class="o">(</span><span class="c1">#0)</span>
 &gt; GET /something HTTP/1.1
@@ -1367,28 +1299,10 @@ BODY:
 * Connection <span class="c1">#0 to host 172.17.4.99 left intact</span>
 -no body in request-
 </pre></div>
-</td></tr></table>
 
 <h3 id="app-root">App Root<a class="headerlink" href="#app-root" title="Permanent link">&para;</a></h3>
 <p>Create an Ingress rule with a app-root annotation:
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span>
+<div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span>
 <span class="s2">apiVersion: extensions/v1beta1</span>
 <span class="s2">kind: Ingress</span>
 <span class="s2">metadata:</span>
@@ -1406,17 +1320,9 @@ BODY:
 <span class="s2">          servicePort: 80</span>
 <span class="s2">        path: /</span>
 <span class="s2">&quot;</span> <span class="p">|</span> kubectl create -f -
-</pre></div>
-</td></tr></table></p>
+</pre></div></p>
 <p>Check the rewrite is working</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2
-3
-4
-5
-6
-7
-8</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>$ curl -I -k http://approot.bar.com/
+<div class="codehilite"><pre><span></span>$ curl -I -k http://approot.bar.com/
 HTTP/1.1 <span class="m">302</span> Moved Temporarily
 Server: nginx/1.11.10
 Date: Mon, <span class="m">13</span> Mar <span class="m">2017</span> <span class="m">14</span>:57:15 GMT
@@ -1425,7 +1331,6 @@ Content-Length: <span class="m">162</span>
 Location: http://stickyingress.example.com/app1
 Connection: keep-alive
 </pre></div>
-</td></tr></table>
                 
                   
                 
