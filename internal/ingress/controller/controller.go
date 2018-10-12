@@ -184,35 +184,27 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		n.metricCollector.SetSSLExpireTime(servers)
 	}
 
-	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
-	go func(isFirstSync bool) {
-		steps := 1
-		if isFirstSync {
-			// For the initial sync it always takes some time for NGINX to
-			//  start listening on the configured port (default 18080)
-			//  For large configurations it might take a while so we loop
-			//  and back off
-			steps = 10
-			time.Sleep(1 * time.Second)
+	retry := wait.Backoff{
+		Steps:    15,
+		Duration: 1 * time.Second,
+		Factor:   0.8,
+		Jitter:   0.1,
+	}
+
+	err := wait.ExponentialBackoff(retry, func() (bool, error) {
+		err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
+		if err == nil {
+			glog.V(2).Infof("Dynamic reconfiguration succeeded.")
+			return true, nil
 		}
 
-		retry := wait.Backoff{
-			Steps:    steps,
-			Duration: 1 * time.Second,
-			Factor:   1.5,
-			Jitter:   0.1,
-		}
-
-		wait.ExponentialBackoff(retry, func() (bool, error) {
-			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
-			if err == nil {
-				glog.Infof("Dynamic reconfiguration succeeded.")
-				return true, nil
-			}
-			glog.Warningf("Dynamic reconfiguration failed: %v", err)
-			return false, nil
-		})
-	}(isFirstSync)
+		glog.Warningf("Dynamic reconfiguration failed: %v", err)
+		return false, err
+	})
+	if err != nil {
+		glog.Errorf("Unexpected failure reconfiguring NGINX:\n%v", err)
+		return err
+	}
 
 	ri := getRemovedIngresses(n.runningConfig, pcfg)
 	re := getRemovedHosts(n.runningConfig, pcfg)
