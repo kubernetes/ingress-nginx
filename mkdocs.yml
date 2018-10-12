@@ -4,8 +4,7 @@ repo_name: "kubernetes/ingress-nginx"
 repo_url: "https://github.com/kubernetes/ingress-nginx"
 markdown_extensions:
   - admonition
-  - codehilite:
-      linenums: true
+  - codehilite
   - pymdownx.inlinehilite
   - pymdownx.tasklist:
       custom_checkbox: true
@@ -51,7 +50,7 @@ nav:
       - Command line arguments: "user-guide/cli-arguments.md"
       - Custom errors: "user-guide/custom-errors.md"
       - Default backend: "user-guide/default-backend.md"
-      - Exposing TCP and UDP services: "user-guide/exposing-tcp-udp-services.md"
+      - Regular expressions in paths: user-guide/ingress-path-matching.md
       - External Articles: "user-guide/external-articles.md"
       - Miscellaneous: "user-guide/miscellaneous.md"
       - Prometheus and Grafana installation: "user-guide/monitoring.md"
@@ -74,7 +73,6 @@ nav:
           - Custom Configuration: "examples/customization/custom-configuration/README.md"
           - Custom Errors: "examples/customization/custom-errors/README.md"
           - Custom Headers: "examples/customization/custom-headers/README.md"
-          - Custom Upstream server checks: "examples/customization/custom-upstream-check/README.md"
           - External authentication: "examples/customization/external-auth-headers/README.md"
           - Custom DH parameters for perfect forward secrecy: "examples/customization/ssl-dh-param/README.md"
           - Sysctl tuning: "examples/customization/sysctl/README.md"
