@@ -46,6 +46,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
@@ -297,6 +298,14 @@ CORS can be controlled with the following annotations:
 
 !!! note
     For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html) 
+
+### HTTP2 Push Preload.
+
+Enables automatic conversion of preload links specified in the “Link” response header fields into push requests.
+
+!!! example
+
+    * `nginx.ingress.kubernetes.io/http2-push-preload: "true"`
 
 ### Server Alias
 
