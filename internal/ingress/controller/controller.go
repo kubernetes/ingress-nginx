@@ -185,17 +185,26 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
 	go func(isFirstSync bool) {
+		maxAttempts := 1
 		if isFirstSync {
-			glog.Infof("Initial synchronization of the NGINX configuration.")
-
-			// it takes time for NGINX to start listening on the configured ports
+			// For the initial sync it always takes some time for NGINX to
+			//  start listening on the configured port (default 18080)
+			//  For large configurations it might take a while so we loop
+			//  and back off
+			maxAttempts = 15
 			time.Sleep(1 * time.Second)
 		}
-		err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
-		if err == nil {
-			glog.Infof("Dynamic reconfiguration succeeded.")
-		} else {
-			glog.Warningf("Dynamic reconfiguration failed: %v", err)
+
+		for i := 0; i < maxAttempts; i++ {
+			err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
+			if err == nil {
+				glog.Infof("Dynamic reconfiguration succeeded.")
+				break
+			} else {
+				glog.Warningf("Dynamic reconfiguration failed: %v", err)
+				// Sleep between retries backing off up to 120s total
+				time.Sleep(time.Duration(i+1) * time.Second)
+			}
 		}
 	}(isFirstSync)
 
