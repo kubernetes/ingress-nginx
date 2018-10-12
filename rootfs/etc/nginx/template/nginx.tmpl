@@ -416,6 +416,9 @@ http {
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
+
+        keepalive_timeout  {{ $cfg.UpstreamKeepaliveTimeout }}s;
+        keepalive_requests {{ $cfg.UpstreamKeepaliveRequests }};
         {{ end }}
     }
 
