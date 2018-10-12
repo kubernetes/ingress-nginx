@@ -393,8 +393,16 @@ type Configuration struct {
 	// upstream servers that are preserved in the cache of each worker process. When this
 	// number is exceeded, the least recently used connections are closed.
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
-	// Default: 32
 	UpstreamKeepaliveConnections int `json:"upstream-keepalive-connections,omitempty"`
+
+	// Sets a timeout during which an idle keepalive connection to an upstream server will stay open.
+	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout
+	UpstreamKeepaliveTimeout int `json:"upstream-keepalive-timeout,omitempty"`
+
+	// Sets the maximum number of requests that can be served through one keepalive connection.
+	// After the maximum number of requests is made, the connection is closed.
+	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests
+	UpstreamKeepaliveRequests int `json:"upstream-keepalive-requests,omitempty"`
 
 	// Sets the maximum size of the variables hash table.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
@@ -651,6 +659,8 @@ func NewDefault() Configuration {
 			ProxyBuffering:         "off",
 		},
 		UpstreamKeepaliveConnections: 32,
+		UpstreamKeepaliveTimeout:     60,
+		UpstreamKeepaliveRequests:    100,
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
 		BindAddressIpv4:              defBindAddress,
 		BindAddressIpv6:              defBindAddress,

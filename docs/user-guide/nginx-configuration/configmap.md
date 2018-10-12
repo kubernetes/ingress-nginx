@@ -99,6 +99,8 @@ The following table shows a configuration option's name, type, and the default v
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128|
 |[variables-hash-max-size](#variables-hash-max-size)|int|2048|
 |[upstream-keepalive-connections](#upstream-keepalive-connections)|int|32|
+|[upstream-keepalive-timeout](#upstream-keepalive-timeout)|int|60|
+|[upstream-keepalive-requests](#upstream-keepalive-requests)|int|100|
 |[limit-conn-zone-variable](#limit-conn-zone-variable)|string|"$binary_remote_addr"|
 |[proxy-stream-timeout](#proxy-stream-timeout)|string|"600s"|
 |[proxy-stream-responses](#proxy-stream-responses)|int|1|
@@ -573,11 +575,34 @@ _References:_
 
 ## upstream-keepalive-connections
 
-Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle keepalive connections to upstream servers that are preserved in the cache of each worker process. When this
-number is exceeded, the least recently used connections are closed. _**default:**_ 32
+Activates the cache for connections to upstream servers. The connections parameter sets the maximum number of idle
+keepalive connections to upstream servers that are preserved in the cache of each worker process. When this number is
+exceeded, the least recently used connections are closed. 
+_**default:**_ 32
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive)
+
+
+## upstream-keepalive-timeout
+
+Sets a timeout during which an idle keepalive connection to an upstream server will stay open.
+ _**default:**_ 60
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout)
+
+
+## upstream-keepalive-requests
+
+Sets the maximum number of requests that can be served through one keepalive connection. After the maximum number of
+requests is made, the connection is closed.
+_**default:**_ 100
+	
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests)
+
 
 ## limit-conn-zone-variable
 
