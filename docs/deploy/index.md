@@ -31,6 +31,10 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 !!! warning
     If multiple Ingresses define different paths for the same host, the ingress controller will merge the definitions.
+    
+!!! attention
+    If you're using GKE you need to initialize your user as a cluster-admin with the following command: 
+    ```kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)```
 
 ### Provider Specific Steps
 
