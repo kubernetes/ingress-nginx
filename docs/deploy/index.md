@@ -15,9 +15,9 @@
   - [Detect installed version](#detect-installed-version)
 - [Using Helm](#using-helm)
 
-## Prerequisite Generic Deployment Script 
+## Prerequisite Generic Deployment Command
 
-The following **Mandatory command** is required for all deployments.
+The following **Mandatory Command** is required for all deployments.
 
 !!! attention
     The default configuration watches Ingress object from all the namespaces.
