@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ncabatoff/process-exporter/proc"
 	"github.com/pkg/errors"
@@ -35,21 +36,24 @@ func (n NGINXController) Name() string {
 
 // Check returns if the nginx healthz endpoint is returning ok (status code 200)
 func (n *NGINXController) Check(_ *http.Request) error {
-	res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath))
+
+	url := fmt.Sprintf("http://127.0.0.1:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath)
+	statusCode, err := simpleGet(url)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
+
+	if statusCode != 200 {
 		return fmt.Errorf("ingress controller is not healthy")
 	}
 
-	res, err = http.Get(fmt.Sprintf("http://127.0.0.1:%v/is-dynamic-lb-initialized", n.cfg.ListenPorts.Status))
+	url = fmt.Sprintf("http://127.0.0.1:%v/is-dynamic-lb-initialized", n.cfg.ListenPorts.Status)
+	statusCode, err = simpleGet(url)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
+
+	if statusCode != 200 {
 		return fmt.Errorf("dynamic load balancer not started")
 	}
 
@@ -69,4 +73,24 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	_, err = fs.NewProc(pid)
 
 	return err
+}
+
+func simpleGet(url string) (int, error) {
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: &http.Transport{DisableKeepAlives: true},
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return -1, err
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return -1, err
+	}
+	defer res.Body.Close()
+
+	return res.StatusCode, nil
 }
