@@ -440,19 +440,12 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#generic-deployment" title="Generic Deployment" class="md-nav__link">
-    Generic Deployment
+  <a href="#prerequisite-generic-deployment-command" title="Prerequisite Generic Deployment Command" class="md-nav__link">
+    Prerequisite Generic Deployment Command
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mandatory-command" title="Mandatory command" class="md-nav__link">
-    Mandatory command
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#provider-specific-steps" title="Provider Specific Steps" class="md-nav__link">
@@ -1218,19 +1211,12 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#generic-deployment" title="Generic Deployment" class="md-nav__link">
-    Generic Deployment
+  <a href="#prerequisite-generic-deployment-command" title="Prerequisite Generic Deployment Command" class="md-nav__link">
+    Prerequisite Generic Deployment Command
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mandatory-command" title="Mandatory command" class="md-nav__link">
-    Mandatory command
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#provider-specific-steps" title="Provider Specific Steps" class="md-nav__link">
@@ -1377,12 +1363,8 @@
 <li><a href="#detect-installed-version">Detect installed version</a></li>
 <li><a href="#using-helm">Using Helm</a></li>
 </ul>
-<h2 id="generic-deployment">Generic Deployment<a class="headerlink" href="#generic-deployment" title="Permanent link">&para;</a></h2>
-<p>The following resources are required for a generic deployment.</p>
-<h3 id="mandatory-command">Mandatory command<a class="headerlink" href="#mandatory-command" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml</span>
-</pre></div>
-
+<h2 id="prerequisite-generic-deployment-command">Prerequisite Generic Deployment Command<a class="headerlink" href="#prerequisite-generic-deployment-command" title="Permanent link">&para;</a></h2>
+<p>The following <strong>Mandatory Command</strong> is required for all deployments.</p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>The default configuration watches Ingress object from all the namespaces.
@@ -1397,6 +1379,9 @@ To change this behavior use the flag <code class="codehilite">--watch-namespace<
 <p>If you're using GKE you need to initialize your user as a cluster-admin with the following command: 
 <code class="codehilite">kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)</code></p>
 </div>
+<div class="codehilite"><pre><span></span><span class="go">kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml</span>
+</pre></div>
+
 <h3 id="provider-specific-steps">Provider Specific Steps<a class="headerlink" href="#provider-specific-steps" title="Permanent link">&para;</a></h3>
 <p>There are cloud provider specific yaml files.</p>
 <h4 id="docker-for-mac">Docker for Mac<a class="headerlink" href="#docker-for-mac" title="Permanent link">&para;</a></h4>
