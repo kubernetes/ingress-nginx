@@ -64,6 +64,13 @@ NODE_IP=${NODE_IP:-127.0.0.1}
 SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD:-40}
 EOF
 
+MINIKUBE_PATH=${HOME}/.minikube
+MINIKUBE_VOLUME="-v ${MINIKUBE_PATH}:${MINIKUBE_PATH}"
+if [ ! -d ${MINIKUBE_PATH} ]; then
+    echo "Minikube directory not found! Volume will be excluded from docker build."
+    MINIKUBE_VOLUME=""
+fi
+
 docker run                                       \
     --tty                                        \
     --rm                                         \
@@ -72,6 +79,7 @@ docker run                                       \
     -v ${PWD}:/go/src/${PKG}                     \
     -v ${PWD}/.gocache:${HOME}/.cache/go-build   \
     -v ${PWD}/bin/${ARCH}:/go/bin/linux_${ARCH}  \
+    ${MINIKUBE_VOLUME}                           \
     -w /go/src/${PKG}                            \
     --env-file .env                              \
     --entrypoint ${FLAGS}                        \
