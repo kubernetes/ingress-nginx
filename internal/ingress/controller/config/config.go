@@ -393,8 +393,16 @@ type Configuration struct {
 	// upstream servers that are preserved in the cache of each worker process. When this
 	// number is exceeded, the least recently used connections are closed.
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
-	// Default: 32
 	UpstreamKeepaliveConnections int `json:"upstream-keepalive-connections,omitempty"`
+
+	// Sets a timeout during which an idle keepalive connection to an upstream server will stay open.
+	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout
+	UpstreamKeepaliveTimeout int `json:"upstream-keepalive-timeout,omitempty"`
+
+	// Sets the maximum number of requests that can be served through one keepalive connection.
+	// After the maximum number of requests is made, the connection is closed.
+	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests
+	UpstreamKeepaliveRequests int `json:"upstream-keepalive-requests,omitempty"`
 
 	// Sets the maximum size of the variables hash table.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
@@ -437,7 +445,7 @@ type Configuration struct {
 	ProxyAddOriginalUriHeader bool `json:"proxy-add-original-uri-header"`
 
 	// EnableOpentracing enables the nginx Opentracing extension
-	// https://github.com/rnburn/nginx-opentracing
+	// https://github.com/opentracing-contrib/nginx-opentracing
 	// By default this is disabled
 	EnableOpentracing bool `json:"enable-opentracing"`
 
@@ -445,6 +453,7 @@ type Configuration struct {
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
 
 	// ZipkinCollectorPort specifies the port to use when uploading traces
+	// Default: 9411
 	ZipkinCollectorPort int `json:"zipkin-collector-port"`
 
 	// ZipkinServiceName specifies the service name to use for any traces created
@@ -459,6 +468,7 @@ type Configuration struct {
 	JaegerCollectorHost string `json:"jaeger-collector-host"`
 
 	// JaegerCollectorPort specifies the port to use when uploading traces
+	// Default: 6831
 	JaegerCollectorPort int `json:"jaeger-collector-port"`
 
 	// JaegerServiceName specifies the service name to use for any traces created
@@ -649,6 +659,8 @@ func NewDefault() Configuration {
 			ProxyBuffering:         "off",
 		},
 		UpstreamKeepaliveConnections: 32,
+		UpstreamKeepaliveTimeout:     60,
+		UpstreamKeepaliveRequests:    100,
 		LimitConnZoneVariable:        defaultLimitConnZoneVariable,
 		BindAddressIpv4:              defBindAddress,
 		BindAddressIpv6:              defBindAddress,

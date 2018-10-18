@@ -15,7 +15,6 @@ Customization | [Custom configuration](customization/custom-configuration/README
 Customization | [Custom DH parameters for perfect forward secrecy](customization/ssl-dh-param/README.md) | TODO | TODO
 Customization | [Custom errors](customization/custom-errors/README.md) | serve custom error pages from the default backend | Intermediate
 Customization | [Custom headers](customization/custom-headers/README.md) | set custom headers before sending traffic to backends  | Advanced
-Customization | [Custom upstream check](customization/custom-upstream-check/README.md) | TODO | TODO
 Customization | [External authentication with response header propagation](customization/external-auth-headers/README.md) | TODO | TODO
 Customization | [Sysctl tuning](customization/sysctl/README.md) | TODO | TODO
 Features | [Rewrite](rewrite/README.md) | TODO | TODO

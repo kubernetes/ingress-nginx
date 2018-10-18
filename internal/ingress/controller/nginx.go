@@ -18,6 +18,7 @@ package controller
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -256,7 +257,7 @@ func (n *NGINXController) Start() {
 	n.store.Run(n.stopCh)
 
 	if n.syncStatus != nil {
-		go n.syncStatus.Run()
+		go n.syncStatus.Run(context.Background())
 	}
 
 	cmd := nginxExecCommand()
