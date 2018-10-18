@@ -1116,10 +1116,6 @@
 <td>Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off. Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. This is an experiemental feature that currently is not ready for production use. Feature backed by OpenResty Lua libraries. (disabled by default)</td>
 </tr>
 <tr>
-<td><code class="codehilite">--enable-dynamic-configuration</code></td>
-<td>Dynamically refresh backends on topology changes instead of reloading NGINX. Feature backed by OpenResty Lua libraries. (default true)</td>
-</tr>
-<tr>
 <td><code class="codehilite">--enable-ssl-chain-completion</code></td>
 <td>Autocomplete SSL certificate chains with missing intermediate CA certificates. A valid certificate chain is required to enable OCSP stapling. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default true)</td>
 </tr>

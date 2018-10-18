@@ -670,6 +670,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#temporal-redirect" title="Temporal Redirect" class="md-nav__link">
+    Temporal Redirect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ssl-passthrough" title="SSL Passthrough" class="md-nav__link">
     SSL Passthrough
   </a>
@@ -790,6 +797,13 @@
         <li class="md-nav__item">
   <a href="#enable-rewrite-log" title="Enable Rewrite Log" class="md-nav__link">
     Enable Rewrite Log
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#x-forwarded-prefix-header" title="X-Forwarded-Prefix Header" class="md-nav__link">
+    X-Forwarded-Prefix Header
   </a>
   
 </li>
@@ -1500,6 +1514,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#temporal-redirect" title="Temporal Redirect" class="md-nav__link">
+    Temporal Redirect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ssl-passthrough" title="SSL Passthrough" class="md-nav__link">
     SSL Passthrough
   </a>
@@ -1620,6 +1641,13 @@
         <li class="md-nav__item">
   <a href="#enable-rewrite-log" title="Enable Rewrite Log" class="md-nav__link">
     Enable Rewrite Log
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#x-forwarded-prefix-header" title="X-Forwarded-Prefix Header" class="md-nav__link">
+    X-Forwarded-Prefix Header
   </a>
   
 </li>
@@ -1811,6 +1839,10 @@ table below.</p>
 <td>number</td>
 </tr>
 <tr>
+<td><a href="#temporal-redirect">nginx.ingress.kubernetes.io/temporal-redirect</a></td>
+<td>string</td>
+</tr>
+<tr>
 <td><a href="#custom-max-body-size">nginx.ingress.kubernetes.io/proxy-body-size</a></td>
 <td>string</td>
 </tr>
@@ -1896,6 +1928,10 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#custom-nginx-upstream-hashing">nginx.ingress.kubernetes.io/upstream-hash-by</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#x-forwarded-prefix-header">nginx.ingress.kubernetes.io/x-forwarded-prefix</a></td>
 <td>string</td>
 </tr>
 <tr>
@@ -2205,6 +2241,8 @@ This can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos
 <p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
 <h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link">&para;</a></h3>
 <p>This annotation allows you to modify the status code used for permanent redirects.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect-code: &#39;308&#39;</code> would return your permanent-redirect with a 308.</p>
+<h3 id="temporal-redirect">Temporal Redirect<a class="headerlink" href="#temporal-redirect" title="Permanent link">&para;</a></h3>
+<p>This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. For example <code class="codehilite">nginx.ingress.kubernetes.io/temporal-redirect: https://www.google.com</code> would redirect everything to Google with a Return Code of 302 (Moved Temporarily)</p>
 <h3 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h3>
 <p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> instructs the controller to send TLS connections directly
 to the backend instead of letting NGINX decrypt the communication. See also <a href="../tls/#ssl-passthrough">TLS/HTTPS</a> in
@@ -2318,6 +2356,11 @@ ingress. To do this, use the annotation:</p>
 <p>Rewrite logs are not enabled by default. In some scenarios it could be required to enable NGINX rewrite logs.
 Note that rewrite logs are sent to the error_log file at the notice level. To enable this feature use the annotation:</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-rewrite-log</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+</pre></div>
+
+<h3 id="x-forwarded-prefix-header">X-Forwarded-Prefix Header<a class="headerlink" href="#x-forwarded-prefix-header" title="Permanent link">&para;</a></h3>
+<p>To add the non-standard <code class="codehilite">X-Forwarded-Prefix</code> header to the upstream request with a string value, the following annotation can be used:</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/x-forwarded-prefix</span><span class="p p-Indicator">:</span> <span class="s">&quot;/path&quot;</span>
 </pre></div>
 
 <h3 id="lua-resty-waf">Lua Resty WAF<a class="headerlink" href="#lua-resty-waf" title="Permanent link">&para;</a></h3>
