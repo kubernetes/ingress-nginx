@@ -44,6 +44,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
+|[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-path](#proxy-cookie-path)|string|
@@ -66,6 +67,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
+|[nginx.ingress.kubernetes.io/x-forwarded-prefix](#x-forwarded-prefix-header)|string|
 |[nginx.ingress.kubernetes.io/load-balance](#custom-nginx-load-balancing)|string|
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
@@ -352,6 +354,9 @@ This annotation allows to return a permanent redirect instead of sending data to
 
 This annotation allows you to modify the status code used for permanent redirects.  For example `nginx.ingress.kubernetes.io/permanent-redirect-code: '308'` would return your permanent-redirect with a 308.
 
+### Temporal Redirect
+This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. For example `nginx.ingress.kubernetes.io/temporal-redirect: https://www.google.com` would redirect everything to Google with a Return Code of 302 (Moved Temporarily)
+
 ### SSL Passthrough
 
 The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` instructs the controller to send TLS connections directly
@@ -513,6 +518,13 @@ Note that rewrite logs are sent to the error_log file at the notice level. To en
 
 ```yaml
 nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
+```
+
+### X-Forwarded-Prefix Header
+To add the non-standard `X-Forwarded-Prefix` header to the upstream request with a string value, the following annotation can be used:
+
+```yaml
+nginx.ingress.kubernetes.io/x-forwarded-prefix: "/path"
 ```
 
 ### Lua Resty WAF
