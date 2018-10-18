@@ -15,15 +15,9 @@
   - [Detect installed version](#detect-installed-version)
 - [Using Helm](#using-helm)
 
-## Generic Deployment 
+## Prerequisite Generic Deployment Command
 
-The following resources are required for a generic deployment.
-
-### Mandatory command
-
-```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
-```
+The following **Mandatory Command** is required for all deployments.
 
 !!! attention
     The default configuration watches Ingress object from all the namespaces.
@@ -31,6 +25,14 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 !!! warning
     If multiple Ingresses define different paths for the same host, the ingress controller will merge the definitions.
+    
+!!! attention
+    If you're using GKE you need to initialize your user as a cluster-admin with the following command: 
+    ```kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)```
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
+```
 
 ### Provider Specific Steps
 

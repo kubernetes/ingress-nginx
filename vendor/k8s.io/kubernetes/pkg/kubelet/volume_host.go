@@ -29,6 +29,7 @@ import (
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
+	csiclientset "k8s.io/csi-api/pkg/client/clientset/versioned"
 	"k8s.io/kubernetes/pkg/cloudprovider"
 	"k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/kubelet/configmap"
@@ -36,7 +37,6 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/mountpod"
 	"k8s.io/kubernetes/pkg/kubelet/secret"
 	"k8s.io/kubernetes/pkg/kubelet/token"
-	"k8s.io/kubernetes/pkg/util/io"
 	"k8s.io/kubernetes/pkg/util/mount"
 	"k8s.io/kubernetes/pkg/volume"
 	"k8s.io/kubernetes/pkg/volume/util"
@@ -122,6 +122,10 @@ func (kvh *kubeletVolumeHost) GetKubeClient() clientset.Interface {
 	return kvh.kubelet.kubeClient
 }
 
+func (kvh *kubeletVolumeHost) GetCSIClient() csiclientset.Interface {
+	return kvh.kubelet.csiClient
+}
+
 func (kvh *kubeletVolumeHost) NewWrapperMounter(
 	volName string,
 	spec volume.Spec,
@@ -166,10 +170,6 @@ func (kvh *kubeletVolumeHost) GetMounter(pluginName string) mount.Interface {
 		return kvh.kubelet.mounter
 	}
 	return mount.NewExecMounter(exec, kvh.kubelet.mounter)
-}
-
-func (kvh *kubeletVolumeHost) GetWriter() io.Writer {
-	return kvh.kubelet.writer
 }
 
 func (kvh *kubeletVolumeHost) GetHostName() string {
@@ -247,7 +247,7 @@ func (kvh *kubeletVolumeHost) getMountExec(pluginName string) (mount.Exec, error
 		glog.V(5).Infof("using default mounter/exec for %s", pluginName)
 		return nil, nil
 	}
-	glog.V(5).Infof("using container %s/%s/%s to execute mount utilites for %s", pod.Namespace, pod.Name, container, pluginName)
+	glog.V(5).Infof("using container %s/%s/%s to execute mount utilities for %s", pod.Namespace, pod.Name, container, pluginName)
 	return &containerExec{
 		pod:           pod,
 		containerName: container,

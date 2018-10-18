@@ -489,6 +489,16 @@ func fromRsaPrivateKey(rsa *rsa.PrivateKey) (*rawJSONWebKey, error) {
 	raw.P = newBuffer(rsa.Primes[0].Bytes())
 	raw.Q = newBuffer(rsa.Primes[1].Bytes())
 
+	if rsa.Precomputed.Dp != nil {
+		raw.Dp = newBuffer(rsa.Precomputed.Dp.Bytes())
+	}
+	if rsa.Precomputed.Dq != nil {
+		raw.Dq = newBuffer(rsa.Precomputed.Dq.Bytes())
+	}
+	if rsa.Precomputed.Qinv != nil {
+		raw.Qi = newBuffer(rsa.Precomputed.Qinv.Bytes())
+	}
+
 	return raw, nil
 }
 
