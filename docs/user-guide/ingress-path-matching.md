@@ -12,22 +12,22 @@ kind: Ingress
 metadata:
   name: test-ingress
   annotations:
-    nginx.ingress.kubernetes.io/use-regex: true
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
-  host: test.com
   rules:
-    - http:
-        paths:
-          - path: /foo/.*
-            backend:
-              serviceName: test
-              servicePort: 80
+  - host: test.com
+    http:
+      paths:
+      - path: /foo/.*
+        backend:
+          serviceName: test
+          servicePort: 80
 ```
 
 The preceding ingress definition would translate to the following location block within the NGINX configuration for the `test.com` server:
 
 ```txt
-location ~* ^/foo/.* {
+location ~* "^/foo/.*" {
   ...
 }
 ```
@@ -48,18 +48,18 @@ kind: Ingress
 metadata:
   name: test-ingress-1
 spec:
-  host: test.com
   rules:
-    - http:
-        paths:
-          - path: /foo/bar
-            backend:
-              serviceName: test
-              servicePort: 80
-          - path: /foo/bar/
-            backend:
-              serviceName: test
-              servicePort: 80
+  - host: test.com
+    http:
+      paths:
+      - path: /foo/bar
+        backend:
+          serviceName: test
+          servicePort: 80
+      - path: /foo/bar/
+        backend:
+          serviceName: test
+          servicePort: 80
 ```
 
 ```yaml
@@ -70,37 +70,37 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  host: test.com
   rules:
-    - http:
-        paths:
-          - path: /foo/bar/.+
-            backend:
-              serviceName: test
-              servicePort: 80
+  - host: test.com
+    http:
+      paths:
+      - path: /foo/bar/.+
+        backend:
+          serviceName: test
+          servicePort: 80
 ```
 
 The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the `test.com` server:
 
 ```txt
-location ~* ^/foo/bar/.+\/?(?<baseuri>.*) {
+location ~* "^/foo/bar/.+\/?(?<baseuri>.*)" {
   ...
 }
 
-location ~* ^/foo/bar/ {
+location ~* "^/foo/bar/" {
   ...
 }
 
-location ~* ^/foo/bar {
+location ~* "^/foo/bar" {
   ...
 }
 ```
 
 The following request URI's would match the corresponding location blocks:
 
-- `test.com/foo/bar/1` matches `~* ^/foo/bar/.+\/?(?<baseuri>.*)`
-- `test.com/foo/bar/` matches `~* ^/foo/bar/`
-- `test.com/foo/bar` matches `~* ^/foo/bar`
+- `test.com/foo/bar/1` matches `~* "^/foo/bar/.+\/?(?<baseuri>.*)"`
+- `test.com/foo/bar/` matches `~* "^/foo/bar/"`
+- `test.com/foo/bar` matches `~* "^/foo/bar"`
 
 **IMPORTANT NOTES**:
 
@@ -121,32 +121,32 @@ Let the following ingress be defined:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: test-ingress-1
+  name: test-ingress-3
   annotations:
-    nginx.ingress.kubernetes.io/use-regex: true
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
-  host: test.com
   rules:
-    - http:
-        paths:
-          - path: /foo/bar/bar
-            backend:
-              serviceName: test
-              servicePort: 80
-          - path: /foo/bar/[A-Z0-9]{3}
-            backend:
-              serviceName: test
-              servicePort: 80
+  - host: test.com
+    http:
+      paths:
+      - path: /foo/bar/bar
+        backend:
+          serviceName: test
+          servicePort: 80
+      - path: /foo/bar/[A-Z0-9]{3}
+        backend:
+          serviceName: test
+          servicePort: 80
 ```
 
 The ingress controller would define the following location blocks (in this order) within the NGINX template for the `test.com` server:
 
 ```txt
-location ~* ^/foo/bar/[A-Z0-9]{3} {
+location ~* "^/foo/bar/[A-Z0-9]{3}" {
   ...
 }
 
-location ~* ^/foo/bar/bar {
+location ~* "^/foo/bar/bar" {
   ...
 }
 ```
