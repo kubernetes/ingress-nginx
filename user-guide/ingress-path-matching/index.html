@@ -1202,20 +1202,20 @@
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress</span>
   <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
 <span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
   <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
-        <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/.*</span>
-            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
-              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
+    <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/.*</span>
+        <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 
 <p>The preceding ingress definition would translate to the following location block within the NGINX configuration for the <code class="codehilite">test.com</code> server:</p>
-<div class="codehilite"><pre><span></span>location ~* ^/foo/.* {
+<div class="codehilite"><pre><span></span>location ~* &quot;^/foo/.*&quot; {
   ...
 }
 </pre></div>
@@ -1230,18 +1230,18 @@
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
   <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-1</span>
 <span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
   <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
-        <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar</span>
-            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
-              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/</span>
-            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
-              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
+    <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar</span>
+        <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/</span>
+        <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
@@ -1251,35 +1251,35 @@
   <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
     <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/rewrite-target</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/</span>
 <span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
   <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
-        <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/.+</span>
-            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
-              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
+    <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/.+</span>
+        <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 
 <p>The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the <code class="codehilite">test.com</code> server:</p>
-<div class="codehilite"><pre><span></span>location ~* ^/foo/bar/.+\/?(?&lt;baseuri&gt;.*) {
+<div class="codehilite"><pre><span></span>location ~* &quot;^/foo/bar/.+\/?(?&lt;baseuri&gt;.*)&quot; {
   ...
 }
 
-location ~* ^/foo/bar/ {
+location ~* &quot;^/foo/bar/&quot; {
   ...
 }
 
-location ~* ^/foo/bar {
+location ~* &quot;^/foo/bar&quot; {
   ...
 }
 </pre></div>
 
 <p>The following request URI's would match the corresponding location blocks:</p>
 <ul>
-<li><code class="codehilite">test.com/foo/bar/1</code> matches <code class="codehilite">~* ^/foo/bar/.+\/?(?&lt;baseuri&gt;.*)</code></li>
-<li><code class="codehilite">test.com/foo/bar/</code> matches <code class="codehilite">~* ^/foo/bar/</code></li>
-<li><code class="codehilite">test.com/foo/bar</code> matches <code class="codehilite">~* ^/foo/bar</code></li>
+<li><code class="codehilite">test.com/foo/bar/1</code> matches <code class="codehilite">~* &quot;^/foo/bar/.+\/?(?&lt;baseuri&gt;.*)&quot;</code></li>
+<li><code class="codehilite">test.com/foo/bar/</code> matches <code class="codehilite">~* &quot;^/foo/bar/&quot;</code></li>
+<li><code class="codehilite">test.com/foo/bar</code> matches <code class="codehilite">~* &quot;^/foo/bar&quot;</code></li>
 </ul>
 <p><strong>IMPORTANT NOTES</strong>:</p>
 <ul>
@@ -1294,30 +1294,30 @@ location ~* ^/foo/bar {
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
 <span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-1</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test-ingress-3</span>
   <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
 <span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
   <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
-        <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/bar</span>
-            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
-              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/[A-Z0-9]{3}</span>
-            <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
-              <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
-              <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.com</span>
+    <span class="l l-Scalar l-Scalar-Plain">http</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">paths</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/bar</span>
+        <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/[A-Z0-9]{3}</span>
+        <span class="l l-Scalar l-Scalar-Plain">backend</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">serviceName</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="l l-Scalar l-Scalar-Plain">servicePort</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 
 <p>The ingress controller would define the following location blocks (in this order) within the NGINX template for the <code class="codehilite">test.com</code> server:</p>
-<div class="codehilite"><pre><span></span>location ~* ^/foo/bar/[A-Z0-9]{3} {
+<div class="codehilite"><pre><span></span>location ~* &quot;^/foo/bar/[A-Z0-9]{3}&quot; {
   ...
 }
 
-location ~* ^/foo/bar/bar {
+location ~* &quot;^/foo/bar/bar&quot; {
   ...
 }
 </pre></div>
