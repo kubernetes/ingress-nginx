@@ -18,7 +18,6 @@ package resolver
 
 import (
 	apiv1 "k8s.io/api/core/v1"
-
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 )
 
@@ -27,15 +26,18 @@ type Resolver interface {
 	// GetDefaultBackend returns the backend that must be used as default
 	GetDefaultBackend() defaults.Backend
 
-	// GetSecret searches for secrets contenating the namespace and name using a the character /
+	// GetSecret searches for secrets containing the namespace and name using a the character /
 	GetSecret(string) (*apiv1.Secret, error)
 
 	// GetAuthCertificate resolves a given secret name into an SSL certificate.
 	// The secret must contain 3 keys named:
+
 	//   ca.crt: contains the certificate chain used for authentication
+	//   tls.crt: contains the server certificate
+	//   tls.key: contains the server key
 	GetAuthCertificate(string) (*AuthSSLCert, error)
 
-	// GetService searches for services contenating the namespace and name using a the character /
+	// GetService searches for services containing the namespace and name using a the character /
 	GetService(string) (*apiv1.Service, error)
 }
 

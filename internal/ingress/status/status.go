@@ -330,6 +330,7 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 	defer p.Close()
 
 	batch := p.Batch()
+	sort.SliceStable(newIngressPoint, lessLoadBalancerIngress(newIngressPoint))
 
 	for _, ing := range ings {
 		batch.Queue(runUpdate(ing, newIngressPoint, s.Client))
@@ -345,8 +346,6 @@ func runUpdate(ing *extensions.Ingress, status []apiv1.LoadBalancerIngress,
 		if wu.IsCancelled() {
 			return nil, nil
 		}
-
-		sort.SliceStable(status, lessLoadBalancerIngress(status))
 
 		curIPs := ing.Status.LoadBalancer.Ingress
 		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
