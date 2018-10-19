@@ -341,6 +341,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if l1.BackendProtocol != l2.BackendProtocol {
+		return false
+	}
+
 	return true
 }
 
