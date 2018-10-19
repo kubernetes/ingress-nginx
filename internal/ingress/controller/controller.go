@@ -824,6 +824,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.Denied = anns.Denied
 					defLoc.LuaRestyWAF = anns.LuaRestyWAF
 					defLoc.InfluxDB = anns.InfluxDB
+					defLoc.BackendProtocol = anns.BackendProtocol
 				} else {
 					glog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
 						ingKey)
