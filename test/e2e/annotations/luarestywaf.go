@@ -68,8 +68,8 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 		It("should apply the score threshold", func() {
 			host := "foo"
 			createIngress(f, host, "http-svc", 80, map[string]string{
-				"nginx.ingress.kubernetes.io/lua-resty-waf":       "active",
-				"nginx.ingress.kubernetes.io/lua-resty-waf-score": "20"})
+				"nginx.ingress.kubernetes.io/lua-resty-waf":                 "active",
+				"nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold": "20"})
 
 			url := fmt.Sprintf("%s?msg=<A href=\"http://mysite.com/\">XSS</A>", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
@@ -84,7 +84,8 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			host := "foo"
 			contenttype := "application/octet-stream"
 			createIngress(f, host, "http-svc", 80, map[string]string{
-				"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
+				"nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types": "true",
+				"nginx.ingress.kubernetes.io/lua-resty-waf":                             "active"})
 
 			url := fmt.Sprintf("%s?msg=my-message", f.IngressController.HTTPURL)
 			resp, _, errs := gorequest.New().
@@ -94,13 +95,13 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 				End()
 
 			Expect(len(errs)).Should(Equal(0))
-			Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		})
 		It("should allow the multipart content type", func() {
 			host := "foo"
 			contenttype := "multipart/form-data; boundary=alamofire.boundary.3fc2e849279e18fc"
 			createIngress(f, host, "http-svc", 80, map[string]string{
-				"nginx.ingress.kubernetes.io/lua-resty-waf-disable-multipart-body": "true",
+				"nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body": "false",
 				"nginx.ingress.kubernetes.io/lua-resty-waf":                        "active"})
 
 			url := fmt.Sprintf("%s?msg=my-message", f.IngressController.HTTPURL)

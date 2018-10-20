@@ -31,13 +31,13 @@ var luaRestyWAFModes = map[string]bool{"ACTIVE": true, "INACTIVE": true, "SIMULA
 
 // Config returns lua-resty-waf configuration for an Ingress rule
 type Config struct {
-	Mode                 string   `json:"mode"`
-	Debug                bool     `json:"debug"`
-	IgnoredRuleSets      []string `json:"ignored-rulesets"`
-	ExtraRulesetString   string   `json:"extra-ruleset-string"`
-	Score                int      `json:"score"`
-	AllowUnknownContent  bool     `json:"allow-unknown-content"`
-	DisableMultipartBody bool     `json:"disable-multipart-body"`
+	Mode                     string   `json:"mode"`
+	Debug                    bool     `json:"debug"`
+	IgnoredRuleSets          []string `json:"ignored-rulesets"`
+	ExtraRulesetString       string   `json:"extra-ruleset-string"`
+	ScoreThreshold           int      `json:"score-threshold"`
+	AllowUnknownContentTypes bool     `json:"allow-unknown-content-types"`
+	ProcessMultipartBody     bool     `json:"process-multipart-body"`
 }
 
 // Equal tests for equality between two Config types
@@ -60,13 +60,13 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	if e1.ExtraRulesetString != e2.ExtraRulesetString {
 		return false
 	}
-	if e1.Score != e2.Score {
+	if e1.ScoreThreshold != e2.ScoreThreshold {
 		return false
 	}
-	if e1.AllowUnknownContent != e2.AllowUnknownContent {
+	if e1.AllowUnknownContentTypes != e2.AllowUnknownContentTypes {
 		return false
 	}
-	if e1.DisableMultipartBody != e2.DisableMultipartBody {
+	if e1.ProcessMultipartBody != e2.ProcessMultipartBody {
 		return false
 	}
 
@@ -107,19 +107,19 @@ func (a luarestywaf) Parse(ing *extensions.Ingress) (interface{}, error) {
 	// TODO(elvinefendi) maybe validate the ruleset string here
 	extraRulesetString, _ := parser.GetStringAnnotation("lua-resty-waf-extra-rules", ing)
 
-	score, _ := parser.GetIntAnnotation("lua-resty-waf-score", ing)
+	scoreThreshold, _ := parser.GetIntAnnotation("lua-resty-waf-score-threshold", ing)
 
-	allowUnknownContent, _ := parser.GetBoolAnnotation("lua-resty-waf-allow-unknown-content", ing)
+	allowUnknownContentTypes, _ := parser.GetBoolAnnotation("lua-resty-waf-allow-unknown-content-types", ing)
 
-	disableMultipartBody, _ := parser.GetBoolAnnotation("lua-resty-waf-disable-multipart-body", ing)
+	processMultipartBody, _ := parser.GetBoolAnnotation("lua-resty-waf-process-multipart-body", ing)
 
 	return &Config{
-		Mode:                 mode,
-		Debug:                debug,
-		IgnoredRuleSets:      ignoredRuleSets,
-		ExtraRulesetString:   extraRulesetString,
-		Score:                score,
-		AllowUnknownContent:  allowUnknownContent,
-		DisableMultipartBody: disableMultipartBody,
+		Mode:                     mode,
+		Debug:                    debug,
+		IgnoredRuleSets:          ignoredRuleSets,
+		ExtraRulesetString:       extraRulesetString,
+		ScoreThreshold:           scoreThreshold,
+		AllowUnknownContentTypes: allowUnknownContentTypes,
+		ProcessMultipartBody:     processMultipartBody,
 	}, nil
 }

@@ -30,9 +30,9 @@ func TestParse(t *testing.T) {
 	luaRestyWAFAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf")
 	luaRestyWAFDebugAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf-debug")
 	luaRestyWAFIgnoredRuleSetsAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf-ignore-rulesets")
-	luaRestyWAFScoreAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf-score")
-	luaRestyWAFAllowUnknownAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf-allow-unknown-content")
-	luaRestyWAFDisableMultipartBody := parser.GetAnnotationWithPrefix("lua-resty-waf-disable-multipart-body")
+	luaRestyWAFScoreThresholdAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf-score-threshold")
+	luaRestyWAFAllowUnknownContentTypesAnnotation := parser.GetAnnotationWithPrefix("lua-resty-waf-allow-unknown-content-types")
+	luaRestyWAFProcessMultipartBody := parser.GetAnnotationWithPrefix("lua-resty-waf-process-multipart-body")
 
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
@@ -54,17 +54,17 @@ func TestParse(t *testing.T) {
 		{map[string]string{luaRestyWAFAnnotation: "inactive", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "INACTIVE", Debug: true, IgnoredRuleSets: []string{}}},
 
 		{map[string]string{
-			luaRestyWAFAnnotation:                "active",
-			luaRestyWAFDebugAnnotation:           "true",
-			luaRestyWAFIgnoredRuleSetsAnnotation: "ruleset1, ruleset2 ruleset3,   another.ruleset",
-			luaRestyWAFScoreAnnotation:           "10",
-			luaRestyWAFAllowUnknownAnnotation:    "true"},
-			&Config{Mode: "ACTIVE", Debug: true, IgnoredRuleSets: []string{"ruleset1", "ruleset2", "ruleset3", "another.ruleset"}, Score: 10, AllowUnknownContent: true}},
+			luaRestyWAFAnnotation:                         "active",
+			luaRestyWAFDebugAnnotation:                    "true",
+			luaRestyWAFIgnoredRuleSetsAnnotation:          "ruleset1, ruleset2 ruleset3,   another.ruleset",
+			luaRestyWAFScoreThresholdAnnotation:           "10",
+			luaRestyWAFAllowUnknownContentTypesAnnotation: "true"},
+			&Config{Mode: "ACTIVE", Debug: true, IgnoredRuleSets: []string{"ruleset1", "ruleset2", "ruleset3", "another.ruleset"}, ScoreThreshold: 10, AllowUnknownContentTypes: true}},
 
 		{map[string]string{luaRestyWAFAnnotation: "siMulate", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "SIMULATE", Debug: true, IgnoredRuleSets: []string{}}},
 		{map[string]string{luaRestyWAFAnnotation: "siMulateX", luaRestyWAFDebugAnnotation: "true"}, &Config{Debug: false}},
 
-		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFDisableMultipartBody: "false"}, &Config{Mode: "ACTIVE", DisableMultipartBody: false, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFProcessMultipartBody: "false"}, &Config{Mode: "ACTIVE", ProcessMultipartBody: false, IgnoredRuleSets: []string{}}},
 	}
 
 	ing := &extensions.Ingress{
