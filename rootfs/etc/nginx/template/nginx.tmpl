@@ -892,7 +892,7 @@ stream {
                 waf:set_option("mode", "{{ $location.LuaRestyWAF.Mode }}")
                 waf:set_option("storage_zone", "waf_storage")
 
-                {{ if $location.LuaRestyWAF.AllowUnknownContent }} 
+                {{ if $location.LuaRestyWAF.AllowUnknownContentTypes }} 
                 waf:set_option("allow_unknown_content_types", true)
                 {{ else }}
                 waf:set_option("allowed_content_types", { "text/html", "text/json", "application/json" })
@@ -900,12 +900,14 @@ stream {
 
                 waf:set_option("event_log_level", ngx.WARN)
 
-                {{ if gt $location.LuaRestyWAF.Score 0 }}
-                waf:set_option("score_threshold", {{ $location.LuaRestyWAF.Score }})
+                {{ if gt $location.LuaRestyWAF.ScoreThreshold 0 }}
+                waf:set_option("score_threshold", {{ $location.LuaRestyWAF.ScoreThreshold }})
                 {{ end }}
 
-                {{ if $location.LuaRestyWAF.DisableMultipartBody }}
+                {{ if not $location.LuaRestyWAF.ProcessMultipartBody }}
                 waf:set_option("process_multipart_body", false)
+                {{ else }}
+                waf:set_option("process_multipart_body", true)
                 {{ end }}
 
                 {{ if $location.LuaRestyWAF.Debug }}
