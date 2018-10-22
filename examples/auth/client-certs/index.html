@@ -838,6 +838,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#creating-certificate-secrets" title="Creating Certificate Secrets" class="md-nav__link">
+    Creating Certificate Secrets
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#setup-instructions" title="Setup Instructions" class="md-nav__link">
     Setup Instructions
   </a>
@@ -1090,6 +1097,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#creating-certificate-secrets" title="Creating Certificate Secrets" class="md-nav__link">
+    Creating Certificate Secrets
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#setup-instructions" title="Setup Instructions" class="md-nav__link">
     Setup Instructions
   </a>
@@ -1116,20 +1130,37 @@
                 
                 
                 <h1 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link">&para;</a></h1>
-<p>It is possible to enable Client Certificate Authentication using additional annotations in Ingress resources, created by you.</p>
-<h2 id="setup-instructions">Setup Instructions<a class="headerlink" href="#setup-instructions" title="Permanent link">&para;</a></h2>
+<p>It is possible to enable Client-Certificate Authentication by adding additional annotations to your Ingress Resource.
+Before getting started you must have the following Certificates Setup:</p>
+<ol>
+<li>CA certificate and Key(Intermediate Certs need to be in CA)</li>
+<li>Server Certificate(Signed by CA) and Key (CN should be equal the the hostname you will use)</li>
+<li>Client Certificate(Signed by CA) and Key</li>
+</ol>
+<h2 id="creating-certificate-secrets">Creating Certificate Secrets<a class="headerlink" href="#creating-certificate-secrets" title="Permanent link">&para;</a></h2>
+<p>There are many different ways of configuring your secrets to enable Client-Certificate
+Authentication to work properly.</p>
 <ol>
 <li>
-<p>Create a file named <code class="codehilite">ca.crt</code> containing the trusted certificate authority chain to verify client certificates. All of the certificates must be in PEM format.<br />
-<em>NB:</em> The file containing the trusted certificates must be named <code class="codehilite">ca.crt</code> exactly - this is expected to be found in the secret.</p>
+<p>You can create a secret containing just the CA certificate and another
+    Secret containing the Server Certificate which is Signed by the CA.
+    <div class="codehilite"><pre><span></span>$ kubectl create secret generic ca-secret --from-file<span class="o">=</span>ca.crt<span class="o">=</span>ca.crt
+$ kubectl create secret generic tls-secret --from-file<span class="o">=</span>tls.crt<span class="o">=</span>server.crt --from-file<span class="o">=</span>tls.key<span class="o">=</span>server.key
+</pre></div></p>
 </li>
 <li>
-<p>Create a secret from this file:<br />
-<code class="codehilite">kubectl create secret generic auth-tls-chain --from-file=ca.crt --namespace=default</code></p>
+<p>You can create a secret containing CA certificate along with the Server
+    Certificate, that can be used for both TLS and Client Auth.
+    <div class="codehilite"><pre><span></span>$ kubectl create secret generic ca-secret --from-file<span class="o">=</span>tls.crt<span class="o">=</span>server.crt --from-file<span class="o">=</span>tls.key<span class="o">=</span>server.key --from-file<span class="o">=</span>ca.crt<span class="o">=</span>ca.crt
+</pre></div></p>
 </li>
-<li>
-<p>Add the annotations as provided in the <a href="ingress.yaml">ingress.yaml</a> example to your own ingress resources as required.</p>
-</li>
+</ol>
+<p>Note: The CA Certificate must contain the trusted certificate authority chain to verify client certificates.</p>
+<h2 id="setup-instructions">Setup Instructions<a class="headerlink" href="#setup-instructions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Add the annotations as provided in the <a href="ingress.yaml">ingress.yaml</a> example to your own ingress resources as required.</li>
+<li>Test by performing a curl against the Ingress Path without the Client Cert and expect a Status Code 400.</li>
+<li>Test by performing a curl against the Ingress Path with the Client Cert and expect a Status Code 200.</li>
 </ol>
                 
                   
