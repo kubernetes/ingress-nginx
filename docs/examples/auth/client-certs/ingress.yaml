@@ -4,9 +4,8 @@ metadata:
   annotations:
     # Enable client certificate authentication
     nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-    # Create the secret containing the trusted ca certificates with `kubectl create secret generic auth-tls-chain --from-file=ca.crt --namespace=default`
-    # NB: The file _must_ be named "ca.crt" and nothing else. This filename is expected to be found in the secret.
-    nginx.ingress.kubernetes.io/auth-tls-secret: "default/auth-tls-chain"
+    # Create the secret containing the trusted ca certificates
+    nginx.ingress.kubernetes.io/auth-tls-secret: "default/ca-secret"
     # Specify the verification depth in the client certificates chain
     nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
     # Specify an error page to be redirected to verification errors
