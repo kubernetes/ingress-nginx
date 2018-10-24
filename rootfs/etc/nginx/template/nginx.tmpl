@@ -884,8 +884,8 @@ stream {
             rewrite_by_lua_block {
                 balancer.rewrite()
             }
-            {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
             access_by_lua_block {
+                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 
@@ -912,16 +912,21 @@ stream {
                 {{ end }}
 
                 waf:exec()
+                {{ end }}
             }
             header_filter_by_lua_block {
+                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require "resty.waf"
                 local waf = lua_resty_waf:new()
                 waf:exec()
+                {{ end }}
             }
             body_filter_by_lua_block {
+                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require "resty.waf"
                 local waf = lua_resty_waf:new()
                 waf:exec()
+                {{ end }}
             }
 
             log_by_lua_block {
@@ -933,7 +938,6 @@ stream {
                 balancer.log()
                 monitor.call()
             }
-            {{ end }}
 
             {{ if (and (not (empty $server.SSLCert.PemFileName)) $all.Cfg.HSTS) }}
             if ($scheme = https) {
