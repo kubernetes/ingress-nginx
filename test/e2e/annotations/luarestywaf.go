@@ -80,7 +80,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			Expect(len(errs)).Should(Equal(0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		})
-		It("should reject the invaild content", func() {
+		It("should not reject request with an unknown content type", func() {
 			host := "foo"
 			contenttype := "application/octet-stream"
 			createIngress(f, host, "http-svc", 80, map[string]string{
