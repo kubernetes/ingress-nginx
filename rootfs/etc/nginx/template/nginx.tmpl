@@ -1195,6 +1195,11 @@ stream {
             {{ range $errCode := $location.CustomHTTPErrors }}
             error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
 
+            {{ if not (empty $location.SecureVerifyCA) }}
+            proxy_ssl_verify              on;
+            proxy_ssl_trusted_certificate {{ $location.SecureVerifyCA }};
+            proxy_ssl_verify_depth        2;
+            {{ end }}
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}

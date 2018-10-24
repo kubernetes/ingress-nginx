@@ -64,7 +64,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
-|[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
+|[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#backend-protocol)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
@@ -696,6 +696,18 @@ Example:
 ```yaml
 nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 ```
+
+You can also specify a secret with a trusted CA certificate to [verify the certificate of the proxied HTTPS server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_trusted_certificate) using:
+```yaml
+nginx.ingress.kubernetes.io/secure-verify-ca-secret: "my-ca-secret"
+```
+
+!!! example
+    Please check the [client-certs](../../examples/auth/client-certs/README.md) example.
+
+!!! Note: that the backend protocol must be set to either "HTTPS" or "GRPC". Also the `proxy_ssl_verify_depth` is set to 2 when
+    enabling is annotation.
+
 
 ### Use Regex
 

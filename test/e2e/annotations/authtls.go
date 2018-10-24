@@ -46,7 +46,8 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			f.KubeClientSet,
 			host,
 			host,
-			nameSpace)
+			nameSpace,
+			false)
 		Expect(err).ToNot(HaveOccurred())
 
 		annotations := map[string]string{
@@ -102,7 +103,8 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			f.KubeClientSet,
 			host,
 			host,
-			nameSpace)
+			nameSpace,
+			false)
 		Expect(err).ToNot(HaveOccurred())
 
 		annotations := map[string]string{
@@ -149,7 +151,8 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			f.KubeClientSet,
 			host,
 			host,
-			nameSpace)
+			nameSpace,
+			false)
 		Expect(err).ToNot(HaveOccurred())
 
 		annotations := map[string]string{

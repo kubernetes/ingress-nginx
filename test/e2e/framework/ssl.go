@@ -92,7 +92,7 @@ func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretN
 // CreateIngressMASecret creates or updates a Secret containing a Mutual Auth
 // certificate-chain for the given Ingress and returns a TLS configuration suitable
 // for HTTP clients to use against that particular Ingress.
-func CreateIngressMASecret(client kubernetes.Interface, host string, secretName, namespace string) (*tls.Config, error) {
+func CreateIngressMASecret(client kubernetes.Interface, host string, secretName, namespace string, onlyCA bool) (*tls.Config, error) {
 	if len(host) == 0 {
 		return nil, fmt.Errorf("requires a non-empty host")
 	}
@@ -108,6 +108,12 @@ func CreateIngressMASecret(client kubernetes.Interface, host string, secretName,
 		v1.TLSCertKey:       serverCert.Bytes(),
 		v1.TLSPrivateKeyKey: serverKey.Bytes(),
 		"ca.crt":            caCert.Bytes(),
+	}
+
+	if onlyCA {
+		data = map[string][]byte{
+			"ca.crt": caCert.Bytes(),
+		}
 	}
 
 	newSecret := &v1.Secret{

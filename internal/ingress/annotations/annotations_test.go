@@ -133,6 +133,8 @@ func TestSecureVerifyCACert(t *testing.T) {
 		{5, map[string]string{backendProtocol: "HTTPS"}, false},
 		{6, map[string]string{}, false},
 		{7, nil, false},
+		{8, map[string]string{backendProtocol: "GRPCS", annotationSecureVerifyCACert: "not"}, false},
+		{9, map[string]string{backendProtocol: "GRPCS", annotationSecureVerifyCACert: "secure-verify-ca"}, true},
 	}
 
 	for _, ann := range anns {

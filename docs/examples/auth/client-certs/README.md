@@ -33,3 +33,5 @@ Note: The CA Certificate must contain the trusted certificate authority chain to
 2. Test by performing a curl against the Ingress Path without the Client Cert and expect a Status Code 400.
 3. Test by performing a curl against the Ingress Path with the Client Cert and expect a Status Code 200.
 
+Note: If you only want to pass the CA to the upstream, create an annotation with the CA cert as seen in [ingress2.yaml](ingress2.yaml).
+

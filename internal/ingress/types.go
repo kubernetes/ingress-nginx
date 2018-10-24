@@ -284,6 +284,10 @@ type Location struct {
 	// ModSecurity allows to enable and configure modsecurity
 	// +optional
 	ModSecurity modsecurity.Config `json:"modsecurity"`
+	// SecureVerifyCA indicates which secret containing ca.crt should be verified
+	// against the service. Note: If an invalid secret it given, it will be ignored.
+	// +optional
+	SecureVerifyCA string `json:"secure-verify-ca,omitempty"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

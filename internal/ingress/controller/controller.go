@@ -356,6 +356,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.BackendProtocol = anns.BackendProtocol
 						loc.CustomHTTPErrors = anns.CustomHTTPErrors
 						loc.ModSecurity = anns.ModSecurity
+						loc.SecureVerifyCA = anns.SecureUpstream.CACert.CAFileName
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -398,6 +399,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						BackendProtocol:      anns.BackendProtocol,
 						CustomHTTPErrors:     anns.CustomHTTPErrors,
 						ModSecurity:          anns.ModSecurity,
+						SecureVerifyCA:       anns.SecureUpstream.CACert.CAFileName,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -584,10 +586,6 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				glog.V(3).Infof("Creating upstream %q", name)
 				upstreams[name] = newUpstream(name)
 				upstreams[name].Port = path.Backend.ServicePort
-
-				if upstreams[name].SecureCACert.Secret == "" {
-					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
-				}
 
 				if upstreams[name].UpstreamHashBy == "" {
 					upstreams[name].UpstreamHashBy = anns.UpstreamHashBy
@@ -851,6 +849,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.InfluxDB = anns.InfluxDB
 					defLoc.BackendProtocol = anns.BackendProtocol
 					defLoc.ModSecurity = anns.ModSecurity
+					defLoc.SecureVerifyCA = anns.SecureUpstream.CACert.CAFileName
 				} else {
 					glog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
 						ingKey)

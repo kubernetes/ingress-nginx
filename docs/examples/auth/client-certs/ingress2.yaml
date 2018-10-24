@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    # Create the secret containing the trusted ca certificates
+    nginx.ingress.kubernetes.io/secure-verify-ca-secret: "ca-secret"
+    # Setup the backend protocol, must be either "HTTPS" or "GRPC".
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  name: nginx-test
+  namespace: default
+spec:
+  rules:
+  - host: ingress.test.com
+    http:
+      paths:
+      - backend:
+          serviceName: http-svc:80
+          servicePort: 80
+        path: /
+  tls:
+  - hosts:
+    - ingress.test.com
+    secretName: tls-secret
+

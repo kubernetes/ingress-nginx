@@ -371,12 +371,13 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.LuaRestyWAF).Equal(&l2.LuaRestyWAF) {
 		return false
 	}
-
 	if !(&l1.InfluxDB).Equal(&l2.InfluxDB) {
 		return false
 	}
-
 	if l1.BackendProtocol != l2.BackendProtocol {
+		return false
+	}
+	if l1.SecureVerifyCA != l2.SecureVerifyCA {
 		return false
 	}
 
