@@ -53,7 +53,20 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		ensureIngress(f, "foo.com")
 	})
 
-	It("should set nameservers for Lua", func() {
+	It("configures balancer Lua middleware correctly", func() {
+		err := f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "balancer.init_worker()") && strings.Contains(cfg, "balancer.balance()")
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		host := "foo.com"
+		err = f.WaitForNginxServer(host, func(server string) bool {
+			return strings.Contains(server, "balancer.rewrite()") && strings.Contains(server, "balancer.log()")
+		})
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("sets nameservers for Lua", func() {
 		err := f.WaitForNginxConfiguration(func(cfg string) bool {
 			r := regexp.MustCompile(`configuration.nameservers = { [".,0-9a-zA-Z]+ }`)
 			return r.MatchString(cfg)
