@@ -222,7 +222,7 @@ func createApiserverClient(apiserverHost, kubeConfig string) (*kubernetes.Client
 		}
 
 		lastErr = err
-		glog.V(2).Infof("Unexpected error discovering Kubernetes version (attempt %v): %v", err, retries)
+		glog.V(2).Infof("Unexpected error discovering Kubernetes version (attempt %v): %v", retries, err)
 		retries++
 		return false, nil
 	})
