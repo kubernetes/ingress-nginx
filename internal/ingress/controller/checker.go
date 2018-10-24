@@ -38,7 +38,8 @@ func (n NGINXController) Name() string {
 func (n *NGINXController) Check(_ *http.Request) error {
 
 	url := fmt.Sprintf("http://127.0.0.1:%v%v", n.cfg.ListenPorts.Status, ngxHealthPath)
-	statusCode, err := simpleGet(url)
+	timeout := n.cfg.HealthCheckTimeout
+	statusCode, err := simpleGet(url, timeout)
 	if err != nil {
 		return err
 	}
@@ -48,7 +49,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	}
 
 	url = fmt.Sprintf("http://127.0.0.1:%v/is-dynamic-lb-initialized", n.cfg.ListenPorts.Status)
-	statusCode, err = simpleGet(url)
+	statusCode, err = simpleGet(url, timeout)
 	if err != nil {
 		return err
 	}
@@ -75,9 +76,9 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	return err
 }
 
-func simpleGet(url string) (int, error) {
+func simpleGet(url string, timeout time.Duration) (int, error) {
 	client := &http.Client{
-		Timeout:   10 * time.Second,
+		Timeout:   timeout * time.Second,
 		Transport: &http.Transport{DisableKeepAlives: true},
 	}
 
