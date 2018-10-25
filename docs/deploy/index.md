@@ -1,20 +1,5 @@
 # Installation Guide
 
-## Contents
-
-- [Generic Deployment](#generic-deployment)
-  - [Mandatory command](#mandatory-command)
-  - [Provider Specific Steps](#provider-specific-steps)
-    - [Docker for Mac](#docker-for-mac)
-    - [minikube](#minikube)
-    - [AWS](#aws)
-    - [GCE - GKE](#gce-gke)
-    - [Azure](#azure)
-    - [Bare-metal](#bare-metal)
-  - [Verify installation](#verify-installation)
-  - [Detect installed version](#detect-installed-version)
-- [Using Helm](#using-helm)
-
 ## Prerequisite Generic Deployment Command
 
 The following **Mandatory Command** is required for all deployments.
