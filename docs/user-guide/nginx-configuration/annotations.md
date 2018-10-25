@@ -578,6 +578,9 @@ nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold: "10"
 
 When you enabled HTTPS in the endpoint and since resty-lua will return 500 error when processing "multipart" contents
 Reference for this [issue](https://github.com/p0pr0ck5/lua-resty-waf/issues/166)
+
+By default, it will be "true"
+
 You may enable the following annotation for work around:
 
 ```yaml

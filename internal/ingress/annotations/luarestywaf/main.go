@@ -111,7 +111,10 @@ func (a luarestywaf) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	allowUnknownContentTypes, _ := parser.GetBoolAnnotation("lua-resty-waf-allow-unknown-content-types", ing)
 
-	processMultipartBody, _ := parser.GetBoolAnnotation("lua-resty-waf-process-multipart-body", ing)
+	processMultipartBody, err := parser.GetBoolAnnotation("lua-resty-waf-process-multipart-body", ing)
+	if err != nil {
+		processMultipartBody = true
+	}
 
 	return &Config{
 		Mode:                     mode,
