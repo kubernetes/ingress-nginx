@@ -88,14 +88,14 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 	rt, _ := parser.GetStringAnnotation("rewrite-target", ing)
-	sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing)
+	/*sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing)
 	if err != nil {
 		sslRe = a.r.GetDefaultBackend().SSLRedirect
 	}
 	fSslRe, err := parser.GetBoolAnnotation("force-ssl-redirect", ing)
 	if err != nil {
 		fSslRe = a.r.GetDefaultBackend().ForceSSLRedirect
-	}
+	}*/
 	abu, _ := parser.GetBoolAnnotation("add-base-url", ing)
 	bus, _ := parser.GetStringAnnotation("base-url-scheme", ing)
 	ar, _ := parser.GetStringAnnotation("app-root", ing)
@@ -105,8 +105,8 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 		Target:           rt,
 		AddBaseURL:       abu,
 		BaseURLScheme:    bus,
-		SSLRedirect:      sslRe,
-		ForceSSLRedirect: fSslRe,
+		SSLRedirect:      false,
+		ForceSSLRedirect: false,
 		AppRoot:          ar,
 		UseRegex:         ur,
 	}, nil
