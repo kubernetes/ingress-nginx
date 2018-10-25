@@ -351,6 +351,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.InfluxDB = anns.InfluxDB
 						loc.DefaultBackend = anns.DefaultBackend
 						loc.BackendProtocol = anns.BackendProtocol
+						loc.CustomHTTPErrors = anns.CustomHTTPErrors
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -391,6 +392,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						InfluxDB:             anns.InfluxDB,
 						DefaultBackend:       anns.DefaultBackend,
 						BackendProtocol:      anns.BackendProtocol,
+						CustomHTTPErrors:     anns.CustomHTTPErrors,
 					}
 
 					if loc.Redirect.FromToWWW {
