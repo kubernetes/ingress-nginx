@@ -97,9 +97,9 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 			Expect(len(errs)).Should(Equal(0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		})
-		It("should allow the multipart content type", func() {
-			host := "foo"
+		It("should not fail a request with multipart content type when multipart body processing disabled", func() {
 			contenttype := "multipart/form-data; boundary=alamofire.boundary.3fc2e849279e18fc"
+			host := "foo"
 			createIngress(f, host, "http-svc", 80, map[string]string{
 				"nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body": "false",
 				"nginx.ingress.kubernetes.io/lua-resty-waf":                        "active"})
@@ -113,6 +113,22 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 
 			Expect(len(errs)).Should(Equal(0))
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		})
+		It("should fail a request with multipart content type when multipart body processing enabled by default", func() {
+			contenttype := "multipart/form-data; boundary=alamofire.boundary.3fc2e849279e18fc"
+			host := "foo"
+			createIngress(f, host, "http-svc", 80, map[string]string{
+				"nginx.ingress.kubernetes.io/lua-resty-waf": "active"})
+
+			url := fmt.Sprintf("%s?msg=my-message", f.IngressController.HTTPURL)
+			resp, _, errs := gorequest.New().
+				Get(url).
+				Set("Host", host).
+				Set("Content-Type", contenttype).
+				End()
+
+			Expect(len(errs)).Should(Equal(0))
+			Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
 		})
 		It("should apply configured extra rules", func() {
 			host := "foo"

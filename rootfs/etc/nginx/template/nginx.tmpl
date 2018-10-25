@@ -906,8 +906,6 @@ stream {
 
                 {{ if not $location.LuaRestyWAF.ProcessMultipartBody }}
                 waf:set_option("process_multipart_body", false)
-                {{ else }}
-                waf:set_option("process_multipart_body", true)
                 {{ end }}
 
                 {{ if $location.LuaRestyWAF.Debug }}

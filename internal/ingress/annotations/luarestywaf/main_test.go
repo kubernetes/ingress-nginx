@@ -46,12 +46,12 @@ func TestParse(t *testing.T) {
 		{nil, &Config{}},
 		{map[string]string{}, &Config{}},
 
-		{map[string]string{luaRestyWAFAnnotation: "active"}, &Config{Mode: "ACTIVE", Debug: false, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "active"}, &Config{Mode: "ACTIVE", Debug: false, IgnoredRuleSets: []string{}, ProcessMultipartBody: true}},
 		{map[string]string{luaRestyWAFDebugAnnotation: "true"}, &Config{Debug: false}},
 
-		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "ACTIVE", Debug: true, IgnoredRuleSets: []string{}}},
-		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFDebugAnnotation: "false"}, &Config{Mode: "ACTIVE", Debug: false, IgnoredRuleSets: []string{}}},
-		{map[string]string{luaRestyWAFAnnotation: "inactive", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "INACTIVE", Debug: true, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "ACTIVE", Debug: true, IgnoredRuleSets: []string{}, ProcessMultipartBody: true}},
+		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFDebugAnnotation: "false"}, &Config{Mode: "ACTIVE", Debug: false, IgnoredRuleSets: []string{}, ProcessMultipartBody: true}},
+		{map[string]string{luaRestyWAFAnnotation: "inactive", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "INACTIVE", Debug: true, IgnoredRuleSets: []string{}, ProcessMultipartBody: true}},
 
 		{map[string]string{
 			luaRestyWAFAnnotation:                         "active",
@@ -59,9 +59,9 @@ func TestParse(t *testing.T) {
 			luaRestyWAFIgnoredRuleSetsAnnotation:          "ruleset1, ruleset2 ruleset3,   another.ruleset",
 			luaRestyWAFScoreThresholdAnnotation:           "10",
 			luaRestyWAFAllowUnknownContentTypesAnnotation: "true"},
-			&Config{Mode: "ACTIVE", Debug: true, IgnoredRuleSets: []string{"ruleset1", "ruleset2", "ruleset3", "another.ruleset"}, ScoreThreshold: 10, AllowUnknownContentTypes: true}},
+			&Config{Mode: "ACTIVE", Debug: true, IgnoredRuleSets: []string{"ruleset1", "ruleset2", "ruleset3", "another.ruleset"}, ScoreThreshold: 10, AllowUnknownContentTypes: true, ProcessMultipartBody: true}},
 
-		{map[string]string{luaRestyWAFAnnotation: "siMulate", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "SIMULATE", Debug: true, IgnoredRuleSets: []string{}}},
+		{map[string]string{luaRestyWAFAnnotation: "siMulate", luaRestyWAFDebugAnnotation: "true"}, &Config{Mode: "SIMULATE", Debug: true, IgnoredRuleSets: []string{}, ProcessMultipartBody: true}},
 		{map[string]string{luaRestyWAFAnnotation: "siMulateX", luaRestyWAFDebugAnnotation: "true"}, &Config{Debug: false}},
 
 		{map[string]string{luaRestyWAFAnnotation: "active", luaRestyWAFProcessMultipartBody: "false"}, &Config{Mode: "ACTIVE", ProcessMultipartBody: false, IgnoredRuleSets: []string{}}},
