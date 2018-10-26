@@ -17,7 +17,6 @@ limitations under the License.
 package annotations
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -58,18 +57,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 			})
 		Expect(err).NotTo(HaveOccurred())
 
-		_, _, errs := gorequest.New().
+		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
 			Retry(10, 1*time.Second, http.StatusNotFound).
+			RedirectPolicy(noRedirectPolicyFunc).
 			Set("Host", host).
 			End()
 
-		Expect(errs[0].Error()).Should(ContainSubstring(`https://forcesslredirect.bar.com/`))
-
-		log, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(log).ToNot(BeEmpty())
-
-		Expect(log).To(ContainSubstring(fmt.Sprintf(` "GET / HTTP/1.1" 308 171 "-" "Go-http-client/1.1"`)))
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
+		Expect(resp.Header.Get("Location")).Should(Equal("https://forcesslredirect.bar.com/"))
 	})
 })
