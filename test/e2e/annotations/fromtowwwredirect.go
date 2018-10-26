@@ -61,16 +61,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 
 		By("sending request to www.fromtowwwredirect.bar.com")
 
-		gorequest.New().
+		resp, _, errs := gorequest.New().
 			Get(fmt.Sprintf("%s/%s", f.IngressController.HTTPURL, "foo")).
 			Retry(10, 1*time.Second, http.StatusNotFound).
+			RedirectPolicy(noRedirectPolicyFunc).
 			Set("Host", fmt.Sprintf("%s.%s", "www", host)).
 			End()
 
-		log, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(log).ToNot(BeEmpty())
-
-		Expect(log).To(ContainSubstring(fmt.Sprintf(` "GET /foo HTTP/1.1" 308 171 "-" "Go-http-client/1.1"`)))
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
+		Expect(resp.Header.Get("Location")).Should(Equal("http://fromtowwwredirect.bar.com/foo"))
 	})
 })
