@@ -120,9 +120,18 @@ type Configuration struct {
 	// By default this is disabled
 	EnableModsecurity bool `json:"enable-modsecurity"`
 
-	// EnableModsecurity enables the OWASP ModSecurity Core Rule Set (CRS)
+	// EnableOWASPCoreRules enables the OWASP ModSecurity Core Rule Set (CRS)
 	// By default this is disabled
 	EnableOWASPCoreRules bool `json:"enable-owasp-modsecurity-crs"`
+
+	// Specifies the key that will be used to authenticate from where (on the internet)
+	// a modsecurity configuration file will be downloaded
+	// By default this is disabled
+	EnableRemoteRulesKey string `json:"remote-modsecurity-rules-key"`
+
+	// Specifies from where (on the internet) a modsecurity configuration file will be downloaded
+	// By default this is disabled
+	EnableRemoteRulesLocation string `json:"remote-modsecurity-rules-location"`
 
 	// ClientHeaderBufferSize allows to configure a custom buffer
 	// size for reading client request header
@@ -495,6 +504,9 @@ type Configuration struct {
 
 	// LocationSnippet adds custom configuration to all the locations in the nginx configuration
 	LocationSnippet string `json:"location-snippet"`
+
+	// ModsecuritySnippet adds custom configuration to the modsecurity section of the nginx configuration
+	ModsecuritySnippet string `json:"modsecurity-snippet"`
 
 	// HTTPRedirectCode sets the HTTP status code to be used in redirects.
 	// Supported codes are 301,302,307 and 308

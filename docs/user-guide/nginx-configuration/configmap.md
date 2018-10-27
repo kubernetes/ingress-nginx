@@ -35,6 +35,9 @@ The following table shows a configuration option's name, type, and the default v
 |[enable-dynamic-tls-records](#enable-dynamic-tls-records)|bool|"true"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
 |[enable-owasp-modsecurity-crs](#enable-owasp-modsecurity-crs)|bool|"false"|
+|[remote-modsecurity-rules-key](#remote-modsecurity-rules-key)|string|""|
+|[remote-modsecurity-rules-location](#remote-modsecurity-rules-location)|string|""|
+|[modsecurity-snippet](#modsecurity-snippet)|string|""|
 |[client-header-buffer-size](#client-header-buffer-size)|string|"1k"|
 |[client-header-timeout](#client-header-timeout)|int|60|
 |[client-body-buffer-size](#client-body-buffer-size)|string|"8k"|
@@ -190,11 +193,25 @@ _References:_
 
 ## enable-modsecurity
 
-Enables the modsecurity module for NGINX. _**default:**_ is disabled
+Enables the modsecurity module for NGINX. 
+_**default:**_ is disabled
 
 ## enable-owasp-modsecurity-crs
 
-Enables the OWASP ModSecurity Core Rule Set (CRS). _**default:**_ is disabled
+Enables the OWASP ModSecurity Core Rule Set (CRS). 
+_**default:**_ is disabled
+
+## remote-modsecurity-rules-key
+
+It also specifies the key that will be used to authenticate to the location where the file will be downloaded from.
+
+## remote-modsecurity-rules-location
+
+Specifies the location a modsecurity configuration file will be downloaded from.
+
+## modsecurity-snippet
+
+Add a snippet to modsecurity configuration.
 
 ## client-header-buffer-size
 
