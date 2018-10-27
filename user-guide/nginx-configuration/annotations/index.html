@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-3.0.4">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-3.0.6">
     
     
       
@@ -100,7 +100,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="../../../#annotations" tabindex="1" class="md-skip">
+      <a href="#annotations" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -1983,6 +1983,18 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
+<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold</a></td>
+<td>number</td>
+</tr>
+<tr>
+<td><a href="#lua-resty-waf">nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
 <td><a href="#influxdb">nginx.ingress.kubernetes.io/enable-influxdb</a></td>
 <td>"true" or "false"</td>
 </tr>
@@ -2383,6 +2395,22 @@ You can use <code class="codehilite">nginx.ingress.kubernetes.io/lua-resty-waf-i
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</span><span class="p p-Indicator">:</span> <span class="s">&#39;[=[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;access&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;actions&quot;:</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;disrupt&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;DENY&quot;</span><span class="nv"> </span><span class="s">},</span><span class="nv"> </span><span class="s">&quot;id&quot;:</span><span class="nv"> </span><span class="s">10001,</span><span class="nv"> </span><span class="s">&quot;msg&quot;:</span><span class="nv"> </span><span class="s">&quot;my</span><span class="nv"> </span><span class="s">custom</span><span class="nv"> </span><span class="s">rule&quot;,</span><span class="nv"> </span><span class="s">&quot;operator&quot;:</span><span class="nv"> </span><span class="s">&quot;STR_CONTAINS&quot;,</span><span class="nv"> </span><span class="s">&quot;pattern&quot;:</span><span class="nv"> </span><span class="s">&quot;foo&quot;,</span><span class="nv"> </span><span class="s">&quot;vars&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;parse&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">&quot;values&quot;,</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;type&quot;:</span><span class="nv"> </span><span class="s">&quot;REQUEST_ARGS&quot;</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;body_filter&quot;:</span><span class="nv"> </span><span class="s">[],</span><span class="nv"> </span><span class="s">&quot;header_filter&quot;:[]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]=]&#39;</span>
 </pre></div>
 
+<p>Since the default allowed contents were <code class="codehilite">&quot;text/html&quot;, &quot;text/json&quot;, &quot;application/json&quot;</code>
+We can enable the following annotation for allow all contents type:</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+</pre></div>
+
+<p>The default score of lua-resty-waf is 5, which usually triggered if hitting 2 default rules, you can modify the score threshold with following annotation:</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold</span><span class="p p-Indicator">:</span> <span class="s">&quot;10&quot;</span>
+</pre></div>
+
+<p>When you enabled HTTPS in the endpoint and since resty-lua will return 500 error when processing "multipart" contents
+Reference for this <a href="https://github.com/p0pr0ck5/lua-resty-waf/issues/166">issue</a></p>
+<p>By default, it will be "true"</p>
+<p>You may enable the following annotation for work around:</p>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body</span><span class="p p-Indicator">:</span> <span class="s">&quot;false&quot;</span>
+</pre></div>
+
 <p>For details on how to write WAF rules, please refer to <a href="https://github.com/p0pr0ck5/lua-resty-waf">https://github.com/p0pr0ck5/lua-resty-waf</a>.</p>
 <h3 id="influxdb">InfluxDB<a class="headerlink" href="#influxdb" title="Permanent link">&para;</a></h3>
 <p>Using <code class="codehilite">influxdb-*</code> annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
@@ -2493,7 +2521,7 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
       
     </div>
     
-      <script src="../../../assets/javascripts/application.583bbe55.js"></script>
+      <script src="../../../assets/javascripts/application.5e60981f.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"../../.."}})</script>
       
