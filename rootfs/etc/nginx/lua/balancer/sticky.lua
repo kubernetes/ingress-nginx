@@ -15,6 +15,8 @@ function _M.new(self, backend)
   local o = {
     instance = self.factory:new(nodes),
     cookie_name = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["name"] or "route",
+    cookie_expires = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["expires"],
+    cookie_max_age = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["maxage"],
     digest_func = digest_func,
   }
   setmetatable(o, self)
@@ -31,20 +33,61 @@ local function encrypted_endpoint_string(self, endpoint_string)
   return encrypted
 end
 
+local function parse_cookie_expires(expires)
+  local time = tonumber(string.sub(expires, 0, string.len(expires) - 1))
+  if time == nil then
+    return nil, string.format("the time of expires (%s) is wrong", expires)
+  end
+
+  local unit = string.sub(expires, -1)
+  if unit == "y" then
+    return time * 60 * 60 * 24 * 365
+  elseif unit == "M" then
+    return time * 60 * 60 * 24 * 30
+  elseif unit == "w" then
+    return time * 60 * 60 * 24 * 7
+  elseif unit == "d" then
+    return time * 60 * 60 * 24
+  elseif unit == "h" then
+    return time * 60 * 60
+  elseif unit == "m" then
+    return time * 60
+  elseif unit == "s" then
+    return time
+  else
+    return nil, string.format("the unit of expires (%s) is wrong, validated unit includes: y, M, w, d, h, m and s", expires)
+  end
+end
+
 local function set_cookie(self, value)
   local cookie, err = ck:new()
   if not cookie then
     ngx.log(ngx.ERR, err)
   end
 
-  local ok
-  ok, err = cookie:set({
+  local cookie_data = {
     key = self.cookie_name,
     value = value,
     path = ngx.var.location_path,
     domain = ngx.var.host,
     httponly = true,
-  })
+  }
+
+  if self.cookie_expires then
+    local expires, err = parse_cookie_expires(self.cookie_expires)
+    if err then
+      ngx.log(ngx.WARN, string.format("error when parsing cookie expires: %s, ignoring it", tostring(err)))
+    else
+      cookie_data.expires = ngx.cookie_time(expires)
+    end
+  end
+
+  if self.cookie_max_age then
+    cookie_data.max_age = tonumber(self.cookie_max_age)
+  end
+
+  local ok
+  ok, err = cookie:set(cookie_data)
   if not ok then
     ngx.log(ngx.ERR, err)
   end

@@ -39,10 +39,21 @@ const (
 	// one isn't supplied and affinity is set to "cookie".
 	annotationAffinityCookieHash = "session-cookie-hash"
 	defaultAffinityCookieHash    = "md5"
+
+	// This is used to control the cookie expires, its value is a time period, the cookie will
+	// not expire during the time period. e.g. 1h (1 hour) the validated time unit includes:
+	// y, M, w, d, h, m and s
+	annotationAffinityCookieExpires = "session-cookie-expires"
+
+	// This is used to control the cookie expires, its value is a number of seconds until the
+	// cookie expires
+	annotationAffinityCookieMaxAge = "session-cookie-max-age"
 )
 
 var (
-	affinityCookieHashRegex = regexp.MustCompile(`^(index|md5|sha1)$`)
+	affinityCookieHashRegex    = regexp.MustCompile(`^(index|md5|sha1)$`)
+	affinityCookieExpiresRegex = regexp.MustCompile(`^(\d+(y|M|w|d|h|m|s))$`)
+	affinityCookieMaxAgeRegex  = regexp.MustCompile(`(^0|-?[1-9]\d*$)`)
 )
 
 // Config describes the per ingress session affinity config
@@ -58,17 +69,23 @@ type Cookie struct {
 	Name string `json:"name"`
 	// The hash that will be used to encode the cookie in case of cookie affinity type
 	Hash string `json:"hash"`
+	// The time period to control cookie expires
+	Expires string `json:"expires"`
+	// The number of seconds until the cookie expires
+	MaxAge string `json:"maxage"`
 }
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
 func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
+	cookie := &Cookie{}
 	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing)
 
 	if err != nil || sn == "" {
 		glog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
 		sn = defaultAffinityCookieName
 	}
+	cookie.Name = sn
 
 	sh, err := parser.GetStringAnnotation(annotationAffinityCookieHash, ing)
 
@@ -76,11 +93,22 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Setting it to default %v", ing.Name, annotationAffinityCookieHash, defaultAffinityCookieHash)
 		sh = defaultAffinityCookieHash
 	}
+	cookie.Hash = sh
 
-	return &Cookie{
-		Name: sn,
-		Hash: sh,
+	se, err := parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)
+	if err != nil && !affinityCookieExpiresRegex.MatchString(se) {
+		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieExpires)
+		se = ""
 	}
+	cookie.Expires = se
+
+	sm, err := parser.GetStringAnnotation(annotationAffinityCookieMaxAge, ing)
+	if err != nil && !affinityCookieMaxAgeRegex.MatchString(sm) {
+		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
+		sm = ""
+	}
+	cookie.MaxAge = sm
+	return cookie
 }
 
 // NewParser creates a new Affinity annotation parser
