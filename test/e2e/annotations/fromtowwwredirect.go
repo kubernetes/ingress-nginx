@@ -31,8 +31,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 	f := framework.NewDefaultFramework("fromtowwwredirect")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -47,17 +46,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return Expect(cfg).Should(ContainSubstring(`server_name www.fromtowwwredirect.bar.com;`)) &&
 					Expect(cfg).Should(ContainSubstring(`return 308 $scheme://fromtowwwredirect.bar.com$request_uri;`))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		By("sending request to www.fromtowwwredirect.bar.com")
 

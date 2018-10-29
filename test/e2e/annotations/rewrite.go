@@ -33,8 +33,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 	f := framework.NewDefaultFramework("rewrite")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(1)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(1)
 	})
 
 	AfterEach(func() {
@@ -48,17 +47,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:8080/", host)
 
 		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, `rewrite "(?i)/something/(.*)" /$1 break;`) &&
 					strings.Contains(server, `rewrite "(?i)/something$" / break;`)
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		By("sending request to Ingress rule path (lowercase)")
 
@@ -93,16 +88,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "rewrite_log on;")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL+"/something").
@@ -123,15 +114,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		By("creating a regular ingress definition")
 		ing := framework.NewSingleIngress("kube-lego", "/.well-known/acme/challenge", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{})
-		_, err := f.EnsureIngress(ing)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(ing)
 
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "/.well-known/acme/challenge")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		By("making a request to the non-rewritten location")
 		resp, body, errs := gorequest.New().
@@ -148,15 +136,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
 		rewriteIng := framework.NewSingleIngress("rewrite-index", "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err = f.EnsureIngress(rewriteIng)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(rewriteIng).NotTo(BeNil())
 
-		err = f.WaitForNginxServer(host,
+		f.EnsureIngress(rewriteIng)
+
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "location ~* ^/ {") && strings.Contains(server, `location ~* "^/.well-known/acme/challenge" {`)
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		By("making a second request to the non-rewritten location")
 		resp, body, errs = gorequest.New().
@@ -173,15 +159,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		By("creating a regular ingress definition")
 		ing := framework.NewSingleIngress("foo", "/foo", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{})
-		_, err := f.EnsureIngress(ing)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(ing)
 
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "location /foo {")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		By(`creating an ingress definition with the use-regex amd rewrite-target annotation`)
 		annotations := map[string]string{
@@ -189,15 +172,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
 		ing = framework.NewSingleIngress("regex", "/foo.+", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err = f.EnsureIngress(ing)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(ing)
 
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, `location ~* "^/foo" {`) && strings.Contains(server, `location ~* "^/foo.+\/?(?<baseuri>.*)" {`)
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		By("ensuring '/foo' matches '~* ^/foo'")
 		resp, body, errs := gorequest.New().
@@ -225,9 +205,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		By("creating a regular ingress definition")
 		ing := framework.NewSingleIngress("foo", "/foo/bar/bar", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{})
-		_, err := f.EnsureIngress(ing)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(ing)
 
 		By(`creating an ingress definition with the use-regex annotation`)
 		annotations := map[string]string{
@@ -235,15 +213,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
 		ing = framework.NewSingleIngress("regex", "/foo/bar/[a-z]{3}", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err = f.EnsureIngress(ing)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(ing)
 
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, `location ~* "^/foo/bar/bar" {`) && strings.Contains(server, `location ~* "^/foo/bar/[a-z]{3}\/?(?<baseuri>.*)" {`)
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		By("check that '/foo/bar/bar' does not match the longest exact path")
 		resp, body, errs := gorequest.New().

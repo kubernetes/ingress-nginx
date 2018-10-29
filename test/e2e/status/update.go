@@ -47,7 +47,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 
 	It("should update status field after client-go reconnection", func() {
 		port, cmd, err := f.KubectlProxy(0)
-		Expect(err).NotTo(HaveOccurred(), "starting kubectl proxy")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error starting kubectl proxy")
 
 		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1beta1.Deployment) error {
@@ -70,46 +70,42 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.IngressController.Namespace).Update(deployment)
 				return err
 			})
-		Expect(err).NotTo(HaveOccurred(), "updating ingress controller deployment flags")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error updating ingress controller deployment flags")
 
-		err = f.NewEchoDeploymentWithReplicas(1)
-		Expect(err).NotTo(HaveOccurred(), "waiting one replicaset in echoserver deployment")
+		f.NewEchoDeploymentWithReplicas(1)
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred(), "waiting Ingress creation for hostname %v", host)
-		Expect(ing).NotTo(BeNil())
+		ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, fmt.Sprintf("server_name %s", host))
 			})
-		Expect(err).NotTo(HaveOccurred(), "waiting for nginx server section with server_name %v", host)
 
 		framework.Logf("waiting for leader election and initial status update")
 		time.Sleep(30 * time.Second)
 
 		err = cmd.Process.Kill()
-		Expect(err).NotTo(HaveOccurred(), "terminating kubectl proxy")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error terminating kubectl proxy")
 
 		ing, err = f.KubeClientSet.Extensions().Ingresses(f.IngressController.Namespace).Get(host, metav1.GetOptions{})
-		Expect(err).NotTo(HaveOccurred(), "getting %s/%v Ingress", f.IngressController.Namespace, host)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error getting %s/%v Ingress", f.IngressController.Namespace, host)
 
 		ing.Status.LoadBalancer.Ingress = []apiv1.LoadBalancerIngress{}
 		_, err = f.KubeClientSet.Extensions().Ingresses(f.IngressController.Namespace).UpdateStatus(ing)
-		Expect(err).NotTo(HaveOccurred(), "cleaning Ingress status")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error cleaning Ingress status")
 		time.Sleep(10 * time.Second)
 
 		err = f.KubeClientSet.CoreV1().
 			ConfigMaps(f.IngressController.Namespace).
 			Delete("ingress-controller-leader-nginx", &metav1.DeleteOptions{})
-		Expect(err).NotTo(HaveOccurred(), "deleting leader election configmap")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error deleting leader election configmap")
 
 		_, cmd, err = f.KubectlProxy(port)
-		Expect(err).NotTo(HaveOccurred(), "starting kubectl proxy")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error starting kubectl proxy")
 		defer func() {
 			if cmd != nil {
 				err := cmd.Process.Kill()
-				Expect(err).NotTo(HaveOccurred(), "terminating kubectl proxy")
+				Expect(err).NotTo(HaveOccurred(), "unexpected error terminating kubectl proxy")
 			}
 		}()
 
@@ -125,7 +121,7 @@ var _ = framework.IngressNginxDescribe("Status Update [Status]", func() {
 
 			return true, nil
 		})
-		Expect(err).NotTo(HaveOccurred(), "waiting for ingress status")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for ingress status")
 		Expect(ing.Status.LoadBalancer.Ingress).Should(Equal([]apiv1.LoadBalancerIngress{
 			{IP: "1.1.0.0"},
 		}))

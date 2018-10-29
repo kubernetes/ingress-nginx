@@ -17,19 +17,19 @@ limitations under the License.
 package annotations
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"k8s.io/ingress-nginx/test/e2e/framework"
 	"regexp"
 	"strings"
+
+	. "github.com/onsi/ginkgo"
+
+	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
 	f := framework.NewDefaultFramework("ipwhitelist")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -44,15 +44,12 @@ var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
-
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(ing)
 
 		denyRegex := regexp.MustCompile("geo \\$the_real_ip \\$deny_[A-Za-z]{32}")
 		denyString := ""
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(conf string) bool {
 
 				match := denyRegex.FindStringSubmatch(conf)
@@ -64,22 +61,19 @@ var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
 				denyString = strings.Replace(match[0], "geo $the_real_ip ", "", -1)
 				return strings.Contains(conf, match[0])
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		ipOne := "18.0.0.0/8 0;"
 		ipTwo := "56.0.0.0/8 0;"
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(conf string) bool {
 				return strings.Contains(conf, ipOne) && strings.Contains(conf, ipTwo)
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		denyStatement := "if (" + denyString + ")"
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, denyStatement)
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 })
