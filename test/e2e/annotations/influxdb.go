@@ -183,8 +183,7 @@ func execInfluxDBCommand(pod *corev1.Pod, command string) (string, error) {
 		execErr bytes.Buffer
 	)
 
-	args := fmt.Sprintf("kubectl exec --namespace %v %v -- %v", pod.Namespace, pod.Name, command)
-	cmd := exec.Command("/bin/bash", "-c", args)
+	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s -- %s", framework.KubectlPath, pod.Namespace, pod.Name, command))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 
@@ -195,7 +194,7 @@ func execInfluxDBCommand(pod *corev1.Pod, command string) (string, error) {
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("could not execute: %v", err)
+		return "", fmt.Errorf("could not execute '%s %s': %v", cmd.Path, cmd.Args, err)
 	}
 
 	return execOut.String(), nil
