@@ -46,6 +46,11 @@ const (
 	HTTPS RequestScheme = "https"
 )
 
+var (
+	// KubectlPath defines the full path of the kubectl binary
+	KubectlPath = "/usr/local/bin/kubectl"
+)
+
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
 type Framework struct {
 	BaseName string
@@ -197,9 +202,8 @@ func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) err
 	return wait.Poll(Poll, time.Minute*5, f.matchNginxConditions("", matcher))
 }
 
-// NginxLogs returns the logs of the nginx ingress controller pod running
-func (f *Framework) NginxLogs() (string, error) {
-	l, err := f.KubeClientSet.CoreV1().Pods(f.IngressController.Namespace).List(metav1.ListOptions{
+func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
+	l, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	if err != nil {
@@ -209,12 +213,17 @@ func (f *Framework) NginxLogs() (string, error) {
 	for _, pod := range l.Items {
 		if strings.HasPrefix(pod.GetName(), "nginx-ingress-controller") {
 			if isRunning, err := podRunningReady(&pod); err == nil && isRunning {
-				return f.Logs(&pod)
+				return Logs(&pod)
 			}
 		}
 	}
 
 	return "", fmt.Errorf("no nginx ingress controller pod is running (logs)")
+}
+
+// NginxLogs returns the logs of the nginx ingress controller pod running
+func (f *Framework) NginxLogs() (string, error) {
+	return nginxLogs(f.KubeClientSet, f.IngressController.Namespace)
 }
 
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
@@ -380,7 +389,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to wait for nginx-ingress-controller replica count to be %v", replicas)
+		return errors.Wrapf(err, "waiting for nginx-ingress-controller replica count to be %v", replicas)
 	}
 
 	return nil
