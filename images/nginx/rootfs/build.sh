@@ -53,10 +53,6 @@ get_src()
   rm -rf "$f"
 }
 
-if [[ ${ARCH} == "ppc64le" ]]; then
-  clean-install software-properties-common
-fi
-
 apt-get update && apt-get dist-upgrade -y
 
 # install required packages to build
@@ -94,7 +90,14 @@ clean-install \
   dumb-init \
   gdb \
   valgrind \
+  bc \
   || exit 1
+
+if [[ ${ARCH} == "ppc64le" ]]; then
+  wget http://ftp.us.debian.org/debian/pool/main/a/apt/libapt-pkg5.0_1.7.0_ppc64el.deb
+  dpkg -i libapt-pkg5.0_1.7.0_ppc64el.deb
+  clean-install python3-apt python3-software-properties software-properties-common
+fi
 
 if [[ ${ARCH} == "x86_64" ]]; then
   ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
@@ -136,6 +139,13 @@ geoip_get "GeoLiteCity.dat.gz" "https://geolite.maxmind.com/download/geoip/datab
 geoip2_get "GeoLite2-City"     "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz"
 geoip2_get "GeoLite2-ASN"      "http://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz"
 
+if [[ (${ARCH} == "ppc64le") ]]; then
+  echo "deb http://deb.debian.org/debian experimental main" >> /etc/apt/sources.list
+  apt-get update
+  apt-get -t experimental install -y luajit
+fi
+
+
 mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
@@ -167,7 +177,7 @@ get_src 4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5 \
 get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src fe7d3188e097d68f1942d46c4adba262d9ddcf433409ebc15bb5355bfb001a4a \
+get_src a75e3c0249c8ce4313d21b43d3cf3dcd89518dd6582ef7c6697cb7fe6ef5a84e \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
 get_src b68286966f292fb552511b71bd8bc11af8f12c8aa760372d1437ac8760cb2f25 \
@@ -206,10 +216,10 @@ get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 5a4485be0031d285f2bdf59afb1f7b8f3cef4c476595ed66f1258206e1b5c3ac \
+get_src 21dab7625a028d4560d0215c4bc3b82f6153344f933abb99dc9fd5f0d19519ab \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 
-get_src 1897d7677d99c1cedeb95b2eb00652a4a7e8e604304c3053a93bd3ba7dd82884 \
+get_src c673fcee37c1c4794f921b6710b09e8a0e1e58117aa788f798507d033f737192 \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
 
 get_src 15bd1005228cf2c869a6f09e8c41a6aaa6846e4936c473106786ae8ac860fab7 \
@@ -225,21 +235,44 @@ export MAKEFLAGS=-j${CORES}
 export CTEST_BUILD_FLAGS=${MAKEFLAGS}
 export HUNTER_JOBS_NUMBER=${CORES}
 
+OPENSSL_DIR="$BUILD_PATH/openssl"
+mkdir -p $OPENSSL_DIR
+cd $OPENSSL_DIR
+
+# Install Openssl 1.1.1 from source
+wget http://http.debian.net/debian/pool/main/o/openssl/openssl_1.1.1-1.dsc
+wget http://http.debian.net/debian/pool/main/o/openssl/openssl_1.1.1.orig.tar.gz
+wget http://http.debian.net/debian/pool/main/o/openssl/openssl_1.1.1.orig.tar.gz.asc
+wget http://http.debian.net/debian/pool/main/o/openssl/openssl_1.1.1-1.debian.tar.xz
+
+tar zxpvf openssl_1.1.1.orig.tar.gz
+cd openssl-1.1.1/
+tar xpvf ../openssl_1.1.1-1.debian.tar.xz
+
+dpkg-buildpackage -rfakeroot
+
+cd ..
+
+dpkg -i openssl_1.1.1-1_amd64.deb libssl1.1_1.1.1-1_amd64.deb libssl-dev_1.1.1-1_amd64.deb
+
+# Install luajit from openresty fork
 export LUAJIT_LIB=/usr/local/lib
+export LUA_LIB_DIR="$LUAJIT_LIB/lua"
 
 # luajit is available only as deb package on ppc64le
-if [[ (${ARCH} == "ppc64le") ]]; then
-  clean-install luajit
-else
+if [[ (${ARCH} != "ppc64le") ]]; then
   cd "$BUILD_PATH/luajit2-$LUAJIT_VERSION"
   make CCDEBUG=-g
   make install
 
   export LUAJIT_INC=/usr/local/include/luajit-2.1
-  export LUA_LIB_DIR="$LUAJIT_LIB/lua"
 fi
 
 # Installing luarocks packages
+if [[ ${ARCH} == "x86_64" ]]; then
+  export PCRE_DIR=/usr/lib/x86_64-linux-gnu
+fi
+
 if [[ ${ARCH} == "armv7l" ]]; then
   export PCRE_DIR=/usr/lib/armhf-linux-gnu
 fi
@@ -252,7 +285,8 @@ if [[ ${ARCH} == "ppc64le" ]]; then
   export PCRE_DIR=/usr/lib/powerpc64le-linux-gnu
 fi
 
-luarocks install lrexlib-pcre 2.7.2-1
+cd "$BUILD_PATH"
+luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
 
 cd "$BUILD_PATH/lua-resty-core-0.1.15"
 make install
@@ -330,14 +364,14 @@ EOF
 mkdir .build
 cd .build
 
-cmake   -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_TESTING=OFF \
-        -DJAEGERTRACING_BUILD_EXAMPLES=OFF \
-        -DJAEGERTRACING_BUILD_CROSSDOCK=OFF \
-        -DJAEGERTRACING_COVERAGE=OFF \
-        -DJAEGERTRACING_PLUGIN=ON \
-        -DHUNTER_CONFIGURATION_TYPES=Release \
-        -DJAEGERTRACING_WITH_YAML_CPP=ON ..
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_TESTING=OFF \
+      -DJAEGERTRACING_BUILD_EXAMPLES=OFF \
+      -DJAEGERTRACING_BUILD_CROSSDOCK=OFF \
+      -DJAEGERTRACING_COVERAGE=OFF \
+      -DJAEGERTRACING_PLUGIN=ON \
+      -DHUNTER_CONFIGURATION_TYPES=Release \
+      -DJAEGERTRACING_WITH_YAML_CPP=ON ..
 
 make
 make install
@@ -360,10 +394,10 @@ EOF
 mkdir .build
 cd .build
 
-cmake   -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_SHARED_LIBS=ON \
-        -DBUILD_PLUGIN=ON \
-        -DBUILD_TESTING=OFF ..
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_SHARED_LIBS=ON \
+      -DBUILD_PLUGIN=ON \
+      -DBUILD_TESTING=OFF ..
 
 make
 make install
@@ -379,9 +413,7 @@ git submodule update
 cd "$BUILD_PATH"
 git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
-# TODO: use a tag once 3.0.3 is released
-# checkout v3.0.3
-# git checkout
+git checkout 973c1f1028429452308bcbce7df8a6283dc59ffe
 git submodule init
 git submodule update
 sh build.sh
