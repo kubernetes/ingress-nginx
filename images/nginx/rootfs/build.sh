@@ -29,13 +29,13 @@ export NGINX_OPENTRACING_VERSION=0.6.0
 export OPENTRACING_CPP_VERSION=1.5.0
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=ba0fa3fa6dbb01995d996f988a897e272100bf95
-export MODSECURITY_VERSION=37b76e88df4bce8a9846345c27271d7e6ce1acfb
+export MODSECURITY_VERSION=56cfa4e4805bb6134b97143052a9b48919cc294f
 export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
 export LUA_UPSTREAM_VERSION=0.07
-export NGINX_INFLUXDB_VERSION=f20cfb2458c338f162132f5a21eb021e2cbe6383
+export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export LUAJIT_VERSION=8e35a1932250b0313c06393061f332c760efdf40
+export LUAJIT_VERSION=c58fe79b870f1934479bf14fe8035fc3d9fdfde2
 
 export BUILD_PATH=/tmp/build
 
@@ -253,7 +253,7 @@ dpkg-buildpackage -rfakeroot
 
 cd ..
 
-dpkg -i openssl_1.1.1-1_amd64.deb libssl1.1_1.1.1-1_amd64.deb libssl-dev_1.1.1-1_amd64.deb
+dpkg -i openssl_1.1.1-1_*.deb libssl1.1_1.1.1-1_*.deb libssl-dev_1.1.1-1_*.deb
 
 # Install luajit from openresty fork
 export LUAJIT_LIB=/usr/local/lib
