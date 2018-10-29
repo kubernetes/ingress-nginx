@@ -69,6 +69,8 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAffinityType)] = "cookie"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieHash)] = "sha123"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieName)] = "INGRESSCOOKIE"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieExpires)] = "1h"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieMaxAge)] = "3000"
 	ing.SetAnnotations(data)
 
 	affin, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -87,5 +89,13 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 
 	if nginxAffinity.Cookie.Name != "INGRESSCOOKIE" {
 		t.Errorf("expected route as sticky-name but returned %v", nginxAffinity.Cookie.Name)
+	}
+
+	if nginxAffinity.Cookie.Expires != "1h" {
+		t.Errorf("expected 1h as sticky-expires but returned %v", nginxAffinity.Cookie.Expires)
+	}
+
+	if nginxAffinity.Cookie.MaxAge != "3000" {
+		t.Errorf("expected 3000 as sticky-max-age but returned %v", nginxAffinity.Cookie.MaxAge)
 	}
 }

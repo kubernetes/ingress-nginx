@@ -88,6 +88,38 @@ describe("Sticky", function()
         assert.equal(sticky_balancer_instance.digest_func, default_hash_implementation)
       end)
     end)
+
+    context("when backend specifies cookie expires", function()
+      it("returns an instance containing the corresponding cookie expires", function()
+        local temp_backend = util.deepcopy(test_backend)
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "1y"
+        local sticky_balancer_instance = sticky:new(temp_backend)
+        assert.equal(sticky_balancer_instance.cookie_expires, "1y")
+      end)
+    end)
+
+    context("when backend does not specify cookie expires", function()
+      it("returns an instance without cookie expires", function()
+        local sticky_balancer_instance = sticky:new(test_backend)
+        assert.equal(sticky_balancer_instance.cookie_expires, nil)
+      end)
+    end)
+
+    context("when backend specifies cookie max-age", function()
+      it("returns an instance containing the corresponding cookie max-age", function()
+        local temp_backend = util.deepcopy(test_backend)
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.maxage = 1000
+        local sticky_balancer_instance = sticky:new(temp_backend)
+        assert.equal(sticky_balancer_instance.cookie_max_age, 1000)
+      end)
+    end)
+
+    context("when backend does not specify cookie max-age", function()
+      it("returns an instance without cookie max-age", function()
+        local sticky_balancer_instance = sticky:new(test_backend)
+        assert.equal(sticky_balancer_instance.cookie_max_age, nil)
+      end)
+    end)
   end)
 
   describe("balance()", function()
@@ -128,6 +160,91 @@ describe("Sticky", function()
           return cookie_instance, false
         end
         local sticky_balancer_instance = sticky:new(get_test_backend())
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+      end)
+
+      it("sets an expires cookie (with expires) on the client", function()
+        local s = {}
+        local expected_expires
+        cookie.new = function(self)
+          local test_backend_hash_fn = test_backend.sessionAffinityConfig.cookieSessionAffinity.hash
+          local cookie_instance = {
+            set = function(self, payload)
+              assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
+              assert.equal(payload.value, util[test_backend_hash_fn .. "_digest"](test_backend_endpoint))
+              assert.equal(payload.path, ngx.var.location_path)
+              assert.equal(payload.domain, nil)
+              assert.equal(payload.httponly, true)
+              expected_expires = payload.expires
+              return true, nil
+            end,
+            get = function(k) return false end,
+          }
+          s = spy.on(cookie_instance, "set")
+          return cookie_instance, false
+        end
+        local temp_backend = util.deepcopy(get_test_backend())
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "1y"
+        local sticky_balancer_instance = sticky:new(temp_backend)
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+        assert.equal(expected_expires, ngx.cookie_time(1 * 60 * 60 * 24 * 365))
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "10M"
+        sticky_balancer_instance = sticky:new(temp_backend)
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+        assert.equal(expected_expires, ngx.cookie_time(10 * 60 * 60 * 24 * 30))
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "8w"
+        sticky_balancer_instance = sticky:new(temp_backend)
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+        assert.equal(expected_expires, ngx.cookie_time(8 * 60 * 60 * 24 * 7))
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "200d"
+        sticky_balancer_instance = sticky:new(temp_backend)
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+        assert.equal(expected_expires, ngx.cookie_time(200 * 60 * 60 * 24))
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "24h"
+        sticky_balancer_instance = sticky:new(temp_backend)
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+        assert.equal(expected_expires, ngx.cookie_time(24 * 60 * 60))
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "30m"
+        sticky_balancer_instance = sticky:new(temp_backend)
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+        assert.equal(expected_expires, ngx.cookie_time(30 * 60))
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "300s"
+        sticky_balancer_instance = sticky:new(temp_backend)
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+        assert.equal(expected_expires, ngx.cookie_time(300))
+      end)
+
+      it("sets an expires cookie (with max-age) on the client", function()
+        local s = {}
+        local cookie_payload = {}
+        cookie.new = function(self)
+          local test_backend_hash_fn = test_backend.sessionAffinityConfig.cookieSessionAffinity.hash
+          local cookie_instance = {
+            set = function(self, payload)
+              assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
+              assert.equal(payload.value, util[test_backend_hash_fn .. "_digest"](test_backend_endpoint))
+              assert.equal(payload.path, ngx.var.location_path)
+              assert.equal(payload.domain, nil)
+              assert.equal(payload.httponly, true)
+              assert.equal(payload.max_age, 1000)
+              return true, nil
+            end,
+            get = function(k) return false end,
+          }
+          s = spy.on(cookie_instance, "set")
+          return cookie_instance, false
+        end
+        local temp_backend = util.deepcopy(get_test_backend())
+        temp_backend.sessionAffinityConfig.cookieSessionAffinity.maxage = "1000"
+        local sticky_balancer_instance = sticky:new(temp_backend)
         assert.has_no.errors(function() sticky_balancer_instance:balance() end)
         assert.spy(s).was_called()
       end)
