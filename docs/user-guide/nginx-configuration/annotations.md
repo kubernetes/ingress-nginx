@@ -27,6 +27,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
 |[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
@@ -326,6 +327,15 @@ Additionally it is possible to set:
   `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authentication request completes.
 * `nginx.ingress.kubernetes.io/auth-request-redirect`:
   `<Request_Redirect_URL>`  to specify the X-Auth-Request-Redirect header value.
+* `nginx.ingress.kubernetes.io/auth-snippet`:
+  `<Auth_Snippet>` to specify a custom snippet to use with external authentication, e.g.
+
+```yaml
+nginx.ingress.kubernetes.io/auth-url: http://foo.com/external-auth
+nginx.ingress.kubernetes.io/auth-snippet: |
+    proxy_set_header Foo-Header 42;
+```
+> Note: `nginx.ingress.kubernetes.io/auth-snippet` is an optional annotation. However, it may only be used in conjunction with `nginx.ingress.kubernetes.io/auth-url` and will be ignored if `nginx.ingress.kubernetes.io/auth-url` is not set
 
 !!! example
     Please check the [external-auth](../../examples/auth/external-auth/README.md) example.
