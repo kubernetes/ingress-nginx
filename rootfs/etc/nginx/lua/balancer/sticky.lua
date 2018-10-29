@@ -55,7 +55,7 @@ local function parse_cookie_expires(expires)
   elseif unit == "s" then
     return time
   else
-    return nil, string.format("the unit of expires (%s) is wrong, validated unit includes: y, M, w, d, h, m and s", expires)
+    return nil, string.format("the unit of expires (%s) is wrong", expires)
   end
 end
 
@@ -73,8 +73,9 @@ local function set_cookie(self, value)
     httponly = true,
   }
 
+  local expires
   if self.cookie_expires then
-    local expires, err = parse_cookie_expires(self.cookie_expires)
+    expires, err = parse_cookie_expires(self.cookie_expires)
     if err then
       ngx.log(ngx.WARN, string.format("error when parsing cookie expires: %s, ignoring it", tostring(err)))
     else
