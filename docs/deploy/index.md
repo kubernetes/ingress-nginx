@@ -2,8 +2,7 @@
 
 ## Contents
 
-- [Generic Deployment](#generic-deployment)
-  - [Mandatory command](#mandatory-command)
+- [Prerequisite Generic Deployment Command](#prerequisite-generic-deployment-command)
   - [Provider Specific Steps](#provider-specific-steps)
     - [Docker for Mac](#docker-for-mac)
     - [minikube](#minikube)
