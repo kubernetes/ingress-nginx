@@ -26,7 +26,7 @@ ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
 
-QEMUVERSION=v2.12.0-1
+QEMUVERSION=v3.0.0
 
 IMGNAME = nginx
 IMAGE = $(REGISTRY)/$(IMGNAME)
