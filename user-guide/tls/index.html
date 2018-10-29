@@ -1226,7 +1226,7 @@
                 <h1 id="tlshttps">TLS/HTTPS<a class="headerlink" href="#tlshttps" title="Permanent link">&para;</a></h1>
 <h2 id="tls-secrets">TLS Secrets<a class="headerlink" href="#tls-secrets" title="Permanent link">&para;</a></h2>
 <p>Anytime we reference a TLS secret, we mean a PEM-encoded X.509, RSA (2048) secret.</p>
-<p>You can generate a self-signed certificate and private key with with:</p>
+<p>You can generate a self-signed certificate and private key with:</p>
 <div class="codehilite"><pre><span></span>$ openssl req -x509 -nodes -days <span class="m">365</span> -newkey rsa:2048 -keyout <span class="si">${</span><span class="nv">KEY_FILE</span><span class="si">}</span> -out <span class="si">${</span><span class="nv">CERT_FILE</span><span class="si">}</span> -subj <span class="s2">&quot;/CN=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">/O=</span><span class="si">${</span><span class="nv">HOST</span><span class="si">}</span><span class="s2">&quot;</span><span class="sb">`</span>
 </pre></div>
 
