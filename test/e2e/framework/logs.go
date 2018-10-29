@@ -25,7 +25,7 @@ import (
 )
 
 // Logs returns the log entries of a given Pod.
-func (f *Framework) Logs(pod *v1.Pod) (string, error) {
+func Logs(pod *v1.Pod) (string, error) {
 	var (
 		execOut bytes.Buffer
 		execErr bytes.Buffer
@@ -35,14 +35,13 @@ func (f *Framework) Logs(pod *v1.Pod) (string, error) {
 		return "", fmt.Errorf("could not determine which container to use")
 	}
 
-	args := fmt.Sprintf("kubectl logs -n %v %v", pod.Namespace, pod.Name)
-	cmd := exec.Command("/bin/bash", "-c", args)
+	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v logs --namespace %s %s", KubectlPath, pod.Namespace, pod.Name))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 
 	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("could not execute: %v", err)
+		return "", fmt.Errorf("could not execute '%s %s': %v", cmd.Path, cmd.Args, err)
 	}
 
 	if execErr.Len() > 0 {
