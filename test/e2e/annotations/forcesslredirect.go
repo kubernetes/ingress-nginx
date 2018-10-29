@@ -30,8 +30,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 	f := framework.NewDefaultFramework("forcesslredirect")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -45,17 +44,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring(`if ($redirect_to_https) {`)) &&
 					Expect(server).Should(ContainSubstring(`return 308 https://$best_http_host$request_uri;`))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).

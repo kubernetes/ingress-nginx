@@ -47,60 +47,54 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	f := framework.NewDefaultFramework("dynamic-configuration")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(1)
-		Expect(err).NotTo(HaveOccurred())
-
+		f.NewEchoDeploymentWithReplicas(1)
 		ensureIngress(f, "foo.com")
 	})
 
 	It("configures balancer Lua middleware correctly", func() {
-		err := f.WaitForNginxConfiguration(func(cfg string) bool {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
 			return strings.Contains(cfg, "balancer.init_worker()") && strings.Contains(cfg, "balancer.balance()")
 		})
-		Expect(err).NotTo(HaveOccurred())
 
 		host := "foo.com"
-		err = f.WaitForNginxServer(host, func(server string) bool {
+		f.WaitForNginxServer(host, func(server string) bool {
 			return strings.Contains(server, "balancer.rewrite()") && strings.Contains(server, "balancer.log()")
 		})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("sets nameservers for Lua", func() {
-		err := f.WaitForNginxConfiguration(func(cfg string) bool {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
 			r := regexp.MustCompile(`configuration.nameservers = { [".,0-9a-zA-Z]+ }`)
 			return r.MatchString(cfg)
 		})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Context("when only backends change", func() {
 		It("handles endpoints only changes", func() {
 			var nginxConfig string
-			err := f.WaitForNginxConfiguration(func(cfg string) bool {
+			f.WaitForNginxConfiguration(func(cfg string) bool {
 				nginxConfig = cfg
 				return true
 			})
 
 			replicas := 2
-			err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
+			err := framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "http-svc", replicas, nil)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(waitForLuaSync)
 
 			ensureRequest(f, "foo.com")
 
 			var newNginxConfig string
-			err = f.WaitForNginxConfiguration(func(cfg string) bool {
+			f.WaitForNginxConfiguration(func(cfg string) bool {
 				newNginxConfig = cfg
 				return true
 			})
-
 			Expect(nginxConfig).Should(Equal(newNginxConfig))
 		})
 
 		It("handles an annotation change", func() {
 			var nginxConfig string
-			err := f.WaitForNginxConfiguration(func(cfg string) bool {
+			f.WaitForNginxConfiguration(func(cfg string) bool {
 				nginxConfig = cfg
 				return true
 			})
@@ -116,7 +110,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 			ensureRequest(f, "foo.com")
 
 			var newNginxConfig string
-			err = f.WaitForNginxConfiguration(func(cfg string) bool {
+			f.WaitForNginxConfiguration(func(cfg string) bool {
 				newNginxConfig = cfg
 				return true
 			})
@@ -127,7 +121,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 	It("handles a non backend update", func() {
 		var nginxConfig string
-		err := f.WaitForNginxConfiguration(func(cfg string) bool {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
 			nginxConfig = cfg
 			return true
 		})
@@ -149,21 +143,19 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		var newNginxConfig string
-		err = f.WaitForNginxConfiguration(func(cfg string) bool {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
 			newNginxConfig = cfg
 			return true
 		})
-
 		Expect(nginxConfig).ShouldNot(Equal(newNginxConfig))
 	})
 })
 
 func ensureIngress(f *framework.Framework, host string) *extensions.Ingress {
-	ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80,
+	ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80,
 		&map[string]string{"nginx.ingress.kubernetes.io/load-balance": "ewma"}))
-	Expect(err).NotTo(HaveOccurred())
-	Expect(ing).NotTo(BeNil())
-	err = f.WaitForNginxServer(host,
+
+	f.WaitForNginxServer(host,
 		func(server string) bool {
 			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host)) &&
 				strings.Contains(server, "proxy_pass http://upstream_balancer;")
