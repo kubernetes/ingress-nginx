@@ -165,9 +165,6 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		//fmt.Println("--------->")
-		//fmt.Println(resp.Header.Get("Set-Cookie"))
-		//fmt.Println("--------->")
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Expires="))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Max-Age=172800"))
