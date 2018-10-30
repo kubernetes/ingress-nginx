@@ -347,6 +347,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_geoip_module.html
 	UseGeoIP bool `json:"use-geoip,omitempty"`
 
+	// UseGeoIP2 enables the geoip2 module for NGINX
+	// By default this is disabled
+	UseGeoIP2 bool `json:"use-geoip2,omitempty"`
+
 	// Enables or disables the use of the NGINX Brotli Module for compression
 	// https://github.com/google/ngx_brotli
 	EnableBrotli bool `json:"enable-brotli,omitempty"`
@@ -630,6 +634,7 @@ func NewDefault() Configuration {
 		EnableBrotli:               false,
 		UseGzip:                    true,
 		UseGeoIP:                   true,
+		UseGeoIP2:                  false,
 		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:      "10s",
 		LoadBalanceAlgorithm:       defaultLoadBalancerAlgorithm,
