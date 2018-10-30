@@ -50,22 +50,17 @@ local function set_cookie(self, value)
   end
 end
 
-local function pick_random(instance)
-  local index = math.random(instance.npoints)
-  return instance:next(index)
-end
-
 function _M.balance(self)
   local cookie, err = ck:new()
   if not cookie then
-    ngx.log(ngx.ERR, err)
-    return pick_random(self.instance)
+    ngx.log(ngx.ERR, "error while initializing cookie: " .. tostring(err))
+    return
   end
 
   local key = cookie:get(self.cookie_name)
   if not key then
-    local tmp_endpoint_string = pick_random(self.instance)
-    key = encrypted_endpoint_string(self, tmp_endpoint_string)
+    local random_str = string.format("%s.%s", ngx.now(), ngx.worker.pid())
+    key = encrypted_endpoint_string(self, random_str)
     set_cookie(self, key)
   end
 
