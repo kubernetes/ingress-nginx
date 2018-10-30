@@ -32,8 +32,7 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 	f := framework.NewDefaultFramework("luarestywaf")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
 	})
 
 	Context("when lua-resty-waf is enabled", func() {
@@ -204,16 +203,14 @@ var _ = framework.IngressNginxDescribe("Annotations - lua-resty-waf", func() {
 })
 
 func createIngress(f *framework.Framework, host, service string, port int, annotations map[string]string) {
-	ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, service, port, &annotations))
-	Expect(err).NotTo(HaveOccurred())
-	Expect(ing).NotTo(BeNil())
+	ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, service, port, &annotations)
+	f.EnsureIngress(ing)
 
-	err = f.WaitForNginxServer(host,
+	f.WaitForNginxServer(host,
 		func(server string) bool {
 			return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host))) &&
 				Expect(server).ShouldNot(ContainSubstring("return 503"))
 		})
-	Expect(err).NotTo(HaveOccurred())
 
 	time.Sleep(1 * time.Second)
 

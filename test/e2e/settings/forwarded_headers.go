@@ -34,11 +34,8 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 	setting := "use-forwarded-headers"
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.UpdateNginxConfigMapData(setting, "false")
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
+		f.UpdateNginxConfigMapData(setting, "false")
 	})
 
 	AfterEach(func() {
@@ -47,18 +44,15 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 	It("should trust X-Forwarded headers when setting is true", func() {
 		host := "forwarded-headers"
 
-		err := f.UpdateNginxConfigMapData(setting, "true")
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData(setting, "true")
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		f.EnsureIngress(ing)
 
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "server_name forwarded-headers")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -80,18 +74,14 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 	It("should not trust X-Forwarded headers when setting is false", func() {
 		host := "forwarded-headers"
 
-		err := f.UpdateNginxConfigMapData(setting, "false")
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData(setting, "false")
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "server_name forwarded-headers")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).

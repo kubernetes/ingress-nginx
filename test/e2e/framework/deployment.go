@@ -17,10 +17,9 @@ limitations under the License.
 package framework
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
+	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -30,23 +29,23 @@ import (
 )
 
 // NewEchoDeployment creates a new single replica deployment of the echoserver image in a particular namespace
-func (f *Framework) NewEchoDeployment() error {
-	return f.NewEchoDeploymentWithReplicas(1)
+func (f *Framework) NewEchoDeployment() {
+	f.NewEchoDeploymentWithReplicas(1)
 }
 
 // NewEchoDeploymentWithReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
 // replicas is configurable
-func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) error {
-	return f.NewDeployment("http-svc", "gcr.io/kubernetes-e2e-test-images/echoserver:2.1", 8080, replicas)
+func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) {
+	f.NewDeployment("http-svc", "gcr.io/kubernetes-e2e-test-images/echoserver:2.1", 8080, replicas)
 }
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
-func (f *Framework) NewHttpbinDeployment() error {
-	return f.NewDeployment("httpbin", "kennethreitz/httpbin", 80, 1)
+func (f *Framework) NewHttpbinDeployment() {
+	f.NewDeployment("httpbin", "kennethreitz/httpbin", 80, 1)
 }
 
 // NewDeployment creates a new deployment in a particular namespace.
-func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) error {
+func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -86,20 +85,13 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	}
 
 	d, err := f.EnsureDeployment(deployment)
-	if err != nil {
-		return err
-	}
-
-	if d == nil {
-		return fmt.Errorf("unexpected error creating deployement %s", name)
-	}
+	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
+	Expect(d).NotTo(BeNil(), "expected a deployement but none returned")
 
 	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, int(replicas), f.IngressController.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
-	if err != nil {
-		return errors.Wrap(err, "failed to wait for to become ready")
-	}
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for to become ready")
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -121,14 +113,6 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 		},
 	}
 
-	s, err := f.EnsureService(service)
-	if err != nil {
-		return err
-	}
-
-	if s == nil {
-		return fmt.Errorf("unexpected error creating service %s", name)
-	}
-
-	return nil
+	s := f.EnsureService(service)
+	Expect(s).NotTo(BeNil(), "expected a service but none returned")
 }

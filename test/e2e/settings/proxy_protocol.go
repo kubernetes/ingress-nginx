@@ -35,11 +35,8 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 	setting := "use-proxy-protocol"
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.UpdateNginxConfigMapData(setting, "false")
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
+		f.UpdateNginxConfigMapData(setting, "false")
 	})
 
 	AfterEach(func() {
@@ -48,27 +45,22 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 	It("should respect port passed by the PROXY Protocol", func() {
 		host := "proxy-protocol"
 
-		err := f.UpdateNginxConfigMapData(setting, "true")
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData(setting, "true")
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "server_name proxy-protocol") &&
 					strings.Contains(server, "listen 80 proxy_protocol")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
-		ip, err := f.GetNginxIP()
-		Expect(err).NotTo(HaveOccurred())
+		ip := f.GetNginxIP()
 		port, err := f.GetNginxPort("http")
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX Port")
 
 		conn, err := net.Dial("tcp", net.JoinHostPort(ip, strconv.Itoa(port)))
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating connection to %s:%d", ip, port)
 		defer conn.Close()
 
 		header := "PROXY TCP4 192.168.0.1 192.168.0.11 56324 1234\r\n"
@@ -76,7 +68,7 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 		conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\n\r\n"))
 
 		data, err := ioutil.ReadAll(conn)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred(), "unexpected error reading connection data")
 		body := string(data)
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", "proxy-protocol")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=80")))
