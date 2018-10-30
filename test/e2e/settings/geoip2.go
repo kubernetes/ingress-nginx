@@ -19,11 +19,12 @@ package settings
 import (
 	"strings"
 
+	"net/http"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
 	"k8s.io/ingress-nginx/test/e2e/framework"
-	"net/http"
 )
 
 var _ = framework.IngressNginxDescribe("Geoip2", func() {
@@ -32,27 +33,23 @@ var _ = framework.IngressNginxDescribe("Geoip2", func() {
 	host := "geoip2"
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
 	})
 
 	It("should only allow requests from specific countries", func() {
-		err := f.UpdateNginxConfigMapData("use-geoip2", "true")
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData("use-geoip2", "true")
 
 		httpSnippetAllowingOnlyAustralia :=
 			`map $geoip2_city_country_code $blocked_country {
   default 1;
   AU 0;
 }`
-		err = f.UpdateNginxConfigMapData("http-snippet", httpSnippetAllowingOnlyAustralia)
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData("http-snippet", httpSnippetAllowingOnlyAustralia)
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "map $geoip2_city_country_code $blocked_country")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		configSnippet :=
 			`if ($blocked_country) {
@@ -63,32 +60,29 @@ var _ = framework.IngressNginxDescribe("Geoip2", func() {
 			"nginx.ingress.kubernetes.io/configuration-snippet": configSnippet,
 		}
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations))
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "if ($blocked_country)")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		// Should be blocked
-		usIp := "8.8.8.8"
+		usIP := "8.8.8.8"
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
-			Set("X-Forwarded-For", usIp).
+			Set("X-Forwarded-For", usIP).
 			End()
 		Expect(errs).To(BeNil())
 		Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
 
 		// Shouldn't be blocked
-		australianIp := "1.1.1.1"
+		australianIP := "1.1.1.1"
 		resp, _, errs = gorequest.New().
 			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
-			Set("X-Forwarded-For", australianIp).
+			Set("X-Forwarded-For", australianIP).
 			End()
 		Expect(errs).To(BeNil())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))

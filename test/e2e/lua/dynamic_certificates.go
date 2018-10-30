@@ -150,6 +150,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 
 		It("picks up the updated certificate without reloading", func() {
 			ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.IngressController.Namespace).Get(host, metav1.GetOptions{})
+			Expect(err).ToNot(HaveOccurred())
 
 			ensureHTTPSRequest(fmt.Sprintf("%s?id=dummy_log_splitter_foo_bar", f.IngressController.HTTPSURL), host, host)
 
