@@ -74,7 +74,7 @@ local function set_cookie(self, value)
   }
 
   local expires
-  if self.cookie_expires then
+  if self.cookie_expires and self.cookie_expires ~= "" then
     expires, err = parse_cookie_expires(self.cookie_expires)
     if err then
       ngx.log(ngx.WARN, string.format("error when parsing cookie expires: %s, ignoring it", tostring(err)))
@@ -83,7 +83,7 @@ local function set_cookie(self, value)
     end
   end
 
-  if self.cookie_max_age then
+  if self.cookie_max_age and self.cookie_max_age ~= "" then
     cookie_data.max_age = tonumber(self.cookie_max_age)
   end
 

@@ -88,38 +88,6 @@ describe("Sticky", function()
         assert.equal(sticky_balancer_instance.digest_func, default_hash_implementation)
       end)
     end)
-
-    context("when backend specifies cookie expires", function()
-      it("returns an instance containing the corresponding cookie expires", function()
-        local temp_backend = util.deepcopy(test_backend)
-        temp_backend.sessionAffinityConfig.cookieSessionAffinity.expires = "1y"
-        local sticky_balancer_instance = sticky:new(temp_backend)
-        assert.equal(sticky_balancer_instance.cookie_expires, "1y")
-      end)
-    end)
-
-    context("when backend does not specify cookie expires", function()
-      it("returns an instance without cookie expires", function()
-        local sticky_balancer_instance = sticky:new(test_backend)
-        assert.equal(sticky_balancer_instance.cookie_expires, nil)
-      end)
-    end)
-
-    context("when backend specifies cookie max-age", function()
-      it("returns an instance containing the corresponding cookie max-age", function()
-        local temp_backend = util.deepcopy(test_backend)
-        temp_backend.sessionAffinityConfig.cookieSessionAffinity.maxage = 1000
-        local sticky_balancer_instance = sticky:new(temp_backend)
-        assert.equal(sticky_balancer_instance.cookie_max_age, 1000)
-      end)
-    end)
-
-    context("when backend does not specify cookie max-age", function()
-      it("returns an instance without cookie max-age", function()
-        local sticky_balancer_instance = sticky:new(test_backend)
-        assert.equal(sticky_balancer_instance.cookie_max_age, nil)
-      end)
-    end)
   end)
 
   describe("balance()", function()
