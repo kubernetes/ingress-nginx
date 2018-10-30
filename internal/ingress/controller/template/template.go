@@ -722,19 +722,6 @@ func buildUpstreamName(loc interface{}) string {
 	return upstreamName
 }
 
-// TODO: Needs Unit Tests
-func isSticky(host string, loc *ingress.Location, stickyLocations map[string][]string) bool {
-	if _, ok := stickyLocations[host]; ok {
-		for _, sl := range stickyLocations[host] {
-			if sl == loc.Path {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
 func buildNextUpstream(i, r interface{}) string {
 	nextUpstream, ok := i.(string)
 	if !ok {

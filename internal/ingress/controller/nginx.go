@@ -811,12 +811,7 @@ func configureCertificates(pcfg *ingress.Configuration, port int) error {
 	}
 
 	url := fmt.Sprintf("http://localhost:%d/configuration/servers", port)
-	err := post(url, servers)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return post(url, servers)
 }
 
 func post(url string, data interface{}) error {
