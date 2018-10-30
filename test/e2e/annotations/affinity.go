@@ -36,8 +36,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 	f := framework.NewDefaultFramework("affinity")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -51,16 +50,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -80,16 +75,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		}
 
 		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL+"/something").
@@ -108,7 +99,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
 		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
+		f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        host,
 				Namespace:   f.IngressController.Namespace,
@@ -143,14 +134,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			},
 		})
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL+"/something").
