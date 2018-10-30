@@ -31,8 +31,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 	f := framework.NewDefaultFramework("alias")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
 	})
 
 	AfterEach(func() {
@@ -43,17 +42,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		annotations := map[string]string{}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name foo")) &&
 					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -81,17 +76,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name foo")) &&
 					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		hosts := []string{"foo", "bar"}
 		for _, host := range hosts {

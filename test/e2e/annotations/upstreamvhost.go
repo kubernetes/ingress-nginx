@@ -26,8 +26,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Upstreamvhost", func() {
 	f := framework.NewDefaultFramework("upstreamvhost")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -40,15 +39,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Upstreamvhost", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring(`proxy_set_header Host "upstreamvhost.bar.com";`))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 })

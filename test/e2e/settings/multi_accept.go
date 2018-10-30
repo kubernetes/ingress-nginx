@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -31,34 +30,29 @@ var _ = framework.IngressNginxDescribe("Multi Accept", func() {
 
 	It("should be enabled by default", func() {
 		expectedDirective := "multi_accept on;"
-		err := f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, expectedDirective)
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should be enabled when set to true", func() {
 		expectedDirective := "multi_accept on;"
-		err := f.UpdateNginxConfigMapData(multiAccept, "true")
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData(multiAccept, "true")
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, expectedDirective)
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should be disabled when set to false", func() {
 		expectedDirective := "multi_accept off;"
-		err := f.UpdateNginxConfigMapData(multiAccept, "false")
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData(multiAccept, "false")
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, expectedDirective)
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 })

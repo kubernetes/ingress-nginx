@@ -26,8 +26,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 	f := framework.NewDefaultFramework("backendprotocol")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -40,16 +39,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("proxy_pass https://upstream_balancer;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should set backend protocol to grpc://", func() {
@@ -59,16 +54,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("grpc_pass grpc://upstream_balancer;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should set backend protocol to grpcs://", func() {
@@ -78,16 +69,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("grpc_pass grpcs://upstream_balancer;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should set backend protocol to ''", func() {
@@ -97,15 +84,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Backendprotocol", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("ajp_pass upstream_balancer;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 })

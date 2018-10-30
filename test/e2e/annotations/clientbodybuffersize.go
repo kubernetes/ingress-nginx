@@ -26,8 +26,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", 
 	f := framework.NewDefaultFramework("clientbodybuffersize")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -40,16 +39,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", 
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1000;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should set client_body_buffer_size to 1K", func() {
@@ -59,16 +54,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", 
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1K;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should set client_body_buffer_size to 1k", func() {
@@ -78,16 +69,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", 
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1k;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should set client_body_buffer_size to 1m", func() {
@@ -97,16 +84,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", 
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1m;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should set client_body_buffer_size to 1M", func() {
@@ -116,16 +99,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", 
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("client_body_buffer_size 1M;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should not set client_body_buffer_size to invalid 1b", func() {
@@ -135,15 +114,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Client-Body-Buffer-Size", 
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).ShouldNot(ContainSubstring("client_body_buffer_size 1b;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 })
