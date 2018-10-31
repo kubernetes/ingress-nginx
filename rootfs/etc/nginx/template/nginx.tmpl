@@ -27,8 +27,8 @@ load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
-{{ if gt (len $cfg.WorkerCpuAffinity) 0 }}
-worker_cpu_affinity {{ $cfg.WorkerCpuAffinity }};
+{{ if gt (len $cfg.WorkerCPUAffinity) 0 }}
+worker_cpu_affinity {{ $cfg.WorkerCPUAffinity }};
 {{ end }}
 
 {{ if ne .MaxOpenFiles 0 }}
@@ -346,7 +346,7 @@ http {
     # If no such header is provided, it can provide a random value.
     map $http_x_request_id $req_id {
         default   $http_x_request_id;
-        {{ if $cfg.GenerateRequestId }}
+        {{ if $cfg.GenerateRequestID }}
         ""        $request_id;
         {{ end }}
     }
@@ -1115,7 +1115,7 @@ stream {
             {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
             {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
-            {{ if $all.Cfg.ProxyAddOriginalUriHeader }}
+            {{ if $all.Cfg.ProxyAddOriginalURIHeader }}
             {{ $proxySetHeader }} X-Original-URI         $request_uri;
             {{ end }}
             {{ $proxySetHeader }} X-Scheme               $pass_access_scheme;
