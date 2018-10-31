@@ -31,8 +31,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Connection", func() {
 	f := framework.NewDefaultFramework("connection")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -45,16 +44,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Connection", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring(`proxy_set_header Connection keep-alive;`))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).

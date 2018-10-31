@@ -27,8 +27,7 @@ var _ = framework.IngressNginxDescribe("Annotations - SSL CIPHERS", func() {
 	f := framework.NewDefaultFramework("sslciphers")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -41,15 +40,11 @@ var _ = framework.IngressNginxDescribe("Annotations - SSL CIPHERS", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("ssl_ciphers ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 })

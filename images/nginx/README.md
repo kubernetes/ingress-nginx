@@ -14,6 +14,7 @@ This custom nginx image contains:
 - [zipkin-cpp-opentracing](https://github.com/rnburn/zipkin-cpp-opentracing)
 - [ModSecurity-nginx](https://github.com/SpiderLabs/ModSecurity-nginx) (only supported in x86_64)
 - [brotli](https://github.com/google/brotli)
+- [geoip2](https://github.com/leev/ngx_http_geoip2_module)
 
 **How to use this image:**
 This image provides a default configuration file with no backend servers.

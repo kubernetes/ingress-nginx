@@ -17,10 +17,9 @@ limitations under the License.
 package framework
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
+	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -60,7 +59,7 @@ bind-address = "0.0.0.0:8088"
 
 // NewInfluxDBDeployment creates an InfluxDB server configured to reply
 // on 8086/tcp and 8089/udp
-func (f *Framework) NewInfluxDBDeployment() error {
+func (f *Framework) NewInfluxDBDeployment() {
 	configuration := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "influxdb-config",
@@ -72,13 +71,9 @@ func (f *Framework) NewInfluxDBDeployment() error {
 	}
 
 	cm, err := f.EnsureConfigMap(configuration)
-	if err != nil {
-		return err
-	}
+	Expect(err).NotTo(HaveOccurred(), "failed to create an Influxdb deployment")
 
-	if cm == nil {
-		return fmt.Errorf("unexpected error creating configmap for influxdb")
-	}
+	Expect(cm).NotTo(BeNil(), "expected a configmap but none returned")
 
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -143,20 +138,12 @@ func (f *Framework) NewInfluxDBDeployment() error {
 	}
 
 	d, err := f.EnsureDeployment(deployment)
-	if err != nil {
-		return err
-	}
+	Expect(err).NotTo(HaveOccurred(), "failed to create an Influxdb deployment")
 
-	if d == nil {
-		return fmt.Errorf("unexpected error creating deployement for influxdb")
-	}
+	Expect(d).NotTo(BeNil(), "unexpected error creating deployement for influxdb")
 
 	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, 1, f.IngressController.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
-	if err != nil {
-		return errors.Wrap(err, "failed to wait for influxdb to become ready")
-	}
-
-	return nil
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for influxdb to become ready")
 }

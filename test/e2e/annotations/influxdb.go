@@ -23,9 +23,10 @@ import (
 	"os/exec"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	jsoniter "github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
@@ -39,17 +40,13 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 	f := framework.NewDefaultFramework("influxdb")
 
 	BeforeEach(func() {
-		err := f.NewInfluxDBDeployment()
-		Expect(err).NotTo(HaveOccurred())
-		err = f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
+		f.NewInfluxDBDeployment()
+		f.NewEchoDeployment()
 	})
 
 	Context("when influxdb is enabled", func() {
 		It("should send the request metric to the influxdb server", func() {
-			ifs, err := createInfluxDBService(f)
-
-			Expect(err).NotTo(HaveOccurred())
+			ifs := createInfluxDBService(f)
 
 			// Ingress configured with InfluxDB annotations
 			host := "influxdb.e2e.local"
@@ -80,6 +77,8 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 			time.Sleep(5 * time.Second)
 
 			var measurements string
+			var err error
+
 			err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 				measurements, err = extractInfluxDBMeasurements(f)
 				if err != nil {
@@ -100,7 +99,7 @@ var _ = framework.IngressNginxDescribe("Annotations - influxdb", func() {
 	})
 })
 
-func createInfluxDBService(f *framework.Framework) (*corev1.Service, error) {
+func createInfluxDBService(f *framework.Framework) *corev1.Service {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "inflxudb-svc",
@@ -120,29 +119,18 @@ func createInfluxDBService(f *framework.Framework) (*corev1.Service, error) {
 		},
 	}
 
-	s, err := f.EnsureService(service)
-	if err != nil {
-		return nil, err
-	}
-
-	if s == nil {
-		return nil, fmt.Errorf("unexpected error creating service for influxdb deployment")
-	}
-
-	return s, nil
+	return f.EnsureService(service)
 }
 
 func createInfluxDBIngress(f *framework.Framework, host, service string, port int, annotations map[string]string) {
-	ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, service, port, &annotations))
-	Expect(err).NotTo(HaveOccurred())
-	Expect(ing).NotTo(BeNil())
+	ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, service, port, &annotations)
+	f.EnsureIngress(ing)
 
-	err = f.WaitForNginxServer(host,
+	f.WaitForNginxServer(host,
 		func(server string) bool {
 			return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host))) &&
 				Expect(server).ShouldNot(ContainSubstring("return 503"))
 		})
-	Expect(err).NotTo(HaveOccurred())
 }
 
 func extractInfluxDBMeasurements(f *framework.Framework) (string, error) {
@@ -183,8 +171,7 @@ func execInfluxDBCommand(pod *corev1.Pod, command string) (string, error) {
 		execErr bytes.Buffer
 	)
 
-	args := fmt.Sprintf("kubectl exec --namespace %v %v -- %v", pod.Namespace, pod.Name, command)
-	cmd := exec.Command("/bin/bash", "-c", args)
+	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s -- %s", framework.KubectlPath, pod.Namespace, pod.Name, command))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 
@@ -195,7 +182,7 @@ func execInfluxDBCommand(pod *corev1.Pod, command string) (string, error) {
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("could not execute: %v", err)
+		return "", fmt.Errorf("could not execute '%s %s': %v", cmd.Path, cmd.Args, err)
 	}
 
 	return execOut.String(), nil

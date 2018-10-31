@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -31,13 +30,11 @@ var _ = framework.IngressNginxDescribe("Main Snippet", func() {
 
 	It("should add value of main-snippet setting to nginx config", func() {
 		expectedComment := "# main snippet"
-		err := f.UpdateNginxConfigMapData(mainSnippet, expectedComment)
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData(mainSnippet, expectedComment)
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, expectedComment)
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 })

@@ -46,6 +46,11 @@ const (
 	HTTPS RequestScheme = "https"
 )
 
+var (
+	// KubectlPath defines the full path of the kubectl binary
+	KubectlPath = "/usr/local/bin/kubectl"
+)
+
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
 type Framework struct {
 	BaseName string
@@ -112,14 +117,10 @@ func (f *Framework) BeforeEach() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	HTTPURL, err := f.GetNginxURL(HTTP)
-	Expect(err).NotTo(HaveOccurred())
-
+	HTTPURL := f.GetNginxURL(HTTP)
 	f.IngressController.HTTPURL = HTTPURL
 
-	HTTPSURL, err := f.GetNginxURL(HTTPS)
-	Expect(err).NotTo(HaveOccurred())
-
+	HTTPSURL := f.GetNginxURL(HTTPS)
 	f.IngressController.HTTPSURL = HTTPSURL
 
 	// we wait for any change in the informers and SSL certificate generation
@@ -149,8 +150,10 @@ func IngressNginxDescribe(text string, body func()) bool {
 
 // GetNginxIP returns the IP address of the minikube cluster
 // where the NGINX ingress controller is running
-func (f *Framework) GetNginxIP() (string, error) {
-	return os.Getenv("NODE_IP"), nil
+func (f *Framework) GetNginxIP() string {
+	nodeIP := os.Getenv("NODE_IP")
+	Expect(nodeIP).NotTo(BeEmpty(), "env variable NODE_IP is empty")
+	return nodeIP
 }
 
 // GetNginxPort returns the number of TCP port where NGINX is running
@@ -173,33 +176,28 @@ func (f *Framework) GetNginxPort(name string) (int, error) {
 }
 
 // GetNginxURL returns the URL should be used to make a request to NGINX
-func (f *Framework) GetNginxURL(scheme RequestScheme) (string, error) {
-	ip, err := f.GetNginxIP()
-	if err != nil {
-		return "", err
-	}
-
+func (f *Framework) GetNginxURL(scheme RequestScheme) string {
+	ip := f.GetNginxIP()
 	port, err := f.GetNginxPort(fmt.Sprintf("%v", scheme))
-	if err != nil {
-		return "", err
-	}
+	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX Port")
 
-	return fmt.Sprintf("%v://%v:%v", scheme, ip, port), nil
+	return fmt.Sprintf("%v://%v:%v", scheme, ip, port)
 }
 
 // WaitForNginxServer waits until the nginx configuration contains a particular server section
-func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) error {
-	return wait.Poll(Poll, time.Minute*5, f.matchNginxConditions(name, matcher))
+func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
+	err := wait.Poll(Poll, time.Minute*5, f.matchNginxConditions(name, matcher))
+	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
-func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) error {
-	return wait.Poll(Poll, time.Minute*5, f.matchNginxConditions("", matcher))
+func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
+	err := wait.Poll(Poll, time.Minute*5, f.matchNginxConditions("", matcher))
+	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
 }
 
-// NginxLogs returns the logs of the nginx ingress controller pod running
-func (f *Framework) NginxLogs() (string, error) {
-	l, err := f.KubeClientSet.CoreV1().Pods(f.IngressController.Namespace).List(metav1.ListOptions{
+func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
+	l, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	if err != nil {
@@ -209,12 +207,17 @@ func (f *Framework) NginxLogs() (string, error) {
 	for _, pod := range l.Items {
 		if strings.HasPrefix(pod.GetName(), "nginx-ingress-controller") {
 			if isRunning, err := podRunningReady(&pod); err == nil && isRunning {
-				return f.Logs(&pod)
+				return Logs(&pod)
 			}
 		}
 	}
 
 	return "", fmt.Errorf("no nginx ingress controller pod is running (logs)")
+}
+
+// NginxLogs returns the logs of the nginx ingress controller pod running
+func (f *Framework) NginxLogs() (string, error) {
+	return nginxLogs(f.KubeClientSet, f.IngressController.Namespace)
 }
 
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
@@ -311,16 +314,12 @@ func (f *Framework) GetNginxConfigMapData() (map[string]string, error) {
 }
 
 // SetNginxConfigMapData sets ingress-nginx's nginx-configuration configMap data
-func (f *Framework) SetNginxConfigMapData(cmData map[string]string) error {
+func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 	// Needs to do a Get and Set, Update will not take just the Data field
 	// or a configMap that is not the very last revision
 	config, err := f.getNginxConfigMap()
-	if err != nil {
-		return err
-	}
-	if config == nil {
-		return fmt.Errorf("Unable to get nginx-configuration configMap")
-	}
+	Expect(err).NotTo(HaveOccurred())
+	Expect(config).NotTo(BeNil(), "expected a configmap but none returned")
 
 	config.Data = cmData
 
@@ -328,25 +327,19 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) error {
 		CoreV1().
 		ConfigMaps(f.IngressController.Namespace).
 		Update(config)
-	if err != nil {
-		return err
-	}
+	Expect(err).NotTo(HaveOccurred())
 
 	time.Sleep(5 * time.Second)
-
-	return err
 }
 
 // UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-configuration map data
-func (f *Framework) UpdateNginxConfigMapData(key string, value string) error {
+func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 	config, err := f.GetNginxConfigMapData()
-	if err != nil {
-		return err
-	}
+	Expect(err).NotTo(HaveOccurred(), "unexpected error reading configmap")
 
 	config[key] = value
 
-	return f.SetNginxConfigMapData(config)
+	f.SetNginxConfigMapData(config)
 }
 
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
@@ -380,7 +373,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to wait for nginx-ingress-controller replica count to be %v", replicas)
+		return errors.Wrapf(err, "waiting for nginx-ingress-controller replica count to be %v", replicas)
 	}
 
 	return nil
@@ -428,6 +421,7 @@ func newSingleIngress(name, path, host, ns, service string, port int, annotation
 			},
 		},
 	}
+
 	if withTLS {
 		ing.Spec.TLS = []extensions.IngressTLS{
 			{

@@ -4,7 +4,7 @@ It is possible to enable Client-Certificate Authentication by adding additional 
 Before getting started you must have the following Certificates Setup:
 
 1. CA certificate and Key(Intermediate Certs need to be in CA)
-2. Server Certificate(Signed by CA) and Key (CN should be equal the the hostname you will use)
+2. Server Certificate(Signed by CA) and Key (CN should be equal the hostname you will use)
 3. Client Certificate(Signed by CA) and Key
 
 ## Creating Certificate Secrets
