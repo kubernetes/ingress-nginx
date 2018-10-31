@@ -16,23 +16,27 @@ limitations under the License.
 
 package annotations
 
-/*
 import (
+	"fmt"
+	"net/http"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/parnurzeal/gorequest"
+
+	"k8s.io/api/extensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-
-// TODO(elvinefendi) merge this with Affinity tests in test/e2e/lua/dynamic_configuration.go
-var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
+var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions", func() {
 	f := framework.NewDefaultFramework("affinity")
 
 	BeforeEach(func() {
-		err := f.DisableDynamicConfiguration()
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -46,16 +50,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -64,36 +64,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
-	})
-
-	It("should redirect to '/something' with enabled affinity", func() {
-		host := "example.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
-
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
-			})
-		Expect(err).NotTo(HaveOccurred())
-
-		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
-			Set("Host", host).
-			End()
-
-		Expect(len(errs)).Should(BeNumerically("==", 0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(fmt.Sprintf("request_uri=http://%v:8080/", host)))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
 	})
 
@@ -105,16 +75,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL+"/something").
@@ -126,14 +92,14 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/something"))
 	})
 
-	It("should set the path to / on the generated cookie if there's more than one rule referring to the same backend", func() {
+	It("does not set the path to / on the generated cookie if there's more than one rule referring to the same backend", func() {
 		host := "example.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/affinity":            "cookie",
 			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
 		}
 
-		ing, err := f.EnsureIngress(&v1beta1.Ingress{
+		f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        host,
 				Namespace:   f.IngressController.Namespace,
@@ -168,14 +134,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 			},
 		})
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://sticky-"+f.IngressController.Namespace+"-http-svc-80;")
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL+"/something").
@@ -184,7 +146,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity", func() {
 
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/;"))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/something;"))
+
+		resp, _, errs = gorequest.New().
+			Get(f.IngressController.HTTPURL+"/somewhereelese").
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/somewhereelese;"))
 	})
 })
-*/

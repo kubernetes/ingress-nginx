@@ -17,7 +17,6 @@ limitations under the License.
 package status
 
 import (
-	"context"
 	"os"
 	"testing"
 	"time"
@@ -298,7 +297,7 @@ func TestStatusActions(t *testing.T) {
 	fk := fkSync.(statusSync)
 
 	// start it and wait for the election and syn actions
-	go fk.Run(context.Background())
+	go fk.Run()
 	//  wait for the election
 	time.Sleep(100 * time.Millisecond)
 	// execute sync

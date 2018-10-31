@@ -41,19 +41,6 @@ fi
 
 SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
 
-mkdir -p ${SCRIPT_ROOT}/test/binaries
-
-TEST_BINARIES=$( cd "${SCRIPT_ROOT}/test/binaries" ; pwd -P )
-
-export PATH=${TEST_BINARIES}:$PATH
-
-if ! [ -x "$(command -v kubectl)" ]; then
-    echo "downloading kubectl..."
-    curl -sSLo ${TEST_BINARIES}/kubectl \
-        https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/linux/amd64/kubectl
-    chmod +x ${TEST_BINARIES}/kubectl
-fi
-
 ginkgo build ./test/e2e
 
 exec --                                      \

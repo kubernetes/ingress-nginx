@@ -171,7 +171,7 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 		bytesSent: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:        "bytes_sent",
-				Help:        "The the number of bytes sent to a client",
+				Help:        "The number of bytes sent to a client",
 				Namespace:   PrometheusNamespace,
 				Buckets:     prometheus.ExponentialBuckets(10, 10, 7), // 7 buckets, exponential factor of 10.
 				ConstLabels: constLabels,

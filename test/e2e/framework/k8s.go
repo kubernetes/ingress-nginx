@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	. "github.com/onsi/gomega"
+
 	api "k8s.io/api/core/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -31,15 +33,23 @@ import (
 )
 
 // EnsureSecret creates a Secret object or returns it if it already exists.
-func (f *Framework) EnsureSecret(secret *api.Secret) (*api.Secret, error) {
+func (f *Framework) EnsureSecret(secret *api.Secret) *api.Secret {
 	s, err := f.KubeClientSet.CoreV1().Secrets(secret.Namespace).Create(secret)
 	if err != nil {
 		if k8sErrors.IsAlreadyExists(err) {
-			return f.KubeClientSet.CoreV1().Secrets(secret.Namespace).Update(secret)
+			s, err := f.KubeClientSet.CoreV1().Secrets(secret.Namespace).Update(secret)
+			Expect(err).NotTo(HaveOccurred(), "unexpected error updating secret")
+
+			return s
 		}
-		return nil, err
+
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating secret")
 	}
-	return s, nil
+
+	Expect(s).NotTo(BeNil())
+	Expect(s.ObjectMeta).NotTo(BeNil())
+
+	return s
 }
 
 // EnsureConfigMap creates a ConfigMap object or returns it if it already exists.
@@ -51,40 +61,49 @@ func (f *Framework) EnsureConfigMap(configMap *api.ConfigMap) (*api.ConfigMap, e
 		}
 		return nil, err
 	}
+
 	return cm, nil
 }
 
 // EnsureIngress creates an Ingress object or returns it if it already exists.
-func (f *Framework) EnsureIngress(ingress *extensions.Ingress) (*extensions.Ingress, error) {
-	s, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(ingress)
+func (f *Framework) EnsureIngress(ingress *extensions.Ingress) *extensions.Ingress {
+	ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Update(ingress)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
-			s, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
+			ing, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(ingress)
+			Expect(err).NotTo(HaveOccurred(), "unexpected error creating ingress")
+			return ing
 		}
+
+		Expect(err).NotTo(HaveOccurred())
 	}
 
-	if s.Annotations == nil {
-		s.Annotations = make(map[string]string)
+	Expect(ing).NotTo(BeNil())
+
+	if ing.Annotations == nil {
+		ing.Annotations = make(map[string]string)
 	}
 
-	return s, nil
+	return ing
 }
 
 // EnsureService creates a Service object or returns it if it already exists.
-func (f *Framework) EnsureService(service *core.Service) (*core.Service, error) {
+func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	s, err := f.KubeClientSet.CoreV1().Services(service.Namespace).Update(service)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
-			return f.KubeClientSet.CoreV1().Services(service.Namespace).Create(service)
+			s, err := f.KubeClientSet.CoreV1().Services(service.Namespace).Create(service)
+			Expect(err).NotTo(HaveOccurred(), "unexpected error creating service")
+			return s
+
 		}
-		return nil, err
+
+		Expect(err).NotTo(HaveOccurred())
 	}
-	return s, nil
+
+	Expect(s).NotTo(BeNil(), "expected a service but none returned")
+
+	return s
 }
 
 // EnsureDeployment creates a Deployment object or returns it if it already exists.

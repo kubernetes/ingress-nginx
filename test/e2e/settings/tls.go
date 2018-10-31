@@ -34,8 +34,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 	host := "settings-tls"
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
 	})
 
 	AfterEach(func() {
@@ -52,19 +51,15 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		tlsConfig, err := tlsEndpoint(f, host)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
-		Expect(err).NotTo(HaveOccurred())
+		framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
 
 		By("setting cipher suite")
+		f.UpdateNginxConfigMapData(sslCiphers, testCiphers)
 
-		err = f.UpdateNginxConfigMapData(sslCiphers, testCiphers)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, fmt.Sprintf("ssl_ciphers '%s';", testCiphers))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPSURL).
@@ -78,15 +73,12 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		Expect(resp.TLS.CipherSuite).Should(BeNumerically("==", tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384))
 
 		By("enforcing TLS v1.0")
+		f.UpdateNginxConfigMapData(sslProtocols, "TLSv1")
 
-		err = f.UpdateNginxConfigMapData(sslProtocols, "TLSv1")
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "ssl_protocols TLSv1;")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs = gorequest.New().
 			Get(f.IngressController.HTTPSURL).
@@ -108,19 +100,15 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		tlsConfig, err := tlsEndpoint(f, host)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
-		Expect(err).NotTo(HaveOccurred())
+		framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
 
 		By("setting max-age parameter")
+		f.UpdateNginxConfigMapData(hstsMaxAge, "86400")
 
-		err = f.UpdateNginxConfigMapData(hstsMaxAge, "86400")
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "Strict-Transport-Security: max-age=86400; includeSubDomains\"")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPSURL).
@@ -133,15 +121,12 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		Expect(resp.Header.Get("Strict-Transport-Security")).Should(ContainSubstring("max-age=86400"))
 
 		By("setting includeSubDomains parameter")
+		f.UpdateNginxConfigMapData(hstsIncludeSubdomains, "false")
 
-		err = f.UpdateNginxConfigMapData(hstsIncludeSubdomains, "false")
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "Strict-Transport-Security: max-age=86400\"")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs = gorequest.New().
 			Get(f.IngressController.HTTPSURL).
@@ -154,15 +139,12 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		Expect(resp.Header.Get("Strict-Transport-Security")).ShouldNot(ContainSubstring("includeSubDomains"))
 
 		By("setting preload parameter")
+		f.UpdateNginxConfigMapData(hstsPreload, "true")
 
-		err = f.UpdateNginxConfigMapData(hstsPreload, "true")
-		Expect(err).NotTo(HaveOccurred())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "Strict-Transport-Security: max-age=86400; preload\"")
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs = gorequest.New().
 			Get(f.IngressController.HTTPSURL).
@@ -177,11 +159,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 })
 
 func tlsEndpoint(f *framework.Framework, host string) (*tls.Config, error) {
-	ing, err := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-	if err != nil {
-		return nil, err
-	}
-
+	ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
 	return framework.CreateIngressTLSSecret(f.KubeClientSet,
 		ing.Spec.TLS[0].Hosts,
 		ing.Spec.TLS[0].SecretName,

@@ -17,10 +17,9 @@ limitations under the License.
 package framework
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
+	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -31,13 +30,13 @@ import (
 
 // NewGRPCFortuneTellerDeployment creates a new single replica
 // deployment of the fortune teller image in a particular namespace
-func (f *Framework) NewGRPCFortuneTellerDeployment() error {
-	return f.NewNewGRPCFortuneTellerDeploymentWithReplicas(1)
+func (f *Framework) NewGRPCFortuneTellerDeployment() {
+	f.NewNewGRPCFortuneTellerDeploymentWithReplicas(1)
 }
 
 // NewNewGRPCFortuneTellerDeploymentWithReplicas creates a new deployment of the
 // fortune teller image in a particular namespace. Number of replicas is configurable
-func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32) error {
+func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32) {
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fortune-teller",
@@ -77,20 +76,13 @@ func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32
 	}
 
 	d, err := f.EnsureDeployment(deployment)
-	if err != nil {
-		return err
-	}
-
-	if d == nil {
-		return fmt.Errorf("unexpected error creating deployement for fortune-teller")
-	}
+	Expect(err).NotTo(HaveOccurred())
+	Expect(d).NotTo(BeNil(), "expected a fortune-teller deployment")
 
 	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, int(replicas), f.IngressController.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
-	if err != nil {
-		return errors.Wrap(err, "failed to wait for to become ready")
-	}
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for to become ready")
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -112,14 +104,5 @@ func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32
 		},
 	}
 
-	s, err := f.EnsureService(service)
-	if err != nil {
-		return err
-	}
-
-	if s == nil {
-		return fmt.Errorf("unexpected error creating service for fortune-teller deployment")
-	}
-
-	return nil
+	f.EnsureService(service)
 }

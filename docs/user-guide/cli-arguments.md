@@ -10,7 +10,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--annotations-prefix string`     | Prefix of the Ingress annotations specific to the NGINX controller. (default "nginx.ingress.kubernetes.io") |
 | `--apiserver-host string`         | Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted. |
 | `--configmap string`              | Name of the ConfigMap containing custom global configurations for the controller. |
-| `--default-backend-service string` | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. If not specified, 404 page will be returned diretly from Nginx.|
+| `--default-backend-service string` | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. If not specified, a 404 page will be returned directly from NGINX.|
 | `--default-server-port int`       | When `default-backend-service` is not specified or specified service does not have any endpoint, a local endpoint with this port will be used to serve 404 page from inside Nginx. |
 | `--default-ssl-certificate string` | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
 | `--election-id string`            | Election id to use for Ingress status updates. (default "ingress-controller-leader") |

@@ -32,8 +32,7 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 	f := framework.NewDefaultFramework("default-backend")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
 	})
 
 	Context("when default backend annotation is enabled", func() {
@@ -44,18 +43,14 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 			}
 
 			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "invalid", 80, &annotations)
-			_, err := f.EnsureIngress(ing)
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ing).NotTo(BeNil())
+			f.EnsureIngress(ing)
 
 			time.Sleep(5 * time.Second)
 
-			err = f.WaitForNginxServer(host,
+			f.WaitForNginxServer(host,
 				func(server string) bool {
 					return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host)))
 				})
-			Expect(err).NotTo(HaveOccurred())
 
 			uri := "/alma/armud"
 			resp, body, errs := gorequest.New().
