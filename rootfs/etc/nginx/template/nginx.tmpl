@@ -1173,16 +1173,11 @@ stream {
             proxy_set_header       X-Service-Port     $service_port;
             {{ end }}
 
-            {{ if not (empty $location.Backend) }}
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
             {{ else if not (eq $location.Proxy.ProxyRedirectTo "off") }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }} {{ $location.Proxy.ProxyRedirectTo }};
-            {{ end }}
-            {{ else }}
-            # No endpoints available for the request
-            return 503;
             {{ end }}
             {{ else }}
             # Location denied. Reason: {{ $location.Denied | printf "%q" }}
