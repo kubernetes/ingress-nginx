@@ -1,6 +1,6 @@
-# Static IPs
+# Static IPs and METALLB IPs
 
-This example demonstrates how to assign a static-ip to an Ingress on through the Nginx controller.
+This example demonstrates how to assign a static-ip or metallb IP to an Ingress on through the Nginx controller.
 
 ## Prerequisites
 
@@ -19,7 +19,8 @@ nodes get static IPs, the IPs are not retained across upgrade.
 To acquire a static IP for the nginx ingress controller, simply put it
 behind a Service of `Type=LoadBalancer`.
 
-First, create a loadbalancer Service and wait for it to acquire an IP
+First, create a loadbalancer Service and wait for it to acquire an IP (selector should
+point to not yet existent ingress controller, we will create it after this step)
 
 ```console
 $ kubectl create -f static-ip-svc.yaml
@@ -32,7 +33,8 @@ nginx-ingress-lb   10.0.138.113   104.154.109.191   80:31457/TCP,443:32240/TCP  
 
 then, update the ingress controller so it adopts the static IP of the Service
 by passing the `--publish-service` flag (the example yaml used in the next step
-already has it set to "nginx-ingress-lb").
+already has it set to "nginx-ingress-lb" you should see this line 
+- --publish-service=$(POD_NAMESPACE)/nginx-ingress-lb in ingress-controller definition).
 
 ```console
 $ kubectl create -f nginx-ingress-controller.yaml
