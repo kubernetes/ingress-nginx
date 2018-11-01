@@ -956,6 +956,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#use-geoip2" title="use-geoip2" class="md-nav__link">
+    use-geoip2
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#enable-brotli" title="enable-brotli" class="md-nav__link">
     enable-brotli
   </a>
@@ -2336,6 +2343,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#use-geoip2" title="use-geoip2" class="md-nav__link">
+    use-geoip2
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#enable-brotli" title="enable-brotli" class="md-nav__link">
     enable-brotli
   </a>
@@ -3120,6 +3134,11 @@ Same for numbers, like "100".</p>
 <td align="left">"true"</td>
 </tr>
 <tr>
+<td align="left"><a href="#use-geoip2">use-geoip2</a></td>
+<td align="left">bool</td>
+<td align="left">"false"</td>
+</tr>
+<tr>
 <td align="left"><a href="#enable-brotli">enable-brotli</a></td>
 <td align="left">bool</td>
 <td align="left">"false"</td>
@@ -3634,6 +3653,12 @@ The default mime type list to compress is: <code class="codehilite">application/
 <h2 id="use-geoip">use-geoip<a class="headerlink" href="#use-geoip" title="Permanent link">&para;</a></h2>
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_geoip_module.html">"geoip" module</a> that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
 <em><strong>default:</strong></em> true</p>
+<blockquote>
+<p><strong>Note:</strong> MaxMind legacy databases are discontinued and will not receive updates after 2019-01-02, cf. <a href="https://support.maxmind.com/geolite-legacy-discontinuation-notice/">discontinuation notice</a>. Consider <a href="#use-geoip2">use-geoip2</a> below.</p>
+</blockquote>
+<h2 id="use-geoip2">use-geoip2<a class="headerlink" href="#use-geoip2" title="Permanent link">&para;</a></h2>
+<p>Enables the <a href="https://github.com/leev/ngx_http_geoip2_module">geoip2 module</a> for NGINX.
+<em><strong>default:</strong></em> false</p>
 <h2 id="enable-brotli">enable-brotli<a class="headerlink" href="#enable-brotli" title="Permanent link">&para;</a></h2>
 <p>Enables or disables compression of HTTP responses using the <a href="https://github.com/google/ngx_brotli">"brotli" module</a>.
 The default mime type list to compress is: <code class="codehilite">application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component</code>. <em><strong>default:</strong></em> is disabled</p>
