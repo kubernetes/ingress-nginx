@@ -19,6 +19,7 @@ package annotations
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -26,8 +27,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Log", func() {
 	f := framework.NewDefaultFramework("log")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -40,16 +40,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Log", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring(`access_log off;`))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("set rewrite_log on", func() {
@@ -59,15 +55,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Log", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring(`rewrite_log on;`))
 			})
-		Expect(err).NotTo(HaveOccurred())
 	})
 })

@@ -17,13 +17,15 @@ limitations under the License.
 package annotations
 
 import (
+	"strings"
+
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", func() {
-	f := framework.NewDefaultFramework("configurationsnippet")
+var _ = framework.IngressNginxDescribe("Annotations - ServerSnippet", func() {
+	f := framework.NewDefaultFramework("serversnippet")
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(2)
@@ -32,11 +34,12 @@ var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", fun
 	AfterEach(func() {
 	})
 
-	It(`set snippet "more_set_headers "Request-Id: $req_id";" in all locations"`, func() {
-		host := "configurationsnippet.foo.com"
+	It(`add valid directives to server via server snippet"`, func() {
+		host := "serversnippet.foo.com"
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `
-				more_set_headers "Request-Id: $req_id";`,
+			"nginx.ingress.kubernetes.io/server-snippet": `
+				more_set_headers "Content-Length: $content_length";
+				more_set_headers "Content-Type: $content_type";`,
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
@@ -44,7 +47,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", fun
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`more_set_headers "Request-Id: $req_id";`))
+				return strings.Contains(server, `more_set_headers "Content-Length: $content_length`) && strings.Contains(server, `more_set_headers "Content-Type: $content_type";`)
 			})
 	})
 })

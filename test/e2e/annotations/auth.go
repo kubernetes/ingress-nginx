@@ -25,6 +25,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
@@ -39,8 +40,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	f := framework.NewDefaultFramework("auth")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
 	})
 
 	AfterEach(func() {
@@ -50,17 +50,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		host := "auth"
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name auth")) &&
 					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -82,17 +78,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name auth")) &&
 					Expect(server).Should(ContainSubstring("return 503"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -108,10 +100,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 401 when authentication is configured but Authorization header is not configured", func() {
 		host := "auth"
 
-		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(s).NotTo(BeNil())
-		Expect(s.ObjectMeta).NotTo(BeNil())
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -120,17 +109,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err = f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name auth")) &&
 					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -146,10 +131,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials", func() {
 		host := "auth"
 
-		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(s).NotTo(BeNil())
-		Expect(s.ObjectMeta).NotTo(BeNil())
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -158,17 +140,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err = f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name auth")) &&
 					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, body, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -185,10 +163,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 200 when authentication is configured and Authorization header is sent", func() {
 		host := "auth"
 
-		s, err := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(s).NotTo(BeNil())
-		Expect(s.ObjectMeta).NotTo(BeNil())
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -197,17 +172,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err = f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name auth")) &&
 					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -223,7 +194,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 500 when authentication is configured with invalid content and Authorization header is sent", func() {
 		host := "auth"
 
-		s, err := f.EnsureSecret(
+		s := f.EnsureSecret(
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -236,9 +207,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				Type: corev1.SecretTypeOpaque,
 			},
 		)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(s).NotTo(BeNil())
-		Expect(s.ObjectMeta).NotTo(BeNil())
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -247,17 +215,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err = f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxServer(host,
+		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("server_name auth")) &&
 					Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().
 			Get(f.IngressController.HTTPURL).
@@ -274,11 +238,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 		host := "auth"
 
 		BeforeEach(func() {
-			err := f.NewHttpbinDeployment()
-			Expect(err).NotTo(HaveOccurred())
+			f.NewHttpbinDeployment()
 
 			var httpbinIP string
-			err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+			err := wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 				e, err := f.KubeClientSet.CoreV1().Endpoints(f.IngressController.Namespace).Get("httpbin", metav1.GetOptions{})
 				if errors.IsNotFound(err) {
 					return false, nil
@@ -300,15 +263,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			}
 
 			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-			_, err = f.EnsureIngress(ing)
+			f.EnsureIngress(ing)
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ing).NotTo(BeNil())
-
-			err = f.WaitForNginxServer(host, func(server string) bool {
+			f.WaitForNginxServer(host, func(server string) bool {
 				return Expect(server).ShouldNot(ContainSubstring("return 503"))
 			})
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should return status code 200 when signed in", func() {

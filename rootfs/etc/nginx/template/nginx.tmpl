@@ -12,6 +12,10 @@
 # setup custom paths that do not require root access
 pid /tmp/nginx.pid;
 
+{{ if $cfg.UseGeoIP2 }}
+load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
+{{ end }}
+
 {{ if $cfg.EnableModsecurity }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
@@ -23,8 +27,8 @@ load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
-{{ if gt (len $cfg.WorkerCpuAffinity) 0 }}
-worker_cpu_affinity {{ $cfg.WorkerCpuAffinity }};
+{{ if gt (len $cfg.WorkerCPUAffinity) 0 }}
+worker_cpu_affinity {{ $cfg.WorkerCPUAffinity }};
 {{ end }}
 
 {{ if ne .MaxOpenFiles 0 }}
@@ -121,6 +125,26 @@ http {
     geoip_city          /etc/nginx/geoip/GeoLiteCity.dat;
     geoip_org           /etc/nginx/geoip/GeoIPASNum.dat;
     geoip_proxy_recursive on;
+    {{ end }}
+
+    {{ if $cfg.UseGeoIP2 }}
+    # https://github.com/leev/ngx_http_geoip2_module#example-usage
+
+    geoip2 /etc/nginx/geoip/GeoLite2-City.mmdb {
+        $geoip2_city_country_code source=$the_real_ip country iso_code;
+        $geoip2_city_country_name source=$the_real_ip country names en;
+        $geoip2_city source=$the_real_ip city names en;
+        $geoip2_postal_code source=$the_real_ip postal code;
+        $geoip2_dma_code source=$the_real_ip location metro_code;
+        $geoip2_latitude source=$the_real_ip location latitude;
+        $geoip2_longitude source=$the_real_ip location longitude;
+        $geoip2_region_code source=$the_real_ip subdivisions 0 iso_code;
+        $geoip2_region_name source=$the_real_ip subdivisions 0 names en;
+    }
+
+    geoip2 /etc/nginx/geoip/GeoLite2-ASN.mmdb {
+        $geoip2_asn source=$the_real_ip autonomous_system_number;
+    }
     {{ end }}
 
     aio                 threads;
@@ -322,7 +346,7 @@ http {
     # If no such header is provided, it can provide a random value.
     map $http_x_request_id $req_id {
         default   $http_x_request_id;
-        {{ if $cfg.GenerateRequestId }}
+        {{ if $cfg.GenerateRequestID }}
         ""        $request_id;
         {{ end }}
     }
@@ -891,8 +915,22 @@ stream {
 
                 waf:set_option("mode", "{{ $location.LuaRestyWAF.Mode }}")
                 waf:set_option("storage_zone", "waf_storage")
+
+                {{ if $location.LuaRestyWAF.AllowUnknownContentTypes }} 
+                waf:set_option("allow_unknown_content_types", true)
+                {{ else }}
                 waf:set_option("allowed_content_types", { "text/html", "text/json", "application/json" })
+                {{ end }}
+
                 waf:set_option("event_log_level", ngx.WARN)
+
+                {{ if gt $location.LuaRestyWAF.ScoreThreshold 0 }}
+                waf:set_option("score_threshold", {{ $location.LuaRestyWAF.ScoreThreshold }})
+                {{ end }}
+
+                {{ if not $location.LuaRestyWAF.ProcessMultipartBody }}
+                waf:set_option("process_multipart_body", false)
+                {{ end }}
 
                 {{ if $location.LuaRestyWAF.Debug }}
                 waf:set_option("debug", true)
@@ -1077,7 +1115,7 @@ stream {
             {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
             {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
-            {{ if $all.Cfg.ProxyAddOriginalUriHeader }}
+            {{ if $all.Cfg.ProxyAddOriginalURIHeader }}
             {{ $proxySetHeader }} X-Original-URI         $request_uri;
             {{ end }}
             {{ $proxySetHeader }} X-Scheme               $pass_access_scheme;
@@ -1135,16 +1173,11 @@ stream {
             proxy_set_header       X-Service-Port     $service_port;
             {{ end }}
 
-            {{ if not (empty $location.Backend) }}
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }};
             {{ else if not (eq $location.Proxy.ProxyRedirectTo "off") }}
             proxy_redirect                          {{ $location.Proxy.ProxyRedirectFrom }} {{ $location.Proxy.ProxyRedirectTo }};
-            {{ end }}
-            {{ else }}
-            # No endpoints available for the request
-            return 503;
             {{ end }}
             {{ else }}
             # Location denied. Reason: {{ $location.Denied | printf "%q" }}

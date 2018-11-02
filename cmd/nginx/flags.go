@@ -84,6 +84,8 @@ Takes the form "namespace/name".`)
 Configured inside the NGINX status server. All requests received on the port
 defined by the healthz-port parameter are forwarded internally to this path.`)
 
+		healthCheckTimeout = flags.Duration("health-check-timeout", 10, `Time limit, in seconds, for a probe to health-check-path to succeed.`)
+
 		updateStatus = flags.Bool("update-status", true,
 			`Update the load-balancer status of Ingress objects this controller satisfies.
 Requires setting the publish-service parameter to a valid Service reference.`)
@@ -217,6 +219,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		ConfigMapName:              *configMap,
 		DefaultSSLCertificate:      *defSSLCertificate,
 		DefaultHealthzURL:          *defHealthzURL,
+		HealthCheckTimeout:         *healthCheckTimeout,
 		PublishService:             *publishSvc,
 		PublishStatusAddress:       *publishStatusAddress,
 		ForceNamespaceIsolation:    *forceIsolation,

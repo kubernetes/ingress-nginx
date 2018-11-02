@@ -30,8 +30,7 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 	f := framework.NewDefaultFramework("configmap-change")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeployment()
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeployment()
 	})
 
 	AfterEach(func() {
@@ -40,22 +39,20 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 	It("should reload after an update in the configuration", func() {
 		host := "configmap-change"
 
-		ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		f.EnsureIngress(ing)
 
 		wlKey := "whitelist-source-range"
 		wlValue := "1.1.1.1"
 
 		By("adding a whitelist-source-range")
 
-		err = f.UpdateNginxConfigMapData(wlKey, wlValue)
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData(wlKey, wlValue)
 
 		checksumRegex := regexp.MustCompile("Configuration checksum:\\s+(\\d+)")
 		checksum := ""
 
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				// before returning, extract the current checksum
 				match := checksumRegex.FindStringSubmatch(cfg)
@@ -66,16 +63,14 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 				return strings.Contains(cfg, "geo $the_real_ip $deny_") &&
 					strings.Contains(cfg, "1.1.1.1 0")
 			})
-		Expect(err).NotTo(HaveOccurred())
 		Expect(checksum).NotTo(BeEmpty())
 
 		By("changing error-log-level")
 
-		err = f.UpdateNginxConfigMapData("error-log-level", "debug")
-		Expect(err).NotTo(HaveOccurred())
+		f.UpdateNginxConfigMapData("error-log-level", "debug")
 
 		newChecksum := ""
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				match := checksumRegex.FindStringSubmatch(cfg)
 				if len(match) > 0 {
@@ -84,8 +79,6 @@ var _ = framework.IngressNginxDescribe("Configmap change", func() {
 
 				return strings.ContainsAny(cfg, "error_log  /var/log/nginx/error.log debug;")
 			})
-		Expect(err).NotTo(HaveOccurred())
-
 		Expect(checksum).NotTo(BeEquivalentTo(newChecksum))
 	})
 })

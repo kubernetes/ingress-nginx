@@ -86,6 +86,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-protocol-header-timeout](#proxy-protocol-header-timeout)|string|"5s"|
 |[use-gzip](#use-gzip)|bool|"true"|
 |[use-geoip](#use-geoip)|bool|"true"|
+|[use-geoip2](#use-geoip2)|bool|"false"|
 |[enable-brotli](#enable-brotli)|bool|"false"|
 |[brotli-level](#brotli-level)|int|4|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"|
@@ -497,6 +498,13 @@ The default mime type list to compress is: `application/atom+xml application/jav
 
 Enables or disables ["geoip" module](http://nginx.org/en/docs/http/ngx_http_geoip_module.html) that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
 _**default:**_ true
+
+> __Note:__ MaxMind legacy databases are discontinued and will not receive updates after 2019-01-02, cf. [discontinuation notice](https://support.maxmind.com/geolite-legacy-discontinuation-notice/). Consider [use-geoip2](#use-geoip2) below.
+
+## use-geoip2
+
+Enables the [geoip2 module](https://github.com/leev/ngx_http_geoip2_module) for NGINX.
+_**default:**_ false
 
 ## enable-brotli
 

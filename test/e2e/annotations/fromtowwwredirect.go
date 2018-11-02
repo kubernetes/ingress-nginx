@@ -31,8 +31,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 	f := framework.NewDefaultFramework("fromtowwwredirect")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(2)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(2)
 	})
 
 	AfterEach(func() {
@@ -47,30 +46,25 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		_, err := f.EnsureIngress(ing)
+		f.EnsureIngress(ing)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ing).NotTo(BeNil())
-
-		err = f.WaitForNginxConfiguration(
+		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return Expect(cfg).Should(ContainSubstring(`server_name www.fromtowwwredirect.bar.com;`)) &&
 					Expect(cfg).Should(ContainSubstring(`return 308 $scheme://fromtowwwredirect.bar.com$request_uri;`))
 			})
-		Expect(err).NotTo(HaveOccurred())
 
 		By("sending request to www.fromtowwwredirect.bar.com")
 
-		gorequest.New().
+		resp, _, errs := gorequest.New().
 			Get(fmt.Sprintf("%s/%s", f.IngressController.HTTPURL, "foo")).
 			Retry(10, 1*time.Second, http.StatusNotFound).
+			RedirectPolicy(noRedirectPolicyFunc).
 			Set("Host", fmt.Sprintf("%s.%s", "www", host)).
 			End()
 
-		log, err := f.NginxLogs()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(log).ToNot(BeEmpty())
-
-		Expect(log).To(ContainSubstring(fmt.Sprintf(` "GET /foo HTTP/1.1" 308 171 "-" "Go-http-client/1.1"`)))
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
+		Expect(resp.Header.Get("Location")).Should(Equal("http://fromtowwwredirect.bar.com/foo"))
 	})
 })

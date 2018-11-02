@@ -17,13 +17,17 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/parnurzeal/gorequest"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", func() {
-	f := framework.NewDefaultFramework("configurationsnippet")
+var _ = framework.IngressNginxDescribe("Annotations - Approot", func() {
+	f := framework.NewDefaultFramework("approot")
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(2)
@@ -32,11 +36,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", fun
 	AfterEach(func() {
 	})
 
-	It(`set snippet "more_set_headers "Request-Id: $req_id";" in all locations"`, func() {
-		host := "configurationsnippet.foo.com"
+	It("should redirect to /foo", func() {
+		host := "approot.bar.com"
+
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `
-				more_set_headers "Request-Id: $req_id";`,
+			"nginx.ingress.kubernetes.io/app-root": "/foo",
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
@@ -44,7 +48,19 @@ var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", fun
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`more_set_headers "Request-Id: $req_id";`))
+				return Expect(server).Should(ContainSubstring(`if ($uri = /) {`)) &&
+					Expect(server).Should(ContainSubstring(`return 302 /foo;`))
 			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Retry(10, 1*time.Second, http.StatusNotFound).
+			RedirectPolicy(noRedirectPolicyFunc).
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusFound))
+		Expect(resp.Header.Get("Location")).Should(Equal("http://approot.bar.com/foo"))
 	})
 })

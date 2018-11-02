@@ -61,6 +61,7 @@ type Configuration struct {
 	ForceNamespaceIsolation bool
 
 	DefaultHealthzURL     string
+	HealthCheckTimeout    time.Duration
 	DefaultSSLCertificate string
 
 	// +optional
