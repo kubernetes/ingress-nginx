@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.63
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.66
 
 RUN clean-install \
   g++ \
@@ -61,3 +61,7 @@ RUN  luarocks install luacheck \
 
 RUN  go get github.com/onsi/ginkgo/ginkgo \
   && go get golang.org/x/lint/golint
+
+RUN  curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl \
+  && chmod +x /usr/local/bin/kubectl
+

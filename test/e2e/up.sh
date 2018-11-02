@@ -22,7 +22,7 @@ if test -e kubectl; then
   echo "skipping download of kubectl"
 else
   echo "downloading kubectl..."
-  curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.11.0/bin/linux/amd64/kubectl && \
+  curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl && \
       chmod +x kubectl && sudo mv kubectl /usr/local/bin/
 fi
 
@@ -31,6 +31,9 @@ touch ${HOME}/.kube/config
 export KUBECONFIG=${HOME}/.kube/config
 
 echo "starting Kubernetes cluster..."
+curl -Lo $DIR/dind-cluster-v1.11.sh https://raw.githubusercontent.com/kubernetes-sigs/kubeadm-dind-cluster/master/fixed/dind-cluster-v1.11.sh && \
+  chmod +x $DIR/dind-cluster-v1.11.sh
+
 $DIR/dind-cluster-v1.11.sh up
 
 kubectl config use-context dind

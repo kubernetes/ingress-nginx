@@ -23,6 +23,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	"github.com/parnurzeal/gorequest"
 
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
@@ -34,8 +35,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 	f := framework.NewDefaultFramework("custom-default-backend")
 
 	BeforeEach(func() {
-		err := f.NewEchoDeploymentWithReplicas(1)
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(1)
 
 		framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 1,
 			func(deployment *appsv1beta1.Deployment) error {
@@ -47,11 +47,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 				return err
 			})
 
-		err = f.WaitForNginxServer("_",
+		f.WaitForNginxServer("_",
 			func(server string) bool {
 				return strings.Contains(server, "set $proxy_upstream_name \"upstream-default-backend\"")
 			})
-		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("uses custom default backend", func() {

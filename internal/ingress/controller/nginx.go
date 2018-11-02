@@ -18,7 +18,6 @@ package controller
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -257,7 +256,7 @@ func (n *NGINXController) Start() {
 	n.store.Run(n.stopCh)
 
 	if n.syncStatus != nil {
-		go n.syncStatus.Run(context.Background())
+		go n.syncStatus.Run()
 	}
 
 	cmd := nginxExecCommand()
@@ -812,12 +811,7 @@ func configureCertificates(pcfg *ingress.Configuration, port int) error {
 	}
 
 	url := fmt.Sprintf("http://localhost:%d/configuration/servers", port)
-	err := post(url, servers)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return post(url, servers)
 }
 
 func post(url string, data interface{}) error {

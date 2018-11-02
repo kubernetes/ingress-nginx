@@ -20,7 +20,7 @@ set -o pipefail
 
 SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
 
-INPUT="namespace.yaml configmap.yaml tcp-services-configmap.yaml udp-services-configmap.yaml rbac.yaml with-rbac.yaml"
+INPUT="namespace.yaml configmap.yaml rbac.yaml with-rbac.yaml"
 MANIFEST=$(cd ${SCRIPT_ROOT}/deploy; cat ${INPUT})
 
 echo "${MANIFEST}" > ${SCRIPT_ROOT}/deploy/mandatory.yaml

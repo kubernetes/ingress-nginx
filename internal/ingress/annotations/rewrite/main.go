@@ -39,7 +39,7 @@ type Config struct {
 	// AppRoot defines the Application Root that the Controller must redirect if it's in '/' context
 	AppRoot string `json:"appRoot"`
 	// UseRegex indicates whether or not the locations use regex paths
-	UseRegex bool `json:useRegex`
+	UseRegex bool `json:"useRegex"`
 }
 
 // Equal tests for equality between two Redirect types

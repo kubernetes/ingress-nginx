@@ -31,10 +31,13 @@ var luaRestyWAFModes = map[string]bool{"ACTIVE": true, "INACTIVE": true, "SIMULA
 
 // Config returns lua-resty-waf configuration for an Ingress rule
 type Config struct {
-	Mode               string   `json:"mode"`
-	Debug              bool     `json:"debug"`
-	IgnoredRuleSets    []string `json:"ignored-rulesets"`
-	ExtraRulesetString string   `json:"extra-ruleset-string"`
+	Mode                     string   `json:"mode"`
+	Debug                    bool     `json:"debug"`
+	IgnoredRuleSets          []string `json:"ignored-rulesets"`
+	ExtraRulesetString       string   `json:"extra-ruleset-string"`
+	ScoreThreshold           int      `json:"score-threshold"`
+	AllowUnknownContentTypes bool     `json:"allow-unknown-content-types"`
+	ProcessMultipartBody     bool     `json:"process-multipart-body"`
 }
 
 // Equal tests for equality between two Config types
@@ -55,6 +58,15 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		return false
 	}
 	if e1.ExtraRulesetString != e2.ExtraRulesetString {
+		return false
+	}
+	if e1.ScoreThreshold != e2.ScoreThreshold {
+		return false
+	}
+	if e1.AllowUnknownContentTypes != e2.AllowUnknownContentTypes {
+		return false
+	}
+	if e1.ProcessMultipartBody != e2.ProcessMultipartBody {
 		return false
 	}
 
@@ -95,10 +107,22 @@ func (a luarestywaf) Parse(ing *extensions.Ingress) (interface{}, error) {
 	// TODO(elvinefendi) maybe validate the ruleset string here
 	extraRulesetString, _ := parser.GetStringAnnotation("lua-resty-waf-extra-rules", ing)
 
+	scoreThreshold, _ := parser.GetIntAnnotation("lua-resty-waf-score-threshold", ing)
+
+	allowUnknownContentTypes, _ := parser.GetBoolAnnotation("lua-resty-waf-allow-unknown-content-types", ing)
+
+	processMultipartBody, err := parser.GetBoolAnnotation("lua-resty-waf-process-multipart-body", ing)
+	if err != nil {
+		processMultipartBody = true
+	}
+
 	return &Config{
-		Mode:               mode,
-		Debug:              debug,
-		IgnoredRuleSets:    ignoredRuleSets,
-		ExtraRulesetString: extraRulesetString,
+		Mode:                     mode,
+		Debug:                    debug,
+		IgnoredRuleSets:          ignoredRuleSets,
+		ExtraRulesetString:       extraRulesetString,
+		ScoreThreshold:           scoreThreshold,
+		AllowUnknownContentTypes: allowUnknownContentTypes,
+		ProcessMultipartBody:     processMultipartBody,
 	}, nil
 }

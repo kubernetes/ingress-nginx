@@ -27,6 +27,9 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+// HTTP protocol
+const HTTP = "HTTP"
+
 var (
 	validProtocols = regexp.MustCompile(`^(HTTP|HTTPS|AJP|GRPC|GRPCS)$`)
 )
@@ -44,18 +47,18 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // rule used to indicate the backend protocol.
 func (a backendProtocol) Parse(ing *extensions.Ingress) (interface{}, error) {
 	if ing.GetAnnotations() == nil {
-		return "HTTP", nil
+		return HTTP, nil
 	}
 
 	proto, err := parser.GetStringAnnotation("backend-protocol", ing)
 	if err != nil {
-		return "HTTP", nil
+		return HTTP, nil
 	}
 
 	proto = strings.TrimSpace(strings.ToUpper(proto))
 	if !validProtocols.MatchString(proto) {
 		glog.Warningf("Protocol %v is not a valid value for the backend-protocol annotation. Using HTTP as protocol", proto)
-		return "HTTP", nil
+		return HTTP, nil
 	}
 
 	return proto, nil

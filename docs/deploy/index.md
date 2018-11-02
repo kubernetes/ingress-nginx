@@ -2,8 +2,7 @@
 
 ## Contents
 
-- [Generic Deployment](#generic-deployment)
-  - [Mandatory command](#mandatory-command)
+- [Prerequisite Generic Deployment Command](#prerequisite-generic-deployment-command)
   - [Provider Specific Steps](#provider-specific-steps)
     - [Docker for Mac](#docker-for-mac)
     - [minikube](#minikube)
@@ -159,7 +158,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 ```
 
 !!! tip
-    For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal/).
+    For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md/).
 
 ### Verify installation
 

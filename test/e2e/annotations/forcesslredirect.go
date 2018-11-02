@@ -17,13 +17,17 @@ limitations under the License.
 package annotations
 
 import (
+	"net/http"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/parnurzeal/gorequest"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", func() {
-	f := framework.NewDefaultFramework("configurationsnippet")
+var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() {
+	f := framework.NewDefaultFramework("forcesslredirect")
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(2)
@@ -32,11 +36,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", fun
 	AfterEach(func() {
 	})
 
-	It(`set snippet "more_set_headers "Request-Id: $req_id";" in all locations"`, func() {
-		host := "configurationsnippet.foo.com"
+	It("should redirect to https", func() {
+		host := "forcesslredirect.bar.com"
+
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `
-				more_set_headers "Request-Id: $req_id";`,
+			"nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
@@ -44,7 +48,19 @@ var _ = framework.IngressNginxDescribe("Annotations - Configurationsnippet", fun
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`more_set_headers "Request-Id: $req_id";`))
+				return Expect(server).Should(ContainSubstring(`if ($redirect_to_https) {`)) &&
+					Expect(server).Should(ContainSubstring(`return 308 https://$best_http_host$request_uri;`))
 			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Retry(10, 1*time.Second, http.StatusNotFound).
+			RedirectPolicy(noRedirectPolicyFunc).
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
+		Expect(resp.Header.Get("Location")).Should(Equal("https://forcesslredirect.bar.com/"))
 	})
 })

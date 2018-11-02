@@ -94,7 +94,7 @@ func main() {
 		if err != nil {
 			// TODO (antoineco): compare with error types from k8s.io/apimachinery/pkg/api/errors
 			if strings.Contains(err.Error(), "cannot get services in the namespace") {
-				glog.Fatalf("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
+				glog.Fatal("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
 			}
 			glog.Fatalf("No service with name %v found: %v", conf.DefaultService, err)
 		}
@@ -160,7 +160,7 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan
-	glog.Infof("Received SIGTERM, shutting down")
+	glog.Info("Received SIGTERM, shutting down")
 
 	exitCode := 0
 	if err := ngx.Stop(); err != nil {
@@ -168,7 +168,7 @@ func handleSigterm(ngx *controller.NGINXController, exit exiter) {
 		exitCode = 1
 	}
 
-	glog.Infof("Handled quit, awaiting Pod deletion")
+	glog.Info("Handled quit, awaiting Pod deletion")
 	time.Sleep(10 * time.Second)
 
 	glog.Infof("Exiting with %v", exitCode)

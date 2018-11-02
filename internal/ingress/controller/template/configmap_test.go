@@ -90,7 +90,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.WorkerShutdownTimeout = "99s"
 	def.NginxStatusIpv4Whitelist = []string{"127.0.0.1", "10.0.0.0/24"}
 	def.NginxStatusIpv6Whitelist = []string{"::1", "2001::/16"}
-	def.ProxyAddOriginalUriHeader = false
+	def.ProxyAddOriginalURIHeader = false
 
 	hash, err := hashstructure.Hash(def, &hashstructure.HashOptions{
 		TagName: "json",

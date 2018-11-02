@@ -102,10 +102,10 @@ type Configuration struct {
 	// By default access logs go to /var/log/nginx/access.log
 	AccessLogPath string `json:"access-log-path,omitempty"`
 
-	// WorkerCpuAffinity bind nginx worker processes to CPUs this will improve response latency
+	// WorkerCPUAffinity bind nginx worker processes to CPUs this will improve response latency
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_cpu_affinity
 	// By default this is disabled
-	WorkerCpuAffinity string `json:"worker-cpu-affinity,omitempty"`
+	WorkerCPUAffinity string `json:"worker-cpu-affinity,omitempty"`
 	// ErrorLogPath sets the path of the error logs
 	// http://nginx.org/en/docs/ngx_core_module.html#error_log
 	// By default error logs go to /var/log/nginx/error.log
@@ -347,6 +347,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_geoip_module.html
 	UseGeoIP bool `json:"use-geoip,omitempty"`
 
+	// UseGeoIP2 enables the geoip2 module for NGINX
+	// By default this is disabled
+	UseGeoIP2 bool `json:"use-geoip2,omitempty"`
+
 	// Enables or disables the use of the NGINX Brotli Module for compression
 	// https://github.com/google/ngx_brotli
 	EnableBrotli bool `json:"enable-brotli,omitempty"`
@@ -438,11 +442,11 @@ type Configuration struct {
 
 	// If the request does not have a request-id, should we generate a random value?
 	// Default: true
-	GenerateRequestId bool `json:"generate-request-id,omitempty"`
+	GenerateRequestID bool `json:"generate-request-id,omitempty"`
 
 	// Adds an X-Original-Uri header with the original request URI to the backend request
 	// Default: true
-	ProxyAddOriginalUriHeader bool `json:"proxy-add-original-uri-header"`
+	ProxyAddOriginalURIHeader bool `json:"proxy-add-original-uri-header"`
 
 	// EnableOpentracing enables the nginx Opentracing extension
 	// https://github.com/opentracing-contrib/nginx-opentracing
@@ -570,7 +574,7 @@ func NewDefault() Configuration {
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
 		AccessLogPath:              "/var/log/nginx/access.log",
-		WorkerCpuAffinity:          "",
+		WorkerCPUAffinity:          "",
 		ErrorLogPath:               "/var/log/nginx/error.log",
 		BlockCIDRs:                 defBlockEntity,
 		BlockUserAgents:            defBlockEntity,
@@ -587,8 +591,8 @@ func NewDefault() Configuration {
 		UseForwardedHeaders:        true,
 		ForwardedForHeader:         "X-Forwarded-For",
 		ComputeFullForwardedFor:    false,
-		ProxyAddOriginalUriHeader:  true,
-		GenerateRequestId:          true,
+		ProxyAddOriginalURIHeader:  true,
+		GenerateRequestID:          true,
 		HTTP2MaxFieldSize:          "4k",
 		HTTP2MaxHeaderSize:         "16k",
 		HTTP2MaxRequests:           1000,
@@ -630,6 +634,7 @@ func NewDefault() Configuration {
 		EnableBrotli:               false,
 		UseGzip:                    true,
 		UseGeoIP:                   true,
+		UseGeoIP2:                  false,
 		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:      "10s",
 		LoadBalanceAlgorithm:       defaultLoadBalancerAlgorithm,
