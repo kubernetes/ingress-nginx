@@ -1132,6 +1132,10 @@
 <td>URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz")</td>
 </tr>
 <tr>
+<td><code class="codehilite">--health-check-timeout duration</code></td>
+<td>Time limit, in seconds, for a probe to health-check-path to succeed. (default 10)</td>
+</tr>
+<tr>
 <td><code class="codehilite">--healthz-port int</code></td>
 <td>Port to use for the healthz endpoint. (default 10254)</td>
 </tr>
@@ -1202,14 +1206,6 @@
 <tr>
 <td><code class="codehilite">--sync-rate-limit float32</code></td>
 <td>Define the sync frequency upper limit (default 0.3)</td>
-</tr>
-<tr>
-<td><code class="codehilite">--tcp-services-configmap string</code></td>
-<td>Name of the ConfigMap containing the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port number or name. TCP ports 80 and 443 are reserved by the controller for servicing HTTP traffic.</td>
-</tr>
-<tr>
-<td><code class="codehilite">--udp-services-configmap string</code></td>
-<td>Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number.</td>
 </tr>
 <tr>
 <td><code class="codehilite">--update-status</code></td>
