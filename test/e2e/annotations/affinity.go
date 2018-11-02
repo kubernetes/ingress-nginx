@@ -193,11 +193,11 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/somewhereelese;"))
 	})
 
-	It("should set sticky cookie with expires", func() {
-		host := "sticky.foo.com"
+	It("should set cookie with expires", func() {
+		host := "cookie.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/affinity":               "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name":    "SERVERID",
+			"nginx.ingress.kubernetes.io/session-cookie-name":    "ExpiresCookie",
 			"nginx.ingress.kubernetes.io/session-cookie-expires": "172800",
 			"nginx.ingress.kubernetes.io/session-cookie-max-age": "259200",
 		}
