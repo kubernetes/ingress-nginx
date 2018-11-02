@@ -406,6 +406,8 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 				if anns.SessionAffinity.Type == "cookie" {
 					ups.SessionAffinity.CookieSessionAffinity.Name = anns.SessionAffinity.Cookie.Name
 					ups.SessionAffinity.CookieSessionAffinity.Hash = anns.SessionAffinity.Cookie.Hash
+					ups.SessionAffinity.CookieSessionAffinity.Expires = anns.SessionAffinity.Cookie.Expires
+					ups.SessionAffinity.CookieSessionAffinity.MaxAge = anns.SessionAffinity.Cookie.MaxAge
 
 					locs := ups.SessionAffinity.CookieSessionAffinity.Locations
 					if _, ok := locs[host]; !ok {

@@ -109,6 +109,8 @@ type SessionAffinityConfig struct {
 type CookieSessionAffinity struct {
 	Name      string              `json:"name"`
 	Hash      string              `json:"hash"`
+	Expires   string              `json:"expires,omitempty"`
+	MaxAge    string              `json:"maxage,omitempty"`
 	Locations map[string][]string `json:"locations,omitempty"`
 }
 
