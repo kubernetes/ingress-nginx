@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -190,5 +191,36 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/somewhereelese;"))
+	})
+
+	It("should set cookie with expires", func() {
+		host := "cookie.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":               "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name":    "ExpiresCookie",
+			"nginx.ingress.kubernetes.io/session-cookie-expires": "172800",
+			"nginx.ingress.kubernetes.io/session-cookie-max-age": "259200",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		local, _ := time.LoadLocation("GMT")
+		duration, _ := time.ParseDuration("48h")
+		expected := time.Date(1970, time.January, 1, 0, 0, 0, 0, local).Add(duration).Format("Mon, 02-Jan-06 15:04:05 MST")
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(fmt.Sprintf("Expires=%s", expected)))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Max-Age=259200"))
 	})
 })

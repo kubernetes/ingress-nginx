@@ -15,6 +15,8 @@ function _M.new(self, backend)
   local o = {
     instance = self.factory:new(nodes),
     cookie_name = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["name"] or "route",
+    cookie_expires = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["expires"],
+    cookie_max_age = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["maxage"],
     digest_func = digest_func,
   }
   setmetatable(o, self)
@@ -37,14 +39,24 @@ local function set_cookie(self, value)
     ngx.log(ngx.ERR, err)
   end
 
-  local ok
-  ok, err = cookie:set({
+  local cookie_data = {
     key = self.cookie_name,
     value = value,
     path = ngx.var.location_path,
     domain = ngx.var.host,
     httponly = true,
-  })
+  }
+
+  if self.cookie_expires and self.cookie_expires ~= "" then
+      cookie_data.expires = ngx.cookie_time(tonumber(self.cookie_expires))
+  end
+
+  if self.cookie_max_age and self.cookie_max_age ~= "" then
+    cookie_data.max_age = tonumber(self.cookie_max_age)
+  end
+
+  local ok
+  ok, err = cookie:set(cookie_data)
   if not ok then
     ngx.log(ngx.ERR, err)
   end
