@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,7 +29,6 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -156,5 +156,36 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/somewhereelese;"))
+	})
+
+	It("should set sticky cookie with expires", func() {
+		host := "sticky.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":               "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name":    "SERVERID",
+			"nginx.ingress.kubernetes.io/session-cookie-expires": "172800",
+			"nginx.ingress.kubernetes.io/session-cookie-max-age": "259200",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Set("Host", host).
+			End()
+
+		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		local, _ := time.LoadLocation("GMT")
+		duration, _ := time.ParseDuration("48h")
+		want := time.Date(1970, time.January, 1, 0, 0, 0, 0, local).Add(duration).Format("Mon, 02-Jan-06 15:04:05 MST")
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(fmt.Sprintf("Expires=%s", want)))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Max-Age=259200"))
 	})
 })

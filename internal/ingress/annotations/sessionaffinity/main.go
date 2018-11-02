@@ -40,9 +40,8 @@ const (
 	annotationAffinityCookieHash = "session-cookie-hash"
 	defaultAffinityCookieHash    = "md5"
 
-	// This is used to control the cookie expires, its value is a time period, the cookie will
-	// not expire during the time period. e.g. 1h (1 hour) the validated time unit includes:
-	// y, M, w, d, h, m and s
+	// This is used to control the cookie expires, its value is a number of seconds until the
+	// cookie expires
 	annotationAffinityCookieExpires = "session-cookie-expires"
 
 	// This is used to control the cookie expires, its value is a number of seconds until the
@@ -52,8 +51,7 @@ const (
 
 var (
 	affinityCookieHashRegex    = regexp.MustCompile(`^(index|md5|sha1)$`)
-	affinityCookieExpiresRegex = regexp.MustCompile(`^(\d+(y|M|w|d|h|m|s))$`)
-	affinityCookieMaxAgeRegex  = regexp.MustCompile(`(^0|-?[1-9]\d*$)`)
+	affinityCookieExpiresRegex = regexp.MustCompile(`(^0|-?[1-9]\d*$)`)
 )
 
 // Config describes the per ingress session affinity config
@@ -69,7 +67,7 @@ type Cookie struct {
 	Name string `json:"name"`
 	// The hash that will be used to encode the cookie in case of cookie affinity type
 	Hash string `json:"hash"`
-	// The time period to control cookie expires
+	// The time duration to control cookie expires
 	Expires string `json:"expires"`
 	// The number of seconds until the cookie expires
 	MaxAge string `json:"maxage"`
@@ -96,14 +94,14 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 	cookie.Hash = sh
 
 	se, err := parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)
-	if err != nil && !affinityCookieExpiresRegex.MatchString(se) {
+	if err != nil || !affinityCookieExpiresRegex.MatchString(se) {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieExpires)
 		se = ""
 	}
 	cookie.Expires = se
 
 	sm, err := parser.GetStringAnnotation(annotationAffinityCookieMaxAge, ing)
-	if err != nil && !affinityCookieMaxAgeRegex.MatchString(sm) {
+	if err != nil || !affinityCookieExpiresRegex.MatchString(sm) {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
 		sm = ""
 	}

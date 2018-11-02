@@ -33,32 +33,6 @@ local function encrypted_endpoint_string(self, endpoint_string)
   return encrypted
 end
 
-local function parse_cookie_expires(expires)
-  local time = tonumber(string.sub(expires, 0, string.len(expires) - 1))
-  if time == nil then
-    return nil, string.format("the time of expires (%s) is wrong", expires)
-  end
-
-  local unit = string.sub(expires, -1)
-  if unit == "y" then
-    return time * 60 * 60 * 24 * 365
-  elseif unit == "M" then
-    return time * 60 * 60 * 24 * 30
-  elseif unit == "w" then
-    return time * 60 * 60 * 24 * 7
-  elseif unit == "d" then
-    return time * 60 * 60 * 24
-  elseif unit == "h" then
-    return time * 60 * 60
-  elseif unit == "m" then
-    return time * 60
-  elseif unit == "s" then
-    return time
-  else
-    return nil, string.format("the unit of expires (%s) is wrong", expires)
-  end
-end
-
 local function set_cookie(self, value)
   local cookie, err = ck:new()
   if not cookie then
@@ -75,12 +49,7 @@ local function set_cookie(self, value)
 
   local expires
   if self.cookie_expires and self.cookie_expires ~= "" then
-    expires, err = parse_cookie_expires(self.cookie_expires)
-    if err then
-      ngx.log(ngx.WARN, string.format("error when parsing cookie expires: %s, ignoring it", tostring(err)))
-    else
-      cookie_data.expires = ngx.cookie_time(expires)
-    end
+      cookie_data.expires = ngx.cookie_time(tonumber(self.cookie_expires))
   end
 
   if self.cookie_max_age and self.cookie_max_age ~= "" then

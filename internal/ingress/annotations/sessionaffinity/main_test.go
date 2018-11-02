@@ -69,7 +69,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAffinityType)] = "cookie"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieHash)] = "sha123"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieName)] = "INGRESSCOOKIE"
-	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieExpires)] = "1h"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieExpires)] = "4500"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieMaxAge)] = "3000"
 	ing.SetAnnotations(data)
 
@@ -91,7 +91,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 		t.Errorf("expected route as sticky-name but returned %v", nginxAffinity.Cookie.Name)
 	}
 
-	if nginxAffinity.Cookie.Expires != "1h" {
+	if nginxAffinity.Cookie.Expires != "4500" {
 		t.Errorf("expected 1h as sticky-expires but returned %v", nginxAffinity.Cookie.Expires)
 	}
 
