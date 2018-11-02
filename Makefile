@@ -24,7 +24,7 @@ GOHOSTOS ?= $(shell go env GOHOSTOS)
 
 # e2e settings
 # Allow limiting the scope of the e2e tests. By default run everything
-FOCUS ?= Annotations\\s-\\sAffinity/Sticky\\sSessions
+FOCUS ?= .*
 # number of parallel test
 E2E_NODES ?= 4
 # slow test only if takes > 40s
