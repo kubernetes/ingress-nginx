@@ -19,7 +19,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--enable-ssl-passthrough`        | Enable SSL Passthrough. |
 | `--force-namespace-isolation`     | Force namespace isolation. Prevents Ingress objects from referencing Secrets and ConfigMaps located in a different namespace than their own. May be used together with watch-namespace. |
 | `--health-check-path string`      | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
-| `--health-check-timeout duration` | Time limit, in seconds, for a probe to health-check-path to succeed. |
+| `--health-check-timeout duration` | Time limit, in seconds, for a probe to health-check-path to succeed. (default 10) |
 | `--healthz-port int`              | Port to use for the healthz endpoint. (default 10254) |
 | `--http-port int`                 | Port to use for servicing HTTP traffic. (default 80) |
 | `--https-port int`                | Port to use for servicing HTTPS traffic. (default 443) |
