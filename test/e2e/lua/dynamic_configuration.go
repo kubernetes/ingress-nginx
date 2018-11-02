@@ -149,31 +149,12 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		})
 		Expect(nginxConfig).ShouldNot(Equal(newNginxConfig))
 	})
-
-	It("should set sticky cookie correctly", func() {
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
-			Set("Host", "foo.com").
-			End()
-
-		Expect(len(errs)).Should(BeNumerically("==", 0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Expires="))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Max-Age=172800"))
-	})
 })
 
 func ensureIngress(f *framework.Framework, host string) *extensions.Ingress {
-	ing, err := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80,
-		&map[string]string{
-			"nginx.ingress.kubernetes.io/load-balance":           "ewma",
-			"nginx.ingress.kubernetes.io/affinity":               "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-name":    "SERVERID",
-			"nginx.ingress.kubernetes.io/session-cookie-expires": "2d",
-			"nginx.ingress.kubernetes.io/session-cookie-max-age": "172800"}))
-	Expect(err).NotTo(HaveOccurred())
-	Expect(ing).NotTo(BeNil())
+	ing := f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80,
+		&map[string]string{"nginx.ingress.kubernetes.io/load-balance": "ewma"}))
+
 	f.WaitForNginxServer(host,
 		func(server string) bool {
 			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host)) &&
