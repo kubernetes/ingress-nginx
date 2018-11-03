@@ -413,7 +413,7 @@ git submodule update
 cd "$BUILD_PATH"
 git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
-git checkout 973c1f1028429452308bcbce7df8a6283dc59ffe
+git checkout 9ada0a28c8100f905014c128b0e6d11dd75ec7e5
 git submodule init
 git submodule update
 sh build.sh
@@ -425,7 +425,7 @@ make install
 cd /etc/nginx/
 git clone -b v3.0/master --single-branch https://github.com/SpiderLabs/owasp-modsecurity-crs
 cd owasp-modsecurity-crs
-git checkout e4e0497be4d598cce0e0a8fef20d1f1e5578c8d0
+git checkout a216353c97dd6ef767a6db4dbf9b724627811c9b
 
 mv crs-setup.conf.example crs-setup.conf
 mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
