@@ -60,6 +60,7 @@ type Cmd interface {
 	SetStdin(in io.Reader)
 	SetStdout(out io.Writer)
 	SetStderr(out io.Writer)
+	SetEnv(env []string)
 	// Stops the command by sending SIGTERM. It is not guaranteed the
 	// process will stop before this function returns. If the process is not
 	// responding, an internal timer function will send a SIGKILL to force
@@ -119,6 +120,10 @@ func (cmd *cmdWrapper) SetStdout(out io.Writer) {
 
 func (cmd *cmdWrapper) SetStderr(out io.Writer) {
 	cmd.Stderr = out
+}
+
+func (cmd *cmdWrapper) SetEnv(env []string) {
+	cmd.Env = env
 }
 
 // Run is part of the Cmd interface.
@@ -206,10 +211,12 @@ func (e CodeExitError) String() string {
 	return e.Err.Error()
 }
 
+// Exited is to check if the process has finished
 func (e CodeExitError) Exited() bool {
 	return true
 }
 
+// ExitStatus is for checking the error code
 func (e CodeExitError) ExitStatus() int {
 	return e.Code
 }

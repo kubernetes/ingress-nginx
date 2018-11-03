@@ -1122,7 +1122,7 @@ func ptracePeek(req int, pid int, addr uintptr, out []byte) (count int, err erro
 	// The ptrace syscall differs from glibc's ptrace.
 	// Peeks returns the word in *data, not as the return value.
 
-	var buf [sizeofPtr]byte
+	var buf [SizeofPtr]byte
 
 	// Leading edge. PEEKTEXT/PEEKDATA don't require aligned
 	// access (PEEKUSER warns that it might), but if we don't
@@ -1130,12 +1130,12 @@ func ptracePeek(req int, pid int, addr uintptr, out []byte) (count int, err erro
 	// boundary and not get the bytes leading up to the page
 	// boundary.
 	n := 0
-	if addr%sizeofPtr != 0 {
-		err = ptrace(req, pid, addr-addr%sizeofPtr, uintptr(unsafe.Pointer(&buf[0])))
+	if addr%SizeofPtr != 0 {
+		err = ptrace(req, pid, addr-addr%SizeofPtr, uintptr(unsafe.Pointer(&buf[0])))
 		if err != nil {
 			return 0, err
 		}
-		n += copy(out, buf[addr%sizeofPtr:])
+		n += copy(out, buf[addr%SizeofPtr:])
 		out = out[n:]
 	}
 
@@ -1173,15 +1173,15 @@ func ptracePoke(pokeReq int, peekReq int, pid int, addr uintptr, data []byte) (c
 
 	// Leading edge.
 	n := 0
-	if addr%sizeofPtr != 0 {
-		var buf [sizeofPtr]byte
-		err = ptrace(peekReq, pid, addr-addr%sizeofPtr, uintptr(unsafe.Pointer(&buf[0])))
+	if addr%SizeofPtr != 0 {
+		var buf [SizeofPtr]byte
+		err = ptrace(peekReq, pid, addr-addr%SizeofPtr, uintptr(unsafe.Pointer(&buf[0])))
 		if err != nil {
 			return 0, err
 		}
-		n += copy(buf[addr%sizeofPtr:], data)
+		n += copy(buf[addr%SizeofPtr:], data)
 		word := *((*uintptr)(unsafe.Pointer(&buf[0])))
-		err = ptrace(pokeReq, pid, addr-addr%sizeofPtr, word)
+		err = ptrace(pokeReq, pid, addr-addr%SizeofPtr, word)
 		if err != nil {
 			return 0, err
 		}
@@ -1189,19 +1189,19 @@ func ptracePoke(pokeReq int, peekReq int, pid int, addr uintptr, data []byte) (c
 	}
 
 	// Interior.
-	for len(data) > sizeofPtr {
+	for len(data) > SizeofPtr {
 		word := *((*uintptr)(unsafe.Pointer(&data[0])))
 		err = ptrace(pokeReq, pid, addr+uintptr(n), word)
 		if err != nil {
 			return n, err
 		}
-		n += sizeofPtr
-		data = data[sizeofPtr:]
+		n += SizeofPtr
+		data = data[SizeofPtr:]
 	}
 
 	// Trailing edge.
 	if len(data) > 0 {
-		var buf [sizeofPtr]byte
+		var buf [SizeofPtr]byte
 		err = ptrace(peekReq, pid, addr+uintptr(n), uintptr(unsafe.Pointer(&buf[0])))
 		if err != nil {
 			return n, err
@@ -1304,6 +1304,7 @@ func Mount(source string, target string, fstype string, flags uintptr, data stri
 //sys	ClockGettime(clockid int32, time *Timespec) (err error)
 //sys	Close(fd int) (err error)
 //sys	CopyFileRange(rfd int, roff *int64, wfd int, woff *int64, len int, flags int) (n int, err error)
+//sys	DeleteModule(name string, flags int) (err error)
 //sys	Dup(oldfd int) (fd int, err error)
 //sys	Dup3(oldfd int, newfd int, flags int) (err error)
 //sysnb	EpollCreate1(flag int) (fd int, err error)
@@ -1317,6 +1318,7 @@ func Mount(source string, target string, fstype string, flags uintptr, data stri
 //sys	fcntl(fd int, cmd int, arg int) (val int, err error)
 //sys	Fdatasync(fd int) (err error)
 //sys	Fgetxattr(fd int, attr string, dest []byte) (sz int, err error)
+//sys	FinitModule(fd int, params string, flags int) (err error)
 //sys	Flistxattr(fd int, dest []byte) (sz int, err error)
 //sys	Flock(fd int, how int) (err error)
 //sys	Fremovexattr(fd int, attr string) (err error)
@@ -1338,6 +1340,7 @@ func Getpgrp() (pid int) {
 //sysnb	Getsid(pid int) (sid int, err error)
 //sysnb	Gettid() (tid int)
 //sys	Getxattr(path string, attr string, dest []byte) (sz int, err error)
+//sys	InitModule(moduleImage []byte, params string) (err error)
 //sys	InotifyAddWatch(fd int, pathname string, mask uint32) (watchdesc int, err error)
 //sysnb	InotifyInit1(flags int) (fd int, err error)
 //sysnb	InotifyRmWatch(fd int, watchdesc uint32) (success int, err error)
@@ -1527,8 +1530,6 @@ func Faccessat(dirfd int, path string, mode uint32, flags int) (err error) {
 // ClockNanosleep
 // ClockSettime
 // Clone
-// CreateModule
-// DeleteModule
 // EpollCtlOld
 // EpollPwait
 // EpollWaitOld
@@ -1572,7 +1573,6 @@ func Faccessat(dirfd int, path string, mode uint32, flags int) (err error) {
 // Pselect6
 // Ptrace
 // Putpmsg
-// QueryModule
 // Quotactl
 // Readahead
 // Readv

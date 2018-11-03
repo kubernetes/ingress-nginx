@@ -20,7 +20,7 @@ import (
 )
 
 // Number contains the semantic version of this SDK.
-const Number = "v10.15.5"
+const Number = "v11.2.6"
 
 var (
 	userAgent = fmt.Sprintf("Go/%s (%s-%s) go-autorest/%s",
@@ -31,7 +31,7 @@ var (
 	)
 )
 
-// UserAgent returns a string containing the Go version, system archityecture and OS, and the go-autorest version.
+// UserAgent returns a string containing the Go version, system architecture and OS, and the go-autorest version.
 func UserAgent() string {
 	return userAgent
 }
