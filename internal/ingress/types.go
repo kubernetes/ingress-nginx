@@ -51,9 +51,9 @@ type Configuration struct {
 	// Backends are a list of backends used by all the Ingress rules in the
 	// ingress controller. This list includes the default backend
 	Backends []*Backend `json:"backends,omitempty"`
-	// Servers
+	// Servers save the website config
 	Servers []*Server `json:"servers,omitempty"`
-	// PassthroughBackend contains the backends used for SSL passthrough.
+	// PassthroughBackends contains the backends used for SSL passthrough.
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
 	PassthroughBackends []*SSLPassthroughBackend `json:"passthroughBackends,omitempty"`
