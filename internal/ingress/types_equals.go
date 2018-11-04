@@ -380,6 +380,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if !(&l1.ModSecurity).Equal(&l2.ModSecurity) {
+		return false
+	}
+
 	return true
 }
 
