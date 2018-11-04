@@ -16,9 +16,7 @@ pid /tmp/nginx.pid;
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
 
-{{ if $cfg.EnableModsecurity }}
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
-{{ end }}
 
 {{ if $cfg.EnableOpentracing }}
 load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
@@ -1020,12 +1018,16 @@ stream {
             {{ end }}
             {{ end }}
 
-            {{ if $all.Cfg.EnableModsecurity }}
+            {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
             modsecurity on;
 
             modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-            {{ if $all.Cfg.EnableOWASPCoreRules }}
+            {{ if (or $location.ModSecurity.OWASPRules $all.Cfg.EnableOWASPCoreRules) }}
             modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+            {{ end }}
+
+            {{ if (not (empty $location.ModSecurity.TransactionID)) }}
+            modsecurity_transaction_id "{{ $location.ModSecurity.TransactionID }}";
             {{ end }}
             {{ end }}
 

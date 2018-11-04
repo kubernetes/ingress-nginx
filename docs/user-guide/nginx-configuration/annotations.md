@@ -95,6 +95,10 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
+|[nginx.ingress.kubernetes.io/enable-modsecurity](#modsecurity)|bool|
+|[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
+|[nginx.ingress.kubernetes.io/modsecurity-transaction-id](#modsecurity)|string|
+
 
 ### Canary
 
@@ -634,6 +638,29 @@ For details on how to write WAF rules, please refer to [https://github.com/p0pr0
 
 [configmap]: ./configmap.md
 
+### ModSecurity
+
+[ModSecurity](http://modsecurity.org/) is an OpenSource Web Application firewall. It can be enabled for a particular set
+of ingress locations. The ModSecurity module must first be enabled by by enabling ModSecurity in the
+[ConfigMap](configmap.md#enable-modsecurity). Note this will enable ModSecurity for all paths, and each path
+must be disabled manually.
+
+It can be enabled using the following annotation: 
+```yaml
+nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+```
+
+You can enable the [OWASP Core Rule Set](https://www.modsecurity.org/CRS/Documentation/) by
+setting the following annotation:
+```yaml
+nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+```
+
+You can pass transactionIDs from nginx by setting up the following:
+```yaml
+nginx.ingress.kubernetes.io/modsecurity-transaction-id: "$request_id"
+```
+
 ### InfluxDB
 
 Using `influxdb-*` annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
@@ -689,5 +716,3 @@ When this annotation is set to `true`, the case insensitive regular expression [
 Additionally, if the [`rewrite-target` annotation](#rewrite) is used on any Ingress for a given host, then the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.  
 
 Please read about [ingress path matching](../ingress-path-matching.md) before using this modifier. 
-
-
