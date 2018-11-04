@@ -29,7 +29,7 @@ export NGINX_OPENTRACING_VERSION=0.6.0
 export OPENTRACING_CPP_VERSION=1.5.0
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=ba0fa3fa6dbb01995d996f988a897e272100bf95
-export MODSECURITY_VERSION=56cfa4e4805bb6134b97143052a9b48919cc294f
+export MODSECURITY_VERSION=fc061a57a8b0abda79b17cbe103d78db803fa575
 export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
 export LUA_UPSTREAM_VERSION=0.07
 export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
@@ -177,7 +177,7 @@ get_src 4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5 \
 get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src a75e3c0249c8ce4313d21b43d3cf3dcd89518dd6582ef7c6697cb7fe6ef5a84e \
+get_src 073deba39f74eff81da917907465e1343c89b335244349d3d3b4ae9331de86f2 \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
 get_src b68286966f292fb552511b71bd8bc11af8f12c8aa760372d1437ac8760cb2f25 \
@@ -249,7 +249,7 @@ tar zxpvf openssl_1.1.1.orig.tar.gz
 cd openssl-1.1.1/
 tar xpvf ../openssl_1.1.1-1.debian.tar.xz
 
-dpkg-buildpackage -rfakeroot
+DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -rfakeroot
 
 cd ..
 
@@ -421,6 +421,10 @@ sh build.sh
 make
 make install
 
+mkdir /etc/modsecurity
+cp modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
+cp unicode.mapping /etc/modsecurity/unicode.mapping
+
 # Download owasp modsecurity crs
 cd /etc/nginx/
 git clone -b v3.0/master --single-branch https://github.com/SpiderLabs/owasp-modsecurity-crs
@@ -431,11 +435,6 @@ mv crs-setup.conf.example crs-setup.conf
 mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
 mv rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 cd ..
-
-# Download modsecurity.conf
-mkdir modsecurity
-cd modsecurity
-curl -sSL -o modsecurity.conf https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended
 
 # OWASP CRS v3 rules
 echo "
