@@ -219,7 +219,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		local, _ := time.LoadLocation("GMT")
 		duration, _ := time.ParseDuration("48h")
-		expected := time.Date(1970, time.January, 1, 0, 0, 0, 0, local).Add(duration).Format("Mon, 02-Jan-06 15:04:05 MST")
+		expected := time.Now().In(local).Add(duration).Format("Mon, 02-Jan-06 15:04")
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(fmt.Sprintf("Expires=%s", expected)))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Max-Age=259200"))
 	})
