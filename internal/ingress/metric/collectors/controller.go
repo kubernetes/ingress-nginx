@@ -177,7 +177,7 @@ func (cm *Controller) SetSSLExpireTime(servers []*ingress.Server) {
 	}
 }
 
-// RemoveMetrics removes metrics for hostames not available anymore
+// RemoveMetrics removes metrics for hostnames not available anymore
 func (cm *Controller) RemoveMetrics(hosts []string, registry prometheus.Gatherer) {
 	mfs, err := registry.Gather()
 	if err != nil {

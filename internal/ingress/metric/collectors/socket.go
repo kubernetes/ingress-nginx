@@ -97,7 +97,7 @@ var (
 )
 
 // NewSocketCollector creates a new SocketCollector instance using
-// the ingresss watch namespace and class used by the controller
+// the ingress watch namespace and class used by the controller
 func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
 	listener, err := net.Listen("unix", socket)
