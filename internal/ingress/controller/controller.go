@@ -552,6 +552,11 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				}
 			}
 
+			s, err := n.store.GetService(svcKey)
+			if err != nil {
+				glog.Warningf("Error obtaining Service %q: %v", svcKey, err)
+			}
+			upstreams[defBackend].Service = s
 		}
 
 		for _, rule := range ing.Spec.Rules {
