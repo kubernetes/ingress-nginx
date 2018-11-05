@@ -423,15 +423,14 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 	aUpstreams := make([]*ingress.Backend, 0, len(upstreams))
 
 	for _, upstream := range upstreams {
+		aUpstreams = append(aUpstreams, upstream)
+
 		isHTTPSfrom := []*ingress.Server{}
 		for _, server := range servers {
 			for _, location := range server.Locations {
 				if upstream.Name == location.Backend {
 					if len(upstream.Endpoints) == 0 {
 						glog.V(3).Infof("Upstream %q has no active Endpoint", upstream.Name)
-
-						location.Backend = "" // for nginx.tmpl checking
-
 						// check if the location contains endpoints and a custom default backend
 						if location.DefaultBackend != nil {
 							sp := location.DefaultBackend.Spec.Ports[0]
@@ -466,14 +465,6 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 		if len(isHTTPSfrom) > 0 {
 			upstream.SSLPassthrough = true
 		}
-	}
-
-	// create the list of upstreams and skip those without Endpoints
-	for _, upstream := range upstreams {
-		if len(upstream.Endpoints) == 0 {
-			continue
-		}
-		aUpstreams = append(aUpstreams, upstream)
 	}
 
 	aServers := make([]*ingress.Server, 0, len(servers))
@@ -552,6 +543,11 @@ func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingres
 				}
 			}
 
+			s, err := n.store.GetService(svcKey)
+			if err != nil {
+				glog.Warningf("Error obtaining Service %q: %v", svcKey, err)
+			}
+			upstreams[defBackend].Service = s
 		}
 
 		for _, rule := range ing.Spec.Rules {
