@@ -85,6 +85,30 @@ type Backend struct {
 	UpstreamHashBy string `json:"upstream-hash-by,omitempty"`
 	// LB algorithm configuration per ingress
 	LoadBalancing string `json:"load-balance,omitempty"`
+	// Denotes if a backend has no server. The backend instead shares a server with another backend and acts as an
+	// alternative backend.
+	// This can be used to share multiple upstreams in the sam nginx server block.
+	NoServer bool `json:"noServer"`
+	// Policies to describe the characteristics of an alternative backend.
+	// +optional
+	TrafficShapingPolicy TrafficShapingPolicy `json:"trafficShapingPolicy,omitempty"`
+	// Contains a list of backends without servers that are associated with this backend.
+	// +optional
+	AlternativeBackends []string `json:"alternativeBackends,omitempty"`
+}
+
+// TrafficShapingPolicy describes the policies to put in place when a backend has no server and is used as an
+// alternative backend
+// +k8s:deepcopy-gen=true
+type TrafficShapingPolicy struct {
+	// Weight (0-100) of traffic to redirect to the backend.
+	// e.g. Weight 20 means 20% of traffic will be redirected to the backend and 80% will remain
+	// with the other backend. 0 weight will not send any traffic to this backend
+	Weight int `json:"weight"`
+	// Header on which to redirect requests to this backend
+	Header string `json:"header"`
+	// Cookie on which to redirect requests to this backend
+	Cookie string `json:"cookie"`
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash
