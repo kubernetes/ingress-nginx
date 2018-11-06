@@ -68,6 +68,11 @@ local function format_ipv6_endpoints(endpoints)
 end
 
 local function sync_backend(backend)
+  if not backend.endpoints or #backend.endpoints == 0 then
+    ngx.log(ngx.INFO, string.format("there is no endpoint for backend %s. Skipping...", backend.name))
+    return
+  end
+
   local implementation = get_implementation(backend)
   local balancer = balancers[backend.name]
 
