@@ -172,7 +172,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 	}
 
-	// Nginx Status whitlelist
+	// Nginx Status whitelist
 	if val, ok := conf[nginxStatusIpv4Whitelist]; ok {
 		whitelist := make([]string, 0)
 		whitelist = append(whitelist, strings.Split(val, ",")...)
