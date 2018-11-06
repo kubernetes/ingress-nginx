@@ -33,6 +33,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/clientbodybuffersize"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/customhttperrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
@@ -72,6 +73,7 @@ type Ingress struct {
 	ConfigurationSnippet string
 	Connection           connection.Config
 	CorsConfig           cors.Config
+	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
 	Denied               error
 	ExternalAuth         authreq.Config
@@ -112,6 +114,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"ConfigurationSnippet": snippet.NewParser(cfg),
 			"Connection":           connection.NewParser(cfg),
 			"CorsConfig":           cors.NewParser(cfg),
+			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
