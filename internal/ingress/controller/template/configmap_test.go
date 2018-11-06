@@ -35,7 +35,7 @@ func TestFilterErrors(t *testing.T) {
 	}
 }
 
-func TestProxytTimeoutParsing(t *testing.T) {
+func TestProxyTimeoutParsing(t *testing.T) {
 	testCases := map[string]struct {
 		input  string
 		expect time.Duration // duration in seconds
