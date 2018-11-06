@@ -186,7 +186,7 @@ func TestGetPemCertificate(t *testing.T) {
 		Data       map[string][]byte
 		eErr       bool
 	}{
-		{"sceret_not_exist", "default/foo_secret_not_exist", nil, true},
+		{"secret_not_exist", "default/foo_secret_not_exist", nil, true},
 		{"data_not_complete_all_not_exist", "default/foo_secret", map[string][]byte{}, true},
 		{"data_not_complete_TLSCertKey_not_exist", "default/foo_secret", map[string][]byte{api.TLSPrivateKeyKey: dKey, tlscaName: dCa}, false},
 		{"data_not_complete_TLSCertKeyAndCA_not_exist", "default/foo_secret", map[string][]byte{api.TLSPrivateKeyKey: dKey}, true},
