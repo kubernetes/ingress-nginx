@@ -575,7 +575,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" $all }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -677,7 +677,7 @@ http {
             proxy_pass          http://upstream_balancer;
         }
 
-        {{ template "CUSTOM_ERRORS" $all }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors) }}
     }
 }
 
@@ -696,7 +696,7 @@ stream {
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
         {{ $proxySetHeaders := .ProxySetHeaders }}
-        {{ range $errCode := .Cfg.CustomHTTPErrors }}
+        {{ range $errCode := .ErrorCodes }}
         location @custom_{{ $errCode }} {
             internal;
 
@@ -817,6 +817,8 @@ stream {
         {{ if not (empty $server.ServerSnippet) }}
         {{ $server.ServerSnippet }}
         {{ end }}
+
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders (collectCustomErrorsPerServer $server)) }}
 
         {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
@@ -1176,6 +1178,16 @@ stream {
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
             {{ end }}
+
+            {{/* if a location-specific error override is set, add the proxy_intercept here */}}
+            {{ if $location.CustomHTTPErrors }}
+            # Custom error pages per ingress
+            proxy_intercept_errors on;
+            {{ end }}
+
+            {{ range $errCode := $location.CustomHTTPErrors }}
+            error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
+
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}

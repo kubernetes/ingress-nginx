@@ -151,14 +151,16 @@ var (
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
-		"isValidClientBodyBufferSize": isValidClientBodyBufferSize,
-		"buildForwardedFor":           buildForwardedFor,
-		"buildAuthSignURL":            buildAuthSignURL,
-		"buildOpentracing":            buildOpentracing,
-		"proxySetHeader":              proxySetHeader,
-		"buildInfluxDB":               buildInfluxDB,
-		"enforceRegexModifier":        enforceRegexModifier,
-		"stripLocationModifer":        stripLocationModifer,
+		"isValidClientBodyBufferSize":  isValidClientBodyBufferSize,
+		"buildForwardedFor":            buildForwardedFor,
+		"buildAuthSignURL":             buildAuthSignURL,
+		"buildOpentracing":             buildOpentracing,
+		"proxySetHeader":               proxySetHeader,
+		"buildInfluxDB":                buildInfluxDB,
+		"enforceRegexModifier":         enforceRegexModifier,
+		"stripLocationModifer":         stripLocationModifer,
+		"buildCustomErrorDeps":         buildCustomErrorDeps,
+		"collectCustomErrorsPerServer": collectCustomErrorsPerServer,
 	}
 )
 
@@ -940,4 +942,41 @@ func proxySetHeader(loc interface{}) string {
 	}
 
 	return "proxy_set_header"
+}
+
+// buildCustomErrorDeps is a utility function returning a struct wrapper with
+// the data required to build the 'CUSTOM_ERRORS' template
+func buildCustomErrorDeps(proxySetHeaders map[string]string, errorCodes []int) interface{} {
+	return struct {
+		ProxySetHeaders map[string]string
+		ErrorCodes      []int
+	}{
+		ProxySetHeaders: proxySetHeaders,
+		ErrorCodes:      errorCodes,
+	}
+}
+
+// collectCustomErrorsPerServer is a utility function which will collect all
+// custom error codes for all locations of a server block, deduplicates them,
+// and returns a unique set (for the template to create @custom_xxx locations)
+func collectCustomErrorsPerServer(input interface{}) []int {
+	server, ok := input.(*ingress.Server)
+	if !ok {
+		glog.Errorf("expected a '*ingress.Server' type but %T was returned", input)
+		return nil
+	}
+
+	codesMap := make(map[int]bool)
+	for _, loc := range server.Locations {
+		for _, code := range loc.CustomHTTPErrors {
+			codesMap[code] = true
+		}
+	}
+
+	uniqueCodes := make([]int, 0, len(codesMap))
+	for key := range codesMap {
+		uniqueCodes = append(uniqueCodes, key)
+	}
+
+	return uniqueCodes
 }
