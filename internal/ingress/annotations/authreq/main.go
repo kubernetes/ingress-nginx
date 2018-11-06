@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/golang/glog"
+
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -37,6 +39,7 @@ type Config struct {
 	Method          string   `json:"method"`
 	ResponseHeaders []string `json:"responseHeaders,omitempty"`
 	RequestRedirect string   `json:"requestRedirect"`
+	AuthSnippet     string   `json:"authSnippet"`
 }
 
 // Equal tests for equality between two Config types
@@ -72,6 +75,9 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		}
 	}
 	if e1.RequestRedirect != e2.RequestRedirect {
+		return false
+	}
+	if e1.AuthSnippet != e2.AuthSnippet {
 		return false
 	}
 
@@ -141,7 +147,15 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	// Optional Parameters
-	signIn, _ := parser.GetStringAnnotation("auth-signin", ing)
+	signIn, err := parser.GetStringAnnotation("auth-signin", ing)
+	if err != nil {
+		glog.Warning("auth-signin annotation is undefined and will not be set")
+	}
+
+	authSnippet, err := parser.GetStringAnnotation("auth-snippet", ing)
+	if err != nil {
+		glog.Warning("auth-snippet annotation is undefined and will not be set")
+	}
 
 	responseHeaders := []string{}
 	hstr, _ := parser.GetStringAnnotation("auth-response-headers", ing)
@@ -167,5 +181,6 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 		Method:          authMethod,
 		ResponseHeaders: responseHeaders,
 		RequestRedirect: requestRedirect,
+		AuthSnippet:     authSnippet,
 	}, nil
 }

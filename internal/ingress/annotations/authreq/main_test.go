@@ -77,16 +77,18 @@ func TestAnnotations(t *testing.T) {
 		signinURL       string
 		method          string
 		requestRedirect string
+		authSnippet     string
 		expErr          bool
 	}{
-		{"empty", "", "", "", "", true},
-		{"no scheme", "bar", "bar", "", "", true},
-		{"invalid host", "http://", "http://", "", "", true},
-		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", true},
-		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", "", false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "", false},
-		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "http://foo.com/redirect-me", false},
+		{"empty", "", "", "", "", "", true},
+		{"no scheme", "bar", "bar", "", "", "", true},
+		{"invalid host", "http://", "http://", "", "", "", true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", true},
+		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "POST", "", "", false},
+		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "", "", false},
+		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "GET", "http://foo.com/redirect-me", "", false},
+		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "proxy_set_header My-Custom-Header 42;", false},
 	}
 
 	for _, test := range tests {
@@ -94,11 +96,12 @@ func TestAnnotations(t *testing.T) {
 		data[parser.GetAnnotationWithPrefix("auth-signin")] = test.signinURL
 		data[parser.GetAnnotationWithPrefix("auth-method")] = fmt.Sprintf("%v", test.method)
 		data[parser.GetAnnotationWithPrefix("auth-request-redirect")] = test.requestRedirect
+		data[parser.GetAnnotationWithPrefix("auth-snippet")] = test.authSnippet
 
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
 			if err == nil {
-				t.Errorf("%v: expected error but retuned nil", test.title)
+				t.Errorf("%v: expected error but returned nil", test.title)
 			}
 			continue
 		}
@@ -117,6 +120,9 @@ func TestAnnotations(t *testing.T) {
 		}
 		if u.RequestRedirect != test.requestRedirect {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.requestRedirect, u.RequestRedirect)
+		}
+		if u.AuthSnippet != test.authSnippet {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.authSnippet, u.AuthSnippet)
 		}
 	}
 }

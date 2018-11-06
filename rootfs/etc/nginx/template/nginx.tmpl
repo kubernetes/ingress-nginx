@@ -888,6 +888,10 @@ stream {
             proxy_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
             {{ end }}
 
+            {{ if not (empty $location.ExternalAuth.AuthSnippet) }}
+            {{ $location.ExternalAuth.AuthSnippet }}
+            {{ end }}
+
             set $target {{ $location.ExternalAuth.URL }};
             proxy_pass $target;
         }
