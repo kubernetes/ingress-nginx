@@ -32,6 +32,14 @@ var (
 	ErrInvalidAnnotationName = errors.New("invalid annotation name")
 )
 
+// NewInvalidAnnotationConfiguration returns a new InvalidConfiguration error for use when
+// annotations are not correctly configured
+func NewInvalidAnnotationConfiguration(name string, reason string) error {
+	return InvalidConfiguration{
+		Name: fmt.Sprintf("the annotation %v does not contain a valid configuration: %v", name, reason),
+	}
+}
+
 // NewInvalidAnnotationContent returns a new InvalidContent error
 func NewInvalidAnnotationContent(name string, val interface{}) error {
 	return InvalidContent{
@@ -44,6 +52,15 @@ func NewLocationDenied(reason string) error {
 	return LocationDenied{
 		Reason: errors.Errorf("Location denied, reason: %v", reason),
 	}
+}
+
+// InvalidConfiguration Error
+type InvalidConfiguration struct {
+	Name string
+}
+
+func (e InvalidConfiguration) Error() string {
+	return e.Name
 }
 
 // InvalidContent error

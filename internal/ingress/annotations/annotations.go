@@ -19,6 +19,7 @@ package annotations
 import (
 	"github.com/golang/glog"
 	"github.com/imdario/mergo"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -33,6 +34,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/clientbodybuffersize"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/customhttperrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/defaultbackend"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
@@ -67,11 +69,13 @@ type Ingress struct {
 	BackendProtocol      string
 	Alias                string
 	BasicDigestAuth      auth.Config
+	Canary               canary.Config
 	CertificateAuth      authtls.Config
 	ClientBodyBufferSize string
 	ConfigurationSnippet string
 	Connection           connection.Config
 	CorsConfig           cors.Config
+	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
 	Denied               error
 	ExternalAuth         authreq.Config
@@ -107,11 +111,13 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 		map[string]parser.IngressAnnotation{
 			"Alias":                alias.NewParser(cfg),
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
+			"Canary":               canary.NewParser(cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),
 			"ClientBodyBufferSize": clientbodybuffersize.NewParser(cfg),
 			"ConfigurationSnippet": snippet.NewParser(cfg),
 			"Connection":           connection.NewParser(cfg),
 			"CorsConfig":           cors.NewParser(cfg),
+			"CustomHTTPErrors":     customhttperrors.NewParser(cfg),
 			"DefaultBackend":       defaultbackend.NewParser(cfg),
 			"ExternalAuth":         authreq.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),

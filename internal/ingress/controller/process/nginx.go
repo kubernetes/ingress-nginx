@@ -46,7 +46,7 @@ NGINX master process died (%v): %v
 }
 
 // WaitUntilPortIsAvailable waits until there is no NGINX master or worker
-// process/es listentning in a particular port.
+// process/es listening in a particular port.
 func WaitUntilPortIsAvailable(port int) {
 	// we wait until the workers are killed
 	for {

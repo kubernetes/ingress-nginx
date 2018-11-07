@@ -8,7 +8,7 @@ This folder contains a dashboard that you can import:
 ## Features
 
   - Ability to filter by Namespace, Controller Class and Controller
-  - Visbility of Request Volume, connections, success rates, config reloads and configs out of sync.
+  - Visibility of Request Volume, connections, success rates, config reloads and configs out of sync.
   - Network IO pressure, memory and CPU use
   - Ingress P50, P95 and P99 percentile response times with IN/OUT throughput
   - SSL certificate expiry 

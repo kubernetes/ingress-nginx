@@ -191,7 +191,7 @@ func TestUseRegex(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a App Context")
 	}
-	if redirect.UseRegex != true {
+	if !redirect.UseRegex {
 		t.Errorf("Unexpected value got in UseRegex")
 	}
 }

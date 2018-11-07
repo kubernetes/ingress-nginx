@@ -6,7 +6,10 @@ local _M = balancer_resty:new({ factory = resty_chash, name = "chash" })
 
 function _M.new(self, backend)
   local nodes = util.get_nodes(backend.endpoints)
-  local o = { instance = self.factory:new(nodes), hash_by = backend["upstream-hash-by"] }
+  local o = {
+    instance = self.factory:new(nodes),
+    hash_by = backend["upstream-hash-by"],
+  }
   setmetatable(o, self)
   self.__index = self
   return o

@@ -61,7 +61,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.66
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.67
 
 ifeq ($(ARCH),arm)
 	QEMUARCH=arm
@@ -226,7 +226,7 @@ check_dead_links:
 
 .PHONY: dep-ensure
 dep-ensure:
-	dep version || go get -u github.com/golang/dep/cmd/dep
+	dep version || curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 	dep ensure -v
 	dep prune -v
 	find vendor -name '*_test.go' -delete

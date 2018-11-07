@@ -68,6 +68,11 @@ local function format_ipv6_endpoints(endpoints)
 end
 
 local function sync_backend(backend)
+  if not backend.endpoints or #backend.endpoints == 0 then
+    ngx.log(ngx.INFO, string.format("there is no endpoint for backend %s. Skipping...", backend.name))
+    return
+  end
+
   local implementation = get_implementation(backend)
   local balancer = balancers[backend.name]
 
@@ -122,9 +127,57 @@ local function sync_backends()
   end
 end
 
+local function route_to_alternative_balancer(balancer)
+  if not balancer.alternative_backends then
+    return false
+  end
+
+  -- TODO: support traffic shaping for n > 1 alternative backends
+  local alternative_balancer = balancers[balancer.alternative_backends[1]]
+
+  local clean_target_header = util.replace_special_char(alternative_balancer.traffic_shaping_policy.header, "-", "_")
+
+  local header = ngx.var["http_" .. clean_target_header]
+  if header then
+    if header == "always" then
+      return true
+    elseif header == "never" then
+      return false
+    end
+  end
+
+  local clean_target_cookie = util.replace_special_char(alternative_balancer.traffic_shaping_policy.cookie, "-", "_")
+
+  local cookie = ngx.var["cookie_" .. clean_target_cookie]
+  if cookie then
+    if cookie == "always" then
+      return true
+    elseif cookie == "never" then
+      return false
+    end
+  end
+
+  if math.random(100) <= alternative_balancer.traffic_shaping_policy.weight then
+    return true
+  end
+
+  return false
+end
+
 local function get_balancer()
   local backend_name = ngx.var.proxy_upstream_name
-  return balancers[backend_name]
+
+  local balancer = balancers[backend_name]
+  if not balancer then
+    return
+  end
+
+  if route_to_alternative_balancer(balancer) then
+    local alternative_balancer = balancers[balancer.alternative_backends[1]]
+    return alternative_balancer
+  end
+
+  return balancer
 end
 
 function _M.init_worker()
