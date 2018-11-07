@@ -80,7 +80,7 @@ type Backend struct {
 
 	// Sets the replacement text that should be changed in the "Location" and "Refresh" header fields of a proxied server response.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect
-	// Default: ""
+	// Default: off
 	ProxyRedirectTo string `json:"proxy-redirect-to"`
 
 	// Enables or disables buffering of a client request body.

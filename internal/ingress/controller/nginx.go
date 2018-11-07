@@ -759,13 +759,16 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 			service = &apiv1.Service{Spec: backend.Service.Spec}
 		}
 		luaBackend := &ingress.Backend{
-			Name:            backend.Name,
-			Port:            backend.Port,
-			SSLPassthrough:  backend.SSLPassthrough,
-			SessionAffinity: backend.SessionAffinity,
-			UpstreamHashBy:  backend.UpstreamHashBy,
-			LoadBalancing:   backend.LoadBalancing,
-			Service:         service,
+			Name:                 backend.Name,
+			Port:                 backend.Port,
+			SSLPassthrough:       backend.SSLPassthrough,
+			SessionAffinity:      backend.SessionAffinity,
+			UpstreamHashBy:       backend.UpstreamHashBy,
+			LoadBalancing:        backend.LoadBalancing,
+			Service:              service,
+			NoServer:             backend.NoServer,
+			TrafficShapingPolicy: backend.TrafficShapingPolicy,
+			AlternativeBackends:  backend.AlternativeBackends,
 		}
 
 		var endpoints []ingress.Endpoint
@@ -811,12 +814,7 @@ func configureCertificates(pcfg *ingress.Configuration, port int) error {
 	}
 
 	url := fmt.Sprintf("http://localhost:%d/configuration/servers", port)
-	err := post(url, servers)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return post(url, servers)
 }
 
 func post(url string, data interface{}) error {

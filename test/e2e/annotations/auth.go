@@ -25,7 +25,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
@@ -232,6 +231,41 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		Expect(len(errs)).Should(BeNumerically("==", 0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+	})
+
+	It(`should set snippet "proxy_set_header My-Custom-Header 42;" when external auth is configured`, func() {
+		host := "auth"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-url": "http://foo.bar/basic-auth/user/password",
+			"nginx.ingress.kubernetes.io/auth-snippet": `
+				proxy_set_header My-Custom-Header 42;`,
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring(`proxy_set_header My-Custom-Header 42;`))
+			})
+	})
+
+	It(`should not set snippet "proxy_set_header My-Custom-Header 42;" when external auth is not configured`, func() {
+		host := "auth"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-snippet": `
+				proxy_set_header My-Custom-Header 42;`,
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).ShouldNot(ContainSubstring(`proxy_set_header My-Custom-Header 42;`))
+			})
 	})
 
 	Context("when external authentication is configured", func() {

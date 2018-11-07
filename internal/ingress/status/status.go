@@ -110,8 +110,15 @@ func (s statusSync) Run() {
 
 	// start a new context
 	ctx := context.Background()
-	// allow to cancel the context in case we stop being the leader
-	leaderCtx, cancel := context.WithCancel(ctx)
+
+	var cancelContext context.CancelFunc
+
+	var newLeaderCtx = func(ctx context.Context) context.CancelFunc {
+		// allow to cancel the context in case we stop being the leader
+		leaderCtx, cancel := context.WithCancel(ctx)
+		go s.elector.Run(leaderCtx)
+		return cancel
+	}
 
 	var stopCh chan struct{}
 	callbacks := leaderelection.LeaderCallbacks{
@@ -133,11 +140,9 @@ func (s statusSync) Run() {
 			close(stopCh)
 
 			// cancel the context
-			cancel()
+			cancelContext()
 
-			// start a new context and run the elector
-			leaderCtx, cancel = context.WithCancel(ctx)
-			go s.elector.Run(leaderCtx)
+			cancelContext = newLeaderCtx(ctx)
 		},
 		OnNewLeader: func(identity string) {
 			glog.Infof("new leader elected: %v", identity)
@@ -162,7 +167,8 @@ func (s statusSync) Run() {
 	}
 
 	ttl := 30 * time.Second
-	le, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
+	var err error
+	s.elector, err = leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
 		Lock:          &lock,
 		LeaseDuration: ttl,
 		RenewDeadline: ttl / 2,
@@ -172,9 +178,8 @@ func (s statusSync) Run() {
 	if err != nil {
 		glog.Fatalf("unexpected error starting leader election: %v", err)
 	}
-	s.elector = le
 
-	go le.Run(leaderCtx)
+	cancelContext = newLeaderCtx(ctx)
 }
 
 // Shutdown stop the sync. In case the instance is the leader it will remove the current IP

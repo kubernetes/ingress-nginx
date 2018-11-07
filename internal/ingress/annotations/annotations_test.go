@@ -43,6 +43,7 @@ var (
 	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
 	annotationAffinityCookieHash   = parser.GetAnnotationWithPrefix("session-cookie-hash")
 	annotationUpstreamHashBy       = parser.GetAnnotationWithPrefix("upstream-hash-by")
+	annotationCustomHTTPErrors     = parser.GetAnnotationWithPrefix("custom-http-errors")
 )
 
 type mockCfg struct {
@@ -268,6 +269,41 @@ func TestCors(t *testing.T) {
 			t.Errorf("Returned %v but expected %v for Cors Methods", r.CorsAllowCredentials, foo.credentials)
 		}
 
+	}
+}
+func TestCustomHTTPErrors(t *testing.T) {
+	ec := NewAnnotationExtractor(mockCfg{})
+	ing := buildIngress()
+
+	fooAnns := []struct {
+		annotations map[string]string
+		er          []int
+	}{
+		{map[string]string{annotationCustomHTTPErrors: "404,415"}, []int{404, 415}},
+		{map[string]string{annotationCustomHTTPErrors: "404"}, []int{404}},
+		{map[string]string{annotationCustomHTTPErrors: ""}, []int{}},
+		{map[string]string{annotationCustomHTTPErrors + "_no": "404"}, []int{}},
+		{map[string]string{}, []int{}},
+		{nil, []int{}},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		r := ec.Extract(ing).CustomHTTPErrors
+
+		// Check that expected codes were created
+		for i := range foo.er {
+			if r[i] != foo.er[i] {
+				t.Errorf("Returned %v but expected %v", r, foo.er)
+			}
+		}
+
+		// Check that no unexpected codes were also created
+		for i := range r {
+			if r[i] != foo.er[i] {
+				t.Errorf("Returned %v but expected %v", r, foo.er)
+			}
+		}
 	}
 }
 

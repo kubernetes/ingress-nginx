@@ -18,11 +18,10 @@ package annotations
 
 import (
 	"fmt"
-	"net/http"
-	"strings"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"net/http"
+	"strings"
 
 	"github.com/parnurzeal/gorequest"
 
@@ -33,7 +32,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 	f := framework.NewDefaultFramework("rewrite")
 
 	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(1)
+		f.NewEchoDeployment()
 	})
 
 	AfterEach(func() {
@@ -76,6 +75,32 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 		Expect(len(errs)).Should(Equal(0))
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+	})
+
+	It("should not redirect to ssl", func() {
+		host := "rewrite.foo.com"
+		annotations := map[string]string{"nginx.ingress.kubernetes.io/ssl-redirect": "false"}
+
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		tlsConfig, err := framework.CreateIngressTLSSecret(
+			f.KubeClientSet,
+			ing.Spec.TLS[0].Hosts,
+			ing.Spec.TLS[0].SecretName,
+			ing.Namespace)
+		Expect(err).ToNot(HaveOccurred())
+
+		framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL+"/").
+			Set("Host", host).
+			RedirectPolicy(noRedirectPolicyFunc).
+			End()
+
+		Expect(len(errs)).Should(Equal(0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 
 	It("should write rewrite logs", func() {

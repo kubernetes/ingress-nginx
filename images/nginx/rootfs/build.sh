@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.5
+export NGINX_VERSION=1.15.6
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -29,8 +29,9 @@ export NGINX_OPENTRACING_VERSION=0.6.0
 export OPENTRACING_CPP_VERSION=1.5.0
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=ba0fa3fa6dbb01995d996f988a897e272100bf95
-export MODSECURITY_VERSION=56cfa4e4805bb6134b97143052a9b48919cc294f
+export MODSECURITY_VERSION=fc061a57a8b0abda79b17cbe103d78db803fa575
 export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
+export LUA_STREAM_NGX_VERSION=0.0.6rc2
 export LUA_UPSTREAM_VERSION=0.07
 export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
 export GEOIP2_VERSION=3.2
@@ -150,8 +151,8 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 1a3a889a8f14998286de3b14cc1dd5b2747178e012d6d480a18aa413985dae6f \
-        "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
+get_src a3d8c67c2035808c7c0d475fffe263db8c353b11521aa7ade468b780ed826cc6 \
+        "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
         "https://github.com/simpl/ngx_devel_kit/archive/v$NDK_VERSION.tar.gz"
@@ -177,7 +178,7 @@ get_src 4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5 \
 get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/v$ZIPKIN_CPP_VERSION.tar.gz"
 
-get_src a75e3c0249c8ce4313d21b43d3cf3dcd89518dd6582ef7c6697cb7fe6ef5a84e \
+get_src 073deba39f74eff81da917907465e1343c89b335244349d3d3b4ae9331de86f2 \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
 get_src b68286966f292fb552511b71bd8bc11af8f12c8aa760372d1437ac8760cb2f25 \
@@ -185,6 +186,9 @@ get_src b68286966f292fb552511b71bd8bc11af8f12c8aa760372d1437ac8760cb2f25 \
 
 get_src 027a1f1ddb35164c720451869fc5ea9095abaf70af02a1b17f59e0772c0cfec0 \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
+
+get_src 5420dbf59bac52cef8021658d7eae1667a2bd14dda23602c985cae2604de77dd \
+        "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
@@ -234,6 +238,8 @@ CORES=$(($(grep -c ^processor /proc/cpuinfo) - 0))
 export MAKEFLAGS=-j${CORES}
 export CTEST_BUILD_FLAGS=${MAKEFLAGS}
 export HUNTER_JOBS_NUMBER=${CORES}
+export HUNTER_KEEP_PACKAGE_SOURCES=false
+export HUNTER_USE_CACHE_SERVERS=true
 
 OPENSSL_DIR="$BUILD_PATH/openssl"
 mkdir -p $OPENSSL_DIR
@@ -249,7 +255,7 @@ tar zxpvf openssl_1.1.1.orig.tar.gz
 cd openssl-1.1.1/
 tar xpvf ../openssl_1.1.1-1.debian.tar.xz
 
-dpkg-buildpackage -rfakeroot
+DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -rfakeroot
 
 cd ..
 
@@ -413,7 +419,7 @@ git submodule update
 cd "$BUILD_PATH"
 git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
-git checkout 973c1f1028429452308bcbce7df8a6283dc59ffe
+git checkout 9ada0a28c8100f905014c128b0e6d11dd75ec7e5
 git submodule init
 git submodule update
 sh build.sh
@@ -421,21 +427,20 @@ sh build.sh
 make
 make install
 
+mkdir /etc/modsecurity
+cp modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
+cp unicode.mapping /etc/modsecurity/unicode.mapping
+
 # Download owasp modsecurity crs
 cd /etc/nginx/
 git clone -b v3.0/master --single-branch https://github.com/SpiderLabs/owasp-modsecurity-crs
 cd owasp-modsecurity-crs
-git checkout e4e0497be4d598cce0e0a8fef20d1f1e5578c8d0
+git checkout a216353c97dd6ef767a6db4dbf9b724627811c9b
 
 mv crs-setup.conf.example crs-setup.conf
 mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
 mv rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 cd ..
-
-# Download modsecurity.conf
-mkdir modsecurity
-cd modsecurity
-curl -sSL -o modsecurity.conf https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended
 
 # OWASP CRS v3 rules
 echo "
@@ -525,6 +530,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS \
   --add-module=$BUILD_PATH/lua-nginx-module-$LUA_NGX_VERSION \
+  --add-module=$BUILD_PATH/stream-lua-nginx-module-$LUA_STREAM_NGX_VERSION \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION \
   --add-module=$BUILD_PATH/nginx-influxdb-module-$NGINX_INFLUXDB_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
@@ -594,6 +600,7 @@ apt-get remove -y --purge \
   protobuf-compiler \
   python \
   xz-utils \
+  bc \
   git g++ pkgconf flex bison doxygen libyajl-dev liblmdb-dev libgeoip-dev libtool dh-autoreconf libpcre++-dev libxml2-dev
 
 apt-get autoremove -y

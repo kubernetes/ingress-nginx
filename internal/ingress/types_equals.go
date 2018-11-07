@@ -84,6 +84,9 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 	if b1.Name != b2.Name {
 		return false
 	}
+	if b1.NoServer != b2.NoServer {
+		return false
+	}
 
 	if b1.Service != b2.Service {
 		if b1.Service == nil || b2.Service == nil {
@@ -124,6 +127,23 @@ func (b1 *Backend) Equal(b2 *Backend) bool {
 		found := false
 		for _, udp2 := range b2.Endpoints {
 			if (&udp1).Equal(&udp2) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	if !b1.TrafficShapingPolicy.Equal(b2.TrafficShapingPolicy) {
+		return false
+	}
+
+	for _, vb1 := range b1.AlternativeBackends {
+		found := false
+		for _, vb2 := range b2.AlternativeBackends {
+			if vb1 == vb2 {
 				found = true
 				break
 			}
@@ -197,6 +217,21 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 		if e1.Target.ResourceVersion != e2.Target.ResourceVersion {
 			return false
 		}
+	}
+
+	return true
+}
+
+// Equal checks for equality between two TrafficShapingPolicies
+func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
+	if tsp1.Weight != tsp2.Weight {
+		return false
+	}
+	if tsp1.Header != tsp2.Header {
+		return false
+	}
+	if tsp1.Cookie != tsp2.Cookie {
+		return false
 	}
 
 	return true

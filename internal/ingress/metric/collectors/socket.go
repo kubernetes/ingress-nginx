@@ -97,7 +97,7 @@ var (
 )
 
 // NewSocketCollector creates a new SocketCollector instance using
-// the ingresss watch namespace and class used by the controller
+// the ingress watch namespace and class used by the controller
 func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
 	listener, err := net.Listen("unix", socket)
@@ -208,11 +208,11 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 func (sc *SocketCollector) handleMessage(msg []byte) {
 	glog.V(5).Infof("msg: %v", string(msg))
 
-	// Unmarshall bytes
+	// Unmarshal bytes
 	var statsBatch []socketData
 	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(msg, &statsBatch)
 	if err != nil {
-		glog.Errorf("Unexpected error deserializing JSON paylod: %v. Payload:\n%v", err, string(msg))
+		glog.Errorf("Unexpected error deserializing JSON payload: %v. Payload:\n%v", err, string(msg))
 		return
 	}
 

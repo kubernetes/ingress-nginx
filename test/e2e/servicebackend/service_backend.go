@@ -49,7 +49,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "return 503;")
+				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
 		resp, _, errs := gorequest.New().
@@ -72,7 +72,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "return 503;")
+				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 
 		resp, _, errs := gorequest.New().

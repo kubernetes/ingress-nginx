@@ -27,10 +27,16 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
 |[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
+|[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
+|[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|
+|[nginx.ingress.kubernetes.io/canary-weight](#canary)|number|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
+|[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
@@ -89,6 +95,23 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
+
+### Canary
+
+In some cases, you may want to "canary" a new set of changes by sending a small number of requests to a different service than the production service. The canary annotation enables the Ingress spec to act as an alternative service for requests to route to depending on the rules applied. The following annotations to configure canary can be enabled after `nginx.ingress.kubernetes.io/canary: "true"` is set:
+
+* `nginx.ingress.kubernetes.io/canary-by-header`: The header to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to `always`, it will be routed to the canary. When the header is set to `never`, it will never be routed to the canary. For any other value, the header will be ignored and the request compared against the other canary rules by precedence.
+
+* `nginx.ingress.kubernetes.io/canary-by-cookie`: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to `always`, it will be routed to the canary. When the cookie is set to `never`, it will never be routed to the canary. For any other value, the cookie will be ingored and the request compared against the other canary rules by precedence. 
+
+* `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - 100) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of 100 means implies all requests will be sent to the alternative service specified in the Ingress.   
+
+Canary rules are evaluated in order of precedence. Precedence is as follows: 
+`canary-by-header -> canary-by-cookie -> canary-weight` 
+
+**Known Limitations**
+
+Currently a maximum of one canary ingress can be applied per Ingress rule. 
 
 ### Rewrite
 
@@ -213,6 +236,17 @@ The ingress controller requires a [default backend](../default-backend.md).
 This service handles the response when the service in the Ingress rule does not have endpoints.
 This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.
 
+### Custom HTTP Errors
+
+Like the [`custom-http-errors`](../configmap.md#custom-http-errors) value in the ConfigMap, this annotation will set NGINX `proxy-intercept-errors`, but only for the NGINX location associated with this ingress.
+Different ingresses can specify different sets of error codes. Even if multiple ingress objects share the same hostname, this annotation can be used to intercept different error codes for each ingress (for example, different error codes to be intercepted for different paths on the same hostname, if each path is on a different ingress).
+If `custom-http-errors` is also specified globally, the error values specified in this annotation will override the global value for the given ingress' hostname and path.
+
+Example usage:
+```
+custom-http-errors: "404,415"
+```
+
 ### Enable CORS
 
 To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule, add the annotation
@@ -326,6 +360,15 @@ Additionally it is possible to set:
   `<Response_Header_1, ..., Response_Header_n>` to specify headers to pass to backend once authentication request completes.
 * `nginx.ingress.kubernetes.io/auth-request-redirect`:
   `<Request_Redirect_URL>`  to specify the X-Auth-Request-Redirect header value.
+* `nginx.ingress.kubernetes.io/auth-snippet`:
+  `<Auth_Snippet>` to specify a custom snippet to use with external authentication, e.g.
+
+```yaml
+nginx.ingress.kubernetes.io/auth-url: http://foo.com/external-auth
+nginx.ingress.kubernetes.io/auth-snippet: |
+    proxy_set_header Foo-Header 42;
+```
+> Note: `nginx.ingress.kubernetes.io/auth-snippet` is an optional annotation. However, it may only be used in conjunction with `nginx.ingress.kubernetes.io/auth-url` and will be ignored if `nginx.ingress.kubernetes.io/auth-url` is not set
 
 !!! example
     Please check the [external-auth](../../examples/auth/external-auth/README.md) example.

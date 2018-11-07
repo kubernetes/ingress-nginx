@@ -48,7 +48,7 @@ func GatherAndCompare(c prometheus.Collector, expected string, metricNames []str
 	}
 
 	if !reflect.DeepEqual(metrics, normalizeMetricFamilies(expectedMetrics)) {
-		// Encode the gathered output to the readbale text format for comparison.
+		// Encode the gathered output to the readable text format for comparison.
 		var buf1 bytes.Buffer
 		enc := expfmt.NewEncoder(&buf1, expfmt.FmtText)
 		for _, mf := range metrics {
