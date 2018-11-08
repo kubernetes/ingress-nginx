@@ -45,7 +45,7 @@ var (
 	oidExtensionSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 )
 
-// AddOrUpdateCertAndKey creates a .pem file wth the cert and the key with the specified name
+// AddOrUpdateCertAndKey creates a .pem file with the cert and the key with the specified name
 func AddOrUpdateCertAndKey(name string, cert, key, ca []byte,
 	fs file.Filesystem) (*ingress.SSLCert, error) {
 
