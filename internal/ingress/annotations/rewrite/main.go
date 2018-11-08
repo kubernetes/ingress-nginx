@@ -79,7 +79,7 @@ type rewrite struct {
 	r resolver.Resolver
 }
 
-// NewParser creates a new reqrite annotation parser
+// NewParser creates a new rewrite annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return rewrite{r}
 }
