@@ -641,7 +641,7 @@ For details on how to write WAF rules, please refer to [https://github.com/p0pr0
 ### ModSecurity
 
 [ModSecurity](http://modsecurity.org/) is an OpenSource Web Application firewall. It can be enabled for a particular set
-of ingress locations. The ModSecurity module must first be enabled by by enabling ModSecurity in the
+of ingress locations. The ModSecurity module must first be enabled by enabling ModSecurity in the
 [ConfigMap](configmap.md#enable-modsecurity). Note this will enable ModSecurity for all paths, and each path
 must be disabled manually.
 
