@@ -889,8 +889,10 @@ stream {
             proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
+            {{ if isValidByteSize $location.Proxy.BodySize }}
             client_max_body_size        {{ $location.Proxy.BodySize }};
-            {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
+            {{ end }}
+            {{ if isValidByteSize $location.ClientBodyBufferSize }}
             client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
             {{ end }}
 
@@ -1100,8 +1102,10 @@ stream {
             }
             {{ end }}
 
+            {{ if isValidByteSize $location.Proxy.BodySize }}
             client_max_body_size                    {{ $location.Proxy.BodySize }};
-            {{ if isValidClientBodyBufferSize $location.ClientBodyBufferSize }}
+            {{ end }}
+            {{ if isValidByteSize $location.ClientBodyBufferSize }}
             client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
             {{ end }}
 
