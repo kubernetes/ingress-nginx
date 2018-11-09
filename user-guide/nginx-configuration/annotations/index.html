@@ -538,6 +538,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#canary" title="Canary" class="md-nav__link">
+    Canary
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rewrite" title="Rewrite" class="md-nav__link">
     Rewrite
   </a>
@@ -609,6 +616,13 @@
         <li class="md-nav__item">
   <a href="#default-backend" title="Default Backend" class="md-nav__link">
     Default Backend
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-http-errors" title="Custom HTTP Errors" class="md-nav__link">
+    Custom HTTP Errors
   </a>
   
 </li>
@@ -811,6 +825,13 @@
         <li class="md-nav__item">
   <a href="#lua-resty-waf" title="Lua Resty WAF" class="md-nav__link">
     Lua Resty WAF
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modsecurity" title="ModSecurity" class="md-nav__link">
+    ModSecurity
   </a>
   
 </li>
@@ -1382,6 +1403,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#canary" title="Canary" class="md-nav__link">
+    Canary
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rewrite" title="Rewrite" class="md-nav__link">
     Rewrite
   </a>
@@ -1453,6 +1481,13 @@
         <li class="md-nav__item">
   <a href="#default-backend" title="Default Backend" class="md-nav__link">
     Default Backend
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-http-errors" title="Custom HTTP Errors" class="md-nav__link">
+    Custom HTTP Errors
   </a>
   
 </li>
@@ -1660,6 +1695,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#modsecurity" title="ModSecurity" class="md-nav__link">
+    ModSecurity
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#influxdb" title="InfluxDB" class="md-nav__link">
     InfluxDB
   </a>
@@ -1771,6 +1813,10 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#external-authentication">nginx.ingress.kubernetes.io/auth-snippet</a></td>
+<td>string</td>
+</tr>
+<tr>
 <td><a href="#backend-protocol">nginx.ingress.kubernetes.io/backend-protocol</a></td>
 <td>string</td>
 </tr>
@@ -1779,12 +1825,32 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#canary">nginx.ingress.kubernetes.io/canary</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
+<td><a href="#canary">nginx.ingress.kubernetes.io/canary-by-header</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#canary">nginx.ingress.kubernetes.io/canary-by-cookie</a></td>
+<td>string</td>
+</tr>
+<tr>
+<td><a href="#canary">nginx.ingress.kubernetes.io/canary-weight</a></td>
+<td>number</td>
+</tr>
+<tr>
 <td><a href="#client-body-buffer-size">nginx.ingress.kubernetes.io/client-body-buffer-size</a></td>
 <td>string</td>
 </tr>
 <tr>
 <td><a href="#configuration-snippet">nginx.ingress.kubernetes.io/configuration-snippet</a></td>
 <td>string</td>
+</tr>
+<tr>
+<td><a href="#custom-http-errors">nginx.ingress.kubernetes.io/custom-http-errors</a></td>
+<td>[]int</td>
 </tr>
 <tr>
 <td><a href="#default-backend">nginx.ingress.kubernetes.io/default-backend</a></td>
@@ -2018,8 +2084,37 @@ table below.</p>
 <td><a href="#use-regex">nginx.ingress.kubernetes.io/use-regex</a></td>
 <td>bool</td>
 </tr>
+<tr>
+<td><a href="#modsecurity">nginx.ingress.kubernetes.io/enable-modsecurity</a></td>
+<td>bool</td>
+</tr>
+<tr>
+<td><a href="#modsecurity">nginx.ingress.kubernetes.io/enable-owasp-core-rules</a></td>
+<td>bool</td>
+</tr>
+<tr>
+<td><a href="#modsecurity">nginx.ingress.kubernetes.io/modsecurity-transaction-id</a></td>
+<td>string</td>
+</tr>
 </tbody>
 </table>
+<h3 id="canary">Canary<a class="headerlink" href="#canary" title="Permanent link">&para;</a></h3>
+<p>In some cases, you may want to "canary" a new set of changes by sending a small number of requests to a different service than the production service. The canary annotation enables the Ingress spec to act as an alternative service for requests to route to depending on the rules applied. The following annotations to configure canary can be enabled after <code class="codehilite">nginx.ingress.kubernetes.io/canary: &quot;true&quot;</code> is set:</p>
+<ul>
+<li>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/canary-by-header</code>: The header to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the request header is set to <code class="codehilite">always</code>, it will be routed to the canary. When the header is set to <code class="codehilite">never</code>, it will never be routed to the canary. For any other value, the header will be ignored and the request compared against the other canary rules by precedence.</p>
+</li>
+<li>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/canary-by-cookie</code>: The cookie to use for notifying the Ingress to route the request to the service specified in the Canary Ingress. When the cookie value is set to <code class="codehilite">always</code>, it will be routed to the canary. When the cookie is set to <code class="codehilite">never</code>, it will never be routed to the canary. For any other value, the cookie will be ingored and the request compared against the other canary rules by precedence. </p>
+</li>
+<li>
+<p><code class="codehilite">nginx.ingress.kubernetes.io/canary-weight</code>: The integer based (0 - 100) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of 100 means implies all requests will be sent to the alternative service specified in the Ingress.   </p>
+</li>
+</ul>
+<p>Canary rules are evaluated in order of precedence. Precedence is as follows: 
+<code class="codehilite">canary-by-header -&gt; canary-by-cookie -&gt; canary-weight</code> </p>
+<p><strong>Known Limitations</strong></p>
+<p>Currently a maximum of one canary ingress can be applied per Ingress rule. </p>
 <h3 id="rewrite">Rewrite<a class="headerlink" href="#rewrite" title="Permanent link">&para;</a></h3>
 <p>In some scenarios the exposed URL in the backend service differs from the specified path in the Ingress rule. Without a rewrite any request will return 404.
 Set the annotation <code class="codehilite">nginx.ingress.kubernetes.io/rewrite-target</code> to the path expected by the service.</p>
@@ -2113,6 +2208,13 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <p>The ingress controller requires a <a href="../../default-backend/">default backend</a>.
 This service handles the response when the service in the Ingress rule does not have endpoints.
 This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation <code class="codehilite">nginx.ingress.kubernetes.io/default-backend: &lt;svc name&gt;</code> to specify a custom default backend.</p>
+<h3 id="custom-http-errors">Custom HTTP Errors<a class="headerlink" href="#custom-http-errors" title="Permanent link">&para;</a></h3>
+<p>Like the <a href="../configmap/#custom-http-errors"><code class="codehilite">custom-http-errors</code></a> value in the ConfigMap, this annotation will set NGINX <code class="codehilite">proxy-intercept-errors</code>, but only for the NGINX location associated with this ingress.
+Different ingresses can specify different sets of error codes. Even if multiple ingress objects share the same hostname, this annotation can be used to intercept different error codes for each ingress (for example, different error codes to be intercepted for different paths on the same hostname, if each path is on a different ingress).
+If <code class="codehilite">custom-http-errors</code> is also specified globally, the error values specified in this annotation will override the global value for the given ingress' hostname and path.</p>
+<p>Example usage:
+<div class="codehilite"><pre><span></span>custom-http-errors: &quot;404,415&quot;
+</pre></div></p>
 <h3 id="enable-cors">Enable CORS<a class="headerlink" href="#enable-cors" title="Permanent link">&para;</a></h3>
 <p>To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule, add the annotation
 <code class="codehilite">nginx.ingress.kubernetes.io/enable-cors: &quot;true&quot;</code>. This will add a section in the server
@@ -2230,7 +2332,17 @@ applied to each location provided in the ingress rule.</p>
   <code class="codehilite">&lt;Response_Header_1, ..., Response_Header_n&gt;</code> to specify headers to pass to backend once authentication request completes.</li>
 <li><code class="codehilite">nginx.ingress.kubernetes.io/auth-request-redirect</code>:
   <code class="codehilite">&lt;Request_Redirect_URL&gt;</code>  to specify the X-Auth-Request-Redirect header value.</li>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/auth-snippet</code>:
+  <code class="codehilite">&lt;Auth_Snippet&gt;</code> to specify a custom snippet to use with external authentication, e.g.</li>
 </ul>
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://foo.com/external-auth</span>
+<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+    <span class="no">proxy_set_header Foo-Header 42;</span>
+</pre></div>
+
+<blockquote>
+<p>Note: <code class="codehilite">nginx.ingress.kubernetes.io/auth-snippet</code> is an optional annotation. However, it may only be used in conjunction with <code class="codehilite">nginx.ingress.kubernetes.io/auth-url</code> and will be ignored if <code class="codehilite">nginx.ingress.kubernetes.io/auth-url</code> is not set</p>
+</blockquote>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Please check the <a href="../../../examples/auth/external-auth/">external-auth</a> example.</p>
@@ -2412,6 +2524,21 @@ Reference for this <a href="https://github.com/p0pr0ck5/lua-resty-waf/issues/166
 </pre></div>
 
 <p>For details on how to write WAF rules, please refer to <a href="https://github.com/p0pr0ck5/lua-resty-waf">https://github.com/p0pr0ck5/lua-resty-waf</a>.</p>
+<h3 id="modsecurity">ModSecurity<a class="headerlink" href="#modsecurity" title="Permanent link">&para;</a></h3>
+<p><a href="http://modsecurity.org/">ModSecurity</a> is an OpenSource Web Application firewall. It can be enabled for a particular set
+of ingress locations. The ModSecurity module must first be enabled by enabling ModSecurity in the
+<a href="../configmap/#enable-modsecurity">ConfigMap</a>. Note this will enable ModSecurity for all paths, and each path
+must be disabled manually.</p>
+<p>It can be enabled using the following annotation: 
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-modsecurity</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+</pre></div></p>
+<p>You can enable the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> by
+setting the following annotation:
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-owasp-core-rules</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+</pre></div></p>
+<p>You can pass transactionIDs from nginx by setting up the following:
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/modsecurity-transaction-id</span><span class="p p-Indicator">:</span> <span class="s">&quot;$request_id&quot;</span>
+</pre></div></p>
 <h3 id="influxdb">InfluxDB<a class="headerlink" href="#influxdb" title="Permanent link">&para;</a></h3>
 <p>Using <code class="codehilite">influxdb-*</code> annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
 using the <a href="https://github.com/influxdata/nginx-influxdb-module/">nginx-influxdb-module</a>.</p>
