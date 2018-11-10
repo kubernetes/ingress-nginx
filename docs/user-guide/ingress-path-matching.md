@@ -34,7 +34,7 @@ location ~* "^/foo/.*" {
 
 ## Path Priority
 
-In NGINX, regular expressions follow a **first match** policy. In order to enable more acurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.
+In NGINX, regular expressions follow a **first match** policy. In order to enable more accurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.
 
 **Please read the [warning](#warning) before using regular expressions in your ingress definitions.**
 
