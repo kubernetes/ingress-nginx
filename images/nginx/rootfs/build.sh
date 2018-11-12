@@ -407,9 +407,9 @@ sh build.sh
 make
 make install
 
-mkdir /etc/modsecurity
-cp modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
-cp unicode.mapping /etc/modsecurity/unicode.mapping
+mkdir -p /etc/nginx/modsecurity
+cp modsecurity.conf-recommended /etc/nginx/modsecurity/modsecurity.conf
+cp unicode.mapping /etc/nginx/modsecurity/unicode.mapping
 
 # Download owasp modsecurity crs
 cd /etc/nginx/
