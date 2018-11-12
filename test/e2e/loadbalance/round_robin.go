@@ -17,10 +17,8 @@ limitations under the License.
 package settings
 
 import (
-	"net/http"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/parnurzeal/gorequest"
 
@@ -30,25 +28,22 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Load Balance", func() {
-	f := framework.NewDefaultFramework("load-balance")
-
-	setting := "load-balance"
+var _ = framework.IngressNginxDescribe("Load Balance - Round Robin", func() {
+	f := framework.NewDefaultFramework("round-robin")
 
 	BeforeEach(func() {
 		f.NewEchoDeploymentWithReplicas(3)
+		f.UpdateNginxConfigMapData("worker-processes", "1")
 	})
 
 	AfterEach(func() {
-		f.UpdateNginxConfigMapData(setting, "")
-
+		f.UpdateNginxConfigMapData("worker-processes", "")
 	})
 
 	It("should evenly distribute requests with round-robin (default algorithm)", func() {
 		host := "load-balance.com"
 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "server_name load-balance.com")
@@ -61,9 +56,8 @@ var _ = framework.IngressNginxDescribe("Load Balance", func() {
 			_, body, errs := gorequest.New().
 				Get(f.IngressController.HTTPURL).
 				Set("Host", host).
-				Retry(10, 1*time.Second, http.StatusNotFound, http.StatusServiceUnavailable).
 				End()
-			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(errs).Should(BeEmpty())
 
 			replica := re.FindString(body)
 			Expect(replica).ShouldNot(Equal(""))
@@ -75,9 +69,8 @@ var _ = framework.IngressNginxDescribe("Load Balance", func() {
 			}
 		}
 
-		acceptableRequestRange := []int{198, 199, 200, 201, 202}
 		for _, v := range replicaRequestCount {
-			Expect(acceptableRequestRange).Should(ContainElement(v))
+			Expect(v).Should(Equal(200))
 		}
 	})
 })
