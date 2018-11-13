@@ -120,6 +120,8 @@ end
 function _M.new(self, backend)
   local o = {
     peers = backend.endpoints,
+    traffic_shaping_policy = backend.trafficShapingPolicy,
+    alternative_backends = backend.alternativeBackends,
   }
   setmetatable(o, self)
   self.__index = self
