@@ -18,6 +18,8 @@ function _M.new(self, backend)
     cookie_expires = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["expires"],
     cookie_max_age = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["maxage"],
     digest_func = digest_func,
+    traffic_shaping_policy = backend.trafficShapingPolicy,
+    alternative_backends = backend.alternativeBackends,
   }
   setmetatable(o, self)
   self.__index = self
