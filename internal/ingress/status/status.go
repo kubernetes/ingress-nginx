@@ -136,7 +136,7 @@ func (s statusSync) Run() {
 			}, stopCh)
 		},
 		OnStoppedLeading: func() {
-			glog.V(2).Infof("I am not status update leader anymore")
+			glog.V(2).Info("I am not status update leader anymore")
 			close(stopCh)
 
 			// cancel the context
@@ -197,7 +197,7 @@ func (s statusSync) Shutdown() {
 		return
 	}
 
-	glog.Infof("updating status of Ingress rules (remove)")
+	glog.Info("updating status of Ingress rules (remove)")
 
 	addrs, err := s.runningAddresses()
 	if err != nil {
