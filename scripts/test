@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+cd $(dirname $0)/..
+
+echo Running tests
+
+FIND_COMMAND="find"
+if [ "$(go env GOHOSTOS)" = "darwin" ]; then
+  FIND_COMMAND="find ."
+fi
+
+PACKAGES="$($FIND_COMMAND -name '*.go' | xargs -I{} dirname {} |  cut -f2 -d/ | sort -u | grep -Ev '(^\.$|.git|.trash-cache|vendor|bin|e2e|images|examples)' | sed -e 's!^!./!' -e 's!$!/...!')"
+
+go test -cover ${PACKAGES}

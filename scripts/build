@@ -1,0 +1,28 @@
+#!/bin/bash
+set -e
+
+source $(dirname $0)/version
+
+cd $(dirname $0)/..
+
+declare -a OS_ARCH_ARG
+
+# only support amd64 for now
+OS_ARCH_ARG=(amd64)
+PKG="k8s.io/ingress-nginx"
+
+rm -rf bin/*
+mkdir -p bin
+for ARCH in ${OS_ARCH_ARG}; do
+  ARCH=$ARCH source ./scripts/envs
+  echo "Building bin/${ARCH}/nginx-ingress-controller"
+  OUTPUT_BIN="bin/$ARCH/nginx-ingress-controller"
+  export CGO_ENABLED=0 
+  go build \
+      -a -installsuffix cgo \
+      -ldflags="-s -w \
+      -X ${PKG}/version.RELEASE=${TAG} \
+      -X ${PKG}/version.COMMIT=${COMMIT} \
+      -X ${PKG}/version.REPO=${REPO_INFO}" \
+      -o ${OUTPUT_BIN} ${PKG}/cmd/nginx
+done

@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+REPO=${REPO:-rancher}
+
+source $(dirname $0)/version
+cd $(dirname $0)/..
+
+
+for arch in $(ls bin); do
+  REGISTRY=${REPO} ARCH=${arch} TAG=${TAG} make -f Makefile_k8s container
+done

@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+
+cd $(dirname $0)/..
+
+echo Running validation
+
+FIND_COMMAND="find"
+if [ "$(go env GOHOSTOS)" = "darwin" ]; then
+  FIND_COMMAND="find ."
+fi
+
+PACKAGES="$($FIND_COMMAND -name '*.go' | xargs -I{} dirname {} |  cut -f2 -d/ | sort -u | grep -Ev '(^\.$|.git|.trash-cache|vendor|bin|test|images)' | sed -e 's!^!./!' -e 's!$!/...!')"
+
+echo Running: go vet
+go vet ${PACKAGES}
+# not doing golint check because it is not required in community
+# echo Running: golint
+# for i in ${PACKAGES}; do
+#    if [ -n "$(golint $i | grep -v 'should have comment.*or be unexported' | tee /dev/stderr)" ]; then
+#        failed=true
+#    fi
+# done
+test -z "$failed"
+echo Running: go fmt
+test -z "$(go fmt ${PACKAGES} | tee /dev/stderr)"

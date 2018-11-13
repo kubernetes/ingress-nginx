@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -e
+
+source $(dirname $0)/version
+
+resetTag(){
+  local tag
+  tag=${1}
+  if [ -n "$tag" ]; then
+    git tag -d "$tag"
+    git tag "$tag"
+  fi
+}
+
+exitFunc()
+{
+  git reset --hard $GIT_COMMIT && resetTag "${GIT_TAG}"
+}
+
+trap exitFunc EXIT
+
+cd $(dirname $0)/..
+mv Makefile Makefile_k8s
+mv Makefile_rancher Makefile
+
+cat >>.gitignore<< EOF
+
+# rancher ci
+.dapper
+/dist/
+EOF
+
+git apply patchs/patch && git add -A . && git commit -m "Rancher ci commit" && resetTag "${GIT_TAG}"
+
+$@

@@ -1,0 +1,90 @@
+diff --git a/internal/k8s/main.go b/internal/k8s/main.go
+index d10f3e5db..10fed6035 100644
+--- a/internal/k8s/main.go
++++ b/internal/k8s/main.go
+@@ -28,6 +28,11 @@ import (
+ 	"k8s.io/client-go/tools/cache"
+ )
+ 
++const (
++	internalAddressAnnotation = "rke.cattle.io/internal-ip"
++	externalAddressAnnotation = "rke.cattle.io/external-ip"
++)
++
+ // ParseNameNS parses a string searching a namespace and name
+ func ParseNameNS(input string) (string, string, error) {
+ 	nsName := strings.Split(input, "/")
+@@ -56,6 +61,15 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP
+ 		}
+ 	}
+ 
++	if node.Annotations != nil {
++		if annotatedIP := node.Annotations[externalAddressAnnotation]; annotatedIP != "" {
++			return annotatedIP
++		}
++		if annotatedIP := node.Annotations[internalAddressAnnotation]; annotatedIP != "" {
++			return annotatedIP
++		}
++	}
++
+ 	for _, address := range node.Status.Addresses {
+ 		if address.Type == apiv1.NodeExternalIP {
+ 			if address.Address != "" {
+@@ -92,11 +106,28 @@ func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
+ 		return nil, fmt.Errorf("unable to get POD information")
+ 	}
+ 
++	var labels map[string]string
++	owners := pod.GetOwnerReferences()
++	if len(owners) == 0 {
++		labels = pod.GetLabels()
++	} else {
++		labels = make(map[string]string)
++		for _, owner := range owners {
++			switch owner.Kind {
++			case "DaemonSet":
++				ds, _ := kubeClient.ExtensionsV1beta1().DaemonSets(podNs).Get(owner.Name, metav1.GetOptions{})
++				for k := range ds.Spec.Template.ObjectMeta.Labels {
++					labels[k] = ds.Spec.Template.ObjectMeta.Labels[k]
++				}
++			}
++		}
++	}
++
+ 	return &PodInfo{
+ 		Name:      podName,
+ 		Namespace: podNs,
+ 		NodeIP:    GetNodeIPOrName(kubeClient, pod.Spec.NodeName, true),
+-		Labels:    pod.GetLabels(),
++		Labels:    labels,
+ 	}, nil
+ }
+ 
+diff --git a/test/e2e/e2e_test.go b/test/e2e/e2e_test.go
+index 8de277bc5..a022bc34d 100644
+--- a/test/e2e/e2e_test.go
++++ b/test/e2e/e2e_test.go
+@@ -19,9 +19,6 @@ package e2e
+ import (
+ 	"testing"
+ 
+-	"github.com/golang/glog"
+-	"k8s.io/client-go/tools/clientcmd"
+-
+ 	"k8s.io/ingress-nginx/test/e2e/framework"
+ )
+ 
+@@ -29,9 +26,12 @@ func init() {
+ 	framework.RegisterParseFlags()
+ 
+ 	if "" == framework.TestContext.KubeConfig {
+-		glog.Fatalf("environment variable %v must be set", clientcmd.RecommendedConfigPathEnvVar)
++		//glog.Fatalf("environment variable %v must be set", clientcmd.RecommendedConfigPathEnvVar)
+ 	}
+ }
+ func TestE2E(t *testing.T) {
++	if "" == framework.TestContext.KubeConfig {
++		t.Skip("test is skiped because kubeconfig is missing")
++	}
+ 	RunE2ETests(t)
+ }

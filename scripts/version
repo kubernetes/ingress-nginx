@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+    DIRTY="-dirty"
+fi
+
+GIT_COMMIT=${GIT_COMMIT:-$(git rev-parse --short HEAD)}
+GIT_TAG=$(git tag -l --contains HEAD | head -n 1)
+REPO_INFO=$(git config --get remote.origin.url)
+
+if [[ -z "$DIRTY" && -n "$GIT_TAG" ]]; then
+    VERSION=$GIT_TAG
+else
+    VERSION="${GIT_COMMIT}${DIRTY}"
+fi
+
+if [ -z "$ARCH" ]; then
+    ARCH=amd64
+fi
+
+TAG=${TAG:-$VERSION}
+
+PKG="k8s.io/ingress-nginx"

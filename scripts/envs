@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e
+
+if [ "$ARCH" = "arm" ]; then
+	QEMUARCH=arm
+	GOARCH=arm
+	DUMB_ARCH=armhf
+fi
+if [ "$ARCH" = "arm64" ]; then
+	QEMUARCH=aarch64
+fi
+if [ "$ARCH" = "ppc64le" ]; then
+	QEMUARCH=ppc64le
+	GOARCH=ppc64le
+	DUMB_ARCH=ppc64el
+fi
+if [ "$ARCH" = "s390x" ]; then
+	QEMUARCH=s390x
+fi
