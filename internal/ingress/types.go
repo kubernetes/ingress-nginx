@@ -20,6 +20,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -280,6 +281,9 @@ type Location struct {
 	// CustomHTTPErrors specifies the error codes that should be intercepted.
 	// +optional
 	CustomHTTPErrors []int `json:"custom-http-errors"`
+	// ModSecurity allows to enable and configure modsecurity
+	// +optional
+	ModSecurity modsecurity.Config `json:"modsecurity"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

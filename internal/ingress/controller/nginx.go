@@ -251,7 +251,7 @@ type NGINXController struct {
 
 // Start starts a new NGINX master process running in the foreground.
 func (n *NGINXController) Start() {
-	glog.Infof("Starting NGINX Ingress controller")
+	glog.Info("Starting NGINX Ingress controller")
 
 	n.store.Run(n.stopCh)
 
@@ -336,7 +336,7 @@ func (n *NGINXController) Stop() error {
 		return fmt.Errorf("shutdown already in progress")
 	}
 
-	glog.Infof("Shutting down controller queues")
+	glog.Info("Shutting down controller queues")
 	close(n.stopCh)
 	go n.syncQueue.Shutdown()
 	if n.syncStatus != nil {

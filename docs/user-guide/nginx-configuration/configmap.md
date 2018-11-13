@@ -830,14 +830,14 @@ _**default:**_ "/.well-known/acme-challenge"
 
 ## block-cidrs
 
-A comma-separated list of IP addresses (or subnets), requestst from which have to be blocked globally.
+A comma-separated list of IP addresses (or subnets), request from which have to be blocked globally.
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_access_module.html#deny](http://nginx.org/en/docs/http/ngx_http_access_module.html#deny)
 
 ## block-user-agents
 
-A comma-separated list of User-Agent, requestst from which have to be blocked globally.
+A comma-separated list of User-Agent, request from which have to be blocked globally.
 It's possible to use here full strings and regular expressions. More details about valid patterns can be found at `map` Nginx directive documentation.
 
 _References:_
@@ -845,7 +845,7 @@ _References:_
 
 ## block-referers
 
-A comma-separated list of Referers, requestst from which have to be blocked globally.
+A comma-separated list of Referers, request from which have to be blocked globally.
 It's possible to use here full strings and regular expressions. More details about valid patterns can be found at `map` Nginx directive documentation.
 
 _References:_

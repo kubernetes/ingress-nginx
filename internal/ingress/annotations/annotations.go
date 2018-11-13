@@ -20,6 +20,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -98,6 +99,7 @@ type Ingress struct {
 	Logs                 log.Config
 	LuaRestyWAF          luarestywaf.Config
 	InfluxDB             influxdb.Config
+	ModSecurity          modsecurity.Config
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -140,6 +142,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"LuaRestyWAF":          luarestywaf.NewParser(cfg),
 			"InfluxDB":             influxdb.NewParser(cfg),
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
+			"ModSecurity":          modsecurity.NewParser(cfg),
 		},
 	}
 }

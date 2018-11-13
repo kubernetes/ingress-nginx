@@ -120,7 +120,7 @@ type Configuration struct {
 	// By default this is disabled
 	EnableModsecurity bool `json:"enable-modsecurity"`
 
-	// EnableModsecurity enables the OWASP ModSecurity Core Rule Set (CRS)
+	// EnableOWASPCoreRules enables the OWASP ModSecurity Core Rule Set (CRS)
 	// By default this is disabled
 	EnableOWASPCoreRules bool `json:"enable-owasp-modsecurity-crs"`
 

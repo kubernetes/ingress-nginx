@@ -241,26 +241,6 @@ export HUNTER_JOBS_NUMBER=${CORES}
 export HUNTER_KEEP_PACKAGE_SOURCES=false
 export HUNTER_USE_CACHE_SERVERS=true
 
-OPENSSL_DIR="$BUILD_PATH/openssl"
-mkdir -p $OPENSSL_DIR
-cd $OPENSSL_DIR
-
-# Install Openssl 1.1.1 from source
-wget http://http.debian.net/debian/pool/main/o/openssl/openssl_1.1.1-1.dsc
-wget http://http.debian.net/debian/pool/main/o/openssl/openssl_1.1.1.orig.tar.gz
-wget http://http.debian.net/debian/pool/main/o/openssl/openssl_1.1.1.orig.tar.gz.asc
-wget http://http.debian.net/debian/pool/main/o/openssl/openssl_1.1.1-1.debian.tar.xz
-
-tar zxpvf openssl_1.1.1.orig.tar.gz
-cd openssl-1.1.1/
-tar xpvf ../openssl_1.1.1-1.debian.tar.xz
-
-DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -rfakeroot
-
-cd ..
-
-dpkg -i openssl_1.1.1-1_*.deb libssl1.1_1.1.1-1_*.deb libssl-dev_1.1.1-1_*.deb
-
 # Install luajit from openresty fork
 export LUAJIT_LIB=/usr/local/lib
 export LUA_LIB_DIR="$LUAJIT_LIB/lua"
@@ -427,9 +407,9 @@ sh build.sh
 make
 make install
 
-mkdir /etc/modsecurity
-cp modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
-cp unicode.mapping /etc/modsecurity/unicode.mapping
+mkdir -p /etc/nginx/modsecurity
+cp modsecurity.conf-recommended /etc/nginx/modsecurity/modsecurity.conf
+cp unicode.mapping /etc/nginx/modsecurity/unicode.mapping
 
 # Download owasp modsecurity crs
 cd /etc/nginx/

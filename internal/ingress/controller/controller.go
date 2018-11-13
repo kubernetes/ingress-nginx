@@ -355,6 +355,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						loc.DefaultBackend = anns.DefaultBackend
 						loc.BackendProtocol = anns.BackendProtocol
 						loc.CustomHTTPErrors = anns.CustomHTTPErrors
+						loc.ModSecurity = anns.ModSecurity
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -396,6 +397,7 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 						DefaultBackend:       anns.DefaultBackend,
 						BackendProtocol:      anns.BackendProtocol,
 						CustomHTTPErrors:     anns.CustomHTTPErrors,
+						ModSecurity:          anns.ModSecurity,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -848,6 +850,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 					defLoc.LuaRestyWAF = anns.LuaRestyWAF
 					defLoc.InfluxDB = anns.InfluxDB
 					defLoc.BackendProtocol = anns.BackendProtocol
+					defLoc.ModSecurity = anns.ModSecurity
 				} else {
 					glog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
 						ingKey)
