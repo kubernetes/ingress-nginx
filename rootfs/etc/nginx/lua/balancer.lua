@@ -133,9 +133,25 @@ local function route_to_alternative_balancer(balancer)
   end
 
   -- TODO: support traffic shaping for n > 1 alternative backends
-  local alternative_balancer = balancers[balancer.alternative_backends[1]]
+  local backend_name = balancer.alternative_backends[1]
+  if not backend_name then
+    ngx.log(ngx.ERR, "empty alternative backend")
+    return false
+  end
 
-  local clean_target_header = util.replace_special_char(alternative_balancer.traffic_shaping_policy.header, "-", "_")
+  local alternative_balancer = balancers[backend_name]
+  if not alternative_balancer then
+    ngx.log(ngx.ERR, "no alternative balancer for backend: " .. tostring(backend_name))
+    return false
+  end
+
+  local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
+  if not traffic_shaping_policy then
+    ngx.log(ngx.ERR, "traffic shaping policy is not set for balanacer of backend: " .. tostring(backend_name))
+    return false
+  end
+
+  local clean_target_header = util.replace_special_char(traffic_shaping_policy.header, "-", "_")
 
   local header = ngx.var["http_" .. clean_target_header]
   if header then
@@ -146,7 +162,7 @@ local function route_to_alternative_balancer(balancer)
     end
   end
 
-  local clean_target_cookie = util.replace_special_char(alternative_balancer.traffic_shaping_policy.cookie, "-", "_")
+  local clean_target_cookie = util.replace_special_char(traffic_shaping_policy.cookie, "-", "_")
 
   local cookie = ngx.var["cookie_" .. clean_target_cookie]
   if cookie then
@@ -157,7 +173,7 @@ local function route_to_alternative_balancer(balancer)
     end
   end
 
-  if math.random(100) <= alternative_balancer.traffic_shaping_policy.weight then
+  if math.random(100) <= traffic_shaping_policy.weight then
     return true
   end
 
