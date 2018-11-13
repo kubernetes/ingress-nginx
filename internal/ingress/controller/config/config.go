@@ -588,7 +588,7 @@ func NewDefault() Configuration {
 		EnableDynamicTLSRecords:    true,
 		EnableUnderscoresInHeaders: false,
 		ErrorLogLevel:              errorLevel,
-		UseForwardedHeaders:        true,
+		UseForwardedHeaders:        false,
 		ForwardedForHeader:         "X-Forwarded-For",
 		ComputeFullForwardedFor:    false,
 		ProxyAddOriginalURIHeader:  true,

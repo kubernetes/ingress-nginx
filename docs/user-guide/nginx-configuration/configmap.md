@@ -106,7 +106,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-stream-timeout](#proxy-stream-timeout)|string|"600s"|
 |[proxy-stream-responses](#proxy-stream-responses)|int|1|
 |[bind-address](#bind-address)|[]string|""|
-|[use-forwarded-headers](#use-forwarded-headers)|bool|"true"|
+|[use-forwarded-headers](#use-forwarded-headers)|bool|"false"|
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"|
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"|
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"true"|
