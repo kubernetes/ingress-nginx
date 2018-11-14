@@ -841,7 +841,7 @@ stream {
 
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length "";
-            proxy_set_header            X-Fowarded-Proto "";
+            proxy_set_header            X-Forwarded-Proto "";
 
             {{ if $location.ExternalAuth.Method }}
             proxy_method                {{ $location.ExternalAuth.Method }};
