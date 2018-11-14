@@ -557,40 +557,40 @@ func TestBuildDenyVariable(t *testing.T) {
 	}
 }
 
-func TestBuildClientBodyBufferSize(t *testing.T) {
-	a := isValidClientBodyBufferSize("1000")
+func TestBuildByteSize(t *testing.T) {
+	a := isValidByteSize("1000")
 	if !a {
 		t.Errorf("Expected '%v' but returned '%v'", true, a)
 	}
-	b := isValidClientBodyBufferSize("1000k")
+	b := isValidByteSize("1000k")
 	if !b {
 		t.Errorf("Expected '%v' but returned '%v'", true, b)
 	}
-	c := isValidClientBodyBufferSize("1000m")
+	c := isValidByteSize("1000m")
 	if !c {
 		t.Errorf("Expected '%v' but returned '%v'", true, c)
 	}
-	d := isValidClientBodyBufferSize("1000km")
+	d := isValidByteSize("1000km")
 	if d {
 		t.Errorf("Expected '%v' but returned '%v'", false, d)
 	}
-	e := isValidClientBodyBufferSize("1000mk")
+	e := isValidByteSize("1000mk")
 	if e {
 		t.Errorf("Expected '%v' but returned '%v'", false, e)
 	}
-	f := isValidClientBodyBufferSize("1000kk")
+	f := isValidByteSize("1000kk")
 	if f {
 		t.Errorf("Expected '%v' but returned '%v'", false, f)
 	}
-	g := isValidClientBodyBufferSize("1000mm")
+	g := isValidByteSize("1000mm")
 	if g {
 		t.Errorf("Expected '%v' but returned '%v'", false, g)
 	}
-	h := isValidClientBodyBufferSize(nil)
+	h := isValidByteSize(nil)
 	if h {
 		t.Errorf("Expected '%v' but returned '%v'", false, h)
 	}
-	i := isValidClientBodyBufferSize("")
+	i := isValidByteSize("")
 	if i {
 		t.Errorf("Expected '%v' but returned '%v'", false, i)
 	}

@@ -151,7 +151,7 @@ var (
 		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
 			return struct{ First, Second interface{} }{all, server}
 		},
-		"isValidClientBodyBufferSize":  isValidClientBodyBufferSize,
+		"isValidByteSize":              isValidByteSize,
 		"buildForwardedFor":            buildForwardedFor,
 		"buildAuthSignURL":             buildAuthSignURL,
 		"buildOpentracing":             buildOpentracing,
@@ -753,7 +753,7 @@ func buildNextUpstream(i, r interface{}) string {
 	return strings.Join(nextUpstreamCodes, " ")
 }
 
-func isValidClientBodyBufferSize(input interface{}) bool {
+func isValidByteSize(input interface{}) bool {
 	s, ok := input.(string)
 	if !ok {
 		glog.Errorf("expected an 'string' type but %T was returned", input)
@@ -761,6 +761,7 @@ func isValidClientBodyBufferSize(input interface{}) bool {
 	}
 
 	if s == "" {
+		glog.Errorf("empty byte size, hence it will not be set.")
 		return false
 	}
 
@@ -780,7 +781,7 @@ func isValidClientBodyBufferSize(input interface{}) bool {
 			return true
 		}
 
-		glog.Errorf("client-body-buffer-size '%v' was provided in an incorrect format, hence it will not be set.", s)
+		glog.Errorf("incorrect byte size format '%v', hence it will not be set.", s)
 		return false
 	}
 
