@@ -30,6 +30,7 @@ func TestParse(t *testing.T) {
 	enable := parser.GetAnnotationWithPrefix("enable-modsecurity")
 	owasp := parser.GetAnnotationWithPrefix("enable-owasp-core-rules")
 	transID := parser.GetAnnotationWithPrefix("modsecurity-transaction-id")
+	snippet := parser.GetAnnotationWithPrefix("modsecurity-snippet")
 
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
@@ -40,19 +41,22 @@ func TestParse(t *testing.T) {
 		annotations map[string]string
 		expected    Config
 	}{
-		{map[string]string{enable: "true"}, Config{true, false, ""}},
-		{map[string]string{enable: "false"}, Config{false, false, ""}},
-		{map[string]string{enable: ""}, Config{false, false, ""}},
+		{map[string]string{enable: "true"}, Config{true, false, "", ""}},
+		{map[string]string{enable: "false"}, Config{false, false, "", ""}},
+		{map[string]string{enable: ""}, Config{false, false, "", ""}},
 
-		{map[string]string{owasp: "true"}, Config{false, true, ""}},
-		{map[string]string{owasp: "false"}, Config{false, false, ""}},
-		{map[string]string{owasp: ""}, Config{false, false, ""}},
+		{map[string]string{owasp: "true"}, Config{false, true, "", ""}},
+		{map[string]string{owasp: "false"}, Config{false, false, "", ""}},
+		{map[string]string{owasp: ""}, Config{false, false, "", ""}},
 
-		{map[string]string{transID: "ok"}, Config{false, false, "ok"}},
-		{map[string]string{transID: ""}, Config{false, false, ""}},
+		{map[string]string{transID: "ok"}, Config{false, false, "ok", ""}},
+		{map[string]string{transID: ""}, Config{false, false, "", ""}},
 
-		{map[string]string{}, Config{false, false, ""}},
-		{nil, Config{false, false, ""}},
+		{map[string]string{snippet: "ModSecurity Rule"}, Config{false, false, "", "ModSecurity Rule"}},
+		{map[string]string{snippet: ""}, Config{false, false, "", ""}},
+
+		{map[string]string{}, Config{false, false, "", ""}},
+		{nil, Config{false, false, "", ""}},
 	}
 
 	ing := &extensions.Ingress{

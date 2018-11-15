@@ -18,17 +18,16 @@ package modsecurity
 
 import (
 	extensions "k8s.io/api/extensions/v1beta1"
-
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-// Config contains the AuthSSLCert used for mutual authentication
-// and the configured ValidationDepth
+// Config contains ModSecurity Configuration items
 type Config struct {
 	Enable        bool   `json:"enable-modsecurity"`
 	OWASPRules    bool   `json:"enable-owasp-core-rules"`
 	TransactionID string `json:"modsecurity-transaction-id"`
+	Snippet       string `json:"modsecurity-snippet"`
 }
 
 // Equal tests for equality between two Config types
@@ -46,6 +45,9 @@ func (modsec1 *Config) Equal(modsec2 *Config) bool {
 		return false
 	}
 	if modsec1.TransactionID != modsec2.TransactionID {
+		return false
+	}
+	if modsec1.Snippet != modsec2.Snippet {
 		return false
 	}
 
@@ -80,9 +82,15 @@ func (a modSecurity) Parse(ing *extensions.Ingress) (interface{}, error) {
 		transactionID = ""
 	}
 
+	snippet, err := parser.GetStringAnnotation("modsecurity-snippet", ing)
+	if err != nil {
+		snippet = ""
+	}
+
 	return Config{
 		Enable:        enableModSecurity,
 		OWASPRules:    owaspRules,
 		TransactionID: transactionID,
+		Snippet:       snippet,
 	}, nil
 }
