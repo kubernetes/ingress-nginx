@@ -801,10 +801,10 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 	}
 	defer conn.Close()
 
-	var streams []*ingress.Backend
+	streams := make([]ingress.Backend, 0)
 	for _, ep := range pcfg.TCPEndpoints {
 		key := fmt.Sprintf("tcp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
-		streams = append(streams, &ingress.Backend{
+		streams = append(streams, ingress.Backend{
 			Name:      key,
 			Endpoints: ep.Endpoints,
 			Port:      intstr.FromInt(ep.Port),
@@ -812,7 +812,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 	}
 	for _, ep := range pcfg.UDPEndpoints {
 		key := fmt.Sprintf("udp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
-		streams = append(streams, &ingress.Backend{
+		streams = append(streams, ingress.Backend{
 			Name:      key,
 			Endpoints: ep.Endpoints,
 			Port:      intstr.FromInt(ep.Port),
@@ -828,7 +828,11 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(conn, "\r\n")
+	_, err = fmt.Fprintf(conn, "\r\n")
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
 
 	if isDynamicCertificatesEnabled {
 		err = configureCertificates(pcfg, port)
