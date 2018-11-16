@@ -218,7 +218,7 @@ type k8sStore struct {
 
 // New creates a new object store to be used in the ingress controller
 func New(checkOCSP bool,
-	namespace, configmap, defaultSSLCertificate string,
+	namespace, configmap, tcp, udp, defaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	fs file.Filesystem,
@@ -473,7 +473,7 @@ func New(checkOCSP bool,
 			cm := obj.(*corev1.ConfigMap)
 			key := k8s.MetaNamespaceKey(cm)
 			// updates to configuration configmaps can trigger an update
-			if key == configmap {
+			if key == configmap || key == tcp || key == udp {
 				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
 				if key == configmap {
 					store.setConfig(cm)
@@ -489,7 +489,7 @@ func New(checkOCSP bool,
 				cm := cur.(*corev1.ConfigMap)
 				key := k8s.MetaNamespaceKey(cm)
 				// updates to configuration configmaps can trigger an update
-				if key == configmap {
+				if key == configmap || key == tcp || key == udp {
 					recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
 					if key == configmap {
 						store.setConfig(cm)

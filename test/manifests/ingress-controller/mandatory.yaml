@@ -5,6 +5,25 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tcp-services
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: udp-services
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -206,6 +225,8 @@ spec:
           args:
             - /nginx-ingress-controller
             - --configmap=$(POD_NAMESPACE)/nginx-configuration
+            - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
+            - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
             - --watch-namespace=${NAMESPACE}
