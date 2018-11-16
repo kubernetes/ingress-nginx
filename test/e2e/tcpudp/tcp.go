@@ -91,7 +91,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		resp, _, errs := gorequest.New().
 			Get(fmt.Sprintf("http://%v:%v", ip, port)).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(len(errs)).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(200))
 	})
 })
