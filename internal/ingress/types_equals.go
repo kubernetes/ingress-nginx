@@ -68,6 +68,7 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 			return false
 		}
 	}
+
 	if len(c1.UDPEndpoints) != len(c2.UDPEndpoints) {
 		return false
 	}
@@ -83,10 +84,10 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 			return false
 		}
 	}
+
 	if len(c1.PassthroughBackends) != len(c2.PassthroughBackends) {
 		return false
 	}
-
 	for _, ptb1 := range c1.PassthroughBackends {
 		found := false
 		for _, ptb2 := range c2.PassthroughBackends {

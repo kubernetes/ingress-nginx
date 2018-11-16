@@ -64,7 +64,8 @@ import (
 )
 
 const (
-	ngxHealthPath = "/healthz"
+	ngxHealthPath     = "/healthz"
+	nginxStreamSocket = "/tmp/ingress-stream.sock"
 )
 
 var (
@@ -794,13 +795,6 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 		return err
 	}
 
-	streamSocket := "/tmp/ingress-stream.sock"
-	conn, err := net.Dial("unix", streamSocket)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
 	streams := make([]ingress.Backend, 0)
 	for _, ep := range pcfg.TCPEndpoints {
 		key := fmt.Sprintf("tcp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
@@ -819,6 +813,28 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 		})
 	}
 
+	err = updateStreamConfiguration(streams)
+	if err != nil {
+		return err
+	}
+
+	if isDynamicCertificatesEnabled {
+		err = configureCertificates(pcfg, port)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func updateStreamConfiguration(streams []ingress.Backend) error {
+	conn, err := net.Dial("unix", nginxStreamSocket)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
 	buf, err := json.Marshal(streams)
 	if err != nil {
 		return err
@@ -831,14 +847,6 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 	_, err = fmt.Fprintf(conn, "\r\n")
 	if err != nil {
 		return err
-	}
-	defer conn.Close()
-
-	if isDynamicCertificatesEnabled {
-		err = configureCertificates(pcfg, port)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

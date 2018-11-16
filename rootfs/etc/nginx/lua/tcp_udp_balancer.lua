@@ -148,14 +148,7 @@ function _M.balance()
     return
   end
 
-  local ctx = ngx.ctx
-  if not ctx.has_run then
-    ctx.has_run = true
-    local _, err = ngx_balancer.set_more_tries(1)
-    if err then
-      ngx.log(ngx.ERR, "failed to set more tries: ", err)
-    end
-  end
+  ngx_balancer.set_more_tries(1)
 
   local ok, err = ngx_balancer.set_current_peer(peer)
   if not ok then
