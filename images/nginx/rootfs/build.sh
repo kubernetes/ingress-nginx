@@ -292,6 +292,8 @@ make install
 cd "$BUILD_PATH/lua-resty-dns-0.21"
 make install
 
+luarocks install lua-resty-dns-client 3.0.0-1
+
 cd "$BUILD_PATH/lua-resty-string-0.11"
 make install
 
