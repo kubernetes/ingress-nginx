@@ -25,6 +25,10 @@ function _M.call()
     return
   end
 
+  if backends == nil or backends == "" then
+    return
+  end
+
   local success, err_conf = tcp_udp_configuration_data:set("backends", backends)
   if not success then
     ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err_conf))
