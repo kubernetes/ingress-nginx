@@ -39,6 +39,7 @@ import (
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -112,6 +113,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.EnableSSLChainCompletion,
 		config.Namespace,
 		config.ConfigMapName,
+		config.TCPConfigMapName,
+		config.UDPConfigMapName,
 		config.DefaultSSLCertificate,
 		config.ResyncPeriod,
 		config.Client,
@@ -578,6 +581,8 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		Backends:                   ingressCfg.Backends,
 		PassthroughBackends:        ingressCfg.PassthroughBackends,
 		Servers:                    ingressCfg.Servers,
+		TCPBackends:                ingressCfg.TCPEndpoints,
+		UDPBackends:                ingressCfg.UDPEndpoints,
 		HealthzURI:                 ngxHealthPath,
 		CustomErrors:               len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                        cfg,
@@ -789,6 +794,42 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 		return err
 	}
 
+	streamSocket := "/tmp/ingress-stream.sock"
+	conn, err := net.Dial("unix", streamSocket)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	var streams []*ingress.Backend
+	for _, ep := range pcfg.TCPEndpoints {
+		key := fmt.Sprintf("tcp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
+		streams = append(streams, &ingress.Backend{
+			Name:      key,
+			Endpoints: ep.Endpoints,
+			Port:      intstr.FromInt(ep.Port),
+		})
+	}
+	for _, ep := range pcfg.UDPEndpoints {
+		key := fmt.Sprintf("udp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
+		streams = append(streams, &ingress.Backend{
+			Name:      key,
+			Endpoints: ep.Endpoints,
+			Port:      intstr.FromInt(ep.Port),
+		})
+	}
+
+	buf, err := json.Marshal(streams)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Write(buf)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(conn, "\r\n")
+
 	if isDynamicCertificatesEnabled {
 		err = configureCertificates(pcfg, port)
 		if err != nil {
@@ -824,7 +865,6 @@ func post(url string, data interface{}) error {
 	}
 
 	glog.V(2).Infof("Posting to %s", url)
-
 	resp, err := http.Post(url, "application/json", bytes.NewReader(buf))
 	if err != nil {
 		return err
