@@ -30,7 +30,7 @@ export OPENTRACING_CPP_VERSION=1.5.0
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=ba0fa3fa6dbb01995d996f988a897e272100bf95
 export MODSECURITY_VERSION=fc061a57a8b0abda79b17cbe103d78db803fa575
-export LUA_NGX_VERSION=e94f2e5d64daa45ff396e262d8dab8e56f5f10e0
+export LUA_NGX_VERSION=1c72f57ce87d4355d546a97c2bd8f5123a70db5c
 export LUA_STREAM_NGX_VERSION=0.0.6rc2
 export LUA_UPSTREAM_VERSION=0.07
 export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
@@ -184,7 +184,7 @@ get_src 073deba39f74eff81da917907465e1343c89b335244349d3d3b4ae9331de86f2 \
 get_src b68286966f292fb552511b71bd8bc11af8f12c8aa760372d1437ac8760cb2f25 \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/$JAEGER_VERSION.tar.gz"
 
-get_src 027a1f1ddb35164c720451869fc5ea9095abaf70af02a1b17f59e0772c0cfec0 \
+get_src 6c8a2792222f6bfad927840bf64cb890466fcca703a0133cbde0e5b808461279 \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
 get_src 5420dbf59bac52cef8021658d7eae1667a2bd14dda23602c985cae2604de77dd \
@@ -196,8 +196,8 @@ get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
 get_src 2349dd0b7ee37680306ee76bc4b6bf5c7509a4a4be16d246d9bbff44f564e4a0 \
         "https://github.com/openresty/lua-resty-lrucache/archive/v0.08.tar.gz"
 
-get_src 2bba995e715a93134b86939c83baa33a1189f2461c41762619f3760e75311a18 \
-        "https://github.com/openresty/lua-resty-core/archive/v0.1.15.tar.gz"
+get_src bc9a00f4dd6dd3928c6e878dc84fa7a1073d5a65900cd77a5c1c7ce2d863b22a \
+        "https://github.com/openresty/lua-resty-core/archive/v0.1.16rc3.tar.gz"
 
 get_src eaf84f58b43289c1c3e0442ada9ed40406357f203adc96e2091638080cb8d361 \
         "https://github.com/openresty/lua-resty-lock/archive/v0.07.tar.gz"
@@ -274,7 +274,7 @@ fi
 cd "$BUILD_PATH"
 luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
 
-cd "$BUILD_PATH/lua-resty-core-0.1.15"
+cd "$BUILD_PATH/lua-resty-core-0.1.16rc3"
 make install
 
 cd "$BUILD_PATH/lua-resty-lrucache-0.08"
