@@ -31,7 +31,6 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 	})
 
 	AfterEach(func() {
-		f.UpdateNginxConfigMapData("enable-modsecurity", "false")
 	})
 
 	It("should enable modsecurity", func() {
@@ -41,8 +40,6 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-modsecurity": "true",
 		}
-
-		f.UpdateNginxConfigMapData("enable-modsecurity", "true")
 
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
@@ -64,8 +61,6 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/modsecurity-transaction-id": "modsecurity-$request_id",
 		}
 
-		f.UpdateNginxConfigMapData("enable-modsecurity", "true")
-
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
@@ -85,14 +80,31 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 			"nginx.ingress.kubernetes.io/enable-modsecurity": "false",
 		}
 
-		f.UpdateNginxConfigMapData("enable-modsecurity", "false")
-
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return !strings.Contains(server, "modsecurity on;")
+			})
+	})
+
+	It("should enable modsecurity with snippet", func() {
+		host := "modsecurity.foo.com"
+		nameSpace := f.IngressController.Namespace
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-modsecurity":  "true",
+			"nginx.ingress.kubernetes.io/modsecurity-snippet": "SecRuleEngine On",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, nameSpace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "modsecurity on;") &&
+					strings.Contains(server, "SecRuleEngine On")
 			})
 	})
 })
