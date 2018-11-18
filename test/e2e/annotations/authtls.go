@@ -81,7 +81,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			TLSClientConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 			Set("Host", host).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
 
 		// Send Request Passing the Client Certs
@@ -90,7 +90,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			TLSClientConfig(clientConfig).
 			Set("Host", host).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 
@@ -135,7 +135,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			TLSClientConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 			Set("Host", host).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 
@@ -191,7 +191,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			Set("Host", host).
 			RedirectPolicy(noRedirectPolicyFunc).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusFound))
 		Expect(resp.Header.Get("Location")).Should(Equal(f.IngressController.HTTPURL + errorPath))
 
@@ -201,7 +201,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			TLSClientConfig(clientConfig).
 			Set("Host", host).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 })

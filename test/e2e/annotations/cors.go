@@ -75,7 +75,7 @@ var _ = framework.IngressNginxDescribe("Annotations - CORS", func() {
 			Options(f.IngressController.HTTPURL+uri).
 			Set("Host", host).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusNoContent))
 	})
 

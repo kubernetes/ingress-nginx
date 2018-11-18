@@ -24,6 +24,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 	apiv1 "k8s.io/api/core/v1"
@@ -146,7 +147,33 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 	}
 }
 
+func mockUnixSocket(t *testing.T) net.Listener {
+	l, err := net.Listen("unix", nginxStreamSocket)
+	if err != nil {
+		t.Fatalf("unexpected error creating unix socket: %v", err)
+	}
+	if l == nil {
+		t.Fatalf("expected a listener but none returned")
+	}
+
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				continue
+			}
+
+			time.Sleep(100 * time.Millisecond)
+			defer conn.Close()
+		}
+	}()
+
+	return l
+}
 func TestConfigureDynamically(t *testing.T) {
+	l := mockUnixSocket(t)
+	defer l.Close()
+
 	target := &apiv1.ObjectReference{}
 
 	backends := []*ingress.Backend{{

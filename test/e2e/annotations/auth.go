@@ -63,7 +63,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
 	})
@@ -91,7 +91,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusServiceUnavailable))
 		Expect(body).Should(ContainSubstring("503 Service Temporarily Unavailable"))
 	})
@@ -122,7 +122,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
 		Expect(body).Should(ContainSubstring("401 Authorization Required"))
 	})
@@ -154,7 +154,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			SetBasicAuth("user", "pass").
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
 		Expect(body).Should(ContainSubstring("401 Authorization Required"))
 	})
@@ -186,7 +186,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			SetBasicAuth("foo", "bar").
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 
@@ -229,7 +229,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			SetBasicAuth("foo", "bar").
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
 	})
 

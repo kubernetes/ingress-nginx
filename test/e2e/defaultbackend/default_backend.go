@@ -94,7 +94,7 @@ var _ = framework.IngressNginxDescribe("Default backend", func() {
 			}
 
 			resp, _, errs := cm.End()
-			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(test.Status))
 		}
 	})

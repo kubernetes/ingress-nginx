@@ -76,7 +76,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				Set("CanaryByHeader", "always").
 				End()
 
-			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).ShouldNot(Equal(http.StatusNotFound))
 			Expect(body).Should(ContainSubstring("http-svc-canary"))
 		})
@@ -113,7 +113,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				Set("CanaryByHeader", "never").
 				End()
 
-			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).ShouldNot(Equal(http.StatusNotFound))
 			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
 		})
@@ -152,7 +152,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				AddCookie(&http.Cookie{Name: "CanaryByCookie", Value: "always"}).
 				End()
 
-			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).ShouldNot(Equal(http.StatusNotFound))
 			Expect(body).Should(ContainSubstring("http-svc-canary"))
 		})
@@ -191,7 +191,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 				AddCookie(&http.Cookie{Name: "CanaryByCookie", Value: "never"}).
 				End()
 
-			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).ShouldNot(Equal(http.StatusNotFound))
 			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
 		})

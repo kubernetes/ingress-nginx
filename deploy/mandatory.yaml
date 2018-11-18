@@ -4,7 +4,6 @@ metadata:
   name: ingress-nginx
 
 ---
-
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -15,7 +14,6 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -162,7 +160,6 @@ subjects:
     namespace: ingress-nginx
 
 ---
-
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -193,6 +190,8 @@ spec:
           args:
             - /nginx-ingress-controller
             - --configmap=$(POD_NAMESPACE)/nginx-configuration
+            - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
+            - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
           securityContext:
@@ -238,3 +237,4 @@ spec:
             timeoutSeconds: 1
 
 ---
+
