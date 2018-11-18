@@ -56,7 +56,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(503))
 	})
 
@@ -79,7 +79,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 			Get(f.IngressController.HTTPURL).
 			Set("Host", host).
 			End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(503))
 	})
 

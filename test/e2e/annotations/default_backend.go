@@ -58,7 +58,7 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 				Set("Host", host).
 				End()
 
-			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			Expect(body).To(ContainSubstring("x-code=503"))

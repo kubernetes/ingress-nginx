@@ -67,7 +67,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.TLS.Version).Should(BeNumerically("==", tls.VersionTLS12))
 		Expect(resp.TLS.CipherSuite).Should(BeNumerically("==", tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384))
@@ -86,7 +86,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.TLS.Version).Should(BeNumerically("==", tls.VersionTLS10))
 		Expect(resp.TLS.CipherSuite).Should(BeNumerically("==", tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA))
@@ -116,7 +116,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Strict-Transport-Security")).Should(ContainSubstring("max-age=86400"))
 
@@ -134,7 +134,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Strict-Transport-Security")).ShouldNot(ContainSubstring("includeSubDomains"))
 
@@ -152,7 +152,7 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Strict-Transport-Security")).Should(ContainSubstring("preload"))
 	})

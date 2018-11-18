@@ -63,7 +63,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Fromtowwwredirect", func()
 			Set("Host", fmt.Sprintf("%s.%s", "www", host)).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
 		Expect(resp.Header.Get("Location")).Should(Equal("http://fromtowwwredirect.bar.com/foo"))
 	})
