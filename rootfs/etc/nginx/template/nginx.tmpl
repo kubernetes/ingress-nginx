@@ -529,6 +529,9 @@ http {
         {{ end }}
         server_name {{ $hostname }};
 
+        {{/* default value of proxy_host is the name and port of a proxied server as specified in the proxy_pass directive */}}
+        set $proxy_host {{ $hostname }};
+
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
            return 403;
