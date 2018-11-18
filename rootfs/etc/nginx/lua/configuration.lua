@@ -47,7 +47,7 @@ local function handle_servers()
 
   local ok, servers = pcall(json.decode, raw_servers)
   if not ok then
-    ngx.log(ngx.ERR,  "could not parse servers: " .. tostring(servers))
+    ngx.log(ngx.ERR, "could not parse servers: " .. tostring(servers))
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
@@ -63,8 +63,7 @@ local function handle_servers()
           return
         end
 
-        local err_msg = string.format("error setting certificate for %s: %s\n",
-          server.hostname, tostring(err))
+        local err_msg = string.format("error setting certificate for %s: %s\n", server.hostname, tostring(err))
         table.insert(err_buf, err_msg)
       end
     else

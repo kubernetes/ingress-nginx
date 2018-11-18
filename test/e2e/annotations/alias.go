@@ -55,7 +55,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
 
@@ -64,7 +64,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 			Set("Host", "bar").
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 		Expect(body).Should(ContainSubstring("404 Not Found"))
 	})
@@ -91,7 +91,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 				Set("Host", host).
 				End()
 
-			Expect(len(errs)).Should(BeNumerically("==", 0))
+			Expect(errs).Should(BeEmpty())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 			Expect(body).Should(ContainSubstring(fmt.Sprintf("host=%v", host)))
 		}

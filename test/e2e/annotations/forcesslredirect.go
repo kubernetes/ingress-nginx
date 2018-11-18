@@ -59,7 +59,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
 		Expect(resp.Header.Get("Location")).Should(Equal("https://forcesslredirect.bar.com/"))
 	})
