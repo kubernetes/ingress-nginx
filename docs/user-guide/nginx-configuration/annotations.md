@@ -70,6 +70,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
@@ -144,6 +145,8 @@ The only affinity type available for NGINX is `cookie`.
 If you use the ``cookie`` affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation `nginx.ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'INGRESSCOOKIE'.
 
 In case of NGINX the annotation `nginx.ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to hash the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
+
+The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.  
 
 !!! attention
     The `index` option is not an actual hash; an in-memory index is used instead, which has less overhead.
@@ -716,6 +719,9 @@ nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 ```
 
 ### Use Regex
+
+!!! attention
+When using this annotation with the NGINX annotation `nginx.ingress.kubernetes.io/affinity` of type `cookie`,  `nginx.ingress.kubernetes.io/session-cookie-path` must be also set; Session cookie paths do not support regex.  
 
 Using the `nginx.ingress.kubernetes.io/use-regex` annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is `false`.
 
