@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testclient "k8s.io/client-go/kubernetes/fake"
 
+	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
@@ -231,25 +232,27 @@ func buildExtensionsIngresses() []extensions.Ingress {
 type testIngressLister struct {
 }
 
-func (til *testIngressLister) ListIngresses() []*extensions.Ingress {
-	var ingresses []*extensions.Ingress
-	ingresses = append(ingresses, &extensions.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo_ingress_non_01",
-			Namespace: apiv1.NamespaceDefault,
-		}})
+func (til *testIngressLister) ListIngresses() []*ingress.Ingress {
+	var ingresses []*ingress.Ingress
+	ingresses = append(ingresses, &ingress.Ingress{
+		Ingress: extensions.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo_ingress_non_01",
+				Namespace: apiv1.NamespaceDefault,
+			}}})
 
-	ingresses = append(ingresses, &extensions.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo_ingress_1",
-			Namespace: apiv1.NamespaceDefault,
-		},
-		Status: extensions.IngressStatus{
-			LoadBalancer: apiv1.LoadBalancerStatus{
-				Ingress: buildLoadBalancerIngressByIP(),
+	ingresses = append(ingresses, &ingress.Ingress{
+		Ingress: extensions.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo_ingress_1",
+				Namespace: apiv1.NamespaceDefault,
 			},
-		},
-	})
+			Status: extensions.IngressStatus{
+				LoadBalancer: apiv1.LoadBalancerStatus{
+					Ingress: buildLoadBalancerIngressByIP(),
+				},
+			},
+		}})
 
 	return ingresses
 }

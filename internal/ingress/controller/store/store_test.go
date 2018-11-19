@@ -730,7 +730,8 @@ func newStore(t *testing.T) *k8sStore {
 	return &k8sStore{
 		listers: &Lister{
 			// add more listers if needed
-			Ingress: IngressLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
+			Ingress:           IngressLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
+			IngressAnnotation: IngressAnnotationsLister{cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)},
 		},
 		sslStore:         NewSSLCertTracker(),
 		filesystem:       fs,
