@@ -533,16 +533,21 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 				}
 
 				if anns.SessionAffinity.Type == "cookie" {
+					cookiePath := anns.SessionAffinity.Cookie.Path
+					if anns.Rewrite.UseRegex && cookiePath == "" {
+						glog.Warningf("session-cookie-path should be set when use-regex is true")
+					}
+
 					ups.SessionAffinity.CookieSessionAffinity.Name = anns.SessionAffinity.Cookie.Name
 					ups.SessionAffinity.CookieSessionAffinity.Hash = anns.SessionAffinity.Cookie.Hash
 					ups.SessionAffinity.CookieSessionAffinity.Expires = anns.SessionAffinity.Cookie.Expires
 					ups.SessionAffinity.CookieSessionAffinity.MaxAge = anns.SessionAffinity.Cookie.MaxAge
+					ups.SessionAffinity.CookieSessionAffinity.Path = cookiePath
 
 					locs := ups.SessionAffinity.CookieSessionAffinity.Locations
 					if _, ok := locs[host]; !ok {
 						locs[host] = []string{}
 					}
-
 					locs[host] = append(locs[host], path.Path)
 				}
 			}

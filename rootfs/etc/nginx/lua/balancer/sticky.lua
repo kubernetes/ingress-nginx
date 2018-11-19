@@ -17,6 +17,7 @@ function _M.new(self, backend)
     cookie_name = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["name"] or "route",
     cookie_expires = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["expires"],
     cookie_max_age = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["maxage"],
+    cookie_path = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["path"],
     digest_func = digest_func,
     traffic_shaping_policy = backend.trafficShapingPolicy,
     alternative_backends = backend.alternativeBackends,
@@ -41,10 +42,15 @@ local function set_cookie(self, value)
     ngx.log(ngx.ERR, err)
   end
 
+  local cookie_path = self.cookie_path
+  if not cookie_path then
+    cookie_path = ngx.var.location_path
+  end
+
   local cookie_data = {
     key = self.cookie_name,
     value = value,
-    path = ngx.var.location_path,
+    path = cookie_path,
     domain = ngx.var.host,
     httponly = true,
   }

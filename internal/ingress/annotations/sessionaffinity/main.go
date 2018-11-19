@@ -47,6 +47,9 @@ const (
 	// This is used to control the cookie expires, its value is a number of seconds until the
 	// cookie expires
 	annotationAffinityCookieMaxAge = "session-cookie-max-age"
+
+	// This is used to control the cookie path when use-regex is set to true
+	annotationAffinityCookiePath = "session-cookie-path"
 )
 
 var (
@@ -71,6 +74,8 @@ type Cookie struct {
 	Expires string `json:"expires"`
 	// The number of seconds until the cookie expires
 	MaxAge string `json:"maxage"`
+	// The path that a cookie will be set on
+	Path string `json:"path"`
 }
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
@@ -106,6 +111,12 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 		sm = ""
 	}
 	cookie.MaxAge = sm
+
+	sp, err := parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
+	if err != nil || sp == "" {
+		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
+	}
+	cookie.Path = sp
 	return cookie
 }
 
