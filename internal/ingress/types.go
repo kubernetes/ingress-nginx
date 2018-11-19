@@ -112,6 +112,7 @@ type CookieSessionAffinity struct {
 	Expires   string              `json:"expires,omitempty"`
 	MaxAge    string              `json:"maxage,omitempty"`
 	Locations map[string][]string `json:"locations,omitempty"`
+	Path      string              `json:"path,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
