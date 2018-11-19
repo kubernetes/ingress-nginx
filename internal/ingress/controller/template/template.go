@@ -34,7 +34,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 
-	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -796,9 +795,9 @@ type ingressInformation struct {
 }
 
 func getIngressInformation(i, p interface{}) *ingressInformation {
-	ing, ok := i.(*extensions.Ingress)
+	ing, ok := i.(*ingress.Ingress)
 	if !ok {
-		glog.Errorf("expected an '*extensions.Ingress' type but %T was returned", i)
+		glog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
 		return &ingressInformation{}
 	}
 

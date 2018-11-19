@@ -372,18 +372,14 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 // getBackendServers returns a list of Upstream and Server to be used by the
 // backend.  An upstream can be used in multiple servers if the namespace,
 // service name and port are the same.
-func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]*ingress.Backend, []*ingress.Server) {
+func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*ingress.Backend, []*ingress.Server) {
 	du := n.getDefaultUpstream()
 	upstreams := n.createUpstreams(ingresses, du)
 	servers := n.createServers(ingresses, upstreams, du)
 
 	for _, ing := range ingresses {
 		ingKey := k8s.MetaNamespaceKey(ing)
-
-		anns, err := n.store.GetIngressAnnotations(ingKey)
-		if err != nil {
-			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
-		}
+		anns := ing.ParsedAnnotations
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -626,17 +622,12 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 
 // createUpstreams creates the NGINX upstreams (Endpoints) for each Service
 // referenced in Ingress rules.
-func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingress.Backend) map[string]*ingress.Backend {
+func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.Backend) map[string]*ingress.Backend {
 	upstreams := make(map[string]*ingress.Backend)
 	upstreams[defUpstreamName] = du
 
 	for _, ing := range data {
-		ingKey := k8s.MetaNamespaceKey(ing)
-
-		anns, err := n.store.GetIngressAnnotations(ingKey)
-		if err != nil {
-			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
-		}
+		anns := ing.ParsedAnnotations
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -873,7 +864,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 // createServers builds a map of host name to Server structs from a map of
 // already computed Upstream structs. Each Server is configured with at least
 // one root location, which uses a default backend if left unspecified.
-func (n *NGINXController) createServers(data []*extensions.Ingress,
+func (n *NGINXController) createServers(data []*ingress.Ingress,
 	upstreams map[string]*ingress.Backend,
 	du *ingress.Backend) map[string]*ingress.Server {
 
@@ -927,11 +918,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	// initialize all other servers
 	for _, ing := range data {
 		ingKey := k8s.MetaNamespaceKey(ing)
-
-		anns, err := n.store.GetIngressAnnotations(ingKey)
-		if err != nil {
-			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
-		}
+		anns := ing.ParsedAnnotations
 
 		// default upstream name
 		un := du.Name
@@ -1010,11 +997,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	// configure default location, alias, and SSL
 	for _, ing := range data {
 		ingKey := k8s.MetaNamespaceKey(ing)
-
-		anns, err := n.store.GetIngressAnnotations(ingKey)
-		if err != nil {
-			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
-		}
+		anns := ing.ParsedAnnotations
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -1121,7 +1104,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 // If a match is found, we know that this server should back the alternative backend and add the alternative backend
 // to a backend's alternative list.
 // If no match is found, then the serverless backend is deleted.
-func mergeAlternativeBackends(ing *extensions.Ingress, upstreams map[string]*ingress.Backend,
+func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingress.Backend,
 	servers map[string]*ingress.Server) {
 
 	// merge catch-all alternative backends
@@ -1176,7 +1159,7 @@ func mergeAlternativeBackends(ing *extensions.Ingress, upstreams map[string]*ing
 
 // extractTLSSecretName returns the name of the Secret containing a SSL
 // certificate for the given host name, or an empty string.
-func extractTLSSecretName(host string, ing *extensions.Ingress,
+func extractTLSSecretName(host string, ing *ingress.Ingress,
 	getLocalSSLCert func(string) (*ingress.SSLCert, error)) string {
 
 	if ing == nil {
