@@ -1985,6 +1985,10 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#cookie-affinity">nginx.ingress.kubernetes.io/session-cookie-path</a></td>
+<td>string</td>
+</tr>
+<tr>
 <td><a href="#server-side-https-enforcement-through-redirect">nginx.ingress.kubernetes.io/ssl-redirect</a></td>
 <td>"true" or "false"</td>
 </tr>
@@ -2096,6 +2100,10 @@ table below.</p>
 <td><a href="#modsecurity">nginx.ingress.kubernetes.io/modsecurity-transaction-id</a></td>
 <td>string</td>
 </tr>
+<tr>
+<td><a href="#modsecurity">nginx.ingress.kubernetes.io/modsecurity-snippet</a></td>
+<td>string</td>
+</tr>
 </tbody>
 </table>
 <h3 id="canary">Canary<a class="headerlink" href="#canary" title="Permanent link">&para;</a></h3>
@@ -2128,6 +2136,10 @@ Set the annotation <code class="codehilite">nginx.ingress.kubernetes.io/rewrite-
 <h3 id="session-affinity">Session Affinity<a class="headerlink" href="#session-affinity" title="Permanent link">&para;</a></h3>
 <p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/affinity</code> enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is <code class="codehilite">cookie</code>.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>If more than one Ingress is defined for a host and at least one Ingress uses <code class="codehilite">nginx.ingress.kubernetes.io/affinity: cookie</code>, then only paths on the Ingress using <code class="codehilite">nginx.ingress.kubernetes.io/affinity</code> will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server. </p>
+</div>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
 <p>Please check the <a href="../../../examples/affinity/cookie/">affinity</a> example.</p>
@@ -2135,6 +2147,7 @@ The only affinity type available for NGINX is <code class="codehilite">cookie</c
 <h4 id="cookie-affinity">Cookie affinity<a class="headerlink" href="#cookie-affinity" title="Permanent link">&para;</a></h4>
 <p>If you use the <code class="codehilite">cookie</code> affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-name</code>. The default is to create a cookie named 'INGRESSCOOKIE'.</p>
 <p>In case of NGINX the annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-hash</code> defines which algorithm will be used to hash the used upstream. Default value is <code class="codehilite">md5</code> and possible values are <code class="codehilite">md5</code>, <code class="codehilite">sha1</code> and <code class="codehilite">index</code>.</p>
+<p>The NGINX annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-path</code> defines the path that will be set on the cookie. This is optional unless the annotation <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> is set to true; Session cookie paths do not support regex.  </p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>The <code class="codehilite">index</code> option is not an actual hash; an in-memory index is used instead, which has less overhead.
@@ -2531,13 +2544,27 @@ of ingress locations. The ModSecurity module must first be enabled by enabling M
 must be disabled manually.</p>
 <p>It can be enabled using the following annotation: 
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-modsecurity</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
-</pre></div></p>
+</pre></div>
+ModSecurity will run in "Detection-Only" mode using the <a href="https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended">recommended configuration</a>.</p>
 <p>You can enable the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> by
 setting the following annotation:
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-owasp-core-rules</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
 </pre></div></p>
 <p>You can pass transactionIDs from nginx by setting up the following:
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/modsecurity-transaction-id</span><span class="p p-Indicator">:</span> <span class="s">&quot;$request_id&quot;</span>
+</pre></div></p>
+<p>You can also add your own set of modsecurity rules via a snippet:
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+<span class="l l-Scalar l-Scalar-Plain">SecRuleEngine On</span>
+<span class="l l-Scalar l-Scalar-Plain">SecDebugLog /tmp/modsec_debug.log</span>
+</pre></div></p>
+<p>Note: If you use both <code class="codehilite">enable-owasp-core-rules</code> and <code class="codehilite">modsecurity-snippet</code> annotations together, only the
+<code class="codehilite">modsecurity-snippet</code> will take effect. If you wish to include the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> or 
+<a href="https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended">recommended configuration</a> simply use the include
+statement:
+<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+<span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf</span>
+<span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/modsecurity/modsecurity.conf</span>
 </pre></div></p>
 <h3 id="influxdb">InfluxDB<a class="headerlink" href="#influxdb" title="Permanent link">&para;</a></h3>
 <p>Using <code class="codehilite">influxdb-*</code> annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
@@ -2567,6 +2594,10 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
 </pre></div>
 
 <h3 id="use-regex">Use Regex<a class="headerlink" href="#use-regex" title="Permanent link">&para;</a></h3>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+</div>
+<p>When using this annotation with the NGINX annotation <code class="codehilite">nginx.ingress.kubernetes.io/affinity</code> of type <code class="codehilite">cookie</code>,  <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-path</code> must be also set; Session cookie paths do not support regex.  </p>
 <p>Using the <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is <code class="codehilite">false</code>.</p>
 <p>The following will indicate that regular expression paths are being used:
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
