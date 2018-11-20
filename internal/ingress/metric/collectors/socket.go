@@ -26,6 +26,7 @@ import (
 	"github.com/golang/glog"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus"
+	pool "gopkg.in/go-playground/pool.v3"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -77,6 +78,8 @@ type SocketCollector struct {
 	metricMapping map[string]interface{}
 
 	hosts sets.String
+
+	workerPool pool.Pool
 }
 
 var (
@@ -118,6 +121,8 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 
 	sc := &SocketCollector{
 		listener: listener,
+
+		workerPool: pool.NewLimited(1),
 
 		responseTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
@@ -216,93 +221,105 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		return
 	}
 
-	for _, stats := range statsBatch {
-		if !sc.hosts.Has(stats.Host) {
-			glog.V(3).Infof("skiping metric for host %v that is not being served", stats.Host)
-			continue
+	sc.workerPool.Queue(sc.runUpdate(statsBatch))
+}
+
+func (sc *SocketCollector) runUpdate(statsBatch []socketData) pool.WorkFunc {
+	return func(wu pool.WorkUnit) (interface{}, error) {
+		if wu.IsCancelled() {
+			return nil, nil
 		}
 
-		requestLabels := prometheus.Labels{
-			"host":   stats.Host,
-			"status": stats.Status,
-			"method": stats.Method,
-			"path":   stats.Path,
-			//"endpoint":  stats.Endpoint,
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"service":   stats.Service,
-		}
+		for _, stats := range statsBatch {
+			if !sc.hosts.Has(stats.Host) {
+				glog.V(3).Infof("skiping metric for host %v that is not being served", stats.Host)
+				continue
+			}
 
-		collectorLabels := prometheus.Labels{
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"status":    stats.Status,
-		}
+			requestLabels := prometheus.Labels{
+				"host":   stats.Host,
+				"status": stats.Status,
+				"method": stats.Method,
+				"path":   stats.Path,
+				//"endpoint":  stats.Endpoint,
+				"namespace": stats.Namespace,
+				"ingress":   stats.Ingress,
+				"service":   stats.Service,
+			}
 
-		latencyLabels := prometheus.Labels{
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"service":   stats.Service,
-		}
+			collectorLabels := prometheus.Labels{
+				"namespace": stats.Namespace,
+				"ingress":   stats.Ingress,
+				"status":    stats.Status,
+			}
 
-		requestsMetric, err := sc.requests.GetMetricWith(collectorLabels)
-		if err != nil {
-			glog.Errorf("Error fetching requests metric: %v", err)
-		} else {
-			requestsMetric.Inc()
-		}
+			latencyLabels := prometheus.Labels{
+				"namespace": stats.Namespace,
+				"ingress":   stats.Ingress,
+				"service":   stats.Service,
+			}
 
-		if stats.Latency != -1 {
-			latencyMetric, err := sc.upstreamLatency.GetMetricWith(latencyLabels)
+			requestsMetric, err := sc.requests.GetMetricWith(collectorLabels)
 			if err != nil {
-				glog.Errorf("Error fetching latency metric: %v", err)
+				glog.Errorf("Error fetching requests metric: %v", err)
 			} else {
-				latencyMetric.Observe(stats.Latency)
+				requestsMetric.Inc()
+			}
+
+			if stats.Latency != -1 {
+				latencyMetric, err := sc.upstreamLatency.GetMetricWith(latencyLabels)
+				if err != nil {
+					glog.Errorf("Error fetching latency metric: %v", err)
+				} else {
+					latencyMetric.Observe(stats.Latency)
+				}
+			}
+
+			if stats.RequestTime != -1 {
+				requestTimeMetric, err := sc.requestTime.GetMetricWith(requestLabels)
+				if err != nil {
+					glog.Errorf("Error fetching request duration metric: %v", err)
+				} else {
+					requestTimeMetric.Observe(stats.RequestTime)
+				}
+			}
+
+			if stats.RequestLength != -1 {
+				requestLengthMetric, err := sc.requestLength.GetMetricWith(requestLabels)
+				if err != nil {
+					glog.Errorf("Error fetching request length metric: %v", err)
+				} else {
+					requestLengthMetric.Observe(stats.RequestLength)
+				}
+			}
+
+			if stats.ResponseTime != -1 {
+				responseTimeMetric, err := sc.responseTime.GetMetricWith(requestLabels)
+				if err != nil {
+					glog.Errorf("Error fetching upstream response time metric: %v", err)
+				} else {
+					responseTimeMetric.Observe(stats.ResponseTime)
+				}
+			}
+
+			if stats.ResponseLength != -1 {
+				bytesSentMetric, err := sc.bytesSent.GetMetricWith(requestLabels)
+				if err != nil {
+					glog.Errorf("Error fetching bytes sent metric: %v", err)
+				} else {
+					bytesSentMetric.Observe(stats.ResponseLength)
+				}
+
+				responseSizeMetric, err := sc.responseLength.GetMetricWith(requestLabels)
+				if err != nil {
+					glog.Errorf("Error fetching bytes sent metric: %v", err)
+				} else {
+					responseSizeMetric.Observe(stats.ResponseLength)
+				}
 			}
 		}
 
-		if stats.RequestTime != -1 {
-			requestTimeMetric, err := sc.requestTime.GetMetricWith(requestLabels)
-			if err != nil {
-				glog.Errorf("Error fetching request duration metric: %v", err)
-			} else {
-				requestTimeMetric.Observe(stats.RequestTime)
-			}
-		}
-
-		if stats.RequestLength != -1 {
-			requestLengthMetric, err := sc.requestLength.GetMetricWith(requestLabels)
-			if err != nil {
-				glog.Errorf("Error fetching request length metric: %v", err)
-			} else {
-				requestLengthMetric.Observe(stats.RequestLength)
-			}
-		}
-
-		if stats.ResponseTime != -1 {
-			responseTimeMetric, err := sc.responseTime.GetMetricWith(requestLabels)
-			if err != nil {
-				glog.Errorf("Error fetching upstream response time metric: %v", err)
-			} else {
-				responseTimeMetric.Observe(stats.ResponseTime)
-			}
-		}
-
-		if stats.ResponseLength != -1 {
-			bytesSentMetric, err := sc.bytesSent.GetMetricWith(requestLabels)
-			if err != nil {
-				glog.Errorf("Error fetching bytes sent metric: %v", err)
-			} else {
-				bytesSentMetric.Observe(stats.ResponseLength)
-			}
-
-			responseSizeMetric, err := sc.responseLength.GetMetricWith(requestLabels)
-			if err != nil {
-				glog.Errorf("Error fetching bytes sent metric: %v", err)
-			} else {
-				responseSizeMetric.Observe(stats.ResponseLength)
-			}
-		}
+		return true, nil
 	}
 }
 
@@ -321,6 +338,7 @@ func (sc *SocketCollector) Start() {
 // Stop stops unix listener
 func (sc *SocketCollector) Stop() {
 	sc.listener.Close()
+	sc.workerPool.Close()
 }
 
 // RemoveMetrics deletes prometheus metrics from prometheus for ingresses and
