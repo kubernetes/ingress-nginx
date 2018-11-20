@@ -761,7 +761,7 @@ func isValidByteSize(input interface{}) bool {
 	}
 
 	if s == "" {
-		glog.Errorf("empty byte size, hence it will not be set.")
+		glog.V(2).Info("empty byte size, hence it will not be set")
 		return false
 	}
 
