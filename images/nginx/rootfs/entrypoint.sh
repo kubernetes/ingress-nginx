@@ -16,4 +16,4 @@
 
 set -e
 
-authbind --deep $@
+authbind --deep "$@"
