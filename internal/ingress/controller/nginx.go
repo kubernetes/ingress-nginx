@@ -56,6 +56,7 @@ import (
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/ingress/status"
+	"k8s.io/ingress-nginx/internal/k8s"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/net/ssl"
@@ -110,6 +111,11 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		metricCollector: mc,
 	}
 
+	pod, err := k8s.GetPodDetails(config.Client)
+	if err != nil {
+		glog.Fatalf("unexpected error obtaining pod information: %v", err)
+	}
+
 	n.store = store.New(
 		config.EnableSSLChainCompletion,
 		config.Namespace,
@@ -121,7 +127,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.Client,
 		fs,
 		n.updateCh,
-		config.DynamicCertificatesEnabled)
+		config.DynamicCertificatesEnabled,
+		pod)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
