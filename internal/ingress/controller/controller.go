@@ -1135,13 +1135,15 @@ func mergeAlternativeBackends(ing *extensions.Ingress, upstreams map[string]*ing
 
 		ups := upstreams[upsName]
 
-		defLoc := servers[defServerName].Locations[0]
+		for _, defLoc := range servers[defServerName].Locations {
+			if !upstreams[defLoc.Backend].NoServer {
+				glog.Infof("matching backend %v found for alternative backend %v",
+					upstreams[defLoc.Backend].Name, ups.Name)
 
-		glog.Infof("matching backend %v found for alternative backend %v",
-			upstreams[defLoc.Backend].Name, ups.Name)
-
-		upstreams[defLoc.Backend].AlternativeBackends =
-			append(upstreams[defLoc.Backend].AlternativeBackends, ups.Name)
+				upstreams[defLoc.Backend].AlternativeBackends =
+					append(upstreams[defLoc.Backend].AlternativeBackends, ups.Name)
+			}
+		}
 	}
 
 	for _, rule := range ing.Spec.Rules {
