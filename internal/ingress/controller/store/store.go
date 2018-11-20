@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"sync"
 	"time"
@@ -76,6 +77,9 @@ type Storer interface {
 	// ListIngresses returns a list of all Ingresses in the store.
 	ListIngresses() []*extensions.Ingress
 
+	// ListControllerPods returns a list of ingress-nginx controller Pods.
+	ListControllerPods() []*corev1.Pod
+
 	// GetIngressAnnotations returns the parsed annotations of an Ingress matching key.
 	GetIngressAnnotations(key string) (*annotations.Ingress, error)
 
@@ -124,6 +128,7 @@ type Informer struct {
 	Service   cache.SharedIndexInformer
 	Secret    cache.SharedIndexInformer
 	ConfigMap cache.SharedIndexInformer
+	Pod       cache.SharedIndexInformer
 }
 
 // Lister contains object listers (stores).
@@ -134,6 +139,7 @@ type Lister struct {
 	Secret            SecretLister
 	ConfigMap         ConfigMapLister
 	IngressAnnotation IngressAnnotationsLister
+	Pod               PodLister
 }
 
 // NotExistsError is returned when an object does not exist in a local store.
@@ -150,6 +156,7 @@ func (i *Informer) Run(stopCh chan struct{}) {
 	go i.Service.Run(stopCh)
 	go i.Secret.Run(stopCh)
 	go i.ConfigMap.Run(stopCh)
+	go i.Pod.Run(stopCh)
 
 	// wait for all involved caches to be synced before processing items
 	// from the queue
@@ -272,6 +279,9 @@ func New(checkOCSP bool,
 
 	store.informers.Service = infFactory.Core().V1().Services().Informer()
 	store.listers.Service.Store = store.informers.Service.GetStore()
+
+	store.informers.Pod = infFactory.Core().V1().Pods().Informer()
+	store.listers.Pod.Store = store.informers.Pod.GetStore()
 
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -515,11 +525,62 @@ func New(checkOCSP bool,
 		},
 	}
 
+	podEventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			glog.Infof("New pod!")
+			pod := obj.(*corev1.Pod)
+			selfPod := store.getCurrentPod()
+
+			if !hasSameOwner(selfPod, pod) {
+				return
+			}
+
+			updateCh.In() <- Event{
+				Type: CreateEvent,
+				Obj:  obj,
+			}
+		},
+		UpdateFunc: func(old, cur interface{}) {
+			oldPod := old.(*corev1.Pod)
+			curPod := cur.(*corev1.Pod)
+			selfPod := store.getCurrentPod()
+
+			if !hasSameOwner(selfPod, curPod) {
+				return
+			}
+
+			if oldPod.Status.Phase == curPod.Status.Phase {
+				return
+			}
+
+			glog.Infof("Pod updated!")
+			updateCh.In() <- Event{
+				Type: UpdateEvent,
+				Obj:  cur,
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			glog.Infof("Pod deleted!")
+			pod := obj.(*corev1.Pod)
+			selfPod := store.getCurrentPod()
+
+			if !hasSameOwner(selfPod, pod) {
+				return
+			}
+
+			updateCh.In() <- Event{
+				Type: DeleteEvent,
+				Obj:  obj,
+			}
+		},
+	}
+
 	store.informers.Ingress.AddEventHandler(ingEventHandler)
 	store.informers.Endpoint.AddEventHandler(epEventHandler)
 	store.informers.Secret.AddEventHandler(secrEventHandler)
 	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
 	store.informers.Service.AddEventHandler(cache.ResourceEventHandlerFuncs{})
+	store.informers.Pod.AddEventHandler(podEventHandler)
 
 	// do not wait for informers to read the configmap configuration
 	ns, name, _ := k8s.ParseNameNS(configmap)
@@ -765,4 +826,55 @@ func (s k8sStore) Run(stopCh chan struct{}) {
 	if s.isOCSPCheckEnabled {
 		go wait.Until(s.checkSSLChainIssues, 60*time.Second, stopCh)
 	}
+}
+
+func (s k8sStore) getCurrentPod() *corev1.Pod {
+
+	ns := os.Getenv("POD_NAMESPACE")
+	name := os.Getenv("POD_NAME")
+
+	for _, i := range s.listers.Pod.List() {
+		pod := i.(*corev1.Pod)
+
+		if pod.GetNamespace() == ns &&
+			pod.GetName() == name {
+			return pod
+		}
+	}
+
+	return nil
+}
+
+// ListControllerPods returns a list of ingress-nginx controller Pods
+func (s k8sStore) ListControllerPods() []*corev1.Pod {
+
+	curPod := s.getCurrentPod()
+
+	var pods []*corev1.Pod
+	for _, i := range s.listers.Pod.List() {
+		pod := i.(*corev1.Pod)
+
+		if !hasSameOwner(curPod, pod) {
+			continue
+		}
+
+		if pod.Status.Phase != corev1.PodRunning {
+			continue
+		}
+
+		pods = append(pods, pod)
+	}
+
+	return pods
+}
+
+func hasSameOwner(pod1, pod2 *corev1.Pod) bool {
+	for _, pod1owner := range pod1.GetOwnerReferences() {
+		for _, pod2owner := range pod2.GetOwnerReferences() {
+			if pod1owner.UID == pod2owner.UID {
+				return true
+			}
+		}
+	}
+	return false
 }

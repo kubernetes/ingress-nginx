@@ -722,6 +722,7 @@ type TemplateConfig struct {
 	ListenPorts                *ListenPorts
 	PublishService             *apiv1.Service
 	DynamicCertificatesEnabled bool
+	ControllerPods             []*apiv1.Pod
 }
 
 // ListenPorts describe the ports required to run the

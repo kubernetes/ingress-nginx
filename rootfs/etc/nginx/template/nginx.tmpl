@@ -923,6 +923,10 @@ stream {
 
         {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders (collectCustomErrorsPerServer $server)) }}
 
+        location /debug {
+            return 200 "{{ len $all.ControllerPods }}";
+        }
+
         {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location $enforceRegex }}

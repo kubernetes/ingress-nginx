@@ -105,6 +105,10 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		return false
 	}
 
+	if len(c1.ControllerPods) != len(c2.ControllerPods) {
+		return false
+	}
+
 	return true
 }
 

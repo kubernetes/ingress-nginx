@@ -70,6 +70,8 @@ type Configuration struct {
 
 	// ConfigurationChecksum contains the particular checksum of a Configuration object
 	ConfigurationChecksum string `json:"configurationChecksum,omitempty"`
+
+	ControllerPods []*apiv1.Pod `json:"controllerPods,omitempty"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
