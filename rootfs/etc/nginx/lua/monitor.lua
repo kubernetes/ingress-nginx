@@ -1,6 +1,7 @@
 local socket = ngx.socket.tcp
 local cjson = require('cjson')
 local assert = assert
+local str_sub = string.sub
 
 local metrics_batch = {}
 -- if an Nginx worker processes more than (MAX_BATCH_SIZE/FLUSH_INTERVAL) RPS then it will start dropping metrics
@@ -16,6 +17,18 @@ local function send(payload)
   assert(s:close())
 end
 
+local function status_class(status)
+  if not status then
+    return "-"
+  end
+
+  if status == "-" then
+    return "ngx_error"
+  end
+
+  return str_sub(status, 0, 1) .. "xx"
+end
+
 local function metrics()
   return {
     host = ngx.var.host or "-",
@@ -25,7 +38,7 @@ local function metrics()
     path = ngx.var.location_path or "-",
 
     method = ngx.var.request_method or "-",
-    status = ngx.var.status or "-",
+    status = status_class(ngx.var.status),
     requestLength = tonumber(ngx.var.request_length) or -1,
     requestTime = tonumber(ngx.var.request_time) or -1,
     responseLength = tonumber(ngx.var.bytes_sent) or -1,
@@ -33,7 +46,7 @@ local function metrics()
     upstreamLatency = tonumber(ngx.var.upstream_connect_time) or -1,
     upstreamResponseTime = tonumber(ngx.var.upstream_response_time) or -1,
     upstreamResponseLength = tonumber(ngx.var.upstream_response_length) or -1,
-    upstreamStatus = ngx.var.upstream_status or "-",
+    upstreamStatus = status_class(ngx.var.upstream_status),
   }
 end
 
