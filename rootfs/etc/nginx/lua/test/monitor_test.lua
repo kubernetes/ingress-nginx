@@ -96,7 +96,7 @@ describe("Monitor", function()
 
       monitor.flush()
 
-      local expected_payload = '[{"upstreamStatus":"200","requestLength":256,"ingress":"example","status":"200","service":"http-svc","requestTime":0.04,"namespace":"default","host":"example.com","method":"GET","upstreamResponseTime":0.02,"upstreamResponseLength":456,"endpoint":"10.10.0.1","upstreamLatency":0.01,"path":"\\/","responseLength":512},{"upstreamStatus":"200","requestLength":256,"ingress":"example","status":"201","service":"http-svc","requestTime":0.04,"namespace":"default","host":"example.com","method":"POST","upstreamResponseTime":0.02,"upstreamResponseLength":456,"endpoint":"10.10.0.1","upstreamLatency":0.01,"path":"\\/","responseLength":512}]'
+      local expected_payload = '[{"requestLength":256,"ingress":"example","status":"200","service":"http-svc","requestTime":0.04,"namespace":"default","host":"example.com","method":"GET","upstreamResponseTime":0.02,"upstreamResponseLength":456,"upstreamLatency":0.01,"path":"\\/","responseLength":512},{"requestLength":256,"ingress":"example","status":"201","service":"http-svc","requestTime":0.04,"namespace":"default","host":"example.com","method":"POST","upstreamResponseTime":0.02,"upstreamResponseLength":456,"upstreamLatency":0.01,"path":"\\/","responseLength":512}]'
 
       assert.stub(tcp_mock.connect).was_called_with(tcp_mock, "unix:/tmp/prometheus-nginx.socket")
       assert.stub(tcp_mock.send).was_called_with(tcp_mock, expected_payload)
