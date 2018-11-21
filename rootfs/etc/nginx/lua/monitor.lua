@@ -34,7 +34,7 @@ local function metrics()
     upstreamLatency = tonumber(ngx.var.upstream_connect_time) or -1,
     upstreamResponseTime = tonumber(ngx.var.upstream_response_time) or -1,
     upstreamResponseLength = tonumber(ngx.var.upstream_response_length) or -1,
-    upstreamStatus = ngx.var.upstream_status or "-",
+    --upstreamStatus = ngx.var.upstream_status or "-",
   }
 end
 
