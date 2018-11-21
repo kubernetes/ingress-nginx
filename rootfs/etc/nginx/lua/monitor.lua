@@ -37,7 +37,6 @@ local function metrics()
     service = ngx.var.service_name or "-",
     path = ngx.var.location_path or "-",
 
-    method = ngx.var.request_method or "-",
     status = status_class(ngx.var.status),
     requestLength = tonumber(ngx.var.request_length) or -1,
     requestTime = tonumber(ngx.var.request_time) or -1,

@@ -42,8 +42,6 @@ type socketData struct {
 
 	ResponseLength float64 `json:"responseLength"`
 
-	Method string `json:"method"`
-
 	RequestLength float64 `json:"requestLength"`
 	RequestTime   float64 `json:"requestTime"`
 
@@ -84,7 +82,6 @@ var (
 
 		"status",
 
-		"method",
 		"path",
 
 		"namespace",
@@ -222,7 +219,6 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		requestLabels := prometheus.Labels{
 			"host":      stats.Host,
 			"status":    stats.Status,
-			"method":    stats.Method,
 			"path":      stats.Path,
 			"namespace": stats.Namespace,
 			"ingress":   stats.Ingress,
