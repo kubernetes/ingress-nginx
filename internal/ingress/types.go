@@ -20,6 +20,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
@@ -209,7 +210,7 @@ type Location struct {
 	// uses the default backend.
 	IsDefBackend bool `json:"isDefBackend"`
 	// Ingress returns the ingress from which this location was generated
-	Ingress *extensions.Ingress `json:"ingress"`
+	Ingress *Ingress `json:"ingress"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
@@ -330,4 +331,10 @@ type L4Backend struct {
 type ProxyProtocol struct {
 	Decode bool `json:"decode"`
 	Encode bool `json:"encode"`
+}
+
+// Ingress holds the definition of an Ingress plus its annotations
+type Ingress struct {
+	extensions.Ingress
+	ParsedAnnotations *annotations.Ingress
 }
