@@ -45,4 +45,5 @@ Additional available variables:
 Sources:
 
 - [Upstream variables](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#variables)
-- [Embedded variables](http://nginx.org/en/docs/http/ngx_http_core_module.html#variables)
+- [Embedded variables](http://nginx.org/en/docs/http/ngx_http_core_module.html#variables
+)
