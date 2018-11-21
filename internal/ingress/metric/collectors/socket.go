@@ -34,7 +34,7 @@ type upstream struct {
 	Latency        float64 `json:"upstreamLatency"`
 	ResponseLength float64 `json:"upstreamResponseLength"`
 	ResponseTime   float64 `json:"upstreamResponseTime"`
-	Status         string  `json:"upstreamStatus"`
+	//Status         string  `json:"upstreamStatus"`
 }
 
 type socketData struct {
