@@ -31,21 +31,21 @@ end
 
 local function metrics()
   return {
-    host = ngx.var.host or "-",
-    namespace = ngx.var.namespace or "-",
-    ingress = ngx.var.ingress_name or "-",
-    service = ngx.var.service_name or "-",
-    path = ngx.var.location_path or "-",
+    h = ngx.var.host or "-",
+    n = ngx.var.namespace or "-",
+    i = ngx.var.ingress_name or "-",
+    s = ngx.var.service_name or "-",
+    p = ngx.var.location_path or "-",
 
-    status = status_class(ngx.var.status),
-    requestLength = tonumber(ngx.var.request_length) or -1,
-    requestTime = tonumber(ngx.var.request_time) or -1,
-    responseLength = tonumber(ngx.var.bytes_sent) or -1,
+    sC = status_class(ngx.var.status),
+    rL = tonumber(ngx.var.request_length) or -1,
+    rT = tonumber(ngx.var.request_time) or -1,
+    resL = tonumber(ngx.var.bytes_sent) or -1,
 
-    upstreamLatency = tonumber(ngx.var.upstream_connect_time) or -1,
-    upstreamResponseTime = tonumber(ngx.var.upstream_response_time) or -1,
-    upstreamResponseLength = tonumber(ngx.var.upstream_response_length) or -1,
-    upstreamStatus = status_class(ngx.var.upstream_status),
+    uL = tonumber(ngx.var.upstream_connect_time) or -1,
+    uResT = tonumber(ngx.var.upstream_response_time) or -1,
+    uResL = tonumber(ngx.var.upstream_response_length) or -1,
+    uS = status_class(ngx.var.upstream_status),
   }
 end
 

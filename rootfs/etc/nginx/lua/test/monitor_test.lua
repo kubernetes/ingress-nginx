@@ -97,7 +97,7 @@ describe("Monitor", function()
 
       monitor.flush()
 
-      local expected_payload = '[{"requestLength":256,"ingress":"example","status":"2xx","service":"http-svc","requestTime":0.04,"namespace":"default","host":"example.com","upstreamResponseTime":0.02,"upstreamStatus":"2xx","upstreamResponseLength":456,"upstreamLatency":0.01,"path":"\\/","responseLength":512},{"requestLength":256,"ingress":"example","status":"2xx","service":"http-svc","requestTime":0.04,"namespace":"default","host":"example.com","upstreamResponseTime":0.02,"upstreamStatus":"ngx_error","upstreamResponseLength":456,"upstreamLatency":0.01,"path":"\\/","responseLength":512}]'
+      local expected_payload = '[{"i":"example","rL":256,"n":"default","uS":"2xx","sC":"2xx","uResT":0.02,"uL":0.01,"s":"http-svc","resL":512,"rT":0.04,"h":"example.com","uResL":456,"p":"\\/"},{"i":"example","rL":256,"n":"default","uS":"ngx_error","sC":"2xx","uResT":0.02,"uL":0.01,"s":"http-svc","resL":512,"rT":0.04,"h":"example.com","uResL":456,"p":"\\/"}]'
 
       assert.stub(tcp_mock.connect).was_called_with(tcp_mock, "unix:/tmp/prometheus-nginx.socket")
       assert.stub(tcp_mock.send).was_called_with(tcp_mock, expected_payload)

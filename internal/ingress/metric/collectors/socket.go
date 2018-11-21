@@ -30,27 +30,27 @@ import (
 )
 
 type upstream struct {
-	Latency        float64 `json:"upstreamLatency"`
-	ResponseLength float64 `json:"upstreamResponseLength"`
-	ResponseTime   float64 `json:"upstreamResponseTime"`
-	Status         string  `json:"upstreamStatus"`
+	Latency        float64 `json:"uL"`
+	ResponseLength float64 `json:"uResL"`
+	ResponseTime   float64 `json:"uResT"`
+	Status         string  `json:"uS"`
 }
 
 type socketData struct {
-	Host   string `json:"host"`
-	Status string `json:"status"`
+	Host   string `json:"h"`
+	Status string `json:"s"`
 
-	ResponseLength float64 `json:"responseLength"`
+	ResponseLength float64 `json:"resL"`
 
-	RequestLength float64 `json:"requestLength"`
-	RequestTime   float64 `json:"requestTime"`
+	RequestLength float64 `json:"rL"`
+	RequestTime   float64 `json:"rT"`
 
 	upstream
 
-	Namespace string `json:"namespace"`
-	Ingress   string `json:"ingress"`
-	Service   string `json:"service"`
-	Path      string `json:"path"`
+	Namespace string `json:"n"`
+	Ingress   string `json:"i"`
+	Service   string `json:"s"`
+	Path      string `json:"p"`
 }
 
 // SocketCollector stores prometheus metrics and ingress meta-data
