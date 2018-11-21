@@ -8,7 +8,7 @@ log_format upstreaminfo
     '[$the_real_ip] - $remote_user [$time_local] "$request" '
     '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
     '$request_length $request_time [$proxy_upstream_name] $upstream_addr '
-    '$upstream_response_length $upstream_response_time $upstream_status';
+    '$upstream_response_length $upstream_response_time $upstream_status $req_id';
 ```
 
 | Placeholder | Description |
@@ -30,6 +30,7 @@ log_format upstreaminfo
 | `$upstream_response_length` | the length of the response obtained from the upstream server |
 | `$upstream_response_time` | time spent on receiving the response from the upstream server as seconds with millisecond resolution |
 | `$upstream_status` | status code of the response obtained from the upstream server |
+| `$req_id` | the randomly generated ID of the request  |
 
 Additional available variables:
 
