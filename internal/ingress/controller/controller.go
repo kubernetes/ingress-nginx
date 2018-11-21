@@ -193,6 +193,16 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		n.metricCollector.SetSSLExpireTime(servers)
 	}
 
+	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
+	if isFirstSync {
+		// For the initial sync it always takes some time for NGINX to
+		//  start listening on the configured port (default 18080)
+		//  For large configurations it might take a while so we loop
+		//  and back off
+		glog.Info("Initial sync, sleeping for 1 second.")
+		time.Sleep(1 * time.Second)
+	}
+
 	retry := wait.Backoff{
 		Steps:    15,
 		Duration: 1 * time.Second,
