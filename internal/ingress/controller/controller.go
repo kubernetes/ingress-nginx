@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/glog"
@@ -59,6 +60,11 @@ type Configuration struct {
 	Namespace string
 
 	ForceNamespaceIsolation bool
+
+	// +optional
+	TCPConfigMapName string
+	// +optional
+	UDPConfigMapName string
 
 	DefaultHealthzURL     string
 	HealthCheckTimeout    time.Duration
@@ -151,6 +157,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	pcfg := &ingress.Configuration{
 		Backends:              upstreams,
 		Servers:               servers,
+		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
+		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
 		PassthroughBackends:   passUpstreams,
 		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
 	}
@@ -185,6 +193,16 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		n.metricCollector.SetSSLExpireTime(servers)
 	}
 
+	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
+	if isFirstSync {
+		// For the initial sync it always takes some time for NGINX to
+		//  start listening on the configured port (default 18080)
+		//  For large configurations it might take a while so we loop
+		//  and back off
+		glog.Info("Initial sync, sleeping for 1 second.")
+		time.Sleep(1 * time.Second)
+	}
+
 	retry := wait.Backoff{
 		Steps:    15,
 		Duration: 1 * time.Second,
@@ -214,6 +232,120 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	n.runningConfig = pcfg
 
 	return nil
+}
+
+func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Protocol) []ingress.L4Service {
+	if configmapName == "" {
+		return []ingress.L4Service{}
+	}
+	glog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
+	_, _, err := k8s.ParseNameNS(configmapName)
+	if err != nil {
+		glog.Errorf("Error parsing ConfigMap reference %q: %v", configmapName, err)
+		return []ingress.L4Service{}
+	}
+	configmap, err := n.store.GetConfigMap(configmapName)
+	if err != nil {
+		glog.Errorf("Error getting ConfigMap %q: %v", configmapName, err)
+		return []ingress.L4Service{}
+	}
+	var svcs []ingress.L4Service
+	var svcProxyProtocol ingress.ProxyProtocol
+	rp := []int{
+		n.cfg.ListenPorts.HTTP,
+		n.cfg.ListenPorts.HTTPS,
+		n.cfg.ListenPorts.SSLProxy,
+		n.cfg.ListenPorts.Status,
+		n.cfg.ListenPorts.Health,
+		n.cfg.ListenPorts.Default,
+	}
+	reserverdPorts := sets.NewInt(rp...)
+	// svcRef format: <(str)namespace>/<(str)service>:<(intstr)port>[:<("PROXY")decode>:<("PROXY")encode>]
+	for port, svcRef := range configmap.Data {
+		externalPort, err := strconv.Atoi(port)
+		if err != nil {
+			glog.Warningf("%q is not a valid %v port number", port, proto)
+			continue
+		}
+		if reserverdPorts.Has(externalPort) {
+			glog.Warningf("Port %d cannot be used for %v stream services. It is reserved for the Ingress controller.", externalPort, proto)
+			continue
+		}
+		nsSvcPort := strings.Split(svcRef, ":")
+		if len(nsSvcPort) < 2 {
+			glog.Warningf("Invalid Service reference %q for %v port %d", svcRef, proto, externalPort)
+			continue
+		}
+		nsName := nsSvcPort[0]
+		svcPort := nsSvcPort[1]
+		svcProxyProtocol.Decode = false
+		svcProxyProtocol.Encode = false
+		// Proxy Protocol is only compatible with TCP Services
+		if len(nsSvcPort) >= 3 && proto == apiv1.ProtocolTCP {
+			if len(nsSvcPort) >= 3 && strings.ToUpper(nsSvcPort[2]) == "PROXY" {
+				svcProxyProtocol.Decode = true
+			}
+			if len(nsSvcPort) == 4 && strings.ToUpper(nsSvcPort[3]) == "PROXY" {
+				svcProxyProtocol.Encode = true
+			}
+		}
+		svcNs, svcName, err := k8s.ParseNameNS(nsName)
+		if err != nil {
+			glog.Warningf("%v", err)
+			continue
+		}
+		svc, err := n.store.GetService(nsName)
+		if err != nil {
+			glog.Warningf("Error getting Service %q: %v", nsName, err)
+			continue
+		}
+		var endps []ingress.Endpoint
+		targetPort, err := strconv.Atoi(svcPort)
+		if err != nil {
+			// not a port number, fall back to using port name
+			glog.V(3).Infof("Searching Endpoints with %v port name %q for Service %q", proto, svcPort, nsName)
+			for _, sp := range svc.Spec.Ports {
+				if sp.Name == svcPort {
+					if sp.Protocol == proto {
+						endps = getEndpoints(svc, &sp, proto, n.store.GetServiceEndpoints)
+						break
+					}
+				}
+			}
+		} else {
+			glog.V(3).Infof("Searching Endpoints with %v port number %d for Service %q", proto, targetPort, nsName)
+			for _, sp := range svc.Spec.Ports {
+				if sp.Port == int32(targetPort) {
+					if sp.Protocol == proto {
+						endps = getEndpoints(svc, &sp, proto, n.store.GetServiceEndpoints)
+						break
+					}
+				}
+			}
+		}
+		// stream services cannot contain empty upstreams and there is
+		// no default backend equivalent
+		if len(endps) == 0 {
+			glog.Warningf("Service %q does not have any active Endpoint for %v port %v", nsName, proto, svcPort)
+			continue
+		}
+		svcs = append(svcs, ingress.L4Service{
+			Port: externalPort,
+			Backend: ingress.L4Backend{
+				Name:          svcName,
+				Namespace:     svcNs,
+				Port:          intstr.FromString(svcPort),
+				Protocol:      proto,
+				ProxyProtocol: svcProxyProtocol,
+			},
+			Endpoints: endps,
+		})
+	}
+	// Keep upstream order sorted to reduce unnecessary nginx config reloads.
+	sort.SliceStable(svcs, func(i, j int) bool {
+		return svcs[i].Port < svcs[j].Port
+	})
+	return svcs
 }
 
 // getDefaultUpstream returns the upstream associated with the default backend.
@@ -250,18 +382,14 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 // getBackendServers returns a list of Upstream and Server to be used by the
 // backend.  An upstream can be used in multiple servers if the namespace,
 // service name and port are the same.
-func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]*ingress.Backend, []*ingress.Server) {
+func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*ingress.Backend, []*ingress.Server) {
 	du := n.getDefaultUpstream()
 	upstreams := n.createUpstreams(ingresses, du)
 	servers := n.createServers(ingresses, upstreams, du)
 
 	for _, ing := range ingresses {
 		ingKey := k8s.MetaNamespaceKey(ing)
-
-		anns, err := n.store.GetIngressAnnotations(ingKey)
-		if err != nil {
-			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
-		}
+		anns := ing.ParsedAnnotations
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -411,16 +539,21 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 				}
 
 				if anns.SessionAffinity.Type == "cookie" {
+					cookiePath := anns.SessionAffinity.Cookie.Path
+					if anns.Rewrite.UseRegex && cookiePath == "" {
+						glog.Warningf("session-cookie-path should be set when use-regex is true")
+					}
+
 					ups.SessionAffinity.CookieSessionAffinity.Name = anns.SessionAffinity.Cookie.Name
 					ups.SessionAffinity.CookieSessionAffinity.Hash = anns.SessionAffinity.Cookie.Hash
 					ups.SessionAffinity.CookieSessionAffinity.Expires = anns.SessionAffinity.Cookie.Expires
 					ups.SessionAffinity.CookieSessionAffinity.MaxAge = anns.SessionAffinity.Cookie.MaxAge
+					ups.SessionAffinity.CookieSessionAffinity.Path = cookiePath
 
 					locs := ups.SessionAffinity.CookieSessionAffinity.Locations
 					if _, ok := locs[host]; !ok {
 						locs[host] = []string{}
 					}
-
 					locs[host] = append(locs[host], path.Path)
 				}
 			}
@@ -504,17 +637,12 @@ func (n *NGINXController) getBackendServers(ingresses []*extensions.Ingress) ([]
 
 // createUpstreams creates the NGINX upstreams (Endpoints) for each Service
 // referenced in Ingress rules.
-func (n *NGINXController) createUpstreams(data []*extensions.Ingress, du *ingress.Backend) map[string]*ingress.Backend {
+func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.Backend) map[string]*ingress.Backend {
 	upstreams := make(map[string]*ingress.Backend)
 	upstreams[defUpstreamName] = du
 
 	for _, ing := range data {
-		ingKey := k8s.MetaNamespaceKey(ing)
-
-		anns, err := n.store.GetIngressAnnotations(ingKey)
-		if err != nil {
-			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
-		}
+		anns := ing.ParsedAnnotations
 
 		var defBackend string
 		if ing.Spec.Backend != nil {
@@ -751,7 +879,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 // createServers builds a map of host name to Server structs from a map of
 // already computed Upstream structs. Each Server is configured with at least
 // one root location, which uses a default backend if left unspecified.
-func (n *NGINXController) createServers(data []*extensions.Ingress,
+func (n *NGINXController) createServers(data []*ingress.Ingress,
 	upstreams map[string]*ingress.Backend,
 	du *ingress.Backend) map[string]*ingress.Server {
 
@@ -805,11 +933,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	// initialize all other servers
 	for _, ing := range data {
 		ingKey := k8s.MetaNamespaceKey(ing)
-
-		anns, err := n.store.GetIngressAnnotations(ingKey)
-		if err != nil {
-			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
-		}
+		anns := ing.ParsedAnnotations
 
 		// default upstream name
 		un := du.Name
@@ -888,11 +1012,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 	// configure default location, alias, and SSL
 	for _, ing := range data {
 		ingKey := k8s.MetaNamespaceKey(ing)
-
-		anns, err := n.store.GetIngressAnnotations(ingKey)
-		if err != nil {
-			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
-		}
+		anns := ing.ParsedAnnotations
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
@@ -999,7 +1119,7 @@ func (n *NGINXController) createServers(data []*extensions.Ingress,
 // If a match is found, we know that this server should back the alternative backend and add the alternative backend
 // to a backend's alternative list.
 // If no match is found, then the serverless backend is deleted.
-func mergeAlternativeBackends(ing *extensions.Ingress, upstreams map[string]*ingress.Backend,
+func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingress.Backend,
 	servers map[string]*ingress.Server) {
 
 	// merge catch-all alternative backends
@@ -1008,13 +1128,15 @@ func mergeAlternativeBackends(ing *extensions.Ingress, upstreams map[string]*ing
 
 		ups := upstreams[upsName]
 
-		defLoc := servers[defServerName].Locations[0]
+		for _, defLoc := range servers[defServerName].Locations {
+			if !upstreams[defLoc.Backend].NoServer {
+				glog.Infof("matching backend %v found for alternative backend %v",
+					upstreams[defLoc.Backend].Name, ups.Name)
 
-		glog.Infof("matching backend %v found for alternative backend %v",
-			upstreams[defLoc.Backend].Name, ups.Name)
-
-		upstreams[defLoc.Backend].AlternativeBackends =
-			append(upstreams[defLoc.Backend].AlternativeBackends, ups.Name)
+				upstreams[defLoc.Backend].AlternativeBackends =
+					append(upstreams[defLoc.Backend].AlternativeBackends, ups.Name)
+			}
+		}
 	}
 
 	for _, rule := range ing.Spec.Rules {
@@ -1054,7 +1176,7 @@ func mergeAlternativeBackends(ing *extensions.Ingress, upstreams map[string]*ing
 
 // extractTLSSecretName returns the name of the Secret containing a SSL
 // certificate for the given host name, or an empty string.
-func extractTLSSecretName(host string, ing *extensions.Ingress,
+func extractTLSSecretName(host string, ing *ingress.Ingress,
 	getLocalSSLCert func(string) (*ingress.SSLCert, error)) string {
 
 	if ing == nil {

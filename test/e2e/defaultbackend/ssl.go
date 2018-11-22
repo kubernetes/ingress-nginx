@@ -44,7 +44,7 @@ var _ = framework.IngressNginxDescribe("Default backend - SSL", func() {
 				InsecureSkipVerify: true,
 			}).End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
 
 		for _, pc := range resp.TLS.PeerCertificates {
@@ -59,7 +59,7 @@ var _ = framework.IngressNginxDescribe("Default backend - SSL", func() {
 				InsecureSkipVerify: true,
 			}).
 			Set("Host", "foo.bar.com").End()
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(len(resp.TLS.PeerCertificates)).Should(BeNumerically("==", 1))
 		for _, pc := range resp.TLS.PeerCertificates {
 			Expect(pc.Issuer.CommonName).Should(Equal("Kubernetes Ingress Controller Fake Certificate"))

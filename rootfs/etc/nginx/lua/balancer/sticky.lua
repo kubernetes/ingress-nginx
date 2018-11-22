@@ -17,6 +17,8 @@ function _M.new(self, backend)
     cookie_name = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["name"] or "route",
     cookie_expires = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["expires"],
     cookie_max_age = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["maxage"],
+    cookie_path = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["path"],
+    cookie_locations = backend["sessionAffinityConfig"]["cookieSessionAffinity"]["locations"],
     digest_func = digest_func,
     traffic_shaping_policy = backend.trafficShapingPolicy,
     alternative_backends = backend.alternativeBackends,
@@ -41,10 +43,15 @@ local function set_cookie(self, value)
     ngx.log(ngx.ERR, err)
   end
 
+  local cookie_path = self.cookie_path
+  if not cookie_path then
+    cookie_path = ngx.var.location_path
+  end
+
   local cookie_data = {
     key = self.cookie_name,
     value = value,
-    path = ngx.var.location_path,
+    path = cookie_path,
     domain = ngx.var.host,
     httponly = true,
   }
@@ -75,7 +82,18 @@ function _M.balance(self)
   if not key then
     local random_str = string.format("%s.%s", ngx.now(), ngx.worker.pid())
     key = encrypted_endpoint_string(self, random_str)
-    set_cookie(self, key)
+
+    if self.cookie_locations then
+      local locs = self.cookie_locations[ngx.var.host]
+      if locs ~= nil then
+        for _, path in pairs(locs) do
+          if ngx.var.location_path == path then
+            set_cookie(self, key)
+            break
+          end
+        end
+      end
+    end
   end
 
   return self.instance:find(key)

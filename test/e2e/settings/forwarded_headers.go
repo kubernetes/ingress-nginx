@@ -63,7 +63,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 			Set("X-Forwarded-Host", "myhost").
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=myhost")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-host=myhost")))
@@ -92,7 +92,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 			Set("X-Forwarded-Host", "myhost").
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("host=forwarded-headers")))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("x-forwarded-port=80")))

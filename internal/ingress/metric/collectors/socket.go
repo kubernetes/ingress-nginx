@@ -30,11 +30,10 @@ import (
 )
 
 type upstream struct {
-	Endpoint       string  `json:"endpoint"`
 	Latency        float64 `json:"upstreamLatency"`
 	ResponseLength float64 `json:"upstreamResponseLength"`
 	ResponseTime   float64 `json:"upstreamResponseTime"`
-	Status         string  `json:"upstreamStatus"`
+	//Status         string  `json:"upstreamStatus"`
 }
 
 type socketData struct {
@@ -87,8 +86,6 @@ var (
 
 		"method",
 		"path",
-
-		//		"endpoint",
 
 		"namespace",
 		"ingress",
@@ -223,11 +220,10 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		}
 
 		requestLabels := prometheus.Labels{
-			"host":   stats.Host,
-			"status": stats.Status,
-			"method": stats.Method,
-			"path":   stats.Path,
-			//"endpoint":  stats.Endpoint,
+			"host":      stats.Host,
+			"status":    stats.Status,
+			"method":    stats.Method,
+			"path":      stats.Path,
 			"namespace": stats.Namespace,
 			"ingress":   stats.Ingress,
 			"service":   stats.Service,

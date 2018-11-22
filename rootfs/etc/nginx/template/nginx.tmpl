@@ -544,6 +544,9 @@ http {
         {{ end }}
         server_name {{ $hostname }};
 
+        {{/* default value of proxy_host is the name and port of a proxied server as specified in the proxy_pass directive */}}
+        set $proxy_host {{ $hostname }};
+
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
            return 403;
@@ -673,6 +676,7 @@ http {
 
             # this should be equals to configuration_data dict
             client_max_body_size                    10m;
+            client_body_buffer_size                 10m;
             proxy_buffering                         off;
 
             content_by_lua_block {
@@ -695,6 +699,40 @@ http {
 }
 
 stream {
+    lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;";
+    lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
+
+    lua_shared_dict tcp_udp_configuration_data 5M;
+
+    init_by_lua_block {
+        require("resty.core")
+        collectgarbage("collect")
+
+        -- init modules
+        local ok, res
+
+        ok, res = pcall(require, "tcp_udp_configuration")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          tcp_udp_configuration = res
+          tcp_udp_configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
+        end
+
+        ok, res = pcall(require, "tcp_udp_balancer")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          tcp_udp_balancer = res
+        end
+    }
+
+    init_worker_by_lua_block {
+        tcp_udp_balancer.init_worker()
+    }
+
+    lua_add_variable $proxy_upstream_name;
+
     log_format log_stream {{ $cfg.LogFormatStream }};
 
     {{ if $cfg.DisableAccessLog }}
@@ -704,6 +742,74 @@ stream {
     {{ end }}
 
     error_log  {{ $cfg.ErrorLogPath }};
+
+    upstream upstream_balancer {
+        server 0.0.0.1:1234; # placeholder
+
+        balancer_by_lua_block {
+          tcp_udp_balancer.balance()
+        }
+    }
+
+    server {
+        listen unix:/tmp/ingress-stream.sock;
+
+        content_by_lua_block {
+          tcp_udp_configuration.call()
+        }
+    }
+
+    # TCP services
+    {{ range $tcpServer := .TCPBackends }}
+    server {
+        preread_by_lua_block {
+            ngx.var.proxy_upstream_name="tcp-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }}";
+        }
+
+        {{ range $address := $all.Cfg.BindAddressIpv4 }}
+        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
+        {{ else }}
+        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
+        {{ end }}
+        {{ if $IsIPV6Enabled }}
+        {{ range $address := $all.Cfg.BindAddressIpv6 }}
+        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
+        {{ else }}
+        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
+        {{ end }}
+        {{ end }}
+        proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
+        proxy_pass              upstream_balancer;
+        {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
+        proxy_protocol          on;
+        {{ end }}
+    }
+    {{ end }}
+
+    # UDP services
+    {{ range $udpServer := .UDPBackends }}
+    server {
+        preread_by_lua_block {
+            ngx.var.proxy_upstream_name="udp-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }}";
+        }
+
+        {{ range $address := $all.Cfg.BindAddressIpv4 }}
+        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
+        {{ else }}
+        listen                  {{ $udpServer.Port }} udp;
+        {{ end }}
+        {{ if $IsIPV6Enabled }}
+        {{ range $address := $all.Cfg.BindAddressIpv6 }}
+        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
+        {{ else }}
+        listen                  [::]:{{ $udpServer.Port }} udp;
+        {{ end }}
+        {{ end }}
+        proxy_responses         {{ $cfg.ProxyStreamResponses }};
+        proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
+        proxy_pass              upstream_balancer;
+    }
+    {{ end }}
 }
 
 {{/* definition of templates to avoid repetitions */}}
@@ -938,7 +1044,7 @@ stream {
                 waf:set_option("mode", "{{ $location.LuaRestyWAF.Mode }}")
                 waf:set_option("storage_zone", "waf_storage")
 
-                {{ if $location.LuaRestyWAF.AllowUnknownContentTypes }} 
+                {{ if $location.LuaRestyWAF.AllowUnknownContentTypes }}
                 waf:set_option("allow_unknown_content_types", true)
                 {{ else }}
                 waf:set_option("allowed_content_types", { "text/html", "text/json", "application/json" })
@@ -1040,9 +1146,18 @@ stream {
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
             modsecurity on;
 
-            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
-            {{ if (or $location.ModSecurity.OWASPRules $all.Cfg.EnableOWASPCoreRules) }}
+            {{ if $location.ModSecurity.Snippet }}
+            modsecurity_rules '
+                {{ $location.ModSecurity.Snippet }}
+            ';
+            {{ else if (or $location.ModSecurity.OWASPRules $all.Cfg.EnableOWASPCoreRules) }}
             modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
+            {{ else }}
+            modsecurity_rules_file /etc/nginx/modsecurity/modsecurity.conf;
+            {{ end }}
+
+            {{ if (not (empty $location.ModSecurity.TransactionID)) }}
+            modsecurity_transaction_id "{{ $location.ModSecurity.TransactionID }}";
             {{ end }}
 
             {{ if (not (empty $location.ModSecurity.TransactionID)) }}

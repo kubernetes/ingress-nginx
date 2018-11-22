@@ -71,6 +71,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieName)] = "INGRESSCOOKIE"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieExpires)] = "4500"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieMaxAge)] = "3000"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookiePath)] = "/foo"
 	ing.SetAnnotations(data)
 
 	affin, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -80,22 +81,26 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	}
 
 	if nginxAffinity.Type != "cookie" {
-		t.Errorf("expected cookie as sticky-type but returned %v", nginxAffinity.Type)
+		t.Errorf("expected cookie as affinity but returned %v", nginxAffinity.Type)
 	}
 
 	if nginxAffinity.Cookie.Hash != "md5" {
-		t.Errorf("expected md5 as sticky-hash but returned %v", nginxAffinity.Cookie.Hash)
+		t.Errorf("expected md5 as session-cookie-hash but returned %v", nginxAffinity.Cookie.Hash)
 	}
 
 	if nginxAffinity.Cookie.Name != "INGRESSCOOKIE" {
-		t.Errorf("expected route as sticky-name but returned %v", nginxAffinity.Cookie.Name)
+		t.Errorf("expected route as session-cookie-name but returned %v", nginxAffinity.Cookie.Name)
 	}
 
 	if nginxAffinity.Cookie.Expires != "4500" {
-		t.Errorf("expected 1h as sticky-expires but returned %v", nginxAffinity.Cookie.Expires)
+		t.Errorf("expected 1h as session-cookie-expires but returned %v", nginxAffinity.Cookie.Expires)
 	}
 
 	if nginxAffinity.Cookie.MaxAge != "3000" {
-		t.Errorf("expected 3000 as sticky-max-age but returned %v", nginxAffinity.Cookie.MaxAge)
+		t.Errorf("expected 3000 as session-cookie-max-age but returned %v", nginxAffinity.Cookie.MaxAge)
+	}
+
+	if nginxAffinity.Cookie.Path != "/foo" {
+		t.Errorf("expected /foo as session-cookie-path but returned %v", nginxAffinity.Cookie.Path)
 	}
 }
