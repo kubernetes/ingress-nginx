@@ -607,6 +607,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
+      Exposing TCP and UDP services
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
       Regular expressions in paths
     </a>
@@ -680,13 +692,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-11" type="checkbox" id="nav-3-11">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-12" type="checkbox" id="nav-3-12">
     
-    <label class="md-nav__link" for="nav-3-11">
+    <label class="md-nav__link" for="nav-3-12">
       Third party addons
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-3-11">
+      <label class="md-nav__title" for="nav-3-12">
         Third party addons
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1206,6 +1218,14 @@
 <tr>
 <td><code class="codehilite">--sync-rate-limit float32</code></td>
 <td>Define the sync frequency upper limit (default 0.3)</td>
+</tr>
+<tr>
+<td><code class="codehilite">--tcp-services-configmap string</code></td>
+<td>Name of the ConfigMap containing the definition of the TCP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port number or name. TCP ports 80 and 443 are reserved by the controller for servicing HTTP traffic.</td>
+</tr>
+<tr>
+<td><code class="codehilite">--udp-services-configmap string</code></td>
+<td>Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number.</td>
 </tr>
 <tr>
 <td><code class="codehilite">--update-status</code></td>

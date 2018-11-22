@@ -609,6 +609,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../exposing-tcp-udp-services/" title="Exposing TCP and UDP services" class="md-nav__link">
+      Exposing TCP and UDP services
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../../ingress-path-matching/" title="Regular expressions in paths" class="md-nav__link">
       Regular expressions in paths
     </a>
@@ -682,13 +694,13 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-11" type="checkbox" id="nav-3-11">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3-12" type="checkbox" id="nav-3-12">
     
-    <label class="md-nav__link" for="nav-3-11">
+    <label class="md-nav__link" for="nav-3-12">
       Third party addons
     </label>
     <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
-      <label class="md-nav__title" for="nav-3-11">
+      <label class="md-nav__title" for="nav-3-12">
         Third party addons
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -1077,7 +1089,7 @@
 <span class="x">    &#39;[$the_real_ip] - $remote_user [$time_local] &quot;$request&quot; &#39;</span>
 <span class="x">    &#39;$status $body_bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;</span>
 <span class="x">    &#39;$request_length $request_time [$proxy_upstream_name] $upstream_addr &#39;</span>
-<span class="x">    &#39;$upstream_response_length $upstream_response_time $upstream_status&#39;;</span>
+<span class="x">    &#39;$upstream_response_length $upstream_response_time $upstream_status $req_id&#39;;</span>
 </pre></div>
 
 <table>
@@ -1155,6 +1167,10 @@
 <tr>
 <td><code class="codehilite">$upstream_status</code></td>
 <td>status code of the response obtained from the upstream server</td>
+</tr>
+<tr>
+<td><code class="codehilite">$req_id</code></td>
+<td>the randomly generated ID of the request</td>
 </tr>
 </tbody>
 </table>
