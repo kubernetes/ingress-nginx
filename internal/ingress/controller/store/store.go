@@ -74,10 +74,7 @@ type Storer interface {
 	GetIngress(key string) (*extensions.Ingress, error)
 
 	// ListIngresses returns a list of all Ingresses in the store.
-	ListIngresses() []*extensions.Ingress
-
-	// GetIngressAnnotations returns the parsed annotations of an Ingress matching key.
-	GetIngressAnnotations(key string) (*annotations.Ingress, error)
+	ListIngresses() []*ingress.Ingress
 
 	// GetLocalSSLCert returns the local copy of a SSLCert
 	GetLocalSSLCert(name string) (*ingress.SSLCert, error)
@@ -218,7 +215,7 @@ type k8sStore struct {
 
 // New creates a new object store to be used in the ingress controller
 func New(checkOCSP bool,
-	namespace, configmap, defaultSSLCertificate string,
+	namespace, configmap, tcp, udp, defaultSSLCertificate string,
 	resyncPeriod time.Duration,
 	client clientset.Interface,
 	fs file.Filesystem,
@@ -473,7 +470,7 @@ func New(checkOCSP bool,
 			cm := obj.(*corev1.ConfigMap)
 			key := k8s.MetaNamespaceKey(cm)
 			// updates to configuration configmaps can trigger an update
-			if key == configmap {
+			if key == configmap || key == tcp || key == udp {
 				recorder.Eventf(cm, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("ConfigMap %v", key))
 				if key == configmap {
 					store.setConfig(cm)
@@ -489,7 +486,7 @@ func New(checkOCSP bool,
 				cm := cur.(*corev1.ConfigMap)
 				key := k8s.MetaNamespaceKey(cm)
 				// updates to configuration configmaps can trigger an update
-				if key == configmap {
+				if key == configmap || key == tcp || key == udp {
 					recorder.Eventf(cm, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("ConfigMap %v", key))
 					if key == configmap {
 						store.setConfig(cm)
@@ -644,13 +641,20 @@ func (s k8sStore) GetIngress(key string) (*extensions.Ingress, error) {
 }
 
 // ListIngresses returns the list of Ingresses
-func (s k8sStore) ListIngresses() []*extensions.Ingress {
+func (s k8sStore) ListIngresses() []*ingress.Ingress {
 	// filter ingress rules
-	var ingresses []*extensions.Ingress
+	var ingresses []*ingress.Ingress
 	for _, item := range s.listers.Ingress.List() {
 		ing := item.(*extensions.Ingress)
 		if !class.IsValid(ing) {
 			continue
+		}
+
+		ingKey := k8s.MetaNamespaceKey(ing)
+		anns, err := s.getIngressAnnotations(ingKey)
+		if err != nil {
+			glog.Errorf("Error getting Ingress annotations %q: %v", ingKey, err)
+
 		}
 
 		for ri, rule := range ing.Spec.Rules {
@@ -665,14 +669,17 @@ func (s k8sStore) ListIngresses() []*extensions.Ingress {
 			}
 		}
 
-		ingresses = append(ingresses, ing)
+		ingresses = append(ingresses, &ingress.Ingress{
+			Ingress:           *ing,
+			ParsedAnnotations: anns,
+		})
 	}
 
 	return ingresses
 }
 
-// GetIngressAnnotations returns the parsed annotations of an Ingress matching key.
-func (s k8sStore) GetIngressAnnotations(key string) (*annotations.Ingress, error) {
+// getIngressAnnotations returns the parsed annotations of an Ingress matching key.
+func (s k8sStore) getIngressAnnotations(key string) (*annotations.Ingress, error) {
 	ia, err := s.listers.IngressAnnotation.ByKey(key)
 	if err != nil {
 		return &annotations.Ingress{}, err

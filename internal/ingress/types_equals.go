@@ -53,6 +53,41 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
+	if len(c1.TCPEndpoints) != len(c2.TCPEndpoints) {
+		return false
+	}
+	for _, tcp1 := range c1.TCPEndpoints {
+		found := false
+		for _, tcp2 := range c2.TCPEndpoints {
+			if (&tcp1).Equal(&tcp2) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	if len(c1.UDPEndpoints) != len(c2.UDPEndpoints) {
+		return false
+	}
+	for _, udp1 := range c1.UDPEndpoints {
+		found := false
+		for _, udp2 := range c2.UDPEndpoints {
+			if (&udp1).Equal(&udp2) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	if len(c1.PassthroughBackends) != len(c2.PassthroughBackends) {
+		return false
+	}
 	for _, ptb1 := range c1.PassthroughBackends {
 		found := false
 		for _, ptb2 := range c2.PassthroughBackends {
@@ -186,6 +221,9 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 		return false
 	}
 	if csa1.Hash != csa2.Hash {
+		return false
+	}
+	if csa1.Path != csa2.Path {
 		return false
 	}
 

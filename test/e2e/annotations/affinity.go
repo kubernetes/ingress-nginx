@@ -68,7 +68,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		match := md5Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
 		Expect(len(match)).Should(BeNumerically("==", 1))
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
 	})
@@ -97,7 +97,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		match := sha1Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
 		Expect(len(match)).Should(BeNumerically("==", 1))
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
 	})
@@ -122,7 +122,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/something"))
 	})
@@ -179,7 +179,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/something;"))
 
@@ -188,7 +188,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/somewhereelese;"))
 	})
@@ -215,12 +215,109 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		local, _ := time.LoadLocation("GMT")
 		duration, _ := time.ParseDuration("48h")
 		expected := time.Date(1970, time.January, 1, 0, 0, 0, 0, local).Add(duration).Format("Mon, 02-Jan-06 15:04:05 MST")
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(fmt.Sprintf("Expires=%s", expected)))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Max-Age=259200"))
+	})
+
+	It("should work with use-regex annotation and session-cookie-path", func() {
+		host := "cookie.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":            "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+			"nginx.ingress.kubernetes.io/use-regex":           "true",
+			"nginx.ingress.kubernetes.io/session-cookie-path": "/foo/bar",
+		}
+
+		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL+"/foo/bar").
+			Set("Host", host).
+			End()
+
+		md5Regex := regexp.MustCompile("SERVERID=[0-9a-f]{32}")
+		match := md5Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
+		Expect(len(match)).Should(BeNumerically("==", 1))
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/foo/bar"))
+	})
+
+	It("should warn user when use-regex is true and session-cookie-path is not set", func() {
+		host := "cookie.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity":            "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "SERVERID",
+			"nginx.ingress.kubernetes.io/use-regex":           "true",
+		}
+
+		ing := framework.NewSingleIngress(host, "/foo/.*", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL+"/foo/bar").
+			Set("Host", host).
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		logs, err := f.NginxLogs()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(logs).To(ContainSubstring(`session-cookie-path should be set when use-regex is true`))
+	})
+
+	It("should not set affinity across all server locations when using separate ingresses", func() {
+		host := "cookie.foo.com"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/affinity": "cookie",
+		}
+		ing1 := framework.NewSingleIngress("ingress1", "/foo/bar", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing1)
+
+		ing2 := framework.NewSingleIngress("ingress2", "/foo", host, f.IngressController.Namespace, "http-svc", 80, &map[string]string{})
+		f.EnsureIngress(ing2)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, `location /foo/bar`) && strings.Contains(server, `location /foo`)
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL+"/foo").
+			Set("Host", host).
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(Equal(""))
+
+		resp, _, errs = gorequest.New().
+			Get(f.IngressController.HTTPURL+"/foo/bar").
+			Set("Host", host).
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/foo/bar"))
 	})
 })

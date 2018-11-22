@@ -158,7 +158,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 ```
 
 !!! tip
-    For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md/).
+    For extended notes regarding deployments on bare-metal, see [Bare-metal considerations](./baremetal.md).
 
 ### Verify installation
 

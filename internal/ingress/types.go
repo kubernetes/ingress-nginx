@@ -20,6 +20,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
@@ -54,6 +55,12 @@ type Configuration struct {
 	Backends []*Backend `json:"backends,omitempty"`
 	// Servers save the website config
 	Servers []*Server `json:"servers,omitempty"`
+	// TCPEndpoints contain endpoints for tcp streams handled by this backend
+	// +optional
+	TCPEndpoints []L4Service `json:"tcpEndpoints,omitempty"`
+	// UDPEndpoints contain endpoints for udp streams handled by this backend
+	// +optional
+	UDPEndpoints []L4Service `json:"udpEndpoints,omitempty"`
 	// PassthroughBackends contains the backends used for SSL passthrough.
 	// It contains information about the associated Server Name Indication (SNI).
 	// +optional
@@ -137,6 +144,7 @@ type CookieSessionAffinity struct {
 	Expires   string              `json:"expires,omitempty"`
 	MaxAge    string              `json:"maxage,omitempty"`
 	Locations map[string][]string `json:"locations,omitempty"`
+	Path      string              `json:"path,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
@@ -202,7 +210,7 @@ type Location struct {
 	// uses the default backend.
 	IsDefBackend bool `json:"isDefBackend"`
 	// Ingress returns the ingress from which this location was generated
-	Ingress *extensions.Ingress `json:"ingress"`
+	Ingress *Ingress `json:"ingress"`
 	// Backend describes the name of the backend to use.
 	Backend string `json:"backend"`
 	// Service describes the referenced services from the ingress
@@ -323,4 +331,10 @@ type L4Backend struct {
 type ProxyProtocol struct {
 	Decode bool `json:"decode"`
 	Encode bool `json:"encode"`
+}
+
+// Ingress holds the definition of an Ingress plus its annotations
+type Ingress struct {
+	extensions.Ingress
+	ParsedAnnotations *annotations.Ingress
 }

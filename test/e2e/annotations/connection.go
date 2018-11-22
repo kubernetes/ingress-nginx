@@ -57,7 +57,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Connection", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(fmt.Sprintf("connection=keep-alive")))
 	})

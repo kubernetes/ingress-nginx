@@ -59,7 +59,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Approot", func() {
 			Set("Host", host).
 			End()
 
-		Expect(len(errs)).Should(BeNumerically("==", 0))
+		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusFound))
 		Expect(resp.Header.Get("Location")).Should(Equal("http://approot.bar.com/foo"))
 	})

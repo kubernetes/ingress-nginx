@@ -70,6 +70,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
@@ -98,7 +99,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/enable-modsecurity](#modsecurity)|bool|
 |[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
 |[nginx.ingress.kubernetes.io/modsecurity-transaction-id](#modsecurity)|string|
-
+|[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
 
 ### Canary
 
@@ -136,6 +137,9 @@ If the Application Root is exposed in a different path and needs to be redirecte
 The annotation `nginx.ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is `cookie`.
 
+!!! attention
+    If more than one Ingress is defined for a host and at least one Ingress uses `nginx.ingress.kubernetes.io/affinity: cookie`, then only paths on the Ingress using `nginx.ingress.kubernetes.io/affinity` will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server. 
+
 !!! example
     Please check the [affinity](../../examples/affinity/cookie/README.md) example.
 
@@ -144,6 +148,8 @@ The only affinity type available for NGINX is `cookie`.
 If you use the ``cookie`` affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation `nginx.ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'INGRESSCOOKIE'.
 
 In case of NGINX the annotation `nginx.ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to hash the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
+
+The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.  
 
 !!! attention
     The `index` option is not an actual hash; an in-memory index is used instead, which has less overhead.
@@ -649,6 +655,7 @@ It can be enabled using the following annotation:
 ```yaml
 nginx.ingress.kubernetes.io/enable-modsecurity: "true"
 ```
+ModSecurity will run in "Detection-Only" mode using the [recommended configuration](https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended).
 
 You can enable the [OWASP Core Rule Set](https://www.modsecurity.org/CRS/Documentation/) by
 setting the following annotation:
@@ -659,6 +666,23 @@ nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
 You can pass transactionIDs from nginx by setting up the following:
 ```yaml
 nginx.ingress.kubernetes.io/modsecurity-transaction-id: "$request_id"
+```
+
+You can also add your own set of modsecurity rules via a snippet:
+```yaml
+nginx.ingress.kubernetes.io/modsecurity-snippet: |
+SecRuleEngine On
+SecDebugLog /tmp/modsec_debug.log
+```
+
+Note: If you use both `enable-owasp-core-rules` and `modsecurity-snippet` annotations together, only the
+`modsecurity-snippet` will take effect. If you wish to include the [OWASP Core Rule Set](https://www.modsecurity.org/CRS/Documentation/) or 
+[recommended configuration](https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended) simply use the include
+statement:
+```yaml
+nginx.ingress.kubernetes.io/modsecurity-snippet: |
+Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
+Include /etc/nginx/modsecurity/modsecurity.conf
 ```
 
 ### InfluxDB
@@ -698,6 +722,9 @@ nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 ```
 
 ### Use Regex
+
+!!! attention
+When using this annotation with the NGINX annotation `nginx.ingress.kubernetes.io/affinity` of type `cookie`,  `nginx.ingress.kubernetes.io/session-cookie-path` must be also set; Session cookie paths do not support regex.  
 
 Using the `nginx.ingress.kubernetes.io/use-regex` annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is `false`.
 
