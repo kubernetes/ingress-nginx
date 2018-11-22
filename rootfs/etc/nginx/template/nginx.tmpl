@@ -1159,10 +1159,6 @@ stream {
             {{ if (not (empty $location.ModSecurity.TransactionID)) }}
             modsecurity_transaction_id "{{ $location.ModSecurity.TransactionID }}";
             {{ end }}
-
-            {{ if (not (empty $location.ModSecurity.TransactionID)) }}
-            modsecurity_transaction_id "{{ $location.ModSecurity.TransactionID }}";
-            {{ end }}
             {{ end }}
 
             {{ if isLocationAllowed $location }}
