@@ -50,6 +50,7 @@ nav:
       - Command line arguments: "user-guide/cli-arguments.md"
       - Custom errors: "user-guide/custom-errors.md"
       - Default backend: "user-guide/default-backend.md"
+      - Exposing TCP and UDP services: "user-guide/exposing-tcp-udp-services.md"
       - Regular expressions in paths: user-guide/ingress-path-matching.md
       - External Articles: "user-guide/external-articles.md"
       - Miscellaneous: "user-guide/miscellaneous.md"
