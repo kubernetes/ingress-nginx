@@ -3,7 +3,7 @@ describe("Balancer chash", function()
 
   describe("balance()", function()
     it("uses correct key for given backend", function()
-      _G.ngx = { var = { request_uri = "/alma/armud" }}
+      _G.ngx.var = { request_uri = "/alma/armud" }
 
       local resty_chash = package.loaded["resty.chash"]
       resty_chash.new = function(self, nodes)

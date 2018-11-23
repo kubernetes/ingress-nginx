@@ -42,14 +42,8 @@ function _M.md5_digest(message)
   return hash_digest(resty_md5, message)
 end
 
--- given an Nginx variable i.e $request_uri
--- it returns value of ngx.var[request_uri]
-function _M.lua_ngx_var(ngx_var)
-  local var_name = string_sub(ngx_var, 2)
-  if var_name:match("^%d+$") then
-    var_name = tonumber(var_name)
-  end
-
+function _M.lua_ngx_var(var_name)
+  var_name = tonumber(var_name) or var_name
   return ngx.var[var_name]
 end
 

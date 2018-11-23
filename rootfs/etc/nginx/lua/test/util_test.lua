@@ -21,15 +21,15 @@ describe("lua_ngx_var", function()
     package.loaded["monitor"] = nil
   end)
 
-  it("returns value of nginx var by key", function()
-    assert.equal("192.168.1.1", util.lua_ngx_var("$remote_addr"))
+  it("returns value of nginx var", function()
+    assert.equal("192.168.1.1", util.lua_ngx_var("remote_addr"))
   end)
 
-  it("returns value of nginx var when key is number", function()
-    assert.equal("nginx/regexp/1/group/capturing", util.lua_ngx_var("$1"))
+  it("returns value of nginx var when it is number", function()
+    assert.equal("nginx/regexp/1/group/capturing", util.lua_ngx_var("1"))
   end)
 
   it("returns nil when variable is not defined", function()
-    assert.equal(nil, util.lua_ngx_var("$foo_bar"))
+    assert.equal(nil, util.lua_ngx_var("foo_bar"))
   end)
 end)
