@@ -12,6 +12,10 @@ function _M.get_backends_data()
   return configuration_data:get("backends")
 end
 
+function _M.get_general_data()
+  return configuration_data:get("general")
+end
+
 local function fetch_request_body()
   ngx.req.read_body()
   local body = ngx.req.get_body_data()
@@ -80,6 +84,31 @@ local function handle_servers()
   ngx.status = ngx.HTTP_CREATED
 end
 
+local function handle_general()
+  if ngx.var.request_method == "GET" then
+    ngx.status = ngx.HTTP_OK
+    ngx.print(_M.get_general_data())
+    return
+  end
+
+  if ngx.var.request_method ~= "POST" then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Only POST and GET requests are allowed!")
+    return
+  end
+
+  local config = fetch_request_body()
+
+  local success, err = configuration_data:safe_set("general", config)
+  if not success then
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    ngx.log(ngx.ERR, "error setting general config: " .. tostring(err))
+    return
+  end
+
+  ngx.status = ngx.HTTP_CREATED
+end
+
 function _M.call()
   if ngx.var.request_method ~= "POST" and ngx.var.request_method ~= "GET" then
     ngx.status = ngx.HTTP_BAD_REQUEST
@@ -89,6 +118,11 @@ function _M.call()
 
   if ngx.var.request_uri == "/configuration/servers" then
     handle_servers()
+    return
+  end
+
+  if ngx.var.request_uri == "/configuration/general" then
+    handle_general()
     return
   end
 
