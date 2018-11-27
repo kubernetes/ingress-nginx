@@ -27,6 +27,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
+|[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
@@ -388,6 +389,14 @@ nginx.ingress.kubernetes.io/auth-snippet: |
 
 !!! example
     Please check the [external-auth](../../examples/auth/external-auth/README.md) example.
+
+#### Global External Authentication
+
+By default the controller redirects all requests to an existing service that provides authentication if `global-auth-url` is set in the NGINX ConfigMap. If you want to disable this behavior for that ingress, you can use ssl-redirect: "false" in the NGINX ConfigMap.
+`nginx.ingress.kubernetes.io/enable-global-auth`:
+   indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to `"true"`.
+
+!!! note For more information please see [global-auth-url](./configmap.md#global-auth-url).
 
 ### Rate limiting
 

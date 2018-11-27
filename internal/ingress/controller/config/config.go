@@ -563,6 +563,11 @@ type Configuration struct {
 	// should not get authenticated
 	NoAuthLocations string `json:"no-auth-locations"`
 
+	// GlobalExternalAuth indicates the access to all locations requires
+	// authentication using an external provider
+	// +optional
+	GlobalExternalAuth GlobalExternalAuth `json:"global-external-auth"`
+
 	// DisableLuaRestyWAF disables lua-resty-waf globally regardless
 	// of whether there's an ingress that has enabled the WAF using annotation
 	DisableLuaRestyWAF bool `json:"disable-lua-resty-waf"`
@@ -592,11 +597,13 @@ func NewDefault() Configuration {
 	defBlockEntity := make([]string, 0)
 	defNginxStatusIpv4Whitelist := make([]string, 0)
 	defNginxStatusIpv6Whitelist := make([]string, 0)
+	defResponseHeaders := make([]string, 0)
 
 	defIPCIDR = append(defIPCIDR, "0.0.0.0/0")
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
 	defProxyDeadlineDuration := time.Duration(5) * time.Second
+	degGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", append(defResponseHeaders, ""), "", ""}
 
 	cfg := Configuration{
 		AllowBackendServerHeader:         false,
@@ -715,6 +722,7 @@ func NewDefault() Configuration {
 		SyslogPort:                   514,
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",
+		GlobalExternalAuth:           degGlobalExternalAuth,
 	}
 
 	if klog.V(5) {
@@ -771,4 +779,17 @@ type ListenPorts struct {
 	Health   int
 	Default  int
 	SSLProxy int
+}
+
+// GlobalExternalAuth describe external authentication configuration for the
+// NGINX Ingress controller
+type GlobalExternalAuth struct {
+	URL string `json:"url"`
+	// Host contains the hostname defined in the URL
+	Host            string   `json:"host"`
+	SigninURL       string   `json:"signinUrl"`
+	Method          string   `json:"method"`
+	ResponseHeaders []string `json:"responseHeaders,omitempty"`
+	RequestRedirect string   `json:"requestRedirect"`
+	AuthSnippet     string   `json:"authSnippet"`
 }

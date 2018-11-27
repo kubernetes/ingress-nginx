@@ -18,6 +18,7 @@ package authreq
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 	"testing"
 
@@ -177,4 +178,39 @@ func TestHeaderAnnotations(t *testing.T) {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.headers, u.ResponseHeaders)
 		}
 	}
+}
+
+func TestParseStringToURL(t *testing.T) {
+	validURL := "http://bar.foo.com/external-auth"
+	validParsedURL, _ := url.Parse(validURL)
+
+	tests := []struct {
+		title   string
+		url     string
+		message string
+		parsed  *url.URL
+		expErr  bool
+	}{
+		{"empty", "", "url scheme is empty.", nil, true},
+		{"no scheme", "bar", "url scheme is empty.", nil, true},
+		{"invalid host", "http://", "url host is empty.", nil, true},
+		{"invalid host (multiple dots)", "http://foo..bar.com", "invalid url host.", nil, true},
+		{"valid URL", validURL, "", validParsedURL, false},
+	}
+
+	for _, test := range tests {
+
+		i, err := ParseStringToURL(test.url)
+		if test.expErr {
+			if err != test.message {
+				t.Errorf("%v: expected error \"%v\" but \"%v\" was returned", test.title, test.message, err)
+			}
+			continue
+		}
+
+		if i.String() != test.parsed.String() {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.parsed, i)
+		}
+	}
+
 }

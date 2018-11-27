@@ -152,6 +152,12 @@ The following table shows a configuration option's name, type, and the default v
 |[limit-req-status-code](#limit-req-status-code)|int|503|
 |[limit-conn-status-code](#limit-conn-status-code)|int|503|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
+|[global-auth-url](#global-auth-url)|string|""|
+|[global-auth-method](#global-auth-method)|string|""|
+|[global-auth-signin](#global-auth-signin)|string|""|
+|[global-auth-response-headers](#global-auth-response-headers)|string|""|
+|[global-auth-request-redirect](#global-auth-request-redirect)|string|""|
+|[global-auth-snippet](#global-auth-snippet)|string|""|
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
 |[block-cidrs](#block-cidrs)|[]string|""|
 |[block-user-agents](#block-user-agents)|[]string|""|
@@ -863,6 +869,45 @@ Sets the [status code to return in response to rejected connections](http://ngin
 
 A comma-separated list of locations on which http requests will never get redirected to their https counterpart.
 _**default:**_ "/.well-known/acme-challenge"
+
+## global-auth-url
+
+A url to an existing service that provides authentication for all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-url`.
+Locations that should not get authenticated can be listed using `no-auth-locations` See [no-auth-locations](#no-auth-locations). In addition, each service can be excluded from authentication via annotation `enable-global-auth` set to "false".
+_**default:**_ ""
+
+_References:_ [https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#external-authentication](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#external-authentication)
+
+## global-auth-method
+
+A HTTP method to use for an existing service that provides authentication for all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-method`.
+_**default:**_ ""
+
+## global-auth-signin
+
+Sets the location of the error page for an existing service that provides authentication for all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-signin`.
+_**default:**_ ""
+
+## global-auth-response-headers
+
+Sets the headers to pass to backend once authentication request completes. Applied to all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-response-headers`.
+_**default:**_ ""
+
+## global-auth-request-redirect
+
+Sets the X-Auth-Request-Redirect header value. Applied to all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-request-redirect`.
+_**default:**_ ""
+
+## global-auth-snippet
+
+Sets a custom snippet to use with external authentication. Applied to all the locations.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-request-redirect`.
+_**default:**_ ""
 
 ## no-auth-locations
 

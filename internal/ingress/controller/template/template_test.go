@@ -283,50 +283,105 @@ func TestBuildProxyPass(t *testing.T) {
 func TestBuildAuthLocation(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	actual := buildAuthLocation(invalidType)
+	actual := buildAuthLocation(invalidType, "")
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
 	authURL := "foo.com/auth"
+	globalAuthURL := "foo.com/global-auth"
 
 	loc := &ingress.Location{
 		ExternalAuth: authreq.Config{
 			URL: authURL,
 		},
-		Path: "/cat",
+		Path:             "/cat",
+		EnableGlobalAuth: true,
 	}
 
-	str := buildAuthLocation(loc)
-
 	encodedAuthURL := strings.Replace(base64.URLEncoding.EncodeToString([]byte(loc.Path)), "=", "", -1)
-	expected = fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
+	externalAuthPath := fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
 
-	if str != expected {
-		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, str)
+	testCases := []struct {
+		title                    string
+		authURL                  string
+		globalAuthURL            string
+		enableglobalExternalAuth bool
+		expected                 string
+	}{
+		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, externalAuthPath},
+		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, externalAuthPath},
+		{"authURL, empty globalAuthURL and enabled", authURL, "", true, externalAuthPath},
+		{"authURL, empty globalAuthURL and disabled", authURL, "", false, externalAuthPath},
+		{"globalAuthURL and enabled", "", globalAuthURL, true, externalAuthPath},
+		{"globalAuthURL and disabled", "", globalAuthURL, false, ""},
+		{"all empty and enabled", "", "", true, ""},
+		{"all empty and disabled", "", "", false, ""},
+	}
+
+	for _, testCase := range testCases {
+		loc.ExternalAuth.URL = testCase.authURL
+		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
+
+		str := buildAuthLocation(loc, testCase.globalAuthURL)
+		if str != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, str)
+		}
+	}
+}
+
+func TestShouldApplyGlobalAuth(t *testing.T) {
+
+	authURL := "foo.com/auth"
+	globalAuthURL := "foo.com/global-auth"
+
+	loc := &ingress.Location{
+		ExternalAuth: authreq.Config{
+			URL: authURL,
+		},
+		Path:             "/cat",
+		EnableGlobalAuth: true,
+	}
+
+	testCases := []struct {
+		title                    string
+		authURL                  string
+		globalAuthURL            string
+		enableglobalExternalAuth bool
+		expected                 bool
+	}{
+		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, false},
+		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, false},
+		{"authURL, empty globalAuthURL and enabled", authURL, "", true, false},
+		{"authURL, empty globalAuthURL and disabled", authURL, "", false, false},
+		{"globalAuthURL and enabled", "", globalAuthURL, true, true},
+		{"globalAuthURL and disabled", "", globalAuthURL, false, false},
+		{"all empty and enabled", "", "", true, false},
+		{"all empty and disabled", "", "", false, false},
+	}
+
+	for _, testCase := range testCases {
+		loc.ExternalAuth.URL = testCase.authURL
+		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
+
+		result := shouldApplyGlobalAuth(loc, testCase.globalAuthURL)
+		if result != testCase.expected {
+			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+		}
 	}
 }
 
 func TestBuildAuthResponseHeaders(t *testing.T) {
-	invalidType := &ingress.Ingress{}
-	expected := []string{}
-	actual := buildAuthResponseHeaders(invalidType)
-
-	if !reflect.DeepEqual(expected, actual) {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	loc := &ingress.Location{
-		ExternalAuth: authreq.Config{ResponseHeaders: []string{"h1", "H-With-Caps-And-Dashes"}},
-	}
-	headers := buildAuthResponseHeaders(loc)
-	expected = []string{
+	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
+	expected := []string{
 		"auth_request_set $authHeader0 $upstream_http_h1;",
 		"proxy_set_header 'h1' $authHeader0;",
 		"auth_request_set $authHeader1 $upstream_http_h_with_caps_and_dashes;",
 		"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
 	}
+
+	headers := buildAuthResponseHeaders(externalAuthResponseHeaders)
 
 	if !reflect.DeepEqual(expected, headers) {
 		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)

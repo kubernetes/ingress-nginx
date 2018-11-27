@@ -153,3 +153,121 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 }
+
+func TestGlobalExternalAuthURLParsing(t *testing.T) {
+	errorURL := ""
+	validURL := "http://bar.foo.com/external-auth"
+
+	testCases := map[string]struct {
+		url    string
+		expect string
+	}{
+		"no scheme":                    {"bar", errorURL},
+		"invalid host":                 {"http://", errorURL},
+		"invalid host (multiple dots)": {"http://foo..bar.com", errorURL},
+		"valid URL":                    {validURL, validURL},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-url": tc.url})
+		if cfg.GlobalExternalAuth.URL != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.URL)
+		}
+	}
+}
+
+func TestGlobalExternalAuthMethodParsing(t *testing.T) {
+	testCases := map[string]struct {
+		method string
+		expect string
+	}{
+		"invalid method": {"FOO", ""},
+		"valid method":   {"POST", "POST"},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-method": tc.method})
+		if cfg.GlobalExternalAuth.Method != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.Method)
+		}
+	}
+}
+
+func TestGlobalExternalAuthSigninParsing(t *testing.T) {
+	errorURL := ""
+	validURL := "http://bar.foo.com/auth-error-page"
+
+	testCases := map[string]struct {
+		signin string
+		expect string
+	}{
+		"no scheme":                    {"bar", errorURL},
+		"invalid host":                 {"http://", errorURL},
+		"invalid host (multiple dots)": {"http://foo..bar.com", errorURL},
+		"valid URL":                    {validURL, validURL},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-signin": tc.signin})
+		if cfg.GlobalExternalAuth.SigninURL != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.SigninURL)
+		}
+	}
+}
+
+func TestGlobalExternalAuthResponseHeadersParsing(t *testing.T) {
+	testCases := map[string]struct {
+		headers string
+		expect  []string
+	}{
+		"single header":                 {"h1", []string{"h1"}},
+		"nothing":                       {"", []string{}},
+		"spaces":                        {"  ", []string{}},
+		"two headers":                   {"1,2", []string{"1", "2"}},
+		"two headers and empty entries": {",1,,2,", []string{"1", "2"}},
+		"header with spaces":            {"1 2", []string{}},
+		"header with other bad symbols": {"1+2", []string{}},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-response-headers": tc.headers})
+
+		if !reflect.DeepEqual(cfg.GlobalExternalAuth.ResponseHeaders, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.ResponseHeaders)
+		}
+	}
+}
+
+func TestGlobalExternalAuthRequestRedirectParsing(t *testing.T) {
+	testCases := map[string]struct {
+		requestRedirect string
+		expect          string
+	}{
+		"empty":                  {"", ""},
+		"valid request redirect": {"http://foo.com/redirect-me", "http://foo.com/redirect-me"},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-request-redirect": tc.requestRedirect})
+		if cfg.GlobalExternalAuth.RequestRedirect != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.RequestRedirect)
+		}
+	}
+}
+
+func TestGlobalExternalAuthSnippetParsing(t *testing.T) {
+	testCases := map[string]struct {
+		authSnippet string
+		expect      string
+	}{
+		"empty":        {"", ""},
+		"auth snippet": {"proxy_set_header My-Custom-Header 42;", "proxy_set_header My-Custom-Header 42;"},
+	}
+
+	for n, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"global-auth-snippet": tc.authSnippet})
+		if cfg.GlobalExternalAuth.AuthSnippet != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.expect, cfg.GlobalExternalAuth.AuthSnippet)
+		}
+	}
+}
