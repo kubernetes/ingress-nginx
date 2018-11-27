@@ -205,8 +205,9 @@ func TestConfigureDynamically(t *testing.T) {
 	}}
 
 	commonConfig := &ingress.Configuration{
-		Backends: backends,
-		Servers:  servers,
+		Backends:            backends,
+		Servers:             servers,
+		ControllerPodsCount: 2,
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -221,12 +222,26 @@ func TestConfigureDynamically(t *testing.T) {
 			t.Fatal(err)
 		}
 		body := string(b)
-		if strings.Contains(body, "target") {
-			t.Errorf("unexpected target reference in JSON content: %v", body)
-		}
 
-		if !strings.Contains(body, "service") {
-			t.Errorf("service reference should be present in JSON content: %v", body)
+		switch r.URL.Path {
+		case "/configuration/backends":
+			{
+				if strings.Contains(body, "target") {
+					t.Errorf("unexpected target reference in JSON content: %v", body)
+				}
+
+				if !strings.Contains(body, "service") {
+					t.Errorf("service reference should be present in JSON content: %v", body)
+				}
+			}
+		case "/configuration/general":
+			{
+				if !strings.Contains(body, "controllerPodsCount") {
+					t.Errorf("controllerPodsCount should be present in JSON content: %v", body)
+				}
+			}
+		default:
+			t.Errorf("unknown request to %s", r.URL.Path)
 		}
 
 	}))
