@@ -18,6 +18,7 @@ package store
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -38,10 +39,19 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 func TestStore(t *testing.T) {
+	pod := &k8s.PodInfo{
+		Name:      "testpod",
+		Namespace: v1.NamespaceDefault,
+		Labels: map[string]string{
+			"pod-template-hash": "1234",
+		},
+	}
+
 	clientSet := fake.NewSimpleClientset()
 
 	t.Run("should return an error searching for non existing objects", func(t *testing.T) {
@@ -70,7 +80,8 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false)
+			false,
+			pod)
 
 		storer.Run(stopCh)
 
@@ -158,7 +169,8 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false)
+			false,
+			pod)
 
 		storer.Run(stopCh)
 
@@ -306,7 +318,8 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false)
+			false,
+			pod)
 
 		storer.Run(stopCh)
 
@@ -395,7 +408,8 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false)
+			false,
+			pod)
 
 		storer.Run(stopCh)
 
@@ -507,7 +521,8 @@ func TestStore(t *testing.T) {
 			clientSet,
 			fs,
 			updateCh,
-			false)
+			false,
+			pod)
 
 		storer.Run(stopCh)
 
@@ -727,17 +742,27 @@ func newStore(t *testing.T) *k8sStore {
 		t.Fatalf("error: %v", err)
 	}
 
+	pod := &k8s.PodInfo{
+		Name:      "ingress-1",
+		Namespace: v1.NamespaceDefault,
+		Labels: map[string]string{
+			"pod-template-hash": "1234",
+		},
+	}
+
 	return &k8sStore{
 		listers: &Lister{
 			// add more listers if needed
 			Ingress:           IngressLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
 			IngressAnnotation: IngressAnnotationsLister{cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)},
+			Pod:               PodLister{cache.NewStore(cache.MetaNamespaceKeyFunc)},
 		},
 		sslStore:         NewSSLCertTracker(),
 		filesystem:       fs,
 		updateCh:         channels.NewRingChannel(10),
 		mu:               new(sync.Mutex),
 		secretIngressMap: NewObjectRefMap(),
+		pod:              pod,
 	}
 }
 
@@ -941,5 +966,66 @@ func TestWriteSSLSessionTicketKey(t *testing.T) {
 		if test != encodedContent {
 			t.Fatalf("expected %v but returned %s", test, encodedContent)
 		}
+	}
+}
+
+func TestListControllerPods(t *testing.T) {
+	os.Setenv("POD_NAMESPACE", "testns")
+	os.Setenv("POD_NAME", "ingress-1")
+
+	s := newStore(t)
+	s.pod = &k8s.PodInfo{
+		Name:      "ingress-1",
+		Namespace: "testns",
+		Labels: map[string]string{
+			"pod-template-hash": "1234",
+		},
+	}
+
+	pod := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ingress-1",
+			Namespace: "testns",
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
+		},
+		Status: v1.PodStatus{
+			Phase: v1.PodRunning,
+		},
+	}
+	s.listers.Pod.Add(pod)
+
+	pod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ingress-2",
+			Namespace: "testns",
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
+		},
+		Status: v1.PodStatus{
+			Phase: v1.PodRunning,
+		},
+	}
+	s.listers.Pod.Add(pod)
+
+	pod = &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ingress-3",
+			Namespace: "testns",
+			Labels: map[string]string{
+				"pod-template-hash": "1234",
+			},
+		},
+		Status: v1.PodStatus{
+			Phase: v1.PodFailed,
+		},
+	}
+	s.listers.Pod.Add(pod)
+
+	pods := s.ListControllerPods()
+	if s := len(pods); s != 2 {
+		t.Errorf("Expected 1 controller Pods but got %v", s)
 	}
 }
