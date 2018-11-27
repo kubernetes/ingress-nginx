@@ -159,6 +159,7 @@ var (
 		"stripLocationModifer":         stripLocationModifer,
 		"buildCustomErrorDeps":         buildCustomErrorDeps,
 		"collectCustomErrorsPerServer": collectCustomErrorsPerServer,
+		"opentracingPropagateContext":  opentracingPropagateContext,
 	}
 )
 
@@ -953,4 +954,18 @@ func collectCustomErrorsPerServer(input interface{}) []int {
 	}
 
 	return uniqueCodes
+}
+
+func opentracingPropagateContext(loc interface{}) string {
+	location, ok := loc.(*ingress.Location)
+	if !ok {
+		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		return "opentracing_propagate_context"
+	}
+
+	if location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
+		return "opentracing_grpc_propagate_context"
+	}
+
+	return "opentracing_propagate_context"
 }

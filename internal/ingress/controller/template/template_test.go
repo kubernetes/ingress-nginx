@@ -834,3 +834,21 @@ func TestEscapeLiteralDollar(t *testing.T) {
 		t.Errorf("Expected %v but returned %v", expected, escapedPath)
 	}
 }
+
+func Test_opentracingPropagateContext(t *testing.T) {
+	tests := map[interface{}]string{
+		&ingress.Location{BackendProtocol: "HTTP"}:  "opentracing_propagate_context",
+		&ingress.Location{BackendProtocol: "HTTPS"}: "opentracing_propagate_context",
+		&ingress.Location{BackendProtocol: "GRPC"}:  "opentracing_grpc_propagate_context",
+		&ingress.Location{BackendProtocol: "GRPCS"}: "opentracing_grpc_propagate_context",
+		&ingress.Location{BackendProtocol: "AJP"}:   "opentracing_propagate_context",
+		"not a location": "opentracing_propagate_context",
+	}
+
+	for loc, expectedDirective := range tests {
+		actualDirective := opentracingPropagateContext(loc)
+		if actualDirective != expectedDirective {
+			t.Errorf("Expected %v but returned %v", expectedDirective, actualDirective)
+		}
+	}
+}
