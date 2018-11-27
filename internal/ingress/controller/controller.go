@@ -98,6 +98,8 @@ type Configuration struct {
 	ValidationWebhook         string
 	ValidationWebhookCertPath string
 	ValidationWebhookKeyPath  string
+
+	GlobalExternalAuth *ngx_config.GlobalExternalAuth
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -1151,6 +1153,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.ConfigurationSnippet = anns.ConfigurationSnippet
 	loc.CorsConfig = anns.CorsConfig
 	loc.ExternalAuth = anns.ExternalAuth
+	loc.EnableGlobalAuth = anns.EnableGlobalAuth
 	loc.HTTP2PushPreload = anns.HTTP2PushPreload
 	loc.Proxy = anns.Proxy
 	loc.RateLimit = anns.RateLimit
