@@ -2133,6 +2133,7 @@ table below.</p>
 </ul>
 <p>Canary rules are evaluated in order of precedence. Precedence is as follows: 
 <code class="codehilite">canary-by-header -&gt; canary-by-cookie -&gt; canary-weight</code> </p>
+<p><strong>Note</strong> that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except <code class="codehilite">nginx.ingress.kubernetes.io/load-balance</code> and <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code>.</p>
 <p><strong>Known Limitations</strong></p>
 <p>Currently a maximum of one canary ingress can be applied per Ingress rule. </p>
 <h3 id="rewrite">Rewrite<a class="headerlink" href="#rewrite" title="Permanent link">&para;</a></h3>
