@@ -151,11 +151,3 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		t.Errorf("unexpected diff: (-got +want)\n%s", diff)
 	}
 }
-
-func TestDefaultLoadBalance(t *testing.T) {
-	conf := map[string]string{}
-	to := ReadConfig(conf)
-	if to.LoadBalanceAlgorithm != "" {
-		t.Errorf("default load balance algorithm wrong")
-	}
-}
