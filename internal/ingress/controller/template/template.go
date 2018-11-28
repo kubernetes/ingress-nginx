@@ -125,7 +125,6 @@ var (
 		"buildLocation":              buildLocation,
 		"buildAuthLocation":          buildAuthLocation,
 		"buildAuthResponseHeaders":   buildAuthResponseHeaders,
-		"buildLoadBalancingConfig":   buildLoadBalancingConfig,
 		"buildProxyPass":             buildProxyPass,
 		"filterRateLimits":           filterRateLimits,
 		"buildRateLimitZones":        buildRateLimitZones,
@@ -403,31 +402,6 @@ func buildLogFormatUpstream(input interface{}) string {
 	}
 
 	return cfg.BuildLogFormatUpstream()
-}
-
-func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) string {
-	backend, ok := b.(*ingress.Backend)
-	if !ok {
-		glog.Errorf("expected an '*ingress.Backend' type but %T was returned", b)
-		return ""
-	}
-
-	if backend.UpstreamHashBy != "" {
-		return fmt.Sprintf("hash %s consistent;", backend.UpstreamHashBy)
-	}
-
-	if backend.LoadBalancing != "" {
-		if backend.LoadBalancing == "round_robin" {
-			return ""
-		}
-		return fmt.Sprintf("%s;", backend.LoadBalancing)
-	}
-
-	if fallbackLoadBalancing == "round_robin" || fallbackLoadBalancing == "" {
-		return ""
-	}
-
-	return fmt.Sprintf("%s;", fallbackLoadBalancing)
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
