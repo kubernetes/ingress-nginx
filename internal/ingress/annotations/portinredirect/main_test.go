@@ -66,21 +66,17 @@ func buildIngress() *extensions.Ingress {
 
 type mockBackend struct {
 	resolver.Mock
-	usePortInRedirects bool
 }
 
 func TestPortInRedirect(t *testing.T) {
 	tests := []struct {
 		title   string
 		usePort *bool
-		def     bool
 		exp     bool
 	}{
-		{"false - default false", newFalse(), false, false},
-		{"false - default true", newFalse(), true, false},
-		{"no annotation - default false", nil, false, false},
-		{"no annotation - default true", nil, true, true},
-		{"true - default true", newTrue(), true, true},
+		{"false", newFalse(), false},
+		{"true ", newTrue(), true},
+		{"no annotation", nil, false},
 	}
 
 	for _, test := range tests {
@@ -92,7 +88,7 @@ func TestPortInRedirect(t *testing.T) {
 		}
 		ing.SetAnnotations(data)
 
-		i, err := NewParser(mockBackend{usePortInRedirects: test.def}).Parse(ing)
+		i, err := NewParser(mockBackend{}).Parse(ing)
 		if err != nil {
 			t.Errorf("unexpected error parsing a valid")
 		}

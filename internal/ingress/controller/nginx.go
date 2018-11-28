@@ -437,7 +437,6 @@ Error: %v
 // Returns nil in case the backend was successfully reloaded.
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := n.store.GetBackendConfiguration()
-	cfg.Resolver = n.resolver
 
 	if n.cfg.EnableSSLPassthrough {
 		servers := []*TCPServer{}

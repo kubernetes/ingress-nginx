@@ -18,6 +18,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"strconv"
 	"time"
 
@@ -81,6 +82,34 @@ const (
 
 // Configuration represents the content of nginx.conf file
 type Configuration struct {
+	// Name server/s used to resolve names of upstream servers into IP addresses.
+	// The file /etc/resolv.conf is used as DNS resolution configuration.
+	Resolver []net.IP
+
+	// Timeout in seconds for reading a response from the proxied server. The timeout is set only between
+	// two successive read operations, not for the transmission of the whole response
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
+	ProxyReadTimeout int `json:"proxy-read-timeout"`
+	// Timeout in seconds for transmitting a request to the proxied server. The timeout is set only between
+	// two successive write operations, not for the transmission of the whole request.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout
+	ProxySendTimeout int `json:"proxy-send-timeout"`
+
+	// enables which HTTP codes should be passed for processing with the error_page directive
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page
+	// By default this is disabled
+	CustomHTTPErrors []int `json:"custom-http-errors,-"`
+
+	// SkipAccessLogURLs sets a list of URLs that should not appear in the NGINX access log
+	// This is useful with urls like `/health` or `health-check` that make "complex" reading the logs
+	// By default this list is empty
+	SkipAccessLogURLs []string `json:"skip-access-log-urls,-"`
+
+	// WhitelistSourceRange allows limiting access to certain client addresses
+	// http://nginx.org/en/docs/http/ngx_http_access_module.html
+	WhitelistSourceRange []string `json:"whitelist-source-range,-"`
+
 	// Sets the name of the configmap that contains the headers to pass to the client
 	AddHeaders string `json:"add-headers,omitempty"`
 

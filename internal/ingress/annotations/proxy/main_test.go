@@ -133,23 +133,23 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected a Config type")
 	}
-	if p.ConnectTimeout != 10 {
-		t.Errorf("expected 10 as connect-timeout but returned %v", p.ConnectTimeout)
+	if p.ConnectTimeout != 5 {
+		t.Errorf("expected 5 as connect-timeout but returned %v", p.ConnectTimeout)
 	}
-	if p.SendTimeout != 15 {
-		t.Errorf("expected 15 as send-timeout but returned %v", p.SendTimeout)
+	if p.SendTimeout != 60 {
+		t.Errorf("expected 60 as send-timeout but returned %v", p.SendTimeout)
 	}
-	if p.ReadTimeout != 20 {
-		t.Errorf("expected 20 as read-timeout but returned %v", p.ReadTimeout)
+	if p.ReadTimeout != 60 {
+		t.Errorf("expected 60 as read-timeout but returned %v", p.ReadTimeout)
 	}
-	if p.BufferSize != "10k" {
-		t.Errorf("expected 10k as buffer-size but returned %v", p.BufferSize)
+	if p.BufferSize != "4k" {
+		t.Errorf("expected 4k as buffer-size but returned %v", p.BufferSize)
 	}
-	if p.BodySize != "3k" {
-		t.Errorf("expected 3k as body-size but returned %v", p.BodySize)
+	if p.BodySize != "1m" {
+		t.Errorf("expected 1m as body-size but returned %v", p.BodySize)
 	}
-	if p.NextUpstream != "error" {
-		t.Errorf("expected error as next-upstream but returned %v", p.NextUpstream)
+	if p.NextUpstream != "error timeout" {
+		t.Errorf("expected error timeout as next-upstream but returned %v", p.NextUpstream)
 	}
 	if p.NextUpstreamTries != 3 {
 		t.Errorf("expected 3 as next-upstream-tries but returned %v", p.NextUpstreamTries)
