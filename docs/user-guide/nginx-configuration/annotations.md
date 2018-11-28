@@ -64,7 +64,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
-|[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
+|[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#ssl-passthrough)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
@@ -428,6 +428,11 @@ the User guide.
 !!! attention
     Because SSL Passthrough works on layer 4 of the OSI model (TCP) and not on the layer 7 (HTTP), using SSL Passthrough
     invalidates all the other annotations set on an Ingress object.
+
+If you want to validate the upstream against a specific certificate, you can create a secret with it and reference the secret with the annotation `nginx.ingress.kubernetes.io/secure-verify-ca-secret`.
+
+!!! note
+    If an invalid or non-existent secret is given, the NGINX ingress controller will ignore the `ssl-passthrough` annotation.
 
 ### Service Upstream
 
