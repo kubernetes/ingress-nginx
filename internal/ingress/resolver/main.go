@@ -18,14 +18,10 @@ package resolver
 
 import (
 	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 )
 
 // Resolver is an interface that knows how to extract information from a controller
 type Resolver interface {
-	// GetDefaultBackend returns the backend that must be used as default
-	GetDefaultBackend() defaults.Backend
-
 	// GetSecret searches for secrets containing the namespace and name using a the character /
 	GetSecret(string) (*apiv1.Secret, error)
 

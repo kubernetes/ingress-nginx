@@ -18,17 +18,10 @@ package resolver
 
 import (
 	apiv1 "k8s.io/api/core/v1"
-
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 )
 
 // Mock implements the Resolver interface
 type Mock struct {
-}
-
-// GetDefaultBackend returns the backend that must be used as default
-func (m Mock) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{}
 }
 
 // GetSecret searches for secrets contenating the namespace and name using a the character /

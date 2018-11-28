@@ -886,21 +886,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	servers := make(map[string]*ingress.Server, len(data))
 	aliases := make(map[string]string, len(data))
 
-	bdef := n.store.GetDefaultBackend()
-	ngxProxy := proxy.Config{
-		BodySize:          bdef.ProxyBodySize,
-		ConnectTimeout:    bdef.ProxyConnectTimeout,
-		SendTimeout:       bdef.ProxySendTimeout,
-		ReadTimeout:       bdef.ProxyReadTimeout,
-		BufferSize:        bdef.ProxyBufferSize,
-		CookieDomain:      bdef.ProxyCookieDomain,
-		CookiePath:        bdef.ProxyCookiePath,
-		NextUpstream:      bdef.ProxyNextUpstream,
-		NextUpstreamTries: bdef.ProxyNextUpstreamTries,
-		RequestBuffering:  bdef.ProxyRequestBuffering,
-		ProxyRedirectFrom: bdef.ProxyRedirectFrom,
-		ProxyBuffering:    bdef.ProxyBuffering,
-	}
+	ngxProxy := proxy.Config{}
 
 	// generated on Start() with createDefaultSSLCertificate()
 	defaultPemFileName := n.cfg.FakeCertificatePath

@@ -25,7 +25,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -66,13 +65,6 @@ func buildIngress() *extensions.Ingress {
 
 type mockBackend struct {
 	resolver.Mock
-}
-
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{
-		LimitRateAfter: 0,
-		LimitRate:      0,
-	}
 }
 
 func TestWithoutAnnotations(t *testing.T) {

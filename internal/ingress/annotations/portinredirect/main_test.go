@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -68,10 +67,6 @@ func buildIngress() *extensions.Ingress {
 type mockBackend struct {
 	resolver.Mock
 	usePortInRedirects bool
-}
-
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{UsePortInRedirects: m.usePortInRedirects}
 }
 
 func TestPortInRedirect(t *testing.T) {

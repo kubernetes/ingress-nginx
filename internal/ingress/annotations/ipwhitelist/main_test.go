@@ -24,7 +24,6 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -121,13 +120,6 @@ func TestParseAnnotations(t *testing.T) {
 
 type mockBackend struct {
 	resolver.Mock
-}
-
-// GetDefaultBackend returns the backend that must be used as default
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{
-		WhitelistSourceRange: []string{"4.4.4.0/24", "1.2.3.4/32"},
-	}
 }
 
 // Test that when we have a whitelist set on the Backend that is used when we

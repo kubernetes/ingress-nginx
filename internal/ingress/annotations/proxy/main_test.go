@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -66,20 +65,6 @@ func buildIngress() *extensions.Ingress {
 
 type mockBackend struct {
 	resolver.Mock
-}
-
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{
-		ProxyConnectTimeout:    10,
-		ProxySendTimeout:       15,
-		ProxyReadTimeout:       20,
-		ProxyBufferSize:        "10k",
-		ProxyBodySize:          "3k",
-		ProxyNextUpstream:      "error",
-		ProxyNextUpstreamTries: 3,
-		ProxyRequestBuffering:  "on",
-		ProxyBuffering:         "off",
-	}
 }
 
 func TestProxy(t *testing.T) {

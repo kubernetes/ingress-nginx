@@ -156,14 +156,13 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a ratelimit) Parse(ing *extensions.Ingress) (interface{}, error) {
-	defBackend := a.r.GetDefaultBackend()
 	lr, err := parser.GetIntAnnotation("limit-rate", ing)
 	if err != nil {
-		lr = defBackend.LimitRate
+		lr = 0
 	}
 	lra, err := parser.GetIntAnnotation("limit-rate-after", ing)
 	if err != nil {
-		lra = defBackend.LimitRateAfter
+		lra = 0
 	}
 
 	rpm, _ := parser.GetIntAnnotation("limit-rpm", ing)

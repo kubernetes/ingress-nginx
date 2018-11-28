@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -50,10 +49,6 @@ type mockCfg struct {
 	resolver.Mock
 	MockSecrets  map[string]*apiv1.Secret
 	MockServices map[string]*apiv1.Service
-}
-
-func (m mockCfg) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{}
 }
 
 func (m mockCfg) GetSecret(name string) (*apiv1.Secret, error) {

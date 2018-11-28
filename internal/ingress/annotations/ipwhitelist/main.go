@@ -78,19 +78,16 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`
 func (a ipwhitelist) Parse(ing *extensions.Ingress) (interface{}, error) {
-	defBackend := a.r.GetDefaultBackend()
-	sort.Strings(defBackend.WhitelistSourceRange)
-
 	val, err := parser.GetStringAnnotation("whitelist-source-range", ing)
 	// A missing annotation is not a problem, just use the default
 	if err == ing_errors.ErrMissingAnnotations {
-		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, nil
+		return &SourceRange{CIDR: []string{}}, nil
 	}
 
 	values := strings.Split(val, ",")
 	ipnets, ips, err := net.ParseIPNets(values...)
 	if err != nil && len(ips) == 0 {
-		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, ing_errors.LocationDenied{
+		return &SourceRange{CIDR: []string{}}, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "the annotation does not contain a valid IP address or network"),
 		}
 	}

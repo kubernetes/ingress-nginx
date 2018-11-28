@@ -103,71 +103,69 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure upstream check parameters
 func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
-
-	defBackend := a.r.GetDefaultBackend()
 	ct, err := parser.GetIntAnnotation("proxy-connect-timeout", ing)
 	if err != nil {
-		ct = defBackend.ProxyConnectTimeout
+		ct = 5
 	}
 
 	st, err := parser.GetIntAnnotation("proxy-send-timeout", ing)
 	if err != nil {
-		st = defBackend.ProxySendTimeout
+		st = 60
 	}
 
 	rt, err := parser.GetIntAnnotation("proxy-read-timeout", ing)
 	if err != nil {
-		rt = defBackend.ProxyReadTimeout
+		rt = 60
 	}
 
 	bufs, err := parser.GetStringAnnotation("proxy-buffer-size", ing)
 	if err != nil || bufs == "" {
-		bufs = defBackend.ProxyBufferSize
+		bufs = "4k"
 	}
 
 	cp, err := parser.GetStringAnnotation("proxy-cookie-path", ing)
 	if err != nil || cp == "" {
-		cp = defBackend.ProxyCookiePath
+		cp = "off"
 	}
 
 	cd, err := parser.GetStringAnnotation("proxy-cookie-domain", ing)
 	if err != nil || cd == "" {
-		cd = defBackend.ProxyCookieDomain
+		cd = "off"
 	}
 
 	bs, err := parser.GetStringAnnotation("proxy-body-size", ing)
 	if err != nil || bs == "" {
-		bs = defBackend.ProxyBodySize
+		bs = "1m"
 	}
 
 	nu, err := parser.GetStringAnnotation("proxy-next-upstream", ing)
 	if err != nil || nu == "" {
-		nu = defBackend.ProxyNextUpstream
+		nu = "error timeout"
 	}
 
 	nut, err := parser.GetIntAnnotation("proxy-next-upstream-tries", ing)
 	if err != nil {
-		nut = defBackend.ProxyNextUpstreamTries
+		nut = 3
 	}
 
 	rb, err := parser.GetStringAnnotation("proxy-request-buffering", ing)
 	if err != nil || rb == "" {
-		rb = defBackend.ProxyRequestBuffering
+		rb = "on"
 	}
 
 	prf, err := parser.GetStringAnnotation("proxy-redirect-from", ing)
 	if err != nil || prf == "" {
-		prf = defBackend.ProxyRedirectFrom
+		prf = "off"
 	}
 
 	prt, err := parser.GetStringAnnotation("proxy-redirect-to", ing)
 	if err != nil || rb == "" {
-		prt = defBackend.ProxyRedirectTo
+		prt = "off"
 	}
 
 	pb, err := parser.GetStringAnnotation("proxy-buffering", ing)
 	if err != nil || pb == "" {
-		pb = defBackend.ProxyBuffering
+		pb = "off"
 	}
 
 	return &Config{bs, ct, st, rt, bufs, cd, cp, nu, nut, prf, prt, rb, pb}, nil

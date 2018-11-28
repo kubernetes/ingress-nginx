@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -71,10 +70,6 @@ func buildIngress() *extensions.Ingress {
 type mockBackend struct {
 	resolver.Mock
 	redirect bool
-}
-
-func (m mockBackend) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{SSLRedirect: m.redirect}
 }
 
 func TestWithoutAnnotations(t *testing.T) {

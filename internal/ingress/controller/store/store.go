@@ -49,7 +49,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
-	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -92,9 +91,6 @@ type Storer interface {
 	// The secret must contain 3 keys named:
 	//   ca.crt: contains the certificate chain used for authentication
 	GetAuthCertificate(string) (*resolver.AuthSSLCert, error)
-
-	// GetDefaultBackend returns the default backend configuration
-	GetDefaultBackend() defaults.Backend
 
 	// Run initiates the synchronization of the controllers
 	Run(stopCh chan struct{})
@@ -809,11 +805,6 @@ func (s k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName stri
 
 		s.backendConfig.SSLSessionTicketKey = ticketString
 	}
-}
-
-// GetDefaultBackend returns the default backend
-func (s k8sStore) GetDefaultBackend() defaults.Backend {
-	return s.backendConfig.Backend
 }
 
 func (s k8sStore) GetBackendConfiguration() ngx_config.Configuration {

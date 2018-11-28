@@ -90,11 +90,11 @@ func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
 	rt, _ := parser.GetStringAnnotation("rewrite-target", ing)
 	sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing)
 	if err != nil {
-		sslRe = a.r.GetDefaultBackend().SSLRedirect
+		sslRe = true
 	}
 	fSslRe, err := parser.GetBoolAnnotation("force-ssl-redirect", ing)
 	if err != nil {
-		fSslRe = a.r.GetDefaultBackend().ForceSSLRedirect
+		fSslRe = false
 	}
 	abu, _ := parser.GetBoolAnnotation("add-base-url", ing)
 	bus, _ := parser.GetStringAnnotation("base-url-scheme", ing)

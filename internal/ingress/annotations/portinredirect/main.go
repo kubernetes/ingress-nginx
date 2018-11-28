@@ -37,7 +37,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 func (a portInRedirect) Parse(ing *extensions.Ingress) (interface{}, error) {
 	up, err := parser.GetBoolAnnotation("use-port-in-redirects", ing)
 	if err != nil {
-		return a.r.GetDefaultBackend().UsePortInRedirects, nil
+		return false, nil
 	}
 
 	return up, nil
