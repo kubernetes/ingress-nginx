@@ -16,17 +16,6 @@ function _M.get_first_value(var)
   return t[1]
 end
 
-function _M.split_pair(pair, seperator)
-  local i = pair:find(seperator)
-  if i == nil then
-    return pair, nil
-  else
-    local name = pair:sub(1, i - 1)
-    local value = pair:sub(i + 1, -1)
-    return name, value
-  end
-end
-
 -- http://nginx.org/en/docs/http/ngx_http_upstream_module.html#example
 -- CAVEAT: nginx is giving out : instead of , so the docs are wrong
 -- 127.0.0.1:26157 : 127.0.0.1:26157 , ngx.var.upstream_addr
