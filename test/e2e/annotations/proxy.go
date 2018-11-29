@@ -141,7 +141,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			func(server string) bool {
 				return !strings.Contains(server, "proxy_connect_timeout 50ks;") &&
 					!strings.Contains(server, "proxy_send_timeout 20ks;") &&
-					!strings.Contains(server, "proxy_read_timeout 60s;")
+					!strings.Contains(server, "proxy_read_timeout 20ks;")
 			})
 	})
 
