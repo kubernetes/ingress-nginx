@@ -22,7 +22,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -100,11 +99,6 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	d, err := f.EnsureDeployment(deployment)
 	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
 	Expect(d).NotTo(BeNil(), "expected a deployement but none returned")
-
-	err = WaitForPodsReady(f.KubeClientSet, defaultTimeout, int(replicas), f.IngressController.Namespace, metav1.ListOptions{
-		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
-	})
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for pods to become ready")
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
