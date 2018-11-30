@@ -268,7 +268,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 			var httpbinIP string
 
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.IngressController.Namespace)
+			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.IngressController.Namespace, 1)
 			Expect(err).NotTo(HaveOccurred())
 
 			e, err := f.KubeClientSet.CoreV1().Endpoints(f.IngressController.Namespace).Get("httpbin", metav1.GetOptions{})
