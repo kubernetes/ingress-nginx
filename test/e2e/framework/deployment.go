@@ -17,14 +17,11 @@ limitations under the License.
 package framework
 
 import (
-	"time"
-
 	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -36,7 +33,7 @@ func (f *Framework) NewEchoDeployment() {
 // NewEchoDeploymentWithReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
 // replicas is configurable
 func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) {
-	f.NewDeployment("http-svc", "gcr.io/kubernetes-e2e-test-images/echoserver:2.1", 8080, replicas)
+	f.NewDeployment("http-svc", "gcr.io/kubernetes-e2e-test-images/echoserver:2.2", 8080, replicas)
 }
 
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
@@ -46,6 +43,19 @@ func (f *Framework) NewHttpbinDeployment() {
 
 // NewDeployment creates a new deployment in a particular namespace.
 func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {
+	probe := &corev1.Probe{
+		InitialDelaySeconds: 5,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+		TimeoutSeconds:      1,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Port: intstr.FromString("http"),
+				Path: "/",
+			},
+		},
+	}
+
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -77,6 +87,8 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 									ContainerPort: port,
 								},
 							},
+							ReadinessProbe: probe,
+							LivenessProbe:  probe,
 						},
 					},
 				},
@@ -87,11 +99,6 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	d, err := f.EnsureDeployment(deployment)
 	Expect(err).NotTo(HaveOccurred(), "failed to create a deployment")
 	Expect(d).NotTo(BeNil(), "expected a deployement but none returned")
-
-	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, int(replicas), f.IngressController.Namespace, metav1.ListOptions{
-		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
-	})
-	Expect(err).NotTo(HaveOccurred(), "failed to wait for to become ready")
 
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -104,7 +111,7 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 					Name:       "http",
 					Port:       80,
 					TargetPort: intstr.FromInt(int(port)),
-					Protocol:   "TCP",
+					Protocol:   corev1.ProtocolTCP,
 				},
 			},
 			Selector: map[string]string{
@@ -115,4 +122,7 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 
 	s := f.EnsureService(service)
 	Expect(s).NotTo(BeNil(), "expected a service but none returned")
+
+	err = WaitForEndpoints(f.KubeClientSet, defaultTimeout, name, f.IngressController.Namespace)
+	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
 }
