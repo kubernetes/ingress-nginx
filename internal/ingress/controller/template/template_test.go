@@ -558,41 +558,28 @@ func TestBuildDenyVariable(t *testing.T) {
 }
 
 func TestBuildByteSize(t *testing.T) {
-	a := isValidByteSize("1000")
-	if !a {
-		t.Errorf("Expected '%v' but returned '%v'", true, a)
+	cases := []struct {
+		input    interface{}
+		expected bool
+	}{
+		{"1000", true},
+		{"1000k", true},
+		{"1m", true},
+		{"10g", true},
+		{" 1m ", true},
+		{"1000kk", false},
+		{"1000km", false},
+		{"1mm", false},
+		{nil, false},
+		{"", false},
+		{"    ", false},
 	}
-	b := isValidByteSize("1000k")
-	if !b {
-		t.Errorf("Expected '%v' but returned '%v'", true, b)
-	}
-	c := isValidByteSize("1000m")
-	if !c {
-		t.Errorf("Expected '%v' but returned '%v'", true, c)
-	}
-	d := isValidByteSize("1000km")
-	if d {
-		t.Errorf("Expected '%v' but returned '%v'", false, d)
-	}
-	e := isValidByteSize("1000mk")
-	if e {
-		t.Errorf("Expected '%v' but returned '%v'", false, e)
-	}
-	f := isValidByteSize("1000kk")
-	if f {
-		t.Errorf("Expected '%v' but returned '%v'", false, f)
-	}
-	g := isValidByteSize("1000mm")
-	if g {
-		t.Errorf("Expected '%v' but returned '%v'", false, g)
-	}
-	h := isValidByteSize(nil)
-	if h {
-		t.Errorf("Expected '%v' but returned '%v'", false, h)
-	}
-	i := isValidByteSize("")
-	if i {
-		t.Errorf("Expected '%v' but returned '%v'", false, i)
+
+	for _, tc := range cases {
+		val := isValidByteSize(tc.input)
+		if tc.expected != val {
+			t.Errorf("Expected '%v' but returned '%v'", tc.expected, val)
+		}
 	}
 }
 
