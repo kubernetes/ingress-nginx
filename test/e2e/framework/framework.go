@@ -112,7 +112,7 @@ func (f *Framework) BeforeEach() {
 	err = f.NewIngressController(f.IngressController.Namespace)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = WaitForPodsReady(f.KubeClientSet, defaultTimeout, 1, f.IngressController.Namespace, metav1.ListOptions{
+	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.IngressController.Namespace, metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	Expect(err).NotTo(HaveOccurred())
@@ -342,7 +342,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		}
 	}
 
-	err = WaitForPodsReady(kubeClientSet, defaultTimeout, replicas, namespace, metav1.ListOptions{
+	err = WaitForPodsReady(kubeClientSet, DefaultTimeout, replicas, namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {

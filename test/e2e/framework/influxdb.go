@@ -17,8 +17,6 @@ limitations under the License.
 package framework
 
 import (
-	"time"
-
 	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
@@ -142,7 +140,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 
 	Expect(d).NotTo(BeNil(), "unexpected error creating deployement for influxdb")
 
-	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, 1, f.IngressController.Namespace, metav1.ListOptions{
+	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.IngressController.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for influxdb to become ready")
