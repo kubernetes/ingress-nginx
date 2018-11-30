@@ -54,15 +54,18 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should enable logs
 func (l log) Parse(ing *extensions.Ingress) (interface{}, error) {
-	accessEnabled, err := parser.GetBoolAnnotation("enable-access-log", ing)
+	var err error
+	config := &Config{}
+
+	config.Access, err = parser.GetBoolAnnotation("enable-access-log", ing)
 	if err != nil {
-		accessEnabled = true
+		config.Access = true
 	}
 
-	rewriteEnabled, err := parser.GetBoolAnnotation("enable-rewrite-log", ing)
+	config.Rewrite, err = parser.GetBoolAnnotation("enable-rewrite-log", ing)
 	if err != nil {
-		rewriteEnabled = false
+		config.Rewrite = false
 	}
 
-	return &Config{Access: accessEnabled, Rewrite: rewriteEnabled}, nil
+	return config, nil
 }
