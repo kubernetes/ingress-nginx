@@ -18,6 +18,7 @@ package framework
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	. "github.com/onsi/gomega"
@@ -141,6 +142,22 @@ func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 	})
 }
 
+// WaitForEndpoints waits for a given amount of time until an endpoint contains.
+func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration, name, ns string) error {
+	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
+		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(name, metav1.GetOptions{})
+		if k8sErrors.IsNotFound(err) {
+			return false, err
+		}
+		Expect(err).NotTo(HaveOccurred())
+		if len(endpoint.Subsets) == 0 || len(endpoint.Subsets[0].Addresses) == 0 {
+			return false, err
+		}
+
+		return true, nil
+	})
+}
+
 // podRunningReady checks whether pod p's phase is running and it has a ready
 // condition of status true.
 func podRunningReady(p *core.Pod) (bool, error) {
@@ -155,4 +172,34 @@ func podRunningReady(p *core.Pod) (bool, error) {
 			p.ObjectMeta.Name, p.Spec.NodeName, core.PodReady, core.ConditionTrue, p.Status.Conditions)
 	}
 	return true, nil
+}
+
+func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
+	l, err := kubeClientSet.CoreV1().Pods(ns).List(metav1.ListOptions{
+		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(l.Items) == 0 {
+		return nil, fmt.Errorf("There is no ingress-nginx pods running in namespace %v", ns)
+	}
+
+	var pod *core.Pod
+
+	for _, p := range l.Items {
+		if strings.HasPrefix(p.GetName(), "nginx-ingress-controller") {
+			if isRunning, err := podRunningReady(&p); err == nil && isRunning {
+				pod = &p
+				break
+			}
+		}
+	}
+
+	if pod == nil {
+		return nil, fmt.Errorf("There is no ingress-nginx pods running in namespace %v", ns)
+	}
+
+	return pod, nil
 }
