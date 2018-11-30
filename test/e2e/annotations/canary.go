@@ -53,8 +53,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("server_name foo")) &&
-						Expect(server).ShouldNot(ContainSubstring("return 503"))
+					return Expect(server).Should(ContainSubstring("server_name foo"))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -90,8 +89,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("server_name foo")) &&
-						Expect(server).ShouldNot(ContainSubstring("return 503"))
+					return Expect(server).Should(ContainSubstring("server_name foo"))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -129,8 +127,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("server_name foo")) &&
-						Expect(server).ShouldNot(ContainSubstring("return 503"))
+					return Expect(server).Should(ContainSubstring("server_name foo"))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -168,8 +165,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("server_name foo")) &&
-						Expect(server).ShouldNot(ContainSubstring("return 503"))
+					return Expect(server).Should(ContainSubstring("server_name foo"))
 				})
 
 			canaryAnnotations := map[string]string{
