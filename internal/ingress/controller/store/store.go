@@ -594,7 +594,9 @@ func (s *k8sStore) extractAnnotations(ing *extensions.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	glog.V(3).Infof("updating annotations information for ingress %v", key)
 
-	copyIng := ing.DeepCopy()
+	copyIng := &extensions.Ingress{}
+	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
+	ing.Spec.DeepCopyInto(&copyIng.Spec)
 
 	for ri, rule := range copyIng.Spec.Rules {
 		if rule.HTTP == nil {
@@ -610,7 +612,7 @@ func (s *k8sStore) extractAnnotations(ing *extensions.Ingress) {
 
 	err := s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
 		Ingress:           *copyIng,
-		ParsedAnnotations: s.annotations.Extract(copyIng),
+		ParsedAnnotations: s.annotations.Extract(ing),
 	})
 	if err != nil {
 		glog.Error(err)
