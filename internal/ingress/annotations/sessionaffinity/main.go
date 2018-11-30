@@ -81,42 +81,39 @@ type Cookie struct {
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
 func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
+	var err error
+
 	cookie := &Cookie{}
-	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing)
 
-	if err != nil || sn == "" {
+	cookie.Name, err = parser.GetStringAnnotation(annotationAffinityCookieName, ing)
+	if err != nil || cookie.Name == "" {
 		glog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
-		sn = defaultAffinityCookieName
+		cookie.Name = defaultAffinityCookieName
 	}
-	cookie.Name = sn
 
-	sh, err := parser.GetStringAnnotation(annotationAffinityCookieHash, ing)
-
-	if err != nil || !affinityCookieHashRegex.MatchString(sh) {
+	cookie.Hash, err = parser.GetStringAnnotation(annotationAffinityCookieHash, ing)
+	if err != nil || !affinityCookieHashRegex.MatchString(cookie.Hash) {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Setting it to default %v", ing.Name, annotationAffinityCookieHash, defaultAffinityCookieHash)
-		sh = defaultAffinityCookieHash
+		cookie.Hash = defaultAffinityCookieHash
 	}
-	cookie.Hash = sh
 
-	se, err := parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)
-	if err != nil || !affinityCookieExpiresRegex.MatchString(se) {
+	cookie.Expires, err = parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)
+	if err != nil || !affinityCookieExpiresRegex.MatchString(cookie.Expires) {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieExpires)
-		se = ""
+		cookie.Expires = ""
 	}
-	cookie.Expires = se
 
-	sm, err := parser.GetStringAnnotation(annotationAffinityCookieMaxAge, ing)
-	if err != nil || !affinityCookieExpiresRegex.MatchString(sm) {
+	cookie.MaxAge, err = parser.GetStringAnnotation(annotationAffinityCookieMaxAge, ing)
+	if err != nil || !affinityCookieExpiresRegex.MatchString(cookie.MaxAge) {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
-		sm = ""
+		cookie.MaxAge = ""
 	}
-	cookie.MaxAge = sm
 
-	sp, err := parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
-	if err != nil || sp == "" {
+	cookie.Path, err = parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
+	if err != nil || cookie.Path == "" {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
 	}
-	cookie.Path = sp
+
 	return cookie
 }
 

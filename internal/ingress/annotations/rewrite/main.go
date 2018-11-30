@@ -87,27 +87,24 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to rewrite the defined paths
 func (a rewrite) Parse(ing *extensions.Ingress) (interface{}, error) {
-	rt, _ := parser.GetStringAnnotation("rewrite-target", ing)
-	sslRe, err := parser.GetBoolAnnotation("ssl-redirect", ing)
-	if err != nil {
-		sslRe = a.r.GetDefaultBackend().SSLRedirect
-	}
-	fSslRe, err := parser.GetBoolAnnotation("force-ssl-redirect", ing)
-	if err != nil {
-		fSslRe = a.r.GetDefaultBackend().ForceSSLRedirect
-	}
-	abu, _ := parser.GetBoolAnnotation("add-base-url", ing)
-	bus, _ := parser.GetStringAnnotation("base-url-scheme", ing)
-	ar, _ := parser.GetStringAnnotation("app-root", ing)
-	ur, _ := parser.GetBoolAnnotation("use-regex", ing)
+	var err error
+	config := &Config{}
 
-	return &Config{
-		Target:           rt,
-		AddBaseURL:       abu,
-		BaseURLScheme:    bus,
-		SSLRedirect:      sslRe,
-		ForceSSLRedirect: fSslRe,
-		AppRoot:          ar,
-		UseRegex:         ur,
-	}, nil
+	config.Target, _ = parser.GetStringAnnotation("rewrite-target", ing)
+	config.SSLRedirect, err = parser.GetBoolAnnotation("ssl-redirect", ing)
+	if err != nil {
+		config.SSLRedirect = a.r.GetDefaultBackend().SSLRedirect
+	}
+
+	config.ForceSSLRedirect, err = parser.GetBoolAnnotation("force-ssl-redirect", ing)
+	if err != nil {
+		config.ForceSSLRedirect = a.r.GetDefaultBackend().ForceSSLRedirect
+	}
+
+	config.AddBaseURL, _ = parser.GetBoolAnnotation("add-base-url", ing)
+	config.BaseURLScheme, _ = parser.GetStringAnnotation("base-url-scheme", ing)
+	config.AppRoot, _ = parser.GetStringAnnotation("app-root", ing)
+	config.UseRegex, _ = parser.GetBoolAnnotation("use-regex", ing)
+
+	return config, nil
 }
