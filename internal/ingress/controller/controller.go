@@ -133,7 +133,9 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	for _, server := range servers {
 		if !hosts.Has(server.Hostname) {
 			hosts.Insert(server.Hostname)
-			hosts.Insert(server.Alias)
+                        if server.Alias != "" {
+				hosts.Insert(server.Alias)
+			}
 		}
 
 		if !server.SSLPassthrough {
