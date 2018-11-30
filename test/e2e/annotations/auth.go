@@ -53,8 +53,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name auth")) &&
-					Expect(server).ShouldNot(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name auth"))
 			})
 
 		resp, body, errs := gorequest.New().
@@ -81,8 +80,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name auth")) &&
-					Expect(server).Should(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name auth"))
 			})
 
 		resp, body, errs := gorequest.New().
@@ -112,8 +110,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name auth")) &&
-					Expect(server).ShouldNot(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name auth"))
 			})
 
 		resp, body, errs := gorequest.New().
@@ -143,8 +140,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name auth")) &&
-					Expect(server).ShouldNot(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name auth"))
 			})
 
 		resp, body, errs := gorequest.New().
@@ -175,8 +171,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name auth")) &&
-					Expect(server).ShouldNot(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name auth"))
 			})
 
 		resp, _, errs := gorequest.New().
@@ -218,8 +213,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name auth")) &&
-					Expect(server).ShouldNot(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name auth"))
 			})
 
 		resp, _, errs := gorequest.New().
@@ -275,7 +269,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			f.NewHttpbinDeployment()
 
 			var httpbinIP string
-			err := wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+			err := wait.PollImmediate(framework.Poll, 5*time.Minute, func() (bool, error) {
 				e, err := f.KubeClientSet.CoreV1().Endpoints(f.IngressController.Namespace).Get("httpbin", metav1.GetOptions{})
 				if errors.IsNotFound(err) {
 					return false, nil
@@ -300,7 +294,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host, func(server string) bool {
-				return Expect(server).ShouldNot(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name auth"))
 			})
 		})
 

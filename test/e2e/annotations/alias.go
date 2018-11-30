@@ -46,8 +46,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name foo")) &&
-					Expect(server).ShouldNot(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name foo"))
 			})
 
 		resp, body, errs := gorequest.New().
@@ -80,8 +79,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Alias", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring("server_name foo")) &&
-					Expect(server).ShouldNot(ContainSubstring("return 503"))
+				return Expect(server).Should(ContainSubstring("server_name foo"))
 			})
 
 		hosts := []string{"foo", "bar"}
