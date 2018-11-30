@@ -123,6 +123,6 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	s := f.EnsureService(service)
 	Expect(s).NotTo(BeNil(), "expected a service but none returned")
 
-	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.IngressController.Namespace)
+	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.IngressController.Namespace, int(replicas))
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
 }
