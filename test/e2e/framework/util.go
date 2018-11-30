@@ -39,8 +39,8 @@ const (
 	// Poll how often to poll for conditions
 	Poll = 2 * time.Second
 
-	// Default time to wait for operations to complete
-	defaultTimeout = 30 * time.Second
+	// DefaultTimeout time to wait for operations to complete
+	DefaultTimeout = 5 * time.Minute
 )
 
 func nowStamp() string {
@@ -109,7 +109,7 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error
 	}
 	// Be robust about making the namespace creation call.
 	var got *v1.Namespace
-	err := wait.PollImmediate(Poll, defaultTimeout, func() (bool, error) {
+	err := wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
 		var err error
 		got, err = c.CoreV1().Namespaces().Create(ns)
 		if err != nil {
@@ -140,7 +140,7 @@ func ExpectNoError(err error, explain ...interface{}) {
 
 // WaitForKubeNamespaceNotExist waits until a namespaces is not present in the cluster
 func WaitForKubeNamespaceNotExist(c kubernetes.Interface, namespace string) error {
-	return wait.PollImmediate(Poll, time.Minute*5, namespaceNotExist(c, namespace))
+	return wait.PollImmediate(Poll, DefaultTimeout, namespaceNotExist(c, namespace))
 }
 
 func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionFunc {
@@ -158,7 +158,7 @@ func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionF
 
 // WaitForNoPodsInNamespace waits until there are no pods running in a namespace
 func WaitForNoPodsInNamespace(c kubernetes.Interface, namespace string) error {
-	return wait.PollImmediate(Poll, time.Minute*5, noPodsInNamespace(c, namespace))
+	return wait.PollImmediate(Poll, DefaultTimeout, noPodsInNamespace(c, namespace))
 }
 
 func noPodsInNamespace(c kubernetes.Interface, namespace string) wait.ConditionFunc {
@@ -184,16 +184,16 @@ func WaitForPodRunningInNamespace(c kubernetes.Interface, pod *v1.Pod) error {
 	if pod.Status.Phase == v1.PodRunning {
 		return nil
 	}
-	return waitTimeoutForPodRunningInNamespace(c, pod.Name, pod.Namespace, defaultTimeout)
+	return waitTimeoutForPodRunningInNamespace(c, pod.Name, pod.Namespace, DefaultTimeout)
 }
 
 func waitTimeoutForPodRunningInNamespace(c kubernetes.Interface, podName, namespace string, timeout time.Duration) error {
-	return wait.PollImmediate(Poll, defaultTimeout, podRunning(c, podName, namespace))
+	return wait.PollImmediate(Poll, DefaultTimeout, podRunning(c, podName, namespace))
 }
 
 // WaitForSecretInNamespace waits a default amount of time for the specified secret is present in a particular namespace
 func WaitForSecretInNamespace(c kubernetes.Interface, namespace, name string) error {
-	return wait.PollImmediate(1*time.Second, time.Minute*2, secretInNamespace(c, namespace, name))
+	return wait.PollImmediate(Poll, DefaultTimeout, secretInNamespace(c, namespace, name))
 }
 
 func secretInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
@@ -215,7 +215,7 @@ func secretInNamespace(c kubernetes.Interface, namespace, name string) wait.Cond
 
 // WaitForFileInFS waits a default amount of time for the specified file is present in the filesystem
 func WaitForFileInFS(file string, fs file.Filesystem) error {
-	return wait.PollImmediate(1*time.Second, time.Minute*2, fileInFS(file, fs))
+	return wait.PollImmediate(Poll, DefaultTimeout, fileInFS(file, fs))
 }
 
 func fileInFS(file string, fs file.Filesystem) wait.ConditionFunc {
@@ -239,7 +239,7 @@ func fileInFS(file string, fs file.Filesystem) wait.ConditionFunc {
 
 // WaitForNoIngressInNamespace waits until there is no ingress object in a particular namespace
 func WaitForNoIngressInNamespace(c kubernetes.Interface, namespace, name string) error {
-	return wait.PollImmediate(1*time.Second, time.Minute*2, noIngressInNamespace(c, namespace, name))
+	return wait.PollImmediate(Poll, DefaultTimeout, noIngressInNamespace(c, namespace, name))
 }
 
 func noIngressInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
@@ -261,7 +261,7 @@ func noIngressInNamespace(c kubernetes.Interface, namespace, name string) wait.C
 
 // WaitForIngressInNamespace waits until a particular ingress object exists namespace
 func WaitForIngressInNamespace(c kubernetes.Interface, namespace, name string) error {
-	return wait.PollImmediate(1*time.Second, time.Minute*2, ingressInNamespace(c, namespace, name))
+	return wait.PollImmediate(Poll, DefaultTimeout, ingressInNamespace(c, namespace, name))
 }
 
 func ingressInNamespace(c kubernetes.Interface, namespace, name string) wait.ConditionFunc {
