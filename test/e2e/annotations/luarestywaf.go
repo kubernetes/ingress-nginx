@@ -208,8 +208,7 @@ func createIngress(f *framework.Framework, host, service string, port int, annot
 
 	f.WaitForNginxServer(host,
 		func(server string) bool {
-			return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host))) &&
-				Expect(server).ShouldNot(ContainSubstring("return 503"))
+			return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host)))
 		})
 
 	time.Sleep(1 * time.Second)
