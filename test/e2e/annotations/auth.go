@@ -28,9 +28,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -269,21 +267,14 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			f.NewHttpbinDeployment()
 
 			var httpbinIP string
-			err := wait.PollImmediate(framework.Poll, 5*time.Minute, func() (bool, error) {
-				e, err := f.KubeClientSet.CoreV1().Endpoints(f.IngressController.Namespace).Get("httpbin", metav1.GetOptions{})
-				if errors.IsNotFound(err) {
-					return false, nil
-				}
-				if err != nil {
-					return false, err
-				}
-				if len(e.Subsets) < 1 || len(e.Subsets[0].Addresses) < 1 {
-					return false, nil
-				}
-				httpbinIP = e.Subsets[0].Addresses[0].IP
-				return true, nil
-			})
+
+			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.IngressController.Namespace)
 			Expect(err).NotTo(HaveOccurred())
+
+			e, err := f.KubeClientSet.CoreV1().Endpoints(f.IngressController.Namespace).Get("httpbin", metav1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+
+			httpbinIP = e.Subsets[0].Addresses[0].IP
 
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
