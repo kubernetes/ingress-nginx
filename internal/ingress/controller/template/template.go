@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"strconv"
+	"regexp"
 	"strings"
 	text_template "text/template"
 	"time"
@@ -727,6 +727,10 @@ func buildNextUpstream(i, r interface{}) string {
 	return strings.Join(nextUpstreamCodes, " ")
 }
 
+var sizeUnitRegex = regexp.MustCompile("^[0-9]+[kKmMgG]{0,1}$")
+
+// isValidByteSize validates size units valid in nginx
+// http://nginx.org/en/docs/syntax.html
 func isValidByteSize(input interface{}) bool {
 	s, ok := input.(string)
 	if !ok {
@@ -734,32 +738,13 @@ func isValidByteSize(input interface{}) bool {
 		return false
 	}
 
+	s = strings.TrimSpace(s)
 	if s == "" {
 		glog.V(2).Info("empty byte size, hence it will not be set")
 		return false
 	}
 
-	_, err := strconv.Atoi(s)
-	if err != nil {
-		sLowercase := strings.ToLower(s)
-
-		check := strings.TrimSuffix(sLowercase, "k")
-		_, err := strconv.Atoi(check)
-		if err == nil {
-			return true
-		}
-
-		mCheck := strings.TrimSuffix(sLowercase, "m")
-		_, err = strconv.Atoi(mCheck)
-		if err == nil {
-			return true
-		}
-
-		glog.Errorf("incorrect byte size format '%v', hence it will not be set.", s)
-		return false
-	}
-
-	return true
+	return sizeUnitRegex.MatchString(s)
 }
 
 type ingressInformation struct {
