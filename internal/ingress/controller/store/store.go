@@ -310,7 +310,7 @@ func New(checkOCSP bool,
 			}
 			recorder.Eventf(ing, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 
-			store.extractAnnotations(ing)
+			store.syncIngress(ing)
 			store.updateSecretIngressMap(ing)
 			store.syncSecrets(ing)
 
@@ -365,7 +365,7 @@ func New(checkOCSP bool,
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			}
 
-			store.extractAnnotations(curIng)
+			store.syncIngress(curIng)
 			store.updateSecretIngressMap(curIng)
 			store.syncSecrets(curIng)
 
@@ -394,7 +394,7 @@ func New(checkOCSP bool,
 						glog.Errorf("could not find Ingress %v in local store", ingKey)
 						continue
 					}
-					store.extractAnnotations(ing)
+					store.syncIngress(ing)
 					store.syncSecrets(ing)
 				}
 				updateCh.In() <- Event{
@@ -421,7 +421,7 @@ func New(checkOCSP bool,
 							glog.Errorf("could not find Ingress %v in local store", ingKey)
 							continue
 						}
-						store.extractAnnotations(ing)
+						store.syncIngress(ing)
 						store.syncSecrets(ing)
 					}
 					updateCh.In() <- Event{
@@ -460,7 +460,7 @@ func New(checkOCSP bool,
 						glog.Errorf("could not find Ingress %v in local store", ingKey)
 						continue
 					}
-					store.extractAnnotations(ing)
+					store.syncIngress(ing)
 				}
 				updateCh.In() <- Event{
 					Type: DeleteEvent,
@@ -530,7 +530,7 @@ func New(checkOCSP bool,
 							glog.Errorf("could not find Ingress %v in local store: %v", key, err)
 							continue
 						}
-						store.extractAnnotations(ing)
+						store.syncIngress(ing)
 					}
 
 					updateCh.In() <- Event{
@@ -588,9 +588,9 @@ func New(checkOCSP bool,
 	return store
 }
 
-// extractAnnotations parses ingress annotations converting the value of the
-// annotation to a go struct and also information about the referenced secrets
-func (s *k8sStore) extractAnnotations(ing *extensions.Ingress) {
+// syncIngress parses ingress annotations converting the value of the
+// annotation to a go struct
+func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	glog.V(3).Infof("updating annotations information for ingress %v", key)
 
@@ -665,7 +665,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 // 'namespace/name' key from the given annotation name.
 func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, error) {
 	annValue, err := parser.GetStringAnnotation(ann, ing)
-	if annValue == "" {
+	if err != nil {
 		return "", err
 	}
 

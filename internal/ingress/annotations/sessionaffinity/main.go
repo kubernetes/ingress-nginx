@@ -86,7 +86,7 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 	cookie := &Cookie{}
 
 	cookie.Name, err = parser.GetStringAnnotation(annotationAffinityCookieName, ing)
-	if err != nil || cookie.Name == "" {
+	if err != nil {
 		glog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
 		cookie.Name = defaultAffinityCookieName
 	}
@@ -110,7 +110,7 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 	}
 
 	cookie.Path, err = parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
-	if err != nil || cookie.Path == "" {
+	if err != nil {
 		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
 	}
 

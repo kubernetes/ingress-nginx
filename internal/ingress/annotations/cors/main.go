@@ -106,17 +106,17 @@ func (c cors) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	config.CorsAllowOrigin, err = parser.GetStringAnnotation("cors-allow-origin", ing)
-	if err != nil || config.CorsAllowOrigin == "" || !corsOriginRegex.MatchString(config.CorsAllowOrigin) {
+	if err != nil || !corsOriginRegex.MatchString(config.CorsAllowOrigin) {
 		config.CorsAllowOrigin = "*"
 	}
 
 	config.CorsAllowHeaders, err = parser.GetStringAnnotation("cors-allow-headers", ing)
-	if err != nil || config.CorsAllowHeaders == "" || !corsHeadersRegex.MatchString(config.CorsAllowHeaders) {
+	if err != nil || !corsHeadersRegex.MatchString(config.CorsAllowHeaders) {
 		config.CorsAllowHeaders = defaultCorsHeaders
 	}
 
 	config.CorsAllowMethods, err = parser.GetStringAnnotation("cors-allow-methods", ing)
-	if err != nil || config.CorsAllowMethods == "" || !corsMethodsRegex.MatchString(config.CorsAllowMethods) {
+	if err != nil || !corsMethodsRegex.MatchString(config.CorsAllowMethods) {
 		config.CorsAllowMethods = defaultCorsMethods
 	}
 

@@ -105,6 +105,10 @@ func TestAnnotations(t *testing.T) {
 			}
 			continue
 		}
+		if err != nil {
+			t.Errorf("%v: unexpected error: %v", test.title, err)
+		}
+
 		u, ok := i.(*Config)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)
