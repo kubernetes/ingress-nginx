@@ -559,24 +559,28 @@ func TestBuildDenyVariable(t *testing.T) {
 
 func TestBuildByteSize(t *testing.T) {
 	cases := []struct {
-		input    interface{}
+		value    interface{}
+		isOffset bool
 		expected bool
 	}{
-		{"1000", true},
-		{"1000k", true},
-		{"1m", true},
-		{"10g", true},
-		{" 1m ", true},
-		{"1000kk", false},
-		{"1000km", false},
-		{"1mm", false},
-		{nil, false},
-		{"", false},
-		{"    ", false},
+		{"1000", false, true},
+		{"1000k", false, true},
+		{"1m", false, true},
+		{"10g", false, false},
+		{" 1m ", false, true},
+		{"1000kk", false, false},
+		{"1000km", false, false},
+		{"1mm", false, false},
+		{nil, false, false},
+		{"", false, false},
+		{"    ", false, false},
+		{"1G", true, true},
+		{"1000kk", true, false},
+		{"", true, false},
 	}
 
 	for _, tc := range cases {
-		val := isValidByteSize(tc.input)
+		val := isValidByteSize(tc.value, tc.isOffset)
 		if tc.expected != val {
 			t.Errorf("Expected '%v' but returned '%v'", tc.expected, val)
 		}
