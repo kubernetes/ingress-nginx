@@ -95,10 +95,6 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return &Config{}, err
 	}
 
-	if tlsauthsecret == "" {
-		return &Config{}, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
-	}
-
 	_, _, err = k8s.ParseNameNS(tlsauthsecret)
 	if err != nil {
 		return &Config{}, ing_errors.NewLocationDenied(err.Error())
@@ -122,7 +118,7 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 	}
 
 	config.ErrorPage, err = parser.GetStringAnnotation("auth-tls-error-page", ing)
-	if err != nil || config.ErrorPage == "" {
+	if err != nil {
 		config.ErrorPage = ""
 	}
 
