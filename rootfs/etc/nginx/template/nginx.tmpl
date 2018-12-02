@@ -1030,7 +1030,7 @@ stream {
             set $location_path  "{{ $location.Path | escapeLiteralDollar }}";
 
             {{ if $all.Cfg.EnableOpentracing }}
-            opentracing_propagate_context;
+            {{ opentracingPropagateContext $location }};
             {{ end }}
 
             rewrite_by_lua_block {

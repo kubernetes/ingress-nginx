@@ -112,7 +112,7 @@ func (f *Framework) BeforeEach() {
 	err = f.NewIngressController(f.IngressController.Namespace)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = WaitForPodsReady(f.KubeClientSet, 5*time.Minute, 1, f.IngressController.Namespace, metav1.ListOptions{
+	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.IngressController.Namespace, metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	Expect(err).NotTo(HaveOccurred())
@@ -197,19 +197,13 @@ func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 }
 
 func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
-	l, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
-	})
+	pod, err := getIngressNGINXPod(namespace, client)
 	if err != nil {
 		return "", err
 	}
 
-	for _, pod := range l.Items {
-		if strings.HasPrefix(pod.GetName(), "nginx-ingress-controller") {
-			if isRunning, err := podRunningReady(&pod); err == nil && isRunning {
-				return Logs(&pod)
-			}
-		}
+	if isRunning, err := podRunningReady(pod); err == nil && isRunning {
+		return Logs(pod)
 	}
 
 	return "", fmt.Errorf("no nginx ingress controller pod is running (logs)")
@@ -222,15 +216,9 @@ func (f *Framework) NginxLogs() (string, error) {
 
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
-		l, err := f.KubeClientSet.CoreV1().Pods(f.IngressController.Namespace).List(metav1.ListOptions{
-			LabelSelector: "app.kubernetes.io/name=ingress-nginx",
-		})
+		pod, err := getIngressNGINXPod(f.IngressController.Namespace, f.KubeClientSet)
 		if err != nil {
 			return false, err
-		}
-
-		if len(l.Items) == 0 {
-			return false, nil
 		}
 
 		var cmd string
@@ -238,21 +226,6 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf")
 		} else {
 			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
-		}
-
-		var pod *v1.Pod
-
-		for _, p := range l.Items {
-			if strings.HasPrefix(p.GetName(), "nginx-ingress-controller") {
-				if isRunning, err := podRunningReady(&p); err == nil && isRunning {
-					pod = &p
-					break
-				}
-			}
-		}
-
-		if pod == nil {
-			return false, nil
 		}
 
 		o, err := f.ExecCommand(pod, cmd)
@@ -369,7 +342,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		}
 	}
 
-	err = WaitForPodsReady(kubeClientSet, 5*time.Minute, replicas, namespace, metav1.ListOptions{
+	err = WaitForPodsReady(kubeClientSet, DefaultTimeout, replicas, namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {

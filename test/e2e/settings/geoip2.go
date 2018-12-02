@@ -45,6 +45,7 @@ var _ = framework.IngressNginxDescribe("Geoip2", func() {
   AU 0;
 }`
 		f.UpdateNginxConfigMapData("http-snippet", httpSnippetAllowingOnlyAustralia)
+		f.UpdateNginxConfigMapData("use-forwarded-headers", "true")
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {

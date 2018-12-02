@@ -76,9 +76,6 @@ const (
 	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
 	sslSessionCacheSize = "10m"
 
-	// Default setting for load balancer algorithm
-	defaultLoadBalancerAlgorithm = ""
-
 	// Parameters for a shared memory zone that will keep states for various keys.
 	// http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone
 	defaultLimitConnZoneVariable = "$binary_remote_addr"
@@ -381,9 +378,6 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
 	WorkerShutdownTimeout string `json:"worker-shutdown-timeout,omitempty"`
 
-	// Defines the load balancing algorithm to use. The deault is round-robin
-	LoadBalanceAlgorithm string `json:"load-balance,omitempty"`
-
 	// Sets the bucket size for the variables hash table.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size
 	VariablesHashBucketSize int `json:"variables-hash-bucket-size,omitempty"`
@@ -588,7 +582,7 @@ func NewDefault() Configuration {
 		EnableDynamicTLSRecords:    true,
 		EnableUnderscoresInHeaders: false,
 		ErrorLogLevel:              errorLevel,
-		UseForwardedHeaders:        true,
+		UseForwardedHeaders:        false,
 		ForwardedForHeader:         "X-Forwarded-For",
 		ComputeFullForwardedFor:    false,
 		ProxyAddOriginalURIHeader:  true,
@@ -637,7 +631,6 @@ func NewDefault() Configuration {
 		UseGeoIP2:                  false,
 		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:      "10s",
-		LoadBalanceAlgorithm:       defaultLoadBalancerAlgorithm,
 		VariablesHashBucketSize:    128,
 		VariablesHashMaxSize:       2048,
 		UseHTTP2:                   true,

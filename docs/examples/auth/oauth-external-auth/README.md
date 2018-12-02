@@ -39,7 +39,7 @@ into a Kubernetes cluster and use it to protect the Kubernetes Dashboard using g
 1. Install the kubernetes dashboard
 
 ```console
-kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addons/kubernetes-dashboard/v1.5.0.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addons/kubernetes-dashboard/v1.10.0.yaml
 ```
 
 2. Create a [custom Github OAuth application](https://github.com/settings/applications/new)

@@ -1,5 +1,6 @@
 local ssl = require("ngx.ssl")
 local configuration = require("configuration")
+local re_sub = ngx.re.sub
 
 local _M = {}
 
@@ -25,6 +26,24 @@ local function set_pem_cert_key(pem_cert_key)
   end
 end
 
+local function get_pem_cert_key(hostname)
+  local pem_cert_key = configuration.get_pem_cert_key(hostname)
+  if pem_cert_key then
+    return pem_cert_key
+  end
+
+  local wildcard_hosatname, _, err = re_sub(hostname, "^.+\\.", "*.", "jo")
+  if err then
+    ngx.log(ngx.ERR, "error: ", err)
+    return pem_cert_key
+  end
+
+  if wildcard_hosatname then
+    pem_cert_key = configuration.get_pem_cert_key(wildcard_hosatname)
+  end
+  return pem_cert_key
+end
+
 function _M.call()
   local hostname, hostname_err = ssl.server_name()
   if hostname_err then
@@ -32,7 +51,7 @@ function _M.call()
     return
   end
 
-  local pem_cert_key = configuration.get_pem_cert_key(hostname)
+  local pem_cert_key = get_pem_cert_key(hostname)
   if not pem_cert_key or pem_cert_key == "" then
     ngx.log(ngx.ERR, "Certificate not found, falling back on default certificate for hostname: " .. tostring(hostname))
     return
