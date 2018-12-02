@@ -727,11 +727,15 @@ func buildNextUpstream(i, r interface{}) string {
 	return strings.Join(nextUpstreamCodes, " ")
 }
 
-var sizeUnitRegex = regexp.MustCompile("^[0-9]+[kKmMgG]{0,1}$")
+// refer to http://nginx.org/en/docs/syntax.html
+// Nginx differentiates between size and offset
+// offset directives support gigabytes in addition
+var nginxSizeRegex = regexp.MustCompile("^[0-9]+[kKmM]{0,1}$")
+var nginxOffsetRegex = regexp.MustCompile("^[0-9]+[kKmMgG]{0,1}$")
 
 // isValidByteSize validates size units valid in nginx
 // http://nginx.org/en/docs/syntax.html
-func isValidByteSize(input interface{}) bool {
+func isValidByteSize(input interface{}, isOffset bool) bool {
 	s, ok := input.(string)
 	if !ok {
 		glog.Errorf("expected an 'string' type but %T was returned", input)
@@ -744,7 +748,11 @@ func isValidByteSize(input interface{}) bool {
 		return false
 	}
 
-	return sizeUnitRegex.MatchString(s)
+	if isOffset {
+		return nginxOffsetRegex.MatchString(s)
+	}
+
+	return nginxSizeRegex.MatchString(s)
 }
 
 type ingressInformation struct {
