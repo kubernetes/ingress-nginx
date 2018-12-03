@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.6
+export NGINX_VERSION=1.15.7
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -94,30 +94,14 @@ clean-install \
   bc \
   || exit 1
 
-if [[ ${ARCH} == "ppc64le" ]]; then
-  wget http://ftp.us.debian.org/debian/pool/main/a/apt/libapt-pkg5.0_1.7.0_ppc64el.deb
-  dpkg -i libapt-pkg5.0_1.7.0_ppc64el.deb
-  clean-install python3-apt python3-software-properties software-properties-common
-fi
-
 if [[ ${ARCH} == "x86_64" ]]; then
   ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
   ln -s /usr/lib/x86_64-linux-gnu /usr/lib/lua-platform-path
 fi
 
-if [[ ${ARCH} == "armv7l" ]]; then
-  ln -s /usr/lib/arm-linux-gnueabihf/liblua5.1.so /usr/lib/liblua.so
-  ln -s /usr/lib/arm-linux-gnueabihf /usr/lib/lua-platform-path
-fi
-
 if [[ ${ARCH} == "aarch64" ]]; then
   ln -s /usr/lib/aarch64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
   ln -s /usr/lib/aarch64-linux-gnu /usr/lib/lua-platform-path
-fi
-
-if [[ ${ARCH} == "ppc64le" ]]; then
-  ln -s /usr/lib/powerpc64le-linux-gnu/liblua5.1.so /usr/lib/liblua.so
-  ln -s /usr/lib/powerpc64le-linux-gnu /usr/lib/lua-platform-path
 fi
 
 mkdir -p /etc/nginx
@@ -140,18 +124,11 @@ geoip_get "GeoLiteCity.dat.gz" "https://geolite.maxmind.com/download/geoip/datab
 geoip2_get "GeoLite2-City"     "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz"
 geoip2_get "GeoLite2-ASN"      "http://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz"
 
-if [[ (${ARCH} == "ppc64le") ]]; then
-  echo "deb http://deb.debian.org/debian experimental main" >> /etc/apt/sources.list
-  apt-get update
-  apt-get -t experimental install -y luajit
-fi
-
-
 mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src a3d8c67c2035808c7c0d475fffe263db8c353b11521aa7ade468b780ed826cc6 \
+get_src 8f22ea2f6c0e0a221b6ddc02b6428a3ff708e2ad55f9361102b1c9f4142bdf93 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -245,30 +222,19 @@ export HUNTER_USE_CACHE_SERVERS=true
 export LUAJIT_LIB=/usr/local/lib
 export LUA_LIB_DIR="$LUAJIT_LIB/lua"
 
-# luajit is available only as deb package on ppc64le
-if [[ (${ARCH} != "ppc64le") ]]; then
-  cd "$BUILD_PATH/luajit2-$LUAJIT_VERSION"
-  make CCDEBUG=-g
-  make install
+cd "$BUILD_PATH/luajit2-$LUAJIT_VERSION"
+make CCDEBUG=-g
+make install
 
-  export LUAJIT_INC=/usr/local/include/luajit-2.1
-fi
+export LUAJIT_INC=/usr/local/include/luajit-2.1
 
 # Installing luarocks packages
 if [[ ${ARCH} == "x86_64" ]]; then
   export PCRE_DIR=/usr/lib/x86_64-linux-gnu
 fi
 
-if [[ ${ARCH} == "armv7l" ]]; then
-  export PCRE_DIR=/usr/lib/armhf-linux-gnu
-fi
-
 if [[ ${ARCH} == "aarch64" ]]; then
   export PCRE_DIR=/usr/lib/aarch64-linux-gnu
-fi
-
-if [[ ${ARCH} == "ppc64le" ]]; then
-  export PCRE_DIR=/usr/lib/powerpc64le-linux-gnu
 fi
 
 cd "$BUILD_PATH"
@@ -480,7 +446,7 @@ WITH_FLAGS="--with-debug \
   --with-http_secure_link_module \
   --with-http_gunzip_module"
 
-if [[ ${ARCH} != "armv7l" || ${ARCH} != "aarch64" ]]; then
+if [[ ${ARCH} != "aarch64" ]]; then
   WITH_FLAGS+=" --with-file-aio"
 fi
 
