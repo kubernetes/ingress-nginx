@@ -32,4 +32,7 @@ end
 ngx.log = function(...) end
 ngx.print = function(...) end
 
+-- TODO(elvinefendi) once this is implemented for production (should be!), share the same code
+math.randomseed(ngx.time() + ngx.worker.pid())
+
 require "busted.runner"({ standalone = false })
