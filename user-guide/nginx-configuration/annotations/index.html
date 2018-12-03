@@ -2192,7 +2192,7 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 <p>To enable consistent hashing for a backend:</p>
 <p><code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code>: the nginx variable, text value or any combination thereof to use for consistent hashing. For example <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by: &quot;$request_uri&quot;</code> to consistently hash upstream requests by the current request URI.</p>
 <h3 id="custom-nginx-load-balancing">Custom NGINX load balancing<a class="headerlink" href="#custom-nginx-load-balancing" title="Permanent link">&para;</a></h3>
-<p>This is similar to (https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#load-balance) but configures load balancing algorithm per ingress.</p>
+<p>This is similar to <a href="../configmap/#load-balance"><code class="codehilite">load-balance</code> in ConfigMap</a>, but configures load balancing algorithm per ingress.</p>
 <blockquote>
 <p>Note that <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> takes preference over this. If this and <code class="codehilite">nginx.ingress.kubernetes.io/upstream-hash-by</code> are not set then we fallback to using globally configured load balancing algorithm.</p>
 </blockquote>
@@ -2386,7 +2386,7 @@ This can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos
 <p>You can specify the client IP source ranges to be excluded from rate-limiting through the <code class="codehilite">nginx.ingress.kubernetes.io/limit-whitelist</code> annotation. The value is a comma separated list of CIDRs.</p>
 <p>If you specify multiple annotations in a single Ingress rule, <code class="codehilite">limit-rpm</code>, and then <code class="codehilite">limit-rps</code> takes precedence.</p>
 <p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/limit-rate</code>, <code class="codehilite">nginx.ingress.kubernetes.io/limit-rate-after</code> define a limit the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">limit-rate-after</code> and <code class="codehilite">limit-rate</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>. if you set the value in ingress annotation will cover global setting.</p>
+<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">limit-rate-after</code> and <code class="codehilite">limit-rate</code> value may be set in the <a href="../configmap/#limit-rate">NGINX ConfigMap</a>. if you set the value in ingress annotation will cover global setting.</p>
 <h3 id="permanent-redirect">Permanent Redirect<a class="headerlink" href="#permanent-redirect" title="Permanent link">&para;</a></h3>
 <p>This annotation allows to return a permanent redirect instead of sending data to the upstream.  For example <code class="codehilite">nginx.ingress.kubernetes.io/permanent-redirect: https://www.google.com</code> would redirect everything to Google.</p>
 <h3 id="permanent-redirect-code">Permanent Redirect Code<a class="headerlink" href="#permanent-redirect-code" title="Permanent link">&para;</a></h3>
@@ -2395,12 +2395,12 @@ This can be used to mitigate <a href="https://www.nginx.com/blog/mitigating-ddos
 <p>This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. For example <code class="codehilite">nginx.ingress.kubernetes.io/temporal-redirect: https://www.google.com</code> would redirect everything to Google with a Return Code of 302 (Moved Temporarily)</p>
 <h3 id="ssl-passthrough">SSL Passthrough<a class="headerlink" href="#ssl-passthrough" title="Permanent link">&para;</a></h3>
 <p>The annotation <code class="codehilite">nginx.ingress.kubernetes.io/ssl-passthrough</code> instructs the controller to send TLS connections directly
-to the backend instead of letting NGINX decrypt the communication. See also <a href="../tls/#ssl-passthrough">TLS/HTTPS</a> in
+to the backend instead of letting NGINX decrypt the communication. See also <a href="../../tls/#ssl-passthrough">TLS/HTTPS</a> in
 the User guide.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>SSL Passthrough is <strong>disabled by default</strong> and requires starting the controller with the
-<a href="../cli-arguments/"><code class="codehilite">--enable-ssl-passthrough</code></a> flag.</p>
+<a href="../../cli-arguments/"><code class="codehilite">--enable-ssl-passthrough</code></a> flag.</p>
 </div>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
@@ -2419,7 +2419,7 @@ invalidates all the other annotations set on an Ingress object.</p>
 </ul>
 <h3 id="server-side-https-enforcement-through-redirect">Server-side HTTPS enforcement through redirect<a class="headerlink" href="#server-side-https-enforcement-through-redirect" title="Permanent link">&para;</a></h3>
 <p>By default the controller redirects (308) to HTTPS if TLS is enabled for that ingress.
-If you want to disable this behavior globally, you can use <code class="codehilite">ssl-redirect: &quot;false&quot;</code> in the NGINX <a href="../configmap/">config map</a>.</p>
+If you want to disable this behavior globally, you can use <code class="codehilite">ssl-redirect: &quot;false&quot;</code> in the NGINX <a href="../configmap/#ssl-redirect">ConfigMap</a>.</p>
 <p>To configure this feature for specific ingress resources, you can use the <code class="codehilite">nginx.ingress.kubernetes.io/ssl-redirect: &quot;false&quot;</code>
 annotation in the particular resource.</p>
 <p>When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to HTTPS
@@ -2435,7 +2435,7 @@ To enable this feature use the annotation <code class="codehilite">nginx.ingress
 <h3 id="whitelist-source-range">Whitelist source range<a class="headerlink" href="#whitelist-source-range" title="Permanent link">&para;</a></h3>
 <p>You can specify allowed client IP source ranges through the <code class="codehilite">nginx.ingress.kubernetes.io/whitelist-source-range</code> annotation.
 The value is a comma separated list of <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDRs</a>, e.g.  <code class="codehilite">10.0.0.0/24,172.10.0.1</code>.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">whitelist-source-range</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.</p>
+<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">whitelist-source-range</code> value may be set in the <a href="../configmap/#whitelist-source-range">NGINX ConfigMap</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Adding an annotation to an Ingress rule overrides any global restriction.</p>
@@ -2453,27 +2453,27 @@ In some scenarios is required to have different values. To allow this we provide
 </ul>
 <h3 id="proxy-redirect">Proxy redirect<a class="headerlink" href="#proxy-redirect" title="Permanent link">&para;</a></h3>
 <p>With the annotations <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-from</code> and <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-to</code> it is possible to
-set the text that should be changed in the <code class="codehilite">Location</code> and <code class="codehilite">Refresh</code> header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)</p>
+set the text that should be changed in the <code class="codehilite">Location</code> and <code class="codehilite">Refresh</code> header fields of a <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect">proxied server response</a></p>
 <p>Setting "off" or "default" in the annotation <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-from</code> disables <code class="codehilite">nginx.ingress.kubernetes.io/proxy-redirect-to</code>,
 otherwise, both annotations must be used in unison. Note that each annotation must be a string without spaces.</p>
 <p>By default the value of each annotation is "off".</p>
 <h3 id="custom-max-body-size">Custom max body size<a class="headerlink" href="#custom-max-body-size" title="Permanent link">&para;</a></h3>
 <p>For NGINX, an 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size"><code class="codehilite">client_max_body_size</code></a>.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-body-size</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.
+<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-body-size</code> value may be set in the <a href="../configmap/#proxy-body-size">NGINX ConfigMap</a>.
 To use custom values in an Ingress rule define these annotation:</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/proxy-body-size</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8m</span>
 </pre></div>
 
 <h3 id="proxy-cookie-domain">Proxy cookie domain<a class="headerlink" href="#proxy-cookie-domain" title="Permanent link">&para;</a></h3>
 <p>Sets a text that <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain">should be changed in the domain attribute</a> of the "Set-Cookie" header fields of a proxied server response.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-cookie-domain</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.</p>
+<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-cookie-domain</code> value may be set in the <a href="../configmap/#proxy-cookie-domain">NGINX ConfigMap</a>.</p>
 <h3 id="proxy-cookie-path">Proxy cookie path<a class="headerlink" href="#proxy-cookie-path" title="Permanent link">&para;</a></h3>
 <p>Sets a text that <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path">should be changed in the path attribute</a> of the "Set-Cookie" header fields of a proxied server response.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-cookie-path</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.</p>
+<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-cookie-path</code> value may be set in the <a href="../configmap/#proxy-cookie-path">NGINX ConfigMap</a>.</p>
 <h3 id="proxy-buffering">Proxy buffering<a class="headerlink" href="#proxy-buffering" title="Permanent link">&para;</a></h3>
 <p>Enable or disable proxy buffering <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering"><code class="codehilite">proxy_buffering</code></a>.
 By default proxy buffering is disabled in the NGINX config.</p>
-<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-buffering</code> value may be set in the <a href="../configmap/">NGINX ConfigMap</a>.
+<p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-buffering</code> value may be set in the <a href="../configmap/#proxy-buffering">NGINX ConfigMap</a>.
 To use custom values in an Ingress rule define these annotation:</p>
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/proxy-buffering</span><span class="p p-Indicator">:</span> <span class="s">&quot;on&quot;</span>
 </pre></div>
@@ -2481,7 +2481,7 @@ To use custom values in an Ingress rule define these annotation:</p>
 <h3 id="proxy-buffer-size">Proxy buffer size<a class="headerlink" href="#proxy-buffer-size" title="Permanent link">&para;</a></h3>
 <p>Sets the size of the buffer <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code class="codehilite">proxy_buffer_size</code></a> used for reading the first part of the response received from the proxied server.
 By default proxy buffer size is set as "4k"</p>
-<p>To configure this setting globally, set <code class="codehilite">proxy-buffer-size</code> in <a href="../configmap/">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
+<p>To configure this setting globally, set <code class="codehilite">proxy-buffer-size</code> in <a href="../configmap/#proxy-buffer-size">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
 <div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/proxy-buffer-size</span><span class="p p-Indicator">:</span> <span class="s">&quot;8k&quot;</span>
 </pre></div></p>
 <h3 id="ssl-ciphers">SSL ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link">&para;</a></h3>
