@@ -558,41 +558,32 @@ func TestBuildDenyVariable(t *testing.T) {
 }
 
 func TestBuildByteSize(t *testing.T) {
-	a := isValidByteSize("1000")
-	if !a {
-		t.Errorf("Expected '%v' but returned '%v'", true, a)
+	cases := []struct {
+		value    interface{}
+		isOffset bool
+		expected bool
+	}{
+		{"1000", false, true},
+		{"1000k", false, true},
+		{"1m", false, true},
+		{"10g", false, false},
+		{" 1m ", false, true},
+		{"1000kk", false, false},
+		{"1000km", false, false},
+		{"1mm", false, false},
+		{nil, false, false},
+		{"", false, false},
+		{"    ", false, false},
+		{"1G", true, true},
+		{"1000kk", true, false},
+		{"", true, false},
 	}
-	b := isValidByteSize("1000k")
-	if !b {
-		t.Errorf("Expected '%v' but returned '%v'", true, b)
-	}
-	c := isValidByteSize("1000m")
-	if !c {
-		t.Errorf("Expected '%v' but returned '%v'", true, c)
-	}
-	d := isValidByteSize("1000km")
-	if d {
-		t.Errorf("Expected '%v' but returned '%v'", false, d)
-	}
-	e := isValidByteSize("1000mk")
-	if e {
-		t.Errorf("Expected '%v' but returned '%v'", false, e)
-	}
-	f := isValidByteSize("1000kk")
-	if f {
-		t.Errorf("Expected '%v' but returned '%v'", false, f)
-	}
-	g := isValidByteSize("1000mm")
-	if g {
-		t.Errorf("Expected '%v' but returned '%v'", false, g)
-	}
-	h := isValidByteSize(nil)
-	if h {
-		t.Errorf("Expected '%v' but returned '%v'", false, h)
-	}
-	i := isValidByteSize("")
-	if i {
-		t.Errorf("Expected '%v' but returned '%v'", false, i)
+
+	for _, tc := range cases {
+		val := isValidByteSize(tc.value, tc.isOffset)
+		if tc.expected != val {
+			t.Errorf("Expected '%v' but returned '%v'", tc.expected, val)
+		}
 	}
 }
 
@@ -832,5 +823,23 @@ func TestEscapeLiteralDollar(t *testing.T) {
 	expected = ""
 	if escapedPath != expected {
 		t.Errorf("Expected %v but returned %v", expected, escapedPath)
+	}
+}
+
+func Test_opentracingPropagateContext(t *testing.T) {
+	tests := map[interface{}]string{
+		&ingress.Location{BackendProtocol: "HTTP"}:  "opentracing_propagate_context",
+		&ingress.Location{BackendProtocol: "HTTPS"}: "opentracing_propagate_context",
+		&ingress.Location{BackendProtocol: "GRPC"}:  "opentracing_grpc_propagate_context",
+		&ingress.Location{BackendProtocol: "GRPCS"}: "opentracing_grpc_propagate_context",
+		&ingress.Location{BackendProtocol: "AJP"}:   "opentracing_propagate_context",
+		"not a location": "opentracing_propagate_context",
+	}
+
+	for loc, expectedDirective := range tests {
+		actualDirective := opentracingPropagateContext(loc)
+		if actualDirective != expectedDirective {
+			t.Errorf("Expected %v but returned %v", expectedDirective, actualDirective)
+		}
 	}
 }

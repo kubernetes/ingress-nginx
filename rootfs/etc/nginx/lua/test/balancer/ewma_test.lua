@@ -3,6 +3,24 @@ local util = require("util")
 describe("Balancer ewma", function()
   local balancer_ewma = require("balancer.ewma")
 
+  describe("after_balance()", function()
+    local ngx_now = 1543238266
+    _G.ngx.now = function() return ngx_now end
+    _G.ngx.var = { upstream_response_time = "0.25", upstream_connect_time = "0.02", upstream_addr = "10.184.7.40:8080" }
+
+    it("updates EWMA stats", function()
+      local backend = {
+        name = "my-dummy-backend", ["load-balance"] = "ewma",
+        endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } }
+      }
+      local instance = balancer_ewma:new(backend)
+
+      instance:after_balance()
+      assert.equal(0.27, instance.ewma[ngx.var.upstream_addr])
+      assert.equal(ngx_now, instance.ewma_last_touched_at[ngx.var.upstream_addr])
+    end)
+  end)
+
   describe("balance()", function()
     it("returns single endpoint when the given backend has only one endpoint", function()
       local backend = {

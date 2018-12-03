@@ -995,10 +995,10 @@ stream {
             proxy_http_version          1.1;
             proxy_ssl_server_name       on;
             proxy_pass_request_headers  on;
-            {{ if isValidByteSize $location.Proxy.BodySize }}
+            {{ if isValidByteSize $location.Proxy.BodySize true }}
             client_max_body_size        {{ $location.Proxy.BodySize }};
             {{ end }}
-            {{ if isValidByteSize $location.ClientBodyBufferSize }}
+            {{ if isValidByteSize $location.ClientBodyBufferSize false }}
             client_body_buffer_size     {{ $location.ClientBodyBufferSize }};
             {{ end }}
 
@@ -1030,7 +1030,7 @@ stream {
             set $location_path  "{{ $location.Path | escapeLiteralDollar }}";
 
             {{ if $all.Cfg.EnableOpentracing }}
-            opentracing_propagate_context;
+            {{ opentracingPropagateContext $location }};
             {{ end }}
 
             rewrite_by_lua_block {
@@ -1213,10 +1213,10 @@ stream {
             }
             {{ end }}
 
-            {{ if isValidByteSize $location.Proxy.BodySize }}
+            {{ if isValidByteSize $location.Proxy.BodySize true }}
             client_max_body_size                    {{ $location.Proxy.BodySize }};
             {{ end }}
-            {{ if isValidByteSize $location.ClientBodyBufferSize }}
+            {{ if isValidByteSize $location.ClientBodyBufferSize false }}
             client_body_buffer_size                 {{ $location.ClientBodyBufferSize }};
             {{ end }}
 

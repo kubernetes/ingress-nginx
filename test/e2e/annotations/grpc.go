@@ -45,8 +45,7 @@ var _ = framework.IngressNginxDescribe("Annotations - grpc", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host))) &&
-						Expect(server).ShouldNot(ContainSubstring("return 503"))
+					return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host)))
 				})
 
 			f.WaitForNginxServer(host,

@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"strconv"
+	"regexp"
 	"strings"
 	text_template "text/template"
 	"time"
@@ -125,7 +125,6 @@ var (
 		"buildLocation":              buildLocation,
 		"buildAuthLocation":          buildAuthLocation,
 		"buildAuthResponseHeaders":   buildAuthResponseHeaders,
-		"buildLoadBalancingConfig":   buildLoadBalancingConfig,
 		"buildProxyPass":             buildProxyPass,
 		"filterRateLimits":           filterRateLimits,
 		"buildRateLimitZones":        buildRateLimitZones,
@@ -160,6 +159,7 @@ var (
 		"stripLocationModifer":         stripLocationModifer,
 		"buildCustomErrorDeps":         buildCustomErrorDeps,
 		"collectCustomErrorsPerServer": collectCustomErrorsPerServer,
+		"opentracingPropagateContext":  opentracingPropagateContext,
 	}
 )
 
@@ -403,31 +403,6 @@ func buildLogFormatUpstream(input interface{}) string {
 	}
 
 	return cfg.BuildLogFormatUpstream()
-}
-
-func buildLoadBalancingConfig(b interface{}, fallbackLoadBalancing string) string {
-	backend, ok := b.(*ingress.Backend)
-	if !ok {
-		glog.Errorf("expected an '*ingress.Backend' type but %T was returned", b)
-		return ""
-	}
-
-	if backend.UpstreamHashBy != "" {
-		return fmt.Sprintf("hash %s consistent;", backend.UpstreamHashBy)
-	}
-
-	if backend.LoadBalancing != "" {
-		if backend.LoadBalancing == "round_robin" {
-			return ""
-		}
-		return fmt.Sprintf("%s;", backend.LoadBalancing)
-	}
-
-	if fallbackLoadBalancing == "round_robin" || fallbackLoadBalancing == "" {
-		return ""
-	}
-
-	return fmt.Sprintf("%s;", fallbackLoadBalancing)
 }
 
 // buildProxyPass produces the proxy pass string, if the ingress has redirects
@@ -752,39 +727,32 @@ func buildNextUpstream(i, r interface{}) string {
 	return strings.Join(nextUpstreamCodes, " ")
 }
 
-func isValidByteSize(input interface{}) bool {
+// refer to http://nginx.org/en/docs/syntax.html
+// Nginx differentiates between size and offset
+// offset directives support gigabytes in addition
+var nginxSizeRegex = regexp.MustCompile("^[0-9]+[kKmM]{0,1}$")
+var nginxOffsetRegex = regexp.MustCompile("^[0-9]+[kKmMgG]{0,1}$")
+
+// isValidByteSize validates size units valid in nginx
+// http://nginx.org/en/docs/syntax.html
+func isValidByteSize(input interface{}, isOffset bool) bool {
 	s, ok := input.(string)
 	if !ok {
 		glog.Errorf("expected an 'string' type but %T was returned", input)
 		return false
 	}
 
+	s = strings.TrimSpace(s)
 	if s == "" {
 		glog.V(2).Info("empty byte size, hence it will not be set")
 		return false
 	}
 
-	_, err := strconv.Atoi(s)
-	if err != nil {
-		sLowercase := strings.ToLower(s)
-
-		check := strings.TrimSuffix(sLowercase, "k")
-		_, err := strconv.Atoi(check)
-		if err == nil {
-			return true
-		}
-
-		mCheck := strings.TrimSuffix(sLowercase, "m")
-		_, err = strconv.Atoi(mCheck)
-		if err == nil {
-			return true
-		}
-
-		glog.Errorf("incorrect byte size format '%v', hence it will not be set.", s)
-		return false
+	if isOffset {
+		return nginxOffsetRegex.MatchString(s)
 	}
 
-	return true
+	return nginxSizeRegex.MatchString(s)
 }
 
 type ingressInformation struct {
@@ -979,4 +947,18 @@ func collectCustomErrorsPerServer(input interface{}) []int {
 	}
 
 	return uniqueCodes
+}
+
+func opentracingPropagateContext(loc interface{}) string {
+	location, ok := loc.(*ingress.Location)
+	if !ok {
+		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		return "opentracing_propagate_context"
+	}
+
+	if location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
+		return "opentracing_grpc_propagate_context"
+	}
+
+	return "opentracing_propagate_context"
 }
