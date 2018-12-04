@@ -128,9 +128,12 @@ func main() {
 		ReportErrors: true,
 	}))
 
-	mc, err := metric.NewCollector(conf.ListenPorts.Status, reg)
-	if err != nil {
-		glog.Fatalf("Error creating prometheus collector:  %v", err)
+	mc := metric.NewDummyCollector()
+	if conf.EnableMetrics {
+		mc, err = metric.NewCollector(conf.ListenPorts.Status, reg)
+		if err != nil {
+			glog.Fatalf("Error creating prometheus collector:  %v", err)
+		}
 	}
 	mc.Start()
 

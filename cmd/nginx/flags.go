@@ -147,6 +147,9 @@ Requires the update-status parameter.`)
 			`Dynamically update SSL certificates instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
 
+		enableMetrics = flags.Bool("enable-metrics", true,
+			`Enables the collection of NGINX metrics`)
+
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
 		statusPort    = flags.Int("status-port", 18080, `Port to use for exposing NGINX status pages.`)
@@ -223,6 +226,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		UpdateStatus:               *updateStatus,
 		ElectionID:                 *electionID,
 		EnableProfiling:            *profiling,
+		EnableMetrics:              *enableMetrics,
 		EnableSSLPassthrough:       *enableSSLPassthrough,
 		EnableSSLChainCompletion:   *enableSSLChainCompletion,
 		ResyncPeriod:               *resyncPeriod,

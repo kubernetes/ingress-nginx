@@ -914,13 +914,15 @@ func proxySetHeader(loc interface{}) string {
 
 // buildCustomErrorDeps is a utility function returning a struct wrapper with
 // the data required to build the 'CUSTOM_ERRORS' template
-func buildCustomErrorDeps(proxySetHeaders map[string]string, errorCodes []int) interface{} {
+func buildCustomErrorDeps(proxySetHeaders map[string]string, errorCodes []int, enableMetrics bool) interface{} {
 	return struct {
 		ProxySetHeaders map[string]string
 		ErrorCodes      []int
+		EnableMetrics   bool
 	}{
 		ProxySetHeaders: proxySetHeaders,
 		ErrorCodes:      errorCodes,
+		EnableMetrics:   enableMetrics,
 	}
 }
 
