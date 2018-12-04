@@ -602,6 +602,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		ListenPorts:                n.cfg.ListenPorts,
 		PublishService:             n.GetPublishService(),
 		DynamicCertificatesEnabled: n.cfg.DynamicCertificatesEnabled,
+		EnableMetrics:              n.cfg.EnableMetrics,
 	}
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
