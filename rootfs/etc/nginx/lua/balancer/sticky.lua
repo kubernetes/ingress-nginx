@@ -54,6 +54,7 @@ local function set_cookie(self, value)
     path = cookie_path,
     domain = ngx.var.host,
     httponly = true,
+    secure = ngx.var.https == "on",
   }
 
   if self.cookie_expires and self.cookie_expires ~= "" then

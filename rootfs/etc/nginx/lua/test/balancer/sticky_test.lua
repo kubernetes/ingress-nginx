@@ -40,7 +40,7 @@ end
 
 describe("Sticky", function()
   before_each(function()
-    mock_ngx({ var = { location_path = "/", host = "test.com" } })
+    mock_ngx({ var = { location_path = "/", host = "test.com", https = "on" } })
   end)
 
   after_each(function()
@@ -102,7 +102,6 @@ describe("Sticky", function()
       cookie.new = mocked_cookie_new
     end)
 
-
     context("when client doesn't have a cookie set and location is in cookie_locations", function()
       it("picks an endpoint for the client", function()
         local sticky_balancer_instance = sticky:new(test_backend)
@@ -122,6 +121,7 @@ describe("Sticky", function()
               assert.equal(payload.path, ngx.var.location_path)
               assert.equal(payload.domain, ngx.var.host)
               assert.equal(payload.httponly, true)
+              assert.equal(payload.secure, true)
               return true, nil
             end,
             get = function(k) return false end,
