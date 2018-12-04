@@ -24,6 +24,7 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 
 ---
+kind: ConfigMap
 apiVersion: v1
 metadata:
   name: udp-services
