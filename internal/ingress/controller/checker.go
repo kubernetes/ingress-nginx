@@ -59,7 +59,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	}
 
 	// check the nginx master process is running
-	fs, err := proc.NewFS("/proc")
+	fs, err := proc.NewFS("/proc", false)
 	if err != nil {
 		return errors.Wrap(err, "unexpected error reading /proc directory")
 	}

@@ -21,7 +21,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 )
 
 var defResolvConf = "/etc/resolv.conf"
@@ -53,6 +53,6 @@ func GetSystemNameServers() ([]net.IP, error) {
 		}
 	}
 
-	glog.V(3).Infof("nameservers IP address/es to use: %v", nameservers)
+	klog.V(3).Infof("nameservers IP address/es to use: %v", nameservers)
 	return nameservers, nil
 }
