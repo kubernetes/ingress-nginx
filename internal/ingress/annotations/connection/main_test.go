@@ -38,7 +38,6 @@ func TestParse(t *testing.T) {
 		annotations map[string]string
 		expected    *Config
 	}{
-		{map[string]string{annotation: ""}, &Config{Enabled: true, Header: ""}},
 		{map[string]string{annotation: "keep-alive"}, &Config{Enabled: true, Header: "keep-alive"}},
 		{map[string]string{}, &Config{Enabled: false}},
 		{nil, &Config{Enabled: false}},

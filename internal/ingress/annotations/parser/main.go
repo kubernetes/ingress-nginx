@@ -52,6 +52,10 @@ func (a ingAnnotations) parseBool(name string) (bool, error) {
 func (a ingAnnotations) parseString(name string) (string, error) {
 	val, ok := a[name]
 	if ok {
+		if len(val) == 0 {
+			return "", errors.NewInvalidAnnotationContent(name, val)
+		}
+
 		return val, nil
 	}
 	return "", errors.ErrMissingAnnotations
@@ -97,6 +101,7 @@ func GetStringAnnotation(name string, ing *extensions.Ingress) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return ingAnnotations(ing.GetAnnotations()).parseString(v)
 }
 

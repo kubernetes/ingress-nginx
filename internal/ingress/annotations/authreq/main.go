@@ -123,9 +123,6 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if urlString == "" {
-		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
-	}
 
 	authURL, err := url.Parse(urlString)
 	if err != nil {

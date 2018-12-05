@@ -43,40 +43,37 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations to look for InfluxDB configurations
 func (c influxdb) Parse(ing *extensions.Ingress) (interface{}, error) {
-	influxdbEnabled, err := parser.GetBoolAnnotation("enable-influxdb", ing)
+	var err error
+	config := &Config{}
+
+	config.InfluxDBEnabled, err = parser.GetBoolAnnotation("enable-influxdb", ing)
 	if err != nil {
-		influxdbEnabled = false
+		config.InfluxDBEnabled = false
 	}
 
-	influxdbMeasurement, err := parser.GetStringAnnotation("influxdb-measurement", ing)
+	config.InfluxDBMeasurement, err = parser.GetStringAnnotation("influxdb-measurement", ing)
 	if err != nil {
-		influxdbMeasurement = "default"
+		config.InfluxDBMeasurement = "default"
 	}
 
-	influxdbPort, err := parser.GetStringAnnotation("influxdb-port", ing)
+	config.InfluxDBPort, err = parser.GetStringAnnotation("influxdb-port", ing)
 	if err != nil {
 		// This is not the default 8086 port but the port usually used to expose
 		// influxdb in UDP, the module uses UDP to talk to influx via the line protocol.
-		influxdbPort = "8089"
+		config.InfluxDBPort = "8089"
 	}
 
-	influxdbHost, err := parser.GetStringAnnotation("influxdb-host", ing)
+	config.InfluxDBHost, err = parser.GetStringAnnotation("influxdb-host", ing)
 	if err != nil {
-		influxdbHost = "127.0.0.1"
+		config.InfluxDBHost = "127.0.0.1"
 	}
 
-	influxdbServerName, err := parser.GetStringAnnotation("influxdb-server-name", ing)
+	config.InfluxDBServerName, err = parser.GetStringAnnotation("influxdb-server-name", ing)
 	if err != nil {
-		influxdbServerName = "nginx-ingress"
+		config.InfluxDBServerName = "nginx-ingress"
 	}
 
-	return &Config{
-		InfluxDBEnabled:     influxdbEnabled,
-		InfluxDBMeasurement: influxdbMeasurement,
-		InfluxDBPort:        influxdbPort,
-		InfluxDBHost:        influxdbHost,
-		InfluxDBServerName:  influxdbServerName,
-	}, nil
+	return config, nil
 }
 
 // Equal tests for equality between two Config types
