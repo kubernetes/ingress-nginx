@@ -79,7 +79,7 @@ func TestGetStringAnnotation(t *testing.T) {
 
 	_, err := GetStringAnnotation("", nil)
 	if err == nil {
-		t.Errorf("expected error but retuned nil")
+		t.Errorf("expected error but none returned")
 	}
 
 	tests := []struct {
@@ -91,6 +91,7 @@ func TestGetStringAnnotation(t *testing.T) {
 	}{
 		{"valid - A", "string", "A", "A", false},
 		{"valid - B", "string", "B", "B", false},
+		{"empty", "string", "", "", true},
 	}
 
 	data := map[string]string{}
@@ -102,7 +103,7 @@ func TestGetStringAnnotation(t *testing.T) {
 		s, err := GetStringAnnotation(test.field, ing)
 		if test.expErr {
 			if err == nil {
-				t.Errorf("%v: expected error but retuned nil", test.name)
+				t.Errorf("%v: expected error but none returned", test.name)
 			}
 			continue
 		}

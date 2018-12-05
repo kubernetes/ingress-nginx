@@ -97,43 +97,39 @@ func (c1 *Config) Equal(c2 *Config) bool {
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the location/s should allows CORS
 func (c cors) Parse(ing *extensions.Ingress) (interface{}, error) {
-	corsenabled, err := parser.GetBoolAnnotation("enable-cors", ing)
+	var err error
+	config := &Config{}
+
+	config.CorsEnabled, err = parser.GetBoolAnnotation("enable-cors", ing)
 	if err != nil {
-		corsenabled = false
+		config.CorsEnabled = false
 	}
 
-	corsalloworigin, err := parser.GetStringAnnotation("cors-allow-origin", ing)
-	if err != nil || corsalloworigin == "" || !corsOriginRegex.MatchString(corsalloworigin) {
-		corsalloworigin = "*"
+	config.CorsAllowOrigin, err = parser.GetStringAnnotation("cors-allow-origin", ing)
+	if err != nil || !corsOriginRegex.MatchString(config.CorsAllowOrigin) {
+		config.CorsAllowOrigin = "*"
 	}
 
-	corsallowheaders, err := parser.GetStringAnnotation("cors-allow-headers", ing)
-	if err != nil || corsallowheaders == "" || !corsHeadersRegex.MatchString(corsallowheaders) {
-		corsallowheaders = defaultCorsHeaders
+	config.CorsAllowHeaders, err = parser.GetStringAnnotation("cors-allow-headers", ing)
+	if err != nil || !corsHeadersRegex.MatchString(config.CorsAllowHeaders) {
+		config.CorsAllowHeaders = defaultCorsHeaders
 	}
 
-	corsallowmethods, err := parser.GetStringAnnotation("cors-allow-methods", ing)
-	if err != nil || corsallowmethods == "" || !corsMethodsRegex.MatchString(corsallowmethods) {
-		corsallowmethods = defaultCorsMethods
+	config.CorsAllowMethods, err = parser.GetStringAnnotation("cors-allow-methods", ing)
+	if err != nil || !corsMethodsRegex.MatchString(config.CorsAllowMethods) {
+		config.CorsAllowMethods = defaultCorsMethods
 	}
 
-	corsallowcredentials, err := parser.GetBoolAnnotation("cors-allow-credentials", ing)
+	config.CorsAllowCredentials, err = parser.GetBoolAnnotation("cors-allow-credentials", ing)
 	if err != nil {
-		corsallowcredentials = true
+		config.CorsAllowCredentials = true
 	}
 
-	corsmaxage, err := parser.GetIntAnnotation("cors-max-age", ing)
+	config.CorsMaxAge, err = parser.GetIntAnnotation("cors-max-age", ing)
 	if err != nil {
-		corsmaxage = defaultCorsMaxAge
+		config.CorsMaxAge = defaultCorsMaxAge
 	}
 
-	return &Config{
-		CorsEnabled:          corsenabled,
-		CorsAllowOrigin:      corsalloworigin,
-		CorsAllowHeaders:     corsallowheaders,
-		CorsAllowMethods:     corsallowmethods,
-		CorsAllowCredentials: corsallowcredentials,
-		CorsMaxAge:           corsmaxage,
-	}, nil
+	return config, nil
 
 }

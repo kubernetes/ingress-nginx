@@ -66,31 +66,28 @@ type modSecurity struct {
 // Parse parses the annotations contained in the ingress
 // rule used to enable ModSecurity in a particular location
 func (a modSecurity) Parse(ing *extensions.Ingress) (interface{}, error) {
+	var err error
+	config := &Config{}
 
-	enableModSecurity, err := parser.GetBoolAnnotation("enable-modsecurity", ing)
+	config.Enable, err = parser.GetBoolAnnotation("enable-modsecurity", ing)
 	if err != nil {
-		enableModSecurity = false
+		config.Enable = false
 	}
 
-	owaspRules, err := parser.GetBoolAnnotation("enable-owasp-core-rules", ing)
+	config.OWASPRules, err = parser.GetBoolAnnotation("enable-owasp-core-rules", ing)
 	if err != nil {
-		owaspRules = false
+		config.OWASPRules = false
 	}
 
-	transactionID, err := parser.GetStringAnnotation("modsecurity-transaction-id", ing)
+	config.TransactionID, err = parser.GetStringAnnotation("modsecurity-transaction-id", ing)
 	if err != nil {
-		transactionID = ""
+		config.TransactionID = ""
 	}
 
-	snippet, err := parser.GetStringAnnotation("modsecurity-snippet", ing)
+	config.Snippet, err = parser.GetStringAnnotation("modsecurity-snippet", ing)
 	if err != nil {
-		snippet = ""
+		config.Snippet = ""
 	}
 
-	return Config{
-		Enable:        enableModSecurity,
-		OWASPRules:    owaspRules,
-		TransactionID: transactionID,
-		Snippet:       snippet,
-	}, nil
+	return config, nil
 }
