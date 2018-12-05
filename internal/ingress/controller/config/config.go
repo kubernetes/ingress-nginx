@@ -715,6 +715,7 @@ type TemplateConfig struct {
 	ListenPorts                *ListenPorts
 	PublishService             *apiv1.Service
 	DynamicCertificatesEnabled bool
+	EnableMetrics              bool
 }
 
 // ListenPorts describe the ports required to run the
