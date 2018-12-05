@@ -940,8 +940,13 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		// default upstream name
 		un := du.Name
 
+		if anns.Canary.Enabled {
+			klog.V(2).Infof("Ingress %v is marked as Canary, ignoring", ingKey)
+			continue
+		}
+
 		if ing.Spec.Backend != nil {
-			defUpstream := fmt.Sprintf("%v-%v-%v", ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
+			defUpstream := upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
 
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
 				// use backend specified in Ingress as the default backend for all its rules
@@ -1015,6 +1020,11 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	for _, ing := range data {
 		ingKey := k8s.MetaNamespaceKey(ing)
 		anns := ing.ParsedAnnotations
+
+		if anns.Canary.Enabled {
+			klog.V(2).Infof("Ingress %v is marked as Canary, ignoring", ingKey)
+			continue
+		}
 
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
