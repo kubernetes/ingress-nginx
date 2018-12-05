@@ -19,8 +19,8 @@ package e2e
 import (
 	"testing"
 
-	"k8s.io/klog"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )

@@ -32,8 +32,8 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/klog"
 	"github.com/zakjan/cert-chain-resolver/certUtil"
+	"k8s.io/klog"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 

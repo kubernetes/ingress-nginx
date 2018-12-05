@@ -24,8 +24,8 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/klog"
 	"github.com/mitchellh/hashstructure"
+	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
