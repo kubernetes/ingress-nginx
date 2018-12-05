@@ -11,7 +11,7 @@ Prometheus HTTP API.
 
 __This library requires Go1.7 or later.__
 
-## Important note about releases, versioning, tagging, stability, and your favorite Go dependency management tool
+## Important note about releases, versioning, tagging, and stability
 
 While our goal is to follow [Semantic Versioning](https://semver.org/), this
 repository is still pre-1.0.0. To quote the
@@ -22,38 +22,42 @@ declaring something 1.0.0 doesn't make it 1.0.0. Instead, we are working
 towards a 1.0.0 release that actually deserves its major version number.
 
 Having said that, we aim for always keeping the tip of master in a workable
-state and for only introducing ”mildly” breaking changes up to and including
-[v0.9.0](https://github.com/prometheus/client_golang/milestone/1). After that,
-a number of ”hard” breaking changes are planned, see the
-[v0.10.0 milestone](https://github.com/prometheus/client_golang/milestone/2),
-which should get the library much closer to 1.0.0 state.
+state. We occasionally tag versions and track their changes in CHANGELOG.md,
+but this happens mostly to keep dependency management tools happy and to give
+people a handle they can talk about easily. In particular, all commits in the
+master branch have passed the same testing and reviewing. There is no QA
+process in place that would render tagged commits more stable or better tested
+than others.
 
-Dependency management in Go projects is still in flux, and there are many tools
-floating around. While [dep](https://golang.github.io/dep/) might develop into
-the de-facto standard tool, it is still officially experimental. The roadmap
-for this library has been laid out with a lot of sometimes painful experience
-in mind. We really cannot adjust it every other month to the needs of the
-currently most popular or most promising Go dependency management tool. The
-recommended course of action with dependency management tools is the following:
+There is a plan behind the current (pre-1.0.0) versioning, though:
 
-- Do not expect strict post-1.0.0 semver semantics prior to the 1.0.0
-  release. If your dependency management tool expects strict post-1.0.0 semver
-  semantics, you have to wait. Sorry.
-- If you want absolute certainty, please lock to a specific commit. You can
-  also lock to tags, but please don't ask for more tagging. This would suggest
-  some release or stability testing procedure that simply is not in place. As
-  said above, we are aiming for stability of the tip of master, but if we
-  tagged every single commit, locking to tags would be the same as locking to
-  commits.
-- If you want to get the newer features and improvements and are willing to
-  take the minor risk of newly introduced bugs and “mild” breakage, just always
-  update to the tip of master (which is essentially the original idea of Go
-  dependency management). We recommend to not use features marked as
-  _deprecated_ in this case.
-- Once [v0.9.0](https://github.com/prometheus/client_golang/milestone/1) is
-  out, you could lock to v0.9.x to get bugfixes (and perhaps minor new
-  features) while avoiding the “hard” breakage that will come with post-0.9
-  features.
+- v0.9 is the “production release”, currently tracked in the master
+  branch. “Patch” releases will usually be just bug fixes, indeed, but
+  important new features that do not require invasive code changes might also
+  be included in those. We do not plan any breaking changes from one v0.9.x
+  release to any later v0.9.y release, but nothing is guaranteed. Since the
+  master branch will eventually be switched over to track the upcoming v0.10
+  (see below), we recommend to tell your dependency management tool of choice
+  to use the latest v0.9.x release, at least for your production software. In
+  that way, you should get bug fixes and non-invasive, low-risk new features
+  without the need to change anything on your part.
+- v0.10 is a planned release that will have a _lot_ of breaking changes
+  (despite being only a “minor” release in the Semantic Versioning terminology,
+  but as said, pre-1.0.0 means nothing is guaranteed). Essentially, we have
+  been piling up feature requests that require breaking changes for a while,
+  and they are all collected in the
+  [v0.10 milestone](https://github.com/prometheus/client_golang/milestone/2).
+  Since there will be so many breaking changes, the development for v0.10 is
+  currently not happening in the master branch, but in the
+  [dev-0.10 branch](https://github.com/prometheus/client_golang/tree/dev-0.10).
+  It will violently change for a while, and it will definitely be in a
+  non-working state now and then. It should only be used for sneak-peaks and
+  discussions of the new features and designs.
+- Once v0.10 is ready for real-life use, it will be merged into the master
+  branch (which is the reason why you should lock your dependency management
+  tool to v0.9.x and only migrate to v0.10 when both you and v0.10 are ready
+  for it). In the ideal case, v0.10 will be the basis for the future v1.0
+  release, but we cannot provide an ETA at this time.
 
 ## Instrumenting applications
 
@@ -62,8 +66,8 @@ recommended course of action with dependency management tools is the following:
 The
 [`prometheus` directory](https://github.com/prometheus/client_golang/tree/master/prometheus)
 contains the instrumentation library. See the
-[best practices section](http://prometheus.io/docs/practices/naming/) of the
-Prometheus documentation to learn more about instrumenting applications.
+[guide](https://prometheus.io/docs/guides/go-application/) on the Prometheus
+website to learn more about instrumenting applications.
 
 The
 [`examples` directory](https://github.com/prometheus/client_golang/tree/master/examples)
