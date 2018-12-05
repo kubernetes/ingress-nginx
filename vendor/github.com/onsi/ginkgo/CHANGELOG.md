@@ -1,3 +1,12 @@
+## 1.7.0
+
+### New Features
+- Add JustAfterEach (#484) [0d4f080]
+
+### Fixes
+- Correctly round suite time in junit reporter [2445fc1]
+- Avoid using -i argument to go test for Golang 1.10+ [46bbc26]
+
 ## 1.6.0
 
 ### New Features
