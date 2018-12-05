@@ -24,7 +24,7 @@ import (
 	"github.com/onsi/gomega/types"
 )
 
-const GOMEGA_VERSION = "1.4.2"
+const GOMEGA_VERSION = "1.4.3"
 
 const nilFailHandlerPanic = `You are trying to make an assertion, but Gomega's fail handler is nil.
 If you're using Ginkgo then you probably forgot to put your assertion in an It().
@@ -46,9 +46,22 @@ func RegisterFailHandler(handler types.GomegaFailHandler) {
 		globalFailWrapper = nil
 		return
 	}
+
 	globalFailWrapper = &types.GomegaFailWrapper{
 		Fail:        handler,
 		TWithHelper: testingtsupport.EmptyTWithHelper{},
+	}
+}
+
+func RegisterFailHandlerWithT(t types.TWithHelper, handler types.GomegaFailHandler) {
+	if handler == nil {
+		globalFailWrapper = nil
+		return
+	}
+
+	globalFailWrapper = &types.GomegaFailWrapper{
+		Fail:        handler,
+		TWithHelper: t,
 	}
 }
 
@@ -74,7 +87,12 @@ func RegisterFailHandler(handler types.GomegaFailHandler) {
 //
 // (As an aside: Ginkgo gets around this limitation by running parallel tests in different *processes*).
 func RegisterTestingT(t types.GomegaTestingT) {
-	RegisterFailHandler(testingtsupport.BuildTestingTGomegaFailWrapper(t).Fail)
+	tWithHelper, hasHelper := t.(types.TWithHelper)
+	if !hasHelper {
+		RegisterFailHandler(testingtsupport.BuildTestingTGomegaFailWrapper(t).Fail)
+		return
+	}
+	RegisterFailHandlerWithT(tWithHelper, testingtsupport.BuildTestingTGomegaFailWrapper(t).Fail)
 }
 
 //InterceptGomegaHandlers runs a given callback and returns an array of

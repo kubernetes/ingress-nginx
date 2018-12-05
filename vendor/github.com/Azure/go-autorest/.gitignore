@@ -9,6 +9,7 @@ _obj
 _test
 .DS_Store
 .idea/
+.vscode/
 
 # Architecture specific extensions/prefixes
 *.[568vq]
