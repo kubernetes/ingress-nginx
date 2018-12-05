@@ -389,6 +389,8 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 	upstreams := n.createUpstreams(ingresses, du)
 	servers := n.createServers(ingresses, upstreams, du)
 
+	var canaryIngresses []*ingress.Ingress
+
 	for _, ing := range ingresses {
 		ingKey := k8s.MetaNamespaceKey(ing)
 		anns := ing.ParsedAnnotations
@@ -561,9 +563,15 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			}
 		}
 
+		// set aside canary ingresses to merge later
 		if anns.Canary.Enabled {
-			klog.Infof("Canary ingress %v detected. Finding eligible backends to merge into.", ing.Name)
-			mergeAlternativeBackends(ing, upstreams, servers)
+			canaryIngresses = append(canaryIngresses, ing)
+		}
+	}
+
+	if nonCanaryIngressExists(ingresses, canaryIngresses) {
+		for _, canaryIng := range canaryIngresses {
+			mergeAlternativeBackends(canaryIng, upstreams, servers)
 		}
 	}
 
@@ -1127,8 +1135,17 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	return servers
 }
 
+// OK to merge canary ingresses iff there exists one or more ingresses to potentially merge into
+func nonCanaryIngressExists(ingresses []*ingress.Ingress, canaryIngresses []*ingress.Ingress) bool {
+	return len(ingresses)-len(canaryIngresses) > 0
+}
+
+// ensure that the following conditions are met
+// 1) names of backends do not match and canary doesn't merge into itself
+// 2) primary name is not the default upstream
+// 3) the primary has a server
 func canMergeBackend(primary *ingress.Backend, alternative *ingress.Backend) bool {
-	return primary.Name != alternative.Name && !primary.NoServer
+	return primary.Name != alternative.Name && primary.Name != defUpstreamName && !primary.NoServer
 }
 
 // Performs the merge action and checks to ensure that one two alternative backends do not merge into each other
