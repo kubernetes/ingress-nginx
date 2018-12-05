@@ -432,7 +432,7 @@ func GetFakeSSLCert() ([]byte, []byte) {
 	priv, err = rsa.GenerateKey(rand.Reader, 2048)
 
 	if err != nil {
-		klog.Fatalf("failed to generate fake private key: %s", err)
+		klog.Fatalf("failed to generate fake private key: %v", err)
 	}
 
 	notBefore := time.Now()
@@ -443,7 +443,7 @@ func GetFakeSSLCert() ([]byte, []byte) {
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 
 	if err != nil {
-		klog.Fatalf("failed to generate fake serial number: %s", err)
+		klog.Fatalf("failed to generate fake serial number: %v", err)
 	}
 
 	template := x509.Certificate{
@@ -462,7 +462,7 @@ func GetFakeSSLCert() ([]byte, []byte) {
 	}
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.(*rsa.PrivateKey).PublicKey, priv)
 	if err != nil {
-		klog.Fatalf("Failed to create fake certificate: %s", err)
+		klog.Fatalf("Failed to create fake certificate: %v", err)
 	}
 
 	cert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
