@@ -87,6 +87,8 @@ type Configuration struct {
 
 	EnableProfiling bool
 
+	EnableMetrics bool
+
 	EnableSSLChainCompletion bool
 
 	FakeCertificatePath string

@@ -826,7 +826,7 @@ func TestEscapeLiteralDollar(t *testing.T) {
 	}
 }
 
-func Test_opentracingPropagateContext(t *testing.T) {
+func TestOpentracingPropagateContext(t *testing.T) {
 	tests := map[interface{}]string{
 		&ingress.Location{BackendProtocol: "HTTP"}:  "opentracing_propagate_context",
 		&ingress.Location{BackendProtocol: "HTTPS"}: "opentracing_propagate_context",
