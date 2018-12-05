@@ -1,32 +1,12 @@
-# Copyright 2015 The Prometheus Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-GO           := GO15VENDOREXPERIMENT=1 go
-FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
-PROMU        := $(FIRST_GOPATH)/bin/promu
-pkgs          = $(shell $(GO) list ./... | grep -v /vendor/)
+pkgs          = $(shell go list ./... | grep -v /vendor/)
 
 PREFIX                  ?= $(shell pwd)
 BIN_DIR                 ?= $(shell pwd)
-DOCKER_IMAGE_NAME       ?= process-exporter
+DOCKER_IMAGE_NAME       ?= ncabatoff/process-exporter
 DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
+SMOKE_TEST = -config.path packaging/conf/all.yaml -once-to-stdout-delay 1s |grep -q 'namedprocess_namegroup_memory_bytes{groupname="process-exporte",memtype="virtual"}'
 
-ifdef DEBUG
-	bindata_flags = -debug
-endif
-
-
-all: format vet build test
+all: format vet test build smoke
 
 style:
 	@echo ">> checking code style"
@@ -34,38 +14,37 @@ style:
 
 test:
 	@echo ">> running short tests"
-	@$(GO) test -short $(pkgs)
+	go test -short $(pkgs)
 
 format:
 	@echo ">> formatting code"
-	@$(GO) fmt $(pkgs)
+	go fmt $(pkgs)
 
 vet:
 	@echo ">> vetting code"
-	@$(GO) vet $(pkgs)
+	go vet $(pkgs)
 
-build: promu
-	@echo ">> building binaries"
-	@$(PROMU) build --prefix $(PREFIX)
+build:
+	@echo ">> building code"
+	cd cmd/process-exporter; CGO_ENABLED=0 go build -o ../../process-exporter -a -tags netgo
 
-tarball: promu
-	@echo ">> building release tarball"
-	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
+smoke:
+	@echo ">> smoke testing process-exporter"
+	./process-exporter $(SMOKE_TEST)
 
-crossbuild: promu
-	@echo ">> cross-building"
-	@$(PROMU) crossbuild
-	@$(PROMU) crossbuild tarballs
+integ:
+	@echo ">> integration testing process-exporter"
+	go build -o integration-tester cmd/integration-tester/main.go
+	go build -o load-generator cmd/load-generator/main.go
+	./integration-tester -write-size-bytes 65536
+
+install:
+	@echo ">> installing binary"
+	cd cmd/process-exporter; CGO_ENABLED=0 go install -a -tags netgo
 
 docker:
 	@echo ">> building docker image"
-	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
+	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
+	docker run --rm -v `pwd`/packaging:/packaging "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" $(SMOKE_TEST)
 
-promu:
-	@echo ">> fetching promu"
-	@GOOS=$(shell uname -s | tr A-Z a-z) \
-	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(patsubst arm%,arm,$(shell uname -m)))) \
-	$(GO) get -u github.com/prometheus/promu
-
-
-.PHONY: all style format build test vet tarball crossbuild docker promu
+.PHONY: all style format test vet build integ docker

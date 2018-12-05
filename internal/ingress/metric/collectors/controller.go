@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/klog"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -181,11 +181,11 @@ func (cm *Controller) SetSSLExpireTime(servers []*ingress.Server) {
 func (cm *Controller) RemoveMetrics(hosts []string, registry prometheus.Gatherer) {
 	mfs, err := registry.Gather()
 	if err != nil {
-		glog.Errorf("Error gathering metrics: %v", err)
+		klog.Errorf("Error gathering metrics: %v", err)
 		return
 	}
 
-	glog.V(2).Infof("removing SSL certificate metrics for %v hosts", hosts)
+	klog.V(2).Infof("removing SSL certificate metrics for %v hosts", hosts)
 	toRemove := sets.NewString(hosts...)
 
 	for _, mf := range mfs {
@@ -212,10 +212,10 @@ func (cm *Controller) RemoveMetrics(hosts []string, registry prometheus.Gatherer
 				continue
 			}
 
-			glog.V(2).Infof("Removing prometheus metric from gauge %v for host %v", metricName, host)
+			klog.V(2).Infof("Removing prometheus metric from gauge %v for host %v", metricName, host)
 			removed := cm.sslExpireTime.Delete(labels)
 			if !removed {
-				glog.V(2).Infof("metric %v for host %v with labels not removed: %v", metricName, host, labels)
+				klog.V(2).Infof("metric %v for host %v with labels not removed: %v", metricName, host, labels)
 			}
 		}
 	}

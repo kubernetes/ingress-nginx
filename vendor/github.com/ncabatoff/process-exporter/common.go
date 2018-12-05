@@ -1,14 +1,18 @@
 package common
 
+import "fmt"
+
 type (
-	NameAndCmdline struct {
-		Name    string
-		Cmdline []string
+	ProcAttributes struct {
+		Name     string
+		Cmdline  []string
+		Username string
 	}
 
 	MatchNamer interface {
 		// MatchAndName returns false if the match failed, otherwise
 		// true and the resulting name.
-		MatchAndName(NameAndCmdline) (bool, string)
+		MatchAndName(ProcAttributes) (bool, string)
+		fmt.Stringer
 	}
 )

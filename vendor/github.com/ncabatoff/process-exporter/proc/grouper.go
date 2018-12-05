@@ -1,173 +1,179 @@
 package proc
 
 import (
-	common "github.com/ncabatoff/process-exporter"
 	"time"
+
+	seq "github.com/ncabatoff/go-seq/seq"
+	common "github.com/ncabatoff/process-exporter"
 )
 
 type (
+	// Grouper is the top-level interface to the process metrics.  All tracked
+	// procs sharing the same group name are aggregated.
 	Grouper struct {
-		namer         common.MatchNamer
-		trackChildren bool
-		// track how much was seen last time so we can report the delta
-		GroupStats map[string]Counts
-		tracker    *Tracker
+		// groupAccum records the historical accumulation of a group so that
+		// we can avoid ever decreasing the counts we return.
+		groupAccum  map[string]Counts
+		tracker     *Tracker
+		threadAccum map[string]map[string]Threads
+		debug       bool
 	}
 
-	GroupCountMap map[string]GroupCounts
+	// GroupByName maps group name to group metrics.
+	GroupByName map[string]Group
 
-	GroupCounts struct {
+	// Threads collects metrics for threads in a group sharing a thread name.
+	Threads struct {
+		Name       string
+		NumThreads int
 		Counts
-		Procs           int
-		Memresident     uint64
-		Memvirtual      uint64
+	}
+
+	// Group describes the metrics of a single group.
+	Group struct {
+		Counts
+		States
+		Wchans map[string]int
+		Procs  int
+		Memory
 		OldestStartTime time.Time
 		OpenFDs         uint64
 		WorstFDratio    float64
+		NumThreads      uint64
+		Threads         []Threads
 	}
 )
 
-func NewGrouper(trackChildren bool, namer common.MatchNamer) *Grouper {
+// Returns true if x < y.  Test designers should ensure they always have
+// a unique name/numthreads combination for each group.
+func lessThreads(x, y Threads) bool { return seq.Compare(x, y) < 0 }
+
+// NewGrouper creates a grouper.
+func NewGrouper(namer common.MatchNamer, trackChildren, alwaysRecheck, debug bool) *Grouper {
 	g := Grouper{
-		trackChildren: trackChildren,
-		namer:         namer,
-		GroupStats:    make(map[string]Counts),
-		tracker:       NewTracker(),
+		groupAccum:  make(map[string]Counts),
+		threadAccum: make(map[string]map[string]Threads),
+		tracker:     NewTracker(namer, trackChildren, alwaysRecheck, debug),
+		debug:       debug,
 	}
 	return &g
 }
 
-func (g *Grouper) checkAncestry(idinfo ProcIdInfo, newprocs map[ProcId]ProcIdInfo) string {
-	ppid := idinfo.ParentPid
-	pProcId := g.tracker.ProcIds[ppid]
-	if pProcId.Pid < 1 {
-		// Reached root of process tree without finding a tracked parent.
-		g.tracker.Ignore(idinfo.ProcId)
-		return ""
-	}
-
-	// Is the parent already known to the tracker?
-	if ptproc, ok := g.tracker.Tracked[pProcId]; ok {
-		if ptproc != nil {
-			// We've found a tracked parent.
-			g.tracker.Track(ptproc.GroupName, idinfo)
-			return ptproc.GroupName
-		} else {
-			// We've found an untracked parent.
-			g.tracker.Ignore(idinfo.ProcId)
-			return ""
-		}
-	}
-
-	// Is the parent another new process?
-	if pinfoid, ok := newprocs[pProcId]; ok {
-		if name := g.checkAncestry(pinfoid, newprocs); name != "" {
-			// We've found a tracked parent, which implies this entire lineage should be tracked.
-			g.tracker.Track(name, idinfo)
-			return name
-		}
-	}
-
-	// Parent is dead, i.e. we never saw it, or there's no tracked proc in our ancestry.
-	g.tracker.Ignore(idinfo.ProcId)
-	return ""
-
-}
-
-// Update tracks any new procs that should be according to policy, and updates
-// the metrics for already tracked procs.  Permission errors are returned as a
-// count, and will not affect the error return value.
-func (g *Grouper) Update(iter ProcIter) (int, error) {
-	newProcs, permErrs, err := g.tracker.Update(iter)
-	if err != nil {
-		return permErrs, err
-	}
-
-	// Step 1: track any new proc that should be tracked based on its name and cmdline.
-	untracked := make(map[ProcId]ProcIdInfo)
-	for _, idinfo := range newProcs {
-		wanted, gname := g.namer.MatchAndName(common.NameAndCmdline{Name: idinfo.Name, Cmdline: idinfo.Cmdline})
-		if !wanted {
-			untracked[idinfo.ProcId] = idinfo
-			continue
-		}
-
-		g.tracker.Track(gname, idinfo)
-	}
-
-	// Step 2: track any untracked new proc that should be tracked because its parent is tracked.
-	if !g.trackChildren {
-		return permErrs, nil
-	}
-
-	for _, idinfo := range untracked {
-		if _, ok := g.tracker.Tracked[idinfo.ProcId]; ok {
-			// Already tracked or ignored
-			continue
-		}
-
-		g.checkAncestry(idinfo, untracked)
-	}
-	return permErrs, nil
-}
-
-// groups returns the aggregate metrics for all groups tracked.  This reflects
-// solely what's currently running.
-func (g *Grouper) groups() GroupCountMap {
-	gcounts := make(GroupCountMap)
-
+func groupadd(grp Group, ts Update) Group {
 	var zeroTime time.Time
-	for _, tinfo := range g.tracker.Tracked {
-		if tinfo == nil {
-			continue
-		}
-		cur := gcounts[tinfo.GroupName]
-		cur.Procs++
-		tstats := tinfo.GetStats()
-		cur.Memresident += tstats.Memory.Resident
-		cur.Memvirtual += tstats.Memory.Virtual
-		cur.OpenFDs += tstats.Filedesc.Open
-		openratio := float64(tstats.Filedesc.Open) / float64(tstats.Filedesc.Limit)
-		if cur.WorstFDratio < openratio {
-			cur.WorstFDratio = openratio
-		}
-		cur.Counts.Cpu += tstats.latest.Cpu
-		cur.Counts.ReadBytes += tstats.latest.ReadBytes
-		cur.Counts.WriteBytes += tstats.latest.WriteBytes
-		if cur.OldestStartTime == zeroTime || tstats.start.Before(cur.OldestStartTime) {
-			cur.OldestStartTime = tstats.start
-		}
-		gcounts[tinfo.GroupName] = cur
+
+	grp.Procs++
+	grp.Memory.ResidentBytes += ts.Memory.ResidentBytes
+	grp.Memory.VirtualBytes += ts.Memory.VirtualBytes
+	grp.Memory.VmSwapBytes += ts.Memory.VmSwapBytes
+	if ts.Filedesc.Open != -1 {
+		grp.OpenFDs += uint64(ts.Filedesc.Open)
+	}
+	openratio := float64(ts.Filedesc.Open) / float64(ts.Filedesc.Limit)
+	if grp.WorstFDratio < openratio {
+		grp.WorstFDratio = openratio
+	}
+	grp.NumThreads += ts.NumThreads
+	grp.Counts.Add(ts.Latest)
+	grp.States.Add(ts.States)
+	if grp.OldestStartTime == zeroTime || ts.Start.Before(grp.OldestStartTime) {
+		grp.OldestStartTime = ts.Start
 	}
 
-	return gcounts
+	if grp.Wchans == nil {
+		grp.Wchans = make(map[string]int)
+	}
+	for wchan, count := range ts.Wchans {
+		grp.Wchans[wchan] += count
+	}
+
+	return grp
 }
 
-// Groups returns GroupCounts with Counts that never decrease in value from one
-// call to the next.  Even if processes exit, their CPU and IO contributions up
-// to that point are included in the results.  Even if no processes remain
-// in a group it will still be included in the results.
-func (g *Grouper) Groups() GroupCountMap {
-	groups := g.groups()
+// Update asks the tracker to report on each tracked process by name.
+// These are aggregated by groupname, augmented by accumulated counts
+// from the past, and returned.  Note that while the Tracker reports
+// only what counts have changed since last cycle, Grouper.Update
+// returns counts that never decrease.  Even once the last process
+// with name X disappears, name X will still appear in the results
+// with the same counts as before; of course, all non-count metrics
+// will be zero.
+func (g *Grouper) Update(iter Iter) (CollectErrors, GroupByName, error) {
+	cerrs, tracked, err := g.tracker.Update(iter)
+	if err != nil {
+		return cerrs, nil, err
+	}
+	return cerrs, g.groups(tracked), nil
+}
 
-	// First add any accumulated counts to what was just observed,
+// Translate the updates into a new GroupByName and update internal history.
+func (g *Grouper) groups(tracked []Update) GroupByName {
+	groups := make(GroupByName)
+	threadsByGroup := make(map[string][]ThreadUpdate)
+
+	for _, update := range tracked {
+		groups[update.GroupName] = groupadd(groups[update.GroupName], update)
+		if update.Threads != nil {
+			threadsByGroup[update.GroupName] =
+				append(threadsByGroup[update.GroupName], update.Threads...)
+		}
+	}
+
+	// Add any accumulated counts to what was just observed,
 	// and update the accumulators.
 	for gname, group := range groups {
-		if oldcounts, ok := g.GroupStats[gname]; ok {
-			group.Counts.Cpu += oldcounts.Cpu
-			group.Counts.ReadBytes += oldcounts.ReadBytes
-			group.Counts.WriteBytes += oldcounts.WriteBytes
+		if oldcounts, ok := g.groupAccum[gname]; ok {
+			group.Counts.Add(Delta(oldcounts))
 		}
-		g.GroupStats[gname] = group.Counts
+		g.groupAccum[gname] = group.Counts
+		group.Threads = g.threads(gname, threadsByGroup[gname])
 		groups[gname] = group
 	}
 
 	// Now add any groups that were observed in the past but aren't running now.
-	for gname, gcounts := range g.GroupStats {
+	for gname, gcounts := range g.groupAccum {
 		if _, ok := groups[gname]; !ok {
-			groups[gname] = GroupCounts{Counts: gcounts}
+			groups[gname] = Group{Counts: gcounts}
 		}
 	}
 
 	return groups
+}
+
+func (g *Grouper) threads(gname string, tracked []ThreadUpdate) []Threads {
+	if len(tracked) == 0 {
+		delete(g.threadAccum, gname)
+		return nil
+	}
+
+	ret := make([]Threads, 0, len(tracked))
+	threads := make(map[string]Threads)
+
+	// First aggregate the thread metrics by thread name.
+	for _, nc := range tracked {
+		curthr := threads[nc.ThreadName]
+		curthr.NumThreads++
+		curthr.Counts.Add(nc.Latest)
+		curthr.Name = nc.ThreadName
+		threads[nc.ThreadName] = curthr
+	}
+
+	// Add any accumulated counts to what was just observed,
+	// and update the accumulators.
+	if history := g.threadAccum[gname]; history != nil {
+		for tname := range threads {
+			if oldcounts, ok := history[tname]; ok {
+				counts := threads[tname]
+				counts.Add(Delta(oldcounts.Counts))
+				threads[tname] = counts
+			}
+		}
+	}
+
+	g.threadAccum[gname] = threads
+
+	for _, thr := range threads {
+		ret = append(ret, thr)
+	}
+	return ret
 }

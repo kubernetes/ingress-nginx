@@ -18,20 +18,20 @@ package ssl
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
 	"testing"
 	"time"
 
 	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/client-go/util/cert/triple"
 
 	"k8s.io/ingress-nginx/internal/file"
 )
 
 // generateRSACerts generates a self signed certificate using a self generated ca
-func generateRSACerts(host string) (*triple.KeyPair, *triple.KeyPair, error) {
-	ca, err := triple.NewCA("self-sign-ca")
+func generateRSACerts(host string) (*keyPair, *keyPair, error) {
+	ca, err := newCA("self-sign-ca")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -50,7 +50,7 @@ func generateRSACerts(host string) (*triple.KeyPair, *triple.KeyPair, error) {
 		return nil, nil, fmt.Errorf("unable to sign the server certificate: %v", err)
 	}
 
-	return &triple.KeyPair{
+	return &keyPair{
 		Key:  key,
 		Cert: cert,
 	}, ca, nil
@@ -181,4 +181,27 @@ func TestCreateSSLCert(t *testing.T) {
 	if ngxCert.CN[0] != "echoheaders" {
 		t.Fatalf("expected cname echoheaders but %v returned", ngxCert.CN[0])
 	}
+}
+
+type keyPair struct {
+	Key  *rsa.PrivateKey
+	Cert *x509.Certificate
+}
+
+func newCA(name string) (*keyPair, error) {
+	key, err := certutil.NewPrivateKey()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create a private key for a new CA: %v", err)
+	}
+	config := certutil.Config{
+		CommonName: name,
+	}
+	cert, err := certutil.NewSelfSignedCACert(config, key)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create a self-signed certificate for a new CA: %v", err)
+	}
+	return &keyPair{
+		Key:  key,
+		Cert: cert,
+	}, nil
 }
