@@ -19,7 +19,7 @@ package sessionaffinity
 import (
 	"regexp"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 
@@ -140,7 +140,7 @@ func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
 	case "cookie":
 		cookie = a.cookieAffinityParse(ing)
 	default:
-		glog.V(3).Infof("No default affinity was found for Ingress %v", ing.Name)
+		klog.V(3).Infof("No default affinity was found for Ingress %v", ing.Name)
 
 	}
 

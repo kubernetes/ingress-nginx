@@ -20,13 +20,13 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 )
 
 func nginxVersion() {
 	flag := "-v"
 
-	if glog.V(2) {
+	if klog.V(2) {
 		flag = "-V"
 	}
 

@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/golang/glog"
 	"github.com/spf13/pflag"
 
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -168,7 +168,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 	flag.CommandLine.Parse([]string{})
 
 	pflag.VisitAll(func(flag *pflag.Flag) {
-		glog.V(2).Infof("FLAG: --%s=%q", flag.Name, flag.Value)
+		klog.V(2).Infof("FLAG: --%s=%q", flag.Name, flag.Value)
 	})
 
 	if *showVersion {
@@ -176,10 +176,10 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 	}
 
 	if *ingressClass != "" {
-		glog.Infof("Watching for Ingress class: %s", *ingressClass)
+		klog.Infof("Watching for Ingress class: %s", *ingressClass)
 
 		if *ingressClass != class.DefaultClass {
-			glog.Warningf("Only Ingresses with class %q will be processed by this Ingress controller", *ingressClass)
+			klog.Warningf("Only Ingresses with class %q will be processed by this Ingress controller", *ingressClass)
 		}
 
 		class.IngressClass = *ingressClass
@@ -209,7 +209,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 	}
 
 	if !*enableSSLChainCompletion {
-		glog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
+		klog.Warningf("SSL certificate chain completion is disabled (--enable-ssl-chain-completion=false)")
 	}
 
 	if *enableSSLChainCompletion && *dynamicCertificatesEnabled {

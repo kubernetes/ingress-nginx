@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
 
@@ -675,7 +675,7 @@ func NewDefault() Configuration {
 		NoAuthLocations:              "/.well-known/acme-challenge",
 	}
 
-	if glog.V(5) {
+	if klog.V(5) {
 		cfg.ErrorLogLevel = "debug"
 	}
 

@@ -30,7 +30,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 	"github.com/pkg/errors"
 
 	. "github.com/onsi/ginkgo"
@@ -235,8 +235,8 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 
 		var match bool
 		errs := InterceptGomegaFailures(func() {
-			if glog.V(10) && len(o) > 0 {
-				glog.Infof("nginx.conf:\n%v", o)
+			if klog.V(10) && len(o) > 0 {
+				klog.Infof("nginx.conf:\n%v", o)
 			}
 
 			// passes the nginx config to the passed function
@@ -250,7 +250,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		}
 
 		if len(errs) > 0 {
-			glog.V(2).Infof("Errors waiting for conditions: %v", errs)
+			klog.V(2).Infof("Errors waiting for conditions: %v", errs)
 		}
 
 		return false, nil
@@ -329,7 +329,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 	}
 
 	if *deployment.Spec.Replicas != int32(replicas) {
-		glog.Infof("updating replica count from %v to %v...", *deployment.Spec.Replicas, replicas)
+		klog.Infof("updating replica count from %v to %v...", *deployment.Spec.Replicas, replicas)
 		deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return err

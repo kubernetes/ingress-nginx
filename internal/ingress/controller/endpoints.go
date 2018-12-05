@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -48,18 +48,18 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 
 	// ExternalName services
 	if s.Spec.Type == corev1.ServiceTypeExternalName {
-		glog.V(3).Infof("Ingress using Service %q of type ExternalName.", svcKey)
+		klog.V(3).Infof("Ingress using Service %q of type ExternalName.", svcKey)
 
 		targetPort := port.TargetPort.IntValue()
 		if targetPort <= 0 {
-			glog.Errorf("ExternalName Service %q has an invalid port (%v)", svcKey, targetPort)
+			klog.Errorf("ExternalName Service %q has an invalid port (%v)", svcKey, targetPort)
 			return upsServers
 		}
 
 		if net.ParseIP(s.Spec.ExternalName) == nil {
 			_, err := net.LookupHost(s.Spec.ExternalName)
 			if err != nil {
-				glog.Errorf("Error resolving host %q: %v", s.Spec.ExternalName, err)
+				klog.Errorf("Error resolving host %q: %v", s.Spec.ExternalName, err)
 				return upsServers
 			}
 		}
@@ -70,10 +70,10 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 		})
 	}
 
-	glog.V(3).Infof("Getting Endpoints for Service %q and port %v", svcKey, port.String())
+	klog.V(3).Infof("Getting Endpoints for Service %q and port %v", svcKey, port.String())
 	ep, err := getServiceEndpoints(svcKey)
 	if err != nil {
-		glog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
+		klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 		return upsServers
 	}
 
@@ -113,6 +113,6 @@ func getEndpoints(s *corev1.Service, port *corev1.ServicePort, proto corev1.Prot
 		}
 	}
 
-	glog.V(3).Infof("Endpoints found for Service %q: %v", svcKey, upsServers)
+	klog.V(3).Infof("Endpoints found for Service %q: %v", svcKey, upsServers)
 	return upsServers
 }

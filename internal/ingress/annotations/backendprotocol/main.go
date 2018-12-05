@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -57,7 +57,7 @@ func (a backendProtocol) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	proto = strings.TrimSpace(strings.ToUpper(proto))
 	if !validProtocols.MatchString(proto) {
-		glog.Warningf("Protocol %v is not a valid value for the backend-protocol annotation. Using HTTP as protocol", proto)
+		klog.Warningf("Protocol %v is not a valid value for the backend-protocol annotation. Using HTTP as protocol", proto)
 		return HTTP, nil
 	}
 

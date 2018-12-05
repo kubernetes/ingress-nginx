@@ -70,7 +70,8 @@ func TestFlagConflict(t *testing.T) {
 	defer func() { os.Args = oldArgs }()
 	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--publish-status-address", "1.1.1.1"}
 
-	_, _, err := parseFlags()
+	_, c, err := parseFlags()
+	t.Logf("%v", c)
 	if err == nil {
 		t.Fatalf("Expected an error parsing flags but none returned")
 	}

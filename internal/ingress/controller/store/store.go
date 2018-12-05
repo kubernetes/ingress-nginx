@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/eapache/channels"
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -247,7 +247,7 @@ func New(checkOCSP bool,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(glog.Infof)
+	eventBroadcaster.StartLogging(klog.Infof)
 	eventBroadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{
 		Interface: client.CoreV1().Events(namespace),
 	})
@@ -305,7 +305,7 @@ func New(checkOCSP bool,
 			ing := obj.(*extensions.Ingress)
 			if !class.IsValid(ing) {
 				a, _ := parser.GetStringAnnotation(class.IngressKey, ing)
-				glog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
+				klog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
 				return
 			}
 			recorder.Eventf(ing, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
@@ -325,17 +325,17 @@ func New(checkOCSP bool,
 				// If we reached here it means the ingress was deleted but its final state is unrecorded.
 				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 				if !ok {
-					glog.Errorf("couldn't get object from tombstone %#v", obj)
+					klog.Errorf("couldn't get object from tombstone %#v", obj)
 					return
 				}
 				ing, ok = tombstone.Obj.(*extensions.Ingress)
 				if !ok {
-					glog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
+					klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
 					return
 				}
 			}
 			if !class.IsValid(ing) {
-				glog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
+				klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
 				return
 			}
 			recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
@@ -356,10 +356,10 @@ func New(checkOCSP bool,
 			validOld := class.IsValid(oldIng)
 			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
-				glog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				klog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validOld && !validCur {
-				glog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				klog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validCur && !reflect.DeepEqual(old, cur) {
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
@@ -437,12 +437,12 @@ func New(checkOCSP bool,
 				// If we reached here it means the secret was deleted but its final state is unrecorded.
 				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 				if !ok {
-					glog.Errorf("couldn't get object from tombstone %#v", obj)
+					klog.Errorf("couldn't get object from tombstone %#v", obj)
 					return
 				}
 				sec, ok = tombstone.Obj.(*corev1.Secret)
 				if !ok {
-					glog.Errorf("Tombstone contained object that is not a Secret: %#v", obj)
+					klog.Errorf("Tombstone contained object that is not a Secret: %#v", obj)
 					return
 				}
 			}
@@ -527,7 +527,7 @@ func New(checkOCSP bool,
 						key := k8s.MetaNamespaceKey(ingKey)
 						ing, err := store.getIngress(key)
 						if err != nil {
-							glog.Errorf("could not find Ingress %v in local store: %v", key, err)
+							klog.Errorf("could not find Ingress %v in local store: %v", key, err)
 							continue
 						}
 						store.syncIngress(ing)
@@ -581,7 +581,7 @@ func New(checkOCSP bool,
 	ns, name, _ := k8s.ParseNameNS(configmap)
 	cm, err := client.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
-		glog.Warningf("Unexpected error reading configuration configmap: %v", err)
+		klog.Warningf("Unexpected error reading configuration configmap: %v", err)
 	}
 
 	store.setConfig(cm)
@@ -623,7 +623,7 @@ func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 // references in secretIngressMap.
 func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
-	glog.V(3).Infof("updating references to secrets for ingress %v", key)
+	klog.V(3).Infof("updating references to secrets for ingress %v", key)
 
 	// delete all existing references first
 	s.secretIngressMap.Delete(key)
@@ -649,7 +649,7 @@ func (s *k8sStore) updateSecretIngressMap(ing *extensions.Ingress) {
 	for _, ann := range secretAnnotations {
 		secrKey, err := objectRefAnnotationNsKey(ann, ing)
 		if err != nil && !errors.IsMissingAnnotations(err) {
-			glog.Errorf("error reading secret reference in annotation %q: %s", ann, err)
+			klog.Errorf("error reading secret reference in annotation %q: %s", ann, err)
 			continue
 		}
 		if secrKey != "" {
@@ -775,18 +775,18 @@ func (s k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName stri
 
 		// 81 used instead of 80 because of padding
 		if !(ticketBytes == 48 || ticketBytes == 81) {
-			glog.Warningf("ssl-session-ticket-key must contain either 48 or 80 bytes")
+			klog.Warningf("ssl-session-ticket-key must contain either 48 or 80 bytes")
 		}
 
 		decodedTicket, err := base64.StdEncoding.DecodeString(ticketString)
 		if err != nil {
-			glog.Errorf("unexpected error decoding ssl-session-ticket-key: %v", err)
+			klog.Errorf("unexpected error decoding ssl-session-ticket-key: %v", err)
 			return
 		}
 
 		err = ioutil.WriteFile(fileName, decodedTicket, file.ReadWriteByUser)
 		if err != nil {
-			glog.Errorf("unexpected error writing ssl-session-ticket-key to %s: %v", fileName, err)
+			klog.Errorf("unexpected error writing ssl-session-ticket-key to %s: %v", fileName, err)
 			return
 		}
 
