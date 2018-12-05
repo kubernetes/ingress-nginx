@@ -55,8 +55,8 @@ func (em BinaryNameMatcher) MatchAndName(nacl common.ProcAttributes) (bool, stri
 }
 
 // String returns the name of the binary to match
-func (m BinaryNameMatcher) String() string {
-	return fmt.Sprintf("%+v", m.Binary)
+func (em BinaryNameMatcher) String() string {
+	return fmt.Sprintf("%+v", em.Binary)
 }
 
 type namedProcessData struct {

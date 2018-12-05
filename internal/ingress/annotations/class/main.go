@@ -17,8 +17,8 @@ limitations under the License.
 package class
 
 import (
-	"k8s.io/klog"
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/klog"
 )
 
 const (

@@ -19,8 +19,8 @@ package file
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"k8s.io/klog"
 	"io/ioutil"
+	"k8s.io/klog"
 )
 
 // SHA1 returns the SHA1 of a file.

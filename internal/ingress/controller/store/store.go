@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/eapache/channels"
-	"k8s.io/klog"
 
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -41,6 +40,7 @@ import (
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
@@ -387,11 +387,11 @@ func New(checkOCSP bool,
 
 			// find references in ingresses and update local ssl certs
 			if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
-				glog.Infof("secret %v was added and it is used in ingress annotations. Parsing...", key)
+				klog.Infof("secret %v was added and it is used in ingress annotations. Parsing...", key)
 				for _, ingKey := range ings {
 					ing, err := store.getIngress(ingKey)
 					if err != nil {
-						glog.Errorf("could not find Ingress %v in local store", ingKey)
+						klog.Errorf("could not find Ingress %v in local store", ingKey)
 						continue
 					}
 					store.syncIngress(ing)
@@ -414,11 +414,11 @@ func New(checkOCSP bool,
 
 				// find references in ingresses and update local ssl certs
 				if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
-					glog.Infof("secret %v was updated and it is used in ingress annotations. Parsing...", key)
+					klog.Infof("secret %v was updated and it is used in ingress annotations. Parsing...", key)
 					for _, ingKey := range ings {
 						ing, err := store.getIngress(ingKey)
 						if err != nil {
-							glog.Errorf("could not find Ingress %v in local store", ingKey)
+							klog.Errorf("could not find Ingress %v in local store", ingKey)
 							continue
 						}
 						store.syncIngress(ing)
@@ -453,11 +453,11 @@ func New(checkOCSP bool,
 
 			// find references in ingresses
 			if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
-				glog.Infof("secret %v was deleted and it is used in ingress annotations. Parsing...", key)
+				klog.Infof("secret %v was deleted and it is used in ingress annotations. Parsing...", key)
 				for _, ingKey := range ings {
 					ing, err := store.getIngress(ingKey)
 					if err != nil {
-						glog.Errorf("could not find Ingress %v in local store", ingKey)
+						klog.Errorf("could not find Ingress %v in local store", ingKey)
 						continue
 					}
 					store.syncIngress(ing)
@@ -592,7 +592,7 @@ func New(checkOCSP bool,
 // annotation to a go struct
 func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
-	glog.V(3).Infof("updating annotations information for ingress %v", key)
+	klog.V(3).Infof("updating annotations information for ingress %v", key)
 
 	copyIng := &extensions.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
@@ -615,7 +615,7 @@ func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 		ParsedAnnotations: s.annotations.Extract(ing),
 	})
 	if err != nil {
-		glog.Error(err)
+		klog.Error(err)
 	}
 }
 

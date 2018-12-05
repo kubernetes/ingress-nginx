@@ -25,8 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/klog"
 	"github.com/pkg/errors"
+	"k8s.io/klog"
 
 	pool "gopkg.in/go-playground/pool.v3"
 	apiv1 "k8s.io/api/core/v1"

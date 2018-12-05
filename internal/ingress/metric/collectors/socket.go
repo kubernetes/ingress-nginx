@@ -23,10 +23,10 @@ import (
 	"net"
 	"os"
 
-	"k8s.io/klog"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/klog"
 )
 
 type upstream struct {

@@ -20,8 +20,8 @@ import (
 	"regexp"
 	"strings"
 
-	"k8s.io/klog"
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"

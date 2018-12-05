@@ -31,7 +31,6 @@ import (
 	text_template "text/template"
 	"time"
 
-	"k8s.io/klog"
 	"github.com/pkg/errors"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -41,6 +40,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
+	"k8s.io/klog"
 )
 
 const (
@@ -738,13 +738,13 @@ var nginxOffsetRegex = regexp.MustCompile("^[0-9]+[kKmMgG]{0,1}$")
 func isValidByteSize(input interface{}, isOffset bool) bool {
 	s, ok := input.(string)
 	if !ok {
-		glog.Errorf("expected an 'string' type but %T was returned", input)
+		klog.Errorf("expected an 'string' type but %T was returned", input)
 		return false
 	}
 
 	s = strings.TrimSpace(s)
 	if s == "" {
-		glog.V(2).Info("empty byte size, hence it will not be set")
+		klog.V(2).Info("empty byte size, hence it will not be set")
 		return false
 	}
 
