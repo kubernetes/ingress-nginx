@@ -63,7 +63,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 
 	length, err := conn.Read(data)
 	if err != nil {
-		klog.V(4).Infof("Error reading the first 4k of the connection: %s", err)
+		klog.V(4).Infof("Error reading the first 4k of the connection: %v", err)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	}
 
 	if proxy == nil {
-		klog.V(4).Infof("There is no configured proxy for SSL connections.")
+		klog.V(4).Info("There is no configured proxy for SSL connections.")
 		return
 	}
 
@@ -100,12 +100,12 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 		_, err = fmt.Fprintf(clientConn, proxyProtocolHeader)
 	}
 	if err != nil {
-		klog.Errorf("Error writing Proxy Protocol header: %s", err)
+		klog.Errorf("Error writing Proxy Protocol header: %v", err)
 		clientConn.Close()
 	} else {
 		_, err = clientConn.Write(data[:length])
 		if err != nil {
-			klog.Errorf("Error writing the first 4k of proxy data: %s", err)
+			klog.Errorf("Error writing the first 4k of proxy data: %v", err)
 			clientConn.Close()
 		}
 	}
