@@ -20,12 +20,24 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"fmt"
+	"time"
 
+	"testing"
+
+	"github.com/eapache/channels"
+	"k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"testing"
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/controller/store"
+	"k8s.io/ingress-nginx/internal/k8s"
 )
 
 func TestMergeAlternativeBackends(t *testing.T) {
@@ -583,6 +595,337 @@ func TestExtractTLSSecretName(t *testing.T) {
 				t.Errorf("Expected Secret name %q (got %q)", tc.expName, name)
 			}
 		})
+	}
+}
+
+func TestGetBackendServers(t *testing.T) {
+	ctl := newNGINXController(t)
+
+	testCases := []struct {
+		Ingresses []*ingress.Ingress
+		Validate  func(servers []*ingress.Server)
+	}{
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: extensions.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: extensions.IngressSpec{
+							Backend: &extensions.IngressBackend{
+								ServiceName: "http-svc-canary",
+								ServicePort: intstr.IntOrString{
+									IntVal: 80,
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						Canary: canary.Config{
+							Enabled: true,
+						},
+					},
+				},
+			},
+			Validate: func(servers []*ingress.Server) {
+				if len(servers) != 1 {
+					t.Errorf("servers count should be 1, got %d", len(servers))
+					return
+				}
+
+				s := servers[0]
+				if s.Hostname != "_" {
+					t.Errorf("server hostname should be '_', got '%s'", s.Hostname)
+				}
+				if !s.Locations[0].IsDefBackend {
+					t.Errorf("server location 0 should be default backend")
+				}
+
+				if s.Locations[0].Backend != defUpstreamName {
+					t.Errorf("location backend should be '%s', got '%s'", defUpstreamName, s.Locations[0].Backend)
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: extensions.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: extensions.IngressSpec{
+							Backend: &extensions.IngressBackend{
+								ServiceName: "http-svc-canary",
+								ServicePort: intstr.IntOrString{
+									IntVal: 80,
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						Canary: canary.Config{
+							Enabled: true,
+						},
+					},
+				},
+				{
+					Ingress: extensions.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: extensions.IngressSpec{
+							Backend: &extensions.IngressBackend{
+								ServiceName: "http-svc",
+								ServicePort: intstr.IntOrString{
+									IntVal: 80,
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						Canary: canary.Config{
+							Enabled: false,
+						},
+					},
+				},
+			},
+			Validate: func(servers []*ingress.Server) {
+				if len(servers) != 1 {
+					t.Errorf("servers count should be 1, got %d", len(servers))
+					return
+				}
+
+				s := servers[0]
+				if s.Hostname != "_" {
+					t.Errorf("server hostname should be '_', got '%s'", s.Hostname)
+				}
+				if s.Locations[0].IsDefBackend {
+					t.Errorf("server location 0 should not be default backend")
+				}
+
+				if s.Locations[0].Backend != "example-http-svc-80" {
+					t.Errorf("location backend should be 'example-http-svc-80', got '%s'", s.Locations[0].Backend)
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: extensions.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: extensions.IngressSpec{
+							Rules: []extensions.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: extensions.IngressRuleValue{
+										HTTP: &extensions.HTTPIngressRuleValue{
+											Paths: []extensions.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: extensions.IngressBackend{
+														ServiceName: "http-svc-canary",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						Canary: canary.Config{
+							Enabled: true,
+						},
+					},
+				},
+			},
+			Validate: func(servers []*ingress.Server) {
+				if len(servers) != 1 {
+					t.Errorf("servers count should be 1, got %d", len(servers))
+					return
+				}
+
+				s := servers[0]
+				if s.Hostname != "_" {
+					t.Errorf("server hostname should be '_', got '%s'", s.Hostname)
+				}
+				if !s.Locations[0].IsDefBackend {
+					t.Errorf("server location 0 should be default backend")
+				}
+
+				if s.Locations[0].Backend != defUpstreamName {
+					t.Errorf("location backend should be '%s', got '%s'", defUpstreamName, s.Locations[0].Backend)
+				}
+			},
+		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: extensions.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "example",
+							Namespace: "example",
+						},
+						Spec: extensions.IngressSpec{
+							Rules: []extensions.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: extensions.IngressRuleValue{
+										HTTP: &extensions.HTTPIngressRuleValue{
+											Paths: []extensions.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: extensions.IngressBackend{
+														ServiceName: "http-svc",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						Canary: canary.Config{
+							Enabled: false,
+						},
+					},
+				},
+				{
+					Ingress: extensions.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "example-canary",
+							Namespace: "example",
+						},
+						Spec: extensions.IngressSpec{
+							Rules: []extensions.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: extensions.IngressRuleValue{
+										HTTP: &extensions.HTTPIngressRuleValue{
+											Paths: []extensions.HTTPIngressPath{
+												{
+													Path: "/",
+													Backend: extensions.IngressBackend{
+														ServiceName: "http-svc-canary",
+														ServicePort: intstr.IntOrString{
+															Type:   intstr.Int,
+															IntVal: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{
+						Canary: canary.Config{
+							Enabled: true,
+						},
+					},
+				},
+			},
+			Validate: func(servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 2, got %d", len(servers))
+					return
+				}
+
+				s := servers[0]
+				if s.Hostname != "_" {
+					t.Errorf("server hostname should be '_', got '%s'", s.Hostname)
+				}
+				if !s.Locations[0].IsDefBackend {
+					t.Errorf("server location 0 should be default backend")
+				}
+
+				if s.Locations[0].Backend != defUpstreamName {
+					t.Errorf("location backend should be '%s', got '%s'", defUpstreamName, s.Locations[0].Backend)
+				}
+
+				s = servers[1]
+				if s.Hostname != "example.com" {
+					t.Errorf("server hostname should be 'example.com', got '%s'", s.Hostname)
+				}
+
+				if s.Locations[0].Backend != "example-http-svc-80" {
+					t.Errorf("location backend should be 'example-http-svc-80', got '%s'", s.Locations[0].Backend)
+				}
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		_, servers := ctl.getBackendServers(testCase.Ingresses)
+		testCase.Validate(servers)
+	}
+}
+
+func newNGINXController(t *testing.T) *NGINXController {
+	ns := v1.NamespaceDefault
+	pod := &k8s.PodInfo{
+		Name:      "testpod",
+		Namespace: ns,
+		Labels: map[string]string{
+			"pod-template-hash": "1234",
+		},
+	}
+
+	clientSet := fake.NewSimpleClientset()
+	configMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:     "config",
+			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
+		},
+	}
+	_, err := clientSet.CoreV1().ConfigMaps(ns).Create(configMap)
+	if err != nil {
+		t.Fatalf("error creating the configuration map: %v", err)
+	}
+
+	fs, err := file.NewFakeFS()
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+
+	storer := store.New(true,
+		ns,
+		fmt.Sprintf("%v/config", ns),
+		fmt.Sprintf("%v/tcp", ns),
+		fmt.Sprintf("%v/udp", ns),
+		"",
+		10*time.Minute,
+		clientSet,
+		fs,
+		channels.NewRingChannel(10),
+		false,
+		pod)
+
+	config := &Configuration{
+		ListenPorts: &ngx_config.ListenPorts{
+			Default: 80,
+		},
+	}
+
+	return &NGINXController{
+		store: storer,
+		cfg:   config,
 	}
 }
 
