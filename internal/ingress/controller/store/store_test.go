@@ -265,6 +265,118 @@ func TestStore(t *testing.T) {
 		}
 	})
 
+	t.Run("should not receive updates for ingress with invalid class", func(t *testing.T) {
+		ns := createNamespace(clientSet, t)
+		defer deleteNamespace(ns, clientSet, t)
+		cm := createConfigMap(clientSet, ns, t)
+		defer deleteConfigMap(cm, ns, clientSet, t)
+
+		stopCh := make(chan struct{})
+		updateCh := channels.NewRingChannel(1024)
+
+		var add uint64
+		var upd uint64
+		var del uint64
+
+		go func(ch *channels.RingChannel) {
+			for {
+				evt, ok := <-ch.Out()
+				if !ok {
+					return
+				}
+
+				e := evt.(Event)
+				if e.Obj == nil {
+					continue
+				}
+				if _, ok := e.Obj.(*extensions.Ingress); !ok {
+					continue
+				}
+
+				switch e.Type {
+				case CreateEvent:
+					atomic.AddUint64(&add, 1)
+				case UpdateEvent:
+					atomic.AddUint64(&upd, 1)
+				case DeleteEvent:
+					atomic.AddUint64(&del, 1)
+				}
+			}
+		}(updateCh)
+
+		fs := newFS(t)
+		storer := New(true,
+			ns,
+			fmt.Sprintf("%v/config", ns),
+			fmt.Sprintf("%v/tcp", ns),
+			fmt.Sprintf("%v/udp", ns),
+			"",
+			10*time.Minute,
+			clientSet,
+			fs,
+			updateCh,
+			false,
+			pod)
+
+		storer.Run(stopCh)
+
+		// create an invalid ingress (different class)
+		invalidIngress := ensureIngress(&extensions.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "custom-class",
+				SelfLink:  fmt.Sprintf("/apis/extensions/v1beta1/namespaces/%s/ingresses/custom-class", ns),
+				Namespace: ns,
+				Annotations: map[string]string{
+					"kubernetes.io/ingress.class": "something",
+				},
+			},
+			Spec: extensions.IngressSpec{
+				Rules: []extensions.IngressRule{
+					{
+						Host: "dummy",
+						IngressRuleValue: extensions.IngressRuleValue{
+							HTTP: &extensions.HTTPIngressRuleValue{
+								Paths: []extensions.HTTPIngressPath{
+									{
+										Path: "/",
+										Backend: extensions.IngressBackend{
+											ServiceName: "http-svc",
+											ServicePort: intstr.FromInt(80),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, clientSet, t)
+		err := framework.WaitForIngressInNamespace(clientSet, ns, invalidIngress.Name)
+		if err != nil {
+			t.Errorf("error waiting for ingress: %v", err)
+		}
+		time.Sleep(1 * time.Second)
+
+		invalidIngressUpdated := invalidIngress.DeepCopy()
+		invalidIngressUpdated.Spec.Rules[0].Host = "update-dummy"
+		_ = ensureIngress(invalidIngressUpdated, clientSet, t)
+		if err != nil {
+			t.Errorf("error creating ingress: %v", err)
+		}
+		// Secret takes a bit to update
+		time.Sleep(3 * time.Second)
+
+		if atomic.LoadUint64(&add) != 0 {
+			t.Errorf("expected 0 event of type Create but %v occurred", add)
+		}
+		if atomic.LoadUint64(&upd) != 0 {
+			t.Errorf("expected 0 event of type Update but %v occurred", upd)
+		}
+		if atomic.LoadUint64(&del) != 0 {
+			t.Errorf("expected 0 event of type Delete but %v occurred", del)
+		}
+	})
+
 	t.Run("should not receive events from secret not referenced from ingress", func(t *testing.T) {
 		ns := createNamespace(clientSet, t)
 		defer deleteNamespace(ns, clientSet, t)
