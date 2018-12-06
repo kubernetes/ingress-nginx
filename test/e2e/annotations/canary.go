@@ -192,4 +192,54 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
 		})
 	})
+
+	Context("Single canary Ingress", func() {
+		It("should not use canary as a catch-all server", func() {
+			host := "foo"
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":           "true",
+				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+			}
+
+			ing := framework.NewSingleCatchAllIngress(canaryIngName, f.IngressController.Namespace, "http-svc-canary", 80, &annotations)
+			f.EnsureIngress(ing)
+
+			ing = framework.NewSingleCatchAllIngress(host, f.IngressController.Namespace, "http-svc", 80, nil)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer("_",
+				func(server string) bool {
+					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.IngressController.Namespace, "http-svc", "80")
+					canaryUpstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.IngressController.Namespace, "http-svc-canary", "80")
+					return Expect(server).Should(ContainSubstring(`set $ingress_name "`+host+`";`)) &&
+						Expect(server).ShouldNot(ContainSubstring(`set $proxy_upstream_name "upstream-default-backend";`)) &&
+						Expect(server).ShouldNot(ContainSubstring(canaryUpstreamName)) &&
+						Expect(server).Should(ContainSubstring(upstreamName))
+				})
+		})
+
+		It("should not use canary with domain as a server", func() {
+			host := "foo"
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":           "true",
+				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+			}
+
+			ing := framework.NewSingleIngress(canaryIngName, "/", host, f.IngressController.Namespace, "http-svc-canary", 80, &annotations)
+			f.EnsureIngress(ing)
+
+			otherHost := "bar"
+			ing = framework.NewSingleIngress(otherHost, "/", otherHost, f.IngressController.Namespace, "http-svc", 80, nil)
+			f.EnsureIngress(ing)
+
+			time.Sleep(waitForLuaSync)
+
+			f.WaitForNginxConfiguration(func(cfg string) bool {
+				return Expect(cfg).Should(ContainSubstring("server_name "+otherHost)) &&
+					Expect(cfg).ShouldNot(ContainSubstring("server_name "+host))
+			})
+		})
+	})
 })
