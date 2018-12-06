@@ -102,7 +102,6 @@ describe("Sticky", function()
       cookie.new = mocked_cookie_new
     end)
 
-
     context("when client doesn't have a cookie set and location is in cookie_locations", function()
       it("picks an endpoint for the client", function()
         local sticky_balancer_instance = sticky:new(test_backend)
@@ -122,6 +121,36 @@ describe("Sticky", function()
               assert.equal(payload.path, ngx.var.location_path)
               assert.equal(payload.domain, ngx.var.host)
               assert.equal(payload.httponly, true)
+              assert.equal(payload.secure, false)
+              return true, nil
+            end,
+            get = function(k) return false end,
+          }
+          s = spy.on(cookie_instance, "set")
+          return cookie_instance, false
+        end
+        local b = get_test_backend()
+        b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
+        b.sessionAffinityConfig.cookieSessionAffinity.locations["test.com"] = {"/"}
+        local sticky_balancer_instance = sticky:new(b)
+        assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+        assert.spy(s).was_called()
+      end)
+
+      it("sets a secure cookie on the client when being in ssl mode", function()
+        ngx.var.https = "on"
+        local s = {}
+        cookie.new = function(self)
+          local test_backend_hash_fn = test_backend.sessionAffinityConfig.cookieSessionAffinity.hash
+          local cookie_instance = {
+            set = function(self, payload)
+              assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
+              local expected_len = #util[test_backend_hash_fn .. "_digest"]("anything")
+              assert.equal(#payload.value, expected_len)
+              assert.equal(payload.path, ngx.var.location_path)
+              assert.equal(payload.domain, ngx.var.host)
+              assert.equal(payload.httponly, true)
+              assert.equal(payload.secure, true)
               return true, nil
             end,
             get = function(k) return false end,
