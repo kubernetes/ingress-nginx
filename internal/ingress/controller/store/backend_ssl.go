@@ -36,8 +36,8 @@ import (
 // syncSecret synchronizes the content of a TLS Secret (certificate(s), secret
 // key) with the filesystem. The resulting files can be used by NGINX.
 func (s k8sStore) syncSecret(key string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.syncSecretMu.Lock()
+	defer s.syncSecretMu.Unlock()
 
 	klog.V(3).Infof("Syncing Secret %q", key)
 

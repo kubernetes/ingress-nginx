@@ -865,7 +865,8 @@ func newStore(t *testing.T) *k8sStore {
 		sslStore:         NewSSLCertTracker(),
 		filesystem:       fs,
 		updateCh:         channels.NewRingChannel(10),
-		mu:               new(sync.Mutex),
+		syncSecretMu:     new(sync.Mutex),
+		backendConfigMu:  new(sync.RWMutex),
 		secretIngressMap: NewObjectRefMap(),
 		pod:              pod,
 	}

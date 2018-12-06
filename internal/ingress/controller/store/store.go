@@ -211,8 +211,11 @@ type k8sStore struct {
 	// updateCh
 	updateCh *channels.RingChannel
 
-	// mu protects against simultaneous invocations of syncSecret
-	mu *sync.Mutex
+	// syncSecretMu protects against simultaneous invocations of syncSecret
+	syncSecretMu *sync.Mutex
+
+	// backendConfigMu protects against simultaneous read/write of backendConfig
+	backendConfigMu *sync.RWMutex
 
 	defaultSSLCertificate string
 
@@ -239,7 +242,8 @@ func New(checkOCSP bool,
 		filesystem:                   fs,
 		updateCh:                     updateCh,
 		backendConfig:                ngx_config.NewDefault(),
-		mu:                           &sync.Mutex{},
+		syncSecretMu:                 &sync.Mutex{},
+		backendConfigMu:              &sync.RWMutex{},
 		secretIngressMap:             NewObjectRefMap(),
 		defaultSSLCertificate:        defaultSSLCertificate,
 		isDynamicCertificatesEnabled: isDynamicCertificatesEnabled,
@@ -798,15 +802,21 @@ func (s k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName stri
 }
 
 // GetDefaultBackend returns the default backend
-func (s k8sStore) GetDefaultBackend() defaults.Backend {
-	return s.backendConfig.Backend
+func (s *k8sStore) GetDefaultBackend() defaults.Backend {
+	return s.GetBackendConfiguration().Backend
 }
 
-func (s k8sStore) GetBackendConfiguration() ngx_config.Configuration {
+func (s *k8sStore) GetBackendConfiguration() ngx_config.Configuration {
+	s.backendConfigMu.RLock()
+	defer s.backendConfigMu.RUnlock()
+
 	return s.backendConfig
 }
 
 func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
+	s.backendConfigMu.Lock()
+	defer s.backendConfigMu.Unlock()
+
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
 	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }
