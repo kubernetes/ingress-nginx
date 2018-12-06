@@ -35,7 +35,7 @@ import (
 
 // syncSecret synchronizes the content of a TLS Secret (certificate(s), secret
 // key) with the filesystem. The resulting files can be used by NGINX.
-func (s k8sStore) syncSecret(key string) {
+func (s *k8sStore) syncSecret(key string) {
 	s.syncSecretMu.Lock()
 	defer s.syncSecretMu.Unlock()
 
@@ -74,7 +74,7 @@ func (s k8sStore) syncSecret(key string) {
 
 // getPemCertificate receives a secret, and creates a ingress.SSLCert as return.
 // It parses the secret and verifies if it's a keypair, or a 'ca.crt' secret only.
-func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
+func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error) {
 	secret, err := s.listers.Secret.ByKey(secretName)
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (s k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error)
 	return sslCert, nil
 }
 
-func (s k8sStore) checkSSLChainIssues() {
+func (s *k8sStore) checkSSLChainIssues() {
 	for _, item := range s.ListLocalSSLCerts() {
 		secrKey := k8s.MetaNamespaceKey(item)
 		secret, err := s.GetLocalSSLCert(secrKey)
