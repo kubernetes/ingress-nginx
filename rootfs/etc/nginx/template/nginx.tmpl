@@ -85,6 +85,13 @@ http {
           balancer = res
         end
 
+        ok, res = pcall(require, "monitor")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          monitor = res
+        end
+
         {{ if $all.DynamicCertificatesEnabled }}
         ok, res = pcall(require, "certificate")
         if not ok then
@@ -105,6 +112,7 @@ http {
     init_worker_by_lua_block {
         defer_to_timer.init_worker()
         balancer.init_worker()
+        monitor.init_worker()
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -828,6 +836,7 @@ stream {
 
             proxy_pass            http://upstream_balancer;
             log_by_lua_block {
+                monitor.call()
             }
         }
         {{ end }}
@@ -1093,6 +1102,7 @@ stream {
                 waf:exec()
                 {{ end }}
                 balancer.log()
+                monitor.call()
                 statsd_monitor.call()
             }
 
