@@ -178,7 +178,7 @@ func (s *k8sStore) checkSSLChainIssues() {
 
 		dst := &ingress.SSLCert{}
 
-		err = mergo.MergeWithOverwrite(dst, secret)
+		err = mergo.Map(dst, secret, mergo.WithOverride)
 		if err != nil {
 			klog.Errorf("Error creating SSL certificate for Secret %q: %v", secrKey, err)
 			continue
