@@ -856,7 +856,7 @@
     "storage/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "kubernetes-1.13.0-rc.2"
+  revision = "kubernetes-1.13.0"
 
 [[projects]]
   digest = "1:501a73762f1b2c4530206ffb657b39d8b58a9b40280d30e4509ae1232767962c"
@@ -869,7 +869,7 @@
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "kubernetes-1.13.0-rc.2"
+  revision = "kubernetes-1.13.0"
 
 [[projects]]
   digest = "1:692e27ed8a5eb2d74bde52d323d428814cd9a6e0f726d02ffd60fda7819e1ee7"
@@ -924,7 +924,7 @@
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "NUT"
-  revision = "kubernetes-1.13.0-rc.2"
+  revision = "kubernetes-1.13.0"
 
 [[projects]]
   digest = "1:cc0487260dc4ffb2b513273ad8438497b8df2d8c0de90aaf03d22cc5b58e3fe1"
@@ -934,7 +934,7 @@
     "pkg/util/logs",
   ]
   pruneopts = "NUT"
-  revision = "kubernetes-1.13.0-rc.2"
+  revision = "kubernetes-1.13.0"
 
 [[projects]]
   digest = "1:14961132526c5e588ccfa30efd6c977db308c1b1fb83ad4043c3a92c961521ae"
@@ -1124,7 +1124,7 @@
     "util/workqueue",
   ]
   pruneopts = "NUT"
-  revision = "kubernetes-1.13.0-rc.2"
+  revision = "kubernetes-1.13.0"
 
 [[projects]]
   branch = "master"
@@ -1186,7 +1186,7 @@
     "third_party/forked/golang/expansion",
   ]
   pruneopts = "NUT"
-  revision = "v1.13.0-rc.2"
+  revision = "v1.13.0"
 
 [[projects]]
   branch = "master"
