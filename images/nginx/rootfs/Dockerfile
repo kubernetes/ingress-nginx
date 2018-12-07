@@ -30,6 +30,6 @@ RUN ln -sf /dev/stderr /var/log/nginx/error.log
 
 EXPOSE 80 443
 
-ENTRYPOINT [ "/entrypoint.sh" ]
+ENTRYPOINT [ "/usr/bin/dumb-init", "/usr/bin/authbind", "--deep" ]
 
 CMD ["nginx", "-g", "daemon off;"]
