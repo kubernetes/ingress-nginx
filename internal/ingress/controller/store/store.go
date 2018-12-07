@@ -211,8 +211,11 @@ type k8sStore struct {
 	// updateCh
 	updateCh *channels.RingChannel
 
-	// mu protects against simultaneous invocations of syncSecret
-	mu *sync.Mutex
+	// syncSecretMu protects against simultaneous invocations of syncSecret
+	syncSecretMu *sync.Mutex
+
+	// backendConfigMu protects against simultaneous read/write of backendConfig
+	backendConfigMu *sync.RWMutex
 
 	defaultSSLCertificate string
 
@@ -239,7 +242,8 @@ func New(checkOCSP bool,
 		filesystem:                   fs,
 		updateCh:                     updateCh,
 		backendConfig:                ngx_config.NewDefault(),
-		mu:                           &sync.Mutex{},
+		syncSecretMu:                 &sync.Mutex{},
+		backendConfigMu:              &sync.RWMutex{},
 		secretIngressMap:             NewObjectRefMap(),
 		defaultSSLCertificate:        defaultSSLCertificate,
 		isDynamicCertificatesEnabled: isDynamicCertificatesEnabled,
@@ -363,6 +367,9 @@ func New(checkOCSP bool,
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validCur && !reflect.DeepEqual(old, cur) {
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+			} else {
+				klog.Infof("ignoring ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				return
 			}
 
 			store.syncIngress(curIng)
@@ -682,7 +689,7 @@ func objectRefAnnotationNsKey(ann string, ing *extensions.Ingress) (string, erro
 
 // syncSecrets synchronizes data from all Secrets referenced by the given
 // Ingress with the local store and file system.
-func (s k8sStore) syncSecrets(ing *extensions.Ingress) {
+func (s *k8sStore) syncSecrets(ing *extensions.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	for _, secrKey := range s.secretIngressMap.ReferencedBy(key) {
 		s.syncSecret(secrKey)
@@ -690,12 +697,12 @@ func (s k8sStore) syncSecrets(ing *extensions.Ingress) {
 }
 
 // GetSecret returns the Secret matching key.
-func (s k8sStore) GetSecret(key string) (*corev1.Secret, error) {
+func (s *k8sStore) GetSecret(key string) (*corev1.Secret, error) {
 	return s.listers.Secret.ByKey(key)
 }
 
 // ListLocalSSLCerts returns the list of local SSLCerts
-func (s k8sStore) ListLocalSSLCerts() []*ingress.SSLCert {
+func (s *k8sStore) ListLocalSSLCerts() []*ingress.SSLCert {
 	var certs []*ingress.SSLCert
 	for _, item := range s.sslStore.List() {
 		if s, ok := item.(*ingress.SSLCert); ok {
@@ -707,12 +714,12 @@ func (s k8sStore) ListLocalSSLCerts() []*ingress.SSLCert {
 }
 
 // GetService returns the Service matching key.
-func (s k8sStore) GetService(key string) (*corev1.Service, error) {
+func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 	return s.listers.Service.ByKey(key)
 }
 
 // getIngress returns the Ingress matching key.
-func (s k8sStore) getIngress(key string) (*extensions.Ingress, error) {
+func (s *k8sStore) getIngress(key string) (*extensions.Ingress, error) {
 	ing, err := s.listers.IngressWithAnnotation.ByKey(key)
 	if err != nil {
 		return nil, err
@@ -722,7 +729,7 @@ func (s k8sStore) getIngress(key string) (*extensions.Ingress, error) {
 }
 
 // ListIngresses returns the list of Ingresses
-func (s k8sStore) ListIngresses() []*ingress.Ingress {
+func (s *k8sStore) ListIngresses() []*ingress.Ingress {
 	// filter ingress rules
 	ingresses := make([]*ingress.Ingress, 0)
 	for _, item := range s.listers.IngressWithAnnotation.List() {
@@ -734,22 +741,22 @@ func (s k8sStore) ListIngresses() []*ingress.Ingress {
 }
 
 // GetLocalSSLCert returns the local copy of a SSLCert
-func (s k8sStore) GetLocalSSLCert(key string) (*ingress.SSLCert, error) {
+func (s *k8sStore) GetLocalSSLCert(key string) (*ingress.SSLCert, error) {
 	return s.sslStore.ByKey(key)
 }
 
 // GetConfigMap returns the ConfigMap matching key.
-func (s k8sStore) GetConfigMap(key string) (*corev1.ConfigMap, error) {
+func (s *k8sStore) GetConfigMap(key string) (*corev1.ConfigMap, error) {
 	return s.listers.ConfigMap.ByKey(key)
 }
 
 // GetServiceEndpoints returns the Endpoints of a Service matching key.
-func (s k8sStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
+func (s *k8sStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
 	return s.listers.Endpoint.ByKey(key)
 }
 
 // GetAuthCertificate is used by the auth-tls annotations to get a cert from a secret
-func (s k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
+func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
 	if _, err := s.GetLocalSSLCert(name); err != nil {
 		s.syncSecret(name)
 	}
@@ -766,7 +773,7 @@ func (s k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error)
 	}, nil
 }
 
-func (s k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName string) {
+func (s *k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName string) {
 	ticketString := ngx_template.ReadConfig(cmap.Data).SSLSessionTicketKey
 	s.backendConfig.SSLSessionTicketKey = ""
 
@@ -795,22 +802,28 @@ func (s k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName stri
 }
 
 // GetDefaultBackend returns the default backend
-func (s k8sStore) GetDefaultBackend() defaults.Backend {
-	return s.backendConfig.Backend
+func (s *k8sStore) GetDefaultBackend() defaults.Backend {
+	return s.GetBackendConfiguration().Backend
 }
 
-func (s k8sStore) GetBackendConfiguration() ngx_config.Configuration {
+func (s *k8sStore) GetBackendConfiguration() ngx_config.Configuration {
+	s.backendConfigMu.RLock()
+	defer s.backendConfigMu.RUnlock()
+
 	return s.backendConfig
 }
 
 func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
+	s.backendConfigMu.Lock()
+	defer s.backendConfigMu.Unlock()
+
 	s.backendConfig = ngx_template.ReadConfig(cmap.Data)
 	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
 }
 
 // Run initiates the synchronization of the informers and the initial
 // synchronization of the secrets.
-func (s k8sStore) Run(stopCh chan struct{}) {
+func (s *k8sStore) Run(stopCh chan struct{}) {
 	// start informers
 	s.informers.Run(stopCh)
 
@@ -820,7 +833,7 @@ func (s k8sStore) Run(stopCh chan struct{}) {
 }
 
 // ListControllerPods returns a list of ingress-nginx controller Pods
-func (s k8sStore) ListControllerPods() []*corev1.Pod {
+func (s *k8sStore) ListControllerPods() []*corev1.Pod {
 	var pods []*corev1.Pod
 
 	for _, i := range s.listers.Pod.List() {
