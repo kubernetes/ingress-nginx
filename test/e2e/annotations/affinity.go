@@ -23,9 +23,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/parnurzeal/gorequest"
 
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,16 +59,17 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
-			Set("Host", host).
-			End()
+		req, _ := autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL),
+			autorest.WithHeader("Host", host))
+		resp, err := autorest.SendWithSender(&autorest.Client{}, req)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 
 		md5Regex := regexp.MustCompile("SERVERID=[0-9a-f]{32}")
 		match := md5Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
 		Expect(len(match)).Should(BeNumerically("==", 1))
 
-		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
 	})
@@ -88,16 +89,17 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
-			Set("Host", host).
-			End()
+		req, _ := autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL),
+			autorest.WithHeader("Host", host))
+		resp, err := autorest.SendWithSender(&autorest.Client{}, req)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 
 		sha1Regex := regexp.MustCompile("INGRESSCOOKIE=[0-9a-f]{40}")
 		match := sha1Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
 		Expect(len(match)).Should(BeNumerically("==", 1))
 
-		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
 	})
@@ -117,12 +119,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/something").
-			Set("Host", host).
-			End()
+		req, _ := autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL+"/something"),
+			autorest.WithHeader("Host", host))
+		resp, err := autorest.SendWithSender(&autorest.Client{}, req)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 
-		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/something"))
 	})
@@ -174,21 +177,23 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/something").
-			Set("Host", host).
-			End()
+		req, _ := autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL+"/something"),
+			autorest.WithHeader("Host", host))
+		resp, err := autorest.SendWithSender(&autorest.Client{}, req)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 
-		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/something;"))
 
-		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL+"/somewhereelese").
-			Set("Host", host).
-			End()
+		req, _ = autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL+"somewhereelse"),
+			autorest.WithHeader("Host", host))
+		resp, err = autorest.SendWithSender(&autorest.Client{}, req)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 
-		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/somewhereelese;"))
 	})
@@ -210,13 +215,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
-			Set("Host", host).
-			End()
+		req, _ := autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL),
+			autorest.WithHeader("Host", host))
+		resp, err := autorest.SendWithSender(&autorest.Client{}, req)
 
-		Expect(errs).Should(BeEmpty())
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
 		local, _ := time.LoadLocation("GMT")
 		duration, _ := time.ParseDuration("48h")
 		expected := time.Date(1970, time.January, 1, 0, 0, 0, 0, local).Add(duration).Format("Mon, 02-Jan-06 15:04:05 MST")
@@ -241,16 +248,17 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/foo/bar").
-			Set("Host", host).
-			End()
+		req, _ := autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL+"/foo/bar"),
+			autorest.WithHeader("Host", host))
+		resp, err := autorest.SendWithSender(&autorest.Client{}, req)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 
 		md5Regex := regexp.MustCompile("SERVERID=[0-9a-f]{32}")
 		match := md5Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
 		Expect(len(match)).Should(BeNumerically("==", 1))
 
-		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/foo/bar"))
@@ -272,12 +280,13 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/foo/bar").
-			Set("Host", host).
-			End()
+		req, _ := autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL+"/foo/bar"),
+			autorest.WithHeader("Host", host))
+		resp, err := autorest.SendWithSender(&autorest.Client{}, req)
 
-		Expect(errs).Should(BeEmpty())
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 		logs, err := f.NginxLogs()
@@ -302,21 +311,23 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 				return strings.Contains(server, `location /foo/bar`) && strings.Contains(server, `location /foo`)
 			})
 
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/foo").
-			Set("Host", host).
-			End()
+		req, _ := autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL+"/foo"),
+			autorest.WithHeader("Host", host))
+		resp, err := autorest.SendWithSender(&autorest.Client{}, req)
 
-		Expect(errs).Should(BeEmpty())
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(Equal(""))
 
-		resp, _, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL+"/foo/bar").
-			Set("Host", host).
-			End()
+		req, _ = autorest.Prepare(&http.Request{},
+			autorest.AsGet(),
+			autorest.WithBaseURL(f.IngressController.HTTPURL+"/foo/bar"),
+			autorest.WithHeader("Host", host))
+		resp, err = autorest.SendWithSender(&autorest.Client{}, req)
 
-		Expect(errs).Should(BeEmpty())
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating request")
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/foo/bar"))
 	})
