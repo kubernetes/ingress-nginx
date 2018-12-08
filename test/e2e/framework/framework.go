@@ -131,16 +131,16 @@ func (f *Framework) BeforeEach() {
 func (f *Framework) AfterEach() {
 	RemoveCleanupAction(f.cleanupHandle)
 
-	By("Waiting for test namespace to no longer exist")
-	err := DeleteKubeNamespace(f.KubeClientSet, f.IngressController.Namespace)
-	Expect(err).NotTo(HaveOccurred())
-
 	if CurrentGinkgoTestDescription().Failed {
 		log, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
 		By("Dumping NGINX logs after a failure running a test")
 		Logf("%v", log)
 	}
+
+	By("Waiting for test namespace to no longer exist")
+	err := DeleteKubeNamespace(f.KubeClientSet, f.IngressController.Namespace)
+	Expect(err).NotTo(HaveOccurred())
 }
 
 // IngressNginxDescribe wrapper function for ginkgo describe. Adds namespacing.

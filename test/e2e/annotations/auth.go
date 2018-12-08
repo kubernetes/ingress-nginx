@@ -41,6 +41,15 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	})
 
 	AfterEach(func() {
+		framework.Logf("ACACACACAC: %v", CurrentGinkgoTestDescription().Failed)
+		if CurrentGinkgoTestDescription().Failed {
+			log, err := f.NginxLogs()
+			if err != nil {
+				framework.Logf("Error: %v", err)
+				return
+			}
+			framework.Logf("NGINX logs after a failure running a test %v", log)
+		}
 	})
 
 	It("should return status code 200 when no authentication is configured", func() {

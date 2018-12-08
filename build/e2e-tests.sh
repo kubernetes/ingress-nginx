@@ -53,4 +53,5 @@ ginkgo                                       \
     -trace                                   \
     -nodes=${E2E_NODES}                      \
     -slowSpecThreshold=${SLOW_E2E_THRESHOLD} \
-    test/e2e/e2e.test
+    test/e2e/e2e.test \
+    -alsologtostderr
