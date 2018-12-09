@@ -14,7 +14,8 @@ nginx controller.
 3. You have the nginx-ingress controller installed in typical fashion (must be
    at least
    [quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.13.0](https://quay.io/kubernetes-ingress-controller/nginx-ingress-controller)
-   for grpc support.
+   for grpc support. is this really working. Itried many option and I am not able to setup environment successfully. Can some 
+   one provide complete steps to setup grpc with k8s?
 4. You have a backend application running a gRPC server and listening for TCP
    traffic.  If you prefer, you can use the
    [fortune-teller](https://github.com/kubernetes/ingress-nginx/images/grpc-fortune-teller)
