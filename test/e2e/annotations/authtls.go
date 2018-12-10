@@ -25,6 +25,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
+
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -57,8 +59,6 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 		f.EnsureIngress(ing)
 
 		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
-		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslKeyDirective := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
 		sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
 
 		sslVerify := "ssl_verify_client on;"
@@ -66,9 +66,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, sslCertDirective) &&
-					strings.Contains(server, sslKeyDirective) &&
-					strings.Contains(server, sslClientCertDirective) &&
+				return strings.Contains(server, sslClientCertDirective) &&
 					strings.Contains(server, sslVerify) &&
 					strings.Contains(server, sslVerifyDepth)
 			})
@@ -95,10 +93,26 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 	})
 
 	It("should set valid auth-tls-secret, sslVerify to off, and sslVerifyDepth to 2", func() {
+		err := framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 1,
+			func(deployment *appsv1beta1.Deployment) error {
+				args := deployment.Spec.Template.Spec.Containers[0].Args
+				args = append(args, "--enable-dynamic-certificates=false")
+				deployment.Spec.Template.Spec.Containers[0].Args = args
+				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.IngressController.Namespace).Update(deployment)
+
+				return err
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				return strings.Contains(cfg, "ok, res = pcall(require, \"certificate\")")
+			})
+
 		host := "authtls.foo.com"
 		nameSpace := f.IngressController.Namespace
 
-		_, err := framework.CreateIngressMASecret(
+		_, err = framework.CreateIngressMASecret(
 			f.KubeClientSet,
 			host,
 			host,
@@ -162,8 +176,6 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 		f.EnsureIngress(ing)
 
 		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
-		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslKeyDirective := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
 		sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
 
 		sslVerify := "ssl_verify_client on;"
@@ -173,9 +185,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, sslCertDirective) &&
-					strings.Contains(server, sslKeyDirective) &&
-					strings.Contains(server, sslClientCertDirective) &&
+				return strings.Contains(server, sslClientCertDirective) &&
 					strings.Contains(server, sslVerify) &&
 					strings.Contains(server, sslVerifyDepth) &&
 					strings.Contains(server, sslErrorPage) &&
