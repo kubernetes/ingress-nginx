@@ -17,9 +17,10 @@ limitations under the License.
 package collectors
 
 import (
+	"fmt"
 	"path/filepath"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	common "github.com/ncabatoff/process-exporter"
 	"github.com/ncabatoff/process-exporter/proc"
@@ -37,7 +38,7 @@ type Stopable interface {
 	Stop()
 }
 
-// BinaryNameMatcher ...
+// BinaryNameMatcher define a namer using the binary name
 type BinaryNameMatcher struct {
 	Name   string
 	Binary string
@@ -45,12 +46,17 @@ type BinaryNameMatcher struct {
 
 // MatchAndName returns false if the match failed, otherwise
 // true and the resulting name.
-func (em BinaryNameMatcher) MatchAndName(nacl common.NameAndCmdline) (bool, string) {
+func (em BinaryNameMatcher) MatchAndName(nacl common.ProcAttributes) (bool, string) {
 	if len(nacl.Cmdline) == 0 {
 		return false, ""
 	}
 	cmd := filepath.Base(em.Binary)
 	return em.Name == cmd, ""
+}
+
+// String returns the name of the binary to match
+func (em BinaryNameMatcher) String() string {
+	return fmt.Sprintf("%+v", em.Binary)
 }
 
 type namedProcessData struct {
@@ -86,7 +92,7 @@ var binary = "/usr/bin/nginx"
 
 // NewNGINXProcess returns a new prometheus collector for the nginx process
 func NewNGINXProcess(pod, namespace, ingressClass string) (NGINXProcessCollector, error) {
-	fs, err := proc.NewFS("/proc")
+	fs, err := proc.NewFS("/proc", false)
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +104,11 @@ func NewNGINXProcess(pod, namespace, ingressClass string) (NGINXProcessCollector
 
 	p := namedProcess{
 		scrapeChan: make(chan scrapeRequest),
-		Grouper:    proc.NewGrouper(true, nm),
+		Grouper:    proc.NewGrouper(nm, true, false, false),
 		fs:         fs,
 	}
 
-	_, err = p.Update(p.fs.AllProcs())
+	_, _, err = p.Update(p.fs.AllProcs())
 	if err != nil {
 		return nil, err
 	}
@@ -184,23 +190,23 @@ func (p namedProcess) Stop() {
 }
 
 func (p namedProcess) scrape(ch chan<- prometheus.Metric) {
-	_, err := p.Update(p.fs.AllProcs())
+	_, groups, err := p.Update(p.fs.AllProcs())
 	if err != nil {
-		glog.Warningf("unexpected error obtaining nginx process info: %v", err)
+		klog.Warningf("unexpected error obtaining nginx process info: %v", err)
 		return
 	}
 
-	for _, gcounts := range p.Groups() {
+	for _, gcounts := range groups {
 		ch <- prometheus.MustNewConstMetric(p.data.numProcs,
 			prometheus.GaugeValue, float64(gcounts.Procs))
 		ch <- prometheus.MustNewConstMetric(p.data.memResidentbytes,
-			prometheus.GaugeValue, float64(gcounts.Memresident))
+			prometheus.GaugeValue, float64(gcounts.Memory.ResidentBytes))
 		ch <- prometheus.MustNewConstMetric(p.data.memVirtualbytes,
-			prometheus.GaugeValue, float64(gcounts.Memvirtual))
+			prometheus.GaugeValue, float64(gcounts.Memory.VirtualBytes))
 		ch <- prometheus.MustNewConstMetric(p.data.startTime,
 			prometheus.GaugeValue, float64(gcounts.OldestStartTime.Unix()))
 		ch <- prometheus.MustNewConstMetric(p.data.cpuSecs,
-			prometheus.CounterValue, gcounts.Cpu)
+			prometheus.CounterValue, gcounts.CPUSystemTime)
 		ch <- prometheus.MustNewConstMetric(p.data.readBytes,
 			prometheus.CounterValue, float64(gcounts.ReadBytes))
 		ch <- prometheus.MustNewConstMetric(p.data.writeBytes,

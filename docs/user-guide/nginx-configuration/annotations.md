@@ -197,7 +197,7 @@ To enable consistent hashing for a backend:
 
 ### Custom NGINX load balancing
 
-This is similar to (https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#load-balance) but configures load balancing algorithm per ingress.
+This is similar to [`load-balance` in ConfigMap](./configmap.md#load-balance), but configures load balancing algorithm per ingress.
 >Note that `nginx.ingress.kubernetes.io/upstream-hash-by` takes preference over this. If this and `nginx.ingress.kubernetes.io/upstream-hash-by` are not set then we fallback to using globally configured load balancing algorithm.
 
 ### Custom NGINX upstream vhost
@@ -402,7 +402,7 @@ If you specify multiple annotations in a single Ingress rule, `limit-rpm`, and t
 
 The annotation `nginx.ingress.kubernetes.io/limit-rate`, `nginx.ingress.kubernetes.io/limit-rate-after` define a limit the rate of response transmission to a client. The rate is specified in bytes per second. The zero value disables rate limiting. The limit is set per a request, and so if a client simultaneously opens two connections, the overall rate will be twice as much as the specified limit.
 
-To configure this setting globally for all Ingress rules, the `limit-rate-after` and `limit-rate` value may be set in the [NGINX ConfigMap][configmap]. if you set the value in ingress annotation will cover global setting.
+To configure this setting globally for all Ingress rules, the `limit-rate-after` and `limit-rate` value may be set in the [NGINX ConfigMap](./configmap.md#limit-rate). if you set the value in ingress annotation will cover global setting.
 
 ### Permanent Redirect
 
@@ -418,12 +418,12 @@ This annotation allows you to return a temporal redirect (Return Code 302) inste
 ### SSL Passthrough
 
 The annotation `nginx.ingress.kubernetes.io/ssl-passthrough` instructs the controller to send TLS connections directly
-to the backend instead of letting NGINX decrypt the communication. See also [TLS/HTTPS](../tls/#ssl-passthrough) in
+to the backend instead of letting NGINX decrypt the communication. See also [TLS/HTTPS](../tls.md#ssl-passthrough) in
 the User guide.
 
 !!! note
     SSL Passthrough is **disabled by default** and requires starting the controller with the
-    [`--enable-ssl-passthrough`](../cli-arguments/) flag.
+    [`--enable-ssl-passthrough`](../cli-arguments.md) flag.
 
 !!! attention
     Because SSL Passthrough works on layer 4 of the OSI model (TCP) and not on the layer 7 (HTTP), using SSL Passthrough
@@ -447,7 +447,7 @@ If the `service-upstream` annotation is specified the following things should be
 ### Server-side HTTPS enforcement through redirect
 
 By default the controller redirects (308) to HTTPS if TLS is enabled for that ingress.
-If you want to disable this behavior globally, you can use `ssl-redirect: "false"` in the NGINX [config map][configmap].
+If you want to disable this behavior globally, you can use `ssl-redirect: "false"` in the NGINX [ConfigMap](./configmap.md#ssl-redirect).
 
 To configure this feature for specific ingress resources, you can use the `nginx.ingress.kubernetes.io/ssl-redirect: "false"`
 annotation in the particular resource.
@@ -469,7 +469,7 @@ To enable this feature use the annotation `nginx.ingress.kubernetes.io/from-to-w
 You can specify allowed client IP source ranges through the `nginx.ingress.kubernetes.io/whitelist-source-range` annotation.
 The value is a comma separated list of [CIDRs](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing), e.g.  `10.0.0.0/24,172.10.0.1`.
 
-To configure this setting globally for all Ingress rules, the `whitelist-source-range` value may be set in the [NGINX ConfigMap][configmap].
+To configure this setting globally for all Ingress rules, the `whitelist-source-range` value may be set in the [NGINX ConfigMap](./configmap.md#whitelist-source-range).
 
 !!! note
     Adding an annotation to an Ingress rule overrides any global restriction.
@@ -489,7 +489,7 @@ In some scenarios is required to have different values. To allow this we provide
 ### Proxy redirect
 
 With the annotations `nginx.ingress.kubernetes.io/proxy-redirect-from` and `nginx.ingress.kubernetes.io/proxy-redirect-to` it is possible to
-set the text that should be changed in the `Location` and `Refresh` header fields of a proxied server response (http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)
+set the text that should be changed in the `Location` and `Refresh` header fields of a [proxied server response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect)
 
 Setting "off" or "default" in the annotation `nginx.ingress.kubernetes.io/proxy-redirect-from` disables `nginx.ingress.kubernetes.io/proxy-redirect-to`,
 otherwise, both annotations must be used in unison. Note that each annotation must be a string without spaces.
@@ -500,7 +500,7 @@ By default the value of each annotation is "off".
 
 For NGINX, an 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter [`client_max_body_size`](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).
 
-To configure this setting globally for all Ingress rules, the `proxy-body-size` value may be set in the [NGINX ConfigMap][configmap].
+To configure this setting globally for all Ingress rules, the `proxy-body-size` value may be set in the [NGINX ConfigMap](./configmap.md#proxy-body-size).
 To use custom values in an Ingress rule define these annotation:
 
 ```yaml
@@ -511,20 +511,20 @@ nginx.ingress.kubernetes.io/proxy-body-size: 8m
 
 Sets a text that [should be changed in the domain attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the "Set-Cookie" header fields of a proxied server response.
 
-To configure this setting globally for all Ingress rules, the `proxy-cookie-domain` value may be set in the [NGINX ConfigMap][configmap].
+To configure this setting globally for all Ingress rules, the `proxy-cookie-domain` value may be set in the [NGINX ConfigMap](./configmap.md#proxy-cookie-domain).
 
 ### Proxy cookie path
 
 Sets a text that [should be changed in the path attribute](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path) of the "Set-Cookie" header fields of a proxied server response.
 
-To configure this setting globally for all Ingress rules, the `proxy-cookie-path` value may be set in the [NGINX ConfigMap][configmap].
+To configure this setting globally for all Ingress rules, the `proxy-cookie-path` value may be set in the [NGINX ConfigMap](./configmap.md#proxy-cookie-path).
 
 ### Proxy buffering
 
 Enable or disable proxy buffering [`proxy_buffering`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering).
 By default proxy buffering is disabled in the NGINX config.
 
-To configure this setting globally for all Ingress rules, the `proxy-buffering` value may be set in the [NGINX ConfigMap][configmap].
+To configure this setting globally for all Ingress rules, the `proxy-buffering` value may be set in the [NGINX ConfigMap](./configmap.md#proxy-buffering).
 To use custom values in an Ingress rule define these annotation:
 
 ```yaml
@@ -536,7 +536,7 @@ nginx.ingress.kubernetes.io/proxy-buffering: "on"
 Sets the size of the buffer [`proxy_buffer_size`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) used for reading the first part of the response received from the proxied server.
 By default proxy buffer size is set as "4k"
 
-To configure this setting globally, set `proxy-buffer-size` in [NGINX ConfigMap][configmap]. To use custom values in an Ingress rule, define this annotation:
+To configure this setting globally, set `proxy-buffer-size` in [NGINX ConfigMap](./configmap.md#proxy-buffer-size). To use custom values in an Ingress rule, define this annotation:
 ```yaml
 nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
 ```
@@ -650,7 +650,7 @@ For details on how to write WAF rules, please refer to [https://github.com/p0pr0
 
 [ModSecurity](http://modsecurity.org/) is an OpenSource Web Application firewall. It can be enabled for a particular set
 of ingress locations. The ModSecurity module must first be enabled by enabling ModSecurity in the
-[ConfigMap](configmap.md#enable-modsecurity). Note this will enable ModSecurity for all paths, and each path
+[ConfigMap](./configmap.md#enable-modsecurity). Note this will enable ModSecurity for all paths, and each path
 must be disabled manually.
 
 It can be enabled using the following annotation: 

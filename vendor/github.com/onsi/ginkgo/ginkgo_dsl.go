@@ -590,6 +590,16 @@ func JustBeforeEach(body interface{}, timeout ...float64) bool {
 	return true
 }
 
+//JustAfterEach blocks are run after It blocks but *before* all AfterEach blocks.  For more details,
+//read the [documentation](http://onsi.github.io/ginkgo/#separating_creation_and_configuration_)
+//
+//Like It blocks, JustAfterEach blocks can be made asynchronous by providing a body function that accepts
+//a Done channel
+func JustAfterEach(body interface{}, timeout ...float64) bool {
+	globalSuite.PushJustAfterEachNode(body, codelocation.New(1), parseTimeout(timeout...))
+	return true
+}
+
 //AfterEach blocks are run after It blocks.   When multiple AfterEach blocks are defined in nested
 //Describe and Context blocks the innermost AfterEach blocks are run first.
 //

@@ -1,3 +1,10 @@
+## 1.4.3
+
+### Fixes:
+
+- ensure file name and line numbers are correctly reported for XUnit [6fff58f]
+- Fixed matcher for content-type (#305) [69d9b43]
+
 ## 1.4.2
 
 ### Fixes:

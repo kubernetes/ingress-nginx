@@ -25,22 +25,6 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 
 ---
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: tcp-services
-  labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: udp-services
-  labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:

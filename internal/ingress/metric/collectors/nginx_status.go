@@ -23,8 +23,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/klog"
 )
 
 var (
@@ -189,7 +189,7 @@ func parse(data string) *basicStatus {
 
 func getNginxStatus(port int, path string) (*basicStatus, error) {
 	url := fmt.Sprintf("http://0.0.0.0:%v%v", port, path)
-	glog.V(3).Infof("start scraping url: %v", url)
+	klog.V(3).Infof("start scraping url: %v", url)
 
 	data, err := httpBody(url)
 
@@ -204,7 +204,7 @@ func getNginxStatus(port int, path string) (*basicStatus, error) {
 func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
 	s, err := getNginxStatus(p.ngxHealthPort, p.ngxStatusPath)
 	if err != nil {
-		glog.Warningf("unexpected error obtaining nginx status info: %v", err)
+		klog.Warningf("unexpected error obtaining nginx status info: %v", err)
 		return
 	}
 

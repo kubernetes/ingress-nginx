@@ -87,14 +87,12 @@ type authTLS struct {
 // Parse parses the annotations contained in the ingress
 // rule used to use a Certificate as authentication method
 func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
+	var err error
+	config := &Config{}
 
 	tlsauthsecret, err := parser.GetStringAnnotation("auth-tls-secret", ing)
 	if err != nil {
 		return &Config{}, err
-	}
-
-	if tlsauthsecret == "" {
-		return &Config{}, ing_errors.NewLocationDenied("an empty string is not a valid secret name")
 	}
 
 	_, _, err = k8s.ParseNameNS(tlsauthsecret)
@@ -102,37 +100,32 @@ func (a authTLS) Parse(ing *extensions.Ingress) (interface{}, error) {
 		return &Config{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
-	tlsVerifyClient, err := parser.GetStringAnnotation("auth-tls-verify-client", ing)
-	if err != nil || !authVerifyClientRegex.MatchString(tlsVerifyClient) {
-		tlsVerifyClient = defaultAuthVerifyClient
-	}
-
-	tlsdepth, err := parser.GetIntAnnotation("auth-tls-verify-depth", ing)
-	if err != nil || tlsdepth == 0 {
-		tlsdepth = defaultAuthTLSDepth
-	}
-
 	authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
 	if err != nil {
 		e := errors.Wrap(err, "error obtaining certificate")
 		return &Config{}, ing_errors.LocationDenied{Reason: e}
 	}
+	config.AuthSSLCert = *authCert
 
-	errorpage, err := parser.GetStringAnnotation("auth-tls-error-page", ing)
-	if err != nil || errorpage == "" {
-		errorpage = ""
+	config.VerifyClient, err = parser.GetStringAnnotation("auth-tls-verify-client", ing)
+	if err != nil || !authVerifyClientRegex.MatchString(config.VerifyClient) {
+		config.VerifyClient = defaultAuthVerifyClient
 	}
 
-	passCert, err := parser.GetBoolAnnotation("auth-tls-pass-certificate-to-upstream", ing)
+	config.ValidationDepth, err = parser.GetIntAnnotation("auth-tls-verify-depth", ing)
+	if err != nil || config.ValidationDepth == 0 {
+		config.ValidationDepth = defaultAuthTLSDepth
+	}
+
+	config.ErrorPage, err = parser.GetStringAnnotation("auth-tls-error-page", ing)
 	if err != nil {
-		passCert = false
+		config.ErrorPage = ""
 	}
 
-	return &Config{
-		AuthSSLCert:        *authCert,
-		VerifyClient:       tlsVerifyClient,
-		ValidationDepth:    tlsdepth,
-		ErrorPage:          errorpage,
-		PassCertToUpstream: passCert,
-	}, nil
+	config.PassCertToUpstream, err = parser.GetBoolAnnotation("auth-tls-pass-certificate-to-upstream", ing)
+	if err != nil {
+		config.PassCertToUpstream = false
+	}
+
+	return config, nil
 }

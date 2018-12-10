@@ -19,9 +19,8 @@ package sessionaffinity
 import (
 	"regexp"
 
-	"github.com/golang/glog"
-
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/klog"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -81,42 +80,39 @@ type Cookie struct {
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
 // It also sets default values when no value or incorrect value is found
 func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
+	var err error
+
 	cookie := &Cookie{}
-	sn, err := parser.GetStringAnnotation(annotationAffinityCookieName, ing)
 
-	if err != nil || sn == "" {
-		glog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
-		sn = defaultAffinityCookieName
+	cookie.Name, err = parser.GetStringAnnotation(annotationAffinityCookieName, ing)
+	if err != nil {
+		klog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
+		cookie.Name = defaultAffinityCookieName
 	}
-	cookie.Name = sn
 
-	sh, err := parser.GetStringAnnotation(annotationAffinityCookieHash, ing)
-
-	if err != nil || !affinityCookieHashRegex.MatchString(sh) {
-		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Setting it to default %v", ing.Name, annotationAffinityCookieHash, defaultAffinityCookieHash)
-		sh = defaultAffinityCookieHash
+	cookie.Hash, err = parser.GetStringAnnotation(annotationAffinityCookieHash, ing)
+	if err != nil || !affinityCookieHashRegex.MatchString(cookie.Hash) {
+		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Setting it to default %v", ing.Name, annotationAffinityCookieHash, defaultAffinityCookieHash)
+		cookie.Hash = defaultAffinityCookieHash
 	}
-	cookie.Hash = sh
 
-	se, err := parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)
-	if err != nil || !affinityCookieExpiresRegex.MatchString(se) {
-		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieExpires)
-		se = ""
+	cookie.Expires, err = parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)
+	if err != nil || !affinityCookieExpiresRegex.MatchString(cookie.Expires) {
+		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieExpires)
+		cookie.Expires = ""
 	}
-	cookie.Expires = se
 
-	sm, err := parser.GetStringAnnotation(annotationAffinityCookieMaxAge, ing)
-	if err != nil || !affinityCookieExpiresRegex.MatchString(sm) {
-		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
-		sm = ""
+	cookie.MaxAge, err = parser.GetStringAnnotation(annotationAffinityCookieMaxAge, ing)
+	if err != nil || !affinityCookieExpiresRegex.MatchString(cookie.MaxAge) {
+		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
+		cookie.MaxAge = ""
 	}
-	cookie.MaxAge = sm
 
-	sp, err := parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
-	if err != nil || sp == "" {
-		glog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
+	cookie.Path, err = parser.GetStringAnnotation(annotationAffinityCookiePath, ing)
+	if err != nil {
+		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Ignoring it", ing.Name, annotationAffinityCookieMaxAge)
 	}
-	cookie.Path = sp
+
 	return cookie
 }
 
@@ -143,7 +139,7 @@ func (a affinity) Parse(ing *extensions.Ingress) (interface{}, error) {
 	case "cookie":
 		cookie = a.cookieAffinityParse(ing)
 	default:
-		glog.V(3).Infof("No default affinity was found for Ingress %v", ing.Name)
+		klog.V(3).Infof("No default affinity was found for Ingress %v", ing.Name)
 
 	}
 

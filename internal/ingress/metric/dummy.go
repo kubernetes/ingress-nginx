@@ -16,7 +16,15 @@ limitations under the License.
 
 package metric
 
-import "k8s.io/ingress-nginx/internal/ingress"
+import (
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/ingress-nginx/internal/ingress"
+)
+
+// NewDummyCollector returns a dummy metric collector
+func NewDummyCollector() Collector {
+	return &DummyCollector{}
+}
 
 // DummyCollector dummy implementation for mocks in tests
 type DummyCollector struct{}
@@ -41,3 +49,6 @@ func (dc DummyCollector) Stop() {}
 
 // SetSSLExpireTime ...
 func (dc DummyCollector) SetSSLExpireTime([]*ingress.Server) {}
+
+// SetHosts ...
+func (dc DummyCollector) SetHosts(hosts sets.String) {}
