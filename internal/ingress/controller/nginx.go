@@ -127,7 +127,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		fs,
 		n.updateCh,
 		config.DynamicCertificatesEnabled,
-		pod)
+		pod,
+		config.DisableCatchAll)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 

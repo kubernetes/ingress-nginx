@@ -156,6 +156,9 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
+
+		disableCatchAll = flags.Bool("disable-catch-all", false,
+			`Disable support for catch-all Ingresses`)
 	)
 
 	flag.Set("logtostderr", "true")
@@ -254,6 +257,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 			SSLProxy: *sslProxyPort,
 			Status:   *statusPort,
 		},
+		DisableCatchAll: *disableCatchAll,
 	}
 
 	return false, config, nil
