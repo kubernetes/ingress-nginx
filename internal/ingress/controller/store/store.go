@@ -232,7 +232,8 @@ func New(checkOCSP bool,
 	fs file.Filesystem,
 	updateCh *channels.RingChannel,
 	isDynamicCertificatesEnabled bool,
-	pod *k8s.PodInfo) Storer {
+	pod *k8s.PodInfo,
+	disableCatchAll bool) Storer {
 
 	store := &k8sStore{
 		isOCSPCheckEnabled:           checkOCSP,
@@ -310,6 +311,10 @@ func New(checkOCSP bool,
 				klog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
 				return
 			}
+			if ing.Spec.Backend != nil && disableCatchAll {
+				klog.Infof("ignoring add for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
+				return
+			}
 			recorder.Eventf(ing, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 
 			store.syncIngress(ing)
@@ -340,6 +345,10 @@ func New(checkOCSP bool,
 				klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
 				return
 			}
+			if ing.Spec.Backend != nil && disableCatchAll {
+				klog.Infof("ignoring delete for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
+				return
+			}
 			recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
 
 			store.listers.IngressWithAnnotation.Delete(ing)
@@ -358,13 +367,27 @@ func New(checkOCSP bool,
 			validOld := class.IsValid(oldIng)
 			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
+				if curIng.Spec.Backend != nil && disableCatchAll {
+					klog.Infof("ignoring update for catch-all ingress %v/%v because of --disable-catch-all", curIng.Namespace, curIng.Name)
+					return
+				}
+
 				klog.Infof("creating ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validOld && !validCur {
 				klog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				// FIXME: this does not actually delete the Ingress resource.
+				// The existing one will be updated with latest changes and invalid ingress.class will be missed.
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validCur && !reflect.DeepEqual(old, cur) {
-				recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+				if curIng.Spec.Backend != nil && disableCatchAll {
+					klog.Infof("ignoring update for catch-all ingress %v/%v because of --disable-catch-all", curIng.Namespace, curIng.Name)
+					// FIXME: this does not actually delete the Ingress resource.
+					// The existing one will be updated with latest changes.
+					recorder.Eventf(curIng, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+				} else {
+					recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+				}
 			} else {
 				klog.Infof("ignoring ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				return

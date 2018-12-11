@@ -352,6 +352,21 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 	return nil
 }
 
+// UpdateIngress runs the given updateFunc on the ingress
+func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name string, updateFunc func(d *extensions.Ingress) error) error {
+	ingress, err := kubeClientSet.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	if err := updateFunc(ingress); err != nil {
+		return err
+	}
+
+	_, err = kubeClientSet.ExtensionsV1beta1().Ingresses(namespace).Update(ingress)
+	return err
+}
+
 // NewSingleIngressWithTLS creates a simple ingress rule with TLS spec included
 func NewSingleIngressWithTLS(name, path, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
 	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, true)
