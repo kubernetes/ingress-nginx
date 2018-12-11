@@ -85,12 +85,14 @@ http {
           balancer = res
         end
 
+        {{ if $all.EnableMetrics }}
         ok, res = pcall(require, "monitor")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           monitor = res
         end
+        {{ end }}
 
         {{ if $all.DynamicCertificatesEnabled }}
         ok, res = pcall(require, "certificate")
@@ -112,7 +114,9 @@ http {
     init_worker_by_lua_block {
         defer_to_timer.init_worker()
         balancer.init_worker()
+        {{ if $all.EnableMetrics }}
         monitor.init_worker()
+        {{ end }}
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -591,7 +595,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -694,7 +698,7 @@ http {
             proxy_pass          http://upstream_balancer;
         }
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
 }
 
@@ -815,6 +819,7 @@ stream {
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
         {{ $proxySetHeaders := .ProxySetHeaders }}
+        {{ $enableMetrics := .EnableMetrics }}
         {{ range $errCode := .ErrorCodes }}
         location @custom_{{ $errCode }} {
             internal;
@@ -836,7 +841,9 @@ stream {
 
             proxy_pass            http://upstream_balancer;
             log_by_lua_block {
+                {{ if $enableMetrics }}
                 monitor.call()
+                {{ end }}
             }
         }
         {{ end }}
@@ -937,7 +944,7 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders (collectCustomErrorsPerServer $server)) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders (collectCustomErrorsPerServer $server) $all.EnableMetrics) }}
 
         {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
@@ -1102,7 +1109,9 @@ stream {
                 waf:exec()
                 {{ end }}
                 balancer.log()
+                {{ if $all.EnableMetrics }}
                 monitor.call()
+                {{ end }}
                 statsd_monitor.call()
             }
 

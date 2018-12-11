@@ -31,7 +31,6 @@ import (
 	text_template "text/template"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -41,6 +40,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
+	"k8s.io/klog"
 )
 
 const (
@@ -84,12 +84,12 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	outCmdBuf := t.bp.Get()
 	defer t.bp.Put(outCmdBuf)
 
-	if glog.V(3) {
+	if klog.V(3) {
 		b, err := json.Marshal(conf)
 		if err != nil {
-			glog.Errorf("unexpected error: %v", err)
+			klog.Errorf("unexpected error: %v", err)
 		}
-		glog.Infof("NGINX configuration: %v", string(b))
+		klog.Infof("NGINX configuration: %v", string(b))
 	}
 
 	err := t.tmpl.Execute(tmplBuf, conf)
@@ -103,7 +103,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	cmd.Stdin = tmplBuf
 	cmd.Stdout = outCmdBuf
 	if err := cmd.Run(); err != nil {
-		glog.Warningf("unexpected error cleaning template: %v", err)
+		klog.Warningf("unexpected error cleaning template: %v", err)
 		return tmplBuf.Bytes(), nil
 	}
 
@@ -202,7 +202,7 @@ func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
 func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 	servers, ok := s.([]*ingress.Server)
 	if !ok {
-		glog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
 		return ""
 	}
 
@@ -238,12 +238,12 @@ func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 func buildResolversForLua(res interface{}, disableIpv6 interface{}) string {
 	nss, ok := res.([]net.IP)
 	if !ok {
-		glog.Errorf("expected a '[]net.IP' type but %T was returned", res)
+		klog.Errorf("expected a '[]net.IP' type but %T was returned", res)
 		return ""
 	}
 	no6, ok := disableIpv6.(bool)
 	if !ok {
-		glog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
+		klog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
 		return ""
 	}
 
@@ -267,12 +267,12 @@ func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 	// NGINX need IPV6 addresses to be surrounded by brackets
 	nss, ok := res.([]net.IP)
 	if !ok {
-		glog.Errorf("expected a '[]net.IP' type but %T was returned", res)
+		klog.Errorf("expected a '[]net.IP' type but %T was returned", res)
 		return ""
 	}
 	no6, ok := disableIpv6.(bool)
 	if !ok {
-		glog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
+		klog.Errorf("expected a 'bool' type but %T was returned", disableIpv6)
 		return ""
 	}
 
@@ -316,7 +316,7 @@ func stripLocationModifer(path string) string {
 func enforceRegexModifier(input interface{}) bool {
 	locations, ok := input.([]*ingress.Location)
 	if !ok {
-		glog.Errorf("expected an '[]*ingress.Location' type but %T was returned", input)
+		klog.Errorf("expected an '[]*ingress.Location' type but %T was returned", input)
 		return false
 	}
 
@@ -333,7 +333,7 @@ func enforceRegexModifier(input interface{}) bool {
 func buildLocation(input interface{}, enforceRegex bool) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return slash
 	}
 
@@ -360,7 +360,7 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 func buildAuthLocation(input interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return ""
 	}
 
@@ -378,7 +378,7 @@ func buildAuthResponseHeaders(input interface{}) []string {
 	location, ok := input.(*ingress.Location)
 	res := []string{}
 	if !ok {
-		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return res
 	}
 
@@ -398,7 +398,7 @@ func buildAuthResponseHeaders(input interface{}) []string {
 func buildLogFormatUpstream(input interface{}) string {
 	cfg, ok := input.(config.Configuration)
 	if !ok {
-		glog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
 		return ""
 	}
 
@@ -412,13 +412,13 @@ func buildLogFormatUpstream(input interface{}) string {
 func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	backends, ok := b.([]*ingress.Backend)
 	if !ok {
-		glog.Errorf("expected an '[]*ingress.Backend' type but %T was returned", b)
+		klog.Errorf("expected an '[]*ingress.Backend' type but %T was returned", b)
 		return ""
 	}
 
 	location, ok := loc.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		klog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
 		return ""
 	}
 
@@ -520,7 +520,7 @@ func filterRateLimits(input interface{}) []ratelimit.Config {
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
-		glog.Errorf("expected a '[]ratelimit.RateLimit' type but %T was returned", input)
+		klog.Errorf("expected a '[]ratelimit.RateLimit' type but %T was returned", input)
 		return ratelimits
 	}
 	for _, server := range servers {
@@ -544,7 +544,7 @@ func buildRateLimitZones(input interface{}) []string {
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
-		glog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
+		klog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
 		return zones.List()
 	}
 
@@ -594,7 +594,7 @@ func buildRateLimit(input interface{}) []string {
 
 	loc, ok := input.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return limits
 	}
 
@@ -634,7 +634,7 @@ func buildRateLimit(input interface{}) []string {
 func isLocationInLocationList(location interface{}, rawLocationList string) bool {
 	loc, ok := location.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected an '*ingress.Location' type but %T was returned", location)
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", location)
 		return false
 	}
 
@@ -656,7 +656,7 @@ func isLocationInLocationList(location interface{}, rawLocationList string) bool
 func isLocationAllowed(input interface{}) bool {
 	loc, ok := input.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
+		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return false
 	}
 
@@ -675,7 +675,7 @@ var (
 func buildDenyVariable(a interface{}) string {
 	l, ok := a.(string)
 	if !ok {
-		glog.Errorf("expected a 'string' type but %T was returned", a)
+		klog.Errorf("expected a 'string' type but %T was returned", a)
 		return ""
 	}
 
@@ -689,7 +689,7 @@ func buildDenyVariable(a interface{}) string {
 func buildUpstreamName(loc interface{}) string {
 	location, ok := loc.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		klog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
 		return ""
 	}
 
@@ -701,7 +701,7 @@ func buildUpstreamName(loc interface{}) string {
 func buildNextUpstream(i, r interface{}) string {
 	nextUpstream, ok := i.(string)
 	if !ok {
-		glog.Errorf("expected a 'string' type but %T was returned", i)
+		klog.Errorf("expected a 'string' type but %T was returned", i)
 		return ""
 	}
 
@@ -738,13 +738,13 @@ var nginxOffsetRegex = regexp.MustCompile("^[0-9]+[kKmMgG]{0,1}$")
 func isValidByteSize(input interface{}, isOffset bool) bool {
 	s, ok := input.(string)
 	if !ok {
-		glog.Errorf("expected an 'string' type but %T was returned", input)
+		klog.Errorf("expected an 'string' type but %T was returned", input)
 		return false
 	}
 
 	s = strings.TrimSpace(s)
 	if s == "" {
-		glog.V(2).Info("empty byte size, hence it will not be set")
+		klog.V(2).Info("empty byte size, hence it will not be set")
 		return false
 	}
 
@@ -765,13 +765,13 @@ type ingressInformation struct {
 func getIngressInformation(i, p interface{}) *ingressInformation {
 	ing, ok := i.(*ingress.Ingress)
 	if !ok {
-		glog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
+		klog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
 		return &ingressInformation{}
 	}
 
 	path, ok := p.(string)
 	if !ok {
-		glog.Errorf("expected a 'string' type but %T was returned", p)
+		klog.Errorf("expected a 'string' type but %T was returned", p)
 		return &ingressInformation{}
 	}
 
@@ -808,7 +808,7 @@ func getIngressInformation(i, p interface{}) *ingressInformation {
 func buildForwardedFor(input interface{}) string {
 	s, ok := input.(string)
 	if !ok {
-		glog.Errorf("expected a 'string' type but %T was returned", input)
+		klog.Errorf("expected a 'string' type but %T was returned", input)
 		return ""
 	}
 
@@ -820,7 +820,7 @@ func buildForwardedFor(input interface{}) string {
 func buildAuthSignURL(input interface{}) string {
 	s, ok := input.(string)
 	if !ok {
-		glog.Errorf("expected an 'string' type but %T was returned", input)
+		klog.Errorf("expected an 'string' type but %T was returned", input)
 		return ""
 	}
 
@@ -855,7 +855,7 @@ func randomString() string {
 func buildOpentracing(input interface{}) string {
 	cfg, ok := input.(config.Configuration)
 	if !ok {
-		glog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", input)
 		return ""
 	}
 
@@ -881,7 +881,7 @@ func buildOpentracing(input interface{}) string {
 func buildInfluxDB(input interface{}) string {
 	cfg, ok := input.(influxdb.Config)
 	if !ok {
-		glog.Errorf("expected an 'influxdb.Config' type but %T was returned", input)
+		klog.Errorf("expected an 'influxdb.Config' type but %T was returned", input)
 		return ""
 	}
 
@@ -901,7 +901,7 @@ func buildInfluxDB(input interface{}) string {
 func proxySetHeader(loc interface{}) string {
 	location, ok := loc.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		klog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
 		return "proxy_set_header"
 	}
 
@@ -914,13 +914,15 @@ func proxySetHeader(loc interface{}) string {
 
 // buildCustomErrorDeps is a utility function returning a struct wrapper with
 // the data required to build the 'CUSTOM_ERRORS' template
-func buildCustomErrorDeps(proxySetHeaders map[string]string, errorCodes []int) interface{} {
+func buildCustomErrorDeps(proxySetHeaders map[string]string, errorCodes []int, enableMetrics bool) interface{} {
 	return struct {
 		ProxySetHeaders map[string]string
 		ErrorCodes      []int
+		EnableMetrics   bool
 	}{
 		ProxySetHeaders: proxySetHeaders,
 		ErrorCodes:      errorCodes,
+		EnableMetrics:   enableMetrics,
 	}
 }
 
@@ -930,7 +932,7 @@ func buildCustomErrorDeps(proxySetHeaders map[string]string, errorCodes []int) i
 func collectCustomErrorsPerServer(input interface{}) []int {
 	server, ok := input.(*ingress.Server)
 	if !ok {
-		glog.Errorf("expected a '*ingress.Server' type but %T was returned", input)
+		klog.Errorf("expected a '*ingress.Server' type but %T was returned", input)
 		return nil
 	}
 
@@ -952,7 +954,7 @@ func collectCustomErrorsPerServer(input interface{}) []int {
 func opentracingPropagateContext(loc interface{}) string {
 	location, ok := loc.(*ingress.Location)
 	if !ok {
-		glog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
+		klog.Errorf("expected a '*ingress.Location' type but %T was returned", loc)
 		return "opentracing_propagate_context"
 	}
 

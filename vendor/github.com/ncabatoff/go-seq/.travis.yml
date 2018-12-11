@@ -1,0 +1,19 @@
+sudo: false
+language: go
+before_install:
+  - go get github.com/mattn/goveralls
+matrix:
+  include:
+    - go: 1.6.x
+      script: go test -v -race ./...
+    - go: 1.x
+      script:
+        - diff -u <(echo -n) <(gofmt -d .)
+        - go install -v ./...
+        - go vet -v ./...
+        - $GOPATH/bin/goveralls -v -race -service=travis-ci
+    - go: master
+      script: go test -v -race ./...
+  allow_failures:
+    - go: master
+  fast_finish: true

@@ -17,11 +17,11 @@ limitations under the License.
 package annotations
 
 import (
-	"github.com/golang/glog"
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
+	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -156,7 +156,7 @@ func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
 	data := make(map[string]interface{})
 	for name, annotationParser := range e.annotations {
 		val, err := annotationParser.Parse(ing)
-		glog.V(5).Infof("annotation %v in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), val)
+		klog.V(5).Infof("annotation %v in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), val)
 		if err != nil {
 			if errors.IsMissingAnnotations(err) {
 				continue
@@ -177,11 +177,11 @@ func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
 			_, alreadyDenied := data[DeniedKeyName]
 			if !alreadyDenied {
 				data[DeniedKeyName] = err
-				glog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
+				klog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
 				continue
 			}
 
-			glog.V(5).Infof("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
+			klog.V(5).Infof("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
 		}
 
 		if val != nil {
@@ -191,7 +191,7 @@ func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
 
 	err := mergo.MapWithOverwrite(pia, data)
 	if err != nil {
-		glog.Errorf("unexpected error merging extracted annotations: %v", err)
+		klog.Errorf("unexpected error merging extracted annotations: %v", err)
 	}
 
 	return pia

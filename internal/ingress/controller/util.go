@@ -24,7 +24,7 @@ import (
 
 	"fmt"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	api "k8s.io/api/core/v1"
 	"k8s.io/kubernetes/pkg/util/sysctl"
@@ -57,7 +57,7 @@ func upstreamName(namespace string, service string, port intstr.IntOrString) str
 func sysctlSomaxconn() int {
 	maxConns, err := sysctl.New().GetSysctl("net/core/somaxconn")
 	if err != nil || maxConns < 512 {
-		glog.V(3).Infof("net.core.somaxconn=%v (using system default)", maxConns)
+		klog.V(3).Infof("net.core.somaxconn=%v (using system default)", maxConns)
 		return 511
 	}
 
@@ -70,10 +70,10 @@ func sysctlFSFileMax() int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		glog.Errorf("Error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
+		klog.Errorf("Error reading system maximum number of open file descriptors (RLIMIT_NOFILE): %v", err)
 		return 0
 	}
-	glog.V(2).Infof("rlimit.max=%v", rLimit.Max)
+	klog.V(2).Infof("rlimit.max=%v", rLimit.Max)
 	return int(rLimit.Max)
 }
 

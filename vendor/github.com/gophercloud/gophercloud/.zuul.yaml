@@ -23,6 +23,15 @@
         OS_BRANCH: stable/queens
 
 - job:
+    name: gophercloud-acceptance-test-rocky
+    parent: gophercloud-acceptance-test
+    description: |
+      Run gophercloud acceptance test on rocky branch
+    vars:
+      global_env:
+        OS_BRANCH: stable/rocky
+
+- job:
     name: gophercloud-acceptance-test-pike
     parent: gophercloud-acceptance-test
     description: |
@@ -80,6 +89,9 @@
     recheck-queens:
       jobs:
         - gophercloud-acceptance-test-queens
+    recheck-rocky:
+      jobs:
+        - gophercloud-acceptance-test-rocky
     periodic:
       jobs:
         - gophercloud-unittest

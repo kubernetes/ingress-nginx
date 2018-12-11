@@ -30,8 +30,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
+	"k8s.io/klog"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -235,8 +235,8 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 
 		var match bool
 		errs := InterceptGomegaFailures(func() {
-			if glog.V(10) && len(o) > 0 {
-				glog.Infof("nginx.conf:\n%v", o)
+			if klog.V(10) && len(o) > 0 {
+				klog.Infof("nginx.conf:\n%v", o)
 			}
 
 			// passes the nginx config to the passed function
@@ -250,7 +250,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		}
 
 		if len(errs) > 0 {
-			glog.V(2).Infof("Errors waiting for conditions: %v", errs)
+			klog.V(2).Infof("Errors waiting for conditions: %v", errs)
 		}
 
 		return false, nil
@@ -329,7 +329,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 	}
 
 	if *deployment.Spec.Replicas != int32(replicas) {
-		glog.Infof("updating replica count from %v to %v...", *deployment.Spec.Replicas, replicas)
+		klog.Infof("updating replica count from %v to %v...", *deployment.Spec.Replicas, replicas)
 		deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return err
@@ -354,38 +354,28 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 
 // NewSingleIngressWithTLS creates a simple ingress rule with TLS spec included
 func NewSingleIngressWithTLS(name, path, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
-	return newSingleIngress(name, path, host, ns, service, port, annotations, true)
+	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, true)
 }
 
 // NewSingleIngress creates a simple ingress rule
 func NewSingleIngress(name, path, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
-	return newSingleIngress(name, path, host, ns, service, port, annotations, false)
+	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, false)
 }
 
-func newSingleIngress(name, path, host, ns, service string, port int, annotations *map[string]string, withTLS bool) *extensions.Ingress {
-	if annotations == nil {
-		annotations = &map[string]string{}
-	}
+func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations *map[string]string, withTLS bool) *extensions.Ingress {
 
-	ing := &extensions.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   ns,
-			Annotations: *annotations,
-		},
-		Spec: extensions.IngressSpec{
-			Rules: []extensions.IngressRule{
-				{
-					Host: host,
-					IngressRuleValue: extensions.IngressRuleValue{
-						HTTP: &extensions.HTTPIngressRuleValue{
-							Paths: []extensions.HTTPIngressPath{
-								{
-									Path: path,
-									Backend: extensions.IngressBackend{
-										ServiceName: service,
-										ServicePort: intstr.FromInt(port),
-									},
+	spec := extensions.IngressSpec{
+		Rules: []extensions.IngressRule{
+			{
+				Host: host,
+				IngressRuleValue: extensions.IngressRuleValue{
+					HTTP: &extensions.HTTPIngressRuleValue{
+						Paths: []extensions.HTTPIngressPath{
+							{
+								Path: path,
+								Backend: extensions.IngressBackend{
+									ServiceName: service,
+									ServicePort: intstr.FromInt(port),
 								},
 							},
 						},
@@ -396,12 +386,40 @@ func newSingleIngress(name, path, host, ns, service string, port int, annotation
 	}
 
 	if withTLS {
-		ing.Spec.TLS = []extensions.IngressTLS{
+		spec.TLS = []extensions.IngressTLS{
 			{
 				Hosts:      []string{host},
 				SecretName: host,
 			},
 		}
+	}
+
+	return newSingleIngress(name, ns, annotations, spec)
+}
+
+// NewSingleCatchAllIngress creates a simple ingress with a catch-all backend
+func NewSingleCatchAllIngress(name, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
+	spec := extensions.IngressSpec{
+		Backend: &extensions.IngressBackend{
+			ServiceName: service,
+			ServicePort: intstr.FromInt(port),
+		},
+	}
+	return newSingleIngress(name, ns, annotations, spec)
+}
+
+func newSingleIngress(name, ns string, annotations *map[string]string, spec extensions.IngressSpec) *extensions.Ingress {
+	if annotations == nil {
+		annotations = &map[string]string{}
+	}
+
+	ing := &extensions.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   ns,
+			Annotations: *annotations,
+		},
+		Spec: spec,
 	}
 
 	return ing

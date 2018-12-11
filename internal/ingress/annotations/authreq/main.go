@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	extensions "k8s.io/api/extensions/v1beta1"
 
@@ -123,9 +123,6 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if urlString == "" {
-		return nil, ing_errors.NewLocationDenied("an empty string is not a valid URL")
-	}
 
 	authURL, err := url.Parse(urlString)
 	if err != nil {
@@ -149,12 +146,12 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	// Optional Parameters
 	signIn, err := parser.GetStringAnnotation("auth-signin", ing)
 	if err != nil {
-		glog.Warning("auth-signin annotation is undefined and will not be set")
+		klog.Warning("auth-signin annotation is undefined and will not be set")
 	}
 
 	authSnippet, err := parser.GetStringAnnotation("auth-snippet", ing)
 	if err != nil {
-		glog.Warning("auth-snippet annotation is undefined and will not be set")
+		klog.Warning("auth-snippet annotation is undefined and will not be set")
 	}
 
 	responseHeaders := []string{}

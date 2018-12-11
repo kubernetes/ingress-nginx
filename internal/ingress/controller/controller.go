@@ -24,8 +24,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/mitchellh/hashstructure"
+	"k8s.io/klog"
 
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -87,6 +87,8 @@ type Configuration struct {
 
 	EnableProfiling bool
 
+	EnableMetrics bool
+
 	EnableSSLChainCompletion bool
 
 	FakeCertificatePath string
@@ -141,7 +143,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 		for _, loc := range server.Locations {
 			if loc.Path != rootLocation {
-				glog.Warningf("Ignoring SSL Passthrough for location %q in server %q", loc.Path, server.Hostname)
+				klog.Warningf("Ignoring SSL Passthrough for location %q in server %q", loc.Path, server.Hostname)
 				continue
 			}
 			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
@@ -164,12 +166,12 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	if n.runningConfig.Equal(pcfg) {
-		glog.V(3).Infof("No configuration change detected, skipping backend reload.")
+		klog.V(3).Infof("No configuration change detected, skipping backend reload.")
 		return nil
 	}
 
 	if !n.IsDynamicConfigurationEnough(pcfg) {
-		glog.Infof("Configuration changes detected, backend reload required.")
+		klog.Infof("Configuration changes detected, backend reload required.")
 
 		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
 			TagName: "json",
@@ -181,13 +183,13 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		if err != nil {
 			n.metricCollector.IncReloadErrorCount()
 			n.metricCollector.ConfigSuccess(hash, false)
-			glog.Errorf("Unexpected failure reloading the backend:\n%v", err)
+			klog.Errorf("Unexpected failure reloading the backend:\n%v", err)
 			return err
 		}
 
 		n.metricCollector.SetHosts(hosts)
 
-		glog.Infof("Backend successfully reloaded.")
+		klog.Infof("Backend successfully reloaded.")
 		n.metricCollector.ConfigSuccess(hash, true)
 		n.metricCollector.IncReloadCount()
 		n.metricCollector.SetSSLExpireTime(servers)
@@ -199,7 +201,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		//  start listening on the configured port (default 18080)
 		//  For large configurations it might take a while so we loop
 		//  and back off
-		glog.Info("Initial sync, sleeping for 1 second.")
+		klog.Info("Initial sync, sleeping for 1 second.")
 		time.Sleep(1 * time.Second)
 	}
 
@@ -213,15 +215,15 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
 		err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
 		if err == nil {
-			glog.V(2).Infof("Dynamic reconfiguration succeeded.")
+			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
 		}
 
-		glog.Warningf("Dynamic reconfiguration failed: %v", err)
+		klog.Warningf("Dynamic reconfiguration failed: %v", err)
 		return false, err
 	})
 	if err != nil {
-		glog.Errorf("Unexpected failure reconfiguring NGINX:\n%v", err)
+		klog.Errorf("Unexpected failure reconfiguring NGINX:\n%v", err)
 		return err
 	}
 
@@ -238,15 +240,15 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 	if configmapName == "" {
 		return []ingress.L4Service{}
 	}
-	glog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
+	klog.V(3).Infof("Obtaining information about %v stream services from ConfigMap %q", proto, configmapName)
 	_, _, err := k8s.ParseNameNS(configmapName)
 	if err != nil {
-		glog.Errorf("Error parsing ConfigMap reference %q: %v", configmapName, err)
+		klog.Errorf("Error parsing ConfigMap reference %q: %v", configmapName, err)
 		return []ingress.L4Service{}
 	}
 	configmap, err := n.store.GetConfigMap(configmapName)
 	if err != nil {
-		glog.Errorf("Error getting ConfigMap %q: %v", configmapName, err)
+		klog.Errorf("Error getting ConfigMap %q: %v", configmapName, err)
 		return []ingress.L4Service{}
 	}
 	var svcs []ingress.L4Service
@@ -264,16 +266,16 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 	for port, svcRef := range configmap.Data {
 		externalPort, err := strconv.Atoi(port)
 		if err != nil {
-			glog.Warningf("%q is not a valid %v port number", port, proto)
+			klog.Warningf("%q is not a valid %v port number", port, proto)
 			continue
 		}
 		if reserverdPorts.Has(externalPort) {
-			glog.Warningf("Port %d cannot be used for %v stream services. It is reserved for the Ingress controller.", externalPort, proto)
+			klog.Warningf("Port %d cannot be used for %v stream services. It is reserved for the Ingress controller.", externalPort, proto)
 			continue
 		}
 		nsSvcPort := strings.Split(svcRef, ":")
 		if len(nsSvcPort) < 2 {
-			glog.Warningf("Invalid Service reference %q for %v port %d", svcRef, proto, externalPort)
+			klog.Warningf("Invalid Service reference %q for %v port %d", svcRef, proto, externalPort)
 			continue
 		}
 		nsName := nsSvcPort[0]
@@ -291,19 +293,19 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		}
 		svcNs, svcName, err := k8s.ParseNameNS(nsName)
 		if err != nil {
-			glog.Warningf("%v", err)
+			klog.Warningf("%v", err)
 			continue
 		}
 		svc, err := n.store.GetService(nsName)
 		if err != nil {
-			glog.Warningf("Error getting Service %q: %v", nsName, err)
+			klog.Warningf("Error getting Service %q: %v", nsName, err)
 			continue
 		}
 		var endps []ingress.Endpoint
 		targetPort, err := strconv.Atoi(svcPort)
 		if err != nil {
 			// not a port number, fall back to using port name
-			glog.V(3).Infof("Searching Endpoints with %v port name %q for Service %q", proto, svcPort, nsName)
+			klog.V(3).Infof("Searching Endpoints with %v port name %q for Service %q", proto, svcPort, nsName)
 			for _, sp := range svc.Spec.Ports {
 				if sp.Name == svcPort {
 					if sp.Protocol == proto {
@@ -313,7 +315,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 				}
 			}
 		} else {
-			glog.V(3).Infof("Searching Endpoints with %v port number %d for Service %q", proto, targetPort, nsName)
+			klog.V(3).Infof("Searching Endpoints with %v port number %d for Service %q", proto, targetPort, nsName)
 			for _, sp := range svc.Spec.Ports {
 				if sp.Port == int32(targetPort) {
 					if sp.Protocol == proto {
@@ -326,7 +328,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		// stream services cannot contain empty upstreams and there is
 		// no default backend equivalent
 		if len(endps) == 0 {
-			glog.Warningf("Service %q does not have any active Endpoint for %v port %v", nsName, proto, svcPort)
+			klog.Warningf("Service %q does not have any active Endpoint for %v port %v", nsName, proto, svcPort)
 			continue
 		}
 		svcs = append(svcs, ingress.L4Service{
@@ -363,14 +365,14 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 
 	svc, err := n.store.GetService(svcKey)
 	if err != nil {
-		glog.Warningf("Error getting default backend %q: %v", svcKey, err)
+		klog.Warningf("Error getting default backend %q: %v", svcKey, err)
 		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
 		return upstream
 	}
 
 	endps := getEndpoints(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 	if len(endps) == 0 {
-		glog.Warningf("Service %q does not have any active Endpoint", svcKey)
+		klog.Warningf("Service %q does not have any active Endpoint", svcKey)
 		endps = []ingress.Endpoint{n.DefaultEndpoint()}
 	}
 
@@ -386,6 +388,8 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 	du := n.getDefaultUpstream()
 	upstreams := n.createUpstreams(ingresses, du)
 	servers := n.createServers(ingresses, upstreams, du)
+
+	var canaryIngresses []*ingress.Ingress
 
 	for _, ing := range ingresses {
 		ingKey := k8s.MetaNamespaceKey(ing)
@@ -404,7 +408,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 
 			if rule.HTTP == nil &&
 				host != defServerName {
-				glog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
+				klog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
 				continue
 			}
 
@@ -415,16 +419,16 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			if server.CertificateAuth.CAFileName == "" {
 				server.CertificateAuth = anns.CertificateAuth
 				if server.CertificateAuth.Secret != "" && server.CertificateAuth.CAFileName == "" {
-					glog.V(3).Infof("Secret %q has no 'ca.crt' key, mutual authentication disabled for Ingress %q",
+					klog.V(3).Infof("Secret %q has no 'ca.crt' key, mutual authentication disabled for Ingress %q",
 						server.CertificateAuth.Secret, ingKey)
 				}
 			} else {
-				glog.V(3).Infof("Server %q is already configured for mutual authentication (Ingress %q)",
+				klog.V(3).Infof("Server %q is already configured for mutual authentication (Ingress %q)",
 					server.Hostname, ingKey)
 			}
 
 			if rule.HTTP == nil {
-				glog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
+				klog.V(3).Infof("Ingress %q does not contain any HTTP rule, using default backend", ingKey)
 				continue
 			}
 
@@ -449,12 +453,12 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						addLoc = false
 
 						if !loc.IsDefBackend {
-							glog.V(3).Infof("Location %q already configured for server %q with upstream %q (Ingress %q)",
+							klog.V(3).Infof("Location %q already configured for server %q with upstream %q (Ingress %q)",
 								loc.Path, server.Hostname, loc.Backend, ingKey)
 							break
 						}
 
-						glog.V(3).Infof("Replacing location %q for server %q with upstream %q to use upstream %q (Ingress %q)",
+						klog.V(3).Infof("Replacing location %q for server %q with upstream %q to use upstream %q (Ingress %q)",
 							loc.Path, server.Hostname, loc.Backend, ups.Name, ingKey)
 
 						loc.Backend = ups.Name
@@ -494,7 +498,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 
 				// new location
 				if addLoc {
-					glog.V(3).Infof("Adding location %q for server %q with upstream %q (Ingress %q)",
+					klog.V(3).Infof("Adding location %q for server %q with upstream %q (Ingress %q)",
 						nginxPath, server.Hostname, ups.Name, ingKey)
 
 					loc := &ingress.Location{
@@ -541,7 +545,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				if anns.SessionAffinity.Type == "cookie" {
 					cookiePath := anns.SessionAffinity.Cookie.Path
 					if anns.Rewrite.UseRegex && cookiePath == "" {
-						glog.Warningf("session-cookie-path should be set when use-regex is true")
+						klog.Warningf("session-cookie-path should be set when use-regex is true")
 					}
 
 					ups.SessionAffinity.CookieSessionAffinity.Name = anns.SessionAffinity.Cookie.Name
@@ -559,9 +563,15 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			}
 		}
 
+		// set aside canary ingresses to merge later
 		if anns.Canary.Enabled {
-			glog.Infof("Canary ingress %v detected. Finding eligible backends to merge into.", ing.Name)
-			mergeAlternativeBackends(ing, upstreams, servers)
+			canaryIngresses = append(canaryIngresses, ing)
+		}
+	}
+
+	if nonCanaryIngressExists(ingresses, canaryIngresses) {
+		for _, canaryIng := range canaryIngresses {
+			mergeAlternativeBackends(canaryIng, upstreams, servers)
 		}
 	}
 
@@ -575,13 +585,13 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			for _, location := range server.Locations {
 				if upstream.Name == location.Backend {
 					if len(upstream.Endpoints) == 0 {
-						glog.V(3).Infof("Upstream %q has no active Endpoint", upstream.Name)
+						klog.V(3).Infof("Upstream %q has no active Endpoint", upstream.Name)
 						// check if the location contains endpoints and a custom default backend
 						if location.DefaultBackend != nil {
 							sp := location.DefaultBackend.Spec.Ports[0]
 							endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 							if len(endps) > 0 {
-								glog.V(3).Infof("Using custom default backend for location %q in server %q (Service \"%v/%v\")",
+								klog.V(3).Infof("Using custom default backend for location %q in server %q (Service \"%v/%v\")",
 									location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
 
 								nb := upstream.DeepCopy()
@@ -597,7 +607,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					if server.SSLPassthrough {
 						if location.Path == rootLocation {
 							if location.Backend == defUpstreamName {
-								glog.Warningf("Server %q has no default backend, ignoring SSL Passthrough.", server.Hostname)
+								klog.Warningf("Server %q has no default backend, ignoring SSL Passthrough.", server.Hostname)
 								continue
 							}
 							isHTTPSfrom = append(isHTTPSfrom, server)
@@ -648,7 +658,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 		if ing.Spec.Backend != nil {
 			defBackend = upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
 
-			glog.V(3).Infof("Creating upstream %q", defBackend)
+			klog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
 			if upstreams[defBackend].SecureCACert.Secret == "" {
 				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
@@ -666,7 +676,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			if anns.ServiceUpstream {
 				endpoint, err := n.getServiceClusterEndpoint(svcKey, ing.Spec.Backend)
 				if err != nil {
-					glog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)
+					klog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)
 				} else {
 					upstreams[defBackend].Endpoints = []ingress.Endpoint{endpoint}
 				}
@@ -686,13 +696,13 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				endps, err := n.serviceEndpoints(svcKey, ing.Spec.Backend.ServicePort.String())
 				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
 				if err != nil {
-					glog.Warningf("Error creating upstream %q: %v", defBackend, err)
+					klog.Warningf("Error creating upstream %q: %v", defBackend, err)
 				}
 			}
 
 			s, err := n.store.GetService(svcKey)
 			if err != nil {
-				glog.Warningf("Error obtaining Service %q: %v", svcKey, err)
+				klog.Warningf("Error obtaining Service %q: %v", svcKey, err)
 			}
 			upstreams[defBackend].Service = s
 		}
@@ -709,7 +719,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					continue
 				}
 
-				glog.V(3).Infof("Creating upstream %q", name)
+				klog.V(3).Infof("Creating upstream %q", name)
 				upstreams[name] = newUpstream(name)
 				upstreams[name].Port = path.Backend.ServicePort
 
@@ -731,7 +741,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				if anns.ServiceUpstream {
 					endpoint, err := n.getServiceClusterEndpoint(svcKey, &path.Backend)
 					if err != nil {
-						glog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)
+						klog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)
 					} else {
 						upstreams[name].Endpoints = []ingress.Endpoint{endpoint}
 					}
@@ -750,7 +760,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				if len(upstreams[name].Endpoints) == 0 {
 					endp, err := n.serviceEndpoints(svcKey, path.Backend.ServicePort.String())
 					if err != nil {
-						glog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
+						klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 						continue
 					}
 					upstreams[name].Endpoints = endp
@@ -758,7 +768,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 				s, err := n.store.GetService(svcKey)
 				if err != nil {
-					glog.Warningf("Error obtaining Service %q: %v", svcKey, err)
+					klog.Warningf("Error obtaining Service %q: %v", svcKey, err)
 					continue
 				}
 
@@ -814,7 +824,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 		return upstreams, err
 	}
 
-	glog.V(3).Infof("Obtaining ports information for Service %q", svcKey)
+	klog.V(3).Infof("Obtaining ports information for Service %q", svcKey)
 	for _, servicePort := range svc.Spec.Ports {
 		// targetPort could be a string, use either the port name or number (int)
 		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
@@ -823,7 +833,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 
 			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 			if len(endps) == 0 {
-				glog.Warningf("Service %q does not have any active Endpoint.", svcKey)
+				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			}
 
 			if n.cfg.SortBackends {
@@ -846,7 +856,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	if len(svc.Spec.Ports) == 0 && svc.Spec.Type == apiv1.ServiceTypeExternalName {
 		externalPort, err := strconv.Atoi(backendPort)
 		if err != nil {
-			glog.Warningf("Only numeric ports are allowed in ExternalName Services: %q is not a valid port number.", backendPort)
+			klog.Warningf("Only numeric ports are allowed in ExternalName Services: %q is not a valid port number.", backendPort)
 			return upstreams, nil
 		}
 
@@ -857,7 +867,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 		}
 		endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 		if len(endps) == 0 {
-			glog.Warningf("Service %q does not have any active Endpoint.", svcKey)
+			klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			return upstreams, nil
 		}
 
@@ -938,8 +948,13 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		// default upstream name
 		un := du.Name
 
+		if anns.Canary.Enabled {
+			klog.V(2).Infof("Ingress %v is marked as Canary, ignoring", ingKey)
+			continue
+		}
+
 		if ing.Spec.Backend != nil {
-			defUpstream := fmt.Sprintf("%v-%v-%v", ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort.String())
+			defUpstream := upstreamName(ing.Namespace, ing.Spec.Backend.ServiceName, ing.Spec.Backend.ServicePort)
 
 			if backendUpstream, ok := upstreams[defUpstream]; ok {
 				// use backend specified in Ingress as the default backend for all its rules
@@ -948,7 +963,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
-					glog.Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q",
+					klog.Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q",
 						ingKey, defServerName)
 
 					defLoc.IsDefBackend = false
@@ -976,7 +991,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					defLoc.BackendProtocol = anns.BackendProtocol
 					defLoc.ModSecurity = anns.ModSecurity
 				} else {
-					glog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
+					klog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
 						ingKey)
 				}
 			}
@@ -1014,6 +1029,11 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		ingKey := k8s.MetaNamespaceKey(ing)
 		anns := ing.ParsedAnnotations
 
+		if anns.Canary.Enabled {
+			klog.V(2).Infof("Ingress %v is marked as Canary, ignoring", ingKey)
+			continue
+		}
+
 		for _, rule := range ing.Spec.Rules {
 			host := rule.Host
 			if host == "" {
@@ -1027,7 +1047,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 						aliases["Alias"] = host
 					}
 				} else {
-					glog.Warningf("Aliases already configured for server %q, skipping (Ingress %q)",
+					klog.Warningf("Aliases already configured for server %q, skipping (Ingress %q)",
 						host, ingKey)
 				}
 			}
@@ -1036,7 +1056,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				if servers[host].ServerSnippet == "" {
 					servers[host].ServerSnippet = anns.ServerSnippet
 				} else {
-					glog.Warningf("Server snippet already configured for server %q, skipping (Ingress %q)",
+					klog.Warningf("Server snippet already configured for server %q, skipping (Ingress %q)",
 						host, ingKey)
 				}
 			}
@@ -1052,14 +1072,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			}
 
 			if len(ing.Spec.TLS) == 0 {
-				glog.V(3).Infof("Ingress %q does not contains a TLS section.", ingKey)
+				klog.V(3).Infof("Ingress %q does not contains a TLS section.", ingKey)
 				continue
 			}
 
 			tlsSecretName := extractTLSSecretName(host, ing, n.store.GetLocalSSLCert)
 
 			if tlsSecretName == "" {
-				glog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
+				klog.V(3).Infof("Host %q is listed in the TLS section but secretName is empty. Using default certificate.", host)
 				servers[host].SSLCert.PemFileName = defaultPemFileName
 				servers[host].SSLCert.PemSHA = defaultPemSHA
 				continue
@@ -1068,7 +1088,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			secrKey := fmt.Sprintf("%v/%v", ing.Namespace, tlsSecretName)
 			cert, err := n.store.GetLocalSSLCert(secrKey)
 			if err != nil {
-				glog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
+				klog.Warningf("Error getting SSL certificate %q: %v. Using default certificate", secrKey, err)
 				servers[host].SSLCert.PemFileName = defaultPemFileName
 				servers[host].SSLCert.PemSHA = defaultPemSHA
 				continue
@@ -1076,15 +1096,15 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 			err = cert.Certificate.VerifyHostname(host)
 			if err != nil {
-				glog.Warningf("Unexpected error validating SSL certificate %q for server %q: %v", secrKey, host, err)
-				glog.Warning("Validating certificate against DNS names. This will be deprecated in a future version.")
+				klog.Warningf("Unexpected error validating SSL certificate %q for server %q: %v", secrKey, host, err)
+				klog.Warning("Validating certificate against DNS names. This will be deprecated in a future version.")
 				// check the Common Name field
 				// https://github.com/golang/go/issues/22922
 				err := verifyHostname(host, cert.Certificate)
 				if err != nil {
-					glog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
+					klog.Warningf("SSL certificate %q does not contain a Common Name or Subject Alternative Name for server %q: %v",
 						secrKey, host, err)
-					glog.Warningf("Using default certificate")
+					klog.Warningf("Using default certificate")
 					servers[host].SSLCert.PemFileName = defaultPemFileName
 					servers[host].SSLCert.PemSHA = defaultPemSHA
 					continue
@@ -1100,14 +1120,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 			servers[host].SSLCert = *cert
 
 			if cert.ExpireTime.Before(time.Now().Add(240 * time.Hour)) {
-				glog.Warningf("SSL certificate for server %q is about to expire (%v)", host, cert.ExpireTime)
+				klog.Warningf("SSL certificate for server %q is about to expire (%v)", host, cert.ExpireTime)
 			}
 		}
 	}
 
 	for alias, host := range aliases {
 		if _, ok := servers[alias]; ok {
-			glog.Warningf("Conflicting hostname (%v) and alias (%v). Removing alias to avoid conflicts.", host, alias)
+			klog.Warningf("Conflicting hostname (%v) and alias (%v). Removing alias to avoid conflicts.", host, alias)
 			servers[host].Alias = ""
 		}
 	}
@@ -1115,14 +1135,23 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	return servers
 }
 
+// OK to merge canary ingresses iff there exists one or more ingresses to potentially merge into
+func nonCanaryIngressExists(ingresses []*ingress.Ingress, canaryIngresses []*ingress.Ingress) bool {
+	return len(ingresses)-len(canaryIngresses) > 0
+}
+
+// ensure that the following conditions are met
+// 1) names of backends do not match and canary doesn't merge into itself
+// 2) primary name is not the default upstream
+// 3) the primary has a server
 func canMergeBackend(primary *ingress.Backend, alternative *ingress.Backend) bool {
-	return primary.Name != alternative.Name && !primary.NoServer
+	return primary.Name != alternative.Name && primary.Name != defUpstreamName && !primary.NoServer
 }
 
 // Performs the merge action and checks to ensure that one two alternative backends do not merge into each other
 func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) bool {
 	if priUps.NoServer {
-		glog.Warningf("unable to merge alternative backend %v into primary backend %v because %v is a primary backend",
+		klog.Warningf("unable to merge alternative backend %v into primary backend %v because %v is a primary backend",
 			altUps.Name, priUps.Name, priUps.Name)
 		return false
 	}
@@ -1152,7 +1181,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			priUps := upstreams[loc.Backend]
 
 			if canMergeBackend(priUps, altUps) {
-				glog.Infof("matching backend %v found for alternative backend %v",
+				klog.Infof("matching backend %v found for alternative backend %v",
 					priUps.Name, altUps.Name)
 
 				merged = mergeAlternativeBackend(priUps, altUps)
@@ -1160,7 +1189,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 		}
 
 		if !merged {
-			glog.Warningf("unable to find real backend for alternative backend %v. Deleting.", altUps.Name)
+			klog.Warningf("unable to find real backend for alternative backend %v. Deleting.", altUps.Name)
 			delete(upstreams, altUps.Name)
 		}
 	}
@@ -1175,7 +1204,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 
 			server, ok := servers[rule.Host]
 			if !ok {
-				glog.Errorf("cannot merge alternative backend %s into hostname %s that does not exist",
+				klog.Errorf("cannot merge alternative backend %s into hostname %s that does not exist",
 					altUps.Name,
 					rule.Host)
 
@@ -1187,7 +1216,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 				priUps := upstreams[loc.Backend]
 
 				if canMergeBackend(priUps, altUps) && loc.Path == path.Path {
-					glog.Infof("matching backend %v found for alternative backend %v",
+					klog.Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
 					merged = mergeAlternativeBackend(priUps, altUps)
@@ -1195,7 +1224,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			}
 
 			if !merged {
-				glog.Warningf("unable to find real backend for alternative backend %v. Deleting.", altUps.Name)
+				klog.Warningf("unable to find real backend for alternative backend %v. Deleting.", altUps.Name)
 				delete(upstreams, altUps.Name)
 			}
 		}
@@ -1230,7 +1259,7 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 
 		cert, err := getLocalSSLCert(secrKey)
 		if err != nil {
-			glog.Warningf("Error getting SSL certificate %q: %v", secrKey, err)
+			klog.Warningf("Error getting SSL certificate %q: %v", secrKey, err)
 			continue
 		}
 
@@ -1242,7 +1271,7 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 		if err != nil {
 			continue
 		}
-		glog.V(3).Infof("Found SSL certificate matching host %q: %q", host, secrKey)
+		klog.V(3).Infof("Found SSL certificate matching host %q: %q", host, secrKey)
 		return tls.SecretName
 	}
 

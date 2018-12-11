@@ -70,7 +70,8 @@ func TestParse(t *testing.T) {
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		result, _ := ap.Parse(ing)
-		if result != testCase.expected {
+		config := result.(*Config)
+		if !config.Equal(&testCase.expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
 	}

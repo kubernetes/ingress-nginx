@@ -1,5 +1,108 @@
 # Changes
 
+## v0.33.1
+
+all: release v0.33.1
+
+- compute: Removes an erroneously added go.mod.
+- logging: Populate source location in fromLogEntry.
+
+## v0.33.0
+
+- bttest:
+  - Add support for apply_label_transformer.
+- expr:
+  - Add expr library.
+- firestore:
+  - Support retrieval of missing documents.
+- kms:
+  - Add IAM methods.
+- pubsub:
+  - Clarify extension documentation.
+- scheduler:
+  - Add v1beta1 client.
+- vision:
+  - Add product search helper.
+  - Add new product search client.
+
+## v0.32.0
+
+Note: This release is the last to support Go 1.6 and 1.8.
+
+- bigquery:
+    - Add support for removing an expiration.
+    - Ignore NeverExpire in Table.Create.
+    - Validate table expiration time.
+- cbt:
+    - Add note about not supporting arbitrary bytes.
+- datastore:
+    - Align key checks.
+- firestore:
+    - Return an error when using Start/End without providing values.
+- pubsub:
+    - Add pstest Close method.
+    - Clarify MaxExtension documentation.
+- securitycenter:
+    - Add v1beta1 client.
+- spanner:
+    - Allow nil in mutations.
+    - Improve doc of SessionPoolConfig.MaxOpened.
+    - Increase session deletion timeout from 5s to 15s.
+
+## v0.31.0
+
+- bigtable:
+    - Group mutations across multiple requests.
+- bigquery:
+    - Link to bigquery troubleshooting errors page in bigquery.Error comment.
+- cbt:
+    - Fix go generate command.
+    - Document usage of both maxage + maxversions.
+- datastore:
+    - Passing nil keys results in ErrInvalidKey.
+- firestore:
+    - Clarify what Document.DataTo does with untouched struct fields.
+- profile:
+    - Validate service name in agent.
+- pubsub:
+    - Fix deadlock with pstest and ctx.Cancel.
+    - Fix a possible deadlock in pstest.
+- trace:
+    - Update doc URL with new fragment.
+
+Special thanks to @fastest963 for going above and beyond helping us to debug
+hard-to-reproduce Pub/Sub issues.
+
+## v0.30.0
+
+- spanner: DML support added. See https://godoc.org/cloud.google.com/go/spanner#hdr-DML_and_Partitioned_DML for more information.
+- bigtable: bttest supports row sample filter.
+- functions: metadata package added for accessing Cloud Functions resource metadata.
+
+## v0.29.0
+
+- bigtable:
+  - Add retry to all idempotent RPCs.
+  - cbt supports complex GC policies.
+  - Emulator supports arbitrary bytes in regex filters.
+- firestore: Add ArrayUnion and ArrayRemove.
+- logging: Add the ContextFunc option to supply the context used for
+  asynchronous RPCs.
+- profiler: Ignore NotDefinedError when fetching the instance name
+- pubsub:
+  - BEHAVIOR CHANGE: Receive doesn't retry if an RPC returns codes.Cancelled.
+  - BEHAVIOR CHANGE: Receive retries on Unavailable intead of returning.
+  - Fix deadlock.
+  - Restore Ack/Nack/Modacks metrics.
+  - Improve context handling in iterator.
+  - Implement synchronous mode for Receive.
+  - pstest: add Pull.
+- spanner: Add a metric for the number of sessions currently opened.
+- storage:
+  - Canceling the context releases all resources.
+  - Add additional RetentionPolicy attributes.
+- vision/apiv1: Add LocalizeObjects method.
+
 ## v0.28.0
 
 - bigtable:

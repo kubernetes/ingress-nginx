@@ -42,8 +42,8 @@ describe("Balancer ewma", function()
         }
       }
       local instance = balancer_ewma:new(backend)
-      
-      local stats = { ["10.184.7.40:8080"] = 0.5, ["10.184.97.100:8080"] = 0.3 }
+      instance.ewma =  { ["10.184.7.40:8080"] = 0.5, ["10.184.97.100:8080"] = 0.3 }
+      instance.ewma_last_touched_at =  { ["10.184.7.40:8080"] = ngx.now(), ["10.184.97.100:8080"] = ngx.now() }
 
       local peer = instance:balance()
       assert.equal("10.184.97.100:8080", peer)

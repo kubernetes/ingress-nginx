@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -75,7 +75,7 @@ func (t *Queue) EnqueueSkippableTask(obj interface{}) {
 // enqueue enqueues ns/name of the given api object in the task queue.
 func (t *Queue) enqueue(obj interface{}, skippable bool) {
 	if t.IsShuttingDown() {
-		glog.Errorf("queue has been shutdown, failed to enqueue: %v", obj)
+		klog.Errorf("queue has been shutdown, failed to enqueue: %v", obj)
 		return
 	}
 
@@ -84,10 +84,10 @@ func (t *Queue) enqueue(obj interface{}, skippable bool) {
 		// make sure the timestamp is bigger than lastSync
 		ts = time.Now().Add(24 * time.Hour).UnixNano()
 	}
-	glog.V(3).Infof("queuing item %v", obj)
+	klog.V(3).Infof("queuing item %v", obj)
 	key, err := t.fn(obj)
 	if err != nil {
-		glog.Errorf("%v", err)
+		klog.Errorf("%v", err)
 		return
 	}
 	t.queue.Add(Element{
@@ -119,15 +119,15 @@ func (t *Queue) worker() {
 
 		item := key.(Element)
 		if t.lastSync > item.Timestamp {
-			glog.V(3).Infof("skipping %v sync (%v > %v)", item.Key, t.lastSync, item.Timestamp)
+			klog.V(3).Infof("skipping %v sync (%v > %v)", item.Key, t.lastSync, item.Timestamp)
 			t.queue.Forget(key)
 			t.queue.Done(key)
 			continue
 		}
 
-		glog.V(3).Infof("syncing %v", item.Key)
+		klog.V(3).Infof("syncing %v", item.Key)
 		if err := t.sync(key); err != nil {
-			glog.Warningf("requeuing %v, err %v", item.Key, err)
+			klog.Warningf("requeuing %v, err %v", item.Key, err)
 			t.queue.AddRateLimited(Element{
 				Key:       item.Key,
 				Timestamp: time.Now().UnixNano(),

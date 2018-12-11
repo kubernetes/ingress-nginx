@@ -17,8 +17,8 @@ limitations under the License.
 package class
 
 import (
-	"github.com/golang/glog"
 	extensions "k8s.io/api/extensions/v1beta1"
+	"k8s.io/klog"
 )
 
 const (
@@ -44,7 +44,7 @@ var (
 func IsValid(ing *extensions.Ingress) bool {
 	ingress, ok := ing.GetAnnotations()[IngressKey]
 	if !ok {
-		glog.V(3).Infof("annotation %v is not present in ingress %v/%v", IngressKey, ing.Namespace, ing.Name)
+		klog.V(3).Infof("annotation %v is not present in ingress %v/%v", IngressKey, ing.Namespace, ing.Name)
 	}
 
 	// we have 2 valid combinations
