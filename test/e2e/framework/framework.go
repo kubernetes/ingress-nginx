@@ -315,6 +315,26 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 	f.SetNginxConfigMapData(config)
 }
 
+// DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.
+// Grace period to wait for pod shutdown is in seconds.
+func (f *Framework) DeleteNGINXPod(grace int64) {
+	ns := f.IngressController.Namespace
+	pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
+	Expect(err).NotTo(HaveOccurred(), "expected ingress nginx pod to be running")
+
+	err = f.KubeClientSet.CoreV1().Pods(ns).Delete(pod.GetName(), metav1.NewDeleteOptions(grace))
+	Expect(err).NotTo(HaveOccurred(), "unexpected error deleting ingress nginx pod")
+
+	err = wait.Poll(Poll, time.Minute*5, func() (bool, error) {
+		pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
+		if err != nil || pod == nil {
+			return false, nil
+		}
+		return pod.GetName() != "", nil
+	})
+	Expect(err).NotTo(HaveOccurred(), "unexpected error while waiting for ingress nginx pod to come up again")
+}
+
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
 func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1beta1.Deployment) error) error {
 	deployment, err := kubeClientSet.AppsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
