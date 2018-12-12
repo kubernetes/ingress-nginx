@@ -636,8 +636,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				return err
 			}
 
-			// TODO: executing diff can return exit code != 0
-			diffOutput, _ := exec.Command("diff", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
+			diffOutput, err := exec.Command("diff", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
+			if err != nil {
+				klog.Warningf("Failed to executing diff command: %v", err)
+			}
 
 			klog.Infof("NGINX configuration diff:\n%v", string(diffOutput))
 
