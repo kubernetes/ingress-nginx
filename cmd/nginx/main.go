@@ -24,13 +24,13 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	discovery "k8s.io/apimachinery/pkg/version"
@@ -94,8 +94,7 @@ func main() {
 
 		_, err = kubeClient.CoreV1().Services(defSvcNs).Get(defSvcName, metav1.GetOptions{})
 		if err != nil {
-			// TODO (antoineco): compare with error types from k8s.io/apimachinery/pkg/api/errors
-			if strings.Contains(err.Error(), "cannot get services in the namespace") {
+			if errors.IsUnauthorized(err) || errors.IsForbidden(err) {
 				klog.Fatal("✖ The cluster seems to be running with a restrictive Authorization mode and the Ingress controller does not have the required permissions to operate normally.")
 			}
 			klog.Fatalf("No service with name %v found: %v", conf.DefaultService, err)

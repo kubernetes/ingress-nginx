@@ -32,7 +32,7 @@ local function get_pem_cert_key(hostname)
     return pem_cert_key
   end
 
-  local wildcard_hosatname, _, err = re_sub(hostname, "^.+\\.", "*.", "jo")
+  local wildcard_hosatname, _, err = re_sub(hostname, "^[^\\.]+\\.", "*.", "jo")
   if err then
     ngx.log(ngx.ERR, "error: ", err)
     return pem_cert_key
