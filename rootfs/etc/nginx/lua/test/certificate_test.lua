@@ -78,6 +78,20 @@ describe("Certificate", function()
       assert.spy(ssl.set_der_priv_key).was_called_with(ssl.priv_key_pem_to_der(PEM_CERT_KEY))
     end)
 
+    it("successfully sets SSL certificate and key for nested wildcard cert", function()
+      ssl.server_name = function() return "sub.nested.hostname", nil end
+      ngx.shared.certificate_data:set("*.nested.hostname", PEM_CERT_KEY)
+
+      spy.on(ngx, "log")
+      spy.on(ssl, "set_der_cert")
+      spy.on(ssl, "set_der_priv_key")
+
+      assert.has_no.errors(certificate.call)
+      assert.spy(ngx.log).was_not_called_with(ngx.ERR, _)
+      assert.spy(ssl.set_der_cert).was_called_with(ssl.cert_pem_to_der(PEM_CERT_KEY))
+      assert.spy(ssl.set_der_priv_key).was_called_with(ssl.priv_key_pem_to_der(PEM_CERT_KEY))
+    end)
+
     it("logs error message when certificate in dictionary is invalid", function()
       ngx.shared.certificate_data:set("hostname", "something invalid")
 
