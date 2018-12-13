@@ -26,6 +26,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/cache"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
@@ -306,6 +307,9 @@ type Location struct {
 	// ModSecurity allows to enable and configure modsecurity
 	// +optional
 	ModSecurity modsecurity.Config `json:"modsecurity"`
+	// cache
+	// +optional
+	Cache cache.Config `json:"cache"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured

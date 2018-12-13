@@ -32,6 +32,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/backendprotocol"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/cache"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/clientbodybuffersize"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
@@ -72,6 +73,7 @@ type Ingress struct {
 	Alias                string
 	BasicDigestAuth      auth.Config
 	Canary               canary.Config
+	Cache                cache.Config
 	CertificateAuth      authtls.Config
 	ClientBodyBufferSize string
 	ConfigurationSnippet string
@@ -116,6 +118,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Alias":                alias.NewParser(cfg),
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
 			"Canary":               canary.NewParser(cfg),
+			"Cache":                cache.NewParser(cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),
 			"ClientBodyBufferSize": clientbodybuffersize.NewParser(cfg),
 			"ConfigurationSnippet": snippet.NewParser(cfg),

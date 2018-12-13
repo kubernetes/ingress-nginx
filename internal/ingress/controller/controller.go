@@ -477,6 +477,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						loc.Rewrite = anns.Rewrite
 						loc.UpstreamVhost = anns.UpstreamVhost
 						loc.Whitelist = anns.Whitelist
+						loc.Cache = anns.Cache
 						loc.Denied = anns.Denied
 						loc.XForwardedPrefix = anns.XForwardedPrefix
 						loc.UsePortInRedirects = anns.UsePortInRedirects
@@ -519,6 +520,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						Rewrite:              anns.Rewrite,
 						UpstreamVhost:        anns.UpstreamVhost,
 						Whitelist:            anns.Whitelist,
+						Cache:                anns.Cache,
 						Denied:               anns.Denied,
 						XForwardedPrefix:     anns.XForwardedPrefix,
 						UsePortInRedirects:   anns.UsePortInRedirects,
