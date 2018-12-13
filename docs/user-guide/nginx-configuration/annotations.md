@@ -15,7 +15,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 
 |Name                       | type |
 |---------------------------|------|
-|[nginx.ingress.kubernetes.io/add-base-url](#rewrite)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/app-root](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
@@ -29,7 +28,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
-|[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|
@@ -124,10 +122,6 @@ Currently a maximum of one canary ingress can be applied per Ingress rule.
 
 In some scenarios the exposed URL in the backend service differs from the specified path in the Ingress rule. Without a rewrite any request will return 404.
 Set the annotation `nginx.ingress.kubernetes.io/rewrite-target` to the path expected by the service.
-
-If the application contains relative links it is possible to add an additional annotation `nginx.ingress.kubernetes.io/add-base-url` that will prepend a [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) in the header of the returned HTML from the backend.
-
-If the scheme of [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) need to be specific, set the annotation `nginx.ingress.kubernetes.io/base-url-scheme` to the scheme such as `http` and `https`.
 
 If the Application Root is exposed in a different path and needs to be redirected, set the annotation `nginx.ingress.kubernetes.io/app-root` to redirect requests for `/`.
 

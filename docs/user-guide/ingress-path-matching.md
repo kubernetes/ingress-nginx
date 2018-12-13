@@ -54,11 +54,11 @@ spec:
       paths:
       - path: /foo/bar
         backend:
-          serviceName: test
+          serviceName: service1
           servicePort: 80
       - path: /foo/bar/
         backend:
-          serviceName: test
+          serviceName: service2
           servicePort: 80
 ```
 
@@ -76,14 +76,14 @@ spec:
       paths:
       - path: /foo/bar/.+
         backend:
-          serviceName: test
+          serviceName: service3
           servicePort: 80
 ```
 
 The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the `test.com` server:
 
 ```txt
-location ~* "^/foo/bar/.+\/?(?<baseuri>.*)" {
+location ~* ^/foo/bar/.+ {
   ...
 }
 
@@ -98,13 +98,12 @@ location ~* "^/foo/bar" {
 
 The following request URI's would match the corresponding location blocks:
 
-- `test.com/foo/bar/1` matches `~* "^/foo/bar/.+\/?(?<baseuri>.*)"`
-- `test.com/foo/bar/` matches `~* "^/foo/bar/"`
-- `test.com/foo/bar` matches `~* "^/foo/bar"`
+- `test.com/foo/bar/1` matches `~* ^/foo/bar/.+` and will go to service 3.
+- `test.com/foo/bar/` matches `~* ^/foo/bar/` and will go to service 2.
+- `test.com/foo/bar` matches `~* ^/foo/bar` and will go to service 1.
 
 **IMPORTANT NOTES**:
 
-- paths created under the `rewrite-ingress` are sorted before `\/?(?<baseuri>.*)` is appended. For example if the path defined within `test-ingress-2` was `/foo/.+` then the location block for `^/foo/.+\/?(?<baseuri>.*)` would be the LAST block listed.
 - If the `use-regex` OR `rewrite-target` annotation is used on any Ingress for a given host, then the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.
 
 ## Warning
