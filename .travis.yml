@@ -28,6 +28,10 @@ env:
   - E2E_NODES=6
   - GH_REF=github.com/kubernetes/ingress-nginx
 
+branches:
+  only:
+  - master
+
 jobs:
   include:
   - stage: Static Check
