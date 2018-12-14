@@ -141,7 +141,7 @@ func (a cache) Parse(ing *extensions.Ingress) (interface{}, error) {
 		klog.Errorf("unexpected error creating cache directory %v: %v", p, err)
 	}
 
-	klog.Info("Created cache directory %v", p)
+	klog.Infof("Created cache directory %v", p)
 
 	return &Config{e, n, ash, it, l, ms, m, mu, p, r, ttl, us}, nil
 
