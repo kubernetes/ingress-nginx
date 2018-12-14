@@ -687,7 +687,7 @@ func buildCaches(input interface{}) []string {
 	caches := sets.String{}
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
-		glog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
+		klog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
 		return caches.List()
 	}
 	for _, server := range servers {
