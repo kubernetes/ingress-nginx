@@ -454,6 +454,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if !(&l1.Jwt).Equal(&l2.Jwt) {
+		return false
+	}
+
 	return true
 }
 

@@ -47,7 +47,7 @@ events {
 
 http {
     lua_package_cpath "/usr/local/lib/lua/?.so;/usr/lib/lua-platform-path/lua/5.1/?.so;;";
-    lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
+    lua_package_path "/etc/nginx/lua/?.lua;/usr/local/share/lua/5.1/?.lua;/etc/nginx/lua/vendor/?.lua;/usr/local/lib/lua/?.lua;;";
 
     {{ buildLuaSharedDictionaries $servers $all.Cfg.DisableLuaRestyWAF }}
 
@@ -81,6 +81,13 @@ http {
           error("require failed: " .. tostring(res))
         else
           balancer = res
+        end
+
+        ok, res = pcall(require, "jwt")
+        if not ok then
+          error("jwt require failed: " .. tostring(res))
+        else
+          jwt = res
         end
 
         {{ if $all.EnableMetrics }}
@@ -501,6 +508,9 @@ http {
     # nginx caches
     {{ range $cache := (buildCaches $servers) }}
     {{ $cache }}{{ end }}
+    {{ if $cfg.EnableJWT }}
+    {{ buildJWKSCache $cfg }}
+    {{ end  }}
 
     # Global filters
     {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
@@ -1101,6 +1111,27 @@ stream {
                 {{ end }}
 
                 waf:exec()
+                {{ end }}
+
+                {{ if (and $location.Jwt.Enabled $all.Cfg.EnableJWT) }}
+                local jwt = require("jwt")
+                local res = ngx.location.capture("/jwks")
+                if not res then
+                  ngx.header.content_type = '{{ $location.Jwt.ResponseContentType }}'
+                  ngx.status = ngx.HTTP_UNAUTHORIZED
+                  ngx.say("{{ $location.Jwt.ResponseData }}")
+                  ngx.exit(ngx.OK)
+                end
+
+                local success, reason = jwt.jwk_verify(res.body)
+
+                if not success then
+                  ngx.header.content_type = '{{ $location.Jwt.ResponseContentType }}'
+                  ngx.status = ngx.HTTP_UNAUTHORIZED
+                  ngx.say("{{ $location.Jwt.ResponseData }}")
+                  ngx.exit(ngx.OK)
+                end
+                {{ end }}
             }
             {{ end }}
 
@@ -1384,6 +1415,39 @@ stream {
             {{ end }}
         }
         {{ end }}
+        {{ if $all.Cfg.EnableJWT }}
+        location = /jwks {
+            {{ range $v := $all.NginxStatusIpv4Whitelist }}
+            allow {{ $v }};
+            {{ end }}
+            {{ if $all.IsIPV6Enabled -}}
+            {{ range $v := $all.NginxStatusIpv6Whitelist }}
+            allow {{ $v }};
+            {{ end }}
+            {{ end -}}
+            deny all;
+
+            rewrite ^(.*)$ {{ $all.Cfg.JWKSUpstreamPath }} break;
+
+            {{ if $all.Cfg.JWKSEnableCache }}
+            aio off; # https://github.com/openresty/lua-nginx-module/issues/587
+
+            add_header            X-Cache-Status     $upstream_cache_status;
+
+            proxy_cache_min_uses        0;
+            proxy_cache_use_stale       {{ $all.Cfg.JWKSCacheUseStale }};
+            proxy_cache_methods         GET;
+            proxy_cache_valid           200 {{ $all.Cfg.JWKSCacheTTL }};
+            proxy_cache_key             jwks/{{ $all.Cfg.JWKSUpstream }};
+            proxy_cache_lock            on;
+            proxy_cache                 jwks-{{ $all.Cfg.JWKSUpstream }};
+            {{ end }}
+
+            proxy_pass http://{{ $all.Cfg.JWKSUpstream }};
+
+        }
+        {{ end }}
+
         {{ end }}
 
         {{ if eq $server.Hostname "_" }}

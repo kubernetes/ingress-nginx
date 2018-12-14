@@ -237,6 +237,7 @@ fi
 
 cd "$BUILD_PATH"
 luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
+luarocks install lua-resty-jwt 0.2.0-0
 
 cd "$BUILD_PATH/lua-resty-core-0.1.16rc3"
 make install

@@ -564,6 +564,18 @@ type Configuration struct {
 
 	// Block all requests with given Referer headers
 	BlockReferers []string `json:"block-referers"`
+	//
+	EnableJWT bool `json:"enable-jwt"`
+	//
+	JWKSUpstream string `json:"jwt-jwks-upstream,omitempty"`
+	//
+	JWKSUpstreamPath string `json:"jwt-jwks-upstream-path,omitempty"`
+	//
+	JWKSEnableCache bool `json:"jwt-jwks-enable-cache"`
+	//
+	JWKSCacheTTL string `json:"jwt-jwks-cache-ttl"`
+	//
+	JWKSCacheUseStale string `json:"jwt-jwks-cache-use-stale"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -690,6 +702,12 @@ func NewDefault() Configuration {
 		SyslogPort:                   514,
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",
+		EnableJWT:                    false,
+		JWKSUpstream:                 "",
+		JWKSUpstreamPath:             "/.well-known/openid-configuration/jwks",
+		JWKSEnableCache:              true,
+		JWKSCacheTTL:                 "10m",
+		JWKSCacheUseStale:            "off",
 	}
 
 	if klog.V(5) {

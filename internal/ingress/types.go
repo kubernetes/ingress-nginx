@@ -31,6 +31,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/jwt"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -310,6 +311,9 @@ type Location struct {
 	// cache
 	// +optional
 	Cache cache.Config `json:"cache"`
+	// jwt
+	// +optional
+	Jwt jwt.Config `json:"jwt"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
