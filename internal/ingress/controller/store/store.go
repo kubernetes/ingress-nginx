@@ -602,6 +602,7 @@ func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 	copyIng := &extensions.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
+	ing.Status.DeepCopyInto(&copyIng.Status)
 
 	for ri, rule := range copyIng.Spec.Rules {
 		if rule.HTTP == nil {
