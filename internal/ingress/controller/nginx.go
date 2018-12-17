@@ -754,6 +754,8 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 
 	copyOfRunningConfig.Backends = []*ingress.Backend{}
 	copyOfPcfg.Backends = []*ingress.Backend{}
+	copyOfRunningConfig.ControllerPodsCount = 0
+	copyOfPcfg.ControllerPodsCount = 0
 
 	if n.cfg.DynamicCertificatesEnabled {
 		clearCertificates(&copyOfRunningConfig)
@@ -823,6 +825,14 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 	}
 
 	err = updateStreamConfiguration(streams)
+	if err != nil {
+		return err
+	}
+
+	url = fmt.Sprintf("http://localhost:%d/configuration/general", port)
+	err = post(url, &ingress.GeneralConfig{
+		ControllerPodsCount: pcfg.ControllerPodsCount,
+	})
 	if err != nil {
 		return err
 	}
