@@ -29,6 +29,7 @@ import (
 	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
@@ -841,5 +842,78 @@ func TestOpentracingPropagateContext(t *testing.T) {
 		if actualDirective != expectedDirective {
 			t.Errorf("Expected %v but returned %v", expectedDirective, actualDirective)
 		}
+	}
+}
+
+func TestGetIngressInformation(t *testing.T) {
+	validIngress := &ingress.Ingress{}
+	invalidIngress := "wrongtype"
+	validPath := "/ok"
+	invalidPath := 10
+
+	info := getIngressInformation(invalidIngress, validPath)
+	expected := &ingressInformation{}
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	info = getIngressInformation(validIngress, invalidPath)
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	// Setup Ingress Resource
+	validIngress.Namespace = "default"
+	validIngress.Name = "validIng"
+	validIngress.Annotations = map[string]string{
+		"ingress.annotation": "ok",
+	}
+	validIngress.Spec.Backend = &extensions.IngressBackend{
+		ServiceName: "a-svc",
+	}
+
+	info = getIngressInformation(validIngress, validPath)
+	expected = &ingressInformation{
+		Namespace: "default",
+		Rule:      "validIng",
+		Annotations: map[string]string{
+			"ingress.annotation": "ok",
+		},
+		Service: "a-svc",
+	}
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	validIngress.Spec.Backend = nil
+	validIngress.Spec.Rules = []extensions.IngressRule{
+		{
+			IngressRuleValue: extensions.IngressRuleValue{
+				HTTP: &extensions.HTTPIngressRuleValue{
+					Paths: []extensions.HTTPIngressPath{
+						{
+							Path: "/ok",
+							Backend: extensions.IngressBackend{
+								ServiceName: "b-svc",
+							},
+						},
+					},
+				},
+			},
+		},
+		{},
+	}
+
+	info = getIngressInformation(validIngress, validPath)
+	expected = &ingressInformation{
+		Namespace: "default",
+		Rule:      "validIng",
+		Annotations: map[string]string{
+			"ingress.annotation": "ok",
+		},
+		Service: "b-svc",
+	}
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
 	}
 }
