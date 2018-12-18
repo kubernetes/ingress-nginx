@@ -8,7 +8,7 @@ Unless otherwise mentioned, the TLS secret used in examples is a 2048 bit RSA
 key/cert pair with an arbitrarily chosen hostname, created as follows
 
 ```console
-$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=nginxsvc/O=nginxsvc"
+$ openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=nginxsvc/O=nginxsvc"
 Generating a 2048 bit RSA private key
 ................+++
 ................+++
@@ -19,110 +19,31 @@ $ kubectl create secret tls tls-secret --key tls.key --cert tls.crt
 secret "tls-secret" created
 ```
 
-## CA Authentication
+Note: If using CA Authentication, described below, you will need to sign the server certificate with the CA.
 
-You can act as your very own CA, or use an existing one. As an exercise / learning, we're going to generate our
-own CA, and also generate a client certificate.
+## Client Certificate Authentication
 
-These instructions are based on CoreOS OpenSSL. [See live doc.](https://coreos.com/kubernetes/docs/latest/openssl.html)
+CA Authentication also known as Mutual Authentication allows both the server and client to verify each others
+identity via a common CA. 
 
-### Generating a CA
+We have a CA Certificate which we obtain usually from a Certificate Authority and use that to sign
+both our server certificate and client certificate. Then every time we want to access our backend, we must
+pass the client certificate.
 
-First of all, you've to generate a CA. This is going to be the one who will sign your client certificates.
-In real production world, you may face CAs with intermediate certificates, as the following:
+These instructions are based on the following [blog](https://medium.com/@awkwardferny/configuring-certificate-based-mutual-authentication-with-kubernetes-ingress-nginx-20e7e38fdfca)
 
-```console
-$ openssl s_client -connect www.google.com:443
-[...]
----
-Certificate chain
- 0 s:/C=US/ST=California/L=Mountain View/O=Google Inc/CN=www.google.com
-   i:/C=US/O=Google Inc/CN=Google Internet Authority G2
- 1 s:/C=US/O=Google Inc/CN=Google Internet Authority G2
-   i:/C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
- 2 s:/C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
-   i:/C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+**Generate the CA Key and Certificate:**
+$ openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca.key -out ca.crt -days 356 -nodes -subj '/CN=My Cert Authority'
 
-```
+**Generate the Server Key, and Certificate and Sign with the CA Certificate:**
+$ openssl req -new -newkey rsa:4096 -keyout server.key -out server.csr -nodes -subj '/CN=mydomain.com'
+$ openssl x509 -req -sha256 -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt
 
-To generate our CA Certificate, we've to run the following commands:
+**Generate the Client Key, and Certificate and Sign with the CA Certificate:**
+$ openssl req -new -newkey rsa:4096 -keyout client.key -out client.csr -nodes -subj '/CN=My Client'
+$ openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt
 
-```console
-$ openssl genrsa -out ca.key 2048
-$ openssl req -x509 -new -nodes -key ca.key -days 10000 -out ca.crt -subj "/CN=example-ca"
-```
-
-This will generate two files: A private key (ca.key) and a public key (ca.crt). This CA is valid for 10000 days.
-The ca.crt can be used later in the step of creation of CA authentication secret.
-
-### Generating the client certificate
-
-The following steps generate a client certificate signed by the CA generated above. This client can be
-used to authenticate in a tls-auth configured ingress.
-
-First, we need to generate an 'openssl.cnf' file that will be used while signing the keys:
-
-```console
-[req]
-req_extensions = v3_req
-distinguished_name = req_distinguished_name
-[req_distinguished_name]
-[ v3_req ]
-basicConstraints = CA:FALSE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
-```
-
-Then, a user generates his very own private key (that he needs to keep secret)
-and a CSR (Certificate Signing Request) that will be sent to the CA to sign and generate a certificate.
-
-```console
-$ openssl genrsa -out client1.key 2048
-$ openssl req -new -key client1.key -out client1.csr -subj "/CN=client1" -config openssl.cnf
-```
-
-As the CA receives the generated 'client1.csr' file, it signs it and generates a client.crt certificate:
-
-```console
-$ openssl x509 -req -in client1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client1.crt -days 365 -extensions v3_req -extfile openssl.cnf
-```
-
-Then, you'll have 3 files: the client.key (user's private key), client.crt (user's public key) and client.csr (disposable CSR).
-
-### Creating the CA Authentication secret
-
-If you're using the CA Authentication feature, you need to generate a secret containing 
-all the authorized CAs. You must download them from your CA site in PEM format (like the following):
-
-```
------BEGIN CERTIFICATE-----
-[....]
------END CERTIFICATE-----
-``` 
-
-You can have as many certificates as you want. If they're in the binary DER format, 
-you can convert them as the following:
-
-```console
-$ openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
-```
-
-Then, you've to concatenate them all in only one file, named 'ca.crt' as the following:
-
-```console
-$ cat certificate1.crt certificate2.crt certificate3.crt >> ca.crt
-```
-
-The final step is to create a secret with the content of this file. This secret is going to be used in 
-the TLS Auth directive:
-
-```console
-$ kubectl create secret generic caingress --namespace=default --from-file=ca.crt=<ca.crt>
-```
-
-__Note:__ You can also generate the CA Authentication Secret along with the TLS Secret by using:
-```console
-$ kubectl create secret generic caingress --namespace=default --from-file=ca.crt=<ca.crt> --from-file=tls.crt=<tls.crt> --from-file=tls.key=<tls.key>
-```
+Once this is complete you can continue to follow the instructions [here](./auth/client-certs/README.md)
 
 ## Test HTTP Service
 
