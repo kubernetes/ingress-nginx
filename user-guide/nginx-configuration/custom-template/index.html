@@ -1087,17 +1087,17 @@
 <p>The NGINX template is located in the file <code class="codehilite">/etc/nginx/template/nginx.tmpl</code>.</p>
 <p>Using a <a href="https://kubernetes.io/docs/concepts/storage/volumes/">Volume</a> it is possible to use a custom template. 
 This includes using a <a href="https://kubernetes.io/docs/concepts/storage/volumes/#example-pod-with-a-secret-a-downward-api-and-a-configmap">Configmap</a> as source of the template</p>
-<div class="codehilite"><pre><span></span>        <span class="l l-Scalar l-Scalar-Plain">volumeMounts</span><span class="p p-Indicator">:</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">mountPath</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc/nginx/template</span>
-            <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-template-volume</span>
-            <span class="l l-Scalar l-Scalar-Plain">readOnly</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-     <span class=" -Error"> </span><span class="l l-Scalar l-Scalar-Plain">volumes</span><span class="p p-Indicator">:</span>
-        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-template-volume</span>
-          <span class="l l-Scalar l-Scalar-Plain">configMap</span><span class="p p-Indicator">:</span>
-            <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-template</span>
-            <span class="l l-Scalar l-Scalar-Plain">items</span><span class="p p-Indicator">:</span>
-            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">key</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx.tmpl</span>
-              <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx.tmpl</span>
+<div class="codehilite"><pre><span></span>        <span class="nt">volumeMounts</span><span class="p">:</span>
+          <span class="p p-Indicator">-</span> <span class="nt">mountPath</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/etc/nginx/template</span>
+            <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-template-volume</span>
+            <span class="nt">readOnly</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+     <span class=" -Error"> </span><span class="nt">volumes</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-template-volume</span>
+          <span class="nt">configMap</span><span class="p">:</span>
+            <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-template</span>
+            <span class="nt">items</span><span class="p">:</span>
+            <span class="p p-Indicator">-</span> <span class="nt">key</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx.tmpl</span>
+              <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx.tmpl</span>
 </pre></div>
 
 <p><strong>Please note the template is tied to the Go code. Do not change names in the variable <code class="codehilite">$cfg</code>.</strong></p>

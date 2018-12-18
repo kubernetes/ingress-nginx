@@ -1198,11 +1198,11 @@ authenticate against the first Ingress's endpoint, and can redirect <code class=
 same endpoint.</p>
 <p>Sample:</p>
 <div class="codehilite"><pre><span></span><span class="nn">...</span>
-<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">application</span>
-  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-url</span><span class="p p-Indicator">:</span> <span class="s">&quot;https://$host/oauth2/auth&quot;</span>
-    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-signin</span><span class="p p-Indicator">:</span> <span class="s">&quot;https://$host/oauth2/start?rd=$escaped_request_uri&quot;</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">application</span>
+  <span class="nt">annotations</span><span class="p">:</span>
+    <span class="nt">nginx.ingress.kubernetes.io/auth-url</span><span class="p">:</span> <span class="s">&quot;https://$host/oauth2/auth&quot;</span>
+    <span class="nt">nginx.ingress.kubernetes.io/auth-signin</span><span class="p">:</span> <span class="s">&quot;https://$host/oauth2/start?rd=$escaped_request_uri&quot;</span>
 <span class="nn">...</span>
 </pre></div>
 

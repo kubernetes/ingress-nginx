@@ -1226,13 +1226,13 @@ environments this value is &lt;None>)</p>
 
 <p>After creating the following ConfigMap, MetalLB takes ownership of one of the IP addresses in the pool and updates
 the <em>loadBalancer</em> IP field of the <code class="codehilite">ingress-nginx</code> Service accordingly.</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
-<span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
-<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">namespace</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">metallb-system</span>
-  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">config</span>
-<span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">config</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">namespace</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">metallb-system</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">config</span>
+<span class="nt">data</span><span class="p">:</span>
+  <span class="nt">config</span><span class="p">:</span> <span class="p p-Indicator">|</span>
     <span class="no">address-pools:</span>
     <span class="no">- name: default</span>
       <span class="no">protocol: layer2</span>
@@ -1372,8 +1372,8 @@ environments this value is &lt;None>)</p>
 </pre></div>
 
 <p>one could edit the <code class="codehilite">ingress-nginx</code> Service and add the following field to the object spec</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">externalIPs</span><span class="p p-Indicator">:</span>
+<div class="codehilite"><pre><span></span><span class="nt">spec</span><span class="p">:</span>
+  <span class="nt">externalIPs</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.1</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.2</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.3</span>
@@ -1413,9 +1413,9 @@ interfaces, without the extra network translation imposed by NodePort Services.<
 Service exists in the target cluster, it is <strong>recommended to delete it</strong>.</p>
 </div>
 <p>This can be achieved by enabling the <code class="codehilite">hostNetwork</code> option in the Pods' spec.</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">template</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">hostNetwork</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<div class="codehilite"><pre><span></span><span class="nt">template</span><span class="p">:</span>
+  <span class="nt">spec</span><span class="p">:</span>
+    <span class="nt">hostNetwork</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
 </pre></div>
 
 <div class="admonition danger">
@@ -1539,8 +1539,8 @@ environments this value is &lt;None>)</p>
 
 <p>One could set the following external IPs in the Service spec, and NGINX would become available on both the NodePort
 and the Service port:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">externalIPs</span><span class="p p-Indicator">:</span>
+<div class="codehilite"><pre><span></span><span class="nt">spec</span><span class="p">:</span>
+  <span class="nt">externalIPs</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.2</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">203.0.113.3</span>
 </pre></div>

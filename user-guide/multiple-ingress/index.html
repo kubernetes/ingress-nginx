@@ -1130,17 +1130,17 @@
 <p>If you're running multiple ingress controllers, or running on a cloud provider that natively handles ingress such as GKE,
 you need to specify the annotation <code class="codehilite">kubernetes.io/ingress.class: &quot;nginx&quot;</code> in all ingresses that you would like the ingress-nginx controller to claim.</p>
 <p>For instance,</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
-  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">kubernetes.io/ingress.class</span><span class="p p-Indicator">:</span> <span class="s">&quot;gce&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
+  <span class="nt">annotations</span><span class="p">:</span>
+    <span class="nt">kubernetes.io/ingress.class</span><span class="p">:</span> <span class="s">&quot;gce&quot;</span>
 </pre></div>
 
 <p>will target the GCE controller, forcing the nginx controller to ignore it, while an annotation like</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
-  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">kubernetes.io/ingress.class</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
+  <span class="nt">annotations</span><span class="p">:</span>
+    <span class="nt">kubernetes.io/ingress.class</span><span class="p">:</span> <span class="s">&quot;nginx&quot;</span>
 </pre></div>
 
 <p>will target the nginx controller, forcing the GCE controller to ignore it.</p>
@@ -1151,12 +1151,12 @@ If you are only running a single NGINX ingress controller, this can be achieved 
 <p>This mechanism also provides users the ability to run <em>multiple</em> NGINX ingress controllers (e.g. one which serves public traffic, one which serves "internal" traffic).
 To do this, the option <code class="codehilite">--ingress-class</code> must be changed to a value unique for the cluster within the definition of the replication controller.
 Here is a partial example:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">template</span><span class="p p-Indicator">:</span>
-     <span class="l l-Scalar l-Scalar-Plain">spec</span><span class="p p-Indicator">:</span>
-       <span class="l l-Scalar l-Scalar-Plain">containers</span><span class="p p-Indicator">:</span>
-         <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-ingress-internal-controller</span>
-           <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+<div class="codehilite"><pre><span></span><span class="nt">spec</span><span class="p">:</span>
+  <span class="nt">template</span><span class="p">:</span>
+     <span class="nt">spec</span><span class="p">:</span>
+       <span class="nt">containers</span><span class="p">:</span>
+         <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nginx-ingress-internal-controller</span>
+           <span class="nt">args</span><span class="p">:</span>
              <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/nginx-ingress-controller</span>
              <span class="p p-Indicator">-</span> <span class="s">&#39;--election-id=ingress-controller-leader-internal&#39;</span>
              <span class="p p-Indicator">-</span> <span class="s">&#39;--ingress-class=nginx-internal&#39;</span>

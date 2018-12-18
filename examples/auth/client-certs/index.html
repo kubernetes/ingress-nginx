@@ -1150,6 +1150,15 @@ Before getting started you must have the following Certificates Setup:</p>
 <li>Server Certificate(Signed by CA) and Key (CN should be equal the hostname you will use)</li>
 <li>Client Certificate(Signed by CA) and Key</li>
 </ol>
+<p>For more details on the generation process, checkout the Prerequisite <a href="../../PREREQUISITES/">docs</a>.</p>
+<p>You can have as many certificates as you want. If they're in the binary DER format, you can convert them as the following:
+<div class="codehilite"><pre><span></span>$ openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
+</pre></div>
+Then, you can concatenate them all in only one file, named 'ca.crt' as the following:
+<div class="codehilite"><pre><span></span>$ cat certificate1.crt certificate2.crt certificate3.crt &gt;&gt; ca.crt
+</pre></div></p>
+<p><strong>Note:</strong> Make sure that the Key Size is greater than 1024 and Hashing Algorithm(Digest) is something better than md5
+for each certificate generated. Otherwise you will receive an error.</p>
 <h2 id="creating-certificate-secrets">Creating Certificate Secrets<a class="headerlink" href="#creating-certificate-secrets" title="Permanent link">&para;</a></h2>
 <p>There are many different ways of configuring your secrets to enable Client-Certificate
 Authentication to work properly.</p>

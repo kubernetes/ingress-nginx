@@ -2828,9 +2828,9 @@
 components for the nginx-controller.</p>
 <p>In order to overwrite nginx-controller configuration values as seen in <a href="https://github.com/kubernetes/ingress-nginx/blob/master/internal/ingress/controller/config/config.go">config.go</a>,
 you can add key-value pairs to the data section of the config-map. For Example:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">map-hash-bucket-size</span><span class="p p-Indicator">:</span> <span class="s">&quot;128&quot;</span>
-  <span class="l l-Scalar l-Scalar-Plain">ssl-protocols</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">SSLv2</span>
+<div class="codehilite"><pre><span></span><span class="nt">data</span><span class="p">:</span>
+  <span class="nt">map-hash-bucket-size</span><span class="p">:</span> <span class="s">&quot;128&quot;</span>
+  <span class="nt">ssl-protocols</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">SSLv2</span>
 </pre></div>
 
 <div class="admonition important">

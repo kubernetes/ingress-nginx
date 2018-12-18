@@ -2227,7 +2227,7 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
 </div>
 <h3 id="configuration-snippet">Configuration snippet<a class="headerlink" href="#configuration-snippet" title="Permanent link">&para;</a></h3>
 <p>Using this annotation you can add additional configuration to the NGINX location. For example:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/configuration-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/configuration-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
   <span class="no">more_set_headers &quot;Request-Id: $req_id&quot;;</span>
 </pre></div>
 
@@ -2304,11 +2304,11 @@ the new server configuration will take place over the alias configuration.</p>
 <p>For more information please see <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name">the <code class="codehilite">server_name</code> documentation</a>.</p>
 <h3 id="server-snippet">Server snippet<a class="headerlink" href="#server-snippet" title="Permanent link">&para;</a></h3>
 <p>Using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/server-snippet</code> it is possible to add custom configuration in the server configuration block.</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">apiVersion</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
-<span class="l l-Scalar l-Scalar-Plain">kind</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
-<span class="l l-Scalar l-Scalar-Plain">metadata</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">annotations</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/server-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+<div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
+<span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ingress</span>
+<span class="nt">metadata</span><span class="p">:</span>
+  <span class="nt">annotations</span><span class="p">:</span>
+    <span class="nt">nginx.ingress.kubernetes.io/server-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
         <span class="no">set $agentflag 0;</span>
 
         <span class="no">if ($http_user_agent ~* &quot;(Mobile)&quot; ){</span>
@@ -2346,7 +2346,7 @@ applied to each location provided in the ingress rule.</p>
 <p>For more information please see <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size">http://nginx.org</a></p>
 <h3 id="external-authentication">External Authentication<a class="headerlink" href="#external-authentication" title="Permanent link">&para;</a></h3>
 <p>To use an existing service that provides authentication the Ingress rule can be annotated with <code class="codehilite">nginx.ingress.kubernetes.io/auth-url</code> to indicate the URL where the HTTP request should be sent.</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-url</span><span class="p p-Indicator">:</span> <span class="s">&quot;URL</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">authentication</span><span class="nv"> </span><span class="s">service&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/auth-url</span><span class="p">:</span> <span class="s">&quot;URL</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">authentication</span><span class="nv"> </span><span class="s">service&quot;</span>
 </pre></div>
 
 <p>Additionally it is possible to set:</p>
@@ -2362,8 +2362,8 @@ applied to each location provided in the ingress rule.</p>
 <li><code class="codehilite">nginx.ingress.kubernetes.io/auth-snippet</code>:
   <code class="codehilite">&lt;Auth_Snippet&gt;</code> to specify a custom snippet to use with external authentication, e.g.</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://foo.com/external-auth</span>
-<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/auth-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/auth-url</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">http://foo.com/external-auth</span>
+<span class="nt">nginx.ingress.kubernetes.io/auth-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
     <span class="no">proxy_set_header Foo-Header 42;</span>
 </pre></div>
 
@@ -2462,7 +2462,7 @@ otherwise, both annotations must be used in unison. Note that each annotation mu
 <p>For NGINX, an 413 error will be returned to the client when the size in a request exceeds the maximum allowed size of the client request body. This size can be configured by the parameter <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size"><code class="codehilite">client_max_body_size</code></a>.</p>
 <p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-body-size</code> value may be set in the <a href="../configmap/#proxy-body-size">NGINX ConfigMap</a>.
 To use custom values in an Ingress rule define these annotation:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/proxy-body-size</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8m</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-body-size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8m</span>
 </pre></div>
 
 <h3 id="proxy-cookie-domain">Proxy cookie domain<a class="headerlink" href="#proxy-cookie-domain" title="Permanent link">&para;</a></h3>
@@ -2476,49 +2476,49 @@ To use custom values in an Ingress rule define these annotation:</p>
 By default proxy buffering is disabled in the NGINX config.</p>
 <p>To configure this setting globally for all Ingress rules, the <code class="codehilite">proxy-buffering</code> value may be set in the <a href="../configmap/#proxy-buffering">NGINX ConfigMap</a>.
 To use custom values in an Ingress rule define these annotation:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/proxy-buffering</span><span class="p p-Indicator">:</span> <span class="s">&quot;on&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-buffering</span><span class="p">:</span> <span class="s">&quot;on&quot;</span>
 </pre></div>
 
 <h3 id="proxy-buffer-size">Proxy buffer size<a class="headerlink" href="#proxy-buffer-size" title="Permanent link">&para;</a></h3>
 <p>Sets the size of the buffer <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code class="codehilite">proxy_buffer_size</code></a> used for reading the first part of the response received from the proxied server.
 By default proxy buffer size is set as "4k"</p>
 <p>To configure this setting globally, set <code class="codehilite">proxy-buffer-size</code> in <a href="../configmap/#proxy-buffer-size">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/proxy-buffer-size</span><span class="p p-Indicator">:</span> <span class="s">&quot;8k&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-buffer-size</span><span class="p">:</span> <span class="s">&quot;8k&quot;</span>
 </pre></div></p>
 <h3 id="ssl-ciphers">SSL ciphers<a class="headerlink" href="#ssl-ciphers" title="Permanent link">&para;</a></h3>
 <p>Specifies the <a href="http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers">enabled ciphers</a>.</p>
 <p>Using this annotation will set the <code class="codehilite">ssl_ciphers</code> directive at the server level. This configuration is active for all the paths in the host.</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/ssl-ciphers</span><span class="p p-Indicator">:</span> <span class="s">&quot;ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/ssl-ciphers</span><span class="p">:</span> <span class="s">&quot;ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP&quot;</span>
 </pre></div>
 
 <h3 id="connection-proxy-header">Connection proxy header<a class="headerlink" href="#connection-proxy-header" title="Permanent link">&para;</a></h3>
 <p>Using this annotation will override the default connection header set by NGINX.
 To use custom values in an Ingress rule, define the annotation:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/connection-proxy-header</span><span class="p p-Indicator">:</span> <span class="s">&quot;keep-alive&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/connection-proxy-header</span><span class="p">:</span> <span class="s">&quot;keep-alive&quot;</span>
 </pre></div>
 
 <h3 id="enable-access-log">Enable Access Log<a class="headerlink" href="#enable-access-log" title="Permanent link">&para;</a></h3>
 <p>Access logs are enabled by default, but in some scenarios access logs might be required to be disabled for a given
 ingress. To do this, use the annotation:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-access-log</span><span class="p p-Indicator">:</span> <span class="s">&quot;false&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/enable-access-log</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
 </pre></div>
 
 <h3 id="enable-rewrite-log">Enable Rewrite Log<a class="headerlink" href="#enable-rewrite-log" title="Permanent link">&para;</a></h3>
 <p>Rewrite logs are not enabled by default. In some scenarios it could be required to enable NGINX rewrite logs.
 Note that rewrite logs are sent to the error_log file at the notice level. To enable this feature use the annotation:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-rewrite-log</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/enable-rewrite-log</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </pre></div>
 
 <h3 id="x-forwarded-prefix-header">X-Forwarded-Prefix Header<a class="headerlink" href="#x-forwarded-prefix-header" title="Permanent link">&para;</a></h3>
 <p>To add the non-standard <code class="codehilite">X-Forwarded-Prefix</code> header to the upstream request with a string value, the following annotation can be used:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/x-forwarded-prefix</span><span class="p p-Indicator">:</span> <span class="s">&quot;/path&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/x-forwarded-prefix</span><span class="p">:</span> <span class="s">&quot;/path&quot;</span>
 </pre></div>
 
 <h3 id="lua-resty-waf">Lua Resty WAF<a class="headerlink" href="#lua-resty-waf" title="Permanent link">&para;</a></h3>
 <p>Using <code class="codehilite">lua-resty-waf-*</code> annotations we can enable and control the <a href="https://github.com/p0pr0ck5/lua-resty-waf">lua-resty-waf</a>
 Web Application Firewall per location.</p>
 <p>Following configuration will enable the WAF for the paths defined in the corresponding ingress:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf</span><span class="p p-Indicator">:</span> <span class="s">&quot;active&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf</span><span class="p">:</span> <span class="s">&quot;active&quot;</span>
 </pre></div>
 
 <p>In order to run it in debugging mode you can set <code class="codehilite">nginx.ingress.kubernetes.io/lua-resty-waf-debug</code> to <code class="codehilite">&quot;true&quot;</code> in addition to the above configuration.
@@ -2526,28 +2526,28 @@ The other possible values for <code class="codehilite">nginx.ingress.kubernetes.
 In <code class="codehilite">inactive</code> mode WAF won't do anything, whereas in <code class="codehilite">simulate</code> mode it will log a warning message if there's a matching WAF rule for given request. This is useful to debug a rule and eliminate possible false positives before fully deploying it.</p>
 <p><code class="codehilite">lua-resty-waf</code> comes with predefined set of rules <a href="https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules">https://github.com/p0pr0ck5/lua-resty-waf/tree/84b4f40362500dd0cb98b9e71b5875cb1a40f1ad/rules</a> that covers ModSecurity CRS.
 You can use <code class="codehilite">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</code> to ignore a subset of those rulesets. For an example:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</span><span class="p p-Indicator">:</span> <span class="s">&quot;41000_sqli,</span><span class="nv"> </span><span class="s">42000_xss&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-ignore-rulesets</span><span class="p">:</span> <span class="s">&quot;41000_sqli,</span><span class="nv"> </span><span class="s">42000_xss&quot;</span>
 </pre></div>
 
 <p>will ignore the two mentioned rulesets.</p>
 <p>It is also possible to configure custom WAF rules per ingress using the <code class="codehilite">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</code> annotation. For an example the following snippet will configure a WAF rule to deny requests with query string value that contains word <code class="codehilite">foo</code>:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</span><span class="p p-Indicator">:</span> <span class="s">&#39;[=[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;access&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;actions&quot;:</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;disrupt&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;DENY&quot;</span><span class="nv"> </span><span class="s">},</span><span class="nv"> </span><span class="s">&quot;id&quot;:</span><span class="nv"> </span><span class="s">10001,</span><span class="nv"> </span><span class="s">&quot;msg&quot;:</span><span class="nv"> </span><span class="s">&quot;my</span><span class="nv"> </span><span class="s">custom</span><span class="nv"> </span><span class="s">rule&quot;,</span><span class="nv"> </span><span class="s">&quot;operator&quot;:</span><span class="nv"> </span><span class="s">&quot;STR_CONTAINS&quot;,</span><span class="nv"> </span><span class="s">&quot;pattern&quot;:</span><span class="nv"> </span><span class="s">&quot;foo&quot;,</span><span class="nv"> </span><span class="s">&quot;vars&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;parse&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">&quot;values&quot;,</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;type&quot;:</span><span class="nv"> </span><span class="s">&quot;REQUEST_ARGS&quot;</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;body_filter&quot;:</span><span class="nv"> </span><span class="s">[],</span><span class="nv"> </span><span class="s">&quot;header_filter&quot;:[]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]=]&#39;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-extra-rules</span><span class="p">:</span> <span class="s">&#39;[=[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;access&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;actions&quot;:</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;disrupt&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;DENY&quot;</span><span class="nv"> </span><span class="s">},</span><span class="nv"> </span><span class="s">&quot;id&quot;:</span><span class="nv"> </span><span class="s">10001,</span><span class="nv"> </span><span class="s">&quot;msg&quot;:</span><span class="nv"> </span><span class="s">&quot;my</span><span class="nv"> </span><span class="s">custom</span><span class="nv"> </span><span class="s">rule&quot;,</span><span class="nv"> </span><span class="s">&quot;operator&quot;:</span><span class="nv"> </span><span class="s">&quot;STR_CONTAINS&quot;,</span><span class="nv"> </span><span class="s">&quot;pattern&quot;:</span><span class="nv"> </span><span class="s">&quot;foo&quot;,</span><span class="nv"> </span><span class="s">&quot;vars&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">{</span><span class="nv"> </span><span class="s">&quot;parse&quot;:</span><span class="nv"> </span><span class="s">[</span><span class="nv"> </span><span class="s">&quot;values&quot;,</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;type&quot;:</span><span class="nv"> </span><span class="s">&quot;REQUEST_ARGS&quot;</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">],</span><span class="nv"> </span><span class="s">&quot;body_filter&quot;:</span><span class="nv"> </span><span class="s">[],</span><span class="nv"> </span><span class="s">&quot;header_filter&quot;:[]</span><span class="nv"> </span><span class="s">}</span><span class="nv"> </span><span class="s">]=]&#39;</span>
 </pre></div>
 
 <p>Since the default allowed contents were <code class="codehilite">&quot;text/html&quot;, &quot;text/json&quot;, &quot;application/json&quot;</code>
 We can enable the following annotation for allow all contents type:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-allow-unknown-content-types</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </pre></div>
 
 <p>The default score of lua-resty-waf is 5, which usually triggered if hitting 2 default rules, you can modify the score threshold with following annotation:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold</span><span class="p p-Indicator">:</span> <span class="s">&quot;10&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-score-threshold</span><span class="p">:</span> <span class="s">&quot;10&quot;</span>
 </pre></div>
 
 <p>When you enabled HTTPS in the endpoint and since resty-lua will return 500 error when processing "multipart" contents
 Reference for this <a href="https://github.com/p0pr0ck5/lua-resty-waf/issues/166">issue</a></p>
 <p>By default, it will be "true"</p>
 <p>You may enable the following annotation for work around:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body</span><span class="p p-Indicator">:</span> <span class="s">&quot;false&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/lua-resty-waf-process-multipart-body</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
 </pre></div>
 
 <p>For details on how to write WAF rules, please refer to <a href="https://github.com/p0pr0ck5/lua-resty-waf">https://github.com/p0pr0ck5/lua-resty-waf</a>.</p>
@@ -2557,18 +2557,18 @@ of ingress locations. The ModSecurity module must first be enabled by enabling M
 <a href="../configmap/#enable-modsecurity">ConfigMap</a>. Note this will enable ModSecurity for all paths, and each path
 must be disabled manually.</p>
 <p>It can be enabled using the following annotation: 
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-modsecurity</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/enable-modsecurity</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </pre></div>
 ModSecurity will run in "Detection-Only" mode using the <a href="https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended">recommended configuration</a>.</p>
 <p>You can enable the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> by
 setting the following annotation:
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-owasp-core-rules</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/enable-owasp-core-rules</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </pre></div></p>
 <p>You can pass transactionIDs from nginx by setting up the following:
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/modsecurity-transaction-id</span><span class="p p-Indicator">:</span> <span class="s">&quot;$request_id&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/modsecurity-transaction-id</span><span class="p">:</span> <span class="s">&quot;$request_id&quot;</span>
 </pre></div></p>
 <p>You can also add your own set of modsecurity rules via a snippet:
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
 <span class="l l-Scalar l-Scalar-Plain">SecRuleEngine On</span>
 <span class="l l-Scalar l-Scalar-Plain">SecDebugLog /tmp/modsec_debug.log</span>
 </pre></div></p>
@@ -2576,18 +2576,18 @@ setting the following annotation:
 <code class="codehilite">modsecurity-snippet</code> will take effect. If you wish to include the <a href="https://www.modsecurity.org/CRS/Documentation/">OWASP Core Rule Set</a> or 
 <a href="https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended">recommended configuration</a> simply use the include
 statement:
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/modsecurity-snippet</span><span class="p">:</span> <span class="p p-Indicator">|</span>
 <span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf</span>
 <span class="l l-Scalar l-Scalar-Plain">Include /etc/nginx/modsecurity/modsecurity.conf</span>
 </pre></div></p>
 <h3 id="influxdb">InfluxDB<a class="headerlink" href="#influxdb" title="Permanent link">&para;</a></h3>
 <p>Using <code class="codehilite">influxdb-*</code> annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
 using the <a href="https://github.com/influxdata/nginx-influxdb-module/">nginx-influxdb-module</a>.</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/enable-influxdb</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
-<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-measurement</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx-reqs&quot;</span>
-<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-port</span><span class="p p-Indicator">:</span> <span class="s">&quot;8089&quot;</span>
-<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-host</span><span class="p p-Indicator">:</span> <span class="s">&quot;127.0.0.1&quot;</span>
-<span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/influxdb-server-name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nginx-ingress&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/enable-influxdb</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
+<span class="nt">nginx.ingress.kubernetes.io/influxdb-measurement</span><span class="p">:</span> <span class="s">&quot;nginx-reqs&quot;</span>
+<span class="nt">nginx.ingress.kubernetes.io/influxdb-port</span><span class="p">:</span> <span class="s">&quot;8089&quot;</span>
+<span class="nt">nginx.ingress.kubernetes.io/influxdb-host</span><span class="p">:</span> <span class="s">&quot;127.0.0.1&quot;</span>
+<span class="nt">nginx.ingress.kubernetes.io/influxdb-server-name</span><span class="p">:</span> <span class="s">&quot;nginx-ingress&quot;</span>
 </pre></div>
 
 <p>For the <code class="codehilite">influxdb-host</code> parameter you have two options:</p>
@@ -2604,7 +2604,7 @@ an ip address to <code class="codehilite">nginx.ingress.kubernetes.io/influxdb-h
 Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
 <p>By default NGINX uses <code class="codehilite">HTTP</code>.</p>
 <p>Example:</p>
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/backend-protocol</span><span class="p p-Indicator">:</span> <span class="s">&quot;HTTPS&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/backend-protocol</span><span class="p">:</span> <span class="s">&quot;HTTPS&quot;</span>
 </pre></div>
 
 <h3 id="use-regex">Use Regex<a class="headerlink" href="#use-regex" title="Permanent link">&para;</a></h3>
@@ -2614,10 +2614,10 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
 <p>When using this annotation with the NGINX annotation <code class="codehilite">nginx.ingress.kubernetes.io/affinity</code> of type <code class="codehilite">cookie</code>,  <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-path</code> must be also set; Session cookie paths do not support regex.  </p>
 <p>Using the <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> annotation will indicate whether or not the paths defined on an Ingress use regular expressions.  The default value is <code class="codehilite">false</code>.</p>
 <p>The following will indicate that regular expression paths are being used:
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;true&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/use-regex</span><span class="p">:</span> <span class="s">&quot;true&quot;</span>
 </pre></div></p>
 <p>The following will indicate that regular expression paths are <strong>not</strong> being used:
-<div class="codehilite"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">nginx.ingress.kubernetes.io/use-regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;false&quot;</span>
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/use-regex</span><span class="p">:</span> <span class="s">&quot;false&quot;</span>
 </pre></div></p>
 <p>When this annotation is set to <code class="codehilite">true</code>, the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.</p>
 <p>Additionally, if the <a href="#rewrite"><code class="codehilite">rewrite-target</code> annotation</a> is used on any Ingress for a given host, then the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.  </p>

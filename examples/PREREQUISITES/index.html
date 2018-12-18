@@ -801,36 +801,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ca-authentication" title="CA Authentication" class="md-nav__link">
-    CA Authentication
+  <a href="#client-certificate-authentication" title="Client Certificate Authentication" class="md-nav__link">
+    Client Certificate Authentication
   </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#generating-a-ca" title="Generating a CA" class="md-nav__link">
-    Generating a CA
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#generating-the-client-certificate" title="Generating the client certificate" class="md-nav__link">
-    Generating the client certificate
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#creating-the-ca-authentication-secret" title="Creating the CA Authentication secret" class="md-nav__link">
-    Creating the CA Authentication secret
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1149,36 +1122,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ca-authentication" title="CA Authentication" class="md-nav__link">
-    CA Authentication
+  <a href="#client-certificate-authentication" title="Client Certificate Authentication" class="md-nav__link">
+    Client Certificate Authentication
   </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#generating-a-ca" title="Generating a CA" class="md-nav__link">
-    Generating a CA
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#generating-the-client-certificate" title="Generating the client certificate" class="md-nav__link">
-    Generating the client certificate
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#creating-the-ca-authentication-secret" title="Creating the CA Authentication secret" class="md-nav__link">
-    Creating the CA Authentication secret
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1213,7 +1159,7 @@
 <h2 id="tls-certificates">TLS certificates<a class="headerlink" href="#tls-certificates" title="Permanent link">&para;</a></h2>
 <p>Unless otherwise mentioned, the TLS secret used in examples is a 2048 bit RSA
 key/cert pair with an arbitrarily chosen hostname, created as follows</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> openssl req -x509 -nodes -days <span class="m">365</span> -newkey rsa:2048 -keyout tls.key -out tls.crt -subj <span class="s2">&quot;/CN=nginxsvc/O=nginxsvc&quot;</span>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> openssl req -x509 -sha256 -nodes -days <span class="m">365</span> -newkey rsa:2048 -keyout tls.key -out tls.crt -subj <span class="s2">&quot;/CN=nginxsvc/O=nginxsvc&quot;</span>
 <span class="go">Generating a 2048 bit RSA private key</span>
 <span class="go">................+++</span>
 <span class="go">................+++</span>
@@ -1224,81 +1170,23 @@ key/cert pair with an arbitrarily chosen hostname, created as follows</p>
 <span class="go">secret &quot;tls-secret&quot; created</span>
 </pre></div>
 
-<h2 id="ca-authentication">CA Authentication<a class="headerlink" href="#ca-authentication" title="Permanent link">&para;</a></h2>
-<p>You can act as your very own CA, or use an existing one. As an exercise / learning, we're going to generate our
-own CA, and also generate a client certificate.</p>
-<p>These instructions are based on CoreOS OpenSSL. <a href="https://coreos.com/kubernetes/docs/latest/openssl.html">See live doc.</a></p>
-<h3 id="generating-a-ca">Generating a CA<a class="headerlink" href="#generating-a-ca" title="Permanent link">&para;</a></h3>
-<p>First of all, you've to generate a CA. This is going to be the one who will sign your client certificates.
-In real production world, you may face CAs with intermediate certificates, as the following:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> openssl s_client -connect www.google.com:443
-<span class="go">[...]</span>
-<span class="go">---</span>
-<span class="go">Certificate chain</span>
-<span class="go"> 0 s:/C=US/ST=California/L=Mountain View/O=Google Inc/CN=www.google.com</span>
-<span class="go">   i:/C=US/O=Google Inc/CN=Google Internet Authority G2</span>
-<span class="go"> 1 s:/C=US/O=Google Inc/CN=Google Internet Authority G2</span>
-<span class="go">   i:/C=US/O=GeoTrust Inc./CN=GeoTrust Global CA</span>
-<span class="go"> 2 s:/C=US/O=GeoTrust Inc./CN=GeoTrust Global CA</span>
-<span class="go">   i:/C=US/O=Equifax/OU=Equifax Secure Certificate Authority</span>
-</pre></div>
-
-<p>To generate our CA Certificate, we've to run the following commands:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> openssl genrsa -out ca.key <span class="m">2048</span>
-<span class="gp">$</span> openssl req -x509 -new -nodes -key ca.key -days <span class="m">10000</span> -out ca.crt -subj <span class="s2">&quot;/CN=example-ca&quot;</span>
-</pre></div>
-
-<p>This will generate two files: A private key (ca.key) and a public key (ca.crt). This CA is valid for 10000 days.
-The ca.crt can be used later in the step of creation of CA authentication secret.</p>
-<h3 id="generating-the-client-certificate">Generating the client certificate<a class="headerlink" href="#generating-the-client-certificate" title="Permanent link">&para;</a></h3>
-<p>The following steps generate a client certificate signed by the CA generated above. This client can be
-used to authenticate in a tls-auth configured ingress.</p>
-<p>First, we need to generate an 'openssl.cnf' file that will be used while signing the keys:</p>
-<div class="codehilite"><pre><span></span><span class="go">[req]</span>
-<span class="go">req_extensions = v3_req</span>
-<span class="go">distinguished_name = req_distinguished_name</span>
-<span class="go">[req_distinguished_name]</span>
-<span class="go">[ v3_req ]</span>
-<span class="go">basicConstraints = CA:FALSE</span>
-<span class="go">keyUsage = nonRepudiation, digitalSignature, keyEncipherment</span>
-</pre></div>
-
-<p>Then, a user generates his very own private key (that he needs to keep secret)
-and a CSR (Certificate Signing Request) that will be sent to the CA to sign and generate a certificate.</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> openssl genrsa -out client1.key <span class="m">2048</span>
-<span class="gp">$</span> openssl req -new -key client1.key -out client1.csr -subj <span class="s2">&quot;/CN=client1&quot;</span> -config openssl.cnf
-</pre></div>
-
-<p>As the CA receives the generated 'client1.csr' file, it signs it and generates a client.crt certificate:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> openssl x509 -req -in client1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client1.crt -days <span class="m">365</span> -extensions v3_req -extfile openssl.cnf
-</pre></div>
-
-<p>Then, you'll have 3 files: the client.key (user's private key), client.crt (user's public key) and client.csr (disposable CSR).</p>
-<h3 id="creating-the-ca-authentication-secret">Creating the CA Authentication secret<a class="headerlink" href="#creating-the-ca-authentication-secret" title="Permanent link">&para;</a></h3>
-<p>If you're using the CA Authentication feature, you need to generate a secret containing 
-all the authorized CAs. You must download them from your CA site in PEM format (like the following):</p>
-<div class="codehilite"><pre><span></span>-----BEGIN CERTIFICATE-----
-[....]
------END CERTIFICATE-----
-</pre></div>
-
-<p>You can have as many certificates as you want. If they're in the binary DER format, 
-you can convert them as the following:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
-</pre></div>
-
-<p>Then, you've to concatenate them all in only one file, named 'ca.crt' as the following:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> cat certificate1.crt certificate2.crt certificate3.crt &gt;&gt; ca.crt
-</pre></div>
-
-<p>The final step is to create a secret with the content of this file. This secret is going to be used in 
-the TLS Auth directive:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create secret generic caingress --namespace<span class="o">=</span>default --from-file<span class="o">=</span>ca.crt<span class="o">=</span>&lt;ca.crt&gt;
-</pre></div>
-
-<p><strong>Note:</strong> You can also generate the CA Authentication Secret along with the TLS Secret by using:
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl create secret generic caingress --namespace<span class="o">=</span>default --from-file<span class="o">=</span>ca.crt<span class="o">=</span>&lt;ca.crt&gt; --from-file<span class="o">=</span>tls.crt<span class="o">=</span>&lt;tls.crt&gt; --from-file<span class="o">=</span>tls.key<span class="o">=</span>&lt;tls.key&gt;
-</pre></div></p>
+<p>Note: If using CA Authentication, described below, you will need to sign the server certificate with the CA.</p>
+<h2 id="client-certificate-authentication">Client Certificate Authentication<a class="headerlink" href="#client-certificate-authentication" title="Permanent link">&para;</a></h2>
+<p>CA Authentication also known as Mutual Authentication allows both the server and client to verify each others
+identity via a common CA. </p>
+<p>We have a CA Certificate which we obtain usually from a Certificate Authority and use that to sign
+both our server certificate and client certificate. Then every time we want to access our backend, we must
+pass the client certificate.</p>
+<p>These instructions are based on the following <a href="https://medium.com/@awkwardferny/configuring-certificate-based-mutual-authentication-with-kubernetes-ingress-nginx-20e7e38fdfca">blog</a></p>
+<p><strong>Generate the CA Key and Certificate:</strong>
+$ openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca.key -out ca.crt -days 356 -nodes -subj '/CN=My Cert Authority'</p>
+<p><strong>Generate the Server Key, and Certificate and Sign with the CA Certificate:</strong>
+$ openssl req -new -newkey rsa:4096 -keyout server.key -out server.csr -nodes -subj '/CN=mydomain.com'
+$ openssl x509 -req -sha256 -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt</p>
+<p><strong>Generate the Client Key, and Certificate and Sign with the CA Certificate:</strong>
+$ openssl req -new -newkey rsa:4096 -keyout client.key -out client.csr -nodes -subj '/CN=My Client'
+$ openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt</p>
+<p>Once this is complete you can continue to follow the instructions <a href="../auth/client-certs/">here</a></p>
 <h2 id="test-http-service">Test HTTP Service<a class="headerlink" href="#test-http-service" title="Permanent link">&para;</a></h2>
 <p>All examples that require a test HTTP Service use the standard http-svc pod,
 which you can deploy as follows</p>
