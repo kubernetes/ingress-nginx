@@ -149,6 +149,20 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		})
 		Expect(nginxConfig).ShouldNot(Equal(newNginxConfig))
 	})
+
+	It("sets controllerPodsCount in Lua general configuration", func() {
+		output, err := f.ExecIngressPod("curl --fail --silent http://127.0.0.1:18080/configuration/general")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(output).Should(Equal(`{"controllerPodsCount":1}`))
+
+		err = framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 3, nil)
+		Expect(err).ToNot(HaveOccurred())
+		time.Sleep(waitForLuaSync)
+
+		output, err = f.ExecIngressPod("curl --fail --silent http://127.0.0.1:18080/configuration/general")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(output).Should(Equal(`{"controllerPodsCount":3}`))
+	})
 })
 
 func ensureIngress(f *framework.Framework, host string) *extensions.Ingress {

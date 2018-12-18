@@ -28,6 +28,16 @@ import (
 	"k8s.io/api/core/v1"
 )
 
+// ExecIngressPod executes a command inside the first container in ingress controller running pod
+func (f *Framework) ExecIngressPod(command string) (string, error) {
+	pod, err := getIngressNGINXPod(f.IngressController.Namespace, f.KubeClientSet)
+	if err != nil {
+		return "", err
+	}
+
+	return f.ExecCommand(pod, command)
+}
+
 // ExecCommand executes a command inside a the first container in a running pod
 func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
 	var (
