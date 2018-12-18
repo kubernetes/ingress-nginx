@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"reflect"
 	"regexp"
 	"strings"
 	text_template "text/template"
@@ -760,6 +761,23 @@ type ingressInformation struct {
 	Rule        string
 	Service     string
 	Annotations map[string]string
+}
+
+func (info *ingressInformation) Equal(other *ingressInformation) bool {
+	if info.Namespace != other.Namespace {
+		return false
+	}
+	if info.Rule != other.Rule {
+		return false
+	}
+	if info.Service != other.Service {
+		return false
+	}
+	if !reflect.DeepEqual(info.Annotations, other.Annotations) {
+		return false
+	}
+
+	return true
 }
 
 func getIngressInformation(i, p interface{}) *ingressInformation {
