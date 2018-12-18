@@ -2,6 +2,9 @@
 
 ## Regular Expression Support
 
+!!! important 
+    Regular expressions and wild cards are not supported in the `spec.rules.host` field. Full hostnames must be used. 
+
 The ingress controller supports **case insensitive** regular expressions in the `spec.rules.http.paths.path` field.
 
 See the [description](./nginx-configuration/annotations.md#use-regex) of the `use-regex` annotation for more details.
