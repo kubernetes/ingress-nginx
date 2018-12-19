@@ -76,8 +76,8 @@ type Storer interface {
 	// ListIngresses returns a list of all Ingresses in the store.
 	ListIngresses() []*ingress.Ingress
 
-	// ListControllerPods returns a list of ingress-nginx controller Pods.
-	ListControllerPods() []*corev1.Pod
+	// GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods.
+	GetRunningControllerPodsCount() int
 
 	// GetLocalSSLCert returns the local copy of a SSLCert
 	GetLocalSSLCert(name string) (*ingress.SSLCert, error)
@@ -288,12 +288,10 @@ func New(checkOCSP bool,
 	store.informers.Pod = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (k8sruntime.Object, error) {
-
 				options.LabelSelector = labelSelector.String()
 				return client.CoreV1().Pods(store.pod.Namespace).List(options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-
 				options.LabelSelector = labelSelector.String()
 				return client.CoreV1().Pods(store.pod.Namespace).Watch(options)
 			},
@@ -604,6 +602,7 @@ func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 	copyIng := &extensions.Ingress{}
 	ing.ObjectMeta.DeepCopyInto(&copyIng.ObjectMeta)
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
+	ing.Status.DeepCopyInto(&copyIng.Status)
 
 	for ri, rule := range copyIng.Spec.Rules {
 		if rule.HTTP == nil {
@@ -832,9 +831,9 @@ func (s *k8sStore) Run(stopCh chan struct{}) {
 	}
 }
 
-// ListControllerPods returns a list of ingress-nginx controller Pods
-func (s *k8sStore) ListControllerPods() []*corev1.Pod {
-	var pods []*corev1.Pod
+// GetRunningControllerPodsCount returns the number of Running ingress-nginx controller Pods
+func (s k8sStore) GetRunningControllerPodsCount() int {
+	count := 0
 
 	for _, i := range s.listers.Pod.List() {
 		pod := i.(*corev1.Pod)
@@ -843,8 +842,8 @@ func (s *k8sStore) ListControllerPods() []*corev1.Pod {
 			continue
 		}
 
-		pods = append(pods, pod)
+		count++
 	}
 
-	return pods
+	return count
 }

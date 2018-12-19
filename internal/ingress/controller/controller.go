@@ -163,6 +163,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
 		PassthroughBackends:   passUpstreams,
 		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
+		ControllerPodsCount:   n.store.GetRunningControllerPodsCount(),
 	}
 
 	if n.runningConfig.Equal(pcfg) {

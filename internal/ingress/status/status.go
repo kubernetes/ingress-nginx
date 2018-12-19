@@ -385,7 +385,7 @@ func runUpdate(ing *ingress.Ingress, status []apiv1.LoadBalancerIngress,
 			return nil, errors.Wrap(err, fmt.Sprintf("unexpected error searching Ingress %v/%v", ing.Namespace, ing.Name))
 		}
 
-		klog.Infof("updating Ingress %v/%v status to %v", currIng.Namespace, currIng.Name, status)
+		klog.Infof("updating Ingress %v/%v status from %v to %v", currIng.Namespace, currIng.Name, currIng.Status.LoadBalancer.Ingress, status)
 		currIng.Status.LoadBalancer.Ingress = status
 		_, err = ingClient.UpdateStatus(currIng)
 		if err != nil {
