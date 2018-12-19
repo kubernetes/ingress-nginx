@@ -34,7 +34,7 @@ import (
 	"encoding/base64"
 	"io/ioutil"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/ingress-nginx/internal/file"
@@ -939,6 +939,8 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 func TestListIngresses(t *testing.T) {
 	s := newStore(t)
 
+	sameTime := metav1.NewTime(time.Now())
+
 	ingressToIgnore := &ingress.Ingress{
 		Ingress: extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -947,6 +949,7 @@ func TestListIngresses(t *testing.T) {
 				Annotations: map[string]string{
 					"kubernetes.io/ingress.class": "something",
 				},
+				CreationTimestamp: sameTime,
 			},
 			Spec: extensions.IngressSpec{
 				Backend: &extensions.IngressBackend{
@@ -961,8 +964,9 @@ func TestListIngresses(t *testing.T) {
 	ingressWithoutPath := &ingress.Ingress{
 		Ingress: extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-3",
-				Namespace: "testns",
+				Name:              "test-3",
+				Namespace:         "testns",
+				CreationTimestamp: sameTime,
 			},
 			Spec: extensions.IngressSpec{
 				Rules: []extensions.IngressRule{
@@ -995,6 +999,7 @@ func TestListIngresses(t *testing.T) {
 				Annotations: map[string]string{
 					"kubernetes.io/ingress.class": "nginx",
 				},
+				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
 			Spec: extensions.IngressSpec{
 				Rules: []extensions.IngressRule{
@@ -1021,8 +1026,21 @@ func TestListIngresses(t *testing.T) {
 	s.listers.IngressWithAnnotation.Add(ingressWithNginxClass)
 
 	ingresses := s.ListIngresses()
+
 	if s := len(ingresses); s != 3 {
 		t.Errorf("Expected 3 Ingresses but got %v", s)
+	}
+
+	if ingresses[0].Name != "test-2" {
+		t.Errorf("Expected Ingress test-2 but got %v", ingresses[0].Name)
+	}
+
+	if ingresses[1].Name != "test-3" {
+		t.Errorf("Expected Ingress test-3 but got %v", ingresses[1].Name)
+	}
+
+	if ingresses[2].Name != "test-4" {
+		t.Errorf("Expected Ingress test-4 but got %v", ingresses[2].Name)
 	}
 }
 
