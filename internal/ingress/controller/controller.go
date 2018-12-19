@@ -120,13 +120,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return nil
 	}
 
-	// sort Ingresses using the ResourceVersion field
 	ings := n.store.ListIngresses()
-	sort.SliceStable(ings, func(i, j int) bool {
-		ir := ings[i].ResourceVersion
-		jr := ings[j].ResourceVersion
-		return ir < jr
-	})
 
 	upstreams, servers := n.getBackendServers(ings)
 	var passUpstreams []*ingress.SSLPassthroughBackend
