@@ -63,6 +63,13 @@ http {
         -- init modules
         local ok, res
 
+        ok, res = pcall(require, "lua_ingress")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          lua_ingress = res
+        end
+
         ok, res = pcall(require, "configuration")
         if not ok then
           error("require failed: " .. tostring(res))
@@ -98,6 +105,7 @@ http {
     }
 
     init_worker_by_lua_block {
+        lua_ingress.init_worker()
         balancer.init_worker()
         {{ if $all.EnableMetrics }}
         monitor.init_worker()
