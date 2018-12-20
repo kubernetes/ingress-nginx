@@ -1208,6 +1208,10 @@
                 
                 <h1 id="ingress-path-matching">Ingress Path Matching<a class="headerlink" href="#ingress-path-matching" title="Permanent link">&para;</a></h1>
 <h2 id="regular-expression-support">Regular Expression Support<a class="headerlink" href="#regular-expression-support" title="Permanent link">&para;</a></h2>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Regular expressions and wild cards are not supported in the <code class="codehilite">spec.rules.host</code> field. Full hostnames must be used. </p>
+</div>
 <p>The ingress controller supports <strong>case insensitive</strong> regular expressions in the <code class="codehilite">spec.rules.http.paths.path</code> field.</p>
 <p>See the <a href="../nginx-configuration/annotations/#use-regex">description</a> of the <code class="codehilite">use-regex</code> annotation for more details.</p>
 <div class="codehilite"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extensions/v1beta1</span>
