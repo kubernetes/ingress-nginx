@@ -31,10 +31,13 @@ touch ${HOME}/.kube/config
 export KUBECONFIG=${HOME}/.kube/config
 
 echo "starting Kubernetes cluster..."
-curl -Lo $DIR/dind-cluster-v1.11.sh https://raw.githubusercontent.com/kubernetes-sigs/kubeadm-dind-cluster/master/fixed/dind-cluster-v1.11.sh && \
-  chmod +x $DIR/dind-cluster-v1.11.sh
+K8S_VERSION=v1.11
+KDC_SHA=e505612125948bab5a415ec3e5c1f9f26324488f28286e005fd1f3a0a6292c49
+curl -Lo $DIR/dind-cluster-$K8S_VERSION.sh https://github.com/kubernetes-sigs/kubeadm-dind-cluster/releases/download/v0.1.0/dind-cluster-$K8S_VERSION.sh && \
+  chmod +x $DIR/dind-cluster-$K8S_VERSION.sh
 
-$DIR/dind-cluster-v1.11.sh up
+echo "$KDC_SHA  $DIR/dind-cluster-$K8S_VERSION.sh" | sha256sum -c - || exit 10
+$DIR/dind-cluster-$K8S_VERSION.sh up
 
 kubectl config use-context dind
 
