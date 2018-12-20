@@ -33,7 +33,14 @@ func (f *Framework) NewEchoDeployment() {
 // NewEchoDeploymentWithReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
 // replicas is configurable
 func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) {
-	f.NewDeployment("http-svc", "gcr.io/kubernetes-e2e-test-images/echoserver:2.2", 8080, replicas)
+	f.NewEchoDeploymentWithNameAndReplicas("http-svc", replicas)
+}
+
+// NewEchoDeploymentWithNameAndReplicas creates a new deployment of the echoserver image in a particular namespace. Number of
+// replicas is configurable and
+// name is configurable
+func (f *Framework) NewEchoDeploymentWithNameAndReplicas(name string, replicas int32) {
+	f.NewDeployment(name, "gcr.io/kubernetes-e2e-test-images/echoserver:2.2", 8080, replicas)
 }
 
 // NewSlowEchoDeployment creates a new deployment of the slow echo server image in a particular namespace.
