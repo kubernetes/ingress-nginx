@@ -17,10 +17,12 @@ limitations under the License.
 package settings
 
 import (
+	"net/http"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/parnurzeal/gorequest"
 
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,7 +38,7 @@ const (
 	ingressControllerPSP = "ingress-controller-psp"
 )
 
-var _ = framework.IngressNginxDescribe("Pod Security Policies", func() {
+var _ = framework.IngressNginxDescribe("[Serial] Pod Security Policies", func() {
 	f := framework.NewDefaultFramework("pod-security-policies")
 
 	BeforeEach(func() {
@@ -75,38 +77,41 @@ var _ = framework.IngressNginxDescribe("Pod Security Policies", func() {
 		f.NewEchoDeployment()
 	})
 
-	// running tests in parallel can update the cluster roles, which introduce a failure
-	/*
-		AfterEach(func() {
-			role, err := f.KubeClientSet.RbacV1().ClusterRoles().Get("nginx-ingress-clusterrole", metav1.GetOptions{})
-			Expect(err).NotTo(HaveOccurred(), "getting ingress controller cluster role")
-			Expect(role).NotTo(BeNil())
+	AfterEach(func() {
+		role, err := f.KubeClientSet.RbacV1().ClusterRoles().Get("nginx-ingress-clusterrole", metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred(), "getting ingress controller cluster role")
+		Expect(role).NotTo(BeNil())
 
-			index := -1
-			for idx, rule := range role.Rules {
-				found := false
-				for _, rn := range rule.ResourceNames {
-					if rn == ingressControllerPSP {
-						found = true
-						break
-					}
-				}
-				if found {
-					index = idx
+		index := -1
+		for idx, rule := range role.Rules {
+			found := false
+			for _, rn := range rule.ResourceNames {
+				if rn == ingressControllerPSP {
+					found = true
+					break
 				}
 			}
+			if found {
+				index = idx
+			}
+		}
 
-			role.Rules = append(role.Rules[:index], role.Rules[index+1:]...)
-			_, err = f.KubeClientSet.RbacV1().ClusterRoles().Update(role)
-			Expect(err).NotTo(HaveOccurred(), "updating ingress controller cluster role to use a pod security policy")
-		})
-	*/
+		role.Rules = append(role.Rules[:index], role.Rules[index+1:]...)
+		_, err = f.KubeClientSet.RbacV1().ClusterRoles().Update(role)
+		Expect(err).NotTo(HaveOccurred(), "updating ingress controller cluster role to not use a pod security policy")
+	})
 
 	It("should be running with a Pod Security Policy", func() {
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "server_tokens on")
 			})
+
+		resp, _, _ := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Set("Host", "foo.bar.com").
+			End()
+		Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 	})
 })
 

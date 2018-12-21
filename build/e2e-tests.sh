@@ -43,14 +43,27 @@ SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
 
 ginkgo build ./test/e2e
 
-exec --                                      \
+echo "Running e2e test suite..."
 ginkgo                                       \
     -randomizeSuites                         \
     -randomizeAllSpecs                       \
     -flakeAttempts=2                         \
-    --focus=${FOCUS}                         \
+    -focus=${FOCUS}                          \
+    -skip="\[Serial\]"                       \
     -p                                       \
     -trace                                   \
     -nodes=${E2E_NODES}                      \
+    -slowSpecThreshold=${SLOW_E2E_THRESHOLD} \
+    test/e2e/e2e.test
+
+echo "Running e2e test suite with tests that require serial execution..."
+ginkgo                                       \
+    -randomizeSuites                         \
+    -randomizeAllSpecs                       \
+    -flakeAttempts=2                         \
+    -focus="\[Serial\]"                      \
+    -p                                       \
+    -trace                                   \
+    -nodes=1                                 \
     -slowSpecThreshold=${SLOW_E2E_THRESHOLD} \
     test/e2e/e2e.test
