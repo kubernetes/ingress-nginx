@@ -76,12 +76,12 @@ type SocketCollector struct {
 	metricMapping map[string]interface{}
 
 	hosts sets.String
+
+	metricsPerHost bool
 }
 
 var (
 	requestTags = []string{
-		"host",
-
 		"status",
 
 		"method",
@@ -95,7 +95,7 @@ var (
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) {
+func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
@@ -113,8 +113,15 @@ func NewSocketCollector(pod, namespace, class string) (*SocketCollector, error) 
 		"controller_pod":       pod,
 	}
 
+	requestTags := requestTags
+	if metricsPerHost {
+		requestTags = append(requestTags, "host")
+	}
+
 	sc := &SocketCollector{
 		listener: listener,
+
+		metricsPerHost: metricsPerHost,
 
 		responseTime: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
@@ -219,14 +226,17 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			continue
 		}
 
+		// Note these must match the order in requestTags at the top
 		requestLabels := prometheus.Labels{
-			"host":      stats.Host,
 			"status":    stats.Status,
 			"method":    stats.Method,
 			"path":      stats.Path,
 			"namespace": stats.Namespace,
 			"ingress":   stats.Ingress,
 			"service":   stats.Service,
+		}
+		if sc.metricsPerHost {
+			requestLabels["host"] = stats.Host
 		}
 
 		collectorLabels := prometheus.Labels{

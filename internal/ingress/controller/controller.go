@@ -87,7 +87,8 @@ type Configuration struct {
 
 	EnableProfiling bool
 
-	EnableMetrics bool
+	EnableMetrics  bool
+	MetricsPerHost bool
 
 	EnableSSLChainCompletion bool
 
