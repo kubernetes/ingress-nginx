@@ -149,6 +149,8 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 
 		enableMetrics = flags.Bool("enable-metrics", true,
 			`Enables the collection of NGINX metrics`)
+		metricsPerHost = flags.Bool("metrics-per-host", true,
+			`Export metrics per-host`)
 
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
@@ -227,6 +229,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		ElectionID:                 *electionID,
 		EnableProfiling:            *profiling,
 		EnableMetrics:              *enableMetrics,
+		MetricsPerHost:             *metricsPerHost,
 		EnableSSLPassthrough:       *enableSSLPassthrough,
 		EnableSSLChainCompletion:   *enableSSLChainCompletion,
 		ResyncPeriod:               *resyncPeriod,
