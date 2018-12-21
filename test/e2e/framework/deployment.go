@@ -36,6 +36,11 @@ func (f *Framework) NewEchoDeploymentWithReplicas(replicas int32) {
 	f.NewDeployment("http-svc", "gcr.io/kubernetes-e2e-test-images/echoserver:2.2", 8080, replicas)
 }
 
+// NewSlowEchoDeployment creates a new deployment of the slow echo server image in a particular namespace.
+func (f *Framework) NewSlowEchoDeployment() {
+	f.NewDeployment("slowecho", "breunigs/slowechoserver", 8080, 1)
+}
+
 // NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
 func (f *Framework) NewHttpbinDeployment() {
 	f.NewDeployment("httpbin", "kennethreitz/httpbin", 80, 1)
