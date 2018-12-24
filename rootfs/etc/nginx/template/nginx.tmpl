@@ -1122,6 +1122,10 @@ stream {
             rewrite_log on;
             {{ end }}
 
+            {{ if $location.HTTP2PushPreload }}
+            http2_push_preload on;
+            {{ end }}
+
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
             set $proxy_upstream_name "{{ buildUpstreamName $location }}";
