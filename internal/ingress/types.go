@@ -238,6 +238,10 @@ type Location struct {
 	// authentication using an external provider
 	// +optional
 	ExternalAuth authreq.Config `json:"externalAuth,omitempty"`
+	// HTTP2PushPreload allows to configure the HTTP2 Push Preload from backend
+	// original location.
+	// +optional
+	HTTP2PushPreload bool `json:"http2PushPreload,omitempty"`
 	// RateLimit describes a limit in the number of connections per IP
 	// address or connections per second.
 	// The Redirect annotation precedes RateLimit
