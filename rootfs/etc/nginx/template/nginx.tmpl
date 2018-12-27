@@ -29,9 +29,7 @@ worker_processes {{ $cfg.WorkerProcesses }};
 worker_cpu_affinity {{ $cfg.WorkerCPUAffinity }};
 {{ end }}
 
-{{ if ne .MaxOpenFiles 0 }}
-worker_rlimit_nofile {{ .MaxOpenFiles }};
-{{ end }}
+worker_rlimit_nofile {{ $cfg.MaxWorkerOpenFiles }};
 
 {{/* http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout */}}
 {{/* avoid waiting too long during a reload */}}
