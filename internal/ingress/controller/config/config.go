@@ -235,6 +235,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
 	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
 
+	// Maximum number of files that can be opened by each worker process.
+	// http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile
+	MaxWorkerOpenFiles int `json:"max-worker-open-files,omitempty"`
+
 	// Sets the bucket size for the map variables hash tables.
 	// Default value depends on the processor’s cache line size.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
@@ -605,7 +609,8 @@ func NewDefault() Configuration {
 		LogFormatStream:            logFormatStream,
 		LogFormatUpstream:          logFormatUpstream,
 		EnableMultiAccept:          true,
-		MaxWorkerConnections:       16384,
+		MaxWorkerConnections:       0,
+		MaxWorkerOpenFiles:         0,
 		MapHashBucketSize:          64,
 		NginxStatusIpv4Whitelist:   defNginxStatusIpv4Whitelist,
 		NginxStatusIpv6Whitelist:   defNginxStatusIpv6Whitelist,
@@ -697,7 +702,6 @@ func (cfg Configuration) BuildLogFormatUpstream() string {
 type TemplateConfig struct {
 	ProxySetHeaders            map[string]string
 	AddHeaders                 map[string]string
-	MaxOpenFiles               int
 	BacklogSize                int
 	Backends                   []*ingress.Backend
 	PassthroughBackends        []*ingress.SSLPassthroughBackend
