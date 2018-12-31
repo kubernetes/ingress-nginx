@@ -522,18 +522,27 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		cfg.ServerNameHashMaxSize = serverNameHashMaxSize
 	}
 
-	// the limit of open files is per worker process
-	// and we leave some room to avoid consuming all the FDs available
-	wp, err := strconv.Atoi(cfg.WorkerProcesses)
-	klog.V(3).Infof("Number of worker processes: %d", wp)
-	if err != nil {
-		wp = 1
+	if cfg.MaxWorkerOpenFiles == 0 {
+		// the limit of open files is per worker process
+		// and we leave some room to avoid consuming all the FDs available
+		wp, err := strconv.Atoi(cfg.WorkerProcesses)
+		klog.V(3).Infof("Number of worker processes: %d", wp)
+		if err != nil {
+			wp = 1
+		}
+		maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
+		klog.V(3).Infof("Maximum number of open file descriptors: %d", maxOpenFiles)
+		if maxOpenFiles < 1024 {
+			// this means the value of RLIMIT_NOFILE is too low.
+			maxOpenFiles = 1024
+		}
+		klog.V(3).Infof("Adjusting MaxWorkerOpenFiles variable to %d", maxOpenFiles)
+		cfg.MaxWorkerOpenFiles = maxOpenFiles
 	}
-	maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
-	klog.V(2).Infof("Maximum number of open file descriptors: %d", maxOpenFiles)
-	if maxOpenFiles < 1024 {
-		// this means the value of RLIMIT_NOFILE is too low.
-		maxOpenFiles = 1024
+
+	if cfg.MaxWorkerConnections == 0 {
+		klog.V(3).Infof("Adjusting MaxWorkerConnections variable to %d", cfg.MaxWorkerOpenFiles)
+		cfg.MaxWorkerConnections = cfg.MaxWorkerOpenFiles
 	}
 
 	setHeaders := map[string]string{}
@@ -583,7 +592,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:            setHeaders,
 		AddHeaders:                 addHeaders,
-		MaxOpenFiles:               maxOpenFiles,
 		BacklogSize:                sysctlSomaxconn(),
 		Backends:                   ingressCfg.Backends,
 		PassthroughBackends:        ingressCfg.PassthroughBackends,
