@@ -1048,8 +1048,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#validation" title="Validation" class="md-nav__link">
-    Validation
+  <a href="#examples" title="Examples" class="md-nav__link">
+    Examples
   </a>
   
     <nav class="md-nav">
@@ -1149,8 +1149,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#validation" title="Validation" class="md-nav__link">
-    Validation
+  <a href="#examples" title="Examples" class="md-nav__link">
+    Examples
   </a>
   
     <nav class="md-nav">
@@ -1217,16 +1217,6 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <td>string</td>
 </tr>
 <tr>
-<td>nginx.ingress.kubernetes.io/add-base-url</td>
-<td>indicates if is required to add a base tag in the head of the responses from the upstream servers</td>
-<td>bool</td>
-</tr>
-<tr>
-<td>nginx.ingress.kubernetes.io/base-url-scheme</td>
-<td>Override for the scheme passed to the base tag</td>
-<td>string</td>
-</tr>
-<tr>
 <td>nginx.ingress.kubernetes.io/ssl-redirect</td>
 <td>Indicates if the location section is accessible SSL only (defaults to True when Ingress contains a Certificate)</td>
 <td>bool</td>
@@ -1248,15 +1238,23 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 </tr>
 </tbody>
 </table>
-<h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <h3 id="rewrite-target">Rewrite Target<a class="headerlink" href="#rewrite-target" title="Permanent link">&para;</a></h3>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Starting in Version 0.2.2, ingress definitions using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/rewrite-target</code> are not backwards compatible with previous versions. In Version 0.2.2 and beyond, any substrings within the request URI that need to be passed to the rewritten path must explicitly be defined in a <a href="https://www.regular-expressions.info/refcapture.html">capture group</a>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a href="https://www.regular-expressions.info/refcapture.html">Captured groups</a> are saved in numbered placeholders, chronologically, in the form <code class="codehilite">$1</code>, <code class="codehilite">$2</code> ... <code class="codehilite">$n</code>. These placeholders can be used as parameters in the <code class="codehilite">rewrite-target</code> annotation. </p>
+</div>
 <p>Create an Ingress rule with a rewrite annotation:</p>
 <div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;</span>
 <span class="go">apiVersion: extensions/v1beta1</span>
 <span class="go">kind: Ingress</span>
 <span class="go">metadata:</span>
 <span class="go">  annotations:</span>
-<span class="go">    nginx.ingress.kubernetes.io/rewrite-target: /</span>
+<span class="go">    nginx.ingress.kubernetes.io/rewrite-target: /$1</span>
 <span class="go">  name: rewrite</span>
 <span class="go">  namespace: default</span>
 <span class="go">spec:</span>
@@ -1267,52 +1265,15 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <span class="go">      - backend:</span>
 <span class="go">          serviceName: http-svc</span>
 <span class="go">          servicePort: 80</span>
-<span class="go">        path: /something</span>
+<span class="go">        path: /something/?(.*)</span>
 <span class="go">&quot; | kubectl create -f -</span>
 </pre></div>
 
-<p>Check the rewrite is working</p>
-<div class="codehilite"><pre><span></span>$ curl -v http://172.17.4.99/something -H <span class="s1">&#39;Host: rewrite.bar.com&#39;</span>
-*   Trying <span class="m">172</span>.17.4.99...
-* Connected to <span class="m">172</span>.17.4.99 <span class="o">(</span><span class="m">172</span>.17.4.99<span class="o">)</span> port <span class="m">80</span> <span class="o">(</span><span class="c1">#0)</span>
-&gt; GET /something HTTP/1.1
-&gt; Host: rewrite.bar.com
-&gt; User-Agent: curl/7.43.0
-&gt; Accept: */*
-&gt;
-&lt; HTTP/1.1 <span class="m">200</span> OK
-&lt; Server: nginx/1.11.0
-&lt; Date: Tue, <span class="m">31</span> May <span class="m">2016</span> <span class="m">16</span>:07:31 GMT
-&lt; Content-Type: text/plain
-&lt; Transfer-Encoding: chunked
-&lt; Connection: keep-alive
-&lt;
-CLIENT VALUES:
-<span class="nv">client_address</span><span class="o">=</span><span class="m">10</span>.2.56.9
-<span class="nv">command</span><span class="o">=</span>GET
-real <span class="nv">path</span><span class="o">=</span>/
-<span class="nv">query</span><span class="o">=</span>nil
-<span class="nv">request_version</span><span class="o">=</span><span class="m">1</span>.1
-<span class="nv">request_uri</span><span class="o">=</span>http://rewrite.bar.com:8080/
-
-SERVER VALUES:
-<span class="nv">server_version</span><span class="o">=</span>nginx: <span class="m">1</span>.9.11 - lua: <span class="m">10001</span>
-
-HEADERS RECEIVED:
-<span class="nv">accept</span><span class="o">=</span>*/*
-<span class="nv">connection</span><span class="o">=</span>close
-<span class="nv">host</span><span class="o">=</span>rewrite.bar.com
-user-agent<span class="o">=</span>curl/7.43.0
-x-forwarded-for<span class="o">=</span><span class="m">10</span>.2.56.1
-x-forwarded-host<span class="o">=</span>rewrite.bar.com
-x-forwarded-port<span class="o">=</span><span class="m">80</span>
-x-forwarded-proto<span class="o">=</span>http
-x-real-ip<span class="o">=</span><span class="m">10</span>.2.56.1
-BODY:
-* Connection <span class="c1">#0 to host 172.17.4.99 left intact</span>
--no body in request-
-</pre></div>
-
+<p>In this ingress definition, any characters captured by <code class="codehilite">(.*)</code> will be assigned to the placeholder <code class="codehilite">$1</code>, which is then used as a parameter in the <code class="codehilite">rewrite-target</code> annotation. </p>
+<p>For example, the ingress definition above will result in the following rewrites:
+- <code class="codehilite">rewrite.bar.com/something</code> rewrites to <code class="codehilite">rewrite.bar.com/</code>
+- <code class="codehilite">rewrite.bar.com/something/</code> rewrites to <code class="codehilite">rewrite.bar.com/</code>
+- <code class="codehilite">rewrite.bar.com/something/new</code> rewrites to <code class="codehilite">rewrite.bar.com/new</code></p>
 <h3 id="app-root">App Root<a class="headerlink" href="#app-root" title="Permanent link">&para;</a></h3>
 <p>Create an Ingress rule with a app-root annotation:
 <div class="codehilite"><pre><span></span>$ <span class="nb">echo</span> <span class="s2">&quot;</span>

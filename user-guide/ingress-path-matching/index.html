@@ -1253,11 +1253,11 @@
       <span class="nt">paths</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar</span>
         <span class="nt">backend</span><span class="p">:</span>
-          <span class="nt">serviceName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="nt">serviceName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">service1</span>
           <span class="nt">servicePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
       <span class="p p-Indicator">-</span> <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/</span>
         <span class="nt">backend</span><span class="p">:</span>
-          <span class="nt">serviceName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="nt">serviceName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">service2</span>
           <span class="nt">servicePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 
@@ -1274,12 +1274,12 @@
       <span class="nt">paths</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/foo/bar/.+</span>
         <span class="nt">backend</span><span class="p">:</span>
-          <span class="nt">serviceName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">test</span>
+          <span class="nt">serviceName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">service3</span>
           <span class="nt">servicePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 
 <p>The ingress controller would define the following location blocks, in order of descending length, within the NGINX template for the <code class="codehilite">test.com</code> server:</p>
-<div class="codehilite"><pre><span></span>location ~* &quot;^/foo/bar/.+\/?(?&lt;baseuri&gt;.*)&quot; {
+<div class="codehilite"><pre><span></span>location ~* ^/foo/bar/.+ {
   ...
 }
 
@@ -1294,13 +1294,12 @@ location ~* &quot;^/foo/bar&quot; {
 
 <p>The following request URI's would match the corresponding location blocks:</p>
 <ul>
-<li><code class="codehilite">test.com/foo/bar/1</code> matches <code class="codehilite">~* &quot;^/foo/bar/.+\/?(?&lt;baseuri&gt;.*)&quot;</code></li>
-<li><code class="codehilite">test.com/foo/bar/</code> matches <code class="codehilite">~* &quot;^/foo/bar/&quot;</code></li>
-<li><code class="codehilite">test.com/foo/bar</code> matches <code class="codehilite">~* &quot;^/foo/bar&quot;</code></li>
+<li><code class="codehilite">test.com/foo/bar/1</code> matches <code class="codehilite">~* ^/foo/bar/.+</code> and will go to service 3.</li>
+<li><code class="codehilite">test.com/foo/bar/</code> matches <code class="codehilite">~* ^/foo/bar/</code> and will go to service 2.</li>
+<li><code class="codehilite">test.com/foo/bar</code> matches <code class="codehilite">~* ^/foo/bar</code> and will go to service 1.</li>
 </ul>
 <p><strong>IMPORTANT NOTES</strong>:</p>
 <ul>
-<li>paths created under the <code class="codehilite">rewrite-ingress</code> are sorted before <code class="codehilite">\/?(?&lt;baseuri&gt;.*)</code> is appended. For example if the path defined within <code class="codehilite">test-ingress-2</code> was <code class="codehilite">/foo/.+</code> then the location block for <code class="codehilite">^/foo/.+\/?(?&lt;baseuri&gt;.*)</code> would be the LAST block listed.</li>
 <li>If the <code class="codehilite">use-regex</code> OR <code class="codehilite">rewrite-target</code> annotation is used on any Ingress for a given host, then the case insensitive regular expression <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location">location modifier</a> will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.</li>
 </ul>
 <h2 id="warning">Warning<a class="headerlink" href="#warning" title="Permanent link">&para;</a></h2>

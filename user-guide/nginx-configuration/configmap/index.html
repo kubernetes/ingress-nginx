@@ -796,6 +796,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#max-worker-open-files" title="max-worker-open-files" class="md-nav__link">
+    max-worker-open-files
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#map-hash-bucket-size" title="map-hash-bucket-size" class="md-nav__link">
     map-hash-bucket-size
   </a>
@@ -2195,6 +2202,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#max-worker-open-files" title="max-worker-open-files" class="md-nav__link">
+    max-worker-open-files
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#map-hash-bucket-size" title="map-hash-bucket-size" class="md-nav__link">
     map-hash-bucket-size
   </a>
@@ -3019,7 +3033,12 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#max-worker-connections">max-worker-connections</a></td>
 <td align="left">int</td>
-<td align="left">16384</td>
+<td align="left">0</td>
+</tr>
+<tr>
+<td align="left"><a href="#max-worker-open-files">max-worker-open-files</a></td>
+<td align="left">int</td>
+<td align="left">0</td>
 </tr>
 <tr>
 <td align="left"><a href="#max-worker-connections">map-hash-bucket-size</a></td>
@@ -3581,7 +3600,13 @@ Example for json output:</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/ngx_core_module.html#multi_accept">http://nginx.org/en/docs/ngx_core_module.html#multi_accept</a></p>
 <h2 id="max-worker-connections">max-worker-connections<a class="headerlink" href="#max-worker-connections" title="Permanent link">&para;</a></h2>
-<p>Sets the maximum number of simultaneous connections that can be opened by each <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_connections">worker process</a></p>
+<p>Sets the <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_connections">maximum number of simultaneous connections</a> that can be opened by each worker process.
+The default of 0 uses the value of <a href="#max-worker-open-files">max-worker-open-files</a>.
+<em><strong>default:</strong></em> 0</p>
+<h2 id="max-worker-open-files">max-worker-open-files<a class="headerlink" href="#max-worker-open-files" title="Permanent link">&para;</a></h2>
+<p>Sets the <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile">maximum number of files</a> that can be opened by each worker process.
+The default of 0 means "max open files (system's limit) / <a href="#worker-processes">worker-processes</a> - 1024".
+<em><strong>default:</strong></em> 0</p>
 <h2 id="map-hash-bucket-size">map-hash-bucket-size<a class="headerlink" href="#map-hash-bucket-size" title="Permanent link">&para;</a></h2>
 <p>Sets the bucket size for the <a href="http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size">map variables hash tables</a>. The details of setting up hash tables are provided in a separate <a href="http://nginx.org/en/docs/hash.html">document</a>.</p>
 <h2 id="proxy-real-ip-cidr">proxy-real-ip-cidr<a class="headerlink" href="#proxy-real-ip-cidr" title="Permanent link">&para;</a></h2>

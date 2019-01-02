@@ -636,6 +636,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#http2-push-preload" title="HTTP2 Push Preload." class="md-nav__link">
+    HTTP2 Push Preload.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#server-alias" title="Server Alias" class="md-nav__link">
     Server Alias
   </a>
@@ -1513,6 +1520,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#http2-push-preload" title="HTTP2 Push Preload." class="md-nav__link">
+    HTTP2 Push Preload.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#server-alias" title="Server Alias" class="md-nav__link">
     Server Alias
   </a>
@@ -1778,10 +1792,6 @@ table below.</p>
 </thead>
 <tbody>
 <tr>
-<td><a href="#rewrite">nginx.ingress.kubernetes.io/add-base-url</a></td>
-<td>"true" or "false"</td>
-</tr>
-<tr>
 <td><a href="#rewrite">nginx.ingress.kubernetes.io/app-root</a></td>
 <td>string</td>
 </tr>
@@ -1831,10 +1841,6 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#backend-protocol">nginx.ingress.kubernetes.io/backend-protocol</a></td>
-<td>string</td>
-</tr>
-<tr>
-<td><a href="#rewrite">nginx.ingress.kubernetes.io/base-url-scheme</a></td>
 <td>string</td>
 </tr>
 <tr>
@@ -1899,6 +1905,10 @@ table below.</p>
 </tr>
 <tr>
 <td><a href="#redirect-from-to-www">nginx.ingress.kubernetes.io/from-to-www-redirect</a></td>
+<td>"true" or "false"</td>
+</tr>
+<tr>
+<td><a href="#http2-push-preload">nginx.ingress.kubernetes.io/http2-push-preload</a></td>
 <td>"true" or "false"</td>
 </tr>
 <tr>
@@ -2140,8 +2150,6 @@ table below.</p>
 <h3 id="rewrite">Rewrite<a class="headerlink" href="#rewrite" title="Permanent link">&para;</a></h3>
 <p>In some scenarios the exposed URL in the backend service differs from the specified path in the Ingress rule. Without a rewrite any request will return 404.
 Set the annotation <code class="codehilite">nginx.ingress.kubernetes.io/rewrite-target</code> to the path expected by the service.</p>
-<p>If the application contains relative links it is possible to add an additional annotation <code class="codehilite">nginx.ingress.kubernetes.io/add-base-url</code> that will prepend a <a href="https://developer.mozilla.org/en/docs/Web/HTML/Element/base"><code class="codehilite">base</code> tag</a> in the header of the returned HTML from the backend.</p>
-<p>If the scheme of <a href="https://developer.mozilla.org/en/docs/Web/HTML/Element/base"><code class="codehilite">base</code> tag</a> need to be specific, set the annotation <code class="codehilite">nginx.ingress.kubernetes.io/base-url-scheme</code> to the scheme such as <code class="codehilite">http</code> and <code class="codehilite">https</code>.</p>
 <p>If the Application Root is exposed in a different path and needs to be redirected, set the annotation <code class="codehilite">nginx.ingress.kubernetes.io/app-root</code> to redirect requests for <code class="codehilite">/</code>.</p>
 <div class="admonition example">
 <p class="admonition-title">Example</p>
@@ -2291,6 +2299,14 @@ location enabling this functionality.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>For more information please see <a href="https://enable-cors.org/server_nginx.html">https://enable-cors.org</a> </p>
+</div>
+<h3 id="http2-push-preload">HTTP2 Push Preload.<a class="headerlink" href="#http2-push-preload" title="Permanent link">&para;</a></h3>
+<p>Enables automatic conversion of preload links specified in the “Link” response header fields into push requests.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<ul>
+<li><code class="codehilite">nginx.ingress.kubernetes.io/http2-push-preload: &quot;true&quot;</code></li>
+</ul>
 </div>
 <h3 id="server-alias">Server Alias<a class="headerlink" href="#server-alias" title="Permanent link">&para;</a></h3>
 <p>To add Server Aliases to an Ingress rule add the annotation <code class="codehilite">nginx.ingress.kubernetes.io/server-alias: &quot;&lt;alias&gt;&quot;</code>.
