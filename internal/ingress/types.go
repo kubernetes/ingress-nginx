@@ -322,6 +322,8 @@ type L4Service struct {
 	Backend L4Backend `json:"backend"`
 	// Endpoints active endpoints of the service
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	// k8s Service
+	Service *apiv1.Service `json:"service,omitempty"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service

@@ -343,6 +343,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 				ProxyProtocol: svcProxyProtocol,
 			},
 			Endpoints: endps,
+			Service:   svc,
 		})
 	}
 	// Keep upstream order sorted to reduce unnecessary nginx config reloads.
