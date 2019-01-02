@@ -821,6 +821,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 			Name:      key,
 			Endpoints: ep.Endpoints,
 			Port:      intstr.FromInt(ep.Port),
+			Service:   ep.Service,
 		})
 	}
 	for _, ep := range pcfg.UDPEndpoints {
@@ -829,6 +830,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 			Name:      key,
 			Endpoints: ep.Endpoints,
 			Port:      intstr.FromInt(ep.Port),
+			Service:   ep.Service,
 		})
 	}
 
