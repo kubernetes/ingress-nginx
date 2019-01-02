@@ -816,21 +816,31 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 
 	streams := make([]ingress.Backend, 0)
 	for _, ep := range pcfg.TCPEndpoints {
+		var service *apiv1.Service
+		if ep.Service != nil {
+			service = &apiv1.Service{Spec: ep.Service.Spec}
+		}
+
 		key := fmt.Sprintf("tcp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
 		streams = append(streams, ingress.Backend{
 			Name:      key,
 			Endpoints: ep.Endpoints,
 			Port:      intstr.FromInt(ep.Port),
-			Service:   ep.Service,
+			Service:   service,
 		})
 	}
 	for _, ep := range pcfg.UDPEndpoints {
+		var service *apiv1.Service
+		if ep.Service != nil {
+			service = &apiv1.Service{Spec: ep.Service.Spec}
+		}
+
 		key := fmt.Sprintf("udp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
 		streams = append(streams, ingress.Backend{
 			Name:      key,
 			Endpoints: ep.Endpoints,
 			Port:      intstr.FromInt(ep.Port),
-			Service:   ep.Service,
+			Service:   service,
 		})
 	}
 
