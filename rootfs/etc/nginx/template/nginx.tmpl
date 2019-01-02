@@ -539,9 +539,6 @@ http {
         {{ end }}
         server_name {{ $hostname }};
 
-        {{/* default value of proxy_host is the name and port of a proxied server as specified in the proxy_pass directive */}}
-        set $proxy_host {{ $hostname }};
-
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
            return 403;
@@ -1126,7 +1123,8 @@ stream {
 
             port_in_redirect {{ if $location.UsePortInRedirects }}on{{ else }}off{{ end }};
 
-            set $proxy_upstream_name "{{ buildUpstreamName $location }}";
+            set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
+            set $proxy_host             $proxy_upstream_name;
 
             {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
             {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCert.PemFileName)) $location.Rewrite.SSLRedirect)) }}
