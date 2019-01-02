@@ -38,71 +38,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 	AfterEach(func() {
 	})
 
-	It("should rewrite request URL", func() {
-		By("setting rewrite-target annotation")
-
-		host := "rewrite.foo.com"
-		annotations := map[string]string{"nginx.ingress.kubernetes.io/rewrite-target": "/"}
-		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:8080/", host)
-
-		ing := framework.NewSingleIngress(host, "/something", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		f.EnsureIngress(ing)
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, `rewrite "(?i)/something/(.*)" /$1 break;`) &&
-					strings.Contains(server, `rewrite "(?i)/something$" / break;`)
-			})
-
-		By("sending request to Ingress rule path (lowercase)")
-
-		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/something").
-			Set("Host", host).
-			End()
-
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
-
-		By("sending request to Ingress rule path (mixed case)")
-
-		resp, body, errs = gorequest.New().
-			Get(f.IngressController.HTTPURL+"/SomeThing").
-			Set("Host", host).
-			End()
-
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
-	})
-
-	It("should not redirect to ssl", func() {
-		host := "rewrite.foo.com"
-		annotations := map[string]string{"nginx.ingress.kubernetes.io/ssl-redirect": "false"}
-
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
-		f.EnsureIngress(ing)
-
-		tlsConfig, err := framework.CreateIngressTLSSecret(
-			f.KubeClientSet,
-			ing.Spec.TLS[0].Hosts,
-			ing.Spec.TLS[0].SecretName,
-			ing.Namespace)
-		Expect(err).ToNot(HaveOccurred())
-
-		framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
-
-		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+"/").
-			Set("Host", host).
-			RedirectPolicy(noRedirectPolicyFunc).
-			End()
-
-		Expect(len(errs)).Should(Equal(0))
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-	})
-
 	It("should write rewrite logs", func() {
 		By("setting enable-rewrite-log annotation")
 
@@ -130,7 +65,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		logs, err := f.NginxLogs()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(logs).To(ContainSubstring(`"(?i)/something$" matches "/something", client:`))
+		Expect(logs).To(ContainSubstring(`"(?i)/something" matches "/something", client:`))
 		Expect(logs).To(ContainSubstring(`rewritten data: "/", args: "",`))
 	})
 
@@ -166,7 +101,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "location ~* ^/ {") && strings.Contains(server, `location ~* "^/.well-known/acme/challenge" {`)
+				return strings.Contains(server, `location ~* "^/" {`) && strings.Contains(server, `location ~* "^/.well-known/acme/challenge" {`)
 			})
 
 		By("making a second request to the non-rewritten location")
@@ -201,7 +136,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `location ~* "^/foo" {`) && strings.Contains(server, `location ~* "^/foo.+\/?(?<baseuri>.*)" {`)
+				return strings.Contains(server, `location ~* "^/foo" {`) && strings.Contains(server, `location ~* "^/foo.+" {`)
 			})
 
 		By("ensuring '/foo' matches '~* ^/foo'")
@@ -242,7 +177,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `location ~* "^/foo/bar/bar" {`) && strings.Contains(server, `location ~* "^/foo/bar/[a-z]{3}\/?(?<baseuri>.*)" {`)
+				return strings.Contains(server, `location ~* "^/foo/bar/bar" {`) && strings.Contains(server, `location ~* "^/foo/bar/[a-z]{3}" {`)
 			})
 
 		By("check that '/foo/bar/bar' does not match the longest exact path")
@@ -255,4 +190,32 @@ var _ = framework.IngressNginxDescribe("Annotations - Rewrite", func() {
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
 	})
+
+	It("should allow for custom rewrite parameters", func() {
+		host := "rewrite.bar.com"
+
+		By(`creating an ingress definition with the use-regex annotation`)
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/use-regex":      "true",
+			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend/$1",
+		}
+		ing := framework.NewSingleIngress("regex", "/foo/bar/(.+)", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, `location ~* "^/foo/bar/(.+)" {`)
+			})
+
+		By("check that '/foo/bar/bar' redirects to cusotm rewrite")
+		resp, body, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL+"/foo/bar/bar").
+			Set("Host", host).
+			End()
+		expectBodyRequestURI := fmt.Sprintf("request_uri=http://%v:8080/new/backend/bar", host)
+		Expect(len(errs)).Should(Equal(0))
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(body).Should(ContainSubstring(expectBodyRequestURI))
+	})
+
 })
