@@ -339,19 +339,6 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	}
 
 	path := location.Path
-	if needsRewrite(location) {
-		if path == slash {
-			return fmt.Sprintf("~* ^%s", path)
-		}
-		// baseuri regex will parse basename from the given location
-		baseuri := `(?<baseuri>.*)`
-		if !strings.HasSuffix(path, slash) {
-			// Not treat the slash after "location path" as a part of baseuri
-			baseuri = fmt.Sprintf(`\/?%s`, baseuri)
-		}
-		return fmt.Sprintf(`~* "^%s%s"`, path, baseuri)
-	}
-
 	if enforceRegex {
 		return fmt.Sprintf(`~* "^%s"`, path)
 	}
@@ -466,48 +453,16 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 		return defProxyPass
 	}
 
-	if !strings.HasSuffix(path, slash) {
-		path = fmt.Sprintf("%s/", path)
-	}
-
 	if len(location.Rewrite.Target) > 0 {
-		var abu string
 		var xForwardedPrefix string
-
-		if location.Rewrite.AddBaseURL {
-			bPath := fmt.Sprintf("%s$escaped_base_uri", path)
-			regex := `(<(?:H|h)(?:E|e)(?:A|a)(?:D|d)(?:[^">]|"[^"]*")*>)`
-			scheme := "$scheme"
-
-			if len(location.Rewrite.BaseURLScheme) > 0 {
-				scheme = location.Rewrite.BaseURLScheme
-			}
-
-			abu = fmt.Sprintf(`
-set_escape_uri $escaped_base_uri $baseuri;
-subs_filter '%v' '$1<base href="%v://$http_host%v">' ro;
-`, regex, scheme, bPath)
-		}
 
 		if location.XForwardedPrefix {
 			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", path)
 		}
 
-		if location.Rewrite.Target == slash {
-			// special case redirect to /
-			// ie /something to /
-			return fmt.Sprintf(`
-rewrite "(?i)%s(.*)" /$1 break;
-rewrite "(?i)%s$" / break;
-%v%v %s%s;
-%v`, path, location.Path, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
-		}
-
 		return fmt.Sprintf(`
-rewrite "(?i)%s(.*)" %s/$1 break;
-rewrite "(?i)%s$" %s/ break;
-%v%v %s%s;
-%v`, path, location.Rewrite.Target, location.Path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName, abu)
+rewrite "(?i)%s" %s break;
+%v%v %s%s;`, path, location.Rewrite.Target, xForwardedPrefix, proxyPass, proto, upstreamName)
 	}
 
 	// default proxy_pass
