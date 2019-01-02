@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"sort"
 	"sync"
 	"time"
 
@@ -735,6 +736,13 @@ func (s *k8sStore) ListIngresses() []*ingress.Ingress {
 		ing := item.(*ingress.Ingress)
 		ingresses = append(ingresses, ing)
 	}
+
+	// sort Ingresses using the CreationTimestamp field
+	sort.SliceStable(ingresses, func(i, j int) bool {
+		ir := ingresses[i].CreationTimestamp
+		jr := ingresses[j].CreationTimestamp
+		return ir.Before(&jr)
+	})
 
 	return ingresses
 }
