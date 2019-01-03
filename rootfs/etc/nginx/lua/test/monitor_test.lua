@@ -78,6 +78,8 @@ describe("Monitor", function()
         request_length = "256",
         request_time = "0.04",
         bytes_sent = "512",
+        ssl_protocol = "TLSv1.2",
+        ssl_cipher = "ECDHE-RSA-AES128-GCM-SHA256",
 
         upstream_addr = "10.10.0.1",
         upstream_connect_time = "0.01",

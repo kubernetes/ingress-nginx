@@ -30,6 +30,9 @@ local function metrics()
     requestTime = tonumber(ngx.var.request_time) or -1,
     responseLength = tonumber(ngx.var.bytes_sent) or -1,
 
+    tlsVersion = ngx.var.ssl_protocol or "-",
+    tlsCipher = ngx.var.ssl_cipher or "-",
+
     upstreamLatency = tonumber(ngx.var.upstream_connect_time) or -1,
     upstreamResponseTime = tonumber(ngx.var.upstream_response_time) or -1,
     upstreamResponseLength = tonumber(ngx.var.upstream_response_length) or -1,

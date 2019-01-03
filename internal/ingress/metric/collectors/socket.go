@@ -47,6 +47,9 @@ type socketData struct {
 	RequestLength float64 `json:"requestLength"`
 	RequestTime   float64 `json:"requestTime"`
 
+	TLSVersion string `json:"tlsVersion"`
+	TLSCipher  string `json:"tlsCipher"`
+
 	upstream
 
 	Namespace string `json:"namespace"`
@@ -169,7 +172,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
-			[]string{"ingress", "namespace", "status"},
+			[]string{"ingress", "namespace", "status", "tls_version", "tls_cipher"},
 		),
 
 		bytesSent: prometheus.NewHistogramVec(
@@ -240,9 +243,11 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		}
 
 		collectorLabels := prometheus.Labels{
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"status":    stats.Status,
+			"namespace":   stats.Namespace,
+			"ingress":     stats.Ingress,
+			"status":      stats.Status,
+			"tls_version": stats.TLSVersion,
+			"tls_cipher":  stats.TLSCipher,
 		}
 
 		latencyLabels := prometheus.Labels{
