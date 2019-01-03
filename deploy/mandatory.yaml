@@ -220,6 +220,7 @@ spec:
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
           securityContext:
+            allowPrivilegeEscalation: true
             capabilities:
               drop:
                 - ALL
