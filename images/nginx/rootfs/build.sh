@@ -119,6 +119,10 @@ function geoip2_get {
     && rm -rf $GEOIP_FOLDER/$1.tar.gz
 }
 
+# geoip_get "GeoIPASNum.dat.gz"  "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz"
+# geoip_get "GeoIP.dat.gz"       "https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
+# geoip_get "GeoLiteCity.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
+geoip2_get "GeoLite2-Country"  "http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz"
 geoip2_get "GeoLite2-City"     "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz"
 geoip2_get "GeoLite2-ASN"      "http://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz"
 
