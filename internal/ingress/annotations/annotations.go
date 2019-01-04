@@ -92,7 +92,7 @@ type Ingress struct {
 	SessionAffinity      sessionaffinity.Config
 	SSLPassthrough       bool
 	UsePortInRedirects   bool
-	UpstreamHashBy       string
+	UpstreamHashBy       upstreamhashby.Config
 	LoadBalancing        string
 	UpstreamVhost        string
 	Whitelist            ipwhitelist.SourceRange

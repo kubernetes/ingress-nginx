@@ -661,9 +661,13 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			if upstreams[defBackend].SecureCACert.Secret == "" {
 				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
 			}
-			if upstreams[defBackend].UpstreamHashBy == "" {
-				upstreams[defBackend].UpstreamHashBy = anns.UpstreamHashBy
+
+			if upstreams[defBackend].UpstreamHashBy.UpstreamHashBy == "" {
+				upstreams[defBackend].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
+				upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
+				upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
 			}
+
 			if upstreams[defBackend].LoadBalancing == "" {
 				upstreams[defBackend].LoadBalancing = anns.LoadBalancing
 			}
@@ -725,8 +729,10 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
 				}
 
-				if upstreams[name].UpstreamHashBy == "" {
-					upstreams[name].UpstreamHashBy = anns.UpstreamHashBy
+				if upstreams[name].UpstreamHashBy.UpstreamHashBy == "" {
+					upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
+					upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
+					upstreams[name].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
 				}
 
 				if upstreams[name].LoadBalancing == "" {

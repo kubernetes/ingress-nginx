@@ -113,6 +113,14 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash
 	UpstreamHashBy string `json:"upstream-hash-by"`
 
+	// Consistent hashing subset flag.
+	// Default: false
+	UpstreamHashBySubset bool `json:"upstream-hash-by-subset"`
+
+	// Subset consistent hashing, subset size.
+	// Default 3
+	UpstreamHashBySubsetSize int `json:"upstream-hash-by-subset-size"`
+
 	// Let's us choose a load balancing algorithm per ingress
 	LoadBalancing string `json:"load-balance"`
 
