@@ -66,6 +66,7 @@ import (
 const (
 	ngxHealthPath     = "/healthz"
 	nginxStreamSocket = "/tmp/ingress-stream.sock"
+	tempNginxPattern  = "nginx-cfg"
 )
 
 var (
@@ -289,6 +290,18 @@ func (n *NGINXController) Start() {
 	// force initial sync
 	n.syncQueue.EnqueueTask(task.GetDummyObject("initial-sync"))
 
+	// In case of error the temporal configuration file will
+	// be available up to five minutes after the error
+	go func() {
+		for {
+			time.Sleep(5 * time.Minute)
+			err := cleanTempNginxCfg()
+			if err != nil {
+				klog.Infof("Unexpected error removing temporal configuration files: %v", err)
+			}
+		}
+	}()
+
 	for {
 		select {
 		case err := <-n.ngxErrCh:
@@ -405,7 +418,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
-	tmpfile, err := ioutil.TempFile("", "nginx-cfg")
+	tmpfile, err := ioutil.TempFile("", tempNginxPattern)
 	if err != nil {
 		return err
 	}
@@ -423,6 +436,7 @@ Error: %v
 %v
 -------------------------------------------------------------------------------
 `, err, string(out))
+
 		return errors.New(oe)
 	}
 
@@ -977,4 +991,33 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	}
 
 	return ioutil.WriteFile("/etc/nginx/opentracing.json", tmplBuf.Bytes(), file.ReadWriteByUser)
+}
+
+func cleanTempNginxCfg() error {
+	var files []string
+
+	err := filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() && os.TempDir() != path {
+			return filepath.SkipDir
+		}
+
+		dur, _ := time.ParseDuration("-5m")
+		fiveMinutesAgo := time.Now().Add(dur)
+		if strings.HasPrefix(info.Name(), tempNginxPattern) && info.ModTime().Before(fiveMinutesAgo) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		err := os.Remove(file)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
