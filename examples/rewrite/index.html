@@ -1242,7 +1242,7 @@ and that you have an ingress controller <a href="../../deploy">running</a> in yo
 <h3 id="rewrite-target">Rewrite Target<a class="headerlink" href="#rewrite-target" title="Permanent link">&para;</a></h3>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
-<p>Starting in Version 0.2.2, ingress definitions using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/rewrite-target</code> are not backwards compatible with previous versions. In Version 0.2.2 and beyond, any substrings within the request URI that need to be passed to the rewritten path must explicitly be defined in a <a href="https://www.regular-expressions.info/refcapture.html">capture group</a>.</p>
+<p>Starting in Version 0.22.0, ingress definitions using the annotation <code class="codehilite">nginx.ingress.kubernetes.io/rewrite-target</code> are not backwards compatible with previous versions. In Version 0.22.0 and beyond, any substrings within the request URI that need to be passed to the rewritten path must explicitly be defined in a <a href="https://www.regular-expressions.info/refcapture.html">capture group</a>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
