@@ -93,7 +93,7 @@ type Backend struct {
 	// StickySessionAffinitySession contains the StickyConfig object with stickyness configuration
 	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
 	// Consistent hashing by NGINX variable
-	UpstreamHashBy string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashBy UpstreamHashByConfig `json:"upstreamHashByConfig,omitempty"`
 	// LB algorithm configuration per ingress
 	LoadBalancing string `json:"load-balance,omitempty"`
 	// Denotes if a backend has no server. The backend instead shares a server with another backend and acts as an
@@ -148,6 +148,13 @@ type CookieSessionAffinity struct {
 	MaxAge    string              `json:"maxage,omitempty"`
 	Locations map[string][]string `json:"locations,omitempty"`
 	Path      string              `json:"path,omitempty"`
+}
+
+// UpstreamHashByConfig described setting from the upstream-hash-by* annotations.
+type UpstreamHashByConfig struct {
+	UpstreamHashBy           string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashBySubset     bool   `json:"upstream-hash-by-subset,omitempty"`
+	UpstreamHashBySubsetSize int    `json:"upstream-hash-by-subset-size,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend

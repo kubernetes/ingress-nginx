@@ -186,7 +186,7 @@ func TestUpstreamHashBy(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).UpstreamHashBy
+		r := ec.Extract(ing).UpstreamHashBy.UpstreamHashBy
 		if r != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
 		}
