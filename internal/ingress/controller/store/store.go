@@ -605,6 +605,9 @@ func (s *k8sStore) syncIngress(ing *extensions.Ingress) {
 	ing.Spec.DeepCopyInto(&copyIng.Spec)
 	ing.Status.DeepCopyInto(&copyIng.Status)
 
+	copyIng.SetAnnotations(make(map[string]string, 0))
+	copyIng.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{})
+
 	for ri, rule := range copyIng.Spec.Rules {
 		if rule.HTTP == nil {
 			continue
