@@ -915,7 +915,8 @@ func newNGINXController(t *testing.T) *NGINXController {
 		fs,
 		channels.NewRingChannel(10),
 		false,
-		pod)
+		pod,
+		false)
 
 	config := &Configuration{
 		ListenPorts: &ngx_config.ListenPorts{

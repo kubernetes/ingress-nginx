@@ -82,7 +82,8 @@ func TestStore(t *testing.T) {
 			fs,
 			updateCh,
 			false,
-			pod)
+			pod,
+			false)
 
 		storer.Run(stopCh)
 
@@ -163,7 +164,8 @@ func TestStore(t *testing.T) {
 			fs,
 			updateCh,
 			false,
-			pod)
+			pod,
+			false)
 
 		storer.Run(stopCh)
 
@@ -316,7 +318,8 @@ func TestStore(t *testing.T) {
 			fs,
 			updateCh,
 			false,
-			pod)
+			pod,
+			false)
 
 		storer.Run(stopCh)
 
@@ -424,7 +427,8 @@ func TestStore(t *testing.T) {
 			fs,
 			updateCh,
 			false,
-			pod)
+			pod,
+			false)
 
 		storer.Run(stopCh)
 
@@ -514,7 +518,8 @@ func TestStore(t *testing.T) {
 			fs,
 			updateCh,
 			false,
-			pod)
+			pod,
+			false)
 
 		storer.Run(stopCh)
 
@@ -627,7 +632,8 @@ func TestStore(t *testing.T) {
 			fs,
 			updateCh,
 			false,
-			pod)
+			pod,
+			false)
 
 		storer.Run(stopCh)
 
