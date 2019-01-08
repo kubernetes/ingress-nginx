@@ -157,9 +157,8 @@ local function route_to_alternative_balancer(balancer)
     return false
   end
 
-  local clean_target_header = util.replace_special_char(traffic_shaping_policy.header, "-", "_")
-
-  local header = ngx.var["http_" .. clean_target_header]
+  local target_header = util.replace_special_char(traffic_shaping_policy.header, "-", "_")
+  local header = ngx.var["http_" .. target_header]
   if header then
     if header == "always" then
       return true
@@ -168,9 +167,8 @@ local function route_to_alternative_balancer(balancer)
     end
   end
 
-  local clean_target_cookie = util.replace_special_char(traffic_shaping_policy.cookie, "-", "_")
-
-  local cookie = ngx.var["cookie_" .. clean_target_cookie]
+  local target_cookie = traffic_shaping_policy.cookie
+  local cookie = ngx.var["cookie_" .. target_cookie]
   if cookie then
     if cookie == "always" then
       return true
