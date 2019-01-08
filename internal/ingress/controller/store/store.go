@@ -304,6 +304,42 @@ func New(checkOCSP bool,
 	)
 	store.listers.Pod.Store = store.informers.Pod.GetStore()
 
+	ingDeleteHandler := func(obj interface{}) {
+		ing, ok := obj.(*extensions.Ingress)
+		if !ok {
+			// If we reached here it means the ingress was deleted but its final state is unrecorded.
+			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+			if !ok {
+				klog.Errorf("couldn't get object from tombstone %#v", obj)
+				return
+			}
+			ing, ok = tombstone.Obj.(*extensions.Ingress)
+			if !ok {
+				klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
+				return
+			}
+		}
+		if !class.IsValid(ing) {
+			klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
+			return
+		}
+		if ing.Spec.Backend != nil && disableCatchAll {
+			klog.Infof("ignoring delete for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
+			return
+		}
+		recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
+
+		store.listers.IngressWithAnnotation.Delete(ing)
+
+		key := k8s.MetaNamespaceKey(ing)
+		store.secretIngressMap.Delete(key)
+
+		updateCh.In() <- Event{
+			Type: DeleteEvent,
+			Obj:  obj,
+		}
+	}
+
 	ingEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			ing := obj.(*extensions.Ingress)
@@ -327,41 +363,7 @@ func New(checkOCSP bool,
 				Obj:  obj,
 			}
 		},
-		DeleteFunc: func(obj interface{}) {
-			ing, ok := obj.(*extensions.Ingress)
-			if !ok {
-				// If we reached here it means the ingress was deleted but its final state is unrecorded.
-				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
-				if !ok {
-					klog.Errorf("couldn't get object from tombstone %#v", obj)
-					return
-				}
-				ing, ok = tombstone.Obj.(*extensions.Ingress)
-				if !ok {
-					klog.Errorf("Tombstone contained object that is not an Ingress: %#v", obj)
-					return
-				}
-			}
-			if !class.IsValid(ing) {
-				klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
-				return
-			}
-			if ing.Spec.Backend != nil && disableCatchAll {
-				klog.Infof("ignoring delete for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
-				return
-			}
-			recorder.Eventf(ing, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", ing.Namespace, ing.Name))
-
-			store.listers.IngressWithAnnotation.Delete(ing)
-
-			key := k8s.MetaNamespaceKey(ing)
-			store.secretIngressMap.Delete(key)
-
-			updateCh.In() <- Event{
-				Type: DeleteEvent,
-				Obj:  obj,
-			}
-		},
+		DeleteFunc: ingDeleteHandler,
 		UpdateFunc: func(old, cur interface{}) {
 			oldIng := old.(*extensions.Ingress)
 			curIng := cur.(*extensions.Ingress)
@@ -377,18 +379,16 @@ func New(checkOCSP bool,
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else if validOld && !validCur {
 				klog.Infof("removing ingress %v based on annotation %v", curIng.Name, class.IngressKey)
-				// FIXME: this does not actually delete the Ingress resource.
-				// The existing one will be updated with latest changes and invalid ingress.class will be missed.
-				recorder.Eventf(curIng, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+				ingDeleteHandler(old)
+				return
 			} else if validCur && !reflect.DeepEqual(old, cur) {
 				if curIng.Spec.Backend != nil && disableCatchAll {
-					klog.Infof("ignoring update for catch-all ingress %v/%v because of --disable-catch-all", curIng.Namespace, curIng.Name)
-					// FIXME: this does not actually delete the Ingress resource.
-					// The existing one will be updated with latest changes.
-					recorder.Eventf(curIng, corev1.EventTypeNormal, "DELETE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
-				} else {
-					recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
+					klog.Infof("ignoring update for catch-all ingress %v/%v and delete old one because of --disable-catch-all", curIng.Namespace, curIng.Name)
+					ingDeleteHandler(old)
+					return
 				}
+
+				recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else {
 				klog.Infof("ignoring ingress %v based on annotation %v", curIng.Name, class.IngressKey)
 				return
