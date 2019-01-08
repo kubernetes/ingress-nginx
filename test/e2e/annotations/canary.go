@@ -473,7 +473,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 
 			canaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
-				"nginx.ingress.kubernetes.io/canary-by-cookie": "CanaryByCookie",
+				"nginx.ingress.kubernetes.io/canary-by-cookie": "Canary-By-Cookie",
 			}
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
@@ -488,7 +488,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			resp, body, errs := gorequest.New().
 				Get(f.IngressController.HTTPURL).
 				Set("Host", host).
-				AddCookie(&http.Cookie{Name: "CanaryByCookie", Value: "always"}).
+				AddCookie(&http.Cookie{Name: "Canary-By-Cookie", Value: "always"}).
 				End()
 
 			Expect(errs).Should(BeEmpty())
@@ -500,7 +500,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			resp, body, errs = gorequest.New().
 				Get(f.IngressController.HTTPURL).
 				Set("Host", host).
-				AddCookie(&http.Cookie{Name: "CanaryByCookie", Value: "never"}).
+				AddCookie(&http.Cookie{Name: "Canary-By-Cookie", Value: "never"}).
 				End()
 
 			Expect(errs).Should(BeEmpty())
@@ -513,7 +513,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			resp, body, errs = gorequest.New().
 				Get(f.IngressController.HTTPURL).
 				Set("Host", host).
-				AddCookie(&http.Cookie{Name: "CanaryByCookie", Value: "badcookievalue"}).
+				AddCookie(&http.Cookie{Name: "Canary-By-Cookie", Value: "badcookievalue"}).
 				End()
 
 			Expect(errs).Should(BeEmpty())
