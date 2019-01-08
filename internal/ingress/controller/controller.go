@@ -1165,6 +1165,13 @@ func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) b
 		return false
 	}
 
+	for _, ab := range priUps.AlternativeBackends {
+		if ab == altUps.Name {
+			klog.V(2).Infof("skip merge alternative backend %v into %v, it's already present", altUps.Name, priUps.Name)
+			return true
+		}
+	}
+
 	priUps.AlternativeBackends =
 		append(priUps.AlternativeBackends, altUps.Name)
 
