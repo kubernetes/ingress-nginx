@@ -520,7 +520,8 @@ http {
     {{ end }}
 
     {{/* Build server redirects (from/to www) */}}
-    {{ range $hostname, $to := .RedirectServers }}
+    {{ range $redirect := .RedirectServers }}
+    ## start server {{ $redirect.From }}
     server {
         {{ range $address := $all.Cfg.BindAddressIpv4 }}
         listen {{ $address }}:{{ $all.ListenPorts.HTTP }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }};
@@ -538,7 +539,25 @@ http {
         listen [::]:{{ if $all.IsSSLPassthroughEnabled }}{{ $all.ListenPorts.SSLProxy }} proxy_protocol{{ else }}{{ $all.ListenPorts.HTTPS }}{{ if $all.Cfg.UseProxyProtocol }} proxy_protocol{{ end }}{{ end }};
         {{ end }}
         {{ end }}
-        server_name {{ $hostname }};
+        server_name {{ $redirect.From }};
+
+        {{ if not (empty $redirect.SSLCert.PemFileName) }}
+        {{/* comment PEM sha is required to detect changes in the generated configuration and force a reload */}}
+        # PEM sha: {{ $redirect.SSLCert.PemSHA }}
+        ssl_certificate                         {{ $redirect.SSLCert.PemFileName }};
+        ssl_certificate_key                     {{ $redirect.SSLCert.PemFileName }};
+        {{ if not (empty $redirect.SSLCert.FullChainPemFileName)}}
+        ssl_trusted_certificate                 {{ $redirect.SSLCert.FullChainPemFileName }};
+        ssl_stapling                            on;
+        ssl_stapling_verify                     on;
+        {{ end }}
+
+        {{ if $all.DynamicCertificatesEnabled}}
+        ssl_certificate_by_lua_block {
+            certificate.call()
+        }
+        {{ end }}
+        {{ end }}
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
@@ -553,11 +572,12 @@ http {
 
         {{ if ne $all.ListenPorts.HTTPS 443 }}
         {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $to }}{{ $redirect_port }}$request_uri;
+        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $redirect.To }}{{ $redirect_port }}$request_uri;
         {{ else }}
-        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $to }}$request_uri;
+        return {{ $all.Cfg.HTTPRedirectCode }} $scheme://{{ $redirect.To }}$request_uri;
         {{ end }}
     }
+    ## end server {{ $redirect.From }}
     {{ end }}
 
     {{ range $server := $servers }}

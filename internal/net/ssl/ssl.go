@@ -30,6 +30,7 @@ import (
 	"math/big"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/zakjan/cert-chain-resolver/certUtil"
@@ -507,4 +508,22 @@ func FullChainCert(in string, fs file.Filesystem) ([]byte, error) {
 	}
 
 	return certUtil.EncodeCertificates(certs), nil
+}
+
+// IsValidHostname checks if a hostname is valid in a list of common names
+func IsValidHostname(hostname string, commonNames []string) bool {
+	for _, cn := range commonNames {
+		if strings.EqualFold(hostname, cn) {
+			return true
+		}
+
+		labels := strings.Split(hostname, ".")
+		labels[0] = "*"
+		candidate := strings.Join(labels, ".")
+		if strings.EqualFold(candidate, cn) {
+			return true
+		}
+	}
+
+	return false
 }
