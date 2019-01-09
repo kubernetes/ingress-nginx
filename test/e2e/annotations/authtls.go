@@ -53,8 +53,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			"nginx.ingress.kubernetes.io/auth-tls-secret": nameSpace + "/" + host,
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, nameSpace, "http-svc", 80, &annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
 		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
 		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
@@ -111,8 +110,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			"nginx.ingress.kubernetes.io/auth-tls-verify-depth":  "2",
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, nameSpace, "http-svc", 80, &annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
 		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
 		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
@@ -158,8 +156,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 			"nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream": "true",
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, nameSpace, "http-svc", 80, &annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
 		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
 		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
