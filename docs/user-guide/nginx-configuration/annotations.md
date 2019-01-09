@@ -465,13 +465,16 @@ When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to 
 even when there is no TLS certificate available.
 This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
 
-### Redirect from/to www.
+### Redirect from/to www
 
 In some scenarios is required to redirect from `www.domain.com` to `domain.com` or vice versa.
 To enable this feature use the annotation `nginx.ingress.kubernetes.io/from-to-www-redirect: "true"`
 
 !!! attention
     If at some point a new Ingress is created with a host equal to one of the options (like `domain.com`) the annotation will be omitted.
+
+!!! attention
+    For HTTPS to HTTPS redirects is mandatory the SSL Certificate defined in the Secret, located in the TLS section of Ingress, contains both FQDN in the common name of the certificate.
 
 ### Whitelist source range
 
