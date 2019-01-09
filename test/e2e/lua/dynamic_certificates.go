@@ -80,7 +80,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 	})
 
 	It("picks up the previously missing secret for a given ingress without reloading", func() {
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.IngressController.Namespace, "http-svc", 80, nil)
 		f.EnsureIngress(ing)
 
 		time.Sleep(waitForLuaSync)
@@ -120,7 +120,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Certificate", func() {
 
 	Context("given an ingress with TLS correctly configured", func() {
 		BeforeEach(func() {
-			ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+			ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.IngressController.Namespace, "http-svc", 80, nil))
 
 			time.Sleep(waitForLuaSync)
 
