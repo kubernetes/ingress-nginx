@@ -38,6 +38,7 @@ import (
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -498,39 +499,20 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	// https://trac.nginx.org/nginx/ticket/631
 	var longestName int
 	var serverNameBytes int
-	redirectServers := make(map[string]string)
+
 	for _, srv := range ingressCfg.Servers {
 		if longestName < len(srv.Hostname) {
 			longestName = len(srv.Hostname)
 		}
 		serverNameBytes += len(srv.Hostname)
-		if srv.RedirectFromToWWW {
-			var n string
-			if strings.HasPrefix(srv.Hostname, "www.") {
-				n = strings.TrimPrefix(srv.Hostname, "www.")
-			} else {
-				n = fmt.Sprintf("www.%v", srv.Hostname)
-			}
-			klog.V(3).Infof("Creating redirect from %q to %q", srv.Hostname, n)
-			if _, ok := redirectServers[n]; !ok {
-				found := false
-				for _, esrv := range ingressCfg.Servers {
-					if esrv.Hostname == n {
-						found = true
-						break
-					}
-				}
-				if !found {
-					redirectServers[n] = srv.Hostname
-				}
-			}
-		}
 	}
+
 	if cfg.ServerNameHashBucketSize == 0 {
 		nameHashBucketSize := nginxHashBucketSize(longestName)
 		klog.V(3).Infof("Adjusting ServerNameHashBucketSize variable to %d", nameHashBucketSize)
 		cfg.ServerNameHashBucketSize = nameHashBucketSize
 	}
+
 	serverNameHashMaxSize := nextPowerOf2(serverNameBytes)
 	if cfg.ServerNameHashMaxSize < serverNameHashMaxSize {
 		klog.V(3).Infof("Adjusting ServerNameHashMaxSize variable to %d", serverNameHashMaxSize)
@@ -619,7 +601,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		IsIPV6Enabled:              n.isIPV6Enabled && !cfg.DisableIpv6,
 		NginxStatusIpv4Whitelist:   cfg.NginxStatusIpv4Whitelist,
 		NginxStatusIpv6Whitelist:   cfg.NginxStatusIpv6Whitelist,
-		RedirectServers:            redirectServers,
+		RedirectServers:            buildRedirects(ingressCfg.Servers),
 		IsSSLPassthroughEnabled:    n.cfg.EnableSSLPassthrough,
 		ListenPorts:                n.cfg.ListenPorts,
 		PublishService:             n.GetPublishService(),
@@ -1021,4 +1003,66 @@ func cleanTempNginxCfg() error {
 	}
 
 	return nil
+}
+
+type redirect struct {
+	From    string
+	To      string
+	SSLCert ingress.SSLCert
+}
+
+func buildRedirects(servers []*ingress.Server) []*redirect {
+	names := sets.String{}
+	redirectServers := make([]*redirect, 0)
+
+	for _, srv := range servers {
+		if !srv.RedirectFromToWWW {
+			continue
+		}
+
+		to := srv.Hostname
+
+		var from string
+		if strings.HasPrefix(to, "www.") {
+			from = strings.TrimPrefix(to, "www.")
+		} else {
+			from = fmt.Sprintf("www.%v", to)
+		}
+
+		if names.Has(to) {
+			continue
+		}
+
+		klog.V(3).Infof("Creating redirect from %q to %q", from, to)
+		found := false
+		for _, esrv := range servers {
+			if esrv.Hostname == from {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			klog.Warningf("Already exists an Ingress with %q hostname. Skipping creation of redirection from %q to %q.", from, from, to)
+			continue
+		}
+
+		r := &redirect{
+			From: from,
+			To:   to,
+		}
+
+		if srv.SSLCert.PemSHA != "" {
+			if ssl.IsValidHostname(from, srv.SSLCert.CN) {
+				r.SSLCert = srv.SSLCert
+			} else {
+				klog.Warningf("the server %v has SSL configured but the SSL certificate does not contains a CN for %v. Redirects will not work for HTTPS to HTTPS", from, to)
+			}
+		}
+
+		redirectServers = append(redirectServers, r)
+		names.Insert(to)
+	}
+
+	return redirectServers
 }

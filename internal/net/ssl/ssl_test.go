@@ -205,3 +205,39 @@ func newCA(name string) (*keyPair, error) {
 		Cert: cert,
 	}, nil
 }
+
+func TestIsValidHostname(t *testing.T) {
+	cases := map[string]struct {
+		Hostname string
+		CN       []string
+		Valid    bool
+	}{
+		"when there is no common names": {
+			"foo.bar",
+			[]string{},
+			false,
+		},
+		"when there is a match for foo.bar": {
+			"foo.bar",
+			[]string{"foo.bar"},
+			true,
+		},
+		"when there is a wildcard match for foo.bar": {
+			"foo.bar",
+			[]string{"*.bar"},
+			true,
+		},
+		"when there is a wrong wildcard for *.bar": {
+			"invalid.foo.bar",
+			[]string{"*.bar"},
+			false,
+		},
+	}
+
+	for k, tc := range cases {
+		valid := IsValidHostname(tc.Hostname, tc.CN)
+		if valid != tc.Valid {
+			t.Errorf("%s: expected '%v' but returned %v", k, tc.Valid, valid)
+		}
+	}
+}
