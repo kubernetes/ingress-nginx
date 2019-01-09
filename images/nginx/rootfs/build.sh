@@ -37,6 +37,7 @@ export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
 export LUAJIT_VERSION=520d53a87dd44c637dddb6de313204211c2b212b
+export NCHAN_VERSION=1.2.3
 
 export BUILD_PATH=/tmp/build
 
@@ -128,6 +129,9 @@ cd "$BUILD_PATH"
 # download, verify and extract the source files
 get_src a8bdafbca87eb99813ae4fcac1ad0875bf725ce19eb265d28268c309b2b40787 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
+
+get_src ea44d9f33115db4737abe611e63e3f734fa18cb11d998354b093a40eb7a8e6be \
+        "https://github.com/slact/nchan/archive/v$NCHAN_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
         "https://github.com/simpl/ngx_devel_kit/archive/v$NDK_VERSION.tar.gz"
@@ -480,6 +484,7 @@ WITH_MODULES="--add-module=$BUILD_PATH/ngx_devel_kit-$NDK_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
+  --add-dynamic-module=$BUILD_PATH/nchan-$NCHAN_VERSION \
   --add-module=$BUILD_PATH/nginx_ajp_module-${NGINX_AJP_VERSION} \
   --add-module=$BUILD_PATH/ngx_brotli"
 
@@ -589,3 +594,4 @@ for value in {1..1023};do
   chown www-data /etc/authbind/byport/$value
   chmod 755 /etc/authbind/byport/$value
 done
+
