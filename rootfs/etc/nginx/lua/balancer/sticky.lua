@@ -52,7 +52,6 @@ local function set_cookie(self, value)
     key = self.cookie_name,
     value = value,
     path = cookie_path,
-    domain = ngx.var.host,
     httponly = true,
     secure = ngx.var.https == "on",
   }
