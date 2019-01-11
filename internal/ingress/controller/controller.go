@@ -18,7 +18,6 @@ package controller
 
 import (
 	"fmt"
-	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -78,8 +77,6 @@ type Configuration struct {
 	UseNodeInternalIP      bool
 	ElectionID             string
 	UpdateStatusOnShutdown bool
-
-	SortBackends bool
 
 	ListenPorts *ngx_config.ListenPorts
 
@@ -845,17 +842,6 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			}
 
-			if n.cfg.SortBackends {
-				sort.SliceStable(endps, func(i, j int) bool {
-					iName := endps[i].Address
-					jName := endps[j].Address
-					if iName != jName {
-						return iName < jName
-					}
-
-					return endps[i].Port < endps[j].Port
-				})
-			}
 			upstreams = append(upstreams, endps...)
 			break
 		}
@@ -882,14 +868,6 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 
 		upstreams = append(upstreams, endps...)
 		return upstreams, nil
-	}
-
-	if !n.cfg.SortBackends {
-		rand.Seed(time.Now().UnixNano())
-		for i := range upstreams {
-			j := rand.Intn(i + 1)
-			upstreams[i], upstreams[j] = upstreams[j], upstreams[i]
-		}
 	}
 
 	return upstreams, nil
