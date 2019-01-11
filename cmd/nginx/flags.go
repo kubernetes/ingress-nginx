@@ -130,7 +130,7 @@ Requires the update-status parameter.`)
 		annotationsPrefix = flags.String("annotations-prefix", "nginx.ingress.kubernetes.io",
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
-		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", true,
+		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
 A valid certificate chain is required to enable OCSP stapling. Certificates
 uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
