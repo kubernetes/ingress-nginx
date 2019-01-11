@@ -721,7 +721,7 @@ type TemplateConfig struct {
 	IsSSLPassthroughEnabled    bool
 	NginxStatusIpv4Whitelist   []string
 	NginxStatusIpv6Whitelist   []string
-	RedirectServers            map[string]string
+	RedirectServers            interface{}
 	ListenPorts                *ListenPorts
 	PublishService             *apiv1.Service
 	DynamicCertificatesEnabled bool
