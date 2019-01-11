@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -52,8 +52,7 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 			},
 		})
 
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.IngressController.Namespace, "http-svc", 80, nil))
 		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,

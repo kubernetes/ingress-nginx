@@ -48,7 +48,11 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		// https://www.openssl.org/docs/man1.1.0/apps/ciphers.html - "CIPHER SUITE NAMES"
 		testCiphers := "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA"
 
-		tlsConfig, err := tlsEndpoint(f, host)
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.IngressController.Namespace, "http-svc", 80, nil))
+		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
+			ing.Spec.TLS[0].Hosts,
+			ing.Spec.TLS[0].SecretName,
+			ing.Namespace)
 		Expect(err).NotTo(HaveOccurred())
 
 		framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
@@ -97,7 +101,11 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		hstsIncludeSubdomains := "hsts-include-subdomains"
 		hstsPreload := "hsts-preload"
 
-		tlsConfig, err := tlsEndpoint(f, host)
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.IngressController.Namespace, "http-svc", 80, nil))
+		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
+			ing.Spec.TLS[0].Hosts,
+			ing.Spec.TLS[0].SecretName,
+			ing.Namespace)
 		Expect(err).NotTo(HaveOccurred())
 
 		framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
@@ -157,11 +165,3 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		Expect(resp.Header.Get("Strict-Transport-Security")).Should(ContainSubstring("preload"))
 	})
 })
-
-func tlsEndpoint(f *framework.Framework, host string) (*tls.Config, error) {
-	ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
-	return framework.CreateIngressTLSSecret(f.KubeClientSet,
-		ing.Spec.TLS[0].Hosts,
-		ing.Spec.TLS[0].SecretName,
-		ing.Namespace)
-}
