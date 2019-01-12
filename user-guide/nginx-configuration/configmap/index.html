@@ -1377,6 +1377,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#limit-conn-status-code" title="limit-conn-status-code" class="md-nav__link">
+    limit-conn-status-code
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#no-tls-redirect-locations" title="no-tls-redirect-locations" class="md-nav__link">
     no-tls-redirect-locations
   </a>
@@ -2783,6 +2790,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#limit-conn-status-code" title="limit-conn-status-code" class="md-nav__link">
+    limit-conn-status-code
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#no-tls-redirect-locations" title="no-tls-redirect-locations" class="md-nav__link">
     no-tls-redirect-locations
   </a>
@@ -3461,6 +3475,11 @@ Same for numbers, like "100".</p>
 <td align="left">503</td>
 </tr>
 <tr>
+<td align="left"><a href="#limit-conn-status-code">limit-conn-status-code</a></td>
+<td align="left">int</td>
+<td align="left">503</td>
+</tr>
+<tr>
 <td align="left"><a href="#no-tls-redirect-locations">no-tls-redirect-locations</a></td>
 <td align="left">string</td>
 <td align="left">"/.well-known/acme-challenge"</td>
@@ -3876,6 +3895,8 @@ Supported codes are <a href="https://developer.mozilla.org/docs/Web/HTTP/Status/
 <p>Enables or disables <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering">buffering of responses from the proxied server</a>.</p>
 <h2 id="limit-req-status-code">limit-req-status-code<a class="headerlink" href="#limit-req-status-code" title="Permanent link">&para;</a></h2>
 <p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status">status code to return in response to rejected requests</a>. <em><strong>default:</strong></em> 503</p>
+<h2 id="limit-conn-status-code">limit-conn-status-code<a class="headerlink" href="#limit-conn-status-code" title="Permanent link">&para;</a></h2>
+<p>Sets the <a href="http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status">status code to return in response to rejected connections</a>. <em><strong>default:</strong></em> 503</p>
 <h2 id="no-tls-redirect-locations">no-tls-redirect-locations<a class="headerlink" href="#no-tls-redirect-locations" title="Permanent link">&para;</a></h2>
 <p>A comma-separated list of locations on which http requests will never get redirected to their https counterpart.
 <em><strong>default:</strong></em> "/.well-known/acme-challenge"</p>

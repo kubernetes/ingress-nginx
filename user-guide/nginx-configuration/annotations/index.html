@@ -733,8 +733,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#redirect-fromto-www" title="Redirect from/to www." class="md-nav__link">
-    Redirect from/to www.
+  <a href="#redirect-fromto-www" title="Redirect from/to www" class="md-nav__link">
+    Redirect from/to www
   </a>
   
 </li>
@@ -1617,8 +1617,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#redirect-fromto-www" title="Redirect from/to www." class="md-nav__link">
-    Redirect from/to www.
+  <a href="#redirect-fromto-www" title="Redirect from/to www" class="md-nav__link">
+    Redirect from/to www
   </a>
   
 </li>
@@ -2445,12 +2445,16 @@ annotation in the particular resource.</p>
 <p>When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a redirect to HTTPS
 even when there is no TLS certificate available.
 This can be achieved by using the <code class="codehilite">nginx.ingress.kubernetes.io/force-ssl-redirect: &quot;true&quot;</code> annotation in the particular resource.</p>
-<h3 id="redirect-fromto-www">Redirect from/to www.<a class="headerlink" href="#redirect-fromto-www" title="Permanent link">&para;</a></h3>
+<h3 id="redirect-fromto-www">Redirect from/to www<a class="headerlink" href="#redirect-fromto-www" title="Permanent link">&para;</a></h3>
 <p>In some scenarios is required to redirect from <code class="codehilite">www.domain.com</code> to <code class="codehilite">domain.com</code> or vice versa.
 To enable this feature use the annotation <code class="codehilite">nginx.ingress.kubernetes.io/from-to-www-redirect: &quot;true&quot;</code></p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
 <p>If at some point a new Ingress is created with a host equal to one of the options (like <code class="codehilite">domain.com</code>) the annotation will be omitted.</p>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>For HTTPS to HTTPS redirects is mandatory the SSL Certificate defined in the Secret, located in the TLS section of Ingress, contains both FQDN in the common name of the certificate.</p>
 </div>
 <h3 id="whitelist-source-range">Whitelist source range<a class="headerlink" href="#whitelist-source-range" title="Permanent link">&para;</a></h3>
 <p>You can specify allowed client IP source ranges through the <code class="codehilite">nginx.ingress.kubernetes.io/whitelist-source-range</code> annotation.
