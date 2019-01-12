@@ -60,9 +60,9 @@ The following table shows a configuration option's name, type, and the default v
 |[log-format-upstream](#log-format-upstream)|string|`%v - [$the_real_ip] - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`|
 |[log-format-stream](#log-format-stream)|string|`[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
 |[enable-multi-accept](#enable-multi-accept)|bool|"true"|
-|[max-worker-connections](#max-worker-connections)|int|0|
+|[max-worker-connections](#max-worker-connections)|int|16384|
 |[max-worker-open-files](#max-worker-open-files)|int|0|
-|[map-hash-bucket-size](#max-worker-connections)|int|64|
+|[map-hash-bucket-size](#max-hash-bucket-size)|int|64|
 |[nginx-status-ipv4-whitelist](#nginx-status-ipv4-whitelist)|[]string|"127.0.0.1"|
 |[nginx-status-ipv6-whitelist](#nginx-status-ipv6-whitelist)|[]string|"::1"|
 |[proxy-real-ip-cidr](#proxy-real-ip-cidr)|[]string|"0.0.0.0/0"|
@@ -362,8 +362,11 @@ _References:_
 ## max-worker-connections
 
 Sets the [maximum number of simultaneous connections](http://nginx.org/en/docs/ngx_core_module.html#worker_connections) that can be opened by each worker process.
-The default of 0 uses the value of [max-worker-open-files](#max-worker-open-files).
-_**default:**_ 0
+0 will use the value of [max-worker-open-files](#max-worker-open-files).
+_**default:**_ 16384
+
+!!! tip
+    Using 0 in scenarios of high load improves performance at the cost of increasing RAM utilization (even on idle).
 
 ## max-worker-open-files
 
