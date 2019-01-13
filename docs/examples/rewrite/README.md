@@ -24,6 +24,38 @@ Rewriting can be controlled using the following annotations:
 
 ### Rewrite Target
 
+Before the Version 0.22.0 we can create an Ingress rule with a rewrite annotation:
+
+```console
+$ echo "
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  name: rewrite
+  namespace: default
+spec:
+  rules:
+  - host: rewrite.bar.com
+    http:
+      paths:
+      - backend:
+          serviceName: http-svc
+          servicePort: 80
+        path: /something/?(.*)
+" | kubectl create -f -
+```
+
+In this ingress definition, any characters captured by `(.*)` will be added after the '/' in the rewrite-target annotation.
+For example, the ingress definition above will result in the following rewrites:
+- `rewrite.bar.com/something` rewrites to `rewrite.bar.com/`
+- `rewrite.bar.com/something/new` rewrites to `rewrite.bar.com/`
+- `rewrite.bar.com/something/new/` rewrites to `rewrite.bar.com/new`
+
+!!! the last part of the path is not preserved without the '/' on the right.
+
+
 !!! attention
     Starting in Version 0.22.0, ingress definitions using the annotation `nginx.ingress.kubernetes.io/rewrite-target` are not backwards compatible with previous versions. In Version 0.22.0 and beyond, any substrings within the request URI that need to be passed to the rewritten path must explicitly be defined in a [capture group](https://www.regular-expressions.info/refcapture.html).
     
