@@ -614,7 +614,7 @@ func NewDefault() Configuration {
 		LogFormatStream:            logFormatStream,
 		LogFormatUpstream:          logFormatUpstream,
 		EnableMultiAccept:          true,
-		MaxWorkerConnections:       0,
+		MaxWorkerConnections:       16384,
 		MaxWorkerOpenFiles:         0,
 		MapHashBucketSize:          64,
 		NginxStatusIpv4Whitelist:   defNginxStatusIpv4Whitelist,
