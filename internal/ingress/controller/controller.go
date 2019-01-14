@@ -130,7 +130,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		if !hosts.Has(server.Hostname) {
 			hosts.Insert(server.Hostname)
 		}
-		if server.Alias != "" && !hosts.Has(server.Hostname) {
+		if server.Alias != "" && !hosts.Has(server.Alias) {
 			hosts.Insert(server.Alias)
 		}
 
