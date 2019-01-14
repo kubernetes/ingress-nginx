@@ -215,6 +215,7 @@ spec:
             - --annotations-prefix=nginx.ingress.kubernetes.io
             - --watch-namespace=${NAMESPACE}
           securityContext:
+            allowPrivilegeEscalation: true
             capabilities:
               drop:
                 - ALL

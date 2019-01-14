@@ -235,6 +235,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
 	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
 
+	// Maximum number of files that can be opened by each worker process.
+	// http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile
+	MaxWorkerOpenFiles int `json:"max-worker-open-files,omitempty"`
+
 	// Sets the bucket size for the map variables hash tables.
 	// Default value depends on the processor’s cache line size.
 	// http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
@@ -515,6 +519,11 @@ type Configuration struct {
 	// Default: 503
 	LimitReqStatusCode int `json:"limit-req-status-code"`
 
+	// LimitConnStatusCode Sets the status code to return in response to rejected connections.
+	// http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status
+	// Default: 503
+	LimitConnStatusCode int `json:"limit-conn-status-code"`
+
 	// EnableSyslog enables the configuration for remote logging in NGINX
 	EnableSyslog bool `json:"enable-syslog"`
 	// SyslogHost FQDN or IP address where the logs should be sent
@@ -606,6 +615,7 @@ func NewDefault() Configuration {
 		LogFormatUpstream:          logFormatUpstream,
 		EnableMultiAccept:          true,
 		MaxWorkerConnections:       16384,
+		MaxWorkerOpenFiles:         0,
 		MapHashBucketSize:          64,
 		NginxStatusIpv4Whitelist:   defNginxStatusIpv4Whitelist,
 		NginxStatusIpv6Whitelist:   defNginxStatusIpv6Whitelist,
@@ -670,6 +680,7 @@ func NewDefault() Configuration {
 		JaegerSamplerType:            "const",
 		JaegerSamplerParam:           "1",
 		LimitReqStatusCode:           503,
+		LimitConnStatusCode:          503,
 		SyslogPort:                   514,
 		NoTLSRedirectLocations:       "/.well-known/acme-challenge",
 		NoAuthLocations:              "/.well-known/acme-challenge",
@@ -697,7 +708,6 @@ func (cfg Configuration) BuildLogFormatUpstream() string {
 type TemplateConfig struct {
 	ProxySetHeaders            map[string]string
 	AddHeaders                 map[string]string
-	MaxOpenFiles               int
 	BacklogSize                int
 	Backends                   []*ingress.Backend
 	PassthroughBackends        []*ingress.SSLPassthroughBackend
@@ -711,7 +721,7 @@ type TemplateConfig struct {
 	IsSSLPassthroughEnabled    bool
 	NginxStatusIpv4Whitelist   []string
 	NginxStatusIpv6Whitelist   []string
-	RedirectServers            map[string]string
+	RedirectServers            interface{}
 	ListenPorts                *ListenPorts
 	PublishService             *apiv1.Service
 	DynamicCertificatesEnabled bool

@@ -18,7 +18,6 @@ package controller
 
 import (
 	"fmt"
-	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -79,15 +78,14 @@ type Configuration struct {
 	ElectionID             string
 	UpdateStatusOnShutdown bool
 
-	SortBackends bool
-
 	ListenPorts *ngx_config.ListenPorts
 
 	EnableSSLPassthrough bool
 
 	EnableProfiling bool
 
-	EnableMetrics bool
+	EnableMetrics  bool
+	MetricsPerHost bool
 
 	EnableSSLChainCompletion bool
 
@@ -97,6 +95,8 @@ type Configuration struct {
 	SyncRateLimit float32
 
 	DynamicCertificatesEnabled bool
+
+	DisableCatchAll bool
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -119,13 +119,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		return nil
 	}
 
-	// sort Ingresses using the ResourceVersion field
 	ings := n.store.ListIngresses()
-	sort.SliceStable(ings, func(i, j int) bool {
-		ir := ings[i].ResourceVersion
-		jr := ings[j].ResourceVersion
-		return ir < jr
-	})
 
 	upstreams, servers := n.getBackendServers(ings)
 	var passUpstreams []*ingress.SSLPassthroughBackend
@@ -135,6 +129,9 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	for _, server := range servers {
 		if !hosts.Has(server.Hostname) {
 			hosts.Insert(server.Hostname)
+		}
+		if server.Alias != "" && !hosts.Has(server.Alias) {
+			hosts.Insert(server.Alias)
 		}
 
 		if !server.SSLPassthrough {
@@ -342,6 +339,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 				ProxyProtocol: svcProxyProtocol,
 			},
 			Endpoints: endps,
+			Service:   svc,
 		})
 	}
 	// Keep upstream order sorted to reduce unnecessary nginx config reloads.
@@ -472,6 +470,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						loc.ConfigurationSnippet = anns.ConfigurationSnippet
 						loc.CorsConfig = anns.CorsConfig
 						loc.ExternalAuth = anns.ExternalAuth
+						loc.HTTP2PushPreload = anns.HTTP2PushPreload
 						loc.Proxy = anns.Proxy
 						loc.RateLimit = anns.RateLimit
 						loc.Redirect = anns.Redirect
@@ -664,9 +663,13 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			if upstreams[defBackend].SecureCACert.Secret == "" {
 				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
 			}
-			if upstreams[defBackend].UpstreamHashBy == "" {
-				upstreams[defBackend].UpstreamHashBy = anns.UpstreamHashBy
+
+			if upstreams[defBackend].UpstreamHashBy.UpstreamHashBy == "" {
+				upstreams[defBackend].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
+				upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
+				upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
 			}
+
 			if upstreams[defBackend].LoadBalancing == "" {
 				upstreams[defBackend].LoadBalancing = anns.LoadBalancing
 			}
@@ -728,8 +731,10 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
 				}
 
-				if upstreams[name].UpstreamHashBy == "" {
-					upstreams[name].UpstreamHashBy = anns.UpstreamHashBy
+				if upstreams[name].UpstreamHashBy.UpstreamHashBy == "" {
+					upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
+					upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
+					upstreams[name].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
 				}
 
 				if upstreams[name].LoadBalancing == "" {
@@ -837,17 +842,6 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			}
 
-			if n.cfg.SortBackends {
-				sort.SliceStable(endps, func(i, j int) bool {
-					iName := endps[i].Address
-					jName := endps[j].Address
-					if iName != jName {
-						return iName < jName
-					}
-
-					return endps[i].Port < endps[j].Port
-				})
-			}
 			upstreams = append(upstreams, endps...)
 			break
 		}
@@ -874,14 +868,6 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 
 		upstreams = append(upstreams, endps...)
 		return upstreams, nil
-	}
-
-	if !n.cfg.SortBackends {
-		rand.Seed(time.Now().UnixNano())
-		for i := range upstreams {
-			j := rand.Intn(i + 1)
-			upstreams[i], upstreams[j] = upstreams[j], upstreams[i]
-		}
 	}
 
 	return upstreams, nil
@@ -1155,6 +1141,13 @@ func mergeAlternativeBackend(priUps *ingress.Backend, altUps *ingress.Backend) b
 		klog.Warningf("unable to merge alternative backend %v into primary backend %v because %v is a primary backend",
 			altUps.Name, priUps.Name, priUps.Name)
 		return false
+	}
+
+	for _, ab := range priUps.AlternativeBackends {
+		if ab == altUps.Name {
+			klog.V(2).Infof("skip merge alternative backend %v into %v, it's already present", altUps.Name, priUps.Name)
+			return true
+		}
 	}
 
 	priUps.AlternativeBackends =

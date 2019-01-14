@@ -114,9 +114,6 @@ different namespace than their own. May be used together with watch-namespace.`)
 			`Update the load-balancer status of Ingress objects when the controller shuts down.
 Requires the update-status parameter.`)
 
-		sortBackends = flags.Bool("sort-backends", false,
-			`Sort servers inside NGINX upstreams.`)
-
 		useNodeInternalIP = flags.Bool("report-node-internal-ip-address", false,
 			`Set the load-balancer status of Ingress objects to internal Node addresses instead of external.
 Requires the update-status parameter.`)
@@ -130,7 +127,7 @@ Requires the update-status parameter.`)
 		annotationsPrefix = flags.String("annotations-prefix", "nginx.ingress.kubernetes.io",
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
-		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", true,
+		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
 A valid certificate chain is required to enable OCSP stapling. Certificates
 uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
@@ -149,6 +146,8 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 
 		enableMetrics = flags.Bool("enable-metrics", true,
 			`Enables the collection of NGINX metrics`)
+		metricsPerHost = flags.Bool("metrics-per-host", true,
+			`Export metrics per-host`)
 
 		httpPort      = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort     = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
@@ -156,7 +155,12 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
 		healthzPort   = flags.Int("healthz-port", 10254, "Port to use for the healthz endpoint.")
+
+		disableCatchAll = flags.Bool("disable-catch-all", false,
+			`Disable support for catch-all Ingresses`)
 	)
+
+	flags.MarkDeprecated("sort-backends", "Feature removed because of the lua load balancer that removed the need of reloads for change in endpoints")
 
 	flag.Set("logtostderr", "true")
 
@@ -227,6 +231,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		ElectionID:                 *electionID,
 		EnableProfiling:            *profiling,
 		EnableMetrics:              *enableMetrics,
+		MetricsPerHost:             *metricsPerHost,
 		EnableSSLPassthrough:       *enableSSLPassthrough,
 		EnableSSLChainCompletion:   *enableSSLChainCompletion,
 		ResyncPeriod:               *resyncPeriod,
@@ -242,7 +247,6 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		PublishStatusAddress:       *publishStatusAddress,
 		ForceNamespaceIsolation:    *forceIsolation,
 		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
-		SortBackends:               *sortBackends,
 		UseNodeInternalIP:          *useNodeInternalIP,
 		SyncRateLimit:              *syncRateLimit,
 		DynamicCertificatesEnabled: *dynamicCertificatesEnabled,
@@ -254,6 +258,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 			SSLProxy: *sslProxyPort,
 			Status:   *statusPort,
 		},
+		DisableCatchAll: *disableCatchAll,
 	}
 
 	return false, config, nil

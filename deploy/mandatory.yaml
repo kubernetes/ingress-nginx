@@ -2,6 +2,9 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 
 ---
 
@@ -182,7 +185,7 @@ subjects:
 
 ---
 
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-ingress-controller
@@ -217,6 +220,7 @@ spec:
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
           securityContext:
+            allowPrivilegeEscalation: true
             capabilities:
               drop:
                 - ALL

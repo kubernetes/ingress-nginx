@@ -16,7 +16,7 @@ describe("Balancer chash", function()
       end
 
       local backend = {
-        name = "my-dummy-backend", ["upstream-hash-by"] = "$request_uri",
+        name = "my-dummy-backend", upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri" },
         endpoints = { { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 } }
       }
       local instance = balancer_chash:new(backend)

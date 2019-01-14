@@ -93,7 +93,7 @@ type Backend struct {
 	// StickySessionAffinitySession contains the StickyConfig object with stickyness configuration
 	SessionAffinity SessionAffinityConfig `json:"sessionAffinityConfig"`
 	// Consistent hashing by NGINX variable
-	UpstreamHashBy string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashBy UpstreamHashByConfig `json:"upstreamHashByConfig,omitempty"`
 	// LB algorithm configuration per ingress
 	LoadBalancing string `json:"load-balance,omitempty"`
 	// Denotes if a backend has no server. The backend instead shares a server with another backend and acts as an
@@ -148,6 +148,13 @@ type CookieSessionAffinity struct {
 	MaxAge    string              `json:"maxage,omitempty"`
 	Locations map[string][]string `json:"locations,omitempty"`
 	Path      string              `json:"path,omitempty"`
+}
+
+// UpstreamHashByConfig described setting from the upstream-hash-by* annotations.
+type UpstreamHashByConfig struct {
+	UpstreamHashBy           string `json:"upstream-hash-by,omitempty"`
+	UpstreamHashBySubset     bool   `json:"upstream-hash-by-subset,omitempty"`
+	UpstreamHashBySubsetSize int    `json:"upstream-hash-by-subset-size,omitempty"`
 }
 
 // Endpoint describes a kubernetes endpoint in a backend
@@ -238,6 +245,10 @@ type Location struct {
 	// authentication using an external provider
 	// +optional
 	ExternalAuth authreq.Config `json:"externalAuth,omitempty"`
+	// HTTP2PushPreload allows to configure the HTTP2 Push Preload from backend
+	// original location.
+	// +optional
+	HTTP2PushPreload bool `json:"http2PushPreload,omitempty"`
 	// RateLimit describes a limit in the number of connections per IP
 	// address or connections per second.
 	// The Redirect annotation precedes RateLimit
@@ -318,6 +329,8 @@ type L4Service struct {
 	Backend L4Backend `json:"backend"`
 	// Endpoints active endpoints of the service
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	// k8s Service
+	Service *apiv1.Service `json:"service,omitempty"`
 }
 
 // L4Backend describes the kubernetes service behind L4 Ingress service
