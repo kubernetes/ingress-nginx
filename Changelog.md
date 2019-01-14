@@ -1,5 +1,117 @@
 # Changelog
 
+### 0.22.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.22.0`
+
+_New Features:_
+
+- NGINX 1.15.8
+- New balancer implementation: consistent hash subset
+- Adds support for HTTP2 Push Preload annotation
+- Allow to disable NGINX prometheus metrics
+- New --disable-catch-all flag to ignore catch-all ingresses
+- Add flag --metrics-per-host to make per-host metrics optional
+
+_Breaking changes:_
+
+- Annotations `nginx.ingress.kubernetes.io/add-base-url` and `nginx.ingress.kubernetes.io/base-url-scheme` were removed.
+
+  Please check issue [#3174](https://github.com/kubernetes/ingress-nginx/pull/3174) for details.
+
+- By default do not trust any client to extract true client IP address from X-Forwarded-For header using realip module (`use-forwarded-headers: "false"`)
+
+_Changes:_
+
+- [X] [#3174](https://github.com/kubernetes/ingress-nginx/pull/3174) Generalize Rewrite Block Creation and Deprecate AddBaseUrl (not backwards compatible)
+- [X] [#3240](https://github.com/kubernetes/ingress-nginx/pull/3240) Adds support for HTTP2 Push Preload annotation
+- [X] [#3333](https://github.com/kubernetes/ingress-nginx/pull/3333) breaking change: by default do not trust any client
+- [X] [#3342](https://github.com/kubernetes/ingress-nginx/pull/3342) Allow privilege escalation
+- [X] [#3363](https://github.com/kubernetes/ingress-nginx/pull/3363) Document for cookie expires annotation
+- [X] [#3396](https://github.com/kubernetes/ingress-nginx/pull/3396) New balancer implementation: consistent hash subset
+- [X] [#3446](https://github.com/kubernetes/ingress-nginx/pull/3446) add more testing for mergeAlternativeBackends
+- [X] [#3453](https://github.com/kubernetes/ingress-nginx/pull/3453) Monitor fixes
+- [X] [#3455](https://github.com/kubernetes/ingress-nginx/pull/3455) Watch controller Pods and make then available in k8sStore
+- [X] [#3465](https://github.com/kubernetes/ingress-nginx/pull/3465) Bump nginx-opentracing for gRPC support
+- [X] [#3467](https://github.com/kubernetes/ingress-nginx/pull/3467) store ewma stats per backend
+- [X] [#3470](https://github.com/kubernetes/ingress-nginx/pull/3470) Use opentracing_grpc_propagate_context when necessary
+- [X] [#3474](https://github.com/kubernetes/ingress-nginx/pull/3474) Improve parsing of annotations and use of Ingress wrapper
+- [X] [#3476](https://github.com/kubernetes/ingress-nginx/pull/3476) Fix nginx directory permissions
+- [X] [#3477](https://github.com/kubernetes/ingress-nginx/pull/3477) clarify canary ingress
+- [X] [#3478](https://github.com/kubernetes/ingress-nginx/pull/3478) delete unused buildLoadBalancingConfig
+- [X] [#3487](https://github.com/kubernetes/ingress-nginx/pull/3487) dynamic certificate mode should support widlcard hosts
+- [X] [#3488](https://github.com/kubernetes/ingress-nginx/pull/3488) Add probes to deployments used in e2e tests
+- [X] [#3492](https://github.com/kubernetes/ingress-nginx/pull/3492) Fix data size validations
+- [X] [#3494](https://github.com/kubernetes/ingress-nginx/pull/3494) Since dynamic mode only checking for 'return 503' is not valid anymore
+- [X] [#3495](https://github.com/kubernetes/ingress-nginx/pull/3495) Adjust default timeout for e2e tests
+- [X] [#3497](https://github.com/kubernetes/ingress-nginx/pull/3497) Wait for the right number of endpoints
+- [X] [#3498](https://github.com/kubernetes/ingress-nginx/pull/3498) Update godeps
+- [X] [#3501](https://github.com/kubernetes/ingress-nginx/pull/3501) be consistent with what Nginx supports
+- [X] [#3503](https://github.com/kubernetes/ingress-nginx/pull/3503) compare error with error types from k8s.io/apimachinery/pkg/api/errors
+- [X] [#3504](https://github.com/kubernetes/ingress-nginx/pull/3504) fix an ewma unit test
+- [X] [#3505](https://github.com/kubernetes/ingress-nginx/pull/3505) Update lua configuration_data when number of controller pod change
+- [X] [#3507](https://github.com/kubernetes/ingress-nginx/pull/3507) Remove temporal configuration file after a while
+- [X] [#3508](https://github.com/kubernetes/ingress-nginx/pull/3508) Update nginx to 1.15.7
+- [X] [#3509](https://github.com/kubernetes/ingress-nginx/pull/3509) [1759] Ingress affinity session cookie with Secure flag for HTTPS
+- [X] [#3512](https://github.com/kubernetes/ingress-nginx/pull/3512) Allow to disable NGINX metrics
+- [X] [#3518](https://github.com/kubernetes/ingress-nginx/pull/3518) Fix log output format
+- [X] [#3521](https://github.com/kubernetes/ingress-nginx/pull/3521) Fix a bug with Canary becoming main server
+- [X] [#3522](https://github.com/kubernetes/ingress-nginx/pull/3522) {tcp,udp}-services cm appear twice
+- [X] [#3525](https://github.com/kubernetes/ingress-nginx/pull/3525) make canary ingresses independent of the order they were applied
+- [X] [#3530](https://github.com/kubernetes/ingress-nginx/pull/3530) Update nginx image
+- [X] [#3532](https://github.com/kubernetes/ingress-nginx/pull/3532) Ignore updates of ingresses with invalid class
+- [X] [#3536](https://github.com/kubernetes/ingress-nginx/pull/3536) Replace dockerfile entrypoint
+- [X] [#3548](https://github.com/kubernetes/ingress-nginx/pull/3548) e2e test to ensure graceful shutdown does not lose requests
+- [X] [#3551](https://github.com/kubernetes/ingress-nginx/pull/3551) Fix --enable-dynamic-certificates for nested subdomain
+- [X] [#3553](https://github.com/kubernetes/ingress-nginx/pull/3553) handle_error_when_executing_diff
+- [X] [#3562](https://github.com/kubernetes/ingress-nginx/pull/3562) Rename nginx.yaml to nginx.json
+- [X] [#3566](https://github.com/kubernetes/ingress-nginx/pull/3566) Add Unit Tests for getIngressInformation
+- [X] [#3569](https://github.com/kubernetes/ingress-nginx/pull/3569) fix status updated: make sure ingress.status is copied
+- [X] [#3573](https://github.com/kubernetes/ingress-nginx/pull/3573) Update Certificate Generation Docs to not use MD5
+- [X] [#3581](https://github.com/kubernetes/ingress-nginx/pull/3581) lua randomseed per worker
+- [X] [#3582](https://github.com/kubernetes/ingress-nginx/pull/3582) Sort ingresses by creation timestamp
+- [X] [#3584](https://github.com/kubernetes/ingress-nginx/pull/3584) Update go to 1.11.4
+- [X] [#3586](https://github.com/kubernetes/ingress-nginx/pull/3586) Add --disable-catch-all option to disable catch-all server
+- [X] [#3587](https://github.com/kubernetes/ingress-nginx/pull/3587) adjust dind istallation
+- [X] [#3594](https://github.com/kubernetes/ingress-nginx/pull/3594) Add a flag to make per-host metrics optional
+- [X] [#3596](https://github.com/kubernetes/ingress-nginx/pull/3596) Fix proxy_host variable configuration
+- [X] [#3601](https://github.com/kubernetes/ingress-nginx/pull/3601) Update nginx to 1.15.8
+- [X] [#3602](https://github.com/kubernetes/ingress-nginx/pull/3602) Update nginx image
+- [X] [#3604](https://github.com/kubernetes/ingress-nginx/pull/3604) Add an option to automatically set worker_connections based on worker_rlimit_nofile
+- [X] [#3615](https://github.com/kubernetes/ingress-nginx/pull/3615) Pass k8s `Service` data through to the TCP balancer script.
+- [X] [#3620](https://github.com/kubernetes/ingress-nginx/pull/3620) Added server alias to metrics
+- [X] [#3624](https://github.com/kubernetes/ingress-nginx/pull/3624) Update nginx to fix geoip database deprecation
+- [X] [#3625](https://github.com/kubernetes/ingress-nginx/pull/3625) Update nginx image
+- [X] [#3633](https://github.com/kubernetes/ingress-nginx/pull/3633) Fix a bug in Ingress update handler
+- [X] [#3634](https://github.com/kubernetes/ingress-nginx/pull/3634) canary by cookie should support hypen in cookie name
+- [X] [#3635](https://github.com/kubernetes/ingress-nginx/pull/3635) Fix duplicate alternative backend merging
+- [X] [#3637](https://github.com/kubernetes/ingress-nginx/pull/3637) Add support for redirect https to https (from-to-www-redirect)
+- [X] [#3640](https://github.com/kubernetes/ingress-nginx/pull/3640) add limit connection status code
+- [X] [#3641](https://github.com/kubernetes/ingress-nginx/pull/3641) Replace deprecated apiVersion in deploy folder
+- [X] [#3643](https://github.com/kubernetes/ingress-nginx/pull/3643) Update nginx
+- [X] [#3644](https://github.com/kubernetes/ingress-nginx/pull/3644) Update nginx image
+- [X] [#3648](https://github.com/kubernetes/ingress-nginx/pull/3648) Remove stickyness cookie domain from Lua balancer to match old behavior
+- [X] [#3649](https://github.com/kubernetes/ingress-nginx/pull/3649) Empty access_by_lua_block breaks satisfy any
+- [X] [#3655](https://github.com/kubernetes/ingress-nginx/pull/3655) Remove flag sort-backends
+- [X] [#3656](https://github.com/kubernetes/ingress-nginx/pull/3656) Change default value of  flag for ssl chain completion
+- [X] [#3660](https://github.com/kubernetes/ingress-nginx/pull/3660) Revert max-worker-connections default value
+- [X] [#3664](https://github.com/kubernetes/ingress-nginx/pull/3664) Fix invalid validation creating prometheus valid host values 
+
+_Documentation:_
+
+- [X] [#3513](https://github.com/kubernetes/ingress-nginx/pull/3513) Revert removal of TCP and UDP support configmaps in mandatroy manifest
+- [X] [#3456](https://github.com/kubernetes/ingress-nginx/pull/3456) Revert TCP/UDP documentation removal and links
+- [X] [#3482](https://github.com/kubernetes/ingress-nginx/pull/3482) Annotations doc links: minor fixes and unification
+- [X] [#3491](https://github.com/kubernetes/ingress-nginx/pull/3491) Update example to use latest Dashboard version.
+- [X] [#3510](https://github.com/kubernetes/ingress-nginx/pull/3510) Update mkdocs [skip ci]
+- [X] [#3516](https://github.com/kubernetes/ingress-nginx/pull/3516) Fix error in configmap yaml definition
+- [X] [#3575](https://github.com/kubernetes/ingress-nginx/pull/3575) Add documentation for spec.rules.host format
+- [X] [#3577](https://github.com/kubernetes/ingress-nginx/pull/3577) Add standard labels to namespace specs
+- [X] [#3592](https://github.com/kubernetes/ingress-nginx/pull/3592) Add inside the User Guide documentation section a basic usage section and example
+- [X] [#3605](https://github.com/kubernetes/ingress-nginx/pull/3605) Fix CLA URLs
+- [X] [#3627](https://github.com/kubernetes/ingress-nginx/pull/3627) Typo: docs/examples/rewrite/README.md
+- [X] [#3632](https://github.com/kubernetes/ingress-nginx/pull/3632) Fixed: error parsing with-rbac.yaml: error converting YAML to JSON
+
 ### 0.21.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0`
