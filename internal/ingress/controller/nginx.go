@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 	"net/http"
 	"os"
@@ -538,8 +539,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	if cfg.MaxWorkerConnections == 0 {
-		klog.V(3).Infof("Adjusting MaxWorkerConnections variable to %d", cfg.MaxWorkerOpenFiles)
-		cfg.MaxWorkerConnections = cfg.MaxWorkerOpenFiles
+		maxWorkerConnections := int(math.Ceil(float64(cfg.MaxWorkerOpenFiles * 3.0 / 4)))
+		klog.V(3).Infof("Adjusting MaxWorkerConnections variable to %d", maxWorkerConnections)
+		cfg.MaxWorkerConnections = maxWorkerConnections
 	}
 
 	setHeaders := map[string]string{}
