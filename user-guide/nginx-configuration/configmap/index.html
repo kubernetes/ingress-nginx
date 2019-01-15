@@ -3047,7 +3047,7 @@ Same for numbers, like "100".</p>
 <tr>
 <td align="left"><a href="#max-worker-connections">max-worker-connections</a></td>
 <td align="left">int</td>
-<td align="left">0</td>
+<td align="left">16384</td>
 </tr>
 <tr>
 <td align="left"><a href="#max-worker-open-files">max-worker-open-files</a></td>
@@ -3055,7 +3055,7 @@ Same for numbers, like "100".</p>
 <td align="left">0</td>
 </tr>
 <tr>
-<td align="left"><a href="#max-worker-connections">map-hash-bucket-size</a></td>
+<td align="left"><a href="#max-hash-bucket-size">map-hash-bucket-size</a></td>
 <td align="left">int</td>
 <td align="left">64</td>
 </tr>
@@ -3620,8 +3620,12 @@ Example for json output:</p>
 <a href="http://nginx.org/en/docs/ngx_core_module.html#multi_accept">http://nginx.org/en/docs/ngx_core_module.html#multi_accept</a></p>
 <h2 id="max-worker-connections">max-worker-connections<a class="headerlink" href="#max-worker-connections" title="Permanent link">&para;</a></h2>
 <p>Sets the <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_connections">maximum number of simultaneous connections</a> that can be opened by each worker process.
-The default of 0 uses the value of <a href="#max-worker-open-files">max-worker-open-files</a>.
-<em><strong>default:</strong></em> 0</p>
+0 will use the value of <a href="#max-worker-open-files">max-worker-open-files</a>.
+<em><strong>default:</strong></em> 16384</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Using 0 in scenarios of high load improves performance at the cost of increasing RAM utilization (even on idle).</p>
+</div>
 <h2 id="max-worker-open-files">max-worker-open-files<a class="headerlink" href="#max-worker-open-files" title="Permanent link">&para;</a></h2>
 <p>Sets the <a href="http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile">maximum number of files</a> that can be opened by each worker process.
 The default of 0 means "max open files (system's limit) / <a href="#worker-processes">worker-processes</a> - 1024".

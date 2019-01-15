@@ -1168,6 +1168,16 @@
 <td>Type of hash that will be used in cookie value</td>
 <td>sha1/md5/index</td>
 </tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/session-cookie-expires</td>
+<td>The value is a date as UNIX timestamp that the cookie will expire on, it corresponds to cookie Expires directive</td>
+<td>number of seconds</td>
+</tr>
+<tr>
+<td>nginx.ingress.kubernetes.io/session-cookie-max-age</td>
+<td>Number of seconds until the cookie expires that will correspond to cookie <code class="codehilite">Max-Age</code> directive</td>
+<td>number of seconds</td>
+</tr>
 </tbody>
 </table>
 <p>You can create the ingress to test this</p>
@@ -1190,6 +1200,8 @@
 <span class="go">  affinity: cookie</span>
 <span class="go">  session-cookie-hash:      sha1</span>
 <span class="go">  session-cookie-name:      INGRESSCOOKIE</span>
+<span class="go">  session-cookie-expires: 172800</span>
+<span class="go">  session-cookie-max-age: 172800</span>
 <span class="go">Events:</span>
 <span class="go">  FirstSeen LastSeen    Count   From                SubObjectPath   Type        Reason  Message</span>
 <span class="go">  --------- --------    -----   ----                -------------   --------    ------  -------</span>
@@ -1203,13 +1215,13 @@
 <span class="go">Content-Type: text/html</span>
 <span class="go">Content-Length: 612</span>
 <span class="go">Connection: keep-alive</span>
-<span class="go">Set-Cookie: INGRESSCOOKIE=a9907b79b248140b56bb13723f72b67697baac3d; Path=/; HttpOnly</span>
+<span class="go">Set-Cookie: INGRESSCOOKIE=a9907b79b248140b56bb13723f72b67697baac3d; Expires=Sun, 12-Feb-17 14:11:12 GMT; Max-Age=172800; Path=/; HttpOnly</span>
 <span class="go">Last-Modified: Tue, 24 Jan 2017 14:02:19 GMT</span>
 <span class="go">ETag: &quot;58875e6b-264&quot;</span>
 <span class="go">Accept-Ranges: bytes</span>
 </pre></div>
 In the example above, you can see a line containing the 'Set-Cookie: INGRESSCOOKIE' setting the right defined stickiness cookie.
-This cookie is created by NGINX containing the hash of the used upstream in that request. 
+This cookie is created by NGINX, it contains the hash of the used upstream in that request and has an expires. 
 If the user changes this cookie, NGINX creates a new one and redirect the user to another upstream.</p>
 <p>If the backend pool grows up NGINX will keep sending the requests through the same server of the first request, even if it's overloaded.</p>
 <p>When the backend server is removed, the requests are then re-routed to another upstream server and NGINX creates a new cookie, as the previous hash became invalid.</p>
