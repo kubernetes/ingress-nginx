@@ -64,9 +64,8 @@ func sysctlSomaxconn() int {
 	return maxConns
 }
 
-// sysctlFSFileMax returns the maximum number of open file descriptors (value
-// of fs.file-max) or 0 in case of error.
-func sysctlFSFileMax() int {
+// rlimitMaxNumFiles returns hard limit for RLIMIT_NOFILE
+func rlimitMaxNumFiles() int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
