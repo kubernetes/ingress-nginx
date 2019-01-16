@@ -46,3 +46,4 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--version`                       | Show release information about the NGINX Ingress controller and exit. |
 | `--vmodule moduleSpec`            | comma-separated list of pattern=N settings for file-filtered logging |
 | `--watch-namespace string`        | Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty. |
+| `--disable-catch-all`             | Disable support for catch-all Ingresses. |

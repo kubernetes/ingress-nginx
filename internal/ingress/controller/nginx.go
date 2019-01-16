@@ -38,6 +38,7 @@ import (
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -66,6 +67,7 @@ import (
 const (
 	ngxHealthPath     = "/healthz"
 	nginxStreamSocket = "/tmp/ingress-stream.sock"
+	tempNginxPattern  = "nginx-cfg"
 )
 
 var (
@@ -127,7 +129,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		fs,
 		n.updateCh,
 		config.DynamicCertificatesEnabled,
-		pod)
+		pod,
+		config.DisableCatchAll)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -289,6 +292,18 @@ func (n *NGINXController) Start() {
 	// force initial sync
 	n.syncQueue.EnqueueTask(task.GetDummyObject("initial-sync"))
 
+	// In case of error the temporal configuration file will
+	// be available up to five minutes after the error
+	go func() {
+		for {
+			time.Sleep(5 * time.Minute)
+			err := cleanTempNginxCfg()
+			if err != nil {
+				klog.Infof("Unexpected error removing temporal configuration files: %v", err)
+			}
+		}
+	}()
+
 	for {
 		select {
 		case err := <-n.ngxErrCh:
@@ -405,7 +420,7 @@ func (n NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
-	tmpfile, err := ioutil.TempFile("", "nginx-cfg")
+	tmpfile, err := ioutil.TempFile("", tempNginxPattern)
 	if err != nil {
 		return err
 	}
@@ -423,6 +438,7 @@ Error: %v
 %v
 -------------------------------------------------------------------------------
 `, err, string(out))
+
 		return errors.New(oe)
 	}
 
@@ -483,57 +499,47 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	// https://trac.nginx.org/nginx/ticket/631
 	var longestName int
 	var serverNameBytes int
-	redirectServers := make(map[string]string)
+
 	for _, srv := range ingressCfg.Servers {
 		if longestName < len(srv.Hostname) {
 			longestName = len(srv.Hostname)
 		}
 		serverNameBytes += len(srv.Hostname)
-		if srv.RedirectFromToWWW {
-			var n string
-			if strings.HasPrefix(srv.Hostname, "www.") {
-				n = strings.TrimPrefix(srv.Hostname, "www.")
-			} else {
-				n = fmt.Sprintf("www.%v", srv.Hostname)
-			}
-			klog.V(3).Infof("Creating redirect from %q to %q", srv.Hostname, n)
-			if _, ok := redirectServers[n]; !ok {
-				found := false
-				for _, esrv := range ingressCfg.Servers {
-					if esrv.Hostname == n {
-						found = true
-						break
-					}
-				}
-				if !found {
-					redirectServers[n] = srv.Hostname
-				}
-			}
-		}
 	}
+
 	if cfg.ServerNameHashBucketSize == 0 {
 		nameHashBucketSize := nginxHashBucketSize(longestName)
 		klog.V(3).Infof("Adjusting ServerNameHashBucketSize variable to %d", nameHashBucketSize)
 		cfg.ServerNameHashBucketSize = nameHashBucketSize
 	}
+
 	serverNameHashMaxSize := nextPowerOf2(serverNameBytes)
 	if cfg.ServerNameHashMaxSize < serverNameHashMaxSize {
 		klog.V(3).Infof("Adjusting ServerNameHashMaxSize variable to %d", serverNameHashMaxSize)
 		cfg.ServerNameHashMaxSize = serverNameHashMaxSize
 	}
 
-	// the limit of open files is per worker process
-	// and we leave some room to avoid consuming all the FDs available
-	wp, err := strconv.Atoi(cfg.WorkerProcesses)
-	klog.V(3).Infof("Number of worker processes: %d", wp)
-	if err != nil {
-		wp = 1
+	if cfg.MaxWorkerOpenFiles == 0 {
+		// the limit of open files is per worker process
+		// and we leave some room to avoid consuming all the FDs available
+		wp, err := strconv.Atoi(cfg.WorkerProcesses)
+		klog.V(3).Infof("Number of worker processes: %d", wp)
+		if err != nil {
+			wp = 1
+		}
+		maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
+		klog.V(3).Infof("Maximum number of open file descriptors: %d", maxOpenFiles)
+		if maxOpenFiles < 1024 {
+			// this means the value of RLIMIT_NOFILE is too low.
+			maxOpenFiles = 1024
+		}
+		klog.V(3).Infof("Adjusting MaxWorkerOpenFiles variable to %d", maxOpenFiles)
+		cfg.MaxWorkerOpenFiles = maxOpenFiles
 	}
-	maxOpenFiles := (sysctlFSFileMax() / wp) - 1024
-	klog.V(2).Infof("Maximum number of open file descriptors: %d", maxOpenFiles)
-	if maxOpenFiles < 1024 {
-		// this means the value of RLIMIT_NOFILE is too low.
-		maxOpenFiles = 1024
+
+	if cfg.MaxWorkerConnections == 0 {
+		klog.V(3).Infof("Adjusting MaxWorkerConnections variable to %d", cfg.MaxWorkerOpenFiles)
+		cfg.MaxWorkerConnections = cfg.MaxWorkerOpenFiles
 	}
 
 	setHeaders := map[string]string{}
@@ -583,7 +589,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	tc := ngx_config.TemplateConfig{
 		ProxySetHeaders:            setHeaders,
 		AddHeaders:                 addHeaders,
-		MaxOpenFiles:               maxOpenFiles,
 		BacklogSize:                sysctlSomaxconn(),
 		Backends:                   ingressCfg.Backends,
 		PassthroughBackends:        ingressCfg.PassthroughBackends,
@@ -596,7 +601,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		IsIPV6Enabled:              n.isIPV6Enabled && !cfg.DisableIpv6,
 		NginxStatusIpv4Whitelist:   cfg.NginxStatusIpv4Whitelist,
 		NginxStatusIpv6Whitelist:   cfg.NginxStatusIpv6Whitelist,
-		RedirectServers:            redirectServers,
+		RedirectServers:            buildRedirects(ingressCfg.Servers),
 		IsSSLPassthroughEnabled:    n.cfg.EnableSSLPassthrough,
 		ListenPorts:                n.cfg.ListenPorts,
 		PublishService:             n.GetPublishService(),
@@ -808,19 +813,31 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 
 	streams := make([]ingress.Backend, 0)
 	for _, ep := range pcfg.TCPEndpoints {
+		var service *apiv1.Service
+		if ep.Service != nil {
+			service = &apiv1.Service{Spec: ep.Service.Spec}
+		}
+
 		key := fmt.Sprintf("tcp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
 		streams = append(streams, ingress.Backend{
 			Name:      key,
 			Endpoints: ep.Endpoints,
 			Port:      intstr.FromInt(ep.Port),
+			Service:   service,
 		})
 	}
 	for _, ep := range pcfg.UDPEndpoints {
+		var service *apiv1.Service
+		if ep.Service != nil {
+			service = &apiv1.Service{Spec: ep.Service.Spec}
+		}
+
 		key := fmt.Sprintf("udp-%v-%v-%v", ep.Backend.Namespace, ep.Backend.Name, ep.Backend.Port.String())
 		streams = append(streams, ingress.Backend{
 			Name:      key,
 			Endpoints: ep.Endpoints,
 			Port:      intstr.FromInt(ep.Port),
+			Service:   service,
 		})
 	}
 
@@ -957,4 +974,95 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	}
 
 	return ioutil.WriteFile("/etc/nginx/opentracing.json", tmplBuf.Bytes(), file.ReadWriteByUser)
+}
+
+func cleanTempNginxCfg() error {
+	var files []string
+
+	err := filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() && os.TempDir() != path {
+			return filepath.SkipDir
+		}
+
+		dur, _ := time.ParseDuration("-5m")
+		fiveMinutesAgo := time.Now().Add(dur)
+		if strings.HasPrefix(info.Name(), tempNginxPattern) && info.ModTime().Before(fiveMinutesAgo) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		err := os.Remove(file)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type redirect struct {
+	From    string
+	To      string
+	SSLCert ingress.SSLCert
+}
+
+func buildRedirects(servers []*ingress.Server) []*redirect {
+	names := sets.String{}
+	redirectServers := make([]*redirect, 0)
+
+	for _, srv := range servers {
+		if !srv.RedirectFromToWWW {
+			continue
+		}
+
+		to := srv.Hostname
+
+		var from string
+		if strings.HasPrefix(to, "www.") {
+			from = strings.TrimPrefix(to, "www.")
+		} else {
+			from = fmt.Sprintf("www.%v", to)
+		}
+
+		if names.Has(to) {
+			continue
+		}
+
+		klog.V(3).Infof("Creating redirect from %q to %q", from, to)
+		found := false
+		for _, esrv := range servers {
+			if esrv.Hostname == from {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			klog.Warningf("Already exists an Ingress with %q hostname. Skipping creation of redirection from %q to %q.", from, from, to)
+			continue
+		}
+
+		r := &redirect{
+			From: from,
+			To:   to,
+		}
+
+		if srv.SSLCert.PemSHA != "" {
+			if ssl.IsValidHostname(from, srv.SSLCert.CN) {
+				r.SSLCert = srv.SSLCert
+			} else {
+				klog.Warningf("the server %v has SSL configured but the SSL certificate does not contains a CN for %v. Redirects will not work for HTTPS to HTTPS", from, to)
+			}
+		}
+
+		redirectServers = append(redirectServers, r)
+		names.Insert(to)
+	}
+
+	return redirectServers
 }

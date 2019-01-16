@@ -32,7 +32,10 @@ local function reset_backends()
       sessionAffinityConfig = { name = "", cookieSessionAffinity = { name = "", hash = "" } },
     },
     { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
-    { name = "my-dummy-app-2", ["load-balance"] = "round_robin", ["upstream-hash-by"] = "$request_uri", },
+    { 
+      name = "my-dummy-app-2", ["load-balance"] = "chash",
+      upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri", },
+    },
     {
       name = "my-dummy-app-3", ["load-balance"] = "ewma",
       sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route", hash = "sha1" } }

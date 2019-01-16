@@ -61,7 +61,8 @@ The following table shows a configuration option's name, type, and the default v
 |[log-format-stream](#log-format-stream)|string|`[$time_local] $protocol $status $bytes_sent $bytes_received $session_time`|
 |[enable-multi-accept](#enable-multi-accept)|bool|"true"|
 |[max-worker-connections](#max-worker-connections)|int|16384|
-|[map-hash-bucket-size](#max-worker-connections)|int|64|
+|[max-worker-open-files](#max-worker-open-files)|int|0|
+|[map-hash-bucket-size](#max-hash-bucket-size)|int|64|
 |[nginx-status-ipv4-whitelist](#nginx-status-ipv4-whitelist)|[]string|"127.0.0.1"|
 |[nginx-status-ipv6-whitelist](#nginx-status-ipv6-whitelist)|[]string|"::1"|
 |[proxy-real-ip-cidr](#proxy-real-ip-cidr)|[]string|"0.0.0.0/0"|
@@ -145,6 +146,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http-redirect-code](#http-redirect-code)|int|308|
 |[proxy-buffering](#proxy-buffering)|string|"off"|
 |[limit-req-status-code](#limit-req-status-code)|int|503|
+|[limit-conn-status-code](#limit-conn-status-code)|int|503|
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"|
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"|
 |[block-cidrs](#block-cidrs)|[]string|""|
@@ -359,7 +361,18 @@ _References:_
 
 ## max-worker-connections
 
-Sets the maximum number of simultaneous connections that can be opened by each [worker process](http://nginx.org/en/docs/ngx_core_module.html#worker_connections)
+Sets the [maximum number of simultaneous connections](http://nginx.org/en/docs/ngx_core_module.html#worker_connections) that can be opened by each worker process.
+0 will use the value of [max-worker-open-files](#max-worker-open-files).
+_**default:**_ 16384
+
+!!! tip
+    Using 0 in scenarios of high load improves performance at the cost of increasing RAM utilization (even on idle).
+
+## max-worker-open-files
+
+Sets the [maximum number of files](http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile) that can be opened by each worker process.
+The default of 0 means "max open files (system's limit) / [worker-processes](#worker-processes) - 1024".
+_**default:**_ 0
 
 ## map-hash-bucket-size
 
@@ -817,6 +830,10 @@ Enables or disables [buffering of responses from the proxied server](http://ngin
 ## limit-req-status-code
 
 Sets the [status code to return in response to rejected requests](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status). _**default:**_ 503
+
+## limit-conn-status-code
+
+Sets the [status code to return in response to rejected connections](http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status). _**default:**_ 503
 
 ## no-tls-redirect-locations
 

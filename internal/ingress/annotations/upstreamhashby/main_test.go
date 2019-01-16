@@ -55,7 +55,12 @@ func TestParse(t *testing.T) {
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		result, _ := ap.Parse(ing)
-		if result != testCase.expected {
+		uc, ok := result.(*Config)
+		if !ok {
+			t.Fatalf("expected a Config type")
+		}
+
+		if uc.UpstreamHashBy != testCase.expected {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
 	}

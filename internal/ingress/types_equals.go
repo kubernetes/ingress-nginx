@@ -234,6 +234,27 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	return true
 }
 
+//Equal checks the equality between UpstreamByConfig types
+func (u1 *UpstreamHashByConfig) Equal(u2 *UpstreamHashByConfig) bool {
+	if u1 == u2 {
+		return true
+	}
+	if u1 == nil || u2 == nil {
+		return false
+	}
+	if u1.UpstreamHashBy != u2.UpstreamHashBy {
+		return false
+	}
+	if u1.UpstreamHashBySubset != u2.UpstreamHashBySubset {
+		return false
+	}
+	if u1.UpstreamHashBySubsetSize != u2.UpstreamHashBySubsetSize {
+		return false
+	}
+
+	return true
+}
+
 // Equal checks the equality against an Endpoint
 func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 	if e1 == e2 {
@@ -372,6 +393,9 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 	if !(&l1.ExternalAuth).Equal(&l2.ExternalAuth) {
+		return false
+	}
+	if l1.HTTP2PushPreload != l2.HTTP2PushPreload {
 		return false
 	}
 	if !(&l1.RateLimit).Equal(&l2.RateLimit) {

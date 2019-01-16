@@ -15,7 +15,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 
 |Name                       | type |
 |---------------------------|------|
-|[nginx.ingress.kubernetes.io/add-base-url](#rewrite)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/app-root](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
@@ -29,7 +28,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
-|[nginx.ingress.kubernetes.io/base-url-scheme](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|
@@ -46,6 +44,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-from-to-www)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
@@ -125,10 +124,6 @@ Currently a maximum of one canary ingress can be applied per Ingress rule.
 In some scenarios the exposed URL in the backend service differs from the specified path in the Ingress rule. Without a rewrite any request will return 404.
 Set the annotation `nginx.ingress.kubernetes.io/rewrite-target` to the path expected by the service.
 
-If the application contains relative links it is possible to add an additional annotation `nginx.ingress.kubernetes.io/add-base-url` that will prepend a [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) in the header of the returned HTML from the backend.
-
-If the scheme of [`base` tag](https://developer.mozilla.org/en/docs/Web/HTML/Element/base) need to be specific, set the annotation `nginx.ingress.kubernetes.io/base-url-scheme` to the scheme such as `http` and `https`.
-
 If the Application Root is exposed in a different path and needs to be redirected, set the annotation `nginx.ingress.kubernetes.io/app-root` to redirect requests for `/`.
 
 !!! example
@@ -191,9 +186,15 @@ nginx.ingress.kubernetes.io/auth-realm: "realm string"
 
 NGINX supports load balancing by client-server mapping based on [consistent hashing](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash) for a given key. The key can contain text, variables or any combination thereof. This feature allows for request stickiness other than client IP or cookies. The [ketama](http://www.last.fm/user/RJ/journal/2007/04/10/392555/) consistent hashing method will be used which ensures only a few keys would be remapped to different servers on upstream group changes.
 
+There is a special mode of upstream hashing called subset. In this mode, upstream servers are grouped into subsets, and stickiness works by mapping keys to a subset instead of individual upstream servers. Specific server is chosen uniformly at random from the selected sticky subset. It provides a balance between stickiness and load distribution.
+
 To enable consistent hashing for a backend:
 
 `nginx.ingress.kubernetes.io/upstream-hash-by`: the nginx variable, text value or any combination thereof to use for consistent hashing. For example `nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"` to consistently hash upstream requests by the current request URI.
+
+"subset" hashing can be enabled setting `nginx.ingress.kubernetes.io/upstream-hash-by-subset`: "true". This maps requests to subset of nodes instead of a single one. `upstream-hash-by-subset-size` determines the size of each subset (default 3).
+
+Please check the [chashsubset](../../examples/chashsubset/deployment.yaml) example.
 
 ### Custom NGINX load balancing
 
@@ -297,6 +298,14 @@ CORS can be controlled with the following annotations:
 
 !!! note
     For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html) 
+
+### HTTP2 Push Preload.
+
+Enables automatic conversion of preload links specified in the “Link” response header fields into push requests.
+
+!!! example
+
+    * `nginx.ingress.kubernetes.io/http2-push-preload: "true"`
 
 ### Server Alias
 
@@ -456,13 +465,16 @@ When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to 
 even when there is no TLS certificate available.
 This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
 
-### Redirect from/to www.
+### Redirect from/to www
 
 In some scenarios is required to redirect from `www.domain.com` to `domain.com` or vice versa.
 To enable this feature use the annotation `nginx.ingress.kubernetes.io/from-to-www-redirect: "true"`
 
 !!! attention
     If at some point a new Ingress is created with a host equal to one of the options (like `domain.com`) the annotation will be omitted.
+
+!!! attention
+    For HTTPS to HTTPS redirects is mandatory the SSL Certificate defined in the Secret, located in the TLS section of Ingress, contains both FQDN in the common name of the certificate.
 
 ### Whitelist source range
 

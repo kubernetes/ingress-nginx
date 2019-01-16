@@ -52,13 +52,12 @@ local function set_cookie(self, value)
     key = self.cookie_name,
     value = value,
     path = cookie_path,
-    domain = ngx.var.host,
     httponly = true,
     secure = ngx.var.https == "on",
   }
 
   if self.cookie_expires and self.cookie_expires ~= "" then
-      cookie_data.expires = ngx.cookie_time(tonumber(self.cookie_expires))
+      cookie_data.expires = ngx.cookie_time(ngx.time() + tonumber(self.cookie_expires))
   end
 
   if self.cookie_max_age and self.cookie_max_age ~= "" then

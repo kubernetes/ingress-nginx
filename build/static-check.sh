@@ -25,4 +25,4 @@ fi
 
 hack/verify-all.sh
 
-luacheck -q rootfs/etc/nginx/lua/
+luacheck --codes -q rootfs/etc/nginx/lua/

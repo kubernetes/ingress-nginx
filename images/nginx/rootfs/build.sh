@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.7
+export NGINX_VERSION=1.15.8
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -36,7 +36,7 @@ export LUA_UPSTREAM_VERSION=0.07
 export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export LUAJIT_VERSION=c58fe79b870f1934479bf14fe8035fc3d9fdfde2
+export LUAJIT_VERSION=520d53a87dd44c637dddb6de313204211c2b212b
 
 export BUILD_PATH=/tmp/build
 
@@ -109,18 +109,16 @@ mkdir -p /etc/nginx
 # Get the GeoIP data
 GEOIP_FOLDER=/etc/nginx/geoip
 mkdir -p $GEOIP_FOLDER
-function geoip_get {
-  wget -O $GEOIP_FOLDER/$1 $2 || { echo "Could not download $1, exiting." ; exit 1; }
-  gunzip $GEOIP_FOLDER/$1
-}
+
 function geoip2_get {
   wget -O $GEOIP_FOLDER/$1.tar.gz $2 || { echo "Could not download $1, exiting." ; exit 1; }
-  mkdir $GEOIP_FOLDER/$1 && tar xf $GEOIP_FOLDER/$1.tar.gz -C $GEOIP_FOLDER/$1 --strip-components 1 && mv $GEOIP_FOLDER/$1/$1.mmdb $GEOIP_FOLDER/$1.mmdb && rm -rf $GEOIP_FOLDER/$1
+  mkdir $GEOIP_FOLDER/$1 \
+    && tar xf $GEOIP_FOLDER/$1.tar.gz -C $GEOIP_FOLDER/$1 --strip-components 1 \
+    && mv $GEOIP_FOLDER/$1/$1.mmdb $GEOIP_FOLDER/$1.mmdb \
+    && rm -rf $GEOIP_FOLDER/$1 \
+    && rm -rf $GEOIP_FOLDER/$1.tar.gz
 }
 
-geoip_get "GeoIPASNum.dat.gz"  "http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz"
-geoip_get "GeoIP.dat.gz"       "https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
-geoip_get "GeoLiteCity.dat.gz" "https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
 geoip2_get "GeoLite2-City"     "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz"
 geoip2_get "GeoLite2-ASN"      "http://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz"
 
@@ -128,7 +126,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 8f22ea2f6c0e0a221b6ddc02b6428a3ff708e2ad55f9361102b1c9f4142bdf93 \
+get_src a8bdafbca87eb99813ae4fcac1ad0875bf725ce19eb265d28268c309b2b40787 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -197,7 +195,7 @@ get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 21dab7625a028d4560d0215c4bc3b82f6153344f933abb99dc9fd5f0d19519ab \
+get_src d04df883adb86c96a8e0fe6c404851b9c776840dbb524419c06ae3fac42c4e64 \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 
 get_src c673fcee37c1c4794f921b6710b09e8a0e1e58117aa788f798507d033f737192 \
@@ -566,6 +564,10 @@ rm -rf /etc/nginx/owasp-modsecurity-crs/.git
 rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
 rm -rf $HOME/.hunter
+
+# move geoip directory
+mv /geoip/* /etc/nginx/geoip
+rm -rf /geoip
 
 # update image permissions
 writeDirs=( \
