@@ -1,5 +1,5 @@
 local socket = ngx.socket.tcp
-local cjson = require('cjson')
+local cjson = require("cjson.safe")
 local assert = assert
 
 local metrics_batch = {}
@@ -49,9 +49,9 @@ local function flush(premature)
   local current_metrics_batch = metrics_batch
   metrics_batch = {}
 
-  local ok, payload = pcall(cjson.encode, current_metrics_batch)
-  if not ok then
-    ngx.log(ngx.ERR, "error while encoding metrics: " .. tostring(payload))
+  local payload, err = cjson.encode(current_metrics_batch)
+  if not payload then
+    ngx.log(ngx.ERR, "error while encoding metrics: ", err)
     return
   end
 
