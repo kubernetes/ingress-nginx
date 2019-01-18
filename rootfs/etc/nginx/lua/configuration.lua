@@ -1,4 +1,4 @@
-local json = require("cjson")
+local cjson = require("cjson.safe")
 
 -- this is the Lua representation of Configuration struct in internal/ingress/types.go
 local configuration_data = ngx.shared.configuration_data
@@ -49,9 +49,9 @@ local function handle_servers()
 
   local raw_servers = fetch_request_body()
 
-  local ok, servers = pcall(json.decode, raw_servers)
-  if not ok then
-    ngx.log(ngx.ERR, "could not parse servers: " .. tostring(servers))
+  local servers, err = cjson.decode(raw_servers)
+  if not servers then
+    ngx.log(ngx.ERR, "could not parse servers: ", err)
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
@@ -59,7 +59,8 @@ local function handle_servers()
   local err_buf = {}
   for _, server in ipairs(servers) do
     if server.hostname and server.sslCert.pemCertKey then
-      local success, err = certificate_data:safe_set(server.hostname, server.sslCert.pemCertKey)
+      local success
+      success, err = certificate_data:safe_set(server.hostname, server.sslCert.pemCertKey)
       if not success then
         if err == "no memory" then
           ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
