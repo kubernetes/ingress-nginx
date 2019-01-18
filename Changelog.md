@@ -15,6 +15,12 @@ _New Features:_
 
 _Breaking changes:_
 
+- Annotation `nginx.ingress.kubernetes.io/rewrite-target` has changed and will not behave as expected if you don't update them.
+
+  Refer to [https://kubernetes.github.io/ingress-nginx/examples/rewrite/#rewrite-target](https://kubernetes.github.io/ingress-nginx/examples/rewrite/#rewrite-target) on how to change it.
+
+  Refer to [https://github.com/kubernetes/ingress-nginx/pull/3174#issuecomment-455665710](https://github.com/kubernetes/ingress-nginx/pull/3174#issuecomment-455665710) on how to do seamless migration.
+
 - Annotations `nginx.ingress.kubernetes.io/add-base-url` and `nginx.ingress.kubernetes.io/base-url-scheme` were removed.
 
   Please check issue [#3174](https://github.com/kubernetes/ingress-nginx/pull/3174) for details.
