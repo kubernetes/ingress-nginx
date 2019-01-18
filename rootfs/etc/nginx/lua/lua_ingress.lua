@@ -22,7 +22,7 @@ math.randomseed = function()
   local seed = seeds[pid]
   if seed then
     ngx.log(ngx.WARN,
-      string.format("ignoring math.randomseed(%d) since PRNG is already seeded for worker %d", seed, pid))
+      string.format("ignoring math.randomseed() since PRNG is already seeded for worker %d", pid))
     return
   end
 
