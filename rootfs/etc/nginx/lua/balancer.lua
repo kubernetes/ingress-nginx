@@ -75,6 +75,10 @@ end
 
 local function sync_backend(backend)
   if not backend.endpoints or #backend.endpoints == 0 then
+    if balancers[backend.name] then
+      balancers[backend.name] = nil
+    end
+
     ngx.log(ngx.INFO, string.format("there is no endpoint for backend %s. Skipping...", backend.name))
     return
   end
