@@ -34,7 +34,6 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--report-node-internal-ip-address` | Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter. |
 | `--sort-backends`                 | Sort servers inside NGINX upstreams. |
 | `--ssl-passthrough-proxy-port int` | Port to use internally for SSL Passthrough. (default 442) |
-| `--status-port int`               | Port to use for exposing NGINX status pages. (default 18080) |
 | `--stderrthreshold severity`      | logs at or above this threshold go to stderr (default 2) |
 | `--sync-period duration`          | Period at which the controller forces the repopulation of its local object stores. Disabled by default. |
 | `--sync-rate-limit float32`       | Define the sync frequency upper limit (default 0.3) |

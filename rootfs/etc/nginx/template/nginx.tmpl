@@ -10,7 +10,7 @@
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
 # setup custom paths that do not require root access
-pid /tmp/nginx.pid;
+pid {{ .PID }};
 
 {{ if $cfg.UseGeoIP2 }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
@@ -614,7 +614,7 @@ http {
     server {
         listen {{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
         {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
-        set $proxy_upstream_name "-";
+        set $proxy_upstream_name "internal";
 
         location / {
           return 404;
@@ -623,35 +623,23 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
-        set $proxy_upstream_name "-";
+        listen unix:{{ .StatusSocket }};
+        set $proxy_upstream_name "internal";
 
-        {{ if gt (len $cfg.BlockUserAgents) 0 }}
-        if ($block_ua) {
-           return 403;
-        }
-        {{ end }}
-        {{ if gt (len $cfg.BlockReferers) 0 }}
-        if ($block_ref) {
-           return 403;
-        }
+        keepalive_timeout 0;
+        gzip off;
+
+        access_log off;
+
+        {{ if $cfg.EnableOpentracing }}
+        opentracing off;
         {{ end }}
 
         location {{ $healthzURI }} {
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-            access_log off;
             return 200;
         }
 
         location /is-dynamic-lb-initialized {
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-            access_log off;
-
             content_by_lua_block {
                 local configuration = require("configuration")
                 local backend_data = configuration.get_backends_data()
@@ -665,28 +653,11 @@ http {
             }
         }
 
-        location /nginx_status {
-            set $proxy_upstream_name "internal";
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-
-            access_log off;
+        location {{ .StatusPath }} {
             stub_status on;
         }
 
         location /configuration {
-            access_log off;
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-
-            allow 127.0.0.1;
-            {{ if $IsIPV6Enabled }}
-            allow ::1;
-            {{ end }}
-            deny all;
-
             # this should be equals to configuration_data dict
             client_max_body_size                    10m;
             client_body_buffer_size                 10m;
@@ -698,16 +669,10 @@ http {
         }
 
         location / {
-            {{ if .CustomErrors }}
-            proxy_set_header    X-Code 404;
-            {{ end }}
-            set $proxy_upstream_name "upstream-default-backend";
-            proxy_set_header    Host   $best_http_host;
-
-            proxy_pass          http://upstream_balancer;
+            content_by_lua_block {
+                ngx.exit(ngx.HTTP_NOT_FOUND)
+            }
         }
-
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
 }
 
@@ -765,7 +730,7 @@ stream {
     }
 
     server {
-        listen unix:/tmp/ingress-stream.sock;
+        listen unix:{{ .StreamSocket }};
 
         content_by_lua_block {
           tcp_udp_configuration.call()

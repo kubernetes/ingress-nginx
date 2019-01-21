@@ -31,6 +31,7 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -151,7 +152,10 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 	})
 
 	It("sets controllerPodsCount in Lua general configuration", func() {
-		output, err := f.ExecIngressPod("curl --fail --silent http://127.0.0.1:18080/configuration/general")
+		// https://github.com/curl/curl/issues/936
+		curlCmd := fmt.Sprintf("curl --fail --silent --unix-socket %v http://localhost/configuration/general", nginx.StatusSocket)
+
+		output, err := f.ExecIngressPod(curlCmd)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(output).Should(Equal(`{"controllerPodsCount":1}`))
 
@@ -159,7 +163,7 @@ var _ = framework.IngressNginxDescribe("Dynamic Configuration", func() {
 		Expect(err).ToNot(HaveOccurred())
 		time.Sleep(waitForLuaSync)
 
-		output, err = f.ExecIngressPod("curl --fail --silent http://127.0.0.1:18080/configuration/general")
+		output, err = f.ExecIngressPod(curlCmd)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(output).Should(Equal(`{"controllerPodsCount":3}`))
 	})
