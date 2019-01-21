@@ -60,14 +60,13 @@ import (
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/net/dns"
 	"k8s.io/ingress-nginx/internal/net/ssl"
+	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/internal/watch"
 )
 
 const (
-	ngxHealthPath     = "/healthz"
-	nginxStreamSocket = "/tmp/ingress-stream.sock"
-	tempNginxPattern  = "nginx-cfg"
+	tempNginxPattern = "nginx-cfg"
 )
 
 var (
@@ -595,7 +594,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		Servers:                    ingressCfg.Servers,
 		TCPBackends:                ingressCfg.TCPEndpoints,
 		UDPBackends:                ingressCfg.UDPEndpoints,
-		HealthzURI:                 ngxHealthPath,
 		CustomErrors:               len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                        cfg,
 		IsIPV6Enabled:              n.isIPV6Enabled && !cfg.DisableIpv6,
@@ -607,6 +605,12 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		PublishService:             n.GetPublishService(),
 		DynamicCertificatesEnabled: n.cfg.DynamicCertificatesEnabled,
 		EnableMetrics:              n.cfg.EnableMetrics,
+
+		HealthzURI:   nginx.HealthPath,
+		PID:          nginx.PID,
+		StatusSocket: nginx.StatusSocket,
+		StatusPath:   nginx.StatusPath,
+		StreamSocket: nginx.StreamSocket,
 	}
 
 	tc.Cfg.Checksum = ingressCfg.ConfigurationChecksum
@@ -772,7 +776,7 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 
 // configureDynamically encodes new Backends in JSON format and POSTs the
 // payload to an internal HTTP endpoint handled by Lua.
-func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertificatesEnabled bool) error {
+func configureDynamically(pcfg *ingress.Configuration, isDynamicCertificatesEnabled bool) error {
 	backends := make([]*ingress.Backend, len(pcfg.Backends))
 
 	for i, backend := range pcfg.Backends {
@@ -805,10 +809,13 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 		backends[i] = luaBackend
 	}
 
-	url := fmt.Sprintf("http://localhost:%d/configuration/backends", port)
-	err := post(url, backends)
+	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/backends", "application/json", backends)
 	if err != nil {
 		return err
+	}
+
+	if statusCode != http.StatusCreated {
+		return fmt.Errorf("unexpected error code: %d", statusCode)
 	}
 
 	streams := make([]ingress.Backend, 0)
@@ -846,16 +853,19 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 		return err
 	}
 
-	url = fmt.Sprintf("http://localhost:%d/configuration/general", port)
-	err = post(url, &ingress.GeneralConfig{
+	statusCode, _, err = nginx.NewPostStatusRequest("/configuration/general", "application/json", ingress.GeneralConfig{
 		ControllerPodsCount: pcfg.ControllerPodsCount,
 	})
 	if err != nil {
 		return err
 	}
 
+	if statusCode != http.StatusCreated {
+		return fmt.Errorf("unexpected error code: %d", statusCode)
+	}
+
 	if isDynamicCertificatesEnabled {
-		err = configureCertificates(pcfg, port)
+		err = configureCertificates(pcfg)
 		if err != nil {
 			return err
 		}
@@ -865,7 +875,7 @@ func configureDynamically(pcfg *ingress.Configuration, port int, isDynamicCertif
 }
 
 func updateStreamConfiguration(streams []ingress.Backend) error {
-	conn, err := net.Dial("unix", nginxStreamSocket)
+	conn, err := net.Dial("unix", nginx.StreamSocket)
 	if err != nil {
 		return err
 	}
@@ -890,7 +900,7 @@ func updateStreamConfiguration(streams []ingress.Backend) error {
 
 // configureCertificates JSON encodes certificates and POSTs it to an internal HTTP endpoint
 // that is handled by Lua
-func configureCertificates(pcfg *ingress.Configuration, port int) error {
+func configureCertificates(pcfg *ingress.Configuration) error {
 	var servers []*ingress.Server
 
 	for _, server := range pcfg.Servers {
@@ -902,30 +912,13 @@ func configureCertificates(pcfg *ingress.Configuration, port int) error {
 		})
 	}
 
-	url := fmt.Sprintf("http://localhost:%d/configuration/servers", port)
-	return post(url, servers)
-}
-
-func post(url string, data interface{}) error {
-	buf, err := json.Marshal(data)
+	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/servers", "application/json", servers)
 	if err != nil {
 		return err
 	}
 
-	klog.V(2).Infof("Posting to %s", url)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(buf))
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			klog.Warningf("Error while closing response body:\n%v", err)
-		}
-	}()
-
-	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unexpected error code: %d", resp.StatusCode)
+	if statusCode != http.StatusCreated {
+		return fmt.Errorf("unexpected error code: %d", statusCode)
 	}
 
 	return nil

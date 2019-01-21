@@ -17,13 +17,12 @@ limitations under the License.
 package collectors
 
 import (
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"log"
 	"regexp"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/klog"
 )
 
@@ -38,9 +37,6 @@ var (
 type (
 	nginxStatusCollector struct {
 		scrapeChan chan scrapeRequest
-
-		ngxHealthPort int
-		ngxStatusPath string
 
 		data *nginxStatusData
 	}
@@ -78,12 +74,10 @@ type NGINXStatusCollector interface {
 }
 
 // NewNGINXStatus returns a new prometheus collector the default nginx status module
-func NewNGINXStatus(podName, namespace, ingressClass string, ngxHealthPort int) (NGINXStatusCollector, error) {
+func NewNGINXStatus(podName, namespace, ingressClass string) (NGINXStatusCollector, error) {
 
 	p := nginxStatusCollector{
-		scrapeChan:    make(chan scrapeRequest),
-		ngxHealthPort: ngxHealthPort,
-		ngxStatusPath: "/nginx_status",
+		scrapeChan: make(chan scrapeRequest),
 	}
 
 	constLabels := prometheus.Labels{
@@ -138,24 +132,6 @@ func (p nginxStatusCollector) Stop() {
 	close(p.scrapeChan)
 }
 
-func httpBody(url string) ([]byte, error) {
-	resp, err := http.DefaultClient.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("unexpected error scraping nginx : %v", err)
-	}
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("unexpected error scraping nginx (%v)", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("unexpected error scraping nginx (status %v)", resp.StatusCode)
-	}
-
-	return data, nil
-}
-
 func toInt(data []string, pos int) int {
 	if len(data) == 0 {
 		return 0
@@ -187,26 +163,22 @@ func parse(data string) *basicStatus {
 	}
 }
 
-func getNginxStatus(port int, path string) (*basicStatus, error) {
-	url := fmt.Sprintf("http://0.0.0.0:%v%v", port, path)
-	klog.V(3).Infof("start scraping url: %v", url)
-
-	data, err := httpBody(url)
-
-	if err != nil {
-		return nil, fmt.Errorf("unexpected error scraping nginx status page: %v", err)
-	}
-
-	return parse(string(data)), nil
-}
-
 // nginxStatusCollector scrape the nginx status
 func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
-	s, err := getNginxStatus(p.ngxHealthPort, p.ngxStatusPath)
+	klog.V(3).Infof("start scraping socket: %v", nginx.StatusPath)
+	status, data, err := nginx.NewGetStatusRequest(nginx.StatusPath)
 	if err != nil {
+		log.Printf("%v", err)
 		klog.Warningf("unexpected error obtaining nginx status info: %v", err)
 		return
 	}
+
+	if status < 200 || status >= 400 {
+		klog.Warningf("unexpected error obtaining nginx status info (status %v)", status)
+		return
+	}
+
+	s := parse(string(data))
 
 	ch <- prometheus.MustNewConstMetric(p.data.connectionsTotal,
 		prometheus.CounterValue, float64(s.Active), "active")

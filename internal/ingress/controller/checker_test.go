@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"os/exec"
 	"testing"
 
@@ -29,27 +30,37 @@ import (
 
 	"k8s.io/ingress-nginx/internal/file"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 func TestNginxCheck(t *testing.T) {
 	mux := http.NewServeMux()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "ok")
-	}))
+	listener, err := net.Listen("unix", nginx.StatusSocket)
+	if err != nil {
+		t.Errorf("crating unix listener: %s", err)
+	}
+	defer listener.Close()
+	defer os.Remove(nginx.StatusSocket)
+
+	server := &httptest.Server{
+		Listener: listener,
+		Config: &http.Server{
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+				fmt.Fprintf(w, "ok")
+			}),
+		},
+	}
 	defer server.Close()
-	// port to be used in the check
-	p := server.Listener.Addr().(*net.TCPAddr).Port
+	server.Start()
 
 	// mock filesystem
-	fs := filesystem.NewFakeFs()
+	fs := filesystem.DefaultFs{}
 
 	n := &NGINXController{
 		cfg: &Configuration{
-			ListenPorts: &ngx_config.ListenPorts{
-				Status: p,
-			},
+			ListenPorts: &ngx_config.ListenPorts{},
 		},
 		fileSystem: fs,
 	}
@@ -62,7 +73,7 @@ func TestNginxCheck(t *testing.T) {
 
 	// create pid file
 	fs.MkdirAll("/tmp", file.ReadWriteByUser)
-	pidFile, err := fs.Create(nginxPID)
+	pidFile, err := fs.Create(nginx.PID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -102,20 +113,14 @@ func TestNginxCheck(t *testing.T) {
 			t.Error("expected an error but none returned")
 		}
 	})
-
-	t.Run("invalid port", func(t *testing.T) {
-		n.cfg.ListenPorts.Status = 9000
-		if err := callHealthz(true, mux); err == nil {
-			t.Error("expected an error but none returned")
-		}
-	})
 }
 
 func callHealthz(expErr bool, mux *http.ServeMux) error {
-	req, err := http.NewRequest("GET", "http://localhost:8080/healthz", nil)
+	req, err := http.NewRequest("GET", "/healthz", nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("healthz error: %v", err)
 	}
+
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, req)
 
