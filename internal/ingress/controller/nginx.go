@@ -959,7 +959,7 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 			return err
 		}
 	} else if cfg.JaegerCollectorHost != "" {
-		tmpl, err = template.New("jarger").Parse(jaegerTmpl)
+		tmpl, err = template.New("jaeger").Parse(jaegerTmpl)
 		if err != nil {
 			return err
 		}
