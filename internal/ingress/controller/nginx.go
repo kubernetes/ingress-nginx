@@ -751,6 +751,33 @@ func clearCertificates(config *ingress.Configuration) {
 	config.Servers = clearedServers
 }
 
+// Helper function to clear endpoints from the ingress configuration since they should be ignored when
+// checking if the new configuration changes can be applied dynamically.
+func clearL4serviceEndpoints(config *ingress.Configuration) {
+	var clearedTCPL4Services []ingress.L4Service
+	var clearedUDPL4Services []ingress.L4Service
+	for _, service := range config.TCPEndpoints {
+		copyofService := ingress.L4Service{
+			Port:      service.Port,
+			Backend:   service.Backend,
+			Endpoints: []ingress.Endpoint{},
+			Service:   nil,
+		}
+		clearedTCPL4Services = append(clearedTCPL4Services, copyofService)
+	}
+	for _, service := range config.UDPEndpoints {
+		copyofService := ingress.L4Service{
+			Port:      service.Port,
+			Backend:   service.Backend,
+			Endpoints: []ingress.Endpoint{},
+			Service:   nil,
+		}
+		clearedUDPL4Services = append(clearedUDPL4Services, copyofService)
+	}
+	config.TCPEndpoints = clearedTCPL4Services
+	config.UDPEndpoints = clearedUDPL4Services
+}
+
 // IsDynamicConfigurationEnough returns whether a Configuration can be
 // dynamically applied, without reloading the backend.
 func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configuration) bool {
@@ -759,6 +786,10 @@ func (n *NGINXController) IsDynamicConfigurationEnough(pcfg *ingress.Configurati
 
 	copyOfRunningConfig.Backends = []*ingress.Backend{}
 	copyOfPcfg.Backends = []*ingress.Backend{}
+
+	clearL4serviceEndpoints(&copyOfRunningConfig)
+	clearL4serviceEndpoints(&copyOfPcfg)
+
 	copyOfRunningConfig.ControllerPodsCount = 0
 	copyOfPcfg.ControllerPodsCount = 0
 
