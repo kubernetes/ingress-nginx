@@ -1,8 +1,14 @@
 #!/bin/bash
 
+git config --global user.email "rancher-ci@rancher.com"
+git config --global user.name "rancher-ci"
+
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
     DIRTY="-dirty"
 fi
+
+# fetch tag information
+git fetch
 
 GIT_COMMIT=${GIT_COMMIT:-$(git rev-parse --short HEAD)}
 GIT_TAG=$(git tag -l --contains HEAD | head -n 1)
