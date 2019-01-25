@@ -563,6 +563,14 @@
   version = "v1.0.3"
 
 [[projects]]
+  branch = "master"
+  digest = "1:1e4c6579336a71d60c374c18fefca05377a3b241d5e0b246caa6efd37a1d1369"
+  name = "github.com/tv42/httpunix"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b75d8614f926c077e48d85f1f8f7885b758c6225"
+
+[[projects]]
   digest = "1:c10994a08ed2ff2cc7611d03ded8bb5f782096880b2daab391adbd9ab95a1764"
   name = "github.com/zakjan/cert-chain-resolver"
   packages = ["certUtil"]
@@ -1230,12 +1238,14 @@
     "github.com/prometheus/client_model/go",
     "github.com/prometheus/common/expfmt",
     "github.com/spf13/pflag",
+    "github.com/tv42/httpunix",
     "github.com/zakjan/cert-chain-resolver/certUtil",
     "gopkg.in/fsnotify/fsnotify.v1",
     "gopkg.in/go-playground/pool.v3",
     "k8s.io/api/apps/v1beta1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
+    "k8s.io/api/rbac/v1",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
