@@ -432,6 +432,36 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 	return newSingleIngress(name, ns, annotations, spec)
 }
 
+// NewSingleIngressWithBackendAndRules creates an ingress with both a default backend and a rule
+func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations *map[string]string) *extensions.Ingress {
+	spec := extensions.IngressSpec{
+		Backend: &extensions.IngressBackend{
+			ServiceName: defaultService,
+			ServicePort: intstr.FromInt(defaultPort),
+		},
+		Rules: []extensions.IngressRule{
+			{
+				Host: host,
+				IngressRuleValue: extensions.IngressRuleValue{
+					HTTP: &extensions.HTTPIngressRuleValue{
+						Paths: []extensions.HTTPIngressPath{
+							{
+								Path: path,
+								Backend: extensions.IngressBackend{
+									ServiceName: service,
+									ServicePort: intstr.FromInt(port),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return newSingleIngress(name, ns, annotations, spec)
+}
+
 // NewSingleCatchAllIngress creates a simple ingress with a catch-all backend
 func NewSingleCatchAllIngress(name, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
 	spec := extensions.IngressSpec{
