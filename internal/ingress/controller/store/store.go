@@ -323,7 +323,7 @@ func New(checkOCSP bool,
 			klog.Infof("ignoring delete for ingress %v based on annotation %v", ing.Name, class.IngressKey)
 			return
 		}
-		if ing.Spec.Backend != nil && disableCatchAll {
+		if isCatchAllIngress(ing.Spec) && disableCatchAll {
 			klog.Infof("ignoring delete for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
 			return
 		}
@@ -348,7 +348,7 @@ func New(checkOCSP bool,
 				klog.Infof("ignoring add for ingress %v based on annotation %v with value %v", ing.Name, class.IngressKey, a)
 				return
 			}
-			if ing.Spec.Backend != nil && disableCatchAll {
+			if isCatchAllIngress(ing.Spec) && disableCatchAll {
 				klog.Infof("ignoring add for catch-all ingress %v/%v because of --disable-catch-all", ing.Namespace, ing.Name)
 				return
 			}
@@ -370,7 +370,7 @@ func New(checkOCSP bool,
 			validOld := class.IsValid(oldIng)
 			validCur := class.IsValid(curIng)
 			if !validOld && validCur {
-				if curIng.Spec.Backend != nil && disableCatchAll {
+				if isCatchAllIngress(curIng.Spec) && disableCatchAll {
 					klog.Infof("ignoring update for catch-all ingress %v/%v because of --disable-catch-all", curIng.Namespace, curIng.Name)
 					return
 				}
@@ -382,7 +382,7 @@ func New(checkOCSP bool,
 				ingDeleteHandler(old)
 				return
 			} else if validCur && !reflect.DeepEqual(old, cur) {
-				if curIng.Spec.Backend != nil && disableCatchAll {
+				if isCatchAllIngress(curIng.Spec) && disableCatchAll {
 					klog.Infof("ignoring update for catch-all ingress %v/%v and delete old one because of --disable-catch-all", curIng.Namespace, curIng.Name)
 					ingDeleteHandler(old)
 					return
@@ -615,6 +615,12 @@ func New(checkOCSP bool,
 
 	store.setConfig(cm)
 	return store
+}
+
+// isCatchAllIngress returns whether or not an ingress produces a
+// catch-all server, and so should be ignored when --disable-catch-all is set
+func isCatchAllIngress(spec extensions.IngressSpec) bool {
+	return spec.Backend != nil && len(spec.Rules) == 0
 }
 
 // syncIngress parses ingress annotations converting the value of the
