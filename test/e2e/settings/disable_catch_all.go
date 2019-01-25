@@ -109,4 +109,24 @@ var _ = framework.IngressNginxDescribe("Disabled catch-all", func() {
 		Expect(errs).To(BeNil())
 		Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 	})
+
+	It("should allow Ingress with both a default backend and rules", func() {
+		host := "foo"
+
+		ing := framework.NewSingleIngressWithBackendAndRules("not-catch-all", "/rulepath", host, f.IngressController.Namespace, "http-svc", 80, "http-svc", 80, nil)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host, func(cfg string) bool {
+			return strings.Contains(cfg, "server_name foo")
+		})
+
+		resp, _, errs := gorequest.New().
+			Get(f.IngressController.HTTPURL).
+			Set("Host", host).
+			End()
+
+		Expect(errs).To(BeNil())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+	})
 })
