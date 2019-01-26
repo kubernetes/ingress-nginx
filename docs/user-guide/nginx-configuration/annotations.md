@@ -247,7 +247,7 @@ nginx.ingress.kubernetes.io/configuration-snippet: |
 
 The ingress controller requires a [default backend](../default-backend.md).
 This service handles the response when the service in the Ingress rule does not have endpoints.
-This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.
+This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.  This `<svc name>` is a reference to a service inside of the same namespace in which you are applying this annotation.
 
 ### Custom HTTP Errors
 
