@@ -94,6 +94,11 @@ type Configuration struct {
 	// By default this is disabled
 	AllowBackendServerHeader bool `json:"allow-backend-server-header"`
 
+	// AccessLogParams sets additionals params for access_log
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+	// By default it's empty
+	AccessLogParams string `json:"access-log-params,omitempty"`
+
 	// AccessLogPath sets the path of the access logs if enabled
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	// By default access logs go to /var/log/nginx/access.log
@@ -577,6 +582,7 @@ func NewDefault() Configuration {
 	cfg := Configuration{
 		AllowBackendServerHeader:   false,
 		AccessLogPath:              "/var/log/nginx/access.log",
+		AccessLogParams:            "",
 		WorkerCPUAffinity:          "",
 		ErrorLogPath:               "/var/log/nginx/error.log",
 		BlockCIDRs:                 defBlockEntity,

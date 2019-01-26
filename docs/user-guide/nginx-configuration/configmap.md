@@ -30,6 +30,7 @@ The following table shows a configuration option's name, type, and the default v
 |[add-headers](#add-headers)|string|""|
 |[allow-backend-server-header](#allow-backend-server-header)|bool|"false"|
 |[hide-headers](#hide-headers)|string array|empty|
+|[access-log-params](#access-log-params)|string|""|
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
 |[enable-dynamic-tls-records](#enable-dynamic-tls-records)|bool|"true"|
@@ -168,6 +169,13 @@ _**default:**_ empty
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header)
+
+## access-log-params
+
+Additional params for access_log. For example, buffer=16k, gzip, flush=1m
+
+_References:_
+[http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log](http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log)
 
 ## access-log-path
 
