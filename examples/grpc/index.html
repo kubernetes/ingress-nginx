@@ -1225,7 +1225,7 @@ nginx controller.</p>
    for grpc support.</li>
 <li>You have a backend application running a gRPC server and listening for TCP
    traffic.  If you prefer, you can use the
-   <a href="https://github.com/kubernetes/ingress-nginx/images/grpc-fortune-teller">fortune-teller</a>
+   <a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller">fortune-teller</a>
    application provided here as an example. </li>
 </ol>
 <h3 id="step-1-kubernetes-deployment">Step 1: kubernetes <code class="codehilite">Deployment</code><a class="headerlink" href="#step-1-kubernetes-deployment" title="Permanent link">&para;</a></h3>
@@ -1235,7 +1235,7 @@ nginx controller.</p>
 <p>This is a standard kubernetes deployment object.  It is running a grpc service
 listening on port <code class="codehilite">50051</code>.</p>
 <p>The sample application
-<a href="https://github.com/kubernetes/ingress-nginx/images/grpc-fortune-teller">fortune-teller-app</a>
+<a href="https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller">fortune-teller-app</a>
 is a grpc server implemented in go. Here's the stripped-down implementation:</p>
 <div class="codehilite"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">grpcServer</span> <span class="o">:=</span> <span class="nx">grpc</span><span class="p">.</span><span class="nx">NewServer</span><span class="p">()</span>
