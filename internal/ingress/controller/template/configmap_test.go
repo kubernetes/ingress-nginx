@@ -59,6 +59,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 		"skip-access-log-urls":          "/log,/demo,/test",
 		"use-proxy-protocol":            "true",
 		"disable-access-log":            "true",
+		"access-log-params":             "buffer=4k gzip",
 		"access-log-path":               "/var/log/test/access.log",
 		"error-log-path":                "/var/log/test/error.log",
 		"use-gzip":                      "true",
@@ -75,6 +76,7 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def := config.NewDefault()
 	def.CustomHTTPErrors = []int{300, 400}
 	def.DisableAccessLog = true
+	def.AccessLogParams = "buffer=4k gzip"
 	def.AccessLogPath = "/var/log/test/access.log"
 	def.ErrorLogPath = "/var/log/test/error.log"
 	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
