@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -33,7 +34,9 @@ import (
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/luarestywaf"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 )
@@ -163,6 +166,14 @@ proxy_pass http://upstream_balancer;`,
 )
 
 func TestBuildLuaSharedDictionaries(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildLuaSharedDictionaries(invalidType, true)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	servers := []*ingress.Server{
 		{
 			Hostname:  "foo.bar",
@@ -209,6 +220,14 @@ func TestFormatIP(t *testing.T) {
 }
 
 func TestBuildLocation(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := "/"
+	actual := buildLocation(invalidType, true)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:    tc.Path,
@@ -263,6 +282,14 @@ func TestBuildProxyPass(t *testing.T) {
 }
 
 func TestBuildAuthLocation(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildAuthLocation(invalidType)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	authURL := "foo.com/auth"
 
 	loc := &ingress.Location{
@@ -275,7 +302,7 @@ func TestBuildAuthLocation(t *testing.T) {
 	str := buildAuthLocation(loc)
 
 	encodedAuthURL := strings.Replace(base64.URLEncoding.EncodeToString([]byte(loc.Path)), "=", "", -1)
-	expected := fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
+	expected = fmt.Sprintf("/_external-auth-%v", encodedAuthURL)
 
 	if str != expected {
 		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, str)
@@ -283,11 +310,19 @@ func TestBuildAuthLocation(t *testing.T) {
 }
 
 func TestBuildAuthResponseHeaders(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := []string{}
+	actual := buildAuthResponseHeaders(invalidType)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	loc := &ingress.Location{
 		ExternalAuth: authreq.Config{ResponseHeaders: []string{"h1", "H-With-Caps-And-Dashes"}},
 	}
 	headers := buildAuthResponseHeaders(loc)
-	expected := []string{
+	expected = []string{
 		"auth_request_set $authHeader0 $upstream_http_h1;",
 		"proxy_set_header 'h1' $authHeader0;",
 		"auth_request_set $authHeader1 $upstream_http_h_with_caps_and_dashes;",
@@ -378,6 +413,14 @@ func BenchmarkTemplateWithData(b *testing.B) {
 }
 
 func TestBuildDenyVariable(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildDenyVariable(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	a := buildDenyVariable("host1.example.com_/.well-known/acme-challenge")
 	b := buildDenyVariable("host1.example.com_/.well-known/acme-challenge")
 	if !reflect.DeepEqual(a, b) {
@@ -416,6 +459,14 @@ func TestBuildByteSize(t *testing.T) {
 }
 
 func TestIsLocationAllowed(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := false
+	actual := isLocationAllowed(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	loc := ingress.Location{
 		Denied: nil,
 	}
@@ -427,23 +478,47 @@ func TestIsLocationAllowed(t *testing.T) {
 }
 
 func TestBuildForwardedFor(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildForwardedFor(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	inputStr := "X-Forwarded-For"
-	outputStr := buildForwardedFor(inputStr)
+	expected = "$http_x_forwarded_for"
+	actual = buildForwardedFor(inputStr)
 
-	validStr := "$http_x_forwarded_for"
-
-	if outputStr != validStr {
-		t.Errorf("Expected '%v' but returned '%v'", validStr, outputStr)
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 }
 
 func TestBuildResolversForLua(t *testing.T) {
+
 	ipOne := net.ParseIP("192.0.0.1")
 	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
 	ipList := []net.IP{ipOne, ipTwo}
 
-	expected := "\"192.0.0.1\", \"2001:db8:1234::\""
-	actual := buildResolversForLua(ipList, false)
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildResolversForLua(invalidType, false)
+
+	// Invalid Type for []net.IP
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	actual = buildResolversForLua(ipList, invalidType)
+
+	// Invalid Type for bool
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	expected = "\"192.0.0.1\", \"2001:db8:1234::\""
+	actual = buildResolversForLua(ipList, false)
 
 	if expected != actual {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -462,6 +537,22 @@ func TestBuildResolvers(t *testing.T) {
 	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
 	ipList := []net.IP{ipOne, ipTwo}
 
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildResolvers(invalidType, false)
+
+	// Invalid Type for []net.IP
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	actual = buildResolvers(ipList, invalidType)
+
+	// Invalid Type for bool
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	validResolver := "resolver 192.0.0.1 [2001:db8:1234::] valid=30s;"
 	resolver := buildResolvers(ipList, false)
 
@@ -478,6 +569,14 @@ func TestBuildResolvers(t *testing.T) {
 }
 
 func TestBuildNextUpstream(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildNextUpstream(invalidType, "")
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	cases := map[string]struct {
 		NextUpstream  string
 		NonIdempotent bool
@@ -516,6 +615,14 @@ func TestBuildNextUpstream(t *testing.T) {
 }
 
 func TestBuildRateLimit(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := []string{}
+	actual := buildRateLimit(invalidType)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	loc := &ingress.Location{}
 
 	loc.RateLimit.Connections.Name = "con"
@@ -547,9 +654,45 @@ func TestBuildRateLimit(t *testing.T) {
 			t.Errorf("Expected '%v' but returned '%v'", validLimits, limits)
 		}
 	}
+
+	// Invalid limit
+	limits = buildRateLimit(&ingress.Ingress{})
+	if !reflect.DeepEqual(expected, limits) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, limits)
+	}
+}
+
+// TODO: Needs more tests
+func TestBuildRateLimitZones(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := []string{}
+	actual := buildRateLimitZones(invalidType)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
+// TODO: Needs more tests
+func TestFilterRateLimits(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := []ratelimit.Config{}
+	actual := filterRateLimits(invalidType)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
 }
 
 func TestBuildAuthSignURL(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildAuthSignURL(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	cases := map[string]struct {
 		Input, Output string
 	}{
@@ -566,6 +709,13 @@ func TestBuildAuthSignURL(t *testing.T) {
 }
 
 func TestIsLocationInLocationList(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := false
+	actual := isLocationInLocationList(invalidType, "")
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
 
 	testCases := []struct {
 		location        *ingress.Location
@@ -589,6 +739,14 @@ func TestIsLocationInLocationList(t *testing.T) {
 }
 
 func TestBuildUpstreamName(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildUpstreamName(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
 	defaultBackend := "upstream-name"
 	defaultHost := "example.com"
 
@@ -742,5 +900,141 @@ func TestGetIngressInformation(t *testing.T) {
 	}
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+}
+
+func TestCollectCustomErrorsPerServer(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	customErrors := collectCustomErrorsPerServer(invalidType)
+	if customErrors != nil {
+		t.Errorf("Expected %v but returned %v", nil, customErrors)
+	}
+
+	server := &ingress.Server{
+		Locations: []*ingress.Location{
+			{CustomHTTPErrors: []int{404, 405}},
+			{CustomHTTPErrors: []int{404, 500}},
+		},
+	}
+
+	expected := []int{404, 405, 500}
+	uniqueCodes := collectCustomErrorsPerServer(server)
+	sort.Ints(uniqueCodes)
+
+	if !reflect.DeepEqual(expected, uniqueCodes) {
+		t.Errorf("Expected '%v' but got '%v'", expected, uniqueCodes)
+	}
+}
+
+func TestProxySetHeader(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := "proxy_set_header"
+	actual := proxySetHeader(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	grpcBackend := &ingress.Location{
+		BackendProtocol: "GRPC",
+	}
+
+	expected = "grpc_set_header"
+	actual = proxySetHeader(grpcBackend)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
+func TestBuildInfluxDB(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildInfluxDB(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	cfg := influxdb.Config{
+		InfluxDBEnabled:     true,
+		InfluxDBServerName:  "ok.com",
+		InfluxDBHost:        "host.com",
+		InfluxDBPort:        "5252",
+		InfluxDBMeasurement: "ok",
+	}
+	expected = "influxdb server_name=ok.com host=host.com port=5252 measurement=ok enabled=true;"
+	actual = buildInfluxDB(cfg)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
+func TestBuildOpenTracing(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildOpentracing(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	cfgJaeger := config.Configuration{
+		EnableOpentracing:   true,
+		JaegerCollectorHost: "jaeger-host.com",
+	}
+	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;\r\n"
+	actual = buildOpentracing(cfgJaeger)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	cfgZipkin := config.Configuration{
+		EnableOpentracing:   true,
+		ZipkinCollectorHost: "zipkin-host.com",
+	}
+	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;\r\n"
+	actual = buildOpentracing(cfgZipkin)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+}
+
+func TestEnforceRegexModifier(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := false
+	actual := enforceRegexModifier(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	locs := []*ingress.Location{
+		{
+			Rewrite: rewrite.Config{
+				Target:   "/alright",
+				UseRegex: true,
+			},
+			Path: "/ok",
+		},
+	}
+	expected = true
+	actual = enforceRegexModifier(locs)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
+func TestStripLocationModifer(t *testing.T) {
+	expected := "ok.com"
+	actual := stripLocationModifer("~*ok.com")
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 }
