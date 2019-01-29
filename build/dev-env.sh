@@ -22,6 +22,8 @@ SKIP_MINIKUBE_START=${SKIP_MINIKUBE_START:-}
 NAMESPACE="${NAMESPACE:-ingress-nginx}"
 echo "NAMESPACE is set to ${NAMESPACE}"
 
+kubectl config set-context minikube
+
 export TAG=dev
 export ARCH=amd64
 export REGISTRY=${REGISTRY:-ingress-controller}
