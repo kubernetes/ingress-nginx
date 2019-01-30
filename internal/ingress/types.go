@@ -118,6 +118,8 @@ type TrafficShapingPolicy struct {
 	Weight int `json:"weight"`
 	// Header on which to redirect requests to this backend
 	Header string `json:"header"`
+	// HeaderValue on which to redirect requests to this backend
+	HeaderValue string `json:"headerValue"`
 	// Cookie on which to redirect requests to this backend
 	Cookie string `json:"cookie"`
 }
