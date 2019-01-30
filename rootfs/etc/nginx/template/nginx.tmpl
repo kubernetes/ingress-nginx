@@ -1373,24 +1373,25 @@ stream {
             add_header            X-Cache-Status     $upstream_cache_status;
             {{ end }}
 
-            proxy_cache_revalidate      {{ $location.Cache.Revalidate }};
-            proxy_cache_min_uses        {{ $location.Cache.MinUses }};
-            proxy_cache_use_stale       {{ $location.Cache.UseStale }};
-            proxy_cache_methods         {{ $location.Cache.Methods }};
-            proxy_cache_valid           200 302 {{ $location.Cache.TTL }};
+            proxy_cache_revalidate        {{ $location.Cache.Revalidate }};
+            proxy_cache_background_update {{ $location.Cache.BackgroundUpdate }};
+            proxy_cache_min_uses          {{ $location.Cache.MinUses }};
+            proxy_cache_use_stale         {{ $location.Cache.UseStale }};
+            proxy_cache_methods           {{ $location.Cache.Methods }};
+            proxy_cache_valid             200 302 {{ $location.Cache.TTL }};
 
-            proxy_cache_key             "$scheme$host$request_uri";
+            proxy_cache_key               "$scheme$host$request_uri";
 
-            proxy_cache_lock            on;
+            proxy_cache_lock              on;
 
             proxy_cache_bypass            $http_pragma;
             proxy_cache_bypass            $http_x_no_cache $arg_nocache;
             proxy_cache_bypass            $http_upgrade;
 
-            proxy_ignore_headers        Cache-Control;
-            proxy_ignore_headers        Set-Cookie;
+            proxy_ignore_headers          Cache-Control;
+            proxy_ignore_headers          Set-Cookie;
 
-            proxy_cache                 {{ $location.Cache.Name }};
+            proxy_cache                   {{ $location.Cache.Name }};
             {{ end }}
 
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}

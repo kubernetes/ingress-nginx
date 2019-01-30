@@ -22,6 +22,7 @@ type Config struct {
 	Revalidate      string `json:"revalidate"`
 	TTL             string `json:"ttl"`
 	UseStale        string `json:"useStale"`
+	BackgroundUpdate string  `json:"backgroundUpdate"`
 }
 
 func (c1 *Config) Equal(c2 *Config) bool {
@@ -68,6 +69,9 @@ func (c1 *Config) Equal(c2 *Config) bool {
 		return false
 	}
 	if c1.TTL != c2.TTL {
+		return false
+	}
+	if c1.BackgroundUpdate != c2.BackgroundUpdate {
 		return false
 	}
  	return true
@@ -132,6 +136,11 @@ func (a cache) Parse(ing *extensions.Ingress) (interface{}, error) {
 		ttl = "10m"
 	}
 
+	bu, err := parser.GetStringAnnotation("cache-background-update", ing)
+	if err != nil {
+		bu = "off"
+	}
+
 	p := fmt.Sprintf("/var/lib/nginx/cache/%v/%v", ing.Namespace, ing.Name)
 	n := fmt.Sprintf("%v-%v", ing.Namespace, ing.Name)
 
@@ -143,6 +152,6 @@ func (a cache) Parse(ing *extensions.Ingress) (interface{}, error) {
 
 	klog.Infof("Created cache directory %v", p)
 
-	return &Config{e, n, ash, it, l, ms, m, mu, p, r, ttl, us}, nil
+	return &Config{e, n, ash, it, l, ms, m, mu, p, r, ttl, us, bu}, nil
 
 }
