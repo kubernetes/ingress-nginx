@@ -230,9 +230,6 @@ func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
 		}
 	}
 
-	if len(out) == 0 {
-		return ""
-	}
 	return strings.Join(out, ";\n\r") + ";"
 }
 
@@ -840,7 +837,7 @@ func buildOpentracing(input interface{}) string {
 	if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so 	 /etc/nginx/opentracing.json;")
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
 	}
 
 	buf.WriteString("\r\n")
