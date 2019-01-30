@@ -72,6 +72,24 @@ local function pick_and_score(self, peers, k)
   return peers[lowest_score_index]
 end
 
+-- Arithmetic mean of the EWMAs, or 0 if there are no entries
+local function get_average_ewma(peers, ewma)
+   -- Get the average for the ewma
+  local old_ewma_average = 0
+  for _, endpoint in ipairs(peers) do
+    local name = endpoint.address .. ":" .. endpoint.port
+    old_ewma_average = old_ewma_average + (ewma[name] or 0)
+  end
+
+  if #peers >= 1 then
+    old_ewma_average = old_ewma_average / #peers
+  else
+    old_ewma_average = 0
+  end
+
+  return old_ewma_average
+end
+
 function _M.balance(self)
   local peers = self.peers
   local endpoint = peers[1]
@@ -107,23 +125,12 @@ function _M.sync(self, backend)
     return
   end
 
-  -- Get the average for the ewma
-  local old_ewma_average = 0
-  for _, endpoint in ipairs(self.peers) do
-    local name = endpoint.address .. ":" .. endpoint.port
-    old_ewma_average = old_ewma_average + (self.ewma[name] or 0)
-  end
-
-  if #self.peers >= 1 then
-    old_ewma_average = old_ewma_average / #self.peers
-  else
-    old_ewma_average = 0
-  end
-
   -- Preserve the values for remaining endpoints and set the new ones to the average
   local new_ewma = {}
   local new_ewma_last_touched_at = {}
   local now = ngx.now()
+  local old_ewma_average = get_average_ewma(self.peers, self.ewma)
+
   for _, endpoint in ipairs(backend.endpoints) do
     local name = endpoint.address .. ":" .. endpoint.port
     if self.ewma[name] ~= nil then
