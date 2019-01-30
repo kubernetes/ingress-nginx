@@ -1068,9 +1068,10 @@ stream {
                 balancer.rewrite()
             }
 
-            {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
 
+            {{ if shouldConfigureAccessBlock $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode $location.Jwt.Enabled $all.Cfg.EnableJWT }}
             access_by_lua_block {
+                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 

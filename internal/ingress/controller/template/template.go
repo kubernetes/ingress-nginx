@@ -122,6 +122,7 @@ var (
 		},
 		"escapeLiteralDollar":        escapeLiteralDollar,
 		"shouldConfigureLuaRestyWAF": shouldConfigureLuaRestyWAF,
+		"shouldConfigureAccessBlock": shouldConfigureAccessBlock,
 		"buildLuaSharedDictionaries": buildLuaSharedDictionaries,
 		"buildLocation":              buildLocation,
 		"buildAuthLocation":          buildAuthLocation,
@@ -200,6 +201,10 @@ func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
 	}
 
 	return false
+}
+
+func shouldConfigureAccessBlock(disableLuaRestyWAF bool, mode string, jwtLocationEnabled bool, jwtGlobalEnabled bool) bool {
+	return shouldConfigureLuaRestyWAF(disableLuaRestyWAF, mode) && jwtLocationEnabled && jwtGlobalEnabled
 }
 
 func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
