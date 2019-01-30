@@ -1383,9 +1383,9 @@ stream {
 
             proxy_cache_lock            on;
 
-            proxy_cache_bypass          $http_pragma            $http_authorization;
-            proxy_cache_bypass          $http_x_no_cache        $arg_nocache;
-            proxy_cache_bypass          $http_upgrade;
+            proxy_cache_bypass            $http_pragma;
+            proxy_cache_bypass            $http_x_no_cache $arg_nocache;
+            proxy_cache_bypass            $http_upgrade;
 
             proxy_ignore_headers        Cache-Control;
             proxy_ignore_headers        Set-Cookie;
