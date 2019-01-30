@@ -107,9 +107,35 @@ function _M.sync(self, backend)
     return
   end
 
+  -- Get the average for the ewma
+  local old_ewma_average = 0
+  for _, endpoint in ipairs(self.peers) do
+    local name = endpoint.address .. ":" .. endpoint.port
+    old_ewma_average = old_ewma_average + (self.ewma[name] or 0)
+  end
+  old_ewma_average = (old_ewma_average / #self.peers) or 0
+
+  -- Preserve the values for remaining endpoints and set the new ones to the average 
+  local new_ewma = {}
+  local new_ewma_last_touched_at = {}
+  local now = ngx.now()
+  for _, endpoint in ipairs(backend.endpoints) do
+    local name = endpoint.address .. ":" .. endpoint.port
+    if self.ewma[name] ~= nil then
+      -- Old endpoint
+      new_ewma[name] = self.ewma[name]
+      new_ewma_last_touched_at[name] = self.ewma_last_touched_at[name]
+    else
+      -- New endpoint
+      new_ewma[name] = old_ewma_average
+      new_ewma_last_touched_at[name] = now
+    end
+  end
+
   self.peers = backend.endpoints
-  self.ewma = {}
-  self.ewma_last_touched_at = {}
+  self.ewma = new_ewma
+  self.ewma_last_touched_at = new_ewma_last_touched_at
+
 end
 
 function _M.new(self, backend)
