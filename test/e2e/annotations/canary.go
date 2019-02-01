@@ -392,7 +392,7 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 		})
 	})
 
-	Context("when canaried by header", func() {
+	Context("when canaried by header with no value", func() {
 		It("should route requests to the correct upstream", func() {
 			host := "foo"
 			annotations := map[string]string{}
@@ -455,6 +455,128 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 			Expect(body).Should(ContainSubstring("http-svc"))
 			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+		})
+	})
+
+	Context("when canaried by header with value", func() {
+		It("should route requests to the correct upstream", func() {
+			host := "foo"
+			annotations := map[string]string{}
+
+			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring("server_name foo"))
+				})
+
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":                 "true",
+				"nginx.ingress.kubernetes.io/canary-by-header":       "CanaryByHeader",
+				"nginx.ingress.kubernetes.io/canary-by-header-value": "DoCanary",
+			}
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.IngressController.Namespace, "http-svc-canary",
+				80, &canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			time.Sleep(waitForLuaSync)
+
+			By("routing requests to the canary upstream when header is set to 'DoCanary'")
+
+			resp, body, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", host).
+				Set("CanaryByHeader", "DoCanary").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc-canary"))
+
+			By("routing requests to the mainline upstream when header is set to 'always'")
+
+			resp, body, errs = gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", host).
+				Set("CanaryByHeader", "always").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc"))
+			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+
+			By("routing requests to the mainline upstream when header is set to 'never'")
+
+			resp, body, errs = gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", host).
+				Set("CanaryByHeader", "never").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc"))
+			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+
+			By("routing requests to the mainline upstream when header is set to anything else")
+
+			resp, body, errs = gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", host).
+				Set("CanaryByHeader", "otherheadervalue").
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc"))
+			Expect(body).ShouldNot(ContainSubstring("http-svc-canary"))
+		})
+	})
+
+	Context("when canaried by header with value and cookie", func() {
+		It("should route requests to the correct upstream", func() {
+			host := "foo"
+			annotations := map[string]string{}
+
+			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring("server_name foo"))
+				})
+
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":                 "true",
+				"nginx.ingress.kubernetes.io/canary-by-header":       "CanaryByHeader",
+				"nginx.ingress.kubernetes.io/canary-by-header-value": "DoCanary",
+				"nginx.ingress.kubernetes.io/canary-by-cookie":       "CanaryByCookie",
+			}
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+
+			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.IngressController.Namespace, "http-svc-canary",
+				80, &canaryAnnotations)
+			f.EnsureIngress(canaryIng)
+
+			time.Sleep(waitForLuaSync)
+
+			By("routing requests to the canary upstream when header value does not match and cookie is set to 'always'")
+			resp, body, errs := gorequest.New().
+				Get(f.IngressController.HTTPURL).
+				Set("Host", host).
+				Set("CanaryByHeader", "otherheadervalue").
+				AddCookie(&http.Cookie{Name: "CanaryByCookie", Value: "always"}).
+				End()
+
+			Expect(errs).Should(BeEmpty())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(body).Should(ContainSubstring("http-svc-canary"))
 		})
 	})
 
