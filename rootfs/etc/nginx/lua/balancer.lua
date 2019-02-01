@@ -160,7 +160,11 @@ local function route_to_alternative_balancer(balancer)
   local target_header = util.replace_special_char(traffic_shaping_policy.header, "-", "_")
   local header = ngx.var["http_" .. target_header]
   if header then
-    if header == "always" then
+    if traffic_shaping_policy.headerValue and #traffic_shaping_policy.headerValue > 0 then
+      if traffic_shaping_policy.headerValue == header then
+        return true
+      end
+    elseif header == "always" then
       return true
     elseif header == "never" then
       return false

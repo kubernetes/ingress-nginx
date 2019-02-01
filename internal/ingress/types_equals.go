@@ -293,6 +293,9 @@ func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
 	if tsp1.Header != tsp2.Header {
 		return false
 	}
+	if tsp1.HeaderValue != tsp2.HeaderValue {
+		return false
+	}
 	if tsp1.Cookie != tsp2.Cookie {
 		return false
 	}

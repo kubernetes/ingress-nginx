@@ -30,10 +30,11 @@ type canary struct {
 
 // Config returns the configuration rules for setting up the Canary
 type Config struct {
-	Enabled bool
-	Weight  int
-	Header  string
-	Cookie  string
+	Enabled     bool
+	Weight      int
+	Header      string
+	HeaderValue string
+	Cookie      string
 }
 
 // NewParser parses the ingress for canary related annotations
@@ -62,12 +63,17 @@ func (c canary) Parse(ing *extensions.Ingress) (interface{}, error) {
 		config.Header = ""
 	}
 
+	config.HeaderValue, err = parser.GetStringAnnotation("canary-by-header-value", ing)
+	if err != nil {
+		config.HeaderValue = ""
+	}
+
 	config.Cookie, err = parser.GetStringAnnotation("canary-by-cookie", ing)
 	if err != nil {
 		config.Cookie = ""
 	}
 
-	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.Cookie) > 0) {
+	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0) {
 		return nil, errors.NewInvalidAnnotationConfiguration("canary", "configured but not enabled")
 	}
 
