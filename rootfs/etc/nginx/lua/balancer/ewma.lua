@@ -72,9 +72,12 @@ local function pick_and_score(self, peers, k)
   return peers[lowest_score_index]
 end
 
+local function ewma_already_exists(self, name)
+  return self.ewma[name] ~= nil
+end
+
 -- Arithmetic mean of the EWMAs, or 0 if there are no entries
 local function get_average_ewma(peers, ewma)
-   -- Get the average for the ewma
   local old_ewma_average = 0
   for _, endpoint in ipairs(peers) do
     local name = endpoint.address .. ":" .. endpoint.port
@@ -89,6 +92,29 @@ local function get_average_ewma(peers, ewma)
 
   return old_ewma_average
 end
+
+-- Preserve ewma values when the upstream list changes
+local function upstream_change_persist_ewma(self, backend)
+  local new_ewma = {}
+  local new_ewma_last_touched_at = {}
+  local now = ngx.now()
+  local old_ewma_average = get_average_ewma(self.peers, self.ewma)
+  for _, endpoint in ipairs(backend.endpoints) do
+    local name = endpoint.address .. ":" .. endpoint.port
+
+    if ewma_already_exists(self, name) then
+      new_ewma[name] = self.ewma[name]
+      new_ewma_last_touched_at[name] = self.ewma_last_touched_at[name]
+    else
+      new_ewma[name] = old_ewma_average
+      new_ewma_last_touched_at[name] = now
+    end
+  end
+
+  self.ewma = new_ewma
+  self.ewma_last_touched_at = new_ewma_last_touched_at
+end
+
 
 function _M.balance(self)
   local peers = self.peers
@@ -125,28 +151,8 @@ function _M.sync(self, backend)
     return
   end
 
-  -- Preserve the values for remaining endpoints and set the new ones to the average
-  local new_ewma = {}
-  local new_ewma_last_touched_at = {}
-  local now = ngx.now()
-  local old_ewma_average = get_average_ewma(self.peers, self.ewma)
-
-  for _, endpoint in ipairs(backend.endpoints) do
-    local name = endpoint.address .. ":" .. endpoint.port
-    if self.ewma[name] ~= nil then
-      -- Old endpoint
-      new_ewma[name] = self.ewma[name]
-      new_ewma_last_touched_at[name] = self.ewma_last_touched_at[name]
-    else
-      -- New endpoint
-      new_ewma[name] = old_ewma_average
-      new_ewma_last_touched_at[name] = now
-    end
-  end
-
+  upstream_change_persist_ewma(self, backend)
   self.peers = backend.endpoints
-  self.ewma = new_ewma
-  self.ewma_last_touched_at = new_ewma_last_touched_at
 end
 
 function _M.new(self, backend)
