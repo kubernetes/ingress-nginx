@@ -144,6 +144,9 @@ func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 
 // WaitForEndpoints waits for a given amount of time until an endpoint contains.
 func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration, name, ns string, expectedEndpoints int) error {
+	if expectedEndpoints == 0 {
+		return nil
+	}
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(name, metav1.GetOptions{})
 		if k8sErrors.IsNotFound(err) {
