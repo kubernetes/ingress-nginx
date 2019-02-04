@@ -17,15 +17,17 @@ limitations under the License.
 package canary
 
 import (
+	"testing"
+
 	api "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"testing"
+
+	"strconv"
 
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
-	"strconv"
 )
 
 func buildIngress() *extensions.Ingress {
@@ -61,6 +63,30 @@ func buildIngress() *extensions.Ingress {
 			},
 		},
 	}
+}
+
+func TestCanaryInvalid(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	i, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("Error Parsing Canary Annotations")
+	}
+
+	val, ok := i.(*Config)
+	if !ok {
+		t.Errorf("Expected %v and got %v", "*Config", val)
+	}
+	if val.Enabled != false {
+		t.Errorf("Expected %v but got %v", false, val.Enabled)
+	}
+	if val.Weight != 0 {
+		t.Errorf("Expected %v but got %v", 0, val.Weight)
+	}
+
 }
 
 func TestAnnotations(t *testing.T) {

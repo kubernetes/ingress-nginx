@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,9 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package backendprotocol
+package customhttperrors
 
 import (
+	"reflect"
+	"sort"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -42,52 +44,25 @@ func buildIngress() *extensions.Ingress {
 		},
 	}
 }
+
 func TestParseInvalidAnnotations(t *testing.T) {
 	ing := buildIngress()
 
-	// Test no annotations set
-	i, err := NewParser(&resolver.Mock{}).Parse(ing)
-	if err != nil {
-		t.Errorf("unexpected error parsing ingress with backend-protocol")
-	}
-	val, ok := i.(string)
-	if !ok {
-		t.Errorf("expected a string type")
-	}
-	if val != "HTTP" {
-		t.Errorf("expected HTTPS but %v returned", val)
+	_, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err == nil {
+		t.Errorf("expected error parsing ingress with custom-http-errors")
 	}
 
 	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("custom-http-errors")] = "400,404,abc,502"
 	ing.SetAnnotations(data)
 
-	// Test with empty annotations
-	i, err = NewParser(&resolver.Mock{}).Parse(ing)
-	if err != nil {
-		t.Errorf("unexpected error parsing ingress with backend-protocol")
+	i, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err == nil {
+		t.Errorf("expected error parsing ingress with custom-http-errors")
 	}
-	val, ok = i.(string)
-	if !ok {
-		t.Errorf("expected a string type")
-	}
-	if val != "HTTP" {
-		t.Errorf("expected HTTPS but %v returned", val)
-	}
-
-	// Test invalid annotation set
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "INVALID"
-	ing.SetAnnotations(data)
-
-	i, err = NewParser(&resolver.Mock{}).Parse(ing)
-	if err != nil {
-		t.Errorf("unexpected error parsing ingress with backend-protocol")
-	}
-	val, ok = i.(string)
-	if !ok {
-		t.Errorf("expected a string type")
-	}
-	if val != "HTTP" {
-		t.Errorf("expected HTTPS but %v returned", val)
+	if i != nil {
+		t.Errorf("expected %v but got %v", nil, i)
 	}
 }
 
@@ -95,18 +70,22 @@ func TestParseAnnotations(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTPS"
+	data[parser.GetAnnotationWithPrefix("custom-http-errors")] = "400,404,500,502"
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(&resolver.Mock{}).Parse(ing)
 	if err != nil {
-		t.Errorf("unexpected error parsing ingress with backend-protocol")
+		t.Errorf("unexpected error parsing ingress with custom-http-errors")
 	}
-	val, ok := i.(string)
+	val, ok := i.([]int)
 	if !ok {
-		t.Errorf("expected a string type")
+		t.Errorf("expected a []int type")
 	}
-	if val != "HTTPS" {
-		t.Errorf("expected HTTPS but %v returned", val)
+
+	expected := []int{400, 404, 500, 502}
+	sort.Ints(val)
+
+	if !reflect.DeepEqual(expected, val) {
+		t.Errorf("expected %v but got %v", expected, val)
 	}
 }

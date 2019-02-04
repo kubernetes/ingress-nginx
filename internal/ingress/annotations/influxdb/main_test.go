@@ -62,6 +62,36 @@ func buildIngress() *extensions.Ingress {
 	}
 }
 
+func TestIngressInvalidInfluxDB(t *testing.T) {
+	ing := buildIngress()
+
+	influx, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	nginxInflux, ok := influx.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type")
+	}
+
+	if nginxInflux.InfluxDBEnabled == true {
+		t.Errorf("expected influxdb enabled but returned %v", nginxInflux.InfluxDBEnabled)
+	}
+
+	if nginxInflux.InfluxDBMeasurement != "default" {
+		t.Errorf("expected measurement name not found. Found %v", nginxInflux.InfluxDBMeasurement)
+	}
+
+	if nginxInflux.InfluxDBPort != "8089" {
+		t.Errorf("expected port not found. Found %v", nginxInflux.InfluxDBPort)
+	}
+
+	if nginxInflux.InfluxDBHost != "127.0.0.1" {
+		t.Errorf("expected host not found. Found %v", nginxInflux.InfluxDBHost)
+	}
+
+	if nginxInflux.InfluxDBServerName != "nginx-ingress" {
+		t.Errorf("expected server name not found. Found %v", nginxInflux.InfluxDBServerName)
+	}
+}
+
 func TestIngressInfluxDB(t *testing.T) {
 	ing := buildIngress()
 
