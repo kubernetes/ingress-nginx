@@ -17,6 +17,8 @@ limitations under the License.
 package ratelimit
 
 import (
+	"reflect"
+	"sort"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -83,7 +85,24 @@ func TestWithoutAnnotations(t *testing.T) {
 	}
 }
 
-func TestBadRateLimiting(t *testing.T) {
+func TestParseCIDRs(t *testing.T) {
+	cidr, _ := parseCIDRs("invalid.com")
+	if cidr != nil {
+		t.Errorf("expected %v but got %v", nil, cidr)
+	}
+
+	expected := []string{"192.0.0.1", "192.0.1.0/24"}
+	cidr, err := parseCIDRs("192.0.0.1, 192.0.1.0/24")
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+	sort.Strings(cidr)
+	if !reflect.DeepEqual(expected, cidr) {
+		t.Errorf("expected %v but got %v", expected, cidr)
+	}
+}
+
+func TestRateLimiting(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}

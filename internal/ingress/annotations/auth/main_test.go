@@ -30,6 +30,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -93,6 +94,42 @@ func TestIngressWithoutAuth(t *testing.T) {
 	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err == nil {
 		t.Error("Expected error with ingress without annotations")
+	}
+}
+
+func TestIngressAuthBadAuthType(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "invalid"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	expected := ing_errors.NewLocationDenied("invalid authentication type")
+	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	if err.Error() != expected.Error() {
+		t.Errorf("expected '%v' but got '%v'", expected, err)
+	}
+}
+
+func TestInvalidIngressAuthNoSecret(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	expected := ing_errors.LocationDenied{
+		Reason: errors.New("error reading secret name from annotation: ingress rule without annotations"),
+	}
+	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	if err.Error() != expected.Reason.Error() {
+		t.Errorf("expected '%v' but got '%v'", expected, err)
 	}
 }
 
