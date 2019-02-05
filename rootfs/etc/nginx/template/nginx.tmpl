@@ -423,7 +423,7 @@ http {
     {{ end }}
 
     {{ range $errCode := $cfg.CustomHTTPErrors }}
-    error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
+    error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
     proxy_ssl_session_reuse on;
 
@@ -603,7 +603,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -798,10 +798,10 @@ stream {
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
-        {{ $proxySetHeaders := .ProxySetHeaders }}
         {{ $enableMetrics := .EnableMetrics }}
+        {{ $upstreamName := .UpstreamName }}
         {{ range $errCode := .ErrorCodes }}
-        location @custom_{{ $errCode }} {
+        location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
 
             proxy_intercept_errors off;
@@ -815,7 +815,7 @@ stream {
             proxy_set_header       X-Service-Port     $service_port;
             proxy_set_header       Host               $best_http_host;
 
-            set $proxy_upstream_name "upstream-default-backend";
+            set $proxy_upstream_name {{ $upstreamName }};
 
             rewrite                (.*) / break;
 
@@ -924,7 +924,10 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders (collectCustomErrorsPerServer $server) $all.EnableMetrics) }}
+        {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
+        {{ end }}
+
 
         {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
@@ -1326,8 +1329,7 @@ stream {
             {{ end }}
 
             {{ range $errCode := $location.CustomHTTPErrors }}
-            error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
-
+            error_page {{ $errCode }} = @custom_{{ $location.DefaultBackendUpstreamName }}_{{ $errCode }};{{ end }}
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}
