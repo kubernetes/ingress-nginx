@@ -1,9 +1,138 @@
----
-pipeline:
-  build:
-    privileged: true
-    image: rancher/dapper:1.11.2
+kind: pipeline
+name: amd64
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: build
+    image: rancher/dapper:v0.4.1
     volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
+      - name: docker
+        path: /var/run/docker.sock
     commands:
-    - ./scripts/rancher-prepare dapper ci
+      - apk add --no-cache git
+      - apk add --no-cache bash
+      - ./scripts/rancher-prepare dapper ci
+  - name: publish-amd64
+    image: docker
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+    environment:
+      USERNAME:
+        from_secret: dockerhub_username
+      PASSWORD:
+        from_secret: dockerhub_password
+    commands:
+      - "docker login -u $USERNAME -p $PASSWORD"
+      - "docker push rancher/nginx-ingress-controller:${DRONE_TAG}-amd64"
+    when:
+      event:
+        - tag
+volumes:
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+---
+kind: pipeline
+name: arm64
+
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+  - name: build
+    image: rancher/dapper:v0.4.1
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache git
+      - apk add --no-cache bash
+      - ./scripts/rancher-prepare dapper ci
+  - name: publish-arm64
+    image: docker
+    volumes:
+        - name: docker
+          path: /var/run/docker.sock
+    environment:
+      USERNAME:
+        from_secret: dockerhub_username
+      PASSWORD:
+        from_secret: dockerhub_password
+    commands:
+      - "docker login -u $USERNAME -p $PASSWORD"
+      - "docker push rancher/nginx-ingress-controller:${DRONE_TAG}-arm64"
+    when:
+      event:
+        - tag
+volumes:
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+---
+kind: pipeline
+name: arm
+
+platform:
+  os: linux
+  arch: arm
+
+steps:
+  - name: build
+    image: rancher/dapper:v0.4.1
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache git
+      - apk add --no-cache bash
+      - ./scripts/rancher-prepare dapper ci
+  - name: publish-arm
+    image: docker
+    volumes:
+        - name: docker
+          path: /var/run/docker.sock
+    environment:
+      USERNAME:
+        from_secret: dockerhub_username
+      PASSWORD:
+        from_secret: dockerhub_password
+    commands:
+      - "docker login -u $USERNAME -p $PASSWORD"
+      - "docker push rancher/nginx-ingress-controller:${DRONE_TAG}-arm"
+    when:
+      event:
+        - tag
+volumes:
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+---
+kind: pipeline
+name: manifest
+
+steps:
+  - name: push-manifest
+    image: plugins/manifest:1.0.2
+    settings:
+      username:
+        from_secret: dockerhub_username
+      password:
+        from_secret: dockerhub_password
+      target: "rancher/nginx-ingress-controller:${DRONE_TAG}"
+      template: "rancher/nginx-ingress-controller:${DRONE_TAG}-ARCH"
+      platforms:
+        - linux/amd64
+        - linux/arm64
+        - linux/arm
+    when:
+      event:
+        - tag
+depends_on:
+- amd64
+- arm64
+- arm
