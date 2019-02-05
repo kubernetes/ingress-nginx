@@ -345,8 +345,9 @@ http {
         default          $pass_server_port;
     }
     {{ else }}
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.HTTPS }}              443;
+    map "$pass_server_port:$pass_access_scheme" $pass_port {
+        "~^{{ $all.ListenPorts.HTTPS }}:.*"           443;
+        "~.*:https$"         443;
         default          $pass_server_port;
     }
     {{ end }}
