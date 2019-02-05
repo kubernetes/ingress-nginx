@@ -22,11 +22,16 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	extensions "k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
+
+const defaultBackendName = "upstream-default-backend"
+
+func errorBlockName(upstreamName string, errorCode string) string {
+	return fmt.Sprintf("@custom_%s_%s", upstreamName, errorCode)
+}
 
 var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func() {
 	f := framework.NewDefaultFramework("custom-http-errors")
@@ -61,12 +66,12 @@ var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func(
 
 		By("configuring error_page directive")
 		for _, code := range errorCodes {
-			Expect(serverConfig).Should(ContainSubstring(fmt.Sprintf("error_page %s = @custom_%s", code, code)))
+			Expect(serverConfig).Should(ContainSubstring(fmt.Sprintf("error_page %s = %s", code, errorBlockName("upstream-default-backend", code))))
 		}
 
 		By("creating error locations")
 		for _, code := range errorCodes {
-			Expect(serverConfig).Should(ContainSubstring(fmt.Sprintf("location @custom_%s", code)))
+			Expect(serverConfig).Should(ContainSubstring(fmt.Sprintf("location %s", errorBlockName("upstream-default-backend", code))))
 		}
 
 		By("updating configuration when only custom-http-error value changes")
@@ -82,9 +87,9 @@ var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func(
 			}
 			return false
 		})
-		Expect(serverConfig).Should(ContainSubstring("location @custom_503"))
-		Expect(serverConfig).ShouldNot(ContainSubstring("location @custom_400"))
-		Expect(serverConfig).ShouldNot(ContainSubstring("location @custom_500"))
+		Expect(serverConfig).Should(ContainSubstring(fmt.Sprintf("location %s", errorBlockName("upstream-default-backend", "503"))))
+		Expect(serverConfig).ShouldNot(ContainSubstring(fmt.Sprintf("location %s", errorBlockName("upstream-default-backend", "404"))))
+		Expect(serverConfig).ShouldNot(ContainSubstring(fmt.Sprintf("location %s", errorBlockName("upstream-default-backend", "500"))))
 
 		By("ignoring duplicate values (503 in this case) per server")
 		annotations["nginx.ingress.kubernetes.io/custom-http-errors"] = "404, 503"
@@ -94,7 +99,26 @@ var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func(
 			serverConfig = sc
 			return strings.Contains(serverConfig, "location /else")
 		})
-		count := strings.Count(serverConfig, fmt.Sprintf("location @custom_503"))
+		count := strings.Count(serverConfig, fmt.Sprintf("location %s", errorBlockName("upstream-default-backend", "503")))
 		Expect(count).Should(Equal(1))
+
+		By("using the custom default-backend from annotation for upstream")
+		customDefaultBackend := "from-annotation"
+		f.NewEchoDeploymentWithNameAndReplicas(customDefaultBackend, 1)
+
+		err = framework.UpdateIngress(f.KubeClientSet, f.IngressController.Namespace, host, func(ingress *extensions.Ingress) error {
+			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/default-backend"] = customDefaultBackend
+			return nil
+		})
+		Expect(err).ToNot(HaveOccurred())
+		f.WaitForNginxServer(host, func(sc string) bool {
+			if serverConfig != sc {
+				serverConfig = sc
+				return true
+			}
+			return false
+		})
+		Expect(serverConfig).Should(ContainSubstring(errorBlockName(fmt.Sprintf("custom-default-backend-%s", customDefaultBackend), "503")))
+		Expect(serverConfig).Should(ContainSubstring(fmt.Sprintf("error_page %s = %s", "503", errorBlockName(fmt.Sprintf("custom-default-backend-%s", customDefaultBackend), "503"))))
 	})
 })

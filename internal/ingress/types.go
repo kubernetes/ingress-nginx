@@ -287,6 +287,9 @@ type Location struct {
 	// DefaultBackend allows the use of a custom default backend for this location.
 	// +optional
 	DefaultBackend *apiv1.Service `json:"defaultBackend,omitempty"`
+	// DefaultBackendUpstreamName is the upstream-formatted string for the name of
+	// this location's custom default backend
+	DefaultBackendUpstreamName string `json:"defaultBackendUpstreamName,omitempty"`
 	// XForwardedPrefix allows to add a header X-Forwarded-Prefix to the request with the
 	// original location.
 	// +optional

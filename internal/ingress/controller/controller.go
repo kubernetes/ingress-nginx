@@ -581,24 +581,25 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 		isHTTPSfrom := []*ingress.Server{}
 		for _, server := range servers {
 			for _, location := range server.Locations {
-				if upstream.Name == location.Backend {
-					if len(upstream.Endpoints) == 0 {
-						klog.V(3).Infof("Upstream %q has no active Endpoint", upstream.Name)
-						// check if the location contains endpoints and a custom default backend
-						if location.DefaultBackend != nil {
-							sp := location.DefaultBackend.Spec.Ports[0]
-							endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
-							if len(endps) > 0 {
-								klog.V(3).Infof("Using custom default backend for location %q in server %q (Service \"%v/%v\")",
-									location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+				if shouldCreateUpstreamForLocationDefaultBackend(upstream, location) {
+					sp := location.DefaultBackend.Spec.Ports[0]
+					endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
+					if len(endps) > 0 {
 
-								nb := upstream.DeepCopy()
-								name := fmt.Sprintf("custom-default-backend-%v", upstream.Name)
-								nb.Name = name
-								nb.Endpoints = endps
-								aUpstreams = append(aUpstreams, nb)
-								location.Backend = name
-							}
+						name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
+						klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
+
+						nb := upstream.DeepCopy()
+						nb.Name = name
+						nb.Endpoints = endps
+						aUpstreams = append(aUpstreams, nb)
+						location.DefaultBackendUpstreamName = name
+
+						if len(upstream.Endpoints) == 0 {
+							klog.V(3).Infof("Upstream %q has no active Endpoint, so using custom default backend for location %q in server %q (Service \"%v/%v\")",
+								upstream.Name, location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+
+							location.Backend = name
 						}
 					}
 
@@ -611,6 +612,8 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 							isHTTPSfrom = append(isHTTPSfrom, server)
 						}
 					}
+				} else {
+					location.DefaultBackendUpstreamName = "upstream-default-backend"
 				}
 			}
 		}
@@ -1346,4 +1349,11 @@ func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 	}
 
 	return oldIngresses.Difference(newIngresses).List()
+}
+
+// checks conditions for whether or not an upstream should be created for a custom default backend
+func shouldCreateUpstreamForLocationDefaultBackend(upstream *ingress.Backend, location *ingress.Location) bool {
+	return (upstream.Name == location.Backend) &&
+		(len(upstream.Endpoints) == 0 || len(location.CustomHTTPErrors) != 0) &&
+		location.DefaultBackend != nil
 }
