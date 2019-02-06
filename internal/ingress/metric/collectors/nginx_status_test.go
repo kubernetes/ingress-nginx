@@ -21,9 +21,12 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 func TestStatusCollector(t *testing.T) {
@@ -96,23 +99,38 @@ func TestStatusCollector(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				fmt.Fprintf(w, c.mock)
-			}))
-			p := server.Listener.Addr().(*net.TCPAddr).Port
+			listener, err := net.Listen("unix", nginx.StatusSocket)
+			if err != nil {
+				t.Fatalf("crating unix listener: %s", err)
+			}
 
-			cm, err := NewNGINXStatus("pod", "default", "nginx", p)
+			server := &httptest.Server{
+				Listener: listener,
+				Config: &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+
+					if r.URL.Path == "/nginx_status" {
+						_, err := fmt.Fprintf(w, c.mock)
+						if err != nil {
+							t.Fatal(err)
+						}
+
+						return
+					}
+
+					fmt.Fprintf(w, "OK")
+				})},
+			}
+			server.Start()
+
+			time.Sleep(1 * time.Second)
+
+			cm, err := NewNGINXStatus("pod", "default", "nginx")
 			if err != nil {
 				t.Errorf("unexpected error creating nginx status collector: %v", err)
 			}
 
 			go cm.Start()
-
-			defer func() {
-				server.Close()
-				cm.Stop()
-			}()
 
 			reg := prometheus.NewPedanticRegistry()
 			if err := reg.Register(cm); err != nil {
@@ -124,6 +142,12 @@ func TestStatusCollector(t *testing.T) {
 			}
 
 			reg.Unregister(cm)
+
+			server.Close()
+			cm.Stop()
+
+			listener.Close()
+			os.Remove(nginx.StatusSocket)
 		})
 	}
 }

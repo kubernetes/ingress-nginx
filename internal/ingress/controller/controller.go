@@ -65,7 +65,6 @@ type Configuration struct {
 	// +optional
 	UDPConfigMapName string
 
-	DefaultHealthzURL     string
 	HealthCheckTimeout    time.Duration
 	DefaultSSLCertificate string
 
@@ -195,10 +194,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
 	if isFirstSync {
-		// For the initial sync it always takes some time for NGINX to
-		//  start listening on the configured port (default 18080)
-		//  For large configurations it might take a while so we loop
-		//  and back off
+		// For the initial sync it always takes some time for NGINX to start listening
+		// For large configurations it might take a while so we loop and back off
 		klog.Info("Initial sync, sleeping for 1 second.")
 		time.Sleep(1 * time.Second)
 	}
@@ -211,7 +208,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
+		err := configureDynamically(pcfg, n.cfg.DynamicCertificatesEnabled)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
@@ -255,7 +252,6 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		n.cfg.ListenPorts.HTTP,
 		n.cfg.ListenPorts.HTTPS,
 		n.cfg.ListenPorts.SSLProxy,
-		n.cfg.ListenPorts.Status,
 		n.cfg.ListenPorts.Health,
 		n.cfg.ListenPorts.Default,
 	}
