@@ -32,6 +32,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/nginx"
 )
 
 func TestIsDynamicConfigurationEnough(t *testing.T) {
@@ -149,32 +150,62 @@ func TestIsDynamicConfigurationEnough(t *testing.T) {
 	}
 }
 
-func mockUnixSocket(t *testing.T) net.Listener {
-	l, err := net.Listen("unix", nginxStreamSocket)
-	if err != nil {
-		t.Fatalf("unexpected error creating unix socket: %v", err)
-	}
-	if l == nil {
-		t.Fatalf("expected a listener but none returned")
-	}
-
-	go func() {
-		for {
-			conn, err := l.Accept()
-			if err != nil {
-				continue
-			}
-
-			time.Sleep(100 * time.Millisecond)
-			defer conn.Close()
-		}
-	}()
-
-	return l
-}
 func TestConfigureDynamically(t *testing.T) {
-	l := mockUnixSocket(t)
-	defer l.Close()
+	listener, err := net.Listen("unix", nginx.StatusSocket)
+	if err != nil {
+		t.Errorf("crating unix listener: %s", err)
+	}
+	defer listener.Close()
+	defer os.Remove(nginx.StatusSocket)
+
+	streamListener, err := net.Listen("unix", nginx.StreamSocket)
+	if err != nil {
+		t.Errorf("crating unix listener: %s", err)
+	}
+	defer streamListener.Close()
+	defer os.Remove(nginx.StreamSocket)
+
+	server := &httptest.Server{
+		Listener: listener,
+		Config: &http.Server{
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusCreated)
+
+				if r.Method != "POST" {
+					t.Errorf("expected a 'POST' request, got '%s'", r.Method)
+				}
+
+				b, err := ioutil.ReadAll(r.Body)
+				if err != nil && err != io.EOF {
+					t.Fatal(err)
+				}
+				body := string(b)
+
+				switch r.URL.Path {
+				case "/configuration/backends":
+					{
+						if strings.Contains(body, "target") {
+							t.Errorf("unexpected target reference in JSON content: %v", body)
+						}
+
+						if !strings.Contains(body, "service") {
+							t.Errorf("service reference should be present in JSON content: %v", body)
+						}
+					}
+				case "/configuration/general":
+					{
+						if !strings.Contains(body, "controllerPodsCount") {
+							t.Errorf("controllerPodsCount should be present in JSON content: %v", body)
+						}
+					}
+				default:
+					t.Errorf("unknown request to %s", r.URL.Path)
+				}
+			}),
+		},
+	}
+	defer server.Close()
+	server.Start()
 
 	target := &apiv1.ObjectReference{}
 
@@ -212,46 +243,7 @@ func TestConfigureDynamically(t *testing.T) {
 		ControllerPodsCount: 2,
 	}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusCreated)
-
-		if r.Method != "POST" {
-			t.Errorf("expected a 'POST' request, got '%s'", r.Method)
-		}
-
-		b, err := ioutil.ReadAll(r.Body)
-		if err != nil && err != io.EOF {
-			t.Fatal(err)
-		}
-		body := string(b)
-
-		switch r.URL.Path {
-		case "/configuration/backends":
-			{
-				if strings.Contains(body, "target") {
-					t.Errorf("unexpected target reference in JSON content: %v", body)
-				}
-
-				if !strings.Contains(body, "service") {
-					t.Errorf("service reference should be present in JSON content: %v", body)
-				}
-			}
-		case "/configuration/general":
-			{
-				if !strings.Contains(body, "controllerPodsCount") {
-					t.Errorf("controllerPodsCount should be present in JSON content: %v", body)
-				}
-			}
-		default:
-			t.Errorf("unknown request to %s", r.URL.Path)
-		}
-
-	}))
-
-	port := ts.Listener.Addr().(*net.TCPAddr).Port
-	defer ts.Close()
-
-	err := configureDynamically(commonConfig, port, false)
+	err = configureDynamically(commonConfig, false)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic configuration: %v", err)
 	}
@@ -262,6 +254,19 @@ func TestConfigureDynamically(t *testing.T) {
 }
 
 func TestConfigureCertificates(t *testing.T) {
+	listener, err := net.Listen("unix", nginx.StatusSocket)
+	if err != nil {
+		t.Errorf("crating unix listener: %s", err)
+	}
+	defer listener.Close()
+	defer os.Remove(nginx.StatusSocket)
+
+	streamListener, err := net.Listen("unix", nginx.StreamSocket)
+	if err != nil {
+		t.Errorf("crating unix listener: %s", err)
+	}
+	defer streamListener.Close()
+	defer os.Remove(nginx.StreamSocket)
 
 	servers := []*ingress.Server{{
 		Hostname: "myapp.fake",
@@ -270,42 +275,46 @@ func TestConfigureCertificates(t *testing.T) {
 		},
 	}}
 
+	server := &httptest.Server{
+		Listener: listener,
+		Config: &http.Server{
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusCreated)
+
+				if r.Method != "POST" {
+					t.Errorf("expected a 'POST' request, got '%s'", r.Method)
+				}
+
+				b, err := ioutil.ReadAll(r.Body)
+				if err != nil && err != io.EOF {
+					t.Fatal(err)
+				}
+				var postedServers []ingress.Server
+				err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, &postedServers)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if len(servers) != len(postedServers) {
+					t.Errorf("Expected servers to be the same length as the posted servers")
+				}
+
+				for i, server := range servers {
+					if !server.Equal(&postedServers[i]) {
+						t.Errorf("Expected servers and posted servers to be equal")
+					}
+				}
+			}),
+		},
+	}
+	defer server.Close()
+	server.Start()
+
 	commonConfig := &ingress.Configuration{
 		Servers: servers,
 	}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusCreated)
-
-		if r.Method != "POST" {
-			t.Errorf("expected a 'POST' request, got '%s'", r.Method)
-		}
-
-		b, err := ioutil.ReadAll(r.Body)
-		if err != nil && err != io.EOF {
-			t.Fatal(err)
-		}
-		var postedServers []ingress.Server
-		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, &postedServers)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if len(servers) != len(postedServers) {
-			t.Errorf("Expected servers to be the same length as the posted servers")
-		}
-
-		for i, server := range servers {
-			if !server.Equal(&postedServers[i]) {
-				t.Errorf("Expected servers and posted servers to be equal")
-			}
-		}
-	}))
-
-	port := ts.Listener.Addr().(*net.TCPAddr).Port
-	defer ts.Close()
-
-	err := configureCertificates(commonConfig, port)
+	err = configureCertificates(commonConfig)
 	if err != nil {
 		t.Errorf("unexpected error posting dynamic certificate configuration: %v", err)
 	}

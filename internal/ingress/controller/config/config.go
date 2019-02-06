@@ -732,6 +732,11 @@ type TemplateConfig struct {
 	PublishService             *apiv1.Service
 	DynamicCertificatesEnabled bool
 	EnableMetrics              bool
+
+	PID          string
+	StatusSocket string
+	StatusPath   string
+	StreamSocket string
 }
 
 // ListenPorts describe the ports required to run the
@@ -739,7 +744,6 @@ type TemplateConfig struct {
 type ListenPorts struct {
 	HTTP     int
 	HTTPS    int
-	Status   int
 	Health   int
 	Default  int
 	SSLProxy int

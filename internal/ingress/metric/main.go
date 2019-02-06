@@ -59,7 +59,7 @@ type collector struct {
 }
 
 // NewCollector creates a new metric collector the for ingress controller
-func NewCollector(statusPort int, metricsPerHost bool, registry *prometheus.Registry) (Collector, error) {
+func NewCollector(metricsPerHost bool, registry *prometheus.Registry) (Collector, error) {
 	podNamespace := os.Getenv("POD_NAMESPACE")
 	if podNamespace == "" {
 		podNamespace = "default"
@@ -67,7 +67,7 @@ func NewCollector(statusPort int, metricsPerHost bool, registry *prometheus.Regi
 
 	podName := os.Getenv("POD_NAME")
 
-	nc, err := collectors.NewNGINXStatus(podName, podNamespace, class.IngressClass, statusPort)
+	nc, err := collectors.NewNGINXStatus(podName, podNamespace, class.IngressClass)
 	if err != nil {
 		return nil, err
 	}
