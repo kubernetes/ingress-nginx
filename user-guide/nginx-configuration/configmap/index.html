@@ -579,6 +579,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#access-log-params" title="access-log-params" class="md-nav__link">
+    access-log-params
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#access-log-path" title="access-log-path" class="md-nav__link">
     access-log-path
   </a>
@@ -1992,6 +1999,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#access-log-params" title="access-log-params" class="md-nav__link">
+    access-log-params
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#access-log-path" title="access-log-path" class="md-nav__link">
     access-log-path
   </a>
@@ -2895,6 +2909,11 @@ Same for numbers, like "100".</p>
 <td align="left">empty</td>
 </tr>
 <tr>
+<td align="left"><a href="#access-log-params">access-log-params</a></td>
+<td align="left">string</td>
+<td align="left">""</td>
+</tr>
+<tr>
 <td align="left"><a href="#access-log-path">access-log-path</a></td>
 <td align="left">string</td>
 <td align="left">"/var/log/nginx/access.log"</td>
@@ -3515,6 +3534,10 @@ Same for numbers, like "100".</p>
 <em><strong>default:</strong></em> empty</p>
 <p><em>References:</em>
 <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header">http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header</a></p>
+<h2 id="access-log-params">access-log-params<a class="headerlink" href="#access-log-params" title="Permanent link">&para;</a></h2>
+<p>Additional params for access_log. For example, buffer=16k, gzip, flush=1m</p>
+<p><em>References:</em>
+<a href="http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log">http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log</a></p>
 <h2 id="access-log-path">access-log-path<a class="headerlink" href="#access-log-path" title="Permanent link">&para;</a></h2>
 <p>Access log path. Goes to <code class="codehilite">/var/log/nginx/access.log</code> by default.</p>
 <p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/access.log</code> is a symlink to <code class="codehilite">/dev/stdout</code></p>
