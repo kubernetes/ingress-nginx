@@ -1173,7 +1173,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			priUps := upstreams[loc.Backend]
 
 			if canMergeBackend(priUps, altUps) {
-				klog.Infof("matching backend %v found for alternative backend %v",
+				klog.V(2).Infof("matching backend %v found for alternative backend %v",
 					priUps.Name, altUps.Name)
 
 				merged = mergeAlternativeBackend(priUps, altUps)
@@ -1208,7 +1208,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 				priUps := upstreams[loc.Backend]
 
 				if canMergeBackend(priUps, altUps) && loc.Path == path.Path {
-					klog.Infof("matching backend %v found for alternative backend %v",
+					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
 					merged = mergeAlternativeBackend(priUps, altUps)
