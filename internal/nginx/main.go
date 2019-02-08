@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/tv42/httpunix"
@@ -85,6 +86,21 @@ func NewPostStatusRequest(path, contentType string, data interface{}) (int, []by
 	}
 
 	return res.StatusCode, body, nil
+}
+
+// ReadNginxConf reads the nginx configuration file into a string
+func ReadNginxConf() (string, error) {
+	confFile, err := os.Open("/etc/nginx/nginx.conf")
+	if err != nil {
+		return "", err
+	}
+	defer confFile.Close()
+
+	contents, err := ioutil.ReadAll(confFile)
+	if err != nil {
+		return "", err
+	}
+	return string(contents), nil
 }
 
 func buildUnixSocketClient() *http.Client {
