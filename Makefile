@@ -105,7 +105,7 @@ container: clean-container .container-$(ARCH)
 	@echo "+ Copying artifact to temporary directory"
 	mkdir -p $(TEMP_DIR)/rootfs
 	cp bin/$(ARCH)/nginx-ingress-controller $(TEMP_DIR)/rootfs/nginx-ingress-controller
-
+	cp bin/$(ARCH)/dbg $(TEMP_DIR)/rootfs/dbg
 	@echo "+ Building container image $(MULTI_ARCH_IMG):$(TAG)"
 	cp -RP ./* $(TEMP_DIR)
 	$(SED_I) "s|BASEIMAGE|$(BASEIMAGE)|g" $(DOCKERFILE)
