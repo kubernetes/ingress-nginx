@@ -42,6 +42,9 @@ RUN bash -eu -c ' \
 RUN  setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
   && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller
 
+RUN  setcap    cap_net_bind_service=+ep /usr/sbin/nginx \
+  && setcap -v cap_net_bind_service=+ep /usr/sbin/nginx
+
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector
 # This only works if nginx is started with CMD or ENTRYPOINT
 RUN ln -sf /dev/stdout /var/log/nginx/access.log

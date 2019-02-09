@@ -17,10 +17,11 @@ limitations under the License.
 package controller
 
 import (
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"os"
 	"os/exec"
 	"syscall"
+
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"fmt"
 
@@ -108,10 +109,5 @@ func nginxExecCommand(args ...string) *exec.Cmd {
 }
 
 func nginxTestCommand(cfg string) *exec.Cmd {
-	ngx := os.Getenv("NGINX_BINARY")
-	if ngx == "" {
-		ngx = defBinary
-	}
-
-	return exec.Command("authbind", "--deep", ngx, "-c", cfg, "-t")
+	return exec.Command(defBinary, "-c", cfg, "-t")
 }
