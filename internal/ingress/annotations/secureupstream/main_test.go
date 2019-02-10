@@ -76,6 +76,22 @@ func (cfg mockCfg) GetAuthCertificate(secret string) (*resolver.AuthSSLCert, err
 	return nil, fmt.Errorf("secret not found: %v", secret)
 }
 
+func TestNoCA(t *testing.T) {
+	ing := buildIngress()
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTPS"
+	ing.SetAnnotations(data)
+
+	_, err := NewParser(mockCfg{
+		certs: map[string]resolver.AuthSSLCert{
+			"default/secure-verify-ca": {},
+		},
+	}).Parse(ing)
+	if err != nil {
+		t.Errorf("Unexpected error on ingress: %v", err)
+	}
+}
+
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
