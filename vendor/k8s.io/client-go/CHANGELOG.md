@@ -5,6 +5,114 @@ https://github.com/kubernetes/test-infra/issues/5843.
 Changes in `k8s.io/api` and `k8s.io/apimachinery` are mentioned here
 because `k8s.io/client-go` depends on them.
 
+# v10.0.0
+
+**Breaking Changes:**
+
+* Action required: client-go will no longer have bootstrap
+(`k8s.io/client-go/tools/bootstrap`) related code. Any reference to it will
+break. Please redirect all references to `k8s.io/bootstrap` instead.
+([#67356](https://github.com/kubernetes/kubernetes/pull/67356))
+
+* The methods `NewSelfSignedCACert` and `NewSignedCert` now use `crypto.Signer`
+interface instead of `rsa.PrivateKey` for certificate creation. This is done
+to allow different kind of private keys (for example: ecdsa).
+([#69329](https://github.com/kubernetes/kubernetes/pull/69329))
+
+* `GetScale` and `UpdateScale` methods have been added for `apps/v1` clients
+and with this, no-verb scale clients have been removed.
+([#70437](https://github.com/kubernetes/kubernetes/pull/70437))
+
+* `k8s.io/client-go/util/cert/triple` package has been removed.
+([#70966](https://github.com/kubernetes/kubernetes/pull/70966))
+
+**New Features:**
+
+* `unfinished_work_microseconds` is added to the workqueue metrics.
+It can be used to detect stuck worker threads (kube-controller-manager runs many workqueues.).
+([#70884](https://github.com/kubernetes/kubernetes/pull/70884))
+
+* A method `GetPorts` is added to expose the ports that were forwarded.
+This can be used to retrieve the locally-bound port in cases where the input was port 0.
+([#67513](https://github.com/kubernetes/kubernetes/pull/67513))
+
+* Dynamic listers and informers, that work with `runtime.Unstructured` objects,
+are added. These are useful for writing generic, non-generated controllers.
+([68748](https://github.com/kubernetes/kubernetes/pull/68748))
+
+* The dynamic fake client now supports JSONPatch.
+([#69330](https://github.com/kubernetes/kubernetes/pull/69330))
+
+* The `GetBinding` method is added for pods in the fake client.
+([#69412](https://github.com/kubernetes/kubernetes/pull/69412))
+
+**Bug fixes and Improvements:**
+
+* The `apiVersion` and action name values for fake evictions are now set.
+([#69035](https://github.com/kubernetes/kubernetes/pull/69035))
+
+* PEM files containing both TLS certificate and key can now be parsed in
+arbitrary order. Previously key was always required to be first.
+([#69536](https://github.com/kubernetes/kubernetes/pull/69536))
+
+* Go clients created from a kubeconfig that specifies a `TokenFile` now
+periodically reload the token from the specified file.
+([#70606](https://github.com/kubernetes/kubernetes/pull/70606))
+
+* It is now ensured that oversized data frames are not written to
+spdystreams in `remotecommand.NewSPDYExecutor`.
+([#70999](https://github.com/kubernetes/kubernetes/pull/70999))
+
+* A panic occuring on calling `scheme.Convert` is fixed by populating the fake
+dynamic client scheme. ([#69125](https://github.com/kubernetes/kubernetes/pull/69125))
+
+* Add step to correctly setup permissions for the in-cluster-client-configuration example.
+([#69232](https://github.com/kubernetes/kubernetes/pull/69232))
+
+* The function `Parallelize` is deprecated. Use `ParallelizeUntil` instead.
+([#68403](https://github.com/kubernetes/kubernetes/pull/68403))
+
+* [k8s.io/apimachinery] Restrict redirect following from the apiserver to
+same-host redirects, and ignore redirects in some cases.
+([#66516](https://github.com/kubernetes/kubernetes/pull/66516))
+
+## API changes
+
+**New Features:**
+
+* GlusterFS PersistentVolumes sources can now reference endpoints in any
+namespace using the `spec.glusterfs.endpointsNamespace` field.
+Ensure all kubelets are upgraded to 1.13+ before using this capability.
+([#60195](https://github.com/kubernetes/kubernetes/pull/60195))
+
+* The [dynamic audit configuration](https://github.com/kubernetes/community/blob/master/keps/sig-auth/0014-dynamic-audit-configuration.md)
+API is added. ([#67547](https://github.com/kubernetes/kubernetes/pull/67547))
+
+* A new field `EnableServiceLinks` is added to the `PodSpec` to indicate whether
+information about services should be injected into pod's environment variables.
+([#68754](https://github.com/kubernetes/kubernetes/pull/68754))
+
+* `CSIPersistentVolume` feature, i.e. `PersistentVolumes` with
+`CSIPersistentVolumeSource`, is GA. `CSIPersistentVolume` feature gate is now
+deprecated and will be removed according to deprecation policy.
+([#69929](https://github.com/kubernetes/kubernetes/pull/69929))
+
+* Raw block volume support is promoted to beta, and enabled by default.
+This is accessible via the `volumeDevices` container field in pod specs,
+and the `volumeMode` field in persistent volume and persistent volume claims definitions.
+([#71167](https://github.com/kubernetes/kubernetes/pull/71167))
+
+**Bug fixes and Improvements:**
+
+* The default value of extensions/v1beta1 Deployment's `RevisionHistoryLimit`
+is set to `MaxInt32`. ([#66605](https://github.com/kubernetes/kubernetes/pull/66605))
+
+* `procMount` field is no longer incorrectly marked as required in openapi schema.
+([#69694](https://github.com/kubernetes/kubernetes/pull/69694))
+
+* The caBundle and service fields in admission webhook API objects now correctly
+indicate they are optional. ([#70138](https://github.com/kubernetes/kubernetes/pull/70138))
+
 # v9.0.0
 
 **Breaking Changes:**
