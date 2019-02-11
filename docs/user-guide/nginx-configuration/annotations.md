@@ -64,6 +64,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
+|[nginx.ingress.kubernetes.io/satisfy](#satisfy)|string|
 |[nginx.ingress.kubernetes.io/secure-verify-ca-secret](#secure-backends)|string|
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
@@ -760,3 +761,11 @@ When this annotation is set to `true`, the case insensitive regular expression [
 Additionally, if the [`rewrite-target` annotation](#rewrite) is used on any Ingress for a given host, then the case insensitive regular expression [location modifier](https://nginx.org/en/docs/http/ngx_http_core_module.html#location) will be enforced on ALL paths for a given host regardless of what Ingress they are defined on.  
 
 Please read about [ingress path matching](../ingress-path-matching.md) before using this modifier. 
+
+### Satisfy
+
+By default, a request would need to satisfy all authentication requirements in order to be allowed. By using this annotation, requests that satisfy either any or all authentication requirements are allowed, based on the configuration value.
+
+```yaml
+nginx.ingress.kubernetes.io/satisfy: "any"
+```
