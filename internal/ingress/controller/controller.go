@@ -484,6 +484,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						loc.BackendProtocol = anns.BackendProtocol
 						loc.CustomHTTPErrors = anns.CustomHTTPErrors
 						loc.ModSecurity = anns.ModSecurity
+						loc.Satisfy = anns.Satisfy
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -526,6 +527,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						BackendProtocol:      anns.BackendProtocol,
 						CustomHTTPErrors:     anns.CustomHTTPErrors,
 						ModSecurity:          anns.ModSecurity,
+						Satisfy:              anns.Satisfy,
 					}
 
 					if loc.Redirect.FromToWWW {

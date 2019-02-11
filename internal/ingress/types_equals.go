@@ -469,6 +469,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if l1.Satisfy != l2.Satisfy {
+		return false
+	}
+
 	return true
 }
 
