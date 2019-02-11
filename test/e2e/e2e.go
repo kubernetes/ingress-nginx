@@ -32,6 +32,7 @@ import (
 
 	// tests to run
 	_ "k8s.io/ingress-nginx/test/e2e/annotations"
+	_ "k8s.io/ingress-nginx/test/e2e/dbg"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
 	_ "k8s.io/ingress-nginx/test/e2e/gracefulshutdown"
 	_ "k8s.io/ingress-nginx/test/e2e/loadbalance"
