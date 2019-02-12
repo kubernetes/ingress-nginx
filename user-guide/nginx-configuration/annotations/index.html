@@ -2630,7 +2630,7 @@ Prometheus, etc.. (recommended)</li>
 <p>It's important to remember that there's no DNS resolver at this stage so you will have to configure
 an ip address to <code class="codehilite">nginx.ingress.kubernetes.io/influxdb-host</code>. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use <code class="codehilite">127.0.0.1</code>.</p>
 <h3 id="backend-protocol">Backend Protocol<a class="headerlink" href="#backend-protocol" title="Permanent link">&para;</a></h3>
-<p>Using <code class="codehilite">backend-protocol</code> annotations is possible to indicate how NGINX should communicate with the backend service.
+<p>Using <code class="codehilite">backend-protocol</code> annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces <code class="codehilite">secure-backends</code> in older versions)
 Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
 <p>By default NGINX uses <code class="codehilite">HTTP</code>.</p>
 <p>Example:</p>
