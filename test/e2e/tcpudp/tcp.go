@@ -84,12 +84,8 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-http-svc-80"`, f.IngressController.Namespace))
 			})
 
-		ip := f.GetNginxIP()
-		port, err := f.GetNginxPort("http-svc")
-		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning service port")
-
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf("http://%v:%v", ip, port)).
+			Get(fmt.Sprintf("http://%v:%v", "localhost", "8080")).
 			End()
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(200))

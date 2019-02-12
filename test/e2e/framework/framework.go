@@ -15,8 +15,10 @@ package framework
 
 import (
 	"fmt"
-	"os"
+	"net"
+	"os/exec"
 	"strings"
+	"syscall"
 	"time"
 
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
@@ -66,6 +68,9 @@ type Framework struct {
 	cleanupHandle CleanupActionHandle
 
 	IngressController *ingressController
+
+	httpPfCmd  *portForwardCommand
+	httpsPfCmd *portForwardCommand
 }
 
 type ingressController struct {
@@ -117,19 +122,33 @@ func (f *Framework) BeforeEach() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	HTTPURL := f.GetNginxURL(HTTP)
-	f.IngressController.HTTPURL = HTTPURL
-
-	HTTPSURL := f.GetNginxURL(HTTPS)
-	f.IngressController.HTTPSURL = HTTPSURL
-
 	// we wait for any change in the informers and SSL certificate generation
 	time.Sleep(5 * time.Second)
+
+	httpPort, err := getAvailablePort()
+	Expect(err).NotTo(HaveOccurred())
+
+	httpsPort, err := getAvailablePort()
+	Expect(err).NotTo(HaveOccurred())
+
+	f.IngressController.HTTPURL = fmt.Sprintf("http://localhost:%v", httpPort)
+	f.IngressController.HTTPSURL = fmt.Sprintf("https://localhost:%v", httpsPort)
+
+	By("Starting port forwarding for HTTP and HTTPS")
+	f.httpPfCmd, err = runPortForward(f.IngressController.Namespace, httpPort, 80)
+	Expect(err).NotTo(HaveOccurred())
+
+	f.httpsPfCmd, err = runPortForward(f.IngressController.Namespace, httpsPort, 443)
+	Expect(err).NotTo(HaveOccurred())
 }
 
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
 	RemoveCleanupAction(f.cleanupHandle)
+
+	By("Killing port-forward for HTTP and HTTPS")
+	f.httpPfCmd.Stop()
+	f.httpsPfCmd.Stop()
 
 	By("Waiting for test namespace to no longer exist")
 	err := DeleteKubeNamespace(f.KubeClientSet, f.IngressController.Namespace)
@@ -148,51 +167,15 @@ func IngressNginxDescribe(text string, body func()) bool {
 	return Describe("[nginx-ingress] "+text, body)
 }
 
-// GetNginxIP returns the IP address of the minikube cluster
-// where the NGINX ingress controller is running
-func (f *Framework) GetNginxIP() string {
-	nodeIP := os.Getenv("NODE_IP")
-	Expect(nodeIP).NotTo(BeEmpty(), "env variable NODE_IP is empty")
-	return nodeIP
-}
-
-// GetNginxPort returns the number of TCP port where NGINX is running
-func (f *Framework) GetNginxPort(name string) (int, error) {
-	s, err := f.KubeClientSet.
-		CoreV1().
-		Services(f.IngressController.Namespace).
-		Get("ingress-nginx", metav1.GetOptions{})
-	if err != nil {
-		return -1, err
-	}
-
-	for _, p := range s.Spec.Ports {
-		if p.NodePort != 0 && p.Name == name {
-			return int(p.NodePort), nil
-		}
-	}
-
-	return -1, err
-}
-
-// GetNginxURL returns the URL should be used to make a request to NGINX
-func (f *Framework) GetNginxURL(scheme RequestScheme) string {
-	ip := f.GetNginxIP()
-	port, err := f.GetNginxPort(fmt.Sprintf("%v", scheme))
-	Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX Port")
-
-	return fmt.Sprintf("%v://%v:%v", scheme, ip, port)
-}
-
 // WaitForNginxServer waits until the nginx configuration contains a particular server section
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, time.Minute*5, f.matchNginxConditions(name, matcher))
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
 }
 
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
-	err := wait.Poll(Poll, time.Minute*5, f.matchNginxConditions("", matcher))
+	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	Expect(err).NotTo(HaveOccurred(), "unexpected error waiting for nginx server condition/s")
 }
 
@@ -218,7 +201,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 	return func() (bool, error) {
 		pod, err := getIngressNGINXPod(f.IngressController.Namespace, f.KubeClientSet)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 
 		var cmd string
@@ -230,7 +213,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 
 		o, err := f.ExecCommand(pod, cmd)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 
 		var match bool
@@ -488,4 +471,71 @@ func newSingleIngress(name, ns string, annotations *map[string]string, spec exte
 	}
 
 	return ing
+}
+
+func getAvailablePort() (int32, error) {
+	l, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return -1, err
+	}
+	return int32(l.Addr().(*net.TCPAddr).Port), l.Close()
+}
+
+type portForwardCommand struct {
+	cmd        *exec.Cmd
+	localPort  int32
+	remotePort int32
+}
+
+// Stop attempts to gracefully stop `kubectl port-forward`, only killing it if necessary.
+// This helps avoid spdy goroutine leaks in the Kubelet.
+func (c *portForwardCommand) Stop() {
+	// SIGINT signals that kubectl port-forward should gracefully terminate
+	if err := c.cmd.Process.Signal(syscall.SIGINT); err != nil {
+		Logf("error sending SIGINT to kubectl port-forward: %v", err)
+	}
+
+	// try to wait for a clean exit
+	done := make(chan error)
+	go func() {
+		done <- c.cmd.Wait()
+	}()
+
+	expired := time.NewTimer(wait.ForeverTestTimeout)
+	defer expired.Stop()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			// success
+			return
+		}
+		Logf("error waiting for kubectl port-forward to exit: %v", err)
+	case <-expired.C:
+		Logf("timed out waiting for kubectl port-forward to exit")
+	}
+
+	Logf("trying to forcibly kill kubectl port-forward")
+	TryKill(c.cmd)
+}
+
+func runPortForward(namespace string, localPort, remotePort int32) (*portForwardCommand, error) {
+	pfcmd := exec.Command("kubectl", "port-forward", "--pod-running-timeout", "2m", "--namespace", namespace, "svc/ingress-nginx", fmt.Sprintf("%v:%v", localPort, remotePort))
+	err := pfcmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	return &portForwardCommand{pfcmd, localPort, remotePort}, nil
+}
+
+// TryKill rough equivalent of ctrl+c for cleaning up processes. Intended to be run in defer.
+func TryKill(cmd *exec.Cmd) {
+	if cmd.Process == nil {
+		return
+	}
+
+	if err := cmd.Process.Kill(); err != nil {
+		Logf("ERROR failed to kill command %v! The process may leak", cmd)
+	}
 }

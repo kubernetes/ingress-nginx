@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"strconv"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -55,12 +54,8 @@ var _ = framework.IngressNginxDescribe("Proxy Protocol", func() {
 					strings.Contains(server, "listen 80 proxy_protocol")
 			})
 
-		ip := f.GetNginxIP()
-		port, err := f.GetNginxPort("http")
-		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning NGINX Port")
-
-		conn, err := net.Dial("tcp", net.JoinHostPort(ip, strconv.Itoa(port)))
-		Expect(err).NotTo(HaveOccurred(), "unexpected error creating connection to %s:%d", ip, port)
+		conn, err := net.Dial("tcp", net.JoinHostPort("localhost", "80"))
+		Expect(err).NotTo(HaveOccurred(), "unexpected error creating connection")
 		defer conn.Close()
 
 		header := "PROXY TCP4 192.168.0.1 192.168.0.11 56324 1234\r\n"

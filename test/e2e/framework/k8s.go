@@ -124,12 +124,17 @@ func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(opts)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 
 		r := 0
 		for _, p := range pl.Items {
-			if isRunning, _ := podRunningReady(&p); isRunning {
+			isRunning, err := podRunningReady(&p)
+			if err != nil {
+				return false, nil
+			}
+
+			if isRunning {
 				r++
 			}
 		}
@@ -147,14 +152,15 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 	if expectedEndpoints == 0 {
 		return nil
 	}
+
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(name, metav1.GetOptions{})
 		if k8sErrors.IsNotFound(err) {
-			return false, err
+			return false, nil
 		}
 		Expect(err).NotTo(HaveOccurred())
 		if len(endpoint.Subsets) == 0 || len(endpoint.Subsets[0].Addresses) == 0 {
-			return false, err
+			return false, nil
 		}
 
 		r := 0
