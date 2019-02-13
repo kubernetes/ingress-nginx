@@ -25,18 +25,18 @@ export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
 export NGINX_DIGEST_AUTH=274490cec649e7300fea97fed13d84e596bbc0ce
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
-export NGINX_OPENTRACING_VERSION=ea9994d7135be5ad2e3009d0f270e063b1fb3b21
-export OPENTRACING_CPP_VERSION=1.5.0
+export NGINX_OPENTRACING_VERSION=0.8.0
+export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
-export JAEGER_VERSION=ba0fa3fa6dbb01995d996f988a897e272100bf95
+export JAEGER_VERSION=cdfaf5bb25ff5f8ec179fd548e6c7c2ade9a6a09
 export MODSECURITY_VERSION=fc061a57a8b0abda79b17cbe103d78db803fa575
-export LUA_NGX_VERSION=1c72f57ce87d4355d546a97c2bd8f5123a70db5c
-export LUA_STREAM_NGX_VERSION=0.0.6rc2
+export LUA_NGX_VERSION=fd90f4e8252e9d06419317fdf525b55c65e15a50
+export LUA_STREAM_NGX_VERSION=0.0.6rc5
 export LUA_UPSTREAM_VERSION=0.07
 export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export LUAJIT_VERSION=520d53a87dd44c637dddb6de313204211c2b212b
+export LUAJIT_VERSION=0e646b54e1368acb2e39d89014ae649207f4d0a0
 
 export BUILD_PATH=/tmp/build
 
@@ -144,10 +144,10 @@ get_src ede0ad490cb9dd69da348bdea2a60a4c45284c9777b2f13fa48394b6b8e7671c \
 get_src 618551948ab14cac51d6e4ad00452312c7b09938f59ebff4f93875013be31f2d \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 343b4293ca0d4afa55bf1ab54c866766043b2585b6ce81467d3d3e25987fc186 \
-        "https://github.com/opentracing-contrib/nginx-opentracing/archive/$NGINX_OPENTRACING_VERSION.tar.gz"
+get_src b2159297814d5df153cf45f355bcd8ffdb71f2468e8149ad549d4f9c0cdc81ad \
+        "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
 
-get_src 4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5 \
+get_src 015c4187f7a6426a2b5196f0ccd982aa87f010cf61f507ae3ce5c90523f92301 \
         "https://github.com/opentracing/opentracing-cpp/archive/v$OPENTRACING_CPP_VERSION.tar.gz"
 
 get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
@@ -156,26 +156,26 @@ get_src 30affaf0f3a84193f7127cc0135da91773ce45d902414082273dae78914f73df \
 get_src 073deba39f74eff81da917907465e1343c89b335244349d3d3b4ae9331de86f2 \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz"
 
-get_src b68286966f292fb552511b71bd8bc11af8f12c8aa760372d1437ac8760cb2f25 \
+get_src 3183450d897baa9309347c8617edc0c97c5b29ffc32bd2d12f498edf2dcbeffa \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/$JAEGER_VERSION.tar.gz"
 
-get_src 6c8a2792222f6bfad927840bf64cb890466fcca703a0133cbde0e5b808461279 \
+get_src 8ff5b18f4ff75ecdb852f50ce2069213d36285fa5f584c28e03ff978fe62d99a \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
 
-get_src 5420dbf59bac52cef8021658d7eae1667a2bd14dda23602c985cae2604de77dd \
+get_src 4f3f6fa0f2b89e0f83b6881b25ed190fd5bc7d38c1db338526664c500f0dedc6 \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
         "https://github.com/openresty/lua-upstream-nginx-module/archive/v$LUA_UPSTREAM_VERSION.tar.gz"
 
-get_src 2349dd0b7ee37680306ee76bc4b6bf5c7509a4a4be16d246d9bbff44f564e4a0 \
-        "https://github.com/openresty/lua-resty-lrucache/archive/v0.08.tar.gz"
+get_src 342709c8e55e9901a91e90cb83153ff588d88be27c4370954b5a2e470e53d26f \
+        "https://github.com/openresty/lua-resty-lrucache/archive/v0.09rc1.tar.gz"
 
-get_src bc9a00f4dd6dd3928c6e878dc84fa7a1073d5a65900cd77a5c1c7ce2d863b22a \
-        "https://github.com/openresty/lua-resty-core/archive/v0.1.16rc3.tar.gz"
+get_src f3bf9a35c66b00594d13b9e22c2e8f07fdaeedc6e790e2ca4675a886d5b5e4da \
+        "https://github.com/openresty/lua-resty-core/archive/v0.1.16rc4.tar.gz"
 
-get_src eaf84f58b43289c1c3e0442ada9ed40406357f203adc96e2091638080cb8d361 \
-        "https://github.com/openresty/lua-resty-lock/archive/v0.07.tar.gz"
+get_src 517db9add320250b770f2daac83a49e38e6131611f2daa5ff05c69d5705e9746 \
+        "https://github.com/openresty/lua-resty-lock/archive/v0.08rc1.tar.gz"
 
 get_src 3917d506e2d692088f7b4035c589cc32634de4ea66e40fc51259fbae43c9258d \
         "https://github.com/hamishforbes/lua-resty-iputils/archive/v0.3.0.tar.gz"
@@ -195,7 +195,7 @@ get_src a77bf0d7cf6a9ba017d0dc973b1a58f13e48242dd3849c5e99c07d250667c44c \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src d04df883adb86c96a8e0fe6c404851b9c776840dbb524419c06ae3fac42c4e64 \
+get_src 69914f80665a1c26f22c66768ee2467689c615a5d3e255b3e99a1ef65c769b3d \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 
 get_src c673fcee37c1c4794f921b6710b09e8a0e1e58117aa788f798507d033f737192 \
@@ -238,13 +238,13 @@ fi
 cd "$BUILD_PATH"
 luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
 
-cd "$BUILD_PATH/lua-resty-core-0.1.16rc3"
+cd "$BUILD_PATH/lua-resty-core-0.1.16rc4"
 make install
 
-cd "$BUILD_PATH/lua-resty-lrucache-0.08"
+cd "$BUILD_PATH/lua-resty-lrucache-0.09rc1"
 make install
 
-cd "$BUILD_PATH/lua-resty-lock-0.07"
+cd "$BUILD_PATH/lua-resty-lock-0.08rc1"
 make install
 
 cd "$BUILD_PATH/lua-resty-iputils-0.3.0"
@@ -363,7 +363,7 @@ git submodule update
 cd "$BUILD_PATH"
 git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
 cd ModSecurity/
-git checkout 9ada0a28c8100f905014c128b0e6d11dd75ec7e5
+git checkout 145f2f35b751cc10ea6fe2b329f68eac20e2bb74
 git submodule init
 git submodule update
 sh build.sh
