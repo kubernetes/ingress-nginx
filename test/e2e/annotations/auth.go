@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 200 when no authentication is configured", func() {
 		host := "auth"
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -55,7 +55,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
@@ -73,7 +73,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -82,7 +82,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
@@ -95,7 +95,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 401 when authentication is configured but Authorization header is not configured", func() {
 		host := "auth"
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -103,7 +103,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -112,7 +112,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			End()
@@ -125,7 +125,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials", func() {
 		host := "auth"
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -133,7 +133,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -142,7 +142,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("user", "pass").
@@ -156,7 +156,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 	It("should return status code 200 when authentication is configured and Authorization header is sent", func() {
 		host := "auth"
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.IngressController.Namespace))
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -164,7 +164,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -173,7 +173,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("foo", "bar").
@@ -190,7 +190,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
-					Namespace: f.IngressController.Namespace,
+					Namespace: f.Namespace,
 				},
 				Data: map[string][]byte{
 					// invalid content
@@ -206,7 +206,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -215,7 +215,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			Set("Host", host).
 			SetBasicAuth("foo", "bar").
@@ -234,7 +234,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				proxy_set_header My-Custom-Header 42;`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -251,7 +251,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				proxy_set_header My-Custom-Header 42;`,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -268,10 +268,10 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 			var httpbinIP string
 
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.IngressController.Namespace, 1)
+			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.Namespace, 1)
 			Expect(err).NotTo(HaveOccurred())
 
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.IngressController.Namespace).Get("httpbin", metav1.GetOptions{})
+			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get("httpbin", metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 
 			httpbinIP = e.Subsets[0].Addresses[0].IP
@@ -281,7 +281,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 			}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host, func(server string) bool {
@@ -291,7 +291,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		It("should return status code 200 when signed in", func() {
 			resp, _, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetInsecureURL()).
 				Retry(10, 1*time.Second, http.StatusNotFound).
 				Set("Host", host).
 				SetBasicAuth("user", "password").
@@ -305,7 +305,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 
 		It("should redirect to signin url when not signed in", func() {
 			resp, _, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetInsecureURL()).
 				Retry(10, 1*time.Second, http.StatusNotFound).
 				Set("Host", host).
 				RedirectPolicy(func(req gorequest.Request, via []gorequest.Request) error {

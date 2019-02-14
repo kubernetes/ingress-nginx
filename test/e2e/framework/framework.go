@@ -16,8 +16,10 @@ package framework
 import (
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -67,17 +69,20 @@ type Framework struct {
 	// should abort, the AfterSuite hook should run all Cleanup actions.
 	cleanupHandle CleanupActionHandle
 
-	IngressController *ingressController
+	Namespace string
 
 	httpPfCmd  *portForwardCommand
 	httpsPfCmd *portForwardCommand
 }
 
-type ingressController struct {
-	HTTPURL  string
-	HTTPSURL string
+// GetInsecureURL returns the URL where the ingress-nginx insecure port (HTTP) is being forwarded
+func (f *Framework) GetInsecureURL() string {
+	return fmt.Sprintf("http://localhost:%v", f.httpPfCmd.localPort)
+}
 
-	Namespace string
+// GetSecureURL returns the URL where the ingress-nginx secure port (HTTPS) is being forwarded
+func (f *Framework) GetSecureURL() string {
+	return fmt.Sprintf("https://localhost:%v", f.httpsPfCmd.localPort)
 }
 
 // NewDefaultFramework makes a new framework and sets up a BeforeEach/AfterEach for
@@ -106,18 +111,14 @@ func (f *Framework) BeforeEach() {
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Building a namespace api object")
-	ingressNamespace, err := CreateKubeNamespace(f.BaseName, f.KubeClientSet)
+	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
 	Expect(err).NotTo(HaveOccurred())
-
-	f.IngressController = &ingressController{
-		Namespace: ingressNamespace,
-	}
 
 	By("Starting new ingress controller")
-	err = f.NewIngressController(f.IngressController.Namespace)
+	err = f.NewIngressController(f.Namespace)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.IngressController.Namespace, metav1.ListOptions{
+	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	Expect(err).NotTo(HaveOccurred())
@@ -125,20 +126,11 @@ func (f *Framework) BeforeEach() {
 	// we wait for any change in the informers and SSL certificate generation
 	time.Sleep(5 * time.Second)
 
-	httpPort, err := getAvailablePort()
-	Expect(err).NotTo(HaveOccurred())
-
-	httpsPort, err := getAvailablePort()
-	Expect(err).NotTo(HaveOccurred())
-
-	f.IngressController.HTTPURL = fmt.Sprintf("http://localhost:%v", httpPort)
-	f.IngressController.HTTPSURL = fmt.Sprintf("https://localhost:%v", httpsPort)
-
 	By("Starting port forwarding for HTTP and HTTPS")
-	f.httpPfCmd, err = RunPortForward(f.IngressController.Namespace, httpPort, 80)
+	f.httpPfCmd, err = RunPortForward(f.Namespace, 80)
 	Expect(err).NotTo(HaveOccurred())
 
-	f.httpsPfCmd, err = RunPortForward(f.IngressController.Namespace, httpsPort, 443)
+	f.httpsPfCmd, err = RunPortForward(f.Namespace, 443)
 	Expect(err).NotTo(HaveOccurred())
 }
 
@@ -151,7 +143,7 @@ func (f *Framework) AfterEach() {
 	f.httpsPfCmd.Stop()
 
 	By("Waiting for test namespace to no longer exist")
-	err := DeleteKubeNamespace(f.KubeClientSet, f.IngressController.Namespace)
+	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
 	Expect(err).NotTo(HaveOccurred())
 
 	if CurrentGinkgoTestDescription().Failed {
@@ -194,12 +186,12 @@ func nginxLogs(client kubernetes.Interface, namespace string) (string, error) {
 
 // NginxLogs returns the logs of the nginx ingress controller pod running
 func (f *Framework) NginxLogs() (string, error) {
-	return nginxLogs(f.KubeClientSet, f.IngressController.Namespace)
+	return nginxLogs(f.KubeClientSet, f.Namespace)
 }
 
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
-		pod, err := getIngressNGINXPod(f.IngressController.Namespace, f.KubeClientSet)
+		pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
 		if err != nil {
 			return false, nil
 		}
@@ -247,7 +239,7 @@ func (f *Framework) getNginxConfigMap() (*v1.ConfigMap, error) {
 
 	config, err := f.KubeClientSet.
 		CoreV1().
-		ConfigMaps(f.IngressController.Namespace).
+		ConfigMaps(f.Namespace).
 		Get("nginx-configuration", metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -281,7 +273,7 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 
 	_, err = f.KubeClientSet.
 		CoreV1().
-		ConfigMaps(f.IngressController.Namespace).
+		ConfigMaps(f.Namespace).
 		Update(config)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -301,7 +293,7 @@ func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
 // DeleteNGINXPod deletes the currently running pod. It waits for the replacement pod to be up.
 // Grace period to wait for pod shutdown is in seconds.
 func (f *Framework) DeleteNGINXPod(grace int64) {
-	ns := f.IngressController.Namespace
+	ns := f.Namespace
 	pod, err := getIngressNGINXPod(ns, f.KubeClientSet)
 	Expect(err).NotTo(HaveOccurred(), "expected ingress nginx pod to be running")
 
@@ -524,15 +516,33 @@ func (c *portForwardCommand) GetLocalPort() int32 {
 	return c.localPort
 }
 
+var mutex = &sync.Mutex{}
+
 // RunPortForward forwards a remote Kubernetes port in the ingress-nginx deployment to a local port
-func RunPortForward(namespace string, localPort, remotePort int32) (*portForwardCommand, error) {
-	pfcmd := exec.Command("kubectl", "port-forward", "--pod-running-timeout", "2m", "--namespace", namespace, "svc/ingress-nginx", fmt.Sprintf("%v:%v", localPort, remotePort))
-	err := pfcmd.Start()
+func RunPortForward(namespace string, remotePort int32) (*portForwardCommand, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	randomPort, err := getAvailablePort()
 	if err != nil {
 		return nil, err
 	}
 
-	return &portForwardCommand{pfcmd, localPort, remotePort}, nil
+	pfcmd := exec.Command("kubectl",
+		"port-forward",
+		"--pod-running-timeout", "5m",
+		"--namespace", namespace,
+		"svc/ingress-nginx",
+		fmt.Sprintf("%v:%v", randomPort, remotePort))
+
+	pfcmd.Stdout = os.Stdout
+	pfcmd.Stderr = os.Stderr
+	err = pfcmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	return &portForwardCommand{pfcmd, randomPort, remotePort}, nil
 }
 
 // TryKill rough equivalent of ctrl+c for cleaning up processes. Intended to be run in defer.
@@ -541,7 +551,7 @@ func TryKill(cmd *exec.Cmd) {
 		return
 	}
 
-	if err := cmd.Process.Kill(); err != nil {
-		Logf("ERROR failed to kill command %v! The process may leak", cmd)
+	if err := cmd.Process.Kill(); err != nil && err.Error() != "os: process already finished" {
+		Logf("ERROR failed to kill command %v! The process may leak: %v", cmd, err)
 	}
 }

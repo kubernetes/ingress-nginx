@@ -37,7 +37,7 @@ var _ = framework.IngressNginxDescribe("Annotations - IPWhiteList", func() {
 
 	It("should set valid ip whitelist range", func() {
 		host := "ipwhitelist.foo.com"
-		nameSpace := f.IngressController.Namespace
+		nameSpace := f.Namespace
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/whitelist-source-range": "18.0.0.0/8, 56.0.0.0/8",

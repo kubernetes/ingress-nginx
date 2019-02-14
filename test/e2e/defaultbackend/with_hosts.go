@@ -17,6 +17,9 @@ limitations under the License.
 package defaultbackend
 
 import (
+	"net/http"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/parnurzeal/gorequest"
@@ -24,8 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/ingress-nginx/test/e2e/framework"
-	"net/http"
-	"strings"
 )
 
 var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
@@ -47,7 +48,7 @@ var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
 		ing := &extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        "default-backend-annotations",
-				Namespace:   f.IngressController.Namespace,
+				Namespace:   f.Namespace,
 				Annotations: annotations,
 			},
 			Spec: extensions.IngressSpec{
@@ -71,7 +72,7 @@ var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Set("Host", "foo.com").
 			End()
 

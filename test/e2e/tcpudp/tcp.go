@@ -45,7 +45,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 
 		config, err := f.KubeClientSet.
 			CoreV1().
-			ConfigMaps(f.IngressController.Namespace).
+			ConfigMaps(f.Namespace).
 			Get("tcp-services", metav1.GetOptions{})
 		Expect(err).To(BeNil(), "unexpected error obtaining tcp-services configmap")
 		Expect(config).NotTo(BeNil(), "expected a configmap but none returned")
@@ -54,16 +54,16 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 			config.Data = map[string]string{}
 		}
 
-		config.Data["8080"] = fmt.Sprintf("%v/http-svc:80", f.IngressController.Namespace)
+		config.Data["8080"] = fmt.Sprintf("%v/http-svc:80", f.Namespace)
 		_, err = f.KubeClientSet.
 			CoreV1().
-			ConfigMaps(f.IngressController.Namespace).
+			ConfigMaps(f.Namespace).
 			Update(config)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating configmap")
 
 		svc, err := f.KubeClientSet.
 			CoreV1().
-			Services(f.IngressController.Namespace).
+			Services(f.Namespace).
 			Get("ingress-nginx", metav1.GetOptions{})
 		Expect(err).To(BeNil(), "unexpected error obtaining ingress-nginx service")
 		Expect(svc).NotTo(BeNil(), "expected a service but none returned")
@@ -75,16 +75,16 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		})
 		_, err = f.KubeClientSet.
 			CoreV1().
-			Services(f.IngressController.Namespace).
+			Services(f.Namespace).
 			Update(svc)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating service")
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-http-svc-80"`, f.IngressController.Namespace))
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-http-svc-80"`, f.Namespace))
 			})
 
-		pfCmd, err := framework.RunPortForward(f.IngressController.Namespace, int32(8080), int32(8080))
+		pfCmd, err := framework.RunPortForward(f.Namespace, int32(8080))
 		Expect(err).NotTo(HaveOccurred())
 
 		resp, _, errs := gorequest.New().

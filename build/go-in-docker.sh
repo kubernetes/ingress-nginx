@@ -60,7 +60,6 @@ GOBUILD_FLAGS=${GOBUILD_FLAGS:-"-v"}
 PWD=${PWD}
 BUSTED_ARGS=${BUSTED_ARGS:-""}
 REPO_INFO=${REPO_INFO:-local}
-NODE_IP=${NODE_IP:-127.0.0.1}
 SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD:-40}
 EOF
 
@@ -74,6 +73,7 @@ fi
 docker run                                       \
     --tty                                        \
     --rm                                         \
+    --net=host \
     ${DOCKER_OPTS}                               \
     -v ${HOME}/.kube:/${HOME}/.kube              \
     -v ${PWD}:/go/src/${PKG}                     \

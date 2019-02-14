@@ -37,11 +37,11 @@ var _ = framework.IngressNginxDescribe("Proxy host variable", func() {
 	})
 
 	It("should exist a proxy_host", func() {
-		upstreamName := fmt.Sprintf("%v-http-svc-80", f.IngressController.Namespace)
+		upstreamName := fmt.Sprintf("%v-http-svc-80", f.Namespace)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Custom-Header: $proxy_host"`,
 		}
-		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.IngressController.Namespace, "http-svc", 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, "http-svc", 80, &annotations))
 
 		f.WaitForNginxConfiguration(
 			func(server string) bool {
@@ -50,7 +50,7 @@ var _ = framework.IngressNginxDescribe("Proxy host variable", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Set("Host", test).
 			End()
 
@@ -60,13 +60,13 @@ var _ = framework.IngressNginxDescribe("Proxy host variable", func() {
 	})
 
 	It("should exist a proxy_host using the upstream-vhost annotation value", func() {
-		upstreamName := fmt.Sprintf("%v-http-svc-80", f.IngressController.Namespace)
+		upstreamName := fmt.Sprintf("%v-http-svc-80", f.Namespace)
 		upstreamVHost := "different.host"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/upstream-vhost":        upstreamVHost,
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Custom-Header: $proxy_host"`,
 		}
-		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.IngressController.Namespace, "http-svc", 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, "http-svc", 80, &annotations))
 
 		f.WaitForNginxConfiguration(
 			func(server string) bool {
@@ -75,7 +75,7 @@ var _ = framework.IngressNginxDescribe("Proxy host variable", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Set("Host", test).
 			End()
 

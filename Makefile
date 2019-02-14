@@ -30,8 +30,6 @@ E2E_NODES ?= 4
 # slow test only if takes > 40s
 SLOW_E2E_THRESHOLD ?= 40
 
-NODE_IP ?= $(shell minikube ip)
-
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
 endif
@@ -167,7 +165,6 @@ static-check:
 .PHONY: test
 test:
 	@$(DEF_VARS)                 \
-	NODE_IP=$(NODE_IP)           \
 	DOCKER_OPTS="-i --net=host"  \
 	build/go-in-docker.sh build/test.sh
 
@@ -182,10 +179,41 @@ e2e-test:
 	@$(DEF_VARS)                             \
 	FOCUS=$(FOCUS)                           \
 	E2E_NODES=$(E2E_NODES)                   \
-	DOCKER_OPTS="-i --net=host"              \
-	NODE_IP=$(NODE_IP)                       \
 	SLOW_E2E_THRESHOLD=$(SLOW_E2E_THRESHOLD) \
 	build/go-in-docker.sh build/e2e-tests.sh
+
+e2e-test-pod:
+	kubectl run ingress-nginx-e2e \
+	--restart=Never \
+	--env=FOCUS=$(FOCUS),E2E_NODES=$(E2E_NODES),SLOW_E2E_THRESHOLD=$(SLOW_E2E_THRESHOLD) \
+	--overrides='{
+	"spec": {
+		"template": {
+		"spec": {
+			"containers": [
+			{
+				"name": "e2e",
+				"image": "quay.io/kubernetes-ingress-controller/e2e:v02132019-7dc17a603",
+				"args": [
+				"/ingress/build/e2e-tests.sh"
+				],
+				"stdin": true,
+				"stdinOnce": true,
+				"tty": true,
+				"volumeMounts": [{
+				"mountPath": "/home/aledbf/go/src/k8s.io/ingress-nginx",
+				"name": "store"
+				}]
+			}
+			],
+			"volumes": [{
+				"name":"store",
+				"emptyDir":{}
+			}]
+		}
+	  }
+	}
+	}'
 
 .PHONY: cover
 cover:

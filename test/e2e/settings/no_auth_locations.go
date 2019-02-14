@@ -45,11 +45,11 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 	BeforeEach(func() {
 		f.NewEchoDeployment()
 
-		s := f.EnsureSecret(buildSecret(username, password, secretName, f.IngressController.Namespace))
+		s := f.EnsureSecret(buildSecret(username, password, secretName, f.Namespace))
 
 		f.UpdateNginxConfigMapData(setting, noAuthPath)
 
-		bi := buildBasicAuthIngressWithSecondPath(host, f.IngressController.Namespace, s.Name, noAuthPath)
+		bi := buildBasicAuthIngressWithSecondPath(host, f.Namespace, s.Name, noAuthPath)
 		f.EnsureIngress(bi)
 	})
 
@@ -63,7 +63,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Set("Host", host).
 			End()
 
@@ -79,7 +79,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetInsecureURL()).
 			Set("Host", host).
 			SetBasicAuth(username, password).
 			End()
@@ -95,7 +95,7 @@ var _ = framework.IngressNginxDescribe("No Auth locations", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf("%s/noauth", f.IngressController.HTTPURL)).
+			Get(fmt.Sprintf("%s/noauth", f.GetInsecureURL())).
 			Set("Host", host).
 			End()
 

@@ -85,7 +85,27 @@ func (f *Framework) EnsureIngress(ingress *extensions.Ingress) *extensions.Ingre
 		ing.Annotations = make(map[string]string)
 	}
 
+	for _, tls := range ing.Spec.TLS {
+		err = wait.Poll(Poll, DefaultTimeout, f.waitForSSL(fmt.Sprintf("%v/%v", ing.Namespace, tls.SecretName)))
+		Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("unexpected error waiting for secret %v/%v", ing.Namespace, tls.SecretName))
+	}
+
 	return ing
+}
+
+func (f *Framework) waitForSSL(secretName string) wait.ConditionFunc {
+	return func() (bool, error) {
+		log, err := f.NginxLogs()
+		if err != nil {
+			return false, nil
+		}
+
+		if strings.Index(log, fmt.Sprintf("Adding Secret %v", secretName)) == -1 {
+			return false, nil
+		}
+
+		return true, nil
+	}
 }
 
 // EnsureService creates a Service object or returns it if it already exists.

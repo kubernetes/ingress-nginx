@@ -20,7 +20,6 @@ set -o pipefail
 
 declare -a mandatory
 mandatory=(
-  NODE_IP
   SLOW_E2E_THRESHOLD
   PKG
   FOCUS

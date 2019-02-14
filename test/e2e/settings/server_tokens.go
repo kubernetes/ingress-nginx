@@ -41,7 +41,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 	It("should not exists Server header in the response", func() {
 		f.UpdateNginxConfigMapData(serverTokens, "false")
 
-		f.EnsureIngress(framework.NewSingleIngress(serverTokens, "/", serverTokens, f.IngressController.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(serverTokens, "/", serverTokens, f.Namespace, "http-svc", 80, nil))
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
@@ -56,7 +56,7 @@ var _ = framework.IngressNginxDescribe("Server Tokens", func() {
 		f.EnsureIngress(&v1beta1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        serverTokens,
-				Namespace:   f.IngressController.Namespace,
+				Namespace:   f.Namespace,
 				Annotations: map[string]string{},
 			},
 			Spec: v1beta1.IngressSpec{
