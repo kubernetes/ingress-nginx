@@ -19,6 +19,7 @@ set -o nounset
 set -o pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export PATH=$PATH:$DIR
 
 NAMESPACE="${NAMESPACE:-ingress-nginx}"
 echo "NAMESPACE is set to ${NAMESPACE}"
@@ -32,7 +33,7 @@ DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 KIND_CLUSTER_NAME="ingress-nginx-dev"
 
 echo "[dev-env] checking for kind binary"
-kind --version || go get -u -v sigs.k8s.io/kind
+kind --version || go get sigs.k8s.io/kind
 
 SKIP_CLUSTER_CREATION=${SKIP_CLUSTER_CREATION:-}
 if [ -z "${SKIP_CLUSTER_CREATION}" ]; then
