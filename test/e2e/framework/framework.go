@@ -135,10 +135,10 @@ func (f *Framework) BeforeEach() {
 	f.IngressController.HTTPSURL = fmt.Sprintf("https://localhost:%v", httpsPort)
 
 	By("Starting port forwarding for HTTP and HTTPS")
-	f.httpPfCmd, err = runPortForward(f.IngressController.Namespace, httpPort, 80)
+	f.httpPfCmd, err = RunPortForward(f.IngressController.Namespace, httpPort, 80)
 	Expect(err).NotTo(HaveOccurred())
 
-	f.httpsPfCmd, err = runPortForward(f.IngressController.Namespace, httpsPort, 443)
+	f.httpsPfCmd, err = RunPortForward(f.IngressController.Namespace, httpsPort, 443)
 	Expect(err).NotTo(HaveOccurred())
 }
 
@@ -519,7 +519,13 @@ func (c *portForwardCommand) Stop() {
 	TryKill(c.cmd)
 }
 
-func runPortForward(namespace string, localPort, remotePort int32) (*portForwardCommand, error) {
+// GetLocalPort returns the random local port generated
+func (c *portForwardCommand) GetLocalPort() int32 {
+	return c.localPort
+}
+
+// RunPortForward forwards a remote Kubernetes port in the ingress-nginx deployment to a local port
+func RunPortForward(namespace string, localPort, remotePort int32) (*portForwardCommand, error) {
 	pfcmd := exec.Command("kubectl", "port-forward", "--pod-running-timeout", "2m", "--namespace", namespace, "svc/ingress-nginx", fmt.Sprintf("%v:%v", localPort, remotePort))
 	err := pfcmd.Start()
 	if err != nil {
