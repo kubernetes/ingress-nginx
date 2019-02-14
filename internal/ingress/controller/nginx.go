@@ -596,7 +596,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		Servers:                    ingressCfg.Servers,
 		TCPBackends:                ingressCfg.TCPEndpoints,
 		UDPBackends:                ingressCfg.UDPEndpoints,
-		CustomErrors:               len(cfg.CustomHTTPErrors) > 0,
 		Cfg:                        cfg,
 		IsIPV6Enabled:              n.isIPV6Enabled && !cfg.DisableIpv6,
 		NginxStatusIpv4Whitelist:   cfg.NginxStatusIpv4Whitelist,
