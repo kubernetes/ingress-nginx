@@ -418,8 +418,7 @@ http {
 
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
 
-    {{ if .CustomErrors }}
-    # Custom error pages
+    {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
     proxy_intercept_errors on;
     {{ end }}
 
