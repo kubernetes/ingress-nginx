@@ -449,6 +449,22 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if len(l1.CustomHTTPErrors) != len(l2.CustomHTTPErrors) {
+		return false
+	}
+	for _, code1 := range l1.CustomHTTPErrors {
+		found := false
+		for _, code2 := range l2.CustomHTTPErrors {
+			if code1 == code2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
 	if !(&l1.ModSecurity).Equal(&l2.ModSecurity) {
 		return false
 	}
