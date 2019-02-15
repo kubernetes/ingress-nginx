@@ -491,6 +491,21 @@ type Configuration struct {
 	// Default: 1
 	JaegerSamplerParam string `json:"jaeger-sampler-param"`
 
+	// DatadogCollectorHost specifies the datadog agent host to use when uploading traces
+	DatadogCollectorHost string `json:"datadog-collector-host"`
+
+	// DatadogCollectorPort specifies the port to use when uploading traces
+	// Default: 8126
+	DatadogCollectorPort int `json:"datadog-collector-port"`
+
+	// DatadogServiceName specifies the service name to use for any traces created
+	// Default: nginx
+	DatadogServiceName string `json:"datadog-service-name"`
+
+	// DatadogOperationNameOverride overrides the operation naem to use for any traces crated
+	// Default: nginx.handle
+	DatadogOperationNameOverride string `json:"datadog-operation-name-override"`
+
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
 
@@ -685,6 +700,9 @@ func NewDefault() Configuration {
 		JaegerServiceName:            "nginx",
 		JaegerSamplerType:            "const",
 		JaegerSamplerParam:           "1",
+		DatadogServiceName:           "nginx",
+		DatadogCollectorPort:         8126,
+		DatadogOperationNameOverride: "nginx.handle",
 		LimitReqStatusCode:           503,
 		LimitConnStatusCode:          503,
 		SyslogPort:                   514,
