@@ -390,7 +390,7 @@ func New(checkOCSP bool,
 
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "UPDATE", fmt.Sprintf("Ingress %s/%s", curIng.Namespace, curIng.Name))
 			} else {
-				klog.Infof("ignoring ingress %v based on annotation %v", curIng.Name, class.IngressKey)
+				klog.V(3).Infof("No changes on ingress %v/%v. Skipping update", curIng.Namespace, curIng.Name)
 				return
 			}
 
