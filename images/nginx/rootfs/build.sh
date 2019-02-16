@@ -29,6 +29,8 @@ export NGINX_OPENTRACING_VERSION=0.8.0
 export OPENTRACING_CPP_VERSION=1.5.1
 export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=cdfaf5bb25ff5f8ec179fd548e6c7c2ade9a6a09
+export MSGPACK_VERSION=3.1.1
+export DATADOG_CPP_VERSION=0.4.2
 export MODSECURITY_VERSION=fc061a57a8b0abda79b17cbe103d78db803fa575
 export LUA_NGX_VERSION=fd90f4e8252e9d06419317fdf525b55c65e15a50
 export LUA_STREAM_NGX_VERSION=0.0.6rc5
@@ -158,6 +160,12 @@ get_src 073deba39f74eff81da917907465e1343c89b335244349d3d3b4ae9331de86f2 \
 
 get_src 3183450d897baa9309347c8617edc0c97c5b29ffc32bd2d12f498edf2dcbeffa \
         "https://github.com/jaegertracing/jaeger-client-cpp/archive/$JAEGER_VERSION.tar.gz"
+
+get_src bda49f996a73d2c6080ff0523e7b535917cd28c8a79c3a5da54fc29332d61d1e \
+        "https://github.com/msgpack/msgpack-c/archive/cpp-$MSGPACK_VERSION.tar.gz"
+
+get_src a3d1c03e7af570fa64c01df259e6e9bb78637a6bd9c65c6bf7e8703e466dc22f \
+        "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
 get_src 8ff5b18f4ff75ecdb852f50ce2069213d36285fa5f584c28e03ff978fe62d99a \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
@@ -348,6 +356,31 @@ cmake -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=ON \
       -DBUILD_PLUGIN=ON \
       -DBUILD_TESTING=OFF ..
+
+make
+make install
+
+# build msgpack lib
+cd "$BUILD_PATH/msgpack-c-cpp-$MSGPACK_VERSION"
+
+mkdir .build
+cd .build
+cmake -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_CXX_FLAGS="-fPIC" \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DBUILD_TESTING=OFF \
+        -DBUILD_MOCKTRACER=OFF \
+        ..
+
+make
+make install
+
+# build datadog lib
+cd "$BUILD_PATH/dd-opentracing-cpp-$DATADOG_CPP_VERSION"
+
+mkdir .build
+cd .build
+cmake ..
 
 make
 make install
