@@ -689,12 +689,19 @@ stream {
         -- init modules
         local ok, res
 
+        ok, res = pcall(require, "configuration")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          configuration = res
+          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
+        end
+
         ok, res = pcall(require, "tcp_udp_configuration")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           tcp_udp_configuration = res
-          tcp_udp_configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "tcp_udp_balancer")
