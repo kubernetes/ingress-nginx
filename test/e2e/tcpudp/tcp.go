@@ -17,10 +17,12 @@ limitations under the License.
 package settings
 
 import (
+	"context"
 	"fmt"
+	"github.com/parnurzeal/gorequest"
+	"net"
 	"strings"
 
-	"github.com/parnurzeal/gorequest"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -55,6 +57,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		}
 
 		config.Data["8080"] = fmt.Sprintf("%v/http-svc:80", f.IngressController.Namespace)
+
 		_, err = f.KubeClientSet.
 			CoreV1().
 			ConfigMaps(f.IngressController.Namespace).
@@ -86,12 +89,101 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 
 		ip := f.GetNginxIP()
 		port, err := f.GetNginxPort("http-svc")
-		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaning service port")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaining service port")
 
 		resp, _, errs := gorequest.New().
 			Get(fmt.Sprintf("http://%v:%v", ip, port)).
 			End()
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(200))
+	})
+
+	It("should expose an ExternalName TCP service", func() {
+		// Setup:
+		// - Create an external name service for DNS lookups on port 5353. Point it to google's DNS server
+		// - Expose port 5353 on the nginx ingress NodePort service to open a hole for this test
+		// - Update the `tcp-services` configmap to proxy traffic to the configured external name service
+
+		// Create an external service for DNS
+		externalService := &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dns-external-name-svc",
+				Namespace: f.IngressController.Namespace,
+			},
+
+			Spec: corev1.ServiceSpec{
+				ExternalName: "google-public-dns-a.google.com",
+				Ports: []corev1.ServicePort{
+					{
+						Name:       "dns-external-name-svc",
+						Port:       5353,
+						TargetPort: intstr.FromInt(53),
+					},
+				},
+				Type: corev1.ServiceTypeExternalName,
+			},
+		}
+		f.EnsureService(externalService)
+
+		// Expose the `external name` port on the `ingress-nginx` service
+		svc, err := f.KubeClientSet.
+			CoreV1().
+			Services(f.IngressController.Namespace).
+			Get("ingress-nginx", metav1.GetOptions{})
+		Expect(err).To(BeNil(), "unexpected error obtaining ingress-nginx service")
+		Expect(svc).NotTo(BeNil(), "expected a service but none returned")
+
+		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
+			Name:       "dns-svc",
+			Port:       5353,
+			TargetPort: intstr.FromInt(5353),
+		})
+		_, err = f.KubeClientSet.
+			CoreV1().
+			Services(f.IngressController.Namespace).
+			Update(svc)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error updating service")
+
+		// Update the TCP configmap to link port 5353 to the DNS external name service
+		config, err := f.KubeClientSet.
+			CoreV1().
+			ConfigMaps(f.IngressController.Namespace).
+			Get("tcp-services", metav1.GetOptions{})
+		Expect(err).To(BeNil(), "unexpected error obtaining tcp-services configmap")
+		Expect(config).NotTo(BeNil(), "expected a configmap but none returned")
+
+		if config.Data == nil {
+			config.Data = map[string]string{}
+		}
+
+		config.Data["5353"] = fmt.Sprintf("%v/dns-external-name-svc:5353", f.IngressController.Namespace)
+
+		_, err = f.KubeClientSet.
+			CoreV1().
+			ConfigMaps(f.IngressController.Namespace).
+			Update(config)
+		Expect(err).NotTo(HaveOccurred(), "unexpected error updating configmap")
+
+		// Validate that the generated nginx config contains the expected `proxy_upstream_name` value
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-dns-external-name-svc-5353"`, f.IngressController.Namespace))
+			})
+
+		// Execute the test. Use the `external name` service to resolve a domain name.
+		ip := f.GetNginxIP()
+		port, err := f.GetNginxPort("dns-svc")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaining service port")
+
+		resolver := net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{}
+				return d.DialContext(ctx, "tcp", fmt.Sprintf("%v:%v", ip, port))
+			},
+		}
+		ips, err := resolver.LookupHost(context.Background(), "google-public-dns-b.google.com")
+		Expect(ips).Should(ContainElement("8.8.4.4"))
+
 	})
 })
