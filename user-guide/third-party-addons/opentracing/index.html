@@ -1194,10 +1194,14 @@ By default this feature is disabled.</p>
 <p>We must also set the host to use when uploading traces:</p>
 <p><div class="codehilite"><pre><span></span>zipkin-collector-host: zipkin.default.svc.cluster.local
 jaeger-collector-host: jaeger-collector.default.svc.cluster.local
+datadog-collector-host: datadog-agent.default.svc.cluster.local
 </pre></div>
 NOTE: While the option is called <code class="codehilite">jaeger-collector-host</code>, you will need to point this to a <code class="codehilite">jaeger-agent</code>, and not the <code class="codehilite">jaeger-collector</code> component.  </p>
-<p>Next you will need to deploy a distributed tracing system which uses OpenTracing. Both <a href="https://github.com/openzipkin/zipkin">Zipkin</a> and
-<a href="https://github.com/jaegertracing/jaeger">Jaeger</a> have been tested.</p>
+<p>Next you will need to deploy a distributed tracing system which uses OpenTracing.
+<a href="https://github.com/openzipkin/zipkin">Zipkin</a> and
+<a href="https://github.com/jaegertracing/jaeger">Jaeger</a> and
+<a href="https://github.com/DataDog/dd-opentracing-cpp">Datadog</a>
+have been tested.</p>
 <p>Other optional configuration options:
 <div class="codehilite"><pre><span></span># specifies the port to use when uploading traces, Default: 9411
 zipkin-collector-port
@@ -1220,6 +1224,15 @@ jaeger-sampler-type
 
 # specifies the argument to be passed to the sampler constructor, Default: 1
 jaeger-sampler-param
+
+# specifies the port to use when uploading traces, Default 8126
+datadog-collector-port
+
+# specifies the service name to use for any traces created, Default: nginx
+datadog-service-name
+
+# specifies the operation name to use for any traces collected, Default: nginx.handle
+datadog-operation-name-override
 </pre></div></p>
 <p>All these options (including host) allow environment variables, such as <code class="codehilite">$HOSTNAME</code> or <code class="codehilite">$HOST_IP</code>. In the case of Jaeger, if you have a Jaeger agent running on each machine in your cluster, you can use something like <code class="codehilite">$HOST_IP</code> (which can be 'mounted' with the <code class="codehilite">status.hostIP</code> fieldpath, as described <a href="https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api">here</a>) to make sure traces will be sent to the local agent.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
