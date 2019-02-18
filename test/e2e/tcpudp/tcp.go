@@ -22,6 +22,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"net"
 	"strings"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +32,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
+)
+
+const (
+	waitForLuaSync = 5 * time.Second
 )
 
 var _ = framework.IngressNginxDescribe("TCP Feature", func() {
@@ -164,6 +169,8 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 			Update(config)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating configmap")
 
+		time.Sleep(waitForLuaSync)
+
 		// Validate that the generated nginx config contains the expected `proxy_upstream_name` value
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
@@ -183,6 +190,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 			},
 		}
 		ips, err := resolver.LookupHost(context.Background(), "google-public-dns-b.google.com")
+		Expect(err).NotTo(HaveOccurred(), "unexpected error from DNS resolver")
 		Expect(ips).Should(ContainElement("8.8.4.4"))
 
 	})
