@@ -230,6 +230,12 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	if csa1.Path != csa2.Path {
 		return false
 	}
+	if csa1.Expires != csa2.Expires {
+		return false
+	}
+	if csa1.MaxAge != csa2.MaxAge {
+		return false
+	}
 
 	return true
 }
