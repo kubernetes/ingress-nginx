@@ -308,6 +308,8 @@ type Location struct {
 	// ModSecurity allows to enable and configure modsecurity
 	// +optional
 	ModSecurity modsecurity.Config `json:"modsecurity"`
+	// Satisfy dictates allow access if any or all is set
+	Satisfy string `json:"satisfy"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
