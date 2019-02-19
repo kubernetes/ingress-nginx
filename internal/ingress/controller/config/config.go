@@ -629,7 +629,7 @@ func NewDefault() Configuration {
 		ProxyStreamTimeout:         "600s",
 		Backend: defaults.Backend{
 			ProxyBodySize:          bodySize,
-			ProxyConnectTimeout:    5,
+			ProxyConnectTimeout:    60,
 			ProxyReadTimeout:       60,
 			ProxySendTimeout:       60,
 			ProxyBufferSize:        "4k",
