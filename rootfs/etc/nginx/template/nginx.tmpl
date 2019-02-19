@@ -1304,6 +1304,10 @@ stream {
             proxy_set_header       X-Service-Port     $service_port;
             {{ end }}
 
+            {{ if $location.Satisfy }}
+            satisfy {{ $location.Satisfy }};
+            {{ end }}
+
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}
             {{ if $location.CustomHTTPErrors }}
             # Custom error pages per ingress

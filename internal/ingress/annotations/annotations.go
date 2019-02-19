@@ -49,6 +49,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/satisfy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/secureupstream"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/serversnippet"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/serviceupstream"
@@ -86,6 +87,7 @@ type Ingress struct {
 	RateLimit            ratelimit.Config
 	Redirect             redirect.Config
 	Rewrite              rewrite.Config
+	Satisfy              string
 	SecureUpstream       secureupstream.Config
 	ServerSnippet        string
 	ServiceUpstream      bool
@@ -129,6 +131,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
+			"Satisfy":              satisfy.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"ServerSnippet":        serversnippet.NewParser(cfg),
 			"ServiceUpstream":      serviceupstream.NewParser(cfg),
