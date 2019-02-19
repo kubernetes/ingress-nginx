@@ -55,7 +55,7 @@ describe("Sticky", function()
       it("returns an instance containing the corresponding cookie name", function()
         local sticky_balancer_instance = sticky:new(test_backend)
         local test_backend_cookie_name = test_backend.sessionAffinityConfig.cookieSessionAffinity.name
-        assert.equal(sticky_balancer_instance.cookie_name, test_backend_cookie_name)
+        assert.equal(sticky_balancer_instance:cookie_name(), test_backend_cookie_name)
       end)
     end)
 
@@ -65,7 +65,7 @@ describe("Sticky", function()
         temp_backend.sessionAffinityConfig.cookieSessionAffinity.name = nil
         local sticky_balancer_instance = sticky:new(temp_backend)
         local default_cookie_name = "route"
-        assert.equal(sticky_balancer_instance.cookie_name, default_cookie_name)
+        assert.equal(sticky_balancer_instance:cookie_name(), default_cookie_name)
       end)
     end)
 
