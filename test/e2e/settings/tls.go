@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,12 +30,17 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+func noRedirectPolicyFunc(gorequest.Request, []gorequest.Request) error {
+	return http.ErrUseLastResponse
+}
+
 var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 	f := framework.NewDefaultFramework("settings-tls")
 	host := "settings-tls"
 
 	BeforeEach(func() {
 		f.NewEchoDeployment()
+		f.UpdateNginxConfigMapData("use-forwarded-headers", "false")
 	})
 
 	AfterEach(func() {
@@ -163,5 +169,64 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Strict-Transport-Security")).Should(ContainSubstring("preload"))
+	})
+
+	It("should not use ports during the HTTP to HTTPS redirection", func() {
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.IngressController.Namespace, "http-svc", 80, nil))
+		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
+			ing.Spec.TLS[0].Hosts,
+			ing.Spec.TLS[0].SecretName,
+			ing.Namespace)
+		Expect(err).NotTo(HaveOccurred())
+
+		framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring(`if ($redirect_to_https) {`)) &&
+					Expect(server).Should(ContainSubstring(`return 308 https://$redirect_host$request_uri;`))
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(fmt.Sprintf(f.IngressController.HTTPURL)).
+			Retry(10, 1*time.Second, http.StatusNotFound).
+			RedirectPolicy(noRedirectPolicyFunc).
+			Set("Host", host).
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
+		Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("https://%v/", host)))
+	})
+
+	It("should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection", func() {
+		f.UpdateNginxConfigMapData("use-forwarded-headers", "true")
+
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.IngressController.Namespace, "http-svc", 80, nil))
+		tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
+			ing.Spec.TLS[0].Hosts,
+			ing.Spec.TLS[0].SecretName,
+			ing.Namespace)
+		Expect(err).NotTo(HaveOccurred())
+
+		framework.WaitForTLS(f.IngressController.HTTPSURL, tlsConfig)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring(`if ($redirect_to_https) {`)) &&
+					Expect(server).Should(ContainSubstring(`return 308 https://$redirect_host$request_uri;`))
+			})
+
+		resp, _, errs := gorequest.New().
+			Get(fmt.Sprintf(f.IngressController.HTTPURL)).
+			Retry(10, 1*time.Second, http.StatusNotFound).
+			RedirectPolicy(noRedirectPolicyFunc).
+			Set("Host", host).
+			Set("X-Forwarded-Host", "example.com:80").
+			End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
+		Expect(resp.Header.Get("Location")).Should(Equal("https://example.com/"))
 	})
 })
