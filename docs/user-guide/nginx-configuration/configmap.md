@@ -132,6 +132,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-connect-timeout](#proxy-connect-timeout)|int|5|
 |[proxy-read-timeout](#proxy-read-timeout)|int|60|
 |[proxy-send-timeout](#proxy-send-timeout)|int|60|
+|[proxy-buffer-number](#proxy-buffer-number)|int|4|
 |[proxy-buffer-size](#proxy-buffer-size)|string|"4k"|
 |[proxy-cookie-path](#proxy-cookie-path)|string|"off"|
 |[proxy-cookie-domain](#proxy-cookie-domain)|string|"off"|
@@ -761,6 +762,10 @@ Sets the timeout in seconds for [reading a response from the proxied server](htt
 ## proxy-send-timeout
 
 Sets the timeout in seconds for [transmitting a request to the proxied server](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
+
+## proxy-buffer-number
+
+Sets the number of the buffer used for [reading the first part of the response](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers) received from the proxied server. This part usually contains a small response header.
 
 ## proxy-buffer-size
 
