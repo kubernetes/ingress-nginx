@@ -1193,7 +1193,7 @@ By default this feature is disabled.</p>
 </pre></div></p>
 <p>We must also set the host to use when uploading traces:</p>
 <p><div class="codehilite"><pre><span></span>zipkin-collector-host: zipkin.default.svc.cluster.local
-jaeger-collector-host: jaeger-collector.default.svc.cluster.local
+jaeger-collector-host: jaeger-agent.default.svc.cluster.local
 datadog-collector-host: datadog-agent.default.svc.cluster.local
 </pre></div>
 NOTE: While the option is called <code class="codehilite">jaeger-collector-host</code>, you will need to point this to a <code class="codehilite">jaeger-agent</code>, and not the <code class="codehilite">jaeger-collector</code> component.  </p>
@@ -1305,7 +1305,7 @@ $ echo &#39;
 <span class="s1">  kind: ConfigMap</span>
 <span class="s1">  data:</span>
 <span class="s1">    enable-opentracing: &quot;true&quot;</span>
-<span class="s1">    jaeger-collector-host: jaeger-collector.default.svc.cluster.local</span>
+<span class="s1">    jaeger-collector-host: jaeger-agent.default.svc.cluster.local</span>
 <span class="s1">  metadata:</span>
 <span class="s1">    name: nginx-configuration</span>
 <span class="s1">    namespace: kube-system</span>
