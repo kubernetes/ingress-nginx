@@ -51,6 +51,8 @@ get_src()
   url="$2"
   f=$(basename "$url")
 
+  echo "Downloading $url"
+
   curl -sSL "$url" -o "$f"
   echo "$hash  $f" | sha256sum -c - || exit 10
   tar xzf "$f"
