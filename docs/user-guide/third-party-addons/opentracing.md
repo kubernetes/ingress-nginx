@@ -17,7 +17,7 @@ We must also set the host to use when uploading traces:
 
 ```
 zipkin-collector-host: zipkin.default.svc.cluster.local
-jaeger-collector-host: jaeger-collector.default.svc.cluster.local
+jaeger-collector-host: jaeger-agent.default.svc.cluster.local
 datadog-collector-host: datadog-agent.default.svc.cluster.local
 ```
 NOTE: While the option is called `jaeger-collector-host`, you will need to point this to a `jaeger-agent`, and not the `jaeger-collector` component.  
@@ -142,7 +142,7 @@ In the Zipkin interface we can see the details:
       kind: ConfigMap
       data:
         enable-opentracing: "true"
-        jaeger-collector-host: jaeger-collector.default.svc.cluster.local
+        jaeger-collector-host: jaeger-agent.default.svc.cluster.local
       metadata:
         name: nginx-configuration
         namespace: kube-system
