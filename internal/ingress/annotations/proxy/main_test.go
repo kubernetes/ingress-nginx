@@ -73,6 +73,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyConnectTimeout:    10,
 		ProxySendTimeout:       15,
 		ProxyReadTimeout:       20,
+		ProxyBufferNumber:      4,
 		ProxyBufferSize:        "10k",
 		ProxyBodySize:          "3k",
 		ProxyNextUpstream:      "error",
@@ -89,6 +90,7 @@ func TestProxy(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-connect-timeout")] = "1"
 	data[parser.GetAnnotationWithPrefix("proxy-send-timeout")] = "2"
 	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "3"
+	data[parser.GetAnnotationWithPrefix("proxy-buffer-number")] = "8"
 	data[parser.GetAnnotationWithPrefix("proxy-buffer-size")] = "1k"
 	data[parser.GetAnnotationWithPrefix("proxy-body-size")] = "2k"
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream")] = "off"
@@ -113,6 +115,9 @@ func TestProxy(t *testing.T) {
 	}
 	if p.ReadTimeout != 3 {
 		t.Errorf("expected 3 as read-timeout but returned %v", p.ReadTimeout)
+	}
+	if p.BufferNumber != 8 {
+		t.Errorf("expected 8 as proxy-buffer-number but returned %v", p.BufferNumber)
 	}
 	if p.BufferSize != "1k" {
 		t.Errorf("expected 1k as buffer-size but returned %v", p.BufferSize)
@@ -156,6 +161,9 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 	if p.ReadTimeout != 20 {
 		t.Errorf("expected 20 as read-timeout but returned %v", p.ReadTimeout)
+	}
+	if p.BufferNumber != 4 {
+		t.Errorf("expected 4 as buffer-number but returned %v", p.BufferNumber)
 	}
 	if p.BufferSize != "10k" {
 		t.Errorf("expected 10k as buffer-size but returned %v", p.BufferSize)

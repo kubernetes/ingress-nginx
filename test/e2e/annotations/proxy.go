@@ -147,8 +147,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 
 	It("should turn on proxy-buffering", func() {
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/proxy-buffering":   "on",
-			"nginx.ingress.kubernetes.io/proxy-buffer-size": "8k",
+			"nginx.ingress.kubernetes.io/proxy-buffering":     "on",
+			"nginx.ingress.kubernetes.io/proxy-buffer-number": "4",
+			"nginx.ingress.kubernetes.io/proxy-buffer-size":   "8k",
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
