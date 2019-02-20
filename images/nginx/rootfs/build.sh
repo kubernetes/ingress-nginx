@@ -31,6 +31,7 @@ export ZIPKIN_CPP_VERSION=0.5.2
 export JAEGER_VERSION=cdfaf5bb25ff5f8ec179fd548e6c7c2ade9a6a09
 export MSGPACK_VERSION=3.1.1
 export DATADOG_CPP_VERSION=0.4.2
+export LUA_BRIDGE_TRACER_VERSION=0.1.0
 export MODSECURITY_VERSION=fc061a57a8b0abda79b17cbe103d78db803fa575
 export LUA_NGX_VERSION=fd90f4e8252e9d06419317fdf525b55c65e15a50
 export LUA_STREAM_NGX_VERSION=0.0.6rc5
@@ -49,6 +50,8 @@ get_src()
   hash="$1"
   url="$2"
   f=$(basename "$url")
+
+  echo "Downloading $url"
 
   curl -sSL "$url" -o "$f"
   echo "$hash  $f" | sha256sum -c - || exit 10
@@ -166,6 +169,9 @@ get_src bda49f996a73d2c6080ff0523e7b535917cd28c8a79c3a5da54fc29332d61d1e \
 
 get_src a3d1c03e7af570fa64c01df259e6e9bb78637a6bd9c65c6bf7e8703e466dc22f \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
+
+get_src c29183001e3ab48299deecd02fb84b799b6627817c9baa66e4b342ac81dd6b40\
+        "https://github.com/opentracing/lua-bridge-tracer/archive/v$LUA_BRIDGE_TRACER_VERSION.tar.gz"
 
 get_src 8ff5b18f4ff75ecdb852f50ce2069213d36285fa5f584c28e03ff978fe62d99a \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz"
@@ -382,6 +388,14 @@ mkdir .build
 cd .build
 cmake ..
 
+make
+make install
+
+# build Lua bridge tracer
+cd "$BUILD_PATH/lua-bridge-tracer-$LUA_BRIDGE_TRACER_VERSION"
+mkdir .build
+cd .build
+cmake ..
 make
 make install
 
