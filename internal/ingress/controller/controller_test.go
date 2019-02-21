@@ -21,12 +21,17 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"fmt"
-	"time"
-
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/eapache/channels"
 	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -35,13 +40,215 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
+	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/metric"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 )
 
 const fakeCertificateName = "default-fake-certificate"
+
+type fakeIngressStore struct {
+	ingresses []*ingress.Ingress
+}
+
+func (fakeIngressStore) GetBackendConfiguration() ngx_config.Configuration {
+	return ngx_config.Configuration{}
+}
+
+func (fakeIngressStore) GetConfigMap(key string) (*corev1.ConfigMap, error) {
+	return nil, fmt.Errorf("test error")
+}
+
+func (fakeIngressStore) GetSecret(key string) (*corev1.Secret, error) {
+	return nil, fmt.Errorf("test error")
+}
+
+func (fakeIngressStore) GetService(key string) (*corev1.Service, error) {
+	return nil, fmt.Errorf("test error")
+}
+
+func (fakeIngressStore) GetServiceEndpoints(key string) (*corev1.Endpoints, error) {
+	return nil, fmt.Errorf("test error")
+}
+
+func (fis fakeIngressStore) ListIngresses() []*ingress.Ingress {
+	return fis.ingresses
+}
+
+func (fakeIngressStore) GetRunningControllerPodsCount() int {
+	return 0
+}
+
+func (fakeIngressStore) GetLocalSSLCert(name string) (*ingress.SSLCert, error) {
+	return nil, fmt.Errorf("test error")
+}
+
+func (fakeIngressStore) ListLocalSSLCerts() []*ingress.SSLCert {
+	return nil
+}
+
+func (fakeIngressStore) GetAuthCertificate(string) (*resolver.AuthSSLCert, error) {
+	return nil, fmt.Errorf("test error")
+}
+
+func (fakeIngressStore) GetDefaultBackend() defaults.Backend {
+	return defaults.Backend{}
+}
+
+func (fakeIngressStore) Run(stopCh chan struct{}) {}
+
+type testNginxTestCommand struct {
+	t        *testing.T
+	expected string
+	out      []byte
+	err      error
+}
+
+func (ntc testNginxTestCommand) ExecCommand(args ...string) *exec.Cmd {
+	return nil
+}
+
+func (ntc testNginxTestCommand) Test(cfg string) ([]byte, error) {
+	fd, err := os.Open(cfg)
+	if err != nil {
+		ntc.t.Errorf("could not read generated nginx configuration: %v", err.Error())
+		return nil, err
+	}
+	defer fd.Close()
+	bytes, err := ioutil.ReadAll(fd)
+	if err != nil {
+		ntc.t.Errorf("could not read generated nginx configuration: %v", err.Error())
+	}
+	if string(bytes) != ntc.expected {
+		ntc.t.Errorf("unexpected generated configuration %v. Expecting %v", string(bytes), ntc.expected)
+	}
+	return ntc.out, ntc.err
+}
+
+type fakeTemplate struct{}
+
+func (fakeTemplate) Write(conf config.TemplateConfig) ([]byte, error) {
+	r := []byte{}
+	for _, s := range conf.Servers {
+		if len(r) > 0 {
+			r = append(r, ',')
+		}
+		r = append(r, []byte(s.Hostname)...)
+	}
+	return r, nil
+}
+
+func TestCheckIngress(t *testing.T) {
+	defer func() {
+		filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() && os.TempDir() != path {
+				return filepath.SkipDir
+			}
+			if strings.HasPrefix(info.Name(), tempNginxPattern) {
+				os.Remove(path)
+			}
+			return nil
+		})
+	}()
+
+	// Ensure no panic with wrong arguments
+	var nginx *NGINXController
+	nginx.CheckIngress(nil)
+	nginx = newNGINXController(t)
+	nginx.CheckIngress(nil)
+	nginx.metricCollector = metric.DummyCollector{}
+
+	nginx.t = fakeTemplate{}
+	nginx.store = fakeIngressStore{
+		ingresses: []*ingress.Ingress{},
+	}
+
+	ing := &extensions.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test-ingress",
+			Namespace:   "user-namespace",
+			Annotations: map[string]string{},
+		},
+		Spec: extensions.IngressSpec{
+			Rules: []extensions.IngressRule{
+				{
+					Host: "example.com",
+				},
+			},
+		},
+	}
+
+	t.Run("When the ingress class differs from nginx", func(t *testing.T) {
+		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "different"
+		nginx.command = testNginxTestCommand{
+			t:   t,
+			err: fmt.Errorf("test error"),
+		}
+		if nginx.CheckIngress(ing) != nil {
+			t.Errorf("with a different ingress class, no error should be returned")
+		}
+	})
+
+	t.Run("when the class is the nginx one", func(t *testing.T) {
+		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
+		nginx.command = testNginxTestCommand{
+			t:        t,
+			err:      nil,
+			expected: "_,example.com",
+		}
+		if nginx.CheckIngress(ing) != nil {
+			t.Errorf("with a new ingress without error, no error should be returned")
+		}
+
+		t.Run("When the hostname is updated", func(t *testing.T) {
+			nginx.store = fakeIngressStore{
+				ingresses: []*ingress.Ingress{
+					{
+						Ingress: *ing,
+					},
+				},
+			}
+			ing.Spec.Rules[0].Host = "test.example.com"
+			nginx.command = testNginxTestCommand{
+				t:        t,
+				err:      nil,
+				expected: "_,test.example.com",
+			}
+			if nginx.CheckIngress(ing) != nil {
+				t.Errorf("with a new ingress without error, no error should be returned")
+			}
+		})
+
+		t.Run("When nginx test returns an error", func(t *testing.T) {
+			nginx.command = testNginxTestCommand{
+				t:        t,
+				err:      fmt.Errorf("test error"),
+				out:      []byte("this is the test command output"),
+				expected: "_,test.example.com",
+			}
+			if nginx.CheckIngress(ing) == nil {
+				t.Errorf("with a new ingress with an error, an error should be returned")
+			}
+		})
+
+		t.Run("When the ingress is in a different namespace than the watched one", func(t *testing.T) {
+			nginx.command = testNginxTestCommand{
+				t:   t,
+				err: fmt.Errorf("test error"),
+			}
+			nginx.cfg.Namespace = "other-namespace"
+			ing.ObjectMeta.Namespace = "test-namespace"
+			if nginx.CheckIngress(ing) != nil {
+				t.Errorf("with a new ingress without error, no error should be returned")
+			}
+		})
+	})
+}
 
 func TestMergeAlternativeBackends(t *testing.T) {
 	testCases := map[string]struct {
@@ -930,8 +1137,10 @@ func newNGINXController(t *testing.T) *NGINXController {
 	}
 
 	return &NGINXController{
-		store: storer,
-		cfg:   config,
+		store:      storer,
+		cfg:        config,
+		command:    NewNginxCommand(),
+		fileSystem: fs,
 	}
 }
 

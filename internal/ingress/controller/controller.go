@@ -23,23 +23,21 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
-
 	"github.com/mitchellh/hashstructure"
-	"k8s.io/klog"
-
 	apiv1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
-
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/klog"
 )
 
 const (
@@ -96,6 +94,10 @@ type Configuration struct {
 	DynamicCertificatesEnabled bool
 
 	DisableCatchAll bool
+
+	ValidationWebhook         string
+	ValidationWebhookCertPath string
+	ValidationWebhookKeyPath  string
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -120,47 +122,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	ings := n.store.ListIngresses()
 
-	upstreams, servers := n.getBackendServers(ings)
-	var passUpstreams []*ingress.SSLPassthroughBackend
-
-	hosts := sets.NewString()
-
-	for _, server := range servers {
-		if !hosts.Has(server.Hostname) {
-			hosts.Insert(server.Hostname)
-		}
-		if server.Alias != "" && !hosts.Has(server.Alias) {
-			hosts.Insert(server.Alias)
-		}
-
-		if !server.SSLPassthrough {
-			continue
-		}
-
-		for _, loc := range server.Locations {
-			if loc.Path != rootLocation {
-				klog.Warningf("Ignoring SSL Passthrough for location %q in server %q", loc.Path, server.Hostname)
-				continue
-			}
-			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
-				Backend:  loc.Backend,
-				Hostname: server.Hostname,
-				Service:  loc.Service,
-				Port:     loc.Port,
-			})
-			break
-		}
-	}
-
-	pcfg := &ingress.Configuration{
-		Backends:              upstreams,
-		Servers:               servers,
-		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
-		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
-		PassthroughBackends:   passUpstreams,
-		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
-		ControllerPodsCount:   n.store.GetRunningControllerPodsCount(),
-	}
+	hosts, servers, pcfg := n.getConfiguration(ings)
 
 	if n.runningConfig.Equal(pcfg) {
 		klog.V(3).Infof("No configuration change detected, skipping backend reload.")
@@ -233,6 +195,60 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	n.runningConfig = pcfg
 
 	return nil
+}
+
+// CheckIngress returns an error in case the provided ingress, when added
+// to the current configuration, generates an invalid configuration
+func (n *NGINXController) CheckIngress(ing *extensions.Ingress) error {
+	if n == nil {
+		return fmt.Errorf("cannot check ingress on a nil ingress controller")
+	}
+	if ing == nil {
+		// no ingress to add, no state change
+		return nil
+	}
+	if !class.IsValid(ing) {
+		klog.Infof("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
+		return nil
+	}
+	if n.cfg.Namespace != "" && ing.ObjectMeta.Namespace != n.cfg.Namespace {
+		klog.Infof("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)
+		return nil
+	}
+
+	ings := n.store.ListIngresses()
+	newIngress := &ingress.Ingress{
+		Ingress:           *ing,
+		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
+	}
+
+	for i, ingress := range ings {
+		if ingress.Ingress.ObjectMeta.Name == ing.ObjectMeta.Name && ingress.Ingress.ObjectMeta.Namespace == ing.ObjectMeta.Namespace {
+			ings[i] = newIngress
+			newIngress = nil
+		}
+	}
+	if newIngress != nil {
+		ings = append(ings, newIngress)
+	}
+
+	_, _, pcfg := n.getConfiguration(ings)
+
+	cfg := n.store.GetBackendConfiguration()
+	cfg.Resolver = n.resolver
+
+	content, err := n.generateTemplate(cfg, *pcfg)
+	if err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+		return err
+	}
+	err = n.testTemplate(content)
+	if err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+	} else {
+		n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
+	}
+	return err
 }
 
 func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Protocol) []ingress.L4Service {
@@ -378,6 +394,51 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 	upstream.Service = svc
 	upstream.Endpoints = append(upstream.Endpoints, endps...)
 	return upstream
+}
+
+// getConfiguration returns the configuration matching the standard kubernetes ingress
+func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.String, []*ingress.Server, *ingress.Configuration) {
+	upstreams, servers := n.getBackendServers(ingresses)
+	var passUpstreams []*ingress.SSLPassthroughBackend
+
+	hosts := sets.NewString()
+
+	for _, server := range servers {
+		if !hosts.Has(server.Hostname) {
+			hosts.Insert(server.Hostname)
+		}
+		if server.Alias != "" && !hosts.Has(server.Alias) {
+			hosts.Insert(server.Alias)
+		}
+
+		if !server.SSLPassthrough {
+			continue
+		}
+
+		for _, loc := range server.Locations {
+			if loc.Path != rootLocation {
+				klog.Warningf("Ignoring SSL Passthrough for location %q in server %q", loc.Path, server.Hostname)
+				continue
+			}
+			passUpstreams = append(passUpstreams, &ingress.SSLPassthroughBackend{
+				Backend:  loc.Backend,
+				Hostname: server.Hostname,
+				Service:  loc.Service,
+				Port:     loc.Port,
+			})
+			break
+		}
+	}
+
+	return hosts, servers, &ingress.Configuration{
+		Backends:              upstreams,
+		Servers:               servers,
+		TCPEndpoints:          n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP),
+		UDPEndpoints:          n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP),
+		PassthroughBackends:   passUpstreams,
+		BackendConfigChecksum: n.store.GetBackendConfiguration().Checksum,
+		ControllerPodsCount:   n.store.GetRunningControllerPodsCount(),
+	}
 }
 
 // getBackendServers returns a list of Upstream and Server to be used by the

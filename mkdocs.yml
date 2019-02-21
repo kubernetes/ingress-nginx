@@ -40,6 +40,7 @@ nav:
       - Installation Guide: "deploy/index.md"
       - Bare-metal considerations: "deploy/baremetal.md"
       - Role Based Access Control (RBAC): "deploy/rbac.md"
+      - Validating Webhook (admission controller): "deploy/validating-webhook.md"
       - Upgrade: "deploy/upgrade.md"
   - User guide:
       - NGINX Configuration:

@@ -159,6 +159,14 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 
 		disableCatchAll = flags.Bool("disable-catch-all", false,
 			`Disable support for catch-all Ingresses`)
+
+		validationWebhook = flags.String("validating-webhook", "",
+			`The address to start an admission controller on to validate incoming ingresses.
+Takes the form "<host>:port". If not provided, no admission controller is started.`)
+		validationWebhookCert = flags.String("validating-webhook-certificate", "",
+			`The path of the validating webhook certificate PEM.`)
+		validationWebhookKey = flags.String("validating-webhook-key", "",
+			`The path of the validating webhook key PEM.`)
 	)
 
 	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
@@ -255,7 +263,10 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
 		},
-		DisableCatchAll: *disableCatchAll,
+		DisableCatchAll:           *disableCatchAll,
+		ValidationWebhook:         *validationWebhook,
+		ValidationWebhookCertPath: *validationWebhookCert,
+		ValidationWebhookKeyPath:  *validationWebhookKey,
 	}
 
 	return false, config, nil
