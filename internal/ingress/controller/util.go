@@ -21,13 +21,11 @@ import (
 	"os/exec"
 	"syscall"
 
-	"k8s.io/klog"
-
 	api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/kubernetes/pkg/util/sysctl"
-
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/klog"
+	"k8s.io/kubernetes/pkg/util/sysctl"
 )
 
 // newUpstream creates an upstream without servers.
@@ -79,14 +77,36 @@ const (
 	cfgPath   = "/etc/nginx/nginx.conf"
 )
 
-func nginxExecCommand(args ...string) *exec.Cmd {
+// NginxExecTester defines the interface to execute
+// command like reload or test configuration
+type NginxExecTester interface {
+	ExecCommand(args ...string) *exec.Cmd
+	Test(cfg string) ([]byte, error)
+}
+
+// NginxCommand stores context around a given nginx executable path
+type NginxCommand struct {
+	Binary string
+}
+
+// NewNginxCommand returns a new NginxCommand from which path
+// has been detected from environment variable NGINX_BINARY or default
+func NewNginxCommand() NginxCommand {
+	return NginxCommand{
+		Binary: defBinary,
+	}
+}
+
+// ExecCommand instanciates an exec.Cmd object to call nginx program
+func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
 	cmdArgs := []string{}
 
 	cmdArgs = append(cmdArgs, "-c", cfgPath)
 	cmdArgs = append(cmdArgs, args...)
-	return exec.Command(defBinary, cmdArgs...)
+	return exec.Command(nc.Binary, cmdArgs...)
 }
 
-func nginxTestCommand(cfg string) *exec.Cmd {
-	return exec.Command(defBinary, "-c", cfg, "-t")
+// Test checks if config file is a syntax valid nginx configuration
+func (nc NginxCommand) Test(cfg string) ([]byte, error) {
+	return exec.Command(nc.Binary, "-c", cfg, "-t").CombinedOutput()
 }
