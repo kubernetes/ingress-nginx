@@ -49,7 +49,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring(`if ($redirect_to_https) {`)) &&
-					Expect(server).Should(ContainSubstring(`return 308 https://$best_http_host$request_uri;`))
+					Expect(server).Should(ContainSubstring(`return 308 https://$redirect_host$request_uri;`))
 			})
 
 		resp, _, errs := gorequest.New().
