@@ -1126,14 +1126,25 @@ stream {
             {{ if not (isLocationInLocationList $location $all.Cfg.NoTLSRedirectLocations) }}
             # enforce ssl on server side
             if ($redirect_to_https) {
+                set_by_lua_block $redirect_host {
+                    local ngx_re = require "ngx.re"
+
+                    local host_port, err = ngx_re.split(ngx.var.best_http_host, ":")
+                    if err then
+                        ngx.log(ngx.ERR, "could not parse variable: ", err)
+                        return ngx.var.best_http_host;
+                    end
+
+                    return host_port[1];
+                }
+
                 {{ if $location.UsePortInRedirects }}
                 # using custom ports require a different rewrite directive
-                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$host{{ $redirect_port }}$request_uri;
-
+                # https://forum.nginx.org/read.php?2,155978,155978#msg-155978
+                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$redirect_host{{ printf ":%v" $all.ListenPorts.HTTPS }}$request_uri;
                 return 497;
                 {{ else }}
-                return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host$request_uri;
+                return {{ $all.Cfg.HTTPRedirectCode }} https://$redirect_host$request_uri;
                 {{ end }}
             }
             {{ end }}
