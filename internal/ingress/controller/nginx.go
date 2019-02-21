@@ -49,7 +49,6 @@ import (
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
@@ -133,9 +132,6 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.DisableCatchAll)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
-
-	n.annotations = annotations.NewAnnotationExtractor(n.store)
-
 	if config.UpdateStatus {
 		n.syncStatus = status.NewStatusSyncer(status.Config{
 			Client:                 config.Client,
@@ -220,8 +216,6 @@ Error loading new template: %v
 // NGINXController describes a NGINX Ingress controller.
 type NGINXController struct {
 	cfg *Configuration
-
-	annotations annotations.Extractor
 
 	recorder record.EventRecorder
 
