@@ -181,12 +181,6 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`if ($redirect_to_https) {`)) &&
-					Expect(server).Should(ContainSubstring(`return 308 https://$redirect_host$request_uri;`))
-			})
-
 		resp, _, errs := gorequest.New().
 			Get(fmt.Sprintf(f.GetURL(framework.HTTP))).
 			Retry(10, 1*time.Second, http.StatusNotFound).
@@ -210,12 +204,6 @@ var _ = framework.IngressNginxDescribe("Settings - TLS)", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`if ($redirect_to_https) {`)) &&
-					Expect(server).Should(ContainSubstring(`return 308 https://$redirect_host$request_uri;`))
-			})
 
 		resp, _, errs := gorequest.New().
 			Get(fmt.Sprintf(f.GetURL(framework.HTTP))).
