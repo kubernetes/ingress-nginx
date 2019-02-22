@@ -73,7 +73,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyConnectTimeout:    10,
 		ProxySendTimeout:       15,
 		ProxyReadTimeout:       20,
-		ProxyBuffersNumber:      4,
+		ProxyBuffersNumber:     4,
 		ProxyBufferSize:        "10k",
 		ProxyBodySize:          "3k",
 		ProxyNextUpstream:      "error",
