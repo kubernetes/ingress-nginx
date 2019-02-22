@@ -81,7 +81,7 @@ type Ingress struct {
 	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
 	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
-	Denied             string
+	Denied             *string
 	ExternalAuth       authreq.Config
 	HTTP2PushPreload   bool
 	Proxy              proxy.Config
@@ -183,7 +183,8 @@ func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
 
 			_, alreadyDenied := data[DeniedKeyName]
 			if !alreadyDenied {
-				data[DeniedKeyName] = err.Error()
+				errString := err.Error()
+				data[DeniedKeyName] = &errString
 				klog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
 				continue
 			}
