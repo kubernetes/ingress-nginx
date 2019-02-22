@@ -80,30 +80,31 @@ type Ingress struct {
 	CorsConfig           cors.Config
 	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
-	Denied               error
-	ExternalAuth         authreq.Config
-	HTTP2PushPreload     bool
-	Proxy                proxy.Config
-	RateLimit            ratelimit.Config
-	Redirect             redirect.Config
-	Rewrite              rewrite.Config
-	Satisfy              string
-	SecureUpstream       secureupstream.Config
-	ServerSnippet        string
-	ServiceUpstream      bool
-	SessionAffinity      sessionaffinity.Config
-	SSLPassthrough       bool
-	UsePortInRedirects   bool
-	UpstreamHashBy       upstreamhashby.Config
-	LoadBalancing        string
-	UpstreamVhost        string
-	Whitelist            ipwhitelist.SourceRange
-	XForwardedPrefix     bool
-	SSLCiphers           string
-	Logs                 log.Config
-	LuaRestyWAF          luarestywaf.Config
-	InfluxDB             influxdb.Config
-	ModSecurity          modsecurity.Config
+	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
+	Denied             *string
+	ExternalAuth       authreq.Config
+	HTTP2PushPreload   bool
+	Proxy              proxy.Config
+	RateLimit          ratelimit.Config
+	Redirect           redirect.Config
+	Rewrite            rewrite.Config
+	Satisfy            string
+	SecureUpstream     secureupstream.Config
+	ServerSnippet      string
+	ServiceUpstream    bool
+	SessionAffinity    sessionaffinity.Config
+	SSLPassthrough     bool
+	UsePortInRedirects bool
+	UpstreamHashBy     upstreamhashby.Config
+	LoadBalancing      string
+	UpstreamVhost      string
+	Whitelist          ipwhitelist.SourceRange
+	XForwardedPrefix   bool
+	SSLCiphers         string
+	Logs               log.Config
+	LuaRestyWAF        luarestywaf.Config
+	InfluxDB           influxdb.Config
+	ModSecurity        modsecurity.Config
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -182,7 +183,8 @@ func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
 
 			_, alreadyDenied := data[DeniedKeyName]
 			if !alreadyDenied {
-				data[DeniedKeyName] = err
+				errString := err.Error()
+				data[DeniedKeyName] = &errString
 				klog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
 				continue
 			}
