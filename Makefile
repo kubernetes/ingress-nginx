@@ -26,11 +26,9 @@ GOHOSTOS ?= $(shell go env GOHOSTOS)
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 4
-# slow test only if takes > 40s
-SLOW_E2E_THRESHOLD ?= 40
-
-NODE_IP ?= $(shell minikube ip)
+E2E_NODES ?= 8
+# slow test only if takes > 50s
+SLOW_E2E_THRESHOLD ?= 50
 
 ifeq ($(GOHOSTOS),darwin)
   SED_I=sed -i ''
@@ -167,7 +165,6 @@ static-check:
 .PHONY: test
 test:
 	@$(DEF_VARS)                 \
-	NODE_IP=$(NODE_IP)           \
 	DOCKER_OPTS="-i --net=host"  \
 	build/go-in-docker.sh build/test.sh
 
@@ -179,13 +176,31 @@ lua-test:
 
 .PHONY: e2e-test
 e2e-test:
-	@$(DEF_VARS)                             \
-	FOCUS=$(FOCUS)                           \
-	E2E_NODES=$(E2E_NODES)                   \
-	DOCKER_OPTS="-i --net=host"              \
-	NODE_IP=$(NODE_IP)                       \
-	SLOW_E2E_THRESHOLD=$(SLOW_E2E_THRESHOLD) \
-	build/go-in-docker.sh build/e2e-tests.sh
+	echo "Granting permissions to ingress-nginx e2e service account..."
+	kubectl create serviceaccount ingress-nginx-e2e || true
+	kubectl create clusterrolebinding permissive-binding \
+	--clusterrole=cluster-admin \
+	--user=admin \
+	--user=kubelet \
+	--serviceaccount=default:ingress-nginx-e2e || true
+
+	kubectl run --rm -i --tty \
+		--attach \
+		--restart=Never \
+		--generator=run-pod/v1 \
+		--env="E2E_NODES=$(E2E_NODES)" \
+		--env="FOCUS=$(FOCUS)" \
+		--env="SLOW_E2E_THRESHOLD=$(SLOW_E2E_THRESHOLD)" \
+		--overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
+		e2e --image=nginx-ingress-controller:e2e
+
+.PHONY: e2e-test-image
+e2e-test-image:
+	@$(DEF_VARS)                 \
+	DOCKER_OPTS="-i --net=host"  \
+	build/go-in-docker.sh build/build-e2e.sh
+
+	make -C test/e2e-image
 
 .PHONY: cover
 cover:

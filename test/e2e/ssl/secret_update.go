@@ -45,14 +45,14 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 		dummySecret := f.EnsureSecret(&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
-				Namespace: f.IngressController.Namespace,
+				Namespace: f.Namespace,
 			},
 			Data: map[string][]byte{
 				"key": []byte("value"),
 			},
 		})
 
-		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.IngressController.Namespace, "http-svc", 80, nil))
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, "http-svc", 80, nil))
 		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 			ing.Spec.TLS[0].Hosts,
 			ing.Spec.TLS[0].SecretName,
@@ -69,12 +69,12 @@ var _ = framework.IngressNginxDescribe("SSL", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(log).ToNot(BeEmpty())
 
-		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("starting syncing of secret %v/dummy", f.IngressController.Namespace)))
+		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("starting syncing of secret %v/dummy", f.Namespace)))
 		time.Sleep(5 * time.Second)
 		dummySecret.Data["some-key"] = []byte("some value")
-		f.KubeClientSet.CoreV1().Secrets(f.IngressController.Namespace).Update(dummySecret)
+		f.KubeClientSet.CoreV1().Secrets(f.Namespace).Update(dummySecret)
 		time.Sleep(5 * time.Second)
-		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("starting syncing of secret %v/dummy", f.IngressController.Namespace)))
-		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("error obtaining PEM from secret %v/dummy", f.IngressController.Namespace)))
+		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("starting syncing of secret %v/dummy", f.Namespace)))
+		Expect(log).ToNot(ContainSubstring(fmt.Sprintf("error obtaining PEM from secret %v/dummy", f.Namespace)))
 	})
 })

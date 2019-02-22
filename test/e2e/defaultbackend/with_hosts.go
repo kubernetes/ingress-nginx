@@ -47,7 +47,7 @@ var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
 		ing := &extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        "default-backend-annotations",
-				Namespace:   f.IngressController.Namespace,
+				Namespace:   f.Namespace,
 				Annotations: annotations,
 			},
 			Spec: extensions.IngressSpec{
@@ -71,7 +71,7 @@ var _ = framework.IngressNginxDescribe("Default backend with hosts", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", "foo.com").
 			End()
 
