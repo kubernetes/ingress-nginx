@@ -29,6 +29,7 @@ type Config struct {
 	ConnectTimeout    int    `json:"connectTimeout"`
 	SendTimeout       int    `json:"sendTimeout"`
 	ReadTimeout       int    `json:"readTimeout"`
+	BuffersNumber     int    `json:"buffersNumber"`
 	BufferSize        string `json:"bufferSize"`
 	CookieDomain      string `json:"cookieDomain"`
 	CookiePath        string `json:"cookiePath"`
@@ -58,6 +59,9 @@ func (l1 *Config) Equal(l2 *Config) bool {
 		return false
 	}
 	if l1.ReadTimeout != l2.ReadTimeout {
+		return false
+	}
+	if l1.BuffersNumber != l2.BuffersNumber {
 		return false
 	}
 	if l1.BufferSize != l2.BufferSize {
@@ -121,6 +125,11 @@ func (a proxy) Parse(ing *extensions.Ingress) (interface{}, error) {
 	config.ReadTimeout, err = parser.GetIntAnnotation("proxy-read-timeout", ing)
 	if err != nil {
 		config.ReadTimeout = defBackend.ProxyReadTimeout
+	}
+
+	config.BuffersNumber, err = parser.GetIntAnnotation("proxy-buffers-number", ing)
+	if err != nil {
+		config.BuffersNumber = defBackend.ProxyBuffersNumber
 	}
 
 	config.BufferSize, err = parser.GetStringAnnotation("proxy-buffer-size", ing)
