@@ -52,7 +52,7 @@ type Backend struct {
 
 	// Sets the number of the buffers used for reading a response from the proxied server
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers
-	ProxyBufferNumber int `json:"proxy-buffer-number"`
+	ProxyBuffersNumber int `json:"proxy-buffers-number"`
 
 	// Sets the size of the buffer used for reading the first part of the response received from the
 	// proxied server. This part usually contains a small response header.
