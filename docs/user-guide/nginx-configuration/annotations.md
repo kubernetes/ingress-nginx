@@ -79,7 +79,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
-|[nginx.ingress.kubernetes.io/proxy-buffer-number](#proxy-buffer-number)|number|
+|[nginx.ingress.kubernetes.io/proxy-buffers-number](#proxy-buffers-number)|number|
 |[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
@@ -547,14 +547,14 @@ To use custom values in an Ingress rule define these annotation:
 nginx.ingress.kubernetes.io/proxy-buffering: "on"
 ```
 
-### Proxy buffer Number
+### Proxy buffers Number
 
-Sets the number of the buffer in [`proxy_buffers`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers) used for reading the first part of the response received from the proxied server.
-By default proxy buffer number is set as 4
+Sets the number of the buffers  in [`proxy_buffers`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers) used for reading the first part of the response received from the proxied server.
+By default proxy buffers number is set as 4
 
-To configure this setting globally, set `proxy-buffer-number` in [NGINX ConfigMap](./configmap.md#proxy-buffer-number). To use custom values in an Ingress rule, define this annotation:
+To configure this setting globally, set `proxy-buffers-number` in [NGINX ConfigMap](./configmap.md#proxy-buffers-number). To use custom values in an Ingress rule, define this annotation:
 ```yaml
-nginx.ingress.kubernetes.io/proxy-buffer-number: "4"
+nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
 ```
 
 ### Proxy buffer size
