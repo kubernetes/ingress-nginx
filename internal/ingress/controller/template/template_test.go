@@ -468,7 +468,7 @@ func TestIsLocationAllowed(t *testing.T) {
 	}
 
 	loc := ingress.Location{
-		Denied: nil,
+		Denied: "",
 	}
 
 	isAllowed := isLocationAllowed(&loc)
