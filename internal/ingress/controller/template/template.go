@@ -611,7 +611,7 @@ func isLocationAllowed(input interface{}) bool {
 		return false
 	}
 
-	return loc.Denied == ""
+	return loc.Denied == nil
 }
 
 var (
