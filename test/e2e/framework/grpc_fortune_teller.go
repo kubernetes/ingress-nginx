@@ -38,7 +38,7 @@ func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fortune-teller",
-			Namespace: f.IngressController.Namespace,
+			Namespace: f.Namespace,
 		},
 		Spec: extensions.DeploymentSpec{
 			Replicas: NewInt32(replicas),
@@ -77,7 +77,7 @@ func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32
 	Expect(err).NotTo(HaveOccurred())
 	Expect(d).NotTo(BeNil(), "expected a fortune-teller deployment")
 
-	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.IngressController.Namespace, metav1.ListOptions{
+	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for to become ready")
@@ -85,7 +85,7 @@ func (f *Framework) NewNewGRPCFortuneTellerDeploymentWithReplicas(replicas int32
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fortune-teller",
-			Namespace: f.IngressController.Namespace,
+			Namespace: f.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{

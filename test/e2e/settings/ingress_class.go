@@ -45,11 +45,11 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			annotations := map[string]string{
 				"kubernetes.io/ingress.class": "testclass",
 			}
-			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.IngressController.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, "http-svc", 80, &annotations)
 			f.EnsureIngress(ing)
 
 			validHost := "bar"
-			ing = framework.NewSingleIngress(validHost, "/", validHost, f.IngressController.Namespace, "http-svc", 80, nil)
+			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, "http-svc", 80, nil)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
@@ -58,14 +58,14 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			})
 
 			resp, _, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", invalidHost).
 				End()
 			Expect(errs).To(BeNil())
 			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 
 			resp, _, errs = gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", validHost).
 				End()
 			Expect(errs).To(BeNil())
@@ -75,12 +75,12 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 
 	Context("With a specific ingress-class", func() {
 		BeforeEach(func() {
-			framework.UpdateDeployment(f.KubeClientSet, f.IngressController.Namespace, "nginx-ingress-controller", 1,
+			framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
 				func(deployment *appsv1beta1.Deployment) error {
 					args := deployment.Spec.Template.Spec.Containers[0].Args
 					args = append(args, "--ingress-class=testclass")
 					deployment.Spec.Template.Spec.Containers[0].Args = args
-					_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.IngressController.Namespace).Update(deployment)
+					_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace).Update(deployment)
 
 					return err
 				})
@@ -89,14 +89,14 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 		It("should ignore Ingress with no class", func() {
 			invalidHost := "bar"
 
-			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.IngressController.Namespace, "http-svc", 80, nil)
+			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, "http-svc", 80, nil)
 			f.EnsureIngress(ing)
 
 			validHost := "foo"
 			annotations := map[string]string{
 				"kubernetes.io/ingress.class": "testclass",
 			}
-			ing = framework.NewSingleIngress(validHost, "/", validHost, f.IngressController.Namespace, "http-svc", 80, &annotations)
+			ing = framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, "http-svc", 80, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(validHost, func(cfg string) bool {
@@ -108,14 +108,14 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			})
 
 			resp, _, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", validHost).
 				End()
 			Expect(errs).To(BeNil())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			resp, _, errs = gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", invalidHost).
 				End()
 			Expect(errs).To(BeNil())
@@ -127,7 +127,7 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			annotations := map[string]string{
 				"kubernetes.io/ingress.class": "testclass",
 			}
-			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 			ing = f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host, func(cfg string) bool {
@@ -135,7 +135,7 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			})
 
 			resp, _, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", host).
 				End()
 			Expect(errs).To(BeNil())
@@ -149,7 +149,7 @@ var _ = framework.IngressNginxDescribe("Ingress class", func() {
 			})
 
 			resp, _, errs = gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Set("Host", host).
 				End()
 			Expect(errs).To(BeNil())

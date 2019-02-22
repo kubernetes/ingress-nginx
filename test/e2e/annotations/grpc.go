@@ -40,7 +40,7 @@ var _ = framework.IngressNginxDescribe("Annotations - grpc", func() {
 				"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 			}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "fortune-teller", 50051, &annotations)
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "fortune-teller", 50051, &annotations)
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxServer(host,

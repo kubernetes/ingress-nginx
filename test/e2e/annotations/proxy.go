@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -57,7 +57,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -72,7 +72,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-redirect-to":   "goodbye.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -86,7 +86,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-body-size": "8m",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -100,7 +100,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-body-size": "15r",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -116,7 +116,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-read-timeout":    "20",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -134,7 +134,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-read-timeout":    "20k",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -151,7 +151,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-buffer-size": "8k",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -168,7 +168,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-request-buffering": "off",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -183,7 +183,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-next-upstream-tries": "5",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -199,7 +199,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Proxy", func() {
 			"nginx.ingress.kubernetes.io/proxy-cookie-path":   "/one/ /",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

@@ -30,7 +30,7 @@ import (
 
 // ExecIngressPod executes a command inside the first container in ingress controller running pod
 func (f *Framework) ExecIngressPod(command string) (string, error) {
-	pod, err := getIngressNGINXPod(f.IngressController.Namespace, f.KubeClientSet)
+	pod, err := getIngressNGINXPod(f.Namespace, f.KubeClientSet)
 	if err != nil {
 		return "", err
 	}

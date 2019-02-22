@@ -33,7 +33,7 @@ import (
 func startIngress(f *framework.Framework, annotations *map[string]string) map[string]bool {
 	host := "upstream-hash-by.foo.com"
 
-	ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, annotations)
+	ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, annotations)
 	f.EnsureIngress(ing)
 	f.WaitForNginxServer(host,
 		func(server string) bool {
@@ -42,7 +42,7 @@ func startIngress(f *framework.Framework, annotations *map[string]string) map[st
 
 	err := wait.PollImmediate(framework.Poll, framework.DefaultTimeout, func() (bool, error) {
 		resp, _, _ := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 		if resp.StatusCode == http.StatusOK {
@@ -57,7 +57,7 @@ func startIngress(f *framework.Framework, annotations *map[string]string) map[st
 
 	for i := 0; i < 100; i++ {
 		_, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 

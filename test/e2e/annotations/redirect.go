@@ -52,7 +52,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 
 		annotations := map[string]string{"nginx.ingress.kubernetes.io/permanent-redirect": redirectURL}
 
-		ing := framework.NewSingleIngress(host, redirectPath, host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, redirectPath, host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -64,7 +64,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 		By("sending request to redirected URL path")
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+redirectPath).
+			Get(f.GetURL(framework.HTTP)+redirectPath).
 			Set("Host", host).
 			RedirectPolicy(noRedirectPolicyFunc).
 			End()
@@ -88,7 +88,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 			"nginx.ingress.kubernetes.io/permanent-redirect-code": strconv.Itoa(redirectCode),
 		}
 
-		ing := framework.NewSingleIngress(host, redirectPath, host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, redirectPath, host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -100,7 +100,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Redirect", func() {
 		By("sending request to redirected URL path")
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+redirectPath).
+			Get(f.GetURL(framework.HTTP)+redirectPath).
 			Set("Host", host).
 			RedirectPolicy(noRedirectPolicyFunc).
 			End()

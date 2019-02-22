@@ -19,10 +19,11 @@ package settings
 import (
 	"context"
 	"fmt"
-	"github.com/parnurzeal/gorequest"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/parnurzeal/gorequest"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,7 +53,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 
 		config, err := f.KubeClientSet.
 			CoreV1().
-			ConfigMaps(f.IngressController.Namespace).
+			ConfigMaps(f.Namespace).
 			Get("tcp-services", metav1.GetOptions{})
 		Expect(err).To(BeNil(), "unexpected error obtaining tcp-services configmap")
 		Expect(config).NotTo(BeNil(), "expected a configmap but none returned")
@@ -61,17 +62,17 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 			config.Data = map[string]string{}
 		}
 
-		config.Data["8080"] = fmt.Sprintf("%v/http-svc:80", f.IngressController.Namespace)
+		config.Data["8080"] = fmt.Sprintf("%v/http-svc:80", f.Namespace)
 
 		_, err = f.KubeClientSet.
 			CoreV1().
-			ConfigMaps(f.IngressController.Namespace).
+			ConfigMaps(f.Namespace).
 			Update(config)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating configmap")
 
 		svc, err := f.KubeClientSet.
 			CoreV1().
-			Services(f.IngressController.Namespace).
+			Services(f.Namespace).
 			Get("ingress-nginx", metav1.GetOptions{})
 		Expect(err).To(BeNil(), "unexpected error obtaining ingress-nginx service")
 		Expect(svc).NotTo(BeNil(), "expected a service but none returned")
@@ -83,21 +84,18 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		})
 		_, err = f.KubeClientSet.
 			CoreV1().
-			Services(f.IngressController.Namespace).
+			Services(f.Namespace).
 			Update(svc)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating service")
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-http-svc-80"`, f.IngressController.Namespace))
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-http-svc-80"`, f.Namespace))
 			})
 
 		ip := f.GetNginxIP()
-		port, err := f.GetNginxPort("http-svc")
-		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaining service port")
-
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf("http://%v:%v", ip, port)).
+			Get(fmt.Sprintf("http://%v:8080", ip)).
 			End()
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(200))
@@ -113,7 +111,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		externalService := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dns-external-name-svc",
-				Namespace: f.IngressController.Namespace,
+				Namespace: f.Namespace,
 			},
 
 			Spec: corev1.ServiceSpec{
@@ -133,7 +131,7 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		// Expose the `external name` port on the `ingress-nginx` service
 		svc, err := f.KubeClientSet.
 			CoreV1().
-			Services(f.IngressController.Namespace).
+			Services(f.Namespace).
 			Get("ingress-nginx", metav1.GetOptions{})
 		Expect(err).To(BeNil(), "unexpected error obtaining ingress-nginx service")
 		Expect(svc).NotTo(BeNil(), "expected a service but none returned")
@@ -145,14 +143,14 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		})
 		_, err = f.KubeClientSet.
 			CoreV1().
-			Services(f.IngressController.Namespace).
+			Services(f.Namespace).
 			Update(svc)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating service")
 
 		// Update the TCP configmap to link port 5353 to the DNS external name service
 		config, err := f.KubeClientSet.
 			CoreV1().
-			ConfigMaps(f.IngressController.Namespace).
+			ConfigMaps(f.Namespace).
 			Get("tcp-services", metav1.GetOptions{})
 		Expect(err).To(BeNil(), "unexpected error obtaining tcp-services configmap")
 		Expect(config).NotTo(BeNil(), "expected a configmap but none returned")
@@ -161,11 +159,11 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 			config.Data = map[string]string{}
 		}
 
-		config.Data["5353"] = fmt.Sprintf("%v/dns-external-name-svc:5353", f.IngressController.Namespace)
+		config.Data["5353"] = fmt.Sprintf("%v/dns-external-name-svc:5353", f.Namespace)
 
 		_, err = f.KubeClientSet.
 			CoreV1().
-			ConfigMaps(f.IngressController.Namespace).
+			ConfigMaps(f.Namespace).
 			Update(config)
 		Expect(err).NotTo(HaveOccurred(), "unexpected error updating configmap")
 
@@ -174,19 +172,16 @@ var _ = framework.IngressNginxDescribe("TCP Feature", func() {
 		// Validate that the generated nginx config contains the expected `proxy_upstream_name` value
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-dns-external-name-svc-5353"`, f.IngressController.Namespace))
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-dns-external-name-svc-5353"`, f.Namespace))
 			})
 
 		// Execute the test. Use the `external name` service to resolve a domain name.
 		ip := f.GetNginxIP()
-		port, err := f.GetNginxPort("dns-svc")
-		Expect(err).NotTo(HaveOccurred(), "unexpected error obtaining service port")
-
 		resolver := net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 				d := net.Dialer{}
-				return d.DialContext(ctx, "tcp", fmt.Sprintf("%v:%v", ip, port))
+				return d.DialContext(ctx, "tcp", fmt.Sprintf("%v:5353", ip))
 			},
 		}
 		ips, err := resolver.LookupHost(context.Background(), "google-public-dns-b.google.com")
