@@ -50,6 +50,10 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout
 	ProxySendTimeout int `json:"proxy-send-timeout"`
 
+	// Sets the number of the buffers used for reading a response from the proxied server
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers
+	ProxyBuffersNumber int `json:"proxy-buffers-number"`
+
 	// Sets the size of the buffer used for reading the first part of the response received from the
 	// proxied server. This part usually contains a small response header.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size)

@@ -671,6 +671,7 @@ func NewDefault() Configuration {
 			ProxyConnectTimeout:    5,
 			ProxyReadTimeout:       60,
 			ProxySendTimeout:       60,
+			ProxyBuffersNumber:     4,
 			ProxyBufferSize:        "4k",
 			ProxyCookieDomain:      "off",
 			ProxyCookiePath:        "off",
