@@ -22,7 +22,6 @@ import (
 	"os"
 	"path"
 	"reflect"
-	"sort"
 	"strings"
 	"testing"
 
@@ -903,26 +902,106 @@ func TestGetIngressInformation(t *testing.T) {
 	}
 }
 
-func TestCollectCustomErrorsPerServer(t *testing.T) {
-	invalidType := &ingress.Ingress{}
-	customErrors := collectCustomErrorsPerServer(invalidType)
-	if customErrors != nil {
-		t.Errorf("Expected %v but returned %v", nil, customErrors)
-	}
-
-	server := &ingress.Server{
-		Locations: []*ingress.Location{
-			{CustomHTTPErrors: []int{404, 405}},
-			{CustomHTTPErrors: []int{404, 500}},
+func TestBuildCustomErrorLocationsPerServer(t *testing.T) {
+	testCases := []struct {
+		server          interface{}
+		expectedResults []errorLocation
+	}{
+		{ // Single ingress
+			&ingress.Server{Locations: []*ingress.Location{
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-backend",
+					CustomHTTPErrors:           []int{401, 402},
+				},
+			}},
+			[]errorLocation{
+				{
+					UpstreamName: "custom-default-backend-test-backend",
+					Codes:        []int{401, 402},
+				},
+			},
+		},
+		{ // Two ingresses, overlapping error codes, same backend
+			&ingress.Server{Locations: []*ingress.Location{
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-backend",
+					CustomHTTPErrors:           []int{401, 402},
+				},
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-backend",
+					CustomHTTPErrors:           []int{402, 403},
+				},
+			}},
+			[]errorLocation{
+				{
+					UpstreamName: "custom-default-backend-test-backend",
+					Codes:        []int{401, 402, 403},
+				},
+			},
+		},
+		{ // Two ingresses, overlapping error codes, different backends
+			&ingress.Server{Locations: []*ingress.Location{
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-one",
+					CustomHTTPErrors:           []int{401, 402},
+				},
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-two",
+					CustomHTTPErrors:           []int{402, 403},
+				},
+			}},
+			[]errorLocation{
+				{
+					UpstreamName: "custom-default-backend-test-one",
+					Codes:        []int{401, 402},
+				},
+				{
+					UpstreamName: "custom-default-backend-test-two",
+					Codes:        []int{402, 403},
+				},
+			},
+		},
+		{ // Many ingresses, overlapping error codes, different backends
+			&ingress.Server{Locations: []*ingress.Location{
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-one",
+					CustomHTTPErrors:           []int{401, 402},
+				},
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-one",
+					CustomHTTPErrors:           []int{501, 502},
+				},
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-two",
+					CustomHTTPErrors:           []int{409, 410},
+				},
+				{
+					DefaultBackendUpstreamName: "custom-default-backend-test-two",
+					CustomHTTPErrors:           []int{504, 505},
+				},
+			}},
+			[]errorLocation{
+				{
+					UpstreamName: "custom-default-backend-test-one",
+					Codes:        []int{401, 402, 501, 502},
+				},
+				{
+					UpstreamName: "custom-default-backend-test-two",
+					Codes:        []int{409, 410, 504, 505},
+				},
+			},
 		},
 	}
 
-	expected := []int{404, 405, 500}
-	uniqueCodes := collectCustomErrorsPerServer(server)
-	sort.Ints(uniqueCodes)
-
-	if !reflect.DeepEqual(expected, uniqueCodes) {
-		t.Errorf("Expected '%v' but got '%v'", expected, uniqueCodes)
+	for _, c := range testCases {
+		response := buildCustomErrorLocationsPerServer(c.server)
+		if results, ok := response.([]errorLocation); ok {
+			if !reflect.DeepEqual(c.expectedResults, results) {
+				t.Errorf("Expected %+v but got %+v", c.expectedResults, results)
+			}
+		} else {
+			t.Error("Unable to convert to []errorLocation")
+		}
 	}
 }
 
