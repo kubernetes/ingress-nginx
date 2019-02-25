@@ -93,6 +93,18 @@ kube-system   kube-dns               ClusterIP   10.96.0.10       <none>        
 kube-system   kubernetes-dashboard   NodePort    10.103.128.17    <none>        80:30000/TCP    30m
 ```
 
+Use the `ingress-nginx` kubectl plugin
+
+Install [krew](https://github.com/GoogleContainerTools/krew), then run
+```console
+$ kubectl krew install --manifest https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/cmd/plugin/release/ingress-nginx.yaml
+```
+to install the plugin. Then run
+```console
+$ kubectl ingress-nginx --help
+```
+to make sure the plugin is properly installed and to get a list of commands. The plugin includes all of the commands present in the `/dbg` tool, plus a more detailed version of `kubectl get ingresses` available by runnning `kubectl ingress-nginx ingresses`.
+
 Use the `/dbg` Tool to Check Dynamic Configuration
 
 ```console

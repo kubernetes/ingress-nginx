@@ -118,3 +118,7 @@
 [[constraint]]
   name = "k8s.io/apiserver"
   revision = "kubernetes-1.13.3"
+
+[[constraint]]
+  name = "k8s.io/cli-runtime"
+  revision = "kubernetes-1.13.3"
