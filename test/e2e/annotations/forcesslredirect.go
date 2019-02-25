@@ -43,7 +43,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 			"nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -53,7 +53,7 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			RedirectPolicy(noRedirectPolicyFunc).
 			Set("Host", host).

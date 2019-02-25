@@ -61,7 +61,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 	configuration := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "influxdb-config",
-			Namespace: f.IngressController.Namespace,
+			Namespace: f.Namespace,
 		},
 		Data: map[string]string{
 			"influxd.conf": influxConfig,
@@ -76,7 +76,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "influxdb-svc",
-			Namespace: f.IngressController.Namespace,
+			Namespace: f.Namespace,
 		},
 		Spec: extensions.DeploymentSpec{
 			Replicas: NewInt32(1),
@@ -140,7 +140,7 @@ func (f *Framework) NewInfluxDBDeployment() {
 
 	Expect(d).NotTo(BeNil(), "unexpected error creating deployement for influxdb")
 
-	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.IngressController.Namespace, metav1.ListOptions{
+	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for influxdb to become ready")

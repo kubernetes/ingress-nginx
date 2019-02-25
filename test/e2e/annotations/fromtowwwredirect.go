@@ -47,7 +47,7 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 			"nginx.ingress.kubernetes.io/from-to-www-redirect": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxConfiguration(
@@ -59,7 +59,7 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 		By("sending request to www.fromtowwwredirect.bar.com")
 
 		resp, _, errs := gorequest.New().
-			Get(fmt.Sprintf("%s/%s", f.IngressController.HTTPURL, "foo")).
+			Get(fmt.Sprintf("%s/%s", f.GetURL(framework.HTTP), "foo")).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			RedirectPolicy(noRedirectPolicyFunc).
 			Set("Host", fmt.Sprintf("%s.%s", "www", host)).
@@ -78,7 +78,7 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 			"nginx.ingress.kubernetes.io/from-to-www-redirect": "true",
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host, fmt.Sprintf("www.%v", host)}, f.IngressController.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host, fmt.Sprintf("www.%v", host)}, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
@@ -90,7 +90,7 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 		f.WaitForNginxServer(fmt.Sprintf("www.%v", host),
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring(`server_name www.fromtowwwredirect.bar.com;`)) &&
-					Expect(server).Should(ContainSubstring(fmt.Sprintf("/etc/ingress-controller/ssl/%v-fromtowwwredirect.bar.com.pem", f.IngressController.Namespace))) &&
+					Expect(server).Should(ContainSubstring(fmt.Sprintf("/etc/ingress-controller/ssl/%v-fromtowwwredirect.bar.com.pem", f.Namespace))) &&
 					Expect(server).Should(ContainSubstring(`return 308 $scheme://fromtowwwredirect.bar.com$request_uri;`))
 			})
 
@@ -103,7 +103,7 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 				InsecureSkipVerify: true,
 				ServerName:         h,
 			}).
-			Get(f.IngressController.HTTPSURL).
+			Get(f.GetURL(framework.HTTPS)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			RedirectPolicy(noRedirectPolicyFunc).
 			Set("host", h).
