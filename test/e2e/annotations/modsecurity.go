@@ -35,7 +35,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 
 	It("should enable modsecurity", func() {
 		host := "modsecurity.foo.com"
-		nameSpace := f.IngressController.Namespace
+		nameSpace := f.Namespace
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-modsecurity": "true",
@@ -53,7 +53,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 
 	It("should enable modsecurity with transaction ID and OWASP rules", func() {
 		host := "modsecurity.foo.com"
-		nameSpace := f.IngressController.Namespace
+		nameSpace := f.Namespace
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-modsecurity":         "true",
@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 
 	It("should disable modsecurity", func() {
 		host := "modsecurity.foo.com"
-		nameSpace := f.IngressController.Namespace
+		nameSpace := f.Namespace
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-modsecurity": "false",
@@ -91,7 +91,7 @@ var _ = framework.IngressNginxDescribe("Annotations - ModSecurityLocation", func
 
 	It("should enable modsecurity with snippet", func() {
 		host := "modsecurity.foo.com"
-		nameSpace := f.IngressController.Namespace
+		nameSpace := f.Namespace
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-modsecurity":  "true",

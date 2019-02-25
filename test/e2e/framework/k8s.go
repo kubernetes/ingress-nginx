@@ -124,7 +124,7 @@ func WaitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(opts)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 
 		r := 0
@@ -150,11 +150,11 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(name, metav1.GetOptions{})
 		if k8sErrors.IsNotFound(err) {
-			return false, err
+			return false, nil
 		}
 		Expect(err).NotTo(HaveOccurred())
 		if len(endpoint.Subsets) == 0 || len(endpoint.Subsets[0].Addresses) == 0 {
-			return false, err
+			return false, nil
 		}
 
 		r := 0
@@ -191,7 +191,7 @@ func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Po
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	if len(l.Items) == 0 {

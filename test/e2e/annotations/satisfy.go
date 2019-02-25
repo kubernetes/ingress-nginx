@@ -58,11 +58,11 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 			annotationKey: "all",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &initAnnotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &initAnnotations)
 		f.EnsureIngress(ing)
 
 		for key, result := range results {
-			err := framework.UpdateIngress(f.KubeClientSet, f.IngressController.Namespace, host, func(ingress *extensions.Ingress) error {
+			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *extensions.Ingress) error {
 				ingress.ObjectMeta.Annotations[annotationKey] = annotations[key]
 				return nil
 			})
@@ -74,7 +74,7 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 				})
 
 			resp, body, errs := gorequest.New().
-				Get(f.IngressController.HTTPURL).
+				Get(f.GetURL(framework.HTTP)).
 				Retry(10, 1*time.Second, http.StatusNotFound).
 				Set("Host", host).
 				End()

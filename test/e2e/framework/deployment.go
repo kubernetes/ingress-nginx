@@ -71,7 +71,7 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	deployment := &extensions.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: f.IngressController.Namespace,
+			Namespace: f.Namespace,
 		},
 		Spec: extensions.DeploymentSpec{
 			Replicas: NewInt32(replicas),
@@ -115,7 +115,7 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: f.IngressController.Namespace,
+			Namespace: f.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
@@ -135,6 +135,6 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	s := f.EnsureService(service)
 	Expect(s).NotTo(BeNil(), "expected a service but none returned")
 
-	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.IngressController.Namespace, int(replicas))
+	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, int(replicas))
 	Expect(err).NotTo(HaveOccurred(), "failed to wait for endpoints to become ready")
 }

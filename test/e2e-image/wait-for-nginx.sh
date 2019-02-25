@@ -33,8 +33,7 @@ function on_exit {
 }
 trap on_exit EXIT
 
-kubectl apply --namespace=$NAMESPACE -f $DIR/manifests/service.yaml
-
+kubectl apply --f $DIR/manifests/service.yaml
 sed "s@\${NAMESPACE}@${NAMESPACE}@" $DIR/manifests/mandatory.yaml | kubectl apply --namespace=$NAMESPACE -f -
 cat $DIR/manifests/service.yaml | kubectl apply --namespace=$NAMESPACE -f -
 
