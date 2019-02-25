@@ -27,8 +27,6 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-const defaultBackendName = "upstream-default-backend"
-
 func errorBlockName(upstreamName string, errorCode string) string {
 	return fmt.Sprintf("@custom_%s_%s", upstreamName, errorCode)
 }
