@@ -20,6 +20,8 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+ignored = ["github.com/kubernetes/ingress-nginx/images/grpc-fortune-teller*"]
+
 [prune]
   non-go = true
   go-tests = true
