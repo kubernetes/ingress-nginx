@@ -106,7 +106,7 @@ var _ = framework.IngressNginxDescribe("Annotations - custom-http-errors", func(
 		customDefaultBackend := "from-annotation"
 		f.NewEchoDeploymentWithNameAndReplicas(customDefaultBackend, 1)
 
-		err = framework.UpdateIngress(f.KubeClientSet, f.IngressController.Namespace, host, func(ingress *extensions.Ingress) error {
+		err = framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *extensions.Ingress) error {
 			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/default-backend"] = customDefaultBackend
 			return nil
 		})
