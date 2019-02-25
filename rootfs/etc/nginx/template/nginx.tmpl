@@ -305,16 +305,6 @@ http {
         ''                $server_port;
     }
 
-    # Obtain best http host
-    map $http_host $this_host {
-        default          $http_host;
-        ''               $host;
-    }
-
-    map $http_x_forwarded_host $best_http_host {
-        default          $http_x_forwarded_host;
-        ''               $this_host;
-    }
     {{ else }}
     map '' $pass_access_scheme {
         default          $scheme;
@@ -323,13 +313,13 @@ http {
     map '' $pass_server_port {
         default          $server_port;
     }
+    {{ end }}
 
     # Obtain best http host
     map $http_host $best_http_host {
         default          $http_host;
         ''               $host;
     }
-    {{ end }}
 
     # validate $pass_access_scheme and $scheme are http to force a redirect
     map "$scheme:$pass_access_scheme" $redirect_to_https {
