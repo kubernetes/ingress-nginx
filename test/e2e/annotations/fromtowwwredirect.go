@@ -90,7 +90,6 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 		f.WaitForNginxServer(fmt.Sprintf("www.%v", host),
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring(`server_name www.fromtowwwredirect.bar.com;`)) &&
-					Expect(server).Should(ContainSubstring(fmt.Sprintf("/etc/ingress-controller/ssl/%v-fromtowwwredirect.bar.com.pem", f.Namespace))) &&
 					Expect(server).Should(ContainSubstring(`return 308 $scheme://fromtowwwredirect.bar.com$request_uri;`))
 			})
 
