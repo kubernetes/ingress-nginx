@@ -305,6 +305,17 @@ http {
         ''                $server_port;
     }
 
+    # Obtain best http host
+    map $http_host $this_host {
+        default          $http_host;
+        ''               $host;
+    }
+
+    map $http_x_forwarded_host $best_http_forwarded_host {
+        default          $http_x_forwarded_host;
+        ''               $this_host;
+    }
+
     {{ else }}
     map '' $pass_access_scheme {
         default          $scheme;
@@ -1249,7 +1260,7 @@ stream {
             {{ else }}
             {{ $proxySetHeader }} X-Forwarded-For        $the_real_ip;
             {{ end }}
-            {{ $proxySetHeader }} X-Forwarded-Host       $best_http_host;
+            {{ $proxySetHeader }} X-Forwarded-Host       $best_http_forwarded_host;
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
             {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
             {{ if $all.Cfg.ProxyAddOriginalURIHeader }}
