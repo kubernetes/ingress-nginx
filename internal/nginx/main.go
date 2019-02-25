@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/tv42/httpunix"
@@ -88,15 +89,39 @@ func NewPostStatusRequest(path, contentType string, data interface{}) (int, []by
 	return res.StatusCode, body, nil
 }
 
+// GetServerBlock takes an nginx.conf file and a host and tries to find the server block for that host
+func GetServerBlock(conf string, host string) (string, error) {
+	startMsg := fmt.Sprintf("## start server %v", host)
+	endMsg := fmt.Sprintf("## end server %v", host)
+
+	blockStart := strings.Index(conf, startMsg)
+	if blockStart < 0 {
+		return "", fmt.Errorf("Host %v was not found in the controller's nginx.conf", host)
+	}
+	blockStart = blockStart + len(startMsg)
+
+	blockEnd := strings.Index(conf, endMsg)
+	if blockEnd < 0 {
+		return "", fmt.Errorf("The end of the host server block could not be found, but the beginning was")
+	}
+
+	return conf[blockStart:blockEnd], nil
+}
+
 // ReadNginxConf reads the nginx configuration file into a string
 func ReadNginxConf() (string, error) {
-	confFile, err := os.Open("/etc/nginx/nginx.conf")
+	return ReadFileToString("/etc/nginx/nginx.conf")
+}
+
+// ReadFileToString reads any file into a string
+func ReadFileToString(path string) (string, error) {
+	f, err := os.Open(path)
 	if err != nil {
 		return "", err
 	}
-	defer confFile.Close()
+	defer f.Close()
 
-	contents, err := ioutil.ReadAll(confFile)
+	contents, err := ioutil.ReadAll(f)
 	if err != nil {
 		return "", err
 	}

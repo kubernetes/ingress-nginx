@@ -110,6 +110,32 @@ local function handle_general()
   ngx.status = ngx.HTTP_CREATED
 end
 
+local function handle_certs()
+  if ngx.var.request_method ~= "GET" then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Only GET requests are allowed!")
+    return
+  end
+
+  local query = ngx.req.get_uri_args()
+  if not query["hostname"] then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.print("Hostname must be specified.")
+    return
+  end
+
+  local key = _M.get_pem_cert_key(query["hostname"])
+  if key then
+    ngx.status = ngx.HTTP_OK
+    ngx.print(key)
+    return
+  else
+    ngx.status = ngx.HTTP_NOT_FOUND
+    ngx.print("No key associated with this hostname.")
+    return
+  end
+end
+
 function _M.call()
   if ngx.var.request_method ~= "POST" and ngx.var.request_method ~= "GET" then
     ngx.status = ngx.HTTP_BAD_REQUEST
@@ -124,6 +150,11 @@ function _M.call()
 
   if ngx.var.request_uri == "/configuration/general" then
     handle_general()
+    return
+  end
+
+  if ngx.var.uri == "/configuration/certs" then
+    handle_certs()
     return
   end
 
