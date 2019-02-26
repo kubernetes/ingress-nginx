@@ -32,6 +32,7 @@ The following table shows a configuration option's name, type, and the default v
 |[hide-headers](#hide-headers)|string array|empty|
 |[access-log-params](#access-log-params)|string|""|
 |[access-log-path](#access-log-path)|string|"/var/log/nginx/access.log"|
+|[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"|
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"|
 |[enable-dynamic-tls-records](#enable-dynamic-tls-records)|bool|"true"|
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"|
@@ -183,6 +184,10 @@ _References:_
 Access log path. Goes to `/var/log/nginx/access.log` by default.
 
 __Note:__ the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
+
+## enable-access-log-for-default-backend
+
+Enables logging access to default backend. _**default:**_ is disabled. 
 
 ## error-log-path
 
