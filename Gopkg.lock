@@ -896,7 +896,7 @@
   revision = "kubernetes-1.13.3"
 
 [[projects]]
-  digest = "1:04f210e4055be6dd920fbc52e6c3548ae34cdf9249cd666ad2cec41da149c7b5"
+  digest = "1:8e9cf9f8e6ced4caf9abcf7191f46d81d0ce7cbdb1ce78a17944abe0020edc50"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -905,6 +905,7 @@
     "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
+    "pkg/apis/meta/v1/unstructured/unstructuredscheme",
     "pkg/apis/meta/v1beta1",
     "pkg/conversion",
     "pkg/conversion/queryparams",
@@ -961,7 +962,18 @@
   revision = "kubernetes-1.13.3"
 
 [[projects]]
-  digest = "1:65bb1c16431d6a811dbe6d68a7a7b566c1ae57ada86c3735127ee492c76dc3e3"
+  digest = "1:63793246976569a95e534c731e79cc555dabee6f8efa29a0b28ca33f23b7e28b"
+  name = "k8s.io/cli-runtime"
+  packages = [
+    "pkg/genericclioptions",
+    "pkg/genericclioptions/printers",
+    "pkg/genericclioptions/resource",
+  ]
+  pruneopts = "NUT"
+  revision = "kubernetes-1.13.3"
+
+[[projects]]
+  digest = "1:8ed4701154a41791914e89f9aad23ec76c8826824af285c5606dd4afd9ac2f25"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -1119,6 +1131,7 @@
     "plugin/pkg/client/auth/openstack",
     "rest",
     "rest/watch",
+    "restmapper",
     "testing",
     "third_party/forked/golang/template",
     "tools/auth",
@@ -1279,11 +1292,13 @@
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/apiserver/pkg/server/healthz",
     "k8s.io/apiserver/pkg/util/logs",
+    "k8s.io/cli-runtime/pkg/genericclioptions",
     "k8s.io/client-go/informers",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/kubernetes/typed/core/v1",
+    "k8s.io/client-go/kubernetes/typed/extensions/v1beta1",
     "k8s.io/client-go/plugin/pkg/client/auth",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/cache",
@@ -1292,6 +1307,7 @@
     "k8s.io/client-go/tools/leaderelection",
     "k8s.io/client-go/tools/leaderelection/resourcelock",
     "k8s.io/client-go/tools/record",
+    "k8s.io/client-go/tools/remotecommand",
     "k8s.io/client-go/util/cert",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/client-go/util/workqueue",
