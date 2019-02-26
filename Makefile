@@ -153,6 +153,12 @@ build:
 	GOBUILD_FLAGS="$(GOBUILD_FLAGS)" \
 	build/go-in-docker.sh build/build.sh
 
+.PHONY: build-plugin
+build-plugin:
+	@$(DEF_VARS) \
+	GOBUILD_FLAGS="$(GOBUILD_FLAGS)" \
+	build/go-in-docker.sh build/build-plugin.sh
+
 .PHONY: clean
 clean:
 	rm -rf bin/ .gocache/ .env
