@@ -38,7 +38,7 @@ var _ = framework.IngressNginxDescribe("Default backend - SSL", func() {
 	It("should return a self generated SSL certificate", func() {
 		By("checking SSL Certificate using the NGINX IP address")
 		resp, _, errs := gorequest.New().
-			Post(f.IngressController.HTTPSURL).
+			Post(f.GetURL(framework.HTTPS)).
 			TLSClientConfig(&tls.Config{
 				// the default backend uses a self generated certificate
 				InsecureSkipVerify: true,
@@ -53,7 +53,7 @@ var _ = framework.IngressNginxDescribe("Default backend - SSL", func() {
 
 		By("checking SSL Certificate using the NGINX catch all server")
 		resp, _, errs = gorequest.New().
-			Post(f.IngressController.HTTPSURL).
+			Post(f.GetURL(framework.HTTPS)).
 			TLSClientConfig(&tls.Config{
 				// the default backend uses a self generated certificate
 				InsecureSkipVerify: true,

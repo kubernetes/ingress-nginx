@@ -49,6 +49,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/satisfy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/secureupstream"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/serversnippet"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/serviceupstream"
@@ -79,29 +80,31 @@ type Ingress struct {
 	CorsConfig           cors.Config
 	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
-	Denied               error
-	ExternalAuth         authreq.Config
-	HTTP2PushPreload     bool
-	Proxy                proxy.Config
-	RateLimit            ratelimit.Config
-	Redirect             redirect.Config
-	Rewrite              rewrite.Config
-	SecureUpstream       secureupstream.Config
-	ServerSnippet        string
-	ServiceUpstream      bool
-	SessionAffinity      sessionaffinity.Config
-	SSLPassthrough       bool
-	UsePortInRedirects   bool
-	UpstreamHashBy       upstreamhashby.Config
-	LoadBalancing        string
-	UpstreamVhost        string
-	Whitelist            ipwhitelist.SourceRange
-	XForwardedPrefix     bool
-	SSLCiphers           string
-	Logs                 log.Config
-	LuaRestyWAF          luarestywaf.Config
-	InfluxDB             influxdb.Config
-	ModSecurity          modsecurity.Config
+	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
+	Denied             *string
+	ExternalAuth       authreq.Config
+	HTTP2PushPreload   bool
+	Proxy              proxy.Config
+	RateLimit          ratelimit.Config
+	Redirect           redirect.Config
+	Rewrite            rewrite.Config
+	Satisfy            string
+	SecureUpstream     secureupstream.Config
+	ServerSnippet      string
+	ServiceUpstream    bool
+	SessionAffinity    sessionaffinity.Config
+	SSLPassthrough     bool
+	UsePortInRedirects bool
+	UpstreamHashBy     upstreamhashby.Config
+	LoadBalancing      string
+	UpstreamVhost      string
+	Whitelist          ipwhitelist.SourceRange
+	XForwardedPrefix   bool
+	SSLCiphers         string
+	Logs               log.Config
+	LuaRestyWAF        luarestywaf.Config
+	InfluxDB           influxdb.Config
+	ModSecurity        modsecurity.Config
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -129,6 +132,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"RateLimit":            ratelimit.NewParser(cfg),
 			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
+			"Satisfy":              satisfy.NewParser(cfg),
 			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"ServerSnippet":        serversnippet.NewParser(cfg),
 			"ServiceUpstream":      serviceupstream.NewParser(cfg),
@@ -179,7 +183,8 @@ func (e Extractor) Extract(ing *extensions.Ingress) *Ingress {
 
 			_, alreadyDenied := data[DeniedKeyName]
 			if !alreadyDenied {
-				data[DeniedKeyName] = err
+				errString := err.Error()
+				data[DeniedKeyName] = &errString
 				klog.Errorf("error reading %v annotation in Ingress %v/%v: %v", name, ing.GetNamespace(), ing.GetName(), err)
 				continue
 			}

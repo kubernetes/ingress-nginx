@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
-		ing := framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -55,7 +55,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("X-Forwarded-Port", "1234").
 			Set("X-Forwarded-Proto", "myproto").
@@ -76,7 +76,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 
 		f.UpdateNginxConfigMapData(setting, "false")
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -84,7 +84,7 @@ var _ = framework.IngressNginxDescribe("X-Forwarded headers", func() {
 			})
 
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			Set("X-Forwarded-Port", "1234").
 			Set("X-Forwarded-Proto", "myproto").

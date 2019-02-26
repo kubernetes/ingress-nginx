@@ -20,8 +20,8 @@ import (
 	"testing"
 )
 
-func TestSysctlFSFileMax(t *testing.T) {
-	i := sysctlFSFileMax()
+func TestRlimitMaxNumFiles(t *testing.T) {
+	i := rlimitMaxNumFiles()
 	if i < 1 {
 		t.Errorf("returned %v but expected > 0", i)
 	}

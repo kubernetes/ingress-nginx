@@ -22,13 +22,12 @@ if test -e kubectl; then
   echo "skipping download of kubectl"
 else
   echo "downloading kubectl..."
-  curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl && \
-      chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+  curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl \
+    && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
 fi
 
-mkdir -p ${HOME}/.kube
-touch ${HOME}/.kube/config
-export KUBECONFIG=${HOME}/.kube/config
+export KUBECONFIG="$(mktemp)"
+echo -n ${KUBECONFIG} > /tmp/kubeconfig
 
 echo "starting Kubernetes cluster..."
 K8S_VERSION=v1.11
@@ -54,3 +53,6 @@ make -C ${DIR}/../../ build container
 echo "copying docker image to cluster..."
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 ${DIR}/dind-cluster-v1.11.sh copy-image ${DEV_IMAGE}
+
+echo "copying e2e docker image to cluster..."
+${DIR}/dind-cluster-v1.11.sh copy-image nginx-ingress-controller:e2e

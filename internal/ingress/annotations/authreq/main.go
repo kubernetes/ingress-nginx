@@ -146,12 +146,12 @@ func (a authReq) Parse(ing *extensions.Ingress) (interface{}, error) {
 	// Optional Parameters
 	signIn, err := parser.GetStringAnnotation("auth-signin", ing)
 	if err != nil {
-		klog.Warning("auth-signin annotation is undefined and will not be set")
+		klog.V(3).Infof("auth-signin annotation is undefined and will not be set")
 	}
 
 	authSnippet, err := parser.GetStringAnnotation("auth-snippet", ing)
 	if err != nil {
-		klog.Warning("auth-snippet annotation is undefined and will not be set")
+		klog.V(3).Infof("auth-snippet annotation is undefined and will not be set")
 	}
 
 	responseHeaders := []string{}
