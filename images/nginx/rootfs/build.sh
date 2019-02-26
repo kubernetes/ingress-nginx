@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.8
+export NGINX_VERSION=1.15.9
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -131,7 +131,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src a8bdafbca87eb99813ae4fcac1ad0875bf725ce19eb265d28268c309b2b40787 \
+get_src e4cfba989bba614cd53f3f406ac6da9f05977d6b1296e5d20a299f10c2d7ae43 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
