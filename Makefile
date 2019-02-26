@@ -185,10 +185,10 @@ e2e-test:
 	echo "Granting permissions to ingress-nginx e2e service account..."
 	kubectl create serviceaccount ingress-nginx-e2e || true
 	kubectl create clusterrolebinding permissive-binding \
-	--clusterrole=cluster-admin \
-	--user=admin \
-	--user=kubelet \
-	--serviceaccount=default:ingress-nginx-e2e || true
+		--clusterrole=cluster-admin \
+		--user=admin \
+		--user=kubelet \
+		--serviceaccount=default:ingress-nginx-e2e || true
 
 	kubectl run --rm -i --tty \
 		--attach \
@@ -202,11 +202,13 @@ e2e-test:
 
 .PHONY: e2e-test-image
 e2e-test-image:
+	make -C test/e2e-image
+
+.PHONY: e2e-test-binary
+e2e-test-binary:
 	@$(DEF_VARS)                 \
 	DOCKER_OPTS="-i --net=host"  \
 	build/go-in-docker.sh build/build-e2e.sh
-
-	make -C test/e2e-image
 
 .PHONY: cover
 cover:
