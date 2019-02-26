@@ -945,8 +945,6 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 func TestListIngresses(t *testing.T) {
 	s := newStore(t)
 
-	sameTime := metav1.NewTime(time.Now())
-
 	ingressToIgnore := &ingress.Ingress{
 		Ingress: extensions.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -955,7 +953,7 @@ func TestListIngresses(t *testing.T) {
 				Annotations: map[string]string{
 					"kubernetes.io/ingress.class": "something",
 				},
-				CreationTimestamp: sameTime,
+				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
 			Spec: extensions.IngressSpec{
 				Backend: &extensions.IngressBackend{
@@ -972,7 +970,7 @@ func TestListIngresses(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:              "test-3",
 				Namespace:         "testns",
-				CreationTimestamp: sameTime,
+				CreationTimestamp: metav1.NewTime(time.Now()),
 			},
 			Spec: extensions.IngressSpec{
 				Rules: []extensions.IngressRule{

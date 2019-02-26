@@ -7,6 +7,7 @@
 		"bind-address-ipv6": [ "[2001:db8:a0b:12f0::1]" ,"[3731:54:65fe:2::a7]" ,"[33:33:33::33::33]" ],
 		"backend": {
 			"custom-http-errors": [404],
+			"proxy-buffers-number": "4",
 			"proxy-buffer-size": "4k",
 			"proxy-connect-timeout": 5,
 			"proxy-read-timeout": 60,

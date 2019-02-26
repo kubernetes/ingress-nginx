@@ -44,7 +44,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 	It("should return 503 when backend service does not exist", func() {
 		host := "nonexistent.svc.com"
 
-		bi := buildIngressWithNonexistentService(host, f.IngressController.Namespace, "/")
+		bi := buildIngressWithNonexistentService(host, f.Namespace, "/")
 		f.EnsureIngress(bi)
 
 		f.WaitForNginxServer(host,
@@ -53,7 +53,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 		Expect(errs).Should(BeEmpty())
@@ -63,7 +63,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 	It("should return 503 when all backend service endpoints are unavailable", func() {
 		host := "unavailable.svc.com"
 
-		bi, bs := buildIngressWithUnavailableServiceEndpoints(host, f.IngressController.Namespace, "/")
+		bi, bs := buildIngressWithUnavailableServiceEndpoints(host, f.Namespace, "/")
 
 		svc := f.EnsureService(bs)
 		Expect(svc).NotTo(BeNil())
@@ -76,7 +76,7 @@ var _ = framework.IngressNginxDescribe("Service backend - 503", func() {
 			})
 
 		resp, _, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL).
+			Get(f.GetURL(framework.HTTP)).
 			Set("Host", host).
 			End()
 		Expect(errs).Should(BeEmpty())

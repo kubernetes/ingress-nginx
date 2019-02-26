@@ -10,7 +10,7 @@
 # Configuration checksum: {{ $all.Cfg.Checksum }}
 
 # setup custom paths that do not require root access
-pid /tmp/nginx.pid;
+pid {{ .PID }};
 
 {{ if $cfg.UseGeoIP2 }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
@@ -274,7 +274,7 @@ http {
     {{ if $cfg.EnableSyslog }}
     access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
     {{ else }}
-    access_log {{ $cfg.AccessLogPath }} upstreaminfo if=$loggable;
+    access_log {{ $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
     {{ end }}
     {{ end }}
 
@@ -433,13 +433,12 @@ http {
 
     ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
 
-    {{ if .CustomErrors }}
-    # Custom error pages
+    {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
     proxy_intercept_errors on;
     {{ end }}
 
     {{ range $errCode := $cfg.CustomHTTPErrors }}
-    error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
+    error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
     proxy_ssl_session_reuse on;
 
@@ -619,7 +618,7 @@ http {
         {{ $cfg.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -629,7 +628,9 @@ http {
     server {
         listen {{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
         {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Default }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
-        set $proxy_upstream_name "-";
+        set $proxy_upstream_name "internal";
+
+        access_log off;
 
         location / {
           return 404;
@@ -638,35 +639,23 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
-        listen {{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};
-        {{ if $IsIPV6Enabled }}listen [::]:{{ $all.ListenPorts.Status }} default_server {{ if $all.Cfg.ReusePort }}reuseport{{ end }} backlog={{ $all.BacklogSize }};{{ end }}
-        set $proxy_upstream_name "-";
+        listen unix:{{ .StatusSocket }};
+        set $proxy_upstream_name "internal";
 
-        {{ if gt (len $cfg.BlockUserAgents) 0 }}
-        if ($block_ua) {
-           return 403;
-        }
-        {{ end }}
-        {{ if gt (len $cfg.BlockReferers) 0 }}
-        if ($block_ref) {
-           return 403;
-        }
+        keepalive_timeout 0;
+        gzip off;
+
+        access_log off;
+
+        {{ if $cfg.EnableOpentracing }}
+        opentracing off;
         {{ end }}
 
         location {{ $healthzURI }} {
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-            access_log off;
             return 200;
         }
 
         location /is-dynamic-lb-initialized {
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-            access_log off;
-
             content_by_lua_block {
                 local configuration = require("configuration")
                 local backend_data = configuration.get_backends_data()
@@ -680,28 +669,11 @@ http {
             }
         }
 
-        location /nginx_status {
-            set $proxy_upstream_name "internal";
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-
-            access_log off;
+        location {{ .StatusPath }} {
             stub_status on;
         }
 
         location /configuration {
-            access_log off;
-            {{ if $cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
-
-            allow 127.0.0.1;
-            {{ if $IsIPV6Enabled }}
-            allow ::1;
-            {{ end }}
-            deny all;
-
             # this should be equals to configuration_data dict
             client_max_body_size                    10m;
             client_body_buffer_size                 10m;
@@ -713,16 +685,10 @@ http {
         }
 
         location / {
-            {{ if .CustomErrors }}
-            proxy_set_header    X-Code 404;
-            {{ end }}
-            set $proxy_upstream_name "upstream-default-backend";
-            proxy_set_header    Host   $best_http_host;
-
-            proxy_pass          http://upstream_balancer;
+            content_by_lua_block {
+                ngx.exit(ngx.HTTP_NOT_FOUND)
+            }
         }
-
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders $cfg.CustomHTTPErrors $all.EnableMetrics) }}
     }
 }
 
@@ -739,12 +705,19 @@ stream {
         -- init modules
         local ok, res
 
+        ok, res = pcall(require, "configuration")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          configuration = res
+          configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
+        end
+
         ok, res = pcall(require, "tcp_udp_configuration")
         if not ok then
           error("require failed: " .. tostring(res))
         else
           tcp_udp_configuration = res
-          tcp_udp_configuration.nameservers = { {{ buildResolversForLua $cfg.Resolver $cfg.DisableIpv6DNS }} }
         end
 
         ok, res = pcall(require, "tcp_udp_balancer")
@@ -766,7 +739,7 @@ stream {
     {{ if $cfg.DisableAccessLog }}
     access_log off;
     {{ else }}
-    access_log {{ $cfg.AccessLogPath }} log_stream;
+    access_log {{ $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
     {{ end }}
 
     error_log  {{ $cfg.ErrorLogPath }};
@@ -780,7 +753,7 @@ stream {
     }
 
     server {
-        listen unix:/tmp/ingress-stream.sock;
+        listen unix:{{ .StreamSocket }};
 
         content_by_lua_block {
           tcp_udp_configuration.call()
@@ -842,10 +815,10 @@ stream {
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
-        {{ $proxySetHeaders := .ProxySetHeaders }}
         {{ $enableMetrics := .EnableMetrics }}
+        {{ $upstreamName := .UpstreamName }}
         {{ range $errCode := .ErrorCodes }}
-        location @custom_{{ $errCode }} {
+        location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
 
             proxy_intercept_errors off;
@@ -859,7 +832,7 @@ stream {
             proxy_set_header       X-Service-Port     $service_port;
             proxy_set_header       Host               $best_http_host;
 
-            set $proxy_upstream_name "upstream-default-backend";
+            set $proxy_upstream_name {{ $upstreamName }};
 
             rewrite                (.*) / break;
 
@@ -968,7 +941,10 @@ stream {
         {{ $server.ServerSnippet }}
         {{ end }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $all.ProxySetHeaders (collectCustomErrorsPerServer $server) $all.EnableMetrics) }}
+        {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
+        {{ end }}
+
 
         {{ $enforceRegex := enforceRegexModifier $server.Locations }}
         {{ range $location := $server.Locations }}
@@ -1020,7 +996,7 @@ stream {
 
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
-            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_http_version          1.1;
@@ -1171,14 +1147,25 @@ stream {
             {{ if not (isLocationInLocationList $location $all.Cfg.NoTLSRedirectLocations) }}
             # enforce ssl on server side
             if ($redirect_to_https) {
+                set_by_lua_block $redirect_host {
+                    local ngx_re = require "ngx.re"
+
+                    local host_port, err = ngx_re.split(ngx.var.best_http_host, ":")
+                    if err then
+                        ngx.log(ngx.ERR, "could not parse variable: ", err)
+                        return ngx.var.best_http_host;
+                    end
+
+                    return host_port[1];
+                }
+
                 {{ if $location.UsePortInRedirects }}
                 # using custom ports require a different rewrite directive
-                {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$host{{ $redirect_port }}$request_uri;
-
+                # https://forum.nginx.org/read.php?2,155978,155978#msg-155978
+                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$redirect_host{{ printf ":%v" $all.ListenPorts.HTTPS }}$request_uri;
                 return 497;
                 {{ else }}
-                return {{ $all.Cfg.HTTPRedirectCode }} https://$best_http_host$request_uri;
+                return {{ $all.Cfg.HTTPRedirectCode }} https://$redirect_host$request_uri;
                 {{ end }}
             }
             {{ end }}
@@ -1319,7 +1306,7 @@ stream {
 
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
-            proxy_buffers                           4 {{ $location.Proxy.BufferSize }};
+            proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_http_version                      1.1;
@@ -1349,6 +1336,10 @@ stream {
             proxy_set_header       X-Service-Port     $service_port;
             {{ end }}
 
+            {{ if $location.Satisfy }}
+            satisfy {{ $location.Satisfy }};
+            {{ end }}
+
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}
             {{ if $location.CustomHTTPErrors }}
             # Custom error pages per ingress
@@ -1356,8 +1347,7 @@ stream {
             {{ end }}
 
             {{ range $errCode := $location.CustomHTTPErrors }}
-            error_page {{ $errCode }} = @custom_{{ $errCode }};{{ end }}
-
+            error_page {{ $errCode }} = @custom_{{ $location.DefaultBackendUpstreamName }}_{{ $errCode }};{{ end }}
 
             {{ buildProxyPass $server.Hostname $all.Backends $location }}
             {{ if (or (eq $location.Proxy.ProxyRedirectFrom "default") (eq $location.Proxy.ProxyRedirectFrom "off")) }}

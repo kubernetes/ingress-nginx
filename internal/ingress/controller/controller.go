@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"sort"
 	"strconv"
 	"strings"
@@ -65,7 +66,6 @@ type Configuration struct {
 	// +optional
 	UDPConfigMapName string
 
-	DefaultHealthzURL     string
 	HealthCheckTimeout    time.Duration
 	DefaultSSLCertificate string
 
@@ -195,10 +195,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})
 	if isFirstSync {
-		// For the initial sync it always takes some time for NGINX to
-		//  start listening on the configured port (default 18080)
-		//  For large configurations it might take a while so we loop
-		//  and back off
+		// For the initial sync it always takes some time for NGINX to start listening
+		// For large configurations it might take a while so we loop and back off
 		klog.Info("Initial sync, sleeping for 1 second.")
 		time.Sleep(1 * time.Second)
 	}
@@ -211,7 +209,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := configureDynamically(pcfg, n.cfg.ListenPorts.Status, n.cfg.DynamicCertificatesEnabled)
+		err := configureDynamically(pcfg, n.cfg.DynamicCertificatesEnabled)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
 			return true, nil
@@ -255,7 +253,6 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		n.cfg.ListenPorts.HTTP,
 		n.cfg.ListenPorts.HTTPS,
 		n.cfg.ListenPorts.SSLProxy,
-		n.cfg.ListenPorts.Status,
 		n.cfg.ListenPorts.Health,
 		n.cfg.ListenPorts.Default,
 	}
@@ -488,6 +485,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						loc.BackendProtocol = anns.BackendProtocol
 						loc.CustomHTTPErrors = anns.CustomHTTPErrors
 						loc.ModSecurity = anns.ModSecurity
+						loc.Satisfy = anns.Satisfy
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -530,6 +528,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						BackendProtocol:      anns.BackendProtocol,
 						CustomHTTPErrors:     anns.CustomHTTPErrors,
 						ModSecurity:          anns.ModSecurity,
+						Satisfy:              anns.Satisfy,
 					}
 
 					if loc.Redirect.FromToWWW {
@@ -583,24 +582,25 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 		isHTTPSfrom := []*ingress.Server{}
 		for _, server := range servers {
 			for _, location := range server.Locations {
-				if upstream.Name == location.Backend {
-					if len(upstream.Endpoints) == 0 {
-						klog.V(3).Infof("Upstream %q has no active Endpoint", upstream.Name)
-						// check if the location contains endpoints and a custom default backend
-						if location.DefaultBackend != nil {
-							sp := location.DefaultBackend.Spec.Ports[0]
-							endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
-							if len(endps) > 0 {
-								klog.V(3).Infof("Using custom default backend for location %q in server %q (Service \"%v/%v\")",
-									location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+				if shouldCreateUpstreamForLocationDefaultBackend(upstream, location) {
+					sp := location.DefaultBackend.Spec.Ports[0]
+					endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
+					if len(endps) > 0 {
 
-								nb := upstream.DeepCopy()
-								name := fmt.Sprintf("custom-default-backend-%v", upstream.Name)
-								nb.Name = name
-								nb.Endpoints = endps
-								aUpstreams = append(aUpstreams, nb)
-								location.Backend = name
-							}
+						name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
+						klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
+
+						nb := upstream.DeepCopy()
+						nb.Name = name
+						nb.Endpoints = endps
+						aUpstreams = append(aUpstreams, nb)
+						location.DefaultBackendUpstreamName = name
+
+						if len(upstream.Endpoints) == 0 {
+							klog.V(3).Infof("Upstream %q has no active Endpoint, so using custom default backend for location %q in server %q (Service \"%v/%v\")",
+								upstream.Name, location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+
+							location.Backend = name
 						}
 					}
 
@@ -613,6 +613,8 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 							isHTTPSfrom = append(isHTTPSfrom, server)
 						}
 					}
+				} else {
+					location.DefaultBackendUpstreamName = "upstream-default-backend"
 				}
 			}
 		}
@@ -690,9 +692,10 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			if anns.Canary.Enabled {
 				upstreams[defBackend].NoServer = true
 				upstreams[defBackend].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-					Weight: anns.Canary.Weight,
-					Header: anns.Canary.Header,
-					Cookie: anns.Canary.Cookie,
+					Weight:      anns.Canary.Weight,
+					Header:      anns.Canary.Header,
+					HeaderValue: anns.Canary.HeaderValue,
+					Cookie:      anns.Canary.Cookie,
 				}
 			}
 
@@ -757,9 +760,10 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				if anns.Canary.Enabled {
 					upstreams[name].NoServer = true
 					upstreams[name].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-						Weight: anns.Canary.Weight,
-						Header: anns.Canary.Header,
-						Cookie: anns.Canary.Cookie,
+						Weight:      anns.Canary.Weight,
+						Header:      anns.Canary.Header,
+						HeaderValue: anns.Canary.HeaderValue,
+						Cookie:      anns.Canary.Cookie,
 					}
 				}
 
@@ -889,6 +893,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 		ConnectTimeout:    bdef.ProxyConnectTimeout,
 		SendTimeout:       bdef.ProxySendTimeout,
 		ReadTimeout:       bdef.ProxyReadTimeout,
+		BuffersNumber:     bdef.ProxyBuffersNumber,
 		BufferSize:        bdef.ProxyBufferSize,
 		CookieDomain:      bdef.ProxyCookieDomain,
 		CookiePath:        bdef.ProxyCookiePath,
@@ -924,6 +929,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				Backend:      du.Name,
 				Proxy:        ngxProxy,
 				Service:      du.Service,
+				Logs: log.Config{
+					Access:  n.store.GetBackendConfiguration().EnableAccessLogForDefaultBackend,
+					Rewrite: false,
+				},
 			},
 		}}
 
@@ -950,7 +959,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				// special "catch all" case, Ingress with a backend but no rule
 				defLoc := servers[defServerName].Locations[0]
 				if defLoc.IsDefBackend && len(ing.Spec.Rules) == 0 {
-					klog.Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q",
+					klog.V(2).Infof("Ingress %q defines a backend but no rule. Using it to configure the catch-all server %q",
 						ingKey, defServerName)
 
 					defLoc.IsDefBackend = false
@@ -998,11 +1007,32 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				Hostname: host,
 				Locations: []*ingress.Location{
 					{
-						Path:         rootLocation,
-						IsDefBackend: true,
-						Backend:      un,
-						Proxy:        ngxProxy,
-						Service:      &apiv1.Service{},
+						Path:                 rootLocation,
+						IsDefBackend:         true,
+						Backend:              un,
+						Service:              &apiv1.Service{},
+						BasicDigestAuth:      anns.BasicDigestAuth,
+						ClientBodyBufferSize: anns.ClientBodyBufferSize,
+						ConfigurationSnippet: anns.ConfigurationSnippet,
+						CorsConfig:           anns.CorsConfig,
+						ExternalAuth:         anns.ExternalAuth,
+						Proxy:                anns.Proxy,
+						RateLimit:            anns.RateLimit,
+						Redirect:             anns.Redirect,
+						Rewrite:              anns.Rewrite,
+						UpstreamVhost:        anns.UpstreamVhost,
+						Whitelist:            anns.Whitelist,
+						Denied:               anns.Denied,
+						XForwardedPrefix:     anns.XForwardedPrefix,
+						UsePortInRedirects:   anns.UsePortInRedirects,
+						Connection:           anns.Connection,
+						Logs:                 anns.Logs,
+						LuaRestyWAF:          anns.LuaRestyWAF,
+						InfluxDB:             anns.InfluxDB,
+						DefaultBackend:       anns.DefaultBackend,
+						BackendProtocol:      anns.BackendProtocol,
+						CustomHTTPErrors:     anns.CustomHTTPErrors,
+						ModSecurity:          anns.ModSecurity,
 					},
 				},
 				SSLPassthrough: anns.SSLPassthrough,
@@ -1175,7 +1205,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			priUps := upstreams[loc.Backend]
 
 			if canMergeBackend(priUps, altUps) {
-				klog.Infof("matching backend %v found for alternative backend %v",
+				klog.V(2).Infof("matching backend %v found for alternative backend %v",
 					priUps.Name, altUps.Name)
 
 				merged = mergeAlternativeBackend(priUps, altUps)
@@ -1210,7 +1240,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 				priUps := upstreams[loc.Backend]
 
 				if canMergeBackend(priUps, altUps) && loc.Path == path.Path {
-					klog.Infof("matching backend %v found for alternative backend %v",
+					klog.V(2).Infof("matching backend %v found for alternative backend %v",
 						priUps.Name, altUps.Name)
 
 					merged = mergeAlternativeBackend(priUps, altUps)
@@ -1324,4 +1354,11 @@ func getRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 	}
 
 	return oldIngresses.Difference(newIngresses).List()
+}
+
+// checks conditions for whether or not an upstream should be created for a custom default backend
+func shouldCreateUpstreamForLocationDefaultBackend(upstream *ingress.Backend, location *ingress.Location) bool {
+	return (upstream.Name == location.Backend) &&
+		(len(upstream.Endpoints) == 0 || len(location.CustomHTTPErrors) != 0) &&
+		location.DefaultBackend != nil
 }

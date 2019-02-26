@@ -94,6 +94,15 @@ type Configuration struct {
 	// By default this is disabled
 	AllowBackendServerHeader bool `json:"allow-backend-server-header"`
 
+	// AccessLogParams sets additionals params for access_log
+	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+	// By default it's empty
+	AccessLogParams string `json:"access-log-params,omitempty"`
+
+	// EnableAccessLogForDefaultBackend enable access_log for default backend
+	// By default this is disabled
+	EnableAccessLogForDefaultBackend bool `json:"enable-access-log-for-default-backend"`
+
 	// AccessLogPath sets the path of the access logs if enabled
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	// By default access logs go to /var/log/nginx/access.log
@@ -486,6 +495,21 @@ type Configuration struct {
 	// Default: 1
 	JaegerSamplerParam string `json:"jaeger-sampler-param"`
 
+	// DatadogCollectorHost specifies the datadog agent host to use when uploading traces
+	DatadogCollectorHost string `json:"datadog-collector-host"`
+
+	// DatadogCollectorPort specifies the port to use when uploading traces
+	// Default: 8126
+	DatadogCollectorPort int `json:"datadog-collector-port"`
+
+	// DatadogServiceName specifies the service name to use for any traces created
+	// Default: nginx
+	DatadogServiceName string `json:"datadog-service-name"`
+
+	// DatadogOperationNameOverride overrides the operation naem to use for any traces crated
+	// Default: nginx.handle
+	DatadogOperationNameOverride string `json:"datadog-operation-name-override"`
+
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
 
@@ -575,81 +599,84 @@ func NewDefault() Configuration {
 	defProxyDeadlineDuration := time.Duration(5) * time.Second
 
 	cfg := Configuration{
-		AllowBackendServerHeader:   false,
-		AccessLogPath:              "/var/log/nginx/access.log",
-		WorkerCPUAffinity:          "",
-		ErrorLogPath:               "/var/log/nginx/error.log",
-		BlockCIDRs:                 defBlockEntity,
-		BlockUserAgents:            defBlockEntity,
-		BlockReferers:              defBlockEntity,
-		BrotliLevel:                4,
-		BrotliTypes:                brotliTypes,
-		ClientHeaderBufferSize:     "1k",
-		ClientHeaderTimeout:        60,
-		ClientBodyBufferSize:       "8k",
-		ClientBodyTimeout:          60,
-		EnableDynamicTLSRecords:    true,
-		EnableUnderscoresInHeaders: false,
-		ErrorLogLevel:              errorLevel,
-		UseForwardedHeaders:        false,
-		ForwardedForHeader:         "X-Forwarded-For",
-		ComputeFullForwardedFor:    false,
-		ProxyAddOriginalURIHeader:  true,
-		GenerateRequestID:          true,
-		HTTP2MaxFieldSize:          "4k",
-		HTTP2MaxHeaderSize:         "16k",
-		HTTP2MaxRequests:           1000,
-		HTTPRedirectCode:           308,
-		HSTS:                       true,
-		HSTSIncludeSubdomains:      true,
-		HSTSMaxAge:                 hstsMaxAge,
-		HSTSPreload:                false,
-		IgnoreInvalidHeaders:       true,
-		GzipLevel:                  5,
-		GzipTypes:                  gzipTypes,
-		KeepAlive:                  75,
-		KeepAliveRequests:          100,
-		LargeClientHeaderBuffers:   "4 8k",
-		LogFormatEscapeJSON:        false,
-		LogFormatStream:            logFormatStream,
-		LogFormatUpstream:          logFormatUpstream,
-		EnableMultiAccept:          true,
-		MaxWorkerConnections:       16384,
-		MaxWorkerOpenFiles:         0,
-		MapHashBucketSize:          64,
-		NginxStatusIpv4Whitelist:   defNginxStatusIpv4Whitelist,
-		NginxStatusIpv6Whitelist:   defNginxStatusIpv6Whitelist,
-		ProxyRealIPCIDR:            defIPCIDR,
-		ProxyProtocolHeaderTimeout: defProxyDeadlineDuration,
-		ServerNameHashMaxSize:      1024,
-		ProxyHeadersHashMaxSize:    512,
-		ProxyHeadersHashBucketSize: 64,
-		ProxyStreamResponses:       1,
-		ReusePort:                  true,
-		ShowServerTokens:           true,
-		SSLBufferSize:              sslBufferSize,
-		SSLCiphers:                 sslCiphers,
-		SSLECDHCurve:               "auto",
-		SSLProtocols:               sslProtocols,
-		SSLSessionCache:            true,
-		SSLSessionCacheSize:        sslSessionCacheSize,
-		SSLSessionTickets:          true,
-		SSLSessionTimeout:          sslSessionTimeout,
-		EnableBrotli:               false,
-		UseGzip:                    true,
-		UseGeoIP:                   true,
-		UseGeoIP2:                  false,
-		WorkerProcesses:            strconv.Itoa(runtime.NumCPU()),
-		WorkerShutdownTimeout:      "10s",
-		VariablesHashBucketSize:    128,
-		VariablesHashMaxSize:       2048,
-		UseHTTP2:                   true,
-		ProxyStreamTimeout:         "600s",
+		AllowBackendServerHeader:         false,
+		AccessLogPath:                    "/var/log/nginx/access.log",
+		AccessLogParams:                  "",
+		EnableAccessLogForDefaultBackend: false,
+		WorkerCPUAffinity:                "",
+		ErrorLogPath:                     "/var/log/nginx/error.log",
+		BlockCIDRs:                       defBlockEntity,
+		BlockUserAgents:                  defBlockEntity,
+		BlockReferers:                    defBlockEntity,
+		BrotliLevel:                      4,
+		BrotliTypes:                      brotliTypes,
+		ClientHeaderBufferSize:           "1k",
+		ClientHeaderTimeout:              60,
+		ClientBodyBufferSize:             "8k",
+		ClientBodyTimeout:                60,
+		EnableDynamicTLSRecords:          true,
+		EnableUnderscoresInHeaders:       false,
+		ErrorLogLevel:                    errorLevel,
+		UseForwardedHeaders:              false,
+		ForwardedForHeader:               "X-Forwarded-For",
+		ComputeFullForwardedFor:          false,
+		ProxyAddOriginalURIHeader:        true,
+		GenerateRequestID:                true,
+		HTTP2MaxFieldSize:                "4k",
+		HTTP2MaxHeaderSize:               "16k",
+		HTTP2MaxRequests:                 1000,
+		HTTPRedirectCode:                 308,
+		HSTS:                             true,
+		HSTSIncludeSubdomains:            true,
+		HSTSMaxAge:                       hstsMaxAge,
+		HSTSPreload:                      false,
+		IgnoreInvalidHeaders:             true,
+		GzipLevel:                        5,
+		GzipTypes:                        gzipTypes,
+		KeepAlive:                        75,
+		KeepAliveRequests:                100,
+		LargeClientHeaderBuffers:         "4 8k",
+		LogFormatEscapeJSON:              false,
+		LogFormatStream:                  logFormatStream,
+		LogFormatUpstream:                logFormatUpstream,
+		EnableMultiAccept:                true,
+		MaxWorkerConnections:             16384,
+		MaxWorkerOpenFiles:               0,
+		MapHashBucketSize:                64,
+		NginxStatusIpv4Whitelist:         defNginxStatusIpv4Whitelist,
+		NginxStatusIpv6Whitelist:         defNginxStatusIpv6Whitelist,
+		ProxyRealIPCIDR:                  defIPCIDR,
+		ProxyProtocolHeaderTimeout:       defProxyDeadlineDuration,
+		ServerNameHashMaxSize:            1024,
+		ProxyHeadersHashMaxSize:          512,
+		ProxyHeadersHashBucketSize:       64,
+		ProxyStreamResponses:             1,
+		ReusePort:                        true,
+		ShowServerTokens:                 true,
+		SSLBufferSize:                    sslBufferSize,
+		SSLCiphers:                       sslCiphers,
+		SSLECDHCurve:                     "auto",
+		SSLProtocols:                     sslProtocols,
+		SSLSessionCache:                  true,
+		SSLSessionCacheSize:              sslSessionCacheSize,
+		SSLSessionTickets:                true,
+		SSLSessionTimeout:                sslSessionTimeout,
+		EnableBrotli:                     false,
+		UseGzip:                          true,
+		UseGeoIP:                         true,
+		UseGeoIP2:                        false,
+		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
+		WorkerShutdownTimeout:            "10s",
+		VariablesHashBucketSize:          128,
+		VariablesHashMaxSize:             2048,
+		UseHTTP2:                         true,
+		ProxyStreamTimeout:               "600s",
 		Backend: defaults.Backend{
 			ProxyBodySize:          bodySize,
 			ProxyConnectTimeout:    5,
 			ProxyReadTimeout:       60,
 			ProxySendTimeout:       60,
+			ProxyBuffersNumber:     4,
 			ProxyBufferSize:        "4k",
 			ProxyCookieDomain:      "off",
 			ProxyCookiePath:        "off",
@@ -679,6 +706,9 @@ func NewDefault() Configuration {
 		JaegerServiceName:            "nginx",
 		JaegerSamplerType:            "const",
 		JaegerSamplerParam:           "1",
+		DatadogServiceName:           "nginx",
+		DatadogCollectorPort:         8126,
+		DatadogOperationNameOverride: "nginx.handle",
 		LimitReqStatusCode:           503,
 		LimitConnStatusCode:          503,
 		SyslogPort:                   514,
@@ -715,7 +745,6 @@ type TemplateConfig struct {
 	TCPBackends                []ingress.L4Service
 	UDPBackends                []ingress.L4Service
 	HealthzURI                 string
-	CustomErrors               bool
 	Cfg                        Configuration
 	IsIPV6Enabled              bool
 	IsSSLPassthroughEnabled    bool
@@ -726,6 +755,11 @@ type TemplateConfig struct {
 	PublishService             *apiv1.Service
 	DynamicCertificatesEnabled bool
 	EnableMetrics              bool
+
+	PID          string
+	StatusSocket string
+	StatusPath   string
+	StreamSocket string
 }
 
 // ListenPorts describe the ports required to run the
@@ -733,7 +767,6 @@ type TemplateConfig struct {
 type ListenPorts struct {
 	HTTP     int
 	HTTPS    int
-	Status   int
 	Health   int
 	Default  int
 	SSLProxy int

@@ -230,6 +230,12 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	if csa1.Path != csa2.Path {
 		return false
 	}
+	if csa1.Expires != csa2.Expires {
+		return false
+	}
+	if csa1.MaxAge != csa2.MaxAge {
+		return false
+	}
 
 	return true
 }
@@ -291,6 +297,9 @@ func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
 		return false
 	}
 	if tsp1.Header != tsp2.Header {
+		return false
+	}
+	if tsp1.HeaderValue != tsp2.HeaderValue {
 		return false
 	}
 	if tsp1.Cookie != tsp2.Cookie {
@@ -446,7 +455,31 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if len(l1.CustomHTTPErrors) != len(l2.CustomHTTPErrors) {
+		return false
+	}
+	for _, code1 := range l1.CustomHTTPErrors {
+		found := false
+		for _, code2 := range l2.CustomHTTPErrors {
+			if code1 == code2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
 	if !(&l1.ModSecurity).Equal(&l2.ModSecurity) {
+		return false
+	}
+
+	if l1.Satisfy != l2.Satisfy {
+		return false
+	}
+
+	if l1.DefaultBackendUpstreamName != l2.DefaultBackendUpstreamName {
 		return false
 	}
 

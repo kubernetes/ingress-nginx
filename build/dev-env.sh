@@ -22,6 +22,8 @@ SKIP_MINIKUBE_START=${SKIP_MINIKUBE_START:-}
 NAMESPACE="${NAMESPACE:-ingress-nginx}"
 echo "NAMESPACE is set to ${NAMESPACE}"
 
+kubectl config use-context minikube
+
 export TAG=dev
 export ARCH=amd64
 export REGISTRY=${REGISTRY:-ingress-controller}
@@ -29,7 +31,7 @@ export REGISTRY=${REGISTRY:-ingress-controller}
 DEV_IMAGE=${REGISTRY}/nginx-ingress-controller:${TAG}
 
 if [ -z "${SKIP_MINIKUBE_START}" ]; then
-    test $(minikube status | grep Running | wc -l) -eq 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
+    test $(minikube status | grep Running | wc -l) -ge 2 && $(minikube status | grep -q 'Correctly Configured') || minikube start \
         --extra-config=kubelet.sync-frequency=1s \
         --extra-config=apiserver.authorization-mode=RBAC
 
