@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"sort"
 	"strconv"
 	"strings"
@@ -928,6 +929,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				Backend:      du.Name,
 				Proxy:        ngxProxy,
 				Service:      du.Service,
+				Logs: log.Config{
+					Access:  n.store.GetBackendConfiguration().EnableAccessLogForDefaultBackend,
+					Rewrite: false,
+				},
 			},
 		}}
 
