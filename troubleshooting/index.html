@@ -1294,7 +1294,12 @@ methods to obtain more information.</p>
 
 <p>Use the <code class="codehilite">ingress-nginx</code> kubectl plugin</p>
 <p>Install <a href="https://github.com/GoogleContainerTools/krew">krew</a>, then run
-<div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl krew install --manifest https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/cmd/plugin/release/ingress-nginx.yaml
+<div class="codehilite"><pre><span></span><span class="gp">$</span> <span class="o">(</span>
+<span class="go">  set -x; cd &quot;$(mktemp -d)&quot; &amp;&amp;</span>
+<span class="go">  curl -fsSLO &quot;https://github.com/kubernetes/ingress-nginx/releases/download/nginx-0.23.0/{ingress-nginx.yaml,kubectl-ingress_nginx-$(uname | tr &#39;[:upper:]&#39; &#39;[:lower:]&#39;)-amd64.tar.gz}&quot; &amp;&amp;</span>
+<span class="go">  kubectl krew install \</span>
+<span class="go">    --manifest=ingress-nginx.yaml --archive=kubectl-ingress_nginx-$(uname | tr &#39;[:upper:]&#39; &#39;[:lower:]&#39;)-amd64.tar.gz</span>
+<span class="go">)</span>
 </pre></div>
 to install the plugin. Then run
 <div class="codehilite"><pre><span></span><span class="gp">$</span> kubectl ingress-nginx --help
