@@ -1,5 +1,116 @@
 # Changelog
 
+### 0.23.0
+
+**Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.23.0`
+
+_New Features:_
+
+- NGINX 1.15.9
+- New `canary-by-header-value` [annotation](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#canary).
+- New debug binary to get runtime information from lua [3686](https://github.com/kubernetes/ingress-nginx/pull/3686)
+- Support for Opentracing with Datadog
+- New [kubectl plugin](https://github.com/kubernetes/ingress-nginx/pull/3779) **Alpha**
+
+_Breaking changes:_
+
+- The NGINX server listening in port 18080 was removed. It was replaced by a server using an unix socket as port [#3684](https://github.com/kubernetes/ingress-nginx/pull/3684)
+  This server was internal to the ingress controller. In case this was being acceded from the outside, you can restore the old server using the `http-snipet` feature in the configuration configmap like:
+
+  ```yaml
+  http-snippet: |
+    server {
+      listen 18080;
+
+      location /nginx_status {
+        allow 127.0.0.1;
+        allow ::1;
+        deny all;
+        stub_status on;
+      }
+
+      location / {
+        return 404;
+      }
+    }
+  ```
+
+_Changes:_
+
+- [X] [#3619](https://github.com/kubernetes/ingress-nginx/pull/3619) add header-value annotation
+- [X] [#3628](https://github.com/kubernetes/ingress-nginx/pull/3628) Fix 503 error generation on empty endpoints
+- [X] [#3666](https://github.com/kubernetes/ingress-nginx/pull/3666) rename sysctlFSFileMax to rlimitMaxNumFiles to reflect what it actually does
+- [X] [#3667](https://github.com/kubernetes/ingress-nginx/pull/3667) worker_connections should be less (3/4th) than worker_rlimit_nofile
+- [X] [#3671](https://github.com/kubernetes/ingress-nginx/pull/3671) bugfix: fixed duplicated seeds.
+- [X] [#3673](https://github.com/kubernetes/ingress-nginx/pull/3673) used table functions of LuaJIT for better performance.
+- [X] [#3674](https://github.com/kubernetes/ingress-nginx/pull/3674) used cjson.safe instead of pcall.
+- [X] [#3682](https://github.com/kubernetes/ingress-nginx/pull/3682) enable use-forwarded-headers for L7 LB
+- [X] [#3684](https://github.com/kubernetes/ingress-nginx/pull/3684) Replace Status port using a socket
+- [X] [#3686](https://github.com/kubernetes/ingress-nginx/pull/3686) Add debug binary to the docker image
+- [X] [#3695](https://github.com/kubernetes/ingress-nginx/pull/3695) > Don't reload nginx when L4 endpoints changed
+- [X] [#3696](https://github.com/kubernetes/ingress-nginx/pull/3696) Apply annotations to default location
+- [X] [#3698](https://github.com/kubernetes/ingress-nginx/pull/3698) Fix --disable-catch-all
+- [X] [#3702](https://github.com/kubernetes/ingress-nginx/pull/3702) Add params for access log
+- [X] [#3704](https://github.com/kubernetes/ingress-nginx/pull/3704) make sure dev-env forces context to be minikube
+- [X] [#3728](https://github.com/kubernetes/ingress-nginx/pull/3728) Fix flaky test
+- [X] [#3730](https://github.com/kubernetes/ingress-nginx/pull/3730) Changes CustomHTTPErrors annotation to use custom default backend
+- [X] [#3734](https://github.com/kubernetes/ingress-nginx/pull/3734) remove old unused lua dicts
+- [X] [#3736](https://github.com/kubernetes/ingress-nginx/pull/3736) do not unnecessarily log
+- [X] [#3737](https://github.com/kubernetes/ingress-nginx/pull/3737) Adjust probe timeouts
+- [X] [#3739](https://github.com/kubernetes/ingress-nginx/pull/3739) dont log unnecessarily
+- [X] [#3740](https://github.com/kubernetes/ingress-nginx/pull/3740) Fix ingress updating for session-cookie-* annotation changes
+- [X] [#3747](https://github.com/kubernetes/ingress-nginx/pull/3747) Update nginx and modules
+- [X] [#3748](https://github.com/kubernetes/ingress-nginx/pull/3748) Update nginx image
+- [X] [#3749](https://github.com/kubernetes/ingress-nginx/pull/3749) Enhance Unit Tests for Annotations
+- [X] [#3750](https://github.com/kubernetes/ingress-nginx/pull/3750) Update go dependencies
+- [X] [#3751](https://github.com/kubernetes/ingress-nginx/pull/3751) Parse environment variables in OpenTracing configuration
+- [X] [#3756](https://github.com/kubernetes/ingress-nginx/pull/3756) Create custom annotation for satisfy "value"
+- [X] [#3757](https://github.com/kubernetes/ingress-nginx/pull/3757) Add mention of secure-backends to backend-protocol docs
+- [X] [#3764](https://github.com/kubernetes/ingress-nginx/pull/3764) delete confusing CustomErrors attribute to make things more explicit
+- [X] [#3765](https://github.com/kubernetes/ingress-nginx/pull/3765) simplify customhttperrors e2e test and add regression test and fix a bug
+- [X] [#3766](https://github.com/kubernetes/ingress-nginx/pull/3766) Support Opentracing with Datadog - part 2
+- [X] [#3767](https://github.com/kubernetes/ingress-nginx/pull/3767) Support Opentracing with Datadog - part 1
+- [X] [#3771](https://github.com/kubernetes/ingress-nginx/pull/3771) Do not log unnecessarily
+- [X] [#3772](https://github.com/kubernetes/ingress-nginx/pull/3772) Fix dashboard link [skip ci]
+- [X] [#3775](https://github.com/kubernetes/ingress-nginx/pull/3775) Fix DNS lookup failures in L4 services
+- [X] [#3779](https://github.com/kubernetes/ingress-nginx/pull/3779) Add kubectl plugin
+- [X] [#3780](https://github.com/kubernetes/ingress-nginx/pull/3780) Enable access log for default backend
+- [X] [#3781](https://github.com/kubernetes/ingress-nginx/pull/3781) feat: configurable proxy buffers number
+- [X] [#3782](https://github.com/kubernetes/ingress-nginx/pull/3782) Lua bridge tracer
+- [X] [#3784](https://github.com/kubernetes/ingress-nginx/pull/3784) use correct host for jaeger-collector-host in docs
+- [X] [#3785](https://github.com/kubernetes/ingress-nginx/pull/3785) use latest base nginx image
+- [X] [#3787](https://github.com/kubernetes/ingress-nginx/pull/3787) Use UsePortInRedirects only if enabled
+- [X] [#3791](https://github.com/kubernetes/ingress-nginx/pull/3791) - remove annotations in nginxcontroller struct
+- [X] [#3792](https://github.com/kubernetes/ingress-nginx/pull/3792) dont restart minikube when it is already running
+- [X] [#3793](https://github.com/kubernetes/ingress-nginx/pull/3793) Update mergo dependency
+- [X] [#3794](https://github.com/kubernetes/ingress-nginx/pull/3794) use use-context that actually changes the context
+- [X] [#3795](https://github.com/kubernetes/ingress-nginx/pull/3795) do not warn when optional annotations arent set
+- [X] [#3799](https://github.com/kubernetes/ingress-nginx/pull/3799) Add /dbg certs command
+- [X] [#3800](https://github.com/kubernetes/ingress-nginx/pull/3800) Refactor e2e
+- [X] [#3809](https://github.com/kubernetes/ingress-nginx/pull/3809) Upgrade openresty/lua-resty-balancer
+- [X] [#3810](https://github.com/kubernetes/ingress-nginx/pull/3810) Update nginx image
+- [X] [#3811](https://github.com/kubernetes/ingress-nginx/pull/3811) Fix e2e tests
+- [X] [#3812](https://github.com/kubernetes/ingress-nginx/pull/3812) Removes unused const from customhttperrors e2e test
+- [X] [#3813](https://github.com/kubernetes/ingress-nginx/pull/3813) Prevent dep from vendoring grpc-fortune-teller dependencies
+- [X] [#3819](https://github.com/kubernetes/ingress-nginx/pull/3819) Fix e2e test in osx
+- [X] [#3820](https://github.com/kubernetes/ingress-nginx/pull/3820) Update nginx image
+- [X] [#3821](https://github.com/kubernetes/ingress-nginx/pull/3821) Update nginx to 1.15.9
+- [X] [#3822](https://github.com/kubernetes/ingress-nginx/pull/3822) Set default for satisfy annotation to nothing
+
+_Documentation:_
+
+- [X] [#3680](https://github.com/kubernetes/ingress-nginx/pull/3680) mention rewrite-target change for 0.22.0
+- [X] [#3693](https://github.com/kubernetes/ingress-nginx/pull/3693) Correcting links for gRPC Fortune Teller app
+- [X] [#3701](https://github.com/kubernetes/ingress-nginx/pull/3701) Update usage documentation for default-backend annotation
+- [X] [#3705](https://github.com/kubernetes/ingress-nginx/pull/3705) Increase Unit Test Coverage for Templates
+- [X] [#3708](https://github.com/kubernetes/ingress-nginx/pull/3708) Update OWNERS
+- [X] [#3731](https://github.com/kubernetes/ingress-nginx/pull/3731) Update a doc example that uses rewrite-target
+
+_Deprecations:_
+
+- The annotation `session-cookie-hash` is deprecated and will be removed in 0.24.
+- Flag `--force-namespace-isolation` is deprecated and will be removed in 0.24. Currently this annotation is being replaced by `--watch-namespace`
+
 ### 0.22.0
 
 **Image:** `quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.22.0`
