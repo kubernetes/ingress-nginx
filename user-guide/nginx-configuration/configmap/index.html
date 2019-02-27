@@ -593,6 +593,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-access-log-for-default-backend" title="enable-access-log-for-default-backend" class="md-nav__link">
+    enable-access-log-for-default-backend
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#error-log-path" title="error-log-path" class="md-nav__link">
     error-log-path
   </a>
@@ -1274,6 +1281,13 @@
         <li class="md-nav__item">
   <a href="#proxy-send-timeout" title="proxy-send-timeout" class="md-nav__link">
     proxy-send-timeout
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-buffers-number" title="proxy-buffers-number" class="md-nav__link">
+    proxy-buffers-number
   </a>
   
 </li>
@@ -2013,6 +2027,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#enable-access-log-for-default-backend" title="enable-access-log-for-default-backend" class="md-nav__link">
+    enable-access-log-for-default-backend
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#error-log-path" title="error-log-path" class="md-nav__link">
     error-log-path
   </a>
@@ -2699,6 +2720,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxy-buffers-number" title="proxy-buffers-number" class="md-nav__link">
+    proxy-buffers-number
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxy-buffer-size" title="proxy-buffer-size" class="md-nav__link">
     proxy-buffer-size
   </a>
@@ -2917,6 +2945,11 @@ Same for numbers, like "100".</p>
 <td align="left"><a href="#access-log-path">access-log-path</a></td>
 <td align="left">string</td>
 <td align="left">"/var/log/nginx/access.log"</td>
+</tr>
+<tr>
+<td align="left"><a href="#enable-access-log-for-default-backend">enable-access-log-for-default-backend</a></td>
+<td align="left">bool</td>
+<td align="left">"false"</td>
 </tr>
 <tr>
 <td align="left"><a href="#error-log-path">error-log-path</a></td>
@@ -3419,6 +3452,11 @@ Same for numbers, like "100".</p>
 <td align="left">60</td>
 </tr>
 <tr>
+<td align="left"><a href="#proxy-buffers-number">proxy-buffers-number</a></td>
+<td align="left">int</td>
+<td align="left">4</td>
+</tr>
+<tr>
 <td align="left"><a href="#proxy-buffer-size">proxy-buffer-size</a></td>
 <td align="left">string</td>
 <td align="left">"4k"</td>
@@ -3541,6 +3579,8 @@ Same for numbers, like "100".</p>
 <h2 id="access-log-path">access-log-path<a class="headerlink" href="#access-log-path" title="Permanent link">&para;</a></h2>
 <p>Access log path. Goes to <code class="codehilite">/var/log/nginx/access.log</code> by default.</p>
 <p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/access.log</code> is a symlink to <code class="codehilite">/dev/stdout</code></p>
+<h2 id="enable-access-log-for-default-backend">enable-access-log-for-default-backend<a class="headerlink" href="#enable-access-log-for-default-backend" title="Permanent link">&para;</a></h2>
+<p>Enables logging access to default backend. <em><strong>default:</strong></em> is disabled. </p>
 <h2 id="error-log-path">error-log-path<a class="headerlink" href="#error-log-path" title="Permanent link">&para;</a></h2>
 <p>Error log path. Goes to <code class="codehilite">/var/log/nginx/error.log</code> by default.</p>
 <p><strong>Note:</strong> the file <code class="codehilite">/var/log/nginx/error.log</code> is a symlink to <code class="codehilite">/dev/stderr</code></p>
@@ -3878,6 +3918,8 @@ See NGINX <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#clien
 <p>Sets the timeout in seconds for <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout">reading a response from the proxied server</a>. The timeout is set only between two successive read operations, not for the transmission of the whole response.</p>
 <h2 id="proxy-send-timeout">proxy-send-timeout<a class="headerlink" href="#proxy-send-timeout" title="Permanent link">&para;</a></h2>
 <p>Sets the timeout in seconds for <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout">transmitting a request to the proxied server</a>. The timeout is set only between two successive write operations, not for the transmission of the whole request.</p>
+<h2 id="proxy-buffers-number">proxy-buffers-number<a class="headerlink" href="#proxy-buffers-number" title="Permanent link">&para;</a></h2>
+<p>Sets the number of the buffer used for <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers">reading the first part of the response</a> received from the proxied server. This part usually contains a small response header.</p>
 <h2 id="proxy-buffer-size">proxy-buffer-size<a class="headerlink" href="#proxy-buffer-size" title="Permanent link">&para;</a></h2>
 <p>Sets the size of the buffer used for <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size">reading the first part of the response</a> received from the proxied server. This part usually contains a small response header.</p>
 <h2 id="proxy-cookie-path">proxy-cookie-path<a class="headerlink" href="#proxy-cookie-path" title="Permanent link">&para;</a></h2>

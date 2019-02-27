@@ -615,15 +615,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#default-backend" title="Default Backend" class="md-nav__link">
-    Default Backend
+  <a href="#custom-http-errors" title="Custom HTTP Errors" class="md-nav__link">
+    Custom HTTP Errors
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#custom-http-errors" title="Custom HTTP Errors" class="md-nav__link">
-    Custom HTTP Errors
+  <a href="#default-backend" title="Default Backend" class="md-nav__link">
+    Default Backend
   </a>
   
 </li>
@@ -784,6 +784,13 @@
         <li class="md-nav__item">
   <a href="#proxy-buffering" title="Proxy buffering" class="md-nav__link">
     Proxy buffering
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-buffers-number" title="Proxy buffers Number" class="md-nav__link">
+    Proxy buffers Number
   </a>
   
 </li>
@@ -1506,15 +1513,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#default-backend" title="Default Backend" class="md-nav__link">
-    Default Backend
+  <a href="#custom-http-errors" title="Custom HTTP Errors" class="md-nav__link">
+    Custom HTTP Errors
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#custom-http-errors" title="Custom HTTP Errors" class="md-nav__link">
-    Custom HTTP Errors
+  <a href="#default-backend" title="Default Backend" class="md-nav__link">
+    Default Backend
   </a>
   
 </li>
@@ -1675,6 +1682,13 @@
         <li class="md-nav__item">
   <a href="#proxy-buffering" title="Proxy buffering" class="md-nav__link">
     Proxy buffering
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxy-buffers-number" title="Proxy buffers Number" class="md-nav__link">
+    Proxy buffers Number
   </a>
   
 </li>
@@ -2066,6 +2080,10 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
+<td><a href="#proxy-buffers-number">nginx.ingress.kubernetes.io/proxy-buffers-number</a></td>
+<td>number</td>
+</tr>
+<tr>
 <td><a href="#proxy-buffer-size">nginx.ingress.kubernetes.io/proxy-buffer-size</a></td>
 <td>string</td>
 </tr>
@@ -2267,17 +2285,16 @@ This annotation also accepts the alternative form "namespace/secretName", in whi
   <span class="no">more_set_headers &quot;Request-Id: $req_id&quot;;</span>
 </pre></div>
 
-<h3 id="default-backend">Default Backend<a class="headerlink" href="#default-backend" title="Permanent link">&para;</a></h3>
-<p>The ingress controller requires a <a href="../../default-backend/">default backend</a>.
-This service handles the response when the service in the Ingress rule does not have endpoints.
-This is a global configuration for the ingress controller. In some cases could be required to return a custom content or format. In this scenario we can use the annotation <code class="codehilite">nginx.ingress.kubernetes.io/default-backend: &lt;svc name&gt;</code> to specify a custom default backend.  This <code class="codehilite">&lt;svc name&gt;</code> is a reference to a service inside of the same namespace in which you are applying this annotation.</p>
 <h3 id="custom-http-errors">Custom HTTP Errors<a class="headerlink" href="#custom-http-errors" title="Permanent link">&para;</a></h3>
-<p>Like the <a href="../configmap/#custom-http-errors"><code class="codehilite">custom-http-errors</code></a> value in the ConfigMap, this annotation will set NGINX <code class="codehilite">proxy-intercept-errors</code>, but only for the NGINX location associated with this ingress.
+<p>Like the <a href="../configmap/#custom-http-errors"><code class="codehilite">custom-http-errors</code></a> value in the ConfigMap, this annotation will set NGINX <code class="codehilite">proxy-intercept-errors</code>, but only for the NGINX location associated with this ingress. If a <a href="#default-backend">default backend annotation</a> is specified on the ingress, the errors will be routed to that annotation's default backend service (instead of the global default backend).
 Different ingresses can specify different sets of error codes. Even if multiple ingress objects share the same hostname, this annotation can be used to intercept different error codes for each ingress (for example, different error codes to be intercepted for different paths on the same hostname, if each path is on a different ingress).
 If <code class="codehilite">custom-http-errors</code> is also specified globally, the error values specified in this annotation will override the global value for the given ingress' hostname and path.</p>
 <p>Example usage:
-<div class="codehilite"><pre><span></span>custom-http-errors: &quot;404,415&quot;
+<div class="codehilite"><pre><span></span>nginx.ingress.kubernetes.io/custom-http-errors: &quot;404,415&quot;
 </pre></div></p>
+<h3 id="default-backend">Default Backend<a class="headerlink" href="#default-backend" title="Permanent link">&para;</a></h3>
+<p>This annotation is of the form <code class="codehilite">nginx.ingress.kubernetes.io/default-backend: &lt;svc name&gt;</code> to specify a custom default backend.  This <code class="codehilite">&lt;svc name&gt;</code> is a reference to a service inside of the same namespace in which you are applying this annotation. This annotation overrides the global default backend.</p>
+<p>This service will be handle the response when the service in the Ingress rule does not have active endpoints. It will also handle the error responses if both this annotation and the <a href="#custom-http-errors">custom-http-errors annotation</a> is set.</p>
 <h3 id="enable-cors">Enable CORS<a class="headerlink" href="#enable-cors" title="Permanent link">&para;</a></h3>
 <p>To enable Cross-Origin Resource Sharing (CORS) in an Ingress rule, add the annotation
 <code class="codehilite">nginx.ingress.kubernetes.io/enable-cors: &quot;true&quot;</code>. This will add a section in the server
@@ -2527,6 +2544,12 @@ To use custom values in an Ingress rule define these annotation:</p>
 <div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-buffering</span><span class="p">:</span> <span class="s">&quot;on&quot;</span>
 </pre></div>
 
+<h3 id="proxy-buffers-number">Proxy buffers Number<a class="headerlink" href="#proxy-buffers-number" title="Permanent link">&para;</a></h3>
+<p>Sets the number of the buffers  in <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers"><code class="codehilite">proxy_buffers</code></a> used for reading the first part of the response received from the proxied server.
+By default proxy buffers number is set as 4</p>
+<p>To configure this setting globally, set <code class="codehilite">proxy-buffers-number</code> in <a href="../configmap/#proxy-buffers-number">NGINX ConfigMap</a>. To use custom values in an Ingress rule, define this annotation:
+<div class="codehilite"><pre><span></span><span class="nt">nginx.ingress.kubernetes.io/proxy-buffers-number</span><span class="p">:</span> <span class="s">&quot;4&quot;</span>
+</pre></div></p>
 <h3 id="proxy-buffer-size">Proxy buffer size<a class="headerlink" href="#proxy-buffer-size" title="Permanent link">&para;</a></h3>
 <p>Sets the size of the buffer <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size"><code class="codehilite">proxy_buffer_size</code></a> used for reading the first part of the response received from the proxied server.
 By default proxy buffer size is set as "4k"</p>
