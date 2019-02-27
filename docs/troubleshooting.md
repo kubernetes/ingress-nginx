@@ -97,7 +97,12 @@ Use the `ingress-nginx` kubectl plugin
 
 Install [krew](https://github.com/GoogleContainerTools/krew), then run
 ```console
-$ kubectl krew install --manifest https://github.com/kubernetes/ingress-nginx/releases/download/nginx-0.23.0/ingress-nginx.yaml
+$ (
+  set -x; cd "$(mktemp -d)" &&
+  curl -fsSLO "https://github.com/kubernetes/ingress-nginx/releases/download/nginx-0.23.0/{ingress-nginx.yaml,kubectl-ingress_nginx-$(uname | tr '[:upper:]' '[:lower:]')-amd64.tar.gz}" &&
+  kubectl krew install \
+    --manifest=ingress-nginx.yaml --archive=kubectl-ingress_nginx-$(uname | tr '[:upper:]' '[:lower:]')-amd64.tar.gz
+)
 ```
 to install the plugin. Then run
 ```console
