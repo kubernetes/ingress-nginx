@@ -69,7 +69,8 @@ func TestSatisfyParser(t *testing.T) {
 	data := map[string]string{
 		"any":     "any",
 		"all":     "all",
-		"invalid": "all",
+		"invalid": "",
+		"":        "",
 	}
 
 	annotations := map[string]string{}
