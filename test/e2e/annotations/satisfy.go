@@ -43,15 +43,13 @@ var _ = framework.IngressNginxDescribe("Annotations - SATISFY", func() {
 		annotationKey := "nginx.ingress.kubernetes.io/satisfy"
 
 		annotations := map[string]string{
-			"any":     "any",
-			"all":     "all",
-			"invalid": "all",
+			"any": "any",
+			"all": "all",
 		}
 
 		results := map[string]string{
-			"any":     "satisfy any",
-			"all":     "satisfy all",
-			"invalid": "satisfy all",
+			"any": "satisfy any",
+			"all": "satisfy all",
 		}
 
 		initAnnotations := map[string]string{
