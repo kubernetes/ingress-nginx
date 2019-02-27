@@ -35,8 +35,9 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses annotation contained in the ingress
 func (s satisfy) Parse(ing *extensions.Ingress) (interface{}, error) {
 	satisfy, err := parser.GetStringAnnotation("satisfy", ing)
-	if err != nil || satisfy != "any" {
-		satisfy = "all"
+
+	if err != nil || (satisfy != "any" && satisfy != "all") {
+		satisfy = ""
 	}
 
 	return satisfy, nil

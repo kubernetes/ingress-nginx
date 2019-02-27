@@ -16,7 +16,7 @@
 all: all-container
 
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
-TAG ?= 0.23.0-rc1
+TAG ?= 0.23.0-rc3
 REGISTRY ?= quay.io/kubernetes-ingress-controller
 DOCKER ?= docker
 SED_I ?= sed -i
@@ -59,7 +59,7 @@ IMAGE = $(REGISTRY)/$(IMGNAME)
 MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
 
 # Set default base image dynamically for each arch
-BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.79
+BASEIMAGE?=quay.io/kubernetes-ingress-controller/nginx-$(ARCH):0.80
 
 ifeq ($(ARCH),arm64)
 	QEMUARCH=aarch64
@@ -185,10 +185,10 @@ e2e-test:
 	echo "Granting permissions to ingress-nginx e2e service account..."
 	kubectl create serviceaccount ingress-nginx-e2e || true
 	kubectl create clusterrolebinding permissive-binding \
-	--clusterrole=cluster-admin \
-	--user=admin \
-	--user=kubelet \
-	--serviceaccount=default:ingress-nginx-e2e || true
+		--clusterrole=cluster-admin \
+		--user=admin \
+		--user=kubelet \
+		--serviceaccount=default:ingress-nginx-e2e || true
 
 	kubectl run --rm -i --tty \
 		--attach \
@@ -202,11 +202,13 @@ e2e-test:
 
 .PHONY: e2e-test-image
 e2e-test-image:
+	make -C test/e2e-image
+
+.PHONY: e2e-test-binary
+e2e-test-binary:
 	@$(DEF_VARS)                 \
 	DOCKER_OPTS="-i --net=host"  \
 	build/go-in-docker.sh build/build-e2e.sh
-
-	make -C test/e2e-image
 
 .PHONY: cover
 cover:
