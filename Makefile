@@ -45,6 +45,7 @@ PKG = k8s.io/ingress-nginx
 ARCH ?= $(shell go env GOARCH)
 GOARCH = ${ARCH}
 DUMB_ARCH = ${ARCH}
+KUBECTL_CONTEXT = $(shell kubectl config current-context)
 
 GOBUILD_FLAGS :=
 
@@ -182,6 +183,14 @@ lua-test:
 
 .PHONY: e2e-test
 e2e-test:
+	if  [ "$(KUBECTL_CONTEXT)" != "minikube" ] && \
+		[ "$(KUBECTL_CONTEXT)" != "kind" ] && \
+		[ "$(KUBECTL_CONTEXT)" != "dind" ] && \
+		[ "$(KUBECTL_CONTEXT)" != "docker-for-desktop" ]; then \
+		echo "kubectl context is "$(KUBECTL_CONTEXT)", but must be one of [minikube, kind, dind, docker-for-deskop]"; \
+		exit 1; \
+	fi
+
 	echo "Granting permissions to ingress-nginx e2e service account..."
 	kubectl create serviceaccount ingress-nginx-e2e || true
 	kubectl create clusterrolebinding permissive-binding \
