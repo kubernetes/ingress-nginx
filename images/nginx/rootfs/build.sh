@@ -39,7 +39,7 @@ export LUA_UPSTREAM_VERSION=0.07
 export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export LUAJIT_VERSION=0e646b54e1368acb2e39d89014ae649207f4d0a0
+export LUAJIT_VERSION=2.1-20190228
 
 export BUILD_PATH=/tmp/build
 
@@ -209,8 +209,8 @@ get_src 89cedd6466801bfef20499689ebb34ecf17a2e60a34cd06e13c0204ea1775588 \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 69914f80665a1c26f22c66768ee2467689c615a5d3e255b3e99a1ef65c769b3d \
-        "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
+get_src 369bc5b37f0de1cfdab6f5691a7c6438d12214ba3adbf681ce2cebb59932d6b6 \
+        "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 
 get_src c673fcee37c1c4794f921b6710b09e8a0e1e58117aa788f798507d033f737192 \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
