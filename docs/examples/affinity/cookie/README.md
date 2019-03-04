@@ -10,7 +10,6 @@ Session stickiness is achieved through 3 annotations on the Ingress, as shown in
 | --- | --- | --- |
 |nginx.ingress.kubernetes.io/affinity|Sets the affinity type|string (in NGINX only ``cookie`` is possible|
 |nginx.ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be used|string (default to INGRESSCOOKIE)|
-|nginx.ingress.kubernetes.io/session-cookie-hash|Type of hash that will be used in cookie value|sha1/md5/index|
 |nginx.ingress.kubernetes.io/session-cookie-expires|The value is a date as UNIX timestamp that the cookie will expire on, it corresponds to cookie Expires directive|number of seconds|
 |nginx.ingress.kubernetes.io/session-cookie-max-age|Number of seconds until the cookie expires that will correspond to cookie `Max-Age` directive|number of seconds|
 
@@ -37,7 +36,6 @@ Rules:
                                 /   	 nginx-service:80 (<none>)
 Annotations:
   affinity:	cookie
-  session-cookie-hash:		sha1
   session-cookie-name:		INGRESSCOOKIE
   session-cookie-expires: 172800
   session-cookie-max-age: 172800

@@ -41,7 +41,6 @@ var (
 	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
 	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
 	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
-	annotationAffinityCookieHash   = parser.GetAnnotationWithPrefix("session-cookie-hash")
 	annotationUpstreamHashBy       = parser.GetAnnotationWithPrefix("upstream-hash-by")
 	annotationCustomHTTPErrors     = parser.GetAnnotationWithPrefix("custom-http-errors")
 )
@@ -200,24 +199,19 @@ func TestAffinitySession(t *testing.T) {
 	fooAnns := []struct {
 		annotations  map[string]string
 		affinitytype string
-		hash         string
 		name         string
 	}{
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "md5", annotationAffinityCookieName: "route"}, "cookie", "md5", "route"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "xpto", annotationAffinityCookieName: "route1"}, "cookie", "md5", "route1"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieHash: "", annotationAffinityCookieName: ""}, "cookie", "md5", "INGRESSCOOKIE"},
-		{map[string]string{}, "", "", ""},
-		{nil, "", "", ""},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: "route"}, "cookie", "route"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: "route1"}, "cookie", "route1"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityCookieName: ""}, "cookie", "INGRESSCOOKIE"},
+		{map[string]string{}, "", ""},
+		{nil, "", ""},
 	}
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
 		r := ec.Extract(ing).SessionAffinity
-		t.Logf("Testing pass %v %v %v", foo.affinitytype, foo.hash, foo.name)
-
-		if r.Cookie.Hash != foo.hash {
-			t.Errorf("Returned %v but expected %v for Hash", r.Cookie.Hash, foo.hash)
-		}
+		t.Logf("Testing pass %v %v", foo.affinitytype, foo.name)
 
 		if r.Cookie.Name != foo.name {
 			t.Errorf("Returned %v but expected %v for Name", r.Cookie.Name, foo.name)

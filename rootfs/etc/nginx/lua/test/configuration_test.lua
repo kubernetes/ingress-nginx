@@ -10,7 +10,7 @@ function get_backends()
         {
             name = "my-dummy-backend-1", ["load-balance"] = "sticky",
             endpoints = { { address = "10.183.7.40", port = "8080", maxFails = 0, failTimeout = 0 } },
-            sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route", hash = "sha1" } },
+            sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route" } },
         },
         {
             name = "my-dummy-backend-2", ["load-balance"] = "ewma",
