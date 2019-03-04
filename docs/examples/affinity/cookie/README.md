@@ -1,19 +1,20 @@
-# Sticky Session
+# Sticky sessions
 
-This example demonstrates how to achieve session affinity using cookies
+This example demonstrates how to achieve session affinity using cookies.
 
 ## Deployment
 
-Session stickiness is achieved through 3 annotations on the Ingress, as shown in the [example](ingress.yaml).
+Session affinity can be configured using the following annotations:
 
-|Name|Description|Values|
+|Name|Description|Value|
 | --- | --- | --- |
-|nginx.ingress.kubernetes.io/affinity|Sets the affinity type|string (in NGINX only ``cookie`` is possible|
-|nginx.ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be used|string (default to INGRESSCOOKIE)|
-|nginx.ingress.kubernetes.io/session-cookie-expires|The value is a date as UNIX timestamp that the cookie will expire on, it corresponds to cookie Expires directive|number of seconds|
-|nginx.ingress.kubernetes.io/session-cookie-max-age|Number of seconds until the cookie expires that will correspond to cookie `Max-Age` directive|number of seconds|
+|nginx.ingress.kubernetes.io/affinity|Type of the affinity, set this to `cookie` to enable session affinity|string (NGINX only supports `cookie`)|
+|nginx.ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be created|string (defaults to `INGRESSCOOKIE`)|
+|nginx.ingress.kubernetes.io/session-cookie-path|Path that will be set on the cookie (required if your [Ingress paths][ingress-paths] use regular expressions)|string (defaults to the currently [matched path][ingress-paths])|
+|nginx.ingress.kubernetes.io/session-cookie-max-age|Time until the cookie expires, corresponds to the `Max-Age` cookie directive|number of seconds|
+|nginx.ingress.kubernetes.io/session-cookie-expires|Legacy version of the previous annotation for compatibility with older browsers, generates an `Expires` cookie directive by adding the seconds to the current date|number of seconds|
 
-You can create the ingress to test this
+You can create the [example Ingress](ingress.yaml) to test this:
 
 ```console
 kubectl create -f ingress.yaml
@@ -21,7 +22,7 @@ kubectl create -f ingress.yaml
 
 ## Validation
 
-You can confirm that the Ingress works.
+You can confirm that the Ingress works:
 
 ```console
 $ kubectl describe ing nginx-test
@@ -57,14 +58,17 @@ Last-Modified: Tue, 24 Jan 2017 14:02:19 GMT
 ETag: "58875e6b-264"
 Accept-Ranges: bytes
 ```
-In the example above, you can see a line containing the 'Set-Cookie: INGRESSCOOKIE' setting the right defined stickiness cookie.
-This cookie is created by NGINX, it contains the hash of the used upstream in that request and has an expires. 
-If the user changes this cookie, NGINX creates a new one and redirect the user to another upstream.
 
-If the backend pool grows up NGINX will keep sending the requests through the same server of the first request, even if it's overloaded.
+In the example above, you can see that the response contains a `Set-Cookie` header with the settings we have defined.
+This cookie is created by NGINX, it contains a randomly generated key corresponding to the upstream used for that request (selected using [consistent hashing][consistent-hashing]) and has an `Expires` directive.
+If the user changes this cookie, NGINX creates a new one and redirects the user to another upstream.
 
-When the backend server is removed, the requests are then re-routed to another upstream server and NGINX creates a new cookie, as the previous hash became invalid.
+If the backend pool grows NGINX will keep sending the requests through the same server of the first request, even if it's overloaded.
 
-When you have more than one Ingress Object pointing to the same Service, but one containing affinity configuration and other don't, the first created Ingress will be used. 
-This means that you can face the situation that you've configured Session Affinity in one Ingress and it doesn't reflects in NGINX configuration, because there is another Ingress Object pointing to the same service that doesn't configure this.
+When the backend server is removed, the requests are re-routed to another upstream server. This does not require the cookie to be updated because the key's [consistent hash][consistent-hashing] will change.
 
+When you have a Service pointing to more than one Ingress, with only one containing affinity configuration, the first created Ingress will be used. 
+This means that you can face the situation that you've configured session affinity on one Ingress and it doesn't work because the Service is pointing to another Ingress that doesn't configure this.
+
+[ingress-paths]: ../../../user-guide/ingress-path-matching
+[consistent-hashing]: https://en.wikipedia.org/wiki/Consistent_hashing
