@@ -1162,7 +1162,7 @@ func nonCanaryIngressExists(ingresses []*ingress.Ingress, canaryIngresses []*ing
 // 2) primary name is not the default upstream
 // 3) the primary has a server
 func canMergeBackend(primary *ingress.Backend, alternative *ingress.Backend) bool {
-	return primary.Name != alternative.Name && primary.Name != defUpstreamName && !primary.NoServer
+	return alternative != nil && primary.Name != alternative.Name && primary.Name != defUpstreamName && !primary.NoServer
 }
 
 // Performs the merge action and checks to ensure that one two alternative backends do not merge into each other
@@ -1223,6 +1223,11 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
 
 			altUps := upstreams[upsName]
+
+			if altUps == nil {
+				klog.Errorf("alternative backend %s has already be removed", upsName)
+				continue
+			}
 
 			merged := false
 

@@ -367,6 +367,32 @@ func NewSingleIngress(name, path, host, ns, service string, port int, annotation
 	return newSingleIngressWithRules(name, path, host, ns, service, port, annotations, nil)
 }
 
+// NewSingleIngressWithMultiplePaths creates a simple ingress rule with multiple paths
+func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations *map[string]string) *extensions.Ingress {
+	spec := extensions.IngressSpec{
+		Rules: []extensions.IngressRule{
+			{
+				Host: host,
+				IngressRuleValue: extensions.IngressRuleValue{
+					HTTP: &extensions.HTTPIngressRuleValue{},
+				},
+			},
+		},
+	}
+
+	for _, path := range paths {
+		spec.Rules[0].IngressRuleValue.HTTP.Paths = append(spec.Rules[0].IngressRuleValue.HTTP.Paths, extensions.HTTPIngressPath{
+			Path: path,
+			Backend: extensions.IngressBackend{
+				ServiceName: service,
+				ServicePort: intstr.FromInt(port),
+			},
+		})
+	}
+
+	return newSingleIngress(name, ns, annotations, spec)
+}
+
 func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations *map[string]string, tlsHosts []string) *extensions.Ingress {
 
 	spec := extensions.IngressSpec{
