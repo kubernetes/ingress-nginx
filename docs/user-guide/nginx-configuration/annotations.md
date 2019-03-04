@@ -70,7 +70,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/session-cookie-hash](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
@@ -149,17 +148,7 @@ The only affinity type available for NGINX is `cookie`.
 
 If you use the ``cookie`` affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation `nginx.ingress.kubernetes.io/session-cookie-name`. The default is to create a cookie named 'INGRESSCOOKIE'.
 
-In case of NGINX the annotation `nginx.ingress.kubernetes.io/session-cookie-hash` defines which algorithm will be used to hash the used upstream. Default value is `md5` and possible values are `md5`, `sha1` and `index`.
-
 The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines the path that will be set on the cookie. This is optional unless the annotation `nginx.ingress.kubernetes.io/use-regex` is set to true; Session cookie paths do not support regex.  
-
-!!! attention
-    The `index` option is not an actual hash; an in-memory index is used instead, which has less overhead.
-    However, with `index`, matching against a changing upstream server list is inconsistent.
-    So, at reload, if upstream servers have changed, index values are not guaranteed to correspond to the same server as before!
-    **Use `index` with caution** and only if you need to!
-
-In NGINX this feature is implemented by the third party module [nginx-sticky-module-ng](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng). The workflow used to define which upstream server will be used is explained [here](https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf)
 
 
 ### Authentication

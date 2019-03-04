@@ -34,11 +34,6 @@ const (
 
 	defaultAffinityCookieName = "INGRESSCOOKIE"
 
-	// This is the algorithm used by nginx to generate a value for the session cookie, if
-	// one isn't supplied and affinity is set to "cookie".
-	annotationAffinityCookieHash = "session-cookie-hash"
-	defaultAffinityCookieHash    = "md5"
-
 	// This is used to control the cookie expires, its value is a number of seconds until the
 	// cookie expires
 	annotationAffinityCookieExpires = "session-cookie-expires"
@@ -52,7 +47,6 @@ const (
 )
 
 var (
-	affinityCookieHashRegex    = regexp.MustCompile(`^(index|md5|sha1)$`)
 	affinityCookieExpiresRegex = regexp.MustCompile(`(^0|-?[1-9]\d*$)`)
 )
 
@@ -67,8 +61,6 @@ type Config struct {
 type Cookie struct {
 	// The name of the cookie that will be used in case of cookie affinity type.
 	Name string `json:"name"`
-	// The hash that will be used to encode the cookie in case of cookie affinity type
-	Hash string `json:"hash"`
 	// The time duration to control cookie expires
 	Expires string `json:"expires"`
 	// The number of seconds until the cookie expires
@@ -88,12 +80,6 @@ func (a affinity) cookieAffinityParse(ing *extensions.Ingress) *Cookie {
 	if err != nil {
 		klog.V(3).Infof("Ingress %v: No value found in annotation %v. Using the default %v", ing.Name, annotationAffinityCookieName, defaultAffinityCookieName)
 		cookie.Name = defaultAffinityCookieName
-	}
-
-	cookie.Hash, err = parser.GetStringAnnotation(annotationAffinityCookieHash, ing)
-	if err != nil || !affinityCookieHashRegex.MatchString(cookie.Hash) {
-		klog.V(3).Infof("Invalid or no annotation value found in Ingress %v: %v. Setting it to default %v", ing.Name, annotationAffinityCookieHash, defaultAffinityCookieHash)
-		cookie.Hash = defaultAffinityCookieHash
 	}
 
 	cookie.Expires, err = parser.GetStringAnnotation(annotationAffinityCookieExpires, ing)

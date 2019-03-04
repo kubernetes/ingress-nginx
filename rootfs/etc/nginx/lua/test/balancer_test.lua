@@ -29,7 +29,7 @@ local function reset_backends()
         { address = "10.184.97.100", port = "8080", maxFails = 0, failTimeout = 0 },
         { address = "10.184.98.239", port = "8080", maxFails = 0, failTimeout = 0 },
       },
-      sessionAffinityConfig = { name = "", cookieSessionAffinity = { name = "", hash = "" } },
+      sessionAffinityConfig = { name = "", cookieSessionAffinity = { name = "" } },
     },
     { name = "my-dummy-app-1", ["load-balance"] = "round_robin", },
     { 
@@ -38,12 +38,12 @@ local function reset_backends()
     },
     {
       name = "my-dummy-app-3", ["load-balance"] = "ewma",
-      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route", hash = "sha1" } }
+      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route" } }
     },
     { name = "my-dummy-app-4", ["load-balance"] = "ewma", },
     {
       name = "my-dummy-app-5", ["load-balance"] = "ewma", ["upstream-hash-by"] = "$request_uri",
-      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route", hash = "sha1" } }
+      sessionAffinityConfig = { name = "cookie", cookieSessionAffinity = { name = "route" } }
     },
   }
 end
