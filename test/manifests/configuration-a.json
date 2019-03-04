@@ -55,8 +55,7 @@
 		"sessionAffinityConfig": {
 			"name": "",
 			"cookieSessionAffinity": {
-				"name": "",
-				"hash": ""
+				"name": ""
 			}
 		}
 	}, {
@@ -128,8 +127,7 @@
 		"sessionAffinityConfig": {
 			"name": "",
 			"cookieSessionAffinity": {
-				"name": "",
-				"hash": ""
+				"name": ""
 			}
 		}
 	}, {
@@ -194,8 +192,7 @@
 		"sessionAffinityConfig": {
 			"name": "",
 			"cookieSessionAffinity": {
-				"name": "",
-				"hash": ""
+				"name": ""
 			}
 		}
 	}],

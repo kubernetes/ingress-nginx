@@ -19,7 +19,6 @@ package annotations
 import (
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -65,13 +64,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			Set("Host", host).
 			End()
 
-		md5Regex := regexp.MustCompile("SERVERID=[0-9a-f]{32}")
-		match := md5Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
-		Expect(len(match)).Should(BeNumerically("==", 1))
-
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
 	})
 
 	It("should change cookie name on ingress definition change", func() {
@@ -112,36 +107,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("OTHERCOOKIENAME"))
-	})
-
-	It("should set sticky cookie with sha1 hash", func() {
-		host := "sha1.foo.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/affinity":            "cookie",
-			"nginx.ingress.kubernetes.io/session-cookie-hash": "sha1",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
-		f.EnsureIngress(ing)
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
-			})
-		time.Sleep(waitForLuaSync)
-
-		resp, _, errs := gorequest.New().
-			Get(f.GetURL(framework.HTTP)).
-			Set("Host", host).
-			End()
-
-		sha1Regex := regexp.MustCompile("INGRESSCOOKIE=[0-9a-f]{40}")
-		match := sha1Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
-		Expect(len(match)).Should(BeNumerically("==", 1))
-
-		Expect(errs).Should(BeEmpty())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
 	})
 
 	It("should set the path to /something on the generated cookie", func() {
@@ -296,13 +261,9 @@ var _ = framework.IngressNginxDescribe("Annotations - Affinity/Sticky Sessions",
 			Set("Host", host).
 			End()
 
-		md5Regex := regexp.MustCompile("SERVERID=[0-9a-f]{32}")
-		match := md5Regex.FindStringSubmatch(resp.Header.Get("Set-Cookie"))
-		Expect(len(match)).Should(BeNumerically("==", 1))
-
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring(match[0]))
+		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("SERVERID="))
 		Expect(resp.Header.Get("Set-Cookie")).Should(ContainSubstring("Path=/foo/bar"))
 	})
 
