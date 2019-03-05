@@ -89,7 +89,7 @@ func NewNGINXStatus(podName, namespace, ingressClass string) (NGINXStatusCollect
 	p.data = &nginxStatusData{
 		connectionsTotal: prometheus.NewDesc(
 			prometheus.BuildFQName(PrometheusNamespace, subSystem, "connections_total"),
-			"total number of connections with state {active, accepted, handled}",
+			"total number of connections with state {accepted, handled}",
 			[]string{"state"}, constLabels),
 
 		requestsTotal: prometheus.NewDesc(
@@ -99,7 +99,7 @@ func NewNGINXStatus(podName, namespace, ingressClass string) (NGINXStatusCollect
 
 		connections: prometheus.NewDesc(
 			prometheus.BuildFQName(PrometheusNamespace, subSystem, "connections"),
-			"current number of client connections with state {reading, writing, waiting}",
+			"current number of client connections with state {active, reading, writing, waiting}",
 			[]string{"state"}, constLabels),
 	}
 
@@ -181,13 +181,13 @@ func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
 	s := parse(string(data))
 
 	ch <- prometheus.MustNewConstMetric(p.data.connectionsTotal,
-		prometheus.CounterValue, float64(s.Active), "active")
-	ch <- prometheus.MustNewConstMetric(p.data.connectionsTotal,
 		prometheus.CounterValue, float64(s.Accepted), "accepted")
 	ch <- prometheus.MustNewConstMetric(p.data.connectionsTotal,
 		prometheus.CounterValue, float64(s.Handled), "handled")
 	ch <- prometheus.MustNewConstMetric(p.data.requestsTotal,
 		prometheus.CounterValue, float64(s.Requests))
+	ch <- prometheus.MustNewConstMetric(p.data.connections,
+		prometheus.GaugeValue, float64(s.Active), "active")
 	ch <- prometheus.MustNewConstMetric(p.data.connections,
 		prometheus.GaugeValue, float64(s.Reading), "reading")
 	ch <- prometheus.MustNewConstMetric(p.data.connections,
