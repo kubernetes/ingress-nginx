@@ -92,7 +92,6 @@ clean-install \
   python \
   luarocks \
   libmaxminddb-dev \
-  authbind \
   dumb-init \
   gdb \
   valgrind \
@@ -629,10 +628,4 @@ writeDirs=( \
 for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};
   chown -R www-data.www-data ${dir};
-done
-
-for value in {1..1023};do
-  touch /etc/authbind/byport/$value
-  chown www-data /etc/authbind/byport/$value
-  chmod 755 /etc/authbind/byport/$value
 done
