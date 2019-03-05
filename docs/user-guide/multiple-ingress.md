@@ -44,7 +44,7 @@ spec:
            args:
              - /nginx-ingress-controller
              - '--election-id=ingress-controller-leader-internal'
-             - '--ingress-class=nginx-internal'
+             - '--ingress-class=internal'
              - '--configmap=ingress/nginx-ingress-internal-controller'
 ```
 
