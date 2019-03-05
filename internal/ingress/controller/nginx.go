@@ -564,17 +564,16 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		secret, err := n.store.GetSecret(secretName)
 		if err != nil {
 			klog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
-		}
-
-		nsSecName := strings.Replace(secretName, "/", "-", -1)
-
-		dh, ok := secret.Data["dhparam.pem"]
-		if ok {
-			pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh, n.fileSystem)
-			if err != nil {
-				klog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
-			} else {
-				sslDHParam = pemFileName
+		} else {
+			nsSecName := strings.Replace(secretName, "/", "-", -1)
+			dh, ok := secret.Data["dhparam.pem"]
+			if ok {
+				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh, n.fileSystem)
+				if err != nil {
+					klog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
+				} else {
+					sslDHParam = pemFileName
+				}
 			}
 		}
 	}
