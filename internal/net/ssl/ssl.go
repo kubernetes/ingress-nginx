@@ -52,6 +52,21 @@ func getPemFileName(fullSecretName string) (string, string) {
 	return fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, pemName), pemName
 }
 
+func verifyPemCertAgainstRootCA(pemCert *x509.Certificate, ca []byte) error {
+	bundle := x509.NewCertPool()
+	bundle.AppendCertsFromPEM(ca)
+	opts := x509.VerifyOptions{
+		Roots: bundle,
+	}
+
+	_, err := pemCert.Verify(opts)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // AddOrUpdateCertAndKey creates a .pem file with the cert and the key with the specified name
 func AddOrUpdateCertAndKey(name string, cert, key, ca []byte,
 	fs file.Filesystem) (*ingress.SSLCert, error) {
@@ -138,13 +153,7 @@ func AddOrUpdateCertAndKey(name string, cert, key, ca []byte,
 	}
 
 	if len(ca) > 0 {
-		bundle := x509.NewCertPool()
-		bundle.AppendCertsFromPEM(ca)
-		opts := x509.VerifyOptions{
-			Roots: bundle,
-		}
-
-		_, err := pemCert.Verify(opts)
+		err := verifyPemCertAgainstRootCA(pemCert, ca)
 		if err != nil {
 			oe := fmt.Sprintf("failed to verify certificate chain: \n\t%s\n", err)
 			return nil, errors.New(oe)
@@ -247,13 +256,7 @@ func CreateSSLCert(name string, cert, key, ca []byte) (*ingress.SSLCert, error) 
 	}
 
 	if len(ca) > 0 {
-		bundle := x509.NewCertPool()
-		bundle.AppendCertsFromPEM(ca)
-		opts := x509.VerifyOptions{
-			Roots: bundle,
-		}
-
-		_, err := pemCert.Verify(opts)
+		err := verifyPemCertAgainstRootCA(pemCert, ca)
 		if err != nil {
 			oe := fmt.Sprintf("failed to verify certificate chain: \n\t%s\n", err)
 			return nil, errors.New(oe)
