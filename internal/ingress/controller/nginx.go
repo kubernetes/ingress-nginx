@@ -49,7 +49,6 @@ import (
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -115,6 +114,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 	if err != nil {
 		klog.Fatalf("unexpected error obtaining pod information: %v", err)
 	}
+	n.podInfo = pod
 
 	n.store = store.New(
 		config.EnableSSLChainCompletion,
@@ -132,15 +132,13 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.DisableCatchAll)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
+
 	if config.UpdateStatus {
-		n.syncStatus = status.NewStatusSyncer(status.Config{
+		n.syncStatus = status.NewStatusSyncer(pod, status.Config{
 			Client:                 config.Client,
 			PublishService:         config.PublishService,
 			PublishStatusAddress:   config.PublishStatusAddress,
 			IngressLister:          n.store,
-			ElectionID:             config.ElectionID,
-			IngressClass:           class.IngressClass,
-			DefaultIngressClass:    class.DefaultClass,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
 			UseNodeInternalIP:      config.UseNodeInternalIP,
 		})
@@ -215,13 +213,15 @@ Error loading new template: %v
 
 // NGINXController describes a NGINX Ingress controller.
 type NGINXController struct {
+	podInfo *k8s.PodInfo
+
 	cfg *Configuration
 
 	recorder record.EventRecorder
 
 	syncQueue *task.Queue
 
-	syncStatus status.Sync
+	syncStatus status.Syncer
 
 	syncRateLimiter flowcontrol.RateLimiter
 
@@ -262,9 +262,27 @@ func (n *NGINXController) Start() {
 
 	n.store.Run(n.stopCh)
 
-	if n.syncStatus != nil {
-		go n.syncStatus.Run()
-	}
+	setupLeaderElection(&leaderElectionConfig{
+		Client:     n.cfg.Client,
+		ElectionID: n.cfg.ElectionID,
+		OnStartedLeading: func(stopCh chan struct{}) {
+			if n.syncStatus != nil {
+				go n.syncStatus.Run(stopCh)
+			}
+		},
+		OnStoppedLeading: func() {
+			// Remove prometheus metrics related to SSL certificates
+			srvs := sets.NewString()
+			for _, s := range n.runningConfig.Servers {
+				if !srvs.Has(s.Hostname) {
+					srvs.Insert(s.Hostname)
+				}
+			}
+			n.metricCollector.RemoveMetrics(nil, srvs.List())
+		},
+		PodName:      n.podInfo.Name,
+		PodNamespace: n.podInfo.Namespace,
+	})
 
 	cmd := nginxExecCommand()
 
