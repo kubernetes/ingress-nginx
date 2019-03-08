@@ -530,6 +530,18 @@
           
           
 
+
+  <li class="md-nav__item">
+    <a href="../../basic-usage/" title="Basic usage" class="md-nav__link">
+      Basic usage
+    </a>
+  </li>
+
+        
+          
+          
+          
+
   
 
 
@@ -2060,10 +2072,6 @@ table below.</p>
 <td>string</td>
 </tr>
 <tr>
-<td><a href="#cookie-affinity">nginx.ingress.kubernetes.io/session-cookie-hash</a></td>
-<td>string</td>
-</tr>
-<tr>
 <td><a href="#cookie-affinity">nginx.ingress.kubernetes.io/session-cookie-path</a></td>
 <td>string</td>
 </tr>
@@ -2231,16 +2239,7 @@ The only affinity type available for NGINX is <code class="codehilite">cookie</c
 </div>
 <h4 id="cookie-affinity">Cookie affinity<a class="headerlink" href="#cookie-affinity" title="Permanent link">&para;</a></h4>
 <p>If you use the <code class="codehilite">cookie</code> affinity type you can also specify the name of the cookie that will be used to route the requests with the annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-name</code>. The default is to create a cookie named 'INGRESSCOOKIE'.</p>
-<p>In case of NGINX the annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-hash</code> defines which algorithm will be used to hash the used upstream. Default value is <code class="codehilite">md5</code> and possible values are <code class="codehilite">md5</code>, <code class="codehilite">sha1</code> and <code class="codehilite">index</code>.</p>
 <p>The NGINX annotation <code class="codehilite">nginx.ingress.kubernetes.io/session-cookie-path</code> defines the path that will be set on the cookie. This is optional unless the annotation <code class="codehilite">nginx.ingress.kubernetes.io/use-regex</code> is set to true; Session cookie paths do not support regex.  </p>
-<div class="admonition attention">
-<p class="admonition-title">Attention</p>
-<p>The <code class="codehilite">index</code> option is not an actual hash; an in-memory index is used instead, which has less overhead.
-However, with <code class="codehilite">index</code>, matching against a changing upstream server list is inconsistent.
-So, at reload, if upstream servers have changed, index values are not guaranteed to correspond to the same server as before!
-<strong>Use <code class="codehilite">index</code> with caution</strong> and only if you need to!</p>
-</div>
-<p>In NGINX this feature is implemented by the third party module <a href="https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng">nginx-sticky-module-ng</a>. The workflow used to define which upstream server will be used is explained <a href="https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/raw/08a395c66e425540982c00482f55034e1fee67b6/docs/sticky.pdf">here</a></p>
 <h3 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h3>
 <p>Is possible to add authentication adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords inside the key <code class="codehilite">auth</code>.</p>
 <p>The annotations are:
@@ -2737,7 +2736,7 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../" title="Introduction" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../basic-usage/" title="Basic usage" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -2746,7 +2745,7 @@ Valid Values: HTTP, HTTPS, GRPC, GRPCS and AJP</p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Introduction
+                Basic usage
               </span>
             </div>
           </a>
