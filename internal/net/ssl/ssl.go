@@ -46,12 +46,17 @@ var (
 	oidExtensionSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 )
 
+// getPemFileName returns absolute file path and file name of pem cert related to given fullSecretName
+func getPemFileName(fullSecretName string) (string, string) {
+	pemName := fmt.Sprintf("%v.pem", fullSecretName)
+	return fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, pemName), pemName
+}
+
 // AddOrUpdateCertAndKey creates a .pem file with the cert and the key with the specified name
 func AddOrUpdateCertAndKey(name string, cert, key, ca []byte,
 	fs file.Filesystem) (*ingress.SSLCert, error) {
 
-	pemName := fmt.Sprintf("%v.pem", name)
-	pemFileName := fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, pemName)
+	pemFileName, pemName := getPemFileName(name)
 	tempPemFile, err := fs.TempFile(file.DefaultSSLDirectory, pemName)
 
 	if err != nil {
@@ -378,8 +383,7 @@ func AddCertAuth(name string, ca []byte, fs file.Filesystem) (*ingress.SSLCert, 
 
 // AddOrUpdateDHParam creates a dh parameters file with the specified name
 func AddOrUpdateDHParam(name string, dh []byte, fs file.Filesystem) (string, error) {
-	pemName := fmt.Sprintf("%v.pem", name)
-	pemFileName := fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, pemName)
+	pemFileName, pemName := getPemFileName(name)
 
 	tempPemFile, err := fs.TempFile(file.DefaultSSLDirectory, pemName)
 
