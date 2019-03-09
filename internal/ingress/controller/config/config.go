@@ -583,6 +583,11 @@ type Configuration struct {
 
 	// Block all requests with given Referer headers
 	BlockReferers []string `json:"block-referers"`
+
+	// UseServiceUpstream sets if nginx should use the service cluster IP
+	// instead of pod IP address and pass the Host header using information
+	// of the service defined in the ingress
+	UseServiceUpstream bool `json:"use-service-upstream"`
 }
 
 // NewDefault returns the default nginx configuration

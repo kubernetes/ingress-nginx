@@ -97,6 +97,8 @@ type Configuration struct {
 	DynamicCertificatesEnabled bool
 
 	DisableCatchAll bool
+
+	ClusterDomain string
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -382,7 +384,7 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 // service name and port are the same.
 func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*ingress.Backend, []*ingress.Server) {
 	du := n.getDefaultUpstream()
-	upstreams := n.createUpstreams(ingresses, du)
+	upstreams := n.createUpstreams(ingresses, du, n.store.GetBackendConfiguration().UseServiceUpstream)
 	servers := n.createServers(ingresses, upstreams, du)
 
 	var canaryIngresses []*ingress.Ingress
@@ -490,6 +492,13 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
 						}
+
+						if n.store.GetBackendConfiguration().UseServiceUpstream {
+							if loc.UpstreamVhost == "" {
+								loc.UpstreamVhost = fmt.Sprintf("%v.%v.svc.%v", loc.Service.Name, loc.Service.Namespace, n.cfg.ClusterDomain)
+							}
+						}
+
 						break
 					}
 				}
@@ -648,7 +657,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 
 // createUpstreams creates the NGINX upstreams (Endpoints) for each Service
 // referenced in Ingress rules.
-func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.Backend) map[string]*ingress.Backend {
+func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.Backend, useService bool) map[string]*ingress.Backend {
 	upstreams := make(map[string]*ingress.Backend)
 	upstreams[defUpstreamName] = du
 
@@ -678,7 +687,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			svcKey := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.Backend.ServiceName)
 
 			// add the service ClusterIP as a single Endpoint instead of individual Endpoints
-			if anns.ServiceUpstream {
+			if anns.ServiceUpstream || useService {
 				endpoint, err := n.getServiceClusterEndpoint(svcKey, ing.Spec.Backend)
 				if err != nil {
 					klog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)

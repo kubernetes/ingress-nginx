@@ -159,6 +159,9 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 
 		disableCatchAll = flags.Bool("disable-catch-all", false,
 			`Disable support for catch-all Ingresses`)
+
+		clusterDomain = flags.String("cluster-domain", "cluster.local",
+			`Configured domain for the Kubernetes cluster.`)
 	)
 
 	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
@@ -256,6 +259,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 			SSLProxy: *sslProxyPort,
 		},
 		DisableCatchAll: *disableCatchAll,
+		ClusterDomain:   *clusterDomain,
 	}
 
 	return false, config, nil
