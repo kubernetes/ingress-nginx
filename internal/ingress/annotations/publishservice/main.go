@@ -34,7 +34,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress rule
 // used to identify the ingress service that is actually connecting this ingrees
-// this overwrites the automatically detected address of the controller pod 
+// this overwrites the automatically detected address of the controller pod
 // and also the service specified globally with the publishservice parameter
 // on a per ingress level
 func (a publishService) Parse(ing *extensions.Ingress) (interface{}, error) {

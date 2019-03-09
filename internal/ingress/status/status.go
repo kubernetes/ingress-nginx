@@ -360,7 +360,7 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 // checks if the ingress is annotated with "publish-service", if yes it returns the ingress point for that service instead of the defaults
 func (s *statusSync) updateIngressPoint(ingressPoint []apiv1.LoadBalancerIngress, ing *ingress.Ingress) []apiv1.LoadBalancerIngress {
 	// empty ingressPoint check is needed as for shutdown only a update with an empty ingressPoint is performed
-	if ing.ParsedAnnotations.PublishService != "" && len(ingressPoint) >0  {
+	if ing.ParsedAnnotations.PublishService != "" && len(ingressPoint) > 0 {
 		klog.V(3).Infof("Using Enpoints of service %v for ingress %v", ing.ParsedAnnotations.PublishService, ing.Name)
 		serviceEndPoint, err := s.getExternalIngressFromService(ing.ParsedAnnotations.PublishService)
 		if err == nil {
@@ -379,7 +379,7 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 
 	batch := p.Batch()
 	sort.SliceStable(newIngressPoint, lessLoadBalancerIngress(newIngressPoint))
-	
+
 	serviceIngressPoint := newIngressPoint
 	for _, ing := range ings {
 		curIPs := ing.Status.LoadBalancer.Ingress
