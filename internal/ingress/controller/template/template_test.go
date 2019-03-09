@@ -832,16 +832,17 @@ func TestOpentracingPropagateContext(t *testing.T) {
 func TestGetIngressInformation(t *testing.T) {
 	validIngress := &ingress.Ingress{}
 	invalidIngress := "wrongtype"
+	host := "host1"
 	validPath := "/ok"
 	invalidPath := 10
 
-	info := getIngressInformation(invalidIngress, validPath)
+	info := getIngressInformation(invalidIngress, host, validPath)
 	expected := &ingressInformation{}
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}
 
-	info = getIngressInformation(validIngress, invalidPath)
+	info = getIngressInformation(validIngress, host, invalidPath)
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}
@@ -856,7 +857,7 @@ func TestGetIngressInformation(t *testing.T) {
 		ServiceName: "a-svc",
 	}
 
-	info = getIngressInformation(validIngress, validPath)
+	info = getIngressInformation(validIngress, host, validPath)
 	expected = &ingressInformation{
 		Namespace: "default",
 		Rule:      "validIng",
@@ -872,6 +873,7 @@ func TestGetIngressInformation(t *testing.T) {
 	validIngress.Spec.Backend = nil
 	validIngress.Spec.Rules = []extensions.IngressRule{
 		{
+			Host: host,
 			IngressRuleValue: extensions.IngressRuleValue{
 				HTTP: &extensions.HTTPIngressRuleValue{
 					Paths: []extensions.HTTPIngressPath{
@@ -888,7 +890,7 @@ func TestGetIngressInformation(t *testing.T) {
 		{},
 	}
 
-	info = getIngressInformation(validIngress, validPath)
+	info = getIngressInformation(validIngress, host, validPath)
 	expected = &ingressInformation{
 		Namespace: "default",
 		Rule:      "validIng",
@@ -897,6 +899,33 @@ func TestGetIngressInformation(t *testing.T) {
 		},
 		Service: "b-svc",
 	}
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	validIngress.Spec.Rules = append(validIngress.Spec.Rules, extensions.IngressRule{
+		Host: "host2",
+		IngressRuleValue: extensions.IngressRuleValue{
+			HTTP: &extensions.HTTPIngressRuleValue{
+				Paths: []extensions.HTTPIngressPath{
+					{
+						Path: "/ok",
+						Backend: extensions.IngressBackend{
+							ServiceName: "c-svc",
+						},
+					},
+				},
+			},
+		},
+	})
+
+	info = getIngressInformation(validIngress, host, validPath)
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	info = getIngressInformation(validIngress, "host2", validPath)
+	expected.Service = "c-svc"
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}
