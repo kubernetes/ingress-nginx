@@ -493,10 +493,8 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 							server.RedirectFromToWWW = true
 						}
 
-						if n.store.GetBackendConfiguration().UseServiceUpstream {
-							if loc.UpstreamVhost == "" {
-								loc.UpstreamVhost = fmt.Sprintf("%v.%v.svc.%v", loc.Service.Name, loc.Service.Namespace, n.cfg.ClusterDomain)
-							}
+						if n.store.GetBackendConfiguration().UseServiceUpstream && loc.UpstreamVhost == "" {
+							loc.UpstreamVhost = fmt.Sprintf("%v.%v.svc.%v", loc.Service.Name, loc.Service.Namespace, n.cfg.ClusterDomain)
 						}
 
 						break
@@ -592,46 +590,56 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			for _, location := range server.Locations {
 				location.DefaultBackendUpstreamName = "upstream-default-backend"
 
-				if shouldCreateUpstreamForLocationDefaultBackend(upstream, location) {
-					sp := location.DefaultBackend.Spec.Ports[0]
-					endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
-					if len(endps) > 0 {
-						name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
-						klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
-
-						nb := upstream.DeepCopy()
-						nb.Name = name
-						nb.Endpoints = endps
-						aUpstreams = append(aUpstreams, nb)
-						location.DefaultBackendUpstreamName = name
-
-						if len(upstream.Endpoints) == 0 {
-							klog.V(3).Infof("Upstream %q has no active Endpoint, so using custom default backend for location %q in server %q (Service \"%v/%v\")",
-								upstream.Name, location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
-
-							location.Backend = name
-
-							if n.store.GetBackendConfiguration().UseServiceUpstream {
-								if location.UpstreamVhost == "" {
-									location.UpstreamVhost = fmt.Sprintf("%v.%v.svc.%v",
-										location.DefaultBackend.GetName(),
-										location.DefaultBackend.GetNamespace(),
-										n.cfg.ClusterDomain)
-								}
-							}
-						}
+				if len(upstream.Endpoints) == 0 && n.cfg.DefaultService != "" {
+					svc, err := n.store.GetService(n.cfg.DefaultService)
+					if err == nil {
+						location.DefaultBackend = svc
 					}
+				}
 
-					if server.SSLPassthrough {
-						if location.Path == rootLocation {
-							if location.Backend == defUpstreamName {
-								klog.Warningf("Server %q has no default backend, ignoring SSL Passthrough.", server.Hostname)
-								continue
-							}
-							isHTTPSfrom = append(isHTTPSfrom, server)
+				if !shouldCreateUpstreamForLocationDefaultBackend(upstream, location) {
+					continue
+				}
+
+				klog.V(3).Infof("Creating upstream for default backend")
+
+				sp := location.DefaultBackend.Spec.Ports[0]
+				endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
+				if len(endps) > 0 {
+					name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
+					klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
+
+					nb := upstream.DeepCopy()
+					nb.Name = name
+					nb.Endpoints = endps
+					aUpstreams = append(aUpstreams, nb)
+					location.DefaultBackendUpstreamName = name
+
+					if len(upstream.Endpoints) == 0 {
+						klog.V(3).Infof("Upstream %q has no active Endpoint, so using custom default backend for location %q in server %q (Service \"%v/%v\")",
+							upstream.Name, location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
+
+						location.Backend = name
+
+						if n.store.GetBackendConfiguration().UseServiceUpstream && location.UpstreamVhost == "" {
+							location.UpstreamVhost = fmt.Sprintf("%v.%v.svc.%v",
+								location.DefaultBackend.GetName(),
+								location.DefaultBackend.GetNamespace(),
+								n.cfg.ClusterDomain)
 						}
 					}
 				}
+
+				if server.SSLPassthrough {
+					if location.Path == rootLocation {
+						if location.Backend == defUpstreamName {
+							klog.Warningf("Server %q has no default backend, ignoring SSL Passthrough.", server.Hostname)
+							continue
+						}
+						isHTTPSfrom = append(isHTTPSfrom, server)
+					}
+				}
+
 			}
 		}
 
