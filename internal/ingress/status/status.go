@@ -379,23 +379,11 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 
 	batch := p.Batch()
 	sort.SliceStable(newIngressPoint, lessLoadBalancerIngress(newIngressPoint))
-	// serviceIngressPoint:= []apiv1.LoadBalancerIngress{}
+	
 	serviceIngressPoint := newIngressPoint
 	for _, ing := range ings {
 		curIPs := ing.Status.LoadBalancer.Ingress
 		serviceIngressPoint = s.updateIngressPoint(newIngressPoint, ing)
-		// Override IngressPoint from annotation service
-		// if ing.ParsedAnnotations.PublishService != "" {
-		// 	klog.V(3).Infof("Using Enpoints of service %v for ingress %v", ing.ParsedAnnotations.PublishService, ing.Name)
-		// 	serviceEndPoint, err := s.getEndpointsFromService(ing.ParsedAnnotations.PublishService)
-		// 	if err != nil {
-		// 		serviceIngressPoint = newIngressPoint
-		// 	}else {
-		// 		serviceIngressPoint = sliceToStatus(serviceEndPoint)
-		// 	}
-		// }else {
-			
-		// }
 
 		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
 		if ingressSliceEqual(curIPs, serviceIngressPoint) {
