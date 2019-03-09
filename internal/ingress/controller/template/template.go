@@ -731,10 +731,16 @@ func (info *ingressInformation) Equal(other *ingressInformation) bool {
 	return true
 }
 
-func getIngressInformation(i, p interface{}) *ingressInformation {
+func getIngressInformation(i, h, p interface{}) *ingressInformation {
 	ing, ok := i.(*ingress.Ingress)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
+		return &ingressInformation{}
+	}
+
+	hostname, ok := h.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", h)
 		return &ingressInformation{}
 	}
 
@@ -760,6 +766,10 @@ func getIngressInformation(i, p interface{}) *ingressInformation {
 
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
+			continue
+		}
+
+		if hostname != "" && hostname != rule.Host {
 			continue
 		}
 
