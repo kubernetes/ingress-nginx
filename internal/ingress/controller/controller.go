@@ -590,11 +590,12 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 		isHTTPSfrom := []*ingress.Server{}
 		for _, server := range servers {
 			for _, location := range server.Locations {
+				location.DefaultBackendUpstreamName = "upstream-default-backend"
+
 				if shouldCreateUpstreamForLocationDefaultBackend(upstream, location) {
 					sp := location.DefaultBackend.Spec.Ports[0]
 					endps := getEndpoints(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
 					if len(endps) > 0 {
-
 						name := fmt.Sprintf("custom-default-backend-%v", location.DefaultBackend.GetName())
 						klog.V(3).Infof("Creating \"%v\" upstream based on default backend annotation", name)
 
@@ -609,6 +610,15 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 								upstream.Name, location.Path, server.Hostname, location.DefaultBackend.Namespace, location.DefaultBackend.Name)
 
 							location.Backend = name
+
+							if n.store.GetBackendConfiguration().UseServiceUpstream {
+								if location.UpstreamVhost == "" {
+									location.UpstreamVhost = fmt.Sprintf("%v.%v.svc.%v",
+										location.DefaultBackend.GetName(),
+										location.DefaultBackend.GetNamespace(),
+										n.cfg.ClusterDomain)
+								}
+							}
 						}
 					}
 
@@ -621,8 +631,6 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 							isHTTPSfrom = append(isHTTPSfrom, server)
 						}
 					}
-				} else {
-					location.DefaultBackendUpstreamName = "upstream-default-backend"
 				}
 			}
 		}
