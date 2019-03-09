@@ -859,22 +859,6 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	}
 
 	klog.V(3).Infof("Obtaining ports information for Service %q", svcKey)
-	for _, servicePort := range svc.Spec.Ports {
-		// targetPort could be a string, use either the port name or number (int)
-		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
-			servicePort.TargetPort.String() == backendPort ||
-			servicePort.Name == backendPort {
-
-			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
-			if len(endps) == 0 {
-				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
-			}
-
-			upstreams = append(upstreams, endps...)
-			break
-		}
-	}
-
 	// Ingress with an ExternalName Service and no port defined for that Service
 	if len(svc.Spec.Ports) == 0 && svc.Spec.Type == apiv1.ServiceTypeExternalName {
 		externalPort, err := strconv.Atoi(backendPort)
@@ -898,6 +882,21 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 		return upstreams, nil
 	}
 
+	for _, servicePort := range svc.Spec.Ports {
+		// targetPort could be a string, use either the port name or number (int)
+		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
+			servicePort.TargetPort.String() == backendPort ||
+			servicePort.Name == backendPort {
+
+			endps := getEndpoints(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpoints)
+			upstreams = append(upstreams, endps...)
+			break
+		}
+	}
+
+	if len(upstreams) == 0 {
+		klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
+	}
 	return upstreams, nil
 }
 
