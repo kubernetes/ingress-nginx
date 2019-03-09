@@ -266,27 +266,7 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 	addrs := []string{}
 
 	if s.PublishService != "" {
-		ns, name, _ := k8s.ParseNameNS(s.PublishService)
-		svc, err := s.Client.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
-
-		if svc.Spec.Type == apiv1.ServiceTypeExternalName {
-			addrs = append(addrs, svc.Spec.ExternalName)
-			return addrs, nil
-		}
-
-		for _, ip := range svc.Status.LoadBalancer.Ingress {
-			if ip.IP == "" {
-				addrs = append(addrs, ip.Hostname)
-			} else {
-				addrs = append(addrs, ip.IP)
-			}
-		}
-
-		addrs = append(addrs, svc.Spec.ExternalIPs...)
-		return addrs, nil
+		return s.getExternalIngressFromService(s.PublishService)
 	}
 
 	if s.PublishStatusAddress != "" {
@@ -314,6 +294,37 @@ func (s *statusSync) runningAddresses() ([]string, error) {
 		}
 	}
 
+	return addrs, nil
+}
+
+// return external name/ip from a service
+func (s *statusSync) getExternalIngressFromService(service string) ([]string, error) {
+	addrs := []string{}
+
+	if service == "" {
+		return nil, errors.New("Cannot get external name/ip from empty service string")
+	}
+
+	ns, name, _ := k8s.ParseNameNS(service)
+	svc, err := s.Client.CoreV1().Services(ns).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	if svc.Spec.Type == apiv1.ServiceTypeExternalName {
+		addrs = append(addrs, svc.Spec.ExternalName)
+		return addrs, nil
+	}
+
+	for _, ip := range svc.Status.LoadBalancer.Ingress {
+		if ip.IP == "" {
+			addrs = append(addrs, ip.Hostname)
+		} else {
+			addrs = append(addrs, ip.IP)
+		}
+	}
+
+	addrs = append(addrs, svc.Spec.ExternalIPs...)
 	return addrs, nil
 }
 
@@ -346,6 +357,19 @@ func sliceToStatus(endpoints []string) []apiv1.LoadBalancerIngress {
 	return lbi
 }
 
+// checks if the ingress is annotated with "publish-service", if yes it returns the ingress point for that service instead of the defaults
+func (s *statusSync) updateIngressPoint(ingressPoint []apiv1.LoadBalancerIngress, ing *ingress.Ingress) []apiv1.LoadBalancerIngress {
+	// empty ingressPoint check is needed as for shutdown only a update with an empty ingressPoint is performed
+	if ing.ParsedAnnotations.PublishService != "" && len(ingressPoint) >0  {
+		klog.V(3).Infof("Using Enpoints of service %v for ingress %v", ing.ParsedAnnotations.PublishService, ing.Name)
+		serviceEndPoint, err := s.getExternalIngressFromService(ing.ParsedAnnotations.PublishService)
+		if err == nil {
+			return sliceToStatus(serviceEndPoint)
+		}
+	}
+	return ingressPoint
+}
+
 // updateStatus changes the status information of Ingress rules
 func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 	ings := s.IngressLister.ListIngresses()
@@ -355,16 +379,19 @@ func (s *statusSync) updateStatus(newIngressPoint []apiv1.LoadBalancerIngress) {
 
 	batch := p.Batch()
 	sort.SliceStable(newIngressPoint, lessLoadBalancerIngress(newIngressPoint))
-
+	
+	serviceIngressPoint := newIngressPoint
 	for _, ing := range ings {
 		curIPs := ing.Status.LoadBalancer.Ingress
+		serviceIngressPoint = s.updateIngressPoint(newIngressPoint, ing)
+
 		sort.SliceStable(curIPs, lessLoadBalancerIngress(curIPs))
-		if ingressSliceEqual(curIPs, newIngressPoint) {
+		if ingressSliceEqual(curIPs, serviceIngressPoint) {
 			klog.V(3).Infof("skipping update of Ingress %v/%v (no change)", ing.Namespace, ing.Name)
 			continue
 		}
 
-		batch.Queue(runUpdate(ing, newIngressPoint, s.Client))
+		batch.Queue(runUpdate(ing, serviceIngressPoint, s.Client))
 	}
 
 	batch.QueueComplete()
