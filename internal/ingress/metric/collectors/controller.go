@@ -46,6 +46,8 @@ type Controller struct {
 
 	constLabels prometheus.Labels
 	labels      prometheus.Labels
+
+	leaderElection *prometheus.GaugeVec
 }
 
 // NewController creates a new prometheus collector for the
@@ -112,6 +114,13 @@ func NewController(pod, namespace, class string) *Controller {
 			},
 			sslLabelHost,
 		),
+		leaderElection: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "leader_election_status",
+				Help: "Gauge reporting status of the leader election, 0 indicates follower, 1 indicates leader. 'name' is the string used to identify the lease",
+			},
+			[]string{"name"},
+		),
 	}
 
 	return cm
@@ -125,6 +134,16 @@ func (cm *Controller) IncReloadCount() {
 // IncReloadErrorCount increment the reload error counter
 func (cm *Controller) IncReloadErrorCount() {
 	cm.reloadOperationErrors.With(cm.constLabels).Inc()
+}
+
+// OnStartedLeading indicates the pod is not the current leader
+func (cm *Controller) OnStartedLeading(electionID string) {
+	cm.leaderElection.WithLabelValues(electionID).Set(0)
+}
+
+// OnStoppedLeading indicates the pod is not the current leader
+func (cm *Controller) OnStoppedLeading(electionID string) {
+	cm.leaderElection.WithLabelValues(electionID).Set(1.0)
 }
 
 // ConfigSuccess set a boolean flag according to the output of the controller configuration reload
