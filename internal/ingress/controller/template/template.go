@@ -250,10 +250,14 @@ func buildResolversForLua(res interface{}, disableIpv6 interface{}) string {
 
 	r := []string{}
 	for _, ns := range nss {
-		if ing_net.IsIPV6(ns) && no6 {
-			continue
+		if ing_net.IsIPV6(ns) {
+			if no6 {
+				continue
+			}
+			r = append(r, fmt.Sprintf("\"[%v]\"", ns))
+		} else {
+			r = append(r, fmt.Sprintf("\"%v\"", ns))
 		}
-		r = append(r, fmt.Sprintf("\"%v\"", ns))
 	}
 
 	return strings.Join(r, ", ")
