@@ -36,6 +36,9 @@ type Collector interface {
 	IncReloadCount()
 	IncReloadErrorCount()
 
+	OnStartedLeading(string)
+	OnStoppedLeading(string)
+
 	RemoveMetrics(ingresses, endpoints []string)
 
 	SetSSLExpireTime([]*ingress.Server)
@@ -146,4 +149,14 @@ func (c *collector) SetSSLExpireTime(servers []*ingress.Server) {
 
 func (c *collector) SetHosts(hosts sets.String) {
 	c.socket.SetHosts(hosts)
+}
+
+// OnStartedLeading indicates the pod is not the current leader
+func (c *collector) OnStartedLeading(electionID string) {
+	c.ingressController.OnStartedLeading(electionID)
+}
+
+// OnStoppedLeading indicates the pod is not the current leader
+func (c *collector) OnStoppedLeading(electionID string) {
+	c.ingressController.OnStoppedLeading(electionID)
 }

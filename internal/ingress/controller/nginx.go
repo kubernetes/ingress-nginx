@@ -269,8 +269,12 @@ func (n *NGINXController) Start() {
 			if n.syncStatus != nil {
 				go n.syncStatus.Run(stopCh)
 			}
+
+			n.metricCollector.OnStartedLeading(n.cfg.ElectionID)
 		},
 		OnStoppedLeading: func() {
+			n.metricCollector.OnStoppedLeading(n.cfg.ElectionID)
+
 			// Remove prometheus metrics related to SSL certificates
 			srvs := sets.NewString()
 			for _, s := range n.runningConfig.Servers {
