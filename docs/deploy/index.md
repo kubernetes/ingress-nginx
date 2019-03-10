@@ -133,7 +133,7 @@ This type of load balancer is supported since v1.10.0 as an ALPHA feature.
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-nlb.yaml
 ```
 
-#### GCE - GKE
+#### GCE-GKE
 
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
