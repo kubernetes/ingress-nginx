@@ -71,7 +71,6 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 type PodInfo struct {
 	Name      string
 	Namespace string
-	NodeIP    string
 	// Labels selectors of the running pod
 	// This is used to search for other Ingress controller pods
 	Labels map[string]string
@@ -95,7 +94,6 @@ func GetPodDetails(kubeClient clientset.Interface) (*PodInfo, error) {
 	return &PodInfo{
 		Name:      podName,
 		Namespace: podNs,
-		NodeIP:    GetNodeIPOrName(kubeClient, pod.Spec.NodeName, true),
 		Labels:    pod.GetLabels(),
 	}, nil
 }
