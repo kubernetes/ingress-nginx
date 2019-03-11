@@ -59,8 +59,6 @@ type Configuration struct {
 
 	Namespace string
 
-	ForceNamespaceIsolation bool
-
 	// +optional
 	TCPConfigMapName string
 	// +optional
