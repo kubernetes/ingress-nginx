@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -31,8 +30,6 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
-
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 )
 
 type leaderElectionConfig struct {
@@ -48,13 +45,6 @@ type leaderElectionConfig struct {
 }
 
 func setupLeaderElection(config *leaderElectionConfig) {
-	// we need to use the defined ingress class to allow multiple leaders
-	// in order to update information about ingress status
-	electionID := fmt.Sprintf("%v-%v", config.ElectionID, class.DefaultClass)
-	if class.IngressClass != "" {
-		electionID = fmt.Sprintf("%v-%v", config.ElectionID, class.IngressClass)
-	}
-
 	var elector *leaderelection.LeaderElector
 
 	// start a new context
@@ -106,7 +96,7 @@ func setupLeaderElection(config *leaderElectionConfig) {
 	})
 
 	lock := resourcelock.ConfigMapLock{
-		ConfigMapMeta: metav1.ObjectMeta{Namespace: config.PodNamespace, Name: electionID},
+		ConfigMapMeta: metav1.ObjectMeta{Namespace: config.PodNamespace, Name: config.ElectionID},
 		Client:        config.Client.CoreV1(),
 		LockConfig: resourcelock.ResourceLockConfig{
 			Identity:      config.PodName,

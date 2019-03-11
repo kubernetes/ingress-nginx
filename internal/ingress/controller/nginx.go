@@ -49,6 +49,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/file"
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -262,18 +263,25 @@ func (n *NGINXController) Start() {
 
 	n.store.Run(n.stopCh)
 
+	// we need to use the defined ingress class to allow multiple leaders
+	// in order to update information about ingress status
+	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.DefaultClass)
+	if class.IngressClass != "" {
+		electionID = fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.IngressClass)
+	}
+
 	setupLeaderElection(&leaderElectionConfig{
 		Client:     n.cfg.Client,
-		ElectionID: n.cfg.ElectionID,
+		ElectionID: electionID,
 		OnStartedLeading: func(stopCh chan struct{}) {
 			if n.syncStatus != nil {
 				go n.syncStatus.Run(stopCh)
 			}
 
-			n.metricCollector.OnStartedLeading(n.cfg.ElectionID)
+			n.metricCollector.OnStartedLeading(electionID)
 		},
 		OnStoppedLeading: func() {
-			n.metricCollector.OnStoppedLeading(n.cfg.ElectionID)
+			n.metricCollector.OnStoppedLeading(electionID)
 
 			// Remove prometheus metrics related to SSL certificates
 			srvs := sets.NewString()
