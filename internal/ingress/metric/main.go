@@ -151,12 +151,12 @@ func (c *collector) SetHosts(hosts sets.String) {
 	c.socket.SetHosts(hosts)
 }
 
-// OnStartedLeading indicates the pod is not the current leader
+// OnStartedLeading indicates the pod was elected as the leader
 func (c *collector) OnStartedLeading(electionID string) {
 	c.ingressController.OnStartedLeading(electionID)
 }
 
-// OnStoppedLeading indicates the pod is not the current leader
+// OnStoppedLeading indicates the pod stopped being the leader
 func (c *collector) OnStoppedLeading(electionID string) {
 	c.ingressController.OnStoppedLeading(electionID)
 }

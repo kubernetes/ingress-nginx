@@ -136,12 +136,12 @@ func (cm *Controller) IncReloadErrorCount() {
 	cm.reloadOperationErrors.With(cm.constLabels).Inc()
 }
 
-// OnStartedLeading indicates the pod is not the current leader
+// OnStartedLeading indicates the pod was elected as the leader
 func (cm *Controller) OnStartedLeading(electionID string) {
 	cm.leaderElection.WithLabelValues(electionID).Set(0)
 }
 
-// OnStoppedLeading indicates the pod is not the current leader
+// OnStoppedLeading indicates the pod stopped being the leader
 func (cm *Controller) OnStoppedLeading(electionID string) {
 	cm.leaderElection.WithLabelValues(electionID).Set(1.0)
 }
