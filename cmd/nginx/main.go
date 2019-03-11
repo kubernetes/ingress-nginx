@@ -110,14 +110,19 @@ func main() {
 	}
 
 	// create the default SSL certificate (dummy)
+	// TODO(elvinefendi) do this in a single function in ssl package
 	defCert, defKey := ssl.GetFakeSSLCert()
-	c, err := ssl.AddOrUpdateCertAndKey(fakeCertificate, defCert, defKey, []byte{}, fs)
+	sslCert, err := ssl.CreateSSLCert(defCert, defKey)
 	if err != nil {
-		klog.Fatalf("Error generating self-signed certificate: %v", err)
+		klog.Fatalf("unexpected error creating fake SSL Cert: %v", err)
 	}
-
-	conf.FakeCertificatePath = c.PemFileName
-	conf.FakeCertificateSHA = c.PemSHA
+	err = ssl.StoreSSLCertOnDisk(fs, fakeCertificate, sslCert)
+	if err != nil {
+		klog.Fatalf("unexpected error storing fake SSL Cert: %v", err)
+	}
+	conf.FakeCertificatePath = sslCert.PemFileName
+	conf.FakeCertificateSHA = sslCert.PemSHA
+	// end create default fake SSL certificates
 
 	conf.Client = kubeClient
 
