@@ -98,17 +98,22 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 			return nil, fmt.Errorf("key 'tls.key' missing from Secret %q", secretName)
 		}
 
-		if s.isDynamicCertificatesEnabled {
-			sslCert, err = ssl.CreateSSLCert(nsSecName, cert, key, ca)
+		sslCert, err = ssl.CreateSSLCert(cert, key)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
+		}
+
+		if !s.isDynamicCertificatesEnabled {
+			err = ssl.StoreSSLCertOnDisk(s.filesystem, nsSecName, sslCert)
 			if err != nil {
-				return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
+				return nil, fmt.Errorf("error while storing certificate and key: %v", err)
 			}
-		} else {
-			// If 'ca.crt' is also present, it will allow this secret to be used in the
-			// 'nginx.ingress.kubernetes.io/auth-tls-secret' annotation
-			sslCert, err = ssl.AddOrUpdateCertAndKey(nsSecName, cert, key, ca, s.filesystem)
+		}
+
+		if len(ca) > 0 {
+			err = ssl.ConfigureCACertWithCertAndKey(s.filesystem, nsSecName, ca, sslCert)
 			if err != nil {
-				return nil, fmt.Errorf("unexpected error creating pem file: %v", err)
+				return nil, fmt.Errorf("error configuring CA certificate: %v", err)
 			}
 		}
 
@@ -118,11 +123,15 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		}
 		klog.V(3).Info(msg)
 
-	} else if ca != nil {
-		sslCert, err = ssl.AddCertAuth(nsSecName, ca, s.filesystem)
-
+	} else if ca != nil && len(ca) > 0 {
+		sslCert, err = ssl.CreateCACert(ca)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
+		}
+
+		err = ssl.ConfigureCACert(s.filesystem, nsSecName, ca, sslCert)
+		if err != nil {
+			return nil, fmt.Errorf("error configuring CA certificate: %v", err)
 		}
 
 		// makes this secret in 'syncSecret' to be used for Certificate Authentication
