@@ -116,8 +116,10 @@ func NewController(pod, namespace, class string) *Controller {
 		),
 		leaderElection: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "leader_election_status",
-				Help: "Gauge reporting status of the leader election, 0 indicates follower, 1 indicates leader. 'name' is the string used to identify the lease",
+				Namespace:   PrometheusNamespace,
+				Name:        "leader_election_status",
+				Help:        "Gauge reporting status of the leader election, 0 indicates follower, 1 indicates leader. 'name' is the string used to identify the lease",
+				ConstLabels: constLabels,
 			},
 			[]string{"name"},
 		),
@@ -138,12 +140,12 @@ func (cm *Controller) IncReloadErrorCount() {
 
 // OnStartedLeading indicates the pod was elected as the leader
 func (cm *Controller) OnStartedLeading(electionID string) {
-	cm.leaderElection.WithLabelValues(electionID).Set(0)
+	cm.leaderElection.WithLabelValues(electionID).Set(1.0)
 }
 
 // OnStoppedLeading indicates the pod stopped being the leader
 func (cm *Controller) OnStoppedLeading(electionID string) {
-	cm.leaderElection.WithLabelValues(electionID).Set(1.0)
+	cm.leaderElection.WithLabelValues(electionID).Set(0)
 }
 
 // ConfigSuccess set a boolean flag according to the output of the controller configuration reload
@@ -169,6 +171,7 @@ func (cm Controller) Describe(ch chan<- *prometheus.Desc) {
 	cm.reloadOperation.Describe(ch)
 	cm.reloadOperationErrors.Describe(ch)
 	cm.sslExpireTime.Describe(ch)
+	cm.leaderElection.Describe(ch)
 }
 
 // Collect implements the prometheus.Collector interface.
@@ -179,6 +182,7 @@ func (cm Controller) Collect(ch chan<- prometheus.Metric) {
 	cm.reloadOperation.Collect(ch)
 	cm.reloadOperationErrors.Collect(ch)
 	cm.sslExpireTime.Collect(ch)
+	cm.leaderElection.Collect(ch)
 }
 
 // SetSSLExpireTime sets the expiration time of SSL Certificates
@@ -198,13 +202,21 @@ func (cm *Controller) SetSSLExpireTime(servers []*ingress.Server) {
 
 // RemoveMetrics removes metrics for hostnames not available anymore
 func (cm *Controller) RemoveMetrics(hosts []string, registry prometheus.Gatherer) {
+	cm.removeSSLExpireMetrics(true, hosts, registry)
+}
+
+// RemoveAllSSLExpireMetrics removes metrics for expiration of SSL Certificates
+func (cm *Controller) RemoveAllSSLExpireMetrics(registry prometheus.Gatherer) {
+	cm.removeSSLExpireMetrics(false, []string{}, registry)
+}
+
+func (cm *Controller) removeSSLExpireMetrics(onlyDefinedHosts bool, hosts []string, registry prometheus.Gatherer) {
 	mfs, err := registry.Gather()
 	if err != nil {
 		klog.Errorf("Error gathering metrics: %v", err)
 		return
 	}
 
-	klog.V(2).Infof("removing SSL certificate metrics for %v hosts", hosts)
 	toRemove := sets.NewString(hosts...)
 
 	for _, mf := range mfs {
@@ -227,7 +239,7 @@ func (cm *Controller) RemoveMetrics(hosts []string, registry prometheus.Gatherer
 				continue
 			}
 
-			if !toRemove.Has(host) {
+			if onlyDefinedHosts && !toRemove.Has(host) {
 				continue
 			}
 
