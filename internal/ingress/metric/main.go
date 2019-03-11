@@ -159,4 +159,5 @@ func (c *collector) OnStartedLeading(electionID string) {
 // OnStoppedLeading indicates the pod stopped being the leader
 func (c *collector) OnStoppedLeading(electionID string) {
 	c.ingressController.OnStoppedLeading(electionID)
+	c.ingressController.RemoveAllSSLExpireMetrics(c.registry)
 }
