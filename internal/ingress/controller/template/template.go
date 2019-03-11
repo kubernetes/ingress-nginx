@@ -456,8 +456,8 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	if len(location.Rewrite.Target) > 0 {
 		var xForwardedPrefix string
 
-		if location.XForwardedPrefix {
-			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", path)
+		if len(location.XForwardedPrefix) > 0 {
+			xForwardedPrefix = fmt.Sprintf("proxy_set_header X-Forwarded-Prefix \"%s\";\n", location.XForwardedPrefix)
 		}
 
 		return fmt.Sprintf(`
