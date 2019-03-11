@@ -35,5 +35,5 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress rule
 // used to add an x-forwarded-prefix header to the request
 func (cbbs xforwardedprefix) Parse(ing *extensions.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation("x-forwarded-prefix", ing)
+	return parser.GetStringAnnotation("x-forwarded-prefix", ing)
 }
