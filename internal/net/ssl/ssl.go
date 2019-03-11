@@ -147,7 +147,7 @@ func CreateCACert(ca []byte) (*ingress.SSLCert, error) {
 	}, nil
 }
 
-// StoreSSLCert creates a .pem file with content PemCertKey from the given sslCert
+// StoreSSLCertOnDisk creates a .pem file with content PemCertKey from the given sslCert
 // and sets relevant remaining fields of sslCert object
 func StoreSSLCertOnDisk(fs file.Filesystem, name string, sslCert *ingress.SSLCert) error {
 	pemFileName, _ := getPemFileName(name)
