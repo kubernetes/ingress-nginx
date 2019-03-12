@@ -1153,6 +1153,10 @@
 <td>Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name".</td>
 </tr>
 <tr>
+<td><code class="codehilite">--disable-catch-all</code></td>
+<td>Disable support for catch-all Ingresses.</td>
+</tr>
+<tr>
 <td><code class="codehilite">--election-id string</code></td>
 <td>Election id to use for Ingress status updates. (default "ingress-controller-leader")</td>
 </tr>
@@ -1167,10 +1171,6 @@
 <tr>
 <td><code class="codehilite">--enable-ssl-passthrough</code></td>
 <td>Enable SSL Passthrough.</td>
-</tr>
-<tr>
-<td><code class="codehilite">--force-namespace-isolation</code></td>
-<td>Force namespace isolation. Prevents Ingress objects from referencing Secrets and ConfigMaps located in a different namespace than their own. May be used together with watch-namespace.</td>
 </tr>
 <tr>
 <td><code class="codehilite">--health-check-path string</code></td>
@@ -1229,10 +1229,6 @@
 <td>Set the load-balancer status of Ingress objects to internal Node addresses instead of external. Requires the update-status parameter.</td>
 </tr>
 <tr>
-<td><code class="codehilite">--sort-backends</code></td>
-<td>Sort servers inside NGINX upstreams.</td>
-</tr>
-<tr>
 <td><code class="codehilite">--ssl-passthrough-proxy-port int</code></td>
 <td>Port to use internally for SSL Passthrough. (default 442)</td>
 </tr>
@@ -1279,10 +1275,6 @@
 <tr>
 <td><code class="codehilite">--watch-namespace string</code></td>
 <td>Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty.</td>
-</tr>
-<tr>
-<td><code class="codehilite">--disable-catch-all</code></td>
-<td>Disable support for catch-all Ingresses.</td>
 </tr>
 </tbody>
 </table>
