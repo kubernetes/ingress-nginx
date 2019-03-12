@@ -41,7 +41,7 @@ var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func(
 			"nginx.ingress.kubernetes.io/rewrite-target":     "/foo",
 		}
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(ContainSubstring("proxy_set_header X-Forwarded-Prefix \"/test/value\";"))
@@ -49,7 +49,7 @@ var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func(
 
 		uri := "/"
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+uri).
+			Get(f.GetURL(framework.HTTP)+uri).
 			Set("Host", host).
 			End()
 
@@ -65,7 +65,7 @@ var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func(
 			"nginx.ingress.kubernetes.io/rewrite-target":     "/foo",
 		}
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.IngressController.Namespace, "http-svc", 80, &annotations))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return Expect(server).Should(And(ContainSubstring(host), Not(ContainSubstring("proxy_set_header X-Forwarded-Prefix"))))
@@ -73,7 +73,7 @@ var _ = framework.IngressNginxDescribe("Annotations - X-Forwarded-Prefix", func(
 
 		uri := "/"
 		resp, body, errs := gorequest.New().
-			Get(f.IngressController.HTTPURL+uri).
+			Get(f.GetURL(framework.HTTP)+uri).
 			Set("Host", host).
 			End()
 
