@@ -1199,22 +1199,27 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 
 		altUps := upstreams[upsName]
 
-		merged := false
+		if altUps == nil {
+			klog.Warningf("alternative backend %s has already been removed", upsName)
+		} else {
 
-		for _, loc := range servers[defServerName].Locations {
-			priUps := upstreams[loc.Backend]
+			merged := false
 
-			if canMergeBackend(priUps, altUps) {
-				klog.V(2).Infof("matching backend %v found for alternative backend %v",
-					priUps.Name, altUps.Name)
+			for _, loc := range servers[defServerName].Locations {
+				priUps := upstreams[loc.Backend]
 
-				merged = mergeAlternativeBackend(priUps, altUps)
+				if canMergeBackend(priUps, altUps) {
+					klog.V(2).Infof("matching backend %v found for alternative backend %v",
+						priUps.Name, altUps.Name)
+
+					merged = mergeAlternativeBackend(priUps, altUps)
+				}
 			}
-		}
 
-		if !merged {
-			klog.Warningf("unable to find real backend for alternative backend %v. Deleting.", altUps.Name)
-			delete(upstreams, altUps.Name)
+			if !merged {
+				klog.Warningf("unable to find real backend for alternative backend %v. Deleting.", altUps.Name)
+				delete(upstreams, altUps.Name)
+			}
 		}
 	}
 
@@ -1225,7 +1230,7 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			altUps := upstreams[upsName]
 
 			if altUps == nil {
-				klog.Errorf("alternative backend %s has already be removed", upsName)
+				klog.Warningf("alternative backend %s has already been removed", upsName)
 				continue
 			}
 
