@@ -18,9 +18,15 @@ package util
 
 import (
 	"fmt"
-
+	"github.com/spf13/cobra"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+)
+
+// The default deployment and service names for ingress-nginx
+const (
+	DefaultIngressDeploymentName = "nginx-ingress-controller"
+	DefaultIngressServiceName    = "ingress-nginx"
 )
 
 // PrintError receives an error value and prints it if it exists
@@ -43,6 +49,20 @@ func printOrError(s string, e error) error {
 	}
 	fmt.Print(s)
 	return nil
+}
+
+// AddPodFlag adds a --pod flag to a cobra command
+func AddPodFlag(cmd *cobra.Command) *string {
+	v := ""
+	cmd.Flags().StringVar(&v, "pod", "", "Query a particular ingress-nginx pod")
+	return &v
+}
+
+// AddDeploymentFlag adds a --deployment flag to a cobra command
+func AddDeploymentFlag(cmd *cobra.Command) *string {
+	v := ""
+	cmd.Flags().StringVar(&v, "deployment", DefaultIngressDeploymentName, "The name of the ingress-nginx deployment")
+	return &v
 }
 
 // GetNamespace takes a set of kubectl flag values and returns the namespace we should be operating in
