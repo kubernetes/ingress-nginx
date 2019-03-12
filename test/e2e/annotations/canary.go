@@ -759,27 +759,24 @@ var _ = framework.IngressNginxDescribe("Annotations - canary", func() {
 		})
 	})
 
-	Context("Single canary Ingress with multiple paths to same backend", func() {
-		It("should work", func() {
-			host := "foo"
-			canaryIngName := fmt.Sprintf("%v-canary", host)
-			annotations := map[string]string{
-				"nginx.ingress.kubernetes.io/canary":           "true",
-				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
-			}
+	It("does not crash when canary ingress has multiple paths to the same non-matching backend", func() {
+		host := "foo"
+		canaryIngName := fmt.Sprintf("%v-canary", host)
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/canary":           "true",
+			"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+		}
 
-			paths := []string{"/foo", "/bar"}
+		paths := []string{"/foo", "/bar"}
+		ing := framework.NewSingleIngressWithMultiplePaths(canaryIngName, paths, host, f.Namespace, "httpy-svc-canary", 80, &annotations)
+		f.EnsureIngress(ing)
 
-			ing := framework.NewSingleIngressWithMultiplePaths(canaryIngName, paths, host, f.Namespace, "httpy-svc-canary", 80, &annotations)
-			f.EnsureIngress(ing)
+		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
+		f.EnsureIngress(ing)
 
-			ing = framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil)
-			f.EnsureIngress(ing)
-
-			f.WaitForNginxServer(host,
-				func(server string) bool {
-					return Expect(server).Should(ContainSubstring("server_name foo"))
-				})
-		})
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return Expect(server).Should(ContainSubstring("server_name foo"))
+			})
 	})
 })
