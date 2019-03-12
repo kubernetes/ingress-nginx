@@ -13,6 +13,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--default-backend-service string` | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. If not specified, a 404 page will be returned directly from NGINX.|
 | `--default-server-port int`       | When `default-backend-service` is not specified or specified service does not have any endpoint, a local endpoint with this port will be used to serve 404 page from inside Nginx. |
 | `--default-ssl-certificate string` | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
+| `--disable-catch-all`             | Disable support for catch-all Ingresses. |
 | `--election-id string`            | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
 | `--enable-dynamic-certificates`   | Dynamically serves certificates instead of reloading NGINX when certificates are created, updated, or deleted. Currently does not support OCSP stapling, so --enable-ssl-chain-completion must be turned off. Assuming the certificate is generated with a 2048 bit RSA key/cert pair, this feature can store roughly 5000 certificates. This is an experiemental feature that currently is not ready for production use. Feature backed by OpenResty Lua libraries. (disabled by default) |
 | `--enable-ssl-chain-completion`   | Autocomplete SSL certificate chains with missing intermediate CA certificates. A valid certificate chain is required to enable OCSP stapling. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default true) |
@@ -44,4 +45,3 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--version`                       | Show release information about the NGINX Ingress controller and exit. |
 | `--vmodule moduleSpec`            | comma-separated list of pattern=N settings for file-filtered logging |
 | `--watch-namespace string`        | Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty. |
-| `--disable-catch-all`             | Disable support for catch-all Ingresses. |
