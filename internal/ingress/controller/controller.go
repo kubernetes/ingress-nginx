@@ -188,7 +188,11 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		klog.Infof("Backend successfully reloaded.")
 		n.metricCollector.ConfigSuccess(hash, true)
 		n.metricCollector.IncReloadCount()
-		n.metricCollector.SetSSLExpireTime(servers)
+
+		if n.isLeader() {
+			klog.V(2).Infof("Updating ssl expiration metrics.")
+			n.metricCollector.SetSSLExpireTime(servers)
+		}
 	}
 
 	isFirstSync := n.runningConfig.Equal(&ingress.Configuration{})

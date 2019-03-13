@@ -287,12 +287,16 @@ func TestStatusActions(t *testing.T) {
 		Client:                 buildSimpleClientSet(),
 		PublishService:         "",
 		IngressLister:          buildIngressLister(),
-		DefaultIngressClass:    "nginx",
-		IngressClass:           "",
 		UpdateStatusOnShutdown: true,
 	}
 	// create object
-	fkSync := NewStatusSyncer(c)
+	fkSync := NewStatusSyncer(&k8s.PodInfo{
+		Name:      "foo_base_pod",
+		Namespace: apiv1.NamespaceDefault,
+		Labels: map[string]string{
+			"lable_sig": "foo_pod",
+		},
+	}, c)
 	if fkSync == nil {
 		t.Fatalf("expected a valid Sync")
 	}
@@ -300,7 +304,10 @@ func TestStatusActions(t *testing.T) {
 	fk := fkSync.(statusSync)
 
 	// start it and wait for the election and syn actions
-	go fk.Run()
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
+	go fk.Run(stopCh)
 	//  wait for the election
 	time.Sleep(100 * time.Millisecond)
 	// execute sync
