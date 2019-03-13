@@ -40,12 +40,16 @@ func (f *Framework) ExecIngressPod(command string) (string, error) {
 
 // ExecCommand executes a command inside a the first container in a running pod
 func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
+	return f.ExecAnyCommand(exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s --container nginx-ingress-controller -- %s", KubectlPath, pod.Namespace, pod.Name, command)))
+}
+
+// ExecAnyCommand executes a command on your system, not inside a kubernetes pod
+func (f *Framework) ExecAnyCommand(cmd *exec.Cmd) (string, error) {
 	var (
 		execOut bytes.Buffer
 		execErr bytes.Buffer
 	)
 
-	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s --container nginx-ingress-controller -- %s", KubectlPath, pod.Namespace, pod.Name, command))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 
@@ -60,6 +64,7 @@ func (f *Framework) ExecCommand(pod *v1.Pod, command string) (string, error) {
 	}
 
 	return execOut.String(), nil
+
 }
 
 // NewIngressController deploys a new NGINX Ingress controller in a namespace

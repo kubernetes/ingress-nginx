@@ -19,3 +19,4 @@ set -o nounset
 set -o pipefail
 
 ginkgo build ./test/e2e
+go build -o ./test/e2e/kubectl-ingress_nginx ./cmd/plugin

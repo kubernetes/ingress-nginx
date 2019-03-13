@@ -6,12 +6,12 @@ all: container
 
 container:
 	make -C ../../ e2e-test-binary
-
 	cp ../e2e/e2e.test .
+	cp ../e2e/kubectl-ingress_nginx .
 	cp ../e2e/wait-for-nginx.sh .
 
 	docker build -t $(IMAGE) .
 
 clean:
-	rm -rf _cache e2e.test kubectl cluster ginkgo
+	rm -rf _cache e2e.test kubectl kubectl-ingress_nginx cluster ginkgo
 	docker rmi -f $(IMAGE) || true

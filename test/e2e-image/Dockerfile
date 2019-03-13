@@ -14,9 +14,10 @@ RUN curl -Lo /usr/local/bin/kubectl \
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/
 
-COPY e2e.sh             /e2e.sh
-COPY manifests          /manifests
-COPY wait-for-nginx.sh  /
-COPY e2e.test           /
+COPY e2e.sh                 /e2e.sh
+COPY manifests              /manifests
+COPY wait-for-nginx.sh      /
+COPY kubectl-ingress_nginx  /
+COPY e2e.test               /
 
 CMD [ "/e2e.sh" ]
