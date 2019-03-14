@@ -42,23 +42,13 @@ var _ = framework.IngressNginxDescribe("kubectl plugin", func() {
 	annotations := map[string]string{}
 
 	BeforeEach(func() {
-		err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
-			func(deployment *appsv1beta1.Deployment) error {
-				args := deployment.Spec.Template.Spec.Containers[0].Args
-				args = append(args, "--enable-dynamic-certificates")
-				args = append(args, "--enable-ssl-chain-completion=false")
-				deployment.Spec.Template.Spec.Containers[0].Args = args
-				_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace).Update(deployment)
-
-				return err
-			})
-		Expect(err).NotTo(HaveOccurred())
+		f.NewEchoDeploymentWithReplicas(1)
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, "ok, res = pcall(require, \"certificate\")") && strings.Contains(cfg, host)
+				return strings.Contains(cfg, host)
 			})
 	})
 
@@ -76,6 +66,18 @@ var _ = framework.IngressNginxDescribe("kubectl plugin", func() {
 
 	Context("the certs subcommand", func() {
 		It("should find and return an extant cert", func() {
+			err := framework.UpdateDeployment(f.KubeClientSet, f.Namespace, "nginx-ingress-controller", 1,
+				func(deployment *appsv1beta1.Deployment) error {
+					args := deployment.Spec.Template.Spec.Containers[0].Args
+					args = append(args, "--enable-dynamic-certificates")
+					args = append(args, "--enable-ssl-chain-completion=false")
+					deployment.Spec.Template.Spec.Containers[0].Args = args
+					_, err := f.KubeClientSet.AppsV1beta1().Deployments(f.Namespace).Update(deployment)
+
+					return err
+				})
+			Expect(err).NotTo(HaveOccurred())
+
 			ing, err := f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Get(host, metav1.GetOptions{})
 			Expect(err).ToNot(HaveOccurred())
 			ing.Spec.TLS = []extensions.IngressTLS{
@@ -91,6 +93,12 @@ var _ = framework.IngressNginxDescribe("kubectl plugin", func() {
 			Expect(err).ToNot(HaveOccurred())
 			_, err = f.KubeClientSet.ExtensionsV1beta1().Ingresses(f.Namespace).Update(ing)
 			Expect(err).ToNot(HaveOccurred())
+
+			f.WaitForNginxConfiguration(
+				func(cfg string) bool {
+					return strings.Contains(cfg, "ok, res = pcall(require, \"certificate\")")
+				})
+
 			time.Sleep(5 * time.Second)
 
 			cmd := exec.Command("/kubectl-ingress_nginx", "certs", "--host", host, "--namespace", f.Namespace)
@@ -177,9 +185,8 @@ var _ = framework.IngressNginxDescribe("kubectl plugin", func() {
 			}
 			Expect(len(columns)).Should(Or(Equal(7), Equal(6)))
 
-			Expect(columns[0]).Should(Equal("foo.com"))  // INGRESS
-			Expect(columns[1]).Should(Equal(host + "/")) // HOST+PATH
-
+			Expect(columns[0]).Should(Equal("foo.com"))    // INGRESS
+			Expect(columns[1]).Should(Equal(host + "/"))   // HOST+PATH
 			i := len(columns) - 6                          // If it exists, skip ADDRESSES
 			Expect(columns[2+i]).Should(Equal("NO"))       // TLS
 			Expect(columns[3+i]).Should(Equal("http-svc")) // SERVICE NAME
