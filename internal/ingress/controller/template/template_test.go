@@ -516,7 +516,7 @@ func TestBuildResolversForLua(t *testing.T) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
-	expected = "\"192.0.0.1\", \"2001:db8:1234::\""
+	expected = "\"192.0.0.1\", \"[2001:db8:1234::]\""
 	actual = buildResolversForLua(ipList, false)
 
 	if expected != actual {
