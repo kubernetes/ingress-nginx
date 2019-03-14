@@ -35,6 +35,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 
 	"k8s.io/ingress-nginx/internal/ingress"
+	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -464,30 +465,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						loc.Port = ups.Port
 						loc.Service = ups.Service
 						loc.Ingress = ing
-						loc.BasicDigestAuth = anns.BasicDigestAuth
-						loc.ClientBodyBufferSize = anns.ClientBodyBufferSize
-						loc.ConfigurationSnippet = anns.ConfigurationSnippet
-						loc.CorsConfig = anns.CorsConfig
-						loc.ExternalAuth = anns.ExternalAuth
-						loc.HTTP2PushPreload = anns.HTTP2PushPreload
-						loc.Proxy = anns.Proxy
-						loc.RateLimit = anns.RateLimit
-						loc.Redirect = anns.Redirect
-						loc.Rewrite = anns.Rewrite
-						loc.UpstreamVhost = anns.UpstreamVhost
-						loc.Whitelist = anns.Whitelist
-						loc.Denied = anns.Denied
-						loc.XForwardedPrefix = anns.XForwardedPrefix
-						loc.UsePortInRedirects = anns.UsePortInRedirects
-						loc.Connection = anns.Connection
-						loc.Logs = anns.Logs
-						loc.LuaRestyWAF = anns.LuaRestyWAF
-						loc.InfluxDB = anns.InfluxDB
-						loc.DefaultBackend = anns.DefaultBackend
-						loc.BackendProtocol = anns.BackendProtocol
-						loc.CustomHTTPErrors = anns.CustomHTTPErrors
-						loc.ModSecurity = anns.ModSecurity
-						loc.Satisfy = anns.Satisfy
+						locationApplyAnnotations(loc, anns)
 
 						if loc.Redirect.FromToWWW {
 							server.RedirectFromToWWW = true
@@ -502,36 +480,14 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 						nginxPath, server.Hostname, ups.Name, ingKey)
 
 					loc := &ingress.Location{
-						Path:                 nginxPath,
-						Backend:              ups.Name,
-						IsDefBackend:         false,
-						Service:              ups.Service,
-						Port:                 ups.Port,
-						Ingress:              ing,
-						BasicDigestAuth:      anns.BasicDigestAuth,
-						ClientBodyBufferSize: anns.ClientBodyBufferSize,
-						ConfigurationSnippet: anns.ConfigurationSnippet,
-						CorsConfig:           anns.CorsConfig,
-						ExternalAuth:         anns.ExternalAuth,
-						Proxy:                anns.Proxy,
-						RateLimit:            anns.RateLimit,
-						Redirect:             anns.Redirect,
-						Rewrite:              anns.Rewrite,
-						UpstreamVhost:        anns.UpstreamVhost,
-						Whitelist:            anns.Whitelist,
-						Denied:               anns.Denied,
-						XForwardedPrefix:     anns.XForwardedPrefix,
-						UsePortInRedirects:   anns.UsePortInRedirects,
-						Connection:           anns.Connection,
-						Logs:                 anns.Logs,
-						LuaRestyWAF:          anns.LuaRestyWAF,
-						InfluxDB:             anns.InfluxDB,
-						DefaultBackend:       anns.DefaultBackend,
-						BackendProtocol:      anns.BackendProtocol,
-						CustomHTTPErrors:     anns.CustomHTTPErrors,
-						ModSecurity:          anns.ModSecurity,
-						Satisfy:              anns.Satisfy,
+						Path:         nginxPath,
+						Backend:      ups.Name,
+						IsDefBackend: false,
+						Service:      ups.Service,
+						Port:         ups.Port,
+						Ingress:      ing,
 					}
+					locationApplyAnnotations(loc, anns)
 
 					if loc.Redirect.FromToWWW {
 						server.RedirectFromToWWW = true
@@ -968,25 +924,12 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					defLoc.Service = backendUpstream.Service
 					defLoc.Ingress = ing
 
-					// customize using Ingress annotations
-					defLoc.Logs = anns.Logs
-					defLoc.BasicDigestAuth = anns.BasicDigestAuth
-					defLoc.ClientBodyBufferSize = anns.ClientBodyBufferSize
-					defLoc.ConfigurationSnippet = anns.ConfigurationSnippet
-					defLoc.CorsConfig = anns.CorsConfig
-					defLoc.ExternalAuth = anns.ExternalAuth
-					defLoc.Proxy = anns.Proxy
-					defLoc.RateLimit = anns.RateLimit
 					// TODO: Redirect and rewrite can affect the catch all behavior, skip for now
-					// defLoc.Redirect = anns.Redirect
-					// defLoc.Rewrite = anns.Rewrite
-					defLoc.UpstreamVhost = anns.UpstreamVhost
-					defLoc.Whitelist = anns.Whitelist
-					defLoc.Denied = anns.Denied
-					defLoc.LuaRestyWAF = anns.LuaRestyWAF
-					defLoc.InfluxDB = anns.InfluxDB
-					defLoc.BackendProtocol = anns.BackendProtocol
-					defLoc.ModSecurity = anns.ModSecurity
+					originalRedirect := defLoc.Redirect
+					originalRewrite := defLoc.Rewrite
+					locationApplyAnnotations(defLoc, anns)
+					defLoc.Redirect = originalRedirect
+					defLoc.Rewrite = originalRewrite
 				} else {
 					klog.V(3).Infof("Ingress %q defines both a backend and rules. Using its backend as default upstream for all its rules.",
 						ingKey)
@@ -1004,37 +947,18 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				continue
 			}
 
+			loc := &ingress.Location{
+				Path:         rootLocation,
+				IsDefBackend: true,
+				Backend:      un,
+				Service:      &apiv1.Service{},
+			}
+			locationApplyAnnotations(loc, anns)
+
 			servers[host] = &ingress.Server{
 				Hostname: host,
 				Locations: []*ingress.Location{
-					{
-						Path:                 rootLocation,
-						IsDefBackend:         true,
-						Backend:              un,
-						Service:              &apiv1.Service{},
-						BasicDigestAuth:      anns.BasicDigestAuth,
-						ClientBodyBufferSize: anns.ClientBodyBufferSize,
-						ConfigurationSnippet: anns.ConfigurationSnippet,
-						CorsConfig:           anns.CorsConfig,
-						ExternalAuth:         anns.ExternalAuth,
-						Proxy:                anns.Proxy,
-						RateLimit:            anns.RateLimit,
-						Redirect:             anns.Redirect,
-						Rewrite:              anns.Rewrite,
-						UpstreamVhost:        anns.UpstreamVhost,
-						Whitelist:            anns.Whitelist,
-						Denied:               anns.Denied,
-						XForwardedPrefix:     anns.XForwardedPrefix,
-						UsePortInRedirects:   anns.UsePortInRedirects,
-						Connection:           anns.Connection,
-						Logs:                 anns.Logs,
-						LuaRestyWAF:          anns.LuaRestyWAF,
-						InfluxDB:             anns.InfluxDB,
-						DefaultBackend:       anns.DefaultBackend,
-						BackendProtocol:      anns.BackendProtocol,
-						CustomHTTPErrors:     anns.CustomHTTPErrors,
-						ModSecurity:          anns.ModSecurity,
-					},
+					loc,
 				},
 				SSLPassthrough: anns.SSLPassthrough,
 				SSLCiphers:     anns.SSLCiphers,
@@ -1151,6 +1075,33 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	}
 
 	return servers
+}
+
+func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) {
+	loc.BasicDigestAuth = anns.BasicDigestAuth
+	loc.ClientBodyBufferSize = anns.ClientBodyBufferSize
+	loc.ConfigurationSnippet = anns.ConfigurationSnippet
+	loc.CorsConfig = anns.CorsConfig
+	loc.ExternalAuth = anns.ExternalAuth
+	loc.HTTP2PushPreload = anns.HTTP2PushPreload
+	loc.Proxy = anns.Proxy
+	loc.RateLimit = anns.RateLimit
+	loc.Redirect = anns.Redirect
+	loc.Rewrite = anns.Rewrite
+	loc.UpstreamVhost = anns.UpstreamVhost
+	loc.Whitelist = anns.Whitelist
+	loc.Denied = anns.Denied
+	loc.XForwardedPrefix = anns.XForwardedPrefix
+	loc.UsePortInRedirects = anns.UsePortInRedirects
+	loc.Connection = anns.Connection
+	loc.Logs = anns.Logs
+	loc.LuaRestyWAF = anns.LuaRestyWAF
+	loc.InfluxDB = anns.InfluxDB
+	loc.DefaultBackend = anns.DefaultBackend
+	loc.BackendProtocol = anns.BackendProtocol
+	loc.CustomHTTPErrors = anns.CustomHTTPErrors
+	loc.ModSecurity = anns.ModSecurity
+	loc.Satisfy = anns.Satisfy
 }
 
 // OK to merge canary ingresses iff there exists one or more ingresses to potentially merge into
