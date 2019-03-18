@@ -141,7 +141,7 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", false,
+		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", true,
 			`Dynamically update SSL certificates instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
 
