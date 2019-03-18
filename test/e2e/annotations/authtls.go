@@ -55,22 +55,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
-		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
-		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslKeyDirective := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-
-		sslVerify := "ssl_verify_client on;"
-		sslVerifyDepth := "ssl_verify_depth 1;"
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, sslCertDirective) &&
-					strings.Contains(server, sslKeyDirective) &&
-					strings.Contains(server, sslClientCertDirective) &&
-					strings.Contains(server, sslVerify) &&
-					strings.Contains(server, sslVerifyDepth)
-			})
+		assertSslClientCertificateConfig(f, host, "on", "1")
 
 		// Send Request without Client Certs
 		req := gorequest.New()
@@ -112,18 +97,7 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
-		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
-		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslKeyDirective := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-
-		sslVerify := "ssl_verify_client off;"
-		sslVerifyDepth := "ssl_verify_depth 2;"
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, sslCertDirective) && strings.Contains(server, sslKeyDirective) && strings.Contains(server, sslClientCertDirective) && strings.Contains(server, sslVerify) && strings.Contains(server, sslVerifyDepth)
-			})
+		assertSslClientCertificateConfig(f, host, "off", "2")
 
 		// Send Request without Client Certs
 		req := gorequest.New()
@@ -158,24 +132,14 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, "http-svc", 80, &annotations))
 
-		// Since we can use the same certificate-chain for tls as well as mutual-auth, we will check all values
-		sslCertDirective := fmt.Sprintf("ssl_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslKeyDirective := fmt.Sprintf("ssl_certificate_key /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
-		sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", nameSpace, host)
+		assertSslClientCertificateConfig(f, host, "on", "1")
 
-		sslVerify := "ssl_verify_client on;"
-		sslVerifyDepth := "ssl_verify_depth 1;"
 		sslErrorPage := fmt.Sprintf("error_page 495 496 = %s;", f.GetURL(framework.HTTP)+errorPath)
 		sslUpstreamClientCert := "proxy_set_header ssl-client-cert $ssl_client_escaped_cert;"
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, sslCertDirective) &&
-					strings.Contains(server, sslKeyDirective) &&
-					strings.Contains(server, sslClientCertDirective) &&
-					strings.Contains(server, sslVerify) &&
-					strings.Contains(server, sslVerifyDepth) &&
-					strings.Contains(server, sslErrorPage) &&
+				return strings.Contains(server, sslErrorPage) &&
 					strings.Contains(server, sslUpstreamClientCert)
 			})
 
@@ -202,3 +166,20 @@ var _ = framework.IngressNginxDescribe("Annotations - AuthTLS", func() {
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	})
 })
+
+func assertSslClientCertificateConfig(f *framework.Framework, host string, verifyClient string, verifyDepth string) {
+	sslCertDirective := "ssl_certificate /etc/ingress-controller/ssl/default-fake-certificate.pem;"
+	sslKeyDirective := "ssl_certificate_key /etc/ingress-controller/ssl/default-fake-certificate.pem;"
+	sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, host)
+	sslVerify := fmt.Sprintf("ssl_verify_client %s;", verifyClient)
+	sslVerifyDepth := fmt.Sprintf("ssl_verify_depth %s;", verifyDepth)
+
+	f.WaitForNginxServer(host,
+		func(server string) bool {
+			return strings.Contains(server, sslCertDirective) &&
+				strings.Contains(server, sslKeyDirective) &&
+				strings.Contains(server, sslClientCertDirective) &&
+				strings.Contains(server, sslVerify) &&
+				strings.Contains(server, sslVerifyDepth)
+		})
+}
