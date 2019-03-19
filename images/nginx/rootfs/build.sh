@@ -611,10 +611,6 @@ rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
 rm -rf $HOME/.hunter
 
-# move geoip directory
-mv /geoip/* /etc/nginx/geoip
-rm -rf /geoip
-
 # update image permissions
 writeDirs=( \
   /etc/nginx \
