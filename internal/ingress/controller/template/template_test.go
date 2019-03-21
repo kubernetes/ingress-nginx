@@ -448,7 +448,7 @@ func TestBuildAuthResponseHeaders(t *testing.T) {
 		"proxy_set_header 'H-With-Caps-And-Dashes' $authHeader1;",
 	}
 
-	headers := buildAuthResponseHeaders(externalAuthResponseHeaders)
+	headers := buildAuthResponseHeaders(proxySetHeader(nil), externalAuthResponseHeaders)
 
 	if !reflect.DeepEqual(expected, headers) {
 		t.Errorf("Expected \n'%v'\nbut returned \n'%v'", expected, headers)
