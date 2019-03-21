@@ -26,7 +26,7 @@ GOHOSTOS ?= $(shell go env GOHOSTOS)
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?= .*
 # number of parallel test
-E2E_NODES ?= 8
+E2E_NODES ?= 10
 # slow test only if takes > 50s
 SLOW_E2E_THRESHOLD ?= 50
 
@@ -184,10 +184,10 @@ lua-test:
 .PHONY: e2e-test
 e2e-test:
 	if  [ "$(KUBECTL_CONTEXT)" != "minikube" ] && \
-		[ "$(KUBECTL_CONTEXT)" != "kind" ] && \
+		[ "$(KUBECTL_CONTEXT)" =~ .*kind* ] && \
 		[ "$(KUBECTL_CONTEXT)" != "dind" ] && \
 		[ "$(KUBECTL_CONTEXT)" != "docker-for-desktop" ]; then \
-		echo "kubectl context is "$(KUBECTL_CONTEXT)", but must be one of [minikube, kind, dind, docker-for-deskop]"; \
+		echo "kubectl context is "$(KUBECTL_CONTEXT)", but must be one of [minikube, *kind*, dind, docker-for-deskop]"; \
 		exit 1; \
 	fi
 
