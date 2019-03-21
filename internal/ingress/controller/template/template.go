@@ -374,11 +374,12 @@ func buildAuthResponseHeaders(input interface{}) []string {
 		return res
 	}
 
+	k := proxySetHeader(input)
 	for i, h := range location.ExternalAuth.ResponseHeaders {
 		hvar := strings.ToLower(h)
 		hvar = strings.NewReplacer("-", "_").Replace(hvar)
 		res = append(res, fmt.Sprintf("auth_request_set $authHeader%v $upstream_http_%v;", i, hvar))
-		res = append(res, fmt.Sprintf("proxy_set_header '%v' $authHeader%v;", h, i))
+		res = append(res, fmt.Sprintf("%s '%v' $authHeader%v;", k, h, i))
 	}
 	return res
 }
