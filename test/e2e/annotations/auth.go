@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -320,6 +321,57 @@ var _ = framework.IngressNginxDescribe("Annotations - Auth", func() {
 			}
 			Expect(resp.StatusCode).Should(Equal(http.StatusFound))
 			Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d"))))
+		})
+	})
+
+	Context("when external authentication and auth-response-headers are configured", func() {
+		host := "auth"
+		rewriteHeader := "Foo"
+		rewriteVal := "baz"
+
+		BeforeEach(func() {
+			f.NewHttpbinDeployment()
+
+			var httpbinIP string
+
+			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "httpbin", f.Namespace, 1)
+			Expect(err).NotTo(HaveOccurred())
+
+			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get("httpbin", metav1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+
+			httpbinIP = e.Subsets[0].Addresses[0].IP
+
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/auth-url":              fmt.Sprintf("http://%s/response-headers?%s=%s", httpbinIP, rewriteHeader, rewriteVal),
+				"nginx.ingress.kubernetes.io/auth-response-headers": rewriteHeader,
+			}
+
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "httpbin", 80, &annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host, func(server string) bool {
+				return Expect(server).Should(ContainSubstring("server_name auth"))
+			})
+		})
+
+		It("should rewrite Foo header from auth response", func() {
+			resp, _, errs := gorequest.New().
+				Get(f.GetURL(framework.HTTP)+"/anything").
+				Retry(10, 1*time.Second, http.StatusNotFound).
+				Set("Host", host).
+				Set(rewriteHeader, "bar").
+				End()
+
+			for _, err := range errs {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			var results struct {
+				Headers map[string]string
+			}
+			json.NewDecoder(resp.Body).Decode(&results)
+			Expect(results.Headers[rewriteHeader]).Should(Equal(rewriteVal))
 		})
 	})
 })
