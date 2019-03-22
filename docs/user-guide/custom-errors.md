@@ -3,15 +3,16 @@
 When the [`custom-http-errors`][cm-custom-http-errors] option is enabled, the Ingress controller configures NGINX so
 that it passes several HTTP headers down to its `default-backend` in case of error:
 
-| Header           | Value                                            |
-| ---------------- | ------------------------------------------------ |
-| `X-Code`         | HTTP status code retuned by the request          |
-| `X-Format`       | Value of the `Accept` header sent by the client  |
-| `X-Original-URI` | URI that caused the error                        |
-| `X-Namespace`    | Namespace where the backend Service is located   |
-| `X-Ingress-Name` | Name of the Ingress where the backend is defined |
-| `X-Service-Name` | Name of the Service backing the backend          |
-| `X-Service-Port` | Port number of the Service backing the backend   |
+| Header           | Value                                                               |
+| ---------------- | ------------------------------------------------------------------- |
+| `X-Code`         | HTTP status code retuned by the request                             |
+| `X-Format`       | Value of the `Accept` header sent by the client                     |
+| `X-Original-URI` | URI that caused the error                                           |
+| `X-Namespace`    | Namespace where the backend Service is located                      |
+| `X-Ingress-Name` | Name of the Ingress where the backend is defined                    |
+| `X-Service-Name` | Name of the Service backing the backend                             |
+| `X-Service-Port` | Port number of the Service backing the backend                      |
+| `X-Request-ID`   | Unique ID that identifies the request - same as for backend service |
 
 A custom error backend can use this information to return the best possible representation of an error page. For
 example, if the value of the `Accept` header send by the client was `application/json`, a carefully crafted backend
