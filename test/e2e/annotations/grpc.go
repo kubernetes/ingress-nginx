@@ -33,9 +33,9 @@ var _ = framework.IngressNginxDescribe("Annotations - grpc", func() {
 	})
 
 	Context("when grpc is enabled", func() {
-		It("should use grpc_pass in the configuration file", func() {
-			host := "grpc"
+		host := "grpc"
 
+		It("should use grpc_pass in the configuration file", func() {
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 			}
@@ -53,6 +53,27 @@ var _ = framework.IngressNginxDescribe("Annotations - grpc", func() {
 					return Expect(server).Should(ContainSubstring("grpc_pass")) &&
 						Expect(server).Should(ContainSubstring("grpc_set_header")) &&
 						Expect(server).ShouldNot(ContainSubstring("proxy_pass"))
+				})
+		})
+
+		It("external auth response headers should use grpc_set_header in the configuration file", func() {
+			annotations := map[string]string{
+				"nginx.ingress.kubernetes.io/auth-url":              "http://authhost",
+				"nginx.ingress.kubernetes.io/auth-response-headers": "Foo",
+				"nginx.ingress.kubernetes.io/backend-protocol":      "GRPC",
+			}
+
+			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring(fmt.Sprintf("server_name %v", host)))
+				})
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return Expect(server).Should(ContainSubstring("grpc_set_header 'Foo'"))
 				})
 		})
 	})
