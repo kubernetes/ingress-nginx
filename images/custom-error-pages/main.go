@@ -55,7 +55,7 @@ const (
 	// ServicePort name of the header that contains the matched Service port in the Ingress
 	ServicePort = "X-Service-Port"
 
-	// Unique ID that identifies the request - same as for backend service
+	// RequestId is a unique ID that identifies the request - same as for backend service
 	RequestId = "X-Request-ID"
 
 	// ErrFilesPathVar is the name of the environment variable indicating
