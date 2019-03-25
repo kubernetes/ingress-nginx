@@ -1381,7 +1381,7 @@ stream {
             proxy_cache_methods           {{ $location.Cache.Methods }};
             proxy_cache_valid             200 302 {{ $location.Cache.TTL }};
 
-            proxy_cache_key               "$scheme$host$request_uri";
+            proxy_cache_key               "$scheme:$host$request_uri";
 
             proxy_cache_lock              on;
 
@@ -1447,6 +1447,25 @@ stream {
 
             proxy_pass http://{{ $all.Cfg.JWKSUpstream }};
 
+        }
+        {{ end }}
+        {{ if $all.Cfg.PurgeableCaches }}
+        location ~ ^/__purge/([\w-]+)/([\w-]+)$ {
+            {{ range $v := $all.NginxStatusIpv4Whitelist }}
+            allow {{ $v }};
+            {{ end }}
+            {{ if $all.IsIPV6Enabled -}}
+            {{ range $v := $all.NginxStatusIpv6Whitelist }}
+            allow {{ $v }};
+            {{ end }}
+            {{ end -}}
+            deny all;
+            if ($request_method = PURGE) {
+                content_by_lua_block {
+                  local cache_purge = require "cache_purge"
+                  cache_purge.purge("/var/lib/nginx/cache", ngx.var[1], ngx.var[2])
+                }
+           }
         }
         {{ end }}
 

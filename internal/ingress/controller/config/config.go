@@ -576,6 +576,8 @@ type Configuration struct {
 	JWKSCacheTTL string `json:"jwt-jwks-cache-ttl"`
 	//
 	JWKSCacheUseStale string `json:"jwt-jwks-cache-use-stale"`
+	//
+	PurgeableCaches bool `json:"enable-cache-purge"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -708,6 +710,7 @@ func NewDefault() Configuration {
 		JWKSEnableCache:              true,
 		JWKSCacheTTL:                 "10m",
 		JWKSCacheUseStale:            "off",
+		PurgeableCaches:              false,
 	}
 
 	if klog.V(5) {
