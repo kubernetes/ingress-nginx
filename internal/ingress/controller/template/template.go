@@ -204,7 +204,7 @@ func shouldConfigureLuaRestyWAF(disableLuaRestyWAF bool, mode string) bool {
 }
 
 func shouldConfigureAccessBlock(disableLuaRestyWAF bool, mode string, jwtLocationEnabled bool, jwtGlobalEnabled bool) bool {
-	return shouldConfigureLuaRestyWAF(disableLuaRestyWAF, mode) && jwtLocationEnabled && jwtGlobalEnabled
+	return shouldConfigureLuaRestyWAF(disableLuaRestyWAF, mode) || (jwtLocationEnabled && jwtGlobalEnabled)
 }
 
 func buildLuaSharedDictionaries(s interface{}, disableLuaRestyWAF bool) string {
