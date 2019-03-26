@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.82
+FROM quay.io/kubernetes-ingress-controller/nginx-amd64:0.83
 
 RUN clean-install \
   g++ \
@@ -25,9 +25,9 @@ RUN clean-install \
   python \
   pkg-config
 
-ENV GOLANG_VERSION 1.12
+ENV GOLANG_VERSION 1.12.1
 ENV GO_ARCH        linux-amd64
-ENV GOLANG_SHA     750a07fef8579ae4839458701f4df690e0b20b8bcce33b437e4df89c451b6f13
+ENV GOLANG_SHA     2a3fdabf665496a0db5f41ec6af7a9b15a49fbe71a85a50ca38b1f13a103aeec
 
 RUN set -eux; \
   url="https://golang.org/dl/go${GOLANG_VERSION}.${GO_ARCH}.tar.gz"; \

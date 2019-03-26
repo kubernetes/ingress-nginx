@@ -40,7 +40,7 @@ if [ "$missing" = true ];then
   exit 1
 fi
 
-E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v03192019-080bed8e8
+E2E_IMAGE=quay.io/kubernetes-ingress-controller/e2e:v03262019-b033fbf0b
 
 DOCKER_OPTS=${DOCKER_OPTS:-""}
 
