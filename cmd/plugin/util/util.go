@@ -18,6 +18,9 @@ package util
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+
 	"github.com/spf13/cobra"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -28,6 +31,11 @@ const (
 	DefaultIngressDeploymentName = "nginx-ingress-controller"
 	DefaultIngressServiceName    = "ingress-nginx"
 )
+
+// IssuePrefix is the github url that we can append an issue number to to link to it
+const IssuePrefix = "https://github.com/kubernetes/ingress-nginx/issues/"
+
+var versionRegex = regexp.MustCompile(`(\d)+\.(\d)+\.(\d)+.*`)
 
 // PrintError receives an error value and prints it if it exists
 func PrintError(e error) {
@@ -49,6 +57,48 @@ func printOrError(s string, e error) error {
 	}
 	fmt.Print(s)
 	return nil
+}
+
+// ParseVersionString returns the major, minor, and patch numbers of a verison string
+func ParseVersionString(v string) (int, int, int, error) {
+	parts := versionRegex.FindStringSubmatch(v)
+
+	if len(parts) != 4 {
+		return 0, 0, 0, fmt.Errorf("Could not parse %v as a version string (like 0.20.3)", v)
+	}
+
+	major, _ := strconv.Atoi(parts[1])
+	minor, _ := strconv.Atoi(parts[2])
+	patch, _ := strconv.Atoi(parts[3])
+
+	return major, minor, patch, nil
+}
+
+// InVersionRangeInclusive checks that the middle version is between the other two versions
+func InVersionRangeInclusive(start, v, stop string) bool {
+	return !isVersionLessThan(v, start) && !isVersionLessThan(stop, v)
+}
+
+func isVersionLessThan(a, b string) bool {
+	aMajor, aMinor, aPatch, err := ParseVersionString(a)
+	if err != nil {
+		panic(err)
+	}
+
+	bMajor, bMinor, bPatch, err := ParseVersionString(b)
+	if err != nil {
+		panic(err)
+	}
+
+	if aMajor != bMajor {
+		return aMajor < bMajor
+	}
+
+	if aMinor != bMinor {
+		return aMinor < bMinor
+	}
+
+	return aPatch < bPatch
 }
 
 // AddPodFlag adds a --pod flag to a cobra command

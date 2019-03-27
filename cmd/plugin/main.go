@@ -18,8 +18,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
@@ -34,6 +35,7 @@ import (
 	"k8s.io/ingress-nginx/cmd/plugin/commands/general"
 	"k8s.io/ingress-nginx/cmd/plugin/commands/info"
 	"k8s.io/ingress-nginx/cmd/plugin/commands/ingresses"
+	"k8s.io/ingress-nginx/cmd/plugin/commands/lint"
 	"k8s.io/ingress-nginx/cmd/plugin/commands/logs"
 	"k8s.io/ingress-nginx/cmd/plugin/commands/ssh"
 )
@@ -57,6 +59,7 @@ func main() {
 	rootCmd.AddCommand(logs.CreateCommand(flags))
 	rootCmd.AddCommand(exec.CreateCommand(flags))
 	rootCmd.AddCommand(ssh.CreateCommand(flags))
+	rootCmd.AddCommand(lint.CreateCommand(flags))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
