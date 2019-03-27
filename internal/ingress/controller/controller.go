@@ -1114,7 +1114,7 @@ func nonCanaryIngressExists(ingresses []*ingress.Ingress, canaryIngresses []*ing
 // 2) primary name is not the default upstream
 // 3) the primary has a server
 func canMergeBackend(primary *ingress.Backend, alternative *ingress.Backend) bool {
-	return primary.Name != alternative.Name && primary.Name != defUpstreamName && !primary.NoServer
+	return alternative != nil && primary.Name != alternative.Name && primary.Name != defUpstreamName && !primary.NoServer
 }
 
 // Performs the merge action and checks to ensure that one two alternative backends do not merge into each other
@@ -1151,22 +1151,27 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 
 		altUps := upstreams[upsName]
 
-		merged := false
+		if altUps == nil {
+			klog.Warningf("alternative backend %s has already been removed", upsName)
+		} else {
 
-		for _, loc := range servers[defServerName].Locations {
-			priUps := upstreams[loc.Backend]
+			merged := false
 
-			if canMergeBackend(priUps, altUps) {
-				klog.V(2).Infof("matching backend %v found for alternative backend %v",
-					priUps.Name, altUps.Name)
+			for _, loc := range servers[defServerName].Locations {
+				priUps := upstreams[loc.Backend]
 
-				merged = mergeAlternativeBackend(priUps, altUps)
+				if canMergeBackend(priUps, altUps) {
+					klog.V(2).Infof("matching backend %v found for alternative backend %v",
+						priUps.Name, altUps.Name)
+
+					merged = mergeAlternativeBackend(priUps, altUps)
+				}
 			}
-		}
 
-		if !merged {
-			klog.Warningf("unable to find real backend for alternative backend %v. Deleting.", altUps.Name)
-			delete(upstreams, altUps.Name)
+			if !merged {
+				klog.Warningf("unable to find real backend for alternative backend %v. Deleting.", altUps.Name)
+				delete(upstreams, altUps.Name)
+			}
 		}
 	}
 
@@ -1175,6 +1180,11 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			upsName := upstreamName(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
 
 			altUps := upstreams[upsName]
+
+			if altUps == nil {
+				klog.Warningf("alternative backend %s has already been removed", upsName)
+				continue
+			}
 
 			merged := false
 
