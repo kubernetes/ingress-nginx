@@ -18,10 +18,13 @@ package request
 
 import (
 	"fmt"
+
+	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	appsv1client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	extensions "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
 	"k8s.io/ingress-nginx/cmd/plugin/util"
@@ -64,6 +67,26 @@ func GetDeploymentPod(flags *genericclioptions.ConfigFlags, deployment string) (
 	}
 
 	return ings[0], nil
+}
+
+// GetDeployments returns an array of Deployments
+func GetDeployments(flags *genericclioptions.ConfigFlags, namespace string) ([]appsv1.Deployment, error) {
+	rawConfig, err := flags.ToRESTConfig()
+	if err != nil {
+		return make([]appsv1.Deployment, 0), err
+	}
+
+	api, err := appsv1client.NewForConfig(rawConfig)
+	if err != nil {
+		return make([]appsv1.Deployment, 0), err
+	}
+
+	deployments, err := api.Deployments(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return make([]appsv1.Deployment, 0), err
+	}
+
+	return deployments.Items, nil
 }
 
 // GetIngressDefinitions returns an array of Ingress resource definitions
