@@ -72,13 +72,16 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 
 	It("should redirect from www HTTPS to HTTPS", func() {
 		By("setting up server for redirect from www")
-		host := "fromtowwwredirect.bar.com"
+
+		fromHost := fmt.Sprintf("%s.nip.io", f.GetNginxIP())
+		toHost := fmt.Sprintf("www.%s", fromHost)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/from-to-www-redirect": "true",
+			"nginx.ingress.kubernetes.io/from-to-www-redirect":  "true",
+			"nginx.ingress.kubernetes.io/configuration-snippet": "more_set_headers \"ExpectedHost: $http_host\";",
 		}
 
-		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host, fmt.Sprintf("www.%v", host)}, f.Namespace, "http-svc", 80, &annotations)
+		ing := framework.NewSingleIngressWithTLS(fromHost, "/", fromHost, []string{fromHost, toHost}, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
 		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
@@ -87,29 +90,43 @@ var _ = framework.IngressNginxDescribe("Annotations - from-to-www-redirect", fun
 			ing.Namespace)
 		Expect(err).ToNot(HaveOccurred())
 
-		f.WaitForNginxServer(fmt.Sprintf("www.%v", host),
+		f.WaitForNginxServer(toHost,
 			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`server_name www.fromtowwwredirect.bar.com;`)) &&
-					Expect(server).Should(ContainSubstring(`return 308 $scheme://fromtowwwredirect.bar.com$request_uri;`))
+				return Expect(server).Should(ContainSubstring(fmt.Sprintf(`server_name %v;`, toHost))) &&
+					Expect(server).Should(ContainSubstring(fmt.Sprintf(`return 308 $scheme://%v$request_uri;`, fromHost)))
 			})
 
-		By("sending request to www.fromtowwwredirect.bar.com")
-
-		h := fmt.Sprintf("%s.%s", "www", host)
+		By("sending request to www should redirect to domain without www")
 
 		resp, _, errs := gorequest.New().
 			TLSClientConfig(&tls.Config{
 				InsecureSkipVerify: true,
-				ServerName:         h,
+				ServerName:         toHost,
 			}).
 			Get(f.GetURL(framework.HTTPS)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
 			RedirectPolicy(noRedirectPolicyFunc).
-			Set("host", h).
+			Set("host", toHost).
 			End()
 
 		Expect(errs).Should(BeEmpty())
 		Expect(resp.StatusCode).Should(Equal(http.StatusPermanentRedirect))
-		Expect(resp.Header.Get("Location")).Should(Equal("https://fromtowwwredirect.bar.com/"))
+		Expect(resp.Header.Get("Location")).Should(Equal(fmt.Sprintf("https://%v/", fromHost)))
+
+		By("sending request to domain should redirect to domain with www")
+
+		req := gorequest.New().
+			TLSClientConfig(&tls.Config{
+				InsecureSkipVerify: true,
+				ServerName:         toHost,
+			}).
+			Get(f.GetURL(framework.HTTPS)).
+			Set("host", toHost)
+
+		resp, _, errs = req.End()
+
+		Expect(errs).Should(BeEmpty())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(resp.Header.Get("ExpectedHost")).Should(Equal(fromHost))
 	})
 })

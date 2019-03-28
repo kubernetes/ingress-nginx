@@ -964,6 +964,26 @@ func configureCertificates(pcfg *ingress.Configuration) error {
 				PemCertKey: server.SSLCert.PemCertKey,
 			},
 		})
+
+		if server.Alias != "" && server.SSLCert.PemCertKey != "" &&
+			ssl.IsValidHostname(server.Alias, server.SSLCert.CN) {
+			servers = append(servers, &ingress.Server{
+				Hostname: server.Alias,
+				SSLCert: ingress.SSLCert{
+					PemCertKey: server.SSLCert.PemCertKey,
+				},
+			})
+		}
+	}
+
+	redirects := buildRedirects(pcfg.Servers)
+	for _, redirect := range redirects {
+		servers = append(servers, &ingress.Server{
+			Hostname: redirect.From,
+			SSLCert: ingress.SSLCert{
+				PemCertKey: redirect.SSLCert.PemCertKey,
+			},
+		})
 	}
 
 	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/servers", "application/json", servers)
