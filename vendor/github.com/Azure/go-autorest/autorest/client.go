@@ -16,6 +16,7 @@ package autorest
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -230,6 +231,11 @@ func (c Client) Do(r *http.Request) (*http.Response, error) {
 func (c Client) sender() Sender {
 	if c.Sender == nil {
 		j, _ := cookiejar.New(nil)
+		tracing.Transport.Base = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+			},
+		}
 		client := &http.Client{Jar: j, Transport: tracing.Transport}
 		return client
 	}

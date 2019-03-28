@@ -24,6 +24,7 @@ import (
 	"time"
 )
 
+// Exemplars keys.
 const (
 	KeyTraceID   = "trace_id"
 	KeySpanID    = "span_id"
@@ -66,7 +67,7 @@ func RegisterAttachmentExtractor(e AttachmentExtractor) {
 	extractors = append(extractors, e)
 }
 
-// NewFromContext extracts exemplars from the given context.
+// AttachmentsFromContext extracts exemplars from the given context.
 // Each registered AttachmentExtractor (see RegisterAttachmentExtractor) is called in an
 // unspecified order to add attachments to the exemplar.
 func AttachmentsFromContext(ctx context.Context) Attachments {
