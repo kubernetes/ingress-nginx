@@ -47,7 +47,7 @@ func main() {
 	}
 
 	// Respect some basic kubectl flags like --namespace
-	flags := genericclioptions.NewConfigFlags()
+	flags := genericclioptions.NewConfigFlags(true)
 	flags.AddFlags(rootCmd.PersistentFlags())
 
 	rootCmd.AddCommand(ingresses.CreateCommand(flags))
