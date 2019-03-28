@@ -1152,6 +1152,10 @@ that it passes several HTTP headers down to its <code class="codehilite">default
 <td><code class="codehilite">X-Service-Port</code></td>
 <td>Port number of the Service backing the backend</td>
 </tr>
+<tr>
+<td><code class="codehilite">X-Request-ID</code></td>
+<td>Unique ID that identifies the request - same as for backend service</td>
+</tr>
 </tbody>
 </table>
 <p>A custom error backend can use this information to return the best possible representation of an error page. For
