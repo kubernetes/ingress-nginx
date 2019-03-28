@@ -44,4 +44,4 @@ Install [releasetool](https://github.com/googleapis/releasetool).
    description, copy the changes added to CHANGES.md.
 
 
-[releases]: https://github.com/GoogleCloudPlatform/google-cloud-go/releases
+[releases]: https://github.com/googleapis/google-cloud-go/releases

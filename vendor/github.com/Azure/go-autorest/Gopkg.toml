@@ -19,6 +19,11 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+required = ["golang.org/x/lint/golint"]
+
+[prune]
+  unused-packages = true
+  go-tests = true
 
 [[constraint]]
   name = "github.com/dgrijalva/jwt-go"
@@ -38,8 +43,8 @@
 
 [[constraint]]
   name = "go.opencensus.io"
-  version = "0.18.0"
+  version = "0.19.2"
 
 [[constraint]]
   name = "contrib.go.opencensus.io/exporter/ocagent"
-  version = "0.2.0"
+  version = "0.4.5"
