@@ -181,6 +181,10 @@ func (f Future) WaitForCompletion(ctx context.Context, client autorest.Client) e
 // running operation has completed, the provided context is cancelled, or the client's
 // polling duration has been exceeded.  It will retry failed polling attempts based on
 // the retry value defined in the client up to the maximum retry attempts.
+// If no deadline is specified in the context then the client.PollingDuration will be
+// used to determine if a default deadline should be used.
+// If PollingDuration is greater than zero the value will be used as the context's timeout.
+// If PollingDuration is zero then no default deadline will be used.
 func (f *Future) WaitForCompletionRef(ctx context.Context, client autorest.Client) (err error) {
 	ctx = tracing.StartSpan(ctx, "github.com/Azure/go-autorest/autorest/azure/async.WaitForCompletionRef")
 	defer func() {
@@ -192,7 +196,9 @@ func (f *Future) WaitForCompletionRef(ctx context.Context, client autorest.Clien
 		tracing.EndSpan(ctx, sc, err)
 	}()
 	cancelCtx := ctx
-	if d := client.PollingDuration; d != 0 {
+	// if the provided context already has a deadline don't override it
+	_, hasDeadline := ctx.Deadline()
+	if d := client.PollingDuration; !hasDeadline && d != 0 {
 		var cancel context.CancelFunc
 		cancelCtx, cancel = context.WithTimeout(ctx, d)
 		defer cancel()
@@ -824,8 +830,6 @@ func (pt *pollingTrackerPut) updatePollingMethod() error {
 				pt.URI = lh
 				pt.Pm = PollingLocation
 			}
-			// when both headers are returned we use the value in the Location header for the final GET
-			pt.FinalGetURI = lh
 		}
 		// make sure a polling URL was found
 		if pt.URI == "" {

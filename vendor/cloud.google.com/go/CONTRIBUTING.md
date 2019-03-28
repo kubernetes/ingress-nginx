@@ -26,6 +26,10 @@ provide a commit message, and use `git codereview mail` to create a Gerrit CL.
 1. Keep amending to the change with `git codereview change` and mail as your
 receive feedback. Each new mailed amendment will create a new patch set for
 your change in Gerrit.
+    - Note: if your change includes a breaking change, our breaking change
+    detector will cause CI/CD to fail. If your breaking change is acceptable
+    in some way, add BREAKING_CHANGE_ACCEPTABLE=<reason> to cause the
+    detector not to be run and to make it clear why that is acceptable.
 
 ## Integration Tests
 
@@ -121,7 +125,7 @@ $ gcloud config set project $GCLOUD_TESTS_GOLANG_PROJECT_ID
 $ gcloud auth login
 
 # Create the indexes used in the datastore integration tests.
-$ gcloud datastore create-indexes datastore/testdata/index.yaml
+$ gcloud datastore indexes create datastore/testdata/index.yaml
 
 # Creates a Google Cloud storage bucket with the same name as your test project,
 # and with the Stackdriver Logging service account as owner, for the sink
