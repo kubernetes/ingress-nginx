@@ -19,8 +19,8 @@ package framework
 import (
 	. "github.com/onsi/gomega"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -68,12 +68,12 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 		},
 	}
 
-	deployment := &extensions.Deployment{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: f.Namespace,
 		},
-		Spec: extensions.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Replicas: NewInt32(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{

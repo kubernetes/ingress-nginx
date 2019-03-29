@@ -38,6 +38,7 @@ will build `master`, which doesn't handle the dependencies well.
 * The `kubernetes` package contains the clientset to access Kubernetes API.
 * The `discovery` package is used to discover APIs supported by a Kubernetes API server.
 * The `dynamic` package contains a dynamic client that can perform generic operations on arbitrary Kubernetes API objects.
+* The `plugin/pkg/client/auth` packages contain optional authentication plugins for obtaining credentials from external sources.
 * The `transport` package is used to set up auth and start a connection.
 * The `tools/cache` package is useful for writing controllers.
 

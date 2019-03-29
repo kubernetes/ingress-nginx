@@ -23,6 +23,7 @@ import (
 
 	. "github.com/onsi/gomega"
 
+	appsv1 "k8s.io/api/apps/v1"
 	api "k8s.io/api/core/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -108,11 +109,11 @@ func (f *Framework) EnsureService(service *core.Service) *core.Service {
 }
 
 // EnsureDeployment creates a Deployment object or returns it if it already exists.
-func (f *Framework) EnsureDeployment(deployment *extensions.Deployment) (*extensions.Deployment, error) {
-	d, err := f.KubeClientSet.Extensions().Deployments(deployment.Namespace).Update(deployment)
+func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	d, err := f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Update(deployment)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
-			return f.KubeClientSet.Extensions().Deployments(deployment.Namespace).Create(deployment)
+			return f.KubeClientSet.AppsV1().Deployments(deployment.Namespace).Create(deployment)
 		}
 		return nil, err
 	}

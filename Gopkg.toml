@@ -20,7 +20,7 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
-ignored = ["github.com/kubernetes/ingress-nginx/images/grpc-fortune-teller*"]
+ignored = ["k8s.io/ingress-nginx/images/*"]
 
 [prune]
   non-go = true
@@ -34,16 +34,8 @@ ignored = ["github.com/kubernetes/ingress-nginx/images/grpc-fortune-teller*"]
   non-go = false
 
 [[override]]
-  name = "github.com/docker/distribution"
-  revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
-
-[[override]]
   name = "gopkg.in/fsnotify.v1"
   source = "https://github.com/fsnotify/fsnotify.git"
-
-[[override]]
-    name = "github.com/golang/glog"
-    source = "k8s.io/klog/glog"
 
 [[constraint]]
   name = "github.com/eapache/channels"
@@ -99,28 +91,28 @@ ignored = ["github.com/kubernetes/ingress-nginx/images/grpc-fortune-teller*"]
 
 [[constraint]]
   name = "k8s.io/kubernetes"
-  revision = "v1.13.3"
+  revision = "v1.14.0"
 
 [[constraint]]
   name = "k8s.io/api"
-  revision = "kubernetes-1.13.3"
+  revision = "kubernetes-1.14.0"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  revision = "kubernetes-1.13.3"
+  revision = "kubernetes-1.14.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  revision = "kubernetes-1.13.3"
+  revision = "release-11.0"
 
 [[constraint]]
   name = "k8s.io/apiextensions-apiserver"
-  revision = "kubernetes-1.13.3"
-
-[[constraint]]
-  name = "k8s.io/apiserver"
-  revision = "kubernetes-1.13.3"
+  revision = "kubernetes-1.14.0"
 
 [[constraint]]
   name = "k8s.io/cli-runtime"
-  revision = "kubernetes-1.13.3"
+  revision = "kubernetes-1.14.0"
+
+[[constraint]]
+  name = "k8s.io/apiserver"
+  revision = "kubernetes-1.14.0"

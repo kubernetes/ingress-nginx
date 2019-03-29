@@ -18,9 +18,17 @@ package ssl
 
 import (
 	"bytes"
+	"crypto"
+	"crypto/rand"
+	cryptorand "crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"errors"
 	"fmt"
+	"math"
+	"math/big"
 	"testing"
 	"time"
 
@@ -36,7 +44,7 @@ func generateRSACerts(host string) (*keyPair, *keyPair, error) {
 		return nil, nil, err
 	}
 
-	key, err := certutil.NewPrivateKey()
+	key, err := newPrivateKey()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create a server private key: %v", err)
 	}
@@ -45,7 +53,7 @@ func generateRSACerts(host string) (*keyPair, *keyPair, error) {
 		CommonName: host,
 		Usages:     []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
 	}
-	cert, err := certutil.NewSignedCert(config, key, ca.Cert, ca.Key)
+	cert, err := newSignedCert(config, key, ca.Cert, ca.Key)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to sign the server certificate: %v", err)
 	}
@@ -66,8 +74,8 @@ func TestStoreSSLCertOnDisk(t *testing.T) {
 
 	name := fmt.Sprintf("test-%v", time.Now().UnixNano())
 
-	c := certutil.EncodeCertPEM(cert.Cert)
-	k := certutil.EncodePrivateKeyPEM(cert.Key)
+	c := encodeCertPEM(cert.Cert)
+	k := encodePrivateKeyPEM(cert.Key)
 
 	sslCert, err := CreateSSLCert(c, k)
 	if err != nil {
@@ -102,9 +110,9 @@ func TestCACert(t *testing.T) {
 
 	name := fmt.Sprintf("test-%v", time.Now().UnixNano())
 
-	c := certutil.EncodeCertPEM(cert.Cert)
-	k := certutil.EncodePrivateKeyPEM(cert.Key)
-	ca := certutil.EncodeCertPEM(CA.Cert)
+	c := encodeCertPEM(cert.Cert)
+	k := encodePrivateKeyPEM(cert.Key)
+	ca := encodeCertPEM(CA.Cert)
 
 	sslCert, err := CreateSSLCert(c, k)
 	if err != nil {
@@ -151,7 +159,7 @@ func TestConfigureCACert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error creating SSL certificate: %v", err)
 	}
-	c := certutil.EncodeCertPEM(ca.Cert)
+	c := encodeCertPEM(ca.Cert)
 
 	sslCert, err := CreateCACert(c)
 	if err != nil {
@@ -187,8 +195,8 @@ func TestCreateSSLCert(t *testing.T) {
 		t.Fatalf("unexpected error creating SSL certificate: %v", err)
 	}
 
-	c := certutil.EncodeCertPEM(cert.Cert)
-	k := certutil.EncodePrivateKeyPEM(cert.Key)
+	c := encodeCertPEM(cert.Cert)
+	k := encodePrivateKeyPEM(cert.Key)
 
 	sslCert, err := CreateSSLCert(c, k)
 	if err != nil {
@@ -219,7 +227,7 @@ type keyPair struct {
 }
 
 func newCA(name string) (*keyPair, error) {
-	key, err := certutil.NewPrivateKey()
+	key, err := newPrivateKey()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create a private key for a new CA: %v", err)
 	}
@@ -270,4 +278,78 @@ func TestIsValidHostname(t *testing.T) {
 			t.Errorf("%s: expected '%v' but returned %v", k, tc.Valid, valid)
 		}
 	}
+}
+
+const (
+	duration365d = time.Hour * 24 * 365
+	rsaKeySize   = 2048
+)
+
+// newPrivateKey creates an RSA private key
+func newPrivateKey() (*rsa.PrivateKey, error) {
+	return rsa.GenerateKey(cryptorand.Reader, rsaKeySize)
+}
+
+// newSignedCert creates a signed certificate using the given CA certificate and key
+func newSignedCert(cfg certutil.Config, key crypto.Signer, caCert *x509.Certificate, caKey crypto.Signer) (*x509.Certificate, error) {
+	serial, err := rand.Int(rand.Reader, new(big.Int).SetInt64(math.MaxInt64))
+	if err != nil {
+		return nil, err
+	}
+	if len(cfg.CommonName) == 0 {
+		return nil, errors.New("must specify a CommonName")
+	}
+	if len(cfg.Usages) == 0 {
+		return nil, errors.New("must specify at least one ExtKeyUsage")
+	}
+
+	certTmpl := x509.Certificate{
+		Subject: pkix.Name{
+			CommonName:   cfg.CommonName,
+			Organization: cfg.Organization,
+		},
+		DNSNames:     cfg.AltNames.DNSNames,
+		IPAddresses:  cfg.AltNames.IPs,
+		SerialNumber: serial,
+		NotBefore:    caCert.NotBefore,
+		NotAfter:     time.Now().Add(duration365d).UTC(),
+		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  cfg.Usages,
+	}
+	certDERBytes, err := x509.CreateCertificate(cryptorand.Reader, &certTmpl, caCert, key.Public(), caKey)
+	if err != nil {
+		return nil, err
+	}
+	return x509.ParseCertificate(certDERBytes)
+}
+
+// encodePublicKeyPEM returns PEM-encoded public data
+func encodePublicKeyPEM(key *rsa.PublicKey) ([]byte, error) {
+	der, err := x509.MarshalPKIXPublicKey(key)
+	if err != nil {
+		return []byte{}, err
+	}
+	block := pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: der,
+	}
+	return pem.EncodeToMemory(&block), nil
+}
+
+// encodePrivateKeyPEM returns PEM-encoded private key data
+func encodePrivateKeyPEM(key *rsa.PrivateKey) []byte {
+	block := pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(key),
+	}
+	return pem.EncodeToMemory(&block)
+}
+
+// encodeCertPEM returns PEM-endcoded certificate data
+func encodeCertPEM(cert *x509.Certificate) []byte {
+	block := pem.Block{
+		Type:  certutil.CertificateBlockType,
+		Bytes: cert.Raw,
+	}
+	return pem.EncodeToMemory(&block)
 }
