@@ -78,7 +78,22 @@ func GetIngressLints() []IngressLint {
 			message: "Contains an annotation with the prefix 'nginx.com'. This is a prefix for https://github.com/nginxinc/kubernetes-ingress",
 			f:       annotationPrefixIsNginxCom,
 		},
+		{
+			message: "The x-forwarded-prefix annotation value is a boolean instead of a string",
+			issue:   3786,
+			version: "0.24.0",
+			f:       xForwardedPrefixIsBool,
+		},
 	}
+}
+
+func xForwardedPrefixIsBool(ing v1beta1.Ingress) bool {
+	for name, val := range ing.Annotations {
+		if strings.HasSuffix(name, "/x-forwarded-prefix") && (val == "true" || val == "false") {
+			return true
+		}
+	}
+	return false
 }
 
 func annotationPrefixIsNginxCom(ing v1beta1.Ingress) bool {
