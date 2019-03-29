@@ -1,7 +1,10 @@
 OpenCensus Proto - Language Independent Interface Types For OpenCensus
 ===============================================================
+[![Gitter chat][gitter-image]][gitter-url]
 [![Build Status][travis-image]][travis-url]
 [![Maven Central][maven-image]][maven-url]
+[![Javadocs][javadoc-image]][javadoc-url]
+[![GoDoc][godoc-image]][godoc-url]
 
 Census provides a framework to define and collect stats against metrics and to
 break those stats down across user-defined dimensions.
@@ -31,19 +34,25 @@ For Maven add to `pom.xml`:
 <dependency>
   <groupId>io.opencensus</groupId>
   <artifactId>opencensus-proto</artifactId>
-  <version>0.0.2</version>
+  <version>0.1.0</version>
 </dependency>
 ```
 
 For Gradle add to dependencies:
 ```gradle
-compile 'io.opencensus:opencensus-proto:0.0.2'
+compile 'io.opencensus:opencensus-proto:0.1.0'
 ```
 
 [travis-image]: https://travis-ci.org/census-instrumentation/opencensus-proto.svg?branch=master
 [travis-url]: https://travis-ci.org/census-instrumentation/opencensus-proto
 [maven-image]: https://maven-badges.herokuapp.com/maven-central/io.opencensus/opencensus-proto/badge.svg
 [maven-url]: https://maven-badges.herokuapp.com/maven-central/io.opencensus/opencensus-proto
+[gitter-image]: https://badges.gitter.im/census-instrumentation/lobby.svg
+[gitter-url]: https://gitter.im/census-instrumentation/lobby
+[javadoc-image]: https://www.javadoc.io/badge/io.opencensus/opencensus-proto.svg
+[javadoc-url]: https://www.javadoc.io/doc/io.opencensus/opencensus-proto
+[godoc-image]: https://godoc.org/github.com/census-instrumentation/opencensus-proto?status.svg
+[godoc-url]: https://godoc.org/github.com/census-instrumentation/opencensus-proto
 
 ### Add the dependencies to Bazel project
 
@@ -52,7 +61,7 @@ In WORKSPACE, add:
 git_repository(
     name = "io_opencensus_proto",
     strip_prefix = "src",
-    tag = "v0.0.2", # CURRENT_OPENCENSUS_PROTO_VERSION
+    tag = "v0.1.0", # CURRENT_OPENCENSUS_PROTO_VERSION
     remote = "https://github.com/census-instrumentation/opencensus-proto",
 )
 ```

@@ -43,7 +43,7 @@ var _ = framework.IngressNginxDescribe("[Serial] Pod Security Policies", func() 
 
 	BeforeEach(func() {
 		psp := createPodSecurityPolicy()
-		_, err := f.KubeClientSet.Extensions().PodSecurityPolicies().Create(psp)
+		_, err := f.KubeClientSet.ExtensionsV1beta1().PodSecurityPolicies().Create(psp)
 		if !k8sErrors.IsAlreadyExists(err) {
 			Expect(err).NotTo(HaveOccurred(), "creating Pod Security Policy")
 		}

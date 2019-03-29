@@ -20,13 +20,8 @@ STATICCHECK_IGNORE = \
   github.com/prometheus/client_golang/prometheus/promhttp/instrument_server_test.go:SA1019 \
   github.com/prometheus/client_golang/prometheus/http.go:SA1019
 
-.PHONY: get_dep
-get_dep:
-	@echo ">> getting dependencies" 
-	$(GO) get -t ./...
-
 .PHONY: test
-test: get_dep common-test
+test: deps common-test
 
 .PHONY: test-short
-test-short: get_dep common-test-short
+test-short: deps common-test-short
