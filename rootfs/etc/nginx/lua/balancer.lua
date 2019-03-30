@@ -195,7 +195,7 @@ local function route_to_alternative_balancer(balancer)
     local the_real_ip = ngx.var.the_real_ip
     if ngx.var.full_x_forwarded_for then
         local tmpIps = ngx_re.split(ngx.var.full_x_forwarded_for,",")
-        local the_real_ip = tmpIps[0]
+        the_real_ip = tmpIps[0]
     end
     if iputils.ip_in_cidrs(the_real_ip, whitelist) then
          return true

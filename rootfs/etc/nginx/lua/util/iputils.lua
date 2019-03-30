@@ -14,7 +14,6 @@ local _M = {
     _VERSION = '0.3.0',
 }
 
-local mt = { __index = _M }
 
 
 -- Precompute binary subnet masks...
@@ -25,7 +24,7 @@ end
 -- ... and their inverted counterparts
 local bin_inverted_masks = {}
 for i=0,32 do
-    local i = tostring(i)
+    i = tostring(i)
     bin_inverted_masks[i] = xor(bin_masks[i], bin_masks["32"])
 end
 
@@ -42,7 +41,7 @@ end
 
 
 local function enable_lrucache(size)
-    local size = size or 4000  -- Cache the last 4000 IPs (~1MB memory) by default
+    size = size or 4000  -- Cache the last 4000 IPs (~1MB memory) by default
     local lrucache_obj, err = require("resty.lrucache").new(size)
     if not lrucache_obj then
         return nil, "failed to create the cache: " .. (err or "unknown")
@@ -54,7 +53,7 @@ _M.enable_lrucache = enable_lrucache
 
 
 local function split_octets(input)
-    local pos = 0
+    local pos
     local prev = 0
     local octs = {}
 
