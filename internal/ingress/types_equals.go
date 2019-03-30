@@ -302,6 +302,9 @@ func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
 	if tsp1.Cookie != tsp2.Cookie {
 		return false
 	}
+	if tsp1.WhiteIps != tsp2.WhiteIps {
+		return false
+	}
 
 	return true
 }

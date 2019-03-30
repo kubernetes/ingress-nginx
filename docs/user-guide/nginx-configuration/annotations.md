@@ -33,6 +33,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string
 |[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-weight](#canary)|number|
+|[nginx.ingress.kubernetes.io/canary-by-white-ip](#canary)|string|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
@@ -114,8 +115,10 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 
 * `nginx.ingress.kubernetes.io/canary-weight`: The integer based (0 - 100) percent of random requests that should be routed to the service specified in the canary Ingress. A weight of 0 implies that no requests will be sent to the service in the Canary ingress by this canary rule. A weight of 100 means implies all requests will be sent to the alternative service specified in the Ingress.   
 
+* `nginx.ingress.kubernetes.io/canary-by-white-ip`: Allows access to the whitelisted IP. Support IP segment, multiple use `,` split.
+
 Canary rules are evaluated in order of precedence. Precedence is as follows: 
-`canary-by-header -> canary-by-cookie -> canary-weight` 
+`canary-by-header -> canary-by-cookie -> canary-weight -> canary-white-ip`  
 
 **Note** that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except `nginx.ingress.kubernetes.io/load-balance` and `nginx.ingress.kubernetes.io/upstream-hash-by`.
 

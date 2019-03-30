@@ -18,7 +18,6 @@ package canary
 
 import (
 	extensions "k8s.io/api/extensions/v1beta1"
-
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -35,6 +34,7 @@ type Config struct {
 	Header      string
 	HeaderValue string
 	Cookie      string
+	WhiteIps    string
 }
 
 // NewParser parses the ingress for canary related annotations
@@ -72,8 +72,12 @@ func (c canary) Parse(ing *extensions.Ingress) (interface{}, error) {
 	if err != nil {
 		config.Cookie = ""
 	}
-
-	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0) {
+	config.WhiteIps, err = parser.GetStringAnnotation("canary-by-white-ip", ing)
+	if err != nil {
+		config.WhiteIps = ""
+	}
+	
+	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0 || len(config.WhiteIps) > 0) {
 		return nil, errors.NewInvalidAnnotationConfiguration("canary", "configured but not enabled")
 	}
 

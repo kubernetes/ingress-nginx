@@ -8,6 +8,8 @@ local chash = require("balancer.chash")
 local chashsubset = require("balancer.chashsubset")
 local sticky = require("balancer.sticky")
 local ewma = require("balancer.ewma")
+local iputils = require("util.iputils")
+local ngx_re = require("ngx.re")
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -186,6 +188,20 @@ local function route_to_alternative_balancer(balancer)
     return true
   end
 
+  -- check whiteips
+  if traffic_shaping_policy.whiteIps ~= "" then
+    local white_ip = ngx_re.split(traffic_shaping_policy.whiteIps,",")
+    local whitelist = iputils.parse_cidrs(white_ip)
+    local the_real_ip = ngx.var.the_real_ip
+    if ngx.var.full_x_forwarded_for then
+        local tmpIps = ngx_re.split(ngx.var.full_x_forwarded_for,",")
+        local the_real_ip = tmpIps[0]
+    end
+    if iputils.ip_in_cidrs(the_real_ip, whitelist) then
+         return true
+    end
+  end
+
   return false
 end
 
@@ -210,6 +226,10 @@ function _M.init_worker()
   local _, err = ngx.timer.every(BACKENDS_SYNC_INTERVAL, sync_backends)
   if err then
     ngx.log(ngx.ERR, string.format("error when setting up timer.every for sync_backends: %s", tostring(err)))
+  end
+  -- add enable lru
+  if not ngx.worker.id() then
+      iputils.enable_lrucache()
   end
 end
 
