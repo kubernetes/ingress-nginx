@@ -46,12 +46,6 @@ var _ = framework.IngressNginxDescribe("Annotations - Forcesslredirect", func() 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, &annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return Expect(server).Should(ContainSubstring(`if ($redirect_to_https) {`)) &&
-					Expect(server).Should(ContainSubstring(`return 308 https://$redirect_host$request_uri;`))
-			})
-
 		resp, _, errs := gorequest.New().
 			Get(f.GetURL(framework.HTTP)).
 			Retry(10, 1*time.Second, http.StatusNotFound).
