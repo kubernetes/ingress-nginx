@@ -866,10 +866,14 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 	defaultPemSHA := n.cfg.FakeCertificateSHA
 
 	// read custom default SSL certificate, fall back to generated default certificate
-	defaultCertificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
-	if err == nil {
-		defaultPemFileName = defaultCertificate.PemFileName
-		defaultPemSHA = defaultCertificate.PemSHA
+	if n.cfg.DefaultSSLCertificate != "" {
+		defaultCertificate, err := n.store.GetLocalSSLCert(n.cfg.DefaultSSLCertificate)
+		if err == nil {
+			defaultPemFileName = defaultCertificate.PemFileName
+			defaultPemSHA = defaultCertificate.PemSHA
+		} else {
+			klog.Warningf("Error loading custom default certificate, falling back to generated default:\n%v", err)
+		}
 	}
 
 	// initialize default server and root location
