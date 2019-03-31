@@ -48,7 +48,7 @@ var (
 		Location         string
 		ProxyPass        string
 		Sticky           bool
-		XForwardedPrefix bool
+		XForwardedPrefix string
 		SecureBackend    bool
 		enforceRegex     bool
 	}{
@@ -58,7 +58,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			false,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -68,7 +68,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			false,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -78,7 +78,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			true,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -88,7 +88,7 @@ var (
 			"/",
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			false,
 		},
@@ -98,7 +98,7 @@ var (
 			"/",
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			false,
 		},
@@ -110,7 +110,7 @@ var (
 rewrite "(?i)/" /jenkins break;
 proxy_pass http://upstream_balancer;`,
 			false,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -122,7 +122,7 @@ proxy_pass http://upstream_balancer;`,
 rewrite "(?i)/" /something break;
 proxy_pass http://upstream_balancer;`,
 			true,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -134,7 +134,7 @@ proxy_pass http://upstream_balancer;`,
 rewrite "(?i)/" /something break;
 proxy_pass http://upstream_balancer;`,
 			true,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -147,7 +147,7 @@ rewrite "(?i)/there" /something break;
 proxy_set_header X-Forwarded-Prefix "/there";
 proxy_pass http://upstream_balancer;`,
 			true,
-			true,
+			"/there",
 			false,
 			true,
 		},
@@ -157,7 +157,7 @@ proxy_pass http://upstream_balancer;`,
 			`~* "^/something"`,
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			true,
 		},

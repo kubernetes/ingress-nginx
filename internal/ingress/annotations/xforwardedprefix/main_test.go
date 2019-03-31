@@ -35,13 +35,13 @@ func TestParse(t *testing.T) {
 
 	testCases := []struct {
 		annotations map[string]string
-		expected    bool
+		expected    string
 	}{
-		{map[string]string{annotation: "true"}, true},
-		{map[string]string{annotation: "1"}, true},
-		{map[string]string{annotation: ""}, false},
-		{map[string]string{}, false},
-		{nil, false},
+		{map[string]string{annotation: "true"}, "true"},
+		{map[string]string{annotation: "1"}, "1"},
+		{map[string]string{annotation: ""}, ""},
+		{map[string]string{}, ""},
+		{nil, ""},
 	}
 
 	ing := &extensions.Ingress{
