@@ -68,6 +68,16 @@ local function redirect_host()
   return host_port[1];
 end
 
+local function parse_x_forwarded_host()
+  local hosts, err = ngx_re_split(ngx.var.http_x_forwarded_host, ",")
+  if err then
+    ngx.log(ngx.ERR, string_format("could not parse variable: %s", err))
+    return ""
+  end
+
+  return hosts[1]
+end
+
 function _M.init_worker()
   randomseed()
 end
@@ -96,10 +106,7 @@ function _M.rewrite(location_config)
 
     -- Obtain best http host
     if ngx.var.http_x_forwarded_host then
-      -- TODO(elvinefendi) https://github.com/kubernetes/ingress-nginx/issues/3790 can
-      -- be fixed here by splitting the value of ngx.var.http_x_forwarded_host by ','
-      -- and taking the first portion
-      ngx.var.best_http_host = ngx.var.http_x_forwarded_host
+      ngx.var.best_http_host = parse_x_forwarded_host()
     end
   end
 
