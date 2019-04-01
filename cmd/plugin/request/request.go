@@ -253,7 +253,7 @@ func getDeploymentPods(flags *genericclioptions.ConfigFlags, deployment string) 
 
 	ingressPods := make([]apiv1.Pod, 0)
 	for _, pod := range pods {
-		if pod.Spec.Containers[0].Name == deployment {
+		if util.PodInDeployment(pod, deployment) {
 			ingressPods = append(ingressPods, pod)
 		}
 	}
