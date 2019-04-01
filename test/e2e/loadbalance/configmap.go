@@ -17,10 +17,9 @@ limitations under the License.
 package loadbalance
 
 import (
-	"regexp"
+	"encoding/json"
 	"strings"
-
-	"github.com/parnurzeal/gorequest"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,49 +27,46 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("Load Balance - Round Robin", func() {
-	f := framework.NewDefaultFramework("round-robin")
+const (
+	waitForLuaSync = 5 * time.Second
+)
+
+var _ = framework.IngressNginxDescribe("Load Balance - Configmap value", func() {
+	f := framework.NewDefaultFramework("lb-configmap")
 
 	BeforeEach(func() {
-		f.NewEchoDeploymentWithReplicas(3)
-		f.UpdateNginxConfigMapData("worker-processes", "1")
+		f.NewEchoDeploymentWithReplicas(1)
 	})
 
 	AfterEach(func() {
-		f.UpdateNginxConfigMapData("worker-processes", "")
 	})
 
-	It("should evenly distribute requests with round-robin (default algorithm)", func() {
+	It("should apply the configmap load-balance setting", func() {
 		host := "load-balance.com"
+
+		f.UpdateNginxConfigMapData("load-balance", "ewma")
 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, "http-svc", 80, nil))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "server_name load-balance.com")
 			})
+		time.Sleep(waitForLuaSync)
 
-		re, _ := regexp.Compile(`http-svc.*`)
-		replicaRequestCount := map[string]int{}
+		getCmd := "/dbg backends all"
+		output, err := f.ExecIngressPod(getCmd)
+		Expect(err).Should(BeNil())
 
-		for i := 0; i < 600; i++ {
-			_, body, errs := gorequest.New().
-				Get(f.GetURL(framework.HTTP)).
-				Set("Host", host).
-				End()
-			Expect(errs).Should(BeEmpty())
+		var backends []map[string]interface{}
+		unmarshalErr := json.Unmarshal([]byte(output), &backends)
+		Expect(unmarshalErr).Should(BeNil())
 
-			replica := re.FindString(body)
-			Expect(replica).ShouldNot(Equal(""))
-
-			if _, ok := replicaRequestCount[replica]; !ok {
-				replicaRequestCount[replica] = 1
-			} else {
-				replicaRequestCount[replica]++
+		for _, backend := range backends {
+			if backend["name"].(string) != "upstream-default-backend" {
+				lb, ok := backend["load-balance"].(string)
+				Expect(ok).Should(Equal(true))
+				Expect(lb).Should(Equal("ewma"))
 			}
-		}
-
-		for _, v := range replicaRequestCount {
-			Expect(v).Should(Equal(200))
 		}
 	})
 })
