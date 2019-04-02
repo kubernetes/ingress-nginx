@@ -585,11 +585,12 @@ Sets the algorithm to use for load balancing.
 The value can either be:
 
 - round_robin: to use the default round robin loadbalancer
-- least_conn: to use the least connected method (_note_ that this is available only in non-dynamic mode: `--enable-dynamic-configuration=false`)
-- ip_hash: to use a hash of the server for routing (_note_ that this is available only in non-dynamic mode: `--enable-dynamic-configuration=false`, but alternatively you can consider using `nginx.ingress.kubernetes.io/upstream-hash-by`)
 - ewma: to use the Peak EWMA method for routing ([implementation](https://github.com/kubernetes/ingress-nginx/blob/master/rootfs/etc/nginx/lua/balancer/ewma.lua))
 
 The default is `round_robin`.
+
+- To load balance using consistent hashing of IP or other variables, consider the `nginx.ingress.kubernetes.io/upstream-hash-by` annotation.
+- To load balance using session cookies, consider the `nginx.ingress.kubernetes.io/affinity` annotation.
 
 _References:_
 [http://nginx.org/en/docs/http/load_balancing.html](http://nginx.org/en/docs/http/load_balancing.html)

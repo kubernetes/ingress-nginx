@@ -619,18 +619,16 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 			klog.V(3).Infof("Creating upstream %q", defBackend)
 			upstreams[defBackend] = newUpstream(defBackend)
-			if upstreams[defBackend].SecureCACert.Secret == "" {
-				upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
-			}
 
-			if upstreams[defBackend].UpstreamHashBy.UpstreamHashBy == "" {
-				upstreams[defBackend].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
-				upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
-				upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
-			}
+			upstreams[defBackend].SecureCACert = anns.SecureUpstream.CACert
 
+			upstreams[defBackend].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
+			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
+			upstreams[defBackend].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
+
+			upstreams[defBackend].LoadBalancing = anns.LoadBalancing
 			if upstreams[defBackend].LoadBalancing == "" {
-				upstreams[defBackend].LoadBalancing = anns.LoadBalancing
+				upstreams[defBackend].LoadBalancing = n.store.GetBackendConfiguration().LoadBalancing
 			}
 
 			svcKey := fmt.Sprintf("%v/%v", ing.Namespace, ing.Spec.Backend.ServiceName)
@@ -687,18 +685,15 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				upstreams[name] = newUpstream(name)
 				upstreams[name].Port = path.Backend.ServicePort
 
-				if upstreams[name].SecureCACert.Secret == "" {
-					upstreams[name].SecureCACert = anns.SecureUpstream.CACert
-				}
+				upstreams[name].SecureCACert = anns.SecureUpstream.CACert
 
-				if upstreams[name].UpstreamHashBy.UpstreamHashBy == "" {
-					upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
-					upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
-					upstreams[name].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
-				}
+				upstreams[name].UpstreamHashBy.UpstreamHashBy = anns.UpstreamHashBy.UpstreamHashBy
+				upstreams[name].UpstreamHashBy.UpstreamHashBySubset = anns.UpstreamHashBy.UpstreamHashBySubset
+				upstreams[name].UpstreamHashBy.UpstreamHashBySubsetSize = anns.UpstreamHashBy.UpstreamHashBySubsetSize
 
+				upstreams[name].LoadBalancing = anns.LoadBalancing
 				if upstreams[name].LoadBalancing == "" {
-					upstreams[name].LoadBalancing = anns.LoadBalancing
+					upstreams[name].LoadBalancing = n.store.GetBackendConfiguration().LoadBalancing
 				}
 
 				svcKey := fmt.Sprintf("%v/%v", ing.Namespace, path.Backend.ServiceName)
