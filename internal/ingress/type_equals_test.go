@@ -71,3 +71,56 @@ func readJSON(p string) (*Configuration, error) {
 
 	return &c, nil
 }
+
+func TestL4ServiceElementsMatch(t *testing.T) {
+	testCases := []struct {
+		listA    []L4Service
+		listB    []L4Service
+		expected bool
+	}{
+		{nil, nil, true},
+		{[]L4Service{{Port: 80}}, nil, false},
+		{[]L4Service{{Port: 80}}, []L4Service{{Port: 80}}, true},
+		{
+			[]L4Service{
+				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.1"}}}},
+			[]L4Service{{Port: 80}},
+			false,
+		},
+		{
+			[]L4Service{
+				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.1"}, {Address: "1.1.1.2"}}}},
+			[]L4Service{
+				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.2"}, {Address: "1.1.1.1"}}}},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		result := compareL4Service(testCase.listA, testCase.listB)
+		if result != testCase.expected {
+			t.Errorf("expected %v but returned %v (%v - %v)", testCase.expected, result, testCase.listA, testCase.listB)
+		}
+	}
+}
+
+func TestIntElementsMatch(t *testing.T) {
+	testCases := []struct {
+		listA    []int
+		listB    []int
+		expected bool
+	}{
+		{nil, nil, true},
+		{[]int{}, nil, false},
+		{[]int{}, []int{1}, false},
+		{[]int{1}, []int{1}, true},
+		{[]int{1, 2, 3}, []int{3, 2, 1}, true},
+	}
+
+	for _, testCase := range testCases {
+		result := compareInts(testCase.listA, testCase.listB)
+		if result != testCase.expected {
+			t.Errorf("expected %v but returned %v (%v - %v)", testCase.expected, result, testCase.listA, testCase.listB)
+		}
+	}
+}
