@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	apiv1 "k8s.io/api/core/v1"
@@ -99,6 +100,25 @@ func isVersionLessThan(a, b string) bool {
 	}
 
 	return aPatch < bPatch
+}
+
+// PodInDeployment returns whether a pod is part of a deployment with the given name
+// a pod is considered to be in {deployment} if it is owned by a replicaset with a name of format {deployment}-otherchars
+func PodInDeployment(pod apiv1.Pod, deployment string) bool {
+	for _, owner := range pod.OwnerReferences {
+		if owner.Controller == nil || !*owner.Controller || owner.Kind != "ReplicaSet" {
+			continue
+		}
+
+		if strings.Count(owner.Name, "-") != strings.Count(deployment, "-")+1 {
+			continue
+		}
+
+		if strings.HasPrefix(owner.Name, deployment+"-") {
+			return true
+		}
+	}
+	return false
 }
 
 // AddPodFlag adds a --pod flag to a cobra command
