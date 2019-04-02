@@ -28,6 +28,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	"k8s.io/ingress-nginx/internal/sets"
 )
 
 // SourceRange returns the CIDR
@@ -44,21 +45,9 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 		return false
 	}
 
-	if len(sr1.CIDR) != len(sr2.CIDR) {
+	match := sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
+	if !match {
 		return false
-	}
-
-	for _, s1l := range sr1.CIDR {
-		found := false
-		for _, sl2 := range sr2.CIDR {
-			if s1l == sl2 {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
 	}
 
 	return true
