@@ -134,6 +134,7 @@ var (
 		"buildResolversForLua":       buildResolversForLua,
 		"configForLua":               configForLua,
 		"locationConfigForLua":       locationConfigForLua,
+		"buildLuaPluginsList":        buildLuaPluginsList,
 		"buildResolvers":             buildResolvers,
 		"buildUpstreamName":          buildUpstreamName,
 		"isLocationInLocationList":   isLocationInLocationList,
@@ -308,6 +309,23 @@ func locationConfigForLua(l interface{}, s interface{}, a interface{}) string {
 		force_ssl_redirect = %t,
 		use_port_in_redirects = %t,
 	}`, forceSSLRedirect, location.UsePortInRedirects)
+}
+
+// buildLuaPluginsList returns a Lua table of plugins to be enabled fortmatted as string
+func buildLuaPluginsList(input interface{}) string {
+	offlinePlugins, ok := input.([]string)
+	if !ok {
+		klog.Errorf("expected a '[]string' type but %T was given", offlinePlugins)
+		return "{}"
+	}
+
+	formattedNames := make([]string, len(offlinePlugins))
+	for i, rawName := range offlinePlugins {
+		name := strings.TrimSpace(rawName)
+		formattedNames[i] = fmt.Sprintf("\"%s\"", name)
+	}
+
+	return fmt.Sprintf("{%s}", strings.Join(formattedNames, ", "))
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file

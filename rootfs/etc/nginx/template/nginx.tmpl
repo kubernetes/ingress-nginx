@@ -109,7 +109,7 @@ http {
           plugins = res
         end
         -- load all plugins that'll be used here
-        plugins.init({})
+        plugins.init({{ buildLuaPluginsList $cfg.OfflinePlugins }})
     }
 
     init_worker_by_lua_block {

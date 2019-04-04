@@ -583,6 +583,9 @@ type Configuration struct {
 
 	// Block all requests with given Referer headers
 	BlockReferers []string `json:"block-referers"`
+
+	// Ordered list of offline plugins to enable from /etc/nginx/lua/plugins/
+	OfflinePlugins []string `json:"offline-plugins"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -608,6 +611,7 @@ func NewDefault() Configuration {
 		BlockCIDRs:                       defBlockEntity,
 		BlockUserAgents:                  defBlockEntity,
 		BlockReferers:                    defBlockEntity,
+		OfflinePlugins:                   make([]string, 0),
 		BrotliLevel:                      4,
 		BrotliTypes:                      brotliTypes,
 		ClientHeaderBufferSize:           "1k",

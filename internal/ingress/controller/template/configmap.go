@@ -136,6 +136,12 @@ func ReadConfig(src map[string]string) config.Configuration {
 		blockRefererList = strings.Split(val, ",")
 	}
 
+	offlinePlugins := make([]string, 0)
+	if val, ok := conf["offline-plugins"]; ok {
+		delete(conf, "offline-plugins")
+		offlinePlugins = strings.Split(val, ",")
+	}
+
 	if val, ok := conf[httpRedirectCode]; ok {
 		delete(conf, httpRedirectCode)
 		j, err := strconv.Atoi(val)
@@ -207,6 +213,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.BlockCIDRs = blockCIDRList
 	to.BlockUserAgents = blockUserAgentList
 	to.BlockReferers = blockRefererList
+	to.OfflinePlugins = offlinePlugins
 	to.HideHeaders = hideHeadersList
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
