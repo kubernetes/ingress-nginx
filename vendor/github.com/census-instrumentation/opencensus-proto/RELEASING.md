@@ -10,9 +10,9 @@ Other systems may also work, but we haven't verified them.
 
 ## Release Go files
 
-To generate the Go files from protos, you'll need to install protoc and protoc-gen-go plugin first.
-Follow the instructions [here](http://google.github.io/proto-lens/installing-protoc.html) and
-[here](https://github.com/golang/protobuf#installation).
+To generate the Go files from protos, you'll need to install protoc, protoc-gen-go and grpc-gateway plugins first.
+Follow the instructions [here](http://google.github.io/proto-lens/installing-protoc.html),
+[here](https://github.com/golang/protobuf#installation) and [here](https://github.com/grpc-ecosystem/grpc-gateway#installation).
 
 Then run the following commands to re-generate the gen-go files:
 

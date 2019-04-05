@@ -91,7 +91,7 @@ func NewPostStatusRequest(path, contentType string, data interface{}) (int, []by
 
 // GetServerBlock takes an nginx.conf file and a host and tries to find the server block for that host
 func GetServerBlock(conf string, host string) (string, error) {
-	startMsg := fmt.Sprintf("## start server %v", host)
+	startMsg := fmt.Sprintf("## start server %v\n", host)
 	endMsg := fmt.Sprintf("## end server %v", host)
 
 	blockStart := strings.Index(conf, startMsg)

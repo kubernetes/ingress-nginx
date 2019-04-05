@@ -52,3 +52,9 @@ func (dc DummyCollector) SetSSLExpireTime([]*ingress.Server) {}
 
 // SetHosts ...
 func (dc DummyCollector) SetHosts(hosts sets.String) {}
+
+// OnStartedLeading indicates the pod is not the current leader
+func (dc DummyCollector) OnStartedLeading(electionID string) {}
+
+// OnStoppedLeading indicates the pod is not the current leader
+func (dc DummyCollector) OnStoppedLeading(electionID string) {}

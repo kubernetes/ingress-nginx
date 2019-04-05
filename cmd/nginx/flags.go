@@ -106,7 +106,7 @@ Requires setting the publish-service parameter to a valid Service reference.`)
 		electionID = flags.String("election-id", "ingress-controller-leader",
 			`Election id to use for Ingress status updates.`)
 
-		forceIsolation = flags.Bool("force-namespace-isolation", false,
+		_ = flags.Bool("force-namespace-isolation", false,
 			`Force namespace isolation.
 Prevents Ingress objects from referencing Secrets and ConfigMaps located in a
 different namespace than their own. May be used together with watch-namespace.`)
@@ -141,7 +141,7 @@ extension for this to succeed.`)
 			`Customized address to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", false,
+		dynamicCertificatesEnabled = flags.Bool("enable-dynamic-certificates", true,
 			`Dynamically update SSL certificates instead of reloading NGINX.
 Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not enabled`)
 
@@ -162,6 +162,7 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 	)
 
 	flags.MarkDeprecated("status-port", `The status port is a unix socket now.`)
+	flags.MarkDeprecated("force-namespace-isolation", `This flag doesn't do anything.`)
 
 	flag.Set("logtostderr", "true")
 
@@ -243,7 +244,6 @@ Feature backed by OpenResty Lua libraries. Requires that OCSP stapling is not en
 		HealthCheckTimeout:         *healthCheckTimeout,
 		PublishService:             *publishSvc,
 		PublishStatusAddress:       *publishStatusAddress,
-		ForceNamespaceIsolation:    *forceIsolation,
 		UpdateStatusOnShutdown:     *updateStatusOnShutdown,
 		UseNodeInternalIP:          *useNodeInternalIP,
 		SyncRateLimit:              *syncRateLimit,

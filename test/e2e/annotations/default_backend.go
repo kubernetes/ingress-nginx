@@ -53,9 +53,11 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 				})
 
 			uri := "/alma/armud"
+			requestId := "something-unique"
 			resp, body, errs := gorequest.New().
 				Get(f.GetURL(framework.HTTP)+uri).
 				Set("Host", host).
+				Set("x-request-id", requestId).
 				End()
 
 			Expect(errs).Should(BeEmpty())
@@ -64,7 +66,7 @@ var _ = framework.IngressNginxDescribe("Annotations - custom default-backend", f
 			Expect(body).To(ContainSubstring("x-code=503"))
 			Expect(body).To(ContainSubstring(fmt.Sprintf("x-ingress-name=%s", host)))
 			Expect(body).To(ContainSubstring("x-service-name=invalid"))
-			Expect(body).To(ContainSubstring(fmt.Sprintf("x-original-uri=%s", uri)))
+			Expect(body).To(ContainSubstring(fmt.Sprintf("x-request-id=%s", requestId)))
 		})
 	})
 })

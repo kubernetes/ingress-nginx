@@ -2,6 +2,8 @@ language: go
 
 matrix:
   include:
+  - go: 1.12beta2
+    env: GO111MODULE=on
   - go: 1.11.x
     env: VET=1 GO111MODULE=on
   - go: 1.11.x
@@ -14,8 +16,6 @@ matrix:
   - go: 1.9.x
   - go: 1.9.x
     env: GAE=1
-  - go: 1.8.x
-  - go: 1.6.x
 
 go_import_path: google.golang.org/grpc
 

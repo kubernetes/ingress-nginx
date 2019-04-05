@@ -145,7 +145,6 @@ type SessionAffinityConfig struct {
 // +k8s:deepcopy-gen=true
 type CookieSessionAffinity struct {
 	Name      string              `json:"name"`
-	Hash      string              `json:"hash"`
 	Expires   string              `json:"expires,omitempty"`
 	MaxAge    string              `json:"maxage,omitempty"`
 	Locations map[string][]string `json:"locations,omitempty"`
@@ -293,7 +292,7 @@ type Location struct {
 	// XForwardedPrefix allows to add a header X-Forwarded-Prefix to the request with the
 	// original location.
 	// +optional
-	XForwardedPrefix bool `json:"xForwardedPrefix,omitempty"`
+	XForwardedPrefix string `json:"xForwardedPrefix,omitempty"`
 	// Logs allows to enable or disable the nginx logs
 	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`

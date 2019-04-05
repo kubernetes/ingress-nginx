@@ -27,6 +27,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/net"
+	"k8s.io/ingress-nginx/internal/sets"
 )
 
 const (
@@ -94,17 +95,9 @@ func (rt1 *Config) Equal(rt2 *Config) bool {
 		return false
 	}
 
-	for _, r1l := range rt1.Whitelist {
-		found := false
-		for _, rl2 := range rt2.Whitelist {
-			if r1l == rl2 {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	match := sets.StringElementsMatch(rt1.Whitelist, rt2.Whitelist)
+	if !match {
+		return false
 	}
 
 	return true

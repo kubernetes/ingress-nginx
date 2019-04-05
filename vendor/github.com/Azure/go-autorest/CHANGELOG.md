@@ -1,10 +1,75 @@
 # CHANGELOG
 
+## v11.7.0
+
+## New Features
+
+- Added methods to obtain a ServicePrincipalToken on the various credential configuration types in the `auth` package.
+
+## v11.6.1
+
+### Bug Fixes
+
+- Fix ACR DNS endpoint for government clouds.
+- Add Cosmos DB DNS endpoints.
+- Update dependencies to resolve build breaks in OpenCensus.
+
+## v11.6.0
+
+### New Features
+
+- Added type `autorest.BasicAuthorizer` to support Basic authentication.
+
+## v11.5.2
+
+### Bug Fixes
+
+- Fixed `GetTokenFromCLI` did not work with zsh.
+
+## v11.5.1
+
+### Bug Fixes
+
+- In `Client.sender()` set the minimum TLS version on HTTP clients to 1.2.
+
+## v11.5.0
+
+### New Features
+
+- The `auth` package has been refactored so that the environment and file settings are now available.
+- The methods used in `auth.NewAuthorizerFromEnvironment()` are now exported so that custom authorization chains can be created.
+- Added support for certificate authorization for file-based config.
+
+## v11.4.0
+
+### New Features
+
+- Added `adal.AddToUserAgent()` so callers can append custom data to the user-agent header used for ADAL requests.
+- Exported `adal.UserAgent()` for parity with `autorest.Client`.
+
+## v11.3.2
+
+### Bug Fixes
+
+- In `Future.WaitForCompletionRef()` if the provided context has a deadline don't add the default deadline.
+
+## v11.3.1
+
+### Bug Fixes
+
+- For an LRO PUT operation the final GET URL was incorrectly set to the Location polling header in some cases.
+
+## v11.3.0
+
+### New Features
+
+- Added method `ServicePrincipalToken()` to `DeviceFlowConfig` type.
+
 ## v11.2.8
 
 ### Bug Fixes
 
-- Deprecate content in the `version` package.  The functionality has been superseded by content in the `autorest` package.
+- Deprecate content in the `version` package. The functionality has been superseded by content in the `autorest` package.
 
 ## v11.2.7
 

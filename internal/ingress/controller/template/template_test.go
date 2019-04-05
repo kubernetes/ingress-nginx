@@ -48,7 +48,7 @@ var (
 		Location         string
 		ProxyPass        string
 		Sticky           bool
-		XForwardedPrefix bool
+		XForwardedPrefix string
 		SecureBackend    bool
 		enforceRegex     bool
 	}{
@@ -58,7 +58,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			false,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -68,7 +68,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			false,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -78,7 +78,7 @@ var (
 			"/",
 			"proxy_pass https://upstream_balancer;",
 			true,
-			false,
+			"",
 			true,
 			false,
 		},
@@ -88,7 +88,7 @@ var (
 			"/",
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			false,
 		},
@@ -98,7 +98,7 @@ var (
 			"/",
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			false,
 		},
@@ -110,7 +110,7 @@ var (
 rewrite "(?i)/" /jenkins break;
 proxy_pass http://upstream_balancer;`,
 			false,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -122,7 +122,7 @@ proxy_pass http://upstream_balancer;`,
 rewrite "(?i)/" /something break;
 proxy_pass http://upstream_balancer;`,
 			true,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -134,7 +134,7 @@ proxy_pass http://upstream_balancer;`,
 rewrite "(?i)/" /something break;
 proxy_pass http://upstream_balancer;`,
 			true,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -147,7 +147,7 @@ rewrite "(?i)/there" /something break;
 proxy_set_header X-Forwarded-Prefix "/there";
 proxy_pass http://upstream_balancer;`,
 			true,
-			true,
+			"/there",
 			false,
 			true,
 		},
@@ -157,7 +157,7 @@ proxy_pass http://upstream_balancer;`,
 			`~* "^/something"`,
 			"proxy_pass http://upstream_balancer;",
 			false,
-			false,
+			"",
 			false,
 			true,
 		},
@@ -516,7 +516,7 @@ func TestBuildResolversForLua(t *testing.T) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 
-	expected = "\"192.0.0.1\", \"2001:db8:1234::\""
+	expected = "\"192.0.0.1\", \"[2001:db8:1234::]\""
 	actual = buildResolversForLua(ipList, false)
 
 	if expected != actual {
@@ -832,16 +832,17 @@ func TestOpentracingPropagateContext(t *testing.T) {
 func TestGetIngressInformation(t *testing.T) {
 	validIngress := &ingress.Ingress{}
 	invalidIngress := "wrongtype"
+	host := "host1"
 	validPath := "/ok"
 	invalidPath := 10
 
-	info := getIngressInformation(invalidIngress, validPath)
+	info := getIngressInformation(invalidIngress, host, validPath)
 	expected := &ingressInformation{}
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}
 
-	info = getIngressInformation(validIngress, invalidPath)
+	info = getIngressInformation(validIngress, host, invalidPath)
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}
@@ -856,7 +857,7 @@ func TestGetIngressInformation(t *testing.T) {
 		ServiceName: "a-svc",
 	}
 
-	info = getIngressInformation(validIngress, validPath)
+	info = getIngressInformation(validIngress, host, validPath)
 	expected = &ingressInformation{
 		Namespace: "default",
 		Rule:      "validIng",
@@ -872,6 +873,7 @@ func TestGetIngressInformation(t *testing.T) {
 	validIngress.Spec.Backend = nil
 	validIngress.Spec.Rules = []extensions.IngressRule{
 		{
+			Host: host,
 			IngressRuleValue: extensions.IngressRuleValue{
 				HTTP: &extensions.HTTPIngressRuleValue{
 					Paths: []extensions.HTTPIngressPath{
@@ -888,7 +890,7 @@ func TestGetIngressInformation(t *testing.T) {
 		{},
 	}
 
-	info = getIngressInformation(validIngress, validPath)
+	info = getIngressInformation(validIngress, host, validPath)
 	expected = &ingressInformation{
 		Namespace: "default",
 		Rule:      "validIng",
@@ -897,6 +899,33 @@ func TestGetIngressInformation(t *testing.T) {
 		},
 		Service: "b-svc",
 	}
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	validIngress.Spec.Rules = append(validIngress.Spec.Rules, extensions.IngressRule{
+		Host: "host2",
+		IngressRuleValue: extensions.IngressRuleValue{
+			HTTP: &extensions.HTTPIngressRuleValue{
+				Paths: []extensions.HTTPIngressPath{
+					{
+						Path: "/ok",
+						Backend: extensions.IngressBackend{
+							ServiceName: "c-svc",
+						},
+					},
+				},
+			},
+		},
+	})
+
+	info = getIngressInformation(validIngress, host, validPath)
+	if !info.Equal(expected) {
+		t.Errorf("Expected %v, but got %v", expected, info)
+	}
+
+	info = getIngressInformation(validIngress, "host2", validPath)
+	expected.Service = "c-svc"
 	if !info.Equal(expected) {
 		t.Errorf("Expected %v, but got %v", expected, info)
 	}

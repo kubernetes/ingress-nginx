@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.15.9
+export NGINX_VERSION=1.15.10
 export NDK_VERSION=0.3.1rc1
 export SETMISC_VERSION=0.32
 export MORE_HEADERS_VERSION=0.33
@@ -39,7 +39,7 @@ export LUA_UPSTREAM_VERSION=0.07
 export NGINX_INFLUXDB_VERSION=0e2cb6cbf850a29c81e44be9e33d9a15d45c50e8
 export GEOIP2_VERSION=3.2
 export NGINX_AJP_VERSION=bf6cd93f2098b59260de8d494f0f4b1f11a84627
-export LUAJIT_VERSION=0e646b54e1368acb2e39d89014ae649207f4d0a0
+export LUAJIT_VERSION=2.1-20190228
 
 export BUILD_PATH=/tmp/build
 
@@ -92,7 +92,6 @@ clean-install \
   python \
   luarocks \
   libmaxminddb-dev \
-  authbind \
   dumb-init \
   gdb \
   valgrind \
@@ -131,7 +130,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src e4cfba989bba614cd53f3f406ac6da9f05977d6b1296e5d20a299f10c2d7ae43 \
+get_src b865743abd52bce4745d0f7e7fedde3cafbaaab617b022c105e3e4e456537c3c \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src 49f50d4cd62b166bc1aaf712febec5e028d9f187cedbc27a610dfd01bdde2d36 \
@@ -185,8 +184,8 @@ get_src 2a69815e4ae01aa8b170941a8e1a10b6f6a9aab699dee485d58f021dd933829a \
 get_src 342709c8e55e9901a91e90cb83153ff588d88be27c4370954b5a2e470e53d26f \
         "https://github.com/openresty/lua-resty-lrucache/archive/v0.09rc1.tar.gz"
 
-get_src f3bf9a35c66b00594d13b9e22c2e8f07fdaeedc6e790e2ca4675a886d5b5e4da \
-        "https://github.com/openresty/lua-resty-core/archive/v0.1.16rc4.tar.gz"
+get_src a6bd1c27291eed3df01225931346a0c78651a71d7c52839227e466eec2df2e63 \
+        "https://github.com/openresty/lua-resty-core/archive/v0.1.16.tar.gz"
 
 get_src 517db9add320250b770f2daac83a49e38e6131611f2daa5ff05c69d5705e9746 \
         "https://github.com/openresty/lua-resty-lock/archive/v0.08rc1.tar.gz"
@@ -209,8 +208,8 @@ get_src 89cedd6466801bfef20499689ebb34ecf17a2e60a34cd06e13c0204ea1775588 \
 get_src d81b33129c6fb5203b571fa4d8394823bf473d8872c0357a1d0f14420b1483bd \
         "https://github.com/cloudflare/lua-resty-cookie/archive/v0.1.0.tar.gz"
 
-get_src 69914f80665a1c26f22c66768ee2467689c615a5d3e255b3e99a1ef65c769b3d \
-        "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
+get_src 369bc5b37f0de1cfdab6f5691a7c6438d12214ba3adbf681ce2cebb59932d6b6 \
+        "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 
 get_src c673fcee37c1c4794f921b6710b09e8a0e1e58117aa788f798507d033f737192 \
         "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
@@ -252,7 +251,7 @@ fi
 cd "$BUILD_PATH"
 luarocks install lrexlib-pcre 2.7.2-1 PCRE_LIBDIR=${PCRE_DIR}
 
-cd "$BUILD_PATH/lua-resty-core-0.1.16rc4"
+cd "$BUILD_PATH/lua-resty-core-0.1.16"
 make install
 
 cd "$BUILD_PATH/lua-resty-lrucache-0.09rc1"
@@ -612,10 +611,6 @@ rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
 
 rm -rf $HOME/.hunter
 
-# move geoip directory
-mv /geoip/* /etc/nginx/geoip
-rm -rf /geoip
-
 # update image permissions
 writeDirs=( \
   /etc/nginx \
@@ -629,10 +624,4 @@ writeDirs=( \
 for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};
   chown -R www-data.www-data ${dir};
-done
-
-for value in {1..1023};do
-  touch /etc/authbind/byport/$value
-  chown www-data /etc/authbind/byport/$value
-  chmod 755 /etc/authbind/byport/$value
 done

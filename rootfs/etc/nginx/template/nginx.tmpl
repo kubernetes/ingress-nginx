@@ -73,6 +73,7 @@ http {
           error("require failed: " .. tostring(res))
         else
           lua_ingress = res
+          lua_ingress.set_config({{ configForLua $all }})
         end
 
         ok, res = pcall(require, "configuration")
@@ -108,6 +109,15 @@ http {
         end
         {{ end }}
 
+        ok, res = pcall(require, "plugins")
+        if not ok then
+          error("require failed: " .. tostring(res))
+        else
+          plugins = res
+        end
+        -- load all plugins that'll be used here
+        plugins.init({})
+
         ok, res = pcall(require, "statsd_monitor")
         if not ok then
           error("require(statsd_monitor) failed: " .. tostring(res))
@@ -123,6 +133,8 @@ http {
         {{ if $all.EnableMetrics }}
         monitor.init_worker()
         {{ end }}
+
+        plugins.run()
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -307,64 +319,6 @@ http {
         default          $remote_addr;
     {{ end }}
     }
-
-    {{ if $cfg.UseForwardedHeaders }}
-    # trust http_x_forwarded_proto headers correctly indicate ssl offloading
-    map $http_x_forwarded_proto $pass_access_scheme {
-        default          $http_x_forwarded_proto;
-        ''               $scheme;
-    }
-
-    map $http_x_forwarded_port $pass_server_port {
-        default           $http_x_forwarded_port;
-        ''                $server_port;
-    }
-
-    # Obtain best http host
-    map $http_host $this_host {
-        default          $http_host;
-        ''               $host;
-    }
-
-    map $http_x_forwarded_host $best_http_host {
-        default          $http_x_forwarded_host;
-        ''               $this_host;
-    }
-    {{ else }}
-    map '' $pass_access_scheme {
-        default          $scheme;
-    }
-
-    map '' $pass_server_port {
-        default          $server_port;
-    }
-
-    # Obtain best http host
-    map $http_host $best_http_host {
-        default          $http_host;
-        ''               $host;
-    }
-    {{ end }}
-
-    # validate $pass_access_scheme and $scheme are http to force a redirect
-    map "$scheme:$pass_access_scheme" $redirect_to_https {
-        default          0;
-        "http:http"      1;
-        "https:http"     1;
-    }
-
-    {{ if $all.IsSSLPassthroughEnabled }}
-    # map port {{ $all.ListenPorts.SSLProxy }} to 443 for header X-Forwarded-Port
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.SSLProxy }}              443;
-        default          $pass_server_port;
-    }
-    {{ else }}
-    map $pass_server_port $pass_port {
-        {{ $all.ListenPorts.HTTPS }}              443;
-        default          $pass_server_port;
-    }
-    {{ end }}
 
     # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
     # If no such header is provided, it can provide a random value.
@@ -830,6 +784,7 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            proxy_set_header       X-Request-ID       $req_id;
             proxy_set_header       Host               $best_http_host;
 
             set $proxy_upstream_name {{ $upstreamName }};
@@ -885,6 +840,10 @@ stream {
         {{ end }}
         {{ end }}
         set $proxy_upstream_name "-";
+        set $pass_access_scheme $scheme;
+        set $pass_server_port $server_port;
+        set $best_http_host $http_host;
+        set $pass_port $pass_server_port;
 
         {{/* Listen on {{ $all.ListenPorts.SSLProxy }} because port {{ $all.ListenPorts.HTTPS }} is used in the TLS sni server */}}
         {{/* This listener must always have proxy_protocol enabled, because the SNI listener forwards on source IP info in it. */}}
@@ -1029,7 +988,7 @@ stream {
         {{ end }}
 
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $location.Path) }}
+            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.Path) }}
             set $namespace      "{{ $ing.Namespace }}";
             set $ingress_name   "{{ $ing.Rule }}";
             set $service_name   "{{ $ing.Service }}";
@@ -1041,12 +1000,13 @@ stream {
             {{ end }}
 
             rewrite_by_lua_block {
+                lua_ingress.rewrite({{ locationConfigForLua $location $server $all }})
                 balancer.rewrite()
+                plugins.run()
             }
 
-            {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
-
             access_by_lua_block {
+                {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
                 local lua_resty_waf = require("resty.waf")
                 local waf = lua_resty_waf:new()
 
@@ -1087,8 +1047,10 @@ stream {
                 {{ end }}
 
                 waf:exec()
+                {{ end }}
+
+                plugins.run()
             }
-            {{ end }}
 
             header_filter_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
@@ -1096,6 +1058,8 @@ stream {
                 local waf = lua_resty_waf:new()
                 waf:exec()
                 {{ end }}
+
+                plugins.run()
             }
             body_filter_by_lua_block {
                 {{ if shouldConfigureLuaRestyWAF $all.Cfg.DisableLuaRestyWAF $location.LuaRestyWAF.Mode }}
@@ -1115,6 +1079,8 @@ stream {
                 {{ if $all.EnableMetrics }}
                 monitor.call()
                 {{ end }}
+
+                plugins.run()
                 statsd_monitor.call()
             }
 
@@ -1141,35 +1107,6 @@ stream {
 
             set $proxy_upstream_name    "{{ buildUpstreamName $location }}";
             set $proxy_host             $proxy_upstream_name;
-
-            {{/* redirect to HTTPS can be achieved forcing the redirect or having a SSL Certificate configured for the server */}}
-            {{ if (or $location.Rewrite.ForceSSLRedirect (and (not (empty $server.SSLCert.PemFileName)) $location.Rewrite.SSLRedirect)) }}
-            {{ if not (isLocationInLocationList $location $all.Cfg.NoTLSRedirectLocations) }}
-            # enforce ssl on server side
-            if ($redirect_to_https) {
-                set_by_lua_block $redirect_host {
-                    local ngx_re = require "ngx.re"
-
-                    local host_port, err = ngx_re.split(ngx.var.best_http_host, ":")
-                    if err then
-                        ngx.log(ngx.ERR, "could not parse variable: ", err)
-                        return ngx.var.best_http_host;
-                    end
-
-                    return host_port[1];
-                }
-
-                {{ if $location.UsePortInRedirects }}
-                # using custom ports require a different rewrite directive
-                # https://forum.nginx.org/read.php?2,155978,155978#msg-155978
-                error_page 497 ={{ $all.Cfg.HTTPRedirectCode }} https://$redirect_host{{ printf ":%v" $all.ListenPorts.HTTPS }}$request_uri;
-                return 497;
-                {{ else }}
-                return {{ $all.Cfg.HTTPRedirectCode }} https://$redirect_host$request_uri;
-                {{ end }}
-            }
-            {{ end }}
-            {{ end }}
 
             {{ if (or $location.ModSecurity.Enable $all.Cfg.EnableModsecurity) }}
             modsecurity on;
@@ -1334,6 +1271,7 @@ stream {
             proxy_set_header       X-Ingress-Name     $ingress_name;
             proxy_set_header       X-Service-Name     $service_name;
             proxy_set_header       X-Service-Port     $service_port;
+            proxy_set_header       X-Request-ID       $req_id;
             {{ end }}
 
             {{ if $location.Satisfy }}

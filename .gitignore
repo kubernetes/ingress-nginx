@@ -45,3 +45,5 @@ gh-pages
 /.env
 /.gocache/
 /bin/
+
+test/e2e-image/wait-for-nginx\.sh

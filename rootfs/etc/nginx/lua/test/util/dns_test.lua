@@ -18,20 +18,20 @@ describe("resolve", function()
     assert.spy(s_ngx_log).was_called_with(ngx.ERR, "failed to instantiate the resolver: an error")
 
     dns_helper.mock_dns_query(nil, "oops!")
-    assert.are.same({ "example.com" }, dns.resolve("example.com"))
-    assert.spy(s_ngx_log).was_called_with(ngx.ERR, "failed to query the DNS server: oops!")
+    assert.are.same({ "example.com" }, dns.resolve("example.com"))    
+    assert.spy(s_ngx_log).was_called_with(ngx.ERR, "failed to query the DNS server:\noops!\noops!")
 
     dns_helper.mock_dns_query({ errcode = 1, errstr = "format error" })
     assert.are.same({ "example.com" }, dns.resolve("example.com"))
-    assert.spy(s_ngx_log).was_called_with(ngx.ERR, "server returned error code: 1: format error")
+    assert.spy(s_ngx_log).was_called_with(ngx.ERR, "failed to query the DNS server:\nserver returned error code: 1: format error\nserver returned error code: 1: format error")
 
     dns_helper.mock_dns_query({})
     assert.are.same({ "example.com" }, dns.resolve("example.com"))
-    assert.spy(s_ngx_log).was_called_with(ngx.ERR, "no A record resolved")
+    assert.spy(s_ngx_log).was_called_with(ngx.ERR, "failed to query the DNS server:\nno record resolved\nno record resolved")
 
     dns_helper.mock_dns_query({ { name = "example.com", cname = "sub.example.com", ttl = 60 } })
     assert.are.same({ "example.com" }, dns.resolve("example.com"))
-    assert.spy(s_ngx_log).was_called_with(ngx.ERR, "no A record resolved")
+    assert.spy(s_ngx_log).was_called_with(ngx.ERR, "failed to query the DNS server:\nno record resolved\nno record resolved")
   end)
 
   it("resolves all A records of given host, caches them with minimal ttl and returns from cache next time", function()

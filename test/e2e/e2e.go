@@ -23,7 +23,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
 	"github.com/onsi/gomega"
-	"k8s.io/apiserver/pkg/util/logs"
+	"k8s.io/component-base/logs"
 
 	// required
 	_ "k8s.io/client-go/plugin/pkg/client/auth"

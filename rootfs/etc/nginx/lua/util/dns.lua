@@ -28,6 +28,25 @@ local function a_records_and_max_ttl(answers)
   return addresses, ttl
 end
 
+local function resolve_host(host, r, qtype)
+  local answers
+  answers, err = r:query(host, { qtype = qtype }, {})
+  if not answers then
+    return nil, -1, tostring(err)
+  end
+
+  if answers.errcode then
+    return nil, -1, string.format("server returned error code: %s: %s", answers.errcode, answers.errstr)
+  end
+
+  local addresses, ttl = a_records_and_max_ttl(answers)
+  if #addresses == 0 then
+    return nil, -1, "no record resolved"
+  end
+
+  return addresses, ttl, nil
+end
+
 function _M.resolve(host)
   local cached_addresses = cache:get(host)
   if cached_addresses then
@@ -50,26 +69,30 @@ function _M.resolve(host)
     return { host }
   end
 
-  local answers
-  answers, err = r:query(host, { qtype = r.TYPE_A }, {})
-  if not answers then
-    ngx.log(ngx.ERR, "failed to query the DNS server: " .. tostring(err))
-    return { host }
+  local dns_errors = {}
+
+  local addresses, ttl
+  addresses, ttl, err = resolve_host(host, r, r.TYPE_A)
+  if not addresses then
+    table.insert(dns_errors, tostring(err))
+  elseif #addresses > 0 then
+    cache:set(host, addresses, ttl)
+    return addresses
   end
 
-  if answers.errcode then
-    ngx.log(ngx.ERR, string.format("server returned error code: %s: %s", answers.errcode, answers.errstr))
-    return { host }
+  addresses, ttl, err = resolve_host(host, r, r.TYPE_AAAA)
+  if not addresses then
+    table.insert(dns_errors, tostring(err))
+  elseif #addresses > 0 then
+    cache:set(host, addresses, ttl)
+    return addresses
   end
 
-  local addresses, ttl = a_records_and_max_ttl(answers)
-  if #addresses == 0 then
-    ngx.log(ngx.ERR, "no A record resolved")
-    return { host }
+  if #dns_errors > 0 then
+    ngx.log(ngx.ERR, "failed to query the DNS server:\n" .. table.concat(dns_errors, "\n"))
   end
 
-  cache:set(host, addresses, ttl)
-  return addresses
+  return { host }
 end
 
 return _M

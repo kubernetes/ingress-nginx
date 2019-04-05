@@ -55,11 +55,13 @@ func TestProcessCollector(t *testing.T) {
 				} else {
 					t.Logf("Status: %v", status.ExitStatus())
 				}
+				done <- struct{}{}
 			}()
 
 			cm, err := NewNGINXProcess("pod", "default", "nginx")
 			if err != nil {
 				t.Errorf("unexpected error creating nginx status collector: %v", err)
+				t.FailNow()
 			}
 
 			go cm.Start()
@@ -68,6 +70,7 @@ func TestProcessCollector(t *testing.T) {
 				cm.Stop()
 
 				cmd.Process.Kill()
+				<-done
 				close(done)
 			}()
 

@@ -31,6 +31,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"text/template"
 	"time"
@@ -115,6 +116,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 	if err != nil {
 		klog.Fatalf("unexpected error obtaining pod information: %v", err)
 	}
+	n.podInfo = pod
 
 	n.store = store.New(
 		config.EnableSSLChainCompletion,
@@ -132,15 +134,13 @@ func NewNGINXController(config *Configuration, mc metric.Collector, fs file.File
 		config.DisableCatchAll)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
+
 	if config.UpdateStatus {
-		n.syncStatus = status.NewStatusSyncer(status.Config{
+		n.syncStatus = status.NewStatusSyncer(pod, status.Config{
 			Client:                 config.Client,
 			PublishService:         config.PublishService,
 			PublishStatusAddress:   config.PublishStatusAddress,
 			IngressLister:          n.store,
-			ElectionID:             config.ElectionID,
-			IngressClass:           class.IngressClass,
-			DefaultIngressClass:    class.DefaultClass,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
 			UseNodeInternalIP:      config.UseNodeInternalIP,
 		})
@@ -215,13 +215,15 @@ Error loading new template: %v
 
 // NGINXController describes a NGINX Ingress controller.
 type NGINXController struct {
+	podInfo *k8s.PodInfo
+
 	cfg *Configuration
 
 	recorder record.EventRecorder
 
 	syncQueue *task.Queue
 
-	syncStatus status.Sync
+	syncStatus status.Syncer
 
 	syncRateLimiter flowcontrol.RateLimiter
 
@@ -254,6 +256,8 @@ type NGINXController struct {
 	fileSystem filesystem.Filesystem
 
 	metricCollector metric.Collector
+
+	currentLeader uint32
 }
 
 // Start starts a new NGINX master process running in the foreground.
@@ -262,9 +266,34 @@ func (n *NGINXController) Start() {
 
 	n.store.Run(n.stopCh)
 
-	if n.syncStatus != nil {
-		go n.syncStatus.Run()
+	// we need to use the defined ingress class to allow multiple leaders
+	// in order to update information about ingress status
+	electionID := fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.DefaultClass)
+	if class.IngressClass != "" {
+		electionID = fmt.Sprintf("%v-%v", n.cfg.ElectionID, class.IngressClass)
 	}
+
+	setupLeaderElection(&leaderElectionConfig{
+		Client:     n.cfg.Client,
+		ElectionID: electionID,
+		OnStartedLeading: func(stopCh chan struct{}) {
+			if n.syncStatus != nil {
+				go n.syncStatus.Run(stopCh)
+			}
+
+			n.setLeader(true)
+			n.metricCollector.OnStartedLeading(electionID)
+			// manually update SSL expiration metrics
+			// (to not wait for a reload)
+			n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
+		},
+		OnStoppedLeading: func() {
+			n.setLeader(false)
+			n.metricCollector.OnStoppedLeading(electionID)
+		},
+		PodName:      n.podInfo.Name,
+		PodNamespace: n.podInfo.Namespace,
+	})
 
 	cmd := nginxExecCommand()
 
@@ -542,9 +571,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		cmap, err := n.store.GetConfigMap(cfg.ProxySetHeaders)
 		if err != nil {
 			klog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.ProxySetHeaders, err)
+		} else {
+			setHeaders = cmap.Data
 		}
-
-		setHeaders = cmap.Data
 	}
 
 	addHeaders := map[string]string{}
@@ -552,9 +581,9 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		cmap, err := n.store.GetConfigMap(cfg.AddHeaders)
 		if err != nil {
 			klog.Warningf("Error reading ConfigMap %q from local store: %v", cfg.AddHeaders, err)
+		} else {
+			addHeaders = cmap.Data
 		}
-
-		addHeaders = cmap.Data
 	}
 
 	sslDHParam := ""
@@ -564,17 +593,16 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		secret, err := n.store.GetSecret(secretName)
 		if err != nil {
 			klog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
-		}
-
-		nsSecName := strings.Replace(secretName, "/", "-", -1)
-
-		dh, ok := secret.Data["dhparam.pem"]
-		if ok {
-			pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh, n.fileSystem)
-			if err != nil {
-				klog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
-			} else {
-				sslDHParam = pemFileName
+		} else {
+			nsSecName := strings.Replace(secretName, "/", "-", -1)
+			dh, ok := secret.Data["dhparam.pem"]
+			if ok {
+				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh, n.fileSystem)
+				if err != nil {
+					klog.Warningf("Error adding or updating dhparam file %v: %v", nsSecName, err)
+				} else {
+					sslDHParam = pemFileName
+				}
 			}
 		}
 	}
@@ -936,6 +964,26 @@ func configureCertificates(pcfg *ingress.Configuration) error {
 				PemCertKey: server.SSLCert.PemCertKey,
 			},
 		})
+
+		if server.Alias != "" && server.SSLCert.PemCertKey != "" &&
+			ssl.IsValidHostname(server.Alias, server.SSLCert.CN) {
+			servers = append(servers, &ingress.Server{
+				Hostname: server.Alias,
+				SSLCert: ingress.SSLCert{
+					PemCertKey: server.SSLCert.PemCertKey,
+				},
+			})
+		}
+	}
+
+	redirects := buildRedirects(pcfg.Servers)
+	for _, redirect := range redirects {
+		servers = append(servers, &ingress.Server{
+			Hostname: redirect.From,
+			SSLCert: ingress.SSLCert{
+				PemCertKey: redirect.SSLCert.PemCertKey,
+			},
+		})
 	}
 
 	statusCode, _, err := nginx.NewPostStatusRequest("/configuration/servers", "application/json", servers)
@@ -1099,4 +1147,16 @@ func buildRedirects(servers []*ingress.Server) []*redirect {
 	}
 
 	return redirectServers
+}
+
+func (n *NGINXController) setLeader(leader bool) {
+	var i uint32
+	if leader {
+		i = 1
+	}
+	atomic.StoreUint32(&n.currentLeader, i)
+}
+
+func (n *NGINXController) isLeader() bool {
+	return atomic.LoadUint32(&n.currentLeader) != 0
 }

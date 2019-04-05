@@ -41,6 +41,7 @@ signatures. Assuming the custom type is called `T`:
 func (t T) Marshal() ([]byte, error) {}
 func (t *T) MarshalTo(data []byte) (n int, err error) {}
 func (t *T) Unmarshal(data []byte) error {}
+func (t *T) Size() int {}
 
 func (t T) MarshalJSON() ([]byte, error) {}
 func (t *T) UnmarshalJSON(data []byte) error {}
@@ -66,3 +67,5 @@ Issues with customtype include:
   * <a href="https://github.com/gogo/protobuf/issues/125">Using a proto message as a customtype is not allowed.</a>
   * <a href="https://github.com/gogo/protobuf/issues/200">cusomtype of type map can not UnmarshalText</a>
   * <a href="https://github.com/gogo/protobuf/issues/201">customtype of type struct cannot jsonpb unmarshal</a>
+  * <a href="https://github.com/gogo/protobuf/issues/477">Customtype field does not get a generated 'getter' method</a>
+  * <a href="https://github.com/gogo/protobuf/issues/478">Repeated customtype fields generate slices without pointer to the custom type </a>
